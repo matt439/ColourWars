@@ -51,8 +51,8 @@ namespace level_consts
 	//const std::string SOUND_BANK = "sound_bank_1";
 	//const std::string MUSIC = "dragostea_din_tei"; //"level_music_1";
 	//constexpr float MUSIC_VOLUME = 0.3f;
-	const std::string COUNTDOWN_SOUND = "UI_Clicks01";
-	constexpr float COUNTDOWN_SOUND_VOLUME = 0.5f;
+	const std::string COUNTDOWN_SOUND = "smash_countdown";
+	constexpr float COUNTDOWN_SOUND_VOLUME = 1.0f;
 
 	const std::string ZOOM_OUT_SOUND = "zoom_out";
 	constexpr float ZOOM_OUT_SOUND_VOLUME = 0.5f;

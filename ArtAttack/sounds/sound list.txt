@@ -26,8 +26,8 @@ FILL_SOUND 	WoodPlankFlicks
 
 Level:
 
-COUNTDOWN_SOUND	???
-LEVEL_MUSIC	??? (different for each available level)
+COUNTDOWN_SOUND	DONE
+LEVEL_MUSIC	DONE(different for each available level)
 
 ZOOM_OUT_EFFECT	????
 

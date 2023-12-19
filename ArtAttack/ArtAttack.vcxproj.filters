@@ -261,6 +261,7 @@
     <ClCompile Include="WeaponSniper.cpp" />
     <ClCompile Include="WeaponSprayer.cpp" />
     <ClCompile Include="WeaponUpdater.cpp" />
+    <ClCompile Include="PaintTile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

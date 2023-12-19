@@ -31,7 +31,8 @@ void ResultsMenuInitial::update()
 			if (!this->_winner_sound_played)
 			{
 				this->_winner_sound_played = true;
-				this->play_wave(WINNER_SOUND);
+				this->stop_effect(FILL_SOUND);
+				this->play_wave(WINNER_SOUND, WINNER_VOLUME);
 			}
 			this->_team_a_percentage->set_hidden(false);
 			this->_team_b_percentage->set_hidden(false);
@@ -198,7 +199,7 @@ void ResultsMenuInitial::init()
 	this->_text_container->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->play_wave(FILL_SOUND);
+	this->play_effect(FILL_SOUND, true, FILL_VOLUME);
 }
 
 void ResultsMenuInitial::draw()

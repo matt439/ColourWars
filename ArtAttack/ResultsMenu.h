@@ -55,8 +55,10 @@ namespace results_menu_consts
 	const std::string DIRECTION_SOUND = "UI_Clicks14";
 	const std::string CONFIRM_SOUND = "UI_Clicks01";
 	const std::string CANCEL_SOUND = "UI_Clicks17";
-	const std::string WINNER_SOUND = "Whoosh2";
-	const std::string FILL_SOUND = "Whoosh2";
+	const std::string WINNER_SOUND = "party_horn";
+	constexpr float WINNER_VOLUME = 1.0f;
+	const std::string FILL_SOUND = "DrumRoll";
+	constexpr float FILL_VOLUME = 1.0f;
 }
 
 class ResultsMenuPage : public MenuPage, public SoundBankObject
