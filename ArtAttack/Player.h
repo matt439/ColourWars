@@ -39,6 +39,20 @@ enum class player_animation_state
 	//DYING
 };
 
+enum class player_collision_type
+{
+    TOP,
+    BOTTOM,
+    LEFT,
+    RIGHT,
+    TOP_LEFT,
+    TOP_RIGHT,
+    BOTTOM_LEFT,
+    BOTTOM_RIGHT,
+    CONTAINED_INSIDE_OTHER,
+    CONTAINS_OTHER,
+};
+
 class Player : public MovingObject, public ICollisionGameObject,
     public AnimationObject, public TextureObject
 {
@@ -89,6 +103,7 @@ private:
     virtual void on_wall_collision(const ICollisionGameObject* other);
     virtual void on_floor_collision(const ICollisionGameObject* other);
     virtual void on_projectile_collision(const ICollisionGameObject* other);
+    virtual void on_structure_collision(const ICollisionGameObject* other);
 
     virtual float get_dt() const;
 
@@ -101,8 +116,19 @@ private:
 
     void respawn();
 
+    player_collision_type calculate_collision_type(const ICollisionGameObject* other) const;
+
+    void on_top_collision(const ICollisionGameObject* other);
+    void on_bottom_collision(const ICollisionGameObject* other);
+    void on_left_collision(const ICollisionGameObject* other);
+    void on_right_collision(const ICollisionGameObject* other);
+    void on_top_left_collision(const ICollisionGameObject* other);
+    void on_top_right_collision(const ICollisionGameObject* other);
+    void on_bottom_left_collision(const ICollisionGameObject* other);
+    void on_bottom_right_collision(const ICollisionGameObject* other);
+
 protected:
-    
+
     virtual void set_player_num(int player_num) { this->_player_num = player_num; }
 
     

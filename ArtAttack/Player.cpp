@@ -251,6 +251,10 @@ void Player::on_collision(const ICollisionGameObject* other)
         other_type == collision_object_type::STRUCTURE_FLOOR ||
 		other_type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE;
 
+    bool structure_collision =
+        other_type == collision_object_type::STRUCTURE ||
+        other_type == collision_object_type::STRUCTURE_PAINTABLE;
+
     player_team team = this->_team;
     bool projectile_collision = false;
     if (team == player_team::A)
@@ -288,9 +292,161 @@ void Player::on_collision(const ICollisionGameObject* other)
 	{
 		this->on_projectile_collision(other);
 	}
+    else if (structure_collision)
+    {
+		this->on_structure_collision(other);
+	}
 	else
 	{
 		throw std::exception("Invalid collision object type.");
+	}
+}
+void Player::on_structure_collision(const ICollisionGameObject* other)
+{
+    //Vector2F other_center = other->get_shape()->get_bounding_box().get_center();
+    //Vector2F this_center = this->_rectangle.get_center();
+    //Vector2F difference_direction = other_center - this_center;
+    //direction dir = difference_direction.get_direction();
+
+
+
+    player_collision_type type = this->calculate_collision_type(other);
+    if (type == player_collision_type::TOP_LEFT)
+    {
+		this->on_top_left_collision(other);
+	}
+    else if (type == player_collision_type::TOP_RIGHT)
+    {
+		this->on_top_right_collision(other);
+	}
+    else if (type == player_collision_type::BOTTOM_LEFT)
+    {
+		this->on_bottom_left_collision(other);
+	}
+    else if (type == player_collision_type::BOTTOM_RIGHT)
+    {
+		this->on_bottom_right_collision(other);
+	}
+    else if (type == player_collision_type::LEFT)
+    {
+		this->on_left_collision(other);
+	}
+    else if (type == player_collision_type::RIGHT)
+    {
+		this->on_right_collision(other);
+	}
+    else if (type == player_collision_type::TOP)
+    {
+		this->on_top_collision(other);
+	}
+    else if (type == player_collision_type::BOTTOM)
+    {
+		this->on_bottom_collision(other);
+	}
+    else
+    {
+		throw std::exception("Invalid collision type.");
+	}
+
+
+}
+void Player::on_top_collision(const ICollisionGameObject* other)
+{
+
+}
+void Player::on_bottom_collision(const ICollisionGameObject* other)
+{
+
+}
+void Player::on_left_collision(const ICollisionGameObject* other)
+{
+
+}
+void Player::on_right_collision(const ICollisionGameObject* other)
+{
+
+}
+void Player::on_top_left_collision(const ICollisionGameObject* other)
+{
+
+}
+void Player::on_top_right_collision(const ICollisionGameObject* other)
+{
+
+}
+void Player::on_bottom_left_collision(const ICollisionGameObject* other)
+{
+
+}
+void Player::on_bottom_right_collision(const ICollisionGameObject* other)
+{
+
+}
+player_collision_type Player::calculate_collision_type(const ICollisionGameObject* other) const
+{
+    const RectangleF& other_rect = other->get_shape()->get_bounding_box();
+
+	float this_left = this->_rectangle.get_left();
+	float this_right = this->_rectangle.get_right();
+	float this_top = this->_rectangle.get_top();
+	float this_bottom = this->_rectangle.get_bottom();
+
+	float other_left = other_rect.get_left();
+	float other_right = other_rect.get_right();
+	float other_top = other_rect.get_top();
+	float other_bottom = other_rect.get_bottom();
+
+	bool left = this_right > other_left && this_left < other_left;
+	bool right = this_left < other_right && this_right > other_right;
+	bool top = this_bottom > other_top && this_top < other_top;
+	bool bottom = this_top < other_bottom && this_bottom > other_bottom;
+
+    bool contained_inside_other = other_rect.contains(this->_rectangle);
+    bool contains_other = this->_rectangle.contains(other_rect);
+
+    if (left && top)
+    {
+		return player_collision_type::TOP_LEFT;
+	}
+    else if (left && bottom)
+    {
+		return player_collision_type::BOTTOM_LEFT;
+	}
+    else if (right && top)
+    {
+		return player_collision_type::TOP_RIGHT;
+	}
+    else if (right && bottom)
+    {
+		return player_collision_type::BOTTOM_RIGHT;
+	}
+    else if (left)
+    {
+		return player_collision_type::LEFT;
+	}
+    else if (right)
+    {
+		return player_collision_type::RIGHT;
+	}
+    else if (top)
+    {
+		return player_collision_type::TOP;
+	}
+    else if (bottom)
+    {
+		return player_collision_type::BOTTOM;
+	}
+    else if (contained_inside_other)
+    {
+        throw std::exception("Player is contained inside other object.");
+    }
+    else if (contains_other)
+    {
+		throw std::exception("Player contains other object.");
+	}
+    else
+    {
+		throw std::exception("Invalid collision type.");
 	}
 }
 void Player::on_projectile_collision(const ICollisionGameObject* other)
@@ -390,7 +546,7 @@ void Player::on_floor_collision(const ICollisionGameObject* other)
 	}
 	else
 	{
-		throw std::exception("Invalid direction value.");
+		//throw std::exception("Invalid direction value.");
 	}
 }
 

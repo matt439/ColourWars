@@ -31,7 +31,7 @@ void ResultsMenuInitial::update()
 			if (!this->_winner_sound_played)
 			{
 				this->_winner_sound_played = true;
-				this->stop_effect(FILL_SOUND);
+				this->stop_effect(FILL_SOUND, true);
 				this->play_wave(WINNER_SOUND, WINNER_VOLUME);
 			}
 			this->_team_a_percentage->set_hidden(false);

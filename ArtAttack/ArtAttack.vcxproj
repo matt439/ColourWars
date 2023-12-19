@@ -190,6 +190,7 @@
     <ClInclude Include="CollisionObject.h" />
     <ClInclude Include="CollisionQuantifier.h" />
     <ClInclude Include="CollisionResolver.h" />
+    <ClInclude Include="collision_classification.h" />
     <ClInclude Include="collision_object_type.h" />
     <ClInclude Include="Colour.h" />
     <ClInclude Include="confirmation_state.h" />

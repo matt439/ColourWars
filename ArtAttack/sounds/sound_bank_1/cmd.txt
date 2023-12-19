@@ -6,4 +6,4 @@ XWBTool -f -o sounds.xwb -y -h sounds.h Explo1.wav Explo2.wav
 
 
 
-XWBTool -f -o sound_bank_1.xwb BowlingBallRoll.wav caramelldansen.wav CartoonBoing.wav DeathImpactYellSingle.wav dragostea_din_tei.wav DrumRoll.wav holly_dolly.wav LaserGun.wav party_horn.wav smash_countdown.wav SplittingFireWood.wav Steamboat.wav ThunderCrack.wav Top_Of_The_Morning.wav UI_Clicks01.wav UI_Clicks14.wav UI_Clicks17.wav UIerror2.wav VulcanMachineGunSeries.wav WaterSplashing.wav WaterSprayIntoBucket.wav Whoosh2.wav WoodRattle.wav
+XWBTool -f -o sound_bank_1.xwb BowlingBallRoll.wav caramelldansen.wav CartoonBoing.wav DeathImpactYellSingle.wav dragostea_din_tei.wav DrumRoll.wav holly_dolly.wav LaserGun.wav party_horn.wav slide_whistle_up.wav smash_countdown.wav SplittingFireWood.wav Steamboat.wav ThunderCrack.wav Top_Of_The_Morning.wav UI_Clicks01.wav UI_Clicks14.wav UI_Clicks17.wav UIerror2.wav VulcanMachineGunSeries.wav WaterSplashing.wav WaterSprayIntoBucket.wav Whoosh2.wav WoodRattle.wav

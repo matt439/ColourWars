@@ -161,6 +161,7 @@
     <ClInclude Include="WeaponSprayer.h" />
     <ClInclude Include="WeaponUpdater.h" />
     <ClInclude Include="wep_type.h" />
+    <ClInclude Include="collision_classification.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />

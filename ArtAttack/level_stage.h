@@ -4,7 +4,8 @@
 enum class level_stage
 {
     TEST_1,
-    TEST_2,
+    KING_OF_THE_HILL,
+    STRUCTURE_TEST,
     RANDOM,
     MAX_STAGE = RANDOM
 };

@@ -130,7 +130,7 @@ void Level::update(const std::vector<player_input>& player_inputs)
 		{
 			this->_state = level_state::ZOOM_OUT;
 			this->_sound_bank->stop_effect(this->_music_name, true);
-			this->_sound_bank->play_effect(ZOOM_OUT_SOUND, ZOOM_OUT_SOUND_VOLUME);
+			this->_sound_bank->play_effect(ZOOM_OUT_SOUND, false, ZOOM_OUT_SOUND_VOLUME);
 		}
 	}
 	else if (this->_state == level_state::ZOOM_OUT)
@@ -141,7 +141,7 @@ void Level::update(const std::vector<player_input>& player_inputs)
 		{
 			this->_state = level_state::OVERVIEW;
 			this->_zoom_out_timer = 0.0f;
-			this->_sound_bank->stop_effect(ZOOM_OUT_SOUND);
+			this->_sound_bank->stop_effect(ZOOM_OUT_SOUND, true);
 		}
 
 		Camera start_camera = Camera::calculate_camera_from_view_rectangle(

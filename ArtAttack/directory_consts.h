@@ -5,7 +5,7 @@
 
 namespace directory_consts
 {
-	const static std::string BASE_DIRECTORY = "C:/VSProjects/ChromaClash/ChromaClash/";
+	const static std::string BASE_DIRECTORY = "C:/VSProjects/ArtAttack/ArtAttack/";
 	const static std::string TEXTURE_DIRECTORY = "./textures/";
 	//const std::string SHADER_DIRECTORY = directory_consts::BASE_DIRECTORY +
 	//	"shaders/";

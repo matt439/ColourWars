@@ -21,6 +21,10 @@ std::unique_ptr<ICollisionGameObject>
 		{
 			col_type = collision_object_type::STRUCTURE_FLOOR;
 		}
+		else if (collision_type == "STRUCTURE")
+		{
+			col_type = collision_object_type::STRUCTURE;
+		}
 		else
 		{
 			throw std::exception("Invalid collision type");

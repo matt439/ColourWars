@@ -1807,9 +1807,13 @@ void MainMenuStageSelect::update_stage_select_visuals()
 		this->_stage_icon->set_sprite_frame("stage_test_1");
 		this->_stage_name->set_text("Test 1");
 		break;
-	case level_stage::TEST_2:
+	case level_stage::KING_OF_THE_HILL:
 		this->_stage_icon->set_sprite_frame("stage_test_2");
-		this->_stage_name->set_text("Test 2");
+		this->_stage_name->set_text("King of the Hill");
+		break;
+	case level_stage::STRUCTURE_TEST:
+		this->_stage_icon->set_sprite_frame("pixel");
+		this->_stage_name->set_text("Structure Test");
 		break;
 	case level_stage::RANDOM:
 		this->_stage_icon->set_sprite_frame("random");
