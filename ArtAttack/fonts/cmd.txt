@@ -1,0 +1,1 @@
+MakeSpriteFont "Courier New" myfile.spritefont /FontSize:32 /FontStyle:Bold

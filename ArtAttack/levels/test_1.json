@@ -1,0 +1,218 @@
+{
+    "level_name": "test_1",
+    "sound":
+    {
+        "sound_bank_name": "sound_bank_1",
+        "music_name": "dragostea_din_tei",
+        "music_volume": 0.3
+    },
+    "spawn_locations":
+    {
+        "team_a":
+        [
+            {
+                "x": 200.0,
+                "y": 20.0
+            },
+            {
+                "x": 400.0,
+                "y": 20.0
+            },
+            {
+                "x": 10.0,
+                "y": 10.0
+            },
+            {
+                "x": 10.0,
+                "y": 10.0
+            }
+        ],
+        "team_b":
+        [
+            {
+                "x": 300.0,
+                "y": 20.0
+            },
+            {
+                "x": 500.0,
+                "y": 20.0
+            },
+            {
+                "x": 10.0,
+                "y": 10.0
+            },
+            {
+                "x": 10.0,
+                "y": 10.0
+            }
+        ]
+    },
+    "level_bounds":
+    {
+        "out_of_bounds":
+        {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 5000.0,
+            "height": 5000.0
+        },
+        "camera_bounds":
+        {
+            "x": 50.0,
+            "y": 50.0,
+            "width": 5000.0,
+            "height": 5000.0
+        },
+        "zoom_out_start_bounds":
+        {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 1920.0,
+            "height": 1080.0
+        },
+        "zoom_out_finish_bounds":
+        {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 3840.0,
+            "height": 2560.0
+        }
+    },
+    "collision_objects":
+    [
+        {
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 100.0,
+                "y": 800.0,
+                "width": 5000.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_FLOOR_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": false,
+                "top": true,
+                "right": false,
+                "bottom": false
+            },
+            "colour": "WHITE"
+        },
+        {
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 700.0,
+                "y": 300.0,
+                "width": 500.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_FLOOR_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": false,
+                "right": true,
+                "bottom": true
+            },
+            "colour": "WHITE"
+        },
+        {
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 0.0,
+                "y": 0.0,
+                "width": 100.0,
+                "height": 5000.0
+            },
+            "collision_type": "STRUCTURE_WALL",
+            "colour": "BLUE"
+        },
+        {
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 2500.0,
+                "y": 0.0,
+                "width": 100.0,
+                "height": 5000.0
+            },
+            "collision_type": "STRUCTURE_WALL",
+            "colour": "BLUE"
+        }
+    ],
+    "non_collision_objects":
+    [
+        {
+            "type": "Visual",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "grsquare_white_4ass",
+            "rectangle":
+            {
+                "x": 0.0,
+                "y": 0.0,
+                "width": 5000.0,
+                "height": 5000.0
+            },
+            "colour": "GREEN"
+        }
+    ],
+    "tile_types":
+    [
+        "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD.......................CCCC.....CCCCC..............................................................................................DDD",
+        "DDD........................CCCCCCCCCCCCC.................................CCCC.........................................................DDD",
+        "DDD..........................CCCCCCCCC...............................CCCCCCC..........................................................DDD",
+        "DDD................................................................CCCCCCC............................................................DDD",
+        "DDD.................................................................................................CC...C............................DDD",
+        "DDD..................................................................................................CCCCC............................DDD",
+        "DDD.........................GGGGGGG..................................................C................CCC.............................DDD",
+        "DDD......CCCC......................................CCC..............GGGGGG...........CCC..............................................DDD",
+        "DDD........CCCCCC.................................CCCCCC............DDDDDD..........CCCCC.............................................DDD",
+        "DDD.......CCCC......................................CC..................DD............................................................DDD",
+        "DDD.....................................................................DD................GGGGGGGGGGG.................................DDD",
+        "DDD..............GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG........................DDGGGGGGGGGG......DDDDDDDDDDD....GGGGGGGG.....................DDD",
+        "DDD..............DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD......GGGGGGGG..........DDDDDDDDDDDD.....................DDDDDDDD.....................DDD",
+        "DDD...................................................DDDDDDDD........................................................................DDD",
+        "DDD...................................................DDDDDDDDGG......................................................................DDD",
+        "DDDGGGGGG.............................................DDDDDDDDDD......................................................GGGGGGGGGGGGGGGGDDD",
+        "DDDDDDDDD.......................CC....................................................................................DDDDDDDDDDDDDDDDDDD",
+        "DDD.........................CCCCC...................................................CCCC..........................GGGGDDDDDDDDDDDDDDDDDDD",
+        "DDD..........................CCC..................................GGGGGG.............CCC..........................DDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD................................................................................CCCCCC.....................GGGGDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD........GGGG.....................................................................CCC.......................DDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD...............................GGGGGGGGGGGGGGGGG.......................................................GGGGDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD......................GGGGGGGGGDDDDDDDDDDDDDDDDDGGGGGG.................................................DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD......................DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD...............GGGGGG........................GGGGDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD...............GGGGGGGDDDDDDDDDDDDDDDDDD.............................DDDDDD........................DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD...............DDDDDDDDDDDDDDDDDDDDDDDDD.............................DDDDDD....................GGGGDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD...............DDDDDDDDDDDDDDDDDDDDDDDDD...................GGGGGG....DDDDDD....GGGGGG..........DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD...............DDDDDDDDDDDDDDDDDDDDDDDDD...................DDDDDD....DDDDDD....DDDDDD......GGGGDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDDGGGGGGGGGGGGGGGDDDDDDDDDDDDDDDDDDDDDDDDDGGGGGGGGGGGGGGGGGGGDDDDDDGGGGDDDDDDGGGGDDDDDDGGGGGGDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
+    ]
+}

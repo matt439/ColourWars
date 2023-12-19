@@ -1,0 +1,92 @@
+{
+    "level_name": "level_0",
+    "spawn_locations":
+    {
+        "team_a":
+        [
+            {
+                "x": 1500.0,
+                "y": 900.0
+            },
+            {
+                "x": 10.0,
+                "y": 10.0
+            },
+            {
+                "x": 10.0,
+                "y": 10.0
+            },
+            {
+                "x": 10.0,
+                "y": 10.0
+            }
+        ],
+        "team_b":
+        [
+            {
+                "x": 10.0,
+                "y": 10.0
+            },
+            {
+                "x": 10.0,
+                "y": 10.0
+            },
+            {
+                "x": 10.0,
+                "y": 10.0
+            },
+            {
+                "x": 10.0,
+                "y": 10.0
+            }
+        ]
+    },
+    "tile_types":
+    [
+        "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD...................................................................................................................................DDD",
+        "DDD.......................CCCC.....CCCCC..............................................................................................DDD",
+        "DDD........................CCCCCCCCCCCCC.................................CCCC.........................................................DDD",
+        "DDD..........................CCCCCCCCC...............................CCCCCCC..........................................................DDD",
+        "DDD................................................................CCCCCCC............................................................DDD",
+        "DDD.................................................................................................CC...C............................DDD",
+        "DDD..................................................................................................CCCCC............................DDD",
+        "DDD.........................GGGGGGG..................................................C................CCC.............................DDD",
+        "DDD......CCCC......................................CCC..............GGGGGG...........CCC..............................................DDD",
+        "DDD........CCCCCC.................................CCCCCC............DDDDDD..........CCCCC.............................................DDD",
+        "DDD.......CCCC......................................CC..................DD............................................................DDD",
+        "DDD.....................................................................DD................GGGGGGGGGGG.................................DDD",
+        "DDD..............GGGGGGGGGGGGGGGGGGGGGGGGGGGGGGG........................DDGGGGGGGGGG......DDDDDDDDDDD....GGGGGGGG.....................DDD",
+        "DDD..............DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD......GGGGGGGG..........DDDDDDDDDDDD.....................DDDDDDDD.....................DDD",
+        "DDD...................................................DDDDDDDD........................................................................DDD",
+        "DDD...................................................DDDDDDDDGG......................................................................DDD",
+        "DDDGGGGGG.............................................DDDDDDDDDD......................................................GGGGGGGGGGGGGGGGDDD",
+        "DDDDDDDDD.......................CC....................................................................................DDDDDDDDDDDDDDDDDDD",
+        "DDD.........................CCCCC...................................................CCCC..........................GGGGDDDDDDDDDDDDDDDDDDD",
+        "DDD..........................CCC..................................GGGGGG.............CCC..........................DDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD................................................................................CCCCCC.....................GGGGDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD........GGGG.....................................................................CCC.......................DDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD...............................GGGGGGGGGGGGGGGGG.......................................................GGGGDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD......................GGGGGGGGGDDDDDDDDDDDDDDDDDGGGGGG.................................................DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD......................DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD...............GGGGGG........................GGGGDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD...............GGGGGGGDDDDDDDDDDDDDDDDDD.............................DDDDDD........................DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD...............DDDDDDDDDDDDDDDDDDDDDDDDD.............................DDDDDD....................GGGGDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD...............DDDDDDDDDDDDDDDDDDDDDDDDD...................GGGGGG....DDDDDD....GGGGGG..........DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDD...............DDDDDDDDDDDDDDDDDDDDDDDDD...................DDDDDD....DDDDDD....DDDDDD......GGGGDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DGGGGGGGGGGGGGGGDDDDDDDDDDDDDDDDDDDDDDDDDGGGGGGGGGGGGGGGGGGGDDDDDDGGGGDDDDDDGGGGDDDDDDGGGGGGDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD",
+        "DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD"
+    ]
+}

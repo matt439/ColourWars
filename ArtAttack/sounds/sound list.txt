@@ -1,0 +1,59 @@
+MainMenu:
+
+UI error	UIerror2
+direction UI_Clicks14
+back UI_Clicks17
+confirm UI_Clicks01
+main menu background Top_Of_The_Morning
+ready	Whoosh2
+
+Title	?????
+
+
+PauseMenu:
+
+WINDOW_OPEN_SOUND  ????
+
+
+
+ResultsMenu:
+
+WINNER_SOUND   ????
+FILL_SOUND 	WoodPlankFlicks
+
+
+
+
+Level:
+
+COUNTDOWN_SOUND	???
+LEVEL_MUSIC	??? (different for each available level)
+
+ZOOM_OUT_EFFECT	????
+
+PAINT_SPLASH_SOUND 	WaterSplashing DONE
+
+SPRAYER_SHOOT_SOUND	WaterSprayIntoBucket DONE
+ROLLER_SHOOT_SOUND 	BowlingBallRoll DONE
+SNIPER_SHOOT_SOUND	WoodRattle DONE
+MISTER_SHOOT_SOUND	VulcanMachineGunSeries DONE
+BUCKET_SHOOT_SOUND	LaserGun DONE
+	
+PLAYER_DAMAGE_SOUND	SplittingFireWood DONE
+PLAYER_DEATH_SOUND	DeathImpactYellSingle DONE
+PLAYER_RESPAWN_SOUND	ThunderCrack DONE
+PLAYER_JUMP_SOUND	CartoonBoing DONE
+
+
+UIerror2.wav UI_Clicks14.wav UI_Clicks17.wav UI_Clicks01.wav Top_Of_The_Morning.wav Whoosh2.wav Steamboat.wav
+
+
+
+hold down sprite effect instance:
+sprayer
+roller
+mister
+
+wave single play:
+sniper
+bucket

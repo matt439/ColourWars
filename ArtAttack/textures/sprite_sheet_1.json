@@ -1,0 +1,612 @@
+{
+    "animation_strips":
+    [
+        {
+            "name": "player_right_walk",
+            "first_frame":
+            {
+                "x": 0,
+                "y": 1150,
+                "w": 52,
+                "h": 120
+            },
+            "frame_count": 8,
+            "frame_time": 0.2,
+            "looping": true
+        },
+        {
+            "name": "player_right_idle",
+            "first_frame":
+            {
+                "x": 0,
+                "y": 1270,
+                "w": 52,
+                "h": 120
+            },
+            "frame_count": 1,
+            "frame_time": 0.05,
+            "looping": true
+        },
+        {
+            "name": "player_right_jumping",
+            "first_frame":
+            {
+                "x": 0,
+                "y": 1390,
+                "w": 52,
+                "h": 120
+            },
+            "frame_count": 1,
+            "frame_time": 0.05,
+            "looping": true
+        },
+        {
+            "name": "player_right_falling",
+            "first_frame":
+            {
+                "x": 0,
+                "y": 1030,
+                "w": 52,
+                "h": 120
+            },
+            "frame_count": 1,
+            "frame_time": 0.05,
+            "looping": true
+        },
+        {
+            "name": "player_test",
+            "first_frame":
+            {
+                "x": 0,
+                "y": 1300,
+                "w": 100,
+                "h": 100
+            },
+            "frame_count": 4,
+            "frame_time": 0.2,
+            "looping": true
+        },
+        {
+            "name": "projectile_1",
+            "first_frame":
+            {
+                "x": 150,
+                "y": 150,
+                "w": 32,
+                "h": 32
+            },
+            "frame_count": 4,
+            "frame_time": 0.2,
+            "looping": true
+        },
+        {
+            "name": "projectile_2",
+            "first_frame":
+            {
+                "x": 150,
+                "y": 190,
+                "w": 32,
+                "h": 32
+            },
+            "frame_count": 4,
+            "frame_time": 0.2,
+            "looping": true
+        },
+        {
+            "name": "projectile_3",
+            "first_frame":
+            {
+                "x": 300,
+                "y": 150,
+                "w": 32,
+                "h": 32
+            },
+            "frame_count": 2,
+            "frame_time": 0.1,
+            "looping": true
+        },
+        {
+            "name": "splash_1",
+            "first_frame":
+            {
+                "x": 300,
+                "y": 190,
+                "w": 32,
+                "h": 32
+            },
+            "frame_count": 5,
+            "frame_time": 0.05,
+            "looping": false
+        }
+    ],
+    "sprite_frames":
+    [
+        {
+            "name": "square_white_32",
+            "position":
+            {
+                "x": 0,
+                "y": 0
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            },
+            "origin":
+            {
+                "x": 0.0,
+                "y": 0.0
+            },
+            "rotated": false
+        },
+        {
+            "name": "paint",
+            "position":
+            {
+                "x": 0,
+                "y": 0
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            }
+        },
+        {
+            "name": "results_menu_team_a_fill",
+            "position":
+            {
+                "x": 0,
+                "y": 0
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            }
+        },
+        {
+            "name": "results_menu_team_b_fill",
+            "position":
+            {
+                "x": 0,
+                "y": 0
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            }
+        },
+        {
+            "name": "pause_menu_box",
+            "position":
+            {
+                "x": 0,
+                "y": 0
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            }
+        },
+        {
+            "name": "square_white_4",
+            "position":
+            {
+                "x": 32,
+                "y": 0
+            },
+            "size":
+            {
+                "w": 4,
+                "h": 4
+            }
+        },
+        {
+            "name": "pixel",
+            "position":
+            {
+                "x": 32,
+                "y": 0
+            },
+            "size":
+            {
+                "w": 4,
+                "h": 4
+            }
+        },
+        {
+            "name": "error",
+            "position":
+            {
+                "x": 36,
+                "y": 0
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            }
+        },
+        {
+            "name": "dirt",
+            "position":
+            {
+                "x": 200,
+                "y": 0
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            }
+        },
+        {
+            "name": "grass",
+            "position":
+            {
+                "x": 232,
+                "y": 0
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            }
+        },
+        {
+            "name": "cloud",
+            "position":
+            {
+                "x": 264,
+                "y": 0
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            }
+        },
+        {
+            "name": "sky",
+            "position":
+            {
+                "x": 296,
+                "y": 0
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            }
+        },
+        {
+            "name": "bucket",
+            "position":
+            {
+                "x": 0,
+                "y": 50
+            },
+            "size":
+            {
+                "w": 60,
+                "h": 60
+            }
+        },
+        {
+            "name": "mister",
+            "position":
+            {
+                "x": 100,
+                "y": 50
+            },
+            "size":
+            {
+                "w": 60,
+                "h": 32
+            }
+        },
+        {
+            "name": "roller",
+            "position":
+            {
+                "x": 200,
+                "y": 50
+            },
+            "size":
+            {
+                "w": 100,
+                "h": 52
+            }
+        },
+        {
+            "name": "sniper",
+            "position":
+            {
+                "x": 400,
+                "y": 50
+            },
+            "size":
+            {
+                "w": 100,
+                "h": 32
+            }
+        },
+        {
+            "name": "sprayer",
+            "position":
+            {
+                "x": 600,
+                "y": 50
+            },
+            "size":
+            {
+                "w": 72,
+                "h": 32
+            }
+        },
+        {
+            "name": "proj_roller",
+            "position":
+            {
+                "x": 0,
+                "y": 150
+            },
+            "size":
+            {
+                "w": 52,
+                "h": 52
+            }
+        },
+        {
+            "name": "nozzle",
+            "position":
+            {
+                "x": 100,
+                "y": 150
+            },
+            "size":
+            {
+                "w": 4,
+                "h": 4
+            }
+        },
+        {
+            "name": "health_box",
+            "position":
+            {
+                "x": 0,
+                "y": 250
+            },
+            "size":
+            {
+                "w": 200,
+                "h": 48
+            }
+        },
+        {
+            "name": "results_menu_fill_box",
+            "position":
+            {
+                "x": 0,
+                "y": 250
+            },
+            "size":
+            {
+                "w": 200,
+                "h": 48
+            }
+        },
+        {
+            "name": "random",
+            "position":
+            {
+                "x": 0,
+                "y": 350
+            },
+            "size":
+            {
+                "w": 64,
+                "h": 64
+            }
+        },
+        {
+            "name": "splatter_20",
+            "position":
+            {
+                "x": 0,
+                "y": 450
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            }
+        },
+        {
+            "name": "splatter_40",
+            "position":
+            {
+                "x": 32,
+                "y": 450
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            }
+        },
+        {
+            "name": "splatter_60",
+            "position":
+            {
+                "x": 64,
+                "y": 450
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            }
+        },
+        {
+            "name": "splatter_80",
+            "position":
+            {
+                "x": 96,
+                "y": 450
+            },
+            "size":
+            {
+                "w": 32,
+                "h": 32
+            }
+        },
+        {
+            "name": "team_select_a",
+            "position":
+            {
+                "x": 0,
+                "y": 500
+            },
+            "size":
+            {
+                "w": 64,
+                "h": 64
+            }
+        },
+        {
+            "name": "team_select_a_selected",
+            "position":
+            {
+                "x": 64,
+                "y": 500
+            },
+            "size":
+            {
+                "w": 64,
+                "h": 64
+            }
+        },
+        {
+            "name": "team_select_b",
+            "position":
+            {
+                "x": 128,
+                "y": 500
+            },
+            "size":
+            {
+                "w": 64,
+                "h": 64
+            }
+        },
+        {
+            "name": "team_select_b_selected",
+            "position":
+            {
+                "x": 192,
+                "y": 500
+            },
+            "size":
+            {
+                "w": 64,
+                "h": 64
+            }
+        },
+        {
+            "name": "team_select_center",
+            "position":
+            {
+                "x": 256,
+                "y": 500
+            },
+            "size":
+            {
+                "w": 64,
+                "h": 64
+            }
+        },
+        {
+            "name": "team_select_center_selected",
+            "position":
+            {
+                "x": 320,
+                "y": 500
+            },
+            "size":
+            {
+                "w": 64,
+                "h": 64
+            }
+        },
+        {
+            "name": "stage_test_1",
+            "position":
+            {
+                "x": 0,
+                "y": 600
+            },
+            "size":
+            {
+                "w": 400,
+                "h": 300
+            }
+        },
+        {
+            "name": "stage_test_2",
+            "position":
+            {
+                "x": 400,
+                "y": 600
+            },
+            "size":
+            {
+                "w": 400,
+                "h": 300
+            }
+        },
+        {
+            "name": "player_1_right",
+            "position":
+            {
+                "x": 0,
+                "y": 1000
+            },
+            "size":
+            {
+                "w": 60,
+                "h": 128
+            }
+        },
+        {
+            "name": "player_2_right",
+            "position":
+            {
+                "x": 60,
+                "y": 1000
+            },
+            "size":
+            {
+                "w": 60,
+                "h": 128
+            }
+        },
+        {
+            "name": "player_right_walk_uniform",
+            "position":
+            {
+                "x": 416,
+                "y": 1150
+            },
+            "size":
+            {
+                "w": 52,
+                "h": 120
+            }
+        }
+    ]
+}

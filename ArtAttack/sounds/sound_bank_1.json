@@ -1,0 +1,38 @@
+{
+    "waves":
+    [
+        "BowlingBallRoll",
+        "caramelldansen",
+        "CartoonBoing",
+        "DeathImpactYellSingle",
+        "dragostea_din_tei",
+        "holly_dolly",
+        "LaserGun",
+        "SplittingFireWood",
+        "Steamboat",
+        "ThunderCrack",
+        "Top_Of_The_Morning",
+        "UI_Clicks01",
+        "UI_Clicks14",
+        "UI_Clicks17",
+        "UIerror2",
+        "VulcanMachineGunSeries",
+        "WaterSplashing",
+        "WaterSprayIntoBucket",
+        "Whoosh2",
+        "WoodRattle"
+    ],
+    "create_effect_instance_for_each_wave": true,
+    "sound_effect_instances":
+    [
+        {
+            "name": "level_music_1",
+            "wave": "Steamboat"
+        },
+        {
+            "name": "zoom_out",
+            "wave": "Whoosh2"
+        }
+    ]
+
+}
