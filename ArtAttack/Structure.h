@@ -8,7 +8,7 @@ class Structure : public TextureObject, public ICollisionGameObject
 {
 private:
 	collision_object_type _collision_type =
-		collision_object_type::STRUCTURE_FLOOR;
+		collision_object_type::STRUCTURE;
 	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
 protected:
 	const MattMath::RectangleF& get_rectangle() const;

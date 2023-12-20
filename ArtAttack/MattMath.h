@@ -96,6 +96,12 @@ namespace MattMath
 		float get_bottom() const;
 		MattMath::Vector2F get_top_left() const;
 		MattMath::Vector2F get_bottom_right() const;
+		MattMath::Vector2F get_top_right() const;
+		MattMath::Vector2F get_bottom_left() const;
+		MattMath::Segment get_top_edge() const;
+		MattMath::Segment get_bottom_edge() const;
+		MattMath::Segment get_left_edge() const;
+		MattMath::Segment get_right_edge() const;
 		float get_area() const;
 		MattMath::RectangleI get_rectangle_i() const;
 		DirectX::SimpleMath::Rectangle get_sm_rectangle() const;
@@ -113,6 +119,7 @@ namespace MattMath
 		bool intersects(const MattMath::Circle& other) const;
 		bool intersects(const MattMath::Triangle& other) const;
 		bool intersects(const MattMath::Segment& other) const;
+		RectangleF intersection(const RectangleF& other) const;
 		
 		//void set_left(float left);
 		//void set_top(float top);
@@ -254,6 +261,8 @@ namespace MattMath
 		
 		Vector2F normalized() const;
 		void normalize();
+
+		bool is_contained_within(const MattMath::RectangleF& other) const;
 
 		void clamp(const Vector2F& min, const Vector2F& max);
 		Vector2F clamped(const Vector2F& min, const Vector2F& max) const;
@@ -579,7 +588,7 @@ namespace MattMath
 		bool operator!=(const Segment& other) const;
 
 		bool intersects(const Segment& other) const;
-		//bool intersects(const MattMath::RectangleF& other) const;
+		bool intersects(const MattMath::RectangleF& other) const;
 		//bool intersects(const MattMath::Circle& other) const;
 		//bool intersects(const MattMath::Triangle& other) const;
 	};

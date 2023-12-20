@@ -41,14 +41,20 @@ enum class player_animation_state
 
 enum class player_collision_type
 {
-    TOP,
-    BOTTOM,
-    LEFT,
-    RIGHT,
-    TOP_LEFT,
-    TOP_RIGHT,
-    BOTTOM_LEFT,
-    BOTTOM_RIGHT,
+    TOP_EDGE,
+    BOTTOM_EDGE,
+    LEFT_EDGE,
+    RIGHT_EDGE,
+    TOP_AND_BOTTOM_EDGES,
+    LEFT_AND_RIGHT_EDGES,
+    TOP_AND_LEFT_EDGES,
+    TOP_AND_RIGHT_EDGES,
+    BOTTOM_AND_LEFT_EDGES,
+    BOTTOM_AND_RIGHT_EDGES,
+    TOP_AND_BOTTOM_AND_LEFT_EDGES,
+    TOP_AND_BOTTOM_AND_RIGHT_EDGES,
+    LEFT_AND_RIGHT_AND_TOP_EDGES,
+    LEFT_AND_RIGHT_AND_BOTTOM_EDGES,
     CONTAINED_INSIDE_OTHER,
     CONTAINS_OTHER,
 };
@@ -100,8 +106,8 @@ private:
     virtual bool is_matching_collision_object_type(
         const ICollisionGameObject* other) const;
 
-    virtual void on_wall_collision(const ICollisionGameObject* other);
-    virtual void on_floor_collision(const ICollisionGameObject* other);
+    //virtual void on_wall_collision(const ICollisionGameObject* other);
+    //virtual void on_floor_collision(const ICollisionGameObject* other);
     virtual void on_projectile_collision(const ICollisionGameObject* other);
     virtual void on_structure_collision(const ICollisionGameObject* other);
 

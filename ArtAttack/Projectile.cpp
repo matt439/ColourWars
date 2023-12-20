@@ -161,10 +161,12 @@ bool Projectile::is_matching_collision_object_type(
     collision_object_type other_type = other->get_collision_object_type();
 
     bool structure_collision =
-        other_type == collision_object_type::STRUCTURE_WALL ||
-        other_type == collision_object_type::STRUCTURE_WALL_PAINTABLE ||
-        other_type == collision_object_type::STRUCTURE_FLOOR ||
-        other_type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE;
+        //other_type == collision_object_type::STRUCTURE_WALL ||
+        //other_type == collision_object_type::STRUCTURE_WALL_PAINTABLE ||
+        //other_type == collision_object_type::STRUCTURE_FLOOR ||
+        //other_type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE ||
+        other_type == collision_object_type::STRUCTURE ||
+        other_type == collision_object_type::STRUCTURE_PAINTABLE;
 
     if (structure_collision)
 	{
@@ -188,10 +190,12 @@ void Projectile::on_collision(const ICollisionGameObject* other)
     collision_object_type other_type = other->get_collision_object_type();
 
     bool structure_collision =
-        other_type == collision_object_type::STRUCTURE_WALL ||
-        other_type == collision_object_type::STRUCTURE_WALL_PAINTABLE ||
-        other_type == collision_object_type::STRUCTURE_FLOOR ||
-        other_type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE;
+        //other_type == collision_object_type::STRUCTURE_WALL ||
+        //other_type == collision_object_type::STRUCTURE_WALL_PAINTABLE ||
+        //other_type == collision_object_type::STRUCTURE_FLOOR ||
+        //other_type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE ||
+        other_type == collision_object_type::STRUCTURE ||
+        other_type == collision_object_type::STRUCTURE_PAINTABLE;
 
     if (structure_collision)
     {

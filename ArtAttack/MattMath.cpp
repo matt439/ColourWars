@@ -289,6 +289,30 @@ Vector2F RectangleF::get_bottom_right() const
 {
 	return Vector2F(this->x + this->width, this->y + this->height);
 }
+Vector2F RectangleF::get_top_right() const
+{
+	return Vector2F(this->x + this->width, this->y);
+}
+Vector2F RectangleF::get_bottom_left() const
+{
+	return Vector2F(this->x, this->y + this->height);
+}
+Segment RectangleF::get_top_edge() const
+{
+	return Segment(this->get_top_left(), this->get_top_right());
+}
+Segment RectangleF::get_bottom_edge() const
+{
+	return Segment(this->get_bottom_left(), this->get_bottom_right());
+}
+Segment RectangleF::get_left_edge() const
+{
+	return Segment(this->get_top_left(), this->get_bottom_left());
+}
+Segment RectangleF::get_right_edge() const
+{
+	return Segment(this->get_top_right(), this->get_bottom_right());
+}
 float RectangleF::get_area() const
 {
 	return this->width * this->height;
@@ -415,6 +439,10 @@ bool RectangleF::intersects(const Triangle& other) const
 bool RectangleF::intersects(const Segment& other) const
 {
 	return EricsonMath::test_segment_AABB(other.point1, other.point2, *this);
+}
+RectangleF RectangleF::intersection(const RectangleF& other) const
+{
+	return RectangleF::intersection(*this, other);
 }
 //void RectangleF::set_left(float left)
 //{
@@ -980,6 +1008,10 @@ void Vector2F::normalize()
 	float length = this->length();
 	this->x /= length;
 	this->y /= length;
+}
+bool Vector2F::is_contained_within(const RectangleF& other) const
+{
+	return other.contains(*this);
 }
 void Vector2F::clamp(const Vector2F& min, const Vector2F& max)
 {
@@ -2053,6 +2085,11 @@ bool Segment::intersects(const Segment& other) const
 	Point2F intersection_point;
 	return EricsonMath::test_2D_segment_segment(this->point1, this->point2,
 		other.point1, other.point2, t, intersection_point);
+}
+bool Segment::intersects(const RectangleF& other) const
+{
+	return other.intersects(*this);
+
 }
 //bool Segment::intersects(const RectangleF& other) const
 //{

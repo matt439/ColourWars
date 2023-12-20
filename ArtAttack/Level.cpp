@@ -524,8 +524,10 @@ level_end_info Level::get_level_end_info() const
 	for (auto& object : *this->_collision_objects)
 	{
 		collision_object_type type = object->get_collision_object_type();
-		if (type == collision_object_type::STRUCTURE_WALL_PAINTABLE ||
-			type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE)
+		//if (type == collision_object_type::STRUCTURE_WALL_PAINTABLE ||
+		//	type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE)
+
+		if (type == collision_object_type::STRUCTURE_PAINTABLE)
 		{
 			try
 			{
