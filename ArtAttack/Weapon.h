@@ -59,7 +59,7 @@ protected:
 	virtual void handle_shoot_sound(bool shooting_this_update, bool holding_shoot);
 	
 	const MattMath::Vector2F& get_player_center() const { return this->_player_center; }
-	void set_player_center(const MattMath::Vector2F& player_center) { this->_player_center = player_center; }
+	
 
 	player_team get_team() const { return this->_team; }
 	int get_player_num() const { return this->_player_num; }
@@ -156,6 +156,8 @@ public:
 
 	float get_ammo() const { return this->_ammo; }
 	void reset_ammo() { this->_ammo = weapon_consts::STARTING_AMMO; }
+	void set_player_center(const MattMath::Vector2F& player_center) { this->_player_center = player_center; }
+	void stop_sounds();
 };
 
 

@@ -35,6 +35,8 @@ namespace player_consts
     constexpr float HEALTH_REGEN_DELAY = 2.0f;
     constexpr float HEALTH_REGEN_RATE = 1.0f;
     constexpr float DAMAGE_SOUND_DELAY = 0.25f;
+    constexpr float DROP_DOWN_VELOCITY = 100.0f;
+    constexpr float DROP_DOWN_ANALOG_THRESHOLD = 0.5f;
 
     constexpr float JUMP_ACCELERATION = -1300.0f;
     //const float STARTING_AMMO = 1.0f;

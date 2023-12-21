@@ -65,15 +65,15 @@
         },
         "zoom_out_start_bounds":
         {
-            "x": 2040.0,
+            "x": 0.0,
             "y": 4000.0,
             "width": 1920.0,
             "height": 1080.0
         },
         "zoom_out_finish_bounds":
         {
-            "x": 1080.0,
-            "y": 2920.0,
+            "x": 0.0,
+            "y": 4000.0,
             "width": 3840.0,
             "height": 2160.0
         }
@@ -147,6 +147,20 @@
             "frame_name": "square_white_4",
             "rectangle":
             {
+                "x": 0.0,
+                "y": 4800.0,
+                "width": 300.0,
+                "height": 20.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "TAN"
+        },
+        {
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
                 "x": 5700.0,
                 "y": 5000.0,
                 "width": 300.0,
@@ -179,6 +193,213 @@
                 "top": true,
                 "right": false,
                 "bottom": false
+            },
+            "colour": "GREY"
+        },
+
+
+
+
+        {
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 500.0,
+                "y": 5900.0,
+                "width": 5000.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "GREY"
+        },
+        {
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 1000.0,
+                "y": 5800.0,
+                "width": 4000.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "GREY"
+        },
+        {
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 1500.0,
+                "y": 5700.0,
+                "width": 3000.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "GREY"
+        },
+        {
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 1700.0,
+                "y": 5600.0,
+                "width": 2200.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "GREY"
+        },
+        {
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 1900.0,
+                "y": 5500.0,
+                "width": 1800.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "GREY"
+        },
+        {
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 2100.0,
+                "y": 5400.0,
+                "width": 1400.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "GREY"
+        },
+        {
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 2300.0,
+                "y": 5300.0,
+                "width": 1000.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "GREY"
+        },
+        {
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 2500.0,
+                "y": 5120.0,
+                "width": 600.0,
+                "height": 20.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "TAN"
+        },
+        {
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 1900.0,
+                "y": 5000.0,
+                "width": 400.0,
+                "height": 50.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
+            },
+            "colour": "GREY"
+        },
+        {
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 3500.0,
+                "y": 5000.0,
+                "width": 400.0,
+                "height": 50.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
             },
             "colour": "GREY"
         }

@@ -259,6 +259,10 @@ void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
         this->_sound_bank->stop_effect(this->_details.shoot_sound_name, true);
     }
 }
+void Weapon::stop_sounds()
+{
+    this->_sound_bank->stop_effect(this->_details.shoot_sound_name, true);
+}
 void Weapon::update_movement_and_rotation(player_input input,
     const Vector2F& player_center,
     const Vector2F& player_velocity,

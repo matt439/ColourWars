@@ -166,7 +166,8 @@ bool Projectile::is_matching_collision_object_type(
         //other_type == collision_object_type::STRUCTURE_FLOOR ||
         //other_type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE ||
         other_type == collision_object_type::STRUCTURE ||
-        other_type == collision_object_type::STRUCTURE_PAINTABLE;
+        other_type == collision_object_type::STRUCTURE_PAINTABLE ||
+        other_type == collision_object_type::STRUCTURE_JUMP_THROUGH;
 
     if (structure_collision)
 	{
@@ -195,7 +196,8 @@ void Projectile::on_collision(const ICollisionGameObject* other)
         //other_type == collision_object_type::STRUCTURE_FLOOR ||
         //other_type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE ||
         other_type == collision_object_type::STRUCTURE ||
-        other_type == collision_object_type::STRUCTURE_PAINTABLE;
+        other_type == collision_object_type::STRUCTURE_PAINTABLE ||
+        other_type == collision_object_type::STRUCTURE_JUMP_THROUGH;
 
     if (structure_collision)
     {

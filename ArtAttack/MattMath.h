@@ -162,6 +162,11 @@ namespace MattMath
 		static RectangleF intersection(const RectangleF& a, const RectangleF& b);
 		static RectangleF union_of(const RectangleF& a, const RectangleF& b);
 
+		static RectangleF from_top_left_bottom_right(const MattMath::Vector2F& top_left,
+			const MattMath::Vector2F& bottom_right);
+		static RectangleF from_top_left_bottom_right(float top, float left,
+			float bottom, float right);
+
 		static const RectangleF ZERO;
 	};
 

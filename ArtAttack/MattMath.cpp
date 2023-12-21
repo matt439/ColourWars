@@ -638,6 +638,18 @@ RectangleF RectangleF::union_of(const RectangleF& a, const RectangleF& b)
 	float y2 = std::max(a.y + a.height, b.y + b.height);
 	return RectangleF(x1, y1, x2 - x1, y2 - y1);
 }
+RectangleF RectangleF::from_top_left_bottom_right(const Vector2F& top_left,
+	const Vector2F& bottom_right)
+{
+	return RectangleF(top_left.x, top_left.y,
+		bottom_right.x - top_left.x,
+		bottom_right.y - top_left.y);
+}
+RectangleF RectangleF::from_top_left_bottom_right(float top, float left,
+	float bottom, float right)
+{
+	return RectangleF(left, top, right - left, bottom - top);
+}
 const RectangleF RectangleF::ZERO = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 #pragma endregion RectangleF
@@ -2176,8 +2188,13 @@ Camera Camera::calculate_camera_from_view_rectangle(
 	const RectangleF& view_rectangle,
 	const RectangleF& world_rectangle)
 {
-	return Camera(world_rectangle.x - view_rectangle.x,
-		world_rectangle.y - view_rectangle.y,
+	//return Camera(world_rectangle.x - view_rectangle.x,
+	//	world_rectangle.y - view_rectangle.y,
+	//	world_rectangle.width / view_rectangle.width);
+
+
+	return Camera(view_rectangle.x - world_rectangle.x,
+		view_rectangle.y - world_rectangle.y,
 		world_rectangle.width / view_rectangle.width);
 
 }

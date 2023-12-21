@@ -130,6 +130,7 @@ void Level::update(const std::vector<player_input>& player_inputs)
 		{
 			this->_state = level_state::ZOOM_OUT;
 			this->_sound_bank->stop_effect(this->_music_name, true);
+			this->stop_player_sounds();
 			this->_sound_bank->play_effect(ZOOM_OUT_SOUND, false, ZOOM_OUT_SOUND_VOLUME);
 		}
 	}
@@ -181,7 +182,7 @@ void Level::update_level_logic(const std::vector<player_input>& player_inputs)
 	{
 		object->update();
 	}
-
+	
 	// update player objects
 	int player_index = 0;
 	for (auto& object : *this->_player_objects)
@@ -242,6 +243,13 @@ void Level::update_level_logic(const std::vector<player_input>& player_inputs)
 				other_object->on_collision(player.get());
 			}
 		}
+	}
+
+	// update some player things after collisions have possible altered position
+	for (auto& object : *this->_player_objects)
+	{
+		object->update_weapon_position();
+		object->update_prev_rectangle();
 	}
 
 	// check collision objects collisions
@@ -312,6 +320,14 @@ void Level::update_level_logic(const std::vector<player_input>& player_inputs)
 			throw std::exception("Collision object out of bounds");
 		}
 	}
+}
+void Level::stop_player_sounds() const
+{
+	for (auto& player : *this->_player_objects)
+	{
+		player->stop_sounds();
+	}
+
 }
 void Level::draw()
 {		

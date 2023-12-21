@@ -25,22 +25,44 @@ std::unique_ptr<ICollisionGameObject>
 		{
 			col_type = collision_object_type::STRUCTURE;
 		}
+		else if (collision_type == "STRUCTURE_JUMP_THROUGH")
+		{
+			col_type = collision_object_type::STRUCTURE_JUMP_THROUGH;
+		}
 		else
 		{
 			throw std::exception("Invalid collision type");
 		}
 
+		RectangleF rectangle = RectangleF::ZERO;
+		if (json.HasMember("rectangle"))
+		{
+			rectangle = RectangleF(json["rectangle"]["x"].GetFloat(),
+				json["rectangle"]["y"].GetFloat(),
+				json["rectangle"]["width"].GetFloat(),
+				json["rectangle"]["height"].GetFloat());
+		}
+		else if (json.HasMember("rectangle_tlbr"))
+		{
+			Vector2F top_left = Vector2F(json["rectangle_tlbr"]["left"].GetFloat(),
+				json["rectangle_tlbr"]["top"].GetFloat());
+			Vector2F bottom_right = Vector2F(json["rectangle_tlbr"]["right"].GetFloat(),
+				json["rectangle_tlbr"]["bottom"].GetFloat());
+			rectangle = RectangleF::from_top_left_bottom_right(top_left, bottom_right);
+		}
+		else
+		{
+			throw std::exception("Invalid rectangle type");
+		}
+
 		return std::make_unique<Structure>(
 			json["sheet_name"].GetString(),
 			json["frame_name"].GetString(),
-				RectangleF(json["rectangle"]["x"].GetFloat(),
-					json["rectangle"]["y"].GetFloat(),
-					json["rectangle"]["width"].GetFloat(),
-					json["rectangle"]["height"].GetFloat()),
-				this->_sprite_batch,
-				this->_resource_manager,
-				col_type,
-				colour_consts::colour_from_name(json["colour"].GetString()));
+			rectangle,
+			this->_sprite_batch,
+			this->_resource_manager,
+			col_type,
+			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
 	else if (type == "StructurePaintable")
 	{
@@ -62,20 +84,37 @@ std::unique_ptr<ICollisionGameObject>
 		{
 			throw std::exception("Invalid collision type");
 		}
-
 		paintable_faces faces;
 		faces.left = json["paintable_faces"]["left"].GetBool();
 		faces.top = json["paintable_faces"]["top"].GetBool();
 		faces.right = json["paintable_faces"]["right"].GetBool();
 		faces.bottom = json["paintable_faces"]["bottom"].GetBool();
 
+		RectangleF rectangle = RectangleF::ZERO;
+		if (json.HasMember("rectangle"))
+		{
+			rectangle = RectangleF(json["rectangle"]["x"].GetFloat(),
+				json["rectangle"]["y"].GetFloat(),
+				json["rectangle"]["width"].GetFloat(),
+				json["rectangle"]["height"].GetFloat());
+		}
+		else if (json.HasMember("rectangle_tlbr"))
+		{
+			Vector2F top_left = Vector2F(json["rectangle_tlbr"]["left"].GetFloat(),
+				json["rectangle_tlbr"]["top"].GetFloat());
+			Vector2F bottom_right = Vector2F(json["rectangle_tlbr"]["right"].GetFloat(),
+				json["rectangle_tlbr"]["bottom"].GetFloat());
+			rectangle = RectangleF::from_top_left_bottom_right(top_left, bottom_right);
+		}
+		else
+		{
+			throw std::exception("Invalid rectangle type");
+		}
+
 		return std::make_unique<StructurePaintable>(
 			json["sheet_name"].GetString(),
 			json["frame_name"].GetString(),
-			RectangleF(json["rectangle"]["x"].GetFloat(),
-								json["rectangle"]["y"].GetFloat(),
-								json["rectangle"]["width"].GetFloat(),
-								json["rectangle"]["height"].GetFloat()),
+			rectangle,
 			this->_sprite_batch,
 			this->_resource_manager,
 			col_type,

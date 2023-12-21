@@ -23,6 +23,8 @@ enum class player_state
 enum class player_move_state
 {
 	ON_GROUND,
+    ON_DROP_DOWN_GROUND,
+    DROPPING_DOWN,
 	ON_CEILING,
     JUMPING,
     IN_AIR,
@@ -90,6 +92,7 @@ private:
     MattMath::Viewport _viewport = MattMath::Viewport();
 
     MattMath::RectangleF _rectangle = player_consts::DEFAULT_BOUNDS;
+    MattMath::RectangleF _prev_rectangle = player_consts::DEFAULT_BOUNDS;
 
     MattMath::Vector2F _respawn_position = MattMath::Vector2F::ZERO;
 
@@ -132,6 +135,8 @@ private:
     void on_top_right_collision(const ICollisionGameObject* other);
     void on_bottom_left_collision(const ICollisionGameObject* other);
     void on_bottom_right_collision(const ICollisionGameObject* other);
+
+    void on_structure_jump_through_collision(const ICollisionGameObject* other);
 
 protected:
 
@@ -254,6 +259,10 @@ public:
     virtual player_team get_team() const { return this->_team; }
 
     float get_respawn_timer() const { return this->_respawn_timer; }
+
+    void update_weapon_position();
+    void update_prev_rectangle();
+    void stop_sounds();
 
     //const MattMath::RectangleF& get_bounding_box() const override;
     //const MattMath::RectangleI get_bounding_box_i() const override;

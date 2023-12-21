@@ -101,6 +101,9 @@ void DebugText::draw_debug_info(const Player* player, int num_projectiles)
     case player_move_state::ON_GROUND:
         move_state_string += "on_ground";
         break;
+    case player_move_state::ON_DROP_DOWN_GROUND:
+        move_state_string += "on_drop_down_ground";
+		break;
     case player_move_state::ON_CEILING:
         move_state_string += "on_ceiling";
         break;

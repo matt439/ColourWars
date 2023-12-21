@@ -6,9 +6,9 @@
 
 namespace camera_consts
 {
-    constexpr float DEFAULT_BORDER_RATIO_LEFT = 0.2f;
+    constexpr float DEFAULT_BORDER_RATIO_LEFT = 0.3f;
     constexpr float DEFAULT_BORDER_RATIO_TOP = 0.2f;
-    constexpr float DEFAULT_BORDER_RATIO_RIGHT = 0.2f;
+    constexpr float DEFAULT_BORDER_RATIO_RIGHT = 0.3f;
     constexpr float DEFAULT_BORDER_RATIO_BOTTOM = 0.4f;
 }
 

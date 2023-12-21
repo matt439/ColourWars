@@ -39,6 +39,7 @@ Player::Player(const RectangleF& rectangle,
     _viewport(view_port),
     _dt(dt),
     _rectangle(rectangle),
+    _prev_rectangle(rectangle),
     _respawn_position(respawn_position)
 {
     this->_sound_bank = resource_manager->get_sound_bank(SOUND_BANK);
@@ -173,7 +174,8 @@ bool Player::is_matching_collision_object_type(
         //other_type == collision_object_type::STRUCTURE_FLOOR ||
         //other_type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE ||
         other_type == collision_object_type::STRUCTURE ||
-        other_type == collision_object_type::STRUCTURE_PAINTABLE;
+        other_type == collision_object_type::STRUCTURE_PAINTABLE ||
+        other_type == collision_object_type::STRUCTURE_JUMP_THROUGH;
 
     //   player_team team = this->_team;
     //   bool projectile_collision = false;
@@ -257,6 +259,9 @@ void Player::on_collision(const ICollisionGameObject* other)
         other_type == collision_object_type::STRUCTURE ||
         other_type == collision_object_type::STRUCTURE_PAINTABLE;
 
+    bool structure_jump_through_collision =
+		other_type == collision_object_type::STRUCTURE_JUMP_THROUGH;
+
     player_team team = this->_team;
     bool projectile_collision = false;
     if (team == player_team::A)
@@ -298,9 +303,42 @@ void Player::on_collision(const ICollisionGameObject* other)
     {
 		this->on_structure_collision(other);
 	}
+    else if (structure_jump_through_collision)
+	{
+		this->on_structure_jump_through_collision(other);
+	}
 	else
 	{
 		throw std::exception("Invalid collision object type.");
+	}
+}
+void Player::on_structure_jump_through_collision(const ICollisionGameObject* other)
+{
+    // only collide if player is moving down and on previous cycle
+    // was above the structure
+    
+    Vector2F velocity = this->get_velocity();
+    direction dir = velocity.get_direction();
+
+    bool moving_down = dir == direction::DOWN || dir == direction::DOWN_LEFT ||
+        dir == direction::DOWN_RIGHT;
+
+    const RectangleF& other_rect = other->get_shape()->get_bounding_box();
+    bool was_above = this->_prev_rectangle.get_bottom() <= other_rect.get_top();
+
+    player_move_state move_state = this->get_move_state();
+
+    if (moving_down && was_above && move_state != player_move_state::DROPPING_DOWN)
+	{
+        MovingObject::set_velocity_y(0.0f);
+
+        const RectangleF& other_rect = other->get_shape()->get_bounding_box();
+        this->_rectangle.set_position_y_from_bottom(other_rect.get_top());
+        this->set_move_state(player_move_state::ON_DROP_DOWN_GROUND);
+	}
+	else
+	{
+		// no collision
 	}
 }
 void Player::on_structure_collision(const ICollisionGameObject* other)
@@ -332,59 +370,19 @@ void Player::on_structure_collision(const ICollisionGameObject* other)
 	}
 	else if (type == player_collision_type::TOP_AND_LEFT_EDGES)
 	{
-        //this->on_top_left_collision(other);
         this->on_top_left_collision(other);
 	}
 	else if (type == player_collision_type::TOP_AND_RIGHT_EDGES)
 	{
-        //this->on_top_right_collision(other);
         this->on_top_right_collision(other);
 	}
 	else if (type == player_collision_type::BOTTOM_AND_LEFT_EDGES)
 	{
-        //this->on_bottom_left_collision(other);
         this->on_bottom_left_collision(other);
 	}
 	else if (type == player_collision_type::BOTTOM_AND_RIGHT_EDGES)
 	{
         this->on_bottom_right_collision(other);
-        
-
-        //Vector2F other_center = other->get_shape()->get_bounding_box().get_center();
-        //Vector2F this_center = this->_rectangle.get_center();
-        //Vector2F difference_direction = other_center - this_center;
-        //direction dir = difference_direction.get_direction();
-
-        //if (dir == direction::RIGHT)
-        //{
-        //    this->on_right_collision(other);
-        //}
-        //else
-        //{
-        //    this->on_bottom_collision(other);
-        //}
-
-  //      player_move_state move_state = this->get_move_state();
-  //      if (move_state == player_move_state::ON_GROUND)
-		//{
-		//	this->on_bottom_collision(other);
-		//}
-		//else if (move_state == player_move_state::ON_CEILING)
-		//{
-		//	this->on_top_collision(other);
-		//}
-		//else if (move_state == player_move_state::JUMPING)
-		//{
-		//	this->on_bottom_collision(other);
-		//}
-		//else if (move_state == player_move_state::IN_AIR)
-		//{
-		//	this->on_bottom_collision(other);
-		//}
-		//else
-		//{
-		//	throw std::exception("Invalid player move state.");
-		//}
 	}
 	else if (type == player_collision_type::LEFT_AND_RIGHT_AND_TOP_EDGES)
 	{
@@ -479,7 +477,11 @@ void Player::on_bottom_left_collision(const ICollisionGameObject* other)
     const RectangleF& other_rect = other->get_shape()->get_bounding_box();
     const RectangleF intersection = this->_rectangle.intersection(other_rect);
 
-    if (intersection.get_width() > intersection.get_height())
+    direction dir = this->get_velocity().get_direction();
+    bool moving_up = dir == direction::UP || dir == direction::UP_LEFT ||
+		dir == direction::UP_RIGHT;
+
+    if (intersection.get_width() > intersection.get_height() && !moving_up)
 	{
 		this->on_bottom_collision(other);
 	}
@@ -493,7 +495,11 @@ void Player::on_bottom_right_collision(const ICollisionGameObject* other)
     const RectangleF& other_rect = other->get_shape()->get_bounding_box();
     const RectangleF intersection = this->_rectangle.intersection(other_rect);
 
-    if (intersection.get_width() > intersection.get_height())
+    direction dir = this->get_velocity().get_direction();
+    bool moving_up = dir == direction::UP || dir == direction::UP_LEFT ||
+        dir == direction::UP_RIGHT;
+
+    if (intersection.get_width() > intersection.get_height() && !moving_up)
     {
 	    this->on_bottom_collision(other);
 }
@@ -604,6 +610,10 @@ player_collision_type Player::calculate_collision_type(const ICollisionGameObjec
     {
 		throw std::exception("Invalid collision type.");
 	}
+}
+void Player::update_weapon_position()
+{
+    this->_primary->set_player_center(this->get_center());
 }
 void Player::on_projectile_collision(const ICollisionGameObject* other)
 {
@@ -772,12 +782,21 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
         MovingObject::get_velocity(),
         this->get_facing_right());
 }
+void Player::update_prev_rectangle()
+{
+	this->_prev_rectangle = this->_rectangle;
+}
 
 void Player::update_movement()
 {
     const player_input input = this->_input;
     const float x_input = input.x_movement;
+    const player_move_state move_state = this->get_move_state();
     const float dt = this->get_dt();
+    const bool analog_stick_down = this->_input.left_analog_stick.y >
+        DROP_DOWN_ANALOG_THRESHOLD;
+    const bool jump_pressed = this->_input.jump_pressed;
+
     //If the player's velocity is zero and the user is requesting to move the player
     if (are_equal(MovingObject::get_velocity_x(), 0.0f) && x_input != 0.0f)
     {
@@ -838,11 +857,23 @@ void Player::update_movement()
         MovingObject::set_velocity_y(MAX_VELOCITY.y);
     }
 
-    //// for testing only. NOT FOR NORMAL PLAY
-    //player->set_vel_y(0.0f);
+    // DROPPING_DOWN state only lasts for one frame
+    if (move_state == player_move_state::DROPPING_DOWN)
+	{
+		this->set_move_state(player_move_state::IN_AIR);
+	}
 
-
-    this->do_jump();
+    // check if dropping down from a platform
+    if (move_state == player_move_state::ON_DROP_DOWN_GROUND && analog_stick_down &&
+        !jump_pressed)
+    {
+        MovingObject::alter_velocity_y(DROP_DOWN_VELOCITY);
+        this->set_move_state(player_move_state::DROPPING_DOWN);
+    }
+	else
+	{
+        this->do_jump();
+	}
 
     MovingObject::set_dx_x(MovingObject::get_velocity_x() * dt);
     MovingObject::set_dx_y(MovingObject::get_velocity_y() * dt);
@@ -865,122 +896,92 @@ void Player::update_movement()
 
 void Player::do_jump()
 {
-    player_move_state move_state = this->get_move_state();
+    const player_move_state move_state = this->get_move_state();
     const bool jump_pressed = this->_input.jump_pressed;
     const bool jump_held = this->_input.jump_held;
     //const bool prev_req_jump = this->_input.prev_requesting_jump;
     const float dt = this->get_dt();
 
-    switch (move_state)
-    {
-    case player_move_state::ON_GROUND:
-        if (jump_pressed) //&& !prev_req_jump)
-		{
-			//this->set_velocity_y(player_consts::JUMP_LAUNCH_VELOCITY *
-			//	(1 - pow(this->get_air_time() /
-			//		player_consts::JUMP_MAX_TIME, player_consts::JUMP_POWER)));
+  //  switch (move_state)
+  //  {
+  //  case player_move_state::ON_GROUND:
+  //      if (jump_pressed)
+		//{
+  //          MovingObject::set_velocity_y(JUMP_LAUNCH_VELOCITY);
+  //          this->set_air_time(0.0f);
+  //          this->set_move_state(player_move_state::JUMPING);
+  //          this->_sound_bank->play_wave(JUMP_SOUND, JUMP_SOUND_VOLUME);
+		//}
+  //      break;
+  //  case player_move_state::ON_CEILING:
+  //      break;
+  //  case player_move_state::JUMPING:
+  //      if (jump_held)
+		//{
+		//	if (this->get_air_time() <= JUMP_MAX_TIME)
+		//	{
+  //              MovingObject::alter_velocity_y(JUMP_ACCELERATION * dt);
+		//	}
+		//	else
+		//	{
+		//		this->set_move_state(player_move_state::IN_AIR);
+		//	}
+		//}
+		//else // !jump held
+		//{
+		//	this->set_move_state(player_move_state::IN_AIR);
+		//}
+  //      this->alter_air_time(dt);
+  //      break;
+  //  case player_move_state::IN_AIR:
+  //      break;
+  //  default:
+  //      break;
+  //  }
 
-            MovingObject::set_velocity_y(JUMP_LAUNCH_VELOCITY);
-            this->set_air_time(0.0f);
-            this->set_move_state(player_move_state::JUMPING);
-            this->_sound_bank->play_wave(JUMP_SOUND, JUMP_SOUND_VOLUME);
-		}
-        break;
-    case player_move_state::ON_CEILING:
-        break;
-    case player_move_state::JUMPING:
-        if (jump_held)
+   
+    if ((move_state == player_move_state::ON_GROUND ||
+        move_state == player_move_state::ON_DROP_DOWN_GROUND) &&
+        jump_pressed)
+    {
+		MovingObject::set_velocity_y(JUMP_LAUNCH_VELOCITY);
+		this->set_air_time(0.0f);
+		this->set_move_state(player_move_state::JUMPING);
+		this->_sound_bank->play_wave(JUMP_SOUND, JUMP_SOUND_VOLUME);
+	}
+	else if (move_state == player_move_state::ON_CEILING)
+	{
+		// do nothing
+	}
+	else if (move_state == player_move_state::JUMPING)
+	{
+		if (jump_held)
 		{
 			if (this->get_air_time() <= JUMP_MAX_TIME)
 			{
-				//this->set_velocity_y(player_consts::JUMP_LAUNCH_VELOCITY *
-				//	(1 - pow(this->get_air_time() /
-				//		player_consts::JUMP_MAX_TIME, player_consts::JUMP_POWER)));
-
-                MovingObject::alter_velocity_y(JUMP_ACCELERATION * dt);
-
-
-				//this->set_jumping(true);
-				//this->set_on_ground(false);
-				//this->set_move_state(player_move_state::JUMPING);
+				MovingObject::alter_velocity_y(JUMP_ACCELERATION * dt);
 			}
 			else
 			{
-				//this->set_jumping(false);
 				this->set_move_state(player_move_state::IN_AIR);
 			}
 		}
 		else // !jump held
 		{
-			//this->set_velocity_y(0.0f);
-			//this->set_jumping(false);
-			//this->set_air_time(player_consts::JUMP_MAX_TIME);
 			this->set_move_state(player_move_state::IN_AIR);
 		}
-        this->alter_air_time(dt);
-        break;
-    case player_move_state::IN_AIR:
-        break;
-    default:
-        break;
-    }
+		this->alter_air_time(dt);
+	}
+	else if (move_state == player_move_state::IN_AIR)
+	{
+		// do nothing
+	}
+
 
     if (this->get_velocity_y() < -MAX_VELOCITY.y)
     {
         this->set_velocity_y(-MAX_VELOCITY.y);
     }
-
-    //const bool req_jump = this->get_input_requesting_jump();
-    //const float dt = this->get_dt();
-    //    
-    //if (this->get_on_ground())
-    //{
-    //    this->set_air_time(0.0f);
-    //    this->set_jumping(false);
-    //}
-    //else if (this->get_on_ceiling())
-    //{
-    //    this->set_jumping(false);
-    //}
-    //else
-    //{
-    //    this->alter_air_time(dt);
-    //}
-    //if (req_jump && !this->get_jumping() &&
-    //    !this->get_prev_requesting_jump() && this->get_on_ground())
-    //{
-    //    this->set_velocity_y(player_consts::JUMP_LAUNCH_VELOCITY *
-    //        (1 - pow(this->get_air_time() /
-    //            player_consts::JUMP_MAX_TIME, player_consts::JUMP_POWER)));
-    //    this->set_jumping(true);
-    //    this->set_on_ground(false);
-    //}
-    //else if (req_jump && this->get_jumping())
-    //{
-    //    if (this->get_air_time() <= player_consts::JUMP_MAX_TIME)
-    //    {
-    //        this->set_velocity_y(player_consts::JUMP_LAUNCH_VELOCITY *
-    //            (1 - pow(this->get_air_time() /
-    //                player_consts::JUMP_MAX_TIME, player_consts::JUMP_POWER)));
-    //        this->set_jumping(true);
-    //        this->set_on_ground(false);
-    //    }
-    //    else
-    //    {
-    //        this->set_jumping(false);
-    //    }
-    //}
-    //else if (!req_jump && this->get_jumping())
-    //{
-    //    this->set_velocity_y(0.0f);
-    //    this->set_jumping(false);
-    //    this->set_air_time(player_consts::JUMP_MAX_TIME);
-    //}
-    //if (this->get_velocity_y() < -player_consts::MAX_VELOCITY.y)
-    //{
-    //    this->set_velocity_y(-player_consts::MAX_VELOCITY.y);
-    //}
-    //this->set_prev_requesting_jump(req_jump);
 }
 
 bool Player::is_visible_in_viewport(const RectangleF& view) const
@@ -1082,7 +1083,8 @@ void Player::respawn()
 player_animation_state Player::calculate_animation_state() const
 {
     player_move_state move_state = this->get_move_state();
-    if (move_state == player_move_state::ON_GROUND)
+    if (move_state == player_move_state::ON_GROUND ||
+        move_state == player_move_state::ON_DROP_DOWN_GROUND)
     {
         float velocity_x = this->get_velocity_x();
         if (velocity_x == 0.0f)
@@ -1106,7 +1108,8 @@ player_animation_state Player::calculate_animation_state() const
     {
 		return player_animation_state::JUMPING;
 	}
-    else if (move_state == player_move_state::IN_AIR)
+    else if (move_state == player_move_state::IN_AIR ||
+		move_state == player_move_state::DROPPING_DOWN)
     {
         if (this->get_velocity_y() > 0.0f)
         {
@@ -1121,6 +1124,10 @@ player_animation_state Player::calculate_animation_state() const
     {
 		throw std::exception("Invalid player move state.");
 	}
+}
+void Player::stop_sounds()
+{
+    this->_primary->stop_sounds();
 }
 
 

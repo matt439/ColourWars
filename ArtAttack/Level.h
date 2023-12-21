@@ -122,6 +122,8 @@ private:
 	void draw_zoom_out_level();
 
 	float zoom_out_camera_ratio();
+
+	void stop_player_sounds() const;
 public:
 	Level() = default;
 	Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_collision_objects,
