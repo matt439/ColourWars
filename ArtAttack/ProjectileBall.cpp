@@ -18,7 +18,7 @@ ProjectileBall::ProjectileBall(const RectangleF& rectangle,
 	SpriteEffects effects,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
-		projectile_type::JET, dt,
+		projectile_type::BALL, dt,
 		sprite_batch, resource_manager,
 		DETAILS_BALL,
 		team_colour, rotation, origin, effects, layer_depth),

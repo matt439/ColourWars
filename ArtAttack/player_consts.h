@@ -32,11 +32,11 @@ namespace player_consts
     constexpr float JUMP_MAX_TIME = 0.35f;
     constexpr float JUMP_POWER = 0.5f;
     constexpr float STARTING_HEALTH = 1.0f;
-    constexpr float HEALTH_REGEN_DELAY = 2.0f;
+    constexpr float HEALTH_REGEN_DELAY = 5.0f;
     constexpr float HEALTH_REGEN_RATE = 1.0f;
     constexpr float DAMAGE_SOUND_DELAY = 0.25f;
     constexpr float DROP_DOWN_VELOCITY = 100.0f;
-    constexpr float DROP_DOWN_ANALOG_THRESHOLD = 0.5f;
+    constexpr float DROP_DOWN_ANALOG_THRESHOLD = 0.8f;
 
     constexpr float JUMP_ACCELERATION = -1300.0f;
     //const float STARTING_AMMO = 1.0f;
@@ -57,16 +57,16 @@ namespace player_consts
     const std::string DAMAGE_SOUND = "SplittingFireWood";
     constexpr float DAMAGE_SOUND_VOLUME = 0.1f;
     const std::string DEATH_SOUND = "DeathImpactYellSingle";
-    constexpr float DEATH_SOUND_VOLUME = 0.3f;
+    constexpr float DEATH_SOUND_VOLUME = 1.0f;
     const std::string JUMP_SOUND = "CartoonBoing";
     constexpr float JUMP_SOUND_VOLUME = 0.2f;
     const std::string RESPAWN_SOUND = "ThunderCrack";
-    constexpr float RESPAWN_SOUND_VOLUME = 0.1f;
+    constexpr float RESPAWN_SOUND_VOLUME = 0.2f;
 
     constexpr float SPRAY_DAMAGE = 0.01f;
-    constexpr float JET_DAMAGE = 0.01f;
-    constexpr float ROLLING_DAMAGE = 0.01f;
-    constexpr float BALL_DAMAGE = 0.01f;
+    constexpr float JET_DAMAGE = 0.334f;
+    constexpr float ROLLING_DAMAGE = 0.015f;
+    constexpr float BALL_DAMAGE = 0.201f;
     constexpr float MIST_DAMAGE = 0.01f;
 
     const static std::string COUNTDOWN_TEXT = "3";

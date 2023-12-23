@@ -13,14 +13,6 @@ std::unique_ptr<ICollisionGameObject>
 	{
 		collision_object_type col_type;
 		std::string collision_type = json["collision_type"].GetString();
-		//if (collision_type == "STRUCTURE_WALL")
-		//{
-		//	col_type = collision_object_type::STRUCTURE_WALL;
-		//}
-		//else if (collision_type == "STRUCTURE_FLOOR")
-		//{
-		//	col_type = collision_object_type::STRUCTURE_FLOOR;
-		//}
 		if (collision_type == "STRUCTURE")
 		{
 			col_type = collision_object_type::STRUCTURE;
@@ -68,17 +60,9 @@ std::unique_ptr<ICollisionGameObject>
 	{
 		collision_object_type col_type;
 		std::string collision_type = json["collision_type"].GetString();
-		//if (collision_type == "STRUCTURE_WALL_PAINTABLE")
-		//{
-		//	col_type = collision_object_type::STRUCTURE_WALL_PAINTABLE;
-		//}
-		//else if (collision_type == "STRUCTURE_FLOOR_PAINTABLE")
-		//{
-		//	col_type = collision_object_type::STRUCTURE_FLOOR_PAINTABLE;
-		//}
 		if (collision_type == "STRUCTURE_PAINTABLE")
 		{
-			col_type = collision_object_type::STRUCTURE;
+			col_type = collision_object_type::STRUCTURE_PAINTABLE;
 		}
 		else
 		{

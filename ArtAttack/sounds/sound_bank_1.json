@@ -30,12 +30,100 @@
     "sound_effect_instances":
     [
         {
-            "name": "level_music_1",
-            "wave": "Steamboat"
+            "name": "sprayer_a0",
+            "wave": "WaterSprayIntoBucket"
         },
         {
-            "name": "zoom_out",
-            "wave": "Whoosh2"
+            "name": "sprayer_a1",
+            "wave": "WaterSprayIntoBucket"
+        },
+        {
+            "name": "sprayer_a2",
+            "wave": "WaterSprayIntoBucket"
+        },
+        {
+            "name": "sprayer_a3",
+            "wave": "WaterSprayIntoBucket"
+        },
+        {
+            "name": "sprayer_b0",
+            "wave": "WaterSprayIntoBucket"
+        },
+        {
+            "name": "sprayer_b1",
+            "wave": "WaterSprayIntoBucket"
+        },
+        {
+            "name": "sprayer_b2",
+            "wave": "WaterSprayIntoBucket"
+        },
+        {
+            "name": "sprayer_b3",
+            "wave": "WaterSprayIntoBucket"
+        },
+        {
+            "name": "roller_a0",
+            "wave": "BowlingBallRoll"
+        },
+        {
+            "name": "roller_a1",
+            "wave": "BowlingBallRoll"
+        },
+        {
+            "name": "roller_a2",
+            "wave": "BowlingBallRoll"
+        },
+        {
+            "name": "roller_a3",
+            "wave": "BowlingBallRoll"
+        },
+        {
+            "name": "roller_b0",
+            "wave": "BowlingBallRoll"
+        },
+        {
+            "name": "roller_b1",
+            "wave": "BowlingBallRoll"
+        },
+        {
+            "name": "roller_b2",
+            "wave": "BowlingBallRoll"
+        },
+        {
+            "name": "roller_b3",
+            "wave": "BowlingBallRoll"
+        },
+        {
+            "name": "mister_a0",
+            "wave": "VulcanMachineGunSeries"
+        },
+        {
+            "name": "mister_a1",
+            "wave": "VulcanMachineGunSeries"
+        },
+        {
+            "name": "mister_a2",
+            "wave": "VulcanMachineGunSeries"
+        },
+        {
+            "name": "mister_a3",
+            "wave": "VulcanMachineGunSeries"
+        },
+        {
+            "name": "mister_b0",
+            "wave": "VulcanMachineGunSeries"
+        },
+        {
+            "name": "mister_b1",
+            "wave": "VulcanMachineGunSeries"
+        },
+        {
+            "name": "mister_b2",
+            "wave": "VulcanMachineGunSeries"
+        },
+        {
+            "name": "mister_b3",
+            "wave": "VulcanMachineGunSeries"
         }
     ]
 

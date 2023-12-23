@@ -21,6 +21,7 @@ namespace interface_consts
 
     const static MattMath::Colour TIMER_COLOUR = colour_consts::GRAY;
     const static MattMath::Colour TIMER_SHADOW_COLOUR = colour_consts::BLACK;
+    constexpr float TIMER_SCALE_FACTOR = 1920.0f;
 
     const static std::string SPRITE_SHEET = "sprite_sheet_1";
     const static std::string EMPTY_BOX_FRAME = "health_box";

@@ -44,7 +44,7 @@ namespace projectile_consts
     {
         0.2f,      //start_time
         1.0f,      //end_time
-        2.0f,      //end_size
+        1.5f,      //end_size
         diffusion_type::LINEAR_SIZE_AND_COL_RECT, //diffusion_type
     };
 
@@ -81,7 +81,7 @@ namespace projectile_consts
         0.0f,                        //gravity
         0.0f,                          //wind_resistance
         rotation_origin::NO_ROTATION,   //rotat_origin
-        2.0f,                           //delete_timer
+        5.0f,                           //delete_timer
         //5.0f,                          //colour_power
         -0.05f,                           //player_damage
         MattMath::Vector2F(5.0f, 5.0f),        //size
@@ -94,7 +94,7 @@ namespace projectile_consts
     {
         0.2f,      //start_time
         2.0f,      //end_time
-        3.0f,      //end_size
+        5.0f,      //end_size
         diffusion_type::LINEAR_SIZE_AND_COL_RECT,
     };
 

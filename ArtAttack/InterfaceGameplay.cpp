@@ -141,6 +141,8 @@ void InterfaceGameplay::draw_timer(const Vector2F& resolution, float timer)
 		resolution.x / 2.0f - (resolution.x * TIMER_OFFSET.x),
 		resolution.y * TIMER_OFFSET.y);
 
+	float scale = resolution.x / TIMER_SCALE_FACTOR;
+
 	SpriteFont* sprite_font = this->get_resource_manager()->
 		get_sprite_font(TIMER_FONT);
 
@@ -148,13 +150,19 @@ void InterfaceGameplay::draw_timer(const Vector2F& resolution, float timer)
 		this->get_sprite_batch(),
 		std::to_string(static_cast<int>(std::ceil(timer))).c_str(),
 		(pos + TIMER_SHADOW_OFFSET).get_xm_vector(),
-		TIMER_SHADOW_COLOUR.get_xm_vector());
+		TIMER_SHADOW_COLOUR.get_xm_vector(),
+		0.0f,
+		XMFLOAT2(0.0f, 0.0f),
+		scale);
 
 	sprite_font->DrawString(
 		this->get_sprite_batch(),
 		std::to_string(static_cast<int>(std::ceil(timer))).c_str(),
 		pos.get_xm_vector(),
-		TIMER_COLOUR.get_xm_vector());
+		TIMER_COLOUR.get_xm_vector(),
+		0.0f,
+		XMFLOAT2(0.0f, 0.0f),
+		scale);
 }
 
 void InterfaceGameplay::draw_respawn_timer(const MattMath::Vector2F& resolution,

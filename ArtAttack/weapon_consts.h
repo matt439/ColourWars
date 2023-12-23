@@ -8,7 +8,7 @@ namespace weapon_consts
 {
     //constexpr float PI = 3.14159265358979323846f;
     constexpr float AMMO_REGEN_DELAY = 2.0f;
-    constexpr float AMMO_REGEN_RATE = 1.0f;
+    constexpr float AMMO_REGEN_RATE = 0.65f;
     constexpr float STARTING_AMMO = 1.0f;
     const static MattMath::Vector2F NOZZLE_SIZE = { 5.0f, 5.0f };
     
@@ -48,7 +48,7 @@ namespace weapon_consts
         //wep_movement::FREE_ROTATE,    //movement
         //shoot_pattern::SINGLE,           //pattern
         //0.25f,                              //player_vel_amount
-        0.001f,                              //ammo_usage
+        0.007f,                              //ammo_usage
         "sprite_sheet_1",               //sheet_name
         "sprayer",                        //frame_name
         projectile_type::SPRAY,         //projectile_type
@@ -63,6 +63,18 @@ namespace weapon_consts
         add_player_velocity::X_ONLY,
         1.0f,
     };
+
+    static const sound_effect_instance_weapon_details SPRAYER_SOUND_DETAILS =
+	{
+        "sprayer_a0",
+        "sprayer_a1",
+        "sprayer_a2",
+        "sprayer_a3",
+        "sprayer_b0",
+        "sprayer_b1",
+        "sprayer_b2",
+        "sprayer_b3",
+	};
 
     static const weapon_details DETAILS_SNIPER =
     {
@@ -80,7 +92,7 @@ namespace weapon_consts
         projectile_type::JET,         //projectile_type
         "sound_bank_1",                 //sound_bank_name
         "WoodRattle",                  //shoot_sound_name
-        1.0f,                           //shoot_sound_volume
+        0.8f,                           //shoot_sound_volume
         //rotation_origin::LEFT_CENTER,
     };
 
@@ -94,14 +106,26 @@ namespace weapon_consts
         //wep_movement::ON_GROUND,     //movement
         //shoot_pattern::SINGLE,           //pattern
         //-1.0f,                              //player_vel_amount
-        0.005f,                              //ammo_usage
+        0.004f,                              //ammo_usage
         "sprite_sheet_1",               //sheet_name
         "roller",                        //frame_name
         projectile_type::ROLLING,         //projectile_type
         "sound_bank_1",                 //sound_bank_name
         "BowlingBallRoll",                  //shoot_sound_name
-        1.0f,                           //shoot_sound_volume
+        2.0f,                           //shoot_sound_volume
         //rotation_origin::LEFT_CENTER,
+    };
+
+    static const sound_effect_instance_weapon_details ROLLER_SOUND_DETAILS =
+    {
+        "roller_a0",
+        "roller_a1",
+        "roller_a2",
+        "roller_a3",
+        "roller_b0",
+        "roller_b1",
+        "roller_b2",
+        "roller_b3",
     };
 
     static const weapon_details DETAILS_MISTER =
@@ -109,8 +133,8 @@ namespace weapon_consts
         { 20.0f, 0.0f },		//offset
         { 60.0f, 30.0f },	//size
         { projectile_consts::DETAILS_MIST.size.x / 2.0f, 0.0f },	//nozzle_offset
-        0.2f,						//shoot_interval
-        100.0f,                     //starting_vel_length
+        0.1f,						//shoot_interval
+        300.0f,                     //starting_vel_length
         //wep_movement::FREE_ROTATE,     //movement
         //shoot_pattern::MIST,           //pattern
         //0.25f,                              //player_vel_amount
@@ -130,6 +154,18 @@ namespace weapon_consts
         1.0f,
     };
 
+    static const sound_effect_instance_weapon_details MISTER_SOUND_DETAILS =
+    {
+        "mister_a0",
+        "mister_a1",
+        "mister_a2",
+        "mister_a3",
+        "mister_b0",
+        "mister_b1",
+        "mister_b2",
+        "mister_b3",
+    };
+
     static const weapon_details DETAILS_BUCKET =
     {
         { 10.0f, -10.0f },		//offset
@@ -140,7 +176,7 @@ namespace weapon_consts
         //wep_movement::FREE_ROTATE,     //movement
         //shoot_pattern::MIST,           //pattern
         //0.25f,                              //player_vel_amount
-        0.01f,                              //ammo_usage
+        0.1f,                              //ammo_usage
         "sprite_sheet_1",               //sheet_name
         "bucket",                        //frame_name
         projectile_type::BALL,         //projectile_type

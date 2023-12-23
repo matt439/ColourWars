@@ -35,7 +35,7 @@ Weapon::Weapon(const weapon_details& details,
     this->_sound_bank = resource_manager->get_sound_bank(details.sound_bank_name);
 }
 
-void Weapon::draw(const Camera& camera)
+void Weapon::draw(const Camera& camera, bool debug)
 {
     //draw weapon
     Vector2F draw_pos = this->get_draw_pos();
@@ -67,19 +67,22 @@ void Weapon::draw(const Camera& camera)
 
     TextureObject::draw(draw_rectangle, camera);
 
-    // draw nozzle
-    TextureObject::set_element_name("nozzle");
-    RectangleF draw_rectangle_noz = this->get_nozzle_rectangle();
-    Vector2F origin_noz = this->calculate_sprite_origin(
-        this->get_nozzle_size(), rotation_origin::CENTER);
+    if (debug)
+    {
+        // draw nozzle
+        TextureObject::set_element_name("nozzle");
+        RectangleF draw_rectangle_noz = this->get_nozzle_rectangle();
+        Vector2F origin_noz = this->calculate_sprite_origin(
+            this->get_nozzle_size(), rotation_origin::CENTER);
 
-    TextureObject::set_origin(origin_noz);
-    TextureObject::set_effects(SpriteEffects::SpriteEffects_None);
-    TextureObject::set_draw_rotation(0.0f);
+        TextureObject::set_origin(origin_noz);
+        TextureObject::set_effects(SpriteEffects::SpriteEffects_None);
+        TextureObject::set_draw_rotation(0.0f);
 
-    TextureObject::draw(draw_rectangle_noz, camera);
+        TextureObject::draw(draw_rectangle_noz, camera);
+    }
 }
-void Weapon::draw()
+void Weapon::draw(bool debug)
 {
     this->draw(Camera::DEFAULT_CAMERA);
 }
@@ -247,21 +250,48 @@ bool Weapon::check_if_shooting_and_ammo_update(
 }
 void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
 {
+    const std::string& sound_name = this->get_sound_effect_instance_name();
+    
     if (holding_shoot || shooting_this_update)
     {
         this->_sound_bank->play_effect(
-            this->_details.shoot_sound_name,
+            //this->_details.shoot_sound_name,
+            sound_name,
             true,
             this->_details.shoot_sound_volume);
     }
     else
     {
-        this->_sound_bank->stop_effect(this->_details.shoot_sound_name, true);
+        //this->_sound_bank->stop_effect(this->_details.shoot_sound_name, true);
+        this->_sound_bank->stop_effect(sound_name, true);
     }
 }
 void Weapon::stop_sounds()
 {
-    this->_sound_bank->stop_effect(this->_details.shoot_sound_name, true);
+    const std::string& sound_name = this->get_sound_effect_instance_name();
+    
+    //this->_sound_bank->stop_effect(this->_details.shoot_sound_name, true);
+    this->_sound_bank->stop_effect(sound_name, true);
+}
+const std::string& Weapon::get_sound_effect_instance_name() const
+{
+    player_team team = this->get_team();
+    int player_num = this->get_player_num();
+
+    wep_type type = this->get_type();
+    switch (type)
+    {
+    case wep_type::SPRAYER:
+        return SPRAYER_SOUND_DETAILS.get_sound_name(team, player_num);
+    case wep_type::ROLLER:
+        return ROLLER_SOUND_DETAILS.get_sound_name(team, player_num);
+    case wep_type::MISTER:
+        return MISTER_SOUND_DETAILS.get_sound_name(team, player_num);
+    default:
+       throw std::exception("Weapon::get_sound_effect_instance_name() - "
+		   "invalid weapon type");
+    }
+
 }
 void Weapon::update_movement_and_rotation(player_input input,
     const Vector2F& player_center,

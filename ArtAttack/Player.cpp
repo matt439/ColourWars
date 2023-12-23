@@ -110,7 +110,7 @@ void Player::draw(const Camera& camera)
     AnimationObject::set_effects(effects);
     AnimationObject::draw(this->_rectangle, camera);
 
-    this->_primary->draw(camera);
+    this->_primary->draw(camera, this->_showing_debug);
 }
 void Player::draw()
 {

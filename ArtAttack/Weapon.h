@@ -127,6 +127,8 @@ protected:
 	float get_dt() const { return *this->_dt; }
 	DirectX::SpriteBatch* get_sprite_batch() const { return this->_sprite_batch; }
 	ResourceManager* get_resource_manager() const { return this->_resource_manager; }
+	const std::string& get_sound_effect_instance_name() const;
+
 public:
 	Weapon(const weapon_details& details,
 		player_team team,
@@ -145,8 +147,8 @@ public:
 	//virtual ~Weapon() = default;
 
 	//virtual void update(const weapon_update& update) = 0;
-	virtual void draw(const MattMath::Camera& camera);
-	virtual void draw();
+	virtual void draw(const MattMath::Camera& camera, bool debug = false);
+	virtual void draw(bool debug = false);
 
 	virtual std::vector<std::unique_ptr<ICollisionGameObject>>
 		update_and_get_projectiles(player_input input,

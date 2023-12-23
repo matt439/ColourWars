@@ -408,8 +408,10 @@ void Level::draw_active_level()
 		player_state state = player->get_state();
 
 		// draw interface
+		Vector2F viewport_size = player_vp.get_size();
+
 		this->_interface_gameplay->draw_gameplay_interface(
-			this->_resolution_manager->get_resolution_vec(),
+			viewport_size,
 			player->get_health(),
 			player->get_weapon_ammo(),
 			this->_timer,
@@ -540,8 +542,6 @@ level_end_info Level::get_level_end_info() const
 	for (auto& object : *this->_collision_objects)
 	{
 		collision_object_type type = object->get_collision_object_type();
-		//if (type == collision_object_type::STRUCTURE_WALL_PAINTABLE ||
-		//	type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE)
 
 		if (type == collision_object_type::STRUCTURE_PAINTABLE)
 		{
@@ -551,6 +551,11 @@ level_end_info Level::get_level_end_info() const
 					dynamic_cast<IPaintableGameObject*>(object.get());
 
 				paint_total paint = paintable_object->get_paint_total();
+
+				if (paint.team_a != 0.0f || paint.team_b != 0.0f)
+				{
+					int x = 0;
+				}
 
 				result.team_a_area += paint.team_a;
 				result.team_b_area += paint.team_b;
