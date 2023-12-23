@@ -1840,17 +1840,21 @@ void MainMenuStageSelect::update_stage_select_visuals()
 
 	switch (this->_select_state.stage)
 	{
-	case level_stage::TEST_1:
-		this->_stage_icon->set_sprite_frame("stage_test_1");
-		this->_stage_name->set_text("Test 1");
-		break;
+	//case level_stage::TEST_1:
+	//	this->_stage_icon->set_sprite_frame("stage_test_1");
+	//	this->_stage_name->set_text("Test 1");
+	//	break;
 	case level_stage::KING_OF_THE_HILL:
-		this->_stage_icon->set_sprite_frame("stage_test_2");
+		this->_stage_icon->set_sprite_frame("stage_king_of_the_hill");
 		this->_stage_name->set_text("King of the Hill");
 		break;
-	case level_stage::STRUCTURE_TEST:
-		this->_stage_icon->set_sprite_frame("pixel");
-		this->_stage_name->set_text("Structure Test");
+	case level_stage::TURBULENCE:
+		this->_stage_icon->set_sprite_frame("stage_turbulence");
+		this->_stage_name->set_text("Turbulence");
+		break;
+	case level_stage::CLOSE_QUARTERS:
+		this->_stage_icon->set_sprite_frame("stage_close_quarters");
+		this->_stage_name->set_text("Close Quarters");
 		break;
 	case level_stage::RANDOM:
 		this->_stage_icon->set_sprite_frame("random");

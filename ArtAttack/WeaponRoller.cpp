@@ -59,6 +59,63 @@ void WeaponRoller::update_movement_and_rotation(player_input input,
     }
 }
 
+void WeaponRoller::draw(const Camera& camera, bool debug)
+{
+    //draw weapon
+    Vector2F draw_pos = this->get_draw_pos();
+    RectangleF draw_rectangle = RectangleF(draw_pos, this->get_details().size);
+
+    Vector2F origin = this->calculate_sprite_origin(
+        this->get_details().size, rotation_origin::LEFT_CENTER);
+
+    SpriteEffects effects = SpriteEffects::SpriteEffects_None;
+    bool invert_y = this->get_invert_y();
+    bool invert_x = this->get_invert_x();
+    if (invert_y && invert_x)
+    {
+        effects = SpriteEffects::SpriteEffects_FlipBoth;
+    }
+    else if (invert_y)
+    {
+        effects = SpriteEffects::SpriteEffects_FlipVertically;
+    }
+    else if (invert_x)
+    {
+        effects = SpriteEffects::SpriteEffects_FlipHorizontally;
+    }
+
+    TextureObject::set_element_name(this->get_details().frame_name);
+    DrawObject::set_origin(origin);
+    DrawObject::set_effects(effects);
+    DrawObject::set_draw_rotation(this->get_rotation());
+
+    if (this->_shooting_this_update)
+	{
+        DrawObject::set_colour(this->get_team_colour());
+	}
+    else
+    {
+        DrawObject::set_colour(colour_consts::WHITE);
+    }
+
+    TextureObject::draw(draw_rectangle, camera);
+
+    if (debug)
+    {
+        // draw nozzle
+        TextureObject::set_element_name("nozzle");
+        RectangleF draw_rectangle_noz = this->get_nozzle_rectangle();
+        Vector2F origin_noz = this->calculate_sprite_origin(
+            this->get_nozzle_size(), rotation_origin::CENTER);
+
+        TextureObject::set_origin(origin_noz);
+        TextureObject::set_effects(SpriteEffects::SpriteEffects_None);
+        TextureObject::set_draw_rotation(0.0f);
+
+        TextureObject::draw(draw_rectangle_noz, camera);
+    }
+}
+
 //std::vector<std::unique_ptr<ICollisionGameObject>>
 //Weapon::update_and_get_projectiles(player_input input,
 //    const Vector2F& player_center,

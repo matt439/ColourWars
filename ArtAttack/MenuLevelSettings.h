@@ -13,7 +13,7 @@ private:
 	level_mode _game_mode = level_mode::STANDARD_MODE;
 	std::vector<menu_player_settings> _player_settings;
 	int _player_count = 0;
-	level_stage _stage = level_stage::TEST_1;
+	level_stage _stage = level_stage::KING_OF_THE_HILL;
 	screen_layout _screen_layout = screen_layout::ONE_PLAYER;
 public:
 	MenuLevelSettings() {}

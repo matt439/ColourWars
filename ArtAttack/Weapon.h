@@ -39,6 +39,7 @@ private:
 	bool _invert_x = false;
 	bool _invert_y = false;
 	bool _gun_player_aligned = true;
+	
 	float _ammo_timer = 0.0f;
 
 	player_team _team = player_team::NONE;
@@ -55,6 +56,8 @@ private:
 protected:
 	SoundBank* _sound_bank = nullptr;
 	weapon_details _details = weapon_consts::DETAILS_DEFAULT;
+
+	bool _shooting_this_update = false;
 
 	virtual void handle_shoot_sound(bool shooting_this_update, bool holding_shoot);
 	

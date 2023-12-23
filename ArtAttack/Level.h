@@ -33,7 +33,7 @@ enum class level_state
 
 namespace level_consts
 {
-	constexpr float TIMER = 180.0f;
+	constexpr float TIMER = 170.0f;
 	constexpr float START_TIMER = 3.0f;
 	const static std::string COUNTDOWN_TEXT = "3";
 	const static std::string COUNTDOWN_FONT_NAME = "gill_sans_mt_bold_144";
@@ -93,7 +93,7 @@ private:
 	MattMath::Camera _zoom_out_camera = MattMath::Camera::DEFAULT_CAMERA;
 
 	team_colour _team_colours = team_colour();
-	level_stage _stage = level_stage::TEST_1;
+	level_stage _stage = level_stage::KING_OF_THE_HILL;
 
 	MattMath::RectangleF _out_of_bounds = MattMath::RectangleF::ZERO;
 	MattMath::RectangleF _camera_bounds = MattMath::RectangleF::ZERO;

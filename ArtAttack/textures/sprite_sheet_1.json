@@ -544,7 +544,7 @@
             }
         },
         {
-            "name": "stage_test_1",
+            "name": "stage_king_of_the_hill",
             "position":
             {
                 "x": 0,
@@ -557,10 +557,23 @@
             }
         },
         {
-            "name": "stage_test_2",
+            "name": "stage_turbulence",
             "position":
             {
                 "x": 400,
+                "y": 600
+            },
+            "size":
+            {
+                "w": 400,
+                "h": 300
+            }
+        },
+        {
+            "name": "stage_close_quarters",
+            "position":
+            {
+                "x": 800,
                 "y": 600
             },
             "size":

@@ -79,9 +79,11 @@ void ResourceLoader::load_sounds()
 //}
 void ResourceLoader::load_level_info()
 {
-    this->load_level_info_from_directory(LEVEL_DIRECTORY, "test_1", level_stage::TEST_1);
+    //this->load_level_info_from_directory(LEVEL_DIRECTORY, "test_1", level_stage::TEST_1);
     this->load_level_info_from_directory(LEVEL_DIRECTORY, "king_of_the_hill", level_stage::KING_OF_THE_HILL);
-    this->load_level_info_from_directory(LEVEL_DIRECTORY, "structure_test", level_stage::STRUCTURE_TEST);
+    this->load_level_info_from_directory(LEVEL_DIRECTORY, "turbulence", level_stage::TURBULENCE);
+    this->load_level_info_from_directory(LEVEL_DIRECTORY, "close_quarters", level_stage::CLOSE_QUARTERS);
+    //this->load_level_info_from_directory(LEVEL_DIRECTORY, "structure_test", level_stage::STRUCTURE_TEST);
 }
 
 //void ResourceLoader::load_main_menu_resources()

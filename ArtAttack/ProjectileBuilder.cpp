@@ -180,5 +180,35 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 			origin,
 			effects,
 			layer_depth));
+
+	projectiles.push_back(
+		std::make_unique<ProjectileMist>(
+			RectangleF(position, DETAILS_MIST.col_rect_size),
+			Vector2F::rotate_vector(velocity, MattMath::PI / 6.0f),
+			team,
+			player_num,
+			team_colour,
+			dt,
+			sprite_batch,
+			resource_manager,
+			rotation,
+			origin,
+			effects,
+			layer_depth));
+
+	projectiles.push_back(
+		std::make_unique<ProjectileMist>(
+			RectangleF(position, DETAILS_MIST.col_rect_size),
+			Vector2F::rotate_vector(velocity, -MattMath::PI / 6.0f),
+			team,
+			player_num,
+			team_colour,
+			dt,
+			sprite_batch,
+			resource_manager,
+			rotation,
+			origin,
+			effects,
+			layer_depth));
 	return projectiles;
 }

@@ -3,11 +3,11 @@
 
 enum class level_stage
 {
-    TEST_1,
     KING_OF_THE_HILL,
-    STRUCTURE_TEST,
+    TURBULENCE,
+    CLOSE_QUARTERS,
     RANDOM,
-    MAX_STAGE = RANDOM
+    MAX_STAGE = RANDOM,
 };
 
 #endif // !LEVEL_STAGE_H

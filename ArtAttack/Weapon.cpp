@@ -242,8 +242,10 @@ bool Weapon::check_if_shooting_and_ammo_update(
     this->alter_ammo_timer(dt);
     this->alter_shoot_timer(dt);
 
-    bool holding_shoot = ok_to_shoot && this->get_ammo() > 0.0f;
-    this->handle_shoot_sound(result, holding_shoot);
+    //bool holding_shoot = ok_to_shoot && this->get_ammo() > 0.0f;
+    this->_shooting_this_update = ok_to_shoot && this->get_ammo() > 0.0f;
+
+    this->handle_shoot_sound(result, this->_shooting_this_update);
 
     return result;
 

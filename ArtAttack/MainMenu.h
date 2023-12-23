@@ -68,7 +68,7 @@ namespace main_menu_consts
 
 	const static MattMath::Colour STAGE_SELECT_SELECTED_COLOUR = colour_consts::FIRE_BRICK;
 	const static MattMath::Colour STAGE_SELECT_UNSELECTED_COLOUR = colour_consts::WHITE;
-	const static MattMath::Vector2F STAGE_SELECT_ICON_SIZE = { 500.0f, 500.0f };
+	const static MattMath::Vector2F STAGE_SELECT_ICON_SIZE = { 800.0f, 600.0f };
 	const static MattMath::Vector2F STAGE_SELECT_READY_SIZE = { 1500.0f, 300.0f };
 
 	constexpr float WEAPON_DESC_X_OFFSET = 250.0f;
@@ -84,7 +84,7 @@ namespace main_menu_consts
 	const std::string MUSIC = "Top_Of_The_Morning";
 	constexpr float MUSIC_VOLUME = 0.03f;
 
-	const static std::string SPRAYER_DESC = "Fires a powerful stream of paint in an arc pattern.\nNeeds to recharge frequently.";
+	const static std::string SPRAYER_DESC = "Fires a powerful stream of paint in an arc pattern.\nGood for beginners.";
 	const static std::string SNIPER_DESC = "Slowly fires powerful, accurate shots.\nCan dispatch players quickly if you have skill.";
 	const static std::string ROLLER_DESC = "Rolls paint in a wide area in front of you.\nCan be used to cover large floor areas quickly.";
 	const static std::string MISTER_DESC = "Produces a mist of slow-moving, diffusing paint particles.";
@@ -312,7 +312,7 @@ class MainMenuStageSelect : public MainMenuPage
 private:
 	struct select_state
 	{
-		level_stage stage = level_stage::TEST_1;
+		level_stage stage = level_stage::KING_OF_THE_HILL;
 		confirmation_state state = confirmation_state::UNCONFIRMED;
 	};
 	std::unique_ptr<MContainer> _texture_container = nullptr;

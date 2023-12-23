@@ -7,8 +7,8 @@
 namespace weapon_consts
 {
     //constexpr float PI = 3.14159265358979323846f;
-    constexpr float AMMO_REGEN_DELAY = 2.0f;
-    constexpr float AMMO_REGEN_RATE = 0.65f;
+    constexpr float AMMO_REGEN_DELAY = 0.5f;
+    constexpr float AMMO_REGEN_RATE = 0.4f;
     constexpr float STARTING_AMMO = 1.0f;
     const static MattMath::Vector2F NOZZLE_SIZE = { 5.0f, 5.0f };
     
@@ -78,7 +78,7 @@ namespace weapon_consts
 
     static const weapon_details DETAILS_SNIPER =
     {
-        { 20.0f, 0.0f },		//offset
+        { 15.0f, -20.0f },		//offset
         { 100.0f, 30.0f },	//size
         { projectile_consts::DETAILS_JET.size.x / 2.0f, 0.0f },	//nozzle_offset
         1.0f,						//shoot_interval
@@ -112,7 +112,7 @@ namespace weapon_consts
         projectile_type::ROLLING,         //projectile_type
         "sound_bank_1",                 //sound_bank_name
         "BowlingBallRoll",                  //shoot_sound_name
-        2.0f,                           //shoot_sound_volume
+        3.0f,                           //shoot_sound_volume
         //rotation_origin::LEFT_CENTER,
     };
 

@@ -10,6 +10,8 @@ private:
 		const MattMath::Vector2F& player_center,
 		const MattMath::Vector2F& player_velocity,
 		bool player_facing_right) override;
+
+	void draw(const MattMath::Camera& camera, bool debug) override;
 public:
 	WeaponRoller(player_team team,
 		int player_num,
