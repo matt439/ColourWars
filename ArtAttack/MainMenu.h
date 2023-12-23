@@ -24,6 +24,7 @@ namespace main_menu_consts
 	const static std::string DETAIL_FONT = "gill_sans_mt_bold_36";
 	const static std::string HEADING_FONT = "gill_sans_mt_bold_72";
 	const static std::string ANNOUNCEMENT_FONT = "gill_sans_mt_bold_144";
+	const static std::string WEAPON_DESCRIPTION_FONT = "gill_sans_mt_bold_24";
 
 	const static MattMath::Colour HEADING_COLOUR = colour_consts::TEAM_ORANGE;
 
@@ -32,11 +33,14 @@ namespace main_menu_consts
 
 	const static MattMath::Colour OPTIONS_VALUE_COLOUR = colour_consts::DARK_TURQUOISE;
 
+	const static MattMath::Colour WEAPON_DESCRIPTION_FONT_COLOUR = colour_consts::WHITE_SMOKE;
+
 	const static MattMath::Colour SHADOW_COLOUR = colour_consts::BLACK;
 	const static MattMath::Vector2F TITLE_SHADOW_OFFSET = { 6.0f, 6.0f };
 	const static MattMath::Vector2F HEADING_SHADOW_OFFSET = { 2.5f, 2.5f };
 	const static MattMath::Vector2F ITEM_SHADOW_OFFSET = { 1.5f, 1.5f };
 	const static MattMath::Vector2F DETAIL_SHADOW_OFFSET = { 1.0f, 1.0f };
+	const static MattMath::Vector2F WEAPON_DESCRIPTION_SHADOW_OFFSET = { 1.0f, 1.0f };
 
 	//const static MattMath::Vector2F MODE_SELECT_WIDGET_POSITION = { 150.0f, 50.0f };
 	const static MattMath::Vector2F MODE_SELECT_WIDGET_SPACING = { 250.0f, 100.0f };
@@ -67,6 +71,8 @@ namespace main_menu_consts
 	const static MattMath::Vector2F STAGE_SELECT_ICON_SIZE = { 500.0f, 500.0f };
 	const static MattMath::Vector2F STAGE_SELECT_READY_SIZE = { 1500.0f, 300.0f };
 
+	constexpr float WEAPON_DESC_X_OFFSET = 250.0f;
+
 	//const std::string WAVE_BANK = "wave_bank_1";
 	const std::string SOUND_BANK = "sound_bank_1";
 	const std::string DIRECTION_SOUND = "UI_Clicks14";
@@ -77,6 +83,13 @@ namespace main_menu_consts
 	const std::string READY_SOUND = "Whoosh2";
 	const std::string MUSIC = "Top_Of_The_Morning";
 	constexpr float MUSIC_VOLUME = 0.03f;
+
+	const static std::string SPRAYER_DESC = "Fires a powerful stream of paint in an arc pattern.\nNeeds to recharge frequently.";
+	const static std::string SNIPER_DESC = "Slowly fires powerful, accurate shots.\nCan dispatch players quickly if you have skill.";
+	const static std::string ROLLER_DESC = "Rolls paint in a wide area in front of you.\nCan be used to cover large floor areas quickly.";
+	const static std::string MISTER_DESC = "Produces a mist of slow-moving, diffusing paint particles.";
+	const static std::string BUCKET_DESC = "Throws a bucket of paint in a short arc pattern.\nIdeal for defeating other players.";
+	const static std::string RANDOM_DESC = "Randomly selects a weapon for you.\nIndecisiveness is nothing to be ashamed of.";
 }
 
 enum class main_menu_screen
@@ -269,7 +282,7 @@ private:
 		std::unique_ptr<MTextDropShadow> _player = nullptr;
 		std::unique_ptr<MTexture> _weapon_icon = nullptr;
 		std::unique_ptr<MTextDropShadow> _weapon_name = nullptr;
-		//std::unique_ptr<MLabel> _weapon_description;
+		std::unique_ptr<MTextDropShadow> _weapon_description = nullptr;
 	};
 	std::unique_ptr<MContainer> _texture_container = nullptr;
 	std::unique_ptr<MContainer> _text_container = nullptr;
@@ -285,6 +298,7 @@ private:
 	wep_type get_random_weapon();
 	void set_level_settings();
 	void cycle_weapons(menu_direction direction, int player_index);
+	std::string weapon_description(wep_type type) const;
 public:
 	MainMenuWeaponSelect(MainMenuData* data) : MainMenuPage(data) {}
 	MainMenuWeaponSelect(MainMenuData* data, MenuLevelSettings* settings);

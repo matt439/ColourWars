@@ -1597,6 +1597,7 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 			this->_player_widgets[i]->_weapon_name->set_text("ERROR");
 			break;
 		}
+
 		if (this->_select_states[i].state == confirmation_state::CONFIRMED)
 		{
 			this->_player_widgets[i]->_weapon_icon->
@@ -1604,6 +1605,9 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 			this->_player_widgets[i]->_weapon_name->
 				set_colour(WEAPON_SELECT_SELECTED_COLOUR);
 		}
+
+		this->_player_widgets[i]->_weapon_description->set_text(
+			this->weapon_description(this->_select_states[i].type));
 	}
 }
 void MainMenuWeaponSelect::unconfirm_all_widgets()
@@ -1697,9 +1701,22 @@ void MainMenuWeaponSelect::init()
 			SHADOW_COLOUR,
 			DETAIL_SHADOW_OFFSET);
 
+		widgets->_weapon_description = std::make_unique<MTextDropShadow>(
+			name + "_wep_desc",
+			this->weapon_description(wep_type::SPRAYER),
+			WEAPON_DESCRIPTION_FONT,
+			widgets->_weapon_icon->get_rectangle().get_position() +
+				Vector2F(WEAPON_DESC_X_OFFSET, 0.0f),
+			this->get_sprite_batch(),
+			this->get_resource_manager(),
+			WEAPON_DESCRIPTION_FONT_COLOUR,
+			SHADOW_COLOUR,
+			WEAPON_DESCRIPTION_SHADOW_OFFSET);
+
 		this->_texture_container->add_child(widgets->_weapon_icon.get());
 		this->_text_container->add_child(widgets->_weapon_name.get());
 		this->_text_container->add_child(widgets->_player.get());
+		this->_text_container->add_child(widgets->_weapon_description.get());
 
 		this->_player_widgets.push_back(std::move(widgets));
 	}
@@ -1709,6 +1726,26 @@ void MainMenuWeaponSelect::init()
 		DEFAULT_RESOLUTION, resolution);
 
 	this->play_effect(MUSIC, true, MUSIC_VOLUME);
+}
+std::string MainMenuWeaponSelect::weapon_description(wep_type type) const
+{
+	switch (type)
+	{
+	case wep_type::SPRAYER:
+		return SPRAYER_DESC;
+	case wep_type::SNIPER:
+		return SNIPER_DESC;
+	case wep_type::ROLLER:
+		return ROLLER_DESC;
+	case wep_type::MISTER:
+		return MISTER_DESC;
+	case wep_type::BUCKET:
+		return BUCKET_DESC;
+	case wep_type::RANDOM_PRIMARY:
+		return RANDOM_DESC;
+	default:
+		return "ERROR";
+	}
 }
 
 #pragma endregion MainMenuWeaponSelect

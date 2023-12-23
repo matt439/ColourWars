@@ -36,9 +36,9 @@ namespace MattMath
 	float max(float a, float b);
 
 	float clamp(float value, float min, float max);
-	//void clamp(float& value, float min, float max);
+	void clamp_ref(float& value, float min, float max);
 	int clamp(int value, int min, int max);
-	//void clamp(int& value, int min, int max);
+	void clamp_ref(int& value, int min, int max);
 
 	int sign(const MattMath::Vector2F& p1,
 		const MattMath::Vector2F& p2, const MattMath::Vector2F& p3);

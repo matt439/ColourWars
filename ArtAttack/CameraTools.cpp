@@ -74,11 +74,18 @@ Camera CameraTools::calculate_camera(
 border_thickness CameraTools::calculate_camera_scroll_border(
 	const Vector2F& viewport_size) const
 {
-	border_thickness result = {
+	border_thickness result =
+	{
 		viewport_size.x * DEFAULT_BORDER_RATIO_LEFT,
 		viewport_size.y * DEFAULT_BORDER_RATIO_TOP,
 		viewport_size.x * DEFAULT_BORDER_RATIO_RIGHT,
-		viewport_size.y * DEFAULT_BORDER_RATIO_BOTTOM };
+		viewport_size.y * DEFAULT_BORDER_RATIO_BOTTOM
+	};
+
+	clamp_ref(result.left, MIN_BORDER_LEFT, viewport_size.x / 2.0f);
+	clamp_ref(result.right, MIN_BORDER_RIGHT, viewport_size.x / 2.0f);
+	clamp_ref(result.top, MIN_BORDER_TOP, viewport_size.y / 2.0f);
+	clamp_ref(result.bottom, MIN_BORDER_BOTTOM, viewport_size.y / 2.0f);
 
 	return result;
 

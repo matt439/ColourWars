@@ -10,6 +10,12 @@ namespace camera_consts
     constexpr float DEFAULT_BORDER_RATIO_TOP = 0.2f;
     constexpr float DEFAULT_BORDER_RATIO_RIGHT = 0.3f;
     constexpr float DEFAULT_BORDER_RATIO_BOTTOM = 0.4f;
+
+    constexpr float MIN_BORDER_LEFT = 400.0f;
+    constexpr float MIN_BORDER_TOP = 250.0f;
+    constexpr float MIN_BORDER_RIGHT = 400.0f;
+    constexpr float MIN_BORDER_BOTTOM = 250.0f;
+
 }
 
 //struct calculate_cam

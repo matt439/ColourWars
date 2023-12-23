@@ -20,6 +20,7 @@ void ResourceLoader::load_fonts()
     //this->load_sprite_font_from_directory(FONT_DIRECTORY, "gill_sans_ultra_bold_96");
     this->load_sprite_font_from_directory(FONT_DIRECTORY, "gill_sans_ultra_bold_144");
 
+    this->load_sprite_font_from_directory(FONT_DIRECTORY, "gill_sans_mt_bold_24");
     this->load_sprite_font_from_directory(FONT_DIRECTORY, "gill_sans_mt_bold_36");
     this->load_sprite_font_from_directory(FONT_DIRECTORY, "gill_sans_mt_bold_48");
     this->load_sprite_font_from_directory(FONT_DIRECTORY, "gill_sans_mt_bold_72");

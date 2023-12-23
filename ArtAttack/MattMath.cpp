@@ -45,6 +45,17 @@ float MattMath::clamp(float value, float min, float max)
 		return value;
 	}
 }
+void MattMath::clamp_ref(float& value, float min, float max)
+{
+	if (value < min)
+	{
+		value = min;
+	}
+	else if (value > max)
+	{
+		value = max;
+	}
+}
 //void MattMath::clamp(float& value, float min, float max)
 //{
 //	if (value < min)
@@ -69,6 +80,17 @@ int MattMath::clamp(int value, int min, int max)
 	else
 	{
 		return value;
+	}
+}
+void MattMath::clamp_ref(int& value, int min, int max)
+{
+	if (value < min)
+	{
+		value = min;
+	}
+	else if (value > max)
+	{
+		value = max;
 	}
 }
 //void MattMath::clamp(int& value, int min, int max)

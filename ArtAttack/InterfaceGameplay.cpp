@@ -149,7 +149,7 @@ void InterfaceGameplay::draw_timer(const Vector2F& resolution, float timer)
 	sprite_font->DrawString(
 		this->get_sprite_batch(),
 		std::to_string(static_cast<int>(std::ceil(timer))).c_str(),
-		(pos + TIMER_SHADOW_OFFSET).get_xm_vector(),
+		(pos + (TIMER_SHADOW_OFFSET * scale)).get_xm_vector(),
 		TIMER_SHADOW_COLOUR.get_xm_vector(),
 		0.0f,
 		XMFLOAT2(0.0f, 0.0f),
