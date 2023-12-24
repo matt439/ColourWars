@@ -429,6 +429,8 @@ void MTextDropShadow::scale_size_and_position(const Vector2F& scale)
 {
 	this->set_position(this->get_position() * scale);
 	this->set_scale(this->get_scale() * scale.x);
+	this->set_shadow_offset(this->get_shadow_offset() * scale);
+	this->set_shadow_scale(this->get_shadow_scale() * scale.x);
 }
 void MTextDropShadow::draw(const Camera& camera)
 {

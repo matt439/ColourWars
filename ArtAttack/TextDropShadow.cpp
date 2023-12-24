@@ -51,3 +51,27 @@ void TextDropShadow::draw()
 {
 	this->draw(Camera::DEFAULT_CAMERA);
 }
+Vector2F TextDropShadow::get_shadow_offset() const
+{
+	return this->_shadow_offset;
+}
+Colour TextDropShadow::get_shadow_color() const
+{
+	return this->_shadow_color;
+}
+float TextDropShadow::get_shadow_scale() const
+{
+	return this->_shadow_scale;
+}
+void TextDropShadow::set_shadow_offset(const Vector2F& offset)
+{
+	this->_shadow_offset = offset;
+}
+void TextDropShadow::set_shadow_color(const Colour& color)
+{
+	this->_shadow_color = color;
+}
+void TextDropShadow::set_shadow_scale(float scale)
+{
+	this->_shadow_scale = scale;
+}

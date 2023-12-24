@@ -25,6 +25,14 @@ public:
 	void draw(const MattMath::Camera& camera);
 	void draw();
 
+	MattMath::Vector2F get_shadow_offset() const;
+	MattMath::Colour get_shadow_color() const;
+	float get_shadow_scale() const;
+
+	void set_shadow_offset(const MattMath::Vector2F& offset);
+	void set_shadow_color(const MattMath::Colour& color);
+	void set_shadow_scale(float scale);
+
 private:
 	MattMath::Vector2F _shadow_offset = { 2.0f, 2.0f };
 	MattMath::Colour _shadow_color = colour_consts::BLACK;

@@ -56,17 +56,6 @@ void MattMath::clamp_ref(float& value, float min, float max)
 		value = max;
 	}
 }
-//void MattMath::clamp(float& value, float min, float max)
-//{
-//	if (value < min)
-//	{
-//		value = min;
-//	}
-//	else if (value > max)
-//	{
-//		value = max;
-//	}
-//}
 int MattMath::clamp(int value, int min, int max)
 {
 	if (value < min)
@@ -93,17 +82,6 @@ void MattMath::clamp_ref(int& value, int min, int max)
 		value = max;
 	}
 }
-//void MattMath::clamp(int& value, int min, int max)
-//{
-//	if (value < min)
-//	{
-//		value = min;
-//	}
-//	else if (value > max)
-//	{
-//		value = max;
-//	}
-//}
 int MattMath::sign(const Vector2F& p1,
 	const Vector2F& p2, const Vector2F& p3)
 {
