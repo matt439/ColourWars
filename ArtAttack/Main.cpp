@@ -155,7 +155,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
         HWND hwnd;
 
-        if (g_save->get_full_screen())
+        if (g_save->get_fullscreen())
         {
             hwnd = CreateWindowExW(WS_EX_TOPMOST, L"ChromaClashWindowClass", g_szAppName, WS_POPUP,
                 CW_USEDEFAULT, CW_USEDEFAULT, res_ivec2.x, res_ivec2.y,
@@ -190,7 +190,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
         /*ShowWindow(hwnd, nCmdShow);*/
 
-        if (g_save->get_full_screen())
+        if (g_save->get_fullscreen())
         {
             ShowWindow(hwnd, SW_SHOWMAXIMIZED);
         }
@@ -240,7 +240,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     static bool s_in_sizemove = false;
     static bool s_in_suspend = false;
     static bool s_minimized = false;
-    static bool s_fullscreen = g_save->get_full_screen();
+    static bool s_fullscreen = g_save->get_fullscreen();
     // TODO: Set s_fullscreen to true if defaulting to fullscreen.
 
     auto game = reinterpret_cast<Game*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));

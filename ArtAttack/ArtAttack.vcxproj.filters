@@ -162,6 +162,7 @@
     <ClInclude Include="WeaponUpdater.h" />
     <ClInclude Include="wep_type.h" />
     <ClInclude Include="collision_classification.h" />
+    <ClInclude Include="screen_resolution.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />

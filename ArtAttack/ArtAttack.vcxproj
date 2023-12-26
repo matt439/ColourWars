@@ -287,6 +287,7 @@
     <ClInclude Include="rotation_origin.h" />
     <ClInclude Include="Save.h" />
     <ClInclude Include="screen_layout.h" />
+    <ClInclude Include="screen_resolution.h" />
     <ClInclude Include="shape_type.h" />
     <ClInclude Include="SoundBank.h" />
     <ClInclude Include="SoundBankObject.h" />

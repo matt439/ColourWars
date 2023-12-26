@@ -296,9 +296,9 @@ void MainMenuOptions::update()
 				this->get_resolution_manager()->set_resolution(
 					this->_resolution_selection);
 
-				std::string res_string = this->get_resolution_manager()->
-					get_resolution_string();
-				this->get_save()->set_resolution_and_save(res_string);
+				//std::string res_string = this->get_resolution_manager()->
+				//	get_resolution_string();
+				this->get_save()->set_resolution_and_save(this->_resolution_selection);
 
 				auto res_f = this->get_float_resolution();
 				auto res_i = this->get_resolution_manager()->get_resolution_ivec();
@@ -429,7 +429,7 @@ void MainMenuOptions::init()
 	Vector2F widget_size = this->get_widget_size();
 
 	this->_resolution_selection = this->get_resolution_manager()->get_resolution();
-	this->_full_screen_selection = this->get_save()->get_full_screen();
+	this->_full_screen_selection = this->get_save()->get_fullscreen();
 
 	this->_background = std::make_unique<MTexture>(
 		"background",
