@@ -1674,6 +1674,554 @@ Colour MattMath::operator* (float S, const Colour& V)
 
 #pragma endregion Colour
 
+#pragma region MatrixF
+
+MatrixF::MatrixF(int rows, int columns)
+{
+	this->_rows = rows;
+	this->_columns = columns;
+}
+MatrixF::MatrixF(int rows, int columns, const std::vector<std::vector<float>>& elements)
+{
+	this->_rows = rows;
+	this->_columns = columns;
+	this->_elements = elements;
+}
+
+float MatrixF::get_element(int row, int column) const
+{
+	// check if the row and column are valid
+	if (!row_valid(row) || !column_valid(column))
+	{
+		throw std::invalid_argument("Row or column is not valid");
+	}
+	return this->_elements[row][column];
+}
+void MatrixF::set_element(int row, int column, float value)
+{
+	// check if the row and column are valid
+	if (!row_valid(row) || !column_valid(column))
+	{
+		throw std::invalid_argument("Row or column is not valid");
+	}
+	this->_elements[row][column] = value;
+}
+
+int MatrixF::get_rows() const
+{
+	return this->_rows;
+}
+int MatrixF::get_columns() const
+{
+	return this->_columns;
+}
+Vector2I MatrixF::get_dimensions() const
+{
+	return Vector2I(this->_columns, this->_rows);
+}
+bool MatrixF::is_square() const
+{
+	return this->_rows == this->_columns;
+}
+bool MatrixF::is_identity() const
+{
+	if (!this->is_square())
+	{
+		return false;
+	}
+	for (int i = 0; i < this->_rows; i++)
+	{
+		for (int j = 0; j < this->_columns; j++)
+		{
+			if (i == j)
+			{
+				if (this->get_element(i, j) != 1.0f)
+				{
+					return false;
+				}
+			}
+			else
+			{
+				if (this->get_element(i, j) != 0.0f)
+				{
+					return false;
+				}
+			}
+		}
+	}
+	return true;
+}
+bool MatrixF::is_symmetric() const
+{
+	if (!this->is_square())
+	{
+		return false;
+	}
+	for (int i = 0; i < this->_rows; i++)
+	{
+		for (int j = 0; j < this->_columns; j++)
+		{
+			if (this->get_element(i, j) != this->get_element(j, i))
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+bool MatrixF::is_diagonal() const
+{
+	if (!this->is_square())
+	{
+		return false;
+	}
+	for (int i = 0; i < this->_rows; i++)
+	{
+		for (int j = 0; j < this->_columns; j++)
+		{
+			if (i != j && this->get_element(i, j) != 0.0f)
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+bool MatrixF::is_upper_triangular() const
+{
+	if (!this->is_square())
+	{
+		return false;
+	}
+	for (int i = 0; i < this->_rows; i++)
+	{
+		for (int j = 0; j < i; j++)
+		{
+			if (this->get_element(i, j) != 0.0f)
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+bool MatrixF::is_lower_triangular() const
+{
+	if (!this->is_square())
+	{
+		return false;
+	}
+	for (int i = 0; i < this->_rows; i++)
+	{
+		for (int j = i + 1; j < this->_columns; j++)
+		{
+			if (this->get_element(i, j) != 0.0f)
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+bool MatrixF::is_invertible() const
+{
+	if (!this->is_square())
+	{
+		return false;
+	}
+	return MattMath::determinant(*this) != 0.0f;
+}
+//bool MatrixF::is_row_echelon_form() const
+//{
+//
+//}
+//bool MatrixF::is_reduced_row_echelon_form() const
+//{
+//
+//}
+bool MatrixF::operator==(const MatrixF& other) const
+{
+	Vector2I dimensions = this->get_dimensions();
+	Vector2I other_dimensions = other.get_dimensions();
+	if (dimensions != other_dimensions)
+	{
+		return false;
+	}
+	for (int i = 0; i < dimensions.x; i++)
+	{
+		for (int j = 0; j < dimensions.y; j++)
+		{
+			if (this->get_element(i, j) != other.get_element(i, j))
+			{
+				return false;
+			}
+		}
+	}
+	return true;
+}
+bool MatrixF::operator!=(const MatrixF& other) const
+{
+	return !(*this == other);
+}
+MatrixF& MatrixF::operator+=(const MatrixF& other)
+{
+	*this = MattMath::add(*this, other);
+	return *this;
+}
+MatrixF& MatrixF::operator-=(const MatrixF& other)
+{
+	*this = MattMath::subtract(*this, other);
+	return *this;
+}
+MatrixF& MatrixF::operator*=(const MatrixF& other)
+{
+	*this = MattMath::multiply(*this, other);
+	return *this;
+}
+MatrixF& MatrixF::operator/=(const MatrixF& other)
+{
+	*this = MattMath::divide(*this, other);
+	return *this;
+}
+MatrixF& MatrixF::operator*=(float other)
+{
+	*this = MattMath::multiply(*this, other);
+	return *this;
+}
+MatrixF& MatrixF::operator/=(float other)
+{
+	*this = MattMath::divide(*this, other);
+	return *this;
+}
+bool MatrixF::row_valid(int row) const
+{
+	return row >= 0 && row < this->_rows;
+}
+bool MatrixF::column_valid(int column) const
+{
+	return column >= 0 && column < this->_columns;
+}
+bool MattMath::equal_dimensions(const MatrixF& a, const MatrixF& b)
+{
+	return a.get_dimensions() == b.get_dimensions();
+}
+MatrixF MattMath::add(const MatrixF& a, const MatrixF& b)
+{
+	// Check if the dimensions are the same
+	if (!equal_dimensions(a, b))
+	{
+		throw std::invalid_argument("Matrix dimensions are not the same");
+	}
+	int rows = a.get_rows();
+	int columns = a.get_columns();
+	MatrixF result(rows, columns);
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < columns; j++)
+		{
+			result.set_element(i, j, a.get_element(i, j) + b.get_element(i, j));
+		}
+	}
+	return result;
+}
+MatrixF MattMath::subtract(const MatrixF& a, const MatrixF& b)
+{
+	// Check if the dimensions are the same
+	if (!equal_dimensions(a, b))
+	{
+		throw std::invalid_argument("Matrix dimensions are not the same");
+	}
+	int rows = a.get_rows();
+	int columns = a.get_columns();
+	MatrixF result(rows, columns);
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < columns; j++)
+		{
+			result.set_element(i, j, a.get_element(i, j) - b.get_element(i, j));
+		}
+	}
+	return result;
+}
+MatrixF MattMath::multiply(const MatrixF& a, const MatrixF& b)
+{
+	// check if the dimensions are correct
+	if (a.get_columns() != b.get_rows())
+	{
+		throw std::invalid_argument("Matrix dimensions are not correct");
+	}
+	MatrixF result(a.get_rows(), b.get_columns());
+	for (int i = 0; i < a.get_rows(); i++)
+	{
+		for (int j = 0; j < b.get_columns(); j++)
+		{
+			float sum = 0.0f;
+			for (int k = 0; k < a.get_columns(); k++)
+			{
+				sum += a.get_element(i, k) * b.get_element(k, j);
+			}
+			result.set_element(i, j, sum);
+		}
+	}
+	return result;
+}
+MatrixF MattMath::divide(const MatrixF& a, const MatrixF& b)
+{
+	// check if the dimensions are correct
+	if (a.get_columns() != b.get_rows())
+	{
+		throw std::invalid_argument("Matrix dimensions are not correct");
+	}
+	MatrixF result(a.get_rows(), b.get_columns());
+	for (int i = 0; i < a.get_rows(); i++)
+	{
+		for (int j = 0; j < b.get_columns(); j++)
+		{
+			float sum = 0.0f;
+			for (int k = 0; k < a.get_columns(); k++)
+			{
+				sum += a.get_element(i, k) / b.get_element(k, j);
+			}
+			result.set_element(i, j, sum);
+		}
+	}
+	return result;
+}
+MatrixF MattMath::multiply(const MatrixF& a, float b)
+{
+	int rows = a.get_rows();
+	int columns = a.get_columns();
+	MatrixF result(rows, columns);
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < columns; j++)
+		{
+			result.set_element(i, j, a.get_element(i, j) * b);
+		}
+	}
+	return result;
+}
+MatrixF MattMath::divide(const MatrixF& a, float b)
+{
+	int rows = a.get_rows();
+	int columns = a.get_columns();
+	MatrixF result(rows, columns);
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < columns; j++)
+		{
+			result.set_element(i, j, a.get_element(i, j) / b);
+		}
+	}
+	return result;
+}
+MatrixF MattMath::gaussian_elimination(const MatrixF& matrix)
+{
+	MatrixF result = matrix;
+	int rows = result.get_rows();
+	int columns = result.get_columns();
+	int i = 0;
+	int j = 0;
+	while (i < rows && j < columns)
+	{
+		// Find the pivot
+		int pivot_row = i;
+		for (int k = i + 1; k < rows; k++)
+		{
+			if (std::abs(result.get_element(k, j)) > std::abs(result.get_element(pivot_row, j)))
+			{
+				pivot_row = k;
+			}
+		}
+		if (result.get_element(pivot_row, j) != 0.0f)
+		{
+			// Swap the rows
+			if (pivot_row != i)
+			{
+				for (int k = 0; k < columns; k++)
+				{
+					float temp = result.get_element(i, k);
+					result.set_element(i, k, result.get_element(pivot_row, k));
+					result.set_element(pivot_row, k, temp);
+				}
+			}
+			// Make the pivot 1
+			float pivot = result.get_element(i, j);
+			for (int k = 0; k < columns; k++)
+			{
+				result.set_element(i, k, result.get_element(i, k) / pivot);
+			}
+			// Make the other elements in the column 0
+			for (int k = 0; k < rows; k++)
+			{
+				if (k != i)
+				{
+					float factor = result.get_element(k, j);
+					for (int l = 0; l < columns; l++)
+					{
+						result.set_element(k, l, result.get_element(k, l) - factor * result.get_element(i, l));
+					}
+				}
+			}
+			i++;
+		}
+		j++;
+	}
+	return result;
+}
+MatrixF MattMath::transpose(const MatrixF& matrix)
+{
+	int rows = matrix.get_rows();
+	int columns = matrix.get_columns();
+	MatrixF result(columns, rows);
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < columns; j++)
+		{
+			result.set_element(j, i, matrix.get_element(i, j));
+		}
+	}
+	return result;
+}
+//MatrixF MattMath::inverse(const MatrixF& matrix)
+//{
+//}
+MatrixF MattMath::identity(int size)
+{
+	MatrixF result(size, size);
+	for (int i = 0; i < size; i++)
+	{
+		result.set_element(i, i, 1.0f);
+	}
+	return result;
+}
+MatrixF MattMath::zero(int rows, int columns)
+{
+	MatrixF result(rows, columns);
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < columns; j++)
+		{
+			result.set_element(i, j, 0.0f);
+		}
+	}
+	return result;
+}
+float MattMath::determinant(const MatrixF& matrix)
+{
+	if (!matrix.is_square())
+	{
+		throw std::invalid_argument("Matrix is not square");
+	}
+	int size = matrix.get_rows();
+	if (size == 1)
+	{
+		return matrix.get_element(0, 0);
+	}
+	else if (size == 2)
+	{
+		return matrix.get_element(0, 0) * matrix.get_element(1, 1) -
+			matrix.get_element(0, 1) * matrix.get_element(1, 0);
+	}
+	else
+	{
+		float result = 0.0f;
+		for (int i = 0; i < size; i++)
+		{
+			MatrixF submatrix(size - 1, size - 1);
+			for (int j = 1; j < size; j++)
+			{
+				for (int k = 0; k < size; k++)
+				{
+					if (k < i)
+					{
+						submatrix.set_element(j - 1, k, matrix.get_element(j, k));
+					}
+					else if (k > i)
+					{
+						submatrix.set_element(j - 1, k - 1, matrix.get_element(j, k));
+					}
+				}
+			}
+			result += matrix.get_element(0, i) * determinant(submatrix) * ((i % 2 == 0) ? 1 : -1);
+		}
+		return result;
+	}
+}
+//std::vector<MatrixF> MattMath::eigenvectors(const MatrixF& matrix)
+//{
+//}
+//std::vector<float> MattMath::eigenvalues(const MatrixF& matrix)
+//{
+//}
+
+
+
+#pragma endregion MatrixF
+
+#pragma region Matrix3x3F
+
+Matrix3x3F::Matrix3x3F(const std::vector<std::vector<float>>& elements) :
+	MatrixF(3, 3, elements)
+{
+}
+Matrix3x3F::Matrix3x3F(float e11, float e12, float e13,
+	float e21, float e22, float e23,
+	float e31, float e32, float e33) :
+	MatrixF(3, 3)
+{
+	this->set_element(0, 0, e11);
+	this->set_element(0, 1, e12);
+	this->set_element(0, 2, e13);
+	this->set_element(1, 0, e21);
+	this->set_element(1, 1, e22);
+	this->set_element(1, 2, e23);
+	this->set_element(2, 0, e31);
+	this->set_element(2, 1, e32);
+	this->set_element(2, 2, e33);
+}
+Matrix3x3F Matrix3x3F::rotation(float angle)
+{
+	float cos_angle = std::cos(angle);
+	float sin_angle = std::sin(angle);
+	return Matrix3x3F(cos_angle, -sin_angle, 0.0f,
+		sin_angle, cos_angle, 0.0f,
+		0.0f, 0.0f, 1.0f);
+}
+Matrix3x3F Matrix3x3F::scale(float x, float y)
+{
+	return Matrix3x3F(x, 0.0f, 0.0f,
+		0.0f, y, 0.0f,
+		0.0f, 0.0f, 1.0f);
+}
+Matrix3x3F Matrix3x3F::scale(float scale)
+{
+	return Matrix3x3F(scale, 0.0f, 0.0f,
+		0.0f, scale, 0.0f,
+		0.0f, 0.0f, 1.0f);
+}
+Matrix3x3F Matrix3x3F::scale(const Vector2F& scale)
+{
+	return Matrix3x3F(scale.x, 0.0f, 0.0f,
+		0.0f, scale.y, 0.0f,
+		0.0f, 0.0f, 1.0f);
+
+}
+Matrix3x3F Matrix3x3F::translation(float x, float y)
+{
+	return Matrix3x3F(1.0f, 0.0f, x,
+		0.0f, 1.0f, y,
+		0.0f, 0.0f, 1.0f);
+}
+Matrix3x3F Matrix3x3F::translation(const Vector2F& translation)
+{
+	return Matrix3x3F(1.0f, 0.0f, translation.x,
+		0.0f, 1.0f, translation.y,
+		0.0f, 0.0f, 1.0f);
+}
+
+#pragma endregion Matrix3x3F
+
 #pragma region Vector3F
 
 Vector3F::Vector3F(float x, float y, float z) :

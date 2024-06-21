@@ -484,6 +484,84 @@ namespace MattMath
 	static Vector3F operator/ (const Vector3F& V, float S);
 	static Vector3F operator* (float S, const Vector3F& V);
 
+	struct MatrixF
+	{
+		MatrixF() = default;
+		MatrixF(const MatrixF&) = default;
+		MatrixF(int rows, int columns);
+		MatrixF(int rows, int columns, const std::vector<std::vector<float>>& elements);
+		
+		float get_element(int row, int column) const;
+		void set_element(int row, int column, float value);
+
+		int get_rows() const;
+		int get_columns() const;
+
+		// x = columns, y = rows
+		Vector2I get_dimensions() const;
+
+		bool is_square() const;
+		bool is_identity() const;
+		bool is_symmetric() const;
+		bool is_diagonal() const;
+		bool is_upper_triangular() const;
+		bool is_lower_triangular() const;
+		bool is_invertible() const;
+		//bool is_row_echelon_form() const;
+		//bool is_reduced_row_echelon_form() const;
+
+		bool operator==(const MatrixF& other) const;
+		bool operator!=(const MatrixF& other) const;
+
+		MatrixF& operator+=(const MatrixF& other);
+		MatrixF& operator-=(const MatrixF& other);
+		MatrixF& operator*=(const MatrixF& other);
+		MatrixF& operator/=(const MatrixF& other);
+		MatrixF& operator*=(float other);
+		MatrixF& operator/=(float other);
+
+	private:
+		int _rows = 0;
+		int _columns = 0;
+		std::vector<std::vector<float>> _elements;
+		bool row_valid(int row) const;
+		bool column_valid(int column) const;
+	};
+
+	static bool equal_dimensions(const MatrixF& a, const MatrixF& b);
+	static MatrixF add(const MatrixF& a, const MatrixF& b);
+	static MatrixF subtract(const MatrixF& a, const MatrixF& b);
+	static MatrixF multiply(const MatrixF& a, const MatrixF& b);
+	static MatrixF divide(const MatrixF& a, const MatrixF& b);
+	static MatrixF multiply(const MatrixF& a, float b);
+	static MatrixF divide(const MatrixF& a, float b);
+	static MatrixF gaussian_elimination(const MatrixF& matrix);
+	static MatrixF transpose(const MatrixF& matrix);
+	//static MatrixF inverse(const MatrixF& matrix);
+	static MatrixF identity(int size);
+	static MatrixF zero(int rows, int columns);
+	static float determinant(const MatrixF& matrix);
+	//static std::vector<MatrixF> eigenvectors(const MatrixF& matrix);
+	//static std::vector<float> eigenvalues(const MatrixF& matrix);
+
+
+	struct Matrix3x3F : MatrixF
+	{
+		Matrix3x3F() = default;
+		Matrix3x3F(const Matrix3x3F&) = default;
+		Matrix3x3F(const std::vector<std::vector<float>>& elements);
+		Matrix3x3F(float e11, float e12, float e13,
+			float e21, float e22, float e23,
+			float e31, float e32, float e33);
+
+		static Matrix3x3F rotation(float angle);
+		static Matrix3x3F scale(float x, float y);
+		static Matrix3x3F scale(float scale);
+		static Matrix3x3F scale(const Vector2F& scale);
+		static Matrix3x3F translation(float x, float y);
+		static Matrix3x3F translation(const Vector2F& translation);
+	};
+
 	struct Viewport
 	{
 	public:
