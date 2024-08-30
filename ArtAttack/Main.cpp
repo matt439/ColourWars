@@ -28,7 +28,7 @@ namespace
     std::unique_ptr<SimpleMath::Vector2> g_screen_resolution = nullptr;
 }
 
-LPCWSTR g_szAppName = L"ChromaClash";
+LPCWSTR g_szAppName = L"Colour Wars";
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 void ExitGame() noexcept;

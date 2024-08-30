@@ -1681,13 +1681,17 @@ MatrixF::MatrixF(int rows, int columns)
 	this->_rows = rows;
 	this->_columns = columns;
 }
-MatrixF::MatrixF(int rows, int columns, const std::vector<std::vector<float>>& elements)
+MatrixF::MatrixF(int rows, int columns, const std::vector<float>& elements)
 {
 	this->_rows = rows;
 	this->_columns = columns;
+	if (rows * columns != elements.size())
+	{
+		throw std::invalid_argument(
+			"Number of elements does not match the dimensions of the matrix");
+	}
 	this->_elements = elements;
 }
-
 float MatrixF::get_element(int row, int column) const
 {
 	// check if the row and column are valid
@@ -1695,7 +1699,8 @@ float MatrixF::get_element(int row, int column) const
 	{
 		throw std::invalid_argument("Row or column is not valid");
 	}
-	return this->_elements[row][column];
+	int index = calculate_index(row, column);
+	return this->_elements[index];
 }
 void MatrixF::set_element(int row, int column, float value)
 {
@@ -1704,7 +1709,8 @@ void MatrixF::set_element(int row, int column, float value)
 	{
 		throw std::invalid_argument("Row or column is not valid");
 	}
-	this->_elements[row][column] = value;
+	int index = calculate_index(row, column);
+	this->_elements[index] = value;
 }
 
 int MatrixF::get_rows() const
@@ -1900,6 +1906,26 @@ bool MatrixF::row_valid(int row) const
 bool MatrixF::column_valid(int column) const
 {
 	return column >= 0 && column < this->_columns;
+}
+int MatrixF::calculate_index(int row, int column) const
+{
+	return row * this->_columns + column;
+}
+MatrixF MattMath::operator+ (const MatrixF& a, const MatrixF& b)
+{
+	return MattMath::add(a, b);
+}
+MatrixF MattMath::operator- (const MatrixF& a, const MatrixF& b)
+{
+	return MattMath::subtract(a, b);
+}
+MatrixF MattMath::operator* (const MatrixF& a, const MatrixF& b)
+{
+	return MattMath::multiply(a, b);
+}
+MatrixF MattMath::operator/ (const MatrixF& a, const MatrixF& b)
+{
+	return MattMath::divide(a, b);
 }
 bool MattMath::equal_dimensions(const MatrixF& a, const MatrixF& b)
 {
@@ -2155,15 +2181,17 @@ float MattMath::determinant(const MatrixF& matrix)
 //{
 //}
 
-
-
 #pragma endregion MatrixF
 
 #pragma region Matrix3x3F
 
-Matrix3x3F::Matrix3x3F(const std::vector<std::vector<float>>& elements) :
+Matrix3x3F::Matrix3x3F(const std::vector<float>& elements) :
 	MatrixF(3, 3, elements)
 {
+	if (elements.size() != 9)
+	{
+		throw std::invalid_argument("Elements vector must have 9 elements");
+	}
 }
 Matrix3x3F::Matrix3x3F(float e11, float e12, float e13,
 	float e21, float e22, float e23,

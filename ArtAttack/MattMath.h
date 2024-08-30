@@ -489,7 +489,7 @@ namespace MattMath
 		MatrixF() = default;
 		MatrixF(const MatrixF&) = default;
 		MatrixF(int rows, int columns);
-		MatrixF(int rows, int columns, const std::vector<std::vector<float>>& elements);
+		MatrixF(int rows, int columns, const std::vector<float>& elements);
 		
 		float get_element(int row, int column) const;
 		void set_element(int row, int column, float value);
@@ -523,24 +523,30 @@ namespace MattMath
 	private:
 		int _rows = 0;
 		int _columns = 0;
-		std::vector<std::vector<float>> _elements;
+		std::vector<float> _elements;
 		bool row_valid(int row) const;
 		bool column_valid(int column) const;
+		int calculate_index(int row, int column) const;
 	};
 
-	static bool equal_dimensions(const MatrixF& a, const MatrixF& b);
-	static MatrixF add(const MatrixF& a, const MatrixF& b);
-	static MatrixF subtract(const MatrixF& a, const MatrixF& b);
-	static MatrixF multiply(const MatrixF& a, const MatrixF& b);
-	static MatrixF divide(const MatrixF& a, const MatrixF& b);
-	static MatrixF multiply(const MatrixF& a, float b);
-	static MatrixF divide(const MatrixF& a, float b);
-	static MatrixF gaussian_elimination(const MatrixF& matrix);
-	static MatrixF transpose(const MatrixF& matrix);
+	MatrixF operator+ (const MatrixF& a, const MatrixF& b);
+	MatrixF operator- (const MatrixF& a, const MatrixF& b);
+	MatrixF operator* (const MatrixF& a, const MatrixF& b);
+	MatrixF operator/ (const MatrixF& a, const MatrixF& b);
+
+	bool equal_dimensions(const MatrixF& a, const MatrixF& b);
+	MatrixF add(const MatrixF& a, const MatrixF& b);
+	MatrixF subtract(const MatrixF& a, const MatrixF& b);
+	MatrixF multiply(const MatrixF& a, const MatrixF& b);
+	MatrixF divide(const MatrixF& a, const MatrixF& b);
+	MatrixF multiply(const MatrixF& a, float b);
+	MatrixF divide(const MatrixF& a, float b);
+	MatrixF gaussian_elimination(const MatrixF& matrix);
+	MatrixF transpose(const MatrixF& matrix);
 	//static MatrixF inverse(const MatrixF& matrix);
-	static MatrixF identity(int size);
-	static MatrixF zero(int rows, int columns);
-	static float determinant(const MatrixF& matrix);
+	MatrixF identity(int size);
+	MatrixF zero(int rows, int columns);
+	float determinant(const MatrixF& matrix);
 	//static std::vector<MatrixF> eigenvectors(const MatrixF& matrix);
 	//static std::vector<float> eigenvalues(const MatrixF& matrix);
 
@@ -549,7 +555,7 @@ namespace MattMath
 	{
 		Matrix3x3F() = default;
 		Matrix3x3F(const Matrix3x3F&) = default;
-		Matrix3x3F(const std::vector<std::vector<float>>& elements);
+		Matrix3x3F(const std::vector<float>& elements);
 		Matrix3x3F(float e11, float e12, float e13,
 			float e21, float e22, float e23,
 			float e31, float e32, float e33);

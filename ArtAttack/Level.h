@@ -33,7 +33,7 @@ enum class level_state
 
 namespace level_consts
 {
-	constexpr float TIMER = 5.0f;
+	constexpr float TIMER = 30.0f;
 	constexpr float START_TIMER = 3.0f;
 	const static std::string COUNTDOWN_TEXT = "3";
 	const static std::string COUNTDOWN_FONT_NAME = "gill_sans_mt_bold_144";

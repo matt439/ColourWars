@@ -44,8 +44,8 @@ void Game::Initialize(GameData* game_data)
     m_deviceResources->SetWindow(this->_data->get_window(),
         window_size.x, window_size.y);
 
-    m_deviceResources->SetWindow(this->_data->get_window(),
-        window_size.x, window_size.y);
+    //m_deviceResources->SetWindow(this->_data->get_window(),
+    //    window_size.x, window_size.y);
 
     AUDIO_ENGINE_FLAGS eflags = AudioEngine_Default;
 #ifdef _DEBUG
@@ -64,7 +64,7 @@ void Game::Initialize(GameData* game_data)
 
     // TODO: Change the timer settings if you want something other than the default variable timestep mode.
     // e.g. for 60 FPS fixed timestep update logic, call:
-    m_timer.SetFixedTimeStep(true);
+    m_timer.SetFixedTimeStep(false);
     m_timer.SetTargetElapsedSeconds(1.0 / 60);
 }
 
