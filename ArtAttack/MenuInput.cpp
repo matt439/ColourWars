@@ -2,7 +2,6 @@
 #include "MenuInput.h"
 
 using namespace DirectX;
-//using namespace DirectX::SimpleMath;
 using namespace MattMath;
 
 MenuInput::MenuInput(GamePad* gamepad) :
@@ -45,8 +44,7 @@ menu_input MenuInput::calculate_menu_input(const raw_menu_input& current,
     bool proceed = prev_proceed && no_press_current;
     bool back = prev_back && no_press_current;
     bool pause = prev_pause && no_press_current;
-    //bool proceed = previous.proceed && !current.proceed;
-    //bool back = previous.back && !current.back;
+
     if (proceed)
     {
         result.action = menu_input_action::PROCEED;

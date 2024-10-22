@@ -2,7 +2,6 @@
 #define PROJECTILE_CONSTS_H
 
 #include "projectile_details.h"
-//#include "SimpleMath.h"
 
 namespace projectile_consts
 {

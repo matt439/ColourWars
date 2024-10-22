@@ -43,35 +43,12 @@ Player::Player(const RectangleF& rectangle,
     _respawn_position(respawn_position)
 {
     this->_sound_bank = resource_manager->get_sound_bank(SOUND_BANK);
-
-    //// create countdown text
-
-    //RectangleF viewport = this->_viewport.get_rectangle();
-    //Vector2F position = viewport.get_size() / 2.0f;
-    ////position = position - Vector2F(COUNTDOWN_TEXT_WIDTH / 2.0f,
-    ////    COUNTDOWN_TEXT_HEIGHT / 2.0f);
-
-    //this->_countdown_text = std::make_unique<TextDropShadow>(
-    //    COUNTDOWN_TEXT,
-    //    COUNTDOWN_FONT_NAME,
-    //    position,
-    //    sprite_batch,
-    //    resource_manager,
-    //    COUNTDOWN_COLOUR,
-    //    COUNTDOWN_SHADOW_COLOUR,
-    //    COUNTDOWN_SHADOW_OFFSET,
-    //    COUNTDOWN_SCALE,
-    //    COUNTDOWN_SCALE);
 }
 
 void Player::draw(const Camera& camera)
 {
     if (this->_state == player_state::DEAD)
     {
-        //// draw countdown text
-
-        //this->_countdown_text->draw(camera);
-        
         return;
     }
     
@@ -169,41 +146,11 @@ bool Player::is_matching_collision_object_type(
     collision_object_type other_type = other->get_collision_object_type();
 
     bool structure_collision =
-        //other_type == collision_object_type::STRUCTURE_WALL ||
-        //other_type == collision_object_type::STRUCTURE_WALL_PAINTABLE ||
-        //other_type == collision_object_type::STRUCTURE_FLOOR ||
-        //other_type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE ||
         other_type == collision_object_type::STRUCTURE ||
         other_type == collision_object_type::STRUCTURE_PAINTABLE ||
         other_type == collision_object_type::STRUCTURE_JUMP_THROUGH;
 
-    //   player_team team = this->_team;
-    //   bool projectile_collision = false;
-
-    //   if (team == player_team::A)
-    //   {
-    //       bool projectile_team_b =
-    //           other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_B ||
-    //           other_type == collision_object_type::PROJECTILE_JET_TEAM_B ||
-    //           other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_B ||
-    //           other_type == collision_object_type::PROJECTILE_BALL_TEAM_B ||
-    //           other_type == collision_object_type::PROJECTILE_MIST_TEAM_B;
-
-    //       projectile_collision = projectile_team_b;
-    //   }
-       //else if (team == player_team::B)
-       //{
-       //	bool projectile_team_a =
-       //		other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
-       //		other_type == collision_object_type::PROJECTILE_JET_TEAM_A ||
-       //		other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
-       //		other_type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
-       //		other_type == collision_object_type::PROJECTILE_MIST_TEAM_A;
-
-    //       projectile_collision = projectile_team_a;
-    //}
-
-    return structure_collision; //|| projectile_collision;
+    return structure_collision;
 }
 bool Player::is_colliding(const ICollisionGameObject* other) const
 {
@@ -247,14 +194,6 @@ void Player::on_collision(const ICollisionGameObject* other)
 {
     collision_object_type other_type = other->get_collision_object_type();
 
-  //  bool wall_collision =
-		//other_type == collision_object_type::STRUCTURE_WALL ||
-		//other_type == collision_object_type::STRUCTURE_WALL_PAINTABLE;
-
-  //  bool floor_collision = 
-  //      other_type == collision_object_type::STRUCTURE_FLOOR ||
-		//other_type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE;
-
     bool structure_collision =
         other_type == collision_object_type::STRUCTURE ||
         other_type == collision_object_type::STRUCTURE_PAINTABLE;
@@ -287,14 +226,6 @@ void Player::on_collision(const ICollisionGameObject* other)
         projectile_collision = projectile_team_a;
     }
 
-	//if (wall_collision)
-	//{
-	//	this->on_wall_collision(other);
-	//}
-	//else if (floor_collision)
-	//{
-	//	this->on_floor_collision(other);
-	//}
     if (projectile_collision)
 	{
 		this->on_projectile_collision(other);
@@ -512,32 +443,11 @@ player_collision_type Player::calculate_collision_type(const ICollisionGameObjec
 {
     const RectangleF& other_rect = other->get_shape()->get_bounding_box();
     const RectangleF& this_rect = this->_rectangle;
-    //const RectangleF intersection = this->_rectangle.intersection(other_rect);
-
-	//float this_left = this->_rectangle.get_left();
-	//float this_right = this->_rectangle.get_right();
-	//float this_top = this->_rectangle.get_top();
-	//float this_bottom = this->_rectangle.get_bottom();
-
-	//float other_left = other_rect.get_left();
-	//float other_right = other_rect.get_right();
-	//float other_top = other_rect.get_top();
-	//float other_bottom = other_rect.get_bottom();
-
-	//bool right = this_right > other_left && this_left < other_left;
-	//bool left = this_left < other_right && this_right > other_right;
-	//bool bottom = this_bottom > other_top && this_top < other_top;
-	//bool top = this_top < other_bottom && this_bottom > other_bottom;
 
     bool left_edge = this_rect.get_left_edge().intersects(other_rect);
     bool right_edge = this_rect.get_right_edge().intersects(other_rect);
     bool top_edge = this_rect.get_top_edge().intersects(other_rect);
 	bool bottom_edge = this_rect.get_bottom_edge().intersects(other_rect);
-
-    //bool top_left_vertex = this_rect.get_top_left().is_contained_within(other_rect);
-    //bool top_right_vertex = this_rect.get_top_right().is_contained_within(other_rect);
-    //bool bottom_left_vertex = this_rect.get_bottom_left().is_contained_within(other_rect);
-    //bool bottom_right_vertex = this_rect.get_bottom_right().is_contained_within(other_rect);
 
     bool contained_inside_other = other_rect.contains(this->_rectangle);
     bool contains_other = this->_rectangle.contains(other_rect);
@@ -661,60 +571,6 @@ void Player::on_projectile_collision(const ICollisionGameObject* other)
 		this->_damage_sound_timer = 0.0f;
 	}
 }
-//void Player::on_wall_collision(const ICollisionGameObject* other)
-//{
-//    direction dir = this->get_velocity().get_direction();
-//    bool left = dir == direction::LEFT || dir == direction::UP_LEFT ||
-//		dir == direction::DOWN_LEFT;
-//    bool right = dir == direction::RIGHT || dir == direction::UP_RIGHT ||
-//	    dir == direction::DOWN_RIGHT;
-//
-//    const RectangleF* other_rect =
-//        static_cast<const RectangleF*>(other->get_shape());
-//
-//    this->set_velocity_x(0.0f);
-//
-//    if (left)
-//	{
-//		this->_rectangle.set_position_x(other_rect->get_right());
-//	}
-//	else if (right)
-//	{
-//        this->_rectangle.set_position_x_from_right(other_rect->get_left());
-//	}
-//	else
-//	{
-//		//throw std::exception("Invalid direction value.");
-//	}
-//}
-//void Player::on_floor_collision(const ICollisionGameObject* other)
-//{
-//    direction dir = this->get_velocity().get_direction();
-//    bool up = dir == direction::UP || dir == direction::UP_LEFT ||
-//	    dir == direction::UP_RIGHT;
-//    bool down = dir == direction::DOWN || dir == direction::DOWN_LEFT ||
-//	    dir == direction::DOWN_RIGHT;
-//
-//    const RectangleF* other_rect =
-//        static_cast<const RectangleF*>(other->get_shape());
-//
-//    MovingObject::set_velocity_y(0.0f);
-//
-//    if (up)
-//    {
-//        this->_rectangle.set_position_y(other_rect->get_bottom());
-//        this->set_move_state(player_move_state::ON_CEILING);
-//	}
-//	else if (down)
-//	{
-//        this->_rectangle.set_position_y_from_bottom(other_rect->get_top());
-//        this->set_move_state(player_move_state::ON_GROUND);
-//	}
-//	else
-//	{
-//		//throw std::exception("Invalid direction value.");
-//	}
-//}
 
 float Player::get_dt() const
 {
@@ -735,16 +591,11 @@ void Player::update()
         }
 
         this->_damage_sound_timer += this->get_dt();
-        //else if (this->_health - this->_prev_health < )
-        //{
-        //    this->_sound_bank->play_wave(DAMAGE_SOUND, DAMAGE_SOUND_VOLUME);
-        //}
     }
     else if (this->_state == player_state::DEAD)
     {
         this->_respawn_timer -= this->get_dt();
-        //this->_countdown_text->set_text(std::to_string(
-        //    3 - static_cast<int>(this->_respawn_timer)));
+
         if (this->_respawn_timer <= 0.0f)
         {
             this->respawn();
@@ -770,8 +621,6 @@ void Player::update()
         }
     }
     this->_health_regen_timer += this->get_dt();
-
-    //this->_prev_health = this->_health;
 }
 std::vector<std::unique_ptr<ICollisionGameObject>>
     Player::update_weapon_and_get_projectiles()
@@ -878,9 +727,6 @@ void Player::update_movement()
     MovingObject::set_dx_x(MovingObject::get_velocity_x() * dt);
     MovingObject::set_dx_y(MovingObject::get_velocity_y() * dt);
 
-    //this->alter_position_y(MovingObject::get_dx_x());
-    //this->alter_position_y(MovingObject::get_dx_y());
-
     this->_rectangle.offset(MovingObject::get_dx_x(),
         MovingObject::get_dx_y());
 
@@ -899,46 +745,7 @@ void Player::do_jump()
     const player_move_state move_state = this->get_move_state();
     const bool jump_pressed = this->_input.jump_pressed;
     const bool jump_held = this->_input.jump_held;
-    //const bool prev_req_jump = this->_input.prev_requesting_jump;
     const float dt = this->get_dt();
-
-  //  switch (move_state)
-  //  {
-  //  case player_move_state::ON_GROUND:
-  //      if (jump_pressed)
-		//{
-  //          MovingObject::set_velocity_y(JUMP_LAUNCH_VELOCITY);
-  //          this->set_air_time(0.0f);
-  //          this->set_move_state(player_move_state::JUMPING);
-  //          this->_sound_bank->play_wave(JUMP_SOUND, JUMP_SOUND_VOLUME);
-		//}
-  //      break;
-  //  case player_move_state::ON_CEILING:
-  //      break;
-  //  case player_move_state::JUMPING:
-  //      if (jump_held)
-		//{
-		//	if (this->get_air_time() <= JUMP_MAX_TIME)
-		//	{
-  //              MovingObject::alter_velocity_y(JUMP_ACCELERATION * dt);
-		//	}
-		//	else
-		//	{
-		//		this->set_move_state(player_move_state::IN_AIR);
-		//	}
-		//}
-		//else // !jump held
-		//{
-		//	this->set_move_state(player_move_state::IN_AIR);
-		//}
-  //      this->alter_air_time(dt);
-  //      break;
-  //  case player_move_state::IN_AIR:
-  //      break;
-  //  default:
-  //      break;
-  //  }
-
    
     if ((move_state == player_move_state::ON_GROUND ||
         move_state == player_move_state::ON_DROP_DOWN_GROUND) &&
@@ -976,7 +783,6 @@ void Player::do_jump()
 	{
 		// do nothing
 	}
-
 
     if (this->get_velocity_y() < -MAX_VELOCITY.y)
     {
@@ -1023,10 +829,6 @@ const Vector2F& Player::get_input_shoot_direction() const
 {
 	return this->_input.shoot_direction;
 }
-//direction_lock Player::get_input_shoot_direction_lock() const
-//{
-//	return this->_input.shoot_direction_lock;
-//}
 bool Player::get_input_primary_shoot() const
 {
 	return this->_input.primary_shoot;
@@ -1039,10 +841,6 @@ bool Player::get_input_jump_held() const
 {
 	return this->_input.jump_held;
 }
-//bool Player::get_prev_requesting_jump() const
-//{
-//	return this->_input.prev_requesting_jump;
-//}
 player_move_state Player::get_move_state() const
 {
 	return this->_move_state;
@@ -1129,62 +927,3 @@ void Player::stop_sounds()
 {
     this->_primary->stop_sounds();
 }
-
-
-
-//Player::Player(const player_info& info) :
-//    _info(info)
-//{
-//}
-
-//Rectangle Player::get_rectangle() const
-//{
-//    Rectangle result(this->_info.position.x,
-//        this->_info.position.y,
-//        this->_info.size.x,
-//        this->_info.size.y);
-//    return result;
-//}
-
-//Vector2 Player::get_center() const
-//{
-//    Rectangle rect = get_rectangle();
-//    float x = ((2.0f * rect.x) + rect.width) / 2.0f;
-//    float y = ((2.0f * rect.y) + rect.height) / 2.0f;
-//    return Vector2(x, y);
-//}
-
-//const RectangleF& Player::get_bounding_box() const
-//{
-//	return this->get_bounding_box();
-//}
-//const RectangleI Player::get_bounding_box_i() const
-//{
-//	return this->get_bounding_box_i();
-//}
-//const RectangleF& Player::get_collision_aabb() const
-//{
-//	return this->get_collision_aabb();
-//}
-//const std::vector<collidable_object_type>&
-//	Player::get_collidable_object_types() const
-//{
-//	return this->get_collidable_object_types();
-//}
-//const std::vector<collidable_object_detail>&
-//	Player::get_collidable_object_details() const
-//{
-//	return this->get_collidable_object_details();
-//}
-//const Vector2F& Player::get_velocity() const
-//{
-//	return this->get_velocity();
-//}
-//const Vector2F& Player::get_dx() const
-//{
-//	return this->get_dx();
-//}
-//float Player::get_rotation() const
-//{
-//	return this->get_rotation();
-//}

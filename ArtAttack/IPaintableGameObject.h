@@ -1,15 +1,13 @@
 #ifndef IPAINTABLEGAMEOBJECT_H
 #define IPAINTABLEGAMEOBJECT_H
 
-//#include "ICollisionGameObject.h"
-
 struct paint_total
 {
 	float team_a = 0.0f;
 	float team_b = 0.0f;
 };
 
-class IPaintableGameObject // : virtual public ICollisionGameObject
+class IPaintableGameObject
 {
 public:
 	virtual ~IPaintableGameObject() = default;

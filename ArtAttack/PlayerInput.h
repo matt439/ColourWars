@@ -29,15 +29,15 @@ struct raw_player_input
 
 class PlayerInput
 {
+public:
+	PlayerInput(DirectX::GamePad* gamepad);
+	std::vector<player_input> update_and_get_player_inputs();
 private:
 	raw_player_input _prev_inputs[4];
 	raw_player_input get_raw_input(int gamepad_num);
 	player_input calculate_player_input(const raw_player_input& current,
 		const raw_player_input& previous);
 	DirectX::GamePad* _gamepad = nullptr;
-public:
-	PlayerInput(DirectX::GamePad* gamepad);
-	std::vector<player_input> update_and_get_player_inputs();
 };
 
 #endif // !PLAYER_INPUT_H

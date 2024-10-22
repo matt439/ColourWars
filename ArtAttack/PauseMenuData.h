@@ -6,9 +6,6 @@
 
 class PauseMenuData : public MenuData
 {
-private:
-	int _player_num = -1;
-	pause_menu_action* _action = nullptr;
 public:
 	PauseMenuData(GameData* game_data, MenuInput* input, int player_num,
 		pause_menu_action* action) :
@@ -20,6 +17,9 @@ public:
 	void set_player_num(int player_num) { this->_player_num = player_num; }
 	pause_menu_action* get_action() { return this->_action; }
 	void set_action(pause_menu_action* action) { this->_action = action; }
+private:
+	int _player_num = -1;
+	pause_menu_action* _action = nullptr;
 };
 
 #endif // !PAUSEMENUDATE_H

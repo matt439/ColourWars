@@ -5,11 +5,6 @@
 
 class ProjectileRolling : public Projectile
 {
-private:
-	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
-	//MattMath::RectangleF get_draw_rectangle() const;
-protected:
-
 public:
 	ProjectileRolling() = default;
 	ProjectileRolling(const MattMath::RectangleF& rectangle,
@@ -32,6 +27,8 @@ public:
 
 	virtual bool is_colliding(const ICollisionGameObject* other) const override;
 	virtual const MattMath::Shape* get_shape() const override;
+private:
+	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
 };
 
 #endif // !PROJECTILEROLLING_H

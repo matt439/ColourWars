@@ -7,8 +7,6 @@
 struct level_end_info
 {
 	team_colour team_colours = team_colour();
-	//player_team winning_team = player_team::NONE;
-	//float winning_score = -999.0f;
 	float team_a_area = 0.0f;
 	float team_b_area = 0.0f;
 
@@ -24,8 +22,6 @@ struct level_end_info
 		}
 		else // draw
 		{
-			//// pick a random team
-			//return (player_team)(rand() % 2);
 			return player_team::NONE;
 		}
 	}
@@ -93,22 +89,6 @@ struct level_end_info
 			throw std::exception("No winning team");
 		}
 	}
-	//inline player_team losing_team() const
-	//{
-	//	player_team winning = winning_team();
-	//	if (winning == player_team::A)
-	//	{
-	//		return player_team::B;
-	//	}
-	//	else if (winning == player_team::B)
-	//	{
-	//		return player_team::A;
-	//	}
-	//	else
-	//	{
-	//		throw std::exception("No winning team");
-	//	}
-	//}
 	inline float winning_score() const
 	{
 		player_team winning = winning_team();

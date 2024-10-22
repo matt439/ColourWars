@@ -24,11 +24,6 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	_team_colours(team_colours),
 	_dt(dt)
 {
-	//this->_splash = std::make_unique<PaintTileSplash>(
-	//	dt, SPLASH_RECTANGLE, SPLASH_SPRITE_SHEET_NAME, SPLASH_ANIMATION_STRIP_NAME,
-	//	sprite_batch,
-	//	resource_manager, color);
-
 	this->_splash = PaintTileSplash(
 		dt, SPLASH_RECTANGLE, SPLASH_SPRITE_SHEET_NAME, SPLASH_ANIMATION_STRIP_NAME,
 		sprite_batch,
@@ -37,12 +32,6 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 
 void PaintTile::update()
 {
-	//if (this->_splash_timer < SPLASH_DURATION)
-	//{
-
-	//}
-	//this->_splash_timer += *this->_dt;
-
 	this->_splash.update();
 }
 void PaintTile::draw(const Camera& camera)
@@ -64,12 +53,6 @@ void PaintTile::draw(const Camera& camera)
 	this->_splash.draw(camera);
 
 	this->TextureObject::draw(this->_rectangle, camera);
-	//if (this->_splash_timer < SPLASH_DURATION)
-	//{
-	//	this->_splash.set_rectangle_center(this->_rectangle.get_center());
-	//	this->_splash.draw(camera);
-	//}
-
 }
 void PaintTile::draw()
 {
@@ -101,14 +84,6 @@ player_team PaintTile::get_team() const
 {
 	return this->_team;
 }
-//void PaintTile::set_team(player_team team)
-//{
-//	this->_team = team;
-//}
-//const RectangleF& PaintTile::get_rectangle() const
-//{
-//	return this->_rectangle;
-//}
 bool PaintTile::is_colliding(const ICollisionGameObject* other) const
 {
     // aabb check
@@ -164,9 +139,7 @@ void PaintTile::on_collision(const ICollisionGameObject* other)
 		throw std::exception("PaintTile::on_collision() - other_type is not a projectile");
 	}
 	this->_team = other_team;
-	//this->_splash_timer = 0.0f;
 	this->_splash.reset_and_play();
-	//this->_sound_bank->play_wave(SOUND_NAME, SOUND_VOLUME);
 }
 collision_object_type PaintTile::get_collision_object_type() const
 {
@@ -180,10 +153,6 @@ bool PaintTile::is_visible_in_viewport(const RectangleF& view) const
 {
 	return this->_rectangle.intersects(view);
 }
-//void play_splash_sound()
-//{
-//	this->_sound_bank = resource_manager->get_sound_bank(SOUND_BANK_NAME);
-//}
 
 void PaintTileSplash::set_rectangle_center(const Vector2F& center)
 {

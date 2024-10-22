@@ -3,7 +3,6 @@
 
 using namespace MattMath;
 
-//template <class T>
 void MenuHighlight::highlight_widget(MWidget* widget)
 {
 	if (widget == nullptr)
@@ -13,7 +12,6 @@ void MenuHighlight::highlight_widget(MWidget* widget)
 	widget->set_colour(this->_highlight_colour);
 }
 
-//template <class T>
 void MenuHighlight::unhighlight_widget(MWidget* widget)
 {
 	if (widget == nullptr)
@@ -57,12 +55,3 @@ void MenuHighlight::set_unhighlight_colour(Colour colour)
 {
 	this->_unhighlight_colour = colour;
 }
-
-//template <class T>
-//void MenuPageHighlight::change_highlight(menu_element next_highlight)
-//{
-//	this->unhighlight_widget(this->get_element_widget(
-//		this->highlighted_element));
-//	this->highlight_widget(this->get_element_widget(next_highlight));
-//	this->highlighted_element = next_highlight;
-//}

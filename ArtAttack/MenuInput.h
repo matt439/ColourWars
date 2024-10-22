@@ -1,13 +1,10 @@
 #ifndef MENUINPUT_H
 #define MENUINPUT_H
 
-
 #include <vector>
 #include "menu_input_action.h"
 #include "connection_state.h"
-//#include "SimpleMath.h"
 #include "MattMath.h"
-
 
 namespace menu_input_consts
 {

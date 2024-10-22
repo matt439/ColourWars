@@ -9,7 +9,6 @@ using namespace colour_consts;
 void InterfaceGameplay::draw_gameplay_interface(const Vector2F& resolution,
 	float health,
 	float ammo,
-	//player_team team,
 	float timer,
 	const Colour& team_colour,
 	ID3D11SamplerState* sampler_state,

@@ -13,7 +13,6 @@ EndMenuData* EndMenuPage::get_end_menu_data()
 void EndMenuInitial::update()
 {
 	std::vector<menu_input> inputs = this->get_menu_inputs();
-	//int player_num = this->get_pause_menu_data()->get_player_num();
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
 

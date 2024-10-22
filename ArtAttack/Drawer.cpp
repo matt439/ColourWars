@@ -2,7 +2,6 @@
 #include "Drawer.h"
 
 using namespace DirectX;
-//using namespace DirectX::SimpleMath;
 using namespace MattMath;
 
 RectangleI Drawer::calculate_draw_rectangle(const RectangleI& rec,

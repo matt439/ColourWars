@@ -219,17 +219,6 @@ void Level::update_level_logic(const std::vector<player_input>& player_inputs)
 	// check player collisions
 	for (auto& player : *this->_player_objects)
 	{
-		//// check player collisions with other players
-		//for (auto& player_2 : *this->_player_objects)
-		//{
-		//	if (player != player_2 && player->is_colliding(player_2.get()))
-		//	{
-		//		player->on_collision(player_2.get());
-		//		player_2->on_collision(player.get());
-		//	}
-		//}
-
-
 		// check player collisions with collision objects
 		for (auto& other_object : *this->_collision_objects)
 		{
@@ -298,10 +287,6 @@ void Level::update_level_logic(const std::vector<player_input>& player_inputs)
 				this->_collision_objects->back());
 			this->_collision_objects->pop_back();
 			i--;
-
-
-			//this->_collision_objects->erase(this->_collision_objects->begin() + i);
-			//i--;
 		}
 	}
 
@@ -445,37 +430,22 @@ void Level::draw_zoom_out_level()
 	this->_viewport_manager->apply_player_viewport(0);
 
 	const Camera& camera = this->_zoom_out_camera;
-	//const RectangleF camera_view =
-	//	this->_viewport_manager->get_camera_adjusted_player_viewport_rect(
-	//		0, camera);
 
 	this->_sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, this->_sampler_state);
 
 	// draw non-collision objects
 	for (auto& object : *this->_non_collision_objects)
 	{
-		//if (object->is_visible_in_viewport(camera_view))
-		//{
-		//	object->draw(camera);
-		//}
 		object->draw(camera);
 	}
 	// draw collision objects
 	for (auto& object : *this->_collision_objects)
 	{
-		//if (object->is_visible_in_viewport(camera_view))
-		//{
-		//	object->draw(camera);
-		//}
 		object->draw(camera);
 	}
 	// draw player objects
 	for (auto& object : *this->_player_objects)
 	{
-		//if (object->is_visible_in_viewport(camera_view))
-		//{
-		//	object->draw(camera);
-		//}
 		object->draw(camera);
 	}
 

@@ -46,19 +46,6 @@ struct interface_draw
 
 class InterfaceGameplay : public Drawer
 {
-private:
-    void draw_ammo(const MattMath::Vector2F& resolution,
-        float ammo,
-        const MattMath::Colour& team_colour,
-        const MattMath::Vector2F& position);
-    void draw_health(const MattMath::Vector2F& resolution,
-        float health,
-        const MattMath::Vector2F& position);
-    void draw_timer(const MattMath::Vector2F& resolution,
-        float timer);
-
-    void draw_respawn_timer(const MattMath::Vector2F& resolution,
-		float timer);
 public:
 	InterfaceGameplay(DirectX::SpriteBatch* sprite_batch,
         ResourceManager* resource_manager, const float* dt) :
@@ -73,5 +60,19 @@ public:
         ID3D11SamplerState* sampler_state,
         float respawn_timer,
         bool show_respawn_timer);
+
+private:
+    void draw_ammo(const MattMath::Vector2F& resolution,
+        float ammo,
+        const MattMath::Colour& team_colour,
+        const MattMath::Vector2F& position);
+    void draw_health(const MattMath::Vector2F& resolution,
+        float health,
+        const MattMath::Vector2F& position);
+    void draw_timer(const MattMath::Vector2F& resolution,
+        float timer);
+
+    void draw_respawn_timer(const MattMath::Vector2F& resolution,
+        float timer);
 };
 #endif // !INTERFACEGAMEPLAY_H

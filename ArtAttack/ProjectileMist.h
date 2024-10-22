@@ -5,10 +5,6 @@
 
 class ProjectileMist : public DiffusingProjectile
 {
-private:
-	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
-protected:
-
 public:
 	ProjectileMist() = default;
 	ProjectileMist(const MattMath::RectangleF& rectangle,
@@ -31,5 +27,7 @@ public:
 
 	virtual bool is_colliding(const ICollisionGameObject* other) const override;
 	virtual const MattMath::Shape* get_shape() const override;
+private:
+	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
 };
 #endif // !PROJECTILEMIST_H

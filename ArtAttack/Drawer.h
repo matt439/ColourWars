@@ -8,10 +8,14 @@
 
 class Drawer
 {
-private:
-	DirectX::SpriteBatch* _sprite_batch = nullptr;
-	ResourceManager* _resource_manager = nullptr;
-	const float* _dt = nullptr;
+public:
+	Drawer(DirectX::SpriteBatch* sprite_batch,
+		ResourceManager* resource_manager,
+		const float* dt) :
+		_sprite_batch(sprite_batch),
+		_resource_manager(resource_manager),
+		_dt(dt) {}
+
 protected:
 	DirectX::SpriteBatch* get_sprite_batch() { return this->_sprite_batch; }
 	ResourceManager* get_resource_manager() { return this->_resource_manager; }
@@ -26,13 +30,11 @@ protected:
 	MattMath::Vector2F calculate_sprite_origin(
 		const MattMath::Vector2F& size,
 		rotation_origin origin);
-public:
-	Drawer(DirectX::SpriteBatch* sprite_batch,
-		ResourceManager* resource_manager,
-		const float* dt) :
-		_sprite_batch(sprite_batch),
-		_resource_manager(resource_manager),
-		_dt(dt) {}
+
+private:
+	DirectX::SpriteBatch* _sprite_batch = nullptr;
+	ResourceManager* _resource_manager = nullptr;
+	const float* _dt = nullptr;
 };
 
 #endif // !DRAWER_H

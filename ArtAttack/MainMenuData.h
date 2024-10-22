@@ -6,9 +6,6 @@
 
 class MainMenuData : public MenuData
 {
-private:
-	MenuLevelSettings* _menu_level_settings = nullptr;
-	bool* _is_ready_to_load_level = nullptr;
 public:
 	MainMenuData(GameData* game_data) :
 		MenuData(game_data) {}
@@ -22,6 +19,9 @@ public:
 	void set_level_settings(MenuLevelSettings* level_settings) { this->_menu_level_settings = level_settings; }
 	bool* get_is_ready_to_load_level() { return this->_is_ready_to_load_level; }
 	void set_is_ready_to_load_level(bool* is_ready_to_load_level) { this->_is_ready_to_load_level = is_ready_to_load_level; }
+private:
+	MenuLevelSettings* _menu_level_settings = nullptr;
+	bool* _is_ready_to_load_level = nullptr;
 };
 
 #endif // !MAINMENUDATA_H

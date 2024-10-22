@@ -20,8 +20,6 @@ namespace debug_text_consts
 
 class DebugText : public Drawer
 {
-private:
-	const ResolutionManager* _resolution_manager = nullptr;
 public:
 	DebugText(DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
@@ -31,6 +29,9 @@ public:
 		_resolution_manager(resolution_manager) {}
 
 	void draw_debug_info(const Player* player, int num_projectiles);
+
+private:
+	const ResolutionManager* _resolution_manager = nullptr;
 };
 
 #endif // !DEBUGTEXT_H

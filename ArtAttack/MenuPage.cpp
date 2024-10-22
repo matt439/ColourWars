@@ -4,10 +4,6 @@
 using namespace DirectX;
 using namespace MattMath;
 
-//Vector2F MenuPage::get_resolution() const
-//{
-//	return this->_resolution;
-//}
 Vector2F MenuPage::get_widget_position() const
 {
 	return this->_widget_position;
@@ -20,10 +16,6 @@ Vector2F MenuPage::get_widget_size() const
 {
 	return this->_widget_size;
 }
-//void MenuPage::set_resolution(const Vector2F& resolution)
-//{
-//	this->_resolution = resolution;
-//}
 void MenuPage::set_widget_position(const Vector2F& widget_position)
 {
 	this->_widget_position = widget_position;
@@ -88,25 +80,6 @@ ViewportManager* MenuPage::get_viewport_manager()
 	return this->_data->get_viewport_manager();
 }
 
-//void MenuPage::draw_widget_in_viewports(MWidget* widget,
-//	ID3D11SamplerState* sampler_state)
-//{
-//	SpriteBatch* sprite_batch = this->get_sprite_batch();
-//
-//	std::vector<Viewport> viewports =
-//		this->get_viewport_manager()->get_all_viewports();
-//
-//	size_t num_viewports = viewports.size();
-//	for (size_t i = 0; i < num_viewports; i++)
-//	{
-//		this->get_viewport_manager()->apply_player_viewport(i);
-//		sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, sampler_state);
-//
-//		widget->draw(viewports[i]);
-//
-//		sprite_batch->End();
-//	}
-//}
 void MenuPage::draw_mobject_in_viewports(MObject* widget,
 	ID3D11SamplerState* sampler_state)
 {
@@ -145,13 +118,3 @@ Vector2I MenuPage::get_int_resolution()
 {
 	return this->get_data()->get_resolution_manager()->get_resolution_ivec();
 }
-
-//void MenuPage::set_context(Menu* context)
-//{
-//	this->_context = context;
-//}
-//
-//Menu* MenuPage::get_context()
-//{
-//	return this->_context;
-//}

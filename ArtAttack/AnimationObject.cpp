@@ -4,25 +4,6 @@
 using namespace DirectX;
 using namespace MattMath;
 
-//AnimationObject::AnimationObject(const float* dt,
-//	const std::string& sheet_name,
-//	const std::string& animation_strip_name,
-//	DirectX::SpriteBatch* sprite_batch,
-//	ResourceManager* resource_manager,
-//	const MattMath::Colour& color = colour_consts::WHITE,
-//	float rotation = 0.0f,
-//	const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
-//	DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
-//	float layer_depth = 0.0f) :
-//	SpriteSheetObject(sheet_name, animation_strip_name, sprite_batch,
-//				resource_manager, color, rotation, origin, effects,
-//				layer_depth),
-//	_dt(dt)
-//{
-//	//this->_animated_sprite = std::make_unique<AnimatedSprite>(
-//	//	this->get_sprite_sheet(), this->get_element_name(), this->_dt);
-//}
-
 AnimationObject::AnimationObject(const float* dt,
 	const std::string& sheet_name,
 	const std::string& animation_strip_name,
@@ -40,7 +21,6 @@ AnimationObject::AnimationObject(const float* dt,
 {
 	this->_frame_time = this->get_animation_strip()->get_frame_time();
 }
-
 
 const AnimationStrip* AnimationObject::get_animation_strip() const
 {
@@ -102,7 +82,7 @@ void AnimationObject::update()
 	}
 	const AnimationStrip* animation_strip = this->get_animation_strip();
 	this->_time_elapsed += *this->_dt;
-	float frame_time = this->_frame_time; //animation_strip->get_frame_time();
+	float frame_time = this->_frame_time;
 	if (this->_time_elapsed > frame_time)
 	{
 		this->_frame_index++;
@@ -139,14 +119,6 @@ void AnimationObject::pause()
 {
 	this->_paused = true;
 }
-//void AnimationObject::set_animation_strip(SpriteSheet* sprite_sheet,
-//	const std::string& animation_strip_name)
-//{
-//	this->_sprite_sheet = sprite_sheet;
-//	//this->_animation_strip_name = animation_strip_name;
-//	this->_animation_strip =
-//		sprite_sheet->get_animation_strip(animation_strip_name);
-//}
 void AnimationObject::set_frame_index(int frame_index)
 {
 	if (frame_index < 0 ||
@@ -181,25 +153,3 @@ void AnimationObject::set_frame_time_to_default()
 {
 	this->_frame_time = this->get_animation_strip()->get_frame_time();
 }
-
-//const std::string& AnimationObject::get_sprite_sheet_name() const
-//{
-//	return this->_sheet_name;
-//}
-//const std::string& AnimationObject::get_animation_strip_name() const
-//{
-//	return this->_animation_strip_name;
-//}
-//SpriteSheet* AnimationObject::get_sprite_sheet() const
-//{
-//	return this->get_resource_manager()->get_sprite_sheet(
-//		this->get_sprite_sheet_name());
-//}
-//void AnimationObject::set_sprite_sheet_name(const std::string& sheet_name)
-//{
-//	this->_sheet_name = sheet_name;
-//}
-//void AnimationObject::set_animation_strip_name(const std::string& strip_name)
-//{
-//	this->_animation_strip_name = strip_name;
-//}

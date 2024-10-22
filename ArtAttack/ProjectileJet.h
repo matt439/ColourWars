@@ -5,12 +5,6 @@
 
 class ProjectileJet : public Projectile
 {
-private:
-	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
-	MattMath::RectangleF get_draw_rectangle() const;
-	//float calculate_rotation() const;
-protected:
-
 public:
 	ProjectileJet() = default;
 	ProjectileJet(const MattMath::RectangleF& rectangle,
@@ -33,5 +27,7 @@ public:
 
 	virtual bool is_colliding(const ICollisionGameObject* other) const override;
 	virtual const MattMath::Shape* get_shape() const override;
+private:
+	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
 };
 #endif // !PROJECTILEJET_H

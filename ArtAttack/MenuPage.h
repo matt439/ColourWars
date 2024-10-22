@@ -2,29 +2,23 @@
 #define MENUPAGE_H
 
 #include "Mh.h"
-//#include "SimpleMath.h"
 #include "MenuData.h"
 #include "State.h"
 #include "MattMath.h"
 
-//class Menu;
-
 class MenuPage : public State
 {
-private:
-	MenuData* _data = nullptr;
-	//MattMath::Vector2F _resolution = { 1920.0f, 1080.0f };
-	MattMath::Vector2F _widget_position = { 150.0f, 150.0f };
-	MattMath::Vector2F _widget_size = { 300.0f, 75.0f };
-	MattMath::Vector2F _widget_spacing = { 250.0f, 150.0f };
-	//Menu* _context = nullptr;
+public:
+	MenuPage(MenuData* data) : _data(data) {}
+	virtual ~MenuPage() {}
+	virtual void update() = 0;
+	virtual void draw() = 0;
+	virtual void init() = 0;
 protected:
-	//MattMath::Vector2F get_resolution() const;
 	MattMath::Vector2F get_widget_position() const;
 	MattMath::Vector2F get_widget_size() const;
 	MattMath::Vector2F get_widget_spacing() const;
 
-	//void set_resolution(const MattMath::Vector2F& resolution);
 	void set_widget_position(const MattMath::Vector2F& widget_position);
 	void set_widget_size(const MattMath::Vector2F& widget_size);
 	void set_widget_spacing(const MattMath::Vector2F& widget_spacing);
@@ -41,21 +35,16 @@ protected:
 	ResourceManager* get_resource_manager();
 	DirectX::SpriteBatch* get_sprite_batch();
 	ViewportManager* get_viewport_manager();
-	//void draw_widget_in_viewports(MWidget* widget,
-	//	ID3D11SamplerState* sampler_state = nullptr);
 	void draw_mobject_in_viewports(MObject* widget,
 		ID3D11SamplerState* sampler_state = nullptr);
 	ID3D11SamplerState* get_point_clamp_sampler_state();
 	std::vector<menu_input> get_menu_inputs();
 	MattMath::Vector2F get_float_resolution();
 	MattMath::Vector2I get_int_resolution();
-	//Menu* get_context();
-public:
-	MenuPage(MenuData* data) : _data(data) {}
-	virtual ~MenuPage() {}
-	virtual void update() = 0;
-	virtual void draw() = 0;
-	virtual void init() = 0;
-	//void set_context(Menu* context);
+private:
+	MenuData* _data = nullptr;
+	MattMath::Vector2F _widget_position = { 150.0f, 150.0f };
+	MattMath::Vector2F _widget_size = { 300.0f, 75.0f };
+	MattMath::Vector2F _widget_spacing = { 250.0f, 150.0f };
 };
 #endif // !MENUPAGE_H

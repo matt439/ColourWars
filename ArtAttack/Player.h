@@ -11,12 +11,10 @@
 #include "ICollisionGameObject.h"
 #include "MovingObject.h"
 #include "SoundBank.h"
-//#include "TextDropShadow.h"
 
 enum class player_state
 {
     ALIVE,
-    //READY_TO_RESPAWN,
     DEAD
 };
 
@@ -37,8 +35,6 @@ enum class player_animation_state
 	JUMPING,
 	FALLING,
     RUNNING,
-	//SHOOTING,
-	//DYING
 };
 
 enum class player_collision_type
@@ -64,134 +60,6 @@ enum class player_collision_type
 class Player : public MovingObject, public ICollisionGameObject,
     public AnimationObject, public TextureObject
 {
-private:
-    //MattMath::Vector3F _camera = player_consts::DEFAULT_CAMERA;
-
-    MattMath::Camera _camera = MattMath::Camera::DEFAULT_CAMERA;
-
-    std::unique_ptr<Weapon> _primary = nullptr;
-
-    float _health = player_consts::STARTING_HEALTH;
-    //float _prev_health = player_consts::STARTING_HEALTH;
-    float _damage_sound_timer = 0.0f;
-    float _air_time = 0.0f;
-    bool _facing_right = true;
-    int _score = 0;
-    bool _showing_debug = false;
-    player_state _state = player_state::ALIVE;
-    float _respawn_timer = player_consts::RESPAWN_DELAY;
-    player_input _input = player_input();
-    player_move_state _move_state = player_move_state::IN_AIR;
-    player_animation_state _animation_state = player_animation_state::IDLE;
-
-    int _player_num = player_consts::DEFAULT_PLAYER_NUM;
-    player_team _team = player_consts::DEFAULT_TEAM;
-    wep_type _primary_type = player_consts::DEFAULT_PRIMARY;
-    wep_type _secondary_type = player_consts::DEFAULT_SECONDARY;
-    MattMath::Colour _team_colour = player_consts::DEFAULT_TEAM_COLOUR;
-    MattMath::Viewport _viewport = MattMath::Viewport();
-
-    MattMath::RectangleF _rectangle = player_consts::DEFAULT_BOUNDS;
-    MattMath::RectangleF _prev_rectangle = player_consts::DEFAULT_BOUNDS;
-
-    MattMath::Vector2F _respawn_position = MattMath::Vector2F::ZERO;
-
-    //std::unique_ptr<TextDropShadow> _countdown_text = nullptr;
-
-    SoundBank* _sound_bank = nullptr;
-
-    const float* _dt = nullptr;
-
-    float _health_regen_timer = 0.0f;
-
-    virtual const MattMath::RectangleF* get_collision_rectangle() const;
-
-    virtual bool is_matching_collision_object_type(
-        const ICollisionGameObject* other) const;
-
-    //virtual void on_wall_collision(const ICollisionGameObject* other);
-    //virtual void on_floor_collision(const ICollisionGameObject* other);
-    virtual void on_projectile_collision(const ICollisionGameObject* other);
-    virtual void on_structure_collision(const ICollisionGameObject* other);
-
-    virtual float get_dt() const;
-
-    virtual void update_movement();
-    virtual void do_jump();
-
-    player_animation_state calculate_animation_state() const;
-
-    const player_animation_info& get_animation_info(player_animation_state state) const;
-
-    void respawn();
-
-    player_collision_type calculate_collision_type(const ICollisionGameObject* other) const;
-
-    void on_top_collision(const ICollisionGameObject* other);
-    void on_bottom_collision(const ICollisionGameObject* other);
-    void on_left_collision(const ICollisionGameObject* other);
-    void on_right_collision(const ICollisionGameObject* other);
-    void on_top_left_collision(const ICollisionGameObject* other);
-    void on_top_right_collision(const ICollisionGameObject* other);
-    void on_bottom_left_collision(const ICollisionGameObject* other);
-    void on_bottom_right_collision(const ICollisionGameObject* other);
-
-    void on_structure_jump_through_collision(const ICollisionGameObject* other);
-
-protected:
-
-    virtual void set_player_num(int player_num) { this->_player_num = player_num; }
-
-    
-    virtual void set_team(player_team team) { this->_team = team; }
-
-    virtual wep_type get_primary() const { return this->_primary_type; }
-    virtual void set_primary(wep_type primary) { this->_primary_type = primary; }
-
-    virtual wep_type get_secondary() const { return this->_secondary_type; }
-    virtual void set_secondary(wep_type secondary) { this->_secondary_type = secondary; }
-
-    virtual void set_team_colour(const MattMath::Colour& team_colour) { this->_team_colour = team_colour; }
-
-    virtual void set_viewport(const MattMath::Viewport& viewport) { this->_viewport = viewport; }
-
-    virtual bool get_facing_right() const { return this->_facing_right; }
-    virtual void set_facing_right(bool facing_right) { this->_facing_right = facing_right; }
-
-    virtual void set_input(const player_input& input) { this->_input = input; }
-
-    virtual void alter_health(float change) { this->_health += change; }
-    virtual void set_health(float health) { this->_health = health; }
-
-    virtual void set_respawn_timer(float respawn_timer) { this->_respawn_timer = respawn_timer; }
-    virtual void alter_respawn_timer(float change) { this->_respawn_timer += change; }
-
-    //virtual bool get_on_ground() const { return this->_on_ground; }
-    //virtual void set_on_ground(bool on_ground) { this->_on_ground = on_ground; }
-
-    //virtual bool get_on_ceiling() const { return this->_on_ceiling; }
-    //virtual void set_on_ceiling(bool on_ceiling) { this->_on_ceiling = on_ceiling; }
-
-    //virtual bool get_jumping() const { return this->_jumping; }
-    //virtual void set_jumping(bool jumping) { this->_jumping = jumping; }
-
-    /*virtual bool get_prev_requesting_jump() const { return this->_prev_requesting_jump; }
-    virtual void set_prev_requesting_jump(bool prev_requesting_jump) { this->_prev_requesting_jump = prev_requesting_jump; }*/
-
-    virtual float get_air_time() const { return this->_air_time; }
-    virtual void set_air_time(float air_time) { this->_air_time = air_time; }
-    virtual void alter_air_time(float change) { this->_air_time += change; }
-
-    virtual int get_score() const { return this->_score; }
-    virtual void set_score(int score) { this->_score = score; }
-    virtual void alter_score(int change) { this->_score += change; }
-
-    //virtual bool get_showing_debug() const { return this->_showing_debug; }
-    virtual void set_showing_debug(bool showing_debug) { this->_showing_debug = showing_debug; }
-
-    //virtual player_move_state get_move_state() const { return this->_move_state; }
-    virtual void set_move_state(player_move_state move_state) { this->_move_state = move_state; }
-
 public:
     Player(const MattMath::RectangleF& rectangle,
         const player_animation_info& animation_info,
@@ -236,11 +104,9 @@ public:
     virtual const MattMath::Viewport& get_viewport() const;
     virtual float get_input_x_movement() const;
     virtual const MattMath::Vector2F& get_input_shoot_direction() const;
-    //virtual direction_lock get_input_shoot_direction_lock() const;
     virtual bool get_input_primary_shoot() const;
     virtual bool get_input_jump_pressed() const;
     virtual bool get_input_jump_held() const;
-    //virtual bool get_prev_requesting_jump() const;
     virtual player_move_state get_move_state() const;
     virtual int get_player_num() const { return this->_player_num; }
 
@@ -264,24 +130,110 @@ public:
     void update_prev_rectangle();
     void stop_sounds();
 
-    //const MattMath::RectangleF& get_bounding_box() const override;
-    //const MattMath::RectangleI get_bounding_box_i() const override;
-
-    //const MattMath::RectangleF& get_collision_aabb() const override;
-    //const std::vector<collidable_object_type>&
-    //    get_collidable_object_types() const override;
-    //const std::vector<collidable_object_detail>&
-    //    get_collidable_object_details() const override;
-
-    //const MattMath::Vector2F& get_velocity() const override;
-    //const MattMath::Vector2F& get_dx() const override;
-    //float get_rotation() const override;
+protected:
+    virtual void set_player_num(int player_num) { this->_player_num = player_num; }
 
 
+    virtual void set_team(player_team team) { this->_team = team; }
 
-    //Weapon* get_primary() { return this->_primary.get(); }
-    //const Weapon* get_primary_const() const { return this->_primary.get(); }
-    //void set_primary(std::unique_ptr<Weapon> primary) { this->_primary = std::move(primary); }
+    virtual wep_type get_primary() const { return this->_primary_type; }
+    virtual void set_primary(wep_type primary) { this->_primary_type = primary; }
+
+    virtual wep_type get_secondary() const { return this->_secondary_type; }
+    virtual void set_secondary(wep_type secondary) { this->_secondary_type = secondary; }
+
+    virtual void set_team_colour(const MattMath::Colour& team_colour) { this->_team_colour = team_colour; }
+
+    virtual void set_viewport(const MattMath::Viewport& viewport) { this->_viewport = viewport; }
+
+    virtual bool get_facing_right() const { return this->_facing_right; }
+    virtual void set_facing_right(bool facing_right) { this->_facing_right = facing_right; }
+
+    virtual void set_input(const player_input& input) { this->_input = input; }
+
+    virtual void alter_health(float change) { this->_health += change; }
+    virtual void set_health(float health) { this->_health = health; }
+
+    virtual void set_respawn_timer(float respawn_timer) { this->_respawn_timer = respawn_timer; }
+    virtual void alter_respawn_timer(float change) { this->_respawn_timer += change; }
+
+    virtual float get_air_time() const { return this->_air_time; }
+    virtual void set_air_time(float air_time) { this->_air_time = air_time; }
+    virtual void alter_air_time(float change) { this->_air_time += change; }
+
+    virtual int get_score() const { return this->_score; }
+    virtual void set_score(int score) { this->_score = score; }
+    virtual void alter_score(int change) { this->_score += change; }
+
+    virtual void set_showing_debug(bool showing_debug) { this->_showing_debug = showing_debug; }
+
+    virtual void set_move_state(player_move_state move_state) { this->_move_state = move_state; }
+private:
+    MattMath::Camera _camera = MattMath::Camera::DEFAULT_CAMERA;
+
+    std::unique_ptr<Weapon> _primary = nullptr;
+
+    float _health = player_consts::STARTING_HEALTH;
+    float _damage_sound_timer = 0.0f;
+    float _air_time = 0.0f;
+    bool _facing_right = true;
+    int _score = 0;
+    bool _showing_debug = false;
+    player_state _state = player_state::ALIVE;
+    float _respawn_timer = player_consts::RESPAWN_DELAY;
+    player_input _input = player_input();
+    player_move_state _move_state = player_move_state::IN_AIR;
+    player_animation_state _animation_state = player_animation_state::IDLE;
+
+    int _player_num = player_consts::DEFAULT_PLAYER_NUM;
+    player_team _team = player_consts::DEFAULT_TEAM;
+    wep_type _primary_type = player_consts::DEFAULT_PRIMARY;
+    wep_type _secondary_type = player_consts::DEFAULT_SECONDARY;
+    MattMath::Colour _team_colour = player_consts::DEFAULT_TEAM_COLOUR;
+    MattMath::Viewport _viewport = MattMath::Viewport();
+
+    MattMath::RectangleF _rectangle = player_consts::DEFAULT_BOUNDS;
+    MattMath::RectangleF _prev_rectangle = player_consts::DEFAULT_BOUNDS;
+
+    MattMath::Vector2F _respawn_position = MattMath::Vector2F::ZERO;
+
+    SoundBank* _sound_bank = nullptr;
+
+    const float* _dt = nullptr;
+
+    float _health_regen_timer = 0.0f;
+
+    virtual const MattMath::RectangleF* get_collision_rectangle() const;
+
+    virtual bool is_matching_collision_object_type(
+        const ICollisionGameObject* other) const;
+
+    virtual void on_projectile_collision(const ICollisionGameObject* other);
+    virtual void on_structure_collision(const ICollisionGameObject* other);
+
+    virtual float get_dt() const;
+
+    virtual void update_movement();
+    virtual void do_jump();
+
+    player_animation_state calculate_animation_state() const;
+
+    const player_animation_info& get_animation_info(player_animation_state state) const;
+
+    void respawn();
+
+    player_collision_type calculate_collision_type(const ICollisionGameObject* other) const;
+
+    void on_top_collision(const ICollisionGameObject* other);
+    void on_bottom_collision(const ICollisionGameObject* other);
+    void on_left_collision(const ICollisionGameObject* other);
+    void on_right_collision(const ICollisionGameObject* other);
+    void on_top_left_collision(const ICollisionGameObject* other);
+    void on_top_right_collision(const ICollisionGameObject* other);
+    void on_bottom_left_collision(const ICollisionGameObject* other);
+    void on_bottom_right_collision(const ICollisionGameObject* other);
+
+    void on_structure_jump_through_collision(const ICollisionGameObject* other);
 };
 
 #endif // !PLAYER_H

@@ -5,15 +5,6 @@
 
 class AnimatedSprite
 {
-private:
-	const float* _dt = nullptr;
-	SpriteSheet* _sprite_sheet = nullptr;
-	//std::string _animation_strip_name = "";
-	const AnimationStrip* _animation_strip = nullptr;
-
-	int _frame_index = 0;
-	bool _paused = false;
-	float _time_elapsed = 0.0f;
 public:
 	AnimatedSprite(SpriteSheet* sprite_sheet,
 		const std::string& animation_strip_name,
@@ -46,5 +37,13 @@ public:
 	void set_animation_strip(SpriteSheet* sprite_sheet,
 		const std::string& animation_strip_name);
 	void set_frame_index(int frame_index);
+
+private:
+	const float* _dt = nullptr;
+	SpriteSheet* _sprite_sheet = nullptr;
+	const AnimationStrip* _animation_strip = nullptr;
+	int _frame_index = 0;
+	bool _paused = false;
+	float _time_elapsed = 0.0f;
 };
 #endif // !ANIMATEDSPRITE_H

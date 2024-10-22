@@ -1,7 +1,6 @@
 #include "pch.h"
 #include "MenuLevelSettings.h"
 
-
 void MenuLevelSettings::set_player_count(int player_count)
 {
 	this->_player_count = player_count;

@@ -10,7 +10,6 @@ struct projectile_details
     float wind_resistance = -1.0f;
     rotation_origin rotat_origin = rotation_origin::NO_ROTATION;
     float delete_timer = -1.0f;
-    //float colour_power = -1.0f;
     float player_damage = -1.0f;
     MattMath::Vector2F size = { 0.0f, 0.0f };
     MattMath::Vector2F col_rect_size = { 0.0f, 0.0f };

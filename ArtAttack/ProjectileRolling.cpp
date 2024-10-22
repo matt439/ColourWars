@@ -37,16 +37,14 @@ void ProjectileRolling::update()
 }
 void ProjectileRolling::draw(const Camera& camera)
 {
-	//this->AnimationObject::draw(this->get_draw_rectangle(), camera);
+	// do nothing
 }
 void ProjectileRolling::draw()
 {
-	//this->AnimationObject::draw(this->get_draw_rectangle());
+	// do nothing
 }
 bool ProjectileRolling::is_visible_in_viewport(const RectangleF& view) const
 {
-	//return this->get_draw_rectangle().intersects(view);
-
 	return false;
 }
 bool ProjectileRolling::is_colliding(const ICollisionGameObject* other) const
@@ -85,9 +83,3 @@ const Shape* ProjectileRolling::get_shape() const
 {
 	return &this->_rectangle;
 }
-//RectangleF ProjectileRolling::get_draw_rectangle() const
-//{
-//	RectangleF draw_rectangle = this->_rectangle;
-//	draw_rectangle.inflate_to_size(this->get_details().size);
-//	return draw_rectangle;
-//}

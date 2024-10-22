@@ -5,10 +5,6 @@
 
 class MovingObject
 {
-private:
-	MattMath::Vector2F _velocity = MattMath::Vector2F::ZERO;
-	MattMath::Vector2F _dx = MattMath::Vector2F::ZERO;
-	float _rotation = 0.0f;
 public:
 	MovingObject() = default;
 	MovingObject(const MattMath::Vector2F& velocity,
@@ -54,6 +50,12 @@ protected:
 	virtual float get_rotation() const;
 	virtual void set_rotation(float rotation);
 	virtual void alter_rotation(float rotation);
+
+private:
+	MattMath::Vector2F _velocity = MattMath::Vector2F::ZERO;
+	MattMath::Vector2F _dx = MattMath::Vector2F::ZERO;
+	float _rotation = 0.0f;
+
 };
 
 #endif // !MOVINGOBJECT_H

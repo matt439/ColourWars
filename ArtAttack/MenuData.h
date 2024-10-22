@@ -6,8 +6,6 @@
 
 class MenuData : public GameData
 {
-private:
-	MenuInput* _input = nullptr;
 public:
 	MenuData(GameData* game_data) : GameData(game_data) {}
 	MenuData(GameData* game_data, MenuInput* input) :
@@ -15,5 +13,7 @@ public:
 	MenuInput* get_input() { return this->_input; }
 	void set_input(MenuInput* input) { this->_input = input; }
 	MenuData* get_menu_data() { return this; }
+private:
+	MenuInput* _input = nullptr;
 };
 #endif // !MENUDATA_H

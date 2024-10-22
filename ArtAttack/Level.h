@@ -4,7 +4,6 @@
 #include "ICollisionGameObject.h"
 #include "TeamColour.h"
 #include "level_stage.h"
-//#include "border_thickness.h"
 #include "PlayerInput.h"
 #include "Player.h"
 #include "ResolutionManager.h"
@@ -19,16 +18,11 @@
 
 enum class level_state
 {
-	//START_CONFIRMATION,
 	START_COUNTDOWN,
 	ACTIVE,
-	//PAUSED,
-	//RESTARTING,
 	ZOOM_OUT,
 	OVERVIEW,
 	FINISHED,
-	//END_SCREEN,
-	//DELETABLE
 };
 
 namespace level_consts
@@ -40,7 +34,6 @@ namespace level_consts
 	const static MattMath::Colour COUNTDOWN_COLOUR = colour_consts::DARK_GRAY;
 	const static MattMath::Colour COUNTDOWN_SHADOW_COLOUR = colour_consts::BLACK;
 	constexpr float COUNTDOWN_SCALE = 2.0f;
-	//constexpr float COUNTDOWN_SHADOW_SCALE = 2.0f;
 	const static MattMath::Vector2F COUNTDOWN_SHADOW_OFFSET = { 5.0f, 5.0f };
 	constexpr float COUNTDOWN_TEXT_WIDTH = 400.0f;
 	constexpr float COUNTDOWN_TEXT_HEIGHT = 600.0f;
@@ -48,9 +41,6 @@ namespace level_consts
 	constexpr float ZOOM_OUT_TIMER = 2.0f;
 	constexpr float OVERVIEW_TIMER = 2.0f;
 
-	//const std::string SOUND_BANK = "sound_bank_1";
-	//const std::string MUSIC = "dragostea_din_tei"; //"level_music_1";
-	//constexpr float MUSIC_VOLUME = 0.3f;
 	const std::string COUNTDOWN_SOUND = "smash_countdown";
 	constexpr float COUNTDOWN_SOUND_VOLUME = 1.0f;
 
@@ -159,123 +149,6 @@ public:
 	level_end_info get_level_end_info() const;
 
 	void stop_music() const;
-
-	//void set_player_inputs(const std::vector<player_input>& player_inputs);
 };
-
-
-//#include <vector>
-//#include <memory>
-//#include "Tile.h"
-//#include "Player.h"
-//#include "TeamColour.h"
-//#include "level_stage.h"
-//#include "tile_consts.h"
-//#include "IPhysical.h"
-////#include "ICollidable.h"
-//#include "MattMath.h"
-//#include "ICollidableWithOthers.h"
-//
-////#include "Projectile.h"
-//
-//struct level_info
-//{
-//	std::shared_ptr<std::vector<ICollidable>> collidable_objects = nullptr;
-//	std::shared_ptr<std::vector<ICollidableWithOthers>> colliding_objects = nullptr;
-//	std::shared_ptr<std::vector<IPhysical>>
-//		non_colliding_objects = nullptr;
-//	std::shared_ptr<std::vector<std::vector<Tile>>> tiles = nullptr;
-//	std::shared_ptr<std::vector<Player>> players = nullptr;
-//	float timer = 0.0f;
-//	team_colour team_colours = team_colour();
-//	level_stage stage = level_stage::TEST_1;
-//	MattMath::RectangleI camera_boundary_border = { 0, 0, 0, 0 };
-//};
-//
-//enum class level_state
-//{
-//	START_CONFIRMATION,
-//	ACTIVE,
-//	PAUSED,
-//	RESTARTING,
-//	TIMER_FINISHED,
-//	END_SCREEN,
-//	DELETABLE
-//};
-//
-//namespace level_consts
-//{
-//	constexpr float TIMER = 60.0f;
-//}
-//
-//class Level
-//{
-//private:
-//	//level_info _info = level_info();
-//	level_state _state = level_state::ACTIVE;
-//	//float _timer = level_consts::TIMER;
-//
-//	std::shared_ptr<std::vector<ICollidable>>
-//		_colliding_objects = nullptr;
-//	std::shared_ptr<std::vector<IPhysical>>
-//		_non_colliding_objects = nullptr;
-//
-//	std::shared_ptr<std::vector<std::vector<Tile>>> _tiles = nullptr;
-//	std::shared_ptr<std::vector<Player>> _players = nullptr;
-//	float _timer = 0.0f;
-//	team_colour _team_colours = team_colour();
-//	level_stage _stage = level_stage::TEST_1;
-//	RECT _camera_boundary_border = { 0, 0, 0, 0 };
-//public:
-//	Level(const level_info& info) :
-//		_colliding_objects(info.colliding_objects),
-//		_non_colliding_objects(info.non_colliding_objects),
-//		_tiles(info.tiles),
-//		_players(info.players),
-//		_timer(info.timer),
-//		_team_colours(info.team_colours),
-//		_stage(info.stage),
-//		_camera_boundary_border(info.camera_boundary_border) {}
-//	
-//	std::vector<std::vector<Tile>>* get_tiles() { return this->_tiles.get(); }
-//	const std::vector<std::vector<Tile>>* get_tiles_const() const { return this->_tiles.get(); }
-//	Tile* get_tile(int x, int y) { return &(*this->_tiles)[y][x]; }
-//	const Tile* get_tile_const(int x, int y) const { return &(*this->_tiles)[y][x]; }
-//	int get_tiles_height() const { return static_cast<int>(this->_tiles->size()); }
-//	int get_tiles_width() const { return static_cast<int>((*this->_tiles)[0].size()); }
-//
-//	MattMath::RectangleI get_level_bounding_rectangle() const;
-//	MattMath::RectangleI get_camera_bounding_rectangle() const;
-//
-//	//std::vector<std::vector<std::shared_ptr<Tile>>> get_tiles() { return this->_info.tiles; }
-//	//std::vector<std::vector<std::shared_ptr<Tile>>> get_tiles_const() const { return this->_info.tiles; }
-//	//Tile* get_tile(int x, int y)& { return this->_info.tiles[y][x].get(); }
-//	//const Tile* get_tile_const(int x, int y)& { return this->_info.tiles[y][x].get(); }
-//	//int get_tiles_height() const { return static_cast<int>(this->_info.tiles.size()); }
-//	//int get_tiles_width() const { return static_cast<int>(this->_info.tiles[0].size()); }
-//
-//	std::vector<Player>* get_players() { return this->_players.get(); }
-//	const std::vector<Player>* get_players_const() const { return this->_players.get(); }
-//	Player* get_player(int index) { return &(*this->_players)[index]; }
-//	const Player* get_player_const(int index) const { return &(*this->_players)[index]; }
-//	int get_players_size() const { return static_cast<int>(this->_players->size()); }
-//
-//	//std::vector<std::shared_ptr<Player>> get_players() { return this->_info.players; }
-//	//std::vector<std::shared_ptr<Player>> get_players_const() const { return this->_info.players; }
-//	//Player* get_player(int index) { return this->_info.players[index].get(); }
-//	//const Player* get_player_const(int index) const { return this->_info.players[index].get(); }
-//	//int get_players_size() const { return static_cast<int>(this->_info.players.size()); }
-//
-//	team_colour get_team_colour() const { return this->_team_colours; }
-//	level_stage get_stage() const { return this->_stage; }
-//
-//	level_state get_state() const { return this->_state; }
-//	void set_state(level_state state) { this->_state = state; }
-//	void set_timer(float timer) { this->_timer = timer; }
-//	float get_timer() const { return this->_timer; }
-//	void increment_timer(float dt) { this->_timer += dt; }
-//
-//	//const RECT& get_camera_boundary_border() const { return this->_camera_boundary_border; }
-//};
 
 #endif

@@ -2,7 +2,6 @@
 #include "AnimatedSprite.h"
 
 using namespace DirectX;
-//using namespace DirectX::SimpleMath;
 using namespace MattMath;
 
 AnimatedSprite::AnimatedSprite(SpriteSheet* sprite_sheet,
@@ -33,17 +32,6 @@ void AnimatedSprite::draw(SpriteBatch* sprite_batch,
 		origin,
 		effects,
 		layer_depth);
-
-	//this->_sprite_sheet->draw(
-	//	sprite_batch,
-	//	this->_animation_strip_name,
-	//	this->_frame_index,
-	//	destination_rectangle,
-	//	color,
-	//	rotation,
-	//	origin,
-	//	effects,
-	//	layer_depth);
 }
 void AnimatedSprite::draw(SpriteBatch* sprite_batch,
 	const Vector2F& position,
@@ -67,18 +55,6 @@ void AnimatedSprite::draw(SpriteBatch* sprite_batch,
 		scale,
 		effects,
 		layer_depth);
-
-	//this->_sprite_sheet->draw(
-	//	sprite_batch,
-	//	this->_animation_strip_name,
-	//	this->_frame_index,
-	//	position,
-	//	color,
-	//	rotation,
-	//	origin,
-	//	scale,
-	//	effects,
-	//	layer_depth);
 }
 void AnimatedSprite::update()
 {
@@ -128,7 +104,6 @@ void AnimatedSprite::set_animation_strip(SpriteSheet* sprite_sheet,
 	const std::string& animation_strip_name)
 {
 	this->_sprite_sheet = sprite_sheet;
-	//this->_animation_strip_name = animation_strip_name;
 	this->_animation_strip =
 		sprite_sheet->get_animation_strip(animation_strip_name);
 }

@@ -83,18 +83,6 @@ player_input PlayerInput::calculate_player_input(
         result.primary_shoot = false;
 	}
 
-
- //   Vector2F direction = current.left_analog_stick;
- //   if (std::abs(direction.x) > STICK_DEADZONE)
- //   {
- //       //direction.normalize();
- //       result.x_movement = direction.x;
- //   }
-	//else
-	//{
-	//	result.x_movement = 0.0f;
-	//}
-
     if (std::fabs(current.left_analog_stick.x) > STICK_DEADZONE)
     {
 		result.x_movement = current.left_analog_stick.x;
@@ -119,41 +107,6 @@ player_input PlayerInput::calculate_player_input(
         result.shoot_angle = 0.0f;
         result.shoot_direction_requested = false;
 	}
-
-    //// combined x movement and shoot direction.
-    //// if left analog stick is pushed far enough
-    //// then use that as the shoot direction
-    //// otherwise use the shoot direction
-    //// as the direction the player is facing
-    //Vector2F direction = current.left_analog_stick;
-    //if (abs(direction.x) > 0.7f)
-    //{
-    //    result.x_movement = direction.x;
-    //    direction.normalize();
-    //    result.shoot_direction = direction;
-    //    result.shoot_direction_lock = direction_lock::UNLOCKED;
-    //}
-    //else if (direction.length() > 0.3f)
-    //{
-    //    direction.normalize();
-    //    result.shoot_direction = direction;
-    //    result.shoot_direction_lock = direction_lock::UNLOCKED;
-    //    //result.x_movement = 0.0f;
-    //    if (direction.x < 0.0f)
-    //    {
-    //        result.x_movement = -FLT_MIN;
-    //    }
-    //    else if (direction.x > 0.0f)
-    //    {
-    //        result.x_movement = FLT_MIN;
-    //    }
-    //}
-    //else
-    //{
-    //    result.x_movement = 0.0f;
-    //    result.shoot_direction_lock = direction_lock::LOCKED;
-    //    result.shoot_direction = Vector2F(0.0f);
-    //}
 
     result.connection = connection_state::CONNECTED;
 

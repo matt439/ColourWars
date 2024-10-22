@@ -5,26 +5,19 @@
 #include "TextureObject.h"
 #include "TeamColour.h"
 #include "ICollisionGameObject.h"
-//#include "VisualAnimation.h"
 #include "AnimationObject.h"
-//#include "SoundBank.h"
 
 namespace paint_tile_consts
 {
 	constexpr float WIDTH = 4.0f;
 	constexpr float HEIGHT = 4.0f;
 	constexpr float THICKNESS = 12.0f;
-	//constexpr float SPLASH_DURATION = 0.5f;
 	const static std::string SHEET_NAME = "sprite_sheet_1";
 	const static std::string FRAME_NAME = "pixel";
 
 	const static std::string SPLASH_SPRITE_SHEET_NAME = "sprite_sheet_1";
 	const static std::string SPLASH_ANIMATION_STRIP_NAME = "splash_1";
 	const static MattMath::RectangleF SPLASH_RECTANGLE = { 0.0f, 0.0f, THICKNESS * 2.0f, THICKNESS * 2.0f };
-
-	//const std::string SOUND_BANK_NAME = "sound_bank_1";
-	//const std::string SOUND_NAME = "WaterSplashing";
-	//constexpr float SOUND_VOLUME = 0.05f;
 }
 
 class PaintTileSplash : public AnimationObject, public IGameObject
@@ -81,8 +74,6 @@ public:
 	void update() override;
 	float get_area() const;
 	player_team get_team() const;
-	//void set_team(player_team team);
-	//const MattMath::RectangleF& get_rectangle() const;
 	bool is_colliding(const ICollisionGameObject* other) const override;
 	const MattMath::Shape* get_shape() const override;
 
@@ -90,15 +81,12 @@ public:
 	collision_object_type get_collision_object_type() const override;
 	bool get_for_deletion() const override;
 	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
-	//void play_splash_sound();
 private:
 	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
 	player_team _team = player_team::NONE;
 	team_colour _team_colours = team_colour();
 	const float* _dt = nullptr;
-	//float _splash_timer = 0.0f;
 	PaintTileSplash _splash;
-	//SoundBank* _sound_bank = nullptr;
 };
 
 #endif // !PAINTTILE_H

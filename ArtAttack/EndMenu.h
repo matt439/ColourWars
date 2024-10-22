@@ -14,11 +14,6 @@ namespace end_menu_consts
 
 	const static MattMath::Vector2F END_MENU_BOX_SIZE = { 900.0f, 600.0f };
 	const static MattMath::Colour END_MENU_BOX_COLOUR = colour_consts::DODGER_BLUE; //colour_consts::DARK_CYAN;
-	//const MattMath::Colour END_MENU_HEADING_TEXT_COLOUR = colour_consts::DARK_KHAKI;
-
-	//const static MattMath::Vector2F END_MENU_INITIAL_WIDGET_SIZE = { 300.0f, 50.0f };
-	//const static MattMath::Vector2F END_MENU_INITIAL_WIDGET_POSITION = { 800.0f, 400.0f };
-	//const static MattMath::Vector2F END_MENU_INITIAL_WIDGET_SPACING = { 50.0f, 60.0f };
 
 	const static MattMath::Vector2F END_MENU_INITIAL_WIDGET_SIZE = { 100.0f, 50.0f };
 	const static MattMath::Vector2F END_MENU_INITIAL_WIDGET_POSITION = { 700.0f, 230.0f };
@@ -46,10 +41,6 @@ namespace end_menu_consts
 
 class EndMenuPage : public MenuPage, public MenuHighlight, public SoundBankObject
 {
-private:
-	EndMenuData* _data = nullptr;
-protected:
-	EndMenuData* get_end_menu_data();
 public:
 	EndMenuPage(EndMenuData* data) :
 		MenuPage(data),
@@ -60,11 +51,20 @@ public:
 	virtual void init() = 0;
 	virtual void update() = 0;
 	virtual void draw() = 0;
+protected:
+	EndMenuData* get_end_menu_data();
+private:
+	EndMenuData* _data = nullptr;
 };
 
 
 class EndMenuInitial : public EndMenuPage
 {
+public:
+	EndMenuInitial(EndMenuData* data) : EndMenuPage(data) {}
+	void init() override;
+	void update() override;
+	void draw() override;
 private:
 	std::unique_ptr<MContainer> _texture_container = nullptr;
 	std::unique_ptr<MContainer> _text_container = nullptr;
@@ -75,11 +75,6 @@ private:
 	std::unique_ptr<MTextDropShadow> _change_level = nullptr;
 	std::unique_ptr<MTextDropShadow> _restart = nullptr;
 	std::unique_ptr<MTextDropShadow> _exit = nullptr;
-public:
-	EndMenuInitial(EndMenuData* data) : EndMenuPage(data) {}
-	void init() override;
-	void update() override;
-	void draw() override;
 };
 
 
