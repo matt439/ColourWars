@@ -32,8 +32,6 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData input,
     const Vector2F& player_velocity,
     bool player_facing_right)
 {
-    const float dt = this->get_dt();
-
     if (player_facing_right)  
     {
         this->set_rotation(PI / 4.0f);

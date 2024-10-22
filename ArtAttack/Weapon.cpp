@@ -84,7 +84,7 @@ void Weapon::draw(const Camera& camera, bool debug)
 }
 void Weapon::draw(bool debug)
 {
-    this->draw(Camera::DEFAULT_CAMERA);
+    this->draw(Camera::DEFAULT_CAMERA, debug);
 }
 
 Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, rotation_origin origin)
@@ -177,7 +177,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 		player_velocity, player_facing_right);
 
     if (this->check_if_shooting_and_ammo_update(input, player_center,
-        player_velocity, player_facing_right))
+        player_velocity))
     {
         return this->shoot(Vector2F::unit_vec_from_angle(this->get_rotation()));
 	}
@@ -190,8 +190,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 bool Weapon::check_if_shooting_and_ammo_update(
     PlayerInputData input,
     const Vector2F& player_center,
-    const Vector2F& player_velocity,
-    bool player_facing_right)
+    const Vector2F& player_velocity)
 {
     const float dt = *this->_dt;
     bool normal_gun_ok_to_shoot = input.primary_shoot &&
@@ -283,8 +282,6 @@ void Weapon::update_movement_and_rotation(PlayerInputData input,
     const Vector2F& player_velocity,
     bool player_facing_right)
 {
-    const float dt = *this->_dt;
-
     if (input.shoot_direction_requested)
     {
         this->set_rotation(input.shoot_angle);
@@ -424,7 +421,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
         player_velocity, player_facing_right);
 
     if (Weapon::check_if_shooting_and_ammo_update(input, player_center,
-		player_velocity, player_facing_right))
+		player_velocity))
     {
         return this->shoot(
             Vector2F::unit_vec_from_angle(this->get_rotation()), player_velocity);

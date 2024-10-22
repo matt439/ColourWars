@@ -105,8 +105,7 @@ protected:
 
 	virtual bool check_if_shooting_and_ammo_update(PlayerInputData input,
 		const MattMath::Vector2F& player_center,
-		const MattMath::Vector2F& player_velocity,
-		bool player_facing_right);
+		const MattMath::Vector2F& player_velocity);
 
 	virtual void update_movement_and_rotation(PlayerInputData input,
 		const MattMath::Vector2F& player_center,
@@ -144,9 +143,6 @@ private:
 	MattMath::Vector2F get_wep_rotation_origin_offset(
 		bool facing_left) const;
 };
-
-
-
 
 class RelativeVelocityWeapon : public Weapon
 {

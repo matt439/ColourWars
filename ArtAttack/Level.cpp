@@ -523,10 +523,10 @@ LevelEndInfo Level::get_level_end_info() const
 
 				PaintTotal paint = paintable_object->get_paint_total();
 
-				if (paint.team_a != 0.0f || paint.team_b != 0.0f)
-				{
-					int x = 0;
-				}
+				//if (paint.team_a != 0.0f || paint.team_b != 0.0f)
+				//{
+				//	int x = 0;
+				//}
 
 				result.team_a_area += paint.team_a;
 				result.team_b_area += paint.team_b;
