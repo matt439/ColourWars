@@ -12,7 +12,7 @@ Projectile::Projectile(const Vector2F& velocity,
     const float* dt,
     SpriteBatch* sprite_batch,
     ResourceManager* resource_manager,
-    const projectile_details& details,
+    const ProjectileDetails& details,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
@@ -20,13 +20,13 @@ Projectile::Projectile(const Vector2F& velocity,
     float layer_depth) :
     MovingObject(velocity, rotation),
     AnimationObject(dt, details.sheet_name, details.animation_strip_name, sprite_batch,
-        resource_manager, color, rotation, origin, effects, layer_depth),
-    _team(team),
+                    resource_manager, color, rotation, origin, effects, layer_depth),
+    _details(details),
     _player_num(player_num),
     _team_colour(team_colour),
     _type(type),
-    _dt(dt),
-    _details(details)
+    _team(team),
+    _dt(dt)
 {
 
 }
@@ -40,8 +40,8 @@ DiffusingProjectile::DiffusingProjectile(
     const float* dt,
     SpriteBatch* sprite_batch,
     ResourceManager* resource_manager,
-    const projectile_details& details,
-    const diffusion_details& diffusion_details,
+    const ProjectileDetails& details,
+    const DiffusionDetails& diffusion_details,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
@@ -63,9 +63,9 @@ const Vector2F& DiffusingProjectile::get_base_size() const
 Vector2F DiffusingProjectile::calculate_diffusion_size() const
 {
     const float time = this->get_timer();
-    const diffusion_details& details = this->_diffusion_details;
+    const DiffusionDetails& details = this->_diffusion_details;
     const Vector2F& base_size = this->get_base_size();
-    Vector2F multiple = Vector2F::ZERO;
+    Vector2F multiple;
     if (time < details.start_time)
     {
         multiple = Vector2F::ONE;
@@ -162,15 +162,15 @@ collision_object_type Projectile::get_collision_object_type() const
     case player_team::A:
         switch (type)
         {
-        case projectile_type::SPRAY:
+        case SPRAY:
 			return collision_object_type::PROJECTILE_SPRAY_TEAM_A;
-        case projectile_type::MIST:
+        case MIST:
             return collision_object_type::PROJECTILE_MIST_TEAM_A;
-        case projectile_type::JET:
+        case JET:
             return collision_object_type::PROJECTILE_JET_TEAM_A;
-        case projectile_type::ROLLING:
+        case ROLLING:
             return collision_object_type::PROJECTILE_ROLLING_TEAM_A;
-        case projectile_type::BALL:
+        case BALL:
             return collision_object_type::PROJECTILE_BALL_TEAM_A;
         default:
             throw std::exception("Invalid projectile_type value.");
@@ -178,15 +178,15 @@ collision_object_type Projectile::get_collision_object_type() const
     case player_team::B:
         switch (type)
         {
-        case projectile_type::SPRAY:
+        case SPRAY:
             return collision_object_type::PROJECTILE_SPRAY_TEAM_B;
-        case projectile_type::MIST:
+        case MIST:
             return collision_object_type::PROJECTILE_MIST_TEAM_B;
-        case projectile_type::JET:
+        case JET:
             return collision_object_type::PROJECTILE_JET_TEAM_B;
-        case projectile_type::ROLLING:
+        case ROLLING:
             return collision_object_type::PROJECTILE_ROLLING_TEAM_B;
-        case projectile_type::BALL:
+        case BALL:
             return collision_object_type::PROJECTILE_BALL_TEAM_B;
         default:
             throw std::exception("Invalid projectile_type value.");

@@ -20,21 +20,21 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f) :
 		TextureObject(sheet_name, frame_name,
-			sprite_batch, resource_manager,
-			color, rotation, origin, effects, layer_depth),
-		_rectangle(rectangle),
-		_collision_type(collision_type) {}
+		              sprite_batch, resource_manager,
+		              color, rotation, origin, effects, layer_depth),
+		_collision_type(collision_type),
+		_rectangle(rectangle) {}
 
-	virtual void update() override;
-	virtual void draw(const MattMath::Camera& camera) override;
-	virtual void draw() override;
-	virtual bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
+	void update() override;
+	void draw(const MattMath::Camera& camera) override;
+	void draw() override;
+	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
 
-	virtual bool is_colliding(const ICollisionGameObject* other) const override;
-	virtual void on_collision(const ICollisionGameObject* other) override;
-	virtual collision_object_type get_collision_object_type() const override;
-	virtual const MattMath::Shape* get_shape() const override;
-	virtual bool get_for_deletion() const override;
+	bool is_colliding(const ICollisionGameObject* other) const override;
+	void on_collision(const ICollisionGameObject* other) override;
+	collision_object_type get_collision_object_type() const override;
+	const MattMath::Shape* get_shape() const override;
+	bool get_for_deletion() const override;
 protected:
 	const MattMath::RectangleF& get_rectangle() const;
 private:

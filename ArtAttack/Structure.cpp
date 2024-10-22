@@ -6,7 +6,7 @@ using namespace MattMath;
 
 void Structure::update()
 {
-	return;
+	
 }
 void Structure::draw(const Camera& camera)
 {
@@ -26,7 +26,7 @@ bool Structure::is_colliding(const ICollisionGameObject* other) const
 }
 void Structure::on_collision(const ICollisionGameObject* other)
 {
-	return;
+	// do nothing
 }
 collision_object_type Structure::get_collision_object_type() const
 {

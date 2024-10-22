@@ -3,7 +3,7 @@
 
 #include "Projectile.h"
 
-class ProjectileJet : public Projectile
+class ProjectileJet final : public Projectile
 {
 public:
 	ProjectileJet() = default;
@@ -20,13 +20,13 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
-	virtual void update() override;
-	virtual void draw(const MattMath::Camera& camera) override;
-	virtual void draw() override;
-	virtual bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
+	void update() override;
+	void draw(const MattMath::Camera& camera) override;
+	void draw() override;
+	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
 
-	virtual bool is_colliding(const ICollisionGameObject* other) const override;
-	virtual const MattMath::Shape* get_shape() const override;
+	bool is_colliding(const ICollisionGameObject* other) const override;
+	const MattMath::Shape* get_shape() const override;
 private:
 	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
 };

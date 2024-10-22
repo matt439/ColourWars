@@ -47,7 +47,7 @@ std::map<std::string, std::unique_ptr<AnimationStrip>>
 	for (auto& strip : json.GetArray())
 	{
 		std::string name = strip["name"].GetString();
-		RectangleI first_frame = RectangleI(
+		auto first_frame = RectangleI(
 			strip["first_frame"]["x"].GetInt(),
 			strip["first_frame"]["y"].GetInt(),
 			strip["first_frame"]["w"].GetInt(),
@@ -65,14 +65,14 @@ void SpriteSheet::load_from_json(const char* json_path)
 {
 	FILE* fp = fopen(json_path, "rb");
 
-	std::unique_ptr<char> readBuffer = std::make_unique<char>();
-	FileReadStream is(fp, readBuffer.get(), sizeof(readBuffer));
+	auto read_buffer = std::make_unique<char>();
+	FileReadStream is(fp, read_buffer.get(), sizeof(read_buffer));
 
 	Document d;
 	d.ParseStream(is);
 
 	fclose(fp);
-	readBuffer.release();
+	read_buffer.release();
 
 	Value& sprite_frames = d["sprite_frames"];
 	Value& animation_strips = d["animation_strips"];
@@ -133,7 +133,7 @@ void SpriteSheet::draw(SpriteBatch* sprite_batch,
 	const Vector2F& origin,
 	float scale,
 	SpriteEffects effects,
-	float layer_depth)
+	float layer_depth) const
 {
 	sprite_batch->Draw(
 		this->_texture,
@@ -154,7 +154,7 @@ void SpriteSheet::draw(SpriteBatch* sprite_batch,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
-	float layer_depth)
+	float layer_depth) const
 {
 	sprite_batch->Draw(
 		this->_texture,

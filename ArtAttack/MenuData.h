@@ -7,13 +7,14 @@
 class MenuData : public GameData
 {
 public:
-	MenuData(GameData* game_data) : GameData(game_data) {}
-	MenuData(GameData* game_data, MenuInput* input) :
+	explicit MenuData(const GameData* game_data) : GameData(game_data) {}
+	MenuData(const GameData* game_data, MenuInput* input) :
 		GameData(game_data), _input(input) {}
-	MenuInput* get_input() { return this->_input; }
+	MenuInput* get_input() const { return this->_input; }
 	void set_input(MenuInput* input) { this->_input = input; }
 	MenuData* get_menu_data() { return this; }
 private:
 	MenuInput* _input = nullptr;
 };
+
 #endif // !MENUDATA_H

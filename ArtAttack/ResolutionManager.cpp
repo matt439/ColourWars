@@ -45,15 +45,15 @@ Vector2I ResolutionManager::convert_resolution_to_ivec(
     switch (resolution)
     {
     case screen_resolution::S_1280_720:
-        return Vector2I(1280, 720);
+        return {1280, 720};
     case screen_resolution::S_1920_1080:
-        return Vector2I(1920, 1080);
+        return {1920, 1080};
     case screen_resolution::S_2560_1440:
-        return Vector2I(2560, 1440);
+        return {2560, 1440};
     case screen_resolution::S_3840_2160:
-        return Vector2I(3840, 2160);
+        return {3840, 2160};
     default:
-        return Vector2I(-1, -1);
+        return {-1, -1};
     }
 }
 
@@ -62,12 +62,14 @@ Vector2F ResolutionManager::convert_resolution_to_vec(
 {
     Vector2I res =
         this->convert_resolution_to_ivec(resolution);
-    return Vector2F(static_cast<float>(res.x),
-        static_cast<float>(res.y));
+    return {
+	    static_cast<float>(res.x),
+        static_cast<float>(res.y)
+    };
 }
 
 std::string ResolutionManager::convert_resolution_to_string(
-    screen_resolution resolution) const
+    screen_resolution resolution)
 {
     switch (resolution)
     {

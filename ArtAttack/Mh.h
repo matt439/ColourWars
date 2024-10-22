@@ -9,7 +9,7 @@ class MObject : public IGameObject
 {
 public:
 	MObject() = default;
-	MObject(const std::string& name, bool hidden = false);
+	explicit MObject(const std::string& name, bool hidden = false);
 	const std::string& get_name() const;
 
 	void draw(const MattMath::Viewport& viewport);
@@ -19,23 +19,23 @@ public:
 
 	virtual void scale_size_and_position(const MattMath::Vector2F& scale) = 0;
 
-	virtual void update() = 0;
-	virtual void draw(const MattMath::Camera& camera) = 0;
-	virtual void draw() = 0;
-	virtual bool is_visible_in_viewport(const MattMath::RectangleF& view) const = 0;
+	void update() override = 0;
+	void draw(const MattMath::Camera& camera) override = 0;
+	void draw() override = 0;
+	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override = 0;
 private:
 	std::string _name = "error_name";
 	bool _hidden = false;
 };
 
-class MContainer : public MObject
+class MContainer final : public MObject
 {
 public:
 	MContainer() = default;
-	MContainer(const std::string& name);
+	explicit MContainer(const std::string& name);
 	void add_child(MObject* child);
 	void remove_child(const std::string& name);
-	void remove_child(MObject* child);
+	void remove_child(const MObject* child);
 	void remove_all_children();
 	size_t get_child_count() const;
 	std::vector<std::pair<std::string, MObject*>> get_children();
@@ -58,20 +58,20 @@ class MWidget : public MObject
 {
 public:
 	MWidget() = default;
-	MWidget(const std::string& name, bool hidden = false);
-	virtual ~MWidget() = default;
+	explicit MWidget(const std::string& name, bool hidden = false);
+	~MWidget() override = default;
 
-	virtual void scale_size_and_position(const MattMath::Vector2F& scale) = 0;
+	void scale_size_and_position(const MattMath::Vector2F& scale) override = 0;
 
-	virtual void update() = 0;
-	virtual void draw(const MattMath::Camera& camera) = 0;
-	virtual void draw() = 0;
-	virtual bool is_visible_in_viewport(const MattMath::RectangleF& view) const = 0;
+	void update() override = 0;
+	void draw(const MattMath::Camera& camera) override = 0;
+	void draw() override = 0;
+	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override = 0;
 
 	virtual void set_colour(const MattMath::Colour& colour) = 0;
 };
 
-class MTexture : public MWidget, public TextureObject
+class MTexture final : public MWidget, public TextureObject
 {
 public:
 	MTexture() = default;
@@ -110,7 +110,7 @@ private:
 	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
 };
 
-class MText : public MWidget, public Text
+class MText final : public MWidget, public Text
 {
 public:
 	MText() = default;
@@ -137,7 +137,7 @@ public:
 	void set_colour(const MattMath::Colour& colour) override;
 };
 
-class MTextDropShadow : public MWidget, public TextDropShadow
+class MTextDropShadow final : public MWidget, public TextDropShadow
 {
 public:
 	MTextDropShadow() = default;

@@ -7,7 +7,7 @@ using namespace player_consts;
 using namespace colour_consts;
 
 Player::Player(const RectangleF& rectangle,
-    const player_animation_info& animation_info,
+    const PlayerAnimationInfo& animation_info,
     SpriteBatch* sprite_batch,
     ResourceManager* resource_manager,
     int player_num,
@@ -24,23 +24,23 @@ Player::Player(const RectangleF& rectangle,
     const Vector2F& origin,
     SpriteEffects effects,
     float layer_depth) :
-    AnimationObject(dt, animation_info.sprite_sheet,
-        animation_info.animation, sprite_batch,
-        resource_manager, DEFAULT_PLAYER_COLOUR, rotation, origin, effects, layer_depth),
-    TextureObject(animation_info.sprite_sheet, animation_info.uniform_texture, sprite_batch,
-        		resource_manager, team_colour, rotation, origin, effects, layer_depth),
     MovingObject(velocity),
+    AnimationObject(dt, animation_info.sprite_sheet,
+                    animation_info.animation, sprite_batch,
+                    resource_manager, DEFAULT_PLAYER_COLOUR, rotation, origin, effects, layer_depth),
+    TextureObject(animation_info.sprite_sheet, animation_info.uniform_texture, sprite_batch,
+                  resource_manager, team_colour, rotation, origin, effects, layer_depth),
+    _primary(std::move(primary_weapon)),
     _player_num(player_num),
     _team(team),
     _primary_type(primary),
-    _primary(std::move(primary_weapon)),
     _secondary_type(secondary),
     _team_colour(team_colour),
     _viewport(view_port),
-    _dt(dt),
     _rectangle(rectangle),
     _prev_rectangle(rectangle),
-    _respawn_position(respawn_position)
+    _respawn_position(respawn_position),
+    _dt(dt)
 {
     this->_sound_bank = resource_manager->get_sound_bank(SOUND_BANK);
 }
@@ -59,26 +59,26 @@ void Player::draw(const Camera& camera)
     {
 		this->_animation_state = new_animation_state;
 
-        const player_animation_info& info = this->get_animation_info(new_animation_state);
+        const PlayerAnimationInfo& info = this->get_animation_info(new_animation_state);
         TextureObject::set_sprite_sheet_name(info.sprite_sheet);
         TextureObject::set_element_name(info.uniform_texture);
 
-        AnimationObject::set_animation_strip_and_reset(info.sprite_sheet, info.animation);
+        set_animation_strip_and_reset(info.sprite_sheet, info.animation);
         if (info.frame_time != FLT_MIN)
         {
-            AnimationObject::set_frame_time(info.frame_time);
+            set_frame_time(info.frame_time);
 		}
         else
         {
-			AnimationObject::set_frame_time_to_default();
+			set_frame_time_to_default();
         }
 	}
 
-    SpriteEffects effects = SpriteEffects::SpriteEffects_None;
+    SpriteEffects effects = SpriteEffects_None;
     bool facing_right = this->get_facing_right();
     if (!facing_right)
     {
-        effects = SpriteEffects::SpriteEffects_FlipHorizontally;
+        effects = SpriteEffects_FlipHorizontally;
     }
 
     TextureObject::set_effects(effects);
@@ -141,7 +141,7 @@ const RectangleF* Player::get_collision_rectangle() const
 }
 
 bool Player::is_matching_collision_object_type(
-    const ICollisionGameObject* other) const
+    const ICollisionGameObject* other)
 {
     collision_object_type other_type = other->get_collision_object_type();
 
@@ -161,7 +161,7 @@ bool Player::is_colliding(const ICollisionGameObject* other) const
 	}
     
     // type check
-    if (!this->is_matching_collision_object_type(other))
+    if (!is_matching_collision_object_type(other))
     {
         return false;
     }
@@ -263,8 +263,8 @@ void Player::on_structure_jump_through_collision(const ICollisionGameObject* oth
 	{
         MovingObject::set_velocity_y(0.0f);
 
-        const RectangleF& other_rect = other->get_shape()->get_bounding_box();
-        this->_rectangle.set_position_y_from_bottom(other_rect.get_top());
+        const RectangleF& rect = other->get_shape()->get_bounding_box();
+        this->_rectangle.set_position_y_from_bottom(rect.get_top());
         this->set_move_state(player_move_state::ON_DROP_DOWN_GROUND);
 	}
 	else
@@ -521,7 +521,7 @@ player_collision_type Player::calculate_collision_type(const ICollisionGameObjec
 		throw std::exception("Invalid collision type.");
 	}
 }
-void Player::update_weapon_position()
+void Player::update_weapon_position() const
 {
     this->_primary->set_player_center(this->get_center());
 }
@@ -623,7 +623,7 @@ void Player::update()
     this->_health_regen_timer += this->get_dt();
 }
 std::vector<std::unique_ptr<ICollisionGameObject>>
-    Player::update_weapon_and_get_projectiles()
+    Player::update_weapon_and_get_projectiles() const
 {
     return this->_primary->update_and_get_projectiles(
         this->get_input(),
@@ -638,7 +638,7 @@ void Player::update_prev_rectangle()
 
 void Player::update_movement()
 {
-    const player_input input = this->_input;
+    const PlayerInputData input = this->_input;
     const float x_input = input.x_movement;
     const player_move_state move_state = this->get_move_state();
     const float dt = this->get_dt();
@@ -796,7 +796,7 @@ bool Player::is_visible_in_viewport(const RectangleF& view) const
     player_and_weapon_rect.inflate(Vector2F(200.0f, 200.0f));
     return player_and_weapon_rect.intersects(view);
 }
-void Player::set_player_input(const player_input& input)
+void Player::set_player_input(const PlayerInputData& input)
 {
 	this->_input = input;
 }
@@ -849,7 +849,7 @@ bool Player::get_showing_debug() const
 {
 	return this->_showing_debug;
 }
-const player_animation_info& Player::get_animation_info(player_animation_state state) const
+const PlayerAnimationInfo& Player::get_animation_info(player_animation_state state)
 {
     switch (state)
     {
@@ -923,7 +923,7 @@ player_animation_state Player::calculate_animation_state() const
 		throw std::exception("Invalid player move state.");
 	}
 }
-void Player::stop_sounds()
+void Player::stop_sounds() const
 {
     this->_primary->stop_sounds();
 }

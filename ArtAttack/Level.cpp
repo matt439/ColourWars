@@ -10,7 +10,7 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_coll
 	std::unique_ptr<std::vector<std::unique_ptr<Player>>> player_objects,
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers,
 	level_stage stage,
-	const team_colour& team_colours,
+	const TeamColour& team_colours,
 	const RectangleF& out_of_bounds,
 	const RectangleF& camera_bounds,
 	const RectangleF& zoom_out_start_bounds,
@@ -60,7 +60,7 @@ void Level::stop_music() const
 {
 	this->_sound_bank->stop_effect(this->_music_name, true);
 }
-void Level::update(const std::vector<player_input>& player_inputs)
+void Level::update(const std::vector<PlayerInputData>& player_inputs)
 {
 	if (this->_state == level_state::START_COUNTDOWN ||
 		this->_start_timer > -1.0f)
@@ -176,7 +176,7 @@ float Level::zoom_out_camera_ratio() const
 {
 	return 1.0f - (this->_zoom_out_timer / ZOOM_OUT_TIMER);
 }
-void Level::update_level_logic(const std::vector<player_input>& player_inputs) const
+void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs) const
 {
 	// update collision objects
 	for (const auto& object : *this->_collision_objects)

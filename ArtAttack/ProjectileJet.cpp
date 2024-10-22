@@ -18,7 +18,7 @@ ProjectileJet::ProjectileJet(const RectangleF& rectangle,
 	SpriteEffects effects,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
-		projectile_type::JET, dt,
+		JET, dt,
 		sprite_batch, resource_manager,
 		DETAILS_JET,
 		team_colour, rotation, origin, effects, layer_depth),
@@ -31,7 +31,7 @@ ProjectileJet::ProjectileJet(const RectangleF& rectangle,
 
 void ProjectileJet::update()
 {
-	const projectile_details& details = this->get_details();
+	const ProjectileDetails& details = this->get_details();
 
 	Projectile::update_movement(details.gravity,
 		details.wind_resistance);

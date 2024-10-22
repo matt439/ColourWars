@@ -6,7 +6,7 @@ using namespace MattMath;
 
 std::unique_ptr<ICollisionGameObject>
 	LevelObjectBuilder::build_collision_object(const Value& json,
-		const team_colour& team_colours) const
+		const TeamColour& team_colours) const
 {
 	std::string type = json["type"].GetString();
 	if (type == "Structure")
@@ -68,7 +68,7 @@ std::unique_ptr<ICollisionGameObject>
 		{
 			throw std::exception("Invalid collision type");
 		}
-		paintable_faces faces;
+		PaintableFaces faces;
 		faces.left = json["paintable_faces"]["left"].GetBool();
 		faces.top = json["paintable_faces"]["top"].GetBool();
 		faces.right = json["paintable_faces"]["right"].GetBool();
@@ -134,7 +134,7 @@ std::unique_ptr<IGameObject>
 
 std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>>
 	LevelObjectBuilder::build_collision_objects(const Value& json,
-		const team_colour& team_colours) const
+		const TeamColour& team_colours) const
 {
 	auto collision_objects = std::make_unique<std::vector<std::unique_ptr<ICollisionGameObject>>>();
 	for (auto& object : json.GetArray())

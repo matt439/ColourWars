@@ -18,7 +18,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	_sampler_state(sampler_state),
 	_resolution_manager(resolution_manager)
 {
-	this->_team_colour = std::make_unique<TeamColour>();
+	this->_team_colour = std::make_unique<TeamColourTools>();
 	this->_player_builder = std::make_unique<PlayerBuilder>();
 
 	this->_level_object_builder = std::make_unique<LevelObjectBuilder>(
@@ -31,7 +31,7 @@ std::unique_ptr<Level>
 	const LevelLoadedInfo* load_info =
 		this->_resource_manager->get_level_info(settings.get_stage());
 
-	const team_colour team_colours = this->_team_colour->generate_random_team_colour();
+	const TeamColour team_colours = this->_team_colour->generate_random_team_colour();
 
 	const Value& collision_objects_json =
 		load_info->get_collision_objects_json();

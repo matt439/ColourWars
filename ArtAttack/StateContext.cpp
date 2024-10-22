@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "StateContext.h"
 
-void StateContext::update()
+void StateContext::update() const
 {
 	if (this->_state == nullptr)
 	{
@@ -9,7 +9,7 @@ void StateContext::update()
 	}
 	this->_state->update();
 }
-void StateContext::draw()
+void StateContext::draw() const
 {
 	if (this->_state == nullptr)
 	{

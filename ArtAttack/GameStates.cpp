@@ -125,7 +125,7 @@ void GameLevel::update()
         //no break here so it goes to active
     case game_level_state::ACTIVE:
     {
-        std::vector<player_input> player_inputs =
+        std::vector<PlayerInputData> player_inputs =
             this->_player_input->update_and_get_player_inputs();
 
         // check for pause menu press
@@ -314,7 +314,7 @@ void GameLevel::draw()
 }
 
 int GameLevel::check_for_pause_input(
-    const std::vector<player_input>& player_inputs)
+    const std::vector<PlayerInputData>& player_inputs)
 {
     for (int i = 0; i < static_cast<int>(player_inputs.size()); i++)
     {

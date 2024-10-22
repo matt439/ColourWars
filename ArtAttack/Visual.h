@@ -5,7 +5,7 @@
 #include "TextureObject.h"
 #include "MattMath.h"
 
-class Visual : public IGameObject, public TextureObject
+class Visual final : public IGameObject, public TextureObject
 {
 public:
 	Visual() = default;
@@ -23,12 +23,11 @@ public:
 			color, rotation, origin, effects, layer_depth),
 		_rectangle(rectangle) {}
 
-	virtual void update() override;
-	virtual void draw(const MattMath::Camera& camera) override;
-	virtual void draw() override;
+	void update() override;
+	void draw(const MattMath::Camera& camera) override;
+	void draw() override;
 
-	virtual bool is_visible_in_viewport(
-		const MattMath::RectangleF& view) const override;
+	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
 
 protected:
 	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;

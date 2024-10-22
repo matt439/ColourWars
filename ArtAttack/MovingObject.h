@@ -6,13 +6,15 @@
 class MovingObject
 {
 public:
+	virtual ~MovingObject() = default;
 	MovingObject() = default;
-	MovingObject(const MattMath::Vector2F& velocity,
-		float rotation = 0.0f,
-		const MattMath::Vector2F& dx = MattMath::Vector2F::ZERO) :
+
+	explicit MovingObject(const MattMath::Vector2F& velocity,
+	                      float rotation = 0.0f,
+	                      const MattMath::Vector2F& dx = MattMath::Vector2F::ZERO) :
 		_velocity(velocity),
-		_rotation(rotation),
-		_dx(dx) {}
+		_dx(dx),
+		_rotation(rotation) {}
 
 protected:
 	virtual const MattMath::Vector2F& get_velocity() const;

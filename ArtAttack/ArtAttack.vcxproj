@@ -226,7 +226,7 @@
     <ClInclude Include="MenuPage.h" />
     <ClInclude Include="menu_element.h" />
     <ClInclude Include="menu_input_action.h" />
-    <ClInclude Include="menu_player_settings.h" />
+    <ClInclude Include="MenuPlayerSettings.h" />
     <ClInclude Include="Mh.h" />
     <ClInclude Include="MovingObject.h" />
     <ClInclude Include="PaintTile.h" />
@@ -238,7 +238,7 @@
     <ClInclude Include="PlayerBuilder.h" />
     <ClInclude Include="PlayerInput.h" />
     <ClInclude Include="player_consts.h" />
-    <ClInclude Include="player_input.h" />
+    <ClInclude Include="PlayerInputData.h" />
     <ClInclude Include="player_team.h" />
     <ClInclude Include="Projectile.h" />
     <ClInclude Include="ProjectileBall.h" />
@@ -270,7 +270,7 @@
     <ClInclude Include="StepTimer.h" />
     <ClInclude Include="Structure.h" />
     <ClInclude Include="StructurePaintable.h" />
-    <ClInclude Include="TeamColour.h" />
+    <ClInclude Include="TeamColourTools.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="TextDropShadow.h" />
     <ClInclude Include="TextObject.h" />
@@ -285,7 +285,7 @@
     <ClInclude Include="WeaponSniper.h" />
     <ClInclude Include="WeaponSprayer.h" />
     <ClInclude Include="weapon_consts.h" />
-    <ClInclude Include="weapon_details.h" />
+    <ClInclude Include="WeaponDetails.h" />
     <ClInclude Include="wep_type.h" />
   </ItemGroup>
   <ItemGroup>

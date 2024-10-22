@@ -8,9 +8,9 @@ class StateContext
 {
 public:
 	virtual ~StateContext() = default;
-	StateContext() {}
-	void update();
-	void draw();
+	StateContext() = default;
+	void update() const;
+	void draw() const;
 	void transition_to(std::unique_ptr<State> state);
 private:
 	std::unique_ptr<State> _state = nullptr;

@@ -12,7 +12,7 @@ EndMenuData* EndMenuPage::get_end_menu_data() const
 
 void EndMenuInitial::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
 

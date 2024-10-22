@@ -28,7 +28,7 @@ void MainMenuTitle::draw()
 }
 void MainMenuTitle::update()
 {
-	const std::vector<menu_input> inputs = this->get_menu_inputs();
+	const std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	for (int i = 0; i < inputs.size(); i++)
 	{
 		if (inputs[i].action == menu_input_action::PROCEED)
@@ -106,7 +106,7 @@ void MainMenuHome::draw()
 }
 void MainMenuHome::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
@@ -271,7 +271,7 @@ void MainMenuOptions::draw()
 }
 void MainMenuOptions::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
@@ -615,7 +615,7 @@ void MainMenuModeSelect::draw()
 }
 void MainMenuModeSelect::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
@@ -849,7 +849,7 @@ void MainMenuPlayerCount::draw()
 }
 void MainMenuPlayerCount::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
@@ -1121,7 +1121,7 @@ void MainMenuTeamSelect::draw()
 }
 void MainMenuTeamSelect::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	int player_count = this->get_player_count();
 
@@ -1401,7 +1401,7 @@ void MainMenuWeaponSelect::draw()
 }
 void MainMenuWeaponSelect::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int player_count = this->get_player_count();
 	int num_inputs = static_cast<int>(inputs.size());
 
@@ -1745,7 +1745,7 @@ void MainMenuStageSelect::draw()
 }
 void MainMenuStageSelect::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	int player_count = this->get_player_count();
 

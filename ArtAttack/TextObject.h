@@ -28,10 +28,10 @@ protected:
 	const MattMath::Vector2F& get_position() const;
 	float get_scale() const;
 
-	void set_text(const std::string& text);
+	virtual void set_text(const std::string& text);
 	void set_font_name(const std::string& font_name);
-	void set_position(const MattMath::Vector2F& position);
-	void set_scale(float scale);
+	virtual void set_position(const MattMath::Vector2F& position);
+	virtual void set_scale(float scale);
 private:
 	std::string _text = "";
 	std::string _font_name = "";

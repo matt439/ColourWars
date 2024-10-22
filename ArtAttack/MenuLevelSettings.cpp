@@ -10,7 +10,7 @@ void MenuLevelSettings::set_player_count(int player_count)
 		this->_player_settings.resize(player_count);
 		for (int i = vector_size; i < player_count; i++)
 		{
-			this->_player_settings[i] = menu_player_settings();
+			this->_player_settings[i] = MenuPlayerSettings();
 		}
 	}
 	else if (vector_size > player_count)

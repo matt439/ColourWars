@@ -3,7 +3,7 @@
 
 #include "Level.h"
 #include "MenuLevelSettings.h"
-#include "TeamColour.h"
+#include "TeamColourTools.h"
 #include "PlayerBuilder.h"
 #include "ResolutionManager.h"
 #include "ResourceManager.h"
@@ -24,7 +24,7 @@ public:
 	std::unique_ptr<Level> build_level(const MenuLevelSettings& settings);
 
 private:
-	std::unique_ptr<TeamColour> _team_colour = nullptr;
+	std::unique_ptr<TeamColourTools> _team_colour = nullptr;
 	std::unique_ptr<PlayerBuilder> _player_builder = nullptr;
 	ResourceManager* _resource_manager = nullptr;
 	DirectX::SpriteBatch* _sprite_batch = nullptr;

@@ -18,7 +18,7 @@ ProjectileSpray::ProjectileSpray(const RectangleF& rectangle,
 	SpriteEffects effects,
 	float layer_depth) :
 	DiffusingProjectile(velocity, team, player_num, team_colour,
-		projectile_type::SPRAY, dt,
+		SPRAY, dt,
 		sprite_batch, resource_manager,
 		DETAILS_SPRAY, DIFFUSION_DETAILS_SPRAY,
 		team_colour, rotation, origin, effects, layer_depth),
@@ -31,13 +31,12 @@ ProjectileSpray::ProjectileSpray(const RectangleF& rectangle,
 
 void ProjectileSpray::update()
 {
-	const projectile_details& details = this->get_details();
+	const ProjectileDetails& details = this->get_details();
 	
 	Projectile::update_movement(details.gravity,
 		details.wind_resistance);
 
-	this->_rectangle.inflate_to_size(
-		DiffusingProjectile::calculate_diffusion_size());
+	this->_rectangle.inflate_to_size(calculate_diffusion_size());
 
 	this->_rectangle.offset(MovingObject::get_dx_x(),
 		MovingObject::get_dx_y());

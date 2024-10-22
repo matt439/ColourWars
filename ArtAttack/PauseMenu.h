@@ -44,18 +44,19 @@ namespace pause_menu_consts
 class PauseMenuPage : public MenuPage, public MenuHighlight, public SoundBankObject
 {
 public:
-	PauseMenuPage(PauseMenuData* data) :
+	explicit PauseMenuPage(PauseMenuData* data) :
 		MenuPage(data),
 		SoundBankObject(pause_menu_consts::SOUND_BANK,
 			this->get_resource_manager()),
 		_data(data) {}
-	virtual ~PauseMenuPage() {}
-	virtual void init() = 0;
-	virtual void update() = 0;
-	virtual void draw() = 0;
+
+	~PauseMenuPage() override = default;
+	void init() override = 0;
+	void update() override = 0;
+	void draw() override = 0;
 protected:
-	std::string get_player_number_text(int player_num);
-	PauseMenuData* get_pause_menu_data();
+	static std::string get_player_number_text(int player_num);
+	PauseMenuData* get_pause_menu_data() const;
 	enum class confirmation_type
 	{
 		RESTART,
@@ -66,10 +67,10 @@ private:
 };
 
 
-class PauseMenuInitial : public PauseMenuPage
+class PauseMenuInitial final : public PauseMenuPage
 {
 public:
-	PauseMenuInitial(PauseMenuData* data) : PauseMenuPage(data) {}
+	explicit PauseMenuInitial(PauseMenuData* data) : PauseMenuPage(data) {}
 	void init() override;
 	void update() override;
 	void draw() override;
@@ -83,7 +84,7 @@ private:
 	std::unique_ptr<MTextDropShadow> _quit = nullptr;
 };
 
-class PauseMenuConfirmation : public PauseMenuPage
+class PauseMenuConfirmation final : public PauseMenuPage
 {
 public:
 	PauseMenuConfirmation(PauseMenuData* data, confirmation_type type) :
@@ -100,7 +101,7 @@ private:
 	std::unique_ptr<MTextDropShadow> _yes = nullptr;
 	std::unique_ptr<MTextDropShadow> _no = nullptr;
 	confirmation_type _type = confirmation_type::RESTART;
-	std::string get_question_text(confirmation_type type);
+	static std::string get_question_text(confirmation_type type);
 };
 
 #endif // !PAUSEMENU_H

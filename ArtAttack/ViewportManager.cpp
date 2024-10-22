@@ -8,7 +8,7 @@ using namespace viewport_consts;
 Viewport ViewportManager::get_fullscreen_viewport() const
 {
     Vector2F res = this->_resolution_manager->get_resolution_vec();
-    return Viewport(0.0f, 0.0f, res.x, res.y);
+    return {0.0f, 0.0f, res.x, res.y};
 }
 
 D3D11_VIEWPORT ViewportManager::get_fullscreen_d3d11_viewport() const
@@ -24,7 +24,7 @@ RectangleF ViewportManager::get_camera_adjusted_player_viewport_rect(
     const float scale = camera.scale;
     const Vector2F& translation = camera.translation;
 
-    RectangleF result = RectangleF(
+	auto result = RectangleF(
 		translation.x,
 		translation.y,
 		vp.width * scale,
@@ -33,7 +33,7 @@ RectangleF ViewportManager::get_camera_adjusted_player_viewport_rect(
 	return result;
 }
 
-void ViewportManager::apply_player_viewport(int player_num)
+void ViewportManager::apply_player_viewport(int player_num) const
 {
 	D3D11_VIEWPORT vp = this->calculate_d3d11_viewport(
         this->_layout, player_num, this->_resolution_manager->get_resolution_vec());
@@ -76,7 +76,7 @@ std::vector<Viewport> ViewportManager::get_all_viewports() const
 	return result;
 }
 
-int ViewportManager::get_player_count_from_layout(screen_layout layout) const
+int ViewportManager::get_player_count_from_layout(screen_layout layout)
 {
 	switch (layout)
 	{
@@ -95,7 +95,7 @@ int ViewportManager::get_player_count_from_layout(screen_layout layout) const
 
 std::vector<MattMath::RectangleF> ViewportManager::get_viewport_dividers() const
 {
-    std::vector<RectangleF> result = std::vector<RectangleF>();
+	auto result = std::vector<RectangleF>();
     const Vector2F res = this->_resolution_manager->get_resolution_vec();
     screen_layout layout = this->_layout;
 
@@ -125,9 +125,9 @@ std::vector<MattMath::RectangleF> ViewportManager::get_viewport_dividers() const
 }
 
 Viewport ViewportManager::calculate_viewport(screen_layout layout,
-	int player_num, const Vector2F& screen_size) const
+	int player_num, const Vector2F& screen_size)
 {
-    Viewport result = Viewport();
+	auto result = Viewport();
     switch (layout)
     {
     case screen_layout::ONE_PLAYER:

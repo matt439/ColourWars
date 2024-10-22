@@ -3,7 +3,7 @@
 
 #include "Weapon.h"
 
-class WeaponRoller : public Weapon
+class WeaponRoller final : public Weapon
 {
 public:
 	WeaponRoller(player_team team,
@@ -21,7 +21,7 @@ public:
 		float layer_depth = 0.0f);
 
 private:
-	void update_movement_and_rotation(player_input input,
+	void update_movement_and_rotation(PlayerInputData input,
 		const MattMath::Vector2F& player_center,
 		const MattMath::Vector2F& player_velocity,
 		bool player_facing_right) override;

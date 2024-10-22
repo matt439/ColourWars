@@ -52,7 +52,7 @@ void MContainer::remove_child(const std::string& name)
 		}
 	}
 }
-void MContainer::remove_child(MObject* child)
+void MContainer::remove_child(const MObject* child)
 {
 	for (auto it = this->_children.begin(); it != this->_children.end(); ++it)
 	{
@@ -184,7 +184,7 @@ void MTexture::scale_size_and_position(const Vector2F& scale)
 }
 void MTexture::draw(const Camera& camera)
 {
-	if (this->MWidget::get_hidden())
+	if (this->get_hidden())
 	{
 		return;
 	}
@@ -192,7 +192,7 @@ void MTexture::draw(const Camera& camera)
 }
 void MTexture::draw()
 {
-	if (this->MWidget::get_hidden())
+	if (this->get_hidden())
 	{
 		return;
 	}
@@ -258,7 +258,7 @@ void MText::scale_size_and_position(const Vector2F& scale)
 }
 void MText::draw(const Camera& camera)
 {
-	if (this->MWidget::get_hidden())
+	if (this->get_hidden())
 	{
 		return;
 	}
@@ -266,7 +266,7 @@ void MText::draw(const Camera& camera)
 }
 void MText::draw()
 {
-	if (this->MWidget::get_hidden())
+	if (this->get_hidden())
 	{
 		return;
 	}
@@ -275,7 +275,7 @@ void MText::draw()
 }
 void MText::update()
 {
-	return;
+	// do nothing
 }
 bool MText::is_visible_in_viewport(const RectangleF& view) const
 {
@@ -324,7 +324,7 @@ void MTextDropShadow::scale_size_and_position(const Vector2F& scale)
 }
 void MTextDropShadow::draw(const Camera& camera)
 {
-	if (this->MWidget::get_hidden())
+	if (this->get_hidden())
 	{
 		return;
 	}
@@ -332,7 +332,7 @@ void MTextDropShadow::draw(const Camera& camera)
 }
 void MTextDropShadow::draw()
 {
-	if (this->MWidget::get_hidden())
+	if (this->get_hidden())
 	{
 		return;
 	}

@@ -19,9 +19,9 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
-	void set_text(const std::string& text);
+	void set_text(const std::string& text) override;
 	void set_colour(const MattMath::Colour& colour) override;
-	void set_scale(float scale);
-	void set_position(const MattMath::Vector2F& position);
+	void set_scale(float scale) override;
+	void set_position(const MattMath::Vector2F& position) override;
 };
 #endif // !TEXT_H

@@ -71,7 +71,7 @@ private:
     std::unique_ptr<EndMenuData> _end_menu_data = nullptr;
     game_level_state _state = game_level_state::FIRST_UPDATE;
     static int check_for_pause_input(
-        const std::vector<player_input>& player_inputs);
+        const std::vector<PlayerInputData>& player_inputs);
     GameData* get_data() const;
 };
 

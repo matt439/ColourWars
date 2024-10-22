@@ -20,7 +20,7 @@ public:
 
 	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> 
 		build_collision_objects(const rapidjson::Value& json,
-			const team_colour& team_colours) const;
+			const TeamColour& team_colours) const;
 
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> 
 		build_non_collision_objects(const rapidjson::Value& json) const;
@@ -35,7 +35,7 @@ private:
 
 	std::unique_ptr<ICollisionGameObject>
 		build_collision_object(const rapidjson::Value& json,
-			const team_colour& team_colours) const;
+			const TeamColour& team_colours) const;
 
 	std::unique_ptr<IGameObject>
 		build_non_collision_object(const rapidjson::Value& json) const;

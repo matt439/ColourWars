@@ -28,7 +28,7 @@ public:
 	void set_layout(screen_layout layout);
 	screen_layout get_layout() const { return _layout; }
 
-	void apply_player_viewport(int player_num);
+	void apply_player_viewport(int player_num) const;
 	MattMath::Viewport get_player_viewport(int player_num) const;
 	std::vector<MattMath::Viewport> get_all_viewports() const;
 
@@ -44,12 +44,12 @@ private:
 
 	screen_layout _layout = screen_layout::ONE_PLAYER;
 
-	int get_player_count_from_layout(screen_layout layout) const;
+	static int get_player_count_from_layout(screen_layout layout);
 
 	D3D11_VIEWPORT calculate_d3d11_viewport(screen_layout layout,
 		int player_num, const MattMath::Vector2F& screen_size) const;
-	MattMath::Viewport calculate_viewport(screen_layout layout,
-		int player_num, const MattMath::Vector2F& screen_size) const;
+	static MattMath::Viewport calculate_viewport(screen_layout layout,
+	                                             int player_num, const MattMath::Vector2F& screen_size);
 
 	MattMath::Viewport get_fullscreen_viewport() const;
 	D3D11_VIEWPORT get_fullscreen_d3d11_viewport() const;

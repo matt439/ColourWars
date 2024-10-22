@@ -5,7 +5,7 @@ using namespace directory_consts;
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
-void ResourceLoader::load_textures()
+void ResourceLoader::load_textures() const
 {
     this->load_sprite_sheet_from_directory(TEXTURE_DIRECTORY, "sprite_sheet_1");
 }
@@ -26,7 +26,7 @@ void ResourceLoader::load_sounds()
     this->load_sound_bank_from_directory(SOUNDS_DIRECTORY, "sound_bank_1");
 }
 
-void ResourceLoader::load_level_info()
+void ResourceLoader::load_level_info() const
 {
     this->load_level_info_from_directory(LEVEL_DIRECTORY, "king_of_the_hill", level_stage::KING_OF_THE_HILL);
     this->load_level_info_from_directory(LEVEL_DIRECTORY, "turbulence", level_stage::TURBULENCE);
@@ -43,7 +43,7 @@ void ResourceLoader::load_all_resources()
 
 
 void ResourceLoader::load_texture(const std::string& texture_path,
-    const std::string& texture_name)
+    const std::string& texture_name) const
 {
     ComPtr<ID3D11ShaderResourceView> m_texture;
 
@@ -65,7 +65,7 @@ void ResourceLoader::load_texture(const std::string& texture_path,
 
 void ResourceLoader::load_texture_from_directory(
     const std::string& directory,
-    const std::string& texture_name)
+    const std::string& texture_name) const
 {
     std::string path = directory + texture_name + ".dds";
     this->load_texture(path, texture_name);
@@ -103,11 +103,11 @@ void ResourceLoader::load_sprite_sheet(
     const std::string& texture_path,
     const std::string& texture_name,
     const std::string& json_path,
-    const std::string& sprite_sheet_name)
+    const std::string& sprite_sheet_name) const
 {
     this->load_texture(texture_path, texture_name);
 
-    std::unique_ptr<SpriteSheet> ss = std::make_unique<SpriteSheet>(
+    auto ss = std::make_unique<SpriteSheet>(
         this->_resource_manager->get_texture(texture_name));
 
     ss->load_from_json(json_path.c_str());
@@ -117,7 +117,7 @@ void ResourceLoader::load_sprite_sheet(
 
 void ResourceLoader::load_sprite_sheet_from_directory(
     const std::string& directory,
-    const std::string& name)
+    const std::string& name) const
 {
     std::string tex_path = directory + name + ".dds";
     std::string json_path = directory + name + ".json";
@@ -125,16 +125,16 @@ void ResourceLoader::load_sprite_sheet_from_directory(
 }
 
 void ResourceLoader::load_level_info(const std::string& json_path,
-    level_stage stage)
+    level_stage stage) const
 {
-    std::unique_ptr<LevelLoadedInfo> lli = std::make_unique<LevelLoadedInfo>(json_path.c_str());
+	auto lli = std::make_unique<LevelLoadedInfo>(json_path.c_str());
     this->_resource_manager->add_level_info(stage, std::move(lli));
 }
 
 void ResourceLoader::load_level_info_from_directory(
     const std::string& directory,
     const std::string& level_name,
-    level_stage stage)
+    level_stage stage) const
 {
     std::string path = directory + level_name + ".json";
     this->load_level_info(path, stage);
@@ -144,12 +144,12 @@ void ResourceLoader::load_sound_bank(const std::string& wave_bank_path,
     const std::string& json_path,
     const std::string& sound_bank_name)
 {
-	std::unique_ptr<WaveBank> wb = std::make_unique<WaveBank>(
+	auto wb = std::make_unique<WaveBank>(
         this->_audio_engine,
         std::wstring(wave_bank_path.begin(),
         wave_bank_path.end()).c_str());
-   
-    std::unique_ptr<SoundBank> sb = std::make_unique<SoundBank>(
+
+	auto sb = std::make_unique<SoundBank>(
         std::move(wb));
 
     sb->load_from_json(json_path.c_str());

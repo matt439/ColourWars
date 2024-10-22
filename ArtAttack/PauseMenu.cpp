@@ -23,14 +23,14 @@ std::string PauseMenuPage::get_player_number_text(int player_num)
 	};
 }
 
-PauseMenuData* PauseMenuPage::get_pause_menu_data()
+PauseMenuData* PauseMenuPage::get_pause_menu_data() const
 {
 	return this->_data;
 }
 
 void PauseMenuInitial::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int player_num = this->get_pause_menu_data()->get_player_num();
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
@@ -55,7 +55,6 @@ void PauseMenuInitial::update()
 			this->get_context()->transition_to(std::make_unique<
 				PauseMenuConfirmation>(this->get_pause_menu_data(),
 					confirmation_type::RESTART));
-			return;
 		}
 		else if (highlighted_element == "quit")
 		{
@@ -63,7 +62,6 @@ void PauseMenuInitial::update()
 			this->get_context()->transition_to(std::make_unique<
 				PauseMenuConfirmation>(this->get_pause_menu_data(),
 					confirmation_type::QUIT));
-			return;
 		}
 	}
 	else if (inputs[player_num].direction == menu_direction::UP)
@@ -196,7 +194,7 @@ void PauseMenuInitial::draw()
 
 void PauseMenuConfirmation::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int player_num = this->get_pause_menu_data()->get_player_num();
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
@@ -283,7 +281,7 @@ void PauseMenuConfirmation::init()
 
 	this->_question = std::make_unique<MTextDropShadow>(
 		"question",
-		this->get_question_text(this->_type),
+		get_question_text(this->_type),
 		DETAIL_FONT,
 		this->calculate_widget_position(0, 2),
 		this->get_sprite_batch(),

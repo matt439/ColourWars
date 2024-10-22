@@ -27,7 +27,7 @@ WeaponRoller::WeaponRoller(player_team team,
 
 }
 
-void WeaponRoller::update_movement_and_rotation(player_input input,
+void WeaponRoller::update_movement_and_rotation(PlayerInputData input,
     const Vector2F& player_center,
     const Vector2F& player_velocity,
     bool player_facing_right)
@@ -48,7 +48,7 @@ void WeaponRoller::update_movement_and_rotation(player_input input,
     this->set_player_center(player_center);
 
     //gun facing left
-    if (this->facing_left(this->get_rotation()))
+    if (facing_left(this->get_rotation()))
     {
         this->set_invert_y(true);
     }
@@ -63,25 +63,25 @@ void WeaponRoller::draw(const Camera& camera, bool debug)
 {
     //draw weapon
     Vector2F draw_pos = this->get_draw_pos();
-    RectangleF draw_rectangle = RectangleF(draw_pos, this->get_details().size);
+    auto draw_rectangle = RectangleF(draw_pos, this->get_details().size);
 
     Vector2F origin = this->calculate_sprite_origin(
         this->get_details().size, rotation_origin::LEFT_CENTER);
 
-    SpriteEffects effects = SpriteEffects::SpriteEffects_None;
+    SpriteEffects effects = SpriteEffects_None;
     bool invert_y = this->get_invert_y();
     bool invert_x = this->get_invert_x();
     if (invert_y && invert_x)
     {
-        effects = SpriteEffects::SpriteEffects_FlipBoth;
+        effects = SpriteEffects_FlipBoth;
     }
     else if (invert_y)
     {
-        effects = SpriteEffects::SpriteEffects_FlipVertically;
+        effects = SpriteEffects_FlipVertically;
     }
     else if (invert_x)
     {
-        effects = SpriteEffects::SpriteEffects_FlipHorizontally;
+        effects = SpriteEffects_FlipHorizontally;
     }
 
     TextureObject::set_element_name(this->get_details().frame_name);
@@ -105,11 +105,11 @@ void WeaponRoller::draw(const Camera& camera, bool debug)
         // draw nozzle
         TextureObject::set_element_name("nozzle");
         RectangleF draw_rectangle_noz = this->get_nozzle_rectangle();
-        Vector2F origin_noz = this->calculate_sprite_origin(
-            this->get_nozzle_size(), rotation_origin::CENTER);
+        Vector2F origin_noz = calculate_sprite_origin(
+            get_nozzle_size(), rotation_origin::CENTER);
 
         TextureObject::set_origin(origin_noz);
-        TextureObject::set_effects(SpriteEffects::SpriteEffects_None);
+        TextureObject::set_effects(SpriteEffects_None);
         TextureObject::set_draw_rotation(0.0f);
 
         TextureObject::draw(draw_rectangle_noz, camera);

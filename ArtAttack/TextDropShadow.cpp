@@ -19,9 +19,9 @@ TextDropShadow::TextDropShadow(const std::string& text,
 	SpriteEffects effects,
 	float layer_depth) :
 	Text(text, font_name, position, sprite_batch, resource_manager,
-		color, scale, rotation, origin, effects, layer_depth),
-	_shadow_color(shadow_color),
+	     color, scale, rotation, origin, effects, layer_depth),
 	_shadow_offset(shadow_offset),
+	_shadow_color(shadow_color),
 	_shadow_scale(shadow_scale)
 {
 

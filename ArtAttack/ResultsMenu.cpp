@@ -6,7 +6,7 @@ using namespace MattMath;
 using namespace results_menu_consts;
 using namespace colour_consts;
 
-ResultsMenuData* ResultsMenuPage::get_results_menu_data()
+ResultsMenuData* ResultsMenuPage::get_results_menu_data() const
 {
 	return this->_data;
 }
@@ -14,7 +14,7 @@ ResultsMenuData* ResultsMenuPage::get_results_menu_data()
 void ResultsMenuInitial::update()
 {
 	const float dt = *this->get_data()->get_dt();
-	std::vector<menu_input> menu_inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> menu_inputs = this->get_menu_inputs();
 	
 
 	if (this->_delay_timer < RESULTS_MENU_TEAM_FILL_DELAY)
@@ -88,7 +88,7 @@ void ResultsMenuInitial::init()
 		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		RESULTS_MENU_BOX_COLOUR);
-	Vector2F fill_box_position = Vector2F(
+	auto fill_box_position = Vector2F(
 		this->calculate_center_position(
 		this->_fill_box->get_rectangle().get_width(), DEFAULT_RESOLUTION.x),
 		this->_box->get_rectangle().get_position().y + RESULTS_MENU_FILL_BOX_Y_OFFSET);
@@ -202,18 +202,18 @@ void ResultsMenuInitial::draw()
 	this->draw_mobject_in_viewports(this->_text_container.get());
 }
 
-void ResultsMenuInitial::update_fill_box()
+void ResultsMenuInitial::update_fill_box() const
 {
 	this->update_team_a_fill();
 	this->update_team_b_fill();
 }
 
-float ResultsMenuInitial::fill_time_ratio()
+float ResultsMenuInitial::fill_time_ratio() const
 {
 	return this->_fill_timer / RESULTS_MENU_TEAM_FILL_TIME;
 }
 
-void ResultsMenuInitial::update_team_a_fill()
+void ResultsMenuInitial::update_team_a_fill() const
 {
 	//float score = this->get_team_percentage(player_team::A);
 	float score = this->get_level_end_info().team_a_ratio();
@@ -227,7 +227,7 @@ void ResultsMenuInitial::update_team_a_fill()
 	this->_team_a_fill->set_width(width);
 }
 
-void ResultsMenuInitial::update_team_b_fill()
+void ResultsMenuInitial::update_team_b_fill() const
 {
 	float score = this->get_level_end_info().team_b_ratio();
 	float max_width = RESULTS_MENU_TEAM_FILL_SIZE.x * score;
@@ -252,7 +252,7 @@ Vector2F ResultsMenuInitial::calculate_team_b_fill_top_right_position() const
 }
 
 int ResultsMenuInitial::check_for_continue_input(
-	const std::vector<menu_input>& menu_input)
+	const std::vector<ProcessedMenuInput>& menu_input)
 {
 	for (int i = 0; i < menu_input.size(); i++)
 	{
@@ -263,7 +263,7 @@ int ResultsMenuInitial::check_for_continue_input(
 	}
 	return -1;
 }
-LevelEndInfo ResultsMenuInitial::get_level_end_info()
+LevelEndInfo ResultsMenuInitial::get_level_end_info() const
 {
 	return this->get_results_menu_data()->get_level_end_info();
 }

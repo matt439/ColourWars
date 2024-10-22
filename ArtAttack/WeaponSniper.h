@@ -3,7 +3,7 @@
 
 #include "Weapon.h"
 
-class WeaponSniper : public Weapon
+class WeaponSniper final : public Weapon
 {
 public:
 	WeaponSniper(player_team team,

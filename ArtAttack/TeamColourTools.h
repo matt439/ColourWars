@@ -4,12 +4,12 @@
 #include "player_team.h"
 #include "colour.h"
 
-struct team_colour
+struct TeamColour
 {
 	MattMath::Colour team_a = colour_consts::TEAM_BLUE;
 	MattMath::Colour team_b = colour_consts::TEAM_YELLOW;
 	
-	inline const MattMath::Colour& get_team_colour(player_team team)
+	const MattMath::Colour& get_team_colour(player_team team) const
 	{
 		switch (team)
 		{
@@ -33,28 +33,29 @@ enum class team_colour_enum
 
 namespace team_colour_consts
 {
-	const team_colour BLUE_ORANGE =
+	const TeamColour BLUE_ORANGE =
 	{
 		colour_consts::TEAM_BLUE,
 		colour_consts::TEAM_ORANGE
 	};
-	const team_colour PINK_GREEN =
+	const TeamColour PINK_GREEN =
 	{
 		colour_consts::TEAM_PINK,
 		colour_consts::TEAM_GREEN
 	};
-	const team_colour BLUE_YELLOW =
+	const TeamColour BLUE_YELLOW =
 	{
 		colour_consts::TEAM_BLUE,
 		colour_consts::TEAM_YELLOW
 	};
 }
 
-class TeamColour
+class TeamColourTools
 {
 public:
-	TeamColour() = default;
-	inline team_colour generate_random_team_colour()
+	TeamColourTools() = default;
+
+	static TeamColour generate_random_team_colour()
 	{
 		int enum_max = static_cast<int>(team_colour_enum::MAX);
 		int random = rand() % enum_max;
@@ -70,7 +71,8 @@ public:
 			return team_colour_consts::BLUE_ORANGE;
 		}
 	}
-	inline team_colour get_team_colours(team_colour_enum team_colour)
+
+	static TeamColour get_team_colours(team_colour_enum team_colour)
 	{
 		switch (team_colour)
 		{
@@ -84,8 +86,9 @@ public:
 			return team_colour_consts::BLUE_ORANGE;
 		}
 	}
-	inline MattMath::Colour get_team_colour(team_colour team_colours,
-		player_team team)
+
+	static MattMath::Colour get_team_colour(TeamColour team_colours,
+	                                        player_team team)
 	{
 		switch (team)
 		{

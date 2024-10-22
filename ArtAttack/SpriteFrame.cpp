@@ -33,6 +33,6 @@ void SpriteFrame::set_source_rectangle(const RectangleI& source_rectangle)
 void SpriteFrame::set_source_rectangle(const Vector2F& position,
 	const Vector2F& size)
 {
-	RectangleI source_rectan = RectangleI(position, size);
+	auto source_rectan = RectangleI(position, size);
 	this->_source_rectangle = source_rectan.get_win_rect();
 }

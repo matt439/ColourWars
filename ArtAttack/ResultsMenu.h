@@ -64,25 +64,26 @@ namespace results_menu_consts
 class ResultsMenuPage : public MenuPage, public SoundBankObject
 {
 public:
-	ResultsMenuPage(ResultsMenuData* data) : 
-		SoundBankObject(results_menu_consts::SOUND_BANK,
-			this->get_resource_manager()),
+	explicit ResultsMenuPage(ResultsMenuData* data) : 
 		MenuPage(data),
+		SoundBankObject(results_menu_consts::SOUND_BANK,
+		                this->get_resource_manager()),
 		_data(data) {}
-	virtual ~ResultsMenuPage() {}
-	virtual void init() = 0;
-	virtual void update() = 0;
-	virtual void draw() = 0;
+
+	~ResultsMenuPage() override = default;
+	void init() override = 0;
+	void update() override = 0;
+	void draw() override = 0;
 protected:
-	ResultsMenuData* get_results_menu_data();
+	ResultsMenuData* get_results_menu_data() const;
 private:
 	ResultsMenuData* _data = nullptr;
 };
 
-class ResultsMenuInitial : public ResultsMenuPage
+class ResultsMenuInitial final : public ResultsMenuPage
 {
 public:
-	ResultsMenuInitial(ResultsMenuData* data) : ResultsMenuPage(data) {}
+	explicit ResultsMenuInitial(ResultsMenuData* data) : ResultsMenuPage(data) {}
 	void init() override;
 	void update() override;
 	void draw() override;
@@ -102,13 +103,13 @@ private:
 	float _delay_timer = 0.0f;
 	float _fill_timer = 0.0f;
 	float _show_results_timer = 0.0f;
-	LevelEndInfo get_level_end_info();
-	float fill_time_ratio();
+	LevelEndInfo get_level_end_info() const;
+	float fill_time_ratio() const;
 	MattMath::Vector2F calculate_team_b_fill_top_right_position() const;
-	int check_for_continue_input(const std::vector<menu_input>& menu_input);
-	void update_fill_box();
-	void update_team_a_fill();
-	void update_team_b_fill();
+	static int check_for_continue_input(const std::vector<ProcessedMenuInput>& menu_input);
+	void update_fill_box() const;
+	void update_team_a_fill() const;
+	void update_team_b_fill() const;
 };
 
 #endif // !RESULTSMENU_H

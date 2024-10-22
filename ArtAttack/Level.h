@@ -2,7 +2,7 @@
 #define LEVEL_H
 
 #include "ICollisionGameObject.h"
-#include "TeamColour.h"
+#include "TeamColourTools.h"
 #include "level_stage.h"
 #include "PlayerInput.h"
 #include "Player.h"
@@ -57,7 +57,7 @@ public:
 		std::unique_ptr<std::vector<std::unique_ptr<Player>>> player_objects,
 		std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers,
 		level_stage stage,
-		const team_colour& team_colours,
+		const TeamColour& team_colours,
 		const MattMath::RectangleF& out_of_bounds,
 		const MattMath::RectangleF& camera_bounds,
 		const MattMath::RectangleF& zoom_out_start_bounds,
@@ -75,7 +75,7 @@ public:
 		ViewportManager* viewport_manager,
 		ResourceManager* resource_manager);
 
-	void update(const std::vector<player_input>& player_inputs);
+	void update(const std::vector<PlayerInputData>& player_inputs);
 	void draw();
 
 	level_state get_state() const;
@@ -117,7 +117,7 @@ private:
 
 	MattMath::Camera _zoom_out_camera = MattMath::Camera::DEFAULT_CAMERA;
 
-	team_colour _team_colours = team_colour();
+	TeamColour _team_colours = TeamColour();
 	level_stage _stage = level_stage::KING_OF_THE_HILL;
 
 	MattMath::RectangleF _out_of_bounds = MattMath::RectangleF::ZERO;
@@ -133,7 +133,7 @@ private:
 	DirectX::SpriteBatch* _sprite_batch = nullptr;
 	ID3D11SamplerState* _sampler_state = nullptr;
 
-	std::vector<player_input> _player_inputs = std::vector<player_input>();
+	std::vector<PlayerInputData> _player_inputs = std::vector<PlayerInputData>();
 	std::unique_ptr<DebugText> _debug_text = nullptr;
 
 	int count_projectiles() const;
@@ -141,7 +141,7 @@ private:
 	bool is_object_out_of_bounds(const ICollisionGameObject* object) const;
 	void draw_end_screen();
 
-	void update_level_logic(const std::vector<player_input>& player_inputs) const;
+	void update_level_logic(const std::vector<PlayerInputData>& player_inputs) const;
 
 	void draw_active_level() const;
 	void draw_zoom_out_level() const;

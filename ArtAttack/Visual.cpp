@@ -5,7 +5,7 @@ using namespace MattMath;
 
 void Visual::update()
 {
-	return;
+	// do nothing
 }
 void Visual::draw(const Camera& camera)
 {

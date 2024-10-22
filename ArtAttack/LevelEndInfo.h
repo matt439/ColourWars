@@ -1,12 +1,12 @@
 #ifndef LEVEL_END_INFO_H
 #define LEVEL_END_INFO_H
 
-#include "TeamColour.h"
+#include "TeamColourTools.h"
 #include "player_team.h"
 
 struct LevelEndInfo
 {
-	team_colour team_colours = team_colour();
+	TeamColour team_colours = TeamColour();
 	float team_a_area = 0.0f;
 	float team_b_area = 0.0f;
 

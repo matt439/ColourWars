@@ -7,16 +7,16 @@ using namespace MattMath;
 MenuInput::MenuInput(GamePad* gamepad) :
     _gamepad(gamepad)
 {
-    for (int i = 0; i < 4; i++)
+    for (auto& prev_input : this->_prev_inputs)
     {
-        this->_prev_inputs[i] = raw_menu_input();
+	    prev_input = RawMenuInput();
     }
 }
 
-raw_menu_input MenuInput::get_raw_input(int gamepad_num)
+RawMenuInput MenuInput::get_raw_input(int gamepad_num) const
 {
-    raw_menu_input result = raw_menu_input();
-    auto pad = this->_gamepad->GetState(gamepad_num, GamePad::DEAD_ZONE_NONE);
+	auto result = RawMenuInput();
+	const auto pad = this->_gamepad->GetState(gamepad_num, GamePad::DEAD_ZONE_NONE);
     if (pad.IsConnected())
     {
         result.left_analog_stick = Vector2F(pad.thumbSticks.leftX,
@@ -33,10 +33,10 @@ raw_menu_input MenuInput::get_raw_input(int gamepad_num)
     return result;
 }
 
-menu_input MenuInput::calculate_menu_input(const raw_menu_input& current,
-    const raw_menu_input& previous)
+ProcessedMenuInput MenuInput::calculate_menu_input(const RawMenuInput& current,
+    const RawMenuInput& previous)
 {
-    menu_input result = menu_input();
+	auto result = ProcessedMenuInput();
     bool no_press_current = !current.proceed && !current.back && !current.pause;
     bool prev_proceed = previous.proceed && !previous.back && !previous.pause;
     bool prev_back = previous.back && !previous.proceed && !previous.pause;
@@ -128,19 +128,19 @@ menu_input MenuInput::calculate_menu_input(const raw_menu_input& current,
     return result;
 }
 
-std::vector<menu_input> MenuInput::update_and_get_menu_inputs()
+std::vector<ProcessedMenuInput> MenuInput::update_and_get_menu_inputs()
 {
-    raw_menu_input current[4];
+    RawMenuInput current[4];
     for (int i = 0; i < 4; i++)
     {
         current[i] = this->get_raw_input(i);
     }
-    std::vector<menu_input> result;
+    std::vector<ProcessedMenuInput> result;
     for (int i = 0; i < 4; i++)
     {
         if (current[i].connected)
         {
-            menu_input input =
+            ProcessedMenuInput input =
                 calculate_menu_input(current[i], this->_prev_inputs[i]);
             result.push_back(input);
         }

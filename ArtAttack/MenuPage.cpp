@@ -28,7 +28,7 @@ void MenuPage::set_widget_size(const Vector2F& widget_size)
 {
 	this->_widget_size = widget_size;
 }
-Vector2F MenuPage::calculate_widget_position(int h_index, int v_index)
+Vector2F MenuPage::calculate_widget_position(int h_index, int v_index) const
 {
 	Vector2F result = this->_widget_position;
 	result.x += h_index * this->_widget_spacing.x;
@@ -40,9 +40,10 @@ Vector2F MenuPage::calculate_center_position(
 	const Vector2F& widget_size,
 	const Vector2F& resolution)
 {
-	return Vector2F(
+	return {
 		(resolution.x - widget_size.x) / 2.0f,
-		(resolution.y - widget_size.y) / 2.0f);
+		(resolution.y - widget_size.y) / 2.0f
+	};
 }
 
 float MenuPage::calculate_center_position(
@@ -51,31 +52,31 @@ float MenuPage::calculate_center_position(
 	return (resolution - widget_size) / 2.0f;
 }
 
-MenuData* MenuPage::get_data()
+MenuData* MenuPage::get_data() const
 {
 	return this->_data;
 }
-MenuInput* MenuPage::get_input()
+MenuInput* MenuPage::get_input() const
 {
 	return this->_data->get_input();
 }
-ResolutionManager* MenuPage::get_resolution_manager()
+ResolutionManager* MenuPage::get_resolution_manager() const
 {
 	return this->_data->get_resolution_manager();
 }
-Save* MenuPage::get_save()
+Save* MenuPage::get_save() const
 {
 	return this->_data->get_save();
 }
-ResourceManager* MenuPage::get_resource_manager()
+ResourceManager* MenuPage::get_resource_manager() const
 {
 	return this->_data->get_resource_manager();
 }
-SpriteBatch* MenuPage::get_sprite_batch()
+SpriteBatch* MenuPage::get_sprite_batch() const
 {
 	return this->_data->get_sprite_batch();
 }
-ViewportManager* MenuPage::get_viewport_manager()
+ViewportManager* MenuPage::get_viewport_manager() const
 {
 	return this->_data->get_viewport_manager();
 }
@@ -86,7 +87,7 @@ void MenuPage::draw_mobject_in_viewports(MObject* widget,
 	SpriteBatch* sprite_batch = this->get_sprite_batch();
 
 	std::vector<Viewport> viewports =
-		this->get_viewport_manager()->get_all_viewports();
+	 	this->get_viewport_manager()->get_all_viewports();
 
 	size_t num_viewports = viewports.size();
 	for (size_t i = 0; i < num_viewports; i++)
@@ -99,22 +100,22 @@ void MenuPage::draw_mobject_in_viewports(MObject* widget,
 		sprite_batch->End();
 	}
 }
-ID3D11SamplerState* MenuPage::get_point_clamp_sampler_state()
+ID3D11SamplerState* MenuPage::get_point_clamp_sampler_state() const
 {
 	return this->get_data()->get_common_states()->PointClamp();
 }
 
-std::vector<menu_input> MenuPage::get_menu_inputs()
+std::vector<ProcessedMenuInput> MenuPage::get_menu_inputs() const
 {
 	return this->get_data()->get_input()->update_and_get_menu_inputs();
 }
 
-Vector2F MenuPage::get_float_resolution()
+Vector2F MenuPage::get_float_resolution() const
 {
 	return this->get_data()->get_resolution_manager()->get_resolution_vec();
 }
 
-Vector2I MenuPage::get_int_resolution()
+Vector2I MenuPage::get_int_resolution() const
 {
 	return this->get_data()->get_resolution_manager()->get_resolution_ivec();
 }

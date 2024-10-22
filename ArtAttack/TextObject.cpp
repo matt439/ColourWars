@@ -27,7 +27,7 @@ TextObject::TextObject(const std::string& text,
 
 void TextObject::draw(const Camera& camera) const
 {
-	SpriteFont* sprite_font =
+	const SpriteFont* sprite_font =
 		this->get_resource_manager()->get_sprite_font(this->_font_name);
 
 	Vector2F view_pos = camera.calculate_view_position(this->_position);
@@ -47,7 +47,7 @@ void TextObject::draw(const Camera& camera) const
 
 void TextObject::draw() const
 {
-	SpriteFont* sprite_font =
+	const SpriteFont* sprite_font =
 		this->get_resource_manager()->get_sprite_font(this->_font_name);
 
 	sprite_font->DrawString(

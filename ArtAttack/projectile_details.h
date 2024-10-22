@@ -4,7 +4,7 @@
 #include "rotation_origin.h"
 #include "MattMath.h"
 
-struct projectile_details
+struct ProjectileDetails
 {
     float gravity = -1.0f;
     float wind_resistance = -1.0f;
@@ -24,7 +24,7 @@ enum class diffusion_type
     LINEAR_SIZE_AND_COL_RECT
 };
 
-struct diffusion_details
+struct DiffusionDetails
 {
     float start_time = -1.0f;
     float end_time = -1.0f;

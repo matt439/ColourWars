@@ -11,7 +11,7 @@ class WeaponBuilder
 {
 public:
 	WeaponBuilder() = default;
-	std::unique_ptr<Weapon> build_weapon(
+	static std::unique_ptr<Weapon> build_weapon(
 		player_team team,
 		int player_num,
 		const MattMath::Colour& team_colour,

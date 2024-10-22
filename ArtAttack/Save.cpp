@@ -9,23 +9,23 @@ using namespace rapidjson;
 using namespace directory_consts;
 using namespace MattMath;
 
-save_data Save::load_from_json(const char* json_path)
+SaveData Save::load_from_json(const char* json_path) const
 {
     FILE* fp = fopen(json_path, "rb");
 
-    std::unique_ptr<char> readBuffer = std::make_unique<char>();
-    FileReadStream is(fp, readBuffer.get(), sizeof(readBuffer));
+    auto read_buffer = std::make_unique<char>();
+    FileReadStream is(fp, read_buffer.get(), sizeof(read_buffer));
 
     Document d;
     d.ParseStream(is);
 
     fclose(fp);
-    readBuffer.release();
+    read_buffer.release();
 
-    Vector2I resolution = Vector2I(d["resolution"]["x"].GetInt(), d["resolution"]["y"].GetInt());
+    auto resolution = Vector2I(d["resolution"]["x"].GetInt(), d["resolution"]["y"].GetInt());
     bool fullscreen = d["fullscreen"].GetBool();
 
-    save_data data = save_data();
+    auto data = SaveData();
     data.resolution = this->convert_ivec_to_resolution(resolution);
     data.fullscreen = fullscreen;
     return data;
@@ -42,7 +42,7 @@ bool Save::check_if_save_file_exists()
 }
 void Save::load_save_file()
 {
-    if (this->check_if_save_file_exists())
+    if (check_if_save_file_exists())
     {
 		std::cout << "Save file exists.\n";
 	}
@@ -55,16 +55,16 @@ void Save::load_save_file()
         this->load_from_json(SAVE_FILE_PATH.c_str());
 }
 
-bool Save::write_save_file(const save_data& data)
+bool Save::write_save_file(const SaveData& data) const
 {
     FILE* fp = fopen(SAVE_FILE_PATH.c_str(), "wb");
-    if (fp == NULL)
+    if (fp == nullptr)
     {
         return false;
     }
     // Allocate buffer on the heap
-    std::unique_ptr<char[]> writeBuffer = std::make_unique<char[]>(65536);
-    FileWriteStream os(fp, writeBuffer.get(), 65536);
+    auto write_buffer = std::make_unique<char[]>(65536);
+    FileWriteStream os(fp, write_buffer.get(), 65536);
 
     Document d;
     d.SetObject();
@@ -82,12 +82,12 @@ bool Save::write_save_file(const save_data& data)
     return true;
 }
 
-void Save::save_to_file()
+void Save::save_to_file() const
 {
     auto start = std::chrono::system_clock::now();
-    auto legacyStart = std::chrono::system_clock::to_time_t(start);
+    auto legacy_start = std::chrono::system_clock::to_time_t(start);
     char buffer[30];
-    std::cout << ctime_s(buffer, sizeof(buffer), &legacyStart) << " Saving...\n";
+    std::cout << ctime_s(buffer, sizeof(buffer), &legacy_start) << " Saving...\n";
     if (write_save_file(this->_save_data))
     {
 		std::cout << "Save was successful.\n";
@@ -139,14 +139,14 @@ Vector2I Save::convert_resolution_to_ivec(
     switch (resolution)
     {
     case screen_resolution::S_1280_720:
-        return Vector2I(1280, 720);
+        return {1280, 720};
     case screen_resolution::S_1920_1080:
-        return Vector2I(1920, 1080);
+        return {1920, 1080};
     case screen_resolution::S_2560_1440:
-        return Vector2I(2560, 1440);
+        return {2560, 1440};
     case screen_resolution::S_3840_2160:
-        return Vector2I(3840, 2160);
+        return {3840, 2160};
     default:
-        return Vector2I(-1, -1);
+        return {-1, -1};
     }
 }

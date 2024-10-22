@@ -10,7 +10,7 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	const std::string& frame_name,
 	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
-	const team_colour& team_colours,
+	const TeamColour& team_colours,
 	const float* dt,
 	const Colour& color,
 	float rotation,
@@ -160,8 +160,8 @@ void PaintTileSplash::set_rectangle_center(const Vector2F& center)
 }
 void PaintTileSplash::reset_and_play()
 {
-	this->AnimationObject::reset();
-	this->AnimationObject::play();
+	this->reset();
+	this->play();
 }
 void PaintTileSplash::set_colour(const Colour& colour)
 {

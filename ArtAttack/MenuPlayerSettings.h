@@ -4,7 +4,7 @@
 #include "player_team.h"
 #include "wep_type.h"
 
-struct menu_player_settings
+struct MenuPlayerSettings
 {
     player_team team = player_team::NONE;
     wep_type weapon = wep_type::SPRAYER;

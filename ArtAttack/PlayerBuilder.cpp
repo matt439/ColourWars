@@ -13,14 +13,13 @@ PlayerBuilder::PlayerBuilder()
 std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_players(
 	const MenuLevelSettings& settings,
 	const LevelLoadedInfo* load_info,
-	team_colour team_colours,
+	TeamColour team_colours,
 	DirectX::SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
-	ViewportManager* viewport_manager,
-	const float* dt)
+	const ViewportManager* viewport_manager,
+	const float* dt) const
 {
-	std::unique_ptr<std::vector<std::unique_ptr<Player>>> players =
-		std::make_unique<std::vector<std::unique_ptr<Player>>>();
+	auto players = std::make_unique<std::vector<std::unique_ptr<Player>>>();
 
 	const std::vector<Vector2F> team_a_spawns = load_info->get_team_a_spawns();
 	const std::vector<Vector2F> team_b_spawns = load_info->get_team_b_spawns();
@@ -37,9 +36,9 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 		{
 			position = team_b_spawns[i];
 		}
-		RectangleF rect = RectangleF(position, DEFAULT_SIZE);
+		auto rect = RectangleF(position, DEFAULT_SIZE);
 
-		std::unique_ptr<Player> player = std::make_unique<Player>(
+		auto player = std::make_unique<Player>(
 			rect,
 			DEFAULT_ANIMATION_INFO,
 			sprite_batch,

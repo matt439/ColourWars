@@ -2,16 +2,15 @@
 #define SPRITEFRAME_H
 
 #include "MattMath.h"
-#include <string>
 
 class SpriteFrame
 {
 public:
-	SpriteFrame() {}
-	SpriteFrame(const MattMath::RectangleI& source_rectangle,
-		const MattMath::Vector2F& origin =
-			MattMath::Vector2F::ZERO,
-		bool rotated = false);
+	SpriteFrame() = default;
+	explicit SpriteFrame(const MattMath::RectangleI& source_rectangle,
+	                     const MattMath::Vector2F& origin =
+		                     MattMath::Vector2F::ZERO,
+	                     bool rotated = false);
 	SpriteFrame(const MattMath::Vector2F& position,
 		const MattMath::Vector2F& size,
 		const MattMath::Vector2F& origin =

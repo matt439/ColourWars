@@ -22,8 +22,8 @@ public:
 				DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 				float layer_depth = 0.0f);
 
-	void draw(const MattMath::Camera& camera);
-	void draw();
+	virtual void draw(const MattMath::Camera& camera);
+	virtual void draw();
 
 	MattMath::Vector2F get_shadow_offset() const;
 	MattMath::Colour get_shadow_color() const;

@@ -7,7 +7,7 @@ using namespace debug_text_consts;
 
 void DebugText::draw_debug_info(const Player* player, int num_projectiles)
 {
-    const player_input& input = player->get_input();
+    const PlayerInputData& input = player->get_input();
     
     RectangleF rect = player->get_rectangle();
     Vector2F center = player->get_center();

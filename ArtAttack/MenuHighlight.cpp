@@ -3,7 +3,7 @@
 
 using namespace MattMath;
 
-void MenuHighlight::highlight_widget(MWidget* widget)
+void MenuHighlight::highlight_widget(MWidget* widget) const
 {
 	if (widget == nullptr)
 	{
@@ -12,7 +12,7 @@ void MenuHighlight::highlight_widget(MWidget* widget)
 	widget->set_colour(this->_highlight_colour);
 }
 
-void MenuHighlight::unhighlight_widget(MWidget* widget)
+void MenuHighlight::unhighlight_widget(MWidget* widget) const
 {
 	if (widget == nullptr)
 	{
@@ -21,7 +21,7 @@ void MenuHighlight::unhighlight_widget(MWidget* widget)
 	widget->set_colour(this->_unhighlight_colour);
 }
 
-MWidget* MenuHighlight::get_highlighted_widget()
+MWidget* MenuHighlight::get_highlighted_widget() const
 {
 	return this->_highlighted_widget;
 }
@@ -38,7 +38,7 @@ void MenuHighlight::change_highlight(MWidget* next_highlight)
 	this->set_highlighted_widget(next_highlight);
 }
 
-Colour MenuHighlight::get_highlight_colour()
+Colour MenuHighlight::get_highlight_colour() const
 {
 	return this->_highlight_colour;
 }
@@ -47,7 +47,7 @@ void MenuHighlight::set_highlight_colour(Colour colour)
 	this->_highlight_colour = colour;
 }
 
-Colour MenuHighlight::get_unhighlight_colour()
+Colour MenuHighlight::get_unhighlight_colour() const
 {
 	return this->_unhighlight_colour;
 }

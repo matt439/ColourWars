@@ -13,9 +13,9 @@ public:
 		_player_num(player_num),
 		_action(action) {}
 
-	int get_player_num() { return this->_player_num; }
+	int get_player_num() const { return this->_player_num; }
 	void set_player_num(int player_num) { this->_player_num = player_num; }
-	pause_menu_action* get_action() { return this->_action; }
+	pause_menu_action* get_action() const { return this->_action; }
 	void set_action(pause_menu_action* action) { this->_action = action; }
 private:
 	int _player_num = -1;

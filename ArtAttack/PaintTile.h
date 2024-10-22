@@ -3,7 +3,7 @@
 
 #include "player_team.h"
 #include "TextureObject.h"
-#include "TeamColour.h"
+#include "TeamColourTools.h"
 #include "ICollisionGameObject.h"
 #include "AnimationObject.h"
 
@@ -20,7 +20,7 @@ namespace paint_tile_consts
 	const static MattMath::RectangleF SPLASH_RECTANGLE = { 0.0f, 0.0f, THICKNESS * 2.0f, THICKNESS * 2.0f };
 }
 
-class PaintTileSplash : public AnimationObject, public IGameObject
+class PaintTileSplash final : public AnimationObject, public IGameObject
 {
 public:
 	PaintTileSplash() = default;
@@ -42,7 +42,7 @@ public:
 
 	void set_rectangle_center(const MattMath::Vector2F& center);
 	void reset_and_play();
-	void set_colour(const MattMath::Colour& colour);
+	void set_colour(const MattMath::Colour& colour) override;
 
 	void update() override;
 	void draw(const MattMath::Camera& camera) override;
@@ -53,7 +53,7 @@ private:
 };
 
 
-class PaintTile : public TextureObject, public ICollisionGameObject
+class PaintTile final : public TextureObject, public ICollisionGameObject
 {
 public:
 	PaintTile() = default;
@@ -62,7 +62,7 @@ public:
 		const std::string& frame_name,
 		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
-		const team_colour& team_colours,
+		const TeamColour& team_colours,
 		const float* dt,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
@@ -84,7 +84,7 @@ public:
 private:
 	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
 	player_team _team = player_team::NONE;
-	team_colour _team_colours = team_colour();
+	TeamColour _team_colours = TeamColour();
 	const float* _dt = nullptr;
 	PaintTileSplash _splash;
 };

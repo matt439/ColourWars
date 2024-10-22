@@ -3,7 +3,7 @@
 
 #include "Weapon.h"
 
-class WeaponBucket : public RelativeVelocityWeapon
+class WeaponBucket final : public RelativeVelocityWeapon
 {
 public:
 	WeaponBucket(player_team team,
