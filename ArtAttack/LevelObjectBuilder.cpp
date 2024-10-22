@@ -11,15 +11,15 @@ std::unique_ptr<ICollisionGameObject>
 	std::string type = json["type"].GetString();
 	if (type == "Structure")
 	{
-		CollisionObjectType col_type;
+		collision_object_type col_type;
 		std::string collision_type = json["collision_type"].GetString();
 		if (collision_type == "STRUCTURE")
 		{
-			col_type = CollisionObjectType::STRUCTURE;
+			col_type = collision_object_type::STRUCTURE;
 		}
 		else if (collision_type == "STRUCTURE_JUMP_THROUGH")
 		{
-			col_type = CollisionObjectType::STRUCTURE_JUMP_THROUGH;
+			col_type = collision_object_type::STRUCTURE_JUMP_THROUGH;
 		}
 		else
 		{
@@ -56,13 +56,13 @@ std::unique_ptr<ICollisionGameObject>
 			col_type,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
-	else if (type == "StructurePaintable")
+	if (type == "StructurePaintable")
 	{
-		CollisionObjectType col_type;
+		collision_object_type col_type;
 		std::string collision_type = json["collision_type"].GetString();
 		if (collision_type == "STRUCTURE_PAINTABLE")
 		{
-			col_type = CollisionObjectType::STRUCTURE_PAINTABLE;
+			col_type = collision_object_type::STRUCTURE_PAINTABLE;
 		}
 		else
 		{
@@ -136,8 +136,7 @@ std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>>
 	LevelObjectBuilder::build_collision_objects(const Value& json,
 		const team_colour& team_colours) const
 {
-	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>>
-		collision_objects = std::make_unique<std::vector<std::unique_ptr<ICollisionGameObject>>>();
+	auto collision_objects = std::make_unique<std::vector<std::unique_ptr<ICollisionGameObject>>>();
 	for (auto& object : json.GetArray())
 	{
 		collision_objects->push_back(build_collision_object(object, team_colours));
@@ -149,8 +148,7 @@ std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>>
 std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
 	LevelObjectBuilder::build_non_collision_objects(const Value& json) const
 {
-	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
-		non_collision_objects = std::make_unique<std::vector<std::unique_ptr<IGameObject>>>();
+	auto non_collision_objects = std::make_unique<std::vector<std::unique_ptr<IGameObject>>>();
 	for (auto& object : json.GetArray())
 	{
 		non_collision_objects->push_back(build_non_collision_object(object));
@@ -162,8 +160,7 @@ std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
 	LevelObjectBuilder::build_viewport_dividers(
 		const ViewportManager* viewport_manager) const
 {
-	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
-		viewport_dividers = std::make_unique<std::vector<std::unique_ptr<IGameObject>>>();
+	auto viewport_dividers = std::make_unique<std::vector<std::unique_ptr<IGameObject>>>();
 
 	std::vector<RectangleF> viewport_rectangles =
 		viewport_manager->get_viewport_dividers();

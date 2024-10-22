@@ -90,7 +90,7 @@ public:
 
     virtual bool is_colliding(const ICollisionGameObject* other) const override;
     virtual void on_collision(const ICollisionGameObject* other) override;
-    virtual CollisionObjectType get_collision_object_type() const override;
+    virtual collision_object_type get_collision_object_type() const override;
     virtual const MattMath::Shape* get_shape() const override;
     virtual bool get_for_deletion() const override;
 

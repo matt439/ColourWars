@@ -11,10 +11,10 @@
 #include "DebugText.h"
 #include "CameraTools.h"
 #include "InterfaceGameplay.h"
-#include "level_end_info.h"
-#include "IPaintableGameObject.h"
+#include "LevelEndInfo.h"
 #include "TextDropShadow.h"
 #include "SoundBank.h"
+#include "IPaintableGameObject.h"
 
 enum class level_state
 {
@@ -81,7 +81,7 @@ public:
 	level_state get_state() const;
 	void set_state(level_state state);
 
-	level_end_info get_level_end_info() const;
+	LevelEndInfo get_level_end_info() const;
 
 	void stop_music() const;
 
@@ -139,14 +139,14 @@ private:
 	int count_projectiles() const;
 	float get_dt() const;
 	bool is_object_out_of_bounds(const ICollisionGameObject* object) const;
-	void draw_end_screen() const;
+	void draw_end_screen();
 
-	void update_level_logic(const std::vector<player_input>& player_inputs);
+	void update_level_logic(const std::vector<player_input>& player_inputs) const;
 
-	void draw_active_level();
-	void draw_zoom_out_level();
+	void draw_active_level() const;
+	void draw_zoom_out_level() const;
 
-	float zoom_out_camera_ratio();
+	float zoom_out_camera_ratio() const;
 
 	void stop_player_sounds() const;
 };

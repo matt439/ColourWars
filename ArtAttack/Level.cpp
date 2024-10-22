@@ -31,23 +31,23 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_coll
 	_collision_objects(std::move(collision_objects)),
 	_player_objects(std::move(player_objects)),
 	_viewport_dividers(std::move(viewport_dividers)),
-	_stage(stage),
+	_music_name(music_name),
+	_music_volume(music_volume),
+	_level_name(level_name),
+	_resolution_manager(resolution_manager),
+	_viewport_manager(viewport_manager),
+	_resource_manager(resource_manager),
 	_team_colours(team_colours),
+	_stage(stage),
 	_out_of_bounds(out_of_bounds),
 	_camera_bounds(camera_bounds),
 	_zoom_out_start_bounds(zoom_out_start_bounds),
 	_zoom_out_finish_bounds(zoom_out_finish_bounds),
 	_team_a_spawns(team_a_spawns),
 	_team_b_spawns(team_b_spawns),
-	_music_name(music_name),
-	_music_volume(music_volume),
 	_dt(dt),
 	_sprite_batch(sprite_batch),
-	_sampler_state(sampler_state),
-	_level_name(level_name),
-	_resolution_manager(resolution_manager),
-	_viewport_manager(viewport_manager),
-	_resource_manager(resource_manager)
+	_sampler_state(sampler_state)
 {
 	this->_debug_text = std::make_unique<DebugText>(sprite_batch,
 		resource_manager, dt, resolution_manager);
@@ -81,6 +81,7 @@ void Level::update(const std::vector<player_input>& player_inputs)
 					object->get_camera(),
 					this->_camera_bounds);
 				object->set_camera(camera);
+				player_index++;
 			}
 
 			// create countdown text
@@ -171,21 +172,21 @@ void Level::update(const std::vector<player_input>& player_inputs)
 	}
 	
 }
-float Level::zoom_out_camera_ratio()
+float Level::zoom_out_camera_ratio() const
 {
 	return 1.0f - (this->_zoom_out_timer / ZOOM_OUT_TIMER);
 }
-void Level::update_level_logic(const std::vector<player_input>& player_inputs)
+void Level::update_level_logic(const std::vector<player_input>& player_inputs) const
 {
 	// update collision objects
-	for (auto& object : *this->_collision_objects)
+	for (const auto& object : *this->_collision_objects)
 	{
 		object->update();
 	}
 	
 	// update player objects
 	int player_index = 0;
-	for (auto& object : *this->_player_objects)
+	for (const auto& object : *this->_player_objects)
 	{		
 		object->set_player_input(player_inputs[player_index]);
 		object->update();
@@ -211,7 +212,7 @@ void Level::update_level_logic(const std::vector<player_input>& player_inputs)
 	}
 
 	// update non-collision objects
-	for (auto& object : *this->_non_collision_objects)
+	for (const auto& object : *this->_non_collision_objects)
 	{
 		object->update();
 	}
@@ -235,7 +236,7 @@ void Level::update_level_logic(const std::vector<player_input>& player_inputs)
 	}
 
 	// update some player things after collisions have possible altered position
-	for (auto& object : *this->_player_objects)
+	for (const auto& object : *this->_player_objects)
 	{
 		object->update_weapon_position();
 		object->update_prev_rectangle();
@@ -308,7 +309,7 @@ void Level::update_level_logic(const std::vector<player_input>& player_inputs)
 }
 void Level::stop_player_sounds() const
 {
-	for (auto& player : *this->_player_objects)
+	for (const auto& player : *this->_player_objects)
 	{
 		player->stop_sounds();
 	}
@@ -337,7 +338,7 @@ void Level::draw()
 		this->draw_zoom_out_level();
 	}
 }
-void Level::draw_active_level()
+void Level::draw_active_level() const
 {
 	for (auto& player : *this->_player_objects)
 	{
@@ -355,7 +356,7 @@ void Level::draw_active_level()
 		this->_sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, this->_sampler_state);
 
 		// draw non-collision objects
-		for (auto& object : *this->_non_collision_objects)
+		for (const auto& object : *this->_non_collision_objects)
 		{
 			if (object->is_visible_in_viewport(camera_view))
 			{
@@ -363,7 +364,7 @@ void Level::draw_active_level()
 			}
 		}
 		// draw collision objects
-		for (auto& object : *this->_collision_objects)
+		for (const auto& object : *this->_collision_objects)
 		{
 			if (object->is_visible_in_viewport(camera_view))
 			{
@@ -371,7 +372,7 @@ void Level::draw_active_level()
 			}
 		}
 		// draw player objects
-		for (auto& object : *this->_player_objects)
+		for (const auto& object : *this->_player_objects)
 		{
 			if (object->is_visible_in_viewport(camera_view))
 			{
@@ -382,15 +383,15 @@ void Level::draw_active_level()
 		// draw viewport dividers
 		const Viewport player_vp =
 			this->_viewport_manager->get_player_viewport(player_num);
-		const Camera viewport_camera = Camera(player_vp);
-		for (auto& divider : *this->_viewport_dividers)
+		const auto viewport_camera = Camera(player_vp);
+		for (const auto& divider : *this->_viewport_dividers)
 		{
 			divider->draw(viewport_camera);
 		}
 
 		this->_sprite_batch->End();
 
-		player_state state = player->get_state();
+		const player_state state = player->get_state();
 
 		// draw interface
 		Vector2F viewport_size = player_vp.get_size();
@@ -424,7 +425,7 @@ void Level::draw_active_level()
 		this->_sprite_batch->End();
 	}
 }
-void Level::draw_zoom_out_level()
+void Level::draw_zoom_out_level() const
 {
 	this->_viewport_manager->set_layout(screen_layout::ONE_PLAYER);
 	this->_viewport_manager->apply_player_viewport(0);
@@ -434,17 +435,17 @@ void Level::draw_zoom_out_level()
 	this->_sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, this->_sampler_state);
 
 	// draw non-collision objects
-	for (auto& object : *this->_non_collision_objects)
+	for (const auto& object : *this->_non_collision_objects)
 	{
 		object->draw(camera);
 	}
 	// draw collision objects
-	for (auto& object : *this->_collision_objects)
+	for (const auto& object : *this->_collision_objects)
 	{
 		object->draw(camera);
 	}
 	// draw player objects
-	for (auto& object : *this->_player_objects)
+	for (const auto& object : *this->_player_objects)
 	{
 		object->draw(camera);
 	}
@@ -459,21 +460,21 @@ level_state Level::get_state() const
 int Level::count_projectiles() const
 {
 	int count = 0;
-	for (auto& object : *this->_collision_objects)
+	for (const auto& object : *this->_collision_objects)
 	{
-		CollisionObjectType type = object->get_collision_object_type();
+		collision_object_type type = object->get_collision_object_type();
 
 		bool is_projectile =
-			type == CollisionObjectType::PROJECTILE_SPRAY_TEAM_A ||
-			type == CollisionObjectType::PROJECTILE_SPRAY_TEAM_B ||
-			type == CollisionObjectType::PROJECTILE_JET_TEAM_A ||
-			type == CollisionObjectType::PROJECTILE_JET_TEAM_B ||
-			type == CollisionObjectType::PROJECTILE_ROLLING_TEAM_A ||
-			type == CollisionObjectType::PROJECTILE_ROLLING_TEAM_B ||
-			type == CollisionObjectType::PROJECTILE_BALL_TEAM_A ||
-			type == CollisionObjectType::PROJECTILE_BALL_TEAM_B ||
-			type == CollisionObjectType::PROJECTILE_MIST_TEAM_A ||
-			type == CollisionObjectType::PROJECTILE_MIST_TEAM_B;
+			type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
+			type == collision_object_type::PROJECTILE_SPRAY_TEAM_B ||
+			type == collision_object_type::PROJECTILE_JET_TEAM_A ||
+			type == collision_object_type::PROJECTILE_JET_TEAM_B ||
+			type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
+			type == collision_object_type::PROJECTILE_ROLLING_TEAM_B ||
+			type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
+			type == collision_object_type::PROJECTILE_BALL_TEAM_B ||
+			type == collision_object_type::PROJECTILE_MIST_TEAM_A ||
+			type == collision_object_type::PROJECTILE_MIST_TEAM_B;
 		if (is_projectile)
 		{
 			count++;
@@ -494,7 +495,7 @@ bool Level::is_object_out_of_bounds(const ICollisionGameObject* object) const
 	return !object_in_bounds;
 }
 
-void Level::draw_end_screen() const
+void Level::draw_end_screen()
 {
 	// TODO
 }
@@ -504,23 +505,23 @@ void Level::set_state(level_state state)
 	this->_state = state;
 }
 
-level_end_info Level::get_level_end_info() const
+LevelEndInfo Level::get_level_end_info() const
 {
-	level_end_info result = level_end_info();
+	auto result = LevelEndInfo();
 	result.team_colours = this->_team_colours;
 
 	for (auto& object : *this->_collision_objects)
 	{
-		CollisionObjectType type = object->get_collision_object_type();
+		collision_object_type type = object->get_collision_object_type();
 
-		if (type == CollisionObjectType::STRUCTURE_PAINTABLE)
+		if (type == collision_object_type::STRUCTURE_PAINTABLE)
 		{
 			try
 			{
-				IPaintableGameObject* paintable_object =
+				auto paintable_object =
 					dynamic_cast<IPaintableGameObject*>(object.get());
 
-				paint_total paint = paintable_object->get_paint_total();
+				PaintTotal paint = paintable_object->get_paint_total();
 
 				if (paint.team_a != 0.0f || paint.team_b != 0.0f)
 				{

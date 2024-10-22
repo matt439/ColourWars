@@ -17,17 +17,17 @@ public:
 		_dt(dt) {}
 
 protected:
-	DirectX::SpriteBatch* get_sprite_batch() { return this->_sprite_batch; }
-	ResourceManager* get_resource_manager() { return this->_resource_manager; }
-	float get_dt() { return *this->_dt; }
-	MattMath::RectangleI calculate_draw_rectangle(
+	DirectX::SpriteBatch* get_sprite_batch() const { return this->_sprite_batch; }
+	ResourceManager* get_resource_manager() const { return this->_resource_manager; }
+	float get_dt() const { return *this->_dt; }
+	static MattMath::RectangleI calculate_draw_rectangle(
 		const MattMath::RectangleI& rec,
 		const MattMath::Vector3F& camera);
-	MattMath::RectangleI calculate_draw_rectangle(
+	static MattMath::RectangleI calculate_draw_rectangle(
 		const MattMath::Vector2F& position,
 		const MattMath::Vector2F& size,
 		const MattMath::Vector3F& camera);
-	MattMath::Vector2F calculate_sprite_origin(
+	static MattMath::Vector2F calculate_sprite_origin(
 		const MattMath::Vector2F& size,
 		rotation_origin origin);
 

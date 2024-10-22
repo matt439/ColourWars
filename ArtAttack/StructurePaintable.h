@@ -31,7 +31,7 @@ public:
 		const MattMath::RectangleF& rectangle,
 		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
-		CollisionObjectType collision_type,
+		collision_object_type collision_type,
 		const team_colour& team_colours,
 		const paintable_faces& faces,
 		const float* dt,
@@ -46,7 +46,7 @@ public:
 	virtual void draw() override;
 	virtual void on_collision(const ICollisionGameObject* other) override;
 
-	paint_total get_paint_total() const override;
+	PaintTotal get_paint_total() const override;
 
 private:
 	std::vector<PaintTile> _paint_tiles = std::vector<PaintTile>();

@@ -4,13 +4,13 @@
 #include "TeamColour.h"
 #include "player_team.h"
 
-struct level_end_info
+struct LevelEndInfo
 {
 	team_colour team_colours = team_colour();
 	float team_a_area = 0.0f;
 	float team_b_area = 0.0f;
 
-	inline player_team winning_team() const
+	player_team winning_team() const
 	{
 		if (team_a_area > team_b_area)
 		{
@@ -20,12 +20,10 @@ struct level_end_info
 		{
 			return player_team::B;
 		}
-		else // draw
-		{
-			return player_team::NONE;
-		}
+		// draw
+		return player_team::NONE;
 	}
-	inline float team_a_ratio() const
+	float team_a_ratio() const
 	{
 		if (team_a_area == 0.0f && team_b_area == 0.0f)
 		{
@@ -33,7 +31,7 @@ struct level_end_info
 		}
 		return team_a_area / (team_a_area + team_b_area);
 	}
-	inline float team_b_ratio() const
+	float team_b_ratio() const
 	{
 		if (team_a_area == 0.0f && team_b_area == 0.0f)
 		{
@@ -41,15 +39,15 @@ struct level_end_info
 		}
 		return team_b_area / (team_a_area + team_b_area);
 	}
-	inline float team_a_percentage() const
+	float team_a_percentage() const
 	{
 		return 100.0f * team_a_ratio();
 	}
-	inline float team_b_percentage() const
+	float team_b_percentage() const
 	{
 		return 100.0f * team_b_ratio();
 	}
-	inline std::string team_a_percentage_string() const
+	std::string team_a_percentage_string() const
 	{
 		std::string result = std::to_string(team_a_percentage());
 		size_t decimal_point = result.find('.');
@@ -59,7 +57,7 @@ struct level_end_info
 		}
 		return result + "%";
 	}
-	inline std::string team_b_percentage_string() const
+	std::string team_b_percentage_string() const
 	{
 		std::string result = std::to_string(team_b_percentage());
 		size_t decimal_point = result.find('.');
@@ -69,7 +67,7 @@ struct level_end_info
 		}
 		return result + "%";
 	}
-	inline std::string winning_team_string() const
+	std::string winning_team_string() const
 	{
 		player_team winning = winning_team();
 		if (winning == player_team::A)
@@ -84,64 +82,55 @@ struct level_end_info
 		{
 			return "Draw!";
 		}
-		else
-		{
-			throw std::exception("No winning team");
-		}
+		throw std::exception("No winning team");
 	}
-	inline float winning_score() const
+	float winning_score() const
 	{
 		player_team winning = winning_team();
 		if (winning == player_team::A)
 		{
 			return team_a_area;
 		}
-		else if (winning == player_team::B)
+		if (winning == player_team::B)
 		{
 			return team_b_area;
 		}
-		else if (winning == player_team::NONE)
+		if (winning == player_team::NONE)
 		{
 			return team_a_area;
 		}
-		else
-		{
-			throw std::exception("No winning team");
-		}
+		throw std::exception("No winning team");
 	}
-	inline float losing_score() const
+	float losing_score() const
 	{
 		player_team winning = winning_team();
 		if (winning == player_team::A)
 		{
 			return team_b_area;
 		}
-		else if (winning == player_team::B)
+		if (winning == player_team::B)
 		{
 			return team_a_area;
 		}
-		else if (winning == player_team::NONE)
+		if (winning == player_team::NONE)
 		{
 			return team_a_area;
 		}
-		else
-		{
-			throw std::exception("No winning team");
-		}
+		throw std::exception("No winning team");
 	}
-	inline float winning_ratio() const
+	float winning_ratio() const
 	{
 		return this->winning_score() / this->losing_score();
 	}
-	inline float losing_ratio() const
+	float losing_ratio() const
 	{
 		return this->losing_score() / this->winning_score();
 	}
-	inline float winning_percentage() const
+	float winning_percentage() const
 	{
 		return 100.0f * this->winning_ratio();
 	}
-	inline float losing_percentage() const
+	float losing_percentage() const
 	{
 		return 100.0f - this->winning_percentage();
 	}

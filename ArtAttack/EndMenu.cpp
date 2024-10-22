@@ -5,7 +5,7 @@ using namespace MattMath;
 using namespace colour_consts;
 using namespace end_menu_consts;
 
-EndMenuData* EndMenuPage::get_end_menu_data()
+EndMenuData* EndMenuPage::get_end_menu_data() const
 {
 	return this->_data;
 }

@@ -37,7 +37,7 @@ public:
 	void on_resuming();
     void on_window_moved() const;
     void on_display_change() const;
-    void on_window_size_changed(int width, int height);
+    void on_window_size_changed(int width, int height) const;
 
     void set_game_data(GameData* game_data) { this->_data = game_data; }
 

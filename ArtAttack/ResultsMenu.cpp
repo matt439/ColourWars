@@ -57,7 +57,7 @@ void ResultsMenuInitial::update()
 
 void ResultsMenuInitial::init()
 {
-	const level_end_info end_info = this->get_level_end_info();
+	const LevelEndInfo end_info = this->get_level_end_info();
 
 	this->_box = std::make_unique<MTexture>(
 		"box",
@@ -263,7 +263,7 @@ int ResultsMenuInitial::check_for_continue_input(
 	}
 	return -1;
 }
-level_end_info ResultsMenuInitial::get_level_end_info()
+LevelEndInfo ResultsMenuInitial::get_level_end_info()
 {
 	return this->get_results_menu_data()->get_level_end_info();
 }

@@ -11,7 +11,7 @@ public:
 		MenuData(game_data, input),
 		_action(action) {}
 
-	end_menu_action* get_action() { return this->_action; }
+	end_menu_action* get_action() const { return this->_action; }
 	void set_action(end_menu_action* action) { this->_action = action; }
 
 private:

@@ -186,7 +186,7 @@
     <ClInclude Include="AnimationStrip.h" />
     <ClInclude Include="BorderThickness.h" />
     <ClInclude Include="CameraTools.h" />
-    <ClInclude Include="CollisionObjectType.h" />
+    <ClInclude Include="collision_object_type.h" />
     <ClInclude Include="Colour.h" />
     <ClInclude Include="confirmation_state.h" />
     <ClInclude Include="connection_state.h" />
@@ -213,7 +213,7 @@
     <ClInclude Include="LevelBuilder.h" />
     <ClInclude Include="LevelLoadedInfo.h" />
     <ClInclude Include="LevelObjectBuilder.h" />
-    <ClInclude Include="level_end_info.h" />
+    <ClInclude Include="LevelEndInfo.h" />
     <ClInclude Include="level_mode.h" />
     <ClInclude Include="level_stage.h" />
     <ClInclude Include="MainMenu.h" />

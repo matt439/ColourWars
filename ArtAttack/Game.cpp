@@ -173,7 +173,7 @@ void Game::on_display_change() const
     _device_resources->UpdateColorSpace();
 }
 
-void Game::on_window_size_changed(int width, int height)
+void Game::on_window_size_changed(int width, int height) const
 {
     if (!_device_resources->WindowSizeChanged(width, height))
         return;

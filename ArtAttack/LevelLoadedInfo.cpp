@@ -77,7 +77,7 @@ float LevelLoadedInfo::get_music_volume() const
 }
 
 std::vector<Vector2F>
-	LevelLoadedInfo::decode_team_spawns_json(const Value& json)	const
+	LevelLoadedInfo::decode_team_spawns_json(const Value& json)
 {
 	std::vector<Vector2F> spawns;
 	for (auto& spawn : json.GetArray())
@@ -87,7 +87,7 @@ std::vector<Vector2F>
 	return spawns;
 }
 
-Document LevelLoadedInfo::load_from_json(const char* json_path) const
+Document LevelLoadedInfo::load_from_json(const char* json_path)
 {
 	FILE* fp = fopen(json_path, "rb");
 

@@ -11,10 +11,10 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	ResourceManager* resource_manager,
 	ID3D11SamplerState* sampler_state,
 	ResolutionManager* resolution_manager) :
-	_viewport_manager(viewport_manager),
 	_resource_manager(resource_manager),
 	_sprite_batch(sprite_batch),
 	_dt(dt),
+	_viewport_manager(viewport_manager),
 	_sampler_state(sampler_state),
 	_resolution_manager(resolution_manager)
 {

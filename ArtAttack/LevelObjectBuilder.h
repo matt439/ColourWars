@@ -4,7 +4,6 @@
 #include "ICollisionGameObject.h"
 #include <memory>
 #include "rapidjson/document.h"
-#include "Structure.h"
 #include "StructurePaintable.h"
 #include "Visual.h"
 #include "ViewportManager.h"

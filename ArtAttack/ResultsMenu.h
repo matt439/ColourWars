@@ -102,7 +102,7 @@ private:
 	float _delay_timer = 0.0f;
 	float _fill_timer = 0.0f;
 	float _show_results_timer = 0.0f;
-	level_end_info get_level_end_info();
+	LevelEndInfo get_level_end_info();
 	float fill_time_ratio();
 	MattMath::Vector2F calculate_team_b_fill_top_right_position() const;
 	int check_for_continue_input(const std::vector<menu_input>& menu_input);

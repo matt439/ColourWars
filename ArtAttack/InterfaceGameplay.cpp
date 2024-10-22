@@ -43,7 +43,7 @@ void InterfaceGameplay::draw_ammo(
 	const Vector2F& resolution,
 	float ammo,
 	const Colour& team_colour,
-	const Vector2F& position)
+	const Vector2F& position) const
 {
 	//draw empty box
 	Vector2F size = Vector2F(
@@ -90,7 +90,7 @@ void InterfaceGameplay::draw_ammo(
 void InterfaceGameplay::draw_health(
 	const Vector2F& resolution,
 	float health,
-	const Vector2F& position)
+	const Vector2F& position) const
 {
 	//draw empty box
 	Vector2F size = Vector2F(
@@ -134,7 +134,7 @@ void InterfaceGameplay::draw_health(
 		fill_rect,
 		HEALTH_COLOUR);
 }
-void InterfaceGameplay::draw_timer(const Vector2F& resolution, float timer)
+void InterfaceGameplay::draw_timer(const Vector2F& resolution, float timer) const
 {
 	Vector2F pos = Vector2F(
 		resolution.x / 2.0f - (resolution.x * TIMER_OFFSET.x),
@@ -165,7 +165,7 @@ void InterfaceGameplay::draw_timer(const Vector2F& resolution, float timer)
 }
 
 void InterfaceGameplay::draw_respawn_timer(const MattMath::Vector2F& resolution,
-	float timer)
+	float timer) const
 {
 	Vector2F pos = Vector2F(
 		resolution.x / 2.0f - (resolution.x * RESPAWN_TIMER_OFFSET.x),

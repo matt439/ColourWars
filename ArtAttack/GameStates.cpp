@@ -2,15 +2,15 @@
 #include "GameStates.h"
 
 GameMenu::GameMenu(GameData* game_data) :
-    _menu_data(std::make_unique<MainMenuData>(game_data)),
-    _game_data(game_data)
+    _game_data(game_data),
+    _menu_data(std::make_unique<MainMenuData>(game_data))
 {
     this->_menu_level_settings = std::make_unique<MenuLevelSettings>();
 }
 GameMenu::GameMenu(GameData* game_data,
-    const main_menu_midway_load_settings& settings) :
-    _menu_data(std::make_unique<MainMenuData>(game_data)),
-    _game_data(game_data)
+    const MainMenuMidwayLoadSettings& settings) :
+    _game_data(game_data),
+    _menu_data(std::make_unique<MainMenuData>(game_data))
 {
     this->_menu_level_settings = std::make_unique<MenuLevelSettings>(
         settings.settings);
@@ -87,7 +87,7 @@ void GameMenu::draw()
     this->_menu->draw();
 }
 
-GameData* GameLevel::get_data()
+GameData* GameLevel::get_data() const
 {
     return this->_game_data;
 }
@@ -150,7 +150,7 @@ void GameLevel::update()
         }
         else if (this->_level->get_state() == level_state::FINISHED)
         {
-            level_end_info end_info = this->_level->get_level_end_info();
+            LevelEndInfo end_info = this->_level->get_level_end_info();
             this->_state = game_level_state::RESULTS;
 
             this->_results_menu_action = std::make_unique<results_menu_action>(
@@ -192,7 +192,7 @@ void GameLevel::update()
             break;
         case pause_menu_action::QUIT:
             this->_level->stop_music();
-            main_menu_midway_load_settings settings;
+            MainMenuMidwayLoadSettings settings;
             settings.settings = MenuLevelSettings();
             settings.screen = main_menu_screen::HOME;
             this->get_context()->transition_to(
@@ -233,7 +233,7 @@ void GameLevel::update()
         case end_menu_action::CHANGE_TEAMS:
         {
             this->_level->stop_music();
-            main_menu_midway_load_settings settings;
+            MainMenuMidwayLoadSettings settings;
             settings.settings = this->_settings;
             settings.screen = main_menu_screen::TEAM_SELECT;
             this->get_context()->transition_to(
@@ -243,7 +243,7 @@ void GameLevel::update()
         case end_menu_action::CHANGE_WEAPONS:
         {
             this->_level->stop_music();
-            main_menu_midway_load_settings settings;
+            MainMenuMidwayLoadSettings settings;
             settings.settings = this->_settings;
             settings.screen = main_menu_screen::WEAPON_SELECT;
             this->get_context()->transition_to(
@@ -253,7 +253,7 @@ void GameLevel::update()
         case end_menu_action::CHANGE_LEVEL:
         {
             this->_level->stop_music();
-            main_menu_midway_load_settings settings;
+            MainMenuMidwayLoadSettings settings;
             settings.settings = this->_settings;
             settings.screen = main_menu_screen::STAGE_SELECT;
             this->get_context()->transition_to(
@@ -271,7 +271,7 @@ void GameLevel::update()
         case end_menu_action::EXIT:
         {
             this->_level->stop_music();
-            main_menu_midway_load_settings settings;
+            MainMenuMidwayLoadSettings settings;
 			settings.settings = MenuLevelSettings();
 			settings.screen = main_menu_screen::HOME;
 			this->get_context()->transition_to(

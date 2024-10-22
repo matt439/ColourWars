@@ -312,7 +312,7 @@ namespace colour_consts
 	const MattMath::Colour TEAM_PINK = { 255, 0, 127, 255 };
 	const MattMath::Colour TEAM_GREEN = { 0, 255, 0, 255 };
 
-	inline static MattMath::Colour colour_from_name(const std::string& name)
+	static MattMath::Colour colour_from_name(const std::string& name)
 	{
 		if (name == "ALICE_BLUE") return colour_consts::ALICE_BLUE;
 		if (name == "ANTIQUE_WHITE") return colour_consts::ANTIQUE_WHITE;

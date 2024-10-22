@@ -34,7 +34,7 @@ namespace interface_consts
     const static MattMath::Colour RESPAWN_TIMER_SHADOW_COLOUR = colour_consts::BLACK;
 }
 
-struct interface_draw
+struct InterfaceDraw
 {
     MattMath::Vector2I resolution = { -1, -1 };
     float health = 0.0f;
@@ -54,7 +54,6 @@ public:
 	void draw_gameplay_interface(const MattMath::Vector2F& resolution,
         float health,
         float ammo,
-        //player_team team,
         float timer,
         const MattMath::Colour& team_colour,
         ID3D11SamplerState* sampler_state,
@@ -65,14 +64,14 @@ private:
     void draw_ammo(const MattMath::Vector2F& resolution,
         float ammo,
         const MattMath::Colour& team_colour,
-        const MattMath::Vector2F& position);
+        const MattMath::Vector2F& position) const;
     void draw_health(const MattMath::Vector2F& resolution,
         float health,
-        const MattMath::Vector2F& position);
+        const MattMath::Vector2F& position) const;
     void draw_timer(const MattMath::Vector2F& resolution,
-        float timer);
+        float timer) const;
 
     void draw_respawn_timer(const MattMath::Vector2F& resolution,
-        float timer);
+        float timer) const;
 };
 #endif // !INTERFACEGAMEPLAY_H

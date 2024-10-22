@@ -11,7 +11,7 @@
 class LevelLoadedInfo
 {
 public:
-	LevelLoadedInfo(const char* json_path) :
+	explicit LevelLoadedInfo(const char* json_path) :
 		_json_doc(load_from_json(json_path)) {}
 
 	std::string get_level_name() const;
@@ -34,10 +34,10 @@ public:
 private:
 	rapidjson::Document _json_doc;
 
-	std::vector<MattMath::Vector2F>
-		decode_team_spawns_json(const rapidjson::Value& json) const;
+	static std::vector<MattMath::Vector2F>
+		decode_team_spawns_json(const rapidjson::Value& json);
 
-	rapidjson::Document load_from_json(const char* json_path) const;
+	static rapidjson::Document load_from_json(const char* json_path);
 
 };
 #endif // !LEVEL_LOADED_INFO_H
