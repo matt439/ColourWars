@@ -6,7 +6,6 @@
 
 namespace weapon_consts
 {
-    //constexpr float PI = 3.14159265358979323846f;
     constexpr float AMMO_REGEN_DELAY = 0.5f;
     constexpr float AMMO_REGEN_RATE = 0.4f;
     constexpr float STARTING_AMMO = 1.0f;
@@ -19,9 +18,6 @@ namespace weapon_consts
         { 0.0f, 0.0f },
         0.0f,
         1100.0f,
-        //wep_movement::FREE_ROTATE,     //movement
-        //shoot_pattern::SINGLE,           //pattern
-        //0.25f,                              //player_vel_amount
         0.0f,                              //ammo_usage
         "sprite_sheet_1",               //sheet_name
         "error",                        //frame_name
@@ -29,7 +25,6 @@ namespace weapon_consts
         "sound_bank_1",                 //sound_bank_name
         "UI_Clicks01",                  //shoot_sound_name
         1.0f,                           //shoot_sound_volume
-        //rotation_origin::LEFT_CENTER,  
     };
 
     static const relative_weapon_details DETAILS_RELATIVE_DEFAULT =
@@ -45,9 +40,6 @@ namespace weapon_consts
         { projectile_consts::DETAILS_SPRAY.size.x / 2.0f, 0.0f },   //nozzle_offset
         0.0f,						//shoot_interval
         1100.0f,                    //starting_vel_length
-        //wep_movement::FREE_ROTATE,    //movement
-        //shoot_pattern::SINGLE,           //pattern
-        //0.25f,                              //player_vel_amount
         0.007f,                              //ammo_usage
         "sprite_sheet_1",               //sheet_name
         "sprayer",                        //frame_name
@@ -55,7 +47,6 @@ namespace weapon_consts
         "sound_bank_1",                 //sound_bank_name
         "WaterSprayIntoBucket",                  //shoot_sound_name
         1.0f,                           //shoot_sound_volume
-        //rotation_origin::LEFT_CENTER,
     };
 
     static const relative_weapon_details DETAILS_RELATIVE_SPRAYER =
@@ -83,9 +74,6 @@ namespace weapon_consts
         { projectile_consts::DETAILS_JET.size.x / 2.0f, 0.0f },	//nozzle_offset
         1.0f,						//shoot_interval
         2000.0f,                    //starting_vel_length
-        //wep_movement::FREE_ROTATE,     //movement
-        //shoot_pattern::SINGLE,           //pattern
-        //-1.0f,                              //player_vel_amount
         0.25f,                              //ammo_usage
         "sprite_sheet_1",               //sheet_name
         "sniper",                        //frame_name
@@ -93,7 +81,6 @@ namespace weapon_consts
         "sound_bank_1",                 //sound_bank_name
         "WoodRattle",                  //shoot_sound_name
         0.8f,                           //shoot_sound_volume
-        //rotation_origin::LEFT_CENTER,
     };
 
     static const weapon_details DETAILS_ROLLER =
@@ -103,9 +90,6 @@ namespace weapon_consts
         { -projectile_consts::DETAILS_ROLLING.size.x / 2.0f, 0.0f },	//nozzle_offset
         0.0001f,						//shoot_interval
         0.0f,                        //starting_vel_length
-        //wep_movement::ON_GROUND,     //movement
-        //shoot_pattern::SINGLE,           //pattern
-        //-1.0f,                              //player_vel_amount
         0.004f,                              //ammo_usage
         "sprite_sheet_1",               //sheet_name
         "roller",                        //frame_name
@@ -113,7 +97,6 @@ namespace weapon_consts
         "sound_bank_1",                 //sound_bank_name
         "BowlingBallRoll",                  //shoot_sound_name
         3.0f,                           //shoot_sound_volume
-        //rotation_origin::LEFT_CENTER,
     };
 
     static const sound_effect_instance_weapon_details ROLLER_SOUND_DETAILS =
@@ -135,9 +118,6 @@ namespace weapon_consts
         { projectile_consts::DETAILS_MIST.size.x / 2.0f, 0.0f },	//nozzle_offset
         0.1f,						//shoot_interval
         300.0f,                     //starting_vel_length
-        //wep_movement::FREE_ROTATE,     //movement
-        //shoot_pattern::MIST,           //pattern
-        //0.25f,                              //player_vel_amount
         0.01f,                              //ammo_usage
         "sprite_sheet_1",               //sheet_name
         "mister",                        //frame_name
@@ -145,7 +125,6 @@ namespace weapon_consts
         "sound_bank_1",                 //sound_bank_name
         "VulcanMachineGunSeries",                  //shoot_sound_name
         0.2f,                           //shoot_sound_volume
-        //rotation_origin::LEFT_CENTER,
     };
 
     static const relative_weapon_details DETAILS_RELATIVE_MISTER =
@@ -173,9 +152,6 @@ namespace weapon_consts
         { projectile_consts::DETAILS_BALL.size.x / 2.0f, 0.0f },	//nozzle_offset
         0.5f,						//shoot_interval
         800.0f,                     //starting_vel_length
-        //wep_movement::FREE_ROTATE,     //movement
-        //shoot_pattern::MIST,           //pattern
-        //0.25f,                              //player_vel_amount
         0.1f,                              //ammo_usage
         "sprite_sheet_1",               //sheet_name
         "bucket",                        //frame_name
@@ -183,7 +159,6 @@ namespace weapon_consts
         "sound_bank_1",                 //sound_bank_name
         "LaserGun",                  //shoot_sound_name
         0.3f,                           //shoot_sound_volume
-        //rotation_origin::LEFT_CENTER,
     };
 
     static const relative_weapon_details DETAILS_RELATIVE_BUCKET =

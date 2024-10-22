@@ -9,8 +9,6 @@
 
 class WeaponBuilder
 {
-private:
-
 public:
 	WeaponBuilder() = default;
 	std::unique_ptr<Weapon> build_weapon(

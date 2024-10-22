@@ -115,23 +115,3 @@ void WeaponRoller::draw(const Camera& camera, bool debug)
         TextureObject::draw(draw_rectangle_noz, camera);
     }
 }
-
-//std::vector<std::unique_ptr<ICollisionGameObject>>
-//Weapon::update_and_get_projectiles(player_input input,
-//    const Vector2F& player_center,
-//    const Vector2F& player_velocity,
-//    bool player_facing_right)
-//{
-//    this->update_movement_and_rotation(input, player_center,
-//        player_velocity, player_facing_right);
-//
-//    if (this->check_if_shooting_and_ammo_update(input, player_center,
-//        player_velocity, player_facing_right))
-//    {
-//        return this->shoot(input.shoot_direction);
-//    }
-//    else
-//    {
-//        return std::vector<std::unique_ptr<ICollisionGameObject>>();
-//    }
-//}

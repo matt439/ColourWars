@@ -151,8 +151,6 @@ bool Weapon::facing_left(float rotation) const
 
 Vector2F Weapon::get_nozzle_pos() const
 {
-	//Vector2 result = this->get_rotation_nozzle_offset(
-	//	this->facing_left(this->_rotation));
 	Vector2F result = this->_details.nozzle_offset;
 	result.x += this->_details.size.x;
 	result = Vector2F::rotate_vector(result, this->_rotation);
@@ -188,7 +186,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
     if (this->check_if_shooting_and_ammo_update(input, player_center,
         player_velocity, player_facing_right))
     {
-		//return this->shoot(input.shoot_direction);
         return this->shoot(Vector2F::unit_vec_from_angle(this->get_rotation()));
 	}
 	else
@@ -206,12 +203,9 @@ bool Weapon::check_if_shooting_and_ammo_update(
     const float dt = *this->_dt;
     bool normal_gun_ok_to_shoot = input.primary_shoot &&
         this->get_gun_player_aligned();
-    //bool roller_ok_to_shoot = this->get_movement() ==
-    //    wep_movement::ON_GROUND &&
-    //    input.primary_shoot; // NOTE: changed this from raw_shooting to primary shoot
-    bool ok_to_shoot = normal_gun_ok_to_shoot; //|| roller_ok_to_shoot;
 
-    //std::vector<std::unique_ptr<ICollisionGameObject>> result;
+    bool ok_to_shoot = normal_gun_ok_to_shoot;
+
 
     bool result = false;
 
@@ -242,7 +236,6 @@ bool Weapon::check_if_shooting_and_ammo_update(
     this->alter_ammo_timer(dt);
     this->alter_shoot_timer(dt);
 
-    //bool holding_shoot = ok_to_shoot && this->get_ammo() > 0.0f;
     this->_shooting_this_update = ok_to_shoot && this->get_ammo() > 0.0f;
 
     this->handle_shoot_sound(result, this->_shooting_this_update);
@@ -257,14 +250,12 @@ void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
     if (holding_shoot || shooting_this_update)
     {
         this->_sound_bank->play_effect(
-            //this->_details.shoot_sound_name,
             sound_name,
             true,
             this->_details.shoot_sound_volume);
     }
     else
     {
-        //this->_sound_bank->stop_effect(this->_details.shoot_sound_name, true);
         this->_sound_bank->stop_effect(sound_name, true);
     }
 }
@@ -272,7 +263,6 @@ void Weapon::stop_sounds()
 {
     const std::string& sound_name = this->get_sound_effect_instance_name();
     
-    //this->_sound_bank->stop_effect(this->_details.shoot_sound_name, true);
     this->_sound_bank->stop_effect(sound_name, true);
 }
 const std::string& Weapon::get_sound_effect_instance_name() const
@@ -301,52 +291,6 @@ void Weapon::update_movement_and_rotation(player_input input,
     bool player_facing_right)
 {
     const float dt = *this->_dt;
-    //if (this->get_details().movement == wep_movement::ON_GROUND)
-    //{
-    //    if (player_facing_right)
-    //    {
-    //        this->set_rotation(PI / 4.0f);
-    //    }
-    //    else //player facing left
-    //    {
-    //        this->set_rotation(3.0f * PI / 4.0f);
-    //    }
-    //    this->set_gun_player_aligned(true);
-    //}
-
-
-    //if ((player_facing_right &&
-    //    input.shoot_direction.x > 0.0f) ||
-    //    (!player_facing_right &&
-    //        input.shoot_direction.x < 0.0f))
-    //{
-    //    this->set_gun_player_aligned(true);
-    //}
-    //else
-    //{
-    //    this->set_gun_player_aligned(false);
-    //}
-
-    //if (this->get_gun_player_aligned())
-    //{
-    //    this->set_rotation(atan2f(input.shoot_direction.y,
-    //        input.shoot_direction.x));
-
-    //}
-    //else
-    //{
-    //    if (player_facing_right)
-    //    {
-    //        this->set_rotation(0.0f);
-    //    }
-    //    else
-    //    {
-    //        this->set_rotation(PI);
-    //    }
-    //}
-
-    //this->set_rotation(std::atan2f(input.shoot_direction.y,
-    //    input.shoot_direction.x));
 
     if (input.shoot_direction_requested)
     {
@@ -363,9 +307,6 @@ void Weapon::update_movement_and_rotation(player_input input,
 			this->set_rotation(PI);
 		}
     }
-
-    
-    
 
     this->set_player_center(player_center);
 
@@ -384,8 +325,6 @@ void Weapon::update_movement_and_rotation(player_input input,
 std::vector<std::unique_ptr<ICollisionGameObject>>
 Weapon::shoot(const Vector2F& shoot_direction) const
 {
-    //this->_sound_bank->play_wave(this->_details.shoot_sound_name);
-
     Vector2F launch_velocity = this->calculate_projectile_launch_velocity(
         shoot_direction, this->get_starting_vel_length());
 
@@ -461,8 +400,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>> RelativeVelocityWeapon::shoot
     const MattMath::Vector2F& shoot_direction,
     const MattMath::Vector2F& player_velocity) const
 {
-    //this->_sound_bank->play_wave(this->_details.shoot_sound_name);
-    
     relative_weapon_details rel_details = this->_rel_details;
     
     add_player_velocity add_player_vel = rel_details.add_vel;
@@ -496,7 +433,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
     if (Weapon::check_if_shooting_and_ammo_update(input, player_center,
 		player_velocity, player_facing_right))
     {
-		//return this->shoot(input.shoot_direction, player_velocity);
         return this->shoot(
             Vector2F::unit_vec_from_angle(this->get_rotation()), player_velocity);
 	}
@@ -505,113 +441,3 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
         return std::vector<std::unique_ptr<ICollisionGameObject>>();
     }
 }
-
-//void Weapon::update(player_input input,
-//    const Vector2F& player_center,
-//    const Vector2F& player_velocity,
-//    bool player_facing_right,
-//    float dt)
-//{
-//    ////if input requesting weapon type change
-//    //if (params.input.primary != this->p_prim_type && params.input.primary != wep_type::NONE)
-//    //{
-//    //    this->p_prim_info = this->get_wep_info(params.input.primary);
-//    //    this->p_prim_type = params.input.primary;
-//    //}
-//
-//    if (this->get_details().movement == wep_movement::ON_GROUND)
-//    {
-//        if (player_facing_right)
-//        {
-//            this->set_rotation(PI / 4.0f);
-//        }
-//        else //player facing left
-//        {
-//            this->set_rotation(3.0f * PI / 4.0f);
-//        }
-//        this->set_gun_player_aligned(true);
-//    }
-//    else //if (this->p_prim_info.movement == wep_movement::FREE_ROTATE)
-//    {
-//
-//        if ((player_facing_right &&
-//            input.shoot_direction.x > 0.0f) ||
-//            (!player_facing_right &&
-//                input.shoot_direction.x < 0.0f))
-//        {
-//            this->set_gun_player_aligned(true);
-//        }
-//        else
-//        {
-//            this->set_gun_player_aligned(false);
-//        }
-//
-//        if (this->get_gun_player_aligned())
-//        {
-//            this->set_rotation(atan2f(input.shoot_direction.y,
-//                input.shoot_direction.x));
-//
-//        }
-//        else
-//        {
-//            if (player_facing_right)
-//            {
-//                this->set_rotation(0.0f);
-//            }
-//            else
-//            {
-//                this->set_rotation(PI);
-//            }
-//        }
-//    }
-//
-//    this->set_player_center(player_center);
-//
-//    //gun facing left
-//    if (this->facing_left(this->get_rotation()))
-//    {
-//        this->set_invert_y(true);
-//    }
-//    //gun facing right
-//    else
-//    {
-//        this->set_invert_y(false);
-//    }
-//
-//    bool normal_gun_ok_to_shoot = input.primary_shoot &&
-//        this->get_gun_player_aligned();
-//    bool roller_ok_to_shoot = this->get_movement() ==
-//        wep_movement::ON_GROUND &&
-//        input.primary_shoot; // NOTE: changed this from raw_shooting to primary shoot
-//    bool ok_to_shoot = normal_gun_ok_to_shoot || roller_ok_to_shoot;
-//
-//    if (this->get_shoot_timer() > this->get_shoot_interval() &&
-//        this->get_ammo() > 0.0f &&
-//        ok_to_shoot)
-//    {
-//        shoot(input.shoot_direction, player_velocity);
-//
-//        this->set_shoot_timer(0.0f);
-//        this->alter_ammo(-this->get_ammo_usage());
-//        if (this->get_ammo() < 0.0f)
-//        {
-//            this->set_ammo(0.0f);
-//        }
-//        this->set_ammo_timer(0.0f);
-//    }
-//
-//    //ammo regen
-//    if (this->get_ammo_timer() >= AMMO_REGEN_DELAY)
-//    {
-//        this->alter_ammo(weapon_consts::AMMO_REGEN_RATE * dt);
-//        if (this->get_ammo() > 1.0f)
-//        {
-//            this->set_ammo(1.0f);
-//        }
-//    }
-//    this->alter_ammo_timer(dt);
-//    this->alter_shoot_timer(dt);
-//
-//    this->delete_collided_projs(weapon);
-//    this->update_projectiles(weapon);
-//}

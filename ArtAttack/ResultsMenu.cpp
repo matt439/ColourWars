@@ -13,7 +13,6 @@ ResultsMenuData* ResultsMenuPage::get_results_menu_data()
 
 void ResultsMenuInitial::update()
 {
-	
 	const float dt = *this->get_data()->get_dt();
 	std::vector<menu_input> menu_inputs = this->get_menu_inputs();
 	
@@ -80,11 +79,6 @@ void ResultsMenuInitial::init()
 		RESULTS_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
-	//Vector2F title_position = this->calculate_center_position(
-	//	this->get_widget_size(),
-	//	DEFAULT_RESOLUTION);
-	//title_position.y -= RESULTS_MENU_TITLE_Y_OFFSET;
-	//this->_heading->set_position(title_position);
 
 	this->_fill_box = std::make_unique<MTexture>(
 		"fill_box",
@@ -161,9 +155,6 @@ void ResultsMenuInitial::init()
 		SHADOW_COLOUR,
 		DETAIL_SHADOW_OFFSET,
 		true);
-	//this->_winner->set_position(Vector2F(
-	//	this->calculate_center_position(this->get_widget_size().x, DEFAULT_RESOLUTION.x),
-	//	this->_box->get_rectangle().get_position().y + WINNER_TEXT_Y_OFFSET));
 
 	this->_proceed = std::make_unique<MTextDropShadow>(
 		"proceed",

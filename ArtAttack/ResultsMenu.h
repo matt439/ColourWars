@@ -63,10 +63,6 @@ namespace results_menu_consts
 
 class ResultsMenuPage : public MenuPage, public SoundBankObject
 {
-private:
-	ResultsMenuData* _data = nullptr;
-protected:
-	ResultsMenuData* get_results_menu_data();
 public:
 	ResultsMenuPage(ResultsMenuData* data) : 
 		SoundBankObject(results_menu_consts::SOUND_BANK,
@@ -77,10 +73,19 @@ public:
 	virtual void init() = 0;
 	virtual void update() = 0;
 	virtual void draw() = 0;
+protected:
+	ResultsMenuData* get_results_menu_data();
+private:
+	ResultsMenuData* _data = nullptr;
 };
 
 class ResultsMenuInitial : public ResultsMenuPage
 {
+public:
+	ResultsMenuInitial(ResultsMenuData* data) : ResultsMenuPage(data) {}
+	void init() override;
+	void update() override;
+	void draw() override;
 private:
 	std::unique_ptr<MContainer> _texture_container = nullptr;
 	std::unique_ptr<MContainer> _text_container = nullptr;
@@ -104,11 +109,6 @@ private:
 	void update_fill_box();
 	void update_team_a_fill();
 	void update_team_b_fill();
-public:
-	ResultsMenuInitial(ResultsMenuData* data) : ResultsMenuPage(data) {}
-	void init() override;
-	void update() override;
-	void draw() override;
 };
 
 #endif // !RESULTSMENU_H

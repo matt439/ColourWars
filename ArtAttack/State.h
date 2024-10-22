@@ -5,10 +5,6 @@ class StateContext;
 
 class State
 {
-private:
-	StateContext* _context = nullptr;
-protected:
-	StateContext* get_context();
 public:
 	State() {}
 	virtual ~State() {}
@@ -16,5 +12,9 @@ public:
 	virtual void draw() = 0;
 	virtual void init() = 0;
 	void set_context(StateContext* context);
+protected:
+	StateContext* get_context();
+private:
+	StateContext* _context = nullptr;
 };
 #endif // !STATE_H

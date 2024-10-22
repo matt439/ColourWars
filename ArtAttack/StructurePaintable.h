@@ -47,7 +47,6 @@ public:
 	virtual void on_collision(const ICollisionGameObject* other) override;
 
 	paint_total get_paint_total() const override;
-protected:
 
 private:
 	std::vector<PaintTile> _paint_tiles = std::vector<PaintTile>();

@@ -22,7 +22,7 @@ void GameMenu::init()
         this->_menu_data->get_gamepad());
     this->_is_ready_to_load_level = std::make_unique<bool>(false);
     this->set_main_menu_data_ptrs();
-    //this->_menu_data->get_resource_loader()->load_main_menu_resources();
+
     this->_menu = std::make_unique<StateContext>();
 
     switch (this->_screen)
@@ -98,15 +98,6 @@ void GameLevel::init()
     this->_menu_input = std::make_unique<MenuInput>(
         this->get_data()->get_gamepad());
 
-    //this->_level_drawer = std::make_unique<LevelDrawer>(
-    //    this->get_data()->get_sprite_batch(),
-    //    this->get_data()->get_resource_manager(),
-    //    this->get_data()->get_resolution_manager(),
-    //    this->get_data()->get_dt(),
-    //    this->get_data()->get_viewport_manager(),
-    //    this->get_data()->get_common_states()->PointClamp());
-    //this->_level_updater = std::make_unique<LevelUpdater>(
-    //    this->get_data()->get_dt());
     this->_level_builder = std::make_unique<LevelBuilder>(
         this->get_data()->get_viewport_manager(),
         this->get_data()->get_dt(),
@@ -120,7 +111,6 @@ void GameLevel::init()
 
     this->_level = std::move(this->_level_builder->build_level(
         this->_settings));
-        //this->get_data()->get_resolution_manager()));
 }
 void GameLevel::update()
 {
@@ -179,7 +169,6 @@ void GameLevel::update()
         }
         else
         {
-            //this->_level_updater->update(this->_level.get(), player_inputs);
             this->_level->update(player_inputs);
         }
         break;
@@ -218,9 +207,6 @@ void GameLevel::update()
         results_menu_action action = *this->_results_menu_action;
         if (action == results_menu_action::CONTINUE_TO_END_MENU)
         {
-            //this->get_context()->transition_to(
-            //    std::make_unique<GameMenu>(this->get_data()));
-
             this->_state = game_level_state::END_MENU;
 
             this->_end_menu_action = std::make_unique<end_menu_action>(
@@ -296,10 +282,6 @@ void GameLevel::update()
 			break;
         }
     }
-    //case game_level_state::BACK_TO_MAIN_MENU:
-    //{
-    //    break;
-    //}
     default:
 		break;
     }
@@ -307,9 +289,6 @@ void GameLevel::update()
 
 void GameLevel::draw()
 {
-    //ID3D11SamplerState* sampler_state =
-    //    this->get_data()->get_common_states()->PointClamp();
-
     switch (this->_state)
     {
     case game_level_state::FIRST_UPDATE:
@@ -331,8 +310,6 @@ void GameLevel::draw()
         this->_level->draw();
         this->_end_menu->draw();
         break;
-    //case game_level_state::BACK_TO_MAIN_MENU:
-    //    break;
     }
 }
 

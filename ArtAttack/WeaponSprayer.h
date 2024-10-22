@@ -5,8 +5,6 @@
 
 class WeaponSprayer : public RelativeVelocityWeapon
 {
-private:
-
 public:
 	WeaponSprayer(player_team team,
 		int player_num,

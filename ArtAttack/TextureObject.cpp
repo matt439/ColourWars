@@ -4,23 +4,6 @@
 using namespace DirectX;
 using namespace MattMath;
 
-//const std::string& TextureObject::get_sprite_sheet_name() const
-//{
-//	return this->_sheet_name;
-//}
-//const std::string& TextureObject::get_sprite_frame_name() const
-//{
-//	return this->_frame_name;
-//}
-//void TextureObject::set_sprite_sheet_name(const std::string& sheet_name)
-//{
-//	this->_sheet_name = sheet_name;
-//}
-//void TextureObject::set_sprite_frame_name(const std::string& frame_name)
-//{
-//	this->_frame_name = frame_name;
-//}
-
 void TextureObject::draw(const RectangleI& destination_rectangle) const
 {
 	SpriteSheet* sprite_sheet = SpriteSheetObject::get_sprite_sheet();

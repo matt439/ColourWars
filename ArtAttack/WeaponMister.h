@@ -5,8 +5,6 @@
 
 class WeaponMister : public RelativeVelocityWeapon
 {
-private:
-
 public:
 	WeaponMister(player_team team,
 		int player_num,

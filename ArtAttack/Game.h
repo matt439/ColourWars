@@ -1,8 +1,5 @@
-//
-// Game.h
-//
-
-#pragma once
+#ifndef  GAME_H
+#define GAME_H
 
 #include "DeviceResources.h"
 #include "StepTimer.h"
@@ -11,9 +8,6 @@
 #include "StateContext.h"
 #include <Audio.h>
 
-
-// A basic game implementation that creates a D3D11 device and
-// provides a game loop.
 class Game final : public DX::IDeviceNotify, public StateContext
 {
 private:
@@ -26,9 +20,7 @@ private:
     void CreateDeviceDependentResources();
     void CreateWindowSizeDependentResources();
 
-    // Device resources.
     std::unique_ptr<DX::DeviceResources> m_deviceResources = nullptr;
-    // Rendering loop timer.
     DX::StepTimer m_timer = DX::StepTimer();
 
     std::unique_ptr<DirectX::SpriteBatch> m_spriteBatch = nullptr;
@@ -68,12 +60,12 @@ public:
     // Messages
     void OnActivated();
     void OnDeactivated();
-    void OnSuspending();
-    void OnResuming();
+    void OnSuspending();    void OnResuming();
     void OnWindowMoved();
     void OnDisplayChange();
     void OnWindowSizeChanged(int width, int height);
 
     void set_game_data(GameData* game_data) { this->_data = game_data; }
-    //GameData* get_game_data() { return this->_data; }
 };
+
+#endif // ! GAME_H

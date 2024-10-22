@@ -41,7 +41,6 @@ enum class game_level_state
     PAUSE_MENU,
     RESULTS,
     END_MENU,
-    //BACK_TO_MAIN_MENU,
 };
 
 class GameLevel : public State

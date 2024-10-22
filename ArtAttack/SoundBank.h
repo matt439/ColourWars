@@ -9,7 +9,6 @@
 #include <rapidjson/document.h>
 #include "MattMath.h"
 
-
 class SoundBank
 {
 public:

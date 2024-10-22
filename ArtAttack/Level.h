@@ -50,6 +50,41 @@ namespace level_consts
 
 class Level
 {
+public:
+	Level() = default;
+	Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_collision_objects,
+		std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> collision_objects,
+		std::unique_ptr<std::vector<std::unique_ptr<Player>>> player_objects,
+		std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers,
+		level_stage stage,
+		const team_colour& team_colours,
+		const MattMath::RectangleF& out_of_bounds,
+		const MattMath::RectangleF& camera_bounds,
+		const MattMath::RectangleF& zoom_out_start_bounds,
+		const MattMath::RectangleF& zoom_out_finish_bounds,
+		const std::vector<MattMath::Vector2F>& team_a_spawns,
+		const std::vector<MattMath::Vector2F>& team_b_spawns,
+		const std::string& sound_bank_name,
+		const std::string& music_name,
+		float music_volume,
+		const float* dt,
+		DirectX::SpriteBatch* sprite_batch,
+		ID3D11SamplerState* sampler_state,
+		const std::string& level_name,
+		const ResolutionManager* resolution_manager,
+		ViewportManager* viewport_manager,
+		ResourceManager* resource_manager);
+
+	void update(const std::vector<player_input>& player_inputs);
+	void draw();
+
+	level_state get_state() const;
+	void set_state(level_state state);
+
+	level_end_info get_level_end_info() const;
+
+	void stop_music() const;
+
 private:
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
 		_non_collision_objects = nullptr;
@@ -93,7 +128,7 @@ private:
 	std::vector<MattMath::Vector2F> _team_a_spawns = std::vector<MattMath::Vector2F>();
 	std::vector<MattMath::Vector2F> _team_b_spawns = std::vector<MattMath::Vector2F>();
 
-	level_state _state = level_state::START_COUNTDOWN; 
+	level_state _state = level_state::START_COUNTDOWN;
 	const float* _dt = nullptr;
 	DirectX::SpriteBatch* _sprite_batch = nullptr;
 	ID3D11SamplerState* _sampler_state = nullptr;
@@ -114,41 +149,6 @@ private:
 	float zoom_out_camera_ratio();
 
 	void stop_player_sounds() const;
-public:
-	Level() = default;
-	Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_collision_objects,
-		std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> collision_objects,
-		std::unique_ptr<std::vector<std::unique_ptr<Player>>> player_objects,
-		std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers,
-		level_stage stage,
-		const team_colour& team_colours,
-		const MattMath::RectangleF& out_of_bounds,
-		const MattMath::RectangleF& camera_bounds,
-		const MattMath::RectangleF& zoom_out_start_bounds,
-		const MattMath::RectangleF& zoom_out_finish_bounds,
-		const std::vector<MattMath::Vector2F>& team_a_spawns,
-		const std::vector<MattMath::Vector2F>& team_b_spawns,
-		const std::string& sound_bank_name,
-		const std::string& music_name,
-		float music_volume,
-		const float* dt,
-		DirectX::SpriteBatch* sprite_batch,
-		ID3D11SamplerState* sampler_state,
-		const std::string& level_name,
-		const ResolutionManager* resolution_manager,
-		ViewportManager* viewport_manager,
-		ResourceManager* resource_manager);
-	//~Level();
-
-	void update(const std::vector<player_input>& player_inputs);
-	void draw();
-
-	level_state get_state() const;
-	void set_state(level_state state);
-
-	level_end_info get_level_end_info() const;
-
-	void stop_music() const;
 };
 
 #endif

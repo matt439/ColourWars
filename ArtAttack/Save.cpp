@@ -9,21 +9,6 @@ using namespace rapidjson;
 using namespace directory_consts;
 using namespace MattMath;
 
-
-//std::vector<std::string> Save::read_raw_save_file()
-//{
-//    std::string temp, path;
-//    path = directory_consts::SAVE_FILE_PATH;
-//    //path = "C:/Users/matsi/source/repos/ColourWars/save_data.txt";
-//    std::ifstream infile(path);
-//    std::vector<std::string> lines;
-//    while (std::getline(infile, temp))
-//    {
-//        lines.push_back(temp);
-//    }
-//    return lines;
-//}
-
 save_data Save::load_from_json(const char* json_path)
 {
     FILE* fp = fopen(json_path, "rb");
@@ -37,7 +22,6 @@ save_data Save::load_from_json(const char* json_path)
     fclose(fp);
     readBuffer.release();
 
-    //std::string resolution = d["resolution"].GetString();
     Vector2I resolution = Vector2I(d["resolution"]["x"].GetInt(), d["resolution"]["y"].GetInt());
     bool fullscreen = d["fullscreen"].GetBool();
 
@@ -48,9 +32,6 @@ save_data Save::load_from_json(const char* json_path)
 }
 bool Save::check_if_save_file_exists()
 {
- //   std::ifstream infile(directory_consts::SAVE_FILE_PATH);
-	//return infile.good();
-
     FILE* fp = fopen(SAVE_FILE_PATH.c_str(), "rb");
     if (fp == NULL)
     {
@@ -70,54 +51,21 @@ void Save::load_save_file()
         std::cout << "Save file does not exist.\n";
         this->save_to_file();
     }
-    //std::vector<std::string> save_file = read_raw_save_file();
-    //this->_save_data = decode_save_file(save_file);
     this->_save_data =
         this->load_from_json(SAVE_FILE_PATH.c_str());
 }
 
-//save_data Save::decode_save_file(const std::vector<std::string>& save_file)
-//{
-//    // set save file to default
-//    save_data result = save_data();
-//    if (save_file.size() < 2)
-//    {
-//        return result;
-//    }
-//    try
-//    {
-//	    result.resolution = save_file[0];
-//        result.full_screen = save_file[1];
-//	}
-//    catch (const std::exception&)
-//    {
-//        return result;
-//    }
-//    //std::string line = save_file[0];
-//    //result.resolution = line;
-//    return result;
-//}
 bool Save::write_save_file(const save_data& data)
 {
-    //std::ofstream save_file(directory_consts::SAVE_FILE_PATH);
-    //if (save_file.is_open())
-    //{
-    //    save_file << this->_save_data.resolution + "\n";
-    //    save_file << this->_save_data.full_screen + "\n";
-    //    //do other save items 
-
-    //    save_file.close();
-    //    return true;
-    //}
-    //return false;
-
     FILE* fp = fopen(SAVE_FILE_PATH.c_str(), "wb");
     if (fp == NULL)
     {
         return false;
     }
-    char writeBuffer[65536];
-    FileWriteStream os(fp, writeBuffer, sizeof(writeBuffer));
+    // Allocate buffer on the heap
+    std::unique_ptr<char[]> writeBuffer = std::make_unique<char[]>(65536);
+    FileWriteStream os(fp, writeBuffer.get(), 65536);
+
     Document d;
     d.SetObject();
     Vector2I resolution_ivec = this->convert_resolution_to_ivec(data.resolution);
@@ -126,11 +74,12 @@ bool Save::write_save_file(const save_data& data)
     resolution.AddMember("y", resolution_ivec.y, d.GetAllocator());
     d.AddMember("resolution", resolution, d.GetAllocator());
     d.AddMember("fullscreen", data.fullscreen, d.GetAllocator());
+
     Writer<FileWriteStream> writer(os);
     d.Accept(writer);
+
     fclose(fp);
     return true;
-
 }
 
 void Save::save_to_file()
@@ -157,14 +106,6 @@ void Save::set_resolution_and_save(screen_resolution resolution)
 
 void Save::set_full_screen_and_save(bool full_screen)
 {
- //   if (full_screen)
- //   {
- //       this->_save_data.full_screen = "true";
- //   }
- //   else
- //   {
-	//	this->_save_data.full_screen = "false";
-	//}
     this->_save_data.fullscreen = full_screen;
 	this->save_to_file();
 }

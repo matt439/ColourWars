@@ -5,13 +5,6 @@
 
 class WeaponRoller : public Weapon
 {
-private:
-	void update_movement_and_rotation(player_input input,
-		const MattMath::Vector2F& player_center,
-		const MattMath::Vector2F& player_velocity,
-		bool player_facing_right) override;
-
-	void draw(const MattMath::Camera& camera, bool debug) override;
 public:
 	WeaponRoller(player_team team,
 		int player_num,
@@ -27,14 +20,13 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
+private:
+	void update_movement_and_rotation(player_input input,
+		const MattMath::Vector2F& player_center,
+		const MattMath::Vector2F& player_velocity,
+		bool player_facing_right) override;
 
-	//std::vector<std::unique_ptr<ICollisionGameObject>>
-	//	update_and_get_projectiles(player_input input,
-	//		const MattMath::Vector2F& player_center,
-	//		const MattMath::Vector2F& player_velocity,
-	//		bool player_facing_right) override;
+	void draw(const MattMath::Camera& camera, bool debug) override;
 };
-
-
 
 #endif // !WEAPONROLLER_H

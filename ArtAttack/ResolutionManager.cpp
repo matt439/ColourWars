@@ -1,8 +1,6 @@
 #include "pch.h"
 #include "ResolutionManager.h"
 
-//using namespace DirectX;
-//using namespace DirectX::SimpleMath;
 using namespace MattMath;
 
 Vector2I ResolutionManager::get_resolution_ivec() const

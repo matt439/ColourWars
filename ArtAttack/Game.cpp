@@ -1,14 +1,9 @@
-//
-// Game.cpp
-//
-
 #include "pch.h"
 #include "Game.h"
 
 extern void ExitGame() noexcept;
 
 using namespace DirectX;
-//using namespace DirectX::SimpleMath;
 
 using Microsoft::WRL::ComPtr;
 
@@ -44,8 +39,6 @@ void Game::Initialize(GameData* game_data)
     m_deviceResources->SetWindow(this->_data->get_window(),
         window_size.x, window_size.y);
 
-    //m_deviceResources->SetWindow(this->_data->get_window(),
-    //    window_size.x, window_size.y);
 
     AUDIO_ENGINE_FLAGS eflags = AudioEngine_Default;
 #ifdef _DEBUG
@@ -86,15 +79,13 @@ void Game::Update(DX::StepTimer const& timer)
 {
     float elapsedTime = float(timer.GetElapsedSeconds());
     *this->_dt = elapsedTime;
-    //this->_state->update();
     this->update();
-    // TODO: Add your game logic here.
+
     if (!m_audio_engine->Update())
     {
         // more about this below...
     }
 
-    elapsedTime;
 }
 #pragma endregion
 
@@ -112,7 +103,6 @@ void Game::Render()
 
     m_deviceResources->PIXBeginEvent(L"Render");
 
-    //this->_state->draw();
     this->draw();
 
     m_deviceResources->PIXEndEvent();

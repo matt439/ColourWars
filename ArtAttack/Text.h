@@ -1,7 +1,6 @@
 #ifndef TEXT_H
 #define TEXT_H
 
-//#include "VisualText.h"
 #include "TextObject.h"
 
 class Text : public TextObject
@@ -19,12 +18,6 @@ public:
 		const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
-
-	//virtual void update() override;
-	//virtual void draw(const MattMath::Camera& camera) override;
-	//virtual void draw() override;
-	//virtual bool is_visible_in_viewport(
-	//	const MattMath::RectangleF& view) const override;
 
 	void set_text(const std::string& text);
 	void set_colour(const MattMath::Colour& colour) override;

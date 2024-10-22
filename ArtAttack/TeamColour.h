@@ -1,7 +1,6 @@
 #ifndef TEAMCOLOUR_H
 #define TEAMCOLOUR_H
-//#include <glm/glm.hpp>
-//#include "colour.h"
+
 #include "player_team.h"
 #include "colour.h"
 
@@ -54,7 +53,7 @@ namespace team_colour_consts
 class TeamColour
 {
 public:
-	TeamColour() {}
+	TeamColour() = default;
 	inline team_colour generate_random_team_colour()
 	{
 		int enum_max = static_cast<int>(team_colour_enum::MAX);

@@ -17,25 +17,6 @@ D3D11_VIEWPORT ViewportManager::get_fullscreen_d3d11_viewport() const
     return vp.get_d3d_viewport();
 }
 
-//void ViewportManager::apply_fullscreen_viewport()
-//{
-//    D3D11_VIEWPORT vp = this->get_fullscreen_d3d11_viewport();
-//    auto context = this->_device_resources->GetD3DDeviceContext();
-//
-//    D3D11_VIEWPORT vp2 = this->get_fullscreen_d3d11_viewport();
-//
-//    //D3D11_VIEWPORT* vps = new D3D11_VIEWPORT[2];
-//    //vps[0] = vp;
-//    //vps[1] = vp2;
-//    this->_test_vps[0] = vp;
-//    this->_test_vps[1] = vp2;
-//
-//    context->RSSetViewports(2, this->_test_vps);
-//
-//    //context->RSSetViewports(1, &vp);
-//    this->_sprite_batch->SetViewport(vp);
-//}
-
 RectangleF ViewportManager::get_camera_adjusted_player_viewport_rect(
     int player_num, const Camera& camera) const
 {
@@ -65,14 +46,12 @@ D3D11_VIEWPORT ViewportManager::calculate_d3d11_viewport(screen_layout layout,
     int player_num, const Vector2F& screen_size) const
 {
 	Viewport vp = this->calculate_viewport(layout, player_num, screen_size);
-	//return static_cast<D3D11_VIEWPORT>(vp);
     return vp.get_d3d_viewport();
 }
 
 void ViewportManager::set_layout(screen_layout layout)
 {
     this->_layout = layout;
-	//this->_player_num = player_num;
 }
 
 Viewport ViewportManager::get_player_viewport(int player_num) const
@@ -144,73 +123,6 @@ std::vector<MattMath::RectangleF> ViewportManager::get_viewport_dividers() const
 		throw std::exception("Invalid screen layout");
     }
 }
-
-//std::vector<RectangleF> ViewportManager::get_viewport_dividers(int player_num) const
-//{
-//    std::vector<RectangleF> result = std::vector<RectangleF>();
-//    //int player_count = this->get_player_count_from_layout(this->_layout);
-//    Vector2F res = this->_resolution_manager->get_resolution_vec();
-//    screen_layout layout = this->_layout;
-//    switch (layout)
-//    {
-//    case screen_layout::ONE_PLAYER:
-//		return result;
-//    case screen_layout::TWO_PLAYER:
-//        switch (player_num)
-//        {
-//        case 0:
-//        {
-//            Viewport vp = this->get_player_viewport(0);
-//            result.push_back(RectangleF(0.0f, vp.height - DIVIDER_THICKNESS,
-//                vp.width, DIVIDER_THICKNESS));
-//            return result;
-//        }
-//        case 1:
-//        {
-//            Viewport vp = this->get_player_viewport(1);
-//            result.push_back(RectangleF(0.0f, 0.0f, vp.width, DIVIDER_THICKNESS));
-//            return result;
-//        }
-//        default:
-//            throw std::exception("Invalid player number");
-//        }
-//    case screen_layout::THREE_PLAYER:
-//        switch (player_num)
-//        {
-//        case 0:
-//        {
-//            Viewport vp = this->get_player_viewport(0);
-//            result.push_back(RectangleF(0.0f, vp.height - DIVIDER_THICKNESS,
-//                vp.width, DIVIDER_THICKNESS));
-//            result.push_back(RectangleF(vp.width - DIVIDER_THICKNESS, 0.0f,
-//                DIVIDER_THICKNESS, vp.height));
-//            return result;
-//        }
-//        case 1:
-//        {
-//            Viewport vp = this->get_player_viewport(1);
-//            result.push_back(RectangleF(0.0f, vp.height - DIVIDER_THICKNESS, vp.width,
-//                DIVIDER_THICKNESS));
-//            result.push_back(RectangleF(0.0f, 0.0f, DIVIDER_THICKNESS, vp.height));
-//            return result;
-//        }
-//        case 2:
-//        {
-//            Viewport vp = this->get_player_viewport(2);
-//            result.push_back(RectangleF(0.0f, 0.0f, vp.width, DIVIDER_THICKNESS));
-//            result.push_back(RectangleF(vp.width - DIVIDER_THICKNESS, 0.0f,
-//                DIVIDER_THICKNESS, vp.height));
-//            return result;
-//        }
-//        default:
-//            throw std::exception("Invalid player number");
-//        }
-//    case screen_layout::FOUR_PLAYER:
-//        throw std::exception("4 player layout not implemented");
-//    default:
-//        throw std::exception("Invalid screen layout");
-//    }
-//}
 
 Viewport ViewportManager::calculate_viewport(screen_layout layout,
 	int player_num, const Vector2F& screen_size) const
@@ -297,90 +209,4 @@ Viewport ViewportManager::calculate_viewport(screen_layout layout,
         result.height = screen_size.y;
         return result;
     }
-    
-    //Viewport result = Viewport();
-    //switch (layout)
-    //{
-    //case screen_layout::ONE_PLAYER:
-    //    result.x = 0.0f;
-    //    result.y = 0.0f;
-    //    result.width = screen_size.x;
-    //    result.height = screen_size.y;
-    //    return result;
-    //case screen_layout::TWO_PLAYER:
-    //    switch (player_num)
-    //    {
-    //    case 0:
-    //        result.x = 0.0f;
-    //        result.y = screen_size.y / 2.0f + 1.0f;
-    //        result.width = screen_size.x;
-    //        result.height = screen_size.y / 2.0f - 1.0f;
-    //        return result;
-
-    //    case 1:
-    //        result.x = 0.0f;
-    //        result.y = 0.0f;
-    //        result.width = screen_size.x;
-    //        result.height = screen_size.y / 2.0f - 1.0f;
-    //        return result;
-    //    }
-    //case screen_layout::THREE_PLAYER:
-    //    switch (player_num)
-    //    {
-    //    case 0:
-    //        result.x = 0.0f;
-    //        result.y = screen_size.y / 2.0f + 1.0f;
-    //        result.width = screen_size.x / 2.0f - 1.0f;
-    //        result.height = screen_size.y / 2.0f - 1.0f;
-    //        return result;
-
-    //    case 1:
-    //        result.x = screen_size.x / 2.0f + 1.0f;
-    //        result.y = screen_size.y / 2.0f + 1.0f;
-    //        result.width = screen_size.x / 2.0f - 1.0f;
-    //        result.height = screen_size.y / 2.0f - 1.0f;
-    //        return result;
-    //    case 2:
-    //        result.x = 0.0f;
-    //        result.y = 0.0f;
-    //        result.width = screen_size.x / 2.0f - 1.0f;
-    //        result.height = screen_size.y / 2.0f - 1.0f;
-    //        return result;
-    //    }
-    //case screen_layout::FOUR_PLAYER:
-    //    switch (player_num)
-    //    {
-    //    case 0:
-    //        result.x = 0.0f;
-    //        result.y = screen_size.y / 2.0f + 1.0f;
-    //        result.width = screen_size.x / 2.0f - 1.0f;
-    //        result.height = screen_size.y / 2.0f - 1.0f;
-    //        return result;
-
-    //    case 1:
-    //        result.x = screen_size.x / 2.0f + 1.0f;
-    //        result.y = screen_size.y / 2.0f + 1.0f;
-    //        result.width = screen_size.x / 2.0f - 1.0f;
-    //        result.height = screen_size.y / 2.0f - 1.0f;
-    //        return result;
-    //    case 2:
-    //        result.x = 0.0f;
-    //        result.y = 0.0f;
-    //        result.width = screen_size.x / 2.0f - 1.0f;
-    //        result.height = screen_size.y / 2.0f - 1.0f;
-    //        return result;
-    //    case 3:
-    //        result.x = screen_size.x / 2.0f + 1.0f;
-    //        result.y = 0.0f;
-    //        result.width = screen_size.x / 2.0f - 1.0f;
-    //        result.height = screen_size.y / 2.0f - 1.0f;
-    //        return result;
-    //    }
-    //default: //1P screen
-    //    result.x = 0.0f;
-    //    result.y = 0.0f;
-    //    result.width = screen_size.x;
-    //    result.height = screen_size.y;
-    //    return result;
-    //}
 }
