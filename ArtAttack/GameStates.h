@@ -15,8 +15,7 @@ class GameMenu final : public State
 {
 public:
 	explicit GameMenu(GameData* game_data);
-    GameMenu(GameData* game_data,
-        const MainMenuMidwayLoadSettings& settings);
+    GameMenu(GameData* game_data, const MainMenuMidwayLoadSettings& settings);
     void update() override;
     void draw() override;
     void init() override;
@@ -29,7 +28,6 @@ private:
     std::unique_ptr<MenuLevelSettings> _menu_level_settings = nullptr;
     std::unique_ptr<bool> _is_ready_to_load_level = nullptr;
     main_menu_screen _screen = main_menu_screen::TITLE;
-    //void create_main_menu_data();
     void set_main_menu_data_ptrs();
     void order_level_creation();
 };
@@ -47,8 +45,7 @@ enum class game_level_state
 class GameLevel final : public State
 {
 public:
-    GameLevel(GameData* game_data, const MenuLevelSettings& settings) :
-        _game_data(game_data), _settings(settings) {}
+    GameLevel(GameData* game_data, const MenuLevelSettings& settings);
     void update() override;
     void draw() override;
     void init() override;

@@ -11,8 +11,7 @@
 class LevelLoadedInfo
 {
 public:
-	explicit LevelLoadedInfo(const char* json_path) :
-		_json_doc(load_from_json(json_path)) {}
+	explicit LevelLoadedInfo(const char* json_path);
 
 	std::string get_level_name() const;
 	std::vector<MattMath::Vector2F> get_team_a_spawns() const;

@@ -6,6 +6,13 @@ using namespace MattMath;
 using namespace interface_consts;
 using namespace colour_consts;
 
+InterfaceGameplay::InterfaceGameplay(SpriteBatch* sprite_batch,
+	ResourceManager* resource_manager, const float* dt) :
+	Drawer(sprite_batch, resource_manager, dt)
+{
+
+}
+
 void InterfaceGameplay::draw_gameplay_interface(const Vector2F& resolution,
 	float health,
 	float ammo,

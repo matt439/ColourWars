@@ -5,9 +5,22 @@ using namespace MattMath;
 using namespace colour_consts;
 using namespace end_menu_consts;
 
+EndMenuPage::EndMenuPage(EndMenuData* data) :
+	MenuPage(data),
+	SoundBankObject(SOUND_BANK, this->get_resource_manager()),
+	_data(data)
+{
+
+}
+
 EndMenuData* EndMenuPage::get_end_menu_data() const
 {
 	return this->_data;
+}
+
+EndMenuInitial::EndMenuInitial(EndMenuData* data) : EndMenuPage(data)
+{
+
 }
 
 void EndMenuInitial::update()

@@ -6,6 +6,15 @@ using namespace MattMath;
 using namespace pause_menu_consts;
 using namespace colour_consts;
 
+PauseMenuPage::PauseMenuPage(PauseMenuData* data) :
+	MenuPage(data),
+	SoundBankObject(pause_menu_consts::SOUND_BANK,
+		this->get_resource_manager()),
+	_data(data)
+{
+
+}
+
 std::string PauseMenuPage::get_player_number_text(int player_num)
 {
 	switch (player_num)
@@ -26,6 +35,12 @@ std::string PauseMenuPage::get_player_number_text(int player_num)
 PauseMenuData* PauseMenuPage::get_pause_menu_data() const
 {
 	return this->_data;
+}
+
+PauseMenuInitial::PauseMenuInitial(PauseMenuData* data) :
+	PauseMenuPage(data)
+{
+
 }
 
 void PauseMenuInitial::update()
@@ -190,6 +205,13 @@ void PauseMenuInitial::draw()
 
 	// draw text separately to use blend state
 	this->draw_mobject_in_viewports(this->_text_container.get());
+}
+
+PauseMenuConfirmation::PauseMenuConfirmation(PauseMenuData* data,
+	confirmation_type type) :
+	PauseMenuPage(data), _type(type)
+{
+
 }
 
 void PauseMenuConfirmation::update()

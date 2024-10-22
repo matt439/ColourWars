@@ -12,44 +12,32 @@ class GameData
 {
 public:
     GameData() = default;
+    explicit GameData(const GameData* game_data);
 
-    explicit GameData(const GameData* game_data) :
-        _save(game_data->get_save()),
-        _resolution_manager(game_data->get_resolution_manager()),
-        _window(game_data->get_window()),
-        _dt(game_data->get_dt()),
-        _sprite_batch(game_data->get_sprite_batch()),
-        _resource_loader(game_data->get_resource_loader()),
-        _resource_manager(game_data->get_resource_manager()),
-        _gamepad(game_data->get_gamepad()),
-        _device_resources(game_data->get_device_resources()),
-        _viewport_manager(game_data->get_viewport_manager()),
-        _common_states(game_data->get_common_states()) {}
+    void set_window(HWND window);
+    HWND get_window() const;
+    void set_resolution_manager(ResolutionManager* resolution_manager);
+    ResolutionManager* get_resolution_manager() const;
+    float* get_dt() const;
+    void set_dt(float* dt);
+    DirectX::SpriteBatch* get_sprite_batch() const;
+    void set_sprite_batch(DirectX::SpriteBatch* sprite_batch);
+    void set_save(Save* save);
+    Save* get_save() const;
+    void set_resource_loader(ResourceLoader* texture_loader);
+    ResourceLoader* get_resource_loader() const;
+    void set_resource_manager(ResourceManager* resource_manager);
+    ResourceManager* get_resource_manager() const;
+    void set_gamepad(DirectX::GamePad* gamepad);
+    DirectX::GamePad* get_gamepad() const;
+    void set_device_resources(DX::DeviceResources* device_resources);
+    DX::DeviceResources* get_device_resources() const;
+    void set_viewport_manager(ViewportManager* viewport_manager);
+    ViewportManager* get_viewport_manager() const;
+    void set_common_states(DirectX::CommonStates* common_states);
+    DirectX::CommonStates* get_common_states() const;
 
-    void set_window(HWND window) { this->_window = window; }
-    HWND get_window() const { return this->_window; }
-    void set_resolution_manager(ResolutionManager* resolution_manager) { this->_resolution_manager = resolution_manager; }
-    ResolutionManager* get_resolution_manager() const { return this->_resolution_manager; }
-    float* get_dt() const { return this->_dt; }
-    void set_dt(float* dt) { this->_dt = dt; }
-    DirectX::SpriteBatch* get_sprite_batch() const { return this->_sprite_batch; }
-    void set_sprite_batch(DirectX::SpriteBatch* sprite_batch) { this->_sprite_batch = sprite_batch; }
-    void set_save(Save* save) { this->_save = save; }
-    Save* get_save() const { return this->_save; }
-    void set_resource_loader(ResourceLoader* texture_loader) { this->_resource_loader = texture_loader; }
-    ResourceLoader* get_resource_loader() const { return this->_resource_loader; }
-    void set_resource_manager(ResourceManager* resource_manager) { this->_resource_manager = resource_manager; }
-    ResourceManager* get_resource_manager() const { return this->_resource_manager; }
-    void set_gamepad(DirectX::GamePad* gamepad) { this->_gamepad = gamepad; }
-    DirectX::GamePad* get_gamepad() const { return this->_gamepad; }
-    void set_device_resources(DX::DeviceResources* device_resources) { this->_device_resources = device_resources; }
-    DX::DeviceResources* get_device_resources() const { return this->_device_resources; }
-    void set_viewport_manager(ViewportManager* viewport_manager) { this->_viewport_manager = viewport_manager; }
-    ViewportManager* get_viewport_manager() const { return this->_viewport_manager; }
-    void set_common_states(DirectX::CommonStates* common_states) { this->_common_states = common_states; }
-    DirectX::CommonStates* get_common_states() const { return this->_common_states; }
-
-    GameData* get_game_data() { return this; }
+    GameData* get_game_data();
 
 private:
     Save* _save = nullptr;

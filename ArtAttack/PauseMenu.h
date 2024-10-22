@@ -44,12 +44,7 @@ namespace pause_menu_consts
 class PauseMenuPage : public MenuPage, public MenuHighlight, public SoundBankObject
 {
 public:
-	explicit PauseMenuPage(PauseMenuData* data) :
-		MenuPage(data),
-		SoundBankObject(pause_menu_consts::SOUND_BANK,
-			this->get_resource_manager()),
-		_data(data) {}
-
+	explicit PauseMenuPage(PauseMenuData* data);
 	~PauseMenuPage() override = default;
 	void init() override = 0;
 	void update() override = 0;
@@ -70,7 +65,7 @@ private:
 class PauseMenuInitial final : public PauseMenuPage
 {
 public:
-	explicit PauseMenuInitial(PauseMenuData* data) : PauseMenuPage(data) {}
+	explicit PauseMenuInitial(PauseMenuData* data);
 	void init() override;
 	void update() override;
 	void draw() override;
@@ -87,8 +82,7 @@ private:
 class PauseMenuConfirmation final : public PauseMenuPage
 {
 public:
-	PauseMenuConfirmation(PauseMenuData* data, confirmation_type type) :
-		PauseMenuPage(data), _type(type) {}
+	PauseMenuConfirmation(PauseMenuData* data, confirmation_type type);
 	void init() override;
 	void update() override;
 	void draw() override;

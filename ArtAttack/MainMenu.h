@@ -110,12 +110,7 @@ struct MainMenuMidwayLoadSettings
 class MainMenuPage : public MenuPage, public SoundBankObject
 {
 public:
-	explicit MainMenuPage(MainMenuData* data) :
-		MenuPage(data),
-		SoundBankObject(main_menu_consts::SOUND_BANK,
-			this->get_resource_manager()),
-		_data(data) {}
-
+	explicit MainMenuPage(MainMenuData* data);
 	~MainMenuPage() override = default;
 	void init() override = 0;
 	void update() override = 0;
@@ -130,7 +125,7 @@ private:
 class MainMenuTitle final : public MainMenuPage
 {
 public:
-	explicit MainMenuTitle(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuTitle(MainMenuData* data);
 	void update() override;
 	void draw() override;
 	void init() override;
@@ -146,7 +141,7 @@ private:
 class MainMenuHome final : public MainMenuPage, public MenuHighlight
 {
 public:
-	explicit MainMenuHome(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuHome(MainMenuData* data);
 	void update() override;
 	void draw() override;
 	void init() override;
@@ -163,7 +158,7 @@ private:
 class MainMenuOptions final : public MainMenuPage, public MenuHighlight
 {
 public:
-	explicit MainMenuOptions(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuOptions(MainMenuData* data);
 	void update() override;
 	void draw() override;
 	void init() override;
@@ -189,7 +184,7 @@ private:
 class MainMenuModeSelect final : public MainMenuPage, public MenuHighlight
 {
 public:
-	explicit MainMenuModeSelect(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuModeSelect(MainMenuData* data);
 	void update() override;
 	void draw() override;
 	void init() override;
@@ -209,7 +204,7 @@ private:
 class MainMenuPlayerCount final : public MainMenuPage, public MenuHighlight
 {
 public:
-	explicit MainMenuPlayerCount(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuPlayerCount(MainMenuData* data);
 	void update() override;
 	void draw() override;
 	void init() override;
@@ -229,7 +224,7 @@ private:
 class MainMenuTeamSelect final : public MainMenuPage
 {
 public:
-	explicit MainMenuTeamSelect(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuTeamSelect(MainMenuData* data);
 	MainMenuTeamSelect(MainMenuData* data, MenuLevelSettings* settings);
 	void update() override;
 	void draw() override;
@@ -264,7 +259,7 @@ private:
 class MainMenuWeaponSelect final : public MainMenuPage
 {
 public:
-	explicit MainMenuWeaponSelect(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuWeaponSelect(MainMenuData* data);
 	MainMenuWeaponSelect(MainMenuData* data, MenuLevelSettings* settings);
 	void update() override;
 	void draw() override;
@@ -301,7 +296,7 @@ private:
 class MainMenuStageSelect final : public MainMenuPage
 {
 public:
-	explicit MainMenuStageSelect(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuStageSelect(MainMenuData* data);
 	MainMenuStageSelect(MainMenuData* data, MenuLevelSettings* settings);
 	void update() override;
 	void draw() override;

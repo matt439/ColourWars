@@ -4,6 +4,16 @@
 using namespace rapidjson;
 using namespace MattMath;
 
+LevelObjectBuilder::LevelObjectBuilder(ResourceManager* resource_manager,
+	DirectX::SpriteBatch* sprite_batch,
+	const float* dt) :
+	_resource_manager(resource_manager),
+	_sprite_batch(sprite_batch),
+	_dt(dt)
+{
+
+}
+
 std::unique_ptr<ICollisionGameObject>
 	LevelObjectBuilder::build_collision_object(const Value& json,
 		const TeamColour& team_colours) const

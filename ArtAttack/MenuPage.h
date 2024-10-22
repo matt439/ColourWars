@@ -9,7 +9,7 @@
 class MenuPage : public State
 {
 public:
-	explicit MenuPage(MenuData* data) : _data(data) {}
+	explicit MenuPage(MenuData* data);
 	~MenuPage() override = default;
 	void update() override = 0;
 	void draw() override = 0;

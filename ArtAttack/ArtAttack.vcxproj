@@ -298,17 +298,22 @@
     <ClCompile Include="Drawer.cpp" />
     <ClCompile Include="DrawObject.cpp" />
     <ClCompile Include="EndMenu.cpp" />
+    <ClCompile Include="EndMenuData.cpp" />
     <ClCompile Include="EricsonMath.cpp" />
     <ClCompile Include="Game.cpp" />
+    <ClCompile Include="GameData.cpp" />
     <ClCompile Include="GameStates.cpp" />
     <ClCompile Include="InterfaceGameplay.cpp" />
     <ClCompile Include="Level.cpp" />
     <ClCompile Include="LevelBuilder.cpp" />
+    <ClCompile Include="LevelEndInfo.cpp" />
     <ClCompile Include="LevelLoadedInfo.cpp" />
     <ClCompile Include="LevelObjectBuilder.cpp" />
     <ClCompile Include="Main.cpp" />
     <ClCompile Include="MainMenu.cpp" />
+    <ClCompile Include="MainMenuData.cpp" />
     <ClCompile Include="MattMath.cpp" />
+    <ClCompile Include="MenuData.cpp" />
     <ClCompile Include="MenuHighlight.cpp" />
     <ClCompile Include="MenuInput.cpp" />
     <ClCompile Include="MenuLevelSettings.cpp" />
@@ -317,6 +322,7 @@
     <ClCompile Include="MovingObject.cpp" />
     <ClCompile Include="PaintTile.cpp" />
     <ClCompile Include="PauseMenu.cpp" />
+    <ClCompile Include="PauseMenuData.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

@@ -6,6 +6,15 @@ using namespace MattMath;
 using namespace main_menu_consts;
 using namespace colour_consts;
 
+MainMenuPage::MainMenuPage(MainMenuData* data) :
+	MenuPage(data),
+	SoundBankObject(main_menu_consts::SOUND_BANK,
+		this->get_resource_manager()),
+	_data(data)
+{
+
+}
+
 MainMenuData* MainMenuPage::get_main_menu_data() const
 {
 	return this->_data;
@@ -17,6 +26,12 @@ int MainMenuPage::get_player_count() const
 }
 
 #pragma region MainMenuTitle
+
+MainMenuTitle::MainMenuTitle(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
 
 void MainMenuTitle::draw()
 {
@@ -95,6 +110,12 @@ void MainMenuTitle::init()
 #pragma endregion MainMenuTitle
 
 #pragma region MainMenuHome
+
+MainMenuHome::MainMenuHome(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
 
 void MainMenuHome::draw()
 {
@@ -260,6 +281,12 @@ void MainMenuHome::init()
 #pragma endregion MainMenuHome
 
 #pragma region MainMenuOptions
+
+MainMenuOptions::MainMenuOptions(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
 
 void MainMenuOptions::draw()
 {
@@ -605,6 +632,12 @@ void MainMenuOptions::update_full_screen_selection_text() const
 
 #pragma region MainMenuModeSelect
 
+MainMenuModeSelect::MainMenuModeSelect(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
+
 void MainMenuModeSelect::draw()
 {
 	this->draw_mobject_in_viewports(this->_texture_container.get(),
@@ -839,6 +872,11 @@ void MainMenuModeSelect::init()
 
 #pragma region MainMenuPlayerCount
 
+MainMenuPlayerCount::MainMenuPlayerCount(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
 void MainMenuPlayerCount::draw()
 {
 	this->draw_mobject_in_viewports(this->_texture_container.get(),
@@ -1104,6 +1142,12 @@ void MainMenuPlayerCount::init()
 #pragma endregion MainMenuPlayerCount
 
 #pragma region MainMenuTeamSelect
+
+MainMenuTeamSelect::MainMenuTeamSelect(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
 
 MainMenuTeamSelect::MainMenuTeamSelect(MainMenuData* data,
 	MenuLevelSettings* settings) :
@@ -1384,6 +1428,12 @@ void MainMenuTeamSelect::init()
 #pragma endregion MainMenuTeamSelect
 
 #pragma region MainMenuWeaponSelect
+
+MainMenuWeaponSelect::MainMenuWeaponSelect(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
 
 MainMenuWeaponSelect::MainMenuWeaponSelect(MainMenuData* data,
 	MenuLevelSettings* settings) :
@@ -1728,6 +1778,12 @@ std::string MainMenuWeaponSelect::weapon_description(wep_type type)
 #pragma endregion MainMenuWeaponSelect
 
 #pragma region MainMenuStageSelect
+
+MainMenuStageSelect::MainMenuStageSelect(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
 
 MainMenuStageSelect::MainMenuStageSelect(MainMenuData* data,
 	MenuLevelSettings* settings) :

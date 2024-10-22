@@ -11,15 +11,12 @@ class Drawer
 public:
 	Drawer(DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
-		const float* dt) :
-		_sprite_batch(sprite_batch),
-		_resource_manager(resource_manager),
-		_dt(dt) {}
+		const float* dt);
 
 protected:
-	DirectX::SpriteBatch* get_sprite_batch() const { return this->_sprite_batch; }
-	ResourceManager* get_resource_manager() const { return this->_resource_manager; }
-	float get_dt() const { return *this->_dt; }
+	DirectX::SpriteBatch* get_sprite_batch() const;
+	ResourceManager* get_resource_manager() const;
+	float get_dt() const;
 	static MattMath::RectangleI calculate_draw_rectangle(
 		const MattMath::RectangleI& rec,
 		const MattMath::Vector3F& camera);

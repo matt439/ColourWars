@@ -61,6 +61,11 @@ void Game::initialize(GameData* game_data)
     _timer.SetTargetElapsedSeconds(1.0 / 60);
 }
 
+void Game::set_game_data(GameData* game_data)
+{
+	this->_data = game_data;
+}
+
 #pragma region Frame Update
 // Executes the basic game loop.
 void Game::tick()

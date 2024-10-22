@@ -13,10 +13,7 @@ class LevelObjectBuilder
 public:
 	LevelObjectBuilder(ResourceManager* resource_manager,
 		DirectX::SpriteBatch* sprite_batch,
-		const float* dt) :
-		_resource_manager(resource_manager),
-		_sprite_batch(sprite_batch),
-		_dt(dt) {}
+		const float* dt);
 
 	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> 
 		build_collision_objects(const rapidjson::Value& json,

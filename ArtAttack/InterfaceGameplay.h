@@ -47,9 +47,8 @@ struct InterfaceDraw
 class InterfaceGameplay : public Drawer
 {
 public:
-	InterfaceGameplay(DirectX::SpriteBatch* sprite_batch,
-        ResourceManager* resource_manager, const float* dt) :
-		Drawer(sprite_batch, resource_manager, dt) {}
+    InterfaceGameplay(DirectX::SpriteBatch* sprite_batch,
+        ResourceManager* resource_manager, const float* dt);
 
 	void draw_gameplay_interface(const MattMath::Vector2F& resolution,
         float health,

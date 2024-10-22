@@ -154,6 +154,25 @@ bool PaintTile::is_visible_in_viewport(const RectangleF& view) const
 	return this->_rectangle.intersects(view);
 }
 
+PaintTileSplash::PaintTileSplash(const float* dt,
+	const RectangleF& rectangle,
+	const std::string& sheet_name,
+	const std::string& animation_strip_name,
+	SpriteBatch* sprite_batch,
+	ResourceManager* resource_manager,
+	const Colour& color,
+	float rotation,
+	const Vector2F& origin,
+	SpriteEffects effects,
+	float layer_depth) :
+	AnimationObject(dt, sheet_name, animation_strip_name,
+		sprite_batch, resource_manager,
+		color, rotation, origin, effects, layer_depth),
+	_rectangle(rectangle)
+{
+
+}
+
 void PaintTileSplash::set_rectangle_center(const Vector2F& center)
 {
 	this->_rectangle.set_position_at_center(center);

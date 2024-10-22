@@ -88,15 +88,17 @@ public:
 private:
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
 		_non_collision_objects = nullptr;
+
 	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>>
 		_collision_objects = nullptr;
+
 	std::unique_ptr<std::vector<std::unique_ptr<Player>>>
 		_player_objects = nullptr;
+
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
 		_viewport_dividers = nullptr;
 
 	SoundBank* _sound_bank = nullptr;
-
 	std::string _music_name = "";
 	float _music_volume = 0.0f;
 

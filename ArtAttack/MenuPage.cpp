@@ -4,6 +4,11 @@
 using namespace DirectX;
 using namespace MattMath;
 
+MenuPage::MenuPage(MenuData* data) : _data(data)
+{
+
+}
+
 Vector2F MenuPage::get_widget_position() const
 {
 	return this->_widget_position;

@@ -4,6 +4,31 @@
 using namespace DirectX;
 using namespace MattMath;
 
+Drawer::Drawer(SpriteBatch* sprite_batch,
+    ResourceManager* resource_manager,
+    const float* dt) :
+    _sprite_batch(sprite_batch),
+    _resource_manager(resource_manager),
+    _dt(dt)
+{
+	
+}
+
+SpriteBatch* Drawer::get_sprite_batch() const
+{
+	return this->_sprite_batch;
+}
+
+ResourceManager* Drawer::get_resource_manager() const
+{
+	return this->_resource_manager;
+}
+
+float Drawer::get_dt() const
+{
+	return *this->_dt;
+}
+
 RectangleI Drawer::calculate_draw_rectangle(const RectangleI& rec,
     const Vector3F& camera)
 {

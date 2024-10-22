@@ -42,12 +42,7 @@ namespace end_menu_consts
 class EndMenuPage : public MenuPage, public MenuHighlight, public SoundBankObject
 {
 public:
-	explicit EndMenuPage(EndMenuData* data) :
-		MenuPage(data),
-		SoundBankObject(end_menu_consts::SOUND_BANK,
-			this->get_resource_manager()),
-		_data(data) {}
-
+	explicit EndMenuPage(EndMenuData* data);
 	~EndMenuPage() override = default;
 	void init() override = 0;
 	void update() override = 0;
@@ -58,11 +53,10 @@ private:
 	EndMenuData* _data = nullptr;
 };
 
-
 class EndMenuInitial final : public EndMenuPage
 {
 public:
-	explicit EndMenuInitial(EndMenuData* data) : EndMenuPage(data) {}
+	explicit EndMenuInitial(EndMenuData* data);
 	void init() override;
 	void update() override;
 	void draw() override;

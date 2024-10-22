@@ -6,6 +6,12 @@ using namespace DirectX;
 using namespace MattMath;
 using namespace rapidjson;
 
+LevelLoadedInfo::LevelLoadedInfo(const char* json_path) :
+	_json_doc(load_from_json(json_path))
+{
+
+}
+
 std::string LevelLoadedInfo::get_level_name() const
 {
 	return this->_json_doc["level_name"].GetString();

@@ -23,7 +23,6 @@
     <ClInclude Include="AnimationStrip.h" />
     <ClInclude Include="BorderThickness.h" />
     <ClInclude Include="CameraTools.h" />
-    <ClInclude Include="CollisionObjectType.h" />
     <ClInclude Include="Colour.h" />
     <ClInclude Include="confirmation_state.h" />
     <ClInclude Include="connection_state.h" />
@@ -45,7 +44,6 @@
     <ClInclude Include="InterfaceGameplay.h" />
     <ClInclude Include="IPaintableGameObject.h" />
     <ClInclude Include="Level.h" />
-    <ClInclude Include="level_end_info.h" />
     <ClInclude Include="level_mode.h" />
     <ClInclude Include="level_stage.h" />
     <ClInclude Include="LevelBuilder.h" />
@@ -56,7 +54,6 @@
     <ClInclude Include="MattMath.h" />
     <ClInclude Include="menu_element.h" />
     <ClInclude Include="menu_input_action.h" />
-    <ClInclude Include="menu_player_settings.h" />
     <ClInclude Include="MenuData.h" />
     <ClInclude Include="MenuHighlight.h" />
     <ClInclude Include="MenuInput.h" />
@@ -70,7 +67,6 @@
     <ClInclude Include="PauseMenuData.h" />
     <ClInclude Include="Player.h" />
     <ClInclude Include="player_consts.h" />
-    <ClInclude Include="player_input.h" />
     <ClInclude Include="player_team.h" />
     <ClInclude Include="PlayerBuilder.h" />
     <ClInclude Include="PlayerInput.h" />
@@ -102,7 +98,6 @@
     <ClInclude Include="StateContext.h" />
     <ClInclude Include="Structure.h" />
     <ClInclude Include="StructurePaintable.h" />
-    <ClInclude Include="TeamColour.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="TextDropShadow.h" />
     <ClInclude Include="TextObject.h" />
@@ -111,7 +106,6 @@
     <ClInclude Include="Visual.h" />
     <ClInclude Include="Weapon.h" />
     <ClInclude Include="weapon_consts.h" />
-    <ClInclude Include="weapon_details.h" />
     <ClInclude Include="WeaponBucket.h" />
     <ClInclude Include="WeaponBuilder.h" />
     <ClInclude Include="WeaponMister.h" />
@@ -120,6 +114,12 @@
     <ClInclude Include="WeaponSprayer.h" />
     <ClInclude Include="wep_type.h" />
     <ClInclude Include="screen_resolution.h" />
+    <ClInclude Include="collision_object_type.h" />
+    <ClInclude Include="LevelEndInfo.h" />
+    <ClInclude Include="MenuPlayerSettings.h" />
+    <ClInclude Include="PlayerInputData.h" />
+    <ClInclude Include="TeamColourTools.h" />
+    <ClInclude Include="WeaponDetails.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -190,6 +190,12 @@
     <ClCompile Include="WeaponSniper.cpp" />
     <ClCompile Include="WeaponSprayer.cpp" />
     <ClCompile Include="PaintTile.cpp" />
+    <ClCompile Include="EndMenuData.cpp" />
+    <ClCompile Include="GameData.cpp" />
+    <ClCompile Include="LevelEndInfo.cpp" />
+    <ClCompile Include="MainMenuData.cpp" />
+    <ClCompile Include="MenuData.cpp" />
+    <ClCompile Include="PauseMenuData.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

@@ -5,7 +5,18 @@ using namespace DirectX;
 using namespace MattMath;
 using namespace debug_text_consts;
 
-void DebugText::draw_debug_info(const Player* player, int num_projectiles)
+DebugText::DebugText(DirectX::SpriteBatch* sprite_batch,
+    ResourceManager* resource_manager,
+    const float* dt,
+    const ResolutionManager* resolution_manager) :
+    Drawer(sprite_batch, resource_manager, dt),
+    _resolution_manager(resolution_manager)
+{
+	
+}
+
+
+void DebugText::draw_debug_info(const Player* player, int num_projectiles) const
 {
     const PlayerInputData& input = player->get_input();
     

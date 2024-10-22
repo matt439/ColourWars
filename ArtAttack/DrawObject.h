@@ -15,14 +15,7 @@ public:
 		float rotation = 0.0f,
 		const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
-		float layer_depth = 0.0f) :
-		_sprite_batch(sprite_batch),
-		_resource_manager(resource_manager),
-		_colour(color),
-		_draw_rotation(rotation),
-		_origin(origin),
-		_effects(effects),
-		_layer_depth(layer_depth) {}
+		float layer_depth = 0.0f);
 
 protected:
 	virtual DirectX::SpriteBatch* get_sprite_batch() const;
