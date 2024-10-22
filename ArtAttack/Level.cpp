@@ -461,19 +461,19 @@ int Level::count_projectiles() const
 	int count = 0;
 	for (auto& object : *this->_collision_objects)
 	{
-		collision_object_type type = object->get_collision_object_type();
+		CollisionObjectType type = object->get_collision_object_type();
 
 		bool is_projectile =
-			type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
-			type == collision_object_type::PROJECTILE_SPRAY_TEAM_B ||
-			type == collision_object_type::PROJECTILE_JET_TEAM_A ||
-			type == collision_object_type::PROJECTILE_JET_TEAM_B ||
-			type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
-			type == collision_object_type::PROJECTILE_ROLLING_TEAM_B ||
-			type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
-			type == collision_object_type::PROJECTILE_BALL_TEAM_B ||
-			type == collision_object_type::PROJECTILE_MIST_TEAM_A ||
-			type == collision_object_type::PROJECTILE_MIST_TEAM_B;
+			type == CollisionObjectType::PROJECTILE_SPRAY_TEAM_A ||
+			type == CollisionObjectType::PROJECTILE_SPRAY_TEAM_B ||
+			type == CollisionObjectType::PROJECTILE_JET_TEAM_A ||
+			type == CollisionObjectType::PROJECTILE_JET_TEAM_B ||
+			type == CollisionObjectType::PROJECTILE_ROLLING_TEAM_A ||
+			type == CollisionObjectType::PROJECTILE_ROLLING_TEAM_B ||
+			type == CollisionObjectType::PROJECTILE_BALL_TEAM_A ||
+			type == CollisionObjectType::PROJECTILE_BALL_TEAM_B ||
+			type == CollisionObjectType::PROJECTILE_MIST_TEAM_A ||
+			type == CollisionObjectType::PROJECTILE_MIST_TEAM_B;
 		if (is_projectile)
 		{
 			count++;
@@ -511,9 +511,9 @@ level_end_info Level::get_level_end_info() const
 
 	for (auto& object : *this->_collision_objects)
 	{
-		collision_object_type type = object->get_collision_object_type();
+		CollisionObjectType type = object->get_collision_object_type();
 
-		if (type == collision_object_type::STRUCTURE_PAINTABLE)
+		if (type == CollisionObjectType::STRUCTURE_PAINTABLE)
 		{
 			try
 			{

@@ -12,7 +12,7 @@ StructurePaintable::StructurePaintable(
 	const RectangleF& rectangle,
 	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
-	collision_object_type collision_type,
+	CollisionObjectType collision_type,
 	const team_colour& team_colours,
 	const paintable_faces& faces,
 	const float* dt,
@@ -59,18 +59,18 @@ void StructurePaintable::draw()
 void StructurePaintable::on_collision(const ICollisionGameObject* other)
 {
 	// check if offensive projectile
-	collision_object_type other_type = other->get_collision_object_type();
+	CollisionObjectType other_type = other->get_collision_object_type();
 	bool is_offensive_projectile =
-		other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_JET_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_JET_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_BALL_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_MIST_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_MIST_TEAM_B;
+		other_type == CollisionObjectType::PROJECTILE_SPRAY_TEAM_A ||
+		other_type == CollisionObjectType::PROJECTILE_SPRAY_TEAM_B ||
+		other_type == CollisionObjectType::PROJECTILE_JET_TEAM_A ||
+		other_type == CollisionObjectType::PROJECTILE_JET_TEAM_B ||
+		other_type == CollisionObjectType::PROJECTILE_ROLLING_TEAM_A ||
+		other_type == CollisionObjectType::PROJECTILE_ROLLING_TEAM_B ||
+		other_type == CollisionObjectType::PROJECTILE_BALL_TEAM_A ||
+		other_type == CollisionObjectType::PROJECTILE_BALL_TEAM_B ||
+		other_type == CollisionObjectType::PROJECTILE_MIST_TEAM_A ||
+		other_type == CollisionObjectType::PROJECTILE_MIST_TEAM_B;
 
 	// if not offensive projectile, return
 	if (!is_offensive_projectile)

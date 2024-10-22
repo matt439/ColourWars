@@ -94,16 +94,16 @@ void Player::draw()
     AnimationObject::draw(this->_rectangle, Camera::DEFAULT_CAMERA);
 	this->_primary->draw(Camera::DEFAULT_CAMERA);
 }
-collision_object_type Player::get_collision_object_type() const
+CollisionObjectType Player::get_collision_object_type() const
 {
     if (this->_state == player_state::ALIVE)
     {
         switch (this->_team)
         {
         case player_team::A:
-            return collision_object_type::PLAYER_TEAM_A;
+            return CollisionObjectType::PLAYER_TEAM_A;
         case player_team::B:
-            return collision_object_type::PLAYER_TEAM_B;
+            return CollisionObjectType::PLAYER_TEAM_B;
         default:
             throw std::exception("Invalid player team");
         };
@@ -113,9 +113,9 @@ collision_object_type Player::get_collision_object_type() const
 		switch (this->_team)
 		{
 		case player_team::A:
-			return collision_object_type::PLAYER_TEAM_A_DEAD;
+			return CollisionObjectType::PLAYER_TEAM_A_DEAD;
 		case player_team::B:
-			return collision_object_type::PLAYER_TEAM_B_DEAD;
+			return CollisionObjectType::PLAYER_TEAM_B_DEAD;
 		default:
 			throw std::exception("Invalid player team");
 		};
@@ -143,12 +143,12 @@ const RectangleF* Player::get_collision_rectangle() const
 bool Player::is_matching_collision_object_type(
     const ICollisionGameObject* other) const
 {
-    collision_object_type other_type = other->get_collision_object_type();
+    CollisionObjectType other_type = other->get_collision_object_type();
 
     bool structure_collision =
-        other_type == collision_object_type::STRUCTURE ||
-        other_type == collision_object_type::STRUCTURE_PAINTABLE ||
-        other_type == collision_object_type::STRUCTURE_JUMP_THROUGH;
+        other_type == CollisionObjectType::STRUCTURE ||
+        other_type == CollisionObjectType::STRUCTURE_PAINTABLE ||
+        other_type == CollisionObjectType::STRUCTURE_JUMP_THROUGH;
 
     return structure_collision;
 }
@@ -192,36 +192,36 @@ bool Player::is_colliding(const ICollisionGameObject* other) const
 }
 void Player::on_collision(const ICollisionGameObject* other)
 {
-    collision_object_type other_type = other->get_collision_object_type();
+    CollisionObjectType other_type = other->get_collision_object_type();
 
     bool structure_collision =
-        other_type == collision_object_type::STRUCTURE ||
-        other_type == collision_object_type::STRUCTURE_PAINTABLE;
+        other_type == CollisionObjectType::STRUCTURE ||
+        other_type == CollisionObjectType::STRUCTURE_PAINTABLE;
 
     bool structure_jump_through_collision =
-		other_type == collision_object_type::STRUCTURE_JUMP_THROUGH;
+		other_type == CollisionObjectType::STRUCTURE_JUMP_THROUGH;
 
     player_team team = this->_team;
     bool projectile_collision = false;
     if (team == player_team::A)
     {
             bool projectile_team_b =
-            other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_B ||
-            other_type == collision_object_type::PROJECTILE_JET_TEAM_B ||
-            other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_B ||
-            other_type == collision_object_type::PROJECTILE_BALL_TEAM_B ||
-            other_type == collision_object_type::PROJECTILE_MIST_TEAM_B;
+            other_type == CollisionObjectType::PROJECTILE_SPRAY_TEAM_B ||
+            other_type == CollisionObjectType::PROJECTILE_JET_TEAM_B ||
+            other_type == CollisionObjectType::PROJECTILE_ROLLING_TEAM_B ||
+            other_type == CollisionObjectType::PROJECTILE_BALL_TEAM_B ||
+            other_type == CollisionObjectType::PROJECTILE_MIST_TEAM_B;
 
         projectile_collision = projectile_team_b;
     }
     else if (team == player_team::B)
     {
         bool projectile_team_a =
-            other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
-            other_type == collision_object_type::PROJECTILE_JET_TEAM_A ||
-            other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
-            other_type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
-            other_type == collision_object_type::PROJECTILE_MIST_TEAM_A;
+            other_type == CollisionObjectType::PROJECTILE_SPRAY_TEAM_A ||
+            other_type == CollisionObjectType::PROJECTILE_JET_TEAM_A ||
+            other_type == CollisionObjectType::PROJECTILE_ROLLING_TEAM_A ||
+            other_type == CollisionObjectType::PROJECTILE_BALL_TEAM_A ||
+            other_type == CollisionObjectType::PROJECTILE_MIST_TEAM_A;
 
         projectile_collision = projectile_team_a;
     }
@@ -527,34 +527,34 @@ void Player::update_weapon_position()
 }
 void Player::on_projectile_collision(const ICollisionGameObject* other)
 {
-    collision_object_type other_type = other->get_collision_object_type();
+    CollisionObjectType other_type = other->get_collision_object_type();
 
-    if (other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
-        other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_B)
+    if (other_type == CollisionObjectType::PROJECTILE_SPRAY_TEAM_A ||
+        other_type == CollisionObjectType::PROJECTILE_SPRAY_TEAM_B)
     {
 		this->_health -= SPRAY_DAMAGE;
         //this->_health_regen_timer = 0.0f;
 	}
-	else if (other_type == collision_object_type::PROJECTILE_JET_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_JET_TEAM_B)
+	else if (other_type == CollisionObjectType::PROJECTILE_JET_TEAM_A ||
+		other_type == CollisionObjectType::PROJECTILE_JET_TEAM_B)
 	{
 		this->_health -= JET_DAMAGE;
         //this->_health_regen_timer = 0.0f;
 	}
-	else if (other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_B)
+	else if (other_type == CollisionObjectType::PROJECTILE_ROLLING_TEAM_A ||
+		other_type == CollisionObjectType::PROJECTILE_ROLLING_TEAM_B)
 	{
 		this->_health -= ROLLING_DAMAGE;
         //this->_health_regen_timer = 0.0f;
 	}
-	else if (other_type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_BALL_TEAM_B)
+	else if (other_type == CollisionObjectType::PROJECTILE_BALL_TEAM_A ||
+		other_type == CollisionObjectType::PROJECTILE_BALL_TEAM_B)
 	{
 		this->_health -= BALL_DAMAGE;
         //this->_health_regen_timer = 0.0f;
 	}
-	else if (other_type == collision_object_type::PROJECTILE_MIST_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_MIST_TEAM_B)
+	else if (other_type == CollisionObjectType::PROJECTILE_MIST_TEAM_A ||
+		other_type == CollisionObjectType::PROJECTILE_MIST_TEAM_B)
 	{
 		this->_health -= MIST_DAMAGE;
         //this->_health_regen_timer = 0.0f;

@@ -1,7 +1,7 @@
 #ifndef CAMERATOOLS_H
 #define CAMERATOOLS_H
 
-#include "border_thickness.h"
+#include "BorderThickness.h"
 #include "MattMath.h"
 
 namespace camera_consts
@@ -27,7 +27,7 @@ public:
         const MattMath::Camera& prev_camera,
         const MattMath::RectangleF& camera_bounds) const;
 private:
-    border_thickness calculate_camera_scroll_border(
-        const MattMath::Vector2F& viewport_size) const;
+    static BorderThickness calculate_camera_scroll_border(
+        const MattMath::Vector2F& viewport_size);
 };
 #endif // !CAMERATOOLS_H

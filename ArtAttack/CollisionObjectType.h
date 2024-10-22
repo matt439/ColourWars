@@ -1,7 +1,7 @@
 #ifndef COLLISION_OBJECT_TYPE_H
 #define COLLISION_OBJECT_TYPE_H
 
-enum class collision_object_type
+enum class CollisionObjectType
 {
 	STRUCTURE,
 	STRUCTURE_PAINTABLE,

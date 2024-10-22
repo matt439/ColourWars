@@ -7,6 +7,7 @@
 class StateContext
 {
 public:
+	virtual ~StateContext() = default;
 	StateContext() {}
 	void update();
 	void draw();

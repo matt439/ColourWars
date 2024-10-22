@@ -31,7 +31,7 @@ public:
 		const MattMath::RectangleF& rectangle,
 		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
-		collision_object_type collision_type,
+		CollisionObjectType collision_type,
 		const team_colour& team_colours,
 		const paintable_faces& faces,
 		const float* dt,

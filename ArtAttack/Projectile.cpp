@@ -95,12 +95,12 @@ Vector2F DiffusingProjectile::calculate_diffusion_size() const
 bool Projectile::is_matching_collision_object_type(
     const ICollisionGameObject* other) const
 {
-    collision_object_type other_type = other->get_collision_object_type();
+    CollisionObjectType other_type = other->get_collision_object_type();
 
     bool structure_collision =
-        other_type == collision_object_type::STRUCTURE ||
-        other_type == collision_object_type::STRUCTURE_PAINTABLE ||
-        other_type == collision_object_type::STRUCTURE_JUMP_THROUGH;
+        other_type == CollisionObjectType::STRUCTURE ||
+        other_type == CollisionObjectType::STRUCTURE_PAINTABLE ||
+        other_type == CollisionObjectType::STRUCTURE_JUMP_THROUGH;
 
     if (structure_collision)
 	{
@@ -112,21 +112,21 @@ bool Projectile::is_matching_collision_object_type(
     switch (team)
     {
     case player_team::A:
-        return other_type == collision_object_type::PLAYER_TEAM_B;
+        return other_type == CollisionObjectType::PLAYER_TEAM_B;
     case player_team::B:
-        return other_type == collision_object_type::PLAYER_TEAM_A;
+        return other_type == CollisionObjectType::PLAYER_TEAM_A;
     default:
         throw std::exception("Invalid player_team value.");
     }
 }
 void Projectile::on_collision(const ICollisionGameObject* other)
 {
-    collision_object_type other_type = other->get_collision_object_type();
+    CollisionObjectType other_type = other->get_collision_object_type();
 
     bool structure_collision =
-        other_type == collision_object_type::STRUCTURE ||
-        other_type == collision_object_type::STRUCTURE_PAINTABLE ||
-        other_type == collision_object_type::STRUCTURE_JUMP_THROUGH;
+        other_type == CollisionObjectType::STRUCTURE ||
+        other_type == CollisionObjectType::STRUCTURE_PAINTABLE ||
+        other_type == CollisionObjectType::STRUCTURE_JUMP_THROUGH;
 
     if (structure_collision)
     {
@@ -138,13 +138,13 @@ void Projectile::on_collision(const ICollisionGameObject* other)
         switch (team)
         {
         case player_team::A:
-            if (other_type == collision_object_type::PLAYER_TEAM_B)
+            if (other_type == CollisionObjectType::PLAYER_TEAM_B)
             {
                 this->set_for_deletion(true);
             }
             break;
         case player_team::B:
-            if (other_type == collision_object_type::PLAYER_TEAM_A)
+            if (other_type == CollisionObjectType::PLAYER_TEAM_A)
             {
                 this->set_for_deletion(true);
             }
@@ -154,7 +154,7 @@ void Projectile::on_collision(const ICollisionGameObject* other)
         }
     }
 }
-collision_object_type Projectile::get_collision_object_type() const
+CollisionObjectType Projectile::get_collision_object_type() const
 {
     projectile_type type = this->get_type();
     switch (this->get_team())
@@ -163,15 +163,15 @@ collision_object_type Projectile::get_collision_object_type() const
         switch (type)
         {
         case projectile_type::SPRAY:
-			return collision_object_type::PROJECTILE_SPRAY_TEAM_A;
+			return CollisionObjectType::PROJECTILE_SPRAY_TEAM_A;
         case projectile_type::MIST:
-            return collision_object_type::PROJECTILE_MIST_TEAM_A;
+            return CollisionObjectType::PROJECTILE_MIST_TEAM_A;
         case projectile_type::JET:
-            return collision_object_type::PROJECTILE_JET_TEAM_A;
+            return CollisionObjectType::PROJECTILE_JET_TEAM_A;
         case projectile_type::ROLLING:
-            return collision_object_type::PROJECTILE_ROLLING_TEAM_A;
+            return CollisionObjectType::PROJECTILE_ROLLING_TEAM_A;
         case projectile_type::BALL:
-            return collision_object_type::PROJECTILE_BALL_TEAM_A;
+            return CollisionObjectType::PROJECTILE_BALL_TEAM_A;
         default:
             throw std::exception("Invalid projectile_type value.");
         }
@@ -179,15 +179,15 @@ collision_object_type Projectile::get_collision_object_type() const
         switch (type)
         {
         case projectile_type::SPRAY:
-            return collision_object_type::PROJECTILE_SPRAY_TEAM_B;
+            return CollisionObjectType::PROJECTILE_SPRAY_TEAM_B;
         case projectile_type::MIST:
-            return collision_object_type::PROJECTILE_MIST_TEAM_B;
+            return CollisionObjectType::PROJECTILE_MIST_TEAM_B;
         case projectile_type::JET:
-            return collision_object_type::PROJECTILE_JET_TEAM_B;
+            return CollisionObjectType::PROJECTILE_JET_TEAM_B;
         case projectile_type::ROLLING:
-            return collision_object_type::PROJECTILE_ROLLING_TEAM_B;
+            return CollisionObjectType::PROJECTILE_ROLLING_TEAM_B;
         case projectile_type::BALL:
-            return collision_object_type::PROJECTILE_BALL_TEAM_B;
+            return CollisionObjectType::PROJECTILE_BALL_TEAM_B;
         default:
             throw std::exception("Invalid projectile_type value.");
         }

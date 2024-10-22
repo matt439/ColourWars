@@ -116,21 +116,21 @@ const Shape* PaintTile::get_shape() const
 }
 void PaintTile::on_collision(const ICollisionGameObject* other)
 {
-	collision_object_type other_type = other->get_collision_object_type();
+	CollisionObjectType other_type = other->get_collision_object_type();
 	player_team other_team;
-	if (other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_JET_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_MIST_TEAM_A)
+	if (other_type == CollisionObjectType::PROJECTILE_SPRAY_TEAM_A ||
+		other_type == CollisionObjectType::PROJECTILE_JET_TEAM_A ||
+		other_type == CollisionObjectType::PROJECTILE_ROLLING_TEAM_A ||
+		other_type == CollisionObjectType::PROJECTILE_BALL_TEAM_A ||
+		other_type == CollisionObjectType::PROJECTILE_MIST_TEAM_A)
 	{
 		other_team = player_team::A;
 	}
-	else if (other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_JET_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_BALL_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_MIST_TEAM_B)
+	else if (other_type == CollisionObjectType::PROJECTILE_SPRAY_TEAM_B ||
+		other_type == CollisionObjectType::PROJECTILE_JET_TEAM_B ||
+		other_type == CollisionObjectType::PROJECTILE_ROLLING_TEAM_B ||
+		other_type == CollisionObjectType::PROJECTILE_BALL_TEAM_B ||
+		other_type == CollisionObjectType::PROJECTILE_MIST_TEAM_B)
 	{
 		other_team = player_team::B;
 	}
@@ -141,9 +141,9 @@ void PaintTile::on_collision(const ICollisionGameObject* other)
 	this->_team = other_team;
 	this->_splash.reset_and_play();
 }
-collision_object_type PaintTile::get_collision_object_type() const
+CollisionObjectType PaintTile::get_collision_object_type() const
 {
-	return collision_object_type::PAINT_TILE;
+	return CollisionObjectType::PAINT_TILE;
 }
 bool PaintTile::get_for_deletion() const
 {

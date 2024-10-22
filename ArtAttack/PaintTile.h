@@ -78,7 +78,7 @@ public:
 	const MattMath::Shape* get_shape() const override;
 
 	void on_collision(const ICollisionGameObject* other) override;
-	collision_object_type get_collision_object_type() const override;
+	CollisionObjectType get_collision_object_type() const override;
 	bool get_for_deletion() const override;
 	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
 private:

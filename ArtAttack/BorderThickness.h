@@ -1,7 +1,7 @@
 #ifndef BORDER_THICKNESS
 #define BORDER_THICKNESS
 
-struct border_thickness
+struct BorderThickness
 {
 	float left = 0.0f;
 	float top = 0.0f;;

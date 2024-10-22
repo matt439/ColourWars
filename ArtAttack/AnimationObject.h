@@ -19,7 +19,7 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 protected:
-	void update();
+	virtual void update();
 	void reset();
 	void stop();
 	void play();

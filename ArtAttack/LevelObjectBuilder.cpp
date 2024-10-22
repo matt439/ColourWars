@@ -11,15 +11,15 @@ std::unique_ptr<ICollisionGameObject>
 	std::string type = json["type"].GetString();
 	if (type == "Structure")
 	{
-		collision_object_type col_type;
+		CollisionObjectType col_type;
 		std::string collision_type = json["collision_type"].GetString();
 		if (collision_type == "STRUCTURE")
 		{
-			col_type = collision_object_type::STRUCTURE;
+			col_type = CollisionObjectType::STRUCTURE;
 		}
 		else if (collision_type == "STRUCTURE_JUMP_THROUGH")
 		{
-			col_type = collision_object_type::STRUCTURE_JUMP_THROUGH;
+			col_type = CollisionObjectType::STRUCTURE_JUMP_THROUGH;
 		}
 		else
 		{
@@ -58,11 +58,11 @@ std::unique_ptr<ICollisionGameObject>
 	}
 	else if (type == "StructurePaintable")
 	{
-		collision_object_type col_type;
+		CollisionObjectType col_type;
 		std::string collision_type = json["collision_type"].GetString();
 		if (collision_type == "STRUCTURE_PAINTABLE")
 		{
-			col_type = collision_object_type::STRUCTURE_PAINTABLE;
+			col_type = CollisionObjectType::STRUCTURE_PAINTABLE;
 		}
 		else
 		{

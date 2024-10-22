@@ -184,9 +184,9 @@
     <ClInclude Include="AnimatedSprite.h" />
     <ClInclude Include="AnimationObject.h" />
     <ClInclude Include="AnimationStrip.h" />
-    <ClInclude Include="border_thickness.h" />
+    <ClInclude Include="BorderThickness.h" />
     <ClInclude Include="CameraTools.h" />
-    <ClInclude Include="collision_object_type.h" />
+    <ClInclude Include="CollisionObjectType.h" />
     <ClInclude Include="Colour.h" />
     <ClInclude Include="confirmation_state.h" />
     <ClInclude Include="connection_state.h" />

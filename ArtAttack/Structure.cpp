@@ -28,7 +28,7 @@ void Structure::on_collision(const ICollisionGameObject* other)
 {
 	return;
 }
-collision_object_type Structure::get_collision_object_type() const
+CollisionObjectType Structure::get_collision_object_type() const
 {
 	return this->_collision_type;
 }

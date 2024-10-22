@@ -11,7 +11,7 @@ Camera CameraTools::calculate_camera(
 	const Camera& prev_camera,
 	const RectangleF& camera_bounds) const
 {
-	border_thickness scroll_border =
+	BorderThickness scroll_border =
 		this->calculate_camera_scroll_border(viewport_size);
 
 	float left_edge = prev_camera.translation.x + scroll_border.left;
@@ -71,10 +71,10 @@ Camera CameraTools::calculate_camera(
 	}
 }
 
-border_thickness CameraTools::calculate_camera_scroll_border(
-	const Vector2F& viewport_size) const
+BorderThickness CameraTools::calculate_camera_scroll_border(
+	const Vector2F& viewport_size)
 {
-	border_thickness result =
+	BorderThickness result =
 	{
 		viewport_size.x * DEFAULT_BORDER_RATIO_LEFT,
 		viewport_size.y * DEFAULT_BORDER_RATIO_TOP,

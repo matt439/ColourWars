@@ -7,6 +7,7 @@
 class DrawObject
 {
 public:
+	virtual ~DrawObject() = default;
 	DrawObject() = default;
 	DrawObject(DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
