@@ -95,7 +95,7 @@ public:
     bool get_for_deletion() const override;
 
 	void set_player_input(const PlayerInputData& input);
-	void set_camera(const MattMath::Camera& camera) { this->_camera = camera; }
+    void set_camera(const MattMath::Camera& camera);
 
 	const MattMath::RectangleF& get_rectangle() const;
 	MattMath::Vector2F get_center() const;
@@ -108,23 +108,23 @@ public:
 	bool get_input_jump_pressed() const;
 	bool get_input_jump_held() const;
 	player_move_state get_move_state() const;
-	int get_player_num() const { return this->_player_num; }
+    int get_player_num() const;
 
 	bool get_showing_debug() const;
 
-	float get_health() const { return this->_health; }
+    float get_health() const;
 
-	float get_weapon_ammo() const { return this->_primary->get_ammo(); }
-	const MattMath::Colour& get_team_colour() const { return this->_team_colour; }
+    float get_weapon_ammo() const;
+    const MattMath::Colour& get_team_colour() const;
 
-	const PlayerInputData& get_input() const { return this->_input; }
+    const PlayerInputData& get_input() const;
 
-	player_state get_state() const { return this->_state; }
-	void set_state(player_state state) { this->_state = state; }
+    player_state get_state() const;
+    void set_state(player_state state);
 
-	player_team get_team() const { return this->_team; }
+    player_team get_team() const;
 
-    float get_respawn_timer() const { return this->_respawn_timer; }
+    float get_respawn_timer() const;
 
     void update_weapon_position() const;
     void update_prev_rectangle();
@@ -197,43 +197,43 @@ private:
 
     void on_structure_jump_through_collision(const ICollisionGameObject* other);
 
-    void set_player_num(int player_num) { this->_player_num = player_num; }
+    void set_player_num(int player_num);
 
 
-    void set_team(player_team team) { this->_team = team; }
+    void set_team(player_team team);
 
-    wep_type get_primary() const { return this->_primary_type; }
-    void set_primary(wep_type primary) { this->_primary_type = primary; }
+    wep_type get_primary() const;
+    void set_primary(wep_type primary);
 
-    wep_type get_secondary() const { return this->_secondary_type; }
-    void set_secondary(wep_type secondary) { this->_secondary_type = secondary; }
+    wep_type get_secondary() const;
+    void set_secondary(wep_type secondary);
 
-    void set_team_colour(const MattMath::Colour& team_colour) { this->_team_colour = team_colour; }
+    void set_team_colour(const MattMath::Colour& team_colour);
 
-    void set_viewport(const MattMath::Viewport& viewport) { this->_viewport = viewport; }
+    void set_viewport(const MattMath::Viewport& viewport);
 
-    bool get_facing_right() const { return this->_facing_right; }
-    void set_facing_right(bool facing_right) { this->_facing_right = facing_right; }
+    bool get_facing_right() const;
+    void set_facing_right(bool facing_right);
 
-    void set_input(const PlayerInputData& input) { this->_input = input; }
+    void set_input(const PlayerInputData& input);
 
-    void alter_health(float change) { this->_health += change; }
-    void set_health(float health) { this->_health = health; }
+    void alter_health(float change);
+    void set_health(float health);
 
-    void set_respawn_timer(float respawn_timer) { this->_respawn_timer = respawn_timer; }
-    void alter_respawn_timer(float change) { this->_respawn_timer += change; }
+    void set_respawn_timer(float respawn_timer);
+    void alter_respawn_timer(float change);
 
-    float get_air_time() const { return this->_air_time; }
-    void set_air_time(float air_time) { this->_air_time = air_time; }
-    void alter_air_time(float change) { this->_air_time += change; }
+    float get_air_time() const;
+    void set_air_time(float air_time);
+    void alter_air_time(float change);
 
-    int get_score() const { return this->_score; }
-    void set_score(int score) { this->_score = score; }
-    void alter_score(int change) { this->_score += change; }
+    int get_score() const;
+    void set_score(int score);
+    void alter_score(int change);
 
-    void set_showing_debug(bool showing_debug) { this->_showing_debug = showing_debug; }
+    void set_showing_debug(bool showing_debug);
 
-    void set_move_state(player_move_state move_state) { this->_move_state = move_state; }
+    void set_move_state(player_move_state move_state);
 };
 
 #endif // !PLAYER_H

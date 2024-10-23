@@ -927,3 +927,166 @@ void Player::stop_sounds() const
 {
     this->_primary->stop_sounds();
 }
+void Player::set_move_state(player_move_state state)
+{
+	this->_move_state = state;
+}
+
+void Player::set_air_time(float time)
+{
+	this->_air_time = time;
+}
+
+void Player::alter_air_time(float time)
+{
+	this->_air_time += time;
+}
+
+void Player::set_facing_right(bool facing_right)
+{
+	this->_facing_right = facing_right;
+}
+
+bool Player::get_facing_right() const
+{
+	return this->_facing_right;
+}
+
+int Player::get_player_num() const
+{
+	return this->_player_num;
+}
+
+float Player::get_health() const
+{
+	return this->_health;
+}
+
+void Player::set_health(float health)
+{
+	this->_health = health;
+}
+
+void Player::alter_health(float change)
+{
+	this->_health += change;
+}
+
+void Player::set_respawn_timer(float respawn_timer)
+{
+	this->_respawn_timer = respawn_timer;
+}
+
+void Player::alter_respawn_timer(float change)
+{
+	this->_respawn_timer += change;
+}
+
+void Player::set_score(int score)
+{
+	this->_score = score;
+}
+
+void Player::alter_score(int change)
+{
+	this->_score += change;
+}
+
+int Player::get_score() const
+{
+	return this->_score;
+}
+
+void Player::set_team(player_team team)
+{
+	this->_team = team;
+}
+
+void Player::set_team_colour(const Colour& team_colour)
+{
+	this->_team_colour = team_colour;
+}
+
+void Player::set_viewport(const Viewport& viewport)
+{
+	this->_viewport = viewport;
+}
+
+void Player::set_input(const PlayerInputData& input)
+{
+	this->_input = input;
+}
+
+wep_type Player::get_primary() const
+{
+	return this->_primary_type;
+}
+
+void Player::set_primary(wep_type primary)
+{
+	this->_primary_type = primary;
+}
+
+wep_type Player::get_secondary() const
+{
+	return this->_secondary_type;
+}
+
+void Player::set_secondary(wep_type secondary)
+{
+	this->_secondary_type = secondary;
+}
+
+void Player::set_showing_debug(bool showing_debug)
+{
+	this->_showing_debug = showing_debug;
+}
+
+void Player::set_player_num(int player_num)
+{
+	this->_player_num = player_num;
+}
+
+void Player::set_camera(const Camera& camera)
+{
+	this->_camera = camera;
+}
+
+float Player::get_weapon_ammo() const
+{
+	return this->_primary->get_ammo();
+}
+
+const Colour& Player::get_team_colour() const
+{
+	return this->_team_colour;
+}
+
+player_state Player::get_state() const
+{
+	return this->_state;
+}
+void Player::set_state(player_state state)
+{
+	this->_state = state;
+}
+
+player_team Player::get_team() const
+{
+	return this->_team;
+}
+
+float Player::get_respawn_timer() const
+{
+	return this->_respawn_timer;
+}
+
+float Player::get_air_time() const
+{
+	return this->_air_time;
+}
+
+const PlayerInputData& Player::get_input() const
+{
+	return this->_input;
+}
