@@ -120,6 +120,7 @@
     <ClInclude Include="PlayerInputData.h" />
     <ClInclude Include="TeamColour.h" />
     <ClInclude Include="WeaponDetails.h" />
+    <ClInclude Include="Partitioner.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -199,6 +200,7 @@
     <ClCompile Include="ResultsMenuData.cpp" />
     <ClCompile Include="TeamColour.cpp" />
     <ClCompile Include="WeaponDetails.cpp" />
+    <ClCompile Include="Partitioner.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

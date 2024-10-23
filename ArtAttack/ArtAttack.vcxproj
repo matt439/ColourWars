@@ -230,6 +230,7 @@
     <ClInclude Include="Mh.h" />
     <ClInclude Include="MovingObject.h" />
     <ClInclude Include="PaintTile.h" />
+    <ClInclude Include="Partitioner.h" />
     <ClInclude Include="PauseMenu.h" />
     <ClInclude Include="PauseMenuData.h" />
     <ClInclude Include="pause_menu_action.h" />
@@ -321,6 +322,7 @@
     <ClCompile Include="Mh.cpp" />
     <ClCompile Include="MovingObject.cpp" />
     <ClCompile Include="PaintTile.cpp" />
+    <ClCompile Include="Partitioner.cpp" />
     <ClCompile Include="PauseMenu.cpp" />
     <ClCompile Include="PauseMenuData.cpp" />
     <ClCompile Include="pch.cpp">
