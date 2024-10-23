@@ -121,6 +121,7 @@
     <ClInclude Include="TeamColour.h" />
     <ClInclude Include="WeaponDetails.h" />
     <ClInclude Include="Partitioner.h" />
+    <ClInclude Include="ThreadPool.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -201,6 +202,7 @@
     <ClCompile Include="TeamColour.cpp" />
     <ClCompile Include="WeaponDetails.cpp" />
     <ClCompile Include="Partitioner.cpp" />
+    <ClCompile Include="ThreadPool.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

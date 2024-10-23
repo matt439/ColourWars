@@ -276,6 +276,7 @@
     <ClInclude Include="TextDropShadow.h" />
     <ClInclude Include="TextObject.h" />
     <ClInclude Include="TextureObject.h" />
+    <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="ViewportManager.h" />
     <ClInclude Include="Visual.h" />
     <ClInclude Include="Weapon.h" />
@@ -361,6 +362,7 @@
     <ClCompile Include="TextDropShadow.cpp" />
     <ClCompile Include="TextObject.cpp" />
     <ClCompile Include="TextureObject.cpp" />
+    <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="ViewportManager.cpp" />
     <ClCompile Include="Visual.cpp" />
     <ClCompile Include="Weapon.cpp" />
