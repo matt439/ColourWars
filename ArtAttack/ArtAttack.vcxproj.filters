@@ -118,7 +118,7 @@
     <ClInclude Include="LevelEndInfo.h" />
     <ClInclude Include="MenuPlayerSettings.h" />
     <ClInclude Include="PlayerInputData.h" />
-    <ClInclude Include="TeamColourTools.h" />
+    <ClInclude Include="TeamColour.h" />
     <ClInclude Include="WeaponDetails.h" />
   </ItemGroup>
   <ItemGroup>
@@ -196,6 +196,9 @@
     <ClCompile Include="MainMenuData.cpp" />
     <ClCompile Include="MenuData.cpp" />
     <ClCompile Include="PauseMenuData.cpp" />
+    <ClCompile Include="ResultsMenuData.cpp" />
+    <ClCompile Include="TeamColour.cpp" />
+    <ClCompile Include="WeaponDetails.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

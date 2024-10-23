@@ -338,6 +338,177 @@ Vector2F Weapon::calculate_projectile_launch_velocity(
     return result;
 }
 
+void Weapon::set_gun_player_aligned(bool gun_player_aligned)
+{
+	this->_gun_player_aligned = gun_player_aligned;
+}
+
+bool Weapon::get_gun_player_aligned() const
+{
+	return this->_gun_player_aligned;
+}
+
+void Weapon::set_shoot_timer(float shoot_timer)
+{
+	this->_shoot_timer = shoot_timer;
+}
+
+void Weapon::alter_shoot_timer(float dt)
+{
+	this->_shoot_timer += dt;
+}
+
+float Weapon::get_shoot_timer() const
+{
+	return this->_shoot_timer;
+}
+
+void Weapon::set_ammo(float ammo)
+{
+	this->_ammo = ammo;
+}
+
+void Weapon::alter_ammo(float ammo)
+{
+	this->_ammo += ammo;
+}
+
+float Weapon::get_ammo_timer() const
+{
+	return this->_ammo_timer;
+}
+
+void Weapon::set_ammo_timer(float ammo_timer)
+{
+	this->_ammo_timer = ammo_timer;
+}
+
+void Weapon::alter_ammo_timer(float dt)
+{
+	this->_ammo_timer += dt;
+}
+
+float Weapon::get_ammo() const
+{
+	return this->_ammo;
+}
+
+const WeaponDetails& Weapon::get_details() const
+{
+	return this->_details;
+}
+
+const Vector2F& Weapon::get_offset() const
+{
+	return this->_details.offset;
+}
+
+const Vector2F& Weapon::get_nozzle_offset() const
+{
+	return this->_details.nozzle_offset;
+}
+
+float Weapon::get_shoot_interval() const
+{
+	return this->_details.shoot_interval;
+}
+
+float Weapon::get_starting_vel_length() const
+{
+	return this->_details.starting_vel_length;
+}
+
+float Weapon::get_ammo_usage() const
+{
+	return this->_details.ammo_usage;
+}
+
+float Weapon::get_rotation() const
+{
+	return this->_rotation;
+}
+
+void Weapon::set_rotation(float rotation)
+{
+	this->_rotation = rotation;
+}
+
+bool Weapon::get_invert_x() const
+{
+	return this->_invert_x;
+}
+
+void Weapon::set_invert_x(bool invert_x)
+{
+	this->_invert_x = invert_x;
+}
+
+bool Weapon::get_invert_y() const
+{
+	return this->_invert_y;
+}
+
+void Weapon::set_invert_y(bool invert_y)
+{
+	this->_invert_y = invert_y;
+}
+
+const Vector2F& Weapon::get_player_center() const
+{
+	return this->_player_center;
+}
+
+void Weapon::set_player_center(const Vector2F& player_center)
+{
+	this->_player_center = player_center;
+}
+
+player_team Weapon::get_team() const
+{
+	return this->_team;
+}
+
+int Weapon::get_player_num() const
+{
+	return this->_player_num;
+}
+
+const Colour& Weapon::get_team_colour() const
+{
+	return this->_team_colour;
+}
+
+wep_type Weapon::get_type() const
+{
+	return this->_type;
+}
+
+void Weapon::reset_ammo()
+{
+	this->_ammo = 1.0f;
+}
+
+ProjectileBuilder* Weapon::get_projectile_builder() const
+{
+	return this->_proj_builder.get();
+}
+const float* Weapon::get_dt_ptr() const
+{
+	return this->_dt;
+}
+float Weapon::get_dt() const
+{
+	return *this->_dt;
+}
+SpriteBatch* Weapon::get_sprite_batch() const
+{
+	return this->_sprite_batch;
+}
+ResourceManager* Weapon::get_resource_manager() const
+{
+	return this->_resource_manager;
+}
+
 RelativeVelocityWeapon::RelativeVelocityWeapon(
     const WeaponDetails& details,
     RelativeWeaponDetails rel_details,

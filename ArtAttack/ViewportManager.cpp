@@ -5,6 +5,16 @@ using namespace DirectX;
 using namespace MattMath;
 using namespace viewport_consts;
 
+ViewportManager::ViewportManager(ResolutionManager* resolution_manager,
+    SpriteBatch* sprite_batch,
+    DX::DeviceResources* device_resources) :
+    _resolution_manager(resolution_manager),
+    _sprite_batch(sprite_batch),
+    _device_resources(device_resources)
+{
+
+}
+
 Viewport ViewportManager::get_fullscreen_viewport() const
 {
     Vector2F res = this->_resolution_manager->get_resolution_vec();
@@ -209,4 +219,9 @@ Viewport ViewportManager::calculate_viewport(screen_layout layout,
         result.height = screen_size.y;
         return result;
     }
+}
+
+screen_layout ViewportManager::get_layout() const
+{
+	return this->_layout;
 }

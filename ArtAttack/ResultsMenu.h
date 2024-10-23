@@ -64,12 +64,7 @@ namespace results_menu_consts
 class ResultsMenuPage : public MenuPage, public SoundBankObject
 {
 public:
-	explicit ResultsMenuPage(ResultsMenuData* data) : 
-		MenuPage(data),
-		SoundBankObject(results_menu_consts::SOUND_BANK,
-		                this->get_resource_manager()),
-		_data(data) {}
-
+	explicit ResultsMenuPage(ResultsMenuData* data);
 	~ResultsMenuPage() override = default;
 	void init() override = 0;
 	void update() override = 0;
@@ -83,7 +78,7 @@ private:
 class ResultsMenuInitial final : public ResultsMenuPage
 {
 public:
-	explicit ResultsMenuInitial(ResultsMenuData* data) : ResultsMenuPage(data) {}
+	explicit ResultsMenuInitial(ResultsMenuData* data);
 	void init() override;
 	void update() override;
 	void draw() override;

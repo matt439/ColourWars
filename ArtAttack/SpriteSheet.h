@@ -10,8 +10,7 @@
 class SpriteSheet
 {	
 public:
-	explicit SpriteSheet(ID3D11ShaderResourceView* texture) :
-		_texture(texture) {}
+	explicit SpriteSheet(ID3D11ShaderResourceView* texture);
 
 	const AnimationStrip* get_animation_strip(const std::string& name) const;
 	

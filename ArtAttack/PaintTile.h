@@ -3,7 +3,7 @@
 
 #include "player_team.h"
 #include "TextureObject.h"
-#include "TeamColourTools.h"
+#include "TeamColour.h"
 #include "ICollisionGameObject.h"
 #include "AnimationObject.h"
 

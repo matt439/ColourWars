@@ -1,7 +1,7 @@
 #ifndef LEVEL_END_INFO_H
 #define LEVEL_END_INFO_H
 
-#include "TeamColourTools.h"
+#include "TeamColour.h"
 #include "player_team.h"
 
 struct LevelEndInfo

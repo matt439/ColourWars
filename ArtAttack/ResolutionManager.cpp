@@ -19,6 +19,11 @@ std::string ResolutionManager::get_resolution_string() const
 	return this->convert_resolution_to_string(this->_resolution);
 }
 
+screen_resolution ResolutionManager::get_resolution() const
+{
+	return this->_resolution;
+}
+
 void ResolutionManager::set_resolution(screen_resolution resolution)
 {
 	this->_resolution = resolution;

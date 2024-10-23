@@ -150,3 +150,18 @@ Vector2I Save::convert_resolution_to_ivec(
         return {-1, -1};
     }
 }
+
+SaveData Save::get_save_data() const
+{
+	return this->_save_data;
+}
+
+screen_resolution Save::get_resolution() const
+{
+	return this->_save_data.resolution;
+}
+
+bool Save::get_fullscreen() const
+{
+	return this->_save_data.fullscreen;
+}

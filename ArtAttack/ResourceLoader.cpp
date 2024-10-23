@@ -5,6 +5,15 @@ using namespace directory_consts;
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
+ResourceLoader::ResourceLoader(ResourceManager* resource_manager,
+    ID3D11Device1* device, DirectX::AudioEngine* audio_engine) :
+    _resource_manager(resource_manager),
+    _device(device),
+    _audio_engine(audio_engine)
+{
+
+}
+
 void ResourceLoader::load_textures() const
 {
     this->load_sprite_sheet_from_directory(TEXTURE_DIRECTORY, "sprite_sheet_1");

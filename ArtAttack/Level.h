@@ -2,7 +2,7 @@
 #define LEVEL_H
 
 #include "ICollisionGameObject.h"
-#include "TeamColourTools.h"
+#include "TeamColour.h"
 #include "level_stage.h"
 #include "PlayerInput.h"
 #include "Player.h"

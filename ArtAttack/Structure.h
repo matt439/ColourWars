@@ -18,12 +18,7 @@ public:
 		float rotation = 0.0f,
 		const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
-		float layer_depth = 0.0f) :
-		TextureObject(sheet_name, frame_name,
-		              sprite_batch, resource_manager,
-		              color, rotation, origin, effects, layer_depth),
-		_collision_type(collision_type),
-		_rectangle(rectangle) {}
+		float layer_depth = 0.0f);
 
 	void update() override;
 	void draw(const MattMath::Camera& camera) override;

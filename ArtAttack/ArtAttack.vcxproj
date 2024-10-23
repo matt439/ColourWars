@@ -270,7 +270,7 @@
     <ClInclude Include="StepTimer.h" />
     <ClInclude Include="Structure.h" />
     <ClInclude Include="StructurePaintable.h" />
-    <ClInclude Include="TeamColourTools.h" />
+    <ClInclude Include="TeamColour.h" />
     <ClInclude Include="Text.h" />
     <ClInclude Include="TextDropShadow.h" />
     <ClInclude Include="TextObject.h" />
@@ -343,6 +343,7 @@
     <ClCompile Include="ResourceLoader.cpp" />
     <ClCompile Include="ResourceManager.cpp" />
     <ClCompile Include="ResultsMenu.cpp" />
+    <ClCompile Include="ResultsMenuData.cpp" />
     <ClCompile Include="Save.cpp" />
     <ClCompile Include="SoundBank.cpp" />
     <ClCompile Include="SoundBankObject.cpp" />
@@ -353,6 +354,7 @@
     <ClCompile Include="StateContext.cpp" />
     <ClCompile Include="Structure.cpp" />
     <ClCompile Include="StructurePaintable.cpp" />
+    <ClCompile Include="TeamColour.cpp" />
     <ClCompile Include="Text.cpp" />
     <ClCompile Include="TextDropShadow.cpp" />
     <ClCompile Include="TextObject.cpp" />
@@ -362,6 +364,7 @@
     <ClCompile Include="Weapon.cpp" />
     <ClCompile Include="WeaponBucket.cpp" />
     <ClCompile Include="WeaponBuilder.cpp" />
+    <ClCompile Include="WeaponDetails.cpp" />
     <ClCompile Include="WeaponMister.cpp" />
     <ClCompile Include="WeaponRoller.cpp" />
     <ClCompile Include="WeaponSniper.cpp" />

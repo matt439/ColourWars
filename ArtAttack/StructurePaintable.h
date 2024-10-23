@@ -4,7 +4,7 @@
 #include "IPaintableGameObject.h"
 #include "Structure.h"
 #include "PaintTile.h"
-#include "TeamColourTools.h"
+#include "TeamColour.h"
 #include "SoundBank.h"
 
 namespace structure_paintable_consts

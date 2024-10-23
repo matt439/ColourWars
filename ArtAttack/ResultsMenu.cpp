@@ -6,9 +6,24 @@ using namespace MattMath;
 using namespace results_menu_consts;
 using namespace colour_consts;
 
+ResultsMenuPage::ResultsMenuPage(ResultsMenuData* data) :
+	MenuPage(data),
+	SoundBankObject(results_menu_consts::SOUND_BANK,
+		this->get_resource_manager()),
+	_data(data)
+{
+
+}
+
 ResultsMenuData* ResultsMenuPage::get_results_menu_data() const
 {
 	return this->_data;
+}
+
+ResultsMenuInitial::ResultsMenuInitial(ResultsMenuData* data) :
+	ResultsMenuPage(data)
+{
+
 }
 
 void ResultsMenuInitial::update()

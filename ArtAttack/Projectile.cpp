@@ -283,3 +283,23 @@ void Projectile::update_movement(float gravity, float wind_resistance)
 	}
     this->alter_timer(dt);
 }
+
+float Projectile::get_delete_timer() const
+{
+	return this->_timer;
+}
+
+Vector2F Projectile::get_col_rect_size() const
+{
+	return this->get_details().size;
+}
+
+float Projectile::get_player_damage() const
+{
+	return this->get_details().player_damage;
+}
+
+const ProjectileDetails& Projectile::get_details() const
+{
+	return this->_details;
+}

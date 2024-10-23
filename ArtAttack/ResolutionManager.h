@@ -12,7 +12,7 @@ public:
     MattMath::Vector2I get_resolution_ivec() const;
     MattMath::Vector2F get_resolution_vec() const;
     std::string get_resolution_string() const;
-    screen_resolution get_resolution() const { return this->_resolution; }
+    screen_resolution get_resolution() const;
     void set_resolution(screen_resolution resolution);
     void set_resolution(const std::string& resolution);
     void set_resolution(const MattMath::Vector2F& resolution);

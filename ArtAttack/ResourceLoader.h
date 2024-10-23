@@ -10,10 +10,7 @@ class ResourceLoader
 {
 public:
 	ResourceLoader(ResourceManager* resource_manager, ID3D11Device1* device,
-		DirectX::AudioEngine* audio_engine) :
-		_resource_manager(resource_manager),
-		_device(device),
-		_audio_engine(audio_engine) {}
+		DirectX::AudioEngine* audio_engine);
 
 	void load_all_resources();
 

@@ -20,13 +20,10 @@ class ViewportManager
 public:
 	ViewportManager(ResolutionManager* resolution_manager,
 		DirectX::SpriteBatch* sprite_batch,
-		DX::DeviceResources* device_resources) :
-		_resolution_manager(resolution_manager),
-		_sprite_batch(sprite_batch),
-		_device_resources(device_resources) {}
+		DX::DeviceResources* device_resources);
 
 	void set_layout(screen_layout layout);
-	screen_layout get_layout() const { return _layout; }
+	screen_layout get_layout() const;
 
 	void apply_player_viewport(int player_num) const;
 	MattMath::Viewport get_player_viewport(int player_num) const;
