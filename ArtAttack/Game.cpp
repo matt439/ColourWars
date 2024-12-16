@@ -210,7 +210,7 @@ void Game::create_device_dependent_resources()
     for (int i = 0; i < NUM_THREADS_MAX; i++)
     {
         this->_sprite_batches[i] = std::move(
-            std::make_unique<SpriteBatch>(this->_deviceResources->get_deferred_context(i)));
+            std::make_unique<SpriteBatch>(this->_device_resources->get_deferred_context(i)));
 
         this->_sprite_batches_ptrs[i] = this->_sprite_batches[i].get();
     }
