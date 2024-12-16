@@ -9,6 +9,8 @@
 #include "ThreadPool.h"
 #include <Audio.h>
 
+constexpr int NUM_THREADS_MAX = 16;
+
 class Game final : public DX::IDeviceNotify, public StateContext
 {
 public:
