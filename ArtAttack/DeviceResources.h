@@ -83,6 +83,10 @@ namespace DX
             m_d3dAnnotation->SetMarker(name);
         }
 
+        void create_deferred_contexts(int num);
+        std::vector<ID3D11DeviceContext*>* get_deferred_contexts() const noexcept;
+        ID3D11DeviceContext* get_deferred_context(int index) const noexcept;
+
     private:
         void CreateFactory();
         void GetHardwareAdapter(IDXGIAdapter1** ppAdapter);
