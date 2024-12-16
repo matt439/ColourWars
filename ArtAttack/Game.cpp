@@ -47,6 +47,10 @@ void Game::initialize(GameData* game_data)
     _audio_engine = std::make_unique<AudioEngine>(eflags);
 
     _device_resources->CreateDeviceResources();
+
+    // create deferred contexts
+    _device_resources->create_deferred_contexts(NUM_THREADS_MAX);
+
     create_device_dependent_resources();
 
     _device_resources->CreateWindowSizeDependentResources();
