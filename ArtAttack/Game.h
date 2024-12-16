@@ -6,6 +6,7 @@
 #include "GameData.h"
 #include "ResourceManager.h"
 #include "StateContext.h"
+#include "ThreadPool.h"
 #include <Audio.h>
 
 class Game final : public DX::IDeviceNotify, public StateContext
@@ -54,7 +55,7 @@ private:
     std::unique_ptr<DX::DeviceResources> _device_resources = nullptr;
     DX::StepTimer _timer = DX::StepTimer();
 
-    std::unique_ptr<DirectX::SpriteBatch> _sprite_batch = nullptr;
+    //std::unique_ptr<DirectX::SpriteBatch> _sprite_batch = nullptr;
 
     std::unique_ptr<DirectX::CommonStates> _states = nullptr;
 
@@ -65,7 +66,9 @@ private:
     std::unique_ptr<DirectX::GamePad> _gamepad = nullptr;
     std::unique_ptr<ViewportManager> _viewport_manager = nullptr;
     GameData* _data = nullptr;
-
+    std::unique_ptr<ThreadPool> _thread_pool = nullptr;
+    std::vector<std::unique_ptr<DirectX::SpriteBatch>> _sprite_batches;
+    std::vector<DirectX::SpriteBatch*> _sprite_batches_ptrs;
     std::unique_ptr<DirectX::AudioEngine> _audio_engine = nullptr;
 };
 
