@@ -205,8 +205,17 @@ void Game::create_device_dependent_resources()
 
     // TODO: Initialize device dependent objects here (independent of window size).
     auto context = _device_resources->GetD3DDeviceContext();
-    _sprite_batch = std::make_unique<SpriteBatch>(context);
-    this->_data->set_sprite_batch(_sprite_batch.get());
+    this->_sprite_batches.resize(NUM_THREADS_MAX);
+    this->_sprite_batches_ptrs.resize(NUM_THREADS_MAX);
+    for (int i = 0; i < NUM_THREADS_MAX; i++)
+    {
+        this->_sprite_batches[i] = std::move(
+            std::make_unique<SpriteBatch>(this->_deviceResources->get_deferred_context(i)));
+
+        this->_sprite_batches_ptrs[i] = this->_sprite_batches[i].get();
+    }
+
+    this->_data->set_sprite_batches(&this->_sprite_batches_ptrs);
 
     this->_resource_manager = std::make_unique<ResourceManager>();
     this->_data->set_resource_manager(this->_resource_manager.get());
