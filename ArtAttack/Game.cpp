@@ -251,7 +251,10 @@ void Game::create_window_size_dependent_resources() const
 void Game::OnDeviceLost()
 {
     // TODO: Add Direct3D resource cleanup here.
-    _sprite_batch.reset();
+    for (auto& sprite_batch : this->_sprite_batches)
+    {
+        sprite_batch.reset();
+    }
     _states.reset();
     this->_resource_manager->reset_all_textures();
     this->_resource_manager->reset_all_sprite_fonts();
