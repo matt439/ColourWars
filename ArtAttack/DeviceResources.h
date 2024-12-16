@@ -120,5 +120,7 @@ namespace DX
 
         // The IDeviceNotify can be held directly as it owns the DeviceResources.
         IDeviceNotify*                                  m_deviceNotify;
+
+        std::unique_ptr<std::vector<ID3D11DeviceContext*>> _deferred_contexts = nullptr;
     };
 }
