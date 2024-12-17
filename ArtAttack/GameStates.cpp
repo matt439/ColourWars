@@ -101,16 +101,17 @@ void GameLevel::init()
 {
     this->_player_input = std::make_unique<PlayerInput>(
         this->get_data()->get_gamepad());
+
     this->_menu_input = std::make_unique<MenuInput>(
         this->get_data()->get_gamepad());
 
     this->_level_builder = std::make_unique<LevelBuilder>(
         this->get_data()->get_viewport_manager(),
         this->get_data()->get_dt(),
-        this->get_data()->get_sprite_batch(),
         this->get_data()->get_resource_manager(),
         this->get_data()->get_common_states()->PointClamp(),
-        this->get_data()->get_resolution_manager());
+        this->get_data()->get_resolution_manager(),
+        this->get_data()->get_thread_pool());
 
     this->get_data()->get_viewport_manager()->
         set_layout(this->_settings.get_screen_layout());
