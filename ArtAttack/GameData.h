@@ -21,8 +21,6 @@ public:
     ResolutionManager* get_resolution_manager() const;
     float* get_dt() const;
     void set_dt(float* dt);
-    DirectX::SpriteBatch* get_sprite_batch() const;
-    void set_sprite_batch(DirectX::SpriteBatch* sprite_batch);
     void set_save(Save* save);
     Save* get_save() const;
     void set_resource_loader(ResourceLoader* texture_loader);
@@ -49,7 +47,6 @@ private:
     ResolutionManager* _resolution_manager = nullptr;
     HWND _window = nullptr;
     float* _dt = nullptr;
-    DirectX::SpriteBatch* _sprite_batch = nullptr;
     ResourceLoader* _resource_loader = nullptr;
     ResourceManager* _resource_manager = nullptr;
     DirectX::GamePad* _gamepad = nullptr;

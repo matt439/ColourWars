@@ -230,7 +230,7 @@ void Game::create_device_dependent_resources()
     this->_data->set_dt(this->_dt.get());
 
     this->_viewport_manager = std::make_unique<ViewportManager>(
-        this->_data->get_resolution_manager(), this->_data->get_sprite_batch(),
+        this->_data->get_resolution_manager(), this->_data->get_sprite_batches()->at(0),
         this->_data->get_device_resources());
     this->_data->set_viewport_manager(this->_viewport_manager.get());
 

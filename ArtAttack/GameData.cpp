@@ -6,7 +6,6 @@ GameData::GameData(const GameData* game_data) :
     _resolution_manager(game_data->get_resolution_manager()),
     _window(game_data->get_window()),
     _dt(game_data->get_dt()),
-    _sprite_batch(game_data->get_sprite_batch()),
     _resource_loader(game_data->get_resource_loader()),
     _resource_manager(game_data->get_resource_manager()),
     _gamepad(game_data->get_gamepad()),
@@ -47,16 +46,6 @@ float* GameData::get_dt() const
 void GameData::set_dt(float* dt)
 {
 	this->_dt = dt;
-}
-
-DirectX::SpriteBatch* GameData::get_sprite_batch() const
-{
-	return this->_sprite_batch;
-}
-
-void GameData::set_sprite_batch(DirectX::SpriteBatch* sprite_batch)
-{
-	this->_sprite_batch = sprite_batch;
 }
 
 void GameData::set_save(Save* save)
