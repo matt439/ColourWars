@@ -131,3 +131,24 @@ GameData* GameData::get_game_data()
 {
 	return this;
 }
+
+std::vector<DirectX::SpriteBatch*>* GameData::get_sprite_batches() const
+{
+	return this->_sprite_batches;
+}
+
+void GameData::set_sprite_batches(std::vector<DirectX::SpriteBatch*>* sprite_batches)
+{
+	this->_sprite_batches = sprite_batches;
+}
+
+void GameData::set_thread_pool(ThreadPool* thread_pool)
+{
+	this->_thread_pool = thread_pool;
+}
+
+ThreadPool* GameData::get_thread_pool() const
+{
+	return this->_thread_pool;
+	return this->_thread_pool;
+}

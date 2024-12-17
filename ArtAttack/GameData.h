@@ -7,6 +7,7 @@
 #include "ResourceManager.h"
 #include "DeviceResources.h"
 #include "ViewportManager.h"
+#include "ThreadPool.h"
 
 class GameData
 {
@@ -36,10 +37,10 @@ public:
     ViewportManager* get_viewport_manager() const;
     void set_common_states(DirectX::CommonStates* common_states);
     DirectX::CommonStates* get_common_states() const;
-    std::vector<DirectX::SpriteBatch*>* get_sprite_batches() const { return this->_sprite_batches; }
-    void set_sprite_batches(std::vector<DirectX::SpriteBatch*>* sprite_batches) { this->_sprite_batches = sprite_batches; }
-    void set_thread_pool(ThreadPool* thread_pool) { this->_thread_pool = thread_pool; }
-    ThreadPool* get_thread_pool() const { return this->_thread_pool; }
+    std::vector<DirectX::SpriteBatch*>* get_sprite_batches() const;
+    void set_sprite_batches(std::vector<DirectX::SpriteBatch*>* sprite_batches);
+    void set_thread_pool(ThreadPool* thread_pool);
+    ThreadPool* get_thread_pool() const;
 
     GameData* get_game_data();
 
