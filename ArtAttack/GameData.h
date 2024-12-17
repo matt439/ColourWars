@@ -56,7 +56,7 @@ private:
     DX::DeviceResources* _device_resources = nullptr;
     ViewportManager* _viewport_manager = nullptr;
     DirectX::CommonStates* _common_states = nullptr;
-    std::vector<DirectX::SpriteBatch*>* _sprite_batches;
+	std::vector<DirectX::SpriteBatch*>* _sprite_batches = nullptr;
     ThreadPool* _thread_pool = nullptr;
 };
 #endif // !GAMEDATA_H

@@ -12,7 +12,9 @@ GameData::GameData(const GameData* game_data) :
     _gamepad(game_data->get_gamepad()),
     _device_resources(game_data->get_device_resources()),
     _viewport_manager(game_data->get_viewport_manager()),
-    _common_states(game_data->get_common_states())
+    _common_states(game_data->get_common_states()),
+	_sprite_batches(game_data->get_sprite_batches()),
+	_thread_pool(game_data->get_thread_pool())
 {
 
 }
