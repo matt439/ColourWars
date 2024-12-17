@@ -296,28 +296,49 @@ void GameLevel::update()
 
 void GameLevel::draw()
 {
+	if (this->_state == game_level_state::FIRST_UPDATE ||
+		this->_state == game_level_state::SECOND_UPDATE)
+	{
+		return;
+	}
+
+    auto deferred_contexts = this->get_data()->get_device_resources()->get_deferred_contexts();
+
+    std::vector<ID3D11CommandList*> command_lists(deferred_contexts->size(), nullptr);
+
+    this->_level->draw(this->get_data()->get_device_resources()->get_deferred_contexts(),
+        &command_lists,
+        this->get_data()->get_sprite_batches());
+
     switch (this->_state)
     {
-    case game_level_state::FIRST_UPDATE:
-        break;
-    case game_level_state::SECOND_UPDATE:
-        break;
     case game_level_state::ACTIVE:
-        this->_level->draw();
         break;
     case game_level_state::PAUSE_MENU:
-        this->_level->draw();
         this->_pause_menu->draw();
         break;
     case game_level_state::RESULTS:
-        this->_level->draw();
         this->_results_menu->draw();
         break;
     case game_level_state::END_MENU:
-        this->_level->draw();
         this->_end_menu->draw();
         break;
     }
+
+    auto immediate_context = this->get_data()->get_device_resources()->GetD3DDeviceContext();
+
+    for (int i = 0; i < command_lists.size(); i++)
+    {
+        if (command_lists[i] == nullptr)
+        {
+            continue;
+        }
+
+        immediate_context->ExecuteCommandList(command_lists[i], FALSE);
+        command_lists[i]->Release();
+    }
+    
+
 }
 
 int GameLevel::check_for_pause_input(

@@ -79,7 +79,7 @@ ResourceManager* MenuPage::get_resource_manager() const
 }
 SpriteBatch* MenuPage::get_sprite_batch() const
 {
-	return this->_data->get_sprite_batch();
+	return this->_data->get_sprite_batches()->at(0);
 }
 ViewportManager* MenuPage::get_viewport_manager() const
 {
@@ -104,6 +104,8 @@ void MenuPage::draw_mobject_in_viewports(MObject* widget,
 
 		sprite_batch->End();
 	}
+
+	// TODO: alter this to use deferred and immediate contexts
 }
 ID3D11SamplerState* MenuPage::get_point_clamp_sampler_state() const
 {
