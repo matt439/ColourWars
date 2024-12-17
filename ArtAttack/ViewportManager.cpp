@@ -12,13 +12,12 @@ ViewportManager::ViewportManager(ResolutionManager* resolution_manager,
     _sprite_batch(sprite_batch),
     _device_resources(device_resources)
 {
-
 }
 
 Viewport ViewportManager::get_fullscreen_viewport() const
 {
     Vector2F res = this->_resolution_manager->get_resolution_vec();
-    return {0.0f, 0.0f, res.x, res.y};
+    return { 0.0f, 0.0f, res.x, res.y };
 }
 
 D3D11_VIEWPORT ViewportManager::get_fullscreen_d3d11_viewport() const
@@ -30,32 +29,50 @@ D3D11_VIEWPORT ViewportManager::get_fullscreen_d3d11_viewport() const
 RectangleF ViewportManager::get_camera_adjusted_player_viewport_rect(
     int player_num, const Camera& camera) const
 {
-	Viewport vp = this->get_player_viewport(player_num);
+    Viewport vp = this->get_player_viewport(player_num);
     const float scale = camera.scale;
     const Vector2F& translation = camera.translation;
 
-	auto result = RectangleF(
-		translation.x,
-		translation.y,
-		vp.width * scale,
-		vp.height * scale);
+    auto result = RectangleF(
+        translation.x,
+        translation.y,
+        vp.width * scale,
+        vp.height * scale);
 
-	return result;
+    return result;
+}
+
+void ViewportManager::apply_player_viewport(int player_num,
+    ID3D11DeviceContext* context) const
+{
+    D3D11_VIEWPORT vp = this->calculate_d3d11_viewport(
+        this->_layout, player_num, this->_resolution_manager->get_resolution_vec());
+    context->RSSetViewports(1, &vp);
+}
+
+void ViewportManager::apply_player_viewport(int player_num,
+    ID3D11DeviceContext* context,
+    SpriteBatch* sprite_batch) const
+{
+    D3D11_VIEWPORT vp = this->calculate_d3d11_viewport(
+        this->_layout, player_num, this->_resolution_manager->get_resolution_vec());
+    context->RSSetViewports(1, &vp);
+    sprite_batch->SetViewport(vp);
 }
 
 void ViewportManager::apply_player_viewport(int player_num) const
 {
-	D3D11_VIEWPORT vp = this->calculate_d3d11_viewport(
+    D3D11_VIEWPORT vp = this->calculate_d3d11_viewport(
         this->_layout, player_num, this->_resolution_manager->get_resolution_vec());
-	auto context = this->_device_resources->GetD3DDeviceContext();
-	context->RSSetViewports(1, &vp);
-	this->_sprite_batch->SetViewport(vp);
+    auto context = this->_device_resources->GetD3DDeviceContext();
+    context->RSSetViewports(1, &vp);
+    this->_sprite_batch->SetViewport(vp);
 }
 
 D3D11_VIEWPORT ViewportManager::calculate_d3d11_viewport(screen_layout layout,
     int player_num, const Vector2F& screen_size) const
 {
-	Viewport vp = this->calculate_viewport(layout, player_num, screen_size);
+    Viewport vp = this->calculate_viewport(layout, player_num, screen_size);
     return vp.get_d3d_viewport();
 }
 
@@ -72,72 +89,72 @@ Viewport ViewportManager::get_player_viewport(int player_num) const
 
 std::vector<Viewport> ViewportManager::get_all_viewports() const
 {
-	std::vector<Viewport> result;
+    std::vector<Viewport> result;
     int player_count = this->get_player_count_from_layout(this->_layout);
-	for (int i = 0; i < player_count; i++)
-	{
-		result.push_back(this->get_player_viewport(i));
-	}
+    for (int i = 0; i < player_count; i++)
+    {
+        result.push_back(this->get_player_viewport(i));
+    }
     // Add a 4th viewport if there are 3 players
     if (player_count == 3)
     {
-		result.push_back(this->get_player_viewport(4));
+        result.push_back(this->get_player_viewport(4));
     }
-	return result;
+    return result;
 }
 
-int ViewportManager::get_player_count_from_layout(screen_layout layout)
+int ViewportManager::get_player_count_from_layout(screen_layout layout) const
 {
-	switch (layout)
-	{
-	case screen_layout::ONE_PLAYER:
-		return 1;
-	case screen_layout::TWO_PLAYER:
-		return 2;
-	case screen_layout::THREE_PLAYER:
-		return 3;
-	case screen_layout::FOUR_PLAYER:
-		return 4;
-	default:
-		return 1;
-	}
+    switch (layout)
+    {
+    case screen_layout::ONE_PLAYER:
+        return 1;
+    case screen_layout::TWO_PLAYER:
+        return 2;
+    case screen_layout::THREE_PLAYER:
+        return 3;
+    case screen_layout::FOUR_PLAYER:
+        return 4;
+    default:
+        return 1;
+    }
 }
 
 std::vector<MattMath::RectangleF> ViewportManager::get_viewport_dividers() const
 {
-	auto result = std::vector<RectangleF>();
+    std::vector<RectangleF> result = std::vector<RectangleF>();
     const Vector2F res = this->_resolution_manager->get_resolution_vec();
     screen_layout layout = this->_layout;
 
     if (layout == screen_layout::ONE_PLAYER)
     {
-		return result;
-	}
+        return result;
+    }
     else if (layout == screen_layout::TWO_PLAYER)
     {
-		result.push_back(RectangleF(0.0f, res.y / 2.0f - DIVIDER_THICKNESS / 2.0f,
-            			res.x, DIVIDER_THICKNESS));
-		return result;
-	}
+        result.push_back(RectangleF(0.0f, res.y / 2.0f - DIVIDER_THICKNESS / 2.0f,
+            res.x, DIVIDER_THICKNESS));
+        return result;
+    }
     else if (layout == screen_layout::THREE_PLAYER ||
         layout == screen_layout::FOUR_PLAYER)
     {
-		result.push_back(RectangleF(0.0f, res.y / 2.0f - DIVIDER_THICKNESS / 2.0f,
-            			res.x, DIVIDER_THICKNESS));
-		result.push_back(RectangleF(res.x / 2.0f - DIVIDER_THICKNESS / 2.0f, 0.0f,
-            			DIVIDER_THICKNESS, res.y));
-		return result;
-	}
+        result.push_back(RectangleF(0.0f, res.y / 2.0f - DIVIDER_THICKNESS / 2.0f,
+            res.x, DIVIDER_THICKNESS));
+        result.push_back(RectangleF(res.x / 2.0f - DIVIDER_THICKNESS / 2.0f, 0.0f,
+            DIVIDER_THICKNESS, res.y));
+        return result;
+    }
     else
     {
-		throw std::exception("Invalid screen layout");
+        throw std::exception("Invalid screen layout");
     }
 }
 
 Viewport ViewportManager::calculate_viewport(screen_layout layout,
-	int player_num, const Vector2F& screen_size)
+    int player_num, const Vector2F& screen_size) const
 {
-	auto result = Viewport();
+    Viewport result = Viewport();
     switch (layout)
     {
     case screen_layout::ONE_PLAYER:
@@ -161,6 +178,8 @@ Viewport ViewportManager::calculate_viewport(screen_layout layout,
             result.width = screen_size.x;
             result.height = screen_size.y / 2.0f;
             return result;
+        default:
+            break;
         }
     case screen_layout::THREE_PLAYER:
         switch (player_num)
@@ -183,6 +202,8 @@ Viewport ViewportManager::calculate_viewport(screen_layout layout,
             result.width = screen_size.x / 2.0f;
             result.height = screen_size.y / 2.0f;
             return result;
+        default:
+            break;
         }
     case screen_layout::FOUR_PLAYER:
         switch (player_num)
@@ -211,6 +232,8 @@ Viewport ViewportManager::calculate_viewport(screen_layout layout,
             result.width = screen_size.x / 2.0f;
             result.height = screen_size.y / 2.0f;
             return result;
+        default:
+            break;
         }
     default: //1P screen
         result.x = 0.0f;
@@ -219,9 +242,4 @@ Viewport ViewportManager::calculate_viewport(screen_layout layout,
         result.height = screen_size.y;
         return result;
     }
-}
-
-screen_layout ViewportManager::get_layout() const
-{
-	return this->_layout;
 }
