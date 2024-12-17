@@ -7,14 +7,13 @@ using namespace MattMath;
 AnimationObject::AnimationObject(const float* dt,
 	const std::string& sheet_name,
 	const std::string& animation_strip_name,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
-	SpriteSheetObject(sheet_name, animation_strip_name, sprite_batch,
+	SpriteSheetObject(sheet_name, animation_strip_name,
 		resource_manager, color, rotation, origin, effects,
 		layer_depth),
 	_dt(dt)
@@ -28,11 +27,12 @@ const AnimationStrip* AnimationObject::get_animation_strip() const
 		this->get_element_name());
 }
 
-void AnimationObject::draw(const RectangleI& destination_rectangle) const
+void AnimationObject::draw(SpriteBatch* sprite_batch,
+	const RectangleI& destination_rectangle) const
 {
 	SpriteSheet* sprite_sheet = SpriteSheetObject::get_sprite_sheet();
 
-	sprite_sheet->draw(this->get_sprite_batch(),
+	sprite_sheet->draw(sprite_batch,
 		this->get_source_rectangle(),
 		destination_rectangle,
 		this->get_colour(),
@@ -41,15 +41,17 @@ void AnimationObject::draw(const RectangleI& destination_rectangle) const
 		this->get_effects(),
 		this->get_layer_depth());
 }
-void AnimationObject::draw(const RectangleF& destination_rectangle) const
+void AnimationObject::draw(SpriteBatch* sprite_batch,
+	const RectangleF& destination_rectangle) const
 {
-	this->draw(destination_rectangle.get_rectangle_i());
+	this->draw(sprite_batch, destination_rectangle.get_rectangle_i());
 }
-void AnimationObject::draw(const Vector2F& position, float scale) const
+void AnimationObject::draw(SpriteBatch* sprite_batch,
+	const Vector2F& position, float scale) const
 {
 	SpriteSheet* sprite_sheet = SpriteSheetObject::get_sprite_sheet();
 
-	sprite_sheet->draw(this->get_sprite_batch(),
+	sprite_sheet->draw(sprite_batch,
 		this->get_source_rectangle(),
 		position,
 		this->get_colour(),
@@ -60,18 +62,20 @@ void AnimationObject::draw(const Vector2F& position, float scale) const
 		this->get_layer_depth());
 
 }
-void AnimationObject::draw(const RectangleF& destination_rectangle,
+void AnimationObject::draw(SpriteBatch* sprite_batch,
+	const RectangleF& destination_rectangle,
 	const Camera& camera) const
 {
 	RectangleF rect = camera.calculate_view_rectangle(destination_rectangle);
-	this->draw(rect);
+	this->draw(sprite_batch, rect);
 }
-void AnimationObject::draw(const Vector2F& position,
+void AnimationObject::draw(SpriteBatch* sprite_batch,
+	const Vector2F& position,
 	const Camera& camera, float scale) const
 {
 	Vector2F view_pos = camera.calculate_view_position(position);
 	float view_scale = camera.calculate_view_scale(scale);
-	this->draw(view_pos, view_scale);
+	this->draw(sprite_batch, view_pos, view_scale);
 }
 
 void AnimationObject::update()

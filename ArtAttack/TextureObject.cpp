@@ -6,24 +6,24 @@ using namespace MattMath;
 
 TextureObject::TextureObject(const std::string& sheet_name,
 	const std::string& frame_name,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
-	SpriteSheetObject(sheet_name, frame_name, sprite_batch, resource_manager,
+	SpriteSheetObject(sheet_name, frame_name, resource_manager,
 		color, rotation, origin, effects, layer_depth)
 {
 
 }
 
-void TextureObject::draw(const RectangleI& destination_rectangle) const
+void TextureObject::draw(SpriteBatch* sprite_batch,
+	const RectangleI& destination_rectangle) const
 {
 	SpriteSheet* sprite_sheet = SpriteSheetObject::get_sprite_sheet();
 
-	sprite_sheet->draw(this->get_sprite_batch(),
+	sprite_sheet->draw(sprite_batch,
 						this->get_element_name(),
 						destination_rectangle,
 						this->get_colour(),
@@ -32,34 +32,38 @@ void TextureObject::draw(const RectangleI& destination_rectangle) const
 						this->get_effects(),
 						this->get_layer_depth());
 }
-void TextureObject::draw(const RectangleF& destination_rectangle)const
+void TextureObject::draw(SpriteBatch* sprite_batch,
+	const RectangleF& destination_rectangle)const
 {
-	this->draw(destination_rectangle.get_rectangle_i());
+	this->draw(sprite_batch, destination_rectangle.get_rectangle_i());
 }
-void TextureObject::draw(const Vector2F& position, float scale) const
+void TextureObject::draw(SpriteBatch* sprite_batch,
+	const Vector2F& position, float scale) const
 {
 	SpriteSheet* sprite_sheet = SpriteSheetObject::get_sprite_sheet();
 	
-	sprite_sheet->draw(this->get_sprite_batch(),
-								this->get_element_name(),
-								position,
-								this->get_colour(),
-								this->get_draw_rotation(),
-								this->get_origin(),
-								scale,
-								this->get_effects(),
-								this->get_layer_depth());
+	sprite_sheet->draw(sprite_batch,
+						this->get_element_name(),
+						position,
+						this->get_colour(),
+						this->get_draw_rotation(),
+						this->get_origin(),
+						scale,
+						this->get_effects(),
+						this->get_layer_depth());
 }
-void TextureObject::draw(const RectangleF& destination_rectangle,
+void TextureObject::draw(SpriteBatch* sprite_batch,
+	const RectangleF& destination_rectangle,
 	const Camera& camera) const
 {
 	RectangleF rect = camera.calculate_view_rectangle(destination_rectangle);
-	this->draw(rect);
+	this->draw(sprite_batch, rect);
 }
-void TextureObject::draw(const Vector2F& position,
+void TextureObject::draw(SpriteBatch* sprite_batch,
+	const Vector2F& position,
 	const Camera& camera, float scale) const
 {
 	Vector2F view_pos = camera.calculate_view_position(position);
 	float view_scale = camera.calculate_view_scale(scale);
-	this->draw(view_pos, view_scale);
+	this->draw(sprite_batch, view_pos, view_scale);
 }

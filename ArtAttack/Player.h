@@ -63,7 +63,6 @@ class Player final : public MovingObject, public ICollisionGameObject,
 public:
     Player(const MattMath::RectangleF& rectangle,
         const PlayerAnimationInfo& animation_info,
-        DirectX::SpriteBatch* sprite_batch,
         ResourceManager* resource_manager,
         int player_num,
         player_team team,
@@ -83,8 +82,8 @@ public:
     void update() override;
     std::vector<std::unique_ptr<ICollisionGameObject>>
         update_weapon_and_get_projectiles() const;
-    void draw(const MattMath::Camera& camera) override;
-    void draw() override;
+    void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Camera& camera) override;
+    void draw(DirectX::SpriteBatch* sprite_batch) override;
 
     bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
 

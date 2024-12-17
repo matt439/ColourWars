@@ -11,7 +11,6 @@ WeaponRoller::WeaponRoller(player_team team,
     const Colour& team_colour,
     wep_type type,
     const Vector2F& player_center,
-    SpriteBatch* sprite_batch,
     ResourceManager* resource_manager,
     const float* dt,
     const Colour& color,
@@ -21,7 +20,7 @@ WeaponRoller::WeaponRoller(player_team team,
     float layer_depth) :
     Weapon(DETAILS_ROLLER,
         team, player_num, team_colour, type, player_center,
-        sprite_batch, resource_manager, dt,
+        resource_manager, dt,
         color, rotation, origin, effects, layer_depth)
 {
 
@@ -57,7 +56,8 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData input,
     }
 }
 
-void WeaponRoller::draw(const Camera& camera, bool debug)
+void WeaponRoller::draw(SpriteBatch* sprite_batch,
+    const Camera& camera, bool debug)
 {
     //draw weapon
     Vector2F draw_pos = this->get_draw_pos();
@@ -96,7 +96,7 @@ void WeaponRoller::draw(const Camera& camera, bool debug)
         DrawObject::set_colour(colour_consts::WHITE);
     }
 
-    TextureObject::draw(draw_rectangle, camera);
+    TextureObject::draw(sprite_batch, draw_rectangle, camera);
 
     if (debug)
     {
@@ -110,6 +110,6 @@ void WeaponRoller::draw(const Camera& camera, bool debug)
         TextureObject::set_effects(SpriteEffects_None);
         TextureObject::set_draw_rotation(0.0f);
 
-        TextureObject::draw(draw_rectangle_noz, camera);
+        TextureObject::draw(sprite_batch, draw_rectangle_noz, camera);
     }
 }

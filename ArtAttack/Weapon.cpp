@@ -11,7 +11,6 @@ Weapon::Weapon(const WeaponDetails& details,
     const Colour& team_colour,
     wep_type type,
     const Vector2F& player_center,
-    SpriteBatch* sprite_batch,
     ResourceManager* resource_manager,
     const float* dt,
     const Colour& color,
@@ -19,11 +18,10 @@ Weapon::Weapon(const WeaponDetails& details,
     const Vector2F& origin,
     SpriteEffects effects,
     float layer_depth) :
-    TextureObject(details.sheet_name, details.frame_name, sprite_batch, resource_manager,
+    TextureObject(details.sheet_name, details.frame_name, resource_manager,
                   color, rotation, origin, effects, layer_depth),
         _details(details),
         _dt(dt),
-        _sprite_batch(sprite_batch),
         _resource_manager(resource_manager),
         _team(team),
         _player_num(player_num),
@@ -35,7 +33,7 @@ Weapon::Weapon(const WeaponDetails& details,
     this->_sound_bank = resource_manager->get_sound_bank(details.sound_bank_name);
 }
 
-void Weapon::draw(const Camera& camera, bool debug)
+void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug)
 {
     //draw weapon
     Vector2F draw_pos = this->get_draw_pos();
@@ -65,7 +63,7 @@ void Weapon::draw(const Camera& camera, bool debug)
     DrawObject::set_effects(effects);
     DrawObject::set_draw_rotation(this->get_rotation());
 
-    TextureObject::draw(draw_rectangle, camera);
+    TextureObject::draw(sprite_batch, draw_rectangle, camera);
 
     if (debug)
     {
@@ -79,12 +77,12 @@ void Weapon::draw(const Camera& camera, bool debug)
         TextureObject::set_effects(SpriteEffects_None);
         TextureObject::set_draw_rotation(0.0f);
 
-        TextureObject::draw(draw_rectangle_noz, camera);
+        TextureObject::draw(sprite_batch, draw_rectangle_noz, camera);
     }
 }
-void Weapon::draw(bool debug)
+void Weapon::draw(SpriteBatch* sprite_batch, bool debug)
 {
-    this->draw(Camera::DEFAULT_CAMERA, debug);
+    this->draw(sprite_batch, Camera::DEFAULT_CAMERA, debug);
 }
 
 Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, rotation_origin origin)
@@ -326,7 +324,6 @@ Weapon::shoot(const Vector2F& shoot_direction) const
         this->get_team_colour(),
         this->get_details().proj_type,
         this->_dt,
-        this->_sprite_batch,
         this->_resource_manager);
 }
 
@@ -500,10 +497,6 @@ float Weapon::get_dt() const
 {
 	return *this->_dt;
 }
-SpriteBatch* Weapon::get_sprite_batch() const
-{
-	return this->_sprite_batch;
-}
 ResourceManager* Weapon::get_resource_manager() const
 {
 	return this->_resource_manager;
@@ -517,7 +510,6 @@ RelativeVelocityWeapon::RelativeVelocityWeapon(
     const Colour& team_colour,
     wep_type type,
     const Vector2F& player_center,
-    DirectX::SpriteBatch* sprite_batch,
     ResourceManager* resource_manager,
     const float* dt,
     const Colour& color,
@@ -526,7 +518,7 @@ RelativeVelocityWeapon::RelativeVelocityWeapon(
     DirectX::SpriteEffects effects,
     float layer_depth) :
     Weapon(details, team, player_num, team_colour, type,
-        player_center, sprite_batch, resource_manager, dt,
+        player_center, resource_manager, dt,
         color, rotation, origin, effects, layer_depth),
     _rel_details(rel_details)
 {
@@ -578,7 +570,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>> RelativeVelocityWeapon::shoot
         this->get_team_colour(),
         this->get_details().proj_type,
         this->get_dt_ptr(),
-        this->get_sprite_batch(),
         this->get_resource_manager());
 }
 

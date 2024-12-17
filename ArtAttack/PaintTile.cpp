@@ -8,7 +8,6 @@ using namespace paint_tile_consts;
 PaintTile::PaintTile(const RectangleF& rectangle,
 	const std::string& sheet_name,
 	const std::string& frame_name,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const TeamColour& team_colours,
 	const float* dt,
@@ -17,8 +16,7 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
-	TextureObject(sheet_name, frame_name,
-		sprite_batch, resource_manager,
+	TextureObject(sheet_name, frame_name, resource_manager,
 		color, rotation, origin, effects, layer_depth),
 	_rectangle(rectangle),
 	_team_colours(team_colours),
@@ -26,7 +24,6 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 {
 	this->_splash = PaintTileSplash(
 		dt, SPLASH_RECTANGLE, SPLASH_SPRITE_SHEET_NAME, SPLASH_ANIMATION_STRIP_NAME,
-		sprite_batch,
 		resource_manager);
 }
 
@@ -34,7 +31,7 @@ void PaintTile::update()
 {
 	this->_splash.update();
 }
-void PaintTile::draw(const Camera& camera)
+void PaintTile::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
 	switch (this->_team)
 	{
@@ -50,11 +47,11 @@ void PaintTile::draw(const Camera& camera)
 		return;
 	}
 	this->_splash.set_rectangle_center(this->_rectangle.get_center());
-	this->_splash.draw(camera);
+	this->_splash.draw(sprite_batch, camera);
 
-	this->TextureObject::draw(this->_rectangle, camera);
+	this->TextureObject::draw(sprite_batch, this->_rectangle, camera);
 }
-void PaintTile::draw()
+void PaintTile::draw(SpriteBatch* sprite_batch)
 {
     switch (this->_team)
     {
@@ -70,9 +67,9 @@ void PaintTile::draw()
 		return;
 	}
 	this->_splash.set_rectangle_center(this->_rectangle.get_center());
-	this->_splash.draw();
+	this->_splash.draw(sprite_batch);
 
-	this->TextureObject::draw(this->_rectangle);
+	this->TextureObject::draw(sprite_batch, this->_rectangle);
 
 
 }
@@ -158,7 +155,6 @@ PaintTileSplash::PaintTileSplash(const float* dt,
 	const RectangleF& rectangle,
 	const std::string& sheet_name,
 	const std::string& animation_strip_name,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	float rotation,
@@ -166,7 +162,7 @@ PaintTileSplash::PaintTileSplash(const float* dt,
 	SpriteEffects effects,
 	float layer_depth) :
 	AnimationObject(dt, sheet_name, animation_strip_name,
-		sprite_batch, resource_manager,
+		resource_manager,
 		color, rotation, origin, effects, layer_depth),
 	_rectangle(rectangle)
 {
@@ -190,13 +186,13 @@ void PaintTileSplash::update()
 {
 	this->AnimationObject::update();
 }
-void PaintTileSplash::draw(const Camera& camera)
+void PaintTileSplash::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
-	this->AnimationObject::draw(this->_rectangle, camera);
+	this->AnimationObject::draw(sprite_batch, this->_rectangle, camera);
 }
-void PaintTileSplash::draw()
+void PaintTileSplash::draw(SpriteBatch* sprite_batch)
 {
-	this->AnimationObject::draw(this->_rectangle);
+	this->AnimationObject::draw(sprite_batch, this->_rectangle);
 }
 bool PaintTileSplash::is_visible_in_viewport(const RectangleF& view) const
 {

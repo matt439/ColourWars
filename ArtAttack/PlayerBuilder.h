@@ -16,7 +16,6 @@ public:
 		const MenuLevelSettings& settings,
 		const LevelLoadedInfo* load_info,
 		TeamColour team_colours,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const ViewportManager* viewport_manager,
 		const float* dt) const;

@@ -6,14 +6,14 @@ using namespace MattMath;
 using namespace interface_consts;
 using namespace colour_consts;
 
-InterfaceGameplay::InterfaceGameplay(SpriteBatch* sprite_batch,
-	ResourceManager* resource_manager, const float* dt) :
-	Drawer(sprite_batch, resource_manager, dt)
+InterfaceGameplay::InterfaceGameplay(ResourceManager* resource_manager, const float* dt) :
+	Drawer(resource_manager, dt)
 {
 
 }
 
-void InterfaceGameplay::draw_gameplay_interface(const Vector2F& resolution,
+void InterfaceGameplay::draw_gameplay_interface(SpriteBatch* sprite_batch,
+	const Vector2F& resolution,
 	float health,
 	float ammo,
 	float timer,
@@ -23,30 +23,30 @@ void InterfaceGameplay::draw_gameplay_interface(const Vector2F& resolution,
 	bool show_respawn_timer)
 {
 	
-	this->get_sprite_batch()->Begin();
-	this->draw_timer(resolution, timer);
-	this->get_sprite_batch()->End();
+	sprite_batch->Begin();
+	this->draw_timer(sprite_batch, resolution, timer);
+	sprite_batch->End();
 
-	this->get_sprite_batch()->Begin(SpriteSortMode_Deferred, nullptr, sampler_state);
+	sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, sampler_state);
 
 	float x_pos = resolution.x - resolution.x * RIGHT_MARGIN;
 
 	Vector2F ammo_pos = Vector2F(x_pos,
 		resolution.y * AMMO_TOP_MARGIN);
-	this->draw_ammo(resolution, ammo, team_colour, ammo_pos);
+	this->draw_ammo(sprite_batch, resolution, ammo, team_colour, ammo_pos);
 
 	Vector2F health_pos = Vector2F(x_pos,
 		resolution.y * HEALTH_TOP_MARGIN);
-	this->draw_health(resolution, health, health_pos);
+	this->draw_health(sprite_batch, resolution, health, health_pos);
 
 	if (show_respawn_timer)
 	{
-		this->draw_respawn_timer(resolution, respawn_timer);
+		this->draw_respawn_timer(sprite_batch, resolution, respawn_timer);
 	}
-	this->get_sprite_batch()->End();
+	sprite_batch->End();
 }
 
-void InterfaceGameplay::draw_ammo(
+void InterfaceGameplay::draw_ammo(SpriteBatch* sprite_batch,
 	const Vector2F& resolution,
 	float ammo,
 	const Colour& team_colour,
@@ -67,7 +67,7 @@ void InterfaceGameplay::draw_ammo(
 		get_sprite_sheet(SPRITE_SHEET);
 
 	sprite_sheet->draw(
-		this->get_sprite_batch(),
+		sprite_batch,
 		EMPTY_BOX_FRAME,
 		empty_box_rect,
 		WHITE);
@@ -89,12 +89,12 @@ void InterfaceGameplay::draw_ammo(
 		get_sprite_sheet(SPRITE_SHEET);
 
 	sprite_sheet->draw(
-		this->get_sprite_batch(),
+		sprite_batch,
 		FILL_FRAME,
 		fill_rect,
 		team_colour);
 }
-void InterfaceGameplay::draw_health(
+void InterfaceGameplay::draw_health(SpriteBatch* sprite_batch,
 	const Vector2F& resolution,
 	float health,
 	const Vector2F& position) const
@@ -114,7 +114,7 @@ void InterfaceGameplay::draw_health(
 		get_sprite_sheet(SPRITE_SHEET);
 
 	sprite_sheet->draw(
-		this->get_sprite_batch(),
+		sprite_batch,
 		EMPTY_BOX_FRAME,
 		empty_rect,
 		WHITE);
@@ -136,12 +136,13 @@ void InterfaceGameplay::draw_health(
 		get_sprite_sheet(SPRITE_SHEET);
 
 	sprite_sheet->draw(
-		this->get_sprite_batch(),
+		sprite_batch,
 		FILL_FRAME,
 		fill_rect,
 		HEALTH_COLOUR);
 }
-void InterfaceGameplay::draw_timer(const Vector2F& resolution, float timer) const
+void InterfaceGameplay::draw_timer(SpriteBatch* sprite_batch,
+	const Vector2F& resolution, float timer) const
 {
 	Vector2F pos = Vector2F(
 		resolution.x / 2.0f - (resolution.x * TIMER_OFFSET.x),
@@ -153,7 +154,7 @@ void InterfaceGameplay::draw_timer(const Vector2F& resolution, float timer) cons
 		get_sprite_font(TIMER_FONT);
 
 	sprite_font->DrawString(
-		this->get_sprite_batch(),
+		sprite_batch,
 		std::to_string(static_cast<int>(std::ceil(timer))).c_str(),
 		(pos + (TIMER_SHADOW_OFFSET * scale)).get_xm_vector(),
 		TIMER_SHADOW_COLOUR.get_xm_vector(),
@@ -162,7 +163,7 @@ void InterfaceGameplay::draw_timer(const Vector2F& resolution, float timer) cons
 		scale);
 
 	sprite_font->DrawString(
-		this->get_sprite_batch(),
+		sprite_batch,
 		std::to_string(static_cast<int>(std::ceil(timer))).c_str(),
 		pos.get_xm_vector(),
 		TIMER_COLOUR.get_xm_vector(),
@@ -171,7 +172,8 @@ void InterfaceGameplay::draw_timer(const Vector2F& resolution, float timer) cons
 		scale);
 }
 
-void InterfaceGameplay::draw_respawn_timer(const MattMath::Vector2F& resolution,
+void InterfaceGameplay::draw_respawn_timer(SpriteBatch* sprite_batch,
+	const Vector2F& resolution,
 	float timer) const
 {
 	Vector2F pos = Vector2F(
@@ -184,13 +186,13 @@ void InterfaceGameplay::draw_respawn_timer(const MattMath::Vector2F& resolution,
 	std::string text = std::to_string(static_cast<int>(timer) + 1);
 
 	sprite_font->DrawString(
-		this->get_sprite_batch(),
+		sprite_batch,
 		text.c_str(),
 		(pos + RESPAWN_TIMER_SHADOW_OFFSET).get_xm_vector(),
 		RESPAWN_TIMER_SHADOW_COLOUR.get_xm_vector());
 
 	sprite_font->DrawString(
-		this->get_sprite_batch(),
+		sprite_batch,
 		text.c_str(),
 		pos.get_xm_vector(),
 		RESPAWN_TIMER_COLOUR.get_xm_vector());

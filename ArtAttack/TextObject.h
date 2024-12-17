@@ -10,7 +10,6 @@ public:
 	TextObject(const std::string& text,
 		const std::string& font_name,
 		const MattMath::Vector2F& position,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		float scale = 1.0f,
@@ -19,8 +18,9 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
-	virtual void draw(const MattMath::Camera& camera) const;
-	virtual void draw() const;
+	virtual void draw(DirectX::SpriteBatch* sprite_batch,
+		const MattMath::Camera& camera) const;
+	virtual void draw(DirectX::SpriteBatch* sprite_batch) const;
 
 protected:	
 	const std::string& get_text() const;

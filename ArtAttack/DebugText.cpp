@@ -5,18 +5,18 @@ using namespace DirectX;
 using namespace MattMath;
 using namespace debug_text_consts;
 
-DebugText::DebugText(DirectX::SpriteBatch* sprite_batch,
-    ResourceManager* resource_manager,
+DebugText::DebugText(ResourceManager* resource_manager,
     const float* dt,
     const ResolutionManager* resolution_manager) :
-    Drawer(sprite_batch, resource_manager, dt),
+    Drawer(resource_manager, dt),
     _resolution_manager(resolution_manager)
 {
 	
 }
 
 
-void DebugText::draw_debug_info(const Player* player, int num_projectiles) const
+void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
+    const Player* player, int num_projectiles) const
 {
     const PlayerInputData& input = player->get_input();
     
@@ -122,14 +122,14 @@ void DebugText::draw_debug_info(const Player* player, int num_projectiles) const
     SpriteFont* sprite_font = this->get_resource_manager()->get_sprite_font(
         DEBUG_FONT);
 
-    this->get_sprite_batch()->Begin();
+    sprite_batch->Begin();
 
     for (size_t i = 0; i < lines.size(); i++)
     {
         Vector2F shadow_pos = text_pos + DEBUG_SHADOW_OFFSET;
         
         sprite_font->DrawString(
-            this->get_sprite_batch(),
+            sprite_batch,
             lines[i].c_str(),
             shadow_pos.get_xm_vector(),
             DEBUG_SHADOW_COLOR.get_xm_vector(),
@@ -138,7 +138,7 @@ void DebugText::draw_debug_info(const Player* player, int num_projectiles) const
             DEBUG_SHADOW_SCALE);
 
         sprite_font->DrawString(
-            this->get_sprite_batch(),
+            sprite_batch,
             lines[i].c_str(),
             text_pos.get_xm_vector(),
             DEBUG_COLOR.get_xm_vector(),
@@ -149,5 +149,5 @@ void DebugText::draw_debug_info(const Player* player, int num_projectiles) const
         text_pos.y += DEBUG_LINE_SPACING;
     }
 
-    this->get_sprite_batch()->End();
+    sprite_batch->End();
 }

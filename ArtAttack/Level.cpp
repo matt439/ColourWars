@@ -21,12 +21,13 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_coll
 	const std::string& music_name,
 	float music_volume,
 	const float* dt,
-	SpriteBatch* sprite_batch,
 	ID3D11SamplerState* sampler_state,
 	const std::string& level_name,
 	const ResolutionManager* resolution_manager,
 	ViewportManager* viewport_manager,
-	ResourceManager* resource_manager) :
+	ResourceManager* resource_manager,
+	ThreadPool* thread_pool,
+	const Partitioner* partitioner) :
 	_non_collision_objects(std::move(non_collision_objects)),
 	_collision_objects(std::move(collision_objects)),
 	_player_objects(std::move(player_objects)),
@@ -46,14 +47,15 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_coll
 	_team_a_spawns(team_a_spawns),
 	_team_b_spawns(team_b_spawns),
 	_dt(dt),
-	_sprite_batch(sprite_batch),
-	_sampler_state(sampler_state)
+	_sampler_state(sampler_state),
+	_thread_pool(thread_pool),
+	_partitioner(partitioner)
 {
-	this->_debug_text = std::make_unique<DebugText>(sprite_batch,
+	this->_debug_text = std::make_unique<DebugText>(
 		resource_manager, dt, resolution_manager);
 	this->_camera_tools = std::make_unique<CameraTools>();
 	this->_interface_gameplay = std::make_unique<InterfaceGameplay>(
-		sprite_batch, resource_manager, dt);
+		resource_manager, dt);
 	this->_sound_bank = resource_manager->get_sound_bank(sound_bank_name);
 }
 void Level::stop_music() const
@@ -94,7 +96,6 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 				COUNTDOWN_TEXT,
 				COUNTDOWN_FONT_NAME,
 				position,
-				this->_sprite_batch,
 				this->_resource_manager,
 				COUNTDOWN_COLOUR,
 				COUNTDOWN_SHADOW_COLOUR,
@@ -315,143 +316,309 @@ void Level::stop_player_sounds() const
 	}
 
 }
-void Level::draw()
-{		
-	if (this->_state == level_state::START_COUNTDOWN)
+//void Level::draw()
+//{		
+//	if (this->_state == level_state::START_COUNTDOWN)
+//	{
+//		this->draw_active_level();
+//	}
+//	else if (this->_state == level_state::ACTIVE)
+//	{
+//		this->draw_active_level();
+//	}
+//	else if (this->_state == level_state::ZOOM_OUT)
+//	{
+//		this->draw_zoom_out_level();
+//	}
+//	else if (this->_state == level_state::OVERVIEW)
+//	{
+//		this->draw_zoom_out_level();
+//	}
+//	else if (this->_state == level_state::FINISHED)
+//	{
+//		this->draw_zoom_out_level();
+//	}
+//}
+void Level::draw(std::vector<ID3D11DeviceContext*>* deferred_contexts,
+	std::vector<ID3D11CommandList*>* command_lists,
+	std::vector<SpriteBatch*>* sprite_batches) const
+{
+	if (this->_state == level_state::START_COUNTDOWN ||
+		this->_state == level_state::ACTIVE)
 	{
-		this->draw_active_level();
+		this->draw_active_level(deferred_contexts,
+			command_lists,
+			sprite_batches);
 	}
-	else if (this->_state == level_state::ACTIVE)
+	else if (this->_state == level_state::ZOOM_OUT ||
+		this->_state == level_state::OVERVIEW ||
+		this->_state == level_state::FINISHED)
 	{
-		this->draw_active_level();
-	}
-	else if (this->_state == level_state::ZOOM_OUT)
-	{
-		this->draw_zoom_out_level();
-	}
-	else if (this->_state == level_state::OVERVIEW)
-	{
-		this->draw_zoom_out_level();
-	}
-	else if (this->_state == level_state::FINISHED)
-	{
-		this->draw_zoom_out_level();
+		this->draw_zoom_out_level(deferred_contexts,
+			command_lists,
+			sprite_batches);
 	}
 }
-void Level::draw_active_level() const
+
+void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contexts,
+		std::vector<ID3D11CommandList*>* command_lists,
+		std::vector<SpriteBatch*>* sprite_batches) const
 {
-	for (auto& player : *this->_player_objects)
+	int num_threads = this->_thread_pool->get_max_num_threads();
+
+	// partition player objects
+	auto partitioned_players =
+		this->_partitioner->partition(this->_player_objects->size(), num_threads);
+
+	// draw player objects
+	for (int i = 0; i < partitioned_players.size(); i++)
 	{
-		const int player_num = player->get_player_num();
+		this->_thread_pool->add_task([this, i, partitioned_players,
+			deferred_contexts, command_lists, sprite_batches]()
+			{
+				this->draw_player_view_level(partitioned_players[i].first,
+				partitioned_players[i].second,
+				deferred_contexts,
+				command_lists,
+				sprite_batches);
+			});
+	}
+	this->_thread_pool->wait_for_tasks_to_complete();
+}
 
-		// apply player viewport
+//void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contexts,
+//	std::vector<ID3D11CommandList*>* command_lists,
+//	std::vector<SpriteBatch*>* sprite_batches) const
+//{
+//	for (auto& player : *this->_player_objects)
+//	{
+//		const int player_num = player->get_player_num();
+//
+//		// apply player viewport
+//		this->_viewport_manager->apply_player_viewport(
+//			player_num);
+//
+//		const Camera& camera = player->get_camera();
+//		const RectangleF camera_view =
+//			this->_viewport_manager->get_camera_adjusted_player_viewport_rect(
+//				player_num, camera);
+//
+//		this->_sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, this->_sampler_state);
+//
+//		// draw non-collision objects
+//		for (const auto& object : *this->_non_collision_objects)
+//		{
+//			if (object->is_visible_in_viewport(camera_view))
+//			{
+//				object->draw(camera);
+//			}
+//		}
+//		// draw collision objects
+//		for (const auto& object : *this->_collision_objects)
+//		{
+//			if (object->is_visible_in_viewport(camera_view))
+//			{
+//				object->draw(camera);
+//			}
+//		}
+//		// draw player objects
+//		for (const auto& object : *this->_player_objects)
+//		{
+//			if (object->is_visible_in_viewport(camera_view))
+//			{
+//				object->draw(camera);
+//			}
+//		}
+//
+//		// draw viewport dividers
+//		const Viewport player_vp =
+//			this->_viewport_manager->get_player_viewport(player_num);
+//		const auto viewport_camera = Camera(player_vp);
+//		for (const auto& divider : *this->_viewport_dividers)
+//		{
+//			divider->draw(viewport_camera);
+//		}
+//
+//		this->_sprite_batch->End();
+//
+//		const player_state state = player->get_state();
+//
+//		// draw interface
+//		Vector2F viewport_size = player_vp.get_size();
+//
+//		this->_interface_gameplay->draw_gameplay_interface(
+//			viewport_size,
+//			player->get_health(),
+//			player->get_weapon_ammo(),
+//			this->_timer,
+//			player->get_team_colour(),
+//			this->_sampler_state,
+//			player->get_respawn_timer(),
+//			state == player_state::DEAD);
+//
+//		// draw debug info
+//		if (player->get_showing_debug())
+//		{
+//			int num_projectiles = this->count_projectiles();
+//			this->_debug_text->draw_debug_info(player.get(), num_projectiles);
+//		}
+//
+//		this->_sprite_batch->Begin();
+//
+//		// draw countdown text
+//		if (this->_state == level_state::START_COUNTDOWN ||
+//			this->_start_timer > -1.0f)
+//		{
+//			this->_countdown_text->draw(viewport_camera);
+//		}
+//
+//		this->_sprite_batch->End();
+//	}
+//}
+void Level::draw_player_view_level(int start, int end,
+	std::vector<ID3D11DeviceContext*>* deferred_contexts,
+	std::vector<ID3D11CommandList*>* command_lists,
+	std::vector<SpriteBatch*>* sprite_batches) const
+{
+	for (int i = start; i < end; i++)
+	{
+		if (deferred_contexts->at(i)->GetType() != D3D11_DEVICE_CONTEXT_DEFERRED)
+		{
+			throw std::exception("Deferred context not created");
+		}
+
+		const int player_num = this->_player_objects->at(i)->get_player_num();
+
 		this->_viewport_manager->apply_player_viewport(
-			player_num);
+			player_num, deferred_contexts->at(i), sprite_batches->at(i));
 
-		const Camera& camera = player->get_camera();
+		const Camera& camera = this->_player_objects->at(i)->get_camera();
 		const RectangleF camera_view =
 			this->_viewport_manager->get_camera_adjusted_player_viewport_rect(
 				player_num, camera);
 
-		this->_sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, this->_sampler_state);
+		sprite_batches->at(i)->Begin(SpriteSortMode_Deferred, nullptr, this->_sampler_state);
 
 		// draw non-collision objects
-		for (const auto& object : *this->_non_collision_objects)
+		for (auto& object : *this->_non_collision_objects)
 		{
 			if (object->is_visible_in_viewport(camera_view))
 			{
-				object->draw(camera);
+				object->draw(sprite_batches->at(i), camera);
 			}
 		}
+
 		// draw collision objects
-		for (const auto& object : *this->_collision_objects)
+		for (auto& object : *this->_collision_objects)
 		{
 			if (object->is_visible_in_viewport(camera_view))
 			{
-				object->draw(camera);
+				object->draw(sprite_batches->at(i), camera);
 			}
 		}
+
 		// draw player objects
-		for (const auto& object : *this->_player_objects)
+		for (auto& object : *this->_player_objects)
 		{
 			if (object->is_visible_in_viewport(camera_view))
 			{
-				object->draw(camera);
+				object->draw(sprite_batches->at(i), camera);
 			}
 		}
 
 		// draw viewport dividers
 		const Viewport player_vp =
 			this->_viewport_manager->get_player_viewport(player_num);
-		const auto viewport_camera = Camera(player_vp);
-		for (const auto& divider : *this->_viewport_dividers)
+
+		const Camera viewport_camera = Camera(player_vp);
+
+		for (auto& divider : *this->_viewport_dividers)
 		{
-			divider->draw(viewport_camera);
+			divider->draw(sprite_batches->at(i), viewport_camera);
 		}
 
-		this->_sprite_batch->End();
+		sprite_batches->at(i)->End();
 
-		const player_state state = player->get_state();
+		const player_state state =  this->_player_objects->at(i)->get_state();
 
 		// draw interface
 		Vector2F viewport_size = player_vp.get_size();
 
 		this->_interface_gameplay->draw_gameplay_interface(
+			sprite_batches->at(i),
 			viewport_size,
-			player->get_health(),
-			player->get_weapon_ammo(),
+			this->_player_objects->at(i)->get_health(),
+			this->_player_objects->at(i)->get_weapon_ammo(),
 			this->_timer,
-			player->get_team_colour(),
+			this->_player_objects->at(i)->get_team_colour(),
 			this->_sampler_state,
-			player->get_respawn_timer(),
+			this->_player_objects->at(i)->get_respawn_timer(),
 			state == player_state::DEAD);
 
 		// draw debug info
-		if (player->get_showing_debug())
+		if (true)
 		{
 			int num_projectiles = this->count_projectiles();
-			this->_debug_text->draw_debug_info(player.get(), num_projectiles);
+
+			this->_debug_text->draw_debug_info(sprite_batches->at(i),
+				this->_player_objects->at(i).get(), num_projectiles);
 		}
 
-		this->_sprite_batch->Begin();
-
-		// draw countdown text
-		if (this->_state == level_state::START_COUNTDOWN ||
-			this->_start_timer > -1.0f)
+		HRESULT hr = deferred_contexts->at(i)->FinishCommandList(FALSE, &command_lists->at(i));
+		if (FAILED(hr))
 		{
-			this->_countdown_text->draw(viewport_camera);
+			throw std::exception("Failed to finish command list");
 		}
-
-		this->_sprite_batch->End();
 	}
 }
-void Level::draw_zoom_out_level() const
+
+void Level::draw_zoom_out_level(std::vector<ID3D11DeviceContext*>* deferred_contexts,
+	std::vector<ID3D11CommandList*>* command_lists,
+	std::vector<SpriteBatch*>* sprite_batches) const
+{
+	int num_threads = this->_thread_pool->get_max_num_threads();
+
+	this->_thread_pool->add_task([this, deferred_contexts, command_lists, sprite_batches]()
+		{
+			this->draw_zoom_out_level_component(deferred_contexts, command_lists, sprite_batches);
+		});
+	
+	this->_thread_pool->wait_for_tasks_to_complete();
+}
+
+void Level::draw_zoom_out_level_component(
+	std::vector<ID3D11DeviceContext*>* deferred_contexts,
+	std::vector<ID3D11CommandList*>* command_lists,
+	std::vector<DirectX::SpriteBatch*>* sprite_batches) const
 {
 	this->_viewport_manager->set_layout(screen_layout::ONE_PLAYER);
 	this->_viewport_manager->apply_player_viewport(0);
 
 	const Camera& camera = this->_zoom_out_camera;
 
-	this->_sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, this->_sampler_state);
+	SpriteBatch* sprite_batch = sprite_batches->at(0);
+
+	sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, this->_sampler_state);
 
 	// draw non-collision objects
 	for (const auto& object : *this->_non_collision_objects)
 	{
-		object->draw(camera);
+		object->draw(sprite_batch, camera);
 	}
 	// draw collision objects
 	for (const auto& object : *this->_collision_objects)
 	{
-		object->draw(camera);
+		object->draw(sprite_batch, camera);
 	}
 	// draw player objects
 	for (const auto& object : *this->_player_objects)
 	{
-		object->draw(camera);
+		object->draw(sprite_batch, camera);
 	}
 
-	this->_sprite_batch->End();
+	sprite_batch->End();
 }
+
 level_state Level::get_state() const
 {
 	return this->_state;

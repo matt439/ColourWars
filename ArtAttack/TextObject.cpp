@@ -7,7 +7,6 @@ using namespace MattMath;
 TextObject::TextObject(const std::string& text,
 	const std::string& font_name,
 	const Vector2F& position,
-	 SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	float scale,
@@ -15,7 +14,7 @@ TextObject::TextObject(const std::string& text,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
-	DrawObject(sprite_batch, resource_manager, color,
+	DrawObject(resource_manager, color,
 		rotation, origin, effects, layer_depth),
 	_text(text),
 	_font_name(font_name),
@@ -25,7 +24,7 @@ TextObject::TextObject(const std::string& text,
 
 }
 
-void TextObject::draw(const Camera& camera) const
+void TextObject::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {
 	const SpriteFont* sprite_font =
 		this->get_resource_manager()->get_sprite_font(this->_font_name);
@@ -34,7 +33,7 @@ void TextObject::draw(const Camera& camera) const
 	float view_scale = camera.calculate_view_scale(this->_scale);
 
 	sprite_font->DrawString(
-		this->get_sprite_batch(),
+		sprite_batch,
 		this->_text.c_str(),
 		view_pos.get_xm_vector(),
 		this->get_colour().get_xm_vector(),
@@ -45,13 +44,13 @@ void TextObject::draw(const Camera& camera) const
 		this->get_layer_depth());
 }
 
-void TextObject::draw() const
+void TextObject::draw(SpriteBatch* sprite_batch) const
 {
 	const SpriteFont* sprite_font =
 		this->get_resource_manager()->get_sprite_font(this->_font_name);
 
 	sprite_font->DrawString(
-		this->get_sprite_batch(),
+		sprite_batch,
 		this->_text.c_str(),
 		this->_position.get_xm_vector(),
 		this->get_colour().get_xm_vector(),

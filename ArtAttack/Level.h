@@ -15,6 +15,9 @@
 #include "TextDropShadow.h"
 #include "SoundBank.h"
 #include "IPaintableGameObject.h"
+#include "ResourceManager.h"
+#include "ThreadPool.h"
+#include "Partitioner.h"
 
 enum class level_state
 {
@@ -68,15 +71,18 @@ public:
 		const std::string& music_name,
 		float music_volume,
 		const float* dt,
-		DirectX::SpriteBatch* sprite_batch,
 		ID3D11SamplerState* sampler_state,
 		const std::string& level_name,
 		const ResolutionManager* resolution_manager,
 		ViewportManager* viewport_manager,
-		ResourceManager* resource_manager);
+		ResourceManager* resource_manager,
+		ThreadPool* thread_pool,
+		const Partitioner* partitioner);
 
 	void update(const std::vector<PlayerInputData>& player_inputs);
-	void draw();
+	void draw(std::vector<ID3D11DeviceContext*>* deferred_contexts,
+		std::vector<ID3D11CommandList*>* command_lists,
+		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
 
 	level_state get_state() const;
 	void set_state(level_state state);
@@ -132,11 +138,13 @@ private:
 
 	level_state _state = level_state::START_COUNTDOWN;
 	const float* _dt = nullptr;
-	DirectX::SpriteBatch* _sprite_batch = nullptr;
 	ID3D11SamplerState* _sampler_state = nullptr;
 
 	std::vector<PlayerInputData> _player_inputs = std::vector<PlayerInputData>();
 	std::unique_ptr<DebugText> _debug_text = nullptr;
+
+	ThreadPool* _thread_pool = nullptr;
+	const Partitioner* _partitioner = nullptr;
 
 	int count_projectiles() const;
 	float get_dt() const;
@@ -145,12 +153,26 @@ private:
 
 	void update_level_logic(const std::vector<PlayerInputData>& player_inputs) const;
 
-	void draw_active_level() const;
-	void draw_zoom_out_level() const;
+	void draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contexts,
+		std::vector<ID3D11CommandList*>* command_lists,
+		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
+
+	void draw_zoom_out_level(std::vector<ID3D11DeviceContext*>* deferred_contexts,
+		std::vector<ID3D11CommandList*>* command_lists,
+		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
 
 	float zoom_out_camera_ratio() const;
 
 	void stop_player_sounds() const;
+
+	void draw_player_view_level(int start, int end,
+		std::vector<ID3D11DeviceContext*>* deferred_contexts,
+		std::vector<ID3D11CommandList*>* command_lists,
+		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
+
+	void draw_zoom_out_level_component(std::vector<ID3D11DeviceContext*>* deferred_contexts,
+		std::vector<ID3D11CommandList*>* command_lists,
+		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
 };
 
 #endif

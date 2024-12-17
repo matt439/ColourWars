@@ -11,15 +11,13 @@ ProjectileMist::ProjectileMist(const RectangleF& rectangle,
 	int player_num,
 	const Colour& team_colour,
 	const float* dt,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
 	DiffusingProjectile(velocity, team, player_num, team_colour,
-		SPRAY, dt,
-		sprite_batch, resource_manager,
+		SPRAY, dt, resource_manager,
 		DETAILS_MIST, DIFFUSION_DETAILS_MIST,
 		team_colour, rotation, origin, effects, layer_depth),
 	_rectangle(rectangle)
@@ -43,13 +41,13 @@ void ProjectileMist::update()
 
 	AnimationObject::update();
 }
-void ProjectileMist::draw(const Camera& camera)
+void ProjectileMist::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
-	this->AnimationObject::draw(this->_rectangle, camera);
+	this->AnimationObject::draw(sprite_batch, this->_rectangle, camera);
 }
-void ProjectileMist::draw()
+void ProjectileMist::draw(SpriteBatch* sprite_batch)
 {
-	this->AnimationObject::draw(this->_rectangle);
+	this->AnimationObject::draw(sprite_batch, this->_rectangle);
 }
 bool ProjectileMist::is_visible_in_viewport(const RectangleF& view) const
 {

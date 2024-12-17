@@ -11,15 +11,13 @@ ProjectileJet::ProjectileJet(const RectangleF& rectangle,
 	int player_num,
 	const Colour& team_colour,
 	const float* dt,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
-		JET, dt,
-		sprite_batch, resource_manager,
+		JET, dt, resource_manager,
 		DETAILS_JET,
 		team_colour, rotation, origin, effects, layer_depth),
 	_rectangle(rectangle)
@@ -41,13 +39,13 @@ void ProjectileJet::update()
 
 	AnimationObject::update();
 }
-void ProjectileJet::draw(const Camera& camera)
+void ProjectileJet::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
-	this->AnimationObject::draw(this->_rectangle, camera);
+	this->AnimationObject::draw(sprite_batch, this->_rectangle, camera);
 }
-void ProjectileJet::draw()
+void ProjectileJet::draw(SpriteBatch* sprite_batch)
 {
-	this->AnimationObject::draw(this->_rectangle);
+	this->AnimationObject::draw(sprite_batch, this->_rectangle);
 }
 bool ProjectileJet::is_visible_in_viewport(const RectangleF& view) const
 {

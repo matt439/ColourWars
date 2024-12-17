@@ -8,7 +8,6 @@ using namespace colour_consts;
 
 Player::Player(const RectangleF& rectangle,
     const PlayerAnimationInfo& animation_info,
-    SpriteBatch* sprite_batch,
     ResourceManager* resource_manager,
     int player_num,
     player_team team,
@@ -26,9 +25,9 @@ Player::Player(const RectangleF& rectangle,
     float layer_depth) :
     MovingObject(velocity),
     AnimationObject(dt, animation_info.sprite_sheet,
-                    animation_info.animation, sprite_batch,
+                    animation_info.animation,
                     resource_manager, DEFAULT_PLAYER_COLOUR, rotation, origin, effects, layer_depth),
-    TextureObject(animation_info.sprite_sheet, animation_info.uniform_texture, sprite_batch,
+    TextureObject(animation_info.sprite_sheet, animation_info.uniform_texture,
                   resource_manager, team_colour, rotation, origin, effects, layer_depth),
     _primary(std::move(primary_weapon)),
     _player_num(player_num),
@@ -45,7 +44,7 @@ Player::Player(const RectangleF& rectangle,
     this->_sound_bank = resource_manager->get_sound_bank(SOUND_BANK);
 }
 
-void Player::draw(const Camera& camera)
+void Player::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
     if (this->_state == player_state::DEAD)
     {
@@ -82,17 +81,17 @@ void Player::draw(const Camera& camera)
     }
 
     TextureObject::set_effects(effects);
-    TextureObject::draw(this->_rectangle, camera);
+    TextureObject::draw(sprite_batch, this->_rectangle, camera);
 
     AnimationObject::set_effects(effects);
-    AnimationObject::draw(this->_rectangle, camera);
+    AnimationObject::draw(sprite_batch, this->_rectangle, camera);
 
-    this->_primary->draw(camera, this->_showing_debug);
+    this->_primary->draw(sprite_batch, camera, this->_showing_debug);
 }
-void Player::draw()
+void Player::draw(SpriteBatch* sprite_batch)
 {
-    AnimationObject::draw(this->_rectangle, Camera::DEFAULT_CAMERA);
-	this->_primary->draw(Camera::DEFAULT_CAMERA);
+    AnimationObject::draw(sprite_batch, this->_rectangle, Camera::DEFAULT_CAMERA);
+	this->_primary->draw(sprite_batch, Camera::DEFAULT_CAMERA);
 }
 collision_object_type Player::get_collision_object_type() const
 {

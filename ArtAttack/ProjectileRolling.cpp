@@ -11,15 +11,13 @@ ProjectileRolling::ProjectileRolling(const RectangleF& rectangle,
 	int player_num,
 	const Colour& team_colour,
 	const float* dt,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
-		ROLLING, dt,
-		sprite_batch, resource_manager,
+		ROLLING, dt, resource_manager,
 		DETAILS_ROLLING,
 		team_colour, rotation, origin, effects, layer_depth),
 	_rectangle(rectangle)
@@ -35,11 +33,11 @@ void ProjectileRolling::update()
 	Projectile::update_movement(details.gravity,
 		details.wind_resistance);
 }
-void ProjectileRolling::draw(const Camera& camera)
+void ProjectileRolling::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
 	// do nothing
 }
-void ProjectileRolling::draw()
+void ProjectileRolling::draw(SpriteBatch* sprite_batch)
 {
 	// do nothing
 }

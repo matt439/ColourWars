@@ -11,15 +11,13 @@ ProjectileBall::ProjectileBall(const RectangleF& rectangle,
 	int player_num,
 	const Colour& team_colour,
 	const float* dt,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
-		BALL, dt,
-		sprite_batch, resource_manager,
+		BALL, dt, resource_manager,
 		DETAILS_BALL,
 		team_colour, rotation, origin, effects, layer_depth),
 	_rectangle(rectangle)
@@ -41,13 +39,14 @@ void ProjectileBall::update()
 
 	AnimationObject::update();
 }
-void ProjectileBall::draw(const Camera& camera)
+void ProjectileBall::draw(SpriteBatch* sprite_batch,
+	const Camera& camera)
 {
-	this->AnimationObject::draw(this->_rectangle, camera);
+	this->AnimationObject::draw(sprite_batch, this->_rectangle, camera);
 }
-void ProjectileBall::draw()
+void ProjectileBall::draw(SpriteBatch* sprite_batch)
 {
-	this->AnimationObject::draw(this->_rectangle);
+	this->AnimationObject::draw(sprite_batch, this->_rectangle);
 }
 bool ProjectileBall::is_visible_in_viewport(const RectangleF& view) const
 {

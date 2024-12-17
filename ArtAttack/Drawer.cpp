@@ -4,38 +4,39 @@
 using namespace DirectX;
 using namespace MattMath;
 
-Drawer::Drawer(SpriteBatch* sprite_batch,
-    ResourceManager* resource_manager,
+Drawer::Drawer(ResourceManager* resource_manager,
     const float* dt) :
-    _sprite_batch(sprite_batch),
     _resource_manager(resource_manager),
     _dt(dt)
 {
-	
 }
 
-SpriteBatch* Drawer::get_sprite_batch() const
+void Drawer::set_resource_manager(ResourceManager* resource_manager)
 {
-	return this->_sprite_batch;
+    this->_resource_manager = resource_manager;
+}
+void Drawer::set_dt(const float* dt)
+{
+    this->_dt = dt;
 }
 
 ResourceManager* Drawer::get_resource_manager() const
 {
-	return this->_resource_manager;
+    return this->_resource_manager;
 }
 
 float Drawer::get_dt() const
 {
-	return *this->_dt;
+    return *this->_dt;
 }
 
 RectangleI Drawer::calculate_draw_rectangle(const RectangleI& rec,
     const Vector3F& camera)
 {
-    return calculate_draw_rectangle(
-		Vector2F(static_cast<float>(rec.x), static_cast<float>(rec.y)),
-		Vector2F(static_cast<float>(rec.width), static_cast<float>(rec.height)),
-		camera);
+    return this->calculate_draw_rectangle(
+        Vector2F(static_cast<float>(rec.x), static_cast<float>(rec.y)),
+        Vector2F(static_cast<float>(rec.width), static_cast<float>(rec.height)),
+        camera);
 }
 
 RectangleI Drawer::calculate_draw_rectangle(const Vector2F& position,
@@ -44,7 +45,7 @@ RectangleI Drawer::calculate_draw_rectangle(const Vector2F& position,
     Vector2F draw_pos = (position - Vector2F(camera.x, camera.y)) * camera.z;
     Vector2F draw_size = Vector2F(size) * camera.z;
     return {
-	    static_cast<int>(draw_pos.x),
+        static_cast<int>(draw_pos.x),
         static_cast<int>(draw_pos.y),
         static_cast<int>(draw_size.x),
         static_cast<int>(draw_size.y)
@@ -59,10 +60,8 @@ Vector2F Drawer::calculate_sprite_origin(
     case rotation_origin::CENTER:
         return Vector2F(size) / 2.0f;
     case rotation_origin::LEFT_CENTER:
-        return {0.0f, size.y / 2.0f};
-    case rotation_origin::TOP_LEFT:
+        return { 0.0f, size.y / 2.0f };
+    default: // rotation_origin::TOP_LEFT
         return Vector2F::ZERO;
-    default:
-		return Vector2F::ZERO;
     }
 }

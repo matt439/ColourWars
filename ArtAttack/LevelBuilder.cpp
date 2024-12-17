@@ -7,12 +7,10 @@ using namespace rapidjson;
 
 LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	const float* dt,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	ID3D11SamplerState* sampler_state,
 	ResolutionManager* resolution_manager) :
 	_resource_manager(resource_manager),
-	_sprite_batch(sprite_batch),
 	_dt(dt),
 	_viewport_manager(viewport_manager),
 	_sampler_state(sampler_state),
@@ -22,7 +20,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	this->_player_builder = std::make_unique<PlayerBuilder>();
 
 	this->_level_object_builder = std::make_unique<LevelObjectBuilder>(
-		this->_resource_manager, this->_sprite_batch, this->_dt);
+		this->_resource_manager, this->_dt);
 }
 
 std::unique_ptr<Level>
@@ -47,7 +45,7 @@ std::unique_ptr<Level>
 
 	std::unique_ptr<std::vector<std::unique_ptr<Player>>> players =
 		this->_player_builder->build_players(settings, load_info, team_colours,
-			this->_sprite_batch, this->_resource_manager, this->_viewport_manager,
+			this->_resource_manager, this->_viewport_manager,
 			this->_dt);
 
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers =
@@ -71,7 +69,6 @@ std::unique_ptr<Level>
 		load_info->get_music_name(),
 		load_info->get_music_volume(),
 		this->_dt,
-		this->_sprite_batch,
 		this->_sampler_state,
 		load_info->get_level_name(),
 		this->_resolution_manager,

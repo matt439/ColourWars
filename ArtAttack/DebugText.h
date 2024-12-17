@@ -21,12 +21,12 @@ namespace debug_text_consts
 class DebugText : public Drawer
 {
 public:
-	DebugText(DirectX::SpriteBatch* sprite_batch,
-		ResourceManager* resource_manager,
+	DebugText(ResourceManager* resource_manager,
 		const float* dt,
 		const ResolutionManager* resolution_manager);
 
-	void draw_debug_info(const Player* player, int num_projectiles) const;
+	void draw_debug_info(DirectX::SpriteBatch* sprite_batch,
+		const Player* player, int num_projectiles) const;
 
 private:
 	const ResolutionManager* _resolution_manager = nullptr;

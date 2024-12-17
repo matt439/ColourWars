@@ -11,7 +11,6 @@ public:
 	AnimationObject(const float* dt,
 		const std::string& sheet_name,
 		const std::string& animation_strip_name,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
@@ -32,14 +31,18 @@ protected:
 	void set_animation_strip_and_reset(const std::string& sprite_sheet,
 		const std::string& animation_strip);
 
-	virtual void draw(const MattMath::RectangleI& destination_rectangle) const;
-	virtual void draw(const MattMath::RectangleF& destination_rectangle) const;
-	virtual void draw(const MattMath::Vector2F& position,
+	virtual void draw(DirectX::SpriteBatch* sprite_batch,
+		const MattMath::RectangleI& destination_rectangle) const;
+	virtual void draw(DirectX::SpriteBatch* sprite_batch,
+		const MattMath::RectangleF& destination_rectangle) const;
+	virtual void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Vector2F& position,
 		float scale = 1.0f) const;
 
-	virtual void draw(const MattMath::RectangleF& destination_rectangle,
+	virtual void draw(DirectX::SpriteBatch* sprite_batch,
+		const MattMath::RectangleF& destination_rectangle,
 		const MattMath::Camera& camera) const;
-	virtual void draw(const MattMath::Vector2F& position,
+	virtual void draw(DirectX::SpriteBatch* sprite_batch,
+		const MattMath::Vector2F& position,
 		const MattMath::Camera& camera, float scale = 1.0f) const;
 
 private:

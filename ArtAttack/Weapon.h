@@ -20,7 +20,6 @@ public:
 		const MattMath::Colour& team_colour,
 		wep_type type,
 		const MattMath::Vector2F& player_center,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const float* dt,
 		const MattMath::Colour& color = colour_consts::WHITE,
@@ -29,8 +28,9 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
-	virtual void draw(const MattMath::Camera& camera, bool debug = false);
-	virtual void draw(bool debug = false);
+	virtual void draw(DirectX::SpriteBatch* sprite_batch,
+		const MattMath::Camera& camera, bool debug = false);
+	virtual void draw(DirectX::SpriteBatch* sprite_batch, bool debug = false);
 
 	virtual std::vector<std::unique_ptr<ICollisionGameObject>>
 		update_and_get_projectiles(PlayerInputData input,
@@ -115,14 +115,12 @@ protected:
 	ProjectileBuilder* get_projectile_builder() const;
 	const float* get_dt_ptr() const;
 	float get_dt() const;
-	DirectX::SpriteBatch* get_sprite_batch() const override;
 	ResourceManager* get_resource_manager() const override;
 	const std::string& get_sound_effect_instance_name() const;
 
 private:
 	std::unique_ptr<ProjectileBuilder> _proj_builder = nullptr;
 	const float* _dt = nullptr;
-	DirectX::SpriteBatch* _sprite_batch = nullptr;
 	ResourceManager* _resource_manager = nullptr;
 
 	float _ammo = weapon_consts::STARTING_AMMO;
@@ -154,7 +152,6 @@ public:
 		const MattMath::Colour& team_colour,
 		wep_type type,
 		const MattMath::Vector2F& player_center,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const float* dt,
 		const MattMath::Colour& color = colour_consts::WHITE,

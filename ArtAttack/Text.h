@@ -10,7 +10,6 @@ public:
 	Text(const std::string& text,
 		const std::string& font_name,
 		const MattMath::Vector2F& position,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		float scale = 1.0f,

@@ -29,7 +29,6 @@ public:
 	StructurePaintable(const std::string& sheet_name,
 		const std::string& frame_name,
 		const MattMath::RectangleF& rectangle,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		collision_object_type collision_type,
 		const TeamColour& team_colours,
@@ -42,8 +41,8 @@ public:
 		float layer_depth = 0.0f);
 
 	void update() override;
-	void draw(const MattMath::Camera& camera) override;
-	void draw() override;
+	void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Camera& camera) override;
+	void draw(DirectX::SpriteBatch* sprite_batch) override;
 	void on_collision(const ICollisionGameObject* other) override;
 
 	PaintTotal get_paint_total() const override;

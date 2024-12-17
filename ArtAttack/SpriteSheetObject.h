@@ -9,7 +9,6 @@ public:
 	SpriteSheetObject() = default;
 	SpriteSheetObject(const std::string& sheet_name,
 		const std::string& element_name,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,

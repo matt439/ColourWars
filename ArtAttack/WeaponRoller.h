@@ -11,7 +11,6 @@ public:
 		const MattMath::Colour& team_colour,
 		wep_type type,
 		const MattMath::Vector2F& player_center,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const float* dt,
 		const MattMath::Colour& color = colour_consts::WHITE,
@@ -26,7 +25,8 @@ private:
 		const MattMath::Vector2F& player_velocity,
 		bool player_facing_right) override;
 
-	void draw(const MattMath::Camera& camera, bool debug) override;
+	void draw(DirectX::SpriteBatch* sprite_batch,
+		const MattMath::Camera& camera, bool debug) override;
 };
 
 #endif // !WEAPONROLLER_H

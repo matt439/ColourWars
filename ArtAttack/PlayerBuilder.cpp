@@ -14,7 +14,6 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 	const MenuLevelSettings& settings,
 	const LevelLoadedInfo* load_info,
 	TeamColour team_colours,
-	DirectX::SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const ViewportManager* viewport_manager,
 	const float* dt) const
@@ -41,7 +40,6 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 		auto player = std::make_unique<Player>(
 			rect,
 			DEFAULT_ANIMATION_INFO,
-			sprite_batch,
 			resource_manager,
 			setting.num,
 			setting.team,
@@ -52,7 +50,6 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 				team_colours.get_team_colour(setting.team),
 				setting.weapon,
 				rect.get_center(),
-				sprite_batch,
 				resource_manager,
 				dt),
 			wep_type::GRENADE_STD,
