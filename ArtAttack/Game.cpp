@@ -237,9 +237,12 @@ void Game::create_device_dependent_resources()
     _states = std::make_unique<CommonStates>(device);
     this->_data->set_common_states(_states.get());
 
+	this->_partitioner = std::make_unique<Partitioner>();
+	this->_data->set_partitioner(this->_partitioner.get());
+
     this->_resource_loader->load_all_resources();
 
-    device;
+    // device;
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.

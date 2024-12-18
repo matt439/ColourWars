@@ -77,20 +77,19 @@ ResourceManager* MenuPage::get_resource_manager() const
 {
 	return this->_data->get_resource_manager();
 }
-SpriteBatch* MenuPage::get_sprite_batch() const
-{
-	return this->_data->get_sprite_batches()->at(0);
-}
+//SpriteBatch* MenuPage::get_sprite_batch() const
+//{
+//	return this->_data->get_sprite_batches()->at(0);
+//}
 ViewportManager* MenuPage::get_viewport_manager() const
 {
 	return this->_data->get_viewport_manager();
 }
 
-void MenuPage::draw_mobject_in_viewports(MObject* widget,
+void MenuPage::draw_mobject_in_viewports(SpriteBatch* sprite_batch,
+	MObject* widget,
 	ID3D11SamplerState* sampler_state)
 {
-	SpriteBatch* sprite_batch = this->get_sprite_batch();
-
 	std::vector<Viewport> viewports =
 	 	this->get_viewport_manager()->get_all_viewports();
 
@@ -100,12 +99,10 @@ void MenuPage::draw_mobject_in_viewports(MObject* widget,
 		this->get_viewport_manager()->apply_player_viewport(i);
 		sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, sampler_state);
 
-		widget->draw(viewports[i]);
+		widget->draw(sprite_batch, viewports[i]);
 
 		sprite_batch->End();
 	}
-
-	// TODO: alter this to use deferred and immediate contexts
 }
 ID3D11SamplerState* MenuPage::get_point_clamp_sampler_state() const
 {

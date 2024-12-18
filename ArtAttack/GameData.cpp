@@ -13,7 +13,8 @@ GameData::GameData(const GameData* game_data) :
     _viewport_manager(game_data->get_viewport_manager()),
     _common_states(game_data->get_common_states()),
 	_sprite_batches(game_data->get_sprite_batches()),
-	_thread_pool(game_data->get_thread_pool())
+	_thread_pool(game_data->get_thread_pool()),
+	_partitioner(game_data->get_partitioner())
 {
 
 }
@@ -142,4 +143,14 @@ ThreadPool* GameData::get_thread_pool() const
 {
 	return this->_thread_pool;
 	return this->_thread_pool;
+}
+
+void GameData::set_partitioner(const Partitioner* partitioner)
+{
+	this->_partitioner = partitioner;
+}
+
+const Partitioner* GameData::get_partitioner() const
+{
+	return this->_partitioner;
 }

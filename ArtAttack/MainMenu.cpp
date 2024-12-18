@@ -35,11 +35,28 @@ MainMenuTitle::MainMenuTitle(MainMenuData* data) :
 
 void MainMenuTitle::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
+	auto deferred_contexts = this->get_data()->get_device_resources()->get_deferred_contexts();
+	std::vector<ID3D11CommandList*> command_lists(deferred_contexts->size(), nullptr);
+	auto sprite_batches = this->get_data()->get_sprite_batches();
+	
+	this->draw_mobject_in_viewports(sprite_batch, this->_texture_container.get(),
 		this->get_point_clamp_sampler_state());
 
 	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	this->draw_mobject_in_viewports(sprite_batch, this->_text_container.get());
+
+	auto immediate_context = this->get_data()->get_device_resources()->GetD3DDeviceContext();
+
+	for (int i = 0; i < command_lists.size(); i++)
+	{
+		if (command_lists[i] == nullptr)
+		{
+			continue;
+		}
+
+		immediate_context->ExecuteCommandList(command_lists[i], FALSE);
+		command_lists[i]->Release();
+	}
 }
 void MainMenuTitle::update()
 {
@@ -63,7 +80,6 @@ void MainMenuTitle::init()
 		"sprite_sheet_1",
 		"square_white_4",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		TITLE_BACKGROUND_COLOUR);
 
@@ -72,7 +88,6 @@ void MainMenuTitle::init()
 		"Colour Wars",
 		TITLE_FONT,
 		Vector2F(200.0f, 300.0f),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		TITLE_TEXT_COLOUR,
 		SHADOW_COLOUR,
@@ -83,7 +98,6 @@ void MainMenuTitle::init()
 		"Start",
 		ITEM_FONT,
 		Vector2F(250.0f, 700.0f),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		TITLE_START_TEXT_COLOUR,
 		SHADOW_COLOUR,
@@ -208,7 +222,6 @@ void MainMenuHome::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HOME_BACKGROUND_COLOUR);
 
@@ -217,7 +230,6 @@ void MainMenuHome::init()
 		"Main Menu",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -228,7 +240,6 @@ void MainMenuHome::init()
 		"Play",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
@@ -239,7 +250,6 @@ void MainMenuHome::init()
 		"Options",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -250,7 +260,6 @@ void MainMenuHome::init()
 		"Exit",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -463,7 +472,6 @@ void MainMenuOptions::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		OPTIONS_BACKGROUND_COLOUR);
 
@@ -472,7 +480,6 @@ void MainMenuOptions::init()
 		"Options",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -483,7 +490,6 @@ void MainMenuOptions::init()
 		"Resolution",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
@@ -494,7 +500,6 @@ void MainMenuOptions::init()
 		"null",
 		ITEM_FONT,
 		this->calculate_widget_position(2, 2),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		OPTIONS_VALUE_COLOUR,
 		SHADOW_COLOUR,
@@ -507,7 +512,6 @@ void MainMenuOptions::init()
 		"Fullscreen",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -518,7 +522,6 @@ void MainMenuOptions::init()
 		"null",
 		ITEM_FONT,
 		this->calculate_widget_position(2, 3),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		OPTIONS_VALUE_COLOUR,
 		SHADOW_COLOUR,
@@ -531,7 +534,6 @@ void MainMenuOptions::init()
 		"Apply",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -542,7 +544,6 @@ void MainMenuOptions::init()
 		"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -774,7 +775,6 @@ void MainMenuModeSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -783,7 +783,6 @@ void MainMenuModeSelect::init()
 		"Mode Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -794,7 +793,6 @@ void MainMenuModeSelect::init()
 		"Standard",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
@@ -805,7 +803,6 @@ void MainMenuModeSelect::init()
 		"Team Deathmatch",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -816,7 +813,6 @@ void MainMenuModeSelect::init()
 		"Deathmatch",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -827,7 +823,6 @@ void MainMenuModeSelect::init()
 		"Practice",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -838,7 +833,6 @@ void MainMenuModeSelect::init()
 		"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -1045,7 +1039,6 @@ void MainMenuPlayerCount::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -1054,7 +1047,6 @@ void MainMenuPlayerCount::init()
 		"Number of Players",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -1065,7 +1057,6 @@ void MainMenuPlayerCount::init()
 		"1 Player",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
@@ -1076,7 +1067,6 @@ void MainMenuPlayerCount::init()
 		"2 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -1087,7 +1077,6 @@ void MainMenuPlayerCount::init()
 		"3 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -1098,7 +1087,6 @@ void MainMenuPlayerCount::init()
 		"4 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -1109,7 +1097,6 @@ void MainMenuPlayerCount::init()
 		"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -1336,7 +1323,6 @@ void MainMenuTeamSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -1347,7 +1333,6 @@ void MainMenuTeamSelect::init()
 		"Team Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -1374,7 +1359,6 @@ void MainMenuTeamSelect::init()
 			label_text,
 			ITEM_FONT,
 			this->calculate_widget_position(0, i + 2),
-			this->get_sprite_batch(),
 			this->get_resource_manager(),
 			TEAM_SELECT_UNSELECTED_COLOUR,
 			SHADOW_COLOUR,
@@ -1385,7 +1369,6 @@ void MainMenuTeamSelect::init()
 			"sprite_sheet_1",
 			"team_select_a",
 			RectangleF(this->calculate_widget_position(2, i + 2), TEAM_SELECT_TEAM_WIDGET_SIZE),
-			this->get_sprite_batch(),
 			this->get_resource_manager());
 
 		auto move = Vector2F(TEAM_SELECT_TEAM_WIDGET_SIZE.x, 0.0f);
@@ -1396,7 +1379,6 @@ void MainMenuTeamSelect::init()
 			"team_select_center",
 			RectangleF(widgets->player_a->get_rectangle().get_position() + move,
 				TEAM_SELECT_TEAM_WIDGET_SIZE),
-			this->get_sprite_batch(),
 			this->get_resource_manager());
 
 		widgets->player_b = std::make_unique<MTexture>(
@@ -1405,7 +1387,6 @@ void MainMenuTeamSelect::init()
 			"team_select_b",
 			RectangleF(widgets->player_center->get_rectangle().get_position() + move,
 				TEAM_SELECT_TEAM_WIDGET_SIZE),
-			this->get_sprite_batch(),
 			this->get_resource_manager());
 
 		this->_texture_container->add_child(widgets->player_a.get());
@@ -1666,7 +1647,6 @@ void MainMenuWeaponSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -1677,7 +1657,6 @@ void MainMenuWeaponSelect::init()
 		"Weapon Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -1703,7 +1682,6 @@ void MainMenuWeaponSelect::init()
 			label_text,
 			ITEM_FONT,
 			this->calculate_widget_position(0, i + 2),
-			this->get_sprite_batch(),
 			this->get_resource_manager(),
 			WEAPON_SELECT_UNSELECTED_COLOUR);
 
@@ -1712,7 +1690,6 @@ void MainMenuWeaponSelect::init()
 			"sprite_sheet_1",
 			"sprayer",
 			RectangleF(this->calculate_widget_position(2, i + 2), WEAPON_SELECT_WEAPON_WIDGET_SIZE),
-			this->get_sprite_batch(),
 			this->get_resource_manager(),
 			PLAY_BACKGROUND_COLOUR);
 
@@ -1722,7 +1699,6 @@ void MainMenuWeaponSelect::init()
 			DETAIL_FONT,
 			widgets->weapon_icon->get_rectangle().get_position() +
 				Vector2F(0.0f, WEAPON_SELECT_WEAPON_WIDGET_SIZE.y),
-			this->get_sprite_batch(),
 			this->get_resource_manager(),
 			WEAPON_SELECT_UNSELECTED_COLOUR,
 			SHADOW_COLOUR,
@@ -1734,7 +1710,6 @@ void MainMenuWeaponSelect::init()
 			WEAPON_DESCRIPTION_FONT,
 			widgets->weapon_icon->get_rectangle().get_position() +
 				Vector2F(WEAPON_DESC_X_OFFSET, 0.0f),
-			this->get_sprite_batch(),
 			this->get_resource_manager(),
 			WEAPON_DESCRIPTION_FONT_COLOUR,
 			SHADOW_COLOUR,
@@ -1925,7 +1900,6 @@ void MainMenuStageSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -1934,7 +1908,6 @@ void MainMenuStageSelect::init()
 		"Stage Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -1946,7 +1919,6 @@ void MainMenuStageSelect::init()
 		"sprite_sheet_1",
 		"stage_test_1",
 		RectangleF(this->calculate_widget_position(0, 1), STAGE_SELECT_ICON_SIZE),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -1955,7 +1927,6 @@ void MainMenuStageSelect::init()
 		"Test 1",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		STAGE_SELECT_UNSELECTED_COLOUR,
 		SHADOW_COLOUR,
@@ -1966,7 +1937,6 @@ void MainMenuStageSelect::init()
 		"READY?",
 		ANNOUNCEMENT_FONT,
 		this->_background->get_rectangle().get_center() - Vector2F(400.0f, 100.0f),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		STAGE_SELECT_SELECTED_COLOUR,
 		SHADOW_COLOUR,

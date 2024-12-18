@@ -15,9 +15,9 @@ const std::string& MObject::get_name() const
 {
 	return this->_name;
 }
-void MObject::draw(const Viewport& viewport)
+void MObject::draw(SpriteBatch* sprite_batch, const Viewport& viewport)
 {
-	this->draw(Camera(viewport));
+	this->draw(sprite_batch, Camera(viewport));
 }
 void MObject::set_hidden(bool hidden)
 {
@@ -96,18 +96,18 @@ void MContainer::update()
 		child.second->update();
 	}
 }
-void MContainer::draw(const MattMath::Camera& camera)
+void MContainer::draw(SpriteBatch* sprite_batch, const MattMath::Camera& camera)
 {
 	for (auto const& child : this->_children)
 	{
-		child.second->draw(camera);
+		child.second->draw(sprite_batch, camera);
 	}
 }
-void MContainer::draw()
+void MContainer::draw(SpriteBatch* sprite_batch)
 {
 	for (auto const& child : this->_children)
 	{
-		child.second->draw();
+		child.second->draw(sprite_batch);
 	}
 }
 bool MContainer::is_visible_in_viewport(const MattMath::RectangleF& view) const
@@ -141,7 +141,6 @@ MTexture::MTexture(const std::string& name,
 	const std::string& sheet_name,
 	const std::string& frame_name,
 	const RectangleF& rectangle,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	bool hidden,
@@ -150,7 +149,7 @@ MTexture::MTexture(const std::string& name,
 	SpriteEffects effects,
 	float layer_depth) :
 	MWidget(name, hidden),
-	TextureObject(sheet_name, frame_name, sprite_batch,
+	TextureObject(sheet_name, frame_name,
 		resource_manager, color, rotation, origin, effects, layer_depth),
 	_rectangle(rectangle)
 {
@@ -182,21 +181,21 @@ void MTexture::scale_size_and_position(const Vector2F& scale)
 {
 	this->_rectangle.scale_size_and_position(scale);
 }
-void MTexture::draw(const Camera& camera)
+void MTexture::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
 	if (this->get_hidden())
 	{
 		return;
 	}
-	this->TextureObject::draw(this->_rectangle, camera);
+	this->TextureObject::draw(sprite_batch, this->_rectangle, camera);
 }
-void MTexture::draw()
+void MTexture::draw(SpriteBatch* sprite_batch)
 {
 	if (this->get_hidden())
 	{
 		return;
 	}
-	this->TextureObject::draw(this->_rectangle);
+	this->TextureObject::draw(sprite_batch, this->_rectangle);
 }
 const RectangleF& MTexture::get_rectangle() const
 {
@@ -235,7 +234,6 @@ MText::MText(const std::string& name,
 	const std::string& text,
 	const std::string& font_name,
 	const Vector2F& position,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	bool hidden,
@@ -245,7 +243,7 @@ MText::MText(const std::string& name,
 	SpriteEffects effects,
 	float layer_depth) :
 	MWidget(name, hidden),
-	Text(text, font_name, position, sprite_batch,
+	Text(text, font_name, position,
 		resource_manager, color,
 		scale, rotation, origin, effects, layer_depth)
 {
@@ -256,21 +254,21 @@ void MText::scale_size_and_position(const Vector2F& scale)
 	this->set_position(this->get_position() * scale);
 	this->set_scale(this->get_scale() * scale.x);
 }
-void MText::draw(const Camera& camera)
+void MText::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
 	if (this->get_hidden())
 	{
 		return;
 	}
-	this->Text::draw(camera);
+	this->Text::draw(sprite_batch, camera);
 }
-void MText::draw()
+void MText::draw(SpriteBatch* sprite_batch)
 {
 	if (this->get_hidden())
 	{
 		return;
 	}
-	this->Text::draw();
+	this->Text::draw(sprite_batch);
 
 }
 void MText::update()
@@ -295,7 +293,6 @@ MTextDropShadow::MTextDropShadow(const std::string& name,
 	const std::string& text,
 	const std::string& font_name,
 	const Vector2F& position,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	const Colour& shadow_color,
@@ -308,7 +305,7 @@ MTextDropShadow::MTextDropShadow(const std::string& name,
 	SpriteEffects effects,
 	float layer_depth) :
 	MWidget(name, hidden),
-	TextDropShadow(text, font_name, position, sprite_batch,
+	TextDropShadow(text, font_name, position,
 		resource_manager, color, shadow_color, shadow_offset,
 		scale, shadow_scale, rotation, origin, effects, layer_depth)
 {
@@ -322,21 +319,21 @@ void MTextDropShadow::scale_size_and_position(const Vector2F& scale)
 	this->set_shadow_offset(this->get_shadow_offset() * scale);
 	this->set_shadow_scale(this->get_shadow_scale() * scale.x);
 }
-void MTextDropShadow::draw(const Camera& camera)
+void MTextDropShadow::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
 	if (this->get_hidden())
 	{
 		return;
 	}
-	this->TextDropShadow::draw(camera);
+	this->TextDropShadow::draw(sprite_batch, camera);
 }
-void MTextDropShadow::draw()
+void MTextDropShadow::draw(SpriteBatch* sprite_batch)
 {
 	if (this->get_hidden())
 	{
 		return;
 	}
-	this->TextDropShadow::draw();
+	this->TextDropShadow::draw(sprite_batch);
 
 }
 void MTextDropShadow::update()

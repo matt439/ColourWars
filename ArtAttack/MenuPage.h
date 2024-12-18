@@ -33,9 +33,9 @@ protected:
 	ResolutionManager* get_resolution_manager() const;
 	Save* get_save() const;
 	ResourceManager* get_resource_manager() const;
-	DirectX::SpriteBatch* get_sprite_batch() const;
+	//DirectX::SpriteBatch* get_sprite_batch() const;
 	ViewportManager* get_viewport_manager() const;
-	void draw_mobject_in_viewports(MObject* widget,
+	void draw_mobject_in_viewports(DirectX::SpriteBatch* sprite_batch, MObject* widget,
 		ID3D11SamplerState* sampler_state = nullptr);
 	ID3D11SamplerState* get_point_clamp_sampler_state() const;
 	std::vector<ProcessedMenuInput> get_menu_inputs() const;

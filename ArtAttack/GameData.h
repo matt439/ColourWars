@@ -8,6 +8,7 @@
 #include "DeviceResources.h"
 #include "ViewportManager.h"
 #include "ThreadPool.h"
+#include "Partitioner.h"
 
 class GameData
 {
@@ -39,6 +40,8 @@ public:
     void set_sprite_batches(std::vector<DirectX::SpriteBatch*>* sprite_batches);
     void set_thread_pool(ThreadPool* thread_pool);
     ThreadPool* get_thread_pool() const;
+	void set_partitioner(const Partitioner* partitioner);
+	const Partitioner* get_partitioner() const;
 
     GameData* get_game_data();
 
@@ -55,5 +58,6 @@ private:
     DirectX::CommonStates* _common_states = nullptr;
 	std::vector<DirectX::SpriteBatch*>* _sprite_batches = nullptr;
     ThreadPool* _thread_pool = nullptr;
+	const Partitioner* _partitioner = nullptr;
 };
 #endif // !GAMEDATA_H

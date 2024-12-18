@@ -9,12 +9,16 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	const float* dt,
 	ResourceManager* resource_manager,
 	ID3D11SamplerState* sampler_state,
-	ResolutionManager* resolution_manager) :
+	ResolutionManager* resolution_manager,
+	ThreadPool* thread_pool,
+	const Partitioner* partitioner) :
 	_resource_manager(resource_manager),
 	_dt(dt),
 	_viewport_manager(viewport_manager),
 	_sampler_state(sampler_state),
-	_resolution_manager(resolution_manager)
+	_resolution_manager(resolution_manager),
+	_thread_pool(thread_pool),
+	_partitioner(partitioner)
 {
 	this->_team_colour = std::make_unique<TeamColourTools>();
 	this->_player_builder = std::make_unique<PlayerBuilder>();
@@ -73,5 +77,7 @@ std::unique_ptr<Level>
 		load_info->get_level_name(),
 		this->_resolution_manager,
 		this->_viewport_manager,
-		this->_resource_manager);
+		this->_resource_manager,
+		this->_thread_pool,
+		this->_partitioner);
 }

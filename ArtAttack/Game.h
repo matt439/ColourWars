@@ -72,6 +72,7 @@ private:
     std::vector<std::unique_ptr<DirectX::SpriteBatch>> _sprite_batches;
     std::vector<DirectX::SpriteBatch*> _sprite_batches_ptrs;
     std::unique_ptr<DirectX::AudioEngine> _audio_engine = nullptr;
+	std::unique_ptr<Partitioner> _partitioner = nullptr;
 };
 
 #endif // ! GAME_H

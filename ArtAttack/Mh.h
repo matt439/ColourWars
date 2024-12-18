@@ -12,7 +12,7 @@ public:
 	explicit MObject(const std::string& name, bool hidden = false);
 	const std::string& get_name() const;
 
-	void draw(const MattMath::Viewport& viewport);
+	void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Viewport& viewport);
 
 	void set_hidden(bool hidden);
 	bool get_hidden() const;
@@ -20,8 +20,8 @@ public:
 	virtual void scale_size_and_position(const MattMath::Vector2F& scale) = 0;
 
 	void update() override = 0;
-	void draw(const MattMath::Camera& camera) override = 0;
-	void draw() override = 0;
+	void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Camera& camera) override = 0;
+	void draw(DirectX::SpriteBatch* sprite_batch) override = 0;
 	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override = 0;
 private:
 	std::string _name = "error_name";
@@ -47,8 +47,8 @@ public:
 	void scale_size_and_position(const MattMath::Vector2F& scale) override;
 
 	void update() override;
-	void draw(const MattMath::Camera& camera) override;
-	void draw() override;
+	void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Camera& camera) override;
+	void draw(DirectX::SpriteBatch* sprite_batch) override;
 	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
 private:
 	std::vector<std::pair<std::string, MObject*>> _children;
@@ -64,8 +64,8 @@ public:
 	void scale_size_and_position(const MattMath::Vector2F& scale) override = 0;
 
 	void update() override = 0;
-	void draw(const MattMath::Camera& camera) override = 0;
-	void draw() override = 0;
+	void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Camera& camera) override = 0;
+	void draw(DirectX::SpriteBatch* sprite_batch) override = 0;
 	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override = 0;
 
 	virtual void set_colour(const MattMath::Colour& colour) = 0;
@@ -79,7 +79,6 @@ public:
 		const std::string& sheet_name,
 		const std::string& frame_name,
 		const MattMath::RectangleF& rectangle,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		bool hidden = false,
@@ -91,8 +90,8 @@ public:
 	void scale_size_and_position(const MattMath::Vector2F& scale) override;
 
 	void update() override;
-	void draw(const MattMath::Camera& camera) override;
-	void draw() override;
+	void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Camera& camera) override;
+	void draw(DirectX::SpriteBatch* sprite_batch) override;
 	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
 
 	void set_texture(const std::string& sheet_name, const std::string& frame_name);
@@ -118,7 +117,6 @@ public:
 		const std::string& text,
 		const std::string& font_name,
 		const MattMath::Vector2F& position,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		bool hidden = false,
@@ -131,8 +129,8 @@ public:
 	void scale_size_and_position(const MattMath::Vector2F& scale) override;
 
 	void update() override;
-	void draw(const MattMath::Camera& camera) override;
-	void draw() override;
+	void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Camera& camera) override;
+	void draw(DirectX::SpriteBatch* sprite_batch) override;
 	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
 	void set_colour(const MattMath::Colour& colour) override;
 };
@@ -145,7 +143,6 @@ public:
 		const std::string& text,
 		const std::string& font_name,
 		const MattMath::Vector2F& position,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		const MattMath::Colour& shadow_color = colour_consts::BLACK,
@@ -161,8 +158,8 @@ public:
 	void scale_size_and_position(const MattMath::Vector2F& scale) override;
 
 	void update() override;
-	void draw(const MattMath::Camera& camera) override;
-	void draw() override;
+	void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Camera& camera) override;
+	void draw(DirectX::SpriteBatch* sprite_batch) override;
 	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
 	void set_colour(const MattMath::Colour& colour) override;
 };

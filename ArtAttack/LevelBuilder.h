@@ -10,6 +10,7 @@
 #include "LevelObjectBuilder.h"
 #include "rapidjson/document.h"
 #include "ViewportManager.h"
+#include "Partitioner.h"
 
 class LevelBuilder
 {
@@ -18,7 +19,9 @@ public:
 		const float* dt,
 		ResourceManager* resource_manager,
 		ID3D11SamplerState* sampler_state,
-		ResolutionManager* resolution_manager);
+		ResolutionManager* resolution_manager,
+		ThreadPool* thread_pool,
+		const Partitioner* partitioner);
 
 	std::unique_ptr<Level> build_level(const MenuLevelSettings& settings);
 
@@ -31,6 +34,8 @@ private:
 	std::unique_ptr<LevelObjectBuilder> _level_object_builder = nullptr;
 	ID3D11SamplerState* _sampler_state = nullptr;
 	ResolutionManager* _resolution_manager = nullptr;
+	ThreadPool* _thread_pool = nullptr;
+	const Partitioner* _partitioner = nullptr;
 };
 
 #endif // !LEVELBUILDER_H

@@ -591,6 +591,11 @@ void Level::draw_zoom_out_level_component(
 	std::vector<ID3D11CommandList*>* command_lists,
 	std::vector<DirectX::SpriteBatch*>* sprite_batches) const
 {
+	if (deferred_contexts->at(0)->GetType() != D3D11_DEVICE_CONTEXT_DEFERRED)
+	{
+		throw std::exception("Deferred context not created");
+	}
+	
 	this->_viewport_manager->set_layout(screen_layout::ONE_PLAYER);
 	this->_viewport_manager->apply_player_viewport(0);
 
@@ -617,6 +622,12 @@ void Level::draw_zoom_out_level_component(
 	}
 
 	sprite_batch->End();
+
+	HRESULT hr = deferred_contexts->at(0)->FinishCommandList(FALSE, &command_lists->at(0));
+	if (FAILED(hr))
+	{
+		throw std::exception("Failed to finish command list");
+	}
 }
 
 level_state Level::get_state() const
