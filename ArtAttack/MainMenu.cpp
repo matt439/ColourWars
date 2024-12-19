@@ -35,28 +35,14 @@ MainMenuTitle::MainMenuTitle(MainMenuData* data) :
 
 void MainMenuTitle::draw()
 {
-	auto deferred_contexts = this->get_data()->get_device_resources()->get_deferred_contexts();
-	std::vector<ID3D11CommandList*> command_lists(deferred_contexts->size(), nullptr);
-	auto sprite_batches = this->get_data()->get_sprite_batches();
-	
-	this->draw_mobject_in_viewports(sprite_batch, this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(sprite_batch, this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
 
-	auto immediate_context = this->get_data()->get_device_resources()->GetD3DDeviceContext();
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
 
-	for (int i = 0; i < command_lists.size(); i++)
-	{
-		if (command_lists[i] == nullptr)
-		{
-			continue;
-		}
-
-		immediate_context->ExecuteCommandList(command_lists[i], FALSE);
-		command_lists[i]->Release();
-	}
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuTitle::update()
 {
@@ -133,11 +119,14 @@ MainMenuHome::MainMenuHome(MainMenuData* data) :
 
 void MainMenuHome::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuHome::update()
 {
@@ -299,11 +288,14 @@ MainMenuOptions::MainMenuOptions(MainMenuData* data) :
 
 void MainMenuOptions::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuOptions::update()
 {
@@ -641,11 +633,14 @@ MainMenuModeSelect::MainMenuModeSelect(MainMenuData* data) :
 
 void MainMenuModeSelect::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuModeSelect::update()
 {
@@ -873,11 +868,14 @@ MainMenuPlayerCount::MainMenuPlayerCount(MainMenuData* data) :
 }
 void MainMenuPlayerCount::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuPlayerCount::update()
 {
@@ -1144,11 +1142,14 @@ MainMenuTeamSelect::MainMenuTeamSelect(MainMenuData* data,
 }
 void MainMenuTeamSelect::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuTeamSelect::update()
 {
@@ -1424,11 +1425,14 @@ MainMenuWeaponSelect::MainMenuWeaponSelect(MainMenuData* data,
 }
 void MainMenuWeaponSelect::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuWeaponSelect::update()
 {
@@ -1768,11 +1772,14 @@ MainMenuStageSelect::MainMenuStageSelect(MainMenuData* data,
 }
 void MainMenuStageSelect::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuStageSelect::update()
 {

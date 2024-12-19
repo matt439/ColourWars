@@ -35,8 +35,15 @@ protected:
 	ResourceManager* get_resource_manager() const;
 	//DirectX::SpriteBatch* get_sprite_batch() const;
 	ViewportManager* get_viewport_manager() const;
-	void draw_mobject_in_viewports(DirectX::SpriteBatch* sprite_batch, MObject* widget,
+
+	void draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,
+		ID3D11CommandList*& command_list,
+		DirectX::SpriteBatch* sprite_batch, MObject* widget,
 		ID3D11SamplerState* sampler_state = nullptr);
+
+	void draw_mobjects_in_viewports(std::vector<std::pair<MObject*,
+		ID3D11SamplerState*>>* mobjects);
+
 	ID3D11SamplerState* get_point_clamp_sampler_state() const;
 	std::vector<ProcessedMenuInput> get_menu_inputs() const;
 	MattMath::Vector2F get_float_resolution() const;

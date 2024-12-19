@@ -87,6 +87,11 @@ void GameMenu::draw()
     this->_menu->draw();
 }
 
+GameData* GameMenu::get_data() const
+{
+    return this->_game_data;
+}
+
 GameLevel::GameLevel(GameData* game_data, const MenuLevelSettings& settings) :
     _game_data(game_data), _settings(settings)
 {

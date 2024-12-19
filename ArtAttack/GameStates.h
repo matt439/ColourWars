@@ -30,6 +30,7 @@ private:
     main_menu_screen _screen = main_menu_screen::TITLE;
     void set_main_menu_data_ptrs();
     void order_level_creation();
+    GameData* get_data() const;
 };
 
 enum class game_level_state
