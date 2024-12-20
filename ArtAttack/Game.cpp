@@ -127,14 +127,26 @@ void Game::clear() const
 
     // Clear the views.
     auto context = _device_resources->GetD3DDeviceContext();
+	auto deferred_contexts = _device_resources->get_deferred_contexts();
     auto renderTarget = _device_resources->GetRenderTargetView();
 
     context->ClearRenderTargetView(renderTarget, Colors::Black);
     context->OMSetRenderTargets(1, &renderTarget, nullptr);
 
+	for (auto& deferred_context : *deferred_contexts)
+    {
+		//deferred_context->ClearRenderTargetView(renderTarget, Colors::Black);
+		deferred_context->OMSetRenderTargets(1, &renderTarget, nullptr);
+	}
+
     // Set the viewport.
     auto const viewport = _device_resources->GetScreenViewport();
     context->RSSetViewports(1, &viewport);
+
+	for (auto& deferred_context : *deferred_contexts)
+	{
+		deferred_context->RSSetViewports(1, &viewport);
+	}
 
     _device_resources->PIXEndEvent();
 }
@@ -220,6 +232,9 @@ void Game::create_device_dependent_resources()
     }
 
     this->_data->set_sprite_batches(&this->_sprite_batches_ptrs);
+
+	this->_thread_pool = std::make_unique<ThreadPool>(NUM_THREADS_MIN, NUM_THREADS_MAX);
+	this->_data->set_thread_pool(this->_thread_pool.get());
 
     this->_resource_manager = std::make_unique<ResourceManager>();
     this->_data->set_resource_manager(this->_resource_manager.get());
