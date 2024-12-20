@@ -62,7 +62,7 @@ void Game::initialize(GameData* game_data)
     // TODO: Change the timer settings if you want something other than the default variable timestep mode.
     // e.g. for 60 FPS fixed timestep update logic, call:
     _timer.SetFixedTimeStep(true);
-    _timer.SetTargetElapsedSeconds(1.0 / 60);
+    _timer.SetTargetElapsedSeconds(1.0 / TARGET_FPS);
 }
 
 void Game::set_game_data(GameData* game_data)
