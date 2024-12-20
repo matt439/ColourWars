@@ -33,7 +33,6 @@ protected:
 	ResolutionManager* get_resolution_manager() const;
 	Save* get_save() const;
 	ResourceManager* get_resource_manager() const;
-	//DirectX::SpriteBatch* get_sprite_batch() const;
 	ViewportManager* get_viewport_manager() const;
 
 	void draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,
@@ -43,6 +42,12 @@ protected:
 
 	void draw_mobjects_in_viewports(std::vector<std::pair<MObject*,
 		ID3D11SamplerState*>>* mobjects);
+
+	void draw_range_of_mobjects_in_viewports(int start, int end,
+		std::vector<std::pair<MObject*, ID3D11SamplerState*>>*mobjects,
+		std::vector<ID3D11DeviceContext*>* deferred_contexts,
+		std::vector<ID3D11CommandList*>* command_lists,
+		std::vector<DirectX::SpriteBatch*>* sprite_batches);
 
 	ID3D11SamplerState* get_point_clamp_sampler_state() const;
 	std::vector<ProcessedMenuInput> get_menu_inputs() const;

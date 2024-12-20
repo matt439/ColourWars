@@ -125,19 +125,29 @@ void MenuPage::draw_mobjects_in_viewports(std::vector<std::pair<MObject*,
 	ID3D11SamplerState*>>* mobjects)
 {
 	auto deferred_contexts = this->get_data()->get_device_resources()->get_deferred_contexts();
-	//D3D11DeviceContext* deferred_context = deferred_contexts->at(0);
-
 	std::vector<ID3D11CommandList*> command_lists(deferred_contexts->size(), nullptr);
-	//ID3D11CommandList* command_list = command_lists[0];
-
 	auto sprite_batches = this->get_data()->get_sprite_batches();
-	//SpriteBatch* sprite_batch = sprite_batches->at(0);
+	auto partitioner = this->get_data()->get_partitioner();
+	int num_threads = this->get_data()->get_thread_pool()->get_max_num_threads();
 
-	for (size_t i = 0; i < mobjects->size(); i++)
+	// partition MObjects objects
+	auto partitioned_mobjects =
+		partitioner->partition(mobjects->size(), num_threads);
+
+	auto thread_pool = this->get_data()->get_thread_pool();
+
+	// draw MObjects objects
+	for (int i = 0; i < partitioned_mobjects.size(); i++)
 	{
-		this->draw_mobject_in_viewports(deferred_contexts->at(i), command_lists[i],
-			sprite_batches->at(i), mobjects->at(i).first, mobjects->at(i).second);
+		thread_pool->add_task([this, i, &partitioned_mobjects, mobjects, deferred_contexts,
+			&command_lists, sprite_batches]()
+			{
+				this->draw_range_of_mobjects_in_viewports(
+					partitioned_mobjects[i].first, partitioned_mobjects[i].second,
+					mobjects, deferred_contexts, &command_lists, sprite_batches);
+			});
 	}
+	thread_pool->wait_for_tasks_to_complete();
 
 	auto immediate_context = this->get_data()->get_device_resources()->GetD3DDeviceContext();
 
@@ -150,6 +160,20 @@ void MenuPage::draw_mobjects_in_viewports(std::vector<std::pair<MObject*,
 
 		immediate_context->ExecuteCommandList(command_lists[i], FALSE);
 		command_lists[i]->Release();
+	}
+}
+
+void MenuPage::draw_range_of_mobjects_in_viewports(int start, int end,
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>>* mobjects,
+	std::vector<ID3D11DeviceContext*>* deferred_contexts,
+	std::vector<ID3D11CommandList*>* command_lists,
+	std::vector<SpriteBatch*>* sprite_batches)
+{
+	for (int i = start; i < end; i++)
+	{
+		this->draw_mobject_in_viewports(
+			this->get_data()->get_device_resources()->get_deferred_context(i),
+			command_lists->at(i), sprite_batches->at(i), mobjects->at(i).first, mobjects->at(i).second);
 	}
 }
 

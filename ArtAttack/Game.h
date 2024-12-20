@@ -59,8 +59,6 @@ private:
     std::unique_ptr<DX::DeviceResources> _device_resources = nullptr;
     DX::StepTimer _timer = DX::StepTimer();
 
-    //std::unique_ptr<DirectX::SpriteBatch> _sprite_batch = nullptr;
-
     std::unique_ptr<DirectX::CommonStates> _states = nullptr;
 
     std::unique_ptr<ResourceLoader> _resource_loader = nullptr;
