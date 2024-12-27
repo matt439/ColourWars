@@ -3,58 +3,58 @@
 
 using namespace MattMath;
 
-sprite_movement_direction CollisionTools::opposite_direction(
-    sprite_movement_direction direction)
+shape_movement_direction CollisionTools::opposite_direction(
+    shape_movement_direction direction)
 {
     switch (direction)
     {
-    case sprite_movement_direction::UP:
-        return sprite_movement_direction::DOWN;
-    case sprite_movement_direction::DOWN:
-        return sprite_movement_direction::UP;
-    case sprite_movement_direction::LEFT:
-        return sprite_movement_direction::RIGHT;
-    case sprite_movement_direction::RIGHT:
-        return sprite_movement_direction::LEFT;
-    case sprite_movement_direction::UP_LEFT:
-        return sprite_movement_direction::DOWN_RIGHT;
-    case sprite_movement_direction::UP_RIGHT:
-        return sprite_movement_direction::DOWN_LEFT;
-    case sprite_movement_direction::DOWN_LEFT:
-        return sprite_movement_direction::UP_RIGHT;
-    case sprite_movement_direction::DOWN_RIGHT:
-        return sprite_movement_direction::UP_LEFT;
+    case shape_movement_direction::UP:
+        return shape_movement_direction::DOWN;
+    case shape_movement_direction::DOWN:
+        return shape_movement_direction::UP;
+    case shape_movement_direction::LEFT:
+        return shape_movement_direction::RIGHT;
+    case shape_movement_direction::RIGHT:
+        return shape_movement_direction::LEFT;
+    case shape_movement_direction::UP_LEFT:
+        return shape_movement_direction::DOWN_RIGHT;
+    case shape_movement_direction::UP_RIGHT:
+        return shape_movement_direction::DOWN_LEFT;
+    case shape_movement_direction::DOWN_LEFT:
+        return shape_movement_direction::UP_RIGHT;
+    case shape_movement_direction::DOWN_RIGHT:
+        return shape_movement_direction::UP_LEFT;
     };
-    return sprite_movement_direction::NONE;
+    return shape_movement_direction::NONE;
 }
 
-sprite_movement_direction CollisionTools::direction_from_collision(
+shape_movement_direction CollisionTools::direction_from_collision(
     collision_direction direction)
 {
     switch (direction)
     {
     case collision_direction::TOP:
-        return sprite_movement_direction::DOWN;
+        return shape_movement_direction::DOWN;
     case collision_direction::BOTTOM:
-        return sprite_movement_direction::UP;
+        return shape_movement_direction::UP;
     case collision_direction::LEFT:
-        return sprite_movement_direction::RIGHT;
+        return shape_movement_direction::RIGHT;
     case collision_direction::RIGHT:
-        return sprite_movement_direction::LEFT;
+        return shape_movement_direction::LEFT;
     case collision_direction::TOP_LEFT:
-        return sprite_movement_direction::DOWN_RIGHT;
+        return shape_movement_direction::DOWN_RIGHT;
     case collision_direction::TOP_RIGHT:
-        return sprite_movement_direction::DOWN_LEFT;
+        return shape_movement_direction::DOWN_LEFT;
     case collision_direction::BOTTOM_LEFT:
-        return sprite_movement_direction::UP_RIGHT;
+        return shape_movement_direction::UP_RIGHT;
     case collision_direction::BOTTOM_RIGHT:
-        return sprite_movement_direction::UP_LEFT;
+        return shape_movement_direction::UP_LEFT;
     };
-    return sprite_movement_direction::NONE;
+    return shape_movement_direction::NONE;
 }
 
 void CollisionTools::move_object_by_direction(Shape* obj,
-    sprite_movement_direction direction, const Vector2F& amount)
+    shape_movement_direction direction, const Vector2F& amount)
 {
     if (amount.x == 0.0f && amount.y == 0.0f)
     {
@@ -63,35 +63,35 @@ void CollisionTools::move_object_by_direction(Shape* obj,
 
     switch (direction)
     {
-    case sprite_movement_direction::UP:
+    case shape_movement_direction::UP:
         obj->offset(Vector2F(0.0f, -amount.y));
         break;
-    case sprite_movement_direction::DOWN:
+    case shape_movement_direction::DOWN:
         obj->offset(Vector2F(0.0f, amount.y));
         break;
-    case sprite_movement_direction::LEFT:
+    case shape_movement_direction::LEFT:
         obj->offset(Vector2F(-amount.x, 0.0f));
         break;
-    case sprite_movement_direction::RIGHT:
+    case shape_movement_direction::RIGHT:
         obj->offset(Vector2F(amount.x, 0.0f));
         break;
-    case sprite_movement_direction::UP_LEFT:
+    case shape_movement_direction::UP_LEFT:
         obj->offset(Vector2F(-amount.x, -amount.y));
         break;
-    case sprite_movement_direction::UP_RIGHT:
+    case shape_movement_direction::UP_RIGHT:
         obj->offset(Vector2F(amount.x, -amount.y));
         break;
-    case sprite_movement_direction::DOWN_LEFT:
+    case shape_movement_direction::DOWN_LEFT:
         obj->offset(Vector2F(-amount.x, amount.y));
         break;
-    default: // sprite_movement_direction::DOWN_RIGHT:
+    default: // shape_movement_direction::DOWN_RIGHT:
         obj->offset(Vector2F(amount.x, amount.y));
         break;
     };
 }
 
 void CollisionTools::move_object_by_direction_relative_to_size(Shape* obj,
-    sprite_movement_direction direction, float relative_amount)
+    shape_movement_direction direction, float relative_amount)
 {
     RectangleF obj_aabb = obj->get_bounding_box();
 
@@ -100,36 +100,36 @@ void CollisionTools::move_object_by_direction_relative_to_size(Shape* obj,
 
     switch (direction)
     {
-    case sprite_movement_direction::UP:
-        move_object_by_direction(obj, sprite_movement_direction::UP,
+    case shape_movement_direction::UP:
+        move_object_by_direction(obj, shape_movement_direction::UP,
             Vector2F(0.0f, relative_height));
         break;
-    case sprite_movement_direction::DOWN:
-        move_object_by_direction(obj, sprite_movement_direction::DOWN,
+    case shape_movement_direction::DOWN:
+        move_object_by_direction(obj, shape_movement_direction::DOWN,
             Vector2F(0.0f, relative_height));
         break;
-    case sprite_movement_direction::LEFT:
-        move_object_by_direction(obj, sprite_movement_direction::LEFT,
+    case shape_movement_direction::LEFT:
+        move_object_by_direction(obj, shape_movement_direction::LEFT,
             Vector2F(relative_width, 0.0f));
         break;
-    case sprite_movement_direction::RIGHT:
-        move_object_by_direction(obj, sprite_movement_direction::RIGHT,
+    case shape_movement_direction::RIGHT:
+        move_object_by_direction(obj, shape_movement_direction::RIGHT,
             Vector2F(relative_width, 0.0f));
         break;
-    case sprite_movement_direction::UP_LEFT:
-        move_object_by_direction(obj, sprite_movement_direction::UP_LEFT,
+    case shape_movement_direction::UP_LEFT:
+        move_object_by_direction(obj, shape_movement_direction::UP_LEFT,
             Vector2F(relative_width, relative_height));
         break;
-    case sprite_movement_direction::UP_RIGHT:
-        move_object_by_direction(obj, sprite_movement_direction::UP_RIGHT,
+    case shape_movement_direction::UP_RIGHT:
+        move_object_by_direction(obj, shape_movement_direction::UP_RIGHT,
             Vector2F(relative_width, relative_height));
         break;
-    case sprite_movement_direction::DOWN_LEFT:
-        move_object_by_direction(obj, sprite_movement_direction::DOWN_LEFT,
+    case shape_movement_direction::DOWN_LEFT:
+        move_object_by_direction(obj, shape_movement_direction::DOWN_LEFT,
             Vector2F(relative_width, relative_height));
         break;
-    default: // sprite_movement_direction::DOWN_RIGHT:
-        move_object_by_direction(obj, sprite_movement_direction::DOWN_RIGHT,
+    default: // shape_movement_direction::DOWN_RIGHT:
+        move_object_by_direction(obj, shape_movement_direction::DOWN_RIGHT,
             Vector2F(relative_width, relative_height));
         break;
     };
@@ -140,7 +140,7 @@ void CollisionTools::move_object_by_direction_relative_to_size(Shape* obj,
  * the given number of iterations.
 */
 bool CollisionTools::bracket_object_collision(bool colliding, int i, Shape* collider,
-    sprite_movement_direction collider_direction)
+    shape_movement_direction collider_direction)
 {
     RectangleF collider_aabb = collider->get_bounding_box();
 
@@ -163,7 +163,7 @@ bool CollisionTools::bracket_object_collision(bool colliding, int i, Shape* coll
 }
 
 bool CollisionTools::bracket_object_collision_generic(Shape* collider, const Shape* collidee,
-    sprite_movement_direction collider_direction, int iterations)
+    shape_movement_direction collider_direction, int iterations)
 {
     RectangleF collider_aabb = collider->get_bounding_box();
 

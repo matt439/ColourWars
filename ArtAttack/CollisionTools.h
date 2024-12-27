@@ -7,7 +7,7 @@
 constexpr int BRACKET_ITERATIONS = 40;
 constexpr float ITERATION_POWER = 1.5f;
 
-enum class sprite_movement_direction
+enum class shape_movement_direction
 {
     UP,
     DOWN,
@@ -60,21 +60,21 @@ public:
         collision_direction direction);
 
 private:
-    sprite_movement_direction opposite_direction(sprite_movement_direction direction);
-    sprite_movement_direction direction_from_collision(collision_direction direction);
+    shape_movement_direction opposite_direction(shape_movement_direction direction);
+    shape_movement_direction direction_from_collision(collision_direction direction);
 
     void move_object_by_direction(MattMath::Shape* obj,
-        sprite_movement_direction direction, const MattMath::Vector2F& amount);
+        shape_movement_direction direction, const MattMath::Vector2F& amount);
 
     void move_object_by_direction_relative_to_size(MattMath::Shape* obj,
-        sprite_movement_direction direction, float relative_amount = 1.0f);
+        shape_movement_direction direction, float relative_amount = 1.0f);
 
     bool bracket_object_collision(bool colliding, int i, MattMath::Shape* collider,
-        sprite_movement_direction collider_direction);
+        shape_movement_direction collider_direction);
 
     bool bracket_object_collision_generic(MattMath::Shape* collider,
         const MattMath::Shape* collidee,
-        sprite_movement_direction collider_direction, int iterations);
+        shape_movement_direction collider_direction, int iterations);
 
     collision_direction compare_point_collision_depth_horizontal(
         const MattMath::Point2F& collider, const MattMath::Point2F& collidee);
