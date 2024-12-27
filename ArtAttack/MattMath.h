@@ -17,8 +17,14 @@ namespace MattMath
 		UP_LEFT,
 		UP_RIGHT,
 		DOWN_LEFT,
-		DOWN_RIGHT
+		DOWN_RIGHT,
 	};
+
+	//enum class vector_type
+	//{
+	//	ROW,
+	//	COLUMN,
+	//};
 	
 	struct Vector2I;
 	struct Vector2F;
@@ -26,6 +32,7 @@ namespace MattMath
 	struct RectangleI;
 	struct Circle;
 	struct Triangle;
+	struct Quad;
 	struct Segment;
 	struct RectangleF;
 	struct Camera;
@@ -53,15 +60,86 @@ namespace MattMath
 	struct Shape
 	{
 		virtual ~Shape() = default;
-		virtual const MattMath::RectangleF& get_bounding_box() const = 0;
+		virtual RectangleF get_bounding_box() const = 0;
 		virtual shape_type get_shape_type() const = 0;
-		virtual bool intersects(const Shape* other) const;
-		virtual bool intersects(const Shape& other) const;
-		virtual bool intersects(const MattMath::Circle& other) const;
-		virtual bool intersects(const MattMath::Triangle& other) const;
-		virtual bool intersects(const MattMath::RectangleF& other) const;
-		virtual bool AABB_intersects(const Shape* other) const;
+		virtual bool intersects(const RectangleF& rect) const = 0;
+		virtual bool intersects(const Circle& circle) const = 0;
+		virtual bool intersects(const Triangle& triangle) const = 0;
+		virtual bool intersects(const Quad& quad) const = 0;
+		virtual bool intersects(const Segment& segment) const = 0;
+		virtual bool intersects(const Point2F& point) const = 0;
+		bool intersects(const Shape* other) const;
+		bool intersects(const Shape& other) const;
+		bool AABB_intersects(const Shape* other) const;
+		bool AABB_intersects(const Shape& other) const;
 	};
+
+	bool shapes_intersect(const Shape* a, const Shape* b);
+	bool shapes_intersect(const Shape& a, const Shape& b);
+	bool shapes_AABB_intersect(const Shape* a, const Shape* b);
+	bool shapes_AABB_intersect(const Shape& a, const Shape& b);
+
+	bool rectangles_intersect(const MattMath::RectangleF& a,
+		const MattMath::RectangleF& b);
+
+	bool rectangle_circle_intersect(const MattMath::RectangleF& rectangle,
+		const MattMath::Circle& circle);
+
+	bool rectangle_triangle_intersect(const MattMath::RectangleF& rectangle, 
+		const MattMath::Triangle& triangle);
+
+	bool rectangle_quad_intersect(const MattMath::RectangleF& rectangle,
+		const MattMath::Quad& quad);
+
+	bool rectangle_segment_intersect(const MattMath::RectangleF& rectangle, 
+		const MattMath::Segment& segment);
+
+	bool rectangle_point_intersect(const MattMath::RectangleF& rectangle, 
+		const MattMath::Point2F& point);
+
+	bool circles_intersect(const MattMath::Circle& a,
+		const MattMath::Circle& b);
+
+	bool circle_triangle_intersect(const MattMath::Circle& circle,
+		const MattMath::Triangle& triangle, MattMath::Point2F& point);
+
+	bool circle_triangle_intersect(const MattMath::Circle& circle,
+		const MattMath::Triangle& triangle);
+
+	bool circle_quad_intersect(const MattMath::Circle& circle,
+		const MattMath::Quad& quad, MattMath::Point2F& point);
+
+	bool circle_quad_intersect(const MattMath::Circle& circle,
+		const MattMath::Quad& quad);
+
+	bool circle_segment_intersect(const MattMath::Circle& circle,
+		const MattMath::Segment& segment, MattMath::Point2F& point);
+
+	bool circle_segment_intersect(const MattMath::Circle& circle,
+		const MattMath::Segment& segment);
+
+	bool circle_point_intersect(const MattMath::Circle& circle, 
+		const MattMath::Point2F& point);
+
+	bool triangles_intersect(const MattMath::Triangle& a, 
+		const MattMath::Triangle& b);
+
+	bool triangle_quad_intersect(const MattMath::Triangle& triangle, 
+		const MattMath::Quad& quad);
+
+	bool triangle_segment_intersect(const MattMath::Triangle& triangle, 
+		const MattMath::Segment& segment);
+
+	bool triangle_point_intersect(const MattMath::Triangle& triangle,
+		const MattMath::Point2F& point);
+
+	bool quads_intersect(const MattMath::Quad& a, const MattMath::Quad& b);
+
+	bool quad_segment_intersect(const MattMath::Quad& quad,
+		const MattMath::Segment& segment);
+
+	bool quad_point_intersect(const MattMath::Quad& quad, 
+		const MattMath::Point2F& point);
 
 	struct RectangleF : public Shape
 	{
@@ -80,7 +158,7 @@ namespace MattMath
 		RectangleF(const DirectX::SimpleMath::Rectangle& rectangle);
 		RectangleF(const RECT& rectangle);
 
-		const RectangleF& get_bounding_box() const override;
+		RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
 
 		float get_x() const;
@@ -112,13 +190,15 @@ namespace MattMath
 		bool operator==(const RectangleF& other) const;
 		bool operator!=(const RectangleF& other) const;
 
-		bool contains(const MattMath::Vector2F& point) const;
+		//bool contains(const MattMath::Vector2F& point) const;
 		bool contains(const RectangleF& other) const;
 
-		bool intersects(const RectangleF& other) const;
-		bool intersects(const MattMath::Circle& other) const;
-		bool intersects(const MattMath::Triangle& other) const;
-		bool intersects(const MattMath::Segment& other) const;
+		bool intersects(const RectangleF& other) const override;
+		bool intersects(const MattMath::Circle& other) const override;
+		bool intersects(const MattMath::Triangle& other) const override;
+		bool intersects(const MattMath::Quad& quad) const override;
+		bool intersects(const MattMath::Segment& other) const override;
+		bool intersects(const MattMath::Point2F& point) const override;
 		RectangleF intersection(const RectangleF& other) const;
 		
 		//void set_left(float left);
@@ -171,6 +251,57 @@ namespace MattMath
 	};
 
 	typedef MattMath::RectangleF AABB;
+	
+	/*template<typename T>
+	struct Matrix
+	{
+		Matrix() = default;
+		Matrix(const Matrix&) = default;
+		Matrix(int rows, int columns);
+		Matrix(int rows, int columns, const std::vector<T>& elements);
+		Matrix(int size, vector_type type);
+		Matrix(int size, vector_type type, const std::vector<T>& elements);
+
+		T get_element(int row, int column) const;
+		void set_element(int row, int column, T value);
+
+		int get_rows() const;
+		int get_columns() const;
+
+		bool is_square() const;
+		bool equal_size(const Matrix<T>& other) const;
+
+		Matrix<T> rotate_pi_radians() const;
+
+		T& operator()(int row, int column);
+		const T& operator()(int row, int column) const;
+
+	private:
+		int _rows = 0;
+		int _columns = 0;
+		std::vector<T> _elements;
+		T** _matrix = nullptr;
+		bool row_valid(int row) const;
+		bool column_valid(int column) const;
+		int calculate_index(int row, int column) const;
+		T& get_element_ref(int row, int column);
+	};
+
+	template<typename T>
+	struct Vector : Matrix<T>
+	{
+		Vector() = default;
+		Vector(const Vector&) = default;
+		Vector(int size);
+		Vector(int size, vector_type type);
+		Vector(int size, vector_type type, const std::vector<T>& elements);
+
+		int get_size() const;
+		vector_type get_vector_type() const;
+
+		T& operator[](int index);
+		const T& operator[](int index) const;
+	};*/
 
 	struct Vector2I
 	{
@@ -220,7 +351,6 @@ namespace MattMath
 	Vector2I operator/ (const Vector2I& V, int S);
 	Vector2I operator* (int S, const Vector2I& V);
 
-
 	struct Vector2F
 	{
 		float x = 0.0f;
@@ -232,7 +362,7 @@ namespace MattMath
 		Vector2F(float x, float y);
 		Vector2F(const DirectX::SimpleMath::Vector2& vector);
 		Vector2F(const DirectX::XMFLOAT2& vector);
-		Vector2F(const MattMath::Vector2I vector);
+		Vector2F(const MattMath::Vector2I& vector);
 
 		DirectX::SimpleMath::Vector2 get_sm_vector() const;
 		DirectX::XMFLOAT2 get_xm_vector() const;
@@ -619,49 +749,109 @@ namespace MattMath
 		Circle(const MattMath::Vector2F& center, float radius);
 		Circle(const DirectX::SimpleMath::Vector2& center, float radius);
 
-		const MattMath::RectangleF& get_bounding_box() const override;
+		MattMath::RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
 
 		bool operator==(const Circle& other) const;
 		bool operator!=(const Circle& other) const;
 
-		bool contains(const MattMath::Vector2F& point) const;
+		//bool contains(const MattMath::Vector2F& point) const;
 
-		bool intersects(const Circle& other) const;
-		bool intersects(const MattMath::RectangleF& other) const;
-		bool intersects(const MattMath::Triangle& other) const;
+		bool intersects(const MattMath::RectangleF& other) const override;
+		bool intersects(const Circle& other) const override;
+		bool intersects(const MattMath::Triangle& other) const override;
+		bool intersects(const MattMath::Quad& other) const override;
+		bool intersects(const MattMath::Segment& other) const override;
+		bool intersects(const MattMath::Point2F& point) const override;
 	};
 	struct Triangle : public Shape
 	{
-		MattMath::Vector2F point1 = MattMath::Vector2F::ZERO;
-		MattMath::Vector2F point2 = MattMath::Vector2F::ZERO;
-		MattMath::Vector2F point3 = MattMath::Vector2F::ZERO;
+		Vector2F points[3] = { Vector2F::ZERO, Vector2F::ZERO, Vector2F::ZERO };
 
 		Triangle() = default;
 		Triangle(const Triangle&) = default;
-		Triangle(const MattMath::Vector2F& point1,
-			const MattMath::Vector2F& point2,
-			const MattMath::Vector2F& point3);
-		Triangle(const DirectX::SimpleMath::Vector2& point1,
-			const DirectX::SimpleMath::Vector2& point2,
-			const DirectX::SimpleMath::Vector2& point3);
+		Triangle(const MattMath::Vector2F& point0,
+			const MattMath::Vector2F& point1,
+			const MattMath::Vector2F& point2);
+		Triangle(const DirectX::SimpleMath::Vector2& point0,
+			const DirectX::SimpleMath::Vector2& point1,
+			const DirectX::SimpleMath::Vector2& point2);
 
-		const MattMath::RectangleF& get_bounding_box() const override;
+		MattMath::RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
 
-		Segment get_segment1() const;
-		Segment get_segment2() const;
-		Segment get_segment3() const;
+		const Vector2F& get_point_0() const;
+		const Vector2F& get_point_1() const;
+		const Vector2F& get_point_2() const;
+		std::vector<Vector2F> get_points() const;
+
+		Segment get_segment_0() const;
+		Segment get_segment_1() const;
+		Segment get_segment_2() const;
+		std::vector<Segment> get_segments() const;
 
 		bool operator==(const Triangle& other) const;
 		bool operator!=(const Triangle& other) const;
 
-		bool contains(const MattMath::Vector2F& point) const;
+		//bool contains(const MattMath::Vector2F& point) const;
 
-		bool intersects(const Triangle& other) const;
-		bool intersects(const MattMath::RectangleF& other) const;
-		bool intersects(const MattMath::Circle& other) const;
+		bool intersects(const MattMath::RectangleF& other) const override;
+		bool intersects(const MattMath::Circle& other) const override;
+		bool intersects(const Triangle& other) const override;
+		bool intersects(const MattMath::Quad& other) const override;
+		bool intersects(const MattMath::Segment& other) const override;
+		bool intersects(const MattMath::Point2F& point) const override;
 	};
+
+	/*
+	* A quadrilateral with four points.
+	* The points are ordered in a clockwise direction, starting from the top left.
+	*/
+	struct Quad : public Shape
+	{
+		Point2F points[4] = { Vector2F::ZERO, Vector2F::ZERO,
+					Vector2F::ZERO, Vector2F::ZERO };
+
+		Quad() = default;
+		Quad(const Quad&) = default;
+		Quad(const Vector2F& point1, const Vector2F& point2,
+			const Vector2F& point3, const Vector2F& point4);
+		Quad(const RectangleF& rectangle);
+		Quad(const DirectX::SimpleMath::Vector2& point1, 
+			const DirectX::SimpleMath::Vector2& point2,
+			const DirectX::SimpleMath::Vector2& point3,
+			const DirectX::SimpleMath::Vector2& point4);
+
+		MattMath::RectangleF get_bounding_box() const override;
+		shape_type get_shape_type() const override;
+
+		const Point2F& get_point_0() const;
+		const Point2F& get_point_1() const;
+		const Point2F& get_point_2() const;
+		const Point2F& get_point_3() const;
+		std::vector<Point2F> get_points() const;
+
+		Segment get_segment_0() const;
+		Segment get_segment_1() const;
+		Segment get_segment_2() const;
+		Segment get_segment_3() const;
+		std::vector<Segment> get_segments() const;
+
+		Triangle get_triangle_0() const;
+		Triangle get_triangle_1() const;
+		std::vector<Triangle> get_triangles() const;
+
+		bool operator==(const Quad& other) const;
+		bool operator!=(const Quad& other) const;
+
+		bool intersects(const RectangleF& other) const;
+		bool intersects(const Circle& other) const;
+		bool intersects(const Triangle& other) const;
+		bool intersects(const Quad& other) const;
+		bool intersects(const Segment& other) const;
+		bool intersects(const Point2F& point) const;
+	};
+
 	struct Segment
 	{
 		MattMath::Point2F point1 = MattMath::Point2F::ZERO;

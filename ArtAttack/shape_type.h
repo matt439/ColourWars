@@ -4,9 +4,9 @@
 enum class shape_type
 {
 	RECTANGLE,
-	ROTATED_RECTANGLE,
 	CIRCLE,
 	TRIANGLE,
+	QUAD,
 	NONE
 };
 

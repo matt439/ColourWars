@@ -114,84 +114,182 @@ float MattMath::lerp(float a, float b, float t)
 bool Shape::intersects(const Shape* other) const
 {
 	shape_type other_shape_type = other->get_shape_type();
-	switch (other_shape_type)
-	{
-	case shape_type::CIRCLE:
-		return this->intersects(static_cast<const Circle*>(other));
-	case shape_type::RECTANGLE:
-		return this->intersects(static_cast<const RectangleF*>(other));
-	case shape_type::TRIANGLE:
-		return this->intersects(static_cast<const Triangle*>(other));
-	default:
-		return false;
-	}
+	shape_type this_shape_type = this->get_shape_type();
 }
+
 bool Shape::intersects(const Shape& other) const
 {
-	shape_type other_shape_type = other.get_shape_type();
-	switch (other_shape_type)
-	{
-	case shape_type::CIRCLE:
-		return this->intersects(static_cast<const Circle&>(other));
-	case shape_type::RECTANGLE:
-		return this->intersects(static_cast<const RectangleF&>(other));
-	case shape_type::TRIANGLE:
-		return this->intersects(static_cast<const Triangle&>(other));
-	default:
-		return false;
-	}
+	return this->intersects(&other);
 }
-bool Shape::intersects(const Circle& other) const
-{
-	shape_type this_shape_type = this->get_shape_type();
-	switch (this_shape_type)
-	{
-	case shape_type::CIRCLE:
-		return static_cast<const Circle&>(*this).intersects(other);
-	case shape_type::RECTANGLE:
-		return static_cast<const RectangleF&>(*this).intersects(other);
-	case shape_type::TRIANGLE:
-		return static_cast<const Triangle&>(*this).intersects(other);
-	default:
-		return false;
-	}
-}
-bool Shape::intersects(const Triangle& other) const
-{
-	shape_type this_shape_type = this->get_shape_type();
-	switch (this_shape_type)
-	{
-	case shape_type::CIRCLE:
-		return static_cast<const Circle&>(*this).intersects(other);
-	case shape_type::RECTANGLE:
-		return static_cast<const RectangleF&>(*this).intersects(other);
-	case shape_type::TRIANGLE:
-		return static_cast<const Triangle&>(*this).intersects(other);
-	default:
-		return false;
-	}
-}
-bool Shape::intersects(const RectangleF& other) const
-{
-	shape_type this_shape_type = this->get_shape_type();
-	switch (this_shape_type)
-	{
-	case shape_type::CIRCLE:
-		return static_cast<const Circle&>(*this).intersects(other);
-	case shape_type::RECTANGLE:
-		return static_cast<const RectangleF&>(*this).intersects(other);
-	case shape_type::TRIANGLE:
-		return static_cast<const Triangle&>(*this).intersects(other);
-	default:
-		return false;
-	}
-}
+
 bool Shape::AABB_intersects(const Shape* other) const
 {
 	return this->get_bounding_box().intersects(other->get_bounding_box());
 }
 
+bool Shape::AABB_intersects(const Shape& other) const
+{
+	return this->AABB_intersects(&other);
+}
+
 #pragma endregion Shape
+
+#pragma region Global Intersect Functions
+
+bool MattMath::shapes_intersect(const Shape* a, const Shape* b)
+{
+	return a->intersects(b);
+}
+
+bool MattMath::shapes_intersect(const Shape& a, const Shape& b)
+{
+	return a.intersects(b);
+}
+
+bool MattMath::shapes_AABB_intersect(const Shape* a, const Shape* b)
+{
+	return a->get_bounding_box().intersects(b->get_bounding_box());
+}
+
+bool MattMath::shapes_AABB_intersect(const Shape& a, const Shape& b)
+{
+	return a.get_bounding_box().intersects(b.get_bounding_box());
+}
+
+bool MattMath::rectangles_intersect(const RectangleF& a, const RectangleF& b)
+{
+	float t;
+	if ((t = a.x - b.x) > b.width || -t > a.width)
+	{
+		return false;
+	}
+	if ((t = a.y - b.y) > b.height || -t > a.height)
+	{
+		return false;
+	}
+	return true;
+}
+
+bool MattMath::rectangle_circle_intersect(const RectangleF& rectangle, const Circle& circle)
+{
+	return EricsonMath::test_circle_AABB(circle, rectangle);
+}
+
+bool MattMath::rectangle_triangle_intersect(const RectangleF& rectangle, const Triangle& triangle)
+{
+	return false;
+}
+
+bool MattMath::rectangle_quad_intersect(const RectangleF& rectangle, const Quad& quad)
+{
+	// get the triangles of the quad
+	std::vector<Triangle> triangles = quad.get_triangles();
+
+	// check each triangle against the rectangle
+	for (const Triangle& triangle : triangles)
+	{
+		if (rectangle_triangle_intersect(rectangle, triangle))
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
+bool MattMath::rectangle_segment_intersect(const RectangleF& rectangle, const Segment& segment)
+{
+	return EricsonMath::test_segment_AABB(segment.point1, segment.point2, rectangle);
+}
+
+bool MattMath::rectangle_point_intersect(const RectangleF& rectangle, const Point2F& point)
+{
+	return point.x >= rectangle.x &&
+		point.x <= rectangle.x + rectangle.width &&
+		point.y >= rectangle.y &&
+		point.y <= rectangle.y + rectangle.height;
+}
+
+bool MattMath::circles_intersect(const Circle& a, const Circle& b)
+{
+	return Vector2F::distance(a.center, b.center) <=
+		a.radius + b.radius;
+}
+
+bool MattMath::circle_triangle_intersect(const Circle& circle, const Triangle& triangle, Point2F& point)
+{
+	return EricsonMath::test_circle_triangle(circle, triangle.get_point_0(),
+		triangle.get_point_1(), triangle.get_point_2(), point);
+}
+
+bool MattMath::circle_triangle_intersect(const Circle& circle, const Triangle& triangle)
+{
+	Point2F point;
+	return EricsonMath::test_circle_triangle(circle, triangle.get_point_0(),
+		triangle.get_point_1(), triangle.get_point_2(), point);
+}
+
+bool MattMath::circle_quad_intersect(const Circle& circle, const Quad& quad, Point2F& point)
+{
+	return false;
+}
+
+bool MattMath::circle_quad_intersect(const Circle& circle, const Quad& quad)
+{
+	return false;
+}
+
+bool MattMath::circle_segment_intersect(const Circle& circle, const Segment& segment, Point2F& point)
+{
+	return false;
+}
+
+bool MattMath::circle_segment_intersect(const Circle& circle, const Segment& segment)
+{
+	return false;
+}
+
+bool MattMath::circle_point_intersect(const Circle& circle, const Point2F& point)
+{
+	return Vector2F::distance(circle.center, point) <= circle.radius;
+}
+
+bool MattMath::triangles_intersect(const Triangle& a, const Triangle& b)
+{
+	return false;
+}
+
+bool MattMath::triangle_quad_intersect(const Triangle& triangle, const Quad& quad)
+{
+	return false;
+}
+
+bool MattMath::triangle_segment_intersect(const Triangle& triangle, const Segment& segment)
+{
+	return false;
+}
+
+bool MattMath::triangle_point_intersect(const Triangle& triangle, const Point2F& point)
+{
+	return EricsonMath::test_point_triangle(point, triangle.points[0],
+		triangle.points[1], triangle.points[2]);
+}
+
+bool MattMath::quads_intersect(const Quad& a, const Quad& b)
+{
+	return false;
+}
+
+bool MattMath::quad_segment_intersect(const Quad& quad, const Segment& segment)
+{
+	return false;
+}
+
+bool MattMath::quad_point_intersect(const Quad& quad, const Point2F& point)
+{
+	return false;
+}
+
+#pragma endregion Global Intersect Functions
 
 #pragma region RectangleF
 
@@ -228,13 +326,33 @@ RectangleF::RectangleF(const RECT& rectangle)
 	this->width = static_cast<float>(rectangle.right - rectangle.left);
 	this->height = static_cast<float>(rectangle.bottom - rectangle.top);
 }
-const RectangleF& RectangleF::get_bounding_box() const
+RectangleF RectangleF::get_bounding_box() const
 {
 	return *this;
 }
 shape_type RectangleF::get_shape_type() const
 {
 	return shape_type::RECTANGLE;
+}
+bool RectangleF::intersects(const Shape* other) const
+{
+	shape_type other_shape_type = other->get_shape_type();
+	switch (other_shape_type)
+	{
+	case shape_type::RECTANGLE:
+		return this->intersects(static_cast<const RectangleF*>(other));
+	case shape_type::CIRCLE:
+		return this->intersects(static_cast<const Circle*>(other));
+	case shape_type::TRIANGLE:
+		return this->intersects(static_cast<const Triangle*>(other));
+	case shape_type::QUAD:
+		return this->intersects(static_cast<const Quad*>(other));
+	}
+	return false;
+}
+bool RectangleF::intersects(const Shape& other) const
+{
+	return this->intersects(&other);
 }
 float RectangleF::get_x() const
 {
@@ -368,13 +486,13 @@ bool RectangleF::operator!=(const RectangleF& other) const
 {
 	return !(*this == other);
 }
-bool RectangleF::contains(const Vector2F& point) const
-{
-	return point.x >= this->x &&
-		point.x <= this->x + this->width &&
-		point.y >= this->y &&
-		point.y <= this->y + this->height;
-}
+//bool RectangleF::contains(const Vector2F& point) const
+//{
+//	return point.x >= this->x &&
+//		point.x <= this->x + this->width &&
+//		point.y >= this->y &&
+//		point.y <= this->y + this->height;
+//}
 bool RectangleF::contains(const RectangleF& other) const
 {
 	return other.x >= this->x &&
@@ -384,61 +502,27 @@ bool RectangleF::contains(const RectangleF& other) const
 }
 bool RectangleF::intersects(const RectangleF& other) const
 {
-	//return this->x < other.x + other.width &&
-	//	this->x + this->width > other.x &&
-	//	this->y < other.y + other.height &&
-	//	this->y + this->height > other.y;
-	//
-	//pg 79
-	float t;
-	if ((t = this->x - other.x) > other.width || -t > this->width)
-	{
-		return false;
-	}
-	if ((t = this->y - other.y) > other.height || -t > this->height)
-	{
-		return false;
-	}
-	return true;
+	return rectangles_intersect(*this, other);
 }
 bool RectangleF::intersects(const Circle& other) const
 {
-	//circleDistance.x = abs(circle.x - rect.x);
-	//circleDistance.y = abs(circle.y - rect.y);
-
-	//if (circleDistance.x > (rect.width / 2 + circle.r)) { return false; }
-	//if (circleDistance.y > (rect.height / 2 + circle.r)) { return false; }
-
-	//if (circleDistance.x <= (rect.width / 2)) { return true; }
-	//if (circleDistance.y <= (rect.height / 2)) { return true; }
-
-	//cornerDistance_sq = (circleDistance.x - rect.width / 2) ^ 2 +
-	//	(circleDistance.y - rect.height / 2) ^ 2;
-
-	//return (cornerDistance_sq <= (circle.r ^ 2));
-
-	return EricsonMath::test_circle_AABB(other, *this);
+	return rectangle_circle_intersect(*this, other);
 }
 bool RectangleF::intersects(const Triangle& other) const
 {
-	// check each segment of the triangle against the rectangle
-	if (EricsonMath::test_segment_AABB(other.point1, other.point2, *this))
-	{
-		return true;
-	}
-	if (EricsonMath::test_segment_AABB(other.point2, other.point3, *this))
-	{
-		return true;
-	}
-	if (EricsonMath::test_segment_AABB(other.point3, other.point1, *this))
-	{
-		return true;
-	}
-	return false;
+	return rectangle_triangle_intersect(*this, other);
+}
+bool RectangleF::intersects(const Quad& other) const
+{
+	return rectangle_quad_intersect(*this, other);
 }
 bool RectangleF::intersects(const Segment& other) const
 {
-	return EricsonMath::test_segment_AABB(other.point1, other.point2, *this);
+	return rectangle_segment_intersect(*this, other);
+}
+bool RectangleF::intersects(const Point2F& other) const
+{
+	return rectangle_point_intersect(*this, other);
 }
 RectangleF RectangleF::intersection(const RectangleF& other) const
 {
@@ -654,6 +738,236 @@ const RectangleF RectangleF::ZERO = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 #pragma endregion RectangleF
 
+#pragma region Matrix
+
+//template<typename T>
+//Matrix<T>::Matrix(int rows, int columns)
+//{
+//	this->_rows = rows;
+//	this->_columns = columns;
+//	this->_elements = std::vector<T>(rows * columns);
+//}
+//
+//template<typename T>
+//Matrix<T>::Matrix(int rows, int columns, const std::vector<T>& elements)
+//{
+//	this->_rows = rows;
+//	this->_columns = columns;
+//	if (rows * columns != elements.size())
+//	{
+//		throw std::invalid_argument(
+//			"Number of elements does not match the dimensions of the matrix");
+//	}
+//	this->_elements = elements;
+//}
+//
+//template<typename T>
+//Matrix<T>::Matrix(int size, vector_type type)
+//{
+//	if (type == vector_type::ROW)
+//	{
+//		this->_rows = 1;
+//		this->_columns = size;
+//	}
+//	else
+//	{
+//		this->_rows = size;
+//		this->_columns = 1;
+//	}
+//	this->_elements = std::vector<T>(size);
+//}
+//
+//template<typename T>
+//Matrix<T>::Matrix(int size, vector_type type, const std::vector<T>& elements)
+//{
+//	if (type == vector_type::ROW)
+//	{
+//		this->_rows = 1;
+//		this->_columns = size;
+//	}
+//	else
+//	{
+//		this->_rows = size;
+//		this->_columns = 1;
+//	}
+//	if (size != elements.size())
+//	{
+//		throw std::invalid_argument(
+//			"Number of elements does not match the dimensions of the matrix");
+//	}
+//	this->_elements = elements;
+//}
+//
+//template<typename T>
+//T Matrix<T>::get_element(int row, int column) const
+//{
+//	// check if the row and column are valid
+//	if (!row_valid(row) || !column_valid(column))
+//	{
+//		throw std::invalid_argument("Row or column is not valid");
+//	}
+//	int index = calculate_index(row, column);
+//	return this->_elements[index];
+//}
+//
+//template<typename T>
+//void Matrix<T>::set_element(int row, int column, T value)
+//{
+//	// check if the row and column are valid
+//	if (!row_valid(row) || !column_valid(column))
+//	{
+//		throw std::invalid_argument("Row or column is not valid");
+//	}
+//	int index = calculate_index(row, column);
+//	this->_elements[index] = value;
+//}
+//
+//template<typename T>
+//int Matrix<T>::get_rows() const
+//{
+//	return this->_rows;
+//}
+//
+//template<typename T>
+//int Matrix<T>::get_columns() const
+//{
+//	return this->_columns;
+//}
+//
+//template<typename T>
+//bool Matrix<T>::is_square() const
+//{
+//	return this->_rows == this->_columns;
+//}
+//
+//template<typename T>
+//bool Matrix<T>::equal_size(const Matrix<T>& other) const
+//{
+//	return this->_rows == other.get_rows() && this->_columns == other.get_columns();
+//}
+//
+//template<typename T>
+//Matrix<T> Matrix<T>::rotate_pi_radians() const
+//{
+//	// create a new matrix with the same dimensions
+//	Matrix<T> rotated_matrix(this->_rows, this->_columns);
+//
+//	// rotate the matrix by 180 degrees
+//	for (int i = 0; i < this->_rows; i++)
+//	{
+//		for (int j = 0; j < this->_columns; j++)
+//		{
+//			rotated_matrix(i, j) = this->_elements[(this->_rows - i - 1) * this->_columns + (this->_columns - j - 1)];
+//		}
+//	}
+//
+//	return rotated_matrix;
+//}
+//
+//template<typename T>
+//T& Matrix<T>::operator()(int row, int column)
+//{
+//	return this->get_element_ref(row, column);
+//}
+//
+//template<typename T>
+//const T& Matrix<T>::operator()(int row, int column) const
+//{
+//	return this->get_element(row, column);
+//}
+//
+//template<typename T>
+//bool Matrix<T>::row_valid(int row) const
+//{
+//	return row >= 0 && row < this->_rows;
+//}
+//
+//template<typename T>
+//bool Matrix<T>::column_valid(int column) const
+//{
+//	return column >= 0 && column < this->_columns;
+//}
+//
+//template<typename T>
+//int Matrix<T>::calculate_index(int row, int column) const
+//{
+//	return row * this->_columns + column;
+//}
+//
+//template<typename T>
+//T& Matrix<T>::get_element_ref(int row, int column)
+//{
+//	// check if the row and column are valid
+//	if (!row_valid(row) || !column_valid(column))
+//	{
+//		throw std::invalid_argument("Row or column is not valid");
+//	}
+//	int index = calculate_index(row, column);
+//	return this->_elements[index];
+//}
+
+#pragma endregion Matrix
+
+#pragma region Vector
+
+//template<typename T>
+//Vector<T>::Vector(int size) :
+//	Matrix<T>(size, vector_type::COLUMN)
+//{
+//}
+//
+//template<typename T>
+//Vector<T>::Vector(int size, vector_type type) :
+//	Matrix<T>(size, type)
+//{
+//}
+//
+//template<typename T>
+//Vector<T>::Vector(int size, vector_type type, const std::vector<T>& elements) :
+//	Matrix<T>(size, type, elements)
+//{
+//}
+//
+//template<typename T>
+//int Vector<T>::get_size() const
+//{
+//	if (this->get_vector_type() == vector_type::ROW)
+//	{
+//		return this->get_columns();
+//	}
+//	else
+//	{
+//		return this->get_rows();
+//	}
+//}
+//
+//template<typename T>
+//vector_type Vector<T>::get_vector_type() const
+//{
+//	if (this->get_rows() == 1)
+//	{
+//		return vector_type::ROW;
+//	}
+//	else
+//	{
+//		return vector_type::COLUMN;
+//	}
+//}
+//
+//template<typename T>
+//T& Vector<T>::operator[](int index)
+//{
+//	return this->get_element_ref(index, 0);
+//}
+//
+//template<typename T>
+//const T& Vector<T>::operator[](int index) const
+//{
+//	return this->get_element(index, 0);
+//}
+
+#pragma endregion Vector
+
 #pragma region Vector2I
 
 Vector2I::Vector2I(int x, int y)
@@ -835,7 +1149,7 @@ Vector2F::Vector2F(const XMFLOAT2& vector)
 	this->x = vector.x;
 	this->y = vector.y;
 }
-Vector2F::Vector2F(const Vector2I vector)
+Vector2F::Vector2F(const Vector2I& vector)
 {
 	this->x = static_cast<float>(vector.x);
 	this->y = static_cast<float>(vector.y);
@@ -2511,7 +2825,7 @@ Circle::Circle(const DirectX::SimpleMath::Vector2& center, float radius) :
 	center(center), radius(radius)
 {
 }
-const RectangleF& Circle::get_bounding_box() const
+RectangleF Circle::get_bounding_box() const
 {
 	return MattMath::RectangleF(this->center.x - this->radius,
 				this->center.y - this->radius,
@@ -2522,6 +2836,7 @@ shape_type Circle::get_shape_type() const
 {
 	return shape_type::CIRCLE;
 }
+
 bool Circle::operator==(const Circle& other) const
 {
 	return this->center == other.center &&
@@ -2531,122 +2846,338 @@ bool Circle::operator!=(const Circle& other) const
 {
 	return !(*this == other);
 }
-bool Circle::contains(const Vector2F& point) const
+//bool Circle::contains(const Vector2F& point) const
+//{
+//	return Vector2F::distance(this->center, point) <= this->radius;
+//}
+bool Circle::intersects(const RectangleF& other) const
 {
-	return Vector2F::distance(this->center, point) <= this->radius;
-
+	return rectangle_circle_intersect(other, *this);
 }
 bool Circle::intersects(const Circle& other) const
 {
-	return Vector2F::distance(this->center, other.center) <=
-		this->radius + other.radius;
-}
-bool Circle::intersects(const RectangleF& other) const
-{
-	return other.intersects(*this);
+	return circles_intersect(*this, other);
 }
 bool Circle::intersects(const Triangle& other) const
 {
-	Point2F closest_point;
-	return EricsonMath::test_circle_triangle(*this, other.point1,
-		other.point2, other.point3, closest_point);
+	return circle_triangle_intersect(*this, other);
+}
+bool Circle::intersects(const Quad& other) const
+{
+	return circle_quad_intersect(*this, other);
+}
+bool Circle::intersects(const Segment& other) const
+{
+	return circle_segment_intersect(*this, other);
+}
+bool Circle::intersects(const Point2F& other) const
+{
+	return circle_point_intersect(*this, other);
 }
 
 #pragma endregion Circle
 
 #pragma region Triangle
 
-Triangle::Triangle(const Vector2F& point1,
-	const Vector2F& point2,
-	const Vector2F& point3) :
-	point1(point1), point2(point2), point3(point3)
+Triangle::Triangle(const Vector2F& point0,
+	const Vector2F& point1,
+	const Vector2F& point2)
 {
+	this->points[0] = point0;
+	this->points[1] = point1;
+	this->points[2] = point2;
 }
-Triangle::Triangle(const DirectX::SimpleMath::Vector2& point1,
-	const DirectX::SimpleMath::Vector2& point2,
-	const DirectX::SimpleMath::Vector2& point3) :
-	point1(point1), point2(point2), point3(point3)
+Triangle::Triangle(const DirectX::SimpleMath::Vector2& point0,
+	const DirectX::SimpleMath::Vector2& point1,
+	const DirectX::SimpleMath::Vector2& point2)
 {
+	this->points[0] = point0;
+	this->points[1] = point1;
+	this->points[2] = point2;
 }
-const RectangleF& Triangle::get_bounding_box() const
+RectangleF Triangle::get_bounding_box() const
 {
-	float x1 = std::min(std::min(this->point1.x, this->point2.x),
-					this->point3.x);
-	float x2 = std::max(std::max(this->point1.x, this->point2.x),
-				this->point3.x);
-	float y1 = std::min(std::min(this->point1.y, this->point2.y),
-				this->point3.y);
-	float y2 = std::max(std::max(this->point1.y, this->point2.y),
-				this->point3.y);
+	float x1 = std::min(std::min(this->points[0].x, this->points[1].x),
+		this->points[2].x);
+
+	float x2 = std::max(std::max(this->points[0].x, this->points[1].x), 
+		this->points[2].x);
+
+	float y1 = std::min(std::min(this->points[0].y, this->points[1].y), 
+		this->points[2].y);
+
+	float y2 = std::max(std::max(this->points[0].y, this->points[1].y), 
+		this->points[2].y);
+
 	return RectangleF(x1, y1, x2 - x1, y2 - y1);
 }
 shape_type Triangle::get_shape_type() const
 {
 	return shape_type::TRIANGLE;
 }
-Segment Triangle::get_segment1() const
+const Vector2F& Triangle::get_point_0() const
 {
-	return Segment(this->point1, this->point2);
+	return this->points[0];
 }
-Segment Triangle::get_segment2() const
+const Vector2F& Triangle::get_point_1() const
 {
-	return Segment(this->point2, this->point3);
+	return this->points[1];
 }
-Segment Triangle::get_segment3() const
+const Vector2F& Triangle::get_point_2() const
 {
-	return Segment(this->point3, this->point1);
+	return this->points[2];
+}
+std::vector<Vector2F> Triangle::get_points() const
+{
+	std::vector<Vector2F> points = { this->points[0], this->points[1], this->points[2] };
+	return points;
+}
+Segment Triangle::get_segment_0() const
+{
+	return Segment(this->points[0], this->points[1]);
+}
+Segment Triangle::get_segment_1() const
+{
+	return Segment(this->points[1], this->points[2]);
+}
+Segment Triangle::get_segment_2() const
+{
+	return Segment(this->points[2], this->points[0]);
+}
+std::vector<Segment> Triangle::get_segments() const
+{
+	std::vector<Segment> segments;
+	segments.push_back(this->get_segment_0());
+	segments.push_back(this->get_segment_1());
+	segments.push_back(this->get_segment_2());
+	return segments;
 }
 bool Triangle::operator==(const Triangle& other) const
 {
-	return this->point1 == other.point1 &&
-		this->point2 == other.point2 &&
-		this->point3 == other.point3;
+	return this->points[0] == other.points[0] &&
+		this->points[1] == other.points[1] &&
+		this->points[2] == other.points[2];
 }
 bool Triangle::operator!=(const Triangle& other) const
 {
 	return !(*this == other);
 }
-bool Triangle::intersects(const Triangle& other) const
-{
-	// check if any of the segments intersect
-	if (this->get_segment1().intersects(other.get_segment1())) return true;
-	if (this->get_segment1().intersects(other.get_segment2())) return true;
-	if (this->get_segment1().intersects(other.get_segment3())) return true;
-	if (this->get_segment2().intersects(other.get_segment1())) return true;
-	if (this->get_segment2().intersects(other.get_segment2())) return true;
-	if (this->get_segment2().intersects(other.get_segment3())) return true;
-	if (this->get_segment3().intersects(other.get_segment1())) return true;
-	if (this->get_segment3().intersects(other.get_segment2())) return true;
-	if (this->get_segment3().intersects(other.get_segment3())) return true;
-	return false;
-}
+
 bool Triangle::intersects(const RectangleF& other) const
 {
-	return other.intersects(*this);
+	return rectangle_triangle_intersect(other, *this);
 }
+
 bool Triangle::intersects(const Circle& other) const
 {
-	return other.intersects(*this);
+	return circle_triangle_intersect(other, *this);
 }
-bool Triangle::contains(const Vector2F& point) const
+
+bool Triangle::intersects(const Triangle& other) const
 {
-	//float d1, d2, d3;
-	//bool has_neg, has_pos;
-
-	//d1 = sign(point, this->point1, this->point2);
-	//d2 = sign(point, this->point2, this->point3);
-	//d3 = sign(point, this->point3, this->point1);
-
-	//has_neg = (d1 < 0) || (d2 < 0) || (d3 < 0);
-	//has_pos = (d1 > 0) || (d2 > 0) || (d3 > 0);
-
-	//return !(has_neg && has_pos);
-
-	return EricsonMath::test_point_triangle(point, this->point1,
-		this->point2, this->point3);
+	return triangles_intersect(*this, other);
 }
+
+bool Triangle::intersects(const Quad& other) const
+{
+	return triangle_quad_intersect(*this, other);
+}
+
+bool Triangle::intersects(const Segment& other) const
+{
+	return triangle_segment_intersect(*this, other);
+}
+
+bool Triangle::intersects(const Point2F& other) const
+{
+	return triangle_point_intersect(*this, other);
+}
+
 
 #pragma endregion Triangle
+
+#pragma region Quad
+
+Quad::Quad(const Vector2F& point0,
+	const Vector2F& point1,
+	const Vector2F& point2,
+	const Vector2F& point3)
+{
+	this->points[0] = point0;
+	this->points[1] = point1;
+	this->points[2] = point2;
+	this->points[3] = point3;
+}
+
+Quad::Quad(const RectangleF& rectangle)
+{
+	this->points[0] = Vector2F(rectangle.x, rectangle.y);
+	this->points[1] = Vector2F(rectangle.x + rectangle.width, rectangle.y);
+	this->points[2] = Vector2F(rectangle.x + rectangle.width, rectangle.y + rectangle.height);
+	this->points[3] = Vector2F(rectangle.x, rectangle.y + rectangle.height);
+}
+
+Quad::Quad(const DirectX::SimpleMath::Vector2& point0,
+	const DirectX::SimpleMath::Vector2& point1,
+	const DirectX::SimpleMath::Vector2& point2,
+	const DirectX::SimpleMath::Vector2& point3)
+{
+	this->points[0] = point0;
+	this->points[1] = point1;
+	this->points[2] = point2;
+	this->points[3] = point3;
+}
+
+RectangleF Quad::get_bounding_box() const
+{
+	float x1 = std::min(std::min(std::min(this->points[0].x, this->points[1].x),
+		this->points[2].x), this->points[3].x);
+
+	float x2 = std::max(std::max(std::max(this->points[0].x, this->points[1].x),
+		this->points[2].x), this->points[3].x);
+
+	float y1 = std::min(std::min(std::min(this->points[0].y, this->points[1].y),
+		this->points[2].y), this->points[3].y);
+
+	float y2 = std::max(std::max(std::max(this->points[0].y, this->points[1].y),
+		this->points[2].y), this->points[3].y);
+
+	return RectangleF(x1, y1, x2 - x1, y2 - y1);
+}
+
+shape_type Quad::get_shape_type() const
+{
+	return shape_type::QUAD;
+}
+
+const Point2F& Quad::get_point_0() const
+{
+	return this->points[0];
+}
+
+const Point2F& Quad::get_point_1() const
+{
+	return this->points[1];
+}
+
+const Point2F& Quad::get_point_2() const
+{
+	return this->points[2];
+}
+
+const Point2F& Quad::get_point_3() const
+{
+	return this->points[3];
+}
+
+std::vector<Point2F> Quad::get_points() const
+{
+	std::vector<Point2F> points =
+	{
+		this->points[0],
+		this->points[1],
+		this->points[2],
+		this->points[3]
+	};
+	return points;
+}
+
+Segment Quad::get_segment_0() const
+{
+	return Segment(this->points[0], this->points[1]);
+}
+
+Segment Quad::get_segment_1() const
+{
+	return Segment(this->points[1], this->points[2]);
+}
+
+Segment Quad::get_segment_2() const
+{
+	return Segment(this->points[2], this->points[3]);
+}
+
+Segment Quad::get_segment_3() const
+{
+	return Segment(this->points[3], this->points[0]);
+}
+
+std::vector<Segment> Quad::get_segments() const
+{
+	std::vector<Segment> segments =
+	{
+		this->get_segment_0(),
+		this->get_segment_1(),
+		this->get_segment_2(),
+		this->get_segment_3()
+	};
+	return segments;
+}
+
+Triangle Quad::get_triangle_0() const
+{
+	return Triangle(this->points[0], this->points[1], this->points[2]);
+}
+
+Triangle Quad::get_triangle_1() const
+{
+	return Triangle(this->points[0], this->points[2], this->points[3]);
+}
+
+std::vector<Triangle> Quad::get_triangles() const
+{
+	std::vector<Triangle> triangles =
+	{
+		this->get_triangle_0(),
+		this->get_triangle_1()
+	};
+	return triangles;
+}
+
+bool Quad::operator==(const Quad& other) const
+{
+	return this->points[0] == other.points[0] &&
+		this->points[1] == other.points[1] &&
+		this->points[2] == other.points[2] &&
+		this->points[3] == other.points[3];
+}
+
+bool Quad::operator!=(const Quad& other) const
+{
+	return !(*this == other);
+}
+
+bool Quad::intersects(const RectangleF& other) const
+{
+	return rectangle_quad_intersect(other, *this);
+}
+
+bool Quad::intersects(const Circle& other) const
+{
+	return circle_quad_intersect(other, *this);
+}
+
+bool Quad::intersects(const Triangle& other) const
+{
+	return triangle_quad_intersect(other, *this);
+}
+
+bool Quad::intersects(const Quad& other) const
+{
+	return quads_intersect(*this, other);
+}
+
+bool Quad::intersects(const Segment& other) const
+{
+	return quad_segment_intersect(*this, other);
+}
+
+bool Quad::intersects(const Point2F& other) const
+{
+	return quad_point_intersect(*this, other);
+}
+
+#pragma endregion Quad
 
 #pragma region Segment
 
