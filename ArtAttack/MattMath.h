@@ -201,6 +201,7 @@ namespace MattMath
 		bool intersects(const MattMath::Quad& quad) const override;
 		bool intersects(const MattMath::Segment& other) const override;
 		bool intersects(const MattMath::Point2F& point) const override;
+		bool contains(const MattMath::Point2F& point) const;
 		RectangleF intersection(const RectangleF& other) const;
 		
 		//void set_left(float left);
@@ -726,7 +727,7 @@ namespace MattMath
 		const D3D11_VIEWPORT* get_d3d_viewport_ptr() const;
 
 		MattMath::RectangleF get_rectangle() const;
-		MattMath::RectangleF get_rectangle(float minDepth, float maxDepth) const;
+		//MattMath::RectangleF get_rectangle(float minDepth, float maxDepth) const;
 		MattMath::Vector2F get_position() const;
 		MattMath::Vector2F get_size() const;
 
@@ -766,6 +767,7 @@ namespace MattMath
 		bool intersects(const MattMath::Quad& other) const override;
 		bool intersects(const MattMath::Segment& other) const override;
 		bool intersects(const MattMath::Point2F& point) const override;
+		bool contains(const MattMath::Point2F& point) const;
 	};
 	struct Triangle : public Shape
 	{
@@ -789,10 +791,10 @@ namespace MattMath
 		const Vector2F& get_point_2() const;
 		std::vector<Vector2F> get_points() const;
 
-		Segment get_segment_0() const;
-		Segment get_segment_1() const;
-		Segment get_segment_2() const;
-		std::vector<Segment> get_segments() const;
+		Segment get_edge_0() const;
+		Segment get_edge_1() const;
+		Segment get_edge_2() const;
+		std::vector<Segment> get_edges() const;
 
 		bool operator==(const Triangle& other) const;
 		bool operator!=(const Triangle& other) const;
@@ -805,6 +807,7 @@ namespace MattMath
 		bool intersects(const MattMath::Quad& other) const override;
 		bool intersects(const MattMath::Segment& other) const override;
 		bool intersects(const MattMath::Point2F& point) const override;
+		bool contains(const MattMath::Point2F& point) const;
 	};
 
 	/*
@@ -836,11 +839,11 @@ namespace MattMath
 		const Point2F& get_point_3() const;
 		std::vector<Point2F> get_points() const;
 
-		Segment get_segment_0() const;
-		Segment get_segment_1() const;
-		Segment get_segment_2() const;
-		Segment get_segment_3() const;
-		std::vector<Segment> get_segments() const;
+		Segment get_edge_0() const;
+		Segment get_edge_1() const;
+		Segment get_edge_2() const;
+		Segment get_edge_3() const;
+		std::vector<Segment> get_edges() const;
 
 		Triangle get_triangle_0() const;
 		Triangle get_triangle_1() const;
@@ -855,6 +858,7 @@ namespace MattMath
 		bool intersects(const Quad& other) const;
 		bool intersects(const Segment& other) const;
 		bool intersects(const Point2F& point) const;
+		bool contains(const Point2F& point) const;
 	};
 
 	struct Segment

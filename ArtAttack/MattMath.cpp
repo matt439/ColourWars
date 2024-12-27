@@ -85,8 +85,8 @@ void MattMath::clamp_ref(int& value, int min, int max)
 int MattMath::sign(const Vector2F& p1,
 	const Vector2F& p2, const Vector2F& p3)
 {
-	return (p1.x - p3.x) * (p2.y - p3.y) -
-		(p2.x - p3.x) * (p1.y - p3.y);
+	return static_cast<int>((p1.x - p3.x) * (p2.y - p3.y) -
+		(p2.x - p3.x) * (p1.y - p3.y));
 }
 
 bool MattMath::are_equal(float a, float b, float epsilon)
@@ -188,6 +188,39 @@ bool MattMath::rectangle_circle_intersect(const RectangleF& rectangle, const Cir
 
 bool MattMath::rectangle_triangle_intersect(const RectangleF& rectangle, const Triangle& triangle)
 {
+	// AABB vs AABB
+	if (!rectangle.intersects(triangle.get_bounding_box()))
+	{
+		return false;
+	}
+
+	// check if the rectangle contains any of the triangle's points
+	if (rectangle.contains(triangle.get_point_0()) ||
+		rectangle.contains(triangle.get_point_1()) ||
+		rectangle.contains(triangle.get_point_2()))
+	{
+		return true;
+	}
+
+	// check if the triangle contains any of the rectangle's points
+	if (triangle.contains(rectangle.get_top_left()) ||
+		triangle.contains(rectangle.get_top_right()) ||
+		triangle.contains(rectangle.get_bottom_left()) ||
+		triangle.contains(rectangle.get_bottom_right()))
+	{
+		return true;
+	}
+
+	// check if any of the triangle's edges intersect the rectangle
+	std::vector<Segment> edges = triangle.get_edges();
+	for (const Segment& edge : edges)
+	{
+		if (rectangle.intersects(edge))
+		{
+			return true;
+		}
+	}
+
 	return false;
 }
 
@@ -525,6 +558,10 @@ bool RectangleF::intersects(const Segment& other) const
 bool RectangleF::intersects(const Point2F& other) const
 {
 	return rectangle_point_intersect(*this, other);
+}
+bool RectangleF::contains(const Point2F& point) const
+{
+	return this->intersects(point);
 }
 RectangleF RectangleF::intersection(const RectangleF& other) const
 {
@@ -2735,10 +2772,10 @@ RectangleF Viewport::get_rectangle() const
 {
 	return RectangleF(this->x, this->y, this->width, this->height);
 }
-RectangleF Viewport::get_rectangle(float minDepth, float maxDepth) const
-{
-	return RectangleF(this->x, this->y, this->width, this->height);
-}
+//RectangleF Viewport::get_rectangle(float minDepth, float maxDepth) const
+//{
+//	return RectangleF(this->x, this->y, this->width, this->height);
+//}
 Vector2F Viewport::get_position() const
 {
 	return Vector2F(this->x, this->y);
@@ -2881,6 +2918,10 @@ bool Circle::intersects(const Point2F& other) const
 {
 	return circle_point_intersect(*this, other);
 }
+bool Circle::contains(const Point2F& point) const
+{
+	return this->intersects(point);
+}
 
 #pragma endregion Circle
 
@@ -2945,24 +2986,26 @@ std::vector<Vector2F> Triangle::get_points() const
 	std::vector<Vector2F> points = { this->points[0], this->points[1], this->points[2] };
 	return points;
 }
-Segment Triangle::get_segment_0() const
+Segment Triangle::get_edge_0() const
 {
 	return Segment(this->points[0], this->points[1]);
 }
-Segment Triangle::get_segment_1() const
+Segment Triangle::get_edge_1() const
 {
 	return Segment(this->points[1], this->points[2]);
 }
-Segment Triangle::get_segment_2() const
+Segment Triangle::get_edge_2() const
 {
 	return Segment(this->points[2], this->points[0]);
 }
-std::vector<Segment> Triangle::get_segments() const
+std::vector<Segment> Triangle::get_edges() const
 {
-	std::vector<Segment> segments;
-	segments.push_back(this->get_segment_0());
-	segments.push_back(this->get_segment_1());
-	segments.push_back(this->get_segment_2());
+	std::vector<Segment> segments =
+	{
+		this->get_edge_0(),
+		this->get_edge_1(),
+		this->get_edge_2()
+	};
 	return segments;
 }
 bool Triangle::operator==(const Triangle& other) const
@@ -3004,6 +3047,11 @@ bool Triangle::intersects(const Segment& other) const
 bool Triangle::intersects(const Point2F& other) const
 {
 	return triangle_point_intersect(*this, other);
+}
+
+bool Triangle::contains(const Point2F& point) const
+{
+	return this->intersects(point);
 }
 
 
@@ -3103,36 +3151,36 @@ std::vector<Point2F> Quad::get_points() const
 	return points;
 }
 
-Segment Quad::get_segment_0() const
+Segment Quad::get_edge_0() const
 {
 	return Segment(this->points[0], this->points[1]);
 }
 
-Segment Quad::get_segment_1() const
+Segment Quad::get_edge_1() const
 {
 	return Segment(this->points[1], this->points[2]);
 }
 
-Segment Quad::get_segment_2() const
+Segment Quad::get_edge_2() const
 {
 	return Segment(this->points[2], this->points[3]);
 }
 
-Segment Quad::get_segment_3() const
+Segment Quad::get_edge_3() const
 {
 	return Segment(this->points[3], this->points[0]);
 }
 
-std::vector<Segment> Quad::get_segments() const
+std::vector<Segment> Quad::get_edges() const
 {
-	std::vector<Segment> segments =
+	std::vector<Segment> edges =
 	{
-		this->get_segment_0(),
-		this->get_segment_1(),
-		this->get_segment_2(),
-		this->get_segment_3()
+		this->get_edge_0(),
+		this->get_edge_1(),
+		this->get_edge_2(),
+		this->get_edge_3()
 	};
-	return segments;
+	return edges;
 }
 
 Triangle Quad::get_triangle_0() const
@@ -3196,6 +3244,11 @@ bool Quad::intersects(const Segment& other) const
 bool Quad::intersects(const Point2F& other) const
 {
 	return quad_point_intersect(*this, other);
+}
+
+bool Quad::contains(const Point2F& point) const
+{
+	return this->intersects(point);
 }
 
 #pragma endregion Quad
