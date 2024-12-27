@@ -113,134 +113,19 @@ float MattMath::lerp(float a, float b, float t)
 
 bool Shape::intersects(const Shape* other) const
 {
-	shape_type other_shape_type = other->get_shape_type();
-	shape_type this_shape_type = this->get_shape_type();
-
-	switch (this_shape_type)
+	switch (other->get_shape_type())
 	{
 	case shape_type::RECTANGLE:
-	{
-		RectangleF this_rectangle = static_cast<const RectangleF&>(*this);
-		switch (other_shape_type)
-		{
-		case shape_type::RECTANGLE:
-		{
-			RectangleF other_rectangle = static_cast<const RectangleF&>(*other);
-			return this_rectangle.intersects(other_rectangle);
-		}
-		case shape_type::CIRCLE:
-		{
-			Circle other_circle = static_cast<const Circle&>(*other);
-			return this_rectangle.intersects(other_circle);
-		}
-		case shape_type::TRIANGLE:
-		{
-			Triangle other_triangle = static_cast<const Triangle&>(*other);
-			return this_rectangle.intersects(other_triangle);
-		}
-		case shape_type::QUAD:
-		{
-			Quad other_quad = static_cast<const Quad&>(*other);
-			return this_rectangle.intersects(other_quad);
-		}
-		default: // // shape_type::NONE
-			throw std::invalid_argument("Shape type not supported");
-		}
-		break;
-	}
+		return this->intersects(*dynamic_cast<const RectangleF*>(other));
 	case shape_type::CIRCLE:
-	{
-		Circle this_circle = static_cast<const Circle&>(*this);
-		switch (other_shape_type)
-		{
-		case shape_type::RECTANGLE:
-		{
-			RectangleF other_rectangle = static_cast<const RectangleF&>(*other);
-			return this_circle.intersects(other_rectangle);
-		}
-		case shape_type::CIRCLE:
-		{
-			Circle other_circle = static_cast<const Circle&>(*other);
-			return this_circle.intersects(other_circle);
-		}
-		case shape_type::TRIANGLE:
-		{
-			Triangle other_triangle = static_cast<const Triangle&>(*other);
-			return this_circle.intersects(other_triangle);
-		}
-		case shape_type::QUAD:
-		{
-			Quad other_quad = static_cast<const Quad&>(*other);
-			return this_circle.intersects(other_quad);
-		}
-		default: // // shape_type::NONE
-			throw std::invalid_argument("Shape type not supported");
-		}
-		break;
-	}
+		return this->intersects(*dynamic_cast<const Circle*>(other));
 	case shape_type::TRIANGLE:
-	{
-		Triangle this_triangle = static_cast<const Triangle&>(*this);
-		switch (other_shape_type)
-		{
-		case shape_type::RECTANGLE:
-		{
-			RectangleF other_rectangle = static_cast<const RectangleF&>(*other);
-			return this_triangle.intersects(other_rectangle);
-		}
-		case shape_type::CIRCLE:
-		{
-			Circle other_circle = static_cast<const Circle&>(*other);
-			return this_triangle.intersects(other_circle);
-		}
-		case shape_type::TRIANGLE:
-		{
-			Triangle other_triangle = static_cast<const Triangle&>(*other);
-			return this_triangle.intersects(other_triangle);
-		}
-		case shape_type::QUAD:
-		{
-			Quad other_quad = static_cast<const Quad&>(*other);
-			return this_triangle.intersects(other_quad);
-		}
-		default: // // shape_type::NONE
-			throw std::invalid_argument("Shape type not supported");
-		}
-		break;
-	}
+		return this->intersects(*dynamic_cast<const Triangle*>(other));
 	case shape_type::QUAD:
-	{
-		Quad this_quad = static_cast<const Quad&>(*this);
-		switch (other_shape_type)
-		{
-		case shape_type::RECTANGLE:
-		{
-			RectangleF other_rectangle = static_cast<const RectangleF&>(*other);
-			return this_quad.intersects(other_rectangle);
-		}
-		case shape_type::CIRCLE:
-		{
-			Circle other_circle = static_cast<const Circle&>(*other);
-			return this_quad.intersects(other_circle);
-		}
-		case shape_type::TRIANGLE:
-		{
-			Triangle other_triangle = static_cast<const Triangle&>(*other);
-			return this_quad.intersects(other_triangle);
-		}
-		case shape_type::QUAD:
-		{
-			Quad other_quad = static_cast<const Quad&>(*other);
-			return this_quad.intersects(other_quad);
-		}
-		default: // // shape_type::NONE
-			throw std::invalid_argument("Shape type not supported");
-		}
-		break;
-	}
-	default: // shape_type::NONE
-		throw std::invalid_argument("Shape type not supported");
-	}
+		return this->intersects(*dynamic_cast<const Quad*>(other));
+	default:
+		throw std::invalid_argument("Shape type not recognized");
+	};
 }
 
 bool Shape::intersects(const Shape& other) const
@@ -536,6 +421,17 @@ Segment RectangleF::get_left_edge() const
 Segment RectangleF::get_right_edge() const
 {
 	return Segment(this->get_top_right(), this->get_bottom_right());
+}
+std::vector<Segment> RectangleF::get_edges() const
+{
+	std::vector<Segment> edges = 
+	{
+		this->get_top_edge(),
+		this->get_bottom_edge(),
+		this->get_left_edge(),
+		this->get_right_edge()
+	};
+	return edges;
 }
 float RectangleF::get_area() const
 {
@@ -2943,6 +2839,11 @@ shape_type Circle::get_shape_type() const
 	return shape_type::CIRCLE;
 }
 
+void Circle::offset(const Vector2F& offset)
+{
+	this->center += offset;
+}
+
 bool Circle::operator==(const Circle& other) const
 {
 	return this->center == other.center &&
@@ -3020,6 +2921,12 @@ RectangleF Triangle::get_bounding_box() const
 shape_type Triangle::get_shape_type() const
 {
 	return shape_type::TRIANGLE;
+}
+void Triangle::offset(const Vector2F& offset)
+{
+	this->points[0] += offset;
+	this->points[1] += offset;
+	this->points[2] += offset;
 }
 const Vector2F& Triangle::get_point_0() const
 {
@@ -3154,6 +3061,14 @@ RectangleF Quad::get_bounding_box() const
 shape_type Quad::get_shape_type() const
 {
 	return shape_type::QUAD;
+}
+
+void Quad::offset(const Vector2F& offset)
+{
+	this->points[0] += offset;
+	this->points[1] += offset;
+	this->points[2] += offset;
+	this->points[3] += offset;
 }
 
 const Point2F& Quad::get_point_0() const

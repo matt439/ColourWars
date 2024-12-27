@@ -186,6 +186,7 @@
     <ClInclude Include="AnimationStrip.h" />
     <ClInclude Include="BorderThickness.h" />
     <ClInclude Include="CameraTools.h" />
+    <ClInclude Include="CollisionTools.h" />
     <ClInclude Include="collision_object_type.h" />
     <ClInclude Include="Colour.h" />
     <ClInclude Include="confirmation_state.h" />
@@ -295,6 +296,7 @@
     <ClCompile Include="AnimationObject.cpp" />
     <ClCompile Include="AnimationStrip.cpp" />
     <ClCompile Include="CameraTools.cpp" />
+    <ClCompile Include="CollisionTools.cpp" />
     <ClCompile Include="DebugText.cpp" />
     <ClCompile Include="DeviceResources.cpp" />
     <ClCompile Include="Drawer.cpp" />

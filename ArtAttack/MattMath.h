@@ -72,6 +72,7 @@ namespace MattMath
 		bool intersects(const Shape& other) const;
 		bool AABB_intersects(const Shape* other) const;
 		bool AABB_intersects(const Shape& other) const;
+		virtual void offset(const Vector2F& amount) = 0;
 	};
 
 	bool shapes_intersect(const Shape* a, const Shape* b);
@@ -180,6 +181,7 @@ namespace MattMath
 		MattMath::Segment get_bottom_edge() const;
 		MattMath::Segment get_left_edge() const;
 		MattMath::Segment get_right_edge() const;
+		std::vector<MattMath::Segment> get_edges() const;
 		float get_area() const;
 		MattMath::RectangleI get_rectangle_i() const;
 		DirectX::SimpleMath::Rectangle get_sm_rectangle() const;
@@ -214,7 +216,7 @@ namespace MattMath
 		void scale_at_center(float horizontal_scale, float vertical_scale);
 		void scale_at_center(const MattMath::Vector2F& scale);
 		void offset(float horizontal_amount, float vertical_amount);
-		void offset(const MattMath::Vector2F& amount);
+		void offset(const MattMath::Vector2F& amount) override;
 		void scale(float horizontal_amount, float vertical_amount);
 		void scale(const MattMath::Vector2F& amount);
 		void scale_size_and_position(float horizontal_amount,
@@ -751,6 +753,7 @@ namespace MattMath
 
 		MattMath::RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
+		void offset(const MattMath::Vector2F& amount) override;
 
 		bool operator==(const Circle& other) const;
 		bool operator!=(const Circle& other) const;
@@ -779,6 +782,7 @@ namespace MattMath
 
 		MattMath::RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
+		void offset(const MattMath::Vector2F& amount) override;
 
 		const Vector2F& get_point_0() const;
 		const Vector2F& get_point_1() const;
@@ -824,6 +828,7 @@ namespace MattMath
 
 		MattMath::RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
+		void offset(const MattMath::Vector2F& amount) override;
 
 		const Point2F& get_point_0() const;
 		const Point2F& get_point_1() const;

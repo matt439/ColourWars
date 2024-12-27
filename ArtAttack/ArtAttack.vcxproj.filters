@@ -122,6 +122,7 @@
     <ClInclude Include="WeaponDetails.h" />
     <ClInclude Include="Partitioner.h" />
     <ClInclude Include="ThreadPool.h" />
+    <ClInclude Include="CollisionTools.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -203,6 +204,7 @@
     <ClCompile Include="WeaponDetails.cpp" />
     <ClCompile Include="Partitioner.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
+    <ClCompile Include="CollisionTools.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />
