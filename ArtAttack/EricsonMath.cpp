@@ -576,11 +576,11 @@ bool EricsonMath::intersect_moving_AABB_AABB(const AABB& a, const AABB& b,
 		}
 		if (a_max.x < b_min.x)
 		{
-			tfirst = max((a_max.x - b_min.x) / v.x, tfirst);
+			tfirst = std::max((a_max.x - b_min.x) / v.x, tfirst);
 		}
 		if (b_max.x > a_min.x)
 		{
-			tlast = min((a_min.x - b_max.x) / v.x, tlast);
+			tlast = std::min((a_min.x - b_max.x) / v.x, tlast);
 		}
 	}
 	if (v.x > 0.0f) {
@@ -590,11 +590,11 @@ bool EricsonMath::intersect_moving_AABB_AABB(const AABB& a, const AABB& b,
 		}
 		if (b_max.x < a_min.x)
 		{
-			tfirst = max((a_min.x - b_max.x) / v.x, tfirst);
+			tfirst = std::max((a_min.x - b_max.x) / v.x, tfirst);
 		}
 		if (a_max.x > b_min.x)
 		{
-			tlast = min((a_max.x - b_min.x) / v.x, tlast);
+			tlast = std::min((a_max.x - b_min.x) / v.x, tlast);
 		}
 	}
 	// No overlap possible if time of first contact occurs after time of last contact
@@ -610,11 +610,11 @@ bool EricsonMath::intersect_moving_AABB_AABB(const AABB& a, const AABB& b,
 		}
 		if (a_max.y < b_min.y)
 		{
-			tfirst = max((a_max.y - b_min.y) / v.y, tfirst);
+			tfirst = std::max((a_max.y - b_min.y) / v.y, tfirst);
 		}
 		if (b_max.y > a_min.y)
 		{
-			tlast = min((a_min.y - b_max.y) / v.y, tlast);
+			tlast = std::min((a_min.y - b_max.y) / v.y, tlast);
 		}
 	}
 	if (v.y > 0.0f) {
@@ -624,11 +624,11 @@ bool EricsonMath::intersect_moving_AABB_AABB(const AABB& a, const AABB& b,
 		}
 		if (b_max.y < a_min.y)
 		{
-			tfirst = max((a_min.y - b_max.y) / v.y, tfirst);
+			tfirst = std::max((a_min.y - b_max.y) / v.y, tfirst);
 		}
 		if (a_max.y > b_min.y)
 		{
-			tlast = min((a_max.y - b_min.y) / v.y, tlast);
+			tlast = std::min((a_max.y - b_min.y) / v.y, tlast);
 		}
 	}
 	// No overlap possible if time of first contact occurs after time of last contact

@@ -2,8 +2,10 @@
 #define MATTMATH_H
 
 #include "SimpleMath.h"
-#include <cmath>
 #include "shape_type.h"
+#include <d3d11.h>
+#include <cmath>
+#include <vector>
 
 namespace MattMath
 {
@@ -39,8 +41,8 @@ namespace MattMath
 
 	constexpr float PI = 3.14159265358979323846f;
 
-	float min(float a, float b);
-	float max(float a, float b);
+	//float min_value(float a, float b);
+	//float max_value(float a, float b);
 
 	float clamp(float value, float min, float max);
 	void clamp_ref(float& value, float min, float max);
@@ -424,8 +426,8 @@ namespace MattMath
 
 		static float dot(const Vector2F& a, const Vector2F& b);
 
-		static Vector2F min(const Vector2F& a, const Vector2F& b);
-		static Vector2F max(const Vector2F& a, const Vector2F& b);
+		static Vector2F min_vec(const Vector2F& a, const Vector2F& b);
+		static Vector2F max_vec(const Vector2F& a, const Vector2F& b);
 
 		static Vector2F vec_from_angle_magnitude(float angle, float magnitude);
 		static Vector2F unit_vec_from_angle(float angle);
