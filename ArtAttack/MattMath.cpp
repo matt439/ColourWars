@@ -181,6 +181,12 @@ bool MattMath::rectangles_intersect(const RectangleF& a, const RectangleF& b)
 	return true;
 }
 
+bool MattMath::rectangle_circle_intersect(const RectangleF& rectangle, const Circle& circle,
+	Point2F& point)
+{
+	return EricsonMath::test_circle_AABB(circle, rectangle, point);
+}
+
 bool MattMath::rectangle_circle_intersect(const RectangleF& rectangle, const Circle& circle)
 {
 	return EricsonMath::test_circle_AABB(circle, rectangle);

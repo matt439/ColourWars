@@ -84,6 +84,9 @@ namespace MattMath
 		const MattMath::RectangleF& b);
 
 	bool rectangle_circle_intersect(const MattMath::RectangleF& rectangle,
+		const MattMath::Circle& circle, MattMath::Point2F& point);
+
+	bool rectangle_circle_intersect(const MattMath::RectangleF& rectangle,
 		const MattMath::Circle& circle);
 
 	bool rectangle_triangle_intersect(const MattMath::RectangleF& rectangle, 
