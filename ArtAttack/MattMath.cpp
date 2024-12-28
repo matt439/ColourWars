@@ -168,18 +168,9 @@ namespace MattMath
 		return a.get_bounding_box().intersects(b.get_bounding_box());
 	}
 
-	bool MattMath::rectangles_intersect(const RectangleF& a, const RectangleF& b)
+	bool rectangles_intersect(const RectangleF& a, const RectangleF& b)
 	{
-		float t;
-		if ((t = a.x - b.x) > b.width || -t > a.width)
-		{
-			return false;
-		}
-		if ((t = a.y - b.y) > b.height || -t > a.height)
-		{
-			return false;
-		}
-		return true;
+		return EricsonMath::test_AABB_AABB(a, b);
 	}
 
 	bool MattMath::rectangle_circle_intersect(const RectangleF& rectangle, const Circle& circle,
@@ -2870,6 +2861,11 @@ namespace MattMath
 	Circle::Circle(const DirectX::SimpleMath::Vector2& center, float radius) :
 		center(center), radius(radius)
 	{
+	}
+	Circle::Circle(float x, float y, float radius)
+	{
+		this->center = Vector2F(x, y);
+		this->radius = radius;
 	}
 	RectangleF Circle::get_bounding_box() const
 	{

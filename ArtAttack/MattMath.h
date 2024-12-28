@@ -756,6 +756,7 @@ namespace MattMath
 		Circle(const Circle&) = default;
 		Circle(const MattMath::Vector2F& center, float radius);
 		Circle(const DirectX::SimpleMath::Vector2& center, float radius);
+		Circle(float x, float y, float radius);
 
 		MattMath::RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
