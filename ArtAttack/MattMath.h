@@ -147,6 +147,11 @@ namespace MattMath
 	bool quad_point_intersect(const MattMath::Quad& quad, 
 		const MattMath::Point2F& point);
 
+	bool segments_intersect(const MattMath::Segment& a, const MattMath::Segment& b,
+		float& t, MattMath::Point2F& p);
+
+	bool segments_intersect(const MattMath::Segment& a, const MattMath::Segment& b);
+
 	struct RectangleF : public Shape
 	{
 		float x = 0.0f;
@@ -869,14 +874,14 @@ namespace MattMath
 
 	struct Segment
 	{
-		MattMath::Point2F point1 = MattMath::Point2F::ZERO;
-		MattMath::Point2F point2 = MattMath::Point2F::ZERO;
+		MattMath::Point2F point_0 = MattMath::Point2F::ZERO;
+		MattMath::Point2F point_1 = MattMath::Point2F::ZERO;
 
 		Segment() = default;
 		Segment(const Segment&) = default;
-		Segment(const MattMath::Point2F& point1,
-			const MattMath::Point2F& point2);
-		Segment(float x1, float y1, float x2, float y2);
+		Segment(const MattMath::Point2F& point_0,
+			const MattMath::Point2F& point_1);
+		Segment(float x0, float y0, float x1, float y1);
 
 		bool operator==(const Segment& other) const;
 		bool operator!=(const Segment& other) const;

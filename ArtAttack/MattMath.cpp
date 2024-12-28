@@ -240,7 +240,7 @@ namespace MattMath
 
 	bool MattMath::rectangle_segment_intersect(const RectangleF& rectangle, const Segment& segment)
 	{
-		return EricsonMath::test_segment_AABB(segment.point1, segment.point2, rectangle);
+		return EricsonMath::test_segment_AABB(segment.point_0, segment.point_1, rectangle);
 	}
 
 	bool MattMath::rectangle_point_intersect(const RectangleF& rectangle, const Point2F& point)
@@ -329,6 +329,20 @@ namespace MattMath
 	bool MattMath::quad_point_intersect(const Quad& quad, const Point2F& point)
 	{
 		return false;
+	}
+
+	bool MattMath::segments_intersect(const Segment& a, const Segment& b, float& t, Point2F& p)
+	{
+		return EricsonMath::test_2D_segment_segment(a.point_0, a.point_1,
+			b.point_0, b.point_1, t, p);
+	}
+
+	bool MattMath::segments_intersect(const Segment& a, const Segment& b)
+	{
+		float t;
+		Point2F p;
+		return EricsonMath::test_2D_segment_segment(a.point_0, a.point_1,
+			b.point_0, b.point_1, t, p);
 	}
 
 #pragma endregion Global Intersect Functions
@@ -3258,17 +3272,17 @@ namespace MattMath
 #pragma region Segment
 
 	Segment::Segment(const Point2F& point1, const Point2F& point2) :
-		point1(point1), point2(point2)
+		point_0(point_0), point_1(point_1)
 	{
 	}
-	Segment::Segment(float x1, float y1, float x2, float y2) :
-		point1(x1, y1), point2(x2, y2)
+	Segment::Segment(float x0, float y0, float x1, float y1) :
+		point_0(x0, y0), point_1(x1, y1)
 	{
 	}
 	bool Segment::operator==(const Segment& other) const
 	{
-		return this->point1 == other.point1 &&
-			this->point2 == other.point2;
+		return this->point_0 == other.point_0 &&
+			this->point_1 == other.point_1;
 	}
 	bool Segment::operator!=(const Segment& other) const
 	{
@@ -3276,10 +3290,7 @@ namespace MattMath
 	}
 	bool Segment::intersects(const Segment& other) const
 	{
-		float t;
-		Point2F intersection_point;
-		return EricsonMath::test_2D_segment_segment(this->point1, this->point2,
-			other.point1, other.point2, t, intersection_point);
+		return segments_intersect(*this, other);
 	}
 	bool Segment::intersects(const RectangleF& other) const
 	{
