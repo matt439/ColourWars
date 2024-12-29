@@ -94,6 +94,10 @@ namespace MattMath
 	{
 		return fabs(a - b) < epsilon;
 	}
+	bool MattMath::are_equal(const Vector2F& a, const Vector2F& b, float epsilon)
+	{
+		return are_equal(a.x, b.x, epsilon) && are_equal(a.y, b.y, epsilon);
+	}
 	float MattMath::to_radians(float degrees)
 	{
 		return degrees * (PI / 180.0f);
@@ -270,13 +274,17 @@ namespace MattMath
 			triangle.get_point_1(), triangle.get_point_2(), point);
 	}
 
-	bool MattMath::circle_quad_intersect(const Circle& circle, const Quad& quad, Point2F& point)
-	{
-		return false;
-	}
-
 	bool MattMath::circle_quad_intersect(const Circle& circle, const Quad& quad)
 	{
+		std::vector<Triangle> triangles = quad.get_triangles();
+
+		for (const Triangle& triangle : triangles)
+		{
+			if (circle_triangle_intersect(circle, triangle))
+			{
+				return true;
+			}
+		}
 		return false;
 	}
 
@@ -3092,6 +3100,11 @@ namespace MattMath
 		this->points[1] = Vector2F(rectangle.x + rectangle.width, rectangle.y);
 		this->points[2] = Vector2F(rectangle.x + rectangle.width, rectangle.y + rectangle.height);
 		this->points[3] = Vector2F(rectangle.x, rectangle.y + rectangle.height);
+
+		if (!this->is_valid())
+		{
+			throw std::invalid_argument("Quad is not valid");
+		}
 	}
 
 	Quad::Quad(const DirectX::SimpleMath::Vector2& point0,
@@ -3103,6 +3116,11 @@ namespace MattMath
 		this->points[1] = point1;
 		this->points[2] = point2;
 		this->points[3] = point3;
+
+		if (!this->is_valid())
+		{
+			throw std::invalid_argument("Quad is not valid");
+		}
 	}
 
 	RectangleF Quad::get_bounding_box() const
@@ -3133,6 +3151,25 @@ namespace MattMath
 		this->points[1] += offset;
 		this->points[2] += offset;
 		this->points[3] += offset;
+	}
+
+	bool Quad::is_valid() const
+	{
+		// check if the edges intersect
+		std::vector<Segment> edges = this->get_edges();
+
+		for (int i = 0; i < 4; i++)
+		{
+			for (int j = i + 1; j < 4; j++)
+			{
+				if (edges[i].intersects(edges[j]))
+				{
+					return false;
+				}
+			}
+		}
+
+		return true;
 	}
 
 	const Point2F& Quad::get_point_0() const
@@ -3271,7 +3308,7 @@ namespace MattMath
 
 #pragma region Segment
 
-	Segment::Segment(const Point2F& point1, const Point2F& point2) :
+	Segment::Segment(const Point2F& point_0, const Point2F& point_1) :
 		point_0(point_0), point_1(point_1)
 	{
 	}

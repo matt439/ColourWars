@@ -53,6 +53,8 @@ namespace MattMath
 		const MattMath::Vector2F& p2, const MattMath::Vector2F& p3);
 
 	bool are_equal(float a, float b, float epsilon = 0.0001f);
+	bool are_equal(const MattMath::Vector2F& a, const MattMath::Vector2F& b,
+		float epsilon = 0.0001f);
 
 	float to_radians(float degrees);
 	float to_degrees(float radians);
@@ -111,9 +113,6 @@ namespace MattMath
 
 	bool circle_triangle_intersect(const MattMath::Circle& circle,
 		const MattMath::Triangle& triangle);
-
-	bool circle_quad_intersect(const MattMath::Circle& circle,
-		const MattMath::Quad& quad, MattMath::Point2F& point);
 
 	bool circle_quad_intersect(const MattMath::Circle& circle,
 		const MattMath::Quad& quad);
@@ -843,6 +842,8 @@ namespace MattMath
 		MattMath::RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
 		void offset(const MattMath::Vector2F& amount) override;
+
+		bool is_valid() const;
 
 		const Point2F& get_point_0() const;
 		const Point2F& get_point_1() const;

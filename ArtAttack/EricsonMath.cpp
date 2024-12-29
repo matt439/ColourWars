@@ -750,3 +750,18 @@ bool  EricsonMath::test_point_triangle(const Point2F& p,
 	barycentric(a, b, c, p, u, v, w);
 	return v >= 0.0f && w >= 0.0f && (v + w) <= 1.0f;
 }
+
+// Given segment ab and point c, computes closest point d on ab.
+// Also returns t for the position of d, d(t) = a + t*(b - a)
+void EricsonMath::closest_pt_point_segment(const Point2F& c, const Point2F& a,
+	const Point2F& b, float& t, Point2F& d)
+{
+	Vector2F ab = b - a;
+	// Project c onto ab, computing parameterized position d(t) = a + t*(b – a)
+	t = Vector2F::dot(c - a, ab) / Vector2F::dot(ab, ab);
+	// If outside segment, clamp t (and therefore d) to the closest endpoint
+	if (t < 0.0f) t = 0.0f;
+	if (t > 1.0f) t = 1.0f;
+	// Compute projected position from the clamped t
+	d = a + t * ab;
+}
