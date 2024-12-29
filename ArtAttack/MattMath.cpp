@@ -290,12 +290,17 @@ namespace MattMath
 
 	bool MattMath::circle_segment_intersect(const Circle& circle, const Segment& segment, Point2F& point)
 	{
-		return false;
+		float t;
+		EricsonMath::closest_pt_point_segment(circle.center,
+			segment.point_0, segment.point_1, t, point);
+
+		return Vector2F::distance(circle.center, point) <= circle.radius;
 	}
 
 	bool MattMath::circle_segment_intersect(const Circle& circle, const Segment& segment)
 	{
-		return false;
+		Point2F point;
+		return circle_segment_intersect(circle, segment, point);
 	}
 
 	bool MattMath::circle_point_intersect(const Circle& circle, const Point2F& point)
