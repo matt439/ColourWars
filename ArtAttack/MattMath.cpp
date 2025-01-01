@@ -310,16 +310,67 @@ namespace MattMath
 
 	bool MattMath::triangles_intersect(const Triangle& a, const Triangle& b)
 	{
+		// check if any of the points are contained within each other
+		for (int i = 0; i < 3; i++)
+		{
+			if (a.contains(b.points[i]) || b.contains(a.points[i]))
+			{
+				return true;
+			}
+		}
+
+		// get edges of each triangle
+		std::vector<Segment> a_edges = a.get_edges();
+		std::vector<Segment> b_edges = b.get_edges();
+
+		// check if any of the edges intersect
+		for (int i = 0; i < 2; i++)
+		{
+			if (segments_intersect(a_edges[i], b_edges[0]) ||
+				segments_intersect(a_edges[i], b_edges[1]))
+			{
+				return true;
+			}
+		}
+
 		return false;
 	}
 
 	bool MattMath::triangle_quad_intersect(const Triangle& triangle, const Quad& quad)
 	{
+		// get the triangles of the quad
+		std::vector<Triangle> triangles = quad.get_triangles();
+
+		// check each triangle against the quad's triangles
+		for (const Triangle& quad_triangle : triangles)
+		{
+			if (triangles_intersect(triangle, quad_triangle))
+			{
+				return true;
+			}
+		}
+
 		return false;
 	}
 
 	bool MattMath::triangle_segment_intersect(const Triangle& triangle, const Segment& segment)
 	{
+		// check if the segment's end points are contained within the triangle
+		if (triangle.contains(segment.point_0) || triangle.contains(segment.point_1))
+		{
+			return true;
+		}
+
+		// check if the segment intersects any of the triangle's edges
+		std::vector<Segment> edges = triangle.get_edges();
+		for (const Segment& edge : edges)
+		{
+			if (segments_intersect(edge, segment))
+			{
+				return true;
+			}
+		}
+
 		return false;
 	}
 
@@ -331,16 +382,54 @@ namespace MattMath
 
 	bool MattMath::quads_intersect(const Quad& a, const Quad& b)
 	{
+		// get the triangles of each quad
+		std::vector<Triangle> a_triangles = a.get_triangles();
+		std::vector<Triangle> b_triangles = b.get_triangles();
+
+		// check each triangle of one quad against the other
+		for (const Triangle& a_triangle : a_triangles)
+		{
+			for (const Triangle& b_triangle : b_triangles)
+			{
+				if (triangles_intersect(a_triangle, b_triangle))
+				{
+					return true;
+				}
+			}
+		}
+
 		return false;
 	}
 
 	bool MattMath::quad_segment_intersect(const Quad& quad, const Segment& segment)
 	{
+		// get the triangles of the quad
+		std::vector<Triangle> triangles = quad.get_triangles();
+
+		// check each triangle against the segment
+		for (const Triangle& triangle : triangles)
+		{
+			if (triangle_segment_intersect(triangle, segment))
+			{
+				return true;
+			}
+		}
+
 		return false;
 	}
 
 	bool MattMath::quad_point_intersect(const Quad& quad, const Point2F& point)
 	{
+		// check if the point is contained within any of the quad's triangles
+		std::vector<Triangle> triangles = quad.get_triangles();
+		for (const Triangle& triangle : triangles)
+		{
+			if (triangle.contains(point))
+			{
+				return true;
+			}
+		}
+
 		return false;
 	}
 
