@@ -316,6 +316,19 @@ void GameLevel::draw()
         &command_lists,
         this->get_data()->get_sprite_batches());
 
+    auto immediate_context = this->get_data()->get_device_resources()->GetD3DDeviceContext();
+
+    for (int i = 0; i < command_lists.size(); i++)
+    {
+        if (command_lists[i] == nullptr)
+        {
+            continue;
+        }
+
+        immediate_context->ExecuteCommandList(command_lists[i], TRUE);
+        command_lists[i]->Release();
+    }
+
     switch (this->_state)
     {
     case game_level_state::ACTIVE:
@@ -329,19 +342,6 @@ void GameLevel::draw()
     case game_level_state::END_MENU:
         this->_end_menu->draw();
         break;
-    }
-
-    auto immediate_context = this->get_data()->get_device_resources()->GetD3DDeviceContext();
-
-    for (int i = 0; i < command_lists.size(); i++)
-    {
-        if (command_lists[i] == nullptr)
-        {
-            continue;
-        }
-
-        immediate_context->ExecuteCommandList(command_lists[i], FALSE);
-        command_lists[i]->Release();
     }
 }
 
