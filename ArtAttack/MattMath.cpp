@@ -492,6 +492,10 @@ namespace MattMath
 	{
 		return shape_type::RECTANGLE;
 	}
+	std::unique_ptr<Shape> RectangleF::clone() const
+	{
+		return std::make_unique<RectangleF>(*this);
+	}
 	float RectangleF::get_x() const
 	{
 		return this->x;
@@ -3000,6 +3004,11 @@ namespace MattMath
 		this->center += offset;
 	}
 
+	std::unique_ptr<Shape> Circle::clone() const
+	{
+		return std::make_unique<Circle>(*this);
+	}
+
 	bool Circle::operator==(const Circle& other) const
 	{
 		return this->center == other.center &&
@@ -3087,6 +3096,10 @@ namespace MattMath
 		this->points[0] += offset;
 		this->points[1] += offset;
 		this->points[2] += offset;
+	}
+	std::unique_ptr<Shape> Triangle::clone() const
+	{
+		return std::make_unique<Triangle>(*this);
 	}
 	const Vector2F& Triangle::get_point_0() const
 	{
@@ -3245,6 +3258,11 @@ namespace MattMath
 		this->points[1] += offset;
 		this->points[2] += offset;
 		this->points[3] += offset;
+	}
+
+	std::unique_ptr<Shape> Quad::clone() const
+	{
+		return std::make_unique<Quad>(*this);
 	}
 
 	bool Quad::is_valid() const

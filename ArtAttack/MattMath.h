@@ -77,6 +77,7 @@ namespace MattMath
 		bool AABB_intersects(const Shape* other) const;
 		bool AABB_intersects(const Shape& other) const;
 		virtual void offset(const Vector2F& amount) = 0;
+		virtual std::unique_ptr<Shape> clone() const = 0;
 	};
 
 	bool shapes_intersect(const Shape* a, const Shape* b);
@@ -170,6 +171,7 @@ namespace MattMath
 
 		RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
+		std::unique_ptr<Shape> clone() const override;
 
 		float get_x() const;
 		float get_y() const;
@@ -765,6 +767,7 @@ namespace MattMath
 		MattMath::RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
 		void offset(const MattMath::Vector2F& amount) override;
+		std::unique_ptr<Shape> clone() const override;
 
 		bool operator==(const Circle& other) const;
 		bool operator!=(const Circle& other) const;
@@ -795,6 +798,7 @@ namespace MattMath
 		MattMath::RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
 		void offset(const MattMath::Vector2F& amount) override;
+		std::unique_ptr<Shape> clone() const override;
 
 		const Vector2F& get_point_0() const;
 		const Vector2F& get_point_1() const;
@@ -842,6 +846,7 @@ namespace MattMath
 		MattMath::RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
 		void offset(const MattMath::Vector2F& amount) override;
+		std::unique_ptr<Shape> clone() const override;
 
 		bool is_valid() const;
 
