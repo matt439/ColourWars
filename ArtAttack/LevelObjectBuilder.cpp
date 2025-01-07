@@ -59,6 +59,7 @@ std::unique_ptr<ICollisionGameObject>
 			json["sheet_name"].GetString(),
 			json["frame_name"].GetString(),
 			rectangle,
+			&rectangle,
 			this->_resource_manager,
 			col_type,
 			colour_consts::colour_from_name(json["colour"].GetString()));
@@ -106,6 +107,7 @@ std::unique_ptr<ICollisionGameObject>
 			json["sheet_name"].GetString(),
 			json["frame_name"].GetString(),
 			rectangle,
+			&rectangle,
 			this->_resource_manager,
 			col_type,
 			team_colours,
