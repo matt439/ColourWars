@@ -564,7 +564,7 @@ void Level::draw_player_view_level(int start, int end,
 				this->_player_objects->at(i).get(), num_projectiles);
 		}
 
-		HRESULT hr = deferred_contexts->at(i)->FinishCommandList(FALSE, &command_lists->at(i));
+		HRESULT hr = deferred_contexts->at(i)->FinishCommandList(TRUE, &command_lists->at(i));
 		if (FAILED(hr))
 		{
 			throw std::exception("Failed to finish command list");
@@ -623,7 +623,7 @@ void Level::draw_zoom_out_level_component(
 
 	sprite_batch->End();
 
-	HRESULT hr = deferred_contexts->at(0)->FinishCommandList(FALSE, &command_lists->at(0));
+	HRESULT hr = deferred_contexts->at(0)->FinishCommandList(TRUE, &command_lists->at(0));
 	if (FAILED(hr))
 	{
 		throw std::exception("Failed to finish command list");
