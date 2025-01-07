@@ -9,7 +9,8 @@ using namespace structure_paintable_consts;
 StructurePaintable::StructurePaintable(
 	const std::string& sheet_name,
 	const std::string& frame_name,
-	const RectangleF& rectangle,
+	const RectangleF& sprite_rectangle,
+	const Shape* collision_shape,
 	ResourceManager* resource_manager,
 	collision_object_type collision_type,
 	const TeamColour& team_colours,
@@ -20,8 +21,8 @@ StructurePaintable::StructurePaintable(
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
-	Structure(sheet_name, frame_name, rectangle, resource_manager,
-		collision_type, color, rotation, origin,
+	Structure(sheet_name, frame_name, sprite_rectangle, collision_shape,
+		resource_manager, collision_type, color, rotation, origin,
 		effects, layer_depth),
 	_team_colours(team_colours),
 	_faces(faces),

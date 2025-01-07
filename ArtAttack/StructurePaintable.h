@@ -28,7 +28,8 @@ public:
 	StructurePaintable() = default;
 	StructurePaintable(const std::string& sheet_name,
 		const std::string& frame_name,
-		const MattMath::RectangleF& rectangle,
+		const MattMath::RectangleF& sprite_rectangle,
+		const MattMath::Shape* collision_shape,
 		ResourceManager* resource_manager,
 		collision_object_type collision_type,
 		const TeamColour& team_colours,

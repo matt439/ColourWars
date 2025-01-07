@@ -10,7 +10,8 @@ public:
 	Structure() = default;
 	Structure(const std::string& sheet_name,
 		const std::string& frame_name,
-		const MattMath::RectangleF& rectangle,
+		const MattMath::RectangleF& sprite_rectangle,
+		const MattMath::Shape* collision_shape,
 		ResourceManager* resource_manager,
 		collision_object_type collision_type,
 		const MattMath::Colour& color = colour_consts::WHITE,
@@ -35,7 +36,8 @@ protected:
 private:
 	collision_object_type _collision_type =
 		collision_object_type::STRUCTURE;
-	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
+	MattMath::RectangleF _sprite_rectangle = MattMath::RectangleF::ZERO;
+	std::unique_ptr<MattMath::Shape> _collision_shape = nullptr;
 };
 
 #endif // !STRUCTURE_H
