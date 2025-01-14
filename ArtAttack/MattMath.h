@@ -794,6 +794,7 @@ namespace MattMath
 		Triangle(const DirectX::SimpleMath::Vector2& point0,
 			const DirectX::SimpleMath::Vector2& point1,
 			const DirectX::SimpleMath::Vector2& point2);
+		Triangle(float x0, float y0, float x1, float y1, float x2, float y2);
 
 		MattMath::RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;

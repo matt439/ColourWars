@@ -3071,6 +3071,12 @@ namespace MattMath
 		this->points[1] = point1;
 		this->points[2] = point2;
 	}
+	Triangle::Triangle(float x0, float y0, float x1, float y1, float x2, float y2)
+	{
+		this->points[0] = Vector2F(x0, y0);
+		this->points[1] = Vector2F(x1, y1);
+		this->points[2] = Vector2F(x2, y2);
+	}
 	RectangleF Triangle::get_bounding_box() const
 	{
 		float x1 = std::min(std::min(this->points[0].x, this->points[1].x),

@@ -115,6 +115,35 @@ std::unique_ptr<ICollisionGameObject>
 			this->_dt,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
+	if (type == "StructureTriangle")
+	{
+		collision_object_type col_type;
+		std::string collision_type = json["collision_type"].GetString();
+		if (collision_type == "STRUCTURE")
+		{
+			col_type = collision_object_type::STRUCTURE;
+		}
+		else
+		{
+			throw std::exception("Invalid collision type");
+		}
+
+		Triangle triangle = Triangle(json["triangle"]["x1"].GetFloat(),
+			json["triangle"]["y1"].GetFloat(),
+			json["triangle"]["x2"].GetFloat(),
+			json["triangle"]["y2"].GetFloat(),
+			json["triangle"]["x3"].GetFloat(),
+			json["triangle"]["y3"].GetFloat());
+
+		return std::make_unique<Structure>(
+			json["sheet_name"].GetString(),
+			json["frame_name"].GetString(),
+			triangle.get_bounding_box(),
+			&triangle,
+			this->_resource_manager,
+			col_type,
+			colour_consts::colour_from_name(json["colour"].GetString()));
+	}
 
 	throw std::exception("Invalid collision object type");
 }
