@@ -11,6 +11,7 @@
 #include "ICollisionGameObject.h"
 #include "MovingObject.h"
 #include "SoundBank.h"
+#include "CollisionTools.h"
 
 enum class player_state
 {
@@ -37,25 +38,25 @@ enum class player_animation_state
     RUNNING,
 };
 
-enum class player_collision_type
-{
-    TOP_EDGE,
-    BOTTOM_EDGE,
-    LEFT_EDGE,
-    RIGHT_EDGE,
-    TOP_AND_BOTTOM_EDGES,
-    LEFT_AND_RIGHT_EDGES,
-    TOP_AND_LEFT_EDGES,
-    TOP_AND_RIGHT_EDGES,
-    BOTTOM_AND_LEFT_EDGES,
-    BOTTOM_AND_RIGHT_EDGES,
-    TOP_AND_BOTTOM_AND_LEFT_EDGES,
-    TOP_AND_BOTTOM_AND_RIGHT_EDGES,
-    LEFT_AND_RIGHT_AND_TOP_EDGES,
-    LEFT_AND_RIGHT_AND_BOTTOM_EDGES,
-    CONTAINED_INSIDE_OTHER,
-    CONTAINS_OTHER,
-};
+//enum class player_collision_type
+//{
+//    TOP_EDGE,
+//    BOTTOM_EDGE,
+//    LEFT_EDGE,
+//    RIGHT_EDGE,
+//    TOP_AND_BOTTOM_EDGES,
+//    LEFT_AND_RIGHT_EDGES,
+//    TOP_AND_LEFT_EDGES,
+//    TOP_AND_RIGHT_EDGES,
+//    BOTTOM_AND_LEFT_EDGES,
+//    BOTTOM_AND_RIGHT_EDGES,
+//    TOP_AND_BOTTOM_AND_LEFT_EDGES,
+//    TOP_AND_BOTTOM_AND_RIGHT_EDGES,
+//    LEFT_AND_RIGHT_AND_TOP_EDGES,
+//    LEFT_AND_RIGHT_AND_BOTTOM_EDGES,
+//    CONTAINED_INSIDE_OTHER,
+//    CONTAINS_OTHER,
+//};
 
 class Player final : public MovingObject, public ICollisionGameObject,
                      public AnimationObject, public TextureObject
@@ -183,7 +184,7 @@ private:
 
     void respawn();
 
-    player_collision_type calculate_collision_type(const ICollisionGameObject* other) const;
+    //player_collision_type calculate_collision_type(const ICollisionGameObject* other) const;
 
     void on_top_collision(const ICollisionGameObject* other);
     void on_bottom_collision(const ICollisionGameObject* other);

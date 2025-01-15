@@ -320,13 +320,16 @@ void CollisionTools::resolve_object_AABB_collision(Shape* collider,
 }
 
 bool CollisionTools::resolve_object_collision(Shape* collider, const Shape* collidee,
-    collision_direction direction)
+    collision_direction direction, Vector2F& amount)
 {
     // check if the sprites are colliding
     if (direction == collision_direction::NONE || !collider->intersects(collidee))
     {
+		amount = Vector2F::ZERO;
         return false;
     }
+
+	Vector2F collider_center = collider->get_bounding_box().get_center();
 
     if (collider->get_shape_type() == shape_type::RECTANGLE &&
         collidee->get_shape_type() == shape_type::RECTANGLE)
@@ -339,5 +342,29 @@ bool CollisionTools::resolve_object_collision(Shape* collider, const Shape* coll
             direction_from_collision(direction), BRACKET_ITERATIONS);
     }
 
+	// calculate the amount moved
+	Vector2F new_center = collider->get_bounding_box().get_center();
+	amount = new_center - collider_center;
+
     return true;
+}
+
+bool CollisionTools::resolve_object_collision(Shape* collider, const Shape* collidee,
+    collision_direction direction)
+{
+    Vector2F amount;
+	return resolve_object_collision(collider, collidee, direction, amount);
+}
+
+Vector2F CollisionTools::calculate_object_collision_depth(
+    const Shape* collider,
+    const Shape* collidee,
+    collision_direction direction)
+{
+	std::unique_ptr<Shape> collider_copy = collider->clone();
+    Vector2F amount;
+
+	resolve_object_collision(collider_copy.get(), collidee, direction, amount);
+
+	return amount;
 }

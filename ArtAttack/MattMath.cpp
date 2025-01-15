@@ -1525,6 +1525,10 @@ namespace MattMath
 		this->x = x;
 		this->y = y;
 	}
+	bool Vector2F::abs_x_greater_than_y() const
+	{
+		return std::abs(this->x) > std::abs(this->y);
+	}
 	Vector2F Vector2F::rotate_vector(const Vector2F& vec, float angle)
 	{
 		float cos_angle = std::cos(angle);

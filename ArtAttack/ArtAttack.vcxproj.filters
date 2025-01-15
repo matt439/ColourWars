@@ -123,6 +123,7 @@
     <ClInclude Include="Partitioner.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="CollisionTools.h" />
+    <ClInclude Include="CollisionDirection.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />

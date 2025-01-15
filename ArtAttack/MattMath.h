@@ -421,6 +421,8 @@ namespace MattMath
 
 		void rotate(float angle);
 
+		bool abs_x_greater_than_y() const;
+
 		static Vector2F rotate_vector(const Vector2F& vec, float angle);
 		static void rotate_vector_by_ref(Vector2F& vec, float angle);
 

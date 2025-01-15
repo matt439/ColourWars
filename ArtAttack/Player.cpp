@@ -273,8 +273,48 @@ void Player::on_structure_jump_through_collision(const ICollisionGameObject* oth
 }
 void Player::on_structure_collision(const ICollisionGameObject* other)
 {
-    player_collision_type type = this->calculate_collision_type(other);
-    if (type == player_collision_type::LEFT_EDGE)
+    //player_collision_type type = this->calculate_collision_type(other);
+	collision_direction direction = CollisionTools::calculate_object_collision_direction(
+		this->get_shape(), other->get_shape());
+
+ //   Vector2F amount = Vector2F::ZERO;
+
+	//CollisionTools::resolve_object_collision(&this->_rectangle,
+ //       other->get_shape(), direction, amount);
+
+    switch (direction)
+    {
+    case TOP:
+		this->on_top_collision(other);
+        break;
+    case BOTTOM:
+		this->on_bottom_collision(other);
+        break;
+    case LEFT:
+		this->on_left_collision(other);
+        break;
+    case RIGHT:
+		this->on_right_collision(other);
+        break;
+    case TOP_LEFT:
+        this->on_top_left_collision(other);
+        break;
+    case TOP_RIGHT:
+		this->on_top_right_collision(other);
+        break;
+    case BOTTOM_LEFT:
+		this->on_bottom_left_collision(other);
+        break;
+    case BOTTOM_RIGHT:
+		this->on_bottom_right_collision(other);
+        break;
+    case NONE:
+		throw std::exception("No collision direction.");
+    default:
+		throw std::exception("Invalid collision direction.");
+    }
+
+    /*if (type == player_collision_type::LEFT_EDGE)
 	{
 		this->on_left_collision(other);
 	}
@@ -341,185 +381,246 @@ void Player::on_structure_collision(const ICollisionGameObject* other)
     else
     {
 		throw std::exception("Invalid collision type.");
-	}
+	}*/
 }
 void Player::on_top_collision(const ICollisionGameObject* other)
 {
     MovingObject::set_velocity_y(0.0f);
 
-	const RectangleF& other_rect = other->get_shape()->get_bounding_box();
-	this->_rectangle.set_position_y(other_rect.get_bottom());
+	//const RectangleF& other_rect = other->get_shape()->get_bounding_box();
+	//this->_rectangle.set_position_y(other_rect.get_bottom());
+
+    CollisionTools::resolve_object_collision(&this->_rectangle,
+        other->get_shape(), collision_direction::TOP);
+
 	this->set_move_state(player_move_state::ON_CEILING);
 }
 void Player::on_bottom_collision(const ICollisionGameObject* other)
 {
     MovingObject::set_velocity_y(0.0f);
 
-    const RectangleF& other_rect = other->get_shape()->get_bounding_box();
-    this->_rectangle.set_position_y_from_bottom(other_rect.get_top());
+    //const RectangleF& other_rect = other->get_shape()->get_bounding_box();
+    //this->_rectangle.set_position_y_from_bottom(other_rect.get_top());
+
+    CollisionTools::resolve_object_collision(&this->_rectangle,
+        other->get_shape(), collision_direction::BOTTOM);
+
     this->set_move_state(player_move_state::ON_GROUND);
 }
 void Player::on_left_collision(const ICollisionGameObject* other)
 {
     this->set_velocity_x(0.0f);
 
-    const RectangleF& other_rect = other->get_shape()->get_bounding_box();
-    this->_rectangle.set_position_x(other_rect.get_right());
+    /*const RectangleF& other_rect = other->get_shape()->get_bounding_box();
+    this->_rectangle.set_position_x(other_rect.get_right());*/
 
+    CollisionTools::resolve_object_collision(&this->_rectangle,
+        other->get_shape(), collision_direction::LEFT);
 }
 void Player::on_right_collision(const ICollisionGameObject* other)
 {
     this->set_velocity_x(0.0f);
 
-	const RectangleF& other_rect = other->get_shape()->get_bounding_box();
-	this->_rectangle.set_position_x_from_right(other_rect.get_left());
+	//const RectangleF& other_rect = other->get_shape()->get_bounding_box();
+	//this->_rectangle.set_position_x_from_right(other_rect.get_left());
+
+    CollisionTools::resolve_object_collision(&this->_rectangle,
+        other->get_shape(), collision_direction::RIGHT);
 }
 void Player::on_top_left_collision(const ICollisionGameObject* other)
 {
-    const RectangleF& other_rect = other->get_shape()->get_bounding_box();
-    const RectangleF intersection = this->_rectangle.intersection(other_rect);
+    //const RectangleF& other_rect = other->get_shape()->get_bounding_box();
+    //const RectangleF intersection = this->_rectangle.intersection(other_rect);
 
-    if (intersection.get_width() > intersection.get_height())
-	{
-		this->on_top_collision(other);
-	}
-	else // intersection.get_width() < intersection.get_height()
-	{
-		this->on_left_collision(other);
-	}
+ //   if (intersection.get_width() > intersection.get_height())
+	//{
+	//	this->on_top_collision(other);
+	//}
+	//else // intersection.get_width() < intersection.get_height()
+	//{
+	//	this->on_left_collision(other);
+	//}
+
+    Vector2F amount = CollisionTools::calculate_object_collision_depth(
+        this->get_shape(), other->get_shape(), collision_direction::TOP_LEFT);
+
+    if (amount.abs_x_greater_than_y())
+    {
+        this->on_top_collision(other);
+    }
+    else // intersection.get_width() < intersection.get_height()
+    {
+        this->on_left_collision(other);
+    }
 }
 void Player::on_top_right_collision(const ICollisionGameObject* other)
 {
-    const RectangleF& other_rect = other->get_shape()->get_bounding_box();
-	const RectangleF intersection = this->_rectangle.intersection(other_rect);
+ //   const RectangleF& other_rect = other->get_shape()->get_bounding_box();
+	//const RectangleF intersection = this->_rectangle.intersection(other_rect);
 
-	if (intersection.get_width() > intersection.get_height())
-	{
-		this->on_top_collision(other);
-	}
-	else // intersection.get_width() < intersection.get_height()
-	{
-		this->on_right_collision(other);
-	}
-}
-void Player::on_bottom_left_collision(const ICollisionGameObject* other)
-{
-    const RectangleF& other_rect = other->get_shape()->get_bounding_box();
-    const RectangleF intersection = this->_rectangle.intersection(other_rect);
+	//if (intersection.get_width() > intersection.get_height())
+	//{
+	//	this->on_top_collision(other);
+	//}
+	//else // intersection.get_width() < intersection.get_height()
+	//{
+	//	this->on_right_collision(other);
+	//}
 
-    direction dir = this->get_velocity().get_direction();
-    bool moving_up = dir == direction::UP || dir == direction::UP_LEFT ||
-		dir == direction::UP_RIGHT;
+	Vector2F amount = CollisionTools::calculate_object_collision_depth(
+		this->get_shape(), other->get_shape(), collision_direction::TOP_RIGHT);
 
-    if (intersection.get_width() > intersection.get_height() && !moving_up)
-	{
-		this->on_bottom_collision(other);
-	}
-	else // intersection.get_width() < intersection.get_height()
-	{
-		this->on_left_collision(other);
-	}
-}
-void Player::on_bottom_right_collision(const ICollisionGameObject* other)
-{
-    const RectangleF& other_rect = other->get_shape()->get_bounding_box();
-    const RectangleF intersection = this->_rectangle.intersection(other_rect);
-
-    direction dir = this->get_velocity().get_direction();
-    bool moving_up = dir == direction::UP || dir == direction::UP_LEFT ||
-        dir == direction::UP_RIGHT;
-
-    if (intersection.get_width() > intersection.get_height() && !moving_up)
+    if (amount.abs_x_greater_than_y())
     {
-	    this->on_bottom_collision(other);
-}
+        this->on_top_collision(other);
+    }
     else // intersection.get_width() < intersection.get_height()
     {
         this->on_right_collision(other);
     }
 }
-player_collision_type Player::calculate_collision_type(const ICollisionGameObject* other) const
+void Player::on_bottom_left_collision(const ICollisionGameObject* other)
 {
-    const RectangleF& other_rect = other->get_shape()->get_bounding_box();
-    const RectangleF& this_rect = this->_rectangle;
+    //const RectangleF& other_rect = other->get_shape()->get_bounding_box();
+    //const RectangleF intersection = this->_rectangle.intersection(other_rect);
 
-    bool left_edge = this_rect.get_left_edge().intersects(other_rect);
-    bool right_edge = this_rect.get_right_edge().intersects(other_rect);
-    bool top_edge = this_rect.get_top_edge().intersects(other_rect);
-	bool bottom_edge = this_rect.get_bottom_edge().intersects(other_rect);
+    direction dir = this->get_velocity().get_direction();
+    bool moving_up = dir == direction::UP || dir == direction::UP_LEFT ||
+		dir == direction::UP_RIGHT;
 
-    bool contained_inside_other = other_rect.contains(this->_rectangle);
-    bool contains_other = this->_rectangle.contains(other_rect);
+ //   if (intersection.get_width() > intersection.get_height() && !moving_up)
+	//{
+	//	this->on_bottom_collision(other);
+	//}
+	//else // intersection.get_width() < intersection.get_height()
+	//{
+	//	this->on_left_collision(other);
+	//}
 
-    if (left_edge && right_edge && top_edge)
+	Vector2F amount = CollisionTools::calculate_object_collision_depth(
+		this->get_shape(), other->get_shape(), collision_direction::BOTTOM_LEFT);
+
+    if (amount.abs_x_greater_than_y() && !moving_up)
     {
-        return player_collision_type::LEFT_AND_RIGHT_AND_TOP_EDGES;
+        this->on_bottom_collision(other);
     }
-    else if (left_edge && right_edge && bottom_edge)
+    else // intersection.get_width() < intersection.get_height()
     {
-        return player_collision_type::LEFT_AND_RIGHT_AND_BOTTOM_EDGES;
+        this->on_left_collision(other);
     }
-    else if (top_edge && bottom_edge && right_edge)
-    {
-        return player_collision_type::TOP_AND_BOTTOM_AND_RIGHT_EDGES;
-    }
-    else if (top_edge && bottom_edge && left_edge)
-    {
-        return player_collision_type::TOP_AND_BOTTOM_AND_LEFT_EDGES;
-    }
-	else if (left_edge && right_edge)
-	{
-		return player_collision_type::LEFT_AND_RIGHT_EDGES;
-	}
-	else if (top_edge && bottom_edge)
-	{
-		return player_collision_type::TOP_AND_BOTTOM_EDGES;
-	}
-	else if (left_edge && top_edge)
-	{
-		return player_collision_type::TOP_AND_LEFT_EDGES;
-	}
-	else if (left_edge && bottom_edge)
-	{
-		return player_collision_type::BOTTOM_AND_LEFT_EDGES;
-	}
-	else if (right_edge && top_edge)
-	{
-		return player_collision_type::TOP_AND_RIGHT_EDGES;
-	}
-	else if (right_edge && bottom_edge)
-	{
-		return player_collision_type::BOTTOM_AND_RIGHT_EDGES;
-	}
-	else if (left_edge)
-	{
-		return player_collision_type::LEFT_EDGE;
-	}
-	else if (right_edge)
-	{
-		return player_collision_type::RIGHT_EDGE;
-	}
-	else if (top_edge)
-	{
-		return player_collision_type::TOP_EDGE;
-	}
-	else if (bottom_edge)
-	{
-		return player_collision_type::BOTTOM_EDGE;
-	}
-    else if (contained_inside_other)
-    {
-        throw std::exception("Player is contained inside other object.");
-    }
-    else if (contains_other)
-    {
-		throw std::exception("Player contains other object.");
-	}
-    else
-    {
-		throw std::exception("Invalid collision type.");
-	}
 }
+void Player::on_bottom_right_collision(const ICollisionGameObject* other)
+{
+    //const RectangleF& other_rect = other->get_shape()->get_bounding_box();
+    //const RectangleF intersection = this->_rectangle.intersection(other_rect);
+
+    direction dir = this->get_velocity().get_direction();
+    bool moving_up = dir == direction::UP || dir == direction::UP_LEFT ||
+        dir == direction::UP_RIGHT;
+
+//    if (intersection.get_width() > intersection.get_height() && !moving_up)
+//    {
+//	    this->on_bottom_collision(other);
+//}
+//    else // intersection.get_width() < intersection.get_height()
+//    {
+//        this->on_right_collision(other);
+//    }
+
+	Vector2F amount = CollisionTools::calculate_object_collision_depth(
+		this->get_shape(), other->get_shape(), collision_direction::BOTTOM_RIGHT);
+
+    if (amount.abs_x_greater_than_y() && !moving_up)
+    {
+        this->on_bottom_collision(other);
+    }
+    else // intersection.get_width() < intersection.get_height()
+    {
+        this->on_right_collision(other);
+    }
+}
+//player_collision_type Player::calculate_collision_type(const ICollisionGameObject* other) const
+//{
+//    const RectangleF& other_rect = other->get_shape()->get_bounding_box();
+//    const RectangleF& this_rect = this->_rectangle;
+//
+//    bool left_edge = this_rect.get_left_edge().intersects(other_rect);
+//    bool right_edge = this_rect.get_right_edge().intersects(other_rect);
+//    bool top_edge = this_rect.get_top_edge().intersects(other_rect);
+//	bool bottom_edge = this_rect.get_bottom_edge().intersects(other_rect);
+//
+//    bool contained_inside_other = other_rect.contains(this->_rectangle);
+//    bool contains_other = this->_rectangle.contains(other_rect);
+//
+//    if (left_edge && right_edge && top_edge)
+//    {
+//        return player_collision_type::LEFT_AND_RIGHT_AND_TOP_EDGES;
+//    }
+//    else if (left_edge && right_edge && bottom_edge)
+//    {
+//        return player_collision_type::LEFT_AND_RIGHT_AND_BOTTOM_EDGES;
+//    }
+//    else if (top_edge && bottom_edge && right_edge)
+//    {
+//        return player_collision_type::TOP_AND_BOTTOM_AND_RIGHT_EDGES;
+//    }
+//    else if (top_edge && bottom_edge && left_edge)
+//    {
+//        return player_collision_type::TOP_AND_BOTTOM_AND_LEFT_EDGES;
+//    }
+//	else if (left_edge && right_edge)
+//	{
+//		return player_collision_type::LEFT_AND_RIGHT_EDGES;
+//	}
+//	else if (top_edge && bottom_edge)
+//	{
+//		return player_collision_type::TOP_AND_BOTTOM_EDGES;
+//	}
+//	else if (left_edge && top_edge)
+//	{
+//		return player_collision_type::TOP_AND_LEFT_EDGES;
+//	}
+//	else if (left_edge && bottom_edge)
+//	{
+//		return player_collision_type::BOTTOM_AND_LEFT_EDGES;
+//	}
+//	else if (right_edge && top_edge)
+//	{
+//		return player_collision_type::TOP_AND_RIGHT_EDGES;
+//	}
+//	else if (right_edge && bottom_edge)
+//	{
+//		return player_collision_type::BOTTOM_AND_RIGHT_EDGES;
+//	}
+//	else if (left_edge)
+//	{
+//		return player_collision_type::LEFT_EDGE;
+//	}
+//	else if (right_edge)
+//	{
+//		return player_collision_type::RIGHT_EDGE;
+//	}
+//	else if (top_edge)
+//	{
+//		return player_collision_type::TOP_EDGE;
+//	}
+//	else if (bottom_edge)
+//	{
+//		return player_collision_type::BOTTOM_EDGE;
+//	}
+//    else if (contained_inside_other)
+//    {
+//        throw std::exception("Player is contained inside other object.");
+//    }
+//    else if (contains_other)
+//    {
+//		throw std::exception("Player contains other object.");
+//	}
+//    else
+//    {
+//		throw std::exception("Invalid collision type.");
+//	}
+//}
 void Player::update_weapon_position() const
 {
     this->_primary->set_player_center(this->get_center());
