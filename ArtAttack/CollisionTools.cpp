@@ -199,43 +199,38 @@ collision_direction CollisionTools::compare_point_collision_depth_vertical(
 }
 
 collision_direction CollisionTools::calculate_containing_collision_direction(
-    const RectangleF& collider, const RectangleF& collidee)
+    const Shape* collider, const Shape* collidee)
 {
-    // calculate the direction of the greatest distance between the two sprites
-	Point2F collider_center = collider.get_center();
-	Point2F collidee_center = collidee.get_center();
+    // calculate the direction of the greatest distance between the two shapes
+	Point2F collider_center = collider->get_center();
+	Point2F collidee_center = collidee->get_center();
 
     float x_distance = collider_center.x - collidee_center.x;
-    if (x_distance < 0.0f)
-    {
-        x_distance *= -1.0f;
-    }
 
     float y_distance = collider_center.y - collidee_center.y;
-    if (y_distance < 0.0f)
-    {
-        y_distance *= -1.0f;
-    }
 
-    if (x_distance < y_distance)
+    if (std::abs(x_distance) < std::abs(y_distance))
     {
         return compare_point_collision_depth_horizontal(collider_center, collidee_center);
     }
     return compare_point_collision_depth_vertical(collider_center, collidee_center);
 }
 
-collision_direction CollisionTools::rectangle_rectangle_collision_direction(
-    const RectangleF& collider, const RectangleF& collidee)
+collision_direction CollisionTools::shape_shape_collision_direction(
+    const Shape* collider, const Shape* collidee)
 {
-    Segment collider_top_edge = collider.get_top_edge();
-	Segment collider_left_edge = collider.get_left_edge();
-	Segment collider_right_edge = collider.get_right_edge();
-	Segment collider_bottom_edge = collider.get_bottom_edge();
+	RectangleF collider_aabb = collider->get_bounding_box();
+	RectangleF collidee_aabb = collidee->get_bounding_box();
+    
+    Segment collider_top_edge = collider_aabb.get_top_edge();
+	Segment collider_left_edge = collider_aabb.get_left_edge();
+	Segment collider_right_edge = collider_aabb.get_right_edge();
+	Segment collider_bottom_edge = collider_aabb.get_bottom_edge();
 
-	bool left_edge = collidee.intersects(collider_left_edge);
-	bool right_edge = collidee.intersects(collider_right_edge);
-	bool top_edge = collidee.intersects(collider_top_edge);
-	bool bottom_edge = collidee.intersects(collider_bottom_edge);
+	bool left_edge = collidee_aabb.intersects(collider_left_edge);
+	bool right_edge = collidee_aabb.intersects(collider_right_edge);
+	bool top_edge = collidee_aabb.intersects(collider_top_edge);
+	bool bottom_edge = collidee_aabb.intersects(collider_bottom_edge);
 
     if (left_edge && right_edge && top_edge && bottom_edge) // collidee is equal size of collider
     {
@@ -264,14 +259,14 @@ collision_direction CollisionTools::rectangle_rectangle_collision_direction(
     if (left_edge && right_edge)
     {
         // check if the collider is more to the left or right of the collidee
-        return compare_point_collision_depth_horizontal(collider.get_center(),
-            collidee.get_center());
+        return compare_point_collision_depth_horizontal(collider->get_center(),
+            collidee->get_center());
     }
     if (top_edge && bottom_edge)
     {
         // check if the collider is more to the top or bottom of the collidee
-        return compare_point_collision_depth_vertical(collider.get_center(),
-            collidee.get_center());
+        return compare_point_collision_depth_vertical(collider->get_center(),
+            collidee->get_center());
     }
     if (left_edge && top_edge)
     {
@@ -302,8 +297,7 @@ collision_direction CollisionTools::calculate_object_collision_direction(const S
         return collision_direction::NONE;
     }
 
-    return rectangle_rectangle_collision_direction(collider->get_bounding_box(),
-        collidee->get_bounding_box());
+    return shape_shape_collision_direction(collider, collidee);
 }
 
 void CollisionTools::resolve_object_AABB_collision(Shape* collider,

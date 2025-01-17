@@ -78,6 +78,7 @@ namespace MattMath
 		bool AABB_intersects(const Shape& other) const;
 		virtual void offset(const Vector2F& amount) = 0;
 		virtual std::unique_ptr<Shape> clone() const = 0;
+		virtual Point2F get_center() const = 0;
 	};
 
 	bool shapes_intersect(const Shape* a, const Shape* b);
@@ -177,7 +178,7 @@ namespace MattMath
 		float get_y() const;
 		float get_width() const;
 		float get_height() const;
-		MattMath::Vector2F get_center() const;
+		MattMath::Vector2F get_center() const override;
 		MattMath::Vector2F get_position() const;
 		MattMath::Vector2F get_size() const;
 		float get_left() const;
@@ -783,6 +784,8 @@ namespace MattMath
 		bool intersects(const MattMath::Segment& other) const override;
 		bool intersects(const MattMath::Point2F& point) const override;
 		bool contains(const MattMath::Point2F& point) const;
+
+		MattMath::Vector2F get_center() const override;
 	};
 	struct Triangle : public Shape
 	{
@@ -825,6 +828,8 @@ namespace MattMath
 		bool intersects(const MattMath::Segment& other) const override;
 		bool intersects(const MattMath::Point2F& point) const override;
 		bool contains(const MattMath::Point2F& point) const;
+
+		MattMath::Vector2F get_center() const override;
 	};
 
 	/*
@@ -879,6 +884,8 @@ namespace MattMath
 		bool intersects(const Segment& other) const;
 		bool intersects(const Point2F& point) const;
 		bool contains(const Point2F& point) const;
+
+		MattMath::Vector2F get_center() const override;
 	};
 
 	struct Segment

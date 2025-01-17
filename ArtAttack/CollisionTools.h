@@ -66,10 +66,10 @@ private:
         const MattMath::Point2F& collider, const MattMath::Point2F& collidee);
 
     static collision_direction calculate_containing_collision_direction(
-        const MattMath::RectangleF& collider, const MattMath::RectangleF& collidee);
+        const MattMath::Shape* collider, const MattMath::Shape* collidee);
 
-    static collision_direction rectangle_rectangle_collision_direction(
-        const MattMath::RectangleF& collider, const MattMath::RectangleF& collidee);
+    static collision_direction shape_shape_collision_direction(
+        const MattMath::Shape* collider, const MattMath::Shape* collidee);
 
     static void resolve_object_AABB_collision(MattMath::Shape* collider,
         const MattMath::Shape* collidee,

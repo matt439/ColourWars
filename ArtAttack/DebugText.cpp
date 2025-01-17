@@ -85,24 +85,8 @@ void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
     lines.push_back("jump_held: " + std::to_string(jump_held));
 
     std::string move_state_string = "move_state: ";
-    switch (move_state)
-    {
-    case player_move_state::ON_GROUND:
-        move_state_string += "on_ground";
-        break;
-    case player_move_state::ON_DROP_DOWN_GROUND:
-        move_state_string += "on_drop_down_ground";
-		break;
-    case player_move_state::ON_CEILING:
-        move_state_string += "on_ceiling";
-        break;
-    case player_move_state::IN_AIR:
-        move_state_string += "in_air";
-        break;
-    case player_move_state::JUMPING:
-        move_state_string += "jumping";
-        break;
-    };
+	move_state_string += player->get_player_move_state_string();
+
     lines.push_back(move_state_string);
 
     std::string state_string = "state: ";

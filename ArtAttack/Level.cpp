@@ -221,6 +221,8 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	// check player collisions
 	for (auto& player : *this->_player_objects)
 	{
+		bool player_colliding_with_structure = false;
+		
 		// check player collisions with collision objects
 		for (auto& other_object : *this->_collision_objects)
 		{
@@ -232,7 +234,17 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 			{
 				player->on_collision(other_object.get());
 				other_object->on_collision(player.get());
+
+				if (is_structure(other_object->get_collision_object_type()))
+				{
+					player_colliding_with_structure = true;
+				}
 			}
+		}
+
+		if (!player_colliding_with_structure)
+		{
+			player->on_no_collision();
 		}
 	}
 

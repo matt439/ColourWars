@@ -119,9 +119,9 @@ std::unique_ptr<ICollisionGameObject>
 	{
 		collision_object_type col_type;
 		std::string collision_type = json["collision_type"].GetString();
-		if (collision_type == "STRUCTURE")
+		if (collision_type == "STRUCTURE_RAMP_RIGHT")
 		{
-			col_type = collision_object_type::STRUCTURE;
+			col_type = collision_object_type::STRUCTURE_RAMP_RIGHT;
 		}
 		else
 		{

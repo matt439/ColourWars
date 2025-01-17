@@ -3054,6 +3054,10 @@ namespace MattMath
 	{
 		return this->intersects(point);
 	}
+	Point2F Circle::get_center() const
+	{
+		return this->center;
+	}
 
 #pragma endregion Circle
 
@@ -3194,6 +3198,11 @@ namespace MattMath
 	bool Triangle::contains(const Point2F& point) const
 	{
 		return this->intersects(point);
+	}
+
+	Point2F Triangle::get_center() const
+	{
+		return (this->points[0] + this->points[1] + this->points[2]) / 3.0f;
 	}
 
 #pragma endregion Triangle
@@ -3424,6 +3433,11 @@ namespace MattMath
 	bool Quad::contains(const Point2F& point) const
 	{
 		return this->intersects(point);
+	}
+
+	Point2F Quad::get_center() const
+	{
+		return (this->points[0] + this->points[1] + this->points[2] + this->points[3]) / 4.0f;
 	}
 
 #pragma endregion Quad

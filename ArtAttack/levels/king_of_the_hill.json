@@ -259,13 +259,13 @@
             "triangle":
             {
                 "x1": 200.0,
-                "y1": 6001.0,
+                "y1": 6000.0,
                 "x2": 400.0,
-                "y2": 6001.0,
+                "y2": 6000.0,
                 "x3": 400.0,
-                "y3": 5801.0
+                "y3": 5800.0
             },
-            "collision_type": "STRUCTURE",
+            "collision_type": "STRUCTURE_RAMP_RIGHT",
             "colour": "SADDLE_BROWN"
         },
 

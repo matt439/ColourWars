@@ -143,13 +143,7 @@ bool Player::is_matching_collision_object_type(
     const ICollisionGameObject* other)
 {
     collision_object_type other_type = other->get_collision_object_type();
-
-    bool structure_collision =
-        other_type == collision_object_type::STRUCTURE ||
-        other_type == collision_object_type::STRUCTURE_PAINTABLE ||
-        other_type == collision_object_type::STRUCTURE_JUMP_THROUGH;
-
-    return structure_collision;
+    return is_structure(other_type);
 }
 bool Player::is_colliding(const ICollisionGameObject* other) const
 {
@@ -200,6 +194,8 @@ void Player::on_collision(const ICollisionGameObject* other)
     bool structure_jump_through_collision =
 		other_type == collision_object_type::STRUCTURE_JUMP_THROUGH;
 
+	bool structure_ramp_collision = is_structure_ramp(other_type);
+
     player_team team = this->_team;
     bool projectile_collision = false;
     if (team == player_team::A)
@@ -237,10 +233,117 @@ void Player::on_collision(const ICollisionGameObject* other)
 	{
 		this->on_structure_jump_through_collision(other);
 	}
+	else if (structure_ramp_collision)
+	{
+		this->on_structure_ramp_collision(other);
+	}
 	else
 	{
 		throw std::exception("Invalid collision object type.");
 	}
+}
+void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
+{
+    collision_direction direction = CollisionTools::calculate_object_collision_direction(
+        this->get_shape(), other->get_shape());
+
+	collision_object_type other_type = other->get_collision_object_type();
+
+	bool bottom_edge_collision = direction == collision_direction::TOP ||
+		direction == collision_direction::TOP_LEFT ||
+		direction == collision_direction::TOP_RIGHT;
+
+	bool side_wall_collision = (direction == collision_direction::RIGHT &&
+        other_type == collision_object_type::STRUCTURE_RAMP_LEFT) 
+		|| (direction == collision_direction::LEFT &&
+			other_type == collision_object_type::STRUCTURE_RAMP_RIGHT);
+
+	bool perform_structure_collision = bottom_edge_collision || side_wall_collision;
+
+	if (perform_structure_collision)
+	{
+		this->on_structure_collision(other);
+		return;
+    }
+    
+	bool is_on_ramp = this->get_move_state() == player_move_state::ON_RAMP_LEFT ||
+		this->get_move_state() == player_move_state::ON_RAMP_RIGHT;
+
+	if (other_type == collision_object_type::STRUCTURE_RAMP_LEFT)
+	{
+        // TODO
+	}
+	else if (other_type == collision_object_type::STRUCTURE_RAMP_RIGHT)
+	{
+        switch (direction)
+        {
+        case BOTTOM:
+            CollisionTools::resolve_object_collision(&this->_rectangle,
+                other->get_shape(), collision_direction::BOTTOM);
+
+            this->set_move_state(player_move_state::ON_RAMP_RIGHT);
+
+			this->set_velocity_y(0.0f);
+            break;
+        case RIGHT:
+            CollisionTools::resolve_object_collision(&this->_rectangle,
+                other->get_shape(), collision_direction::BOTTOM);
+
+            this->set_move_state(player_move_state::ON_RAMP_RIGHT);
+
+			this->set_velocity_y(0.0f);
+            break;
+        case BOTTOM_LEFT:
+        {
+			player_move_state move_state = this->get_move_state();
+
+			RectangleF ramp_rect = other->get_shape()->get_bounding_box();
+
+			Point2F player_center = this->get_center();
+            Point2F ramp_top = ramp_rect.get_top();
+
+            MattMath::direction dir = this->get_velocity().get_direction();
+            bool moving_up = dir == direction::UP || dir == direction::UP_LEFT ||
+                dir == direction::UP_RIGHT;
+
+            if (move_state == player_move_state::ON_RAMP_RIGHT ||
+				(player_center.y < ramp_top.y && !moving_up))
+
+            {
+                CollisionTools::resolve_object_collision(&this->_rectangle,
+                    other->get_shape(), collision_direction::BOTTOM);
+
+                this->set_move_state(player_move_state::ON_RAMP_RIGHT);
+
+                this->set_velocity_y(0.0f);
+            }
+            else
+            {
+                CollisionTools::resolve_object_collision(&this->_rectangle,
+                    other->get_shape(), collision_direction::LEFT);
+
+				this->set_velocity_x(0.0f);
+            }
+            break;
+        }
+        case BOTTOM_RIGHT:
+            CollisionTools::resolve_object_collision(&this->_rectangle,
+                other->get_shape(), collision_direction::BOTTOM);
+
+            this->set_move_state(player_move_state::ON_RAMP_RIGHT);
+
+			this->set_velocity_y(0.0f);
+            break;
+        case NONE:
+            throw std::exception("No collision direction.");
+        default:
+            throw std::exception("Invalid collision direction.");
+        }
+	}
+	else
+	{
+		throw std::exception("Invalid ramp type.");
+	}   
 }
 void Player::on_structure_jump_through_collision(const ICollisionGameObject* other)
 {
@@ -847,9 +950,7 @@ void Player::do_jump()
     const bool jump_held = this->_input.jump_held;
     const float dt = this->get_dt();
    
-    if ((move_state == player_move_state::ON_GROUND ||
-        move_state == player_move_state::ON_DROP_DOWN_GROUND) &&
-        jump_pressed)
+    if (this->is_on_ground() && jump_pressed)
     {
 		MovingObject::set_velocity_y(JUMP_LAUNCH_VELOCITY);
 		this->set_air_time(0.0f);
@@ -981,8 +1082,7 @@ void Player::respawn()
 player_animation_state Player::calculate_animation_state() const
 {
     player_move_state move_state = this->get_move_state();
-    if (move_state == player_move_state::ON_GROUND ||
-        move_state == player_move_state::ON_DROP_DOWN_GROUND)
+    if (this->is_on_ground())
     {
         float velocity_x = this->get_velocity_x();
         if (velocity_x == 0.0f)
@@ -1189,4 +1289,47 @@ float Player::get_air_time() const
 const PlayerInputData& Player::get_input() const
 {
 	return this->_input;
+}
+
+std::string Player::get_player_move_state_string() const
+{
+    switch (this->_move_state)
+    {
+    case player_move_state::ON_GROUND:
+        return "on_ground";
+    case player_move_state::ON_DROP_DOWN_GROUND:
+        return "on_drop_down_ground";
+    case player_move_state::ON_CEILING:
+        return "on_ceiling";
+	case player_move_state::ON_RAMP_LEFT:
+		return "on_ramp_left";
+	case player_move_state::ON_RAMP_RIGHT:
+		return "on_ramp_right";
+    case player_move_state::IN_AIR:
+        return "in_air";
+    case player_move_state::JUMPING:
+        return "jumping";
+    };
+	return "invalid";
+}
+
+bool Player::is_on_ground() const
+{
+	return this->_move_state == player_move_state::ON_GROUND ||
+		this->_move_state == player_move_state::ON_DROP_DOWN_GROUND ||
+		this->_move_state == player_move_state::ON_RAMP_LEFT ||
+		this->_move_state == player_move_state::ON_RAMP_RIGHT;
+}
+
+void Player::on_no_collision()
+{
+	player_move_state move_state = this->get_move_state();
+
+	if (move_state == player_move_state::ON_GROUND ||
+		move_state == player_move_state::ON_DROP_DOWN_GROUND ||
+		move_state == player_move_state::ON_RAMP_LEFT ||
+		move_state == player_move_state::ON_RAMP_RIGHT)
+	{
+		this->set_move_state(player_move_state::IN_AIR);
+	}
 }

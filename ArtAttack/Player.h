@@ -23,6 +23,8 @@ enum class player_move_state
 {
 	ON_GROUND,
     ON_DROP_DOWN_GROUND,
+    ON_RAMP_LEFT,
+	ON_RAMP_RIGHT,
     DROPPING_DOWN,
 	ON_CEILING,
     JUMPING,
@@ -130,6 +132,10 @@ public:
     void update_prev_rectangle();
     void stop_sounds() const;
 
+	std::string get_player_move_state_string() const;
+
+	void on_no_collision();
+
 private:
     MattMath::Camera _camera = MattMath::Camera::DEFAULT_CAMERA;
 
@@ -197,6 +203,8 @@ private:
 
     void on_structure_jump_through_collision(const ICollisionGameObject* other);
 
+	void on_structure_ramp_collision(const ICollisionGameObject* other);
+
     void set_player_num(int player_num);
 
 
@@ -234,6 +242,8 @@ private:
     void set_showing_debug(bool showing_debug);
 
     void set_move_state(player_move_state move_state);
+
+	bool is_on_ground() const;
 };
 
 #endif // !PLAYER_H
