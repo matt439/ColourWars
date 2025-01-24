@@ -3,136 +3,37 @@
 
 using namespace MattMath;
 
-shape_movement_direction CollisionTools::opposite_direction(
-    shape_movement_direction direction)
+Vector2F CollisionTools::opposite_direction(
+    const Vector2F& direction)
 {
-    switch (direction)
-    {
-    case shape_movement_direction::UP:
-        return shape_movement_direction::DOWN;
-    case shape_movement_direction::DOWN:
-        return shape_movement_direction::UP;
-    case shape_movement_direction::LEFT:
-        return shape_movement_direction::RIGHT;
-    case shape_movement_direction::RIGHT:
-        return shape_movement_direction::LEFT;
-    case shape_movement_direction::UP_LEFT:
-        return shape_movement_direction::DOWN_RIGHT;
-    case shape_movement_direction::UP_RIGHT:
-        return shape_movement_direction::DOWN_LEFT;
-    case shape_movement_direction::DOWN_LEFT:
-        return shape_movement_direction::UP_RIGHT;
-    case shape_movement_direction::DOWN_RIGHT:
-        return shape_movement_direction::UP_LEFT;
-    };
-    return shape_movement_direction::NONE;
-}
-
-shape_movement_direction CollisionTools::direction_from_collision(
-    collision_direction direction)
-{
-    switch (direction)
-    {
-    case collision_direction::TOP:
-        return shape_movement_direction::DOWN;
-    case collision_direction::BOTTOM:
-        return shape_movement_direction::UP;
-    case collision_direction::LEFT:
-        return shape_movement_direction::RIGHT;
-    case collision_direction::RIGHT:
-        return shape_movement_direction::LEFT;
-    case collision_direction::TOP_LEFT:
-        return shape_movement_direction::DOWN_RIGHT;
-    case collision_direction::TOP_RIGHT:
-        return shape_movement_direction::DOWN_LEFT;
-    case collision_direction::BOTTOM_LEFT:
-        return shape_movement_direction::UP_RIGHT;
-    case collision_direction::BOTTOM_RIGHT:
-        return shape_movement_direction::UP_LEFT;
-    };
-    return shape_movement_direction::NONE;
+	return Vector2F(-direction.x, -direction.y);
 }
 
 void CollisionTools::move_object_by_direction(Shape* obj,
-    shape_movement_direction direction, const Vector2F& amount)
+    const Vector2F& movement_direction, const Vector2F& amount)
 {
-    if (amount.x == 0.0f && amount.y == 0.0f)
-    {
-        return;
-    }
-
-    switch (direction)
-    {
-    case shape_movement_direction::UP:
-        obj->offset(Vector2F(0.0f, -amount.y));
-        break;
-    case shape_movement_direction::DOWN:
-        obj->offset(Vector2F(0.0f, amount.y));
-        break;
-    case shape_movement_direction::LEFT:
-        obj->offset(Vector2F(-amount.x, 0.0f));
-        break;
-    case shape_movement_direction::RIGHT:
-        obj->offset(Vector2F(amount.x, 0.0f));
-        break;
-    case shape_movement_direction::UP_LEFT:
-        obj->offset(Vector2F(-amount.x, -amount.y));
-        break;
-    case shape_movement_direction::UP_RIGHT:
-        obj->offset(Vector2F(amount.x, -amount.y));
-        break;
-    case shape_movement_direction::DOWN_LEFT:
-        obj->offset(Vector2F(-amount.x, amount.y));
-        break;
-    default: // shape_movement_direction::DOWN_RIGHT:
-        obj->offset(Vector2F(amount.x, amount.y));
-        break;
-    };
+	obj->offset(movement_direction * amount);
 }
 
 void CollisionTools::move_object_by_direction_relative_to_size(Shape* obj,
-    shape_movement_direction direction, float relative_amount)
+    const Vector2F& movement_direction, float relative_amount)
 {
     RectangleF obj_aabb = obj->get_bounding_box();
 
-    double relative_width = obj_aabb.width * relative_amount;
-    double relative_height = obj_aabb.height * relative_amount;
+    float relative_width = obj_aabb.width * relative_amount;
+    float relative_height = obj_aabb.height * relative_amount;
 
-    switch (direction)
+    if (movement_direction.x == 0.0f)
+	{
+		relative_width = 0.0f;
+	}
+	if (movement_direction.y == 0.0f)
     {
-    case shape_movement_direction::UP:
-        move_object_by_direction(obj, shape_movement_direction::UP,
-            Vector2F(0.0f, relative_height));
-        break;
-    case shape_movement_direction::DOWN:
-        move_object_by_direction(obj, shape_movement_direction::DOWN,
-            Vector2F(0.0f, relative_height));
-        break;
-    case shape_movement_direction::LEFT:
-        move_object_by_direction(obj, shape_movement_direction::LEFT,
-            Vector2F(relative_width, 0.0f));
-        break;
-    case shape_movement_direction::RIGHT:
-        move_object_by_direction(obj, shape_movement_direction::RIGHT,
-            Vector2F(relative_width, 0.0f));
-        break;
-    case shape_movement_direction::UP_LEFT:
-        move_object_by_direction(obj, shape_movement_direction::UP_LEFT,
-            Vector2F(relative_width, relative_height));
-        break;
-    case shape_movement_direction::UP_RIGHT:
-        move_object_by_direction(obj, shape_movement_direction::UP_RIGHT,
-            Vector2F(relative_width, relative_height));
-        break;
-    case shape_movement_direction::DOWN_LEFT:
-        move_object_by_direction(obj, shape_movement_direction::DOWN_LEFT,
-            Vector2F(relative_width, relative_height));
-        break;
-    default: // shape_movement_direction::DOWN_RIGHT:
-        move_object_by_direction(obj, shape_movement_direction::DOWN_RIGHT,
-            Vector2F(relative_width, relative_height));
-        break;
-    };
+		relative_height = 0.0f;
+	}
+
+	move_object_by_direction(obj, movement_direction,
+                            Vector2F(relative_width, relative_height));
 }
 
 /**
@@ -140,7 +41,7 @@ void CollisionTools::move_object_by_direction_relative_to_size(Shape* obj,
  * the given number of iterations.
 */
 bool CollisionTools::bracket_object_collision(bool colliding, int i, Shape* collider,
-    shape_movement_direction collider_direction)
+    const Vector2F& collider_direction)
 {
     RectangleF collider_aabb = collider->get_bounding_box();
 
@@ -163,7 +64,7 @@ bool CollisionTools::bracket_object_collision(bool colliding, int i, Shape* coll
 }
 
 bool CollisionTools::bracket_object_collision_generic(Shape* collider, const Shape* collidee,
-    shape_movement_direction collider_direction, int iterations)
+    const Vector2F& collider_direction, int iterations)
 {
     RectangleF collider_aabb = collider->get_bounding_box();
 
@@ -178,27 +79,27 @@ bool CollisionTools::bracket_object_collision_generic(Shape* collider, const Sha
     return true;
 }
 
-collision_direction CollisionTools::compare_point_collision_depth_horizontal(
+Vector2F CollisionTools::compare_point_collision_depth_horizontal(
     const Point2F& collider, const Point2F& collidee)
 {
     if (collider.x < collidee.x)
     {
-        return collision_direction::RIGHT;
+        return Vector2F::DIRECTION_RIGHT;
     }
-    return collision_direction::LEFT;
+	return Vector2F::DIRECTION_LEFT;
 }
 
-collision_direction CollisionTools::compare_point_collision_depth_vertical(
+Vector2F CollisionTools::compare_point_collision_depth_vertical(
     const Point2F& collider, const Point2F& collidee)
 {
     if (collider.y < collidee.y)
     {
-        return collision_direction::BOTTOM;
+		return Vector2F::DIRECTION_DOWN;
     }
-    return collision_direction::TOP;
+	return Vector2F::DIRECTION_UP;
 }
 
-collision_direction CollisionTools::calculate_containing_collision_direction(
+Vector2F CollisionTools::calculate_containing_collision_direction(
     const Shape* collider, const Shape* collidee)
 {
     // calculate the direction of the greatest distance between the two shapes
@@ -216,7 +117,7 @@ collision_direction CollisionTools::calculate_containing_collision_direction(
     return compare_point_collision_depth_vertical(collider_center, collidee_center);
 }
 
-collision_direction CollisionTools::shape_shape_collision_direction(
+Vector2F CollisionTools::shape_shape_collision_direction(
     const Shape* collider, const Shape* collidee)
 {
 	RectangleF collider_aabb = collider->get_bounding_box();
@@ -239,22 +140,22 @@ collision_direction CollisionTools::shape_shape_collision_direction(
     if ((left_edge && right_edge && top_edge) || (top_edge &&
         !(left_edge || right_edge || bottom_edge)))
     {
-        return collision_direction::TOP;
+		return Vector2F::DIRECTION_UP;
     }
     if ((left_edge && right_edge && bottom_edge) || (bottom_edge &&
         !(left_edge || right_edge || top_edge)))
     {
-        return collision_direction::BOTTOM;
+		return Vector2F::DIRECTION_DOWN;
     }
     if ((top_edge && bottom_edge && right_edge) || (right_edge &&
         !(left_edge || top_edge || bottom_edge)))
     {
-        return collision_direction::RIGHT;
+		return Vector2F::DIRECTION_RIGHT;
     }
     if ((top_edge && bottom_edge && left_edge) || (left_edge &&
         !(right_edge || top_edge || bottom_edge)))
     {
-        return collision_direction::LEFT;
+		return Vector2F::DIRECTION_LEFT;
     }
     if (left_edge && right_edge)
     {
@@ -270,31 +171,31 @@ collision_direction CollisionTools::shape_shape_collision_direction(
     }
     if (left_edge && top_edge)
     {
-        return collision_direction::TOP_LEFT;
+		return Vector2F::DIRECTION_UP_LEFT;
     }
     if (left_edge && bottom_edge)
     {
-        return collision_direction::BOTTOM_LEFT;
+		return Vector2F::DIRECTION_DOWN_LEFT;
     }
     if (right_edge && top_edge)
     {
-        return collision_direction::TOP_RIGHT;
+		return Vector2F::DIRECTION_UP_RIGHT;
     }
     if (right_edge && bottom_edge)
     {
-        return collision_direction::BOTTOM_RIGHT;
+		return Vector2F::DIRECTION_DOWN_RIGHT;
     }
 
     // collider contains collidee or collidee contains collider
     return calculate_containing_collision_direction(collider, collidee);
 }
 
-collision_direction CollisionTools::calculate_object_collision_direction(const Shape* collider,
+Vector2F CollisionTools::calculate_object_collision_direction(const Shape* collider,
     const Shape* collidee)
 {
     if (!collider->intersects(collidee))
     {
-        return collision_direction::NONE;
+		return Vector2F::ZERO;
     }
 
     return shape_shape_collision_direction(collider, collidee);
@@ -302,7 +203,7 @@ collision_direction CollisionTools::calculate_object_collision_direction(const S
 
 void CollisionTools::resolve_object_AABB_collision(Shape* collider,
     const Shape* collidee,
-    collision_direction direction)
+    const Vector2F& collision_direction)
 {
     // get the intersection rectangle
     RectangleF inter = RectangleF::intersection(collider->get_bounding_box(),
@@ -310,14 +211,14 @@ void CollisionTools::resolve_object_AABB_collision(Shape* collider,
 
     Vector2F amount = { inter.width, inter.height };
 
-    move_object_by_direction(collider, direction_from_collision(direction), amount);
+    move_object_by_direction(collider, opposite_direction(collision_direction), amount);
 }
 
 bool CollisionTools::resolve_object_collision(Shape* collider, const Shape* collidee,
-    collision_direction direction, Vector2F& amount)
+    const Vector2F& collision_direction, Vector2F& amount)
 {
     // check if the sprites are colliding
-    if (direction == collision_direction::NONE || !collider->intersects(collidee))
+    if (collision_direction == Vector2F::ZERO || !collider->intersects(collidee))
     {
 		amount = Vector2F::ZERO;
         return false;
@@ -328,12 +229,13 @@ bool CollisionTools::resolve_object_collision(Shape* collider, const Shape* coll
     if (collider->get_shape_type() == shape_type::RECTANGLE &&
         collidee->get_shape_type() == shape_type::RECTANGLE)
     {
-        resolve_object_AABB_collision(collider, collidee, direction);
+        resolve_object_AABB_collision(collider, collidee, collision_direction);
     }
     else // one or both of the sprites are using pixel collision
     {
         bracket_object_collision_generic(collider, collidee,
-            direction_from_collision(direction), BRACKET_ITERATIONS);
+                                            opposite_direction(collision_direction),
+                                                                BRACKET_ITERATIONS);
     }
 
 	// calculate the amount moved
@@ -344,21 +246,21 @@ bool CollisionTools::resolve_object_collision(Shape* collider, const Shape* coll
 }
 
 bool CollisionTools::resolve_object_collision(Shape* collider, const Shape* collidee,
-    collision_direction direction)
+    const Vector2F& collision_direction)
 {
     Vector2F amount;
-	return resolve_object_collision(collider, collidee, direction, amount);
+	return resolve_object_collision(collider, collidee, collision_direction, amount);
 }
 
 Vector2F CollisionTools::calculate_object_collision_depth(
     const Shape* collider,
     const Shape* collidee,
-    collision_direction direction)
+    const Vector2F& collision_direction)
 {
 	std::unique_ptr<Shape> collider_copy = collider->clone();
     Vector2F amount;
 
-	resolve_object_collision(collider_copy.get(), collidee, direction, amount);
+	resolve_object_collision(collider_copy.get(), collidee, collision_direction, amount);
 
 	return amount;
 }

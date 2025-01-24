@@ -422,6 +422,8 @@ namespace MattMath
 
 		void rotate(float angle);
 
+		void to_unit_vector();
+
 		bool abs_x_greater_than_y() const;
 
 		static Vector2F rotate_vector(const Vector2F& vec, float angle);
@@ -441,10 +443,18 @@ namespace MattMath
 		static Vector2F vec_from_angle_magnitude(float angle, float magnitude);
 		static Vector2F unit_vec_from_angle(float angle);
 
+		static Vector2F unit_vector(const Vector2F& vec);
+
 		static const Vector2F ZERO;
 		static const Vector2F ONE;
-		static const Vector2F UNIT_X;
-		static const Vector2F UNIT_Y;
+		static const Vector2F DIRECTION_RIGHT;
+		static const Vector2F DIRECTION_DOWN;
+		static const Vector2F DIRECTION_LEFT;
+		static const Vector2F DIRECTION_UP;
+		static const Vector2F DIRECTION_UP_RIGHT;
+		static const Vector2F DIRECTION_DOWN_RIGHT;
+		static const Vector2F DIRECTION_DOWN_LEFT;
+		static const Vector2F DIRECTION_UP_LEFT;
 	};
 
 	Vector2F operator+ (const Vector2F& V1, const Vector2F& V2);

@@ -186,7 +186,6 @@
     <ClInclude Include="AnimationStrip.h" />
     <ClInclude Include="BorderThickness.h" />
     <ClInclude Include="CameraTools.h" />
-    <ClInclude Include="CollisionDirection.h" />
     <ClInclude Include="CollisionTools.h" />
     <ClInclude Include="collision_object_type.h" />
     <ClInclude Include="Colour.h" />

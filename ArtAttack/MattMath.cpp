@@ -1525,6 +1525,20 @@ namespace MattMath
 		this->x = x;
 		this->y = y;
 	}
+	void Vector2F::to_unit_vector()
+	{
+		float length = this->length();
+		if (length == 0.0f)
+		{
+			this->x = 1.0f;
+			this->y = 0.0f;
+		}
+		else
+		{
+			this->x /= length;
+			this->y /= length;
+		}
+	}
 	bool Vector2F::abs_x_greater_than_y() const
 	{
 		return std::abs(this->x) > std::abs(this->y);
@@ -1585,11 +1599,29 @@ namespace MattMath
 	{
 		return Vector2F(std::cos(angle), std::sin(angle));
 	}
+	Vector2F Vector2F::unit_vector(const Vector2F& vec)
+	{
+		float length = vec.length();
+		if (length == 0.0f)
+		{
+			return Vector2F(1.0f, 0.0f);
+		}
+		else
+		{
+			return Vector2F(vec.x / length, vec.y / length);
+		}
+	}
 
 	const Vector2F Vector2F::ZERO = { 0.0f, 0.0f };
 	const Vector2F Vector2F::ONE = { 1.0f, 1.0f };
-	const Vector2F Vector2F::UNIT_X = { 1.0f, 0.0f };
-	const Vector2F Vector2F::UNIT_Y = { 0.0f, 1.0f };
+	const Vector2F Vector2F::DIRECTION_RIGHT = { 1.0f, 0.0f };
+	const Vector2F Vector2F::DIRECTION_DOWN = { 0.0f, 1.0f };
+	const Vector2F Vector2F::DIRECTION_LEFT = { -1.0f, 0.0f };
+	const Vector2F Vector2F::DIRECTION_UP = { 0.0f, -1.0f };
+	const Vector2F Vector2F::DIRECTION_UP_RIGHT = Vector2F::unit_vector(Vector2F::DIRECTION_UP + Vector2F::DIRECTION_RIGHT);
+	const Vector2F Vector2F::DIRECTION_DOWN_RIGHT = Vector2F::unit_vector(Vector2F::DIRECTION_DOWN + Vector2F::DIRECTION_RIGHT);
+	const Vector2F Vector2F::DIRECTION_DOWN_LEFT = Vector2F::unit_vector(Vector2F::DIRECTION_DOWN + Vector2F::DIRECTION_LEFT);
+	const Vector2F Vector2F::DIRECTION_UP_LEFT = Vector2F::unit_vector(Vector2F::DIRECTION_UP + Vector2F::DIRECTION_LEFT);
 
 
 	Vector2F MattMath::operator+ (const Vector2F& V1, const Vector2F& V2)

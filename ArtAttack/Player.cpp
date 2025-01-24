@@ -244,18 +244,18 @@ void Player::on_collision(const ICollisionGameObject* other)
 }
 void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
 {
-    collision_direction direction = CollisionTools::calculate_object_collision_direction(
+    Vector2F direction = CollisionTools::calculate_object_collision_direction(
         this->get_shape(), other->get_shape());
 
 	collision_object_type other_type = other->get_collision_object_type();
 
-	bool bottom_edge_collision = direction == collision_direction::TOP ||
-		direction == collision_direction::TOP_LEFT ||
-		direction == collision_direction::TOP_RIGHT;
+	bool bottom_edge_collision = direction == Vector2F::DIRECTION_UP ||
+		direction == Vector2F::DIRECTION_UP_LEFT ||
+		direction == Vector2F::DIRECTION_UP_RIGHT;
 
-	bool side_wall_collision = (direction == collision_direction::RIGHT &&
+	bool side_wall_collision = (direction == Vector2F::DIRECTION_RIGHT &&
         other_type == collision_object_type::STRUCTURE_RAMP_LEFT) 
-		|| (direction == collision_direction::LEFT &&
+		|| (direction == Vector2F::DIRECTION_LEFT &&
 			other_type == collision_object_type::STRUCTURE_RAMP_RIGHT);
 
 	bool perform_structure_collision = bottom_edge_collision || side_wall_collision;
@@ -275,25 +275,25 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
 	}
 	else if (other_type == collision_object_type::STRUCTURE_RAMP_RIGHT)
 	{
-        switch (direction)
+        if (direction == Vector2F::DIRECTION_DOWN)
         {
-        case BOTTOM:
             CollisionTools::resolve_object_collision(&this->_rectangle,
-                other->get_shape(), collision_direction::BOTTOM);
+                other->get_shape(), Vector2F::DIRECTION_DOWN);
 
             this->set_move_state(player_move_state::ON_RAMP_RIGHT);
 
-			this->set_velocity_y(0.0f);
-            break;
-        case RIGHT:
+            this->set_velocity_y(0.0f);
+        }
+        else if (direction == Vector2F::DIRECTION_RIGHT)
+        {
             CollisionTools::resolve_object_collision(&this->_rectangle,
-                other->get_shape(), collision_direction::BOTTOM);
+                other->get_shape(), Vector2F::DIRECTION_DOWN);
 
             this->set_move_state(player_move_state::ON_RAMP_RIGHT);
 
-			this->set_velocity_y(0.0f);
-            break;
-        case BOTTOM_LEFT:
+            this->set_velocity_y(0.0f);
+        }
+        else if (direction == Vector2F::DIRECTION_DOWN_LEFT)
         {
 			player_move_state move_state = this->get_move_state();
 
@@ -311,7 +311,7 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
 
             {
                 CollisionTools::resolve_object_collision(&this->_rectangle,
-                    other->get_shape(), collision_direction::BOTTOM);
+                    other->get_shape(), Vector2F::DIRECTION_DOWN);
 
                 this->set_move_state(player_move_state::ON_RAMP_RIGHT);
 
@@ -320,23 +320,26 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
             else
             {
                 CollisionTools::resolve_object_collision(&this->_rectangle,
-                    other->get_shape(), collision_direction::LEFT);
+                    other->get_shape(), Vector2F::DIRECTION_LEFT);
 
 				this->set_velocity_x(0.0f);
             }
-            break;
         }
-        case BOTTOM_RIGHT:
+        else if (direction == Vector2F::DIRECTION_DOWN_RIGHT)
+        {
             CollisionTools::resolve_object_collision(&this->_rectangle,
-                other->get_shape(), collision_direction::BOTTOM);
+                other->get_shape(), Vector2F::DIRECTION_DOWN);
 
             this->set_move_state(player_move_state::ON_RAMP_RIGHT);
 
-			this->set_velocity_y(0.0f);
-            break;
-        case NONE:
+            this->set_velocity_y(0.0f);
+        }
+        else if (direction == Vector2F::ZERO)
+        {
             throw std::exception("No collision direction.");
-        default:
+        }
+		else
+        {
             throw std::exception("Invalid collision direction.");
         }
 	}
@@ -377,7 +380,7 @@ void Player::on_structure_jump_through_collision(const ICollisionGameObject* oth
 void Player::on_structure_collision(const ICollisionGameObject* other)
 {
     //player_collision_type type = this->calculate_collision_type(other);
-	collision_direction direction = CollisionTools::calculate_object_collision_direction(
+	Vector2F direction = CollisionTools::calculate_object_collision_direction(
 		this->get_shape(), other->get_shape());
 
  //   Vector2F amount = Vector2F::ZERO;
@@ -385,37 +388,42 @@ void Player::on_structure_collision(const ICollisionGameObject* other)
 	//CollisionTools::resolve_object_collision(&this->_rectangle,
  //       other->get_shape(), direction, amount);
 
-    switch (direction)
+    if (direction == Vector2F::DIRECTION_UP)
     {
-    case TOP:
 		this->on_top_collision(other);
-        break;
-    case BOTTOM:
+	}
+	else if (direction == Vector2F::DIRECTION_DOWN)
+	{
 		this->on_bottom_collision(other);
-        break;
-    case LEFT:
-		this->on_left_collision(other);
-        break;
-    case RIGHT:
-		this->on_right_collision(other);
-        break;
-    case TOP_LEFT:
-        this->on_top_left_collision(other);
-        break;
-    case TOP_RIGHT:
-		this->on_top_right_collision(other);
-        break;
-    case BOTTOM_LEFT:
-		this->on_bottom_left_collision(other);
-        break;
-    case BOTTOM_RIGHT:
-		this->on_bottom_right_collision(other);
-        break;
-    case NONE:
-		throw std::exception("No collision direction.");
-    default:
-		throw std::exception("Invalid collision direction.");
     }
+	else if (direction == Vector2F::DIRECTION_LEFT)
+	{
+		this->on_left_collision(other);
+    }
+	else if (direction == Vector2F::DIRECTION_RIGHT)
+	{
+		this->on_right_collision(other);
+	}
+	else if (direction == Vector2F::DIRECTION_UP_LEFT)
+	{
+		this->on_top_left_collision(other);
+	}
+	else if (direction == Vector2F::DIRECTION_UP_RIGHT)
+	{
+		this->on_top_right_collision(other);
+	}
+	else if (direction == Vector2F::DIRECTION_DOWN_LEFT)
+	{
+		this->on_bottom_left_collision(other);
+	}
+	else if (direction == Vector2F::DIRECTION_DOWN_RIGHT)
+	{
+		this->on_bottom_right_collision(other);
+	}
+	else
+	{
+		throw std::exception("Invalid collision direction.");   
+	}
 
     /*if (type == player_collision_type::LEFT_EDGE)
 	{
@@ -494,7 +502,7 @@ void Player::on_top_collision(const ICollisionGameObject* other)
 	//this->_rectangle.set_position_y(other_rect.get_bottom());
 
     CollisionTools::resolve_object_collision(&this->_rectangle,
-        other->get_shape(), collision_direction::TOP);
+        other->get_shape(), Vector2F::DIRECTION_UP);
 
 	this->set_move_state(player_move_state::ON_CEILING);
 }
@@ -506,7 +514,7 @@ void Player::on_bottom_collision(const ICollisionGameObject* other)
     //this->_rectangle.set_position_y_from_bottom(other_rect.get_top());
 
     CollisionTools::resolve_object_collision(&this->_rectangle,
-        other->get_shape(), collision_direction::BOTTOM);
+        other->get_shape(), Vector2F::DIRECTION_DOWN);
 
     this->set_move_state(player_move_state::ON_GROUND);
 }
@@ -518,7 +526,7 @@ void Player::on_left_collision(const ICollisionGameObject* other)
     this->_rectangle.set_position_x(other_rect.get_right());*/
 
     CollisionTools::resolve_object_collision(&this->_rectangle,
-        other->get_shape(), collision_direction::LEFT);
+        other->get_shape(), Vector2F::DIRECTION_LEFT);
 }
 void Player::on_right_collision(const ICollisionGameObject* other)
 {
@@ -528,7 +536,7 @@ void Player::on_right_collision(const ICollisionGameObject* other)
 	//this->_rectangle.set_position_x_from_right(other_rect.get_left());
 
     CollisionTools::resolve_object_collision(&this->_rectangle,
-        other->get_shape(), collision_direction::RIGHT);
+        other->get_shape(), Vector2F::DIRECTION_RIGHT);
 }
 void Player::on_top_left_collision(const ICollisionGameObject* other)
 {
@@ -545,7 +553,7 @@ void Player::on_top_left_collision(const ICollisionGameObject* other)
 	//}
 
     Vector2F amount = CollisionTools::calculate_object_collision_depth(
-        this->get_shape(), other->get_shape(), collision_direction::TOP_LEFT);
+        this->get_shape(), other->get_shape(), Vector2F::DIRECTION_UP_LEFT);
 
     if (amount.abs_x_greater_than_y())
     {
@@ -571,7 +579,7 @@ void Player::on_top_right_collision(const ICollisionGameObject* other)
 	//}
 
 	Vector2F amount = CollisionTools::calculate_object_collision_depth(
-		this->get_shape(), other->get_shape(), collision_direction::TOP_RIGHT);
+		this->get_shape(), other->get_shape(), Vector2F::DIRECTION_UP_RIGHT);
 
     if (amount.abs_x_greater_than_y())
     {
@@ -601,7 +609,7 @@ void Player::on_bottom_left_collision(const ICollisionGameObject* other)
 	//}
 
 	Vector2F amount = CollisionTools::calculate_object_collision_depth(
-		this->get_shape(), other->get_shape(), collision_direction::BOTTOM_LEFT);
+		this->get_shape(), other->get_shape(), Vector2F::DIRECTION_DOWN_LEFT);
 
     if (amount.abs_x_greater_than_y() && !moving_up)
     {
@@ -631,7 +639,7 @@ void Player::on_bottom_right_collision(const ICollisionGameObject* other)
 //    }
 
 	Vector2F amount = CollisionTools::calculate_object_collision_depth(
-		this->get_shape(), other->get_shape(), collision_direction::BOTTOM_RIGHT);
+		this->get_shape(), other->get_shape(), Vector2F::DIRECTION_DOWN_RIGHT);
 
     if (amount.abs_x_greater_than_y() && !moving_up)
     {
