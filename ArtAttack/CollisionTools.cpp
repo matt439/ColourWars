@@ -9,12 +9,6 @@ Vector2F CollisionTools::opposite_direction(
 	return Vector2F(-direction.x, -direction.y);
 }
 
-void CollisionTools::move_object_by_direction(Shape* obj,
-    const Vector2F& movement_direction, const Vector2F& amount)
-{
-	obj->offset(movement_direction * amount);
-}
-
 void CollisionTools::move_object_by_direction_relative_to_size(Shape* obj,
     const Vector2F& movement_direction, float relative_amount)
 {
@@ -32,8 +26,7 @@ void CollisionTools::move_object_by_direction_relative_to_size(Shape* obj,
 		relative_height = 0.0f;
 	}
 
-	move_object_by_direction(obj, movement_direction,
-                            Vector2F(relative_width, relative_height));
+	obj->offset(movement_direction * Vector2F(relative_width, relative_height));
 }
 
 /**
@@ -211,7 +204,7 @@ void CollisionTools::resolve_object_AABB_collision(Shape* collider,
 
     Vector2F amount = { inter.width, inter.height };
 
-    move_object_by_direction(collider, opposite_direction(collision_direction), amount);
+	collider->offset(opposite_direction(collision_direction) * amount);
 }
 
 bool CollisionTools::resolve_object_collision(Shape* collider, const Shape* collidee,
@@ -224,17 +217,18 @@ bool CollisionTools::resolve_object_collision(Shape* collider, const Shape* coll
         return false;
     }
 
+    Vector2F unit_direction = Vector2F::unit_vector(collision_direction);
 	Vector2F collider_center = collider->get_bounding_box().get_center();
 
     if (collider->get_shape_type() == shape_type::RECTANGLE &&
         collidee->get_shape_type() == shape_type::RECTANGLE)
     {
-        resolve_object_AABB_collision(collider, collidee, collision_direction);
+        resolve_object_AABB_collision(collider, collidee, unit_direction);
     }
     else // one or both of the sprites are using pixel collision
     {
         bracket_object_collision_generic(collider, collidee,
-                                            opposite_direction(collision_direction),
+                                            opposite_direction(unit_direction),
                                                                 BRACKET_ITERATIONS);
     }
 

@@ -31,9 +31,6 @@ public:
 private:
     static MattMath::Vector2F opposite_direction(const MattMath::Vector2F& direction);
 
-    static void move_object_by_direction(MattMath::Shape* obj,
-        const MattMath::Vector2F& movement_direction, const MattMath::Vector2F& amount);
-
     static void move_object_by_direction_relative_to_size(MattMath::Shape* obj,
         const MattMath::Vector2F& movement_direction, float relative_amount = 1.0f);
 

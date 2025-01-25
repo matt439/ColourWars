@@ -395,6 +395,7 @@ void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contex
 				sprite_batches);
 			});
 	}
+
 	this->_thread_pool->wait_for_tasks_to_complete();
 }
 
@@ -568,12 +569,19 @@ void Level::draw_player_view_level(int start, int end,
 			state == player_state::DEAD);
 
 		// draw debug info
-		if (true)
+		if (this->_player_objects->at(i)->get_showing_debug())
 		{
 			int num_projectiles = this->count_projectiles();
 
 			this->_debug_text->draw_debug_info(sprite_batches->at(i),
 				this->_player_objects->at(i).get(), num_projectiles);
+		}
+
+		// draw countdown text
+		if (this->_state == level_state::START_COUNTDOWN ||
+			this->_start_timer > -1.0f)
+		{
+			this->draw_countdown_text(sprite_batches->at(i), viewport_camera);
 		}
 
 		HRESULT hr = deferred_contexts->at(i)->FinishCommandList(TRUE, &command_lists->at(i));
@@ -724,4 +732,14 @@ LevelEndInfo Level::get_level_end_info() const
 	}
 
 	return result;
+}
+
+void Level::draw_countdown_text(SpriteBatch* sprite_batch,
+	const MattMath::Camera& viewport_camera) const
+{
+	sprite_batch->Begin();
+	
+	this->_countdown_text->draw(sprite_batch, viewport_camera);
+
+	sprite_batch->End();
 }

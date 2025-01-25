@@ -173,6 +173,9 @@ private:
 	void draw_zoom_out_level_component(std::vector<ID3D11DeviceContext*>* deferred_contexts,
 		std::vector<ID3D11CommandList*>* command_lists,
 		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
+
+	void draw_countdown_text(DirectX::SpriteBatch* sprite_batch,
+		const MattMath::Camera& viewport_camera) const;
 };
 
 #endif
