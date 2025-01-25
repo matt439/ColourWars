@@ -8,15 +8,15 @@ using namespace player_input_consts;
 PlayerInput::PlayerInput(GamePad* gamepad) :
     _gamepad(gamepad)
 {
-    for (int i = 0; i < 4; i++)
+    for (auto& _prev_input : this->_prev_inputs)
     {
-        this->_prev_inputs[i] = raw_player_input();
+	    _prev_input = RawPlayerInput();
     }
 }
 
-raw_player_input PlayerInput::get_raw_input(int gamepad_num)
+RawPlayerInput PlayerInput::get_raw_input(int gamepad_num) const
 {
-    raw_player_input result = raw_player_input();
+	auto result = RawPlayerInput();
     auto pad = this->_gamepad->GetState(gamepad_num, GamePad::DEAD_ZONE_CIRCULAR);
     if (pad.IsConnected())
     {
@@ -35,10 +35,10 @@ raw_player_input PlayerInput::get_raw_input(int gamepad_num)
     return result;
 }
 
-player_input PlayerInput::calculate_player_input(
-    const raw_player_input& current, const raw_player_input& previous)
+PlayerInputData PlayerInput::calculate_player_input(
+    const RawPlayerInput& current, const RawPlayerInput& previous)
 {
-    player_input result = player_input();
+	auto result = PlayerInputData();
 
     result.jump_held = current.jump_button || current.jump_trigger > TRIGGER_JUMP_THRESHOLD;
 
@@ -83,18 +83,6 @@ player_input PlayerInput::calculate_player_input(
         result.primary_shoot = false;
 	}
 
-
- //   Vector2F direction = current.left_analog_stick;
- //   if (std::abs(direction.x) > STICK_DEADZONE)
- //   {
- //       //direction.normalize();
- //       result.x_movement = direction.x;
- //   }
-	//else
-	//{
-	//	result.x_movement = 0.0f;
-	//}
-
     if (std::fabs(current.left_analog_stick.x) > STICK_DEADZONE)
     {
 		result.x_movement = current.left_analog_stick.x;
@@ -120,41 +108,6 @@ player_input PlayerInput::calculate_player_input(
         result.shoot_direction_requested = false;
 	}
 
-    //// combined x movement and shoot direction.
-    //// if left analog stick is pushed far enough
-    //// then use that as the shoot direction
-    //// otherwise use the shoot direction
-    //// as the direction the player is facing
-    //Vector2F direction = current.left_analog_stick;
-    //if (abs(direction.x) > 0.7f)
-    //{
-    //    result.x_movement = direction.x;
-    //    direction.normalize();
-    //    result.shoot_direction = direction;
-    //    result.shoot_direction_lock = direction_lock::UNLOCKED;
-    //}
-    //else if (direction.length() > 0.3f)
-    //{
-    //    direction.normalize();
-    //    result.shoot_direction = direction;
-    //    result.shoot_direction_lock = direction_lock::UNLOCKED;
-    //    //result.x_movement = 0.0f;
-    //    if (direction.x < 0.0f)
-    //    {
-    //        result.x_movement = -FLT_MIN;
-    //    }
-    //    else if (direction.x > 0.0f)
-    //    {
-    //        result.x_movement = FLT_MIN;
-    //    }
-    //}
-    //else
-    //{
-    //    result.x_movement = 0.0f;
-    //    result.shoot_direction_lock = direction_lock::LOCKED;
-    //    result.shoot_direction = Vector2F(0.0f);
-    //}
-
     result.connection = connection_state::CONNECTED;
 
     result.left_analog_stick = current.left_analog_stick;
@@ -163,19 +116,19 @@ player_input PlayerInput::calculate_player_input(
     return result;
 }
 
-std::vector<player_input> PlayerInput::update_and_get_player_inputs()
+std::vector<PlayerInputData> PlayerInput::update_and_get_player_inputs()
 {
-    raw_player_input current[4];
+    RawPlayerInput current[4];
     for (int i = 0; i < 4; i++)
     {
         current[i] = this->get_raw_input(i);
     }
-    std::vector<player_input> result;
+    std::vector<PlayerInputData> result;
     for (int i = 0; i < 4; i++)
     {
         if (current[i].connected)
         {
-            player_input input = calculate_player_input(current[i],
+            PlayerInputData input = calculate_player_input(current[i],
                 this->_prev_inputs[i]);
             result.push_back(input);
         }

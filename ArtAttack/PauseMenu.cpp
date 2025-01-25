@@ -6,6 +6,15 @@ using namespace MattMath;
 using namespace pause_menu_consts;
 using namespace colour_consts;
 
+PauseMenuPage::PauseMenuPage(PauseMenuData* data) :
+	MenuPage(data),
+	SoundBankObject(pause_menu_consts::SOUND_BANK,
+		this->get_resource_manager()),
+	_data(data)
+{
+
+}
+
 std::string PauseMenuPage::get_player_number_text(int player_num)
 {
 	switch (player_num)
@@ -23,14 +32,20 @@ std::string PauseMenuPage::get_player_number_text(int player_num)
 	};
 }
 
-PauseMenuData* PauseMenuPage::get_pause_menu_data()
+PauseMenuData* PauseMenuPage::get_pause_menu_data() const
 {
 	return this->_data;
 }
 
+PauseMenuInitial::PauseMenuInitial(PauseMenuData* data) :
+	PauseMenuPage(data)
+{
+
+}
+
 void PauseMenuInitial::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int player_num = this->get_pause_menu_data()->get_player_num();
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
@@ -55,7 +70,6 @@ void PauseMenuInitial::update()
 			this->get_context()->transition_to(std::make_unique<
 				PauseMenuConfirmation>(this->get_pause_menu_data(),
 					confirmation_type::RESTART));
-			return;
 		}
 		else if (highlighted_element == "quit")
 		{
@@ -63,7 +77,6 @@ void PauseMenuInitial::update()
 			this->get_context()->transition_to(std::make_unique<
 				PauseMenuConfirmation>(this->get_pause_menu_data(),
 					confirmation_type::QUIT));
-			return;
 		}
 	}
 	else if (inputs[player_num].direction == menu_direction::UP)
@@ -109,7 +122,6 @@ void PauseMenuInitial::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, PAUSE_MENU_BOX_SIZE),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PAUSE_MENU_BOX_COLOUR);
 	this->_box->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
@@ -124,7 +136,6 @@ void PauseMenuInitial::init()
 			this->get_pause_menu_data()->get_player_num()),
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PAUSE_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
@@ -135,7 +146,6 @@ void PauseMenuInitial::init()
 		"Resume",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 2),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
@@ -146,7 +156,6 @@ void PauseMenuInitial::init()
 		"Restart",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 3),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -157,7 +166,6 @@ void PauseMenuInitial::init()
 		"Quit",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 4),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -187,16 +195,26 @@ void PauseMenuInitial::init()
 }
 void PauseMenuInitial::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
+}
+
+PauseMenuConfirmation::PauseMenuConfirmation(PauseMenuData* data,
+	confirmation_type type) :
+	PauseMenuPage(data), _type(type)
+{
+
 }
 
 void PauseMenuConfirmation::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int player_num = this->get_pause_menu_data()->get_player_num();
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
@@ -260,7 +278,6 @@ void PauseMenuConfirmation::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, PAUSE_MENU_BOX_SIZE),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PAUSE_MENU_BOX_COLOUR);
 	this->_box->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
@@ -275,7 +292,6 @@ void PauseMenuConfirmation::init()
 			this->get_pause_menu_data()->get_player_num()),
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PAUSE_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
@@ -283,10 +299,9 @@ void PauseMenuConfirmation::init()
 
 	this->_question = std::make_unique<MTextDropShadow>(
 		"question",
-		this->get_question_text(this->_type),
+		get_question_text(this->_type),
 		DETAIL_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PAUSE_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
@@ -297,7 +312,6 @@ void PauseMenuConfirmation::init()
 		"Yes",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 3),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -308,7 +322,6 @@ void PauseMenuConfirmation::init()
 		"No",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 4),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
@@ -336,11 +349,14 @@ void PauseMenuConfirmation::init()
 
 void PauseMenuConfirmation::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 
 std::string PauseMenuConfirmation::get_question_text(

@@ -15,9 +15,9 @@ const std::string& MObject::get_name() const
 {
 	return this->_name;
 }
-void MObject::draw(const Viewport& viewport)
+void MObject::draw(SpriteBatch* sprite_batch, const Viewport& viewport)
 {
-	this->draw(Camera(viewport));
+	this->draw(sprite_batch, Camera(viewport));
 }
 void MObject::set_hidden(bool hidden)
 {
@@ -52,7 +52,7 @@ void MContainer::remove_child(const std::string& name)
 		}
 	}
 }
-void MContainer::remove_child(MObject* child)
+void MContainer::remove_child(const MObject* child)
 {
 	for (auto it = this->_children.begin(); it != this->_children.end(); ++it)
 	{
@@ -96,18 +96,18 @@ void MContainer::update()
 		child.second->update();
 	}
 }
-void MContainer::draw(const MattMath::Camera& camera)
+void MContainer::draw(SpriteBatch* sprite_batch, const MattMath::Camera& camera)
 {
 	for (auto const& child : this->_children)
 	{
-		child.second->draw(camera);
+		child.second->draw(sprite_batch, camera);
 	}
 }
-void MContainer::draw()
+void MContainer::draw(SpriteBatch* sprite_batch)
 {
 	for (auto const& child : this->_children)
 	{
-		child.second->draw();
+		child.second->draw(sprite_batch);
 	}
 }
 bool MContainer::is_visible_in_viewport(const MattMath::RectangleF& view) const
@@ -132,116 +132,6 @@ MWidget::MWidget(const std::string& name, bool hidden) :
 {
 
 }
-//const std::string& MWidget::get_name() const
-//{
-//	return this->_name;
-//}
-//void MWidget::set_hidden(bool hidden)
-//{
-//	this->_hidden = hidden;
-//}
-//bool MWidget::get_hidden() const
-//{
-//	return this->_hidden;
-//}
-//void MWidget::add_child(MWidget* child)
-//{
-//	this->_children.push_back(std::make_pair(child->get_name(), child));
-//}
-//std::vector<std::pair<std::string, MWidget*>> MWidget::get_children()
-//{ 
-//	return this->_children;
-//}
-//size_t MWidget::get_child_count() const
-//{
-//	return this->_children.size();
-//}
-//void MWidget::draw_children()
-//{
-//	for (auto const& child : this->_children)
-//	{
-//		child.second->draw();
-//	}
-//}
-//void MWidget::draw_children(const Viewport& viewport)
-//{
-//	for (auto const& child : this->_children)
-//	{
-//		child.second->draw(viewport);
-//	}
-//}
-//void MWidget::draw_children(const Camera& camera)
-//{
-//	for (auto const& child : this->_children)
-//	{
-//		child.second->draw(camera);
-//	}
-//}
-//void MWidget::draw(const Viewport& viewport)
-//{
-//	this->draw(Camera(viewport));
-//}
-//void MWidget::draw(const Camera& camera)
-//{
-//	this->draw_self(camera);
-//	this->draw_children(camera);
-//}
-//void MWidget::draw()
-//{
-//	this->draw_self();
-//	this->draw_children();
-//}
-
-//void MWidget::update_resolution(const Vector2I& resolution)
-//{
-//	this->update_resolution(Vector2F(static_cast<float>(resolution.x),
-//		static_cast<float>(resolution.y)));
-//}
-
-//void MWidget::update_resolution(const Vector2F& prev_resolution,
-//	const Vector2F& new_resolution)
-//{
-//	//Vector2F size = this->get_size();
-//	//Vector2F position = this->get_position();
-//	//float scale_factor_x = resolution.x / size.x;
-//	//float scale_factor_y = resolution.y / size.y;
-//	//Vector2F scale_factor = Vector2F(scale_factor_x, scale_factor_y);
-//
-//	////scale window's children
-//	//for (auto const& child : this->get_children())
-//	//{
-//	//	Vector2F child_position = child.second->get_position();
-//	//	if (child_position != Vector2F(0.0f))
-//	//	{
-//	//		Vector2F child_relative_position = child_position / size;
-//	//		child.second->
-//	//			set_position(child_relative_position * resolution);
-//	//	}
-//	//	child.second->scale_size(scale_factor);
-//	//}
-//	////scale window
-//	//this->scale_size(scale_factor);
-//	//if (position != Vector2F(0.0f))
-//	//{
-//	//	Vector2F relative_position = position / size;
-//	//	this->set_position(relative_position * resolution);
-//	//}
-//
-//	Vector2F scale_factor = new_resolution / prev_resolution;
-//	this->scale_and_move(scale_factor);
-//}
-//void MWidget::scale_and_move(const Vector2F& scale)
-//{
-//	this->scale_and_move_self(scale);
-//	this->scale_and_move_children(scale);
-//}
-//void MWidget::scale_and_move_children(const Vector2F& scale)
-//{
-//	for (auto const& child : this->_children)
-//	{
-//		child.second->scale_and_move(scale);
-//	}
-//}
 
 #pragma endregion MWidget
 
@@ -251,7 +141,6 @@ MTexture::MTexture(const std::string& name,
 	const std::string& sheet_name,
 	const std::string& frame_name,
 	const RectangleF& rectangle,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	bool hidden,
@@ -260,7 +149,7 @@ MTexture::MTexture(const std::string& name,
 	SpriteEffects effects,
 	float layer_depth) :
 	MWidget(name, hidden),
-	TextureObject(sheet_name, frame_name, sprite_batch,
+	TextureObject(sheet_name, frame_name,
 		resource_manager, color, rotation, origin, effects, layer_depth),
 	_rectangle(rectangle)
 {
@@ -292,21 +181,21 @@ void MTexture::scale_size_and_position(const Vector2F& scale)
 {
 	this->_rectangle.scale_size_and_position(scale);
 }
-void MTexture::draw(const Camera& camera)
+void MTexture::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
-	if (this->MWidget::get_hidden())
+	if (this->get_hidden())
 	{
 		return;
 	}
-	this->TextureObject::draw(this->_rectangle, camera);
+	this->TextureObject::draw(sprite_batch, this->_rectangle, camera);
 }
-void MTexture::draw()
+void MTexture::draw(SpriteBatch* sprite_batch)
 {
-	if (this->MWidget::get_hidden())
+	if (this->get_hidden())
 	{
 		return;
 	}
-	this->TextureObject::draw(this->_rectangle);
+	this->TextureObject::draw(sprite_batch, this->_rectangle);
 }
 const RectangleF& MTexture::get_rectangle() const
 {
@@ -345,7 +234,6 @@ MText::MText(const std::string& name,
 	const std::string& text,
 	const std::string& font_name,
 	const Vector2F& position,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	bool hidden,
@@ -355,7 +243,7 @@ MText::MText(const std::string& name,
 	SpriteEffects effects,
 	float layer_depth) :
 	MWidget(name, hidden),
-	Text(text, font_name, position, sprite_batch,
+	Text(text, font_name, position,
 		resource_manager, color,
 		scale, rotation, origin, effects, layer_depth)
 {
@@ -366,26 +254,26 @@ void MText::scale_size_and_position(const Vector2F& scale)
 	this->set_position(this->get_position() * scale);
 	this->set_scale(this->get_scale() * scale.x);
 }
-void MText::draw(const Camera& camera)
+void MText::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
-	if (this->MWidget::get_hidden())
+	if (this->get_hidden())
 	{
 		return;
 	}
-	this->Text::draw(camera);
+	this->Text::draw(sprite_batch, camera);
 }
-void MText::draw()
+void MText::draw(SpriteBatch* sprite_batch)
 {
-	if (this->MWidget::get_hidden())
+	if (this->get_hidden())
 	{
 		return;
 	}
-	this->Text::draw();
+	this->Text::draw(sprite_batch);
 
 }
 void MText::update()
 {
-	return;
+	// do nothing
 }
 bool MText::is_visible_in_viewport(const RectangleF& view) const
 {
@@ -405,7 +293,6 @@ MTextDropShadow::MTextDropShadow(const std::string& name,
 	const std::string& text,
 	const std::string& font_name,
 	const Vector2F& position,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	const Colour& shadow_color,
@@ -418,7 +305,7 @@ MTextDropShadow::MTextDropShadow(const std::string& name,
 	SpriteEffects effects,
 	float layer_depth) :
 	MWidget(name, hidden),
-	TextDropShadow(text, font_name, position, sprite_batch,
+	TextDropShadow(text, font_name, position,
 		resource_manager, color, shadow_color, shadow_offset,
 		scale, shadow_scale, rotation, origin, effects, layer_depth)
 {
@@ -432,21 +319,21 @@ void MTextDropShadow::scale_size_and_position(const Vector2F& scale)
 	this->set_shadow_offset(this->get_shadow_offset() * scale);
 	this->set_shadow_scale(this->get_shadow_scale() * scale.x);
 }
-void MTextDropShadow::draw(const Camera& camera)
+void MTextDropShadow::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
-	if (this->MWidget::get_hidden())
+	if (this->get_hidden())
 	{
 		return;
 	}
-	this->TextDropShadow::draw(camera);
+	this->TextDropShadow::draw(sprite_batch, camera);
 }
-void MTextDropShadow::draw()
+void MTextDropShadow::draw(SpriteBatch* sprite_batch)
 {
-	if (this->MWidget::get_hidden())
+	if (this->get_hidden())
 	{
 		return;
 	}
-	this->TextDropShadow::draw();
+	this->TextDropShadow::draw(sprite_batch);
 
 }
 void MTextDropShadow::update()
@@ -464,118 +351,3 @@ void MTextDropShadow::set_colour(const Colour& colour)
 }
 
 #pragma endregion MTextDropShadow
-
-//void MLabel::draw_self()
-//{
-//	if (this->get_hidden())
-//		return;
-//
-//	this->get_sprite_font()->DrawString(
-//		this->get_sprite_batch(),
-//		this->get_text().c_str(),
-//		this->get_position().get_xm_vector(),
-//		this->get_colour().get_xm_vector(),
-//		0.0f,
-//		Vector2F::ZERO.get_xm_vector(),
-//		this->get_scale(),
-//		SpriteEffects_None, 0.0f);
-//}
-//
-//void MLabel::draw_self(const Viewport& viewport)
-//{
-//	if (this->get_hidden())
-//		return;
-//
-//	Vector2F position = this->get_position();
-//	position.x -= viewport.x;
-//	position.y -= viewport.y;
-//
-//	this->get_sprite_font()->DrawString(
-//		this->get_sprite_batch(),
-//		this->get_text().c_str(),
-//		position.get_xm_vector(),
-//		this->get_colour().get_xm_vector(),
-//		0.0f,
-//		Vector2F::ZERO.get_xm_vector(),
-//		this->get_scale(),
-//		SpriteEffects_None, 0.0f);
-//}
-//
-//void MLabel::draw()
-//{
-//	this->draw_self();
-//	this->draw_children();
-//}
-//
-//void MLabel::draw(const Viewport& viewport)
-//{
-//	this->draw_self(viewport);
-//	this->draw_children(viewport);
-//}
-//
-//void MImage::draw_self()
-//{
-//	if (this->get_hidden())
-//		return;
-//
-//	//sprite_frame_reference frame_ref = this->get_sprite_frame_reference();
-//	if (this->get_sprite_sheet_name() != "")
-//	{
-//		this->get_sprite_sheet()->draw(
-//			this->get_sprite_batch(),
-//			this->get_sprite_frame_name(),
-//			this->get_bounding_box_i(),
-//			this->get_colour());
-//	}
-//	else
-//	{
-//		this->get_sprite_batch()->Draw(
-//			this->get_texture(),
-//			this->get_bounding_box_i().get_sm_rectangle(),
-//			this->get_colour().get_xm_vector());
-//	}
-//}
-//
-//void MImage::draw_self(const Viewport& viewport)
-//{
-//	if (this->get_hidden())
-//		return;
-//
-//	RectangleI bounds = this->get_bounding_box_i();
-//	bounds.x -= static_cast<long>(viewport.x);
-//	bounds.y -= static_cast<long>(viewport.y);
-//	//bounds.x -= 1;
-//	//bounds.y -= 1;
-//	//bounds.width += 2;
-//	//bounds.height += 2;
-//
-//	//sprite_frame_reference frame_ref = this->get_sprite_frame_reference();
-//
-//	if (this->get_sprite_sheet_name() != "")
-//	{
-//		this->get_sprite_sheet()->draw(
-//			this->get_sprite_batch(),
-//			this->get_sprite_frame_name(),
-//			bounds,
-//			this->get_colour());
-//	}
-//	else
-//	{
-//		this->get_sprite_batch()->Draw(
-//			this->get_texture(),
-//			bounds.get_win_rect(),
-//			this->get_colour().get_xm_vector());
-//	}
-//}
-//
-//void MImage::draw()
-//{
-//	this->draw_self();
-//	this->draw_children();
-//}
-//
-//void MImage::draw(const Viewport& viewport)
-//{
-//	this->draw_self(viewport);
-//	this->draw_children(viewport);
-//}

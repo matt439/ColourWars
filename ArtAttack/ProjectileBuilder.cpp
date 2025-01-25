@@ -14,16 +14,15 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 		const Colour& team_colour,
 		projectile_type type,
 		const float* dt,
-		SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		float rotation,
 		const Vector2F& origin,
 		SpriteEffects effects,
-		float layer_depth)
+		float layer_depth) const
 {
 	switch (type)
     {
-    case projectile_type::SPRAY:
+    case SPRAY:
 	{
 		std::vector<std::unique_ptr<ICollisionGameObject>> projectiles;
 		projectiles.push_back(
@@ -34,7 +33,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 				player_num,
 				team_colour,
 				dt,
-				sprite_batch,
 				resource_manager,
 				rotation,
 				origin,
@@ -42,7 +40,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 				layer_depth));
 		return projectiles;
 	}
-    case projectile_type::JET:
+    case JET:
 	{
 		std::vector<std::unique_ptr<ICollisionGameObject>> projectiles;
 		projectiles.push_back(
@@ -53,7 +51,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 				player_num,
 				team_colour,
 				dt,
-				sprite_batch,
 				resource_manager,
 				rotation,
 				origin,
@@ -61,7 +58,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 				layer_depth));
 		return projectiles;
 	}
-	case projectile_type::ROLLING:
+	case ROLLING:
 	{
 		std::vector<std::unique_ptr<ICollisionGameObject>> projectiles;
 		projectiles.push_back(
@@ -72,7 +69,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 				player_num,
 				team_colour,
 				dt,
-				sprite_batch,
 				resource_manager,
 				rotation,
 				origin,
@@ -80,7 +76,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 				layer_depth));
 		return projectiles;
 	}
-	case projectile_type::MIST:
+	case MIST:
 		return this->build_mist_projectiles(
 			position,
 			velocity,
@@ -89,13 +85,12 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 			team_colour,
 			type,
 			dt,
-			sprite_batch,
 			resource_manager,
 			rotation,
 			origin,
 			effects,
 			layer_depth);
-	case projectile_type::BALL:
+	case BALL:
 	{
 		std::vector<std::unique_ptr<ICollisionGameObject>> projectiles;
 		projectiles.push_back(
@@ -106,7 +101,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 				player_num,
 				team_colour,
 				dt,
-				sprite_batch,
 				resource_manager,
 				rotation,
 				origin,
@@ -128,7 +122,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 	const Colour& team_colour,
 	projectile_type type,
 	const float* dt,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	float rotation,
 	const Vector2F& origin,
@@ -144,7 +137,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 			player_num,
 			team_colour,
 			dt,
-			sprite_batch,
 			resource_manager,
 			rotation,
 			origin,
@@ -159,7 +151,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 			player_num,
 			team_colour,
 			dt,
-			sprite_batch,
 			resource_manager,
 			rotation,
 			origin,
@@ -174,7 +165,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 			player_num,
 			team_colour,
 			dt,
-			sprite_batch,
 			resource_manager,
 			rotation,
 			origin,
@@ -189,7 +179,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 			player_num,
 			team_colour,
 			dt,
-			sprite_batch,
 			resource_manager,
 			rotation,
 			origin,
@@ -204,7 +193,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 			player_num,
 			team_colour,
 			dt,
-			sprite_batch,
 			resource_manager,
 			rotation,
 			origin,

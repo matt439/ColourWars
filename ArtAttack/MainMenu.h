@@ -1,5 +1,6 @@
 #ifndef MAINMENU_H
 #define MAINMENU_H
+
 #include "Mh.h"
 #include "player_team.h"
 #include "MainMenuData.h"
@@ -8,7 +9,6 @@
 #include "menu_element.h"
 #include "MenuPage.h"
 #include "StateContext.h"
-//#include "WaveBankObject.h"
 #include "SoundBankObject.h"
 
 namespace main_menu_consts
@@ -42,10 +42,8 @@ namespace main_menu_consts
 	const static MattMath::Vector2F DETAIL_SHADOW_OFFSET = { 1.0f, 1.0f };
 	const static MattMath::Vector2F WEAPON_DESCRIPTION_SHADOW_OFFSET = { 1.0f, 1.0f };
 
-	//const static MattMath::Vector2F MODE_SELECT_WIDGET_POSITION = { 150.0f, 50.0f };
 	const static MattMath::Vector2F MODE_SELECT_WIDGET_SPACING = { 250.0f, 100.0f };
 
-	//const static MattMath::Vector2F PLAYER_COUNT_WIDGET_POSITION = { 150.0f, 50.0f };
 	const static MattMath::Vector2F PLAYER_COUNT_WIDGET_SPACING = { 250.0f, 100.0f };
 
 	const static MattMath::Vector2F TEAM_SELECT_WIDGET_SPACING = { 250.0f, 125.0f };
@@ -73,7 +71,6 @@ namespace main_menu_consts
 
 	constexpr float WEAPON_DESC_X_OFFSET = 250.0f;
 
-	//const std::string WAVE_BANK = "wave_bank_1";
 	const std::string SOUND_BANK = "sound_bank_1";
 	const std::string DIRECTION_SOUND = "UI_Clicks14";
 	const std::string CONFIRM_SOUND = "UI_Clicks01";
@@ -104,7 +101,7 @@ enum class main_menu_screen
 	STAGE_SELECT
 };
 
-struct main_menu_midway_load_settings
+struct MainMenuMidwayLoadSettings
 {
 	main_menu_screen screen = main_menu_screen::TITLE;
 	MenuLevelSettings settings = MenuLevelSettings();
@@ -112,45 +109,42 @@ struct main_menu_midway_load_settings
 
 class MainMenuPage : public MenuPage, public SoundBankObject
 {
+public:
+	explicit MainMenuPage(MainMenuData* data);
+	~MainMenuPage() override = default;
+	void init() override = 0;
+	void update() override = 0;
+	void draw() override = 0;
+protected:
+	MainMenuData* get_main_menu_data() const;
+	int get_player_count() const;
 private:
 	MainMenuData* _data = nullptr;
-protected:
-	MainMenuData* get_main_menu_data();
-	int get_player_count();
-public:
-	MainMenuPage(MainMenuData* data) :
-		MenuPage(data),
-		SoundBankObject(main_menu_consts::SOUND_BANK,
-			this->get_resource_manager()),
-		_data(data) {}
-	virtual ~MainMenuPage() {}
-	virtual void init() = 0;
-	virtual void update() = 0;
-	virtual void draw() = 0;
 };
 
-class MainMenuTitle : public MainMenuPage
+class MainMenuTitle final : public MainMenuPage
 {
+public:
+	explicit MainMenuTitle(MainMenuData* data);
+	void update() override;
+	void draw() override;
+	void init() override;
 private:
 	std::unique_ptr<MContainer> _texture_container = nullptr;
 	std::unique_ptr<MContainer> _text_container = nullptr;
 	std::unique_ptr<MTexture> _background = nullptr;
 	std::unique_ptr<MTextDropShadow> _title = nullptr;
 	std::unique_ptr<MTextDropShadow> _start = nullptr;
-
-	//std::unique_ptr<SoundLibrary> _title_sound = nullptr;
-	//std::unique_ptr<SoundSingle> _title_sound_effect = nullptr;
-	//std::unique_ptr<DirectX::SoundEffectInstance> _title_sound_effect_instance = nullptr;
 	std::unique_ptr<DirectX::SoundEffectInstance> _music = nullptr;
+};
 
+class MainMenuHome final : public MainMenuPage, public MenuHighlight
+{
 public:
-	MainMenuTitle(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuHome(MainMenuData* data);
 	void update() override;
 	void draw() override;
 	void init() override;
-};
-class MainMenuHome : public MainMenuPage, public MenuHighlight
-{
 private:
 	std::unique_ptr<MContainer> _texture_container = nullptr;
 	std::unique_ptr<MContainer> _text_container = nullptr;
@@ -159,15 +153,15 @@ private:
 	std::unique_ptr<MTextDropShadow> _play = nullptr;
 	std::unique_ptr<MTextDropShadow> _options = nullptr;
 	std::unique_ptr<MTextDropShadow> _exit = nullptr;
+};
+
+class MainMenuOptions final : public MainMenuPage, public MenuHighlight
+{
 public:
-	MainMenuHome(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuOptions(MainMenuData* data);
 	void update() override;
 	void draw() override;
 	void init() override;
-};
-
-class MainMenuOptions : public MainMenuPage, public MenuHighlight
-{
 private:
 	std::unique_ptr<MContainer> _texture_container = nullptr;
 	std::unique_ptr<MContainer> _text_container = nullptr;
@@ -183,17 +177,17 @@ private:
 	bool _full_screen_selection = true;
 	void cycle_resolution(menu_direction direction);
 	void update_resolution_selection_text();
-	void update_full_screen_selection_text();
+	void update_full_screen_selection_text() const;
 	void apply_fullscreen_setting(bool fullscreen);
+};
+
+class MainMenuModeSelect final : public MainMenuPage, public MenuHighlight
+{
 public:
-	MainMenuOptions(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuModeSelect(MainMenuData* data);
 	void update() override;
 	void draw() override;
 	void init() override;
-};
-
-class MainMenuModeSelect : public MainMenuPage, public MenuHighlight
-{
 private:
 	std::unique_ptr<MContainer> _texture_container = nullptr;
 	std::unique_ptr<MContainer> _text_container = nullptr;
@@ -204,16 +198,16 @@ private:
 	std::unique_ptr<MTextDropShadow> _dm = nullptr;
 	std::unique_ptr<MTextDropShadow> _practice = nullptr;
 	std::unique_ptr<MTextDropShadow> _back = nullptr;
-	menu_element convert_mode_to_element(level_mode mode);
+	static menu_element convert_mode_to_element(level_mode mode);
+};
+
+class MainMenuPlayerCount final : public MainMenuPage, public MenuHighlight
+{
 public:
-	MainMenuModeSelect(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuPlayerCount(MainMenuData* data);
 	void update() override;
 	void draw() override;
 	void init() override;
-};
-
-class MainMenuPlayerCount : public MainMenuPage, public MenuHighlight
-{
 private:
 	std::unique_ptr<MContainer> _texture_container = nullptr;
 	std::unique_ptr<MContainer> _text_container = nullptr;
@@ -224,93 +218,91 @@ private:
 	std::unique_ptr<MTextDropShadow> _3_players = nullptr;
 	std::unique_ptr<MTextDropShadow> _4_players = nullptr;
 	std::unique_ptr<MTextDropShadow> _back = nullptr;
-	menu_element convert_player_count_to_element(int player_count);
-public:
-	MainMenuPlayerCount(MainMenuData* data) : MainMenuPage(data) {}
-	void update() override;
-	void draw() override;
-	void init() override;
+	static menu_element convert_player_count_to_element(int player_count);
 };
 
-class MainMenuTeamSelect : public MainMenuPage
+class MainMenuTeamSelect final : public MainMenuPage
 {
-private:
-	struct team_select_state
-	{
-		player_team team = player_team::NONE;
-		confirmation_state state = confirmation_state::UNCONFIRMED;
-	};
-	struct player_widgets
-	{
-		std::unique_ptr<MTextDropShadow> _player = nullptr;
-		std::unique_ptr<MTexture> _player_a = nullptr;
-		std::unique_ptr<MTexture> _player_center = nullptr;
-		std::unique_ptr<MTexture> _player_b = nullptr;
-	};
-	//int _num_players;
-	std::unique_ptr<MContainer> _texture_container = nullptr;
-	std::unique_ptr<MContainer> _text_container = nullptr;
-	std::unique_ptr<MTexture> _background = nullptr;
-	std::unique_ptr<MTextDropShadow> _heading = nullptr;
-
-	std::vector<std::unique_ptr<
-		MainMenuTeamSelect::player_widgets>> _player_widgets;
-	std::vector<MainMenuTeamSelect::team_select_state> _select_states;
-	void update_team_select_visuals();
-	void deselect_and_unconfirm_all_widgets();
-	bool all_players_confirmed();
-	bool all_players_unconfirmed();
-	void set_level_settings();
 public:
-	MainMenuTeamSelect(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuTeamSelect(MainMenuData* data);
 	MainMenuTeamSelect(MainMenuData* data, MenuLevelSettings* settings);
 	void update() override;
 	void draw() override;
 	void init() override;
-};
-
-class MainMenuWeaponSelect : public MainMenuPage
-{
 private:
-	struct select_state
+	struct TeamSelectState
 	{
-		wep_type type = wep_type::SPRAYER;
+		player_team team = player_team::NONE;
 		confirmation_state state = confirmation_state::UNCONFIRMED;
 	};
-	struct widgets
+	struct PlayerWidgets
 	{
-		std::unique_ptr<MTextDropShadow> _player = nullptr;
-		std::unique_ptr<MTexture> _weapon_icon = nullptr;
-		std::unique_ptr<MTextDropShadow> _weapon_name = nullptr;
-		std::unique_ptr<MTextDropShadow> _weapon_description = nullptr;
+		std::unique_ptr<MTextDropShadow> player = nullptr;
+		std::unique_ptr<MTexture> player_a = nullptr;
+		std::unique_ptr<MTexture> player_center = nullptr;
+		std::unique_ptr<MTexture> player_b = nullptr;
 	};
 	std::unique_ptr<MContainer> _texture_container = nullptr;
 	std::unique_ptr<MContainer> _text_container = nullptr;
 	std::unique_ptr<MTexture> _background = nullptr;
 	std::unique_ptr<MTextDropShadow> _heading = nullptr;
-	std::vector<std::unique_ptr<
-		MainMenuWeaponSelect::widgets>> _player_widgets;
-	std::vector<MainMenuWeaponSelect::select_state> _select_states;
-	void update_weapon_select_visuals();
-	void unconfirm_all_widgets();
-	bool all_players_confirmed();
-	bool all_players_unconfirmed();
-	wep_type get_random_weapon();
-	void set_level_settings();
-	void cycle_weapons(menu_direction direction, int player_index);
-	std::string weapon_description(wep_type type) const;
+
+	std::vector<std::unique_ptr<PlayerWidgets>> _player_widgets;
+	std::vector<TeamSelectState> _select_states;
+	void update_team_select_visuals();
+	void deselect_and_unconfirm_all_widgets();
+	bool all_players_confirmed() const;
+	bool all_players_unconfirmed() const;
+	void set_level_settings() const;
+};
+
+class MainMenuWeaponSelect final : public MainMenuPage
+{
 public:
-	MainMenuWeaponSelect(MainMenuData* data) : MainMenuPage(data) {}
+	explicit MainMenuWeaponSelect(MainMenuData* data);
 	MainMenuWeaponSelect(MainMenuData* data, MenuLevelSettings* settings);
 	void update() override;
 	void draw() override;
 	void init() override;
+private:
+	struct SelectState
+	{
+		wep_type type = wep_type::SPRAYER;
+		confirmation_state state = confirmation_state::UNCONFIRMED;
+	};
+	struct Widgets
+	{
+		std::unique_ptr<MTextDropShadow> player = nullptr;
+		std::unique_ptr<MTexture> weapon_icon = nullptr;
+		std::unique_ptr<MTextDropShadow> weapon_name = nullptr;
+		std::unique_ptr<MTextDropShadow> weapon_description = nullptr;
+	};
+	std::unique_ptr<MContainer> _texture_container = nullptr;
+	std::unique_ptr<MContainer> _text_container = nullptr;
+	std::unique_ptr<MTexture> _background = nullptr;
+	std::unique_ptr<MTextDropShadow> _heading = nullptr;
+	std::vector<std::unique_ptr<Widgets>> _player_widgets;
+	std::vector<SelectState> _select_states;
+	void update_weapon_select_visuals();
+	void unconfirm_all_widgets();
+	bool all_players_confirmed() const;
+	bool all_players_unconfirmed() const;
+	static wep_type get_random_weapon();
+	void set_level_settings() const;
+	void cycle_weapons(menu_direction direction, int player_index);
+	static std::string weapon_description(wep_type type);
 };
 
-class MainMenuStageSelect : public MainMenuPage
+class MainMenuStageSelect final : public MainMenuPage
 {
+public:
+	explicit MainMenuStageSelect(MainMenuData* data);
+	MainMenuStageSelect(MainMenuData* data, MenuLevelSettings* settings);
+	void update() override;
+	void draw() override;
+	void init() override;
 private:
-	struct select_state
+	struct SelectState
 	{
 		level_stage stage = level_stage::KING_OF_THE_HILL;
 		confirmation_state state = confirmation_state::UNCONFIRMED;
@@ -322,19 +314,12 @@ private:
 	std::unique_ptr<MTexture> _stage_icon = nullptr;
 	std::unique_ptr<MTextDropShadow> _stage_name = nullptr;
 	std::unique_ptr<MTextDropShadow> _ready = nullptr;
-	MainMenuStageSelect::select_state _select_state =
-		MainMenuStageSelect::select_state();
+	SelectState _select_state = SelectState();
 	void update_stage_select_visuals();
 	void unconfirm_all_widgets();
-	level_stage get_random_stage();
+	static level_stage get_random_stage();
 	void cycle_stages(menu_direction direction);
-	void set_level_settings();
-public:
-	MainMenuStageSelect(MainMenuData* data) : MainMenuPage(data) {}
-	MainMenuStageSelect(MainMenuData* data, MenuLevelSettings* settings);
-	void update() override;
-	void draw() override;
-	void init() override;
+	void set_level_settings() const;
 };
 
 #endif

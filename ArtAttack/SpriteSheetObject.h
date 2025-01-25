@@ -5,25 +5,24 @@
 
 class SpriteSheetObject : public DrawObject
 {
-private:
-	std::string _sheet_name = "";
-	std::string _element_name = "";
-protected:
-	virtual const std::string& get_sprite_sheet_name() const;
-	virtual const std::string& get_element_name() const;
-	virtual SpriteSheet* get_sprite_sheet() const;
-	virtual void set_sprite_sheet_name(const std::string& sheet_name);
-	virtual void set_element_name(const std::string& element_name);
 public:
 	SpriteSheetObject() = default;
 	SpriteSheetObject(const std::string& sheet_name,
 		const std::string& element_name,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
+protected:
+	virtual const std::string& get_sprite_sheet_name() const;
+	virtual const std::string& get_element_name() const;
+	virtual SpriteSheet* get_sprite_sheet() const;
+	virtual void set_sprite_sheet_name(const std::string& sheet_name);
+	virtual void set_element_name(const std::string& element_name);
+private:
+	std::string _sheet_name = "";
+	std::string _element_name = "";
 };
 #endif // !SPRITESHEETOBJECT_H

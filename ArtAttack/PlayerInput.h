@@ -2,9 +2,7 @@
 #define PLAYERINPUT_H
 
 #include <vector>
-#include "connection_state.h"
-#include <cmath>
-#include "player_input.h"
+#include "PlayerInputData.h"
 #include "MattMath.h"
 
 namespace player_input_consts
@@ -14,7 +12,7 @@ namespace player_input_consts
 	constexpr float STICK_DEADZONE = 0.5f;
 }
 
-struct raw_player_input
+struct RawPlayerInput
 {
 	MattMath::Vector2F left_analog_stick = { 0.0f, 0.0f };
 	MattMath::Vector2F right_analog_stick = { 0.0f, 0.0f };
@@ -29,15 +27,15 @@ struct raw_player_input
 
 class PlayerInput
 {
-private:
-	raw_player_input _prev_inputs[4];
-	raw_player_input get_raw_input(int gamepad_num);
-	player_input calculate_player_input(const raw_player_input& current,
-		const raw_player_input& previous);
-	DirectX::GamePad* _gamepad = nullptr;
 public:
-	PlayerInput(DirectX::GamePad* gamepad);
-	std::vector<player_input> update_and_get_player_inputs();
+	explicit PlayerInput(DirectX::GamePad* gamepad);
+	std::vector<PlayerInputData> update_and_get_player_inputs();
+private:
+	RawPlayerInput _prev_inputs[4];
+	RawPlayerInput get_raw_input(int gamepad_num) const;
+	static PlayerInputData calculate_player_input(const RawPlayerInput& current,
+	                                              const RawPlayerInput& previous);
+	DirectX::GamePad* _gamepad = nullptr;
 };
 
 #endif // !PLAYER_INPUT_H

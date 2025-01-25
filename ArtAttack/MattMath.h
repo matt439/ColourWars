@@ -2,8 +2,10 @@
 #define MATTMATH_H
 
 #include "SimpleMath.h"
-#include <cmath>
 #include "shape_type.h"
+#include <d3d11.h>
+#include <cmath>
+#include <vector>
 
 namespace MattMath
 {
@@ -17,8 +19,14 @@ namespace MattMath
 		UP_LEFT,
 		UP_RIGHT,
 		DOWN_LEFT,
-		DOWN_RIGHT
+		DOWN_RIGHT,
 	};
+
+	//enum class vector_type
+	//{
+	//	ROW,
+	//	COLUMN,
+	//};
 	
 	struct Vector2I;
 	struct Vector2F;
@@ -26,14 +34,15 @@ namespace MattMath
 	struct RectangleI;
 	struct Circle;
 	struct Triangle;
+	struct Quad;
 	struct Segment;
 	struct RectangleF;
 	struct Camera;
 
 	constexpr float PI = 3.14159265358979323846f;
 
-	float min(float a, float b);
-	float max(float a, float b);
+	//float min_value(float a, float b);
+	//float max_value(float a, float b);
 
 	float clamp(float value, float min, float max);
 	void clamp_ref(float& value, float min, float max);
@@ -44,6 +53,8 @@ namespace MattMath
 		const MattMath::Vector2F& p2, const MattMath::Vector2F& p3);
 
 	bool are_equal(float a, float b, float epsilon = 0.0001f);
+	bool are_equal(const MattMath::Vector2F& a, const MattMath::Vector2F& b,
+		float epsilon = 0.0001f);
 
 	float to_radians(float degrees);
 	float to_degrees(float radians);
@@ -53,15 +64,94 @@ namespace MattMath
 	struct Shape
 	{
 		virtual ~Shape() = default;
-		virtual const MattMath::RectangleF& get_bounding_box() const = 0;
+		virtual RectangleF get_bounding_box() const = 0;
 		virtual shape_type get_shape_type() const = 0;
-		virtual bool intersects(const Shape* other) const;
-		virtual bool intersects(const Shape& other) const;
-		virtual bool intersects(const MattMath::Circle& other) const;
-		virtual bool intersects(const MattMath::Triangle& other) const;
-		virtual bool intersects(const MattMath::RectangleF& other) const;
-		virtual bool AABB_intersects(const Shape* other) const;
+		virtual bool intersects(const RectangleF& rect) const = 0;
+		virtual bool intersects(const Circle& circle) const = 0;
+		virtual bool intersects(const Triangle& triangle) const = 0;
+		virtual bool intersects(const Quad& quad) const = 0;
+		virtual bool intersects(const Segment& segment) const = 0;
+		virtual bool intersects(const Point2F& point) const = 0;
+		bool intersects(const Shape* other) const;
+		bool intersects(const Shape& other) const;
+		bool AABB_intersects(const Shape* other) const;
+		bool AABB_intersects(const Shape& other) const;
+		virtual void offset(const Vector2F& amount) = 0;
+		virtual std::unique_ptr<Shape> clone() const = 0;
+		virtual Point2F get_center() const = 0;
 	};
+
+	bool shapes_intersect(const Shape* a, const Shape* b);
+	bool shapes_intersect(const Shape& a, const Shape& b);
+	bool shapes_AABB_intersect(const Shape* a, const Shape* b);
+	bool shapes_AABB_intersect(const Shape& a, const Shape& b);
+
+	bool rectangles_intersect(const MattMath::RectangleF& a,
+		const MattMath::RectangleF& b);
+
+	bool rectangle_circle_intersect(const MattMath::RectangleF& rectangle,
+		const MattMath::Circle& circle, MattMath::Point2F& point);
+
+	bool rectangle_circle_intersect(const MattMath::RectangleF& rectangle,
+		const MattMath::Circle& circle);
+
+	bool rectangle_triangle_intersect(const MattMath::RectangleF& rectangle, 
+		const MattMath::Triangle& triangle);
+
+	bool rectangle_quad_intersect(const MattMath::RectangleF& rectangle,
+		const MattMath::Quad& quad);
+
+	bool rectangle_segment_intersect(const MattMath::RectangleF& rectangle, 
+		const MattMath::Segment& segment);
+
+	bool rectangle_point_intersect(const MattMath::RectangleF& rectangle, 
+		const MattMath::Point2F& point);
+
+	bool circles_intersect(const MattMath::Circle& a,
+		const MattMath::Circle& b);
+
+	bool circle_triangle_intersect(const MattMath::Circle& circle,
+		const MattMath::Triangle& triangle, MattMath::Point2F& point);
+
+	bool circle_triangle_intersect(const MattMath::Circle& circle,
+		const MattMath::Triangle& triangle);
+
+	bool circle_quad_intersect(const MattMath::Circle& circle,
+		const MattMath::Quad& quad);
+
+	bool circle_segment_intersect(const MattMath::Circle& circle,
+		const MattMath::Segment& segment, MattMath::Point2F& point);
+
+	bool circle_segment_intersect(const MattMath::Circle& circle,
+		const MattMath::Segment& segment);
+
+	bool circle_point_intersect(const MattMath::Circle& circle, 
+		const MattMath::Point2F& point);
+
+	bool triangles_intersect(const MattMath::Triangle& a, 
+		const MattMath::Triangle& b);
+
+	bool triangle_quad_intersect(const MattMath::Triangle& triangle, 
+		const MattMath::Quad& quad);
+
+	bool triangle_segment_intersect(const MattMath::Triangle& triangle, 
+		const MattMath::Segment& segment);
+
+	bool triangle_point_intersect(const MattMath::Triangle& triangle,
+		const MattMath::Point2F& point);
+
+	bool quads_intersect(const MattMath::Quad& a, const MattMath::Quad& b);
+
+	bool quad_segment_intersect(const MattMath::Quad& quad,
+		const MattMath::Segment& segment);
+
+	bool quad_point_intersect(const MattMath::Quad& quad, 
+		const MattMath::Point2F& point);
+
+	bool segments_intersect(const MattMath::Segment& a, const MattMath::Segment& b,
+		float& t, MattMath::Point2F& p);
+
+	bool segments_intersect(const MattMath::Segment& a, const MattMath::Segment& b);
 
 	struct RectangleF : public Shape
 	{
@@ -80,14 +170,15 @@ namespace MattMath
 		RectangleF(const DirectX::SimpleMath::Rectangle& rectangle);
 		RectangleF(const RECT& rectangle);
 
-		const RectangleF& get_bounding_box() const override;
+		RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
+		std::unique_ptr<Shape> clone() const override;
 
 		float get_x() const;
 		float get_y() const;
 		float get_width() const;
 		float get_height() const;
-		MattMath::Vector2F get_center() const;
+		MattMath::Vector2F get_center() const override;
 		MattMath::Vector2F get_position() const;
 		MattMath::Vector2F get_size() const;
 		float get_left() const;
@@ -102,6 +193,7 @@ namespace MattMath
 		MattMath::Segment get_bottom_edge() const;
 		MattMath::Segment get_left_edge() const;
 		MattMath::Segment get_right_edge() const;
+		std::vector<MattMath::Segment> get_edges() const;
 		float get_area() const;
 		MattMath::RectangleI get_rectangle_i() const;
 		DirectX::SimpleMath::Rectangle get_sm_rectangle() const;
@@ -112,13 +204,16 @@ namespace MattMath
 		bool operator==(const RectangleF& other) const;
 		bool operator!=(const RectangleF& other) const;
 
-		bool contains(const MattMath::Vector2F& point) const;
+		//bool contains(const MattMath::Vector2F& point) const;
 		bool contains(const RectangleF& other) const;
 
-		bool intersects(const RectangleF& other) const;
-		bool intersects(const MattMath::Circle& other) const;
-		bool intersects(const MattMath::Triangle& other) const;
-		bool intersects(const MattMath::Segment& other) const;
+		bool intersects(const RectangleF& other) const override;
+		bool intersects(const MattMath::Circle& other) const override;
+		bool intersects(const MattMath::Triangle& other) const override;
+		bool intersects(const MattMath::Quad& quad) const override;
+		bool intersects(const MattMath::Segment& other) const override;
+		bool intersects(const MattMath::Point2F& point) const override;
+		bool contains(const MattMath::Point2F& point) const;
 		RectangleF intersection(const RectangleF& other) const;
 		
 		//void set_left(float left);
@@ -134,7 +229,7 @@ namespace MattMath
 		void scale_at_center(float horizontal_scale, float vertical_scale);
 		void scale_at_center(const MattMath::Vector2F& scale);
 		void offset(float horizontal_amount, float vertical_amount);
-		void offset(const MattMath::Vector2F& amount);
+		void offset(const MattMath::Vector2F& amount) override;
 		void scale(float horizontal_amount, float vertical_amount);
 		void scale(const MattMath::Vector2F& amount);
 		void scale_size_and_position(float horizontal_amount,
@@ -171,6 +266,57 @@ namespace MattMath
 	};
 
 	typedef MattMath::RectangleF AABB;
+	
+	/*template<typename T>
+	struct Matrix
+	{
+		Matrix() = default;
+		Matrix(const Matrix&) = default;
+		Matrix(int rows, int columns);
+		Matrix(int rows, int columns, const std::vector<T>& elements);
+		Matrix(int size, vector_type type);
+		Matrix(int size, vector_type type, const std::vector<T>& elements);
+
+		T get_element(int row, int column) const;
+		void set_element(int row, int column, T value);
+
+		int get_rows() const;
+		int get_columns() const;
+
+		bool is_square() const;
+		bool equal_size(const Matrix<T>& other) const;
+
+		Matrix<T> rotate_pi_radians() const;
+
+		T& operator()(int row, int column);
+		const T& operator()(int row, int column) const;
+
+	private:
+		int _rows = 0;
+		int _columns = 0;
+		std::vector<T> _elements;
+		T** _matrix = nullptr;
+		bool row_valid(int row) const;
+		bool column_valid(int column) const;
+		int calculate_index(int row, int column) const;
+		T& get_element_ref(int row, int column);
+	};
+
+	template<typename T>
+	struct Vector : Matrix<T>
+	{
+		Vector() = default;
+		Vector(const Vector&) = default;
+		Vector(int size);
+		Vector(int size, vector_type type);
+		Vector(int size, vector_type type, const std::vector<T>& elements);
+
+		int get_size() const;
+		vector_type get_vector_type() const;
+
+		T& operator[](int index);
+		const T& operator[](int index) const;
+	};*/
 
 	struct Vector2I
 	{
@@ -220,7 +366,6 @@ namespace MattMath
 	Vector2I operator/ (const Vector2I& V, int S);
 	Vector2I operator* (int S, const Vector2I& V);
 
-
 	struct Vector2F
 	{
 		float x = 0.0f;
@@ -232,7 +377,7 @@ namespace MattMath
 		Vector2F(float x, float y);
 		Vector2F(const DirectX::SimpleMath::Vector2& vector);
 		Vector2F(const DirectX::XMFLOAT2& vector);
-		Vector2F(const MattMath::Vector2I vector);
+		Vector2F(const MattMath::Vector2I& vector);
 
 		DirectX::SimpleMath::Vector2 get_sm_vector() const;
 		DirectX::XMFLOAT2 get_xm_vector() const;
@@ -277,6 +422,10 @@ namespace MattMath
 
 		void rotate(float angle);
 
+		void to_unit_vector();
+
+		bool abs_x_greater_than_y() const;
+
 		static Vector2F rotate_vector(const Vector2F& vec, float angle);
 		static void rotate_vector_by_ref(Vector2F& vec, float angle);
 
@@ -288,16 +437,24 @@ namespace MattMath
 
 		static float dot(const Vector2F& a, const Vector2F& b);
 
-		static Vector2F min(const Vector2F& a, const Vector2F& b);
-		static Vector2F max(const Vector2F& a, const Vector2F& b);
+		static Vector2F min_vec(const Vector2F& a, const Vector2F& b);
+		static Vector2F max_vec(const Vector2F& a, const Vector2F& b);
 
 		static Vector2F vec_from_angle_magnitude(float angle, float magnitude);
 		static Vector2F unit_vec_from_angle(float angle);
 
+		static Vector2F unit_vector(const Vector2F& vec);
+
 		static const Vector2F ZERO;
 		static const Vector2F ONE;
-		static const Vector2F UNIT_X;
-		static const Vector2F UNIT_Y;
+		static const Vector2F DIRECTION_RIGHT;
+		static const Vector2F DIRECTION_DOWN;
+		static const Vector2F DIRECTION_LEFT;
+		static const Vector2F DIRECTION_UP;
+		static const Vector2F DIRECTION_UP_RIGHT;
+		static const Vector2F DIRECTION_DOWN_RIGHT;
+		static const Vector2F DIRECTION_DOWN_LEFT;
+		static const Vector2F DIRECTION_UP_LEFT;
 	};
 
 	Vector2F operator+ (const Vector2F& V1, const Vector2F& V2);
@@ -594,7 +751,7 @@ namespace MattMath
 		const D3D11_VIEWPORT* get_d3d_viewport_ptr() const;
 
 		MattMath::RectangleF get_rectangle() const;
-		MattMath::RectangleF get_rectangle(float minDepth, float maxDepth) const;
+		//MattMath::RectangleF get_rectangle(float minDepth, float maxDepth) const;
 		MattMath::Vector2F get_position() const;
 		MattMath::Vector2F get_size() const;
 
@@ -618,60 +775,139 @@ namespace MattMath
 		Circle(const Circle&) = default;
 		Circle(const MattMath::Vector2F& center, float radius);
 		Circle(const DirectX::SimpleMath::Vector2& center, float radius);
+		Circle(float x, float y, float radius);
 
-		const MattMath::RectangleF& get_bounding_box() const override;
+		MattMath::RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
+		void offset(const MattMath::Vector2F& amount) override;
+		std::unique_ptr<Shape> clone() const override;
 
 		bool operator==(const Circle& other) const;
 		bool operator!=(const Circle& other) const;
 
-		bool contains(const MattMath::Vector2F& point) const;
+		//bool contains(const MattMath::Vector2F& point) const;
 
-		bool intersects(const Circle& other) const;
-		bool intersects(const MattMath::RectangleF& other) const;
-		bool intersects(const MattMath::Triangle& other) const;
+		bool intersects(const MattMath::RectangleF& other) const override;
+		bool intersects(const Circle& other) const override;
+		bool intersects(const MattMath::Triangle& other) const override;
+		bool intersects(const MattMath::Quad& other) const override;
+		bool intersects(const MattMath::Segment& other) const override;
+		bool intersects(const MattMath::Point2F& point) const override;
+		bool contains(const MattMath::Point2F& point) const;
+
+		MattMath::Vector2F get_center() const override;
 	};
 	struct Triangle : public Shape
 	{
-		MattMath::Vector2F point1 = MattMath::Vector2F::ZERO;
-		MattMath::Vector2F point2 = MattMath::Vector2F::ZERO;
-		MattMath::Vector2F point3 = MattMath::Vector2F::ZERO;
+		Vector2F points[3] = { Vector2F::ZERO, Vector2F::ZERO, Vector2F::ZERO };
 
 		Triangle() = default;
 		Triangle(const Triangle&) = default;
-		Triangle(const MattMath::Vector2F& point1,
-			const MattMath::Vector2F& point2,
-			const MattMath::Vector2F& point3);
-		Triangle(const DirectX::SimpleMath::Vector2& point1,
-			const DirectX::SimpleMath::Vector2& point2,
-			const DirectX::SimpleMath::Vector2& point3);
+		Triangle(const MattMath::Vector2F& point0,
+			const MattMath::Vector2F& point1,
+			const MattMath::Vector2F& point2);
+		Triangle(const DirectX::SimpleMath::Vector2& point0,
+			const DirectX::SimpleMath::Vector2& point1,
+			const DirectX::SimpleMath::Vector2& point2);
+		Triangle(float x0, float y0, float x1, float y1, float x2, float y2);
 
-		const MattMath::RectangleF& get_bounding_box() const override;
+		MattMath::RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
+		void offset(const MattMath::Vector2F& amount) override;
+		std::unique_ptr<Shape> clone() const override;
 
-		Segment get_segment1() const;
-		Segment get_segment2() const;
-		Segment get_segment3() const;
+		const Vector2F& get_point_0() const;
+		const Vector2F& get_point_1() const;
+		const Vector2F& get_point_2() const;
+		std::vector<Vector2F> get_points() const;
+
+		Segment get_edge_0() const;
+		Segment get_edge_1() const;
+		Segment get_edge_2() const;
+		std::vector<Segment> get_edges() const;
 
 		bool operator==(const Triangle& other) const;
 		bool operator!=(const Triangle& other) const;
 
-		bool contains(const MattMath::Vector2F& point) const;
+		//bool contains(const MattMath::Vector2F& point) const;
 
-		bool intersects(const Triangle& other) const;
-		bool intersects(const MattMath::RectangleF& other) const;
-		bool intersects(const MattMath::Circle& other) const;
+		bool intersects(const MattMath::RectangleF& other) const override;
+		bool intersects(const MattMath::Circle& other) const override;
+		bool intersects(const Triangle& other) const override;
+		bool intersects(const MattMath::Quad& other) const override;
+		bool intersects(const MattMath::Segment& other) const override;
+		bool intersects(const MattMath::Point2F& point) const override;
+		bool contains(const MattMath::Point2F& point) const;
+
+		MattMath::Vector2F get_center() const override;
 	};
+
+	/*
+	* A quadrilateral with four points.
+	* The points are ordered in a clockwise direction, starting from the top left.
+	*/
+	struct Quad : public Shape
+	{
+		Point2F points[4] = { Vector2F::ZERO, Vector2F::ZERO,
+					Vector2F::ZERO, Vector2F::ZERO };
+
+		Quad() = default;
+		Quad(const Quad&) = default;
+		Quad(const Vector2F& point1, const Vector2F& point2,
+			const Vector2F& point3, const Vector2F& point4);
+		Quad(const RectangleF& rectangle);
+		Quad(const DirectX::SimpleMath::Vector2& point1, 
+			const DirectX::SimpleMath::Vector2& point2,
+			const DirectX::SimpleMath::Vector2& point3,
+			const DirectX::SimpleMath::Vector2& point4);
+
+		MattMath::RectangleF get_bounding_box() const override;
+		shape_type get_shape_type() const override;
+		void offset(const MattMath::Vector2F& amount) override;
+		std::unique_ptr<Shape> clone() const override;
+
+		bool is_valid() const;
+
+		const Point2F& get_point_0() const;
+		const Point2F& get_point_1() const;
+		const Point2F& get_point_2() const;
+		const Point2F& get_point_3() const;
+		std::vector<Point2F> get_points() const;
+
+		Segment get_edge_0() const;
+		Segment get_edge_1() const;
+		Segment get_edge_2() const;
+		Segment get_edge_3() const;
+		std::vector<Segment> get_edges() const;
+
+		Triangle get_triangle_0() const;
+		Triangle get_triangle_1() const;
+		std::vector<Triangle> get_triangles() const;
+
+		bool operator==(const Quad& other) const;
+		bool operator!=(const Quad& other) const;
+
+		bool intersects(const RectangleF& other) const;
+		bool intersects(const Circle& other) const;
+		bool intersects(const Triangle& other) const;
+		bool intersects(const Quad& other) const;
+		bool intersects(const Segment& other) const;
+		bool intersects(const Point2F& point) const;
+		bool contains(const Point2F& point) const;
+
+		MattMath::Vector2F get_center() const override;
+	};
+
 	struct Segment
 	{
-		MattMath::Point2F point1 = MattMath::Point2F::ZERO;
-		MattMath::Point2F point2 = MattMath::Point2F::ZERO;
+		MattMath::Point2F point_0 = MattMath::Point2F::ZERO;
+		MattMath::Point2F point_1 = MattMath::Point2F::ZERO;
 
 		Segment() = default;
 		Segment(const Segment&) = default;
-		Segment(const MattMath::Point2F& point1,
-			const MattMath::Point2F& point2);
-		Segment(float x1, float y1, float x2, float y2);
+		Segment(const MattMath::Point2F& point_0,
+			const MattMath::Point2F& point_1);
+		Segment(float x0, float y0, float x1, float y1);
 
 		bool operator==(const Segment& other) const;
 		bool operator!=(const Segment& other) const;

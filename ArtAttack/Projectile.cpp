@@ -10,23 +10,22 @@ Projectile::Projectile(const Vector2F& velocity,
     const Colour& team_colour,
     projectile_type type,
     const float* dt,
-    SpriteBatch* sprite_batch,
     ResourceManager* resource_manager,
-    const projectile_details& details,
+    const ProjectileDetails& details,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
     SpriteEffects effects,
     float layer_depth) :
     MovingObject(velocity, rotation),
-    AnimationObject(dt, details.sheet_name, details.animation_strip_name, sprite_batch,
-        resource_manager, color, rotation, origin, effects, layer_depth),
-    _team(team),
+    AnimationObject(dt, details.sheet_name, details.animation_strip_name,
+                    resource_manager, color, rotation, origin, effects, layer_depth),
+    _details(details),
     _player_num(player_num),
     _team_colour(team_colour),
     _type(type),
-    _dt(dt),
-    _details(details)
+    _team(team),
+    _dt(dt)
 {
 
 }
@@ -38,17 +37,16 @@ DiffusingProjectile::DiffusingProjectile(
     const Colour& team_colour,
     projectile_type type,
     const float* dt,
-    SpriteBatch* sprite_batch,
     ResourceManager* resource_manager,
-    const projectile_details& details,
-    const diffusion_details& diffusion_details,
+    const ProjectileDetails& details,
+    const DiffusionDetails& diffusion_details,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
     SpriteEffects effects,
     float layer_depth) :
     Projectile(velocity, team, player_num,
-        team_colour, type, dt, sprite_batch,
+        team_colour, type, dt,
         resource_manager, details, color, rotation,
         origin, effects, layer_depth),
     _diffusion_details(diffusion_details)
@@ -60,69 +58,12 @@ const Vector2F& DiffusingProjectile::get_base_size() const
 	return this->get_details().size;
 }
 
-
-//RectangleF DiffusingProjectile::get_collision_rectangle() const
-//{
-//    diffusion_type type = this->get_diffusion_type();
-//    if (type == diffusion_type::LINEAR_SIZE_AND_COL_RECT)
-//    {
-//        Vector2F col_rect_size = this->calculate_diffusion_col_rect_size();
-//        RectangleF result(
-//            static_cast<long>(this->get_position_x() - col_rect_size.x / 2.0f),
-//                static_cast<long>(this->get_position_y() - col_rect_size.y / 2.0f),
-//                    static_cast<long>(col_rect_size.x),
-//                        static_cast<long>(col_rect_size.y));
-//        return result;
-//    }
-//    return Projectile::get_collision_rectangle();
-//}
-//
-//Vector2F DiffusingProjectile::get_size() const
-//{
-//	diffusion_type type = this->get_diffusion_type();
-//	if (type == diffusion_type::LINEAR_SIZE_AND_COL_RECT ||
-//		type == diffusion_type::LINEAR_SIZE)
-//	{
-//        Vector2F diff_size = this->calculate_diffusion_size();
-//		return diff_size;
-//	}
-//}
-//
-//Vector2F DiffusingProjectile::calculate_diffusion_col_rect_size() const
-//{
-//
-//    float multiple;
-//    float time = this->get_timer();
-//    Vector2F col_rect_size = this->get_col_rect_size();
-//    if (time < this->_diffusion_details.start_time)
-//    {
-//        multiple = 1.0f;
-//    }
-//    else if (time >= this->_diffusion_details.end_time)
-//    {
-//        multiple = this->_diffusion_details.end_size;
-//    }
-//    else
-//    {
-//        float diff_length = this->_diffusion_details.end_time -
-//            this->_diffusion_details.start_time;
-//        float diff_time = time -
-//            this->_diffusion_details.start_time;
-//        multiple = 1.0f + this->_diffusion_details.end_time *
-//            (diff_time / diff_length);
-//    }
-//    Vector2F result = Vector2F(col_rect_size.x * multiple,
-//        col_rect_size.y * multiple);
-//    return result;
-//
-//}
-
 Vector2F DiffusingProjectile::calculate_diffusion_size() const
 {
     const float time = this->get_timer();
-    const diffusion_details& details = this->_diffusion_details;
+    const DiffusionDetails& details = this->_diffusion_details;
     const Vector2F& base_size = this->get_base_size();
-    Vector2F multiple = Vector2F::ZERO;
+    Vector2F multiple;
     if (time < details.start_time)
     {
         multiple = Vector2F::ONE;
@@ -137,8 +78,6 @@ Vector2F DiffusingProjectile::calculate_diffusion_size() const
             details.start_time;
         float diff_time = time -
             details.start_time;
-        //multiple = 1.0f + details.end_size *
-        //    (diff_time / diff_length);
 
         float ratio = diff_time / diff_length;
 
@@ -146,10 +85,6 @@ Vector2F DiffusingProjectile::calculate_diffusion_size() const
             Vector2F(details.end_scale.x * ratio,
 			details.end_scale.y * ratio);
     }
-    //Vector2F result = Vector2F(base_size.x * multiple,
-    //    base_size.y * multiple);
-    //return result;
-
     return base_size * multiple;
 }
 
@@ -161,10 +96,6 @@ bool Projectile::is_matching_collision_object_type(
     collision_object_type other_type = other->get_collision_object_type();
 
     bool structure_collision =
-        //other_type == collision_object_type::STRUCTURE_WALL ||
-        //other_type == collision_object_type::STRUCTURE_WALL_PAINTABLE ||
-        //other_type == collision_object_type::STRUCTURE_FLOOR ||
-        //other_type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE ||
         other_type == collision_object_type::STRUCTURE ||
         other_type == collision_object_type::STRUCTURE_PAINTABLE ||
         other_type == collision_object_type::STRUCTURE_JUMP_THROUGH;
@@ -191,10 +122,6 @@ void Projectile::on_collision(const ICollisionGameObject* other)
     collision_object_type other_type = other->get_collision_object_type();
 
     bool structure_collision =
-        //other_type == collision_object_type::STRUCTURE_WALL ||
-        //other_type == collision_object_type::STRUCTURE_WALL_PAINTABLE ||
-        //other_type == collision_object_type::STRUCTURE_FLOOR ||
-        //other_type == collision_object_type::STRUCTURE_FLOOR_PAINTABLE ||
         other_type == collision_object_type::STRUCTURE ||
         other_type == collision_object_type::STRUCTURE_PAINTABLE ||
         other_type == collision_object_type::STRUCTURE_JUMP_THROUGH;
@@ -233,15 +160,15 @@ collision_object_type Projectile::get_collision_object_type() const
     case player_team::A:
         switch (type)
         {
-        case projectile_type::SPRAY:
+        case SPRAY:
 			return collision_object_type::PROJECTILE_SPRAY_TEAM_A;
-        case projectile_type::MIST:
+        case MIST:
             return collision_object_type::PROJECTILE_MIST_TEAM_A;
-        case projectile_type::JET:
+        case JET:
             return collision_object_type::PROJECTILE_JET_TEAM_A;
-        case projectile_type::ROLLING:
+        case ROLLING:
             return collision_object_type::PROJECTILE_ROLLING_TEAM_A;
-        case projectile_type::BALL:
+        case BALL:
             return collision_object_type::PROJECTILE_BALL_TEAM_A;
         default:
             throw std::exception("Invalid projectile_type value.");
@@ -249,15 +176,15 @@ collision_object_type Projectile::get_collision_object_type() const
     case player_team::B:
         switch (type)
         {
-        case projectile_type::SPRAY:
+        case SPRAY:
             return collision_object_type::PROJECTILE_SPRAY_TEAM_B;
-        case projectile_type::MIST:
+        case MIST:
             return collision_object_type::PROJECTILE_MIST_TEAM_B;
-        case projectile_type::JET:
+        case JET:
             return collision_object_type::PROJECTILE_JET_TEAM_B;
-        case projectile_type::ROLLING:
+        case ROLLING:
             return collision_object_type::PROJECTILE_ROLLING_TEAM_B;
-        case projectile_type::BALL:
+        case BALL:
             return collision_object_type::PROJECTILE_BALL_TEAM_B;
         default:
             throw std::exception("Invalid projectile_type value.");
@@ -266,10 +193,6 @@ collision_object_type Projectile::get_collision_object_type() const
         throw std::exception("Invalid player_team value.");
     }
 }
-//bool Projectile::get_for_deletion() const
-//{
-//    return this->get_for_deletion();
-//}
 player_team Projectile::get_team() const
 {
     return this->_team;
@@ -322,7 +245,6 @@ void Projectile::update_movement(float gravity, float wind_resistance)
 	}
 
     //wind resistance
-    //float wind_resistance = proj.get_wind_resistance();
     if (std::fabs(MovingObject::get_velocity_x()) > wind_resistance * 4.0f)
     {
         //right
@@ -349,13 +271,6 @@ void Projectile::update_movement(float gravity, float wind_resistance)
         MovingObject::set_velocity_x(-projectile_consts::MAX_VELOCITY.x);
     }
 
-    ////rotate
-    //if (proj.get_rotation_origin() != rotation_origin::NO_ROTATION)
-    //{
-    //    proj.set_rotation(
-    //        atan2f(proj.get_velocity_y(), proj.get_velocity_x()));
-    //}
-
     //displacement
     MovingObject::set_dx_x(MovingObject::get_velocity_x() * dt);
     MovingObject::set_dx_y(MovingObject::get_velocity_y() * dt);
@@ -365,4 +280,24 @@ void Projectile::update_movement(float gravity, float wind_resistance)
 		this->set_for_deletion(true);
 	}
     this->alter_timer(dt);
+}
+
+float Projectile::get_delete_timer() const
+{
+	return this->_timer;
+}
+
+Vector2F Projectile::get_col_rect_size() const
+{
+	return this->get_details().size;
+}
+
+float Projectile::get_player_damage() const
+{
+	return this->get_details().player_damage;
+}
+
+const ProjectileDetails& Projectile::get_details() const
+{
+	return this->_details;
 }

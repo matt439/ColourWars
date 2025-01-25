@@ -7,7 +7,6 @@ using namespace DirectX;
 Text::Text(const std::string& text,
 	const std::string& font_name,
 	const Vector2F& position,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	float scale,
@@ -15,7 +14,7 @@ Text::Text(const std::string& text,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
-	TextObject(text, font_name, position, sprite_batch, resource_manager,
+	TextObject(text, font_name, position, resource_manager,
 		color, scale, rotation, origin, effects, layer_depth)
 {
 

@@ -1,18 +1,13 @@
 #ifndef COLLISION_OBJECT_TYPE_H
 #define COLLISION_OBJECT_TYPE_H
 
-//#include <vector>
-//#include "shape_type.h"
-
 enum class collision_object_type
 {
-	//STRUCTURE_WALL,
-	//STRUCTURE_WALL_PAINTABLE,
-	//STRUCTURE_FLOOR,
-	//STRUCTURE_FLOOR_PAINTABLE,
 	STRUCTURE,
 	STRUCTURE_PAINTABLE,
 	STRUCTURE_JUMP_THROUGH,
+	STRUCTURE_RAMP_LEFT,
+	STRUCTURE_RAMP_RIGHT,
 	PLAYER_TEAM_A,
 	PLAYER_TEAM_B,
 	PLAYER_TEAM_A_DEAD,
@@ -28,60 +23,68 @@ enum class collision_object_type
 	PROJECTILE_MIST_TEAM_A,
 	PROJECTILE_MIST_TEAM_B,
 	PAINT_TILE,
-	//PROJECTILE_OFFENSIVE_TEAM_A,
-	//PROJECTILE_OFFENSIVE_TEAM_B,
-	//PROJECTILE_DEFENSIVE_TEAM_A,
-	//PROJECTILE_DEFENSIVE_TEAM_B,
 	POWER_UP,
 	DEFAULT,
 	NONE
 };
 
-//enum class collidable_object_shape
-//{
-//	RECTANGLE,
-//	RECTANGLE_ROTATED,
-//	CIRCLE,
-//	TRIANGLE,
-//	NONE
-//};
+inline bool is_player(collision_object_type type)
+{
+	return type == collision_object_type::PLAYER_TEAM_A ||
+		type == collision_object_type::PLAYER_TEAM_B;
+}
 
-//enum class collision_effect_type
-//{
-//	COLLIDER_PLAYER_HEALTH_ALTER,
-//	COLLIDEE_PLAYER_HEALTH_ALTER,
-//	COLLIDER_PLAYER_AMMO_ALTER,
-//	PAINTABLE_OBJECT_PAINT_TEAM_A,
-//	PAINTABLE_OBJECT_PAINT_TEAM_B,
-//	DESTROY_SELF,
-//	DESTROY_OTHER,
-//	IMPART_VELOCITY,
-//	NONE
-//};
-//
-//enum class collision_movement_outcome
-//{
-//	NONE, // no effect, pass through
-//	STOP_VERTICAL, // slide horizontally
-//	STOP_HORIZONTAL, // slide vertically
-//	REBOUND_HORIZONTAL, // rebound horizontally
-//	REBOUND_VERTICAL, // rebound vertically
-//	STOP, // stop immediately
-//	
-//};
-//
-//struct collision_effect_detail
-//{A
-//	collision_effect_type type = collision_effect_type::NONE;
-//	float value = 0.0f;
-//};
-//
-//struct collidee_object_detail
-//{
-//	collision_object_type colidee_type = collision_object_type::NONE;
-//	collision_movement_outcome movement_outcome = collision_movement_outcome::NONE;
-//	//collidable_object_shape colidee_shape = collidable_object_shape::NONE;
-//	std::vector<collision_effect_detail> effects;
-//};
+inline bool is_dead_player(collision_object_type type)
+{
+	return type == collision_object_type::PLAYER_TEAM_A_DEAD ||
+		type == collision_object_type::PLAYER_TEAM_B_DEAD;
+}
+
+inline bool is_projectile(collision_object_type type)
+{
+	return type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
+		type == collision_object_type::PROJECTILE_SPRAY_TEAM_B ||
+		type == collision_object_type::PROJECTILE_JET_TEAM_A ||
+		type == collision_object_type::PROJECTILE_JET_TEAM_B ||
+		type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
+		type == collision_object_type::PROJECTILE_ROLLING_TEAM_B ||
+		type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
+		type == collision_object_type::PROJECTILE_BALL_TEAM_B ||
+		type == collision_object_type::PROJECTILE_MIST_TEAM_A ||
+		type == collision_object_type::PROJECTILE_MIST_TEAM_B;
+}
+
+inline bool is_team_a_projectile(collision_object_type type)
+{
+	return type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
+		type == collision_object_type::PROJECTILE_JET_TEAM_A ||
+		type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
+		type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
+		type == collision_object_type::PROJECTILE_MIST_TEAM_A;
+}
+
+inline bool is_team_b_projectile(collision_object_type type)
+{
+	return type == collision_object_type::PROJECTILE_SPRAY_TEAM_B ||
+		type == collision_object_type::PROJECTILE_JET_TEAM_B ||
+		type == collision_object_type::PROJECTILE_ROLLING_TEAM_B ||
+		type == collision_object_type::PROJECTILE_BALL_TEAM_B ||
+		type == collision_object_type::PROJECTILE_MIST_TEAM_B;
+}
+
+inline bool is_structure(collision_object_type type)
+{
+	return type == collision_object_type::STRUCTURE ||
+		type == collision_object_type::STRUCTURE_PAINTABLE ||
+		type == collision_object_type::STRUCTURE_JUMP_THROUGH ||
+		type == collision_object_type::STRUCTURE_RAMP_LEFT ||
+		type == collision_object_type::STRUCTURE_RAMP_RIGHT;
+}
+
+inline bool is_structure_ramp(collision_object_type type)
+{
+	return type == collision_object_type::STRUCTURE_RAMP_LEFT ||
+		type == collision_object_type::STRUCTURE_RAMP_RIGHT;
+}
 
 #endif // !COLLISION_OBJECT_TYPE_H

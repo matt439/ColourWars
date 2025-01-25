@@ -4,9 +4,20 @@
 using namespace DirectX;
 using namespace MattMath;
 
-SpriteBatch* DrawObject::get_sprite_batch() const
+DrawObject::DrawObject(ResourceManager* resource_manager,
+	const Colour& color,
+	float rotation,
+	const Vector2F& origin,
+	SpriteEffects effects,
+	float layer_depth) :
+	_resource_manager(resource_manager),
+	_colour(color),
+	_draw_rotation(rotation),
+	_origin(origin),
+	_effects(effects),
+	_layer_depth(layer_depth)
 {
-	return this->_sprite_batch;
+
 }
 ResourceManager* DrawObject::get_resource_manager() const
 {
@@ -32,7 +43,6 @@ float DrawObject::get_layer_depth() const
 {
 	return this->_layer_depth;
 }
-
 void DrawObject::set_colour(const Colour& colour)
 {
 	this->_colour = colour;

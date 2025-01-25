@@ -1,53 +1,23 @@
-//
-// Game.h
-//
-
-#pragma once
+#ifndef  GAME_H
+#define GAME_H
 
 #include "DeviceResources.h"
 #include "StepTimer.h"
 #include "GameData.h"
 #include "ResourceManager.h"
 #include "StateContext.h"
+#include "ThreadPool.h"
 #include <Audio.h>
 
+constexpr int TARGET_FPS = 60;
+constexpr int NUM_THREADS_MIN = 1;
+constexpr int NUM_THREADS_MAX = 16;
 
-// A basic game implementation that creates a D3D11 device and
-// provides a game loop.
 class Game final : public DX::IDeviceNotify, public StateContext
 {
-private:
-
-    void Update(DX::StepTimer const& timer);
-    void Render();
-
-    void Clear();
-
-    void CreateDeviceDependentResources();
-    void CreateWindowSizeDependentResources();
-
-    // Device resources.
-    std::unique_ptr<DX::DeviceResources> m_deviceResources = nullptr;
-    // Rendering loop timer.
-    DX::StepTimer m_timer = DX::StepTimer();
-
-    std::unique_ptr<DirectX::SpriteBatch> m_spriteBatch = nullptr;
-
-    std::unique_ptr<DirectX::CommonStates> m_states = nullptr;
-
-    std::unique_ptr<ResourceLoader> _resource_loader = nullptr;
-    std::unique_ptr<ResourceManager> _resource_manager = nullptr;
-    std::unique_ptr<float> _dt = nullptr;
-    std::unique_ptr<State> _state = nullptr;
-    std::unique_ptr<DirectX::GamePad> _gamepad = nullptr;
-    std::unique_ptr<ViewportManager> _viewport_manager = nullptr;
-    GameData* _data = nullptr;
-
-    std::unique_ptr<DirectX::AudioEngine> m_audio_engine = nullptr;
-
 public:
     Game() noexcept(false);
-    ~Game();
+    ~Game() override;
 
     Game(Game&&) = default;
     Game& operator= (Game&&) = default;
@@ -56,24 +26,53 @@ public:
     Game& operator= (Game const&) = delete;
 
     // Initialization and management
-    void Initialize(GameData* game_data);
+    void initialize(GameData* game_data);
 
     // Basic game loop
-    void Tick();
+    void tick();
 
     // IDeviceNotify
     void OnDeviceLost() override;
     void OnDeviceRestored() override;
 
     // Messages
-    void OnActivated();
-    void OnDeactivated();
-    void OnSuspending();
-    void OnResuming();
-    void OnWindowMoved();
-    void OnDisplayChange();
-    void OnWindowSizeChanged(int width, int height);
+    void on_activated() const;
+    void on_deactivated() const;
+    void on_suspending() const;
+	void on_resuming();
+    void on_window_moved() const;
+    void on_display_change() const;
+    void on_window_size_changed(int width, int height) const;
 
-    void set_game_data(GameData* game_data) { this->_data = game_data; }
-    //GameData* get_game_data() { return this->_data; }
+    void set_game_data(GameData* game_data);
+
+private:
+
+    void update(DX::StepTimer const& timer);
+    void render();
+
+    void clear() const;
+
+    void create_device_dependent_resources();
+    void create_window_size_dependent_resources() const;
+
+    std::unique_ptr<DX::DeviceResources> _device_resources = nullptr;
+    DX::StepTimer _timer = DX::StepTimer();
+
+    std::unique_ptr<DirectX::CommonStates> _states = nullptr;
+
+    std::unique_ptr<ResourceLoader> _resource_loader = nullptr;
+    std::unique_ptr<ResourceManager> _resource_manager = nullptr;
+    std::unique_ptr<float> _dt = nullptr;
+    std::unique_ptr<State> _state = nullptr;
+    std::unique_ptr<DirectX::GamePad> _gamepad = nullptr;
+    std::unique_ptr<ViewportManager> _viewport_manager = nullptr;
+    GameData* _data = nullptr;
+    std::unique_ptr<ThreadPool> _thread_pool = nullptr;
+    std::vector<std::unique_ptr<DirectX::SpriteBatch>> _sprite_batches;
+    std::vector<DirectX::SpriteBatch*> _sprite_batches_ptrs;
+    std::unique_ptr<DirectX::AudioEngine> _audio_engine = nullptr;
+	std::unique_ptr<Partitioner> _partitioner = nullptr;
 };
+
+#endif // ! GAME_H

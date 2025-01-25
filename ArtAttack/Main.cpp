@@ -1,7 +1,3 @@
-//
-// Main.cpp
-//
-
 #include "pch.h"
 #include "Game.h"
 #include "Save.h"
@@ -208,7 +204,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
         g_game_data->set_window(hwnd);
 
         //g_game->Initialize(hwnd, rc.right - rc.left, rc.bottom - rc.top);
-        g_game->Initialize(g_game_data.get());
+        g_game->initialize(g_game_data.get());
         g_game->transition_to(std::make_unique<GameMenu>(g_game_data.get()));
     }
 
@@ -223,7 +219,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
         }
         else
         {
-            g_game->Tick();
+            g_game->tick();
         }
     }
 
@@ -258,7 +254,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_PAINT:
         if (s_in_sizemove && game)
         {
-            game->Tick();
+            game->tick();
         }
         else
         {
@@ -271,14 +267,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_DISPLAYCHANGE:
         if (game)
         {
-            game->OnDisplayChange();
+            game->on_display_change();
         }
         break;
 
     case WM_MOVE:
         if (game)
         {
-            game->OnWindowMoved();
+            game->on_window_moved();
         }
         break;
 
@@ -289,7 +285,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             {
                 s_minimized = true;
                 if (!s_in_suspend && game)
-                    game->OnSuspending();
+                    game->on_suspending();
                 s_in_suspend = true;
             }
         }
@@ -297,12 +293,12 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             s_minimized = false;
             if (s_in_suspend && game)
-                game->OnResuming();
+                game->on_resuming();
             s_in_suspend = false;
         }
         else if (!s_in_sizemove && game)
         {
-            game->OnWindowSizeChanged(LOWORD(lParam), HIWORD(lParam));
+            game->on_window_size_changed(LOWORD(lParam), HIWORD(lParam));
         }
         break;
 
@@ -317,7 +313,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             RECT rc;
             GetClientRect(hWnd, &rc);
 
-            game->OnWindowSizeChanged(rc.right - rc.left, rc.bottom - rc.top);
+            game->on_window_size_changed(rc.right - rc.left, rc.bottom - rc.top);
         }
         break;
 
@@ -335,11 +331,11 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
             if (wParam)
             {
-                game->OnActivated();
+                game->on_activated();
             }
             else
             {
-                game->OnDeactivated();
+                game->on_deactivated();
             }
         }
         break;
@@ -349,7 +345,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         {
         case PBT_APMQUERYSUSPEND:
             if (!s_in_suspend && game)
-                game->OnSuspending();
+                game->on_suspending();
             s_in_suspend = true;
             return TRUE;
 
@@ -357,7 +353,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             if (!s_minimized)
             {
                 if (s_in_suspend && game)
-                    game->OnResuming();
+                    game->on_resuming();
                 s_in_suspend = false;
             }
             return TRUE;

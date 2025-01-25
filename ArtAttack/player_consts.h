@@ -5,11 +5,12 @@
 #include "wep_type.h"
 #include "Colour.h"
 
-struct player_animation_info
+struct PlayerAnimationInfo
 {
 	std::string sprite_sheet = "";
     std::string animation = "";
     std::string uniform_texture = "";
+
     // if frame_time is FLT_MIN, then the frame_time will be set to the default
     float frame_time = FLT_MIN;
 };
@@ -23,7 +24,6 @@ namespace player_consts
     const MattMath::Vector2F STARTING_DX = { 0.0f, 0.0f };
     const MattMath::Vector2F STARTING_VELOCITY = { 0.0f, 0.0f };
     const MattMath::Vector2F MAX_VELOCITY = { 800.0f, 1900.0f };
-    //const glm::vec2 MAX_DX = { 32.0f, 32.0f };
     constexpr float X_INITIAL_VELOCITY = 100.0f;
     constexpr float X_ACCELERATION = 900.0f;
     constexpr float X_DEACCELERATION = 2500.0f;
@@ -39,14 +39,12 @@ namespace player_consts
     constexpr float DROP_DOWN_ANALOG_THRESHOLD = 0.8f;
 
     constexpr float JUMP_ACCELERATION = -1300.0f;
-    //const float STARTING_AMMO = 1.0f;
     constexpr float RESPAWN_DELAY = 3.0f;
     constexpr int DEFAULT_PLAYER_NUM = 0;
-    const player_team DEFAULT_TEAM = player_team::A;
+    constexpr auto DEFAULT_TEAM = player_team::A;
     const MattMath::Colour DEFAULT_TEAM_COLOUR = colour_consts::GRAY;
-    //const MattMath::Vector3F DEFAULT_CAMERA = { -999.0f, -999.0f, 1.0f };
-    const wep_type DEFAULT_PRIMARY = wep_type::SPRAYER;
-    const wep_type DEFAULT_SECONDARY = wep_type::GRENADE_STD;
+    constexpr auto DEFAULT_PRIMARY = wep_type::SPRAYER;
+    constexpr auto DEFAULT_SECONDARY = wep_type::GRENADE_STD;
     const std::string DEFAULT_SHEET = "sprite_sheet_1";
     const std::string DEFAULT_ANIMATION_STRIP = "player_right_walk";
     const std::string DEFAULT_UNIFORM_TEXTURE = "player_right_walk_uniform";
@@ -78,42 +76,42 @@ namespace player_consts
     constexpr float COUNTDOWN_TEXT_WIDTH = 400.0f;
     constexpr float COUNTDOWN_TEXT_HEIGHT = 600.0f;
 
-    const player_animation_info DEFAULT_ANIMATION_INFO =
+    const PlayerAnimationInfo DEFAULT_ANIMATION_INFO =
     {
 		DEFAULT_SHEET,
 		DEFAULT_ANIMATION_STRIP,
 		DEFAULT_UNIFORM_TEXTURE,
         FLT_MIN
 	};
-    const player_animation_info ANIMATION_INFO_WALK =
+    const PlayerAnimationInfo ANIMATION_INFO_WALK =
     {
         DEFAULT_SHEET,
         "player_right_walk",
         "player_right_walk_uniform",
         FLT_MIN
     };
-    const player_animation_info ANIMATION_INFO_RUNNING =
+    const PlayerAnimationInfo ANIMATION_INFO_RUNNING =
     {
         DEFAULT_SHEET,
         "player_right_walk",
         "player_right_walk_uniform",
         0.05f
     };
-    const player_animation_info ANIMATION_INFO_IDLE =
+    const PlayerAnimationInfo ANIMATION_INFO_IDLE =
     {
 		DEFAULT_SHEET,
 		"player_right_idle",
 		"player_right_walk_uniform",
         FLT_MIN
 	};
-    const player_animation_info ANIMATION_INFO_JUMPING =
+    const PlayerAnimationInfo ANIMATION_INFO_JUMPING =
     {
         DEFAULT_SHEET,
         "player_right_jumping",
         "player_right_walk_uniform",
         FLT_MIN
     };
-    const player_animation_info ANIMATION_INFO_FALLING =
+    const PlayerAnimationInfo ANIMATION_INFO_FALLING =
     {
         DEFAULT_SHEET,
         "player_right_falling",

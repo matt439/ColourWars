@@ -134,5 +134,8 @@ namespace EricsonMath
 		const MattMath::Point2F& a, const MattMath::Point2F& b,
 		const MattMath::Point2F& c);
 
+	void closest_pt_point_segment(const MattMath::Point2F& c, const MattMath::Point2F& a,
+		const MattMath::Point2F& b, float& t, MattMath::Point2F& d);
+
 }
 #endif // !ERICSONMATH_H

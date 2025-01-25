@@ -10,7 +10,6 @@ public:
 	TextDropShadow(const std::string& text,
 				const std::string& font_name,
 				const MattMath::Vector2F& position,
-				DirectX::SpriteBatch* sprite_batch,
 				ResourceManager* resource_manager,
 				const MattMath::Colour& color = colour_consts::WHITE,
 				const MattMath::Colour& shadow_color = colour_consts::BLACK,
@@ -22,8 +21,8 @@ public:
 				DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 				float layer_depth = 0.0f);
 
-	void draw(const MattMath::Camera& camera);
-	void draw();
+	virtual void draw(DirectX::SpriteBatch* sprite_batc, const MattMath::Camera& camera);
+	virtual void draw(DirectX::SpriteBatch* sprite_batc);
 
 	MattMath::Vector2F get_shadow_offset() const;
 	MattMath::Colour get_shadow_color() const;

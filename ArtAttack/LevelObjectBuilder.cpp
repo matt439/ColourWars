@@ -4,9 +4,17 @@
 using namespace rapidjson;
 using namespace MattMath;
 
+LevelObjectBuilder::LevelObjectBuilder(ResourceManager* resource_manager,
+	const float* dt) :
+	_resource_manager(resource_manager),
+	_dt(dt)
+{
+
+}
+
 std::unique_ptr<ICollisionGameObject>
 	LevelObjectBuilder::build_collision_object(const Value& json,
-		const team_colour& team_colours) const
+		const TeamColour& team_colours) const
 {
 	std::string type = json["type"].GetString();
 	if (type == "Structure")
@@ -51,12 +59,12 @@ std::unique_ptr<ICollisionGameObject>
 			json["sheet_name"].GetString(),
 			json["frame_name"].GetString(),
 			rectangle,
-			this->_sprite_batch,
+			&rectangle,
 			this->_resource_manager,
 			col_type,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
-	else if (type == "StructurePaintable")
+	if (type == "StructurePaintable")
 	{
 		collision_object_type col_type;
 		std::string collision_type = json["collision_type"].GetString();
@@ -68,7 +76,7 @@ std::unique_ptr<ICollisionGameObject>
 		{
 			throw std::exception("Invalid collision type");
 		}
-		paintable_faces faces;
+		PaintableFaces faces;
 		faces.left = json["paintable_faces"]["left"].GetBool();
 		faces.top = json["paintable_faces"]["top"].GetBool();
 		faces.right = json["paintable_faces"]["right"].GetBool();
@@ -99,12 +107,41 @@ std::unique_ptr<ICollisionGameObject>
 			json["sheet_name"].GetString(),
 			json["frame_name"].GetString(),
 			rectangle,
-			this->_sprite_batch,
+			&rectangle,
 			this->_resource_manager,
 			col_type,
 			team_colours,
 			faces,
 			this->_dt,
+			colour_consts::colour_from_name(json["colour"].GetString()));
+	}
+	if (type == "StructureTriangle")
+	{
+		collision_object_type col_type;
+		std::string collision_type = json["collision_type"].GetString();
+		if (collision_type == "STRUCTURE_RAMP_RIGHT")
+		{
+			col_type = collision_object_type::STRUCTURE_RAMP_RIGHT;
+		}
+		else
+		{
+			throw std::exception("Invalid collision type");
+		}
+
+		Triangle triangle = Triangle(json["triangle"]["x1"].GetFloat(),
+			json["triangle"]["y1"].GetFloat(),
+			json["triangle"]["x2"].GetFloat(),
+			json["triangle"]["y2"].GetFloat(),
+			json["triangle"]["x3"].GetFloat(),
+			json["triangle"]["y3"].GetFloat());
+
+		return std::make_unique<Structure>(
+			json["sheet_name"].GetString(),
+			json["frame_name"].GetString(),
+			triangle.get_bounding_box(),
+			&triangle,
+			this->_resource_manager,
+			col_type,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
 
@@ -124,7 +161,6 @@ std::unique_ptr<IGameObject>
 				json["rectangle"]["y"].GetFloat(),
 				json["rectangle"]["width"].GetFloat(),
 				json["rectangle"]["height"].GetFloat()),
-			this->_sprite_batch,
 			this->_resource_manager,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
@@ -134,10 +170,9 @@ std::unique_ptr<IGameObject>
 
 std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>>
 	LevelObjectBuilder::build_collision_objects(const Value& json,
-		const team_colour& team_colours) const
+		const TeamColour& team_colours) const
 {
-	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>>
-		collision_objects = std::make_unique<std::vector<std::unique_ptr<ICollisionGameObject>>>();
+	auto collision_objects = std::make_unique<std::vector<std::unique_ptr<ICollisionGameObject>>>();
 	for (auto& object : json.GetArray())
 	{
 		collision_objects->push_back(build_collision_object(object, team_colours));
@@ -149,8 +184,7 @@ std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>>
 std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
 	LevelObjectBuilder::build_non_collision_objects(const Value& json) const
 {
-	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
-		non_collision_objects = std::make_unique<std::vector<std::unique_ptr<IGameObject>>>();
+	auto non_collision_objects = std::make_unique<std::vector<std::unique_ptr<IGameObject>>>();
 	for (auto& object : json.GetArray())
 	{
 		non_collision_objects->push_back(build_non_collision_object(object));
@@ -162,8 +196,7 @@ std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
 	LevelObjectBuilder::build_viewport_dividers(
 		const ViewportManager* viewport_manager) const
 {
-	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
-		viewport_dividers = std::make_unique<std::vector<std::unique_ptr<IGameObject>>>();
+	auto viewport_dividers = std::make_unique<std::vector<std::unique_ptr<IGameObject>>>();
 
 	std::vector<RectangleF> viewport_rectangles =
 		viewport_manager->get_viewport_dividers();
@@ -173,7 +206,6 @@ std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
 			viewport_consts::DIVIDER_SHEET_NAME,
 			viewport_consts::DIVIDER_FRAME_NAME,
 			rectangle,
-			this->_sprite_batch,
 			this->_resource_manager,
 			viewport_consts::DIVIDER_COLOUR));
 	}

@@ -3,6 +3,16 @@
 
 using namespace MattMath;
 
+MovingObject::MovingObject(const Vector2F& velocity,
+	float rotation,
+	const Vector2F& dx) :
+	_velocity(velocity),
+	_dx(dx),
+	_rotation(rotation)
+{
+
+}
+
 const Vector2F& MovingObject::get_velocity() const
 {
 	return this->_velocity;

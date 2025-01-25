@@ -13,7 +13,6 @@ namespace pause_menu_consts
 	const static MattMath::Vector2F DEFAULT_RESOLUTION = { 1920.0f, 1080.0f };
 
 	const static MattMath::Vector2F PAUSE_MENU_BOX_SIZE = { 900.0f, 600.0f };
-	//const static MattMath::Colour PAUSE_MENU_BOX_COLOUR = colour_consts::DARK_CYAN;
 	const static MattMath::Colour PAUSE_MENU_BOX_COLOUR = colour_consts::DODGER_BLUE;
 
 	const static MattMath::Colour PAUSE_MENU_HEADING_TEXT_COLOUR = colour_consts::TEAM_ORANGE; //colour_consts::DARK_KHAKI;
@@ -44,31 +43,32 @@ namespace pause_menu_consts
 
 class PauseMenuPage : public MenuPage, public MenuHighlight, public SoundBankObject
 {
-private:
-	PauseMenuData* _data = nullptr;
+public:
+	explicit PauseMenuPage(PauseMenuData* data);
+	~PauseMenuPage() override = default;
+	void init() override = 0;
+	void update() override = 0;
+	void draw() override = 0;
 protected:
-	std::string get_player_number_text(int player_num);
-	PauseMenuData* get_pause_menu_data();
+	static std::string get_player_number_text(int player_num);
+	PauseMenuData* get_pause_menu_data() const;
 	enum class confirmation_type
 	{
 		RESTART,
 		QUIT
 	};
-public:
-	PauseMenuPage(PauseMenuData* data) :
-		MenuPage(data),
-		SoundBankObject(pause_menu_consts::SOUND_BANK,
-			this->get_resource_manager()),
-		_data(data) {}
-	virtual ~PauseMenuPage() {}
-	virtual void init() = 0;
-	virtual void update() = 0;
-	virtual void draw() = 0;
+private:
+	PauseMenuData* _data = nullptr;
 };
 
 
-class PauseMenuInitial : public PauseMenuPage
+class PauseMenuInitial final : public PauseMenuPage
 {
+public:
+	explicit PauseMenuInitial(PauseMenuData* data);
+	void init() override;
+	void update() override;
+	void draw() override;
 private:
 	std::unique_ptr<MContainer> _texture_container = nullptr;
 	std::unique_ptr<MContainer> _text_container = nullptr;
@@ -77,15 +77,15 @@ private:
 	std::unique_ptr<MTextDropShadow> _resume = nullptr;
 	std::unique_ptr<MTextDropShadow> _restart = nullptr;
 	std::unique_ptr<MTextDropShadow> _quit = nullptr;
+};
+
+class PauseMenuConfirmation final : public PauseMenuPage
+{
 public:
-	PauseMenuInitial(PauseMenuData* data) : PauseMenuPage(data) {}
+	PauseMenuConfirmation(PauseMenuData* data, confirmation_type type);
 	void init() override;
 	void update() override;
 	void draw() override;
-};
-
-class PauseMenuConfirmation : public PauseMenuPage
-{
 private:
 	std::unique_ptr<MContainer> _texture_container = nullptr;
 	std::unique_ptr<MContainer> _text_container = nullptr;
@@ -95,13 +95,7 @@ private:
 	std::unique_ptr<MTextDropShadow> _yes = nullptr;
 	std::unique_ptr<MTextDropShadow> _no = nullptr;
 	confirmation_type _type = confirmation_type::RESTART;
-	std::string get_question_text(confirmation_type type);
-public:
-	PauseMenuConfirmation(PauseMenuData* data, confirmation_type type) :
-		PauseMenuPage(data), _type(type) {}
-	void init() override;
-	void update() override;
-	void draw() override;
+	static std::string get_question_text(confirmation_type type);
 };
 
 #endif // !PAUSEMENU_H

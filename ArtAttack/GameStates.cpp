@@ -2,15 +2,15 @@
 #include "GameStates.h"
 
 GameMenu::GameMenu(GameData* game_data) :
-    _menu_data(std::make_unique<MainMenuData>(game_data)),
-    _game_data(game_data)
+    _game_data(game_data),
+    _menu_data(std::make_unique<MainMenuData>(game_data))
 {
     this->_menu_level_settings = std::make_unique<MenuLevelSettings>();
 }
 GameMenu::GameMenu(GameData* game_data,
-    const main_menu_midway_load_settings& settings) :
-    _menu_data(std::make_unique<MainMenuData>(game_data)),
-    _game_data(game_data)
+    const MainMenuMidwayLoadSettings& settings) :
+    _game_data(game_data),
+    _menu_data(std::make_unique<MainMenuData>(game_data))
 {
     this->_menu_level_settings = std::make_unique<MenuLevelSettings>(
         settings.settings);
@@ -22,7 +22,7 @@ void GameMenu::init()
         this->_menu_data->get_gamepad());
     this->_is_ready_to_load_level = std::make_unique<bool>(false);
     this->set_main_menu_data_ptrs();
-    //this->_menu_data->get_resource_loader()->load_main_menu_resources();
+
     this->_menu = std::make_unique<StateContext>();
 
     switch (this->_screen)
@@ -87,7 +87,18 @@ void GameMenu::draw()
     this->_menu->draw();
 }
 
-GameData* GameLevel::get_data()
+GameData* GameMenu::get_data() const
+{
+    return this->_game_data;
+}
+
+GameLevel::GameLevel(GameData* game_data, const MenuLevelSettings& settings) :
+    _game_data(game_data), _settings(settings)
+{
+
+}
+
+GameData* GameLevel::get_data() const
 {
     return this->_game_data;
 }
@@ -95,32 +106,24 @@ void GameLevel::init()
 {
     this->_player_input = std::make_unique<PlayerInput>(
         this->get_data()->get_gamepad());
+
     this->_menu_input = std::make_unique<MenuInput>(
         this->get_data()->get_gamepad());
 
-    //this->_level_drawer = std::make_unique<LevelDrawer>(
-    //    this->get_data()->get_sprite_batch(),
-    //    this->get_data()->get_resource_manager(),
-    //    this->get_data()->get_resolution_manager(),
-    //    this->get_data()->get_dt(),
-    //    this->get_data()->get_viewport_manager(),
-    //    this->get_data()->get_common_states()->PointClamp());
-    //this->_level_updater = std::make_unique<LevelUpdater>(
-    //    this->get_data()->get_dt());
     this->_level_builder = std::make_unique<LevelBuilder>(
         this->get_data()->get_viewport_manager(),
         this->get_data()->get_dt(),
-        this->get_data()->get_sprite_batch(),
         this->get_data()->get_resource_manager(),
         this->get_data()->get_common_states()->PointClamp(),
-        this->get_data()->get_resolution_manager());
+        this->get_data()->get_resolution_manager(),
+        this->get_data()->get_thread_pool(),
+		this->get_data()->get_partitioner());
 
     this->get_data()->get_viewport_manager()->
         set_layout(this->_settings.get_screen_layout());
 
     this->_level = std::move(this->_level_builder->build_level(
         this->_settings));
-        //this->get_data()->get_resolution_manager()));
 }
 void GameLevel::update()
 {
@@ -135,7 +138,7 @@ void GameLevel::update()
         //no break here so it goes to active
     case game_level_state::ACTIVE:
     {
-        std::vector<player_input> player_inputs =
+        std::vector<PlayerInputData> player_inputs =
             this->_player_input->update_and_get_player_inputs();
 
         // check for pause menu press
@@ -160,7 +163,7 @@ void GameLevel::update()
         }
         else if (this->_level->get_state() == level_state::FINISHED)
         {
-            level_end_info end_info = this->_level->get_level_end_info();
+            LevelEndInfo end_info = this->_level->get_level_end_info();
             this->_state = game_level_state::RESULTS;
 
             this->_results_menu_action = std::make_unique<results_menu_action>(
@@ -179,7 +182,6 @@ void GameLevel::update()
         }
         else
         {
-            //this->_level_updater->update(this->_level.get(), player_inputs);
             this->_level->update(player_inputs);
         }
         break;
@@ -203,7 +205,7 @@ void GameLevel::update()
             break;
         case pause_menu_action::QUIT:
             this->_level->stop_music();
-            main_menu_midway_load_settings settings;
+            MainMenuMidwayLoadSettings settings;
             settings.settings = MenuLevelSettings();
             settings.screen = main_menu_screen::HOME;
             this->get_context()->transition_to(
@@ -218,9 +220,6 @@ void GameLevel::update()
         results_menu_action action = *this->_results_menu_action;
         if (action == results_menu_action::CONTINUE_TO_END_MENU)
         {
-            //this->get_context()->transition_to(
-            //    std::make_unique<GameMenu>(this->get_data()));
-
             this->_state = game_level_state::END_MENU;
 
             this->_end_menu_action = std::make_unique<end_menu_action>(
@@ -247,7 +246,7 @@ void GameLevel::update()
         case end_menu_action::CHANGE_TEAMS:
         {
             this->_level->stop_music();
-            main_menu_midway_load_settings settings;
+            MainMenuMidwayLoadSettings settings;
             settings.settings = this->_settings;
             settings.screen = main_menu_screen::TEAM_SELECT;
             this->get_context()->transition_to(
@@ -257,7 +256,7 @@ void GameLevel::update()
         case end_menu_action::CHANGE_WEAPONS:
         {
             this->_level->stop_music();
-            main_menu_midway_load_settings settings;
+            MainMenuMidwayLoadSettings settings;
             settings.settings = this->_settings;
             settings.screen = main_menu_screen::WEAPON_SELECT;
             this->get_context()->transition_to(
@@ -267,7 +266,7 @@ void GameLevel::update()
         case end_menu_action::CHANGE_LEVEL:
         {
             this->_level->stop_music();
-            main_menu_midway_load_settings settings;
+            MainMenuMidwayLoadSettings settings;
             settings.settings = this->_settings;
             settings.screen = main_menu_screen::STAGE_SELECT;
             this->get_context()->transition_to(
@@ -285,7 +284,7 @@ void GameLevel::update()
         case end_menu_action::EXIT:
         {
             this->_level->stop_music();
-            main_menu_midway_load_settings settings;
+            MainMenuMidwayLoadSettings settings;
 			settings.settings = MenuLevelSettings();
 			settings.screen = main_menu_screen::HOME;
 			this->get_context()->transition_to(
@@ -296,10 +295,6 @@ void GameLevel::update()
 			break;
         }
     }
-    //case game_level_state::BACK_TO_MAIN_MENU:
-    //{
-    //    break;
-    //}
     default:
 		break;
     }
@@ -307,37 +302,51 @@ void GameLevel::update()
 
 void GameLevel::draw()
 {
-    //ID3D11SamplerState* sampler_state =
-    //    this->get_data()->get_common_states()->PointClamp();
+	if (this->_state == game_level_state::FIRST_UPDATE ||
+		this->_state == game_level_state::SECOND_UPDATE)
+	{
+		return;
+	}
+
+    auto deferred_contexts = this->get_data()->get_device_resources()->get_deferred_contexts();
+
+    std::vector<ID3D11CommandList*> command_lists(deferred_contexts->size(), nullptr);
+
+    this->_level->draw(this->get_data()->get_device_resources()->get_deferred_contexts(),
+        &command_lists,
+        this->get_data()->get_sprite_batches());
+
+    auto immediate_context = this->get_data()->get_device_resources()->GetD3DDeviceContext();
+
+    for (int i = 0; i < command_lists.size(); i++)
+    {
+        if (command_lists[i] == nullptr)
+        {
+            continue;
+        }
+
+        immediate_context->ExecuteCommandList(command_lists[i], TRUE);
+        command_lists[i]->Release();
+    }
 
     switch (this->_state)
     {
-    case game_level_state::FIRST_UPDATE:
-        break;
-    case game_level_state::SECOND_UPDATE:
-        break;
     case game_level_state::ACTIVE:
-        this->_level->draw();
         break;
     case game_level_state::PAUSE_MENU:
-        this->_level->draw();
         this->_pause_menu->draw();
         break;
     case game_level_state::RESULTS:
-        this->_level->draw();
         this->_results_menu->draw();
         break;
     case game_level_state::END_MENU:
-        this->_level->draw();
         this->_end_menu->draw();
         break;
-    //case game_level_state::BACK_TO_MAIN_MENU:
-    //    break;
     }
 }
 
 int GameLevel::check_for_pause_input(
-    const std::vector<player_input>& player_inputs)
+    const std::vector<PlayerInputData>& player_inputs)
 {
     for (int i = 0; i < static_cast<int>(player_inputs.size()); i++)
     {

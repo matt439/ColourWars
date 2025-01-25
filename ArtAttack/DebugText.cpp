@@ -5,9 +5,20 @@ using namespace DirectX;
 using namespace MattMath;
 using namespace debug_text_consts;
 
-void DebugText::draw_debug_info(const Player* player, int num_projectiles)
+DebugText::DebugText(ResourceManager* resource_manager,
+    const float* dt,
+    const ResolutionManager* resolution_manager) :
+    Drawer(resource_manager, dt),
+    _resolution_manager(resolution_manager)
 {
-    const player_input& input = player->get_input();
+	
+}
+
+
+void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
+    const Player* player, int num_projectiles) const
+{
+    const PlayerInputData& input = player->get_input();
     
     RectangleF rect = player->get_rectangle();
     Vector2F center = player->get_center();
@@ -21,20 +32,12 @@ void DebugText::draw_debug_info(const Player* player, int num_projectiles)
     float shoot_angle = input.shoot_angle;
     Vector2F left_stick = input.left_analog_stick;
     Vector2F right_stick = input.right_analog_stick;
-    //direction_lock shoot_direction_lock = player->
-    //    get_input_shoot_direction_lock();
     bool primary_shooting = player->
         get_input_primary_shoot();
-    //int num_projectiles = player->
-    //    get_primary_const()->get_num_projectiles();
     bool jump_pressed = player->
 		get_input_jump_pressed();
     bool jump_held = player->
         get_input_jump_held();
-  //  bool prev_requesting_jump = player->
-		//get_prev_requesting_jump();
-    //bool on_ground = player->get_on_ground();
-    //bool on_ceiling = player->get_on_ceiling();
     player_move_state move_state = player->get_move_state();
     player_state state = player->get_state();
 
@@ -64,17 +67,6 @@ void DebugText::draw_debug_info(const Player* player, int num_projectiles)
     lines.push_back("right-stick: " + std::to_string(right_stick.x) + ", " +
         std::to_string(right_stick.y));
 
-    //std::string shoot_direction_string = "shoot-direction-lock: ";
-    //if (shoot_direction_lock == direction_lock::LOCKED)
-    //{
-    //    shoot_direction_string += "locked";
-    //}
-    //else
-    //{
-    //    shoot_direction_string += "unlocked";
-    //}
-    //lines.push_back(shoot_direction_string);
-
     std::string primary_shooting_string = "primary-shooting: ";
     if (primary_shooting)
     {
@@ -91,29 +83,10 @@ void DebugText::draw_debug_info(const Player* player, int num_projectiles)
     lines.push_back("proj_count: " + std::to_string(num_projectiles));
     lines.push_back("jump_pressed: " + std::to_string(jump_pressed));
     lines.push_back("jump_held: " + std::to_string(jump_held));
-    //lines.push_back("prev_jump: " + std::to_string(prev_requesting_jump));
-    //lines.push_back("on_ground: " + std::to_string(on_ground));
-    //lines.push_back("on_ceiling: " + std::to_string(on_ceiling));
 
     std::string move_state_string = "move_state: ";
-    switch (move_state)
-    {
-    case player_move_state::ON_GROUND:
-        move_state_string += "on_ground";
-        break;
-    case player_move_state::ON_DROP_DOWN_GROUND:
-        move_state_string += "on_drop_down_ground";
-		break;
-    case player_move_state::ON_CEILING:
-        move_state_string += "on_ceiling";
-        break;
-    case player_move_state::IN_AIR:
-        move_state_string += "in_air";
-        break;
-    case player_move_state::JUMPING:
-        move_state_string += "jumping";
-        break;
-    };
+	move_state_string += player->get_player_move_state_string();
+
     lines.push_back(move_state_string);
 
     std::string state_string = "state: ";
@@ -125,9 +98,6 @@ void DebugText::draw_debug_info(const Player* player, int num_projectiles)
     case player_state::DEAD:
         state_string += "dead";
         break;
-    //case player_state::READY_TO_RESPAWN:
-    //    state_string += "ready_to_respawn";
-    //    break;
     };
     lines.push_back(state_string);
 
@@ -136,14 +106,14 @@ void DebugText::draw_debug_info(const Player* player, int num_projectiles)
     SpriteFont* sprite_font = this->get_resource_manager()->get_sprite_font(
         DEBUG_FONT);
 
-    this->get_sprite_batch()->Begin();
+    sprite_batch->Begin();
 
     for (size_t i = 0; i < lines.size(); i++)
     {
         Vector2F shadow_pos = text_pos + DEBUG_SHADOW_OFFSET;
         
         sprite_font->DrawString(
-            this->get_sprite_batch(),
+            sprite_batch,
             lines[i].c_str(),
             shadow_pos.get_xm_vector(),
             DEBUG_SHADOW_COLOR.get_xm_vector(),
@@ -152,7 +122,7 @@ void DebugText::draw_debug_info(const Player* player, int num_projectiles)
             DEBUG_SHADOW_SCALE);
 
         sprite_font->DrawString(
-            this->get_sprite_batch(),
+            sprite_batch,
             lines[i].c_str(),
             text_pos.get_xm_vector(),
             DEBUG_COLOR.get_xm_vector(),
@@ -163,5 +133,5 @@ void DebugText::draw_debug_info(const Player* player, int num_projectiles)
         text_pos.y += DEBUG_LINE_SPACING;
     }
 
-    this->get_sprite_batch()->End();
+    sprite_batch->End();
 }

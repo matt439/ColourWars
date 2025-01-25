@@ -1,149 +1,160 @@
-//
-// Game.cpp
-//
-
 #include "pch.h"
 #include "Game.h"
 
 extern void ExitGame() noexcept;
 
 using namespace DirectX;
-//using namespace DirectX::SimpleMath;
 
 using Microsoft::WRL::ComPtr;
 
 Game::Game() noexcept(false)
 {
     // Renders only 2D, so no need for a depth buffer.
-    m_deviceResources = std::make_unique<DX::DeviceResources>(
+    _device_resources = std::make_unique<DX::DeviceResources>(
         DXGI_FORMAT_B8G8R8A8_UNORM, DXGI_FORMAT_UNKNOWN);
 
     //m_deviceResources = std::make_unique<DX::DeviceResources>();
     // TODO: Provide parameters for swapchain format, depth/stencil format, and backbuffer count.
     //   Add DX::DeviceResources::c_AllowTearing to opt-in to variable rate displays.
     //   Add DX::DeviceResources::c_EnableHDR for HDR10 display.
-    m_deviceResources->RegisterDeviceNotify(this);
+    _device_resources->RegisterDeviceNotify(this);
 }
 
 Game::~Game()
 {
-    if (m_audio_engine)
+    if (_audio_engine)
     {
-        m_audio_engine->Suspend();
+        _audio_engine->Suspend();
     }
 }
 
 // Initialize the Direct3D resources required to run.
-void Game::Initialize(GameData* game_data)
+void Game::initialize(GameData* game_data)
 {
     this->_data = game_data;
 
-    this->_data->set_device_resources(m_deviceResources.get());
+    this->_data->set_device_resources(_device_resources.get());
 
     MattMath::Vector2I window_size = this->_data->get_resolution_manager()->get_resolution_ivec();
-    m_deviceResources->SetWindow(this->_data->get_window(),
+    _device_resources->SetWindow(this->_data->get_window(),
         window_size.x, window_size.y);
 
-    //m_deviceResources->SetWindow(this->_data->get_window(),
-    //    window_size.x, window_size.y);
 
     AUDIO_ENGINE_FLAGS eflags = AudioEngine_Default;
 #ifdef _DEBUG
     eflags |= AudioEngine_Debug;
 #endif
-    m_audio_engine = std::make_unique<AudioEngine>(eflags);
+    _audio_engine = std::make_unique<AudioEngine>(eflags);
 
-    m_deviceResources->CreateDeviceResources();
-    CreateDeviceDependentResources();
+    _device_resources->CreateDeviceResources();
 
-    m_deviceResources->CreateWindowSizeDependentResources();
-    CreateWindowSizeDependentResources();
+    // create deferred contexts
+    _device_resources->create_deferred_contexts(NUM_THREADS_MAX);
+
+    create_device_dependent_resources();
+
+    _device_resources->CreateWindowSizeDependentResources();
+    create_window_size_dependent_resources();
 
     this->_gamepad = std::make_unique<GamePad>();
     this->_data->set_gamepad(this->_gamepad.get());
 
     // TODO: Change the timer settings if you want something other than the default variable timestep mode.
     // e.g. for 60 FPS fixed timestep update logic, call:
-    m_timer.SetFixedTimeStep(true);
-    m_timer.SetTargetElapsedSeconds(1.0 / 60);
+    _timer.SetFixedTimeStep(true);
+    _timer.SetTargetElapsedSeconds(1.0 / TARGET_FPS);
+}
+
+void Game::set_game_data(GameData* game_data)
+{
+	this->_data = game_data;
 }
 
 #pragma region Frame Update
 // Executes the basic game loop.
-void Game::Tick()
+void Game::tick()
 {
-    m_timer.Tick([&]()
+    _timer.Tick([&]()
         {
-            Update(m_timer);
+            update(_timer);
         });
 
-    Render();
+    render();
 
 }
 
 // Updates the world.
-void Game::Update(DX::StepTimer const& timer)
+void Game::update(DX::StepTimer const& timer)
 {
     float elapsedTime = float(timer.GetElapsedSeconds());
     *this->_dt = elapsedTime;
-    //this->_state->update();
-    this->update();
-    // TODO: Add your game logic here.
-    if (!m_audio_engine->Update())
+    StateContext::update();
+
+    if (!_audio_engine->Update())
     {
         // more about this below...
     }
 
-    elapsedTime;
 }
 #pragma endregion
 
 #pragma region Frame Render
 // Draws the scene.
-void Game::Render()
+void Game::render()
 {
     // Don't try to render anything before the first Update.
-    if (m_timer.GetFrameCount() == 0)
+    if (_timer.GetFrameCount() == 0)
     {
         return;
     }
 
-    Clear();
+    clear();
 
-    m_deviceResources->PIXBeginEvent(L"Render");
+    _device_resources->PIXBeginEvent(L"Render");
 
-    //this->_state->draw();
     this->draw();
 
-    m_deviceResources->PIXEndEvent();
+    _device_resources->PIXEndEvent();
 
     // Show the new frame.
-    m_deviceResources->Present();
+    _device_resources->Present();
 }
 
 // Helper method to clear the back buffers.
-void Game::Clear()
+void Game::clear() const
 {
-    m_deviceResources->PIXBeginEvent(L"Clear");
+    _device_resources->PIXBeginEvent(L"Clear");
 
     // Clear the views.
-    auto context = m_deviceResources->GetD3DDeviceContext();
-    auto renderTarget = m_deviceResources->GetRenderTargetView();
+    auto context = _device_resources->GetD3DDeviceContext();
+	auto deferred_contexts = _device_resources->get_deferred_contexts();
+    auto renderTarget = _device_resources->GetRenderTargetView();
 
     context->ClearRenderTargetView(renderTarget, Colors::Black);
     context->OMSetRenderTargets(1, &renderTarget, nullptr);
 
+	for (auto& deferred_context : *deferred_contexts)
+    {
+		//deferred_context->ClearRenderTargetView(renderTarget, Colors::Black);
+		deferred_context->OMSetRenderTargets(1, &renderTarget, nullptr);
+	}
+
     // Set the viewport.
-    auto const viewport = m_deviceResources->GetScreenViewport();
+    auto const viewport = _device_resources->GetScreenViewport();
     context->RSSetViewports(1, &viewport);
 
-    m_deviceResources->PIXEndEvent();
+	for (auto& deferred_context : *deferred_contexts)
+	{
+		deferred_context->RSSetViewports(1, &viewport);
+	}
+
+    _device_resources->PIXEndEvent();
 }
 #pragma endregion
 
 #pragma region Message Handlers
 // Message handlers
-void Game::OnActivated()
+void Game::on_activated() const
 {
     // TODO: Game is becoming active window.
 
@@ -151,44 +162,44 @@ void Game::OnActivated()
         this->_gamepad->Resume();
 }
 
-void Game::OnDeactivated()
+void Game::on_deactivated() const
 {
     // TODO: Game is becoming background window.
     this->_gamepad->Suspend();
 }
 
-void Game::OnSuspending()
+void Game::on_suspending() const
 {
     // TODO: Game is being power-suspended (or minimized).
     this->_gamepad->Suspend();
-    m_audio_engine->Suspend();
+    _audio_engine->Suspend();
 }
 
-void Game::OnResuming()
+void Game::on_resuming()
 {
-    m_timer.ResetElapsedTime();
+    _timer.ResetElapsedTime();
     this->_gamepad->Resume();
-    m_audio_engine->Resume();
+    _audio_engine->Resume();
     // TODO: Game is being power-resumed (or returning from minimize).
 }
 
-void Game::OnWindowMoved()
+void Game::on_window_moved() const
 {
-    auto const r = m_deviceResources->GetOutputSize();
-    m_deviceResources->WindowSizeChanged(r.right, r.bottom);
+    auto const r = _device_resources->GetOutputSize();
+    _device_resources->WindowSizeChanged(r.right, r.bottom);
 }
 
-void Game::OnDisplayChange()
+void Game::on_display_change() const
 {
-    m_deviceResources->UpdateColorSpace();
+    _device_resources->UpdateColorSpace();
 }
 
-void Game::OnWindowSizeChanged(int width, int height)
+void Game::on_window_size_changed(int width, int height) const
 {
-    if (!m_deviceResources->WindowSizeChanged(width, height))
+    if (!_device_resources->WindowSizeChanged(width, height))
         return;
 
-    CreateWindowSizeDependentResources();
+    create_window_size_dependent_resources();
 
     // TODO: Game window is being resized.
 }
@@ -204,47 +215,65 @@ void Game::OnWindowSizeChanged(int width, int height)
 
 #pragma region Direct3D Resources
 // These are the resources that depend on the device.
-void Game::CreateDeviceDependentResources()
+void Game::create_device_dependent_resources()
 {
-    auto device = m_deviceResources->GetD3DDevice();
+    auto device = _device_resources->GetD3DDevice();
 
     // TODO: Initialize device dependent objects here (independent of window size).
-    auto context = m_deviceResources->GetD3DDeviceContext();
-    m_spriteBatch = std::make_unique<SpriteBatch>(context);
-    this->_data->set_sprite_batch(m_spriteBatch.get());
+    auto context = _device_resources->GetD3DDeviceContext();
+    this->_sprite_batches.resize(NUM_THREADS_MAX);
+    this->_sprite_batches_ptrs.resize(NUM_THREADS_MAX);
+    for (int i = 0; i < NUM_THREADS_MAX; i++)
+    {
+        this->_sprite_batches[i] = std::move(
+            std::make_unique<SpriteBatch>(this->_device_resources->get_deferred_context(i)));
+
+        this->_sprite_batches_ptrs[i] = this->_sprite_batches[i].get();
+    }
+
+    this->_data->set_sprite_batches(&this->_sprite_batches_ptrs);
+
+	this->_thread_pool = std::make_unique<ThreadPool>(NUM_THREADS_MIN, NUM_THREADS_MAX);
+	this->_data->set_thread_pool(this->_thread_pool.get());
 
     this->_resource_manager = std::make_unique<ResourceManager>();
     this->_data->set_resource_manager(this->_resource_manager.get());
     this->_resource_loader = std::make_unique<ResourceLoader>(
-        this->_resource_manager.get(), device, this->m_audio_engine.get());
+        this->_resource_manager.get(), device, this->_audio_engine.get());
     this->_data->set_resource_loader(this->_resource_loader.get());
     this->_dt = std::make_unique<float>(0.f);
     this->_data->set_dt(this->_dt.get());
 
     this->_viewport_manager = std::make_unique<ViewportManager>(
-        this->_data->get_resolution_manager(), this->_data->get_sprite_batch(),
+        this->_data->get_resolution_manager(), this->_data->get_sprite_batches()->at(0),
         this->_data->get_device_resources());
     this->_data->set_viewport_manager(this->_viewport_manager.get());
 
-    m_states = std::make_unique<CommonStates>(device);
-    this->_data->set_common_states(m_states.get());
+    _states = std::make_unique<CommonStates>(device);
+    this->_data->set_common_states(_states.get());
+
+	this->_partitioner = std::make_unique<Partitioner>();
+	this->_data->set_partitioner(this->_partitioner.get());
 
     this->_resource_loader->load_all_resources();
 
-    device;
+    // device;
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.
-void Game::CreateWindowSizeDependentResources()
+void Game::create_window_size_dependent_resources() const
 {
-    auto size = m_deviceResources->GetOutputSize();
+    auto size = _device_resources->GetOutputSize();
 }
 
 void Game::OnDeviceLost()
 {
     // TODO: Add Direct3D resource cleanup here.
-    m_spriteBatch.reset();
-    m_states.reset();
+    for (auto& sprite_batch : this->_sprite_batches)
+    {
+        sprite_batch.reset();
+    }
+    _states.reset();
     this->_resource_manager->reset_all_textures();
     this->_resource_manager->reset_all_sprite_fonts();
     this->_resource_manager->reset_all_sounds();
@@ -252,9 +281,9 @@ void Game::OnDeviceLost()
 
 void Game::OnDeviceRestored()
 {
-    CreateDeviceDependentResources();
+    create_device_dependent_resources();
 
-    CreateWindowSizeDependentResources();
+    create_window_size_dependent_resources();
 }
 
 #pragma endregion

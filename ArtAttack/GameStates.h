@@ -11,8 +11,15 @@
 #include "EndMenu.h"
 #include "PlayerInput.h"
 
-class GameMenu : public State
+class GameMenu final : public State
 {
+public:
+	explicit GameMenu(GameData* game_data);
+    GameMenu(GameData* game_data, const MainMenuMidwayLoadSettings& settings);
+    void update() override;
+    void draw() override;
+    void init() override;
+
 private:
     GameData* _game_data = nullptr; // need this to pass to GameLevel
     std::unique_ptr<StateContext> _menu = nullptr;
@@ -21,16 +28,9 @@ private:
     std::unique_ptr<MenuLevelSettings> _menu_level_settings = nullptr;
     std::unique_ptr<bool> _is_ready_to_load_level = nullptr;
     main_menu_screen _screen = main_menu_screen::TITLE;
-    //void create_main_menu_data();
     void set_main_menu_data_ptrs();
     void order_level_creation();
-public:
-    GameMenu(GameData* game_data);
-    GameMenu(GameData* game_data,
-        const main_menu_midway_load_settings& settings);
-    void update() override;
-    void draw() override;
-    void init() override;
+    GameData* get_data() const;
 };
 
 enum class game_level_state
@@ -41,11 +41,16 @@ enum class game_level_state
     PAUSE_MENU,
     RESULTS,
     END_MENU,
-    //BACK_TO_MAIN_MENU,
 };
 
-class GameLevel : public State
+class GameLevel final : public State
 {
+public:
+    GameLevel(GameData* game_data, const MenuLevelSettings& settings);
+    void update() override;
+    void draw() override;
+    void init() override;
+
 private:
     GameData* _game_data = nullptr;
     MenuLevelSettings _settings = MenuLevelSettings();
@@ -63,15 +68,9 @@ private:
     std::unique_ptr<end_menu_action> _end_menu_action = nullptr;
     std::unique_ptr<EndMenuData> _end_menu_data = nullptr;
     game_level_state _state = game_level_state::FIRST_UPDATE;
-    int check_for_pause_input(
-        const std::vector<player_input>& player_inputs);
-    GameData* get_data();
-public:
-    GameLevel(GameData* game_data, const MenuLevelSettings& settings) :
-        _settings(settings), _game_data(game_data) {}
-    void update() override;
-    void draw() override;
-    void init() override;
+    static int check_for_pause_input(
+        const std::vector<PlayerInputData>& player_inputs);
+    GameData* get_data() const;
 };
 
 #endif // !GAMELEVEL_H

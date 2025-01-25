@@ -3,39 +3,17 @@
 #include "rapidjson/filereadstream.h"
 
 using namespace DirectX;
-//using namespace DirectX::SimpleMath;
 using namespace MattMath;
 using namespace rapidjson;
 
-//void SpriteSheet::add_frame(const SpriteFrame& frame)
-//{
-//	this->_sprite_frames.push_back(std::make_unique<SpriteFrame>(frame));
-//}
-//void SpriteSheet::add_frame(const Rectangle& source_rectangle)
-//{
-//	//this->_sprite_frames.push_back(
-//	//	std::make_unique<SpriteFrame>(source_rectangle));
-//	this->_sprite_frames.push_back(SpriteFrame(source_rectangle));
-//}
-//void SpriteSheet::add_frame(const Vector2& position, const Vector2& size)
-//{
-//	//this->_sprite_frames.push_back(
-//	//	std::make_unique<SpriteFrame>(position, size));
-//	this->_sprite_frames.push_back(SpriteFrame(position, size));
-//}
-//SpriteFrame& SpriteSheet::get_frame(int index) const
-//{
-//	return this->_sprite_frames[index];
-//}
-//int SpriteSheet::get_frame_count() const
-//{
-//	return static_cast<int>(this->_sprite_frames.size());
-//}
+SpriteSheet::SpriteSheet(ID3D11ShaderResourceView* texture) :
+	_texture(texture)
+{
+
+}
 
 const AnimationStrip* SpriteSheet::get_animation_strip(const std::string& name) const
 {
-	//AnimationStrip strip = this->_animation_strips.at(name);
-	//return strip;
 	return this->_animation_strips.at(name).get();
 }
 
@@ -75,7 +53,7 @@ std::map<std::string, std::unique_ptr<AnimationStrip>>
 	for (auto& strip : json.GetArray())
 	{
 		std::string name = strip["name"].GetString();
-		RectangleI first_frame = RectangleI(
+		auto first_frame = RectangleI(
 			strip["first_frame"]["x"].GetInt(),
 			strip["first_frame"]["y"].GetInt(),
 			strip["first_frame"]["w"].GetInt(),
@@ -93,14 +71,14 @@ void SpriteSheet::load_from_json(const char* json_path)
 {
 	FILE* fp = fopen(json_path, "rb");
 
-	std::unique_ptr<char> readBuffer = std::make_unique<char>();
-	FileReadStream is(fp, readBuffer.get(), sizeof(readBuffer));
+	auto read_buffer = std::make_unique<char>();
+	FileReadStream is(fp, read_buffer.get(), sizeof(read_buffer));
 
 	Document d;
 	d.ParseStream(is);
 
 	fclose(fp);
-	readBuffer.release();
+	read_buffer.release();
 
 	Value& sprite_frames = d["sprite_frames"];
 	Value& animation_strips = d["animation_strips"];
@@ -161,7 +139,7 @@ void SpriteSheet::draw(SpriteBatch* sprite_batch,
 	const Vector2F& origin,
 	float scale,
 	SpriteEffects effects,
-	float layer_depth)
+	float layer_depth) const
 {
 	sprite_batch->Draw(
 		this->_texture,
@@ -182,7 +160,7 @@ void SpriteSheet::draw(SpriteBatch* sprite_batch,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
-	float layer_depth)
+	float layer_depth) const
 {
 	sprite_batch->Draw(
 		this->_texture,
@@ -194,52 +172,3 @@ void SpriteSheet::draw(SpriteBatch* sprite_batch,
 		effects,
 		layer_depth);
 }
-
-//void SpriteSheet::draw(SpriteBatch* sprite_batch,
-//	const std::string& animation_strip_name,
-//	int frame_index,
-//	const Vector2& position,
-//	const Color& color,
-//	float rotation,
-//	const Vector2& origin,
-//	float scale,
-//	SpriteEffects effects,
-//	float layer_depth)
-//{
-//	sprite_batch->Draw(
-//		this->_texture,
-//		position,
-//		this->_animation_strips[animation_strip_name].
-//			get_frame_rect(frame_index),
-//		color,
-//		rotation,
-//		origin,
-//		scale,
-//		effects,
-//		layer_depth);
-//}
-//
-//void SpriteSheet::draw(SpriteBatch* sprite_batch,
-//	const std::string& animation_strip_name,
-//	int frame_index,
-//	const Rectangle& destination_rectangle,
-//	const Color& color,
-//	float rotation,
-//	const Vector2& origin,
-//	SpriteEffects effects,
-//	float layer_depth)
-//{
-//	Rectangle des_rectan = destination_rectangle;
-//	RECT dest_rect = des_rectan.operator RECT();
-//
-//	sprite_batch->Draw(
-//		this->_texture,
-//		dest_rect,
-//		this->_animation_strips[animation_strip_name].
-//			get_frame_rect(frame_index),
-//		color,
-//		rotation,
-//		origin,
-//		effects,
-//		layer_depth);
-//}

@@ -5,33 +5,28 @@
 #include "TextureObject.h"
 #include "MattMath.h"
 
-class Visual : public IGameObject, public TextureObject
+class Visual final : public IGameObject, public TextureObject
 {
-private:
-	
-protected:
-	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
 public:
 	Visual() = default;
 	Visual(const std::string& sheet_name,
 		const std::string& frame_name,
 		const MattMath::RectangleF& rectangle,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
-		float layer_depth = 0.0f) :
-		TextureObject(sheet_name, frame_name, sprite_batch, resource_manager,
-			color, rotation, origin, effects, layer_depth),
-		_rectangle(rectangle) {}
+		float layer_depth = 0.0f);
 
-	virtual void update() override;
-	virtual void draw(const MattMath::Camera& camera) override;
-	virtual void draw() override;
-	//virtual void draw(const MattMath::Viewport& viewport);
-	virtual bool is_visible_in_viewport(
-		const MattMath::RectangleF& view) const override;
+	void update() override;
+	void draw(DirectX::SpriteBatch* sprite_batch,
+		const MattMath::Camera& camera) override;
+	void draw(DirectX::SpriteBatch* sprite_batch) override;
+
+	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
+
+protected:
+	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
 };
 #endif // !VISUAL_H

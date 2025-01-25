@@ -7,4 +7,5 @@ enum class player_team
 	B,
 	NONE
 };
+
 #endif // !PLAYER_TEAM_H

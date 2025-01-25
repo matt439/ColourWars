@@ -14,7 +14,7 @@ namespace structure_paintable_consts
 	constexpr float SOUND_VOLUME = 0.1f;
 }
 
-struct paintable_faces
+struct PaintableFaces
 {
 	bool left = false;
 	bool top = false;
@@ -22,18 +22,18 @@ struct paintable_faces
 	bool bottom = false;
 };
 
-class StructurePaintable : public Structure, public IPaintableGameObject
+class StructurePaintable final : public Structure, public IPaintableGameObject
 {
 public:
 	StructurePaintable() = default;
 	StructurePaintable(const std::string& sheet_name,
 		const std::string& frame_name,
-		const MattMath::RectangleF& rectangle,
-		DirectX::SpriteBatch* sprite_batch,
+		const MattMath::RectangleF& sprite_rectangle,
+		const MattMath::Shape* collision_shape,
 		ResourceManager* resource_manager,
 		collision_object_type collision_type,
-		const team_colour& team_colours,
-		const paintable_faces& faces,
+		const TeamColour& team_colours,
+		const PaintableFaces& faces,
 		const float* dt,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
@@ -41,18 +41,17 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
-	virtual void update() override;
-	virtual void draw(const MattMath::Camera& camera) override;
-	virtual void draw() override;
-	virtual void on_collision(const ICollisionGameObject* other) override;
+	void update() override;
+	void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Camera& camera) override;
+	void draw(DirectX::SpriteBatch* sprite_batch) override;
+	void on_collision(const ICollisionGameObject* other) override;
 
-	paint_total get_paint_total() const override;
-protected:
+	PaintTotal get_paint_total() const override;
 
 private:
 	std::vector<PaintTile> _paint_tiles = std::vector<PaintTile>();
-	team_colour _team_colours = team_colour();
-	paintable_faces _faces = paintable_faces();
+	TeamColour _team_colours = TeamColour();
+	PaintableFaces _faces = PaintableFaces();
 	const float* _dt = nullptr;
 	std::vector<PaintTile> generate_paint_tiles() const;
 	SoundBank* _sound_bank = nullptr;

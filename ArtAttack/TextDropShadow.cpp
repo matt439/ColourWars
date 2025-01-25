@@ -7,7 +7,6 @@ using namespace DirectX;
 TextDropShadow::TextDropShadow(const std::string& text,
 	const std::string& font_name,
 	const Vector2F& position,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	const Colour& shadow_color,
@@ -18,15 +17,15 @@ TextDropShadow::TextDropShadow(const std::string& text,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
-	Text(text, font_name, position, sprite_batch, resource_manager,
-		color, scale, rotation, origin, effects, layer_depth),
-	_shadow_color(shadow_color),
+	Text(text, font_name, position, resource_manager,
+	     color, scale, rotation, origin, effects, layer_depth),
 	_shadow_offset(shadow_offset),
+	_shadow_color(shadow_color),
 	_shadow_scale(shadow_scale)
 {
 
 }
-void TextDropShadow::draw(const Camera& camera)
+void TextDropShadow::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
 	// Store original values
 	Colour original_color = this->get_colour();
@@ -37,7 +36,7 @@ void TextDropShadow::draw(const Camera& camera)
 	this->TextObject::set_colour(this->_shadow_color);
 	this->TextObject::set_scale(this->_shadow_scale);
 	this->TextObject::set_position(this->get_position() + this->_shadow_offset);
-	this->TextObject::draw(camera);
+	this->TextObject::draw(sprite_batch, camera);
 
 	// Restore original values
 	this->TextObject::set_colour(original_color);
@@ -45,11 +44,11 @@ void TextDropShadow::draw(const Camera& camera)
 	this->TextObject::set_position(original_position);
 
 	// Draw Text
-	this->TextObject::draw(camera);
+	this->TextObject::draw(sprite_batch, camera);
 }
-void TextDropShadow::draw()
+void TextDropShadow::draw(SpriteBatch* sprite_batch)
 {
-	this->draw(Camera::DEFAULT_CAMERA);
+	this->draw(sprite_batch, Camera::DEFAULT_CAMERA);
 }
 Vector2F TextDropShadow::get_shadow_offset() const
 {

@@ -712,3 +712,34 @@ void DeviceResources::UpdateColorSpace()
         }
     }
 }
+
+void DeviceResources::create_deferred_contexts(int num)
+{
+    this->_deferred_contexts = std::make_unique<std::vector<ID3D11DeviceContext*>>();
+
+    for (int i = 0; i < num; i++)
+    {
+        ID3D11DeviceContext* deferred_context = nullptr;
+        HRESULT hr = m_d3dDevice->CreateDeferredContext(0, &deferred_context);
+        if (FAILED(hr))
+        {
+            throw std::runtime_error("Failed to create deferred context.");
+        }
+        this->_deferred_contexts->push_back(deferred_context);
+    }
+}
+
+std::vector<ID3D11DeviceContext*>* DeviceResources::get_deferred_contexts() const noexcept
+{
+    return this->_deferred_contexts.get();
+}
+
+ID3D11DeviceContext*
+DeviceResources::get_deferred_context(int index) const noexcept
+{
+    if (index < 0 || index >= this->_deferred_contexts->size())
+    {
+        throw std::out_of_range("Invalid index.");
+    }
+    return this->_deferred_contexts->at(index);
+}

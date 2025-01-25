@@ -6,14 +6,13 @@ using namespace MattMath;
 
 SpriteSheetObject::SpriteSheetObject(const std::string& sheet_name,
 	const std::string& element_name,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
-	DrawObject(sprite_batch, resource_manager, color, rotation, origin,
+	DrawObject(resource_manager, color, rotation, origin,
 		effects, layer_depth),
 	_sheet_name(sheet_name),
 	_element_name(element_name)

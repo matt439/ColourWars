@@ -5,15 +5,27 @@ using namespace MattMath;
 using namespace colour_consts;
 using namespace end_menu_consts;
 
-EndMenuData* EndMenuPage::get_end_menu_data()
+EndMenuPage::EndMenuPage(EndMenuData* data) :
+	MenuPage(data),
+	SoundBankObject(SOUND_BANK, this->get_resource_manager()),
+	_data(data)
+{
+
+}
+
+EndMenuData* EndMenuPage::get_end_menu_data() const
 {
 	return this->_data;
 }
 
+EndMenuInitial::EndMenuInitial(EndMenuData* data) : EndMenuPage(data)
+{
+
+}
+
 void EndMenuInitial::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
-	//int player_num = this->get_pause_menu_data()->get_player_num();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
 
@@ -127,7 +139,6 @@ void EndMenuInitial::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, END_MENU_BOX_SIZE),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		END_MENU_BOX_COLOUR);
 	this->_box->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
@@ -141,7 +152,6 @@ void EndMenuInitial::init()
 		"Level End",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		END_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
@@ -152,7 +162,6 @@ void EndMenuInitial::init()
 		"Change Teams",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
@@ -163,7 +172,6 @@ void EndMenuInitial::init()
 		"Change Weapons",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -174,7 +182,6 @@ void EndMenuInitial::init()
 		"Change Level",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -185,7 +192,6 @@ void EndMenuInitial::init()
 		"Restart",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -196,7 +202,6 @@ void EndMenuInitial::init()
 		"Exit to Main Menu",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -226,9 +231,12 @@ void EndMenuInitial::init()
 }
 void EndMenuInitial::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }

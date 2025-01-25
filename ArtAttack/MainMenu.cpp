@@ -6,11 +6,20 @@ using namespace MattMath;
 using namespace main_menu_consts;
 using namespace colour_consts;
 
-MainMenuData* MainMenuPage::get_main_menu_data()
+MainMenuPage::MainMenuPage(MainMenuData* data) :
+	MenuPage(data),
+	SoundBankObject(main_menu_consts::SOUND_BANK,
+		this->get_resource_manager()),
+	_data(data)
+{
+
+}
+
+MainMenuData* MainMenuPage::get_main_menu_data() const
 {
 	return this->_data;
 }
-int MainMenuPage::get_player_count()
+int MainMenuPage::get_player_count() const
 { 
 	return this->get_main_menu_data()->get_level_settings()->
 		get_player_count();
@@ -18,17 +27,26 @@ int MainMenuPage::get_player_count()
 
 #pragma region MainMenuTitle
 
+MainMenuTitle::MainMenuTitle(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
+
 void MainMenuTitle::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuTitle::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	const std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	for (int i = 0; i < inputs.size(); i++)
 	{
 		if (inputs[i].action == menu_input_action::PROCEED)
@@ -48,7 +66,6 @@ void MainMenuTitle::init()
 		"sprite_sheet_1",
 		"square_white_4",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		TITLE_BACKGROUND_COLOUR);
 
@@ -57,7 +74,6 @@ void MainMenuTitle::init()
 		"Colour Wars",
 		TITLE_FONT,
 		Vector2F(200.0f, 300.0f),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		TITLE_TEXT_COLOUR,
 		SHADOW_COLOUR,
@@ -68,7 +84,6 @@ void MainMenuTitle::init()
 		"Start",
 		ITEM_FONT,
 		Vector2F(250.0f, 700.0f),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		TITLE_START_TEXT_COLOUR,
 		SHADOW_COLOUR,
@@ -96,17 +111,26 @@ void MainMenuTitle::init()
 
 #pragma region MainMenuHome
 
+MainMenuHome::MainMenuHome(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
+
 void MainMenuHome::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuHome::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
@@ -120,7 +144,7 @@ void MainMenuHome::update()
 				std::make_unique<MainMenuTitle>(this->get_main_menu_data()));
 			return;
 		}
-		else if (inputs[i].action == menu_input_action::PROCEED)
+		if (inputs[i].action == menu_input_action::PROCEED)
 		{
 			if (highlighted_element == "play")
 			{
@@ -130,7 +154,7 @@ void MainMenuHome::update()
 						this->get_main_menu_data()));
 				return;
 			}
-			else if (highlighted_element == "options")
+			if (highlighted_element == "options")
 			{
 				this->play_wave(CONFIRM_SOUND);
 				this->get_context()->transition_to(
@@ -138,7 +162,7 @@ void MainMenuHome::update()
 						this->get_main_menu_data()));
 				return;
 			}
-			else if (highlighted_element == "exit")
+			if (highlighted_element == "exit")
 			{
 				DestroyWindow(this->get_main_menu_data()->get_window());
 			}
@@ -187,7 +211,6 @@ void MainMenuHome::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HOME_BACKGROUND_COLOUR);
 
@@ -196,7 +219,6 @@ void MainMenuHome::init()
 		"Main Menu",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -207,7 +229,6 @@ void MainMenuHome::init()
 		"Play",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
@@ -218,7 +239,6 @@ void MainMenuHome::init()
 		"Options",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -229,7 +249,6 @@ void MainMenuHome::init()
 		"Exit",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -261,17 +280,26 @@ void MainMenuHome::init()
 
 #pragma region MainMenuOptions
 
+MainMenuOptions::MainMenuOptions(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
+
 void MainMenuOptions::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuOptions::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
@@ -436,7 +464,6 @@ void MainMenuOptions::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		OPTIONS_BACKGROUND_COLOUR);
 
@@ -445,7 +472,6 @@ void MainMenuOptions::init()
 		"Options",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -456,7 +482,6 @@ void MainMenuOptions::init()
 		"Resolution",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
@@ -467,7 +492,6 @@ void MainMenuOptions::init()
 		"null",
 		ITEM_FONT,
 		this->calculate_widget_position(2, 2),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		OPTIONS_VALUE_COLOUR,
 		SHADOW_COLOUR,
@@ -480,7 +504,6 @@ void MainMenuOptions::init()
 		"Fullscreen",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -491,7 +514,6 @@ void MainMenuOptions::init()
 		"null",
 		ITEM_FONT,
 		this->calculate_widget_position(2, 3),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		OPTIONS_VALUE_COLOUR,
 		SHADOW_COLOUR,
@@ -504,7 +526,6 @@ void MainMenuOptions::init()
 		"Apply",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -515,7 +536,6 @@ void MainMenuOptions::init()
 		"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -586,7 +606,7 @@ void MainMenuOptions::update_resolution_selection_text()
 	this->_resolution_value->set_text(res_text);
 }
 
-void MainMenuOptions::update_full_screen_selection_text()
+void MainMenuOptions::update_full_screen_selection_text() const
 {
 	bool fs = this->_full_screen_selection; //this->get_context()->get_data()->get_save()->get_full_screen();
 	std::string fs_text = "";
@@ -605,17 +625,26 @@ void MainMenuOptions::update_full_screen_selection_text()
 
 #pragma region MainMenuModeSelect
 
+MainMenuModeSelect::MainMenuModeSelect(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
+
 void MainMenuModeSelect::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuModeSelect::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
@@ -629,7 +658,7 @@ void MainMenuModeSelect::update()
 				this->get_main_menu_data()));
 			return;
 		}
-		else if (inputs[i].action == menu_input_action::PROCEED)
+		if (inputs[i].action == menu_input_action::PROCEED)
 		{
 			if (highlighted_element == "standard")
 			{
@@ -641,35 +670,17 @@ void MainMenuModeSelect::update()
 						this->get_main_menu_data()));
 				return;
 			}
-			else if (highlighted_element == "tdm")
+			if (highlighted_element == "tdm")
 			{
 				this->play_wave(ERROR_SOUND);
-				//this->get_main_menu_data()->get_level_settings()->
-				//	set_game_mode(level_mode::TEAM_DEATHMATCH);
-				//this->get_context()->transition_to(
-				//	std::make_unique<MainMenuPlayerCount>(
-				//		this->get_main_menu_data()));
-				//return;
 			}
 			else if (highlighted_element == "dm")
 			{
 				this->play_wave(ERROR_SOUND);
-				//this->get_main_menu_data()->get_level_settings()->
-				//	set_game_mode(level_mode::DEATHMATCH);
-				//this->get_context()->transition_to(
-				//	std::make_unique<MainMenuPlayerCount>(
-				//		this->get_main_menu_data()));
-				//return;
 			}
 			else if (highlighted_element == "practice")
 			{
 				this->play_wave(ERROR_SOUND);
-				//this->get_main_menu_data()->get_level_settings()->
-				//	set_game_mode(level_mode::PRACTICE);
-				//this->get_context()->transition_to(
-				//	std::make_unique<MainMenuPlayerCount>(
-				//		this->get_main_menu_data()));
-				//return;
 			}
 			else if (highlighted_element == "back")
 			{
@@ -759,7 +770,6 @@ void MainMenuModeSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -768,7 +778,6 @@ void MainMenuModeSelect::init()
 		"Mode Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -779,7 +788,6 @@ void MainMenuModeSelect::init()
 		"Standard",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
@@ -790,7 +798,6 @@ void MainMenuModeSelect::init()
 		"Team Deathmatch",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -801,7 +808,6 @@ void MainMenuModeSelect::init()
 		"Deathmatch",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -812,7 +818,6 @@ void MainMenuModeSelect::init()
 		"Practice",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -823,7 +828,6 @@ void MainMenuModeSelect::init()
 		"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -857,17 +861,25 @@ void MainMenuModeSelect::init()
 
 #pragma region MainMenuPlayerCount
 
+MainMenuPlayerCount::MainMenuPlayerCount(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
 void MainMenuPlayerCount::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuPlayerCount::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
@@ -882,7 +894,7 @@ void MainMenuPlayerCount::update()
 					this->get_main_menu_data()));
 			return;
 		}
-		else if (inputs[i].action == menu_input_action::PROCEED)
+		if (inputs[i].action == menu_input_action::PROCEED)
 		{
 			if (highlighted_element == "1_player")
 			{
@@ -900,7 +912,7 @@ void MainMenuPlayerCount::update()
 						get_main_menu_data()));
 				return;
 			}
-			else if (highlighted_element == "2_players")
+			if (highlighted_element == "2_players")
 			{
 				this->play_wave(CONFIRM_SOUND);
 				this->get_main_menu_data()->get_level_settings()->
@@ -912,7 +924,7 @@ void MainMenuPlayerCount::update()
 						get_main_menu_data()));
 				return;
 			}
-			else if (highlighted_element == "3_players")
+			if (highlighted_element == "3_players")
 			{
 				this->play_wave(CONFIRM_SOUND);
 				this->get_main_menu_data()->get_level_settings()->
@@ -924,7 +936,7 @@ void MainMenuPlayerCount::update()
 						get_main_menu_data()));
 				return;
 			}
-			else if (highlighted_element == "4_players")
+			if (highlighted_element == "4_players")
 			{
 				this->play_wave(CONFIRM_SOUND);
 				this->get_main_menu_data()->get_level_settings()->
@@ -936,7 +948,7 @@ void MainMenuPlayerCount::update()
 					get_main_menu_data()));
 				return;
 			}
-			else if (highlighted_element == "back")
+			if (highlighted_element == "back")
 			{
 				this->play_wave(CANCEL_SOUND);
 				this->get_context()->transition_to(
@@ -1025,7 +1037,6 @@ void MainMenuPlayerCount::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -1034,7 +1045,6 @@ void MainMenuPlayerCount::init()
 		"Number of Players",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -1045,7 +1055,6 @@ void MainMenuPlayerCount::init()
 		"1 Player",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
@@ -1056,7 +1065,6 @@ void MainMenuPlayerCount::init()
 		"2 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -1067,7 +1075,6 @@ void MainMenuPlayerCount::init()
 		"3 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -1078,7 +1085,6 @@ void MainMenuPlayerCount::init()
 		"4 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -1089,7 +1095,6 @@ void MainMenuPlayerCount::init()
 		"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
@@ -1123,6 +1128,12 @@ void MainMenuPlayerCount::init()
 
 #pragma region MainMenuTeamSelect
 
+MainMenuTeamSelect::MainMenuTeamSelect(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
+
 MainMenuTeamSelect::MainMenuTeamSelect(MainMenuData* data,
 	MenuLevelSettings* settings) :
 	MainMenuPage(data)
@@ -1131,15 +1142,18 @@ MainMenuTeamSelect::MainMenuTeamSelect(MainMenuData* data,
 }
 void MainMenuTeamSelect::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuTeamSelect::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	int player_count = this->get_player_count();
 
@@ -1197,7 +1211,6 @@ void MainMenuTeamSelect::update()
 				}
 			}
 		}
-		//this->_select_states[i].state == confirmation_state::UNCONFIRMED;
 	}
 	if (this->all_players_confirmed())
 	{
@@ -1209,7 +1222,7 @@ void MainMenuTeamSelect::update()
 	}
 	this->update_team_select_visuals();
 }
-void MainMenuTeamSelect::set_level_settings()
+void MainMenuTeamSelect::set_level_settings() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
@@ -1220,7 +1233,7 @@ void MainMenuTeamSelect::set_level_settings()
 			set_player_num(i, i);
 	}
 }
-bool MainMenuTeamSelect::all_players_confirmed()
+bool MainMenuTeamSelect::all_players_confirmed() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
@@ -1231,7 +1244,7 @@ bool MainMenuTeamSelect::all_players_confirmed()
 	}
 	return true;
 }
-bool MainMenuTeamSelect::all_players_unconfirmed()
+bool MainMenuTeamSelect::all_players_unconfirmed() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
@@ -1252,19 +1265,19 @@ void MainMenuTeamSelect::update_team_select_visuals()
 		switch (this->_select_states[i].team)
 		{
 		case player_team::A:
-			this->_player_widgets[i]->_player_a->set_sprite_frame(
+			this->_player_widgets[i]->player_a->set_sprite_frame(
 				"team_select_a_selected");
-			selected_widget = this->_player_widgets[i]->_player_a.get();
+			selected_widget = this->_player_widgets[i]->player_a.get();
 			break;
 		case player_team::NONE:
-			this->_player_widgets[i]->_player_center->set_sprite_frame(
+			this->_player_widgets[i]->player_center->set_sprite_frame(
 				"team_select_center_selected");
-			selected_widget = this->_player_widgets[i]->_player_center.get();
+			selected_widget = this->_player_widgets[i]->player_center.get();
 			break;
 		case player_team::B:
-			this->_player_widgets[i]->_player_b->set_sprite_frame(
+			this->_player_widgets[i]->player_b->set_sprite_frame(
 				"team_select_b_selected");
-			selected_widget = this->_player_widgets[i]->_player_b.get();
+			selected_widget = this->_player_widgets[i]->player_b.get();
 			break;
 		}
 		if (this->_select_states[i].state ==
@@ -1279,18 +1292,18 @@ void MainMenuTeamSelect::deselect_and_unconfirm_all_widgets()
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		this->_player_widgets[i]->_player_a->set_sprite_frame(
+		this->_player_widgets[i]->player_a->set_sprite_frame(
 			"team_select_a");
-		this->_player_widgets[i]->_player_center->set_sprite_frame(
+		this->_player_widgets[i]->player_center->set_sprite_frame(
 			"team_select_center");
-		this->_player_widgets[i]->_player_b->set_sprite_frame(
+		this->_player_widgets[i]->player_b->set_sprite_frame(
 			"team_select_b");
 
-		this->_player_widgets[i]->_player_a->set_colour(
+		this->_player_widgets[i]->player_a->set_colour(
 			main_menu_consts::TEAM_SELECT_UNSELECTED_COLOUR);
-		this->_player_widgets[i]->_player_center->set_colour(
+		this->_player_widgets[i]->player_center->set_colour(
 			main_menu_consts::TEAM_SELECT_UNSELECTED_COLOUR);
-		this->_player_widgets[i]->_player_b->set_colour(
+		this->_player_widgets[i]->player_b->set_colour(
 			main_menu_consts::TEAM_SELECT_UNSELECTED_COLOUR);
 	}
 }
@@ -1311,7 +1324,6 @@ void MainMenuTeamSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -1322,7 +1334,6 @@ void MainMenuTeamSelect::init()
 		"Team Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -1333,63 +1344,57 @@ void MainMenuTeamSelect::init()
 	
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		//this->_select_states.push_back(MainMenuTeamSelect::team_select_state());
-		MainMenuTeamSelect::team_select_state state = team_select_state();
+		auto state = TeamSelectState();
 		state.state = confirmation_state::UNCONFIRMED;
 		state.team = this->get_main_menu_data()->get_level_settings()->
 			get_player_team(i);
 		this->_select_states.push_back(state);
 
-		std::unique_ptr<MainMenuTeamSelect::player_widgets> widgets =
-			std::make_unique<MainMenuTeamSelect::player_widgets>();
+		auto widgets = std::make_unique<PlayerWidgets>();
 
 		std::string name = "player_" + std::to_string(i + 1);
 		std::string label_text = "Player " + std::to_string(i + 1);
 
-		widgets->_player = std::make_unique<MTextDropShadow>(
+		widgets->player = std::make_unique<MTextDropShadow>(
 			name,
 			label_text,
 			ITEM_FONT,
 			this->calculate_widget_position(0, i + 2),
-			this->get_sprite_batch(),
 			this->get_resource_manager(),
 			TEAM_SELECT_UNSELECTED_COLOUR,
 			SHADOW_COLOUR,
 			ITEM_SHADOW_OFFSET);
 
-		widgets->_player_a = std::make_unique<MTexture>(
+		widgets->player_a = std::make_unique<MTexture>(
 			name + "_a",
 			"sprite_sheet_1",
 			"team_select_a",
 			RectangleF(this->calculate_widget_position(2, i + 2), TEAM_SELECT_TEAM_WIDGET_SIZE),
-			this->get_sprite_batch(),
 			this->get_resource_manager());
 
-		Vector2F move = Vector2F(TEAM_SELECT_TEAM_WIDGET_SIZE.x, 0.0f);
+		auto move = Vector2F(TEAM_SELECT_TEAM_WIDGET_SIZE.x, 0.0f);
 
-		widgets->_player_center = std::make_unique<MTexture>(
+		widgets->player_center = std::make_unique<MTexture>(
 			name + "_center",
 			"sprite_sheet_1",
 			"team_select_center",
-			RectangleF(widgets->_player_a->get_rectangle().get_position() + move,
+			RectangleF(widgets->player_a->get_rectangle().get_position() + move,
 				TEAM_SELECT_TEAM_WIDGET_SIZE),
-			this->get_sprite_batch(),
 			this->get_resource_manager());
 
-		widgets->_player_b = std::make_unique<MTexture>(
+		widgets->player_b = std::make_unique<MTexture>(
 			name + "_b",
 			"sprite_sheet_1",
 			"team_select_b",
-			RectangleF(widgets->_player_center->get_rectangle().get_position() + move,
+			RectangleF(widgets->player_center->get_rectangle().get_position() + move,
 				TEAM_SELECT_TEAM_WIDGET_SIZE),
-			this->get_sprite_batch(),
 			this->get_resource_manager());
 
-		this->_texture_container->add_child(widgets->_player_a.get());
-		this->_texture_container->add_child(widgets->_player_center.get());
-		this->_texture_container->add_child(widgets->_player_b.get());
+		this->_texture_container->add_child(widgets->player_a.get());
+		this->_texture_container->add_child(widgets->player_center.get());
+		this->_texture_container->add_child(widgets->player_b.get());
 
-		this->_text_container->add_child(widgets->_player.get());
+		this->_text_container->add_child(widgets->player.get());
 
 		this->_player_widgets.push_back(std::move(widgets));
 	}
@@ -1406,6 +1411,12 @@ void MainMenuTeamSelect::init()
 
 #pragma region MainMenuWeaponSelect
 
+MainMenuWeaponSelect::MainMenuWeaponSelect(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
+
 MainMenuWeaponSelect::MainMenuWeaponSelect(MainMenuData* data,
 	MenuLevelSettings* settings) :
 	MainMenuPage(data)
@@ -1414,15 +1425,18 @@ MainMenuWeaponSelect::MainMenuWeaponSelect(MainMenuData* data,
 }
 void MainMenuWeaponSelect::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuWeaponSelect::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int player_count = this->get_player_count();
 	int num_inputs = static_cast<int>(inputs.size());
 
@@ -1494,7 +1508,7 @@ void MainMenuWeaponSelect::update()
 	}
 	this->update_weapon_select_visuals();
 }
-void MainMenuWeaponSelect::set_level_settings()
+void MainMenuWeaponSelect::set_level_settings() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
@@ -1538,7 +1552,7 @@ void MainMenuWeaponSelect::cycle_weapons(
 	this->_select_states[player_index].type =
 		static_cast<wep_type>(enum_pos);
 }
-bool MainMenuWeaponSelect::all_players_confirmed()
+bool MainMenuWeaponSelect::all_players_confirmed() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
@@ -1549,7 +1563,7 @@ bool MainMenuWeaponSelect::all_players_confirmed()
 	}
 	return true;
 }
-bool MainMenuWeaponSelect::all_players_unconfirmed()
+bool MainMenuWeaponSelect::all_players_unconfirmed() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
@@ -1569,44 +1583,44 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 		switch (this->_select_states[i].type)
 		{
 		case wep_type::SPRAYER:
-			this->_player_widgets[i]->_weapon_icon->set_sprite_frame("sprayer");
-			this->_player_widgets[i]->_weapon_name->set_text("Sprayer");
+			this->_player_widgets[i]->weapon_icon->set_sprite_frame("sprayer");
+			this->_player_widgets[i]->weapon_name->set_text("Sprayer");
 			break;
 		case wep_type::SNIPER:
-			this->_player_widgets[i]->_weapon_icon->set_sprite_frame("sniper");
-			this->_player_widgets[i]->_weapon_name->set_text("Sniper");
+			this->_player_widgets[i]->weapon_icon->set_sprite_frame("sniper");
+			this->_player_widgets[i]->weapon_name->set_text("Sniper");
 			break;
 		case wep_type::ROLLER:
-			this->_player_widgets[i]->_weapon_icon->set_sprite_frame("roller");
-			this->_player_widgets[i]->_weapon_name->set_text("Roller");
+			this->_player_widgets[i]->weapon_icon->set_sprite_frame("roller");
+			this->_player_widgets[i]->weapon_name->set_text("Roller");
 			break;
 		case wep_type::MISTER:
-			this->_player_widgets[i]->_weapon_icon->set_sprite_frame("mister");
-			this->_player_widgets[i]->_weapon_name->set_text("Mister");
+			this->_player_widgets[i]->weapon_icon->set_sprite_frame("mister");
+			this->_player_widgets[i]->weapon_name->set_text("Mister");
 			break;
 		case wep_type::BUCKET:
-			this->_player_widgets[i]->_weapon_icon->set_sprite_frame("bucket");
-			this->_player_widgets[i]->_weapon_name->set_text("Bucket");
+			this->_player_widgets[i]->weapon_icon->set_sprite_frame("bucket");
+			this->_player_widgets[i]->weapon_name->set_text("Bucket");
 			break;
 		case wep_type::RANDOM_PRIMARY:
-			this->_player_widgets[i]->_weapon_icon->set_sprite_frame("random");
-			this->_player_widgets[i]->_weapon_name->set_text("Random");
+			this->_player_widgets[i]->weapon_icon->set_sprite_frame("random");
+			this->_player_widgets[i]->weapon_name->set_text("Random");
 			break;
 		default:
-			this->_player_widgets[i]->_weapon_icon->set_sprite_frame("error");
-			this->_player_widgets[i]->_weapon_name->set_text("ERROR");
+			this->_player_widgets[i]->weapon_icon->set_sprite_frame("error");
+			this->_player_widgets[i]->weapon_name->set_text("ERROR");
 			break;
 		}
 
 		if (this->_select_states[i].state == confirmation_state::CONFIRMED)
 		{
-			this->_player_widgets[i]->_weapon_icon->
+			this->_player_widgets[i]->weapon_icon->
 				set_colour(WEAPON_SELECT_SELECTED_COLOUR);
-			this->_player_widgets[i]->_weapon_name->
+			this->_player_widgets[i]->weapon_name->
 				set_colour(WEAPON_SELECT_SELECTED_COLOUR);
 		}
 
-		this->_player_widgets[i]->_weapon_description->set_text(
+		this->_player_widgets[i]->weapon_description->set_text(
 			this->weapon_description(this->_select_states[i].type));
 	}
 }
@@ -1614,9 +1628,9 @@ void MainMenuWeaponSelect::unconfirm_all_widgets()
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		this->_player_widgets[i]->_weapon_icon->set_colour(
+		this->_player_widgets[i]->weapon_icon->set_colour(
 			WEAPON_SELECT_UNSELECTED_COLOUR);
-		this->_player_widgets[i]->_weapon_name->set_colour(
+		this->_player_widgets[i]->weapon_name->set_colour(
 			WEAPON_SELECT_UNSELECTED_COLOUR);
 	}
 }
@@ -1637,7 +1651,6 @@ void MainMenuWeaponSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -1648,7 +1661,6 @@ void MainMenuWeaponSelect::init()
 		"Weapon Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -1658,65 +1670,59 @@ void MainMenuWeaponSelect::init()
 
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		//this->_select_states.push_back(MainMenuWeaponSelect::select_state());
-		MainMenuWeaponSelect::select_state state;
+		SelectState state;
 		state.state = confirmation_state::UNCONFIRMED;
 		state.type = this->get_main_menu_data()->get_level_settings()
 			->get_player_weapon(i);
 		this->_select_states.push_back(state);
 
-		std::unique_ptr<MainMenuWeaponSelect::widgets> widgets =
-			std::make_unique<MainMenuWeaponSelect::widgets>();
+		auto widgets = std::make_unique<Widgets>();
 
 		std::string name = "player_" + std::to_string(i + 1);
 		std::string label_text = "Player " + std::to_string(i + 1);
 
-		widgets->_player = std::make_unique<MTextDropShadow>(
+		widgets->player = std::make_unique<MTextDropShadow>(
 			name,
 			label_text,
 			ITEM_FONT,
 			this->calculate_widget_position(0, i + 2),
-			this->get_sprite_batch(),
 			this->get_resource_manager(),
 			WEAPON_SELECT_UNSELECTED_COLOUR);
 
-		widgets->_weapon_icon = std::make_unique<MTexture>(
+		widgets->weapon_icon = std::make_unique<MTexture>(
 			name + "_wep_icon",
 			"sprite_sheet_1",
 			"sprayer",
 			RectangleF(this->calculate_widget_position(2, i + 2), WEAPON_SELECT_WEAPON_WIDGET_SIZE),
-			this->get_sprite_batch(),
 			this->get_resource_manager(),
 			PLAY_BACKGROUND_COLOUR);
 
-		widgets->_weapon_name = std::make_unique<MTextDropShadow>(
+		widgets->weapon_name = std::make_unique<MTextDropShadow>(
 			name + "_wep_name",
 			"Sprayer",
 			DETAIL_FONT,
-			widgets->_weapon_icon->get_rectangle().get_position() +
+			widgets->weapon_icon->get_rectangle().get_position() +
 				Vector2F(0.0f, WEAPON_SELECT_WEAPON_WIDGET_SIZE.y),
-			this->get_sprite_batch(),
 			this->get_resource_manager(),
 			WEAPON_SELECT_UNSELECTED_COLOUR,
 			SHADOW_COLOUR,
 			DETAIL_SHADOW_OFFSET);
 
-		widgets->_weapon_description = std::make_unique<MTextDropShadow>(
+		widgets->weapon_description = std::make_unique<MTextDropShadow>(
 			name + "_wep_desc",
 			this->weapon_description(wep_type::SPRAYER),
 			WEAPON_DESCRIPTION_FONT,
-			widgets->_weapon_icon->get_rectangle().get_position() +
+			widgets->weapon_icon->get_rectangle().get_position() +
 				Vector2F(WEAPON_DESC_X_OFFSET, 0.0f),
-			this->get_sprite_batch(),
 			this->get_resource_manager(),
 			WEAPON_DESCRIPTION_FONT_COLOUR,
 			SHADOW_COLOUR,
 			WEAPON_DESCRIPTION_SHADOW_OFFSET);
 
-		this->_texture_container->add_child(widgets->_weapon_icon.get());
-		this->_text_container->add_child(widgets->_weapon_name.get());
-		this->_text_container->add_child(widgets->_player.get());
-		this->_text_container->add_child(widgets->_weapon_description.get());
+		this->_texture_container->add_child(widgets->weapon_icon.get());
+		this->_text_container->add_child(widgets->weapon_name.get());
+		this->_text_container->add_child(widgets->player.get());
+		this->_text_container->add_child(widgets->weapon_description.get());
 
 		this->_player_widgets.push_back(std::move(widgets));
 	}
@@ -1727,7 +1733,7 @@ void MainMenuWeaponSelect::init()
 
 	this->play_effect(MUSIC, true, MUSIC_VOLUME);
 }
-std::string MainMenuWeaponSelect::weapon_description(wep_type type) const
+std::string MainMenuWeaponSelect::weapon_description(wep_type type)
 {
 	switch (type)
 	{
@@ -1752,6 +1758,12 @@ std::string MainMenuWeaponSelect::weapon_description(wep_type type) const
 
 #pragma region MainMenuStageSelect
 
+MainMenuStageSelect::MainMenuStageSelect(MainMenuData* data) :
+	MainMenuPage(data)
+{
+
+}
+
 MainMenuStageSelect::MainMenuStageSelect(MainMenuData* data,
 	MenuLevelSettings* settings) :
 	MainMenuPage(data)
@@ -1760,15 +1772,18 @@ MainMenuStageSelect::MainMenuStageSelect(MainMenuData* data,
 }
 void MainMenuStageSelect::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 void MainMenuStageSelect::update()
 {
-	std::vector<menu_input> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	int player_count = this->get_player_count();
 
@@ -1829,7 +1844,7 @@ void MainMenuStageSelect::update()
 	}
 	this->update_stage_select_visuals();
 }
-void MainMenuStageSelect::set_level_settings()
+void MainMenuStageSelect::set_level_settings() const
 {
 	this->get_main_menu_data()->get_level_settings()->set_stage(
 		this->_select_state.stage);
@@ -1840,10 +1855,6 @@ void MainMenuStageSelect::update_stage_select_visuals()
 
 	switch (this->_select_state.stage)
 	{
-	//case level_stage::TEST_1:
-	//	this->_stage_icon->set_sprite_frame("stage_test_1");
-	//	this->_stage_name->set_text("Test 1");
-	//	break;
 	case level_stage::KING_OF_THE_HILL:
 		this->_stage_icon->set_sprite_frame("stage_king_of_the_hill");
 		this->_stage_name->set_text("King of the Hill");
@@ -1867,8 +1878,6 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	}
 	if (this->_select_state.state == confirmation_state::CONFIRMED)
 	{
-		//this->_stage_icon->set_colour(this->_highlight_colour);
-		//this->_stage_name->set_colour(this->_highlight_colour);
 		this->_ready->set_hidden(false);
 	}
 }
@@ -1898,7 +1907,6 @@ void MainMenuStageSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -1907,7 +1915,6 @@ void MainMenuStageSelect::init()
 		"Stage Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
@@ -1919,7 +1926,6 @@ void MainMenuStageSelect::init()
 		"sprite_sheet_1",
 		"stage_test_1",
 		RectangleF(this->calculate_widget_position(0, 1), STAGE_SELECT_ICON_SIZE),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -1928,7 +1934,6 @@ void MainMenuStageSelect::init()
 		"Test 1",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		STAGE_SELECT_UNSELECTED_COLOUR,
 		SHADOW_COLOUR,
@@ -1939,7 +1944,6 @@ void MainMenuStageSelect::init()
 		"READY?",
 		ANNOUNCEMENT_FONT,
 		this->_background->get_rectangle().get_center() - Vector2F(400.0f, 100.0f),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		STAGE_SELECT_SELECTED_COLOUR,
 		SHADOW_COLOUR,

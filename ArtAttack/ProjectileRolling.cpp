@@ -11,15 +11,13 @@ ProjectileRolling::ProjectileRolling(const RectangleF& rectangle,
 	int player_num,
 	const Colour& team_colour,
 	const float* dt,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
-		projectile_type::ROLLING, dt,
-		sprite_batch, resource_manager,
+		ROLLING, dt, resource_manager,
 		DETAILS_ROLLING,
 		team_colour, rotation, origin, effects, layer_depth),
 	_rectangle(rectangle)
@@ -30,23 +28,21 @@ ProjectileRolling::ProjectileRolling(const RectangleF& rectangle,
 }
 void ProjectileRolling::update()
 {
-	const projectile_details& details = this->get_details();
+	const ProjectileDetails& details = this->get_details();
 
 	Projectile::update_movement(details.gravity,
 		details.wind_resistance);
 }
-void ProjectileRolling::draw(const Camera& camera)
+void ProjectileRolling::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
-	//this->AnimationObject::draw(this->get_draw_rectangle(), camera);
+	// do nothing
 }
-void ProjectileRolling::draw()
+void ProjectileRolling::draw(SpriteBatch* sprite_batch)
 {
-	//this->AnimationObject::draw(this->get_draw_rectangle());
+	// do nothing
 }
 bool ProjectileRolling::is_visible_in_viewport(const RectangleF& view) const
 {
-	//return this->get_draw_rectangle().intersects(view);
-
 	return false;
 }
 bool ProjectileRolling::is_colliding(const ICollisionGameObject* other) const
@@ -85,9 +81,3 @@ const Shape* ProjectileRolling::get_shape() const
 {
 	return &this->_rectangle;
 }
-//RectangleF ProjectileRolling::get_draw_rectangle() const
-//{
-//	RectangleF draw_rectangle = this->_rectangle;
-//	draw_rectangle.inflate_to_size(this->get_details().size);
-//	return draw_rectangle;
-//}

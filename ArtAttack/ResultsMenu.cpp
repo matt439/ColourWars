@@ -6,16 +6,30 @@ using namespace MattMath;
 using namespace results_menu_consts;
 using namespace colour_consts;
 
-ResultsMenuData* ResultsMenuPage::get_results_menu_data()
+ResultsMenuPage::ResultsMenuPage(ResultsMenuData* data) :
+	MenuPage(data),
+	SoundBankObject(results_menu_consts::SOUND_BANK,
+		this->get_resource_manager()),
+	_data(data)
+{
+
+}
+
+ResultsMenuData* ResultsMenuPage::get_results_menu_data() const
 {
 	return this->_data;
 }
 
+ResultsMenuInitial::ResultsMenuInitial(ResultsMenuData* data) :
+	ResultsMenuPage(data)
+{
+
+}
+
 void ResultsMenuInitial::update()
 {
-	
 	const float dt = *this->get_data()->get_dt();
-	std::vector<menu_input> menu_inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> menu_inputs = this->get_menu_inputs();
 	
 
 	if (this->_delay_timer < RESULTS_MENU_TEAM_FILL_DELAY)
@@ -58,14 +72,13 @@ void ResultsMenuInitial::update()
 
 void ResultsMenuInitial::init()
 {
-	const level_end_info end_info = this->get_level_end_info();
+	const LevelEndInfo end_info = this->get_level_end_info();
 
 	this->_box = std::make_unique<MTexture>(
 		"box",
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, RESULTS_MENU_BOX_SIZE),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		RESULTS_MENU_BOX_COLOUR);
 	this->_box->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
@@ -75,26 +88,19 @@ void ResultsMenuInitial::init()
 		"Results",
 		HEADING_FONT,
 		HEADING_POSITION,
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		RESULTS_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
-	//Vector2F title_position = this->calculate_center_position(
-	//	this->get_widget_size(),
-	//	DEFAULT_RESOLUTION);
-	//title_position.y -= RESULTS_MENU_TITLE_Y_OFFSET;
-	//this->_heading->set_position(title_position);
 
 	this->_fill_box = std::make_unique<MTexture>(
 		"fill_box",
 		"sprite_sheet_1",
 		"results_menu_fill_box",
 		RectangleF(Vector2F::ZERO, RESULTS_MENU_FILL_BOX_SIZE),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		RESULTS_MENU_BOX_COLOUR);
-	Vector2F fill_box_position = Vector2F(
+	auto fill_box_position = Vector2F(
 		this->calculate_center_position(
 		this->_fill_box->get_rectangle().get_width(), DEFAULT_RESOLUTION.x),
 		this->_box->get_rectangle().get_position().y + RESULTS_MENU_FILL_BOX_Y_OFFSET);
@@ -106,7 +112,6 @@ void ResultsMenuInitial::init()
 		"results_menu_team_a_fill",
 		RectangleF(Vector2F::ZERO,
 			Vector2F(0.0f, RESULTS_MENU_TEAM_FILL_SIZE.y)),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_results_menu_data()->get_level_end_info().team_colours.team_a);
 	this->_team_a_fill->set_position(this->_fill_box->get_rectangle().get_position() +
@@ -118,7 +123,6 @@ void ResultsMenuInitial::init()
 		"results_menu_team_b_fill",
 		RectangleF(Vector2F::ZERO,
 			Vector2F(0.0f, RESULTS_MENU_TEAM_FILL_SIZE.y)),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		this->get_results_menu_data()->get_level_end_info().team_colours.team_b);
 
@@ -127,7 +131,6 @@ void ResultsMenuInitial::init()
 		end_info.team_a_percentage_string(),
 		DETAIL_FONT,
 		this->_team_a_fill->get_rectangle().get_position(),
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PERCENTAGE_TEXT_COLOUR,
 		SHADOW_COLOUR,
@@ -139,7 +142,6 @@ void ResultsMenuInitial::init()
 		end_info.team_b_percentage_string(),
 		DETAIL_FONT,
 		Vector2F::ZERO,
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		PERCENTAGE_TEXT_COLOUR,
 		SHADOW_COLOUR,
@@ -155,22 +157,17 @@ void ResultsMenuInitial::init()
 		end_info.winning_team_string(),
 		ITEM_FONT,
 		WINNER_POSITION,
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		RESULTS_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		DETAIL_SHADOW_OFFSET,
 		true);
-	//this->_winner->set_position(Vector2F(
-	//	this->calculate_center_position(this->get_widget_size().x, DEFAULT_RESOLUTION.x),
-	//	this->_box->get_rectangle().get_position().y + WINNER_TEXT_Y_OFFSET));
 
 	this->_proceed = std::make_unique<MTextDropShadow>(
 		"proceed",
 		"Press A to proceed",
 		DETAIL_FONT,
 		PROCEED_POSITION,
-		this->get_sprite_batch(),
 		this->get_resource_manager(),
 		RESULTS_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
@@ -204,25 +201,28 @@ void ResultsMenuInitial::init()
 
 void ResultsMenuInitial::draw()
 {
-	this->draw_mobject_in_viewports(this->_texture_container.get(),
-		this->get_point_clamp_sampler_state());
+	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	// draw text separately to use blend state
-	this->draw_mobject_in_viewports(this->_text_container.get());
+	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+		this->get_point_clamp_sampler_state()));
+
+	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+
+	this->draw_mobjects_in_viewports(&mobjects);
 }
 
-void ResultsMenuInitial::update_fill_box()
+void ResultsMenuInitial::update_fill_box() const
 {
 	this->update_team_a_fill();
 	this->update_team_b_fill();
 }
 
-float ResultsMenuInitial::fill_time_ratio()
+float ResultsMenuInitial::fill_time_ratio() const
 {
 	return this->_fill_timer / RESULTS_MENU_TEAM_FILL_TIME;
 }
 
-void ResultsMenuInitial::update_team_a_fill()
+void ResultsMenuInitial::update_team_a_fill() const
 {
 	//float score = this->get_team_percentage(player_team::A);
 	float score = this->get_level_end_info().team_a_ratio();
@@ -236,7 +236,7 @@ void ResultsMenuInitial::update_team_a_fill()
 	this->_team_a_fill->set_width(width);
 }
 
-void ResultsMenuInitial::update_team_b_fill()
+void ResultsMenuInitial::update_team_b_fill() const
 {
 	float score = this->get_level_end_info().team_b_ratio();
 	float max_width = RESULTS_MENU_TEAM_FILL_SIZE.x * score;
@@ -261,7 +261,7 @@ Vector2F ResultsMenuInitial::calculate_team_b_fill_top_right_position() const
 }
 
 int ResultsMenuInitial::check_for_continue_input(
-	const std::vector<menu_input>& menu_input)
+	const std::vector<ProcessedMenuInput>& menu_input)
 {
 	for (int i = 0; i < menu_input.size(); i++)
 	{
@@ -272,7 +272,7 @@ int ResultsMenuInitial::check_for_continue_input(
 	}
 	return -1;
 }
-level_end_info ResultsMenuInitial::get_level_end_info()
+LevelEndInfo ResultsMenuInitial::get_level_end_info() const
 {
 	return this->get_results_menu_data()->get_level_end_info();
 }

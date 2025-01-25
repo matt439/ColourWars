@@ -4,36 +4,16 @@
 using namespace DirectX;
 using namespace MattMath;
 
-//AnimationObject::AnimationObject(const float* dt,
-//	const std::string& sheet_name,
-//	const std::string& animation_strip_name,
-//	DirectX::SpriteBatch* sprite_batch,
-//	ResourceManager* resource_manager,
-//	const MattMath::Colour& color = colour_consts::WHITE,
-//	float rotation = 0.0f,
-//	const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
-//	DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
-//	float layer_depth = 0.0f) :
-//	SpriteSheetObject(sheet_name, animation_strip_name, sprite_batch,
-//				resource_manager, color, rotation, origin, effects,
-//				layer_depth),
-//	_dt(dt)
-//{
-//	//this->_animated_sprite = std::make_unique<AnimatedSprite>(
-//	//	this->get_sprite_sheet(), this->get_element_name(), this->_dt);
-//}
-
 AnimationObject::AnimationObject(const float* dt,
 	const std::string& sheet_name,
 	const std::string& animation_strip_name,
-	SpriteBatch* sprite_batch,
 	ResourceManager* resource_manager,
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
-	SpriteSheetObject(sheet_name, animation_strip_name, sprite_batch,
+	SpriteSheetObject(sheet_name, animation_strip_name,
 		resource_manager, color, rotation, origin, effects,
 		layer_depth),
 	_dt(dt)
@@ -41,18 +21,18 @@ AnimationObject::AnimationObject(const float* dt,
 	this->_frame_time = this->get_animation_strip()->get_frame_time();
 }
 
-
 const AnimationStrip* AnimationObject::get_animation_strip() const
 {
 	return this->get_sprite_sheet()->get_animation_strip(
 		this->get_element_name());
 }
 
-void AnimationObject::draw(const RectangleI& destination_rectangle) const
+void AnimationObject::draw(SpriteBatch* sprite_batch,
+	const RectangleI& destination_rectangle) const
 {
 	SpriteSheet* sprite_sheet = SpriteSheetObject::get_sprite_sheet();
 
-	sprite_sheet->draw(this->get_sprite_batch(),
+	sprite_sheet->draw(sprite_batch,
 		this->get_source_rectangle(),
 		destination_rectangle,
 		this->get_colour(),
@@ -61,15 +41,17 @@ void AnimationObject::draw(const RectangleI& destination_rectangle) const
 		this->get_effects(),
 		this->get_layer_depth());
 }
-void AnimationObject::draw(const RectangleF& destination_rectangle) const
+void AnimationObject::draw(SpriteBatch* sprite_batch,
+	const RectangleF& destination_rectangle) const
 {
-	this->draw(destination_rectangle.get_rectangle_i());
+	this->draw(sprite_batch, destination_rectangle.get_rectangle_i());
 }
-void AnimationObject::draw(const Vector2F& position, float scale) const
+void AnimationObject::draw(SpriteBatch* sprite_batch,
+	const Vector2F& position, float scale) const
 {
 	SpriteSheet* sprite_sheet = SpriteSheetObject::get_sprite_sheet();
 
-	sprite_sheet->draw(this->get_sprite_batch(),
+	sprite_sheet->draw(sprite_batch,
 		this->get_source_rectangle(),
 		position,
 		this->get_colour(),
@@ -80,18 +62,20 @@ void AnimationObject::draw(const Vector2F& position, float scale) const
 		this->get_layer_depth());
 
 }
-void AnimationObject::draw(const RectangleF& destination_rectangle,
+void AnimationObject::draw(SpriteBatch* sprite_batch,
+	const RectangleF& destination_rectangle,
 	const Camera& camera) const
 {
 	RectangleF rect = camera.calculate_view_rectangle(destination_rectangle);
-	this->draw(rect);
+	this->draw(sprite_batch, rect);
 }
-void AnimationObject::draw(const Vector2F& position,
+void AnimationObject::draw(SpriteBatch* sprite_batch,
+	const Vector2F& position,
 	const Camera& camera, float scale) const
 {
 	Vector2F view_pos = camera.calculate_view_position(position);
 	float view_scale = camera.calculate_view_scale(scale);
-	this->draw(view_pos, view_scale);
+	this->draw(sprite_batch, view_pos, view_scale);
 }
 
 void AnimationObject::update()
@@ -102,7 +86,7 @@ void AnimationObject::update()
 	}
 	const AnimationStrip* animation_strip = this->get_animation_strip();
 	this->_time_elapsed += *this->_dt;
-	float frame_time = this->_frame_time; //animation_strip->get_frame_time();
+	float frame_time = this->_frame_time;
 	if (this->_time_elapsed > frame_time)
 	{
 		this->_frame_index++;
@@ -139,14 +123,6 @@ void AnimationObject::pause()
 {
 	this->_paused = true;
 }
-//void AnimationObject::set_animation_strip(SpriteSheet* sprite_sheet,
-//	const std::string& animation_strip_name)
-//{
-//	this->_sprite_sheet = sprite_sheet;
-//	//this->_animation_strip_name = animation_strip_name;
-//	this->_animation_strip =
-//		sprite_sheet->get_animation_strip(animation_strip_name);
-//}
 void AnimationObject::set_frame_index(int frame_index)
 {
 	if (frame_index < 0 ||
@@ -181,25 +157,3 @@ void AnimationObject::set_frame_time_to_default()
 {
 	this->_frame_time = this->get_animation_strip()->get_frame_time();
 }
-
-//const std::string& AnimationObject::get_sprite_sheet_name() const
-//{
-//	return this->_sheet_name;
-//}
-//const std::string& AnimationObject::get_animation_strip_name() const
-//{
-//	return this->_animation_strip_name;
-//}
-//SpriteSheet* AnimationObject::get_sprite_sheet() const
-//{
-//	return this->get_resource_manager()->get_sprite_sheet(
-//		this->get_sprite_sheet_name());
-//}
-//void AnimationObject::set_sprite_sheet_name(const std::string& sheet_name)
-//{
-//	this->_sheet_name = sheet_name;
-//}
-//void AnimationObject::set_animation_strip_name(const std::string& strip_name)
-//{
-//	this->_animation_strip_name = strip_name;
-//}

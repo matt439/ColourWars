@@ -3,17 +3,14 @@
 
 #include "Weapon.h"
 
-class WeaponMister : public RelativeVelocityWeapon
+class WeaponMister final : public RelativeVelocityWeapon
 {
-private:
-
 public:
 	WeaponMister(player_team team,
 		int player_num,
 		const MattMath::Colour& team_colour,
 		wep_type type,
 		const MattMath::Vector2F& player_center,
-		DirectX::SpriteBatch* sprite_batch,
 		ResourceManager* resource_manager,
 		const float* dt,
 		const MattMath::Colour& color = colour_consts::WHITE,
