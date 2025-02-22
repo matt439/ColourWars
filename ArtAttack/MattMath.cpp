@@ -484,6 +484,25 @@ namespace MattMath
 		this->width = static_cast<float>(rectangle.right - rectangle.left);
 		this->height = static_cast<float>(rectangle.bottom - rectangle.top);
 	}
+	RectangleF::RectangleF(const Vector2F& center, float horiz_half_width,
+		float vert_half_height)
+	{
+		this->x = center.x - horiz_half_width;
+		this->y = center.y - vert_half_height;
+		this->width = horiz_half_width * 2.0f;
+		this->height = vert_half_height * 2.0f;
+	}
+	//RectangleF::RectangleF(const Segment& center_line, float thickness)
+	//{
+	//	Vector2F center = center_line.get_center();
+	//	Vector2F direction = center_line.get_direction();
+	//	Vector2F perpendicular = Vector2F(-direction.y, direction.x);
+	//	Vector2F half_thickness = perpendicular * thickness / 2.0f;
+	//	this->x = center.x - half_thickness.x;
+	//	this->y = center.y - half_thickness.y;
+	//	this->width = thickness;
+	//	this->height = thickness;
+	//}
 	RectangleF RectangleF::get_bounding_box() const
 	{
 		return *this;
@@ -706,6 +725,10 @@ namespace MattMath
 		this->y -= amount.y;
 		this->width += amount.x * 2.0f;
 		this->height += amount.y * 2.0f;
+	}
+	void RectangleF::inflate(float amount)
+	{
+		this->inflate(amount, amount);
 	}
 	void RectangleF::inflate_to_size(float width, float height)
 	{
@@ -1525,6 +1548,12 @@ namespace MattMath
 		this->x = x;
 		this->y = y;
 	}
+	void Vector2F::normal()
+	{
+		float temp = x;
+		x = -y;
+		y = temp;
+	}
 	void Vector2F::to_unit_vector()
 	{
 		float length = this->length();
@@ -1558,6 +1587,10 @@ namespace MattMath
 
 		vec.x = vec.x * cos_angle - vec.y * sin_angle;
 		vec.y = vec.x * sin_angle + vec.y * cos_angle;
+	}
+	float Vector2F::angle_between(const Vector2F& a, const Vector2F& b)
+	{
+		return std::acos(Vector2F::dot(a, b) / (a.length() * b.length()));
 	}
 	Vector2F Vector2F::lerp(const Vector2F& a, const Vector2F& b, float t)
 	{
@@ -1609,6 +1642,48 @@ namespace MattMath
 		else
 		{
 			return Vector2F(vec.x / length, vec.y / length);
+		}
+	}
+
+	Vector2F Vector2F::normal(const Vector2F& vec)
+	{
+		return Vector2F(-vec.y, vec.x);
+	}
+
+	Vector2F Vector2F::direction_to_8_cardinal_direction(const Vector2F& direction)
+	{
+		float angle = direction.angle();
+		if (angle >= -PI / 8.0f && angle < PI / 8.0f)
+		{
+			return Vector2F::DIRECTION_RIGHT;
+		}
+		else if (angle >= PI / 8.0f && angle < 3.0f * PI / 8.0f)
+		{
+			return Vector2F::DIRECTION_DOWN_RIGHT;
+		}
+		else if (angle >= 3.0f * PI / 8.0f && angle < 5.0f * PI / 8.0f)
+		{
+			return Vector2F::DIRECTION_DOWN;
+		}
+		else if (angle >= 5.0f * PI / 8.0f && angle < 7.0f * PI / 8.0f)
+		{
+			return Vector2F::DIRECTION_DOWN_LEFT;
+		}
+		else if (angle >= 7.0f * PI / 8.0f || angle < -7.0f * PI / 8.0f)
+		{
+			return Vector2F::DIRECTION_LEFT;
+		}
+		else if (angle >= -7.0f * PI / 8.0f && angle < -5.0f * PI / 8.0f)
+		{
+			return Vector2F::DIRECTION_UP_LEFT;
+		}
+		else if (angle >= -5.0f * PI / 8.0f && angle < -3.0f * PI / 8.0f)
+		{
+			return Vector2F::DIRECTION_UP;
+		}
+		else
+		{
+			return Vector2F::DIRECTION_UP_RIGHT;
 		}
 	}
 
@@ -3045,6 +3120,17 @@ namespace MattMath
 		return std::make_unique<Circle>(*this);
 	}
 
+	std::vector<Segment> Circle::get_edges() const
+	{
+		// Circles have no edges
+		return std::vector<Segment>();
+	}
+
+	void Circle::inflate(float amount)
+	{
+		this->radius += amount;
+	}
+
 	bool Circle::operator==(const Circle& other) const
 	{
 		return this->center == other.center &&
@@ -3147,6 +3233,22 @@ namespace MattMath
 	{
 		return std::make_unique<Triangle>(*this);
 	}
+	void Triangle::inflate(float amount)
+	{
+		Vector2F center = this->get_center();
+		Vector2F edge0 = this->points[0] - center;
+		Vector2F edge1 = this->points[1] - center;
+		Vector2F edge2 = this->points[2] - center;
+
+		edge0.normalize();
+		edge1.normalize();
+		edge2.normalize();
+
+		this->points[0] = center + edge0 * (this->points[0] - center).length() + edge0 * amount;
+		this->points[1] = center + edge1 * (this->points[1] - center).length() + edge1 * amount;
+		this->points[2] = center + edge2 * (this->points[2] - center).length() + edge2 * amount;
+
+	}
 	const Vector2F& Triangle::get_point_0() const
 	{
 		return this->points[0];
@@ -3185,6 +3287,32 @@ namespace MattMath
 			this->get_edge_2()
 		};
 		return segments;
+	}
+	float Triangle::get_angle_0() const
+	{
+		return Vector2F::angle_between(this->get_edge_0().get_direction(),
+			this->get_edge_2().get_direction());
+
+	}
+	float Triangle::get_angle_1() const
+	{
+		return Vector2F::angle_between(this->get_edge_1().get_direction(),
+			this->get_edge_0().get_direction());
+	}
+	float Triangle::get_angle_2() const
+	{
+		return Vector2F::angle_between(this->get_edge_2().get_direction(),
+			this->get_edge_1().get_direction());
+	}
+	std::vector<float> Triangle::get_angles() const
+	{
+		std::vector<float> angles =
+		{
+			this->get_angle_0(),
+			this->get_angle_1(),
+			this->get_angle_2()
+		};
+		return angles;
 	}
 	bool Triangle::operator==(const Triangle& other) const
 	{
@@ -3236,8 +3364,110 @@ namespace MattMath
 	{
 		return (this->points[0] + this->points[1] + this->points[2]) / 3.0f;
 	}
+	
+	float Triangle::calculate_gradient(int edge) const
+	{
+		if (edge < 0 || edge > 2)
+		{
+			throw std::invalid_argument("Edge must be between 0 and 2");
+		}
+
+		return (this->points[(edge + 1) % 3].y - this->points[edge].y) /
+			(this->points[(edge + 1) % 3].x - this->points[edge].x);
+	}
 
 #pragma endregion Triangle
+
+#pragma region TriangleRightAxisAligned
+
+	TriangleRightAxisAligned::TriangleRightAxisAligned(
+		const Vector2F& top,
+		const Vector2F& left, const Vector2F& right) :
+		Triangle(top, left, right)
+	{
+
+	}
+
+	TriangleRightAxisAligned::TriangleRightAxisAligned(
+		const DirectX::SimpleMath::Vector2& top,
+		const DirectX::SimpleMath::Vector2& left,
+		const DirectX::SimpleMath::Vector2& right) :
+		Triangle(top, left, right)
+	{
+
+	}
+
+	TriangleRightAxisAligned::TriangleRightAxisAligned(
+		float x0, float y0, float x1, float y1, float x2, float y2) :
+		Triangle(x0, y0, x1, y1, x2, y2)
+	{
+
+	}
+
+	Segment TriangleRightAxisAligned::get_hypotenuse() const
+	{
+		int hypotenuse = this->find_hypotenuse(*this);
+		if (hypotenuse == -1)
+		{
+			throw std::invalid_argument("Triangle is not a right triangle");
+		}
+
+		return this->get_edges()[hypotenuse];
+	}
+	float TriangleRightAxisAligned::get_hypotenuse_gradient() const
+	{
+		int hypotenuse = this->find_hypotenuse(*this);
+		if (hypotenuse == -1)
+		{
+			throw std::invalid_argument("Triangle is not a right triangle");
+		}
+
+		return this->calculate_gradient(hypotenuse);
+	}
+
+	//bool TriangleRightAxisAligned::is_right_triangle(const Triangle& tri) const
+	//{
+	//	int hypotenuse = this->find_hypotenuse(tri);
+	//	if (hypotenuse == -1)
+	//	{
+	//		return false;
+	//	}
+
+	//	return true;
+	//}
+
+	int TriangleRightAxisAligned::find_hypotenuse(const Triangle& tri) const
+	{
+		// find the hypotenuse
+		if (are_equal(tri.get_angle_0(), PI_OVER_2))
+		{
+			return 0;
+		}
+		else if (are_equal(tri.get_angle_1(), PI_OVER_2))
+		{
+			return 1;
+		}
+		else if (are_equal(tri.get_angle_2(), PI_OVER_2))
+		{
+			return 2;
+		}
+		else
+		{
+			return -1;
+		}
+	}
+	float TriangleRightAxisAligned::calculate_gradient(int edge) const
+	{
+		if (edge < 0 || edge > 2)
+		{
+			throw std::invalid_argument("Edge must be between 0 and 2");
+		}
+
+		return (this->points[(edge + 1) % 3].y - this->points[edge].y) /
+			(this->points[(edge + 1) % 3].x - this->points[edge].x);
+	}
+
+#pragma endregion TriangleRightAxisAligned
 
 #pragma region Quad
 
@@ -3250,6 +3480,29 @@ namespace MattMath
 		this->points[1] = point1;
 		this->points[2] = point2;
 		this->points[3] = point3;
+
+		if (!this->is_valid())
+		{
+			throw std::invalid_argument("Quad is not valid");
+		}
+	}
+
+	Quad::Quad(const std::vector<Point2F>& points)
+	{
+		if (points.size() != 4)
+		{
+			throw std::invalid_argument("Quad must have 4 points");
+		}
+
+		this->points[0] = points[0];
+		this->points[1] = points[1];
+		this->points[2] = points[2];
+		this->points[3] = points[3];
+
+		if (!this->is_valid())
+		{
+			throw std::invalid_argument("Quad is not valid");
+		}
 	}
 
 	Quad::Quad(const RectangleF& rectangle)
@@ -3314,6 +3567,25 @@ namespace MattMath
 	std::unique_ptr<Shape> Quad::clone() const
 	{
 		return std::make_unique<Quad>(*this);
+	}
+
+	void Quad::inflate(float amount)
+	{
+		Vector2F center = this->get_center();
+		Vector2F edge0 = this->points[0] - center;
+		Vector2F edge1 = this->points[1] - center;
+		Vector2F edge2 = this->points[2] - center;
+		Vector2F edge3 = this->points[3] - center;
+
+		edge0.normalize();
+		edge1.normalize();
+		edge2.normalize();
+		edge3.normalize();
+
+		this->points[0] = center + edge0 * (this->points[0] - center).length() + edge0 * amount;
+		this->points[1] = center + edge1 * (this->points[1] - center).length() + edge1 * amount;
+		this->points[2] = center + edge2 * (this->points[2] - center).length() + edge2 * amount;
+		this->points[3] = center + edge3 * (this->points[3] - center).length() + edge3 * amount;
 	}
 
 	bool Quad::is_valid() const
@@ -3502,6 +3774,18 @@ namespace MattMath
 		return other.intersects(*this);
 
 	}
+	Vector2F Segment::get_direction() const
+	{
+		return this->point_1 - this->point_0;
+	}
+	float Segment::get_length() const
+	{
+		return this->get_direction().length();
+	}
+	Point2F Segment::get_center() const
+	{
+		return (this->point_0 + this->point_1) / 2.0f;
+	}
 	//bool Segment::intersects(const RectangleF& other) const
 	//{
 	//
@@ -3610,5 +3894,95 @@ namespace MattMath
 	const Camera Camera::DEFAULT_CAMERA = { Vector2F::ZERO, 1.0f };
 
 #pragma endregion Camera
+
+#pragma region RectangleRotated
+
+	RectangleRotated::RectangleRotated(const Point2F& center,
+		const Vector2F& x_axis, const Vector2F& y_axis,
+		const Vector2F& hw_extents) :
+		Quad(calculate_points(center, x_axis, y_axis, hw_extents))
+
+	{
+		if (!this->is_valid(x_axis, y_axis, hw_extents))
+		{
+			throw std::invalid_argument("RectangleRotated is not valid");
+		}
+	}
+	RectangleRotated::RectangleRotated(const Segment& center_line,
+		float thickness) :
+		Quad(calculate_points(center_line, thickness))
+	{
+		Vector2F x_axis = center_line.get_direction();
+		Vector2F y_axis = Vector2F::normal(center_line.get_direction());
+		Vector2F hw_extents = Vector2F(center_line.get_length() / 2.0f + thickness, thickness);
+		
+		if (!this->is_valid(x_axis, y_axis, hw_extents))
+		{
+			throw std::invalid_argument("RectangleRotated is not valid");
+		}
+	}
+
+	bool RectangleRotated::is_valid(const Vector2F& x_axis, const Vector2F& y_axis,
+		const Vector2F& hw_extents) const
+	{
+		// check that half width and half height are positive
+		if (hw_extents.x <= 0.0f || hw_extents.y <= 0.0f)
+		{
+			return false;
+		}
+
+		// check if x_axis and y_axis are perpendicular
+		if (!are_equal(Vector2F::dot(x_axis, y_axis), EPSILON))
+		{
+			return false;
+		}
+		
+		// check if the edges are perpendicular
+		std::vector<Segment> edges = this->get_edges();
+		for (int i = 0; i < 4; i++)
+		{
+			if (!are_equal(Vector2F::dot(edges[i].get_direction(),
+				edges[(i + 1) % 4].get_direction()), EPSILON))
+			{
+				return false;
+			}
+		}
+
+		// check if the pairs of opposite edges are equal in length
+		if (!are_equal(edges[0].get_length(), edges[2].get_length()) ||
+			!are_equal(edges[1].get_length(), edges[3].get_length()))
+		{
+			return false;
+		}
+
+		return true;
+	}
+
+	std::vector<Point2F> RectangleRotated::calculate_points(const Point2F& center,
+		const Vector2F& x_axis, const Vector2F& y_axis,
+		const Vector2F& hw_extents) const
+	{
+		std::vector<Point2F> points(4);
+
+		points[0] = center - x_axis * hw_extents.x - y_axis * hw_extents.y;
+		points[1] = center + x_axis * hw_extents.x - y_axis * hw_extents.y;
+		points[2] = center + x_axis * hw_extents.x + y_axis * hw_extents.y;
+		points[3] = center - x_axis * hw_extents.x + y_axis * hw_extents.y;
+
+		return points;
+	}
+
+	std::vector<Point2F> RectangleRotated::calculate_points(const Segment& center_line,
+		float thickness) const
+	{
+		Vector2F center = center_line.get_center();
+		Vector2F x_axis = center_line.get_direction();
+		Vector2F y_axis = Vector2F::normal(center_line.get_direction());
+		Vector2F hw_extents = Vector2F(center_line.get_length() / 2.0f + thickness, thickness);
+
+		return calculate_points(center, x_axis, y_axis, hw_extents);
+	}
+
+#pragma endregion RectangleRotated
 
 } // namespace MattMath

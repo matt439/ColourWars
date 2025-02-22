@@ -123,6 +123,9 @@
     <ClInclude Include="Partitioner.h" />
     <ClInclude Include="ThreadPool.h" />
     <ClInclude Include="CollisionTools.h" />
+    <ClInclude Include="StructureRampRight.h" />
+    <ClInclude Include="StructureRamp.h" />
+    <ClInclude Include="StructureRampLeft.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
@@ -205,6 +208,9 @@
     <ClCompile Include="Partitioner.cpp" />
     <ClCompile Include="ThreadPool.cpp" />
     <ClCompile Include="CollisionTools.cpp" />
+    <ClCompile Include="StructureRamp.cpp" />
+    <ClCompile Include="StructureRampRight.cpp" />
+    <ClCompile Include="StructureRampLeft.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="resource.rc" />

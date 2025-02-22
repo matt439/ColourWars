@@ -29,10 +29,6 @@ void CollisionTools::move_object_by_direction_relative_to_size(Shape* obj,
 	obj->offset(movement_direction * Vector2F(relative_width, relative_height));
 }
 
-/**
- * Moves the object back and forth with decreasing step size for
- * the given number of iterations.
-*/
 bool CollisionTools::bracket_object_collision(bool colliding, int i, Shape* collider,
     const Vector2F& collider_direction)
 {
@@ -113,18 +109,45 @@ Vector2F CollisionTools::calculate_containing_collision_direction(
 Vector2F CollisionTools::shape_shape_collision_direction(
     const Shape* collider, const Shape* collidee)
 {
-	RectangleF collider_aabb = collider->get_bounding_box();
-	RectangleF collidee_aabb = collidee->get_bounding_box();
+	Point2F collider_center = collider->get_center();
+	Point2F collidee_center = collidee->get_center();
+
+	Vector2F direction = collidee_center - collider_center;
+
+	if (direction == Vector2F::ZERO)
+	{
+		return Vector2F::ZERO;
+	}
+
+	return Vector2F::unit_vector(direction);
+}
+
+Vector2F CollisionTools::calculate_object_collision_direction(const Shape* collider,
+    const Shape* collidee)
+{
+    if (!collider->intersects(collidee))
+    {
+		return Vector2F::ZERO;
+    }
+
+    return shape_shape_collision_direction(collider, collidee);
+}
+
+Vector2F CollisionTools::calculate_object_collision_direction_by_edge(
+    const Shape* collider, const Shape* collidee)
+{
+    RectangleF collider_aabb = collider->get_bounding_box();
+    RectangleF collidee_aabb = collidee->get_bounding_box();
     
     Segment collider_top_edge = collider_aabb.get_top_edge();
-	Segment collider_left_edge = collider_aabb.get_left_edge();
-	Segment collider_right_edge = collider_aabb.get_right_edge();
-	Segment collider_bottom_edge = collider_aabb.get_bottom_edge();
+    Segment collider_left_edge = collider_aabb.get_left_edge();
+    Segment collider_right_edge = collider_aabb.get_right_edge();
+    Segment collider_bottom_edge = collider_aabb.get_bottom_edge();
 
-	bool left_edge = collidee_aabb.intersects(collider_left_edge);
-	bool right_edge = collidee_aabb.intersects(collider_right_edge);
-	bool top_edge = collidee_aabb.intersects(collider_top_edge);
-	bool bottom_edge = collidee_aabb.intersects(collider_bottom_edge);
+    bool left_edge = collidee_aabb.intersects(collider_left_edge);
+    bool right_edge = collidee_aabb.intersects(collider_right_edge);
+    bool top_edge = collidee_aabb.intersects(collider_top_edge);
+    bool bottom_edge = collidee_aabb.intersects(collider_bottom_edge);
 
     if (left_edge && right_edge && top_edge && bottom_edge) // collidee is equal size of collider
     {
@@ -133,22 +156,22 @@ Vector2F CollisionTools::shape_shape_collision_direction(
     if ((left_edge && right_edge && top_edge) || (top_edge &&
         !(left_edge || right_edge || bottom_edge)))
     {
-		return Vector2F::DIRECTION_UP;
+    	return Vector2F::DIRECTION_UP;
     }
     if ((left_edge && right_edge && bottom_edge) || (bottom_edge &&
         !(left_edge || right_edge || top_edge)))
     {
-		return Vector2F::DIRECTION_DOWN;
+    	return Vector2F::DIRECTION_DOWN;
     }
     if ((top_edge && bottom_edge && right_edge) || (right_edge &&
         !(left_edge || top_edge || bottom_edge)))
     {
-		return Vector2F::DIRECTION_RIGHT;
+    	return Vector2F::DIRECTION_RIGHT;
     }
     if ((top_edge && bottom_edge && left_edge) || (left_edge &&
         !(right_edge || top_edge || bottom_edge)))
     {
-		return Vector2F::DIRECTION_LEFT;
+    	return Vector2F::DIRECTION_LEFT;
     }
     if (left_edge && right_edge)
     {
@@ -164,34 +187,23 @@ Vector2F CollisionTools::shape_shape_collision_direction(
     }
     if (left_edge && top_edge)
     {
-		return Vector2F::DIRECTION_UP_LEFT;
+    	return Vector2F::DIRECTION_UP_LEFT;
     }
     if (left_edge && bottom_edge)
     {
-		return Vector2F::DIRECTION_DOWN_LEFT;
+    	return Vector2F::DIRECTION_DOWN_LEFT;
     }
     if (right_edge && top_edge)
     {
-		return Vector2F::DIRECTION_UP_RIGHT;
+    	return Vector2F::DIRECTION_UP_RIGHT;
     }
     if (right_edge && bottom_edge)
     {
-		return Vector2F::DIRECTION_DOWN_RIGHT;
+    	return Vector2F::DIRECTION_DOWN_RIGHT;
     }
 
     // collider contains collidee or collidee contains collider
     return calculate_containing_collision_direction(collider, collidee);
-}
-
-Vector2F CollisionTools::calculate_object_collision_direction(const Shape* collider,
-    const Shape* collidee)
-{
-    if (!collider->intersects(collidee))
-    {
-		return Vector2F::ZERO;
-    }
-
-    return shape_shape_collision_direction(collider, collidee);
 }
 
 void CollisionTools::resolve_object_AABB_collision(Shape* collider,
@@ -204,7 +216,16 @@ void CollisionTools::resolve_object_AABB_collision(Shape* collider,
 
     Vector2F amount = { inter.width, inter.height };
 
-	collider->offset(opposite_direction(collision_direction) * amount);
+	Vector2F direction = collision_direction;
+
+	if (collision_direction.x != 0.0f && collision_direction.y != 0.0f)
+	{
+		float larger = std::max(collision_direction.x, collision_direction.y);
+
+        direction = collision_direction / larger;
+	}
+
+	collider->offset(opposite_direction(direction) * amount);
 }
 
 bool CollisionTools::resolve_object_collision(Shape* collider, const Shape* collidee,

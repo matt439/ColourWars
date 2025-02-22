@@ -256,7 +256,7 @@
 
         {
             "name": "mountain_level_1_ramp_east",
-            "type": "StructureTriangle",
+            "type": "StructureRamp",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "ramp_right_200_100",
             "triangle":

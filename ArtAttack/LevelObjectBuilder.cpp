@@ -76,11 +76,6 @@ std::unique_ptr<ICollisionGameObject>
 		{
 			throw std::exception("Invalid collision type");
 		}
-		PaintableFaces faces;
-		faces.left = json["paintable_faces"]["left"].GetBool();
-		faces.top = json["paintable_faces"]["top"].GetBool();
-		faces.right = json["paintable_faces"]["right"].GetBool();
-		faces.bottom = json["paintable_faces"]["bottom"].GetBool();
 
 		RectangleF rectangle = RectangleF::ZERO;
 		if (json.HasMember("rectangle"))
@@ -103,6 +98,37 @@ std::unique_ptr<ICollisionGameObject>
 			throw std::exception("Invalid rectangle type");
 		}
 
+		//PaintableFaces faces;
+		//faces.left = json["paintable_faces"]["left"].GetBool();
+		//faces.top = json["paintable_faces"]["top"].GetBool();
+		//faces.right = json["paintable_faces"]["right"].GetBool();
+		//faces.bottom = json["paintable_faces"]["bottom"].GetBool();
+
+		std::vector<Segment> paintable_edges;
+		if (json.HasMember("paintable_faces"))
+		{
+			if (json["paintable_faces"]["left"].GetBool())
+			{
+				paintable_edges.push_back(rectangle.get_left_edge());
+			}
+			if (json["paintable_faces"]["top"].GetBool())
+			{
+				paintable_edges.push_back(rectangle.get_top_edge());
+			}
+			if (json["paintable_faces"]["right"].GetBool())
+			{
+				paintable_edges.push_back(rectangle.get_right_edge());
+			}
+			if (json["paintable_faces"]["bottom"].GetBool())
+			{
+				paintable_edges.push_back(rectangle.get_bottom_edge());
+			}
+		}
+		else
+		{
+			throw std::exception("Invalid paintable edges");
+		}
+
 		return std::make_unique<StructurePaintable>(
 			json["sheet_name"].GetString(),
 			json["frame_name"].GetString(),
@@ -111,11 +137,11 @@ std::unique_ptr<ICollisionGameObject>
 			this->_resource_manager,
 			col_type,
 			team_colours,
-			faces,
+			paintable_edges,
 			this->_dt,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
-	if (type == "StructureTriangle")
+	if (type == "StructureRamp")
 	{
 		collision_object_type col_type;
 		std::string collision_type = json["collision_type"].GetString();
@@ -123,12 +149,17 @@ std::unique_ptr<ICollisionGameObject>
 		{
 			col_type = collision_object_type::STRUCTURE_RAMP_RIGHT;
 		}
+		else if (collision_type == "STRUCTURE_RAMP_LEFT")
+		{
+			col_type = collision_object_type::STRUCTURE_RAMP_LEFT;
+		}
 		else
 		{
 			throw std::exception("Invalid collision type");
 		}
-
-		Triangle triangle = Triangle(json["triangle"]["x1"].GetFloat(),
+		
+		TriangleRightAxisAligned triangle = TriangleRightAxisAligned(
+			json["triangle"]["x1"].GetFloat(),
 			json["triangle"]["y1"].GetFloat(),
 			json["triangle"]["x2"].GetFloat(),
 			json["triangle"]["y2"].GetFloat(),

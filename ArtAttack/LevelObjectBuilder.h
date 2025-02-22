@@ -7,6 +7,8 @@
 #include "StructurePaintable.h"
 #include "Visual.h"
 #include "ViewportManager.h"
+//#include "StructureRampLeft.h"
+//#include "StructureRampRight.h"
 
 class LevelObjectBuilder
 {

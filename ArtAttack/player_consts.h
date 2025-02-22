@@ -37,6 +37,7 @@ namespace player_consts
     constexpr float DAMAGE_SOUND_DELAY = 0.25f;
     constexpr float DROP_DOWN_VELOCITY = 100.0f;
     constexpr float DROP_DOWN_ANALOG_THRESHOLD = 0.8f;
+    constexpr float RAMP_GRAVITY_MULTIPLIER = 20.0f;
 
     constexpr float JUMP_ACCELERATION = -1300.0f;
     constexpr float RESPAWN_DELAY = 3.0f;

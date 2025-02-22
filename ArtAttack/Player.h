@@ -201,6 +201,10 @@ private:
     void on_bottom_left_collision(const ICollisionGameObject* other);
     void on_bottom_right_collision(const ICollisionGameObject* other);
 
+	//void on_ground_collision();
+	//void on_ceiling_collision();
+	//void on_wall_collision();
+
     void on_structure_jump_through_collision(const ICollisionGameObject* other);
 
 	void on_structure_ramp_collision(const ICollisionGameObject* other);
@@ -244,6 +248,7 @@ private:
     void set_move_state(player_move_state move_state);
 
 	bool is_on_ground() const;
+    bool is_on_ramp() const;
 };
 
 #endif // !PLAYER_H

@@ -38,8 +38,12 @@ namespace MattMath
 	struct Segment;
 	struct RectangleF;
 	struct Camera;
+	struct Colour;
+	struct RectangleRotated;
 
 	constexpr float PI = 3.14159265358979323846f;
+	constexpr float PI_OVER_2 = PI / 2.0f;
+	constexpr float EPSILON = 0.0001f;
 
 	//float min_value(float a, float b);
 	//float max_value(float a, float b);
@@ -52,7 +56,7 @@ namespace MattMath
 	int sign(const MattMath::Vector2F& p1,
 		const MattMath::Vector2F& p2, const MattMath::Vector2F& p3);
 
-	bool are_equal(float a, float b, float epsilon = 0.0001f);
+	bool are_equal(float a, float b, float epsilon = EPSILON);
 	bool are_equal(const MattMath::Vector2F& a, const MattMath::Vector2F& b,
 		float epsilon = 0.0001f);
 
@@ -79,6 +83,8 @@ namespace MattMath
 		virtual void offset(const Vector2F& amount) = 0;
 		virtual std::unique_ptr<Shape> clone() const = 0;
 		virtual Point2F get_center() const = 0;
+		virtual std::vector<Segment> get_edges() const = 0;
+		virtual void inflate(float amount) = 0;
 	};
 
 	bool shapes_intersect(const Shape* a, const Shape* b);
@@ -169,6 +175,9 @@ namespace MattMath
 						const DirectX::SimpleMath::Vector2& size);
 		RectangleF(const DirectX::SimpleMath::Rectangle& rectangle);
 		RectangleF(const RECT& rectangle);
+		RectangleF(const MattMath::Vector2F& center, float horiz_half_width,
+			float vert_half_height);
+		//RectangleF(const MattMath::Segment& center_line, float thickness);
 
 		RectangleF get_bounding_box() const override;
 		shape_type get_shape_type() const override;
@@ -193,7 +202,7 @@ namespace MattMath
 		MattMath::Segment get_bottom_edge() const;
 		MattMath::Segment get_left_edge() const;
 		MattMath::Segment get_right_edge() const;
-		std::vector<MattMath::Segment> get_edges() const;
+		std::vector<MattMath::Segment> get_edges() const override;
 		float get_area() const;
 		MattMath::RectangleI get_rectangle_i() const;
 		DirectX::SimpleMath::Rectangle get_sm_rectangle() const;
@@ -223,6 +232,7 @@ namespace MattMath
 
 		void inflate(float horizontal_amount, float vertical_amount);
 		void inflate(const MattMath::Vector2F& amount);
+		void inflate(float amount) override;
 		void inflate_to_size(float width, float height);
 		void inflate_to_size(const MattMath::Vector2F& size);
 		void scale_at_center(float scale);
@@ -421,6 +431,7 @@ namespace MattMath
 		static float angle(const Vector2F& vec);
 
 		void rotate(float angle);
+		void normal();
 
 		void to_unit_vector();
 
@@ -428,6 +439,8 @@ namespace MattMath
 
 		static Vector2F rotate_vector(const Vector2F& vec, float angle);
 		static void rotate_vector_by_ref(Vector2F& vec, float angle);
+
+		static float angle_between(const Vector2F& a, const Vector2F& b);
 
 		static Vector2F lerp(const Vector2F& a, const Vector2F& b, float t);
 		static Vector2F lerp(const Vector2F& a, const Vector2F& b, const Vector2F& t);
@@ -444,6 +457,10 @@ namespace MattMath
 		static Vector2F unit_vec_from_angle(float angle);
 
 		static Vector2F unit_vector(const Vector2F& vec);
+		
+		static Vector2F normal(const Vector2F& vec);
+
+		static Vector2F direction_to_8_cardinal_direction(const Vector2F& direction);
 
 		static const Vector2F ZERO;
 		static const Vector2F ONE;
@@ -781,6 +798,8 @@ namespace MattMath
 		shape_type get_shape_type() const override;
 		void offset(const MattMath::Vector2F& amount) override;
 		std::unique_ptr<Shape> clone() const override;
+		std::vector<Segment> get_edges() const override;
+		void inflate(float amount) override;
 
 		bool operator==(const Circle& other) const;
 		bool operator!=(const Circle& other) const;
@@ -815,6 +834,7 @@ namespace MattMath
 		shape_type get_shape_type() const override;
 		void offset(const MattMath::Vector2F& amount) override;
 		std::unique_ptr<Shape> clone() const override;
+		void inflate(float amount) override;
 
 		const Vector2F& get_point_0() const;
 		const Vector2F& get_point_1() const;
@@ -824,7 +844,12 @@ namespace MattMath
 		Segment get_edge_0() const;
 		Segment get_edge_1() const;
 		Segment get_edge_2() const;
-		std::vector<Segment> get_edges() const;
+		std::vector<Segment> get_edges() const override;
+
+		float get_angle_0() const;
+		float get_angle_1() const;
+		float get_angle_2() const;
+		std::vector<float> get_angles() const;
 
 		bool operator==(const Triangle& other) const;
 		bool operator!=(const Triangle& other) const;
@@ -840,6 +865,28 @@ namespace MattMath
 		bool contains(const MattMath::Point2F& point) const;
 
 		MattMath::Vector2F get_center() const override;
+
+		float calculate_gradient(int edge) const;
+	};
+	struct TriangleRightAxisAligned : public Triangle
+	{
+		TriangleRightAxisAligned() = default;
+		TriangleRightAxisAligned(const TriangleRightAxisAligned&) = default;
+		TriangleRightAxisAligned(const MattMath::Vector2F& top,
+			const MattMath::Vector2F& left, const MattMath::Vector2F& right);
+		TriangleRightAxisAligned(const DirectX::SimpleMath::Vector2& top,
+			const DirectX::SimpleMath::Vector2& left,
+			const DirectX::SimpleMath::Vector2& right);
+		TriangleRightAxisAligned(float x0, float y0, float x1, float y1,
+			float x2, float y2);
+
+		Segment get_hypotenuse() const;
+		float get_hypotenuse_gradient() const;
+
+	private:
+		//bool is_right_triangle(const Triangle& tri) const;
+		int find_hypotenuse(const Triangle& tri) const;
+		float calculate_gradient(int edge) const;
 	};
 
 	/*
@@ -855,6 +902,7 @@ namespace MattMath
 		Quad(const Quad&) = default;
 		Quad(const Vector2F& point1, const Vector2F& point2,
 			const Vector2F& point3, const Vector2F& point4);
+		Quad(const std::vector<Point2F>& points);
 		Quad(const RectangleF& rectangle);
 		Quad(const DirectX::SimpleMath::Vector2& point1, 
 			const DirectX::SimpleMath::Vector2& point2,
@@ -865,6 +913,7 @@ namespace MattMath
 		shape_type get_shape_type() const override;
 		void offset(const MattMath::Vector2F& amount) override;
 		std::unique_ptr<Shape> clone() const override;
+		void inflate(float amount) override;
 
 		bool is_valid() const;
 
@@ -878,7 +927,7 @@ namespace MattMath
 		Segment get_edge_1() const;
 		Segment get_edge_2() const;
 		Segment get_edge_3() const;
-		std::vector<Segment> get_edges() const;
+		std::vector<Segment> get_edges() const override;
 
 		Triangle get_triangle_0() const;
 		Triangle get_triangle_1() const;
@@ -914,6 +963,12 @@ namespace MattMath
 
 		bool intersects(const Segment& other) const;
 		bool intersects(const MattMath::RectangleF& other) const;
+
+		MattMath::Vector2F get_direction() const;
+
+		float get_length() const;
+
+		MattMath::Point2F get_center() const;
 		//bool intersects(const MattMath::Circle& other) const;
 		//bool intersects(const MattMath::Triangle& other) const;
 	};
@@ -957,15 +1012,47 @@ namespace MattMath
 		static const Camera DEFAULT_CAMERA;
 	};
 
-	
+	struct RectangleRotated : public Quad
+	{
+		RectangleRotated() = default;
+		RectangleRotated(const RectangleRotated&) = default;
+		RectangleRotated(const MattMath::Point2F& center,
+			const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
+			const MattMath::Vector2F& hw_extents);
+		RectangleRotated(const MattMath::Segment& center_line,
+			float thickness);
+		//RectangleRotated(const MattMath::Point2F& center,
+		//	float angle, const MattMath::Vector2F& hw_extents);
 
+	private:
+		bool is_valid(const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
+			const MattMath::Vector2F& hw_extents) const;
 
-	//struct RotatedRectangle
-	//{
-	//	MattMath::Point2F c; // OBB center point
-	//	MattMath::Vector2F u[2]; // Local x-, y-, and z-axes
-	//	MattMath::Vector2F e; // Positive halfwidth extents of OBB along each axis
-	//};
+		std::vector<MattMath::Point2F> calculate_points(const MattMath::Point2F& center,
+			const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
+			const MattMath::Vector2F& hw_extents) const;
+
+		std::vector<MattMath::Point2F> calculate_points(const MattMath::Segment& center_line,
+			float thickness) const;
+
+		//MattMath::Point2F calculate_point_0(const MattMath::Point2F& center,
+		//	const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
+		//	const MattMath::Vector2F& hw_extents) const;
+
+		//MattMath::Point2F calculate_point_1(const MattMath::Point2F& center, 
+		//	const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
+		//	const MattMath::Vector2F& hw_extents) const;
+
+		//MattMath::Point2F calculate_point_2(const MattMath::Point2F& center, 
+		//	const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
+		//	const MattMath::Vector2F& hw_extents) const;
+
+		//MattMath::Point2F calculate_point_3(const MattMath::Point2F& center, 
+		//	const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
+		//	const MattMath::Vector2F& hw_extents) const;
+	};
+
+	typedef RectangleRotated OBB;
 }
 
 #endif // !MATTMATH_H

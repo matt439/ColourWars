@@ -14,13 +14,13 @@ namespace structure_paintable_consts
 	constexpr float SOUND_VOLUME = 0.1f;
 }
 
-struct PaintableFaces
-{
-	bool left = false;
-	bool top = false;
-	bool right = false;
-	bool bottom = false;
-};
+//struct PaintableFaces
+//{
+//	bool left = false;
+//	bool top = false;
+//	bool right = false;
+//	bool bottom = false;
+//};
 
 class StructurePaintable final : public Structure, public IPaintableGameObject
 {
@@ -33,7 +33,8 @@ public:
 		ResourceManager* resource_manager,
 		collision_object_type collision_type,
 		const TeamColour& team_colours,
-		const PaintableFaces& faces,
+		//const PaintableFaces& faces,
+		const std::vector<MattMath::Segment>& paintable_edges,
 		const float* dt,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
@@ -51,7 +52,8 @@ public:
 private:
 	std::vector<PaintTile> _paint_tiles = std::vector<PaintTile>();
 	TeamColour _team_colours = TeamColour();
-	PaintableFaces _faces = PaintableFaces();
+	//PaintableFaces _faces = PaintableFaces();
+	const std::vector<MattMath::Segment>& _paintable_edges;
 	const float* _dt = nullptr;
 	std::vector<PaintTile> generate_paint_tiles() const;
 	SoundBank* _sound_bank = nullptr;

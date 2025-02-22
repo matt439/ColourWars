@@ -247,6 +247,8 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
     Vector2F direction = CollisionTools::calculate_object_collision_direction(
         this->get_shape(), other->get_shape());
 
+	direction = Vector2F::direction_to_8_cardinal_direction(direction);
+
 	collision_object_type other_type = other->get_collision_object_type();
 
 	bool bottom_edge_collision = direction == Vector2F::DIRECTION_UP ||
@@ -295,7 +297,14 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
         }
         else if (direction == Vector2F::DIRECTION_DOWN_LEFT)
         {
-			player_move_state move_state = this->get_move_state();
+            CollisionTools::resolve_object_collision(&this->_rectangle,
+                other->get_shape(), Vector2F::DIRECTION_DOWN);
+
+            this->set_move_state(player_move_state::ON_RAMP_RIGHT);
+
+            this->set_velocity_y(0.0f);
+            
+            /*player_move_state move_state = this->get_move_state();
 
 			RectangleF ramp_rect = other->get_shape()->get_bounding_box();
 
@@ -323,7 +332,7 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
                     other->get_shape(), Vector2F::DIRECTION_LEFT);
 
 				this->set_velocity_x(0.0f);
-            }
+            }*/
         }
         else if (direction == Vector2F::DIRECTION_DOWN_RIGHT)
         {
@@ -379,8 +388,105 @@ void Player::on_structure_jump_through_collision(const ICollisionGameObject* oth
 }
 void Player::on_structure_collision(const ICollisionGameObject* other)
 {
-	Vector2F direction = CollisionTools::calculate_object_collision_direction(
-		this->get_shape(), other->get_shape());
+	//Vector2F col_direction = CollisionTools::calculate_object_collision_direction(
+	//	this->get_shape(), other->get_shape());
+
+	//if (col_direction == Vector2F::ZERO)
+ //   {
+	//	throw std::exception("Player and structure are not colliding.");
+	//}
+ //   
+	//Vector2F cardinal_col_direction = Vector2F::direction_to_8_cardinal_direction(col_direction);
+
+ //   Vector2F player_direction = Vector2F::unit_vector(this->get_dx());
+
+ //   
+	//// check for wall collision
+	//if (cardinal_col_direction == Vector2F::DIRECTION_LEFT ||
+	//	cardinal_col_direction == Vector2F::DIRECTION_RIGHT)
+	//{
+ //       CollisionTools::resolve_object_collision(&this->_rectangle,
+ //           other->get_shape(), Vector2F(col_direction.x, 0.0f));
+
+ //       this->on_wall_collision();
+	//}
+ ////   // ground or ceiling collision
+	////else
+ ////   if (cardinal_col_direction == Vector2F::DIRECTION_UP ||
+	////	cardinal_col_direction == Vector2F::DIRECTION_DOWN)
+ ////   {
+	////	if (player_direction.y > 0.0f)
+	////	{
+	////		this->on_ground_collision();
+
+ ////           CollisionTools::resolve_object_collision(&this->_rectangle,
+ ////               other->get_shape(), Vector2F(0.0f, col_direction.y));
+	////	}
+	////	else if (player_direction.y < 0.0f)
+	////	{
+	////		this->on_ceiling_collision();
+
+ ////           CollisionTools::resolve_object_collision(&this->_rectangle,
+ ////               other->get_shape(), Vector2F(0.0f, col_direction.y));
+	////	}
+	////}
+	//// up collision
+	//else 
+ //   if (cardinal_col_direction == Vector2F::DIRECTION_UP_LEFT ||
+	//	cardinal_col_direction == Vector2F::DIRECTION_UP_RIGHT ||
+	//	cardinal_col_direction == Vector2F::DIRECTION_UP)
+	//{
+ //       Vector2F amount = CollisionTools::calculate_object_collision_depth(
+	//		this->get_shape(), other->get_shape(), cardinal_col_direction);
+
+ //       //CollisionTools::resolve_object_collision(&this->_rectangle,
+ //       //    other->get_shape(), Vector2F(cardinal_col_direction.x, 0.0f));
+ //       
+ //       if (amount.abs_x_greater_than_y())
+ //       {
+ //           CollisionTools::resolve_object_collision(&this->_rectangle,
+ //               other->get_shape(), Vector2F(0.0f, cardinal_col_direction.y));
+ //           this->on_ceiling_collision();
+ //       }
+ //       else
+ //       {
+	//		CollisionTools::resolve_object_collision(&this->_rectangle,
+	//			other->get_shape(), Vector2F(cardinal_col_direction.x, 0.0f));
+	//		this->on_wall_collision();
+ //       }
+	//}
+	//// down collision
+	//else
+ //   if (cardinal_col_direction == Vector2F::DIRECTION_DOWN_LEFT ||
+	//	cardinal_col_direction == Vector2F::DIRECTION_DOWN_RIGHT ||
+	//	cardinal_col_direction == Vector2F::DIRECTION_DOWN)
+ //   {
+ //       Vector2F amount = CollisionTools::calculate_object_collision_depth(
+ //           this->get_shape(), other->get_shape(), cardinal_col_direction);
+
+	//	if (amount.abs_x_greater_than_y())
+	//	{
+	//		CollisionTools::resolve_object_collision(&this->_rectangle,
+	//			other->get_shape(), Vector2F(0.0f, cardinal_col_direction.y));
+	//		this->on_ground_collision();
+	//	}
+	//	else
+	//	{
+	//		CollisionTools::resolve_object_collision(&this->_rectangle,
+	//			other->get_shape(), Vector2F(cardinal_col_direction.x, 0.0f));
+	//		this->on_wall_collision();
+	//	}
+ //   }
+	//else
+	//{
+	//	throw std::exception("Invalid collision direction.");
+	//}
+
+	// check if the player is not moving in the same direction as the collision
+
+
+    Vector2F direction = CollisionTools::calculate_object_collision_direction_by_edge(
+    	this->get_shape(), other->get_shape());
 
     if (direction == Vector2F::DIRECTION_UP)
     {
@@ -419,6 +525,22 @@ void Player::on_structure_collision(const ICollisionGameObject* other)
 		throw std::exception("Invalid collision direction.");   
 	}
 }
+
+//void Player::on_ground_collision()
+//{
+//    MovingObject::set_velocity_y(0.0f);
+//    this->set_move_state(player_move_state::ON_GROUND);
+//}
+//void Player::on_ceiling_collision()
+//{
+//	MovingObject::set_velocity_y(0.0f);
+//	this->set_move_state(player_move_state::ON_CEILING);
+//}
+//void Player::on_wall_collision()
+//{
+//	MovingObject::set_velocity_x(0.0f);
+//}
+
 void Player::on_top_collision(const ICollisionGameObject* other)
 {
     MovingObject::set_velocity_y(0.0f);
@@ -695,7 +817,15 @@ void Player::update_movement()
         }
     }
     //gravity
-    MovingObject::alter_velocity_y(GRAVITY * dt);
+    if (this->is_on_ramp())
+    {
+		// increase gravity on ramp
+		MovingObject::alter_velocity_y(GRAVITY * RAMP_GRAVITY_MULTIPLIER * dt);
+	}
+	else
+	{
+		MovingObject::alter_velocity_y(GRAVITY * dt);
+    }
     if (MovingObject::get_velocity_y() > MAX_VELOCITY.y)
     {
         MovingObject::set_velocity_y(MAX_VELOCITY.y);
@@ -1110,6 +1240,12 @@ bool Player::is_on_ground() const
 	return this->_move_state == player_move_state::ON_GROUND ||
 		this->_move_state == player_move_state::ON_DROP_DOWN_GROUND ||
 		this->_move_state == player_move_state::ON_RAMP_LEFT ||
+		this->_move_state == player_move_state::ON_RAMP_RIGHT;
+}
+
+bool Player::is_on_ramp() const
+{
+	return this->_move_state == player_move_state::ON_RAMP_LEFT ||
 		this->_move_state == player_move_state::ON_RAMP_RIGHT;
 }
 
