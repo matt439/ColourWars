@@ -7,6 +7,7 @@ enum class shape_type
 	CIRCLE,
 	TRIANGLE,
 	QUAD,
+	RECTANGLE_ROTATED,
 	NONE
 };
 

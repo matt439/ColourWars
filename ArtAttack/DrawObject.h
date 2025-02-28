@@ -30,6 +30,8 @@ protected:
 	virtual void set_effects(DirectX::SpriteEffects effects);
 	virtual void set_layer_depth(float layer_depth);
 
+	void set_draw_rotation_by_rectangle_rotated(const MattMath::RectangleRotated& rect);
+
 private:
 	ResourceManager* _resource_manager = nullptr;
 	MattMath::Colour _colour = colour_consts::WHITE;

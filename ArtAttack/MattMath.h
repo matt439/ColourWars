@@ -76,6 +76,7 @@ namespace MattMath
 		virtual bool intersects(const Quad& quad) const = 0;
 		virtual bool intersects(const Segment& segment) const = 0;
 		virtual bool intersects(const Point2F& point) const = 0;
+		virtual bool intersects(const RectangleRotated& rect_rotated) const = 0;
 		bool intersects(const Shape* other) const;
 		bool intersects(const Shape& other) const;
 		bool AABB_intersects(const Shape* other) const;
@@ -113,6 +114,9 @@ namespace MattMath
 	bool rectangle_point_intersect(const MattMath::RectangleF& rectangle, 
 		const MattMath::Point2F& point);
 
+	bool rectangle_rotated_rectangle_intersect(const MattMath::RectangleF& rect,
+		const MattMath::RectangleRotated& rotated_rect);
+
 	bool circles_intersect(const MattMath::Circle& a,
 		const MattMath::Circle& b);
 
@@ -134,6 +138,9 @@ namespace MattMath
 	bool circle_point_intersect(const MattMath::Circle& circle, 
 		const MattMath::Point2F& point);
 
+	bool circle_rectangle_rotated_intersect(const MattMath::Circle& circle,
+		const MattMath::RectangleRotated& rect_rotated);
+
 	bool triangles_intersect(const MattMath::Triangle& a, 
 		const MattMath::Triangle& b);
 
@@ -146,6 +153,9 @@ namespace MattMath
 	bool triangle_point_intersect(const MattMath::Triangle& triangle,
 		const MattMath::Point2F& point);
 
+	bool triangle_rectangle_rotated_intersect(const MattMath::Triangle& triangle,
+		const MattMath::RectangleRotated& rect_rotated);
+
 	bool quads_intersect(const MattMath::Quad& a, const MattMath::Quad& b);
 
 	bool quad_segment_intersect(const MattMath::Quad& quad,
@@ -154,10 +164,22 @@ namespace MattMath
 	bool quad_point_intersect(const MattMath::Quad& quad, 
 		const MattMath::Point2F& point);
 
+	bool quad_rectangle_rotated_intersect(const MattMath::Quad& quad, 
+		const MattMath::RectangleRotated& rect_rotated);
+
 	bool segments_intersect(const MattMath::Segment& a, const MattMath::Segment& b,
 		float& t, MattMath::Point2F& p);
 
 	bool segments_intersect(const MattMath::Segment& a, const MattMath::Segment& b);
+
+	bool segment_rectangle_rotated_intersect(const MattMath::Segment& segment,
+		const MattMath::RectangleRotated& rect_rotated);
+
+	bool point_rectangle_rotated_intersect(const MattMath::Point2F& point,
+		const MattMath::RectangleRotated& rect_rotated);
+
+	bool rectangles_rotated_intersect(const MattMath::RectangleRotated& a,
+		const MattMath::RectangleRotated& b);
 
 	struct RectangleF : public Shape
 	{
@@ -222,6 +244,7 @@ namespace MattMath
 		bool intersects(const MattMath::Quad& quad) const override;
 		bool intersects(const MattMath::Segment& other) const override;
 		bool intersects(const MattMath::Point2F& point) const override;
+		bool intersects(const RectangleRotated& rect_rotated) const override;
 		bool contains(const MattMath::Point2F& point) const;
 		RectangleF intersection(const RectangleF& other) const;
 		
@@ -724,7 +747,6 @@ namespace MattMath
 	//static std::vector<MatrixF> eigenvectors(const MatrixF& matrix);
 	//static std::vector<float> eigenvalues(const MatrixF& matrix);
 
-
 	struct Matrix3x3F : MatrixF
 	{
 		Matrix3x3F() = default;
@@ -812,6 +834,7 @@ namespace MattMath
 		bool intersects(const MattMath::Quad& other) const override;
 		bool intersects(const MattMath::Segment& other) const override;
 		bool intersects(const MattMath::Point2F& point) const override;
+		bool intersects(const RectangleRotated& rect_rotated) const override;
 		bool contains(const MattMath::Point2F& point) const;
 
 		MattMath::Vector2F get_center() const override;
@@ -862,6 +885,7 @@ namespace MattMath
 		bool intersects(const MattMath::Quad& other) const override;
 		bool intersects(const MattMath::Segment& other) const override;
 		bool intersects(const MattMath::Point2F& point) const override;
+		bool intersects(const RectangleRotated& rect_rotated) const override;
 		bool contains(const MattMath::Point2F& point) const;
 
 		MattMath::Vector2F get_center() const override;
@@ -895,15 +919,13 @@ namespace MattMath
 	*/
 	struct Quad : public Shape
 	{
-		Point2F points[4] = { Vector2F::ZERO, Vector2F::ZERO,
-					Vector2F::ZERO, Vector2F::ZERO };
-
 		Quad() = default;
 		Quad(const Quad&) = default;
 		Quad(const Vector2F& point1, const Vector2F& point2,
 			const Vector2F& point3, const Vector2F& point4);
 		Quad(const std::vector<Point2F>& points);
 		Quad(const RectangleF& rectangle);
+		Quad(const RectangleRotated& rectangle);
 		Quad(const DirectX::SimpleMath::Vector2& point1, 
 			const DirectX::SimpleMath::Vector2& point2,
 			const DirectX::SimpleMath::Vector2& point3,
@@ -923,6 +945,11 @@ namespace MattMath
 		const Point2F& get_point_3() const;
 		std::vector<Point2F> get_points() const;
 
+		void set_point_0(const Point2F& point);
+		void set_point_1(const Point2F& point);
+		void set_point_2(const Point2F& point);
+		void set_point_3(const Point2F& point);
+
 		Segment get_edge_0() const;
 		Segment get_edge_1() const;
 		Segment get_edge_2() const;
@@ -936,15 +963,20 @@ namespace MattMath
 		bool operator==(const Quad& other) const;
 		bool operator!=(const Quad& other) const;
 
-		bool intersects(const RectangleF& other) const;
-		bool intersects(const Circle& other) const;
-		bool intersects(const Triangle& other) const;
-		bool intersects(const Quad& other) const;
-		bool intersects(const Segment& other) const;
-		bool intersects(const Point2F& point) const;
+		bool intersects(const RectangleF& other) const override;
+		bool intersects(const Circle& other) const override;
+		bool intersects(const Triangle& other) const override;
+		bool intersects(const Quad& other) const override;
+		bool intersects(const Segment& other) const override;
+		bool intersects(const Point2F& point) const override;
+		bool intersects(const RectangleRotated& rect_rotated) const override;
 		bool contains(const Point2F& point) const;
 
 		MattMath::Vector2F get_center() const override;
+
+	private:
+		Point2F points[4] = { Vector2F::ZERO, Vector2F::ZERO,
+					Vector2F::ZERO, Vector2F::ZERO };
 	};
 
 	struct Segment
@@ -1012,21 +1044,75 @@ namespace MattMath
 		static const Camera DEFAULT_CAMERA;
 	};
 
-	struct RectangleRotated : public Quad
+	struct RectangleRotated : public Shape
 	{
 		RectangleRotated() = default;
 		RectangleRotated(const RectangleRotated&) = default;
 		RectangleRotated(const MattMath::Point2F& center,
 			const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
 			const MattMath::Vector2F& hw_extents);
-		RectangleRotated(const MattMath::Segment& center_line,
-			float thickness);
+		RectangleRotated(const MattMath::Segment& center_line, float thickness);
+
+		RectangleF get_bounding_box() const override;
+		shape_type get_shape_type() const override;
+		bool intersects(const RectangleF& rect) const override;
+		bool intersects(const Circle& circle) const override;;
+		bool intersects(const Triangle& triangle) const override;
+		bool intersects(const Quad& quad) const override;
+		bool intersects(const Segment& segment) const override;
+		bool intersects(const Point2F& point) const override;
+		bool intersects(const RectangleRotated& rect_rotated) const override;
+		bool contains(const Point2F& point) const;
+		void offset(const Vector2F& amount) override;
+		std::unique_ptr<Shape> clone() const override;
+		Point2F get_center() const override;
+		std::vector<Segment> get_edges() const override;
+		void inflate(float amount) override;
+
+		Point2F get_x_axis() const;
+		Point2F get_y_axis() const;
+		Point2F get_half_extents() const;
+		float get_half_x_width() const;
+		float get_half_y_width() const;
+
+		void set_center(const Point2F& center);
+		void set_x_axis(const Point2F& x_axis);
+		void set_y_axis(const Point2F& y_axis);
+		void set_half_extents(const Point2F& hw_extents);
+		void set_half_x_width(float half_x_width);
+		void set_half_y_width(float half_y_width);
+
+		Point2F get_point_0() const;
+		Point2F get_point_1() const;
+		Point2F get_point_2() const;
+		Point2F get_point_3() const;
+		const std::vector<Point2F>& get_points() const;
+
+		Segment get_edge_0() const;
+		Segment get_edge_1() const;
+		Segment get_edge_2() const;
+		Segment get_edge_3() const;
+
+		Quad get_quad() const;
+
+		float get_angle() const;
 		//RectangleRotated(const MattMath::Point2F& center,
 		//	float angle, const MattMath::Vector2F& hw_extents);
 
+		//std::vector<Point2F> get_points() const;
+
+		bool is_valid() const;
+
 	private:
-		bool is_valid(const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
-			const MattMath::Vector2F& hw_extents) const;
+		Point2F _center = Point2F::ZERO;
+		Vector2F _x_axis = Vector2F::DIRECTION_RIGHT;
+		Vector2F _y_axis = Vector2F::DIRECTION_UP;
+		Vector2F _hw_extents = Vector2F::ZERO;
+
+		std::vector<Point2F> _points = { Point2F::ZERO, Point2F::ZERO,
+					Point2F::ZERO, Point2F::ZERO };
+
+		std::vector<Point2F> calculate_points() const;
 
 		std::vector<MattMath::Point2F> calculate_points(const MattMath::Point2F& center,
 			const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
@@ -1035,21 +1121,9 @@ namespace MattMath
 		std::vector<MattMath::Point2F> calculate_points(const MattMath::Segment& center_line,
 			float thickness) const;
 
-		//MattMath::Point2F calculate_point_0(const MattMath::Point2F& center,
-		//	const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
-		//	const MattMath::Vector2F& hw_extents) const;
-
-		//MattMath::Point2F calculate_point_1(const MattMath::Point2F& center, 
-		//	const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
-		//	const MattMath::Vector2F& hw_extents) const;
-
-		//MattMath::Point2F calculate_point_2(const MattMath::Point2F& center, 
-		//	const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
-		//	const MattMath::Vector2F& hw_extents) const;
-
-		//MattMath::Point2F calculate_point_3(const MattMath::Point2F& center, 
-		//	const MattMath::Vector2F& x_axis, const MattMath::Vector2F& y_axis,
-		//	const MattMath::Vector2F& hw_extents) const;
+		bool half_widths_valid() const;
+		bool axes_valid() const;
+		bool edges_valid() const;
 	};
 
 	typedef RectangleRotated OBB;

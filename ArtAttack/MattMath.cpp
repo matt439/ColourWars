@@ -128,6 +128,8 @@ namespace MattMath
 			return this->intersects(*dynamic_cast<const Triangle*>(other));
 		case shape_type::QUAD:
 			return this->intersects(*dynamic_cast<const Quad*>(other));
+		case shape_type::RECTANGLE_ROTATED:
+			return this->intersects(*dynamic_cast<const RectangleRotated*>(other));
 		default:
 			throw std::invalid_argument("Shape type not recognized");
 		};
@@ -255,6 +257,46 @@ namespace MattMath
 			point.y <= rectangle.y + rectangle.height;
 	}
 
+	bool MattMath::rectangle_rotated_rectangle_intersect(const RectangleF& rect,
+		const RectangleRotated& rotated_rect)
+	{
+		// check if the rectangles' bounding boxes intersect
+		if (!rect.intersects(rotated_rect.get_bounding_box()))
+		{
+			return false;
+		}
+
+		// check if the rotated rectangle contains any of the rectangle's points
+		if (rotated_rect.contains(rect.get_top_left()) ||
+			rotated_rect.contains(rect.get_top_right()) ||
+			rotated_rect.contains(rect.get_bottom_left()) ||
+			rotated_rect.contains(rect.get_bottom_right()))
+		{
+			return true;
+		}
+
+		// check if the rectangle contains any of the rotated rectangle's points
+		if (rect.contains(rotated_rect.get_point_0()) ||
+			rect.contains(rotated_rect.get_point_1()) ||
+			rect.contains(rotated_rect.get_point_2()) ||
+			rect.contains(rotated_rect.get_point_3()))
+		{
+			return true;
+		}
+
+		// check if any of the rotated rectangle's edges intersect the rectangle
+		std::vector<Segment> edges = rotated_rect.get_edges();
+		for (const Segment& edge : edges)
+		{
+			if (rect.intersects(edge))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	bool MattMath::circles_intersect(const Circle& a, const Circle& b)
 	{
 		return Vector2F::distance(a.center, b.center) <=
@@ -306,6 +348,37 @@ namespace MattMath
 	bool MattMath::circle_point_intersect(const Circle& circle, const Point2F& point)
 	{
 		return Vector2F::distance(circle.center, point) <= circle.radius;
+	}
+
+	bool MattMath::circle_rectangle_rotated_intersect(const Circle& circle,
+		const RectangleRotated& rect_rotated)
+	{
+		// check if the circle intersects the rectangle's bounding box
+		if (!circle.intersects(rect_rotated.get_bounding_box()))
+		{
+			return false;
+		}
+
+		// check if the circle intersects any of the rectangle's edges
+		std::vector<Segment> edges = rect_rotated.get_edges();
+		for (const Segment& edge : edges)
+		{
+			if (circle_segment_intersect(circle, edge))
+			{
+				return true;
+			}
+		}
+
+		// check if the circle intersects any of the rectangle's corners
+		if (circle_point_intersect(circle, rect_rotated.get_point_0()) ||
+			circle_point_intersect(circle, rect_rotated.get_point_1()) ||
+			circle_point_intersect(circle, rect_rotated.get_point_2()) ||
+			circle_point_intersect(circle, rect_rotated.get_point_3()))
+		{
+			return true;
+		}
+
+		return false;
 	}
 
 	bool MattMath::triangles_intersect(const Triangle& a, const Triangle& b)
@@ -380,6 +453,45 @@ namespace MattMath
 			triangle.points[1], triangle.points[2]);
 	}
 
+	bool MattMath::triangle_rectangle_rotated_intersect(const Triangle& triangle,
+		const RectangleRotated& rect_rotated)
+	{
+		// check if the triangle intersects the rectangle's bounding box
+		if (!triangle.intersects(rect_rotated.get_bounding_box()))
+		{
+			return false;
+		}
+
+		// check if the triangle contains any of the rectangle's points
+		if (triangle.contains(rect_rotated.get_point_0()) ||
+			triangle.contains(rect_rotated.get_point_1()) ||
+			triangle.contains(rect_rotated.get_point_2()) ||
+			triangle.contains(rect_rotated.get_point_3()))
+		{
+			return true;
+		}
+
+		// check if the rectangle contains any of the triangle's points
+		if (rect_rotated.contains(triangle.points[0]) ||
+			rect_rotated.contains(triangle.points[1]) ||
+			rect_rotated.contains(triangle.points[2]))
+		{
+			return true;
+		}
+
+		// check if any of the triangle's edges intersect the rectangle
+		std::vector<Segment> edges = triangle.get_edges();
+		for (const Segment& edge : edges)
+		{
+			if (rect_rotated.intersects(edge))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	bool MattMath::quads_intersect(const Quad& a, const Quad& b)
 	{
 		// get the triangles of each quad
@@ -433,6 +545,24 @@ namespace MattMath
 		return false;
 	}
 
+	bool MattMath::quad_rectangle_rotated_intersect(const Quad& quad,
+		const RectangleRotated& rect_rotated)
+	{
+		// get the triangles of the quad
+		std::vector<Triangle> triangles = quad.get_triangles();
+
+		// check each triangle against the rotated rectangle
+		for (const Triangle& triangle : triangles)
+		{
+			if (triangle_rectangle_rotated_intersect(triangle, rect_rotated))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	bool MattMath::segments_intersect(const Segment& a, const Segment& b, float& t, Point2F& p)
 	{
 		return EricsonMath::test_2D_segment_segment(a.point_0, a.point_1,
@@ -445,6 +575,79 @@ namespace MattMath
 		Point2F p;
 		return EricsonMath::test_2D_segment_segment(a.point_0, a.point_1,
 			b.point_0, b.point_1, t, p);
+	}
+
+	bool MattMath::segment_rectangle_rotated_intersect(const Segment& segment,
+		const RectangleRotated& rect_rotated)
+	{
+		// check if the segment intersects the rectangle's bounding box
+		if (!segment.intersects(rect_rotated.get_bounding_box()))
+		{
+			return false;
+		}
+
+		// check if the segment intersects any of the rectangle's edges
+		std::vector<Segment> edges = rect_rotated.get_edges();
+		for (const Segment& edge : edges)
+		{
+			if (segments_intersect(segment, edge))
+			{
+				return true;
+			}
+		}
+
+		return false;
+
+	}
+
+	bool MattMath::point_rectangle_rotated_intersect(const Point2F& point,
+		const RectangleRotated& rect_rotated)
+	{
+		return rect_rotated.contains(point);
+	}
+
+	bool MattMath::rectangles_rotated_intersect(const RectangleRotated& a,
+		const RectangleRotated& b)
+	{
+		// check if the rectangles' bounding boxes intersect
+		if (!a.intersects(b.get_bounding_box()))
+		{
+			return false;
+		}
+
+		// check if any of the points of one rectangle are contained within the other
+		if (a.contains(b.get_point_0()) ||
+			a.contains(b.get_point_1()) ||
+			a.contains(b.get_point_2()) ||
+			a.contains(b.get_point_3()))
+		{
+			return true;
+		}
+
+		if (b.contains(a.get_point_0()) ||
+			b.contains(a.get_point_1()) ||
+			b.contains(a.get_point_2()) ||
+			b.contains(a.get_point_3()))
+		{
+			return true;
+		}
+
+		// check if any of the edges of one rectangle intersect the other
+		std::vector<Segment> a_edges = a.get_edges();
+		std::vector<Segment> b_edges = b.get_edges();
+
+		for (const Segment& edge : a_edges)
+		{
+			for (const Segment& other_edge : b_edges)
+			{
+				if (segments_intersect(edge, other_edge))
+				{
+					return true;
+				}
+			}
+		}
+
+		return false;
 	}
 
 #pragma endregion Global Intersect Functions
@@ -699,6 +902,10 @@ namespace MattMath
 	bool RectangleF::contains(const Point2F& point) const
 	{
 		return this->intersects(point);
+	}
+	bool RectangleF::intersects(const RectangleRotated& other) const
+	{
+		return rectangle_rotated_rectangle_intersect(*this, other);
 	}
 	RectangleF RectangleF::intersection(const RectangleF& other) const
 	{
@@ -3168,6 +3375,10 @@ namespace MattMath
 	{
 		return circle_point_intersect(*this, other);
 	}
+	bool Circle::intersects(const RectangleRotated& rect_rotated) const
+	{
+		return circle_rectangle_rotated_intersect(*this, rect_rotated);
+	}
 	bool Circle::contains(const Point2F& point) const
 	{
 		return this->intersects(point);
@@ -3355,6 +3566,11 @@ namespace MattMath
 		return triangle_point_intersect(*this, other);
 	}
 
+	bool Triangle::intersects(const RectangleRotated& rect_rotated) const
+	{
+		return triangle_rectangle_rotated_intersect(*this, rect_rotated);
+	}
+
 	bool Triangle::contains(const Point2F& point) const
 	{
 		return this->intersects(point);
@@ -3518,6 +3734,21 @@ namespace MattMath
 		}
 	}
 
+	Quad::Quad(const RectangleRotated& rectangle)
+	{
+		Quad q = rectangle.get_quad();
+
+		this->points[0] = q.get_point_0();
+		this->points[1] = q.get_point_1();
+		this->points[2] = q.get_point_2();
+		this->points[3] = q.get_point_3();
+
+		if (!this->is_valid())
+		{
+			throw std::invalid_argument("Quad is not valid");
+		}
+	}
+
 	Quad::Quad(const DirectX::SimpleMath::Vector2& point0,
 		const DirectX::SimpleMath::Vector2& point1,
 		const DirectX::SimpleMath::Vector2& point2,
@@ -3639,6 +3870,46 @@ namespace MattMath
 		return points;
 	}
 
+	void Quad::set_point_0(const Point2F& point)
+	{
+		this->points[0] = point;
+
+		if (!this->is_valid())
+		{
+			throw std::invalid_argument("Quad is not valid");
+		}
+	}
+
+	void Quad::set_point_1(const Point2F& point)
+	{
+		this->points[1] = point;
+
+		if (!this->is_valid())
+		{
+			throw std::invalid_argument("Quad is not valid");
+		}
+	}
+
+	void Quad::set_point_2(const Point2F& point)
+	{
+		this->points[2] = point;
+
+		if (!this->is_valid())
+		{
+			throw std::invalid_argument("Quad is not valid");
+		}
+	}
+
+	void Quad::set_point_3(const Point2F& point)
+	{
+		this->points[3] = point;
+
+		if (!this->is_valid())
+		{
+			throw std::invalid_argument("Quad is not valid");
+		}
+	}
+
 	Segment Quad::get_edge_0() const
 	{
 		return Segment(this->points[0], this->points[1]);
@@ -3732,6 +4003,11 @@ namespace MattMath
 	bool Quad::intersects(const Point2F& other) const
 	{
 		return quad_point_intersect(*this, other);
+	}
+
+	bool Quad::intersects(const RectangleRotated& rect_rotated) const
+	{
+		return quad_rectangle_rotated_intersect(*this, rect_rotated);
 	}
 
 	bool Quad::contains(const Point2F& point) const
@@ -3900,62 +4176,258 @@ namespace MattMath
 	RectangleRotated::RectangleRotated(const Point2F& center,
 		const Vector2F& x_axis, const Vector2F& y_axis,
 		const Vector2F& hw_extents) :
-		Quad(calculate_points(center, x_axis, y_axis, hw_extents))
-
+		_center(center), _x_axis(x_axis), _y_axis(y_axis), _hw_extents(hw_extents)
 	{
-		if (!this->is_valid(x_axis, y_axis, hw_extents))
+		if (!this->is_valid())
 		{
 			throw std::invalid_argument("RectangleRotated is not valid");
 		}
+
+		this->_points = this->calculate_points();
 	}
 	RectangleRotated::RectangleRotated(const Segment& center_line,
-		float thickness) :
-		Quad(calculate_points(center_line, thickness))
+		float thickness)
 	{
-		Vector2F x_axis = center_line.get_direction();
-		Vector2F y_axis = Vector2F::normal(center_line.get_direction());
-		Vector2F hw_extents = Vector2F(center_line.get_length() / 2.0f + thickness, thickness);
-		
-		if (!this->is_valid(x_axis, y_axis, hw_extents))
+		this->_center = center_line.get_center();
+		this->_x_axis = center_line.get_direction();
+		this->_y_axis = Vector2F::normal(center_line.get_direction());
+		this->_hw_extents = Vector2F(center_line.get_length() / 2.0f + thickness, thickness);
+
+		if (!this->is_valid())
 		{
 			throw std::invalid_argument("RectangleRotated is not valid");
 		}
+
+		this->_points = this->calculate_points();
 	}
 
-	bool RectangleRotated::is_valid(const Vector2F& x_axis, const Vector2F& y_axis,
-		const Vector2F& hw_extents) const
+	RectangleF RectangleRotated::get_bounding_box() const
 	{
-		// check that half width and half height are positive
-		if (hw_extents.x <= 0.0f || hw_extents.y <= 0.0f)
+		Quad quad = this->get_quad();
+		return quad.get_bounding_box();
+	}
+	shape_type RectangleRotated::get_shape_type() const
+	{
+		return shape_type::RECTANGLE_ROTATED;
+	}
+	bool RectangleRotated::intersects(const RectangleF& rect) const
+	{
+		return rectangle_rotated_rectangle_intersect(rect, *this);
+	}
+	bool RectangleRotated::intersects(const Circle& circle) const
+	{
+		return circle_rectangle_rotated_intersect(circle, *this);
+	}
+	bool RectangleRotated::intersects(const Triangle& triangle) const
+	{
+		return triangle_rectangle_rotated_intersect(triangle, *this);
+	}
+	bool RectangleRotated::intersects(const Quad& quad) const
+	{
+		return quad_rectangle_rotated_intersect(quad, *this);
+	}
+	bool RectangleRotated::intersects(const Segment& segment) const
+	{
+		return segment_rectangle_rotated_intersect(segment, *this);
+	}
+	bool RectangleRotated::intersects(const Point2F& point) const
+	{
+		return point_rectangle_rotated_intersect(point, *this);
+	}
+	bool RectangleRotated::intersects(const RectangleRotated& rect_rotated) const
+	{
+		return rectangles_rotated_intersect(*this, rect_rotated);
+	}
+	bool RectangleRotated::contains(const Point2F& point) const
+	{
+		return point_rectangle_rotated_intersect(point, *this);
+	}
+	void RectangleRotated::offset(const Vector2F& amount)
+	{
+		this->_center += amount;
+
+		this->_points = this->calculate_points();
+
+	}
+	std::unique_ptr<Shape> RectangleRotated::clone() const
+	{
+		return std::make_unique<RectangleRotated>(*this);
+	}
+	Point2F RectangleRotated::get_center() const
+	{
+		return this->_center;
+	}
+	std::vector<Segment> RectangleRotated::get_edges() const
+	{
+		std::vector<Segment> edges =
+		{
+			this->get_edge_0(),
+			this->get_edge_1(),
+			this->get_edge_2(),
+			this->get_edge_3()
+		};
+		return edges;
+	}
+	void RectangleRotated::inflate(float amount)
+	{
+		this->_hw_extents += Vector2F(amount, amount);
+
+		if (!this->half_widths_valid())
+		{
+			throw std::invalid_argument("Half widths are not valid");
+		}
+
+		this->_points = this->calculate_points();
+	}
+
+	Point2F RectangleRotated::get_x_axis() const
+	{
+		return this->_x_axis;
+	}
+	Point2F RectangleRotated::get_y_axis() const
+	{
+		return this->_y_axis;
+	}
+	Point2F RectangleRotated::get_half_extents() const
+	{
+		return this->_hw_extents;
+	}
+	float RectangleRotated::get_half_x_width() const
+	{
+		return this->_hw_extents.x;
+	}
+	float RectangleRotated::get_half_y_width() const
+	{
+		return this->_hw_extents.y;
+	}
+	void RectangleRotated::set_center(const Point2F& center)
+	{
+		this->_center = center;
+
+		this->_points = this->calculate_points();
+	}
+	void RectangleRotated::set_x_axis(const Point2F& x_axis)
+	{
+		this->_x_axis = x_axis;
+
+		if (!this->axes_valid())
+		{
+			throw std::invalid_argument("Axes are not valid");
+		}
+
+		this->_points = this->calculate_points();
+	}
+	void RectangleRotated::set_y_axis(const Point2F& y_axis)
+	{
+		this->_y_axis = y_axis;
+
+		if (!this->axes_valid())
+		{
+			throw std::invalid_argument("Axes are not valid");
+		}
+
+		this->_points = this->calculate_points();
+	}
+	void RectangleRotated::set_half_extents(const Point2F& hw_extents)
+	{
+		this->_hw_extents = hw_extents;
+
+		if (!this->half_widths_valid())
+		{
+			throw std::invalid_argument("Half widths are not valid");
+		}
+
+		this->_points = this->calculate_points();
+	}
+	void RectangleRotated::set_half_x_width(float half_x_width)
+	{
+		this->_hw_extents.x = half_x_width;
+
+		if (!this->half_widths_valid())
+		{
+			throw std::invalid_argument("Half widths are not valid");
+		}
+
+		this->_points = this->calculate_points();
+	}
+	void RectangleRotated::set_half_y_width(float half_y_width)
+	{
+		this->_hw_extents.y = half_y_width;
+
+		if (!this->half_widths_valid())
+		{
+			throw std::invalid_argument("Half widths are not valid");
+		}
+
+		this->_points = this->calculate_points();
+	}
+	Point2F RectangleRotated::get_point_0() const
+	{
+		return this->_points[0];
+	}
+	Point2F RectangleRotated::get_point_1() const
+	{
+		return this->_points[1];
+	}
+	Point2F RectangleRotated::get_point_2() const
+	{
+		return this->_points[2];
+	}
+	Point2F RectangleRotated::get_point_3() const
+	{
+		return this->_points[3];
+	}
+	const std::vector<Point2F>& RectangleRotated::get_points() const
+	{
+		return this->_points;
+	}
+	Segment RectangleRotated::get_edge_0() const
+	{
+		return Segment(this->_points[0], this->_points[1]);
+	}
+	Segment RectangleRotated::get_edge_1() const
+	{
+		return Segment(this->_points[1], this->_points[2]);
+	}
+	Segment RectangleRotated::get_edge_2() const
+	{
+		return Segment(this->_points[2], this->_points[3]);
+	}
+	Segment RectangleRotated::get_edge_3() const
+	{
+		return Segment(this->_points[3], this->_points[0]);
+	}
+	Quad RectangleRotated::get_quad() const
+	{
+		auto points = this->calculate_points();
+
+		return Quad(points);
+	}
+	float RectangleRotated::get_angle() const
+	{
+		return Vector2F::angle_between(this->_x_axis, Vector2F::DIRECTION_RIGHT);
+	}
+	bool RectangleRotated::is_valid() const
+	{
+		if (!this->half_widths_valid())
 		{
 			return false;
 		}
-
-		// check if x_axis and y_axis are perpendicular
-		if (!are_equal(Vector2F::dot(x_axis, y_axis), EPSILON))
+		if (!this->axes_valid())
 		{
 			return false;
 		}
-		
-		// check if the edges are perpendicular
-		std::vector<Segment> edges = this->get_edges();
-		for (int i = 0; i < 4; i++)
-		{
-			if (!are_equal(Vector2F::dot(edges[i].get_direction(),
-				edges[(i + 1) % 4].get_direction()), EPSILON))
-			{
-				return false;
-			}
-		}
-
-		// check if the pairs of opposite edges are equal in length
-		if (!are_equal(edges[0].get_length(), edges[2].get_length()) ||
-			!are_equal(edges[1].get_length(), edges[3].get_length()))
+		if (!this->edges_valid())
 		{
 			return false;
 		}
 
 		return true;
+	}
+
+	std::vector<Point2F> RectangleRotated::calculate_points() const
+	{
+		return calculate_points(this->_center, this->_x_axis, this->_y_axis, this->_hw_extents);
 	}
 
 	std::vector<Point2F> RectangleRotated::calculate_points(const Point2F& center,
@@ -3981,6 +4453,43 @@ namespace MattMath
 		Vector2F hw_extents = Vector2F(center_line.get_length() / 2.0f + thickness, thickness);
 
 		return calculate_points(center, x_axis, y_axis, hw_extents);
+	}
+
+	bool RectangleRotated::half_widths_valid() const
+	{
+		// check that half width and half height are positive
+		if (_hw_extents.x <= 0.0f || _hw_extents.y <= 0.0f)
+		{
+			return false;
+		}
+	}
+	bool RectangleRotated::axes_valid() const
+	{
+		// check if x_axis and y_axis are perpendicular
+		if (!are_equal(Vector2F::dot(_x_axis, _y_axis), EPSILON))
+		{
+			return false;
+		}
+	}
+	bool RectangleRotated::edges_valid() const
+	{
+		// check if the edges are perpendicular
+		std::vector<Segment> edges = this->get_edges();
+		for (int i = 0; i < 4; i++)
+		{
+			if (!are_equal(Vector2F::dot(edges[i].get_direction(),
+				edges[(i + 1) % 4].get_direction()), EPSILON))
+			{
+				return false;
+			}
+		}
+
+		// check if the pairs of opposite edges are equal in length
+		if (!are_equal(edges[0].get_length(), edges[2].get_length(), EPSILON) ||
+			!are_equal(edges[1].get_length(), edges[3].get_length(), EPSILON))
+		{
+			return false;
+		}
 	}
 
 #pragma endregion RectangleRotated

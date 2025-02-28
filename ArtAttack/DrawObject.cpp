@@ -63,3 +63,7 @@ void DrawObject::set_layer_depth(float layer_depth)
 {
 	this->_layer_depth = layer_depth;
 }
+void DrawObject::set_draw_rotation_by_rectangle_rotated(const RectangleRotated& rect)
+{
+	// TODO: Implement this function
+}
