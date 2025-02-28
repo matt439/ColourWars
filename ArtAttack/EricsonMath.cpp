@@ -765,3 +765,24 @@ void EricsonMath::closest_pt_point_segment(const Point2F& c, const Point2F& a,
 	// Compute projected position from the clamped t
 	d = a + t * ab;
 }
+
+void EricsonMath::closest_pt_point_OBB(const Point2F& p, const OBB& b, Point2F& q)
+{
+	Vector2F d = p - b.get_center();
+	// Start result at center of box; make steps from there
+	q = b.get_center();
+	// For each OBB axis...
+	for (int i = 0; i < 3; i++)
+	{
+		// ...project d onto that axis to get the distance
+		// along the axis of d from the box center
+		float dist = Vector2F::dot(d, b.get_axis(i));
+		// If distance farther than the box extents, clamp to the box
+		if (dist > b.get_half_width(i)) dist = b.get_half_width(i);
+		if (dist < -b.get_half_width(i)) dist = -b.get_half_width(i);
+		// Step that distance along the axis to get world coordinate
+		q += dist * b.get_axis(i);
+	}
+}
+
+// 132

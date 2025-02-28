@@ -137,5 +137,9 @@ namespace EricsonMath
 	void closest_pt_point_segment(const MattMath::Point2F& c, const MattMath::Point2F& a,
 		const MattMath::Point2F& b, float& t, MattMath::Point2F& d);
 
+	// Given point p, return point q on (or in) OBB b, closest to p
+	void closest_pt_point_OBB(const MattMath::Point2F& p, const MattMath::OBB& b,
+		MattMath::Point2F& q);
+
 }
 #endif // !ERICSONMATH_H

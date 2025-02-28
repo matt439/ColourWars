@@ -1071,9 +1071,11 @@ namespace MattMath
 
 		Point2F get_x_axis() const;
 		Point2F get_y_axis() const;
+		Point2F get_axis(int axis) const;
 		Point2F get_half_extents() const;
 		float get_half_x_width() const;
 		float get_half_y_width() const;
+		float get_half_width(int axis) const;
 
 		void set_center(const Point2F& center);
 		void set_x_axis(const Point2F& x_axis);
@@ -1095,6 +1097,8 @@ namespace MattMath
 
 		Quad get_quad() const;
 
+		RectangleF get_rectangle_rotated_to_axis() const;
+
 		float get_angle() const;
 		//RectangleRotated(const MattMath::Point2F& center,
 		//	float angle, const MattMath::Vector2F& hw_extents);
@@ -1102,6 +1106,9 @@ namespace MattMath
 		//std::vector<Point2F> get_points() const;
 
 		bool is_valid() const;
+
+		bool operator==(const RectangleRotated& other) const;
+		bool operator!=(const RectangleRotated& other) const;
 
 	private:
 		Point2F _center = Point2F::ZERO;

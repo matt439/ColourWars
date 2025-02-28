@@ -597,13 +597,14 @@ namespace MattMath
 		}
 
 		return false;
-
 	}
 
 	bool MattMath::point_rectangle_rotated_intersect(const Point2F& point,
 		const RectangleRotated& rect_rotated)
 	{
-		return rect_rotated.contains(point);
+		Quad quad = rect_rotated.get_quad();
+
+		return quad_point_intersect(quad, point);
 	}
 
 	bool MattMath::rectangles_rotated_intersect(const RectangleRotated& a,
@@ -4178,6 +4179,9 @@ namespace MattMath
 		const Vector2F& hw_extents) :
 		_center(center), _x_axis(x_axis), _y_axis(y_axis), _hw_extents(hw_extents)
 	{
+		this->_x_axis.normalize();
+		this->_y_axis.normalize();
+		
 		if (!this->is_valid())
 		{
 			throw std::invalid_argument("RectangleRotated is not valid");
@@ -4190,7 +4194,7 @@ namespace MattMath
 	{
 		this->_center = center_line.get_center();
 		this->_x_axis = center_line.get_direction();
-		this->_y_axis = Vector2F::normal(center_line.get_direction());
+		this->_y_axis = Vector2F::normal(this->_x_axis);
 		this->_hw_extents = Vector2F(center_line.get_length() / 2.0f + thickness, thickness);
 
 		if (!this->is_valid())
@@ -4203,8 +4207,19 @@ namespace MattMath
 
 	RectangleF RectangleRotated::get_bounding_box() const
 	{
-		Quad quad = this->get_quad();
-		return quad.get_bounding_box();
+		float x1 = std::min(std::min(std::min(this->_points[0].x, this->_points[1].x),
+			this->_points[2].x), this->_points[3].x);
+
+		float x2 = std::max(std::max(std::max(this->_points[0].x, this->_points[1].x),
+			this->_points[2].x), this->_points[3].x);
+
+		float y1 = std::min(std::min(std::min(this->_points[0].y, this->_points[1].y),
+			this->_points[2].y), this->_points[3].y);
+
+		float y2 = std::max(std::max(std::max(this->_points[0].y, this->_points[1].y),
+			this->_points[2].y), this->_points[3].y);
+
+		return RectangleF(x1, y1, x2 - x1, y2 - y1);
 	}
 	shape_type RectangleRotated::get_shape_type() const
 	{
@@ -4288,6 +4303,19 @@ namespace MattMath
 	{
 		return this->_y_axis;
 	}
+	Point2F RectangleRotated::get_axis(int axis) const
+	{
+		if (axis == 0)
+		{
+			return this->_x_axis;
+		}
+		else if (axis == 1)
+		{
+			return this->_y_axis;
+		}
+
+		throw std::invalid_argument("Axis must be 0 or 1");
+	}
 	Point2F RectangleRotated::get_half_extents() const
 	{
 		return this->_hw_extents;
@@ -4300,6 +4328,19 @@ namespace MattMath
 	{
 		return this->_hw_extents.y;
 	}
+	float RectangleRotated::get_half_width(int axis) const
+	{
+		if (axis == 0)
+		{
+			return this->_hw_extents.x;
+		}
+		else if (axis == 1)
+		{
+			return this->_hw_extents.y;
+		}
+
+		throw std::invalid_argument("Axis must be 0 or 1");
+	}
 	void RectangleRotated::set_center(const Point2F& center)
 	{
 		this->_center = center;
@@ -4308,7 +4349,7 @@ namespace MattMath
 	}
 	void RectangleRotated::set_x_axis(const Point2F& x_axis)
 	{
-		this->_x_axis = x_axis;
+		this->_x_axis = x_axis.normalized();
 
 		if (!this->axes_valid())
 		{
@@ -4319,7 +4360,7 @@ namespace MattMath
 	}
 	void RectangleRotated::set_y_axis(const Point2F& y_axis)
 	{
-		this->_y_axis = y_axis;
+		this->_y_axis = y_axis.normalized();
 
 		if (!this->axes_valid())
 		{
@@ -4403,6 +4444,10 @@ namespace MattMath
 
 		return Quad(points);
 	}
+	RectangleF RectangleRotated::get_rectangle_rotated_to_axis() const
+	{
+		return RectangleF(this->_center, this->_hw_extents.x, this->_hw_extents.y);
+	}
 	float RectangleRotated::get_angle() const
 	{
 		return Vector2F::angle_between(this->_x_axis, Vector2F::DIRECTION_RIGHT);
@@ -4462,23 +4507,39 @@ namespace MattMath
 		{
 			return false;
 		}
+
+		return true;
 	}
 	bool RectangleRotated::axes_valid() const
 	{
-		// check if x_axis and y_axis are perpendicular
-		if (!are_equal(Vector2F::dot(_x_axis, _y_axis), EPSILON))
+		// check if x_axis and y_axis are unit vectors
+		if (!are_equal(_x_axis.length(), 1.0f, EPSILON) ||
+			!are_equal(_y_axis.length(), 1.0f, EPSILON))
 		{
 			return false;
 		}
+		
+		// check if x_axis and y_axis are perpendicular
+		if (!are_equal(Vector2F::dot(_x_axis, _y_axis), 0.0f, EPSILON))
+		{
+			return false;
+		}
+
+		return true;
 	}
 	bool RectangleRotated::edges_valid() const
 	{
-		// check if the edges are perpendicular
 		std::vector<Segment> edges = this->get_edges();
-		for (int i = 0; i < 4; i++)
+		if (edges.size() != 4)
+		{
+			throw std::invalid_argument("RectangleRotated must have 4 edges");
+		}
+
+		// check if the edges are perpendicular
+		for (size_t i = 0; i < 4; i++)
 		{
 			if (!are_equal(Vector2F::dot(edges[i].get_direction(),
-				edges[(i + 1) % 4].get_direction()), EPSILON))
+				edges[(i + 1) % 4].get_direction()), 0.0f, EPSILON))
 			{
 				return false;
 			}
@@ -4490,6 +4551,8 @@ namespace MattMath
 		{
 			return false;
 		}
+
+		return true;
 	}
 
 #pragma endregion RectangleRotated
