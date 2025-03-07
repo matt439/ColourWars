@@ -697,7 +697,7 @@ float EricsonMath::signed_2D_tri_area(const Point2F& a,
 bool EricsonMath::test_2D_segment_segment(const Point2F& a,
 	const Point2F& b, const Point2F& c,
 	const Point2F& d, float& t, Point2F& p)
-{
+{	
 	// Sign of areas correspond to which side of ab points c and d are
 	float a1 = signed_2D_tri_area(a, b, d); // Compute winding of abd (+ or -)
 	float a2 = signed_2D_tri_area(a, b, c); // To intersect, must have sign opposite of a1

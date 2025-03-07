@@ -359,6 +359,12 @@ namespace MattMath
 			return false;
 		}
 
+		// check if circle's center is contained within the rectangle
+		if (rect_rotated.contains(circle.center))
+		{
+			return true;
+		}
+
 		// check if the circle intersects any of the rectangle's edges
 		std::vector<Segment> edges = rect_rotated.get_edges();
 		for (const Segment& edge : edges)
@@ -367,15 +373,6 @@ namespace MattMath
 			{
 				return true;
 			}
-		}
-
-		// check if the circle intersects any of the rectangle's corners
-		if (circle_point_intersect(circle, rect_rotated.get_point_0()) ||
-			circle_point_intersect(circle, rect_rotated.get_point_1()) ||
-			circle_point_intersect(circle, rect_rotated.get_point_2()) ||
-			circle_point_intersect(circle, rect_rotated.get_point_3()))
-		{
-			return true;
 		}
 
 		return false;
@@ -565,6 +562,13 @@ namespace MattMath
 
 	bool MattMath::segments_intersect(const Segment& a, const Segment& b, float& t, Point2F& p)
 	{
+		if (a == b)
+		{
+			t = 0.0f;
+			p = a.point_0;
+			return true;
+		}
+		
 		return EricsonMath::test_2D_segment_segment(a.point_0, a.point_1,
 			b.point_0, b.point_1, t, p);
 	}
@@ -573,8 +577,7 @@ namespace MattMath
 	{
 		float t;
 		Point2F p;
-		return EricsonMath::test_2D_segment_segment(a.point_0, a.point_1,
-			b.point_0, b.point_1, t, p);
+		return segments_intersect(a, b, t, p);
 	}
 
 	bool MattMath::segment_rectangle_rotated_intersect(const Segment& segment,
@@ -584,6 +587,12 @@ namespace MattMath
 		if (!segment.intersects(rect_rotated.get_bounding_box()))
 		{
 			return false;
+		}
+
+		// check if the segment's end points are contained within the rectangle
+		if (rect_rotated.contains(segment.point_0) || rect_rotated.contains(segment.point_1))
+		{
+			return true;
 		}
 
 		// check if the segment intersects any of the rectangle's edges
