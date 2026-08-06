@@ -735,20 +735,22 @@ LevelEndInfo Level::get_level_end_info() const
 
 		if (type == collision_object_type::STRUCTURE_PAINTABLE)
 		{
-			try
-			{
-				auto paintable_object =
-					dynamic_cast<IPaintableGameObject*>(object.get());
+			// dynamic_cast on a POINTER returns nullptr on failure; only the
+			// reference form throws bad_cast. The catch here could never fire,
+			// and the null was dereferenced unchecked one line above it.
+			auto paintable_object =
+				dynamic_cast<IPaintableGameObject*>(object.get());
 
-				PaintTotal paint = paintable_object->get_paint_total();
-
-				result.team_a_area += paint.team_a;
-				result.team_b_area += paint.team_b;
-			}
-			catch (const std::bad_cast& e)
+			if (paintable_object == nullptr)
 			{
-				throw std::exception("Could not cast to IPaintableGameObject");
+				throw std::runtime_error(
+					"Object tagged STRUCTURE_PAINTABLE is not an IPaintableGameObject");
 			}
+
+			PaintTotal paint = paintable_object->get_paint_total();
+
+			result.team_a_area += paint.team_a;
+			result.team_b_area += paint.team_b;
 		}
 	}
 

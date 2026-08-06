@@ -947,12 +947,12 @@ namespace MattMath
 	{
 		this->inflate(amount, amount);
 	}
-	void RectangleF::inflate_to_size(float width, float height)
+	void RectangleF::inflate_to_size(float new_width, float new_height)
 	{
-		this->x -= (width - this->width) / 2.0f;
-		this->y -= (height - this->height) / 2.0f;
-		this->width = width;
-		this->height = height;
+		this->x -= (new_width - this->width) / 2.0f;
+		this->y -= (new_height - this->height) / 2.0f;
+		this->width = new_width;
+		this->height = new_height;
 	}
 	void RectangleF::inflate_to_size(const Vector2F& size)
 	{
@@ -1017,84 +1017,84 @@ namespace MattMath
 		this->x = position.x;
 		this->y = position.y;
 	}
-	void RectangleF::set_position(float x, float y)
+	void RectangleF::set_position(float new_x, float new_y)
 	{
-		this->x = x;
-		this->y = y;
+		this->x = new_x;
+		this->y = new_y;
 	}
 	void RectangleF::set_position_at_center(const Vector2F& position)
 	{
 		this->x = position.x - this->width / 2.0f;
 		this->y = position.y - this->height / 2.0f;
 	}
-	void RectangleF::set_position_at_center(float x, float y)
+	void RectangleF::set_position_at_center(float new_x, float new_y)
 	{
-		this->x = x - this->width / 2.0f;
-		this->y = y - this->height / 2.0f;
+		this->x = new_x - this->width / 2.0f;
+		this->y = new_y - this->height / 2.0f;
 	}
-	void RectangleF::set_position_x(float x)
+	void RectangleF::set_position_x(float new_x)
 	{
-		this->x = x;
+		this->x = new_x;
 	}
-	void RectangleF::set_position_x_from_right(float x)
+	void RectangleF::set_position_x_from_right(float new_x)
 	{
-		this->x = x - this->width;
+		this->x = new_x - this->width;
 	}
-	void RectangleF::set_position_y(float y)
+	void RectangleF::set_position_y(float new_y)
 	{
-		this->y = y;
+		this->y = new_y;
 	}
-	void RectangleF::set_position_y_from_bottom(float y)
+	void RectangleF::set_position_y_from_bottom(float new_y)
 	{
-		this->y = y - this->height;
+		this->y = new_y - this->height;
 	}
 	void RectangleF::set_position_from_top_right(const Vector2F& position)
 	{
 		this->x = position.x - this->width;
 		this->y = position.y;
 	}
-	void RectangleF::set_position_from_top_right(float x, float y)
+	void RectangleF::set_position_from_top_right(float new_x, float new_y)
 	{
-		this->x = x - this->width;
-		this->y = y;
+		this->x = new_x - this->width;
+		this->y = new_y;
 	}
 	void RectangleF::set_position_from_bottom_left(const Vector2F& position)
 	{
 		this->x = position.x;
 		this->y = position.y - this->height;
 	}
-	void RectangleF::set_position_from_bottom_left(float x, float y)
+	void RectangleF::set_position_from_bottom_left(float new_x, float new_y)
 	{
-		this->x = x;
-		this->y = y - this->height;
+		this->x = new_x;
+		this->y = new_y - this->height;
 	}
 	void RectangleF::set_position_from_bottom_right(const Vector2F& position)
 	{
 		this->x = position.x - this->width;
 		this->y = position.y - this->height;
 	}
-	void RectangleF::set_position_from_bottom_right(float x, float y)
+	void RectangleF::set_position_from_bottom_right(float new_x, float new_y)
 	{
-		this->x = x - this->width;
-		this->y = y - this->height;
+		this->x = new_x - this->width;
+		this->y = new_y - this->height;
 	}
 	void RectangleF::set_size(const Vector2F& size)
 	{
 		this->width = size.x;
 		this->height = size.y;
 	}
-	void RectangleF::set_size(float width, float height)
+	void RectangleF::set_size(float new_width, float new_height)
 	{
-		this->width = width;
-		this->height = height;
+		this->width = new_width;
+		this->height = new_height;
 	}
-	void RectangleF::set_width(float width)
+	void RectangleF::set_width(float new_width)
 	{
-		this->width = width;
+		this->width = new_width;
 	}
-	void RectangleF::set_height(float height)
+	void RectangleF::set_height(float new_height)
 	{
-		this->height = height;
+		this->height = new_height;
 	}
 	RectangleF RectangleF::intersection(const RectangleF& a, const RectangleF& b)
 	{
@@ -1477,10 +1477,10 @@ namespace MattMath
 		this->x *= static_cast<int>(amount.x);
 		this->y *= static_cast<int>(amount.y);
 	}
-	void Vector2I::set(int x, int y)
+	void Vector2I::set(int new_x, int new_y)
 	{
-		this->x = x;
-		this->y = y;
+		this->x = new_x;
+		this->y = new_y;
 	}
 	void Vector2I::set(const SimpleMath::Vector2& vector)
 	{
@@ -1769,11 +1769,11 @@ namespace MattMath
 		float cos_angle = std::cos(angle);
 		float sin_angle = std::sin(angle);
 
-		float x = this->x * cos_angle - this->y * sin_angle;
-		float y = this->x * sin_angle + this->y * cos_angle;
+		float rotated_x = this->x * cos_angle - this->y * sin_angle;
+		float rotated_y = this->x * sin_angle + this->y * cos_angle;
 
-		this->x = x;
-		this->y = y;
+		this->x = rotated_x;
+		this->y = rotated_y;
 	}
 	void Vector2F::normal()
 	{
@@ -2358,12 +2358,12 @@ namespace MattMath
 		this->a = alpha;
 		this->clamp_colours();
 	}
-	void Colour::set_from_int_rgba(int r, int g, int b, int a)
+	void Colour::set_from_int_rgba(int red, int green, int blue, int alpha)
 	{
-		this->r = static_cast<float>(r) / 255.0f;
-		this->g = static_cast<float>(g) / 255.0f;
-		this->b = static_cast<float>(b) / 255.0f;
-		this->a = static_cast<float>(a) / 255.0f;
+		this->r = static_cast<float>(red) / 255.0f;
+		this->g = static_cast<float>(green) / 255.0f;
+		this->b = static_cast<float>(blue) / 255.0f;
+		this->a = static_cast<float>(alpha) / 255.0f;
 		this->clamp_colours();
 	}
 	void Colour::set_from_hex(const std::string& hex)
@@ -3494,8 +3494,7 @@ namespace MattMath
 	}
 	std::vector<Vector2F> Triangle::get_points() const
 	{
-		std::vector<Vector2F> points = { this->points[0], this->points[1], this->points[2] };
-		return points;
+		return { this->points[0], this->points[1], this->points[2] };
 	}
 	Segment Triangle::get_edge_0() const
 	{
@@ -3880,14 +3879,13 @@ namespace MattMath
 
 	std::vector<Point2F> Quad::get_points() const
 	{
-		std::vector<Point2F> points =
+		return
 		{
 			this->points[0],
 			this->points[1],
 			this->points[2],
 			this->points[3]
 		};
-		return points;
 	}
 
 	void Quad::set_point_0(const Point2F& point)

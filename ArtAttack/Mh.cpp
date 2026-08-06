@@ -161,7 +161,9 @@ void MTexture::update()
 }
 bool MTexture::is_visible_in_viewport(const RectangleF& view) const
 {
-	return this->is_visible_in_viewport(view);
+	// This called itself - infinite recursion, and /W4 has been reporting it
+	// as C4717 the whole time. Test the widget's own rectangle, as Visual does.
+	return this->_rectangle.intersects(view);
 }
 void MTexture::set_texture(const std::string& sheet_name,
 	const std::string& frame_name)
@@ -275,7 +277,7 @@ void MText::update()
 {
 	// do nothing
 }
-bool MText::is_visible_in_viewport(const RectangleF& view) const
+bool MText::is_visible_in_viewport(const RectangleF& /*view*/) const
 {
 	// TODO: implement text bounding box
 	return true;
@@ -340,7 +342,7 @@ void MTextDropShadow::update()
 {
 	return;
 }
-bool MTextDropShadow::is_visible_in_viewport(const RectangleF& view) const
+bool MTextDropShadow::is_visible_in_viewport(const RectangleF& /*view*/) const
 {
 	// TODO: implement text bounding box
 	return true;

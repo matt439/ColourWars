@@ -142,7 +142,6 @@ void GameData::set_thread_pool(ThreadPool* thread_pool)
 ThreadPool* GameData::get_thread_pool() const
 {
 	return this->_thread_pool;
-	return this->_thread_pool;
 }
 
 void GameData::set_partitioner(const Partitioner* partitioner)

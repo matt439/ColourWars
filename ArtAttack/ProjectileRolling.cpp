@@ -33,15 +33,15 @@ void ProjectileRolling::update()
 	Projectile::update_movement(details.gravity,
 		details.wind_resistance);
 }
-void ProjectileRolling::draw(SpriteBatch* sprite_batch, const Camera& camera)
+void ProjectileRolling::draw(SpriteBatch* /*sprite_batch*/, const Camera& /*camera*/)
 {
 	// do nothing
 }
-void ProjectileRolling::draw(SpriteBatch* sprite_batch)
+void ProjectileRolling::draw(SpriteBatch* /*sprite_batch*/)
 {
 	// do nothing
 }
-bool ProjectileRolling::is_visible_in_viewport(const RectangleF& view) const
+bool ProjectileRolling::is_visible_in_viewport(const RectangleF& /*view*/) const
 {
 	return false;
 }

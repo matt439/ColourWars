@@ -20,7 +20,7 @@ void SoundBank::play_wave(const std::string& wave_name, float volume, float pitc
 	{
 		this->_wave_bank->Play(wave_name.c_str(), volume, pitch, pan);
 	}
-	catch (const std::out_of_range& e)
+	catch (const std::out_of_range&)
 	{
 		throw std::out_of_range("Wave with name " + wave_name + " not found");
 	}
@@ -77,7 +77,7 @@ SoundEffectInstance* SoundBank::get_sound_effect_instance(const std::string& ins
 	{
 		return this->_sound_effect_instances.at(instance_name).get();
 	}
-	catch (const std::out_of_range& e)
+	catch (const std::out_of_range&)
 	{
 		throw std::out_of_range("SoundEffectInstance with name " + instance_name + " not found");
 	}
@@ -113,7 +113,7 @@ std::map<std::string, std::unique_ptr<SoundEffectInstance>>
 					this->_wave_bank->
 					CreateInstance(wave.c_str());
 			}
-			catch (const std::out_of_range& e)
+			catch (const std::out_of_range&)
 			{
 				throw std::out_of_range("Wave with name " + wave + " not found");
 			}
@@ -134,7 +134,7 @@ std::map<std::string, std::unique_ptr<SoundEffectInstance>>
 					this->_wave_bank->
 					CreateInstance(wave.c_str());
 			}
-			catch (const std::out_of_range& e)
+			catch (const std::out_of_range&)
 			{
 				throw std::out_of_range("Wave with name " + wave + " not found");
 			}

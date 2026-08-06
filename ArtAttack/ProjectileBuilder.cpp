@@ -120,7 +120,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 	player_team team,
 	int player_num,
 	const Colour& team_colour,
-	projectile_type type,
+	projectile_type /*type*/,	// always MIST here
 	const float* dt,
 	ResourceManager* resource_manager,
 	float rotation,

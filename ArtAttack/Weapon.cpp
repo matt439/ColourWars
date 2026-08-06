@@ -188,8 +188,8 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 
 bool Weapon::check_if_shooting_and_ammo_update(
     PlayerInputData input,
-    const Vector2F& player_center,
-    const Vector2F& player_velocity)
+    const Vector2F& /*player_center*/,
+    const Vector2F& /*player_velocity*/)
 {
     const float dt = *this->_dt;
     bool normal_gun_ok_to_shoot = input.primary_shoot &&
@@ -293,7 +293,7 @@ std::string Weapon::resolve_loop_sound_name(wep_type type,
 }
 void Weapon::update_movement_and_rotation(PlayerInputData input,
     const Vector2F& player_center,
-    const Vector2F& player_velocity,
+    const Vector2F& /*player_velocity*/,
     bool player_facing_right)
 {
     if (input.shoot_direction_requested)

@@ -25,7 +25,7 @@ WeaponSniper::WeaponSniper(player_team team,
 {
 
 }
-void WeaponSniper::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
+void WeaponSniper::handle_shoot_sound(bool shooting_this_update, bool /*holding_shoot*/)
 {
     if (shooting_this_update)
     {

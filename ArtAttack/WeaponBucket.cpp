@@ -25,7 +25,7 @@ WeaponBucket::WeaponBucket(player_team team,
 {
 
 }
-void WeaponBucket::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
+void WeaponBucket::handle_shoot_sound(bool shooting_this_update, bool /*holding_shoot*/)
 {
     if (shooting_this_update)
     {

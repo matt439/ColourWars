@@ -268,12 +268,33 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
 		return;
     }
     
-	bool is_on_ramp = this->get_move_state() == player_move_state::ON_RAMP_LEFT ||
-		this->get_move_state() == player_move_state::ON_RAMP_RIGHT;
-
 	if (other_type == collision_object_type::STRUCTURE_RAMP_LEFT)
 	{
-        // TODO
+        // Mirror of the RAMP_RIGHT case below. This was an empty `// TODO`, so
+        // left ramps had no collision response at all - players fell straight
+        // through them. side_wall_collision above already routes a DIRECTION_RIGHT
+        // hit to the flat-structure path, which is a left ramp's wall side, so
+        // the remaining directions are all ramp-surface contacts.
+        if (direction == Vector2F::DIRECTION_DOWN ||
+            direction == Vector2F::DIRECTION_LEFT ||
+            direction == Vector2F::DIRECTION_DOWN_LEFT ||
+            direction == Vector2F::DIRECTION_DOWN_RIGHT)
+        {
+            CollisionTools::resolve_object_collision(&this->_rectangle,
+                other->get_shape(), Vector2F::DIRECTION_DOWN);
+
+            this->set_move_state(player_move_state::ON_RAMP_LEFT);
+
+            this->set_velocity_y(0.0f);
+        }
+        else if (direction == Vector2F::ZERO)
+        {
+            throw std::runtime_error("No collision direction.");
+        }
+        else
+        {
+            throw std::runtime_error("Invalid collision direction.");
+        }
 	}
 	else if (other_type == collision_object_type::STRUCTURE_RAMP_RIGHT)
 	{

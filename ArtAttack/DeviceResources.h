@@ -89,7 +89,8 @@ namespace DX
         // from a removed device is invalid.
         void create_deferred_contexts(int num);
         std::vector<ID3D11DeviceContext*>* get_deferred_contexts() const noexcept;
-        ID3D11DeviceContext* get_deferred_context(int index) const noexcept;
+        // Throws std::out_of_range for an invalid index, so not noexcept.
+        ID3D11DeviceContext* get_deferred_context(int index) const;
 
     private:
         void CreateFactory();

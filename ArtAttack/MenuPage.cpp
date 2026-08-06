@@ -102,10 +102,8 @@ void MenuPage::draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,
 	size_t num_viewports = viewports.size();
 	for (size_t i = 0; i < num_viewports; i++)
 	{
-		//this->get_viewport_manager()->apply_player_viewport(i);
-
 		this->get_viewport_manager()->apply_player_viewport(
-			i, deferred_context, sprite_batch);
+			static_cast<int>(i), deferred_context, sprite_batch);
 
 		sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, sampler_state);
 
@@ -171,8 +169,10 @@ void MenuPage::draw_range_of_mobjects_in_viewports(int start, int end,
 {
 	for (int i = start; i < end; i++)
 	{
+		// Use the contexts passed in rather than re-fetching the same ones
+		// through GameData from a worker thread.
 		this->draw_mobject_in_viewports(
-			this->get_data()->get_device_resources()->get_deferred_context(i),
+			deferred_contexts->at(i),
 			command_lists->at(i), sprite_batches->at(i), mobjects->at(i).first, mobjects->at(i).second);
 	}
 }

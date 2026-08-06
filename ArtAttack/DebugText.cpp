@@ -38,7 +38,6 @@ void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
 		get_input_jump_pressed();
     bool jump_held = player->
         get_input_jump_held();
-    player_move_state move_state = player->get_move_state();
     player_state state = player->get_state();
 
     std::vector<std::string> lines;

@@ -40,11 +40,11 @@ bool Structure::is_visible_in_viewport(const RectangleF& view) const
 {
 	return this->_sprite_rectangle.intersects(view);
 }
-bool Structure::is_colliding(const ICollisionGameObject* other) const
+bool Structure::is_colliding(const ICollisionGameObject* /*other*/) const
 {
 	return false;
 }
-void Structure::on_collision(const ICollisionGameObject* other)
+void Structure::on_collision(const ICollisionGameObject* /*other*/)
 {
 	// do nothing
 }
