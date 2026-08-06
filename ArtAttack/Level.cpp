@@ -292,6 +292,18 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 		}
 	}
 
+	// A projectile that leaves the level is ordinary - it missed. Retire it
+	// with everything else being deleted this frame rather than throwing, which
+	// terminated the process because nothing on the tick path catches.
+	for (auto& object : *this->_collision_objects)
+	{
+		if (!object->get_for_deletion() &&
+			this->is_object_out_of_bounds(object.get()))
+		{
+			object->set_for_deletion(true);
+		}
+	}
+
 	// check for deletable objects
 	for (size_t i = 0; i < this->_collision_objects->size(); i++)
 	{
@@ -304,19 +316,13 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 		}
 	}
 
-	// check for out of bounds objects
+	// A player leaving the level is a genuine simulation failure, not a
+	// gameplay event, so it still reports loudly.
 	for (auto& player : *this->_player_objects)
 	{
 		if (this->is_object_out_of_bounds(player.get()))
 		{
-			throw std::exception("Player out of bounds");
-		}
-	}
-	for (auto& object : *this->_collision_objects)
-	{
-		if (this->is_object_out_of_bounds(object.get()))
-		{
-			throw std::exception("Collision object out of bounds");
+			throw std::runtime_error("Player out of bounds");
 		}
 	}
 }

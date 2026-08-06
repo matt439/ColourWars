@@ -41,11 +41,17 @@ public:
 	float get_ammo() const;
 	void reset_ammo();
 	void set_player_center(const MattMath::Vector2F& player_center);
-	void stop_sounds() const;
+
+	// Never throws: weapons with no looping fire sound stop nothing.
+	virtual void stop_sounds() const;
 
 protected:
 	SoundBank* _sound_bank = nullptr;
 	WeaponDetails _details = weapon_consts::DETAILS_DEFAULT;
+
+	// Name of this weapon's looping SoundEffectInstance, resolved once at
+	// construction. Empty for weapons that fire a one-shot wave instead.
+	std::string _loop_sound_name;
 
 	bool _shooting_this_update = false;
 
@@ -116,9 +122,11 @@ protected:
 	const float* get_dt_ptr() const;
 	float get_dt() const;
 	ResourceManager* get_resource_manager() const override;
-	const std::string& get_sound_effect_instance_name() const;
 
 private:
+	static std::string resolve_loop_sound_name(wep_type type,
+		player_team team, int player_num);
+
 	std::unique_ptr<ProjectileBuilder> _proj_builder = nullptr;
 	const float* _dt = nullptr;
 	ResourceManager* _resource_manager = nullptr;

@@ -45,6 +45,7 @@ public:
 	collision_object_type get_collision_object_type() const override;
 	const MattMath::Shape* get_shape() const override = 0;
 	bool get_for_deletion() const override;
+	void set_for_deletion(bool for_deletion) override;
 
 	float get_delete_timer() const;
 	MattMath::Vector2F get_col_rect_size() const;
@@ -53,7 +54,6 @@ protected:
 	const ProjectileDetails& get_details() const;
 
 	player_team get_team() const;
-	void set_for_deletion(bool for_deletion);
 
 	virtual bool is_matching_collision_object_type(const ICollisionGameObject* other) const;
 

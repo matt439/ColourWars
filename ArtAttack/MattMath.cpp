@@ -1724,11 +1724,21 @@ namespace MattMath
 	Vector2F Vector2F::normalized() const
 	{
 		float length = this->length();
+		if (length == 0.0f)
+		{
+			return Vector2F::ZERO;
+		}
 		return Vector2F(this->x / length, this->y / length);
 	}
 	void Vector2F::normalize()
 	{
 		float length = this->length();
+		if (length == 0.0f)
+		{
+			this->x = 0.0f;
+			this->y = 0.0f;
+			return;
+		}
 		this->x /= length;
 		this->y /= length;
 	}
@@ -4190,28 +4200,41 @@ namespace MattMath
 	{
 		this->_x_axis.normalize();
 		this->_y_axis.normalize();
-		
+
+		// Points first: is_valid() -> edges_valid() reads _points, so
+		// validating before this line checked four zero corners and could
+		// never reject anything.
+		this->_points = this->calculate_points();
+
 		if (!this->is_valid())
 		{
 			throw std::invalid_argument("RectangleRotated is not valid");
 		}
-
-		this->_points = this->calculate_points();
 	}
 	RectangleRotated::RectangleRotated(const Segment& center_line,
 		float thickness)
 	{
+		if (center_line.get_length() == 0.0f)
+		{
+			throw std::invalid_argument(
+				"RectangleRotated: centre line has zero length, so it has no direction");
+		}
+
 		this->_center = center_line.get_center();
+		// Segment::get_direction() returns point_1 - point_0 un-normalised,
+		// but axes_valid() requires a unit axis - without this the constructor
+		// threw for every segment whose length was not 1.
 		this->_x_axis = center_line.get_direction();
+		this->_x_axis.normalize();
 		this->_y_axis = Vector2F::normal(this->_x_axis);
 		this->_hw_extents = Vector2F(center_line.get_length() / 2.0f + thickness, thickness);
+
+		this->_points = this->calculate_points();
 
 		if (!this->is_valid())
 		{
 			throw std::invalid_argument("RectangleRotated is not valid");
 		}
-
-		this->_points = this->calculate_points();
 	}
 
 	RectangleF RectangleRotated::get_bounding_box() const
@@ -4294,13 +4317,15 @@ namespace MattMath
 	}
 	void RectangleRotated::inflate(float amount)
 	{
-		this->_hw_extents += Vector2F(amount, amount);
-
-		if (!this->half_widths_valid())
+		// Validate the candidate before committing it. Assigning first and
+		// throwing afterwards left the object holding the rejected value.
+		const Vector2F inflated = this->_hw_extents + Vector2F(amount, amount);
+		if (inflated.x <= 0.0f || inflated.y <= 0.0f)
 		{
 			throw std::invalid_argument("Half widths are not valid");
 		}
 
+		this->_hw_extents = inflated;
 		this->_points = this->calculate_points();
 	}
 
@@ -4356,59 +4381,64 @@ namespace MattMath
 
 		this->_points = this->calculate_points();
 	}
+	// Each setter validates the candidate value before committing it, so a
+	// rejected argument leaves the rectangle exactly as it was. Assigning to
+	// the member first and throwing afterwards left the object corrupt: it
+	// held the bad value and a stale _points cache.
 	void RectangleRotated::set_x_axis(const Point2F& x_axis)
 	{
-		this->_x_axis = x_axis.normalized();
+		const Vector2F candidate = x_axis.normalized();
 
-		if (!this->axes_valid())
+		if (!are_equal(candidate.length(), 1.0f, EPSILON) ||
+			!are_equal(Vector2F::dot(candidate, this->_y_axis), 0.0f, EPSILON))
 		{
 			throw std::invalid_argument("Axes are not valid");
 		}
 
+		this->_x_axis = candidate;
 		this->_points = this->calculate_points();
 	}
 	void RectangleRotated::set_y_axis(const Point2F& y_axis)
 	{
-		this->_y_axis = y_axis.normalized();
+		const Vector2F candidate = y_axis.normalized();
 
-		if (!this->axes_valid())
+		if (!are_equal(candidate.length(), 1.0f, EPSILON) ||
+			!are_equal(Vector2F::dot(this->_x_axis, candidate), 0.0f, EPSILON))
 		{
 			throw std::invalid_argument("Axes are not valid");
 		}
 
+		this->_y_axis = candidate;
 		this->_points = this->calculate_points();
 	}
 	void RectangleRotated::set_half_extents(const Point2F& hw_extents)
 	{
-		this->_hw_extents = hw_extents;
-
-		if (!this->half_widths_valid())
+		if (hw_extents.x <= 0.0f || hw_extents.y <= 0.0f)
 		{
 			throw std::invalid_argument("Half widths are not valid");
 		}
 
+		this->_hw_extents = hw_extents;
 		this->_points = this->calculate_points();
 	}
 	void RectangleRotated::set_half_x_width(float half_x_width)
 	{
-		this->_hw_extents.x = half_x_width;
-
-		if (!this->half_widths_valid())
+		if (half_x_width <= 0.0f)
 		{
 			throw std::invalid_argument("Half widths are not valid");
 		}
 
+		this->_hw_extents.x = half_x_width;
 		this->_points = this->calculate_points();
 	}
 	void RectangleRotated::set_half_y_width(float half_y_width)
 	{
-		this->_hw_extents.y = half_y_width;
-
-		if (!this->half_widths_valid())
+		if (half_y_width <= 0.0f)
 		{
 			throw std::invalid_argument("Half widths are not valid");
 		}
 
+		this->_hw_extents.y = half_y_width;
 		this->_points = this->calculate_points();
 	}
 	Point2F RectangleRotated::get_point_0() const
@@ -4503,7 +4533,8 @@ namespace MattMath
 	{
 		Vector2F center = center_line.get_center();
 		Vector2F x_axis = center_line.get_direction();
-		Vector2F y_axis = Vector2F::normal(center_line.get_direction());
+		x_axis.normalize();
+		Vector2F y_axis = Vector2F::normal(x_axis);
 		Vector2F hw_extents = Vector2F(center_line.get_length() / 2.0f + thickness, thickness);
 
 		return calculate_points(center, x_axis, y_axis, hw_extents);
@@ -4544,19 +4575,31 @@ namespace MattMath
 			throw std::invalid_argument("RectangleRotated must have 4 edges");
 		}
 
-		// check if the edges are perpendicular
+		// Compare unit directions rather than the raw edge vectors. The dot
+		// product of two un-normalised edges scales with the square of the
+		// rectangle's size, so an absolute epsilon rejected large rectangles
+		// that were perfectly square.
 		for (size_t i = 0; i < 4; i++)
 		{
-			if (!are_equal(Vector2F::dot(edges[i].get_direction(),
-				edges[(i + 1) % 4].get_direction()), 0.0f, EPSILON))
+			const Vector2F direction_a = edges[i].get_direction().normalized();
+			const Vector2F direction_b =
+				edges[(i + 1) % 4].get_direction().normalized();
+
+			if (!are_equal(Vector2F::dot(direction_a, direction_b), 0.0f, EPSILON))
 			{
 				return false;
 			}
 		}
 
-		// check if the pairs of opposite edges are equal in length
-		if (!are_equal(edges[0].get_length(), edges[2].get_length(), EPSILON) ||
-			!are_equal(edges[1].get_length(), edges[3].get_length(), EPSILON))
+		// Opposite edges must match in length, to a tolerance that scales with
+		// the edges themselves for the same reason.
+		const float length_0 = edges[0].get_length();
+		const float length_1 = edges[1].get_length();
+
+		if (std::fabs(length_0 - edges[2].get_length()) >
+				EPSILON * std::max(1.0f, length_0) ||
+			std::fabs(length_1 - edges[3].get_length()) >
+				EPSILON * std::max(1.0f, length_1))
 		{
 			return false;
 		}

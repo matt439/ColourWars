@@ -1,6 +1,6 @@
 #include "pch.h"
 #include "LevelLoadedInfo.h"
-#include "rapidjson/filereadstream.h"
+#include "JsonLoader.h"
 
 using namespace DirectX;
 using namespace MattMath;
@@ -95,16 +95,5 @@ std::vector<Vector2F>
 
 Document LevelLoadedInfo::load_from_json(const char* json_path)
 {
-	FILE* fp = fopen(json_path, "rb");
-
-	std::unique_ptr<char> readBuffer = std::make_unique<char>();
-	FileReadStream is(fp, readBuffer.get(), sizeof(readBuffer));
-
-	Document d;
-	d.ParseStream(is);
-
-	fclose(fp);
-	readBuffer.release();
-
-	return d;
+	return json_loader::parse_file(json_path);
 }

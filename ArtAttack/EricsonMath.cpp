@@ -530,18 +530,18 @@ bool EricsonMath::test_circle_triangle(const Circle& s, const Point2F& a,
 //}
 
 
-// Intersect AABBs ‘a’ and ‘b’ moving with constant velocities va and vb.
+// Intersect AABBs ï¿½aï¿½ and ï¿½bï¿½ moving with constant velocities va and vb.
 // On intersection, return time of first and last contact in tfirst and tlast
 bool EricsonMath::intersect_moving_AABB_AABB(const AABB& a, const AABB& b,
 	const Vector2F& va, const Vector2F& vb,
 	float& tfirst, float& tlast)
 {
-	// Exit early if ‘a’ and ‘b’ initially overlapping
+	// Exit early if ï¿½aï¿½ and ï¿½bï¿½ initially overlapping
 	if (test_AABB_AABB(a, b)) {
 		tfirst = tlast = 0.0f;
 		return 1;
 	}
-	// Use relative velocity; effectively treating ’a’ as stationary
+	// Use relative velocity; effectively treating ï¿½aï¿½ as stationary
 	Vector2F v = vb - va;
 	// Initialize times of first and last contact
 	tfirst = 0.0f;
@@ -757,7 +757,7 @@ void EricsonMath::closest_pt_point_segment(const Point2F& c, const Point2F& a,
 	const Point2F& b, float& t, Point2F& d)
 {
 	Vector2F ab = b - a;
-	// Project c onto ab, computing parameterized position d(t) = a + t*(b – a)
+	// Project c onto ab, computing parameterized position d(t) = a + t*(b ï¿½ a)
 	t = Vector2F::dot(c - a, ab) / Vector2F::dot(ab, ab);
 	// If outside segment, clamp t (and therefore d) to the closest endpoint
 	if (t < 0.0f) t = 0.0f;
@@ -771,8 +771,9 @@ void EricsonMath::closest_pt_point_OBB(const Point2F& p, const OBB& b, Point2F& 
 	Vector2F d = p - b.get_center();
 	// Start result at center of box; make steps from there
 	q = b.get_center();
-	// For each OBB axis...
-	for (int i = 0; i < 3; i++)
+	// For each OBB axis... (2 in 2D - the textbook version this came from is 3D,
+	// and OBB::get_axis throws for any index above 1)
+	for (int i = 0; i < 2; i++)
 	{
 		// ...project d onto that axis to get the distance
 		// along the axis of d from the box center

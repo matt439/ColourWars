@@ -37,13 +37,19 @@ ThreadPool::~ThreadPool()
 
 void ThreadPool::add_task(std::function<void()> task)
 {
-    PTP_WORK work = CreateThreadpoolWork(work_callback,
-        new std::function<void()>(task), &_callback_environment);
+    auto item = std::make_unique<task_item>(task_item{ std::move(task), this });
+
+    PTP_WORK work = CreateThreadpoolWork(work_callback, item.get(),
+        &_callback_environment);
     if (!work)
     {
+        // item is still owned here, so the failure does not leak the callable.
         throw std::runtime_error("Failed to create thread pool work object.");
     }
     _work_items.push_back(work);
+
+    // The callback owns the item from the moment it is submitted.
+    item.release();
     SubmitThreadpoolWork(work);
 }
 
@@ -55,13 +61,42 @@ void ThreadPool::wait_for_tasks_to_complete()
         CloseThreadpoolWork(work);
     }
     _work_items.clear();
+
+    std::exception_ptr failure;
+    {
+        std::lock_guard<std::mutex> lock(_exception_mutex);
+        failure = _first_exception;
+        _first_exception = nullptr;
+    }
+    if (failure)
+    {
+        std::rethrow_exception(failure);
+    }
 }
 
-void CALLBACK ThreadPool::work_callback(PTP_CALLBACK_INSTANCE instance, PVOID parameter, PTP_WORK work)
+void CALLBACK ThreadPool::work_callback(PTP_CALLBACK_INSTANCE,
+    PVOID parameter, PTP_WORK)
 {
-    std::function<void()>* task = static_cast<std::function<void()>*>(parameter);
-    (*task)();
-    delete task;
+    // unique_ptr rather than a trailing delete: the task must be freed whether
+    // it returns or throws.
+    std::unique_ptr<task_item> item(static_cast<task_item*>(parameter));
+    try
+    {
+        item->task();
+    }
+    catch (...)
+    {
+        item->pool->record_exception(std::current_exception());
+    }
+}
+
+void ThreadPool::record_exception(std::exception_ptr exception)
+{
+    std::lock_guard<std::mutex> lock(_exception_mutex);
+    if (!_first_exception)
+    {
+        _first_exception = exception;
+    }
 }
 
 int ThreadPool::get_min_num_threads() const

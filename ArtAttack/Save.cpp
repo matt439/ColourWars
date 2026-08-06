@@ -1,7 +1,9 @@
 #include "pch.h"
 #include "Save.h"
+#include "JsonLoader.h"
 #include <cstdio>
-#include "rapidjson/filereadstream.h"
+#include <filesystem>
+#include <system_error>
 #include "rapidjson/filewritestream.h"
 #include "rapidjson/writer.h"
 
@@ -11,29 +13,33 @@ using namespace MattMath;
 
 SaveData Save::load_from_json(const char* json_path) const
 {
-    FILE* fp = fopen(json_path, "rb");
+    Document d = json_loader::parse_file(json_path);
 
-    auto read_buffer = std::make_unique<char>();
-    FileReadStream is(fp, read_buffer.get(), sizeof(read_buffer));
-
-    Document d;
-    d.ParseStream(is);
-
-    fclose(fp);
-    read_buffer.release();
-
-    auto resolution = Vector2I(d["resolution"]["x"].GetInt(), d["resolution"]["y"].GetInt());
-    bool fullscreen = d["fullscreen"].GetBool();
-
+    // Every field is optional: a save written by an older build, or one a user
+    // has hand-edited, must degrade to the default rather than crash.
     auto data = SaveData();
-    data.resolution = this->convert_ivec_to_resolution(resolution);
-    data.fullscreen = fullscreen;
+
+    if (d.IsObject() &&
+        d.HasMember("resolution") && d["resolution"].IsObject() &&
+        d["resolution"].HasMember("x") && d["resolution"]["x"].IsInt() &&
+        d["resolution"].HasMember("y") && d["resolution"]["y"].IsInt())
+    {
+        data.resolution = this->convert_ivec_to_resolution(
+            Vector2I(d["resolution"]["x"].GetInt(), d["resolution"]["y"].GetInt()));
+    }
+
+    if (d.IsObject() &&
+        d.HasMember("fullscreen") && d["fullscreen"].IsBool())
+    {
+        data.fullscreen = d["fullscreen"].GetBool();
+    }
+
     return data;
 }
 bool Save::check_if_save_file_exists()
 {
-    FILE* fp = fopen(SAVE_FILE_PATH.c_str(), "rb");
-    if (fp == NULL)
+    FILE* fp = nullptr;
+    if (fopen_s(&fp, SAVE_FILE_PATH.c_str(), "rb") != 0 || fp == nullptr)
     {
 		return false;
 	}
@@ -42,23 +48,38 @@ bool Save::check_if_save_file_exists()
 }
 void Save::load_save_file()
 {
-    if (check_if_save_file_exists())
+    if (!check_if_save_file_exists())
     {
-		std::cout << "Save file exists.\n";
-	}
-    else
-    {
-        std::cout << "Save file does not exist.\n";
+        // First run, or the save directory was never created. Write the
+        // defaults out so the file exists from here on.
         this->save_to_file();
     }
-    this->_save_data =
-        this->load_from_json(SAVE_FILE_PATH.c_str());
+
+    try
+    {
+        this->_save_data = this->load_from_json(SAVE_FILE_PATH.c_str());
+    }
+    catch (const std::exception&)
+    {
+        // A missing, unreadable or corrupt save is not fatal - the defaults are
+        // perfectly playable, and the next settings change overwrites the file.
+        this->_save_data = SaveData();
+    }
 }
 
 bool Save::write_save_file(const SaveData& data) const
 {
-    FILE* fp = fopen(SAVE_FILE_PATH.c_str(), "wb");
-    if (fp == nullptr)
+    // fopen("wb") does not create directories, so a deployed build with no
+    // save/ folder would fail here on every attempt.
+    const std::filesystem::path save_path(SAVE_FILE_PATH);
+    if (save_path.has_parent_path())
+    {
+        std::error_code ec;
+        std::filesystem::create_directories(save_path.parent_path(), ec);
+    }
+
+    FILE* fp = nullptr;
+    if (fopen_s(&fp, SAVE_FILE_PATH.c_str(), "wb") != 0 || fp == nullptr)
     {
         return false;
     }

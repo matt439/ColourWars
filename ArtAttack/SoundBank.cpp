@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "SoundBank.h"
+#include "JsonLoader.h"
 #include <cstdio>
-#include "rapidjson/filereadstream.h"
 
 using namespace DirectX;
 using namespace rapidjson;
@@ -149,16 +149,7 @@ std::map<std::string, std::unique_ptr<SoundEffectInstance>>
 
 void SoundBank::load_from_json(const char* json_path)
 {
-	FILE* fp = fopen(json_path, "rb");
-
-	auto read_buffer = std::make_unique<char>();
-	FileReadStream is(fp, read_buffer.get(), sizeof(read_buffer));
-
-	Document d;
-	d.ParseStream(is);
-
-	fclose(fp);
-	read_buffer.release();
+	Document d = json_loader::parse_file(json_path);
 
 	Value& waves = d["waves"];
 	Value& sound_effect_instances = d["sound_effect_instances"];

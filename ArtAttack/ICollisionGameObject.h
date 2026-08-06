@@ -14,6 +14,11 @@ public:
 	virtual collision_object_type get_collision_object_type() const = 0;
 	virtual const MattMath::Shape* get_shape() const = 0;
 	virtual bool get_for_deletion() const = 0;
+
+	// Requests removal at the end of the frame. Objects that are part of the
+	// level's fixed geometry (structures, paint tiles) cannot be removed and
+	// ignore this by default.
+	virtual void set_for_deletion(bool /*for_deletion*/) {}
 };
 
 #endif // !ICOLLISIONGAMEOBJECT_H

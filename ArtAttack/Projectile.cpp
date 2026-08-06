@@ -275,16 +275,19 @@ void Projectile::update_movement(float gravity, float wind_resistance)
     MovingObject::set_dx_x(MovingObject::get_velocity_x() * dt);
     MovingObject::set_dx_y(MovingObject::get_velocity_y() * dt);
 
+    // Age first, then test: testing before the increment let a projectile
+    // survive one frame past its deadline.
+    this->alter_timer(dt);
+
     if (this->get_timer() > this->get_delete_timer())
 	{
 		this->set_for_deletion(true);
 	}
-    this->alter_timer(dt);
 }
 
 float Projectile::get_delete_timer() const
 {
-	return this->_timer;
+	return this->get_details().delete_timer;
 }
 
 Vector2F Projectile::get_col_rect_size() const

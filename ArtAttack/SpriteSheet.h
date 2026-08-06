@@ -13,9 +13,15 @@ public:
 	explicit SpriteSheet(ID3D11ShaderResourceView* texture);
 
 	const AnimationStrip* get_animation_strip(const std::string& name) const;
-	
+
+	// Throws std::out_of_range naming the frame if it is not in the sheet.
+	const SpriteFrame& get_sprite_frame(const std::string& name) const;
+
 	void load_from_json(const char* json_path);
 
+	// Every draw overload is const: a single SpriteSheet is shared by every
+	// drawable in the level and is entered concurrently by the render workers,
+	// so nothing here may mutate the frame or strip maps.
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const std::string& frame_name,
 		const MattMath::Vector2F& position,
@@ -25,7 +31,7 @@ public:
 			MattMath::Vector2F::ZERO,
 		float scale = 1.0f,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
-		float layer_depth = 0.0f);
+		float layer_depth = 0.0f) const;
 
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const std::string& frame_name,
@@ -35,7 +41,7 @@ public:
 		const MattMath::Vector2F& origin =
 			MattMath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
-		float layer_depth = 0.0f);
+		float layer_depth = 0.0f) const;
 
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const RECT* source_rect,

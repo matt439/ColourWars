@@ -14,17 +14,20 @@ class ResourceManager
 public:
 	ResourceManager() = default;
 
-	ID3D11ShaderResourceView* get_texture(const std::string& texture_name);
+	// The getters are const and non-mutating: they are called per-draw from
+	// thread-pool workers, so they must not touch the maps. Each throws
+	// std::out_of_range naming the resource if it is absent or released.
+	ID3D11ShaderResourceView* get_texture(const std::string& texture_name) const;
 
 	void add_texture(const std::string& texture_name,
 		ID3D11ShaderResourceView* texture);
 
-	DirectX::SpriteFont* get_sprite_font(const std::string& font_name);
+	DirectX::SpriteFont* get_sprite_font(const std::string& font_name) const;
 
 	void add_sprite_font(const std::string& font_name,
 		std::unique_ptr<DirectX::SpriteFont> font);
 
-	SpriteSheet* get_sprite_sheet(const std::string& sprite_sheet_name);
+	SpriteSheet* get_sprite_sheet(const std::string& sprite_sheet_name) const;
 
 	void add_sprite_sheet(const std::string& sprite_sheet_name,
 		std::unique_ptr<SpriteSheet> sprite_sheet);
@@ -37,7 +40,7 @@ public:
 	void add_sound_bank(const std::string& sound_bank_name,
 		std::unique_ptr<SoundBank> sound_bank);
 
-	SoundBank* get_sound_bank(const std::string& sound_bank_name);
+	SoundBank* get_sound_bank(const std::string& sound_bank_name) const;
 
 	void reset_all_sprite_fonts();
 	void reset_all_textures();

@@ -442,6 +442,14 @@ namespace MattMath
 		float dot(const Vector2F& other) const;
 		Vector2F cross(const Vector2F& other) const;
 		
+		// Zero-length in, zero-length out. A zero vector has no direction, and
+		// returning zero lets the caller detect that; dividing by the length
+		// produced NaN, which then propagated silently through velocities and
+		// shape validation.
+		//
+		// Note this is deliberately NOT the same contract as to_unit_vector()
+		// and unit_vector(), which substitute (1, 0) for a zero vector. Use
+		// those only where an arbitrary direction is acceptable.
 		Vector2F normalized() const;
 		void normalize();
 
@@ -456,6 +464,8 @@ namespace MattMath
 		void rotate(float angle);
 		void normal();
 
+		// Substitutes (1, 0) for a zero-length vector - i.e. it invents a
+		// direction rather than reporting that there is none. See normalize().
 		void to_unit_vector();
 
 		bool abs_x_greater_than_y() const;
@@ -479,6 +489,7 @@ namespace MattMath
 		static Vector2F vec_from_angle_magnitude(float angle, float magnitude);
 		static Vector2F unit_vec_from_angle(float angle);
 
+		// Returns (1, 0) for a zero-length vector. See to_unit_vector().
 		static Vector2F unit_vector(const Vector2F& vec);
 		
 		static Vector2F normal(const Vector2F& vec);

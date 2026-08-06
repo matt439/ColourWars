@@ -31,6 +31,7 @@ Weapon::Weapon(const WeaponDetails& details,
 {
     this->_proj_builder = std::make_unique<ProjectileBuilder>();
     this->_sound_bank = resource_manager->get_sound_bank(details.sound_bank_name);
+    this->_loop_sound_name = resolve_loop_sound_name(type, team, player_num);
 }
 
 void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug)
@@ -235,32 +236,49 @@ bool Weapon::check_if_shooting_and_ammo_update(
 }
 void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
 {
-    const std::string& sound_name = this->get_sound_effect_instance_name();
-    
+    if (this->_loop_sound_name.empty())
+    {
+        return;
+    }
+
     if (holding_shoot || shooting_this_update)
     {
         this->_sound_bank->play_effect(
-            sound_name,
+            this->_loop_sound_name,
             true,
             this->_details.shoot_sound_volume);
     }
     else
     {
-        this->_sound_bank->stop_effect(sound_name, true);
+        this->_sound_bank->stop_effect(this->_loop_sound_name, true);
     }
 }
 void Weapon::stop_sounds() const
 {
-    const std::string& sound_name = this->get_sound_effect_instance_name();
-    
-    this->_sound_bank->stop_effect(sound_name, true);
+    if (this->_loop_sound_name.empty())
+    {
+        return;
+    }
+    this->_sound_bank->stop_effect(this->_loop_sound_name, true);
 }
-const std::string& Weapon::get_sound_effect_instance_name() const
+std::string Weapon::resolve_loop_sound_name(wep_type type,
+    player_team team, int player_num)
 {
-    player_team team = this->get_team();
-    int player_num = this->get_player_num();
+    // Sniper and Bucket fire a one-shot wave (see their handle_shoot_sound
+    // overrides) and have no looping instance at all. They get an empty name,
+    // which both handle_shoot_sound and stop_sounds read as "nothing to do".
+    //
+    // Resolved once here rather than looked up per call so that stop_sounds -
+    // a teardown path with no catch anywhere above it - cannot throw.
+    if (team != player_team::A && team != player_team::B)
+    {
+        return {};
+    }
+    if (player_num < 0 || player_num > 3)
+    {
+        return {};
+    }
 
-    wep_type type = this->get_type();
     switch (type)
     {
     case wep_type::SPRAYER:
@@ -270,10 +288,8 @@ const std::string& Weapon::get_sound_effect_instance_name() const
     case wep_type::MISTER:
         return MISTER_SOUND_DETAILS.get_sound_name(team, player_num);
     default:
-       throw std::exception("Weapon::get_sound_effect_instance_name() - "
-		   "invalid weapon type");
+        return {};
     }
-
 }
 void Weapon::update_movement_and_rotation(PlayerInputData input,
     const Vector2F& player_center,
