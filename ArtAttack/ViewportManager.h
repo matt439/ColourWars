@@ -19,12 +19,16 @@ class ViewportManager
 {
 public:
 	ViewportManager(ResolutionManager* resolution_manager,
-		DirectX::SpriteBatch* sprite_batch,
 		DX::DeviceResources* device_resources);
 
 	void set_layout(screen_layout layout);
 	screen_layout get_layout() const { return _layout; }
-	void apply_player_viewport(int player_num) const;
+
+	// Every overload takes the context to apply to. There used to be a
+	// one-argument version that reached for the IMMEDIATE context and a cached
+	// SpriteBatch*, which render workers were calling - ID3D11DeviceContext is
+	// not thread-safe, and the deferred contexts exist precisely so that
+	// workers never touch the immediate one.
 	void apply_player_viewport(int player_num,
 		ID3D11DeviceContext* context,
 		DirectX::SpriteBatch* sprite_batch) const;
@@ -44,7 +48,6 @@ public:
 
 private:
 	ResolutionManager* _resolution_manager = nullptr;
-	DirectX::SpriteBatch* _sprite_batch = nullptr;
 	DX::DeviceResources* _device_resources = nullptr;
 
 	screen_layout _layout = screen_layout::ONE_PLAYER;

@@ -10,6 +10,10 @@ namespace player_input_consts
 	constexpr float TRIGGER_SHOOT_THRESHOLD = 0.6f;
 	constexpr float TRIGGER_JUMP_THRESHOLD = 0.6f;
 	constexpr float STICK_DEADZONE = 0.5f;
+
+	// XInput slots. An index into the vector returned by
+	// update_and_get_player_inputs() is a pad slot, never an ordinal.
+	constexpr int MAX_PAD_COUNT = 4;
 }
 
 struct RawPlayerInput
@@ -29,9 +33,13 @@ class PlayerInput
 {
 public:
 	explicit PlayerInput(DirectX::GamePad* gamepad);
+
+	// Returns exactly player_input_consts::MAX_PAD_COUNT entries, indexed by
+	// XInput pad slot. Absent pads carry connection_state::DISCONNECTED and
+	// neutral input rather than being omitted.
 	std::vector<PlayerInputData> update_and_get_player_inputs();
 private:
-	RawPlayerInput _prev_inputs[4];
+	RawPlayerInput _prev_inputs[player_input_consts::MAX_PAD_COUNT];
 	RawPlayerInput get_raw_input(int gamepad_num) const;
 	static PlayerInputData calculate_player_input(const RawPlayerInput& current,
 	                                              const RawPlayerInput& previous);

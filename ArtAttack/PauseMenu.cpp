@@ -37,6 +37,19 @@ PauseMenuData* PauseMenuPage::get_pause_menu_data() const
 	return this->_data;
 }
 
+ProcessedMenuInput PauseMenuPage::get_pausing_player_input(
+	const std::vector<ProcessedMenuInput>& inputs) const
+{
+	const int player_num = this->get_pause_menu_data()->get_player_num();
+
+	if (player_num < 0 ||
+		static_cast<size_t>(player_num) >= inputs.size())
+	{
+		return ProcessedMenuInput();
+	}
+	return inputs[static_cast<size_t>(player_num)];
+}
+
 PauseMenuInitial::PauseMenuInitial(PauseMenuData* data) :
 	PauseMenuPage(data)
 {
@@ -45,18 +58,18 @@ PauseMenuInitial::PauseMenuInitial(PauseMenuData* data) :
 
 void PauseMenuInitial::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
-	int player_num = this->get_pause_menu_data()->get_player_num();
+	const ProcessedMenuInput input =
+		this->get_pausing_player_input(this->get_menu_inputs());
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
 
-	if (inputs[player_num].action == menu_input_action::BACK ||
-		inputs[player_num].action == menu_input_action::PAUSE)
+	if (input.action == menu_input_action::BACK ||
+		input.action == menu_input_action::PAUSE)
 	{
 		this->play_wave(CANCEL_SOUND);
 		*this->get_pause_menu_data()->get_action() = pause_menu_action::RESUME;
 	}
-	else if (inputs[player_num].action == menu_input_action::PROCEED)
+	else if (input.action == menu_input_action::PROCEED)
 	{
 		if (highlighted_element == "resume")
 		{
@@ -79,7 +92,7 @@ void PauseMenuInitial::update()
 					confirmation_type::QUIT));
 		}
 	}
-	else if (inputs[player_num].direction == menu_direction::UP)
+	else if (input.direction == menu_direction::UP)
 	{
 		this->play_wave(DIRECTION_SOUND);
 		if (highlighted_element == "resume")
@@ -95,7 +108,7 @@ void PauseMenuInitial::update()
 			this->change_highlight(this->_restart.get());
 		}
 	}
-	else if (inputs[player_num].direction == menu_direction::DOWN)
+	else if (input.direction == menu_direction::DOWN)
 	{
 		this->play_wave(DIRECTION_SOUND);
 		if (highlighted_element == "resume")
@@ -214,19 +227,19 @@ PauseMenuConfirmation::PauseMenuConfirmation(PauseMenuData* data,
 
 void PauseMenuConfirmation::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
-	int player_num = this->get_pause_menu_data()->get_player_num();
+	const ProcessedMenuInput input =
+		this->get_pausing_player_input(this->get_menu_inputs());
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
 
-	if (inputs[player_num].action == menu_input_action::BACK)
+	if (input.action == menu_input_action::BACK)
 	{
 		this->play_wave(CANCEL_SOUND);
 		this->get_context()->transition_to(std::make_unique<PauseMenuInitial>(
 			this->get_pause_menu_data()));
 		return;
 	}
-	else if (inputs[player_num].action == menu_input_action::PROCEED)
+	else if (input.action == menu_input_action::PROCEED)
 	{
 		if (highlighted_element == "yes")
 		{
@@ -253,8 +266,8 @@ void PauseMenuConfirmation::update()
 			return;
 		}
 	}
-	else if (inputs[player_num].direction == menu_direction::UP ||
-		inputs[player_num].direction == menu_direction::DOWN)
+	else if (input.direction == menu_direction::UP ||
+		input.direction == menu_direction::DOWN)
 	{
 		this->play_wave(DIRECTION_SOUND);
 		if (highlighted_element == "yes")

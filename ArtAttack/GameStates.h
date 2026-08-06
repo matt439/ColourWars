@@ -68,6 +68,11 @@ private:
     std::unique_ptr<end_menu_action> _end_menu_action = nullptr;
     std::unique_ptr<EndMenuData> _end_menu_data = nullptr;
     game_level_state _state = game_level_state::FIRST_UPDATE;
+    // Sets the screen layout from the settings, then builds the level. Used by
+    // init() and by every restart path, so they cannot drift apart.
+    void build_and_enter_level();
+
+    // Returns the XInput pad slot of the player who pressed pause, or -1.
     static int check_for_pause_input(
         const std::vector<PlayerInputData>& player_inputs);
     GameData* get_data() const;

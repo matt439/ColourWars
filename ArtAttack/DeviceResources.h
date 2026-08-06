@@ -83,6 +83,10 @@ namespace DX
             m_d3dAnnotation->SetMarker(name);
         }
 
+        // Creates `num` deferred contexts on the current device. The count is
+        // remembered so CreateDeviceResources() can rebuild them after device
+        // loss - contexts belong to the device that made them, and using ones
+        // from a removed device is invalid.
         void create_deferred_contexts(int num);
         std::vector<ID3D11DeviceContext*>* get_deferred_contexts() const noexcept;
         ID3D11DeviceContext* get_deferred_context(int index) const noexcept;
@@ -125,6 +129,11 @@ namespace DX
         // The IDeviceNotify can be held directly as it owns the DeviceResources.
         IDeviceNotify*                                  m_deviceNotify;
 
+        // Owning handles, plus a raw mirror for the existing accessors. The
+        // contexts used to be raw pointers that were never Released and never
+        // recreated on device loss.
+        std::vector<Microsoft::WRL::ComPtr<ID3D11DeviceContext>> _deferred_contexts_owned;
         std::unique_ptr<std::vector<ID3D11DeviceContext*>> _deferred_contexts = nullptr;
+        int _deferred_context_count = 0;
     };
 }

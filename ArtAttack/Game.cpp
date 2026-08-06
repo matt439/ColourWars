@@ -51,6 +51,7 @@ void Game::initialize(GameData* game_data)
     // create deferred contexts
     _device_resources->create_deferred_contexts(NUM_THREADS_MAX);
 
+    create_services();
     create_device_dependent_resources();
 
     _device_resources->CreateWindowSizeDependentResources();
@@ -214,50 +215,73 @@ void Game::on_window_size_changed(int width, int height) const
 #pragma endregion
 
 #pragma region Direct3D Resources
-// These are the resources that depend on the device.
-void Game::create_device_dependent_resources()
+// Services that outlive the D3D device. These are created exactly once, in
+// initialize(), and never reassigned: every live Level, Player, Weapon,
+// Projectile and drawable snapshots raw pointers to them at construction and
+// is never told when they change. Recreating them on device restore turned the
+// entire object graph into dangling pointers.
+void Game::create_services()
 {
     auto device = _device_resources->GetD3DDevice();
 
-    // TODO: Initialize device dependent objects here (independent of window size).
-    auto context = _device_resources->GetD3DDeviceContext();
-    this->_sprite_batches.resize(NUM_THREADS_MAX);
-    this->_sprite_batches_ptrs.resize(NUM_THREADS_MAX);
-    for (int i = 0; i < NUM_THREADS_MAX; i++)
-    {
-        this->_sprite_batches[i] = std::move(
-            std::make_unique<SpriteBatch>(this->_device_resources->get_deferred_context(i)));
-
-        this->_sprite_batches_ptrs[i] = this->_sprite_batches[i].get();
-    }
-
-    this->_data->set_sprite_batches(&this->_sprite_batches_ptrs);
-
-	this->_thread_pool = std::make_unique<ThreadPool>(NUM_THREADS_MIN, NUM_THREADS_MAX);
-	this->_data->set_thread_pool(this->_thread_pool.get());
+    this->_thread_pool = std::make_unique<ThreadPool>(NUM_THREADS_MIN, NUM_THREADS_MAX);
+    this->_data->set_thread_pool(this->_thread_pool.get());
 
     this->_resource_manager = std::make_unique<ResourceManager>();
     this->_data->set_resource_manager(this->_resource_manager.get());
+
     this->_resource_loader = std::make_unique<ResourceLoader>(
         this->_resource_manager.get(), device, this->_audio_engine.get());
     this->_data->set_resource_loader(this->_resource_loader.get());
+
     this->_dt = std::make_unique<float>(0.f);
     this->_data->set_dt(this->_dt.get());
 
     this->_viewport_manager = std::make_unique<ViewportManager>(
-        this->_data->get_resolution_manager(), this->_data->get_sprite_batches()->at(0),
+        this->_data->get_resolution_manager(),
         this->_data->get_device_resources());
     this->_data->set_viewport_manager(this->_viewport_manager.get());
+
+    this->_partitioner = std::make_unique<Partitioner>();
+    this->_data->set_partitioner(this->_partitioner.get());
+}
+
+// These are the resources that depend on the device, and only those. Re-run on
+// every device restore.
+void Game::create_device_dependent_resources()
+{
+    auto device = _device_resources->GetD3DDevice();
+
+    this->_sprite_batches.resize(NUM_THREADS_MAX);
+    this->_sprite_batches_ptrs.resize(NUM_THREADS_MAX);
+    for (int i = 0; i < NUM_THREADS_MAX; i++)
+    {
+        this->_sprite_batches[i] =
+            std::make_unique<SpriteBatch>(this->_device_resources->get_deferred_context(i));
+
+        this->_sprite_batches_ptrs[i] = this->_sprite_batches[i].get();
+    }
+
+    // The vector's address is stable, so consumers that hold it keep working;
+    // only the pointers inside it change.
+    this->_data->set_sprite_batches(&this->_sprite_batches_ptrs);
 
     _states = std::make_unique<CommonStates>(device);
     this->_data->set_common_states(_states.get());
 
-	this->_partitioner = std::make_unique<Partitioner>();
-	this->_data->set_partitioner(this->_partitioner.get());
+    // Reload the GPU-side assets into the existing ResourceManager, so every
+    // borrowed SpriteSheet*/SoundBank* pointer stays valid.
+    this->_resource_loader->set_device(device);
 
-    this->_resource_loader->load_all_resources();
-
-    // device;
+    if (this->_resources_loaded)
+    {
+        this->_resource_loader->reload_device_resources();
+    }
+    else
+    {
+        this->_resource_loader->load_all_resources();
+        this->_resources_loaded = true;
+    }
 }
 
 // Allocate all memory resources that change on a window SizeChanged event.
@@ -268,15 +292,20 @@ void Game::create_window_size_dependent_resources() const
 
 void Game::OnDeviceLost()
 {
-    // TODO: Add Direct3D resource cleanup here.
+    // Only D3D objects. Audio is not a device resource, and tearing down the
+    // sound banks here left every Level, Player, Weapon and StructurePaintable
+    // holding a freed SoundBank*.
     for (auto& sprite_batch : this->_sprite_batches)
     {
         sprite_batch.reset();
     }
+    this->_sprite_batches_ptrs.assign(this->_sprite_batches_ptrs.size(), nullptr);
+
     _states.reset();
+    this->_data->set_common_states(nullptr);
+
     this->_resource_manager->reset_all_textures();
     this->_resource_manager->reset_all_sprite_fonts();
-    this->_resource_manager->reset_all_sounds();
 }
 
 void Game::OnDeviceRestored()

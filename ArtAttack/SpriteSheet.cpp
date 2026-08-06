@@ -12,6 +12,11 @@ SpriteSheet::SpriteSheet(ID3D11ShaderResourceView* texture) :
 
 }
 
+void SpriteSheet::set_texture(ID3D11ShaderResourceView* texture)
+{
+	this->_texture = texture;
+}
+
 const AnimationStrip* SpriteSheet::get_animation_strip(const std::string& name) const
 {
 	const auto it = this->_animation_strips.find(name);

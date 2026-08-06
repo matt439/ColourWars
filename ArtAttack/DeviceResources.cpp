@@ -430,6 +430,15 @@ void DeviceResources::HandleDeviceLost()
     m_d3dContext.Reset();
     m_d3dAnnotation.Reset();
 
+    // Deferred contexts belong to the device that created them. They must go
+    // with it, and be rebuilt below, or the renderer would keep recording into
+    // contexts owned by a removed device.
+    _deferred_contexts_owned.clear();
+    if (_deferred_contexts != nullptr)
+    {
+        _deferred_contexts->clear();
+    }
+
 #ifdef _DEBUG
     {
         ComPtr<ID3D11Debug> d3dDebug;
@@ -444,6 +453,12 @@ void DeviceResources::HandleDeviceLost()
     m_dxgiFactory.Reset();
 
     CreateDeviceResources();
+
+    if (_deferred_context_count > 0)
+    {
+        create_deferred_contexts(_deferred_context_count);
+    }
+
     CreateWindowSizeDependentResources();
 
     if (m_deviceNotify)
@@ -715,17 +730,22 @@ void DeviceResources::UpdateColorSpace()
 
 void DeviceResources::create_deferred_contexts(int num)
 {
+    this->_deferred_context_count = num;
+
+    this->_deferred_contexts_owned.clear();
     this->_deferred_contexts = std::make_unique<std::vector<ID3D11DeviceContext*>>();
 
     for (int i = 0; i < num; i++)
     {
-        ID3D11DeviceContext* deferred_context = nullptr;
-        HRESULT hr = m_d3dDevice->CreateDeferredContext(0, &deferred_context);
+        Microsoft::WRL::ComPtr<ID3D11DeviceContext> deferred_context;
+        HRESULT hr = m_d3dDevice->CreateDeferredContext(0,
+            deferred_context.GetAddressOf());
         if (FAILED(hr))
         {
             throw std::runtime_error("Failed to create deferred context.");
         }
-        this->_deferred_contexts->push_back(deferred_context);
+        this->_deferred_contexts->push_back(deferred_context.Get());
+        this->_deferred_contexts_owned.push_back(std::move(deferred_context));
     }
 }
 
@@ -737,9 +757,11 @@ std::vector<ID3D11DeviceContext*>* DeviceResources::get_deferred_contexts() cons
 ID3D11DeviceContext*
 DeviceResources::get_deferred_context(int index) const noexcept
 {
-    if (index < 0 || index >= this->_deferred_contexts->size())
+    if (this->_deferred_contexts == nullptr ||
+        index < 0 ||
+        static_cast<size_t>(index) >= this->_deferred_contexts->size())
     {
         throw std::out_of_range("Invalid index.");
     }
-    return this->_deferred_contexts->at(index);
+    return this->_deferred_contexts->at(static_cast<size_t>(index));
 }

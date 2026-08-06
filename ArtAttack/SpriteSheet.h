@@ -19,6 +19,11 @@ public:
 
 	void load_from_json(const char* json_path);
 
+	// Points the sheet at a newly created texture after a device restore. The
+	// frame and animation-strip tables are device-independent and survive, so
+	// every cached SpriteSheet* and AnimationStrip* stays valid.
+	void set_texture(ID3D11ShaderResourceView* texture);
+
 	// Every draw overload is const: a single SpriteSheet is shared by every
 	// drawable in the level and is entered concurrently by the render workers,
 	// so nothing here may mutate the frame or strip maps.

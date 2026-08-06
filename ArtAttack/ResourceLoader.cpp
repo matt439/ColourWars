@@ -14,21 +14,62 @@ ResourceLoader::ResourceLoader(ResourceManager* resource_manager,
 
 }
 
-void ResourceLoader::load_textures() const
+void ResourceLoader::set_device(ID3D11Device1* device)
+{
+    this->_device = device;
+}
+
+void ResourceLoader::load_textures()
 {
     this->load_sprite_sheet_from_directory(TEXTURE_DIRECTORY, "sprite_sheet_1");
+    this->_loaded_sprite_sheets.push_back({ TEXTURE_DIRECTORY, "sprite_sheet_1" });
 }
 void ResourceLoader::load_fonts()
 {
-    this->load_sprite_font_from_directory(FONT_DIRECTORY, "gill_sans_ultra_bold_144");
+    const std::string font_names[] =
+    {
+        "gill_sans_ultra_bold_144",
+        "gill_sans_mt_bold_24",
+        "gill_sans_mt_bold_36",
+        "gill_sans_mt_bold_48",
+        "gill_sans_mt_bold_72",
+        "gill_sans_mt_bold_144",
+        "courier_new_bold_16",
+    };
 
-    this->load_sprite_font_from_directory(FONT_DIRECTORY, "gill_sans_mt_bold_24");
-    this->load_sprite_font_from_directory(FONT_DIRECTORY, "gill_sans_mt_bold_36");
-    this->load_sprite_font_from_directory(FONT_DIRECTORY, "gill_sans_mt_bold_48");
-    this->load_sprite_font_from_directory(FONT_DIRECTORY, "gill_sans_mt_bold_72");
-    this->load_sprite_font_from_directory(FONT_DIRECTORY, "gill_sans_mt_bold_144");
+    for (const std::string& font_name : font_names)
+    {
+        this->load_sprite_font_from_directory(FONT_DIRECTORY, font_name);
+        this->_loaded_fonts.push_back({ FONT_DIRECTORY, font_name });
+    }
+}
 
-    this->load_sprite_font_from_directory(FONT_DIRECTORY, "courier_new_bold_16");
+void ResourceLoader::reload_device_resources()
+{
+    // Fonts hold GPU textures, so they have to be rebuilt outright. Nothing
+    // caches a SpriteFont* - every text object looks its font up by name.
+    std::vector<asset_record> fonts = this->_loaded_fonts;
+    this->_loaded_fonts.clear();
+    for (const asset_record& font : fonts)
+    {
+        this->load_sprite_font_from_directory(font.directory, font.name);
+        this->_loaded_fonts.push_back(font);
+    }
+
+    for (const asset_record& sheet : this->_loaded_sprite_sheets)
+    {
+        this->reload_sprite_sheet_texture(sheet.directory, sheet.name);
+    }
+}
+
+void ResourceLoader::reload_sprite_sheet_texture(const std::string& directory,
+    const std::string& name) const
+{
+    const std::string texture_path = directory + name + ".dds";
+    this->load_texture(texture_path, name);
+
+    this->_resource_manager->get_sprite_sheet(name)->set_texture(
+        this->_resource_manager->get_texture(name));
 }
 void ResourceLoader::load_sounds()
 {

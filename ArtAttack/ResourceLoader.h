@@ -14,6 +14,18 @@ public:
 
 	void load_all_resources();
 
+	// Rebuilds only what actually lives on the GPU (fonts, textures) after a
+	// device loss, replaying exactly what load_all_resources() loaded.
+	//
+	// Sound banks, level info and the SpriteSheet objects themselves are NOT
+	// recreated: they are not device resources, and callers hold raw
+	// SoundBank*, LevelLoadedInfo* and SpriteSheet* pointers to them. Each
+	// SpriteSheet has its texture re-seated in place instead.
+	void reload_device_resources();
+
+	// The device changes identity on restore, so the loader has to be told.
+	void set_device(ID3D11Device1* device);
+
 	void load_texture(const std::string& texture_path,
 		const std::string& texture_name) const;
 	void load_texture_from_directory(const std::string& directory,
@@ -48,10 +60,26 @@ private:
 	ID3D11Device1* _device = nullptr;
 	DirectX::AudioEngine* _audio_engine = nullptr;
 
-	void load_textures() const;
+	// What was loaded, so a device restore can replay it without a second
+	// hardcoded copy of the asset list.
+	struct asset_record
+	{
+		std::string directory;
+		std::string name;
+	};
+	std::vector<asset_record> _loaded_fonts;
+	std::vector<asset_record> _loaded_sprite_sheets;
+
+	void load_textures();
 	void load_fonts();
 	void load_level_info() const;
 	void load_sounds();
+
+	// Reloads the sheet's .dds and points the existing SpriteSheet at it. The
+	// frame and animation-strip tables are device-independent, so they are left
+	// alone and every cached SpriteSheet*/AnimationStrip* stays valid.
+	void reload_sprite_sheet_texture(const std::string& directory,
+		const std::string& name) const;
 };
 
 #endif // !RESOURCELOADER_H

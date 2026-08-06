@@ -53,26 +53,44 @@ private:
 
     void clear() const;
 
+    // Services that must survive device loss. Created once in initialize().
+    void create_services();
+
+    // GPU objects only. Re-run on every device restore.
     void create_device_dependent_resources();
     void create_window_size_dependent_resources() const;
 
     std::unique_ptr<DX::DeviceResources> _device_resources = nullptr;
     DX::StepTimer _timer = DX::StepTimer();
 
-    std::unique_ptr<DirectX::CommonStates> _states = nullptr;
+    // DECLARATION ORDER IS LOAD-BEARING BELOW THIS LINE.
+    //
+    // Members destruct in reverse declaration order. DirectXTK requires the
+    // AudioEngine to outlive every WaveBank and SoundEffectInstance - their
+    // destructors unregister themselves from it - and ResourceManager owns the
+    // SoundBanks that own those. So _audio_engine is declared FIRST, and dies
+    // LAST. It used to be declared near the end and was destroyed before the
+    // banks it owns, on every normal exit.
+    std::unique_ptr<DirectX::AudioEngine> _audio_engine = nullptr;
 
-    std::unique_ptr<ResourceLoader> _resource_loader = nullptr;
     std::unique_ptr<ResourceManager> _resource_manager = nullptr;
+    std::unique_ptr<ResourceLoader> _resource_loader = nullptr;
+
+    std::unique_ptr<DirectX::CommonStates> _states = nullptr;
     std::unique_ptr<float> _dt = nullptr;
-    std::unique_ptr<State> _state = nullptr;
     std::unique_ptr<DirectX::GamePad> _gamepad = nullptr;
     std::unique_ptr<ViewportManager> _viewport_manager = nullptr;
     GameData* _data = nullptr;
     std::unique_ptr<ThreadPool> _thread_pool = nullptr;
     std::vector<std::unique_ptr<DirectX::SpriteBatch>> _sprite_batches;
     std::vector<DirectX::SpriteBatch*> _sprite_batches_ptrs;
-    std::unique_ptr<DirectX::AudioEngine> _audio_engine = nullptr;
 	std::unique_ptr<Partitioner> _partitioner = nullptr;
+
+    // The state tree borrows every service above, so it must die first -
+    // i.e. be declared last.
+    std::unique_ptr<State> _state = nullptr;
+
+    bool _resources_loaded = false;
 };
 
 #endif // ! GAME_H

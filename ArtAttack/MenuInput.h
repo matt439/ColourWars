@@ -5,11 +5,14 @@
 #include "menu_input_action.h"
 #include "connection_state.h"
 #include "MattMath.h"
+#include "PlayerInput.h"
 
 namespace menu_input_consts
 {
 	constexpr float DIGITAL_PRESENCE_THRESHOLD = 0.8f;
 	constexpr float DIGITAL_ABSENCE_THRESHOLD = 0.8f;
+
+	using player_input_consts::MAX_PAD_COUNT;
 }
 
 struct RawMenuInput
@@ -45,9 +48,12 @@ class MenuInput
 {
 public:
 	explicit MenuInput(DirectX::GamePad* gamepad);
+
+	// Returns exactly menu_input_consts::MAX_PAD_COUNT entries, indexed by
+	// XInput pad slot. Absent pads carry DISCONNECTED and neutral input.
 	std::vector<ProcessedMenuInput> update_and_get_menu_inputs();
 private:
-	RawMenuInput _prev_inputs[4];
+	RawMenuInput _prev_inputs[menu_input_consts::MAX_PAD_COUNT];
 	RawMenuInput get_raw_input(int gamepad_num) const;
 	static ProcessedMenuInput calculate_menu_input(const RawMenuInput& current,
 	                                               const RawMenuInput& previous);

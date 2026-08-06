@@ -118,19 +118,26 @@ PlayerInputData PlayerInput::calculate_player_input(
 
 std::vector<PlayerInputData> PlayerInput::update_and_get_player_inputs()
 {
-    RawPlayerInput current[4];
-    for (int i = 0; i < 4; i++)
+    RawPlayerInput current[MAX_PAD_COUNT];
+    for (int i = 0; i < MAX_PAD_COUNT; i++)
     {
         current[i] = this->get_raw_input(i);
     }
-    std::vector<PlayerInputData> result;
-    for (int i = 0; i < 4; i++)
+
+    // Always one entry per pad slot. Pushing back only for connected pads made
+    // the index mean "nth connected pad" while every caller read it as "player
+    // number", so unplugging a pad silently handed a player someone else's
+    // controller and then indexed past the end of the vector.
+    //
+    // Slots with no pad keep the default-constructed value: zeroed axes,
+    // nothing pressed, and connection == DISCONNECTED.
+    std::vector<PlayerInputData> result(MAX_PAD_COUNT);
+    for (int i = 0; i < MAX_PAD_COUNT; i++)
     {
         if (current[i].connected)
         {
-            PlayerInputData input = calculate_player_input(current[i],
+            result[i] = calculate_player_input(current[i],
                 this->_prev_inputs[i]);
-            result.push_back(input);
         }
         this->_prev_inputs[i] = current[i];
     }

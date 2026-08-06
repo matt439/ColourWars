@@ -186,10 +186,22 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	}
 	
 	// update player objects
-	int player_index = 0;
 	for (const auto& object : *this->_player_objects)
-	{		
-		object->set_player_input(player_inputs[player_index]);
+	{
+		// Index by the player's own pad slot, not by position in this loop.
+		// player_inputs is one entry per pad slot; a running counter only
+		// happened to agree while every pad stayed connected.
+		const int player_index = object->get_player_num();
+
+		if (player_index >= 0 &&
+			static_cast<size_t>(player_index) < player_inputs.size())
+		{
+			object->set_player_input(player_inputs[player_index]);
+		}
+		else
+		{
+			object->set_player_input(PlayerInputData());
+		}
 		object->update();
 
 		// update player camera
@@ -208,8 +220,6 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 		{
 			this->_collision_objects->push_back(std::move(proj));
 		}
-
-		player_index++;
 	}
 
 	// update non-collision objects
@@ -602,14 +612,11 @@ void Level::draw_zoom_out_level(std::vector<ID3D11DeviceContext*>* deferred_cont
 	std::vector<ID3D11CommandList*>* command_lists,
 	std::vector<SpriteBatch*>* sprite_batches) const
 {
-	int num_threads = this->_thread_pool->get_max_num_threads();
-
-	this->_thread_pool->add_task([this, deferred_contexts, command_lists, sprite_batches]()
-		{
-			this->draw_zoom_out_level_component(deferred_contexts, command_lists, sprite_batches);
-		});
-	
-	this->_thread_pool->wait_for_tasks_to_complete();
+	// Submitting exactly one task and then immediately blocking on it gains no
+	// parallelism and pays a full thread-pool round trip. Record it here, on
+	// the calling thread.
+	this->draw_zoom_out_level_component(deferred_contexts, command_lists,
+		sprite_batches);
 }
 
 void Level::draw_zoom_out_level_component(
@@ -619,15 +626,23 @@ void Level::draw_zoom_out_level_component(
 {
 	if (deferred_contexts->at(0)->GetType() != D3D11_DEVICE_CONTEXT_DEFERRED)
 	{
-		throw std::exception("Deferred context not created");
+		throw std::runtime_error("Deferred context not created");
 	}
-	
-	this->_viewport_manager->set_layout(screen_layout::ONE_PLAYER);
-	this->_viewport_manager->apply_player_viewport(0);
 
 	const Camera& camera = this->_zoom_out_camera;
 
+	ID3D11DeviceContext* context = deferred_contexts->at(0);
 	SpriteBatch* sprite_batch = sprite_batches->at(0);
+
+	// Compute the fullscreen viewport and apply it to this context only.
+	// This used to call ViewportManager::set_layout(ONE_PLAYER), permanently
+	// clobbering shared presentation state from inside a draw call: the layout
+	// was never restored, so restarting a 2-4 player match rendered every
+	// camera into one fullscreen viewport with no split-screen dividers.
+	const D3D11_VIEWPORT viewport =
+		this->_viewport_manager->get_fullscreen_d3d11_viewport();
+	context->RSSetViewports(1, &viewport);
+	sprite_batch->SetViewport(viewport);
 
 	sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, this->_sampler_state);
 

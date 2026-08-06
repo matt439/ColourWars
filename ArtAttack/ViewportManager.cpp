@@ -6,10 +6,8 @@ using namespace MattMath;
 using namespace viewport_consts;
 
 ViewportManager::ViewportManager(ResolutionManager* resolution_manager,
-    SpriteBatch* sprite_batch,
     DX::DeviceResources* device_resources) :
     _resolution_manager(resolution_manager),
-    _sprite_batch(sprite_batch),
     _device_resources(device_resources)
 {
 }
@@ -58,15 +56,6 @@ void ViewportManager::apply_player_viewport(int player_num,
         this->_layout, player_num, this->_resolution_manager->get_resolution_vec());
     context->RSSetViewports(1, &vp);
     sprite_batch->SetViewport(vp);
-}
-
-void ViewportManager::apply_player_viewport(int player_num) const
-{
-    D3D11_VIEWPORT vp = this->calculate_d3d11_viewport(
-        this->_layout, player_num, this->_resolution_manager->get_resolution_vec());
-    auto context = this->_device_resources->GetD3DDeviceContext();
-    context->RSSetViewports(1, &vp);
-    this->_sprite_batch->SetViewport(vp);
 }
 
 D3D11_VIEWPORT ViewportManager::calculate_d3d11_viewport(screen_layout layout,

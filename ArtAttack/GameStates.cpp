@@ -119,11 +119,19 @@ void GameLevel::init()
         this->get_data()->get_thread_pool(),
 		this->get_data()->get_partitioner());
 
+    this->build_and_enter_level();
+}
+
+// The single way into a level. LevelBuilder reads the current screen layout to
+// build the split-screen dividers, so the layout must be set first - every
+// restart path used to skip that and rebuild the level under whatever layout
+// happened to be in place.
+void GameLevel::build_and_enter_level()
+{
     this->get_data()->get_viewport_manager()->
         set_layout(this->_settings.get_screen_layout());
 
-    this->_level = std::move(this->_level_builder->build_level(
-        this->_settings));
+    this->_level = this->_level_builder->build_level(this->_settings);
 }
 void GameLevel::update()
 {
@@ -199,8 +207,7 @@ void GameLevel::update()
             break;
         case pause_menu_action::RESTART:
             this->_level->stop_music();
-            this->_level = std::move(this->_level_builder->build_level(
-                this->_settings));
+            this->build_and_enter_level();
             this->_state = game_level_state::FIRST_UPDATE;
             break;
         case pause_menu_action::QUIT:
@@ -276,8 +283,7 @@ void GameLevel::update()
         case end_menu_action::RESTART:
         {
             this->_level->stop_music();
-            this->_level = std::move(this->_level_builder->build_level(
-                this->_settings));
+            this->build_and_enter_level();
             this->_state = game_level_state::FIRST_UPDATE;
             break;
         }

@@ -3,6 +3,7 @@
 
 using namespace DirectX;
 using namespace MattMath;
+using namespace menu_input_consts;
 
 MenuInput::MenuInput(GamePad* gamepad) :
     _gamepad(gamepad)
@@ -130,19 +131,21 @@ ProcessedMenuInput MenuInput::calculate_menu_input(const RawMenuInput& current,
 
 std::vector<ProcessedMenuInput> MenuInput::update_and_get_menu_inputs()
 {
-    RawMenuInput current[4];
-    for (int i = 0; i < 4; i++)
+    RawMenuInput current[MAX_PAD_COUNT];
+    for (int i = 0; i < MAX_PAD_COUNT; i++)
     {
         current[i] = this->get_raw_input(i);
     }
-    std::vector<ProcessedMenuInput> result;
-    for (int i = 0; i < 4; i++)
+
+    // One entry per pad slot, always - see PlayerInput for why. Slots with no
+    // pad keep the default value (direction NONE, action NONE, DISCONNECTED),
+    // which every menu loop already treats as "no input this frame".
+    std::vector<ProcessedMenuInput> result(MAX_PAD_COUNT);
+    for (int i = 0; i < MAX_PAD_COUNT; i++)
     {
         if (current[i].connected)
         {
-            ProcessedMenuInput input =
-                calculate_menu_input(current[i], this->_prev_inputs[i]);
-            result.push_back(input);
+            result[i] = calculate_menu_input(current[i], this->_prev_inputs[i]);
         }
         this->_prev_inputs[i] = current[i];
     }

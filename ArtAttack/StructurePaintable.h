@@ -14,13 +14,20 @@ namespace structure_paintable_consts
 	constexpr float SOUND_VOLUME = 0.1f;
 }
 
-//struct PaintableFaces
-//{
-//	bool left = false;
-//	bool top = false;
-//	bool right = false;
-//	bool bottom = false;
-//};
+// Which faces of a paintable structure generate paint tiles.
+//
+// These used to be encoded as a std::vector<Segment> of the matching edges and
+// decoded back by matching positional indices against RectangleF::get_edges().
+// That ordering is {top, bottom, left, right} but the decoder assumed
+// {top, right, bottom, left}, so three of the four faces painted on the wrong
+// side. Passing the booleans through directly removes the round trip.
+struct PaintableFaces
+{
+	bool left = false;
+	bool top = false;
+	bool right = false;
+	bool bottom = false;
+};
 
 class StructurePaintable final : public Structure, public IPaintableGameObject
 {
@@ -33,8 +40,7 @@ public:
 		ResourceManager* resource_manager,
 		collision_object_type collision_type,
 		const TeamColour& team_colours,
-		//const PaintableFaces& faces,
-		const std::vector<MattMath::Segment>& paintable_edges,
+		const PaintableFaces& faces,
 		const float* dt,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
@@ -52,8 +58,10 @@ public:
 private:
 	std::vector<PaintTile> _paint_tiles = std::vector<PaintTile>();
 	TeamColour _team_colours = TeamColour();
-	//PaintableFaces _faces = PaintableFaces();
-	const std::vector<MattMath::Segment>& _paintable_edges;
+	// By value. This was a reference bound to a vector local to
+	// LevelObjectBuilder::build_collision_object, so it dangled for the whole
+	// life of every paintable structure in the level.
+	PaintableFaces _faces = PaintableFaces();
 	const float* _dt = nullptr;
 	std::vector<PaintTile> generate_paint_tiles() const;
 	SoundBank* _sound_bank = nullptr;

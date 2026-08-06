@@ -98,36 +98,21 @@ std::unique_ptr<ICollisionGameObject>
 			throw std::exception("Invalid rectangle type");
 		}
 
-		//PaintableFaces faces;
-		//faces.left = json["paintable_faces"]["left"].GetBool();
-		//faces.top = json["paintable_faces"]["top"].GetBool();
-		//faces.right = json["paintable_faces"]["right"].GetBool();
-		//faces.bottom = json["paintable_faces"]["bottom"].GetBool();
+		if (!json.HasMember("paintable_faces"))
+		{
+			throw std::runtime_error(
+				"StructurePaintable is missing its paintable_faces object");
+		}
 
-		std::vector<Segment> paintable_edges;
-		if (json.HasMember("paintable_faces"))
-		{
-			if (json["paintable_faces"]["left"].GetBool())
-			{
-				paintable_edges.push_back(rectangle.get_left_edge());
-			}
-			if (json["paintable_faces"]["top"].GetBool())
-			{
-				paintable_edges.push_back(rectangle.get_top_edge());
-			}
-			if (json["paintable_faces"]["right"].GetBool())
-			{
-				paintable_edges.push_back(rectangle.get_right_edge());
-			}
-			if (json["paintable_faces"]["bottom"].GetBool())
-			{
-				paintable_edges.push_back(rectangle.get_bottom_edge());
-			}
-		}
-		else
-		{
-			throw std::exception("Invalid paintable edges");
-		}
+		// Pass the booleans straight through. Encoding them as Segments and
+		// recovering them by positional index against get_edges() put three of
+		// the four faces on the wrong side of the structure.
+		const rapidjson::Value& faces_json = json["paintable_faces"];
+		PaintableFaces faces;
+		faces.left = faces_json["left"].GetBool();
+		faces.top = faces_json["top"].GetBool();
+		faces.right = faces_json["right"].GetBool();
+		faces.bottom = faces_json["bottom"].GetBool();
 
 		return std::make_unique<StructurePaintable>(
 			json["sheet_name"].GetString(),
@@ -137,7 +122,7 @@ std::unique_ptr<ICollisionGameObject>
 			this->_resource_manager,
 			col_type,
 			team_colours,
-			paintable_edges,
+			faces,
 			this->_dt,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
