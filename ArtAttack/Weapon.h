@@ -57,6 +57,10 @@ protected:
 
 	virtual void handle_shoot_sound(bool shooting_this_update, bool holding_shoot);
 
+	// Tint for this frame's draw. A hook rather than a member assignment so
+	// draw() stays a pure read - the render workers all enter it at once.
+	virtual MattMath::Colour get_draw_colour() const;
+
 	const MattMath::Vector2F& get_player_center() const;
 
 

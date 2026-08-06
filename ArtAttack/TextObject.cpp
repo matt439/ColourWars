@@ -61,6 +61,27 @@ void TextObject::draw(SpriteBatch* sprite_batch) const
 		this->get_layer_depth());
 }
 
+void TextObject::draw_with(SpriteBatch* sprite_batch,
+	const Camera& camera,
+	const Colour& colour,
+	const Vector2F& position,
+	float scale) const
+{
+	const SpriteFont* sprite_font =
+		this->get_resource_manager()->get_sprite_font(this->_font_name);
+
+	sprite_font->DrawString(
+		sprite_batch,
+		this->_text.c_str(),
+		camera.calculate_view_position(position).get_xm_vector(),
+		colour.get_xm_vector(),
+		this->get_draw_rotation(),
+		this->get_origin().get_xm_vector(),
+		camera.calculate_view_scale(scale),
+		this->get_effects(),
+		this->get_layer_depth());
+}
+
 const std::string& TextObject::get_text() const
 {
 	return this->_text;

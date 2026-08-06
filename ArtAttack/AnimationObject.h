@@ -45,6 +45,14 @@ protected:
 		const MattMath::Vector2F& position,
 		const MattMath::Camera& camera, float scale = 1.0f) const;
 
+	// See TextureObject::draw_with - lets a caller vary colour and effects per
+	// draw without assigning them to this shared object first.
+	void draw_with(DirectX::SpriteBatch* sprite_batch,
+		const MattMath::RectangleF& destination_rectangle,
+		const MattMath::Camera& camera,
+		const MattMath::Colour& colour,
+		DirectX::SpriteEffects effects) const;
+
 private:
 	const float* _dt = nullptr;
 	int _frame_index = 0;

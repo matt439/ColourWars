@@ -44,47 +44,57 @@ Player::Player(const RectangleF& rectangle,
     this->_sound_bank = resource_manager->get_sound_bank(SOUND_BANK);
 }
 
+void Player::update_animation_state()
+{
+    const player_animation_state new_animation_state =
+        this->calculate_animation_state();
+
+    if (this->_animation_state == new_animation_state)
+    {
+        return;
+    }
+
+    this->_animation_state = new_animation_state;
+
+    const PlayerAnimationInfo& info = this->get_animation_info(new_animation_state);
+    TextureObject::set_sprite_sheet_name(info.sprite_sheet);
+    TextureObject::set_element_name(info.uniform_texture);
+
+    set_animation_strip_and_reset(info.sprite_sheet, info.animation);
+    if (info.frame_time != FLT_MIN)
+    {
+        set_frame_time(info.frame_time);
+    }
+    else
+    {
+        set_frame_time_to_default();
+    }
+}
+
 void Player::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
     if (this->_state == player_state::DEAD)
     {
         return;
     }
-    
-    player_animation_state current_animation_state = this->_animation_state;
-    player_animation_state new_animation_state = this->calculate_animation_state();
 
-    if (current_animation_state != new_animation_state)
-    {
-		this->_animation_state = new_animation_state;
+    // Pure read: nothing below assigns a member. update_animation_state() has
+    // already chosen the clip, and the flip is passed as a parameter.
+    const SpriteEffects effects = this->get_facing_right()
+        ? SpriteEffects_None
+        : SpriteEffects_FlipHorizontally;
 
-        const PlayerAnimationInfo& info = this->get_animation_info(new_animation_state);
-        TextureObject::set_sprite_sheet_name(info.sprite_sheet);
-        TextureObject::set_element_name(info.uniform_texture);
+    // Every base call is explicitly qualified: Player inherits DrawObject
+    // twice, once through TextureObject and once through AnimationObject, and
+    // the two subobjects carry independent colour/origin/rotation.
+    TextureObject::draw_with(sprite_batch, this->_rectangle, camera,
+        this->TextureObject::get_element_name(),
+        this->TextureObject::get_colour(),
+        this->TextureObject::get_origin(), effects,
+        this->TextureObject::get_draw_rotation());
 
-        set_animation_strip_and_reset(info.sprite_sheet, info.animation);
-        if (info.frame_time != FLT_MIN)
-        {
-            set_frame_time(info.frame_time);
-		}
-        else
-        {
-			set_frame_time_to_default();
-        }
-	}
-
-    SpriteEffects effects = SpriteEffects_None;
-    bool facing_right = this->get_facing_right();
-    if (!facing_right)
-    {
-        effects = SpriteEffects_FlipHorizontally;
-    }
-
-    TextureObject::set_effects(effects);
-    TextureObject::draw(sprite_batch, this->_rectangle, camera);
-
-    AnimationObject::set_effects(effects);
-    AnimationObject::draw(sprite_batch, this->_rectangle, camera);
+    AnimationObject::draw_with(sprite_batch, this->_rectangle, camera,
+        this->AnimationObject::get_colour(), effects);
 
     this->_primary->draw(sprite_batch, camera, this->_showing_debug);
 }
@@ -717,8 +727,16 @@ float Player::get_dt() const
 void Player::update()
 {
     if (this->_state == player_state::ALIVE)
-    {   
+    {
         this->update_movement();
+
+        // Clip selection has to happen here, once per frame, not in draw().
+        // draw() runs once per viewport, concurrently on every render worker,
+        // so mutating the animation state there was both a data race on the
+        // std::string sheet/element names and wrong on its own terms: a player
+        // off-screen in every viewport never advanced its animation at all,
+        // because Level guards the draw call with is_visible_in_viewport.
+        this->update_animation_state();
 
         AnimationObject::update();
 

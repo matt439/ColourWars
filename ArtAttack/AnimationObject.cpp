@@ -78,6 +78,24 @@ void AnimationObject::draw(SpriteBatch* sprite_batch,
 	this->draw(sprite_batch, view_pos, view_scale);
 }
 
+void AnimationObject::draw_with(SpriteBatch* sprite_batch,
+	const RectangleF& destination_rectangle,
+	const Camera& camera,
+	const Colour& colour,
+	SpriteEffects effects) const
+{
+	SpriteSheet* sprite_sheet = SpriteSheetObject::get_sprite_sheet();
+
+	sprite_sheet->draw(sprite_batch,
+		this->get_source_rectangle(),
+		camera.calculate_view_rectangle(destination_rectangle).get_rectangle_i(),
+		colour,
+		this->get_draw_rotation(),
+		this->get_origin(),
+		effects,
+		this->get_layer_depth());
+}
+
 void AnimationObject::update()
 {
 	if (this->_paused)

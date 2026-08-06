@@ -22,6 +22,16 @@ public:
 		const MattMath::Camera& camera) const;
 	virtual void draw(DirectX::SpriteBatch* sprite_batch) const;
 
+	// Draws with the given colour, position and scale without storing any of
+	// them. TextDropShadow used to draw its shadow by assigning those three
+	// members, drawing, and assigning them back - a save/restore that is a
+	// data race the moment two render workers run it on the same object.
+	void draw_with(DirectX::SpriteBatch* sprite_batch,
+		const MattMath::Camera& camera,
+		const MattMath::Colour& colour,
+		const MattMath::Vector2F& position,
+		float scale) const;
+
 protected:	
 	const std::string& get_text() const;
 	const std::string& get_font_name() const;

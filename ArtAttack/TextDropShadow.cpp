@@ -27,23 +27,15 @@ TextDropShadow::TextDropShadow(const std::string& text,
 }
 void TextDropShadow::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
-	// Store original values
-	Colour original_color = this->get_colour();
-	Vector2F original_position = this->get_position();
-	float original_scale = this->get_scale();
+	// Pass the shadow's colour, offset position and scale rather than assigning
+	// them to this object and restoring them afterwards. The save/restore was a
+	// data race: the render workers all run draw() on the same object, so one
+	// thread could restore the originals while another was mid-shadow.
+	this->TextObject::draw_with(sprite_batch, camera,
+		this->_shadow_color,
+		this->get_position() + this->_shadow_offset,
+		this->_shadow_scale);
 
-	// Draw Shadow
-	this->TextObject::set_colour(this->_shadow_color);
-	this->TextObject::set_scale(this->_shadow_scale);
-	this->TextObject::set_position(this->get_position() + this->_shadow_offset);
-	this->TextObject::draw(sprite_batch, camera);
-
-	// Restore original values
-	this->TextObject::set_colour(original_color);
-	this->TextObject::set_scale(original_scale);
-	this->TextObject::set_position(original_position);
-
-	// Draw Text
 	this->TextObject::draw(sprite_batch, camera);
 }
 void TextDropShadow::draw(SpriteBatch* sprite_batch)

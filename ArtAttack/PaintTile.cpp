@@ -25,6 +25,10 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	this->_splash = PaintTileSplash(
 		dt, SPLASH_RECTANGLE, SPLASH_SPRITE_SHEET_NAME, SPLASH_ANIMATION_STRIP_NAME,
 		resource_manager);
+
+	// The splash is always centred on the tile and the tile never moves, so
+	// this is set once here rather than re-assigned on every draw call.
+	this->_splash.set_rectangle_center(rectangle.get_center());
 }
 
 void PaintTile::update()
@@ -33,45 +37,25 @@ void PaintTile::update()
 }
 void PaintTile::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
-	switch (this->_team)
+	// Pure read. StructurePaintable::draw walks every tile it owns, and is
+	// itself entered by every render worker at once, so assigning the tile's
+	// and the splash's colour here was an unsynchronised write to state shared
+	// by all of them.
+	if (this->_team == player_team::NONE)
 	{
-	case player_team::A:
-		this->set_colour(this->_team_colours.get_team_colour(player_team::A));
-		this->_splash.set_colour(this->_team_colours.get_team_colour(player_team::A));
-		break;
-	case player_team::B:
-		this->set_colour(this->_team_colours.get_team_colour(player_team::B));
-		this->_splash.set_colour(this->_team_colours.get_team_colour(player_team::B));
-		break;
-	default: // player_team::NONE
 		return;
 	}
-	this->_splash.set_rectangle_center(this->_rectangle.get_center());
-	this->_splash.draw(sprite_batch, camera);
+	const Colour tint = this->_team_colours.get_team_colour(this->_team);
 
-	this->TextureObject::draw(sprite_batch, this->_rectangle, camera);
+	this->_splash.draw_with_colour(sprite_batch, camera, tint);
+
+	this->TextureObject::draw_with(sprite_batch, this->_rectangle, camera,
+		this->get_element_name(), tint, this->get_origin(),
+		this->get_effects(), this->get_draw_rotation());
 }
 void PaintTile::draw(SpriteBatch* sprite_batch)
 {
-    switch (this->_team)
-    {
-	case player_team::A:
-		this->set_colour(this->_team_colours.get_team_colour(player_team::A));
-		this->_splash.set_colour(this->_team_colours.get_team_colour(player_team::A));
-		break;
-	case player_team::B:
-		this->set_colour(this->_team_colours.get_team_colour(player_team::B));
-		this->_splash.set_colour(this->_team_colours.get_team_colour(player_team::B));
-		break;
-	default: // player_team::NONE
-		return;
-	}
-	this->_splash.set_rectangle_center(this->_rectangle.get_center());
-	this->_splash.draw(sprite_batch);
-
-	this->TextureObject::draw(sprite_batch, this->_rectangle);
-
-
+	this->draw(sprite_batch, Camera::DEFAULT_CAMERA);
 }
 float PaintTile::get_area() const
 {
@@ -189,6 +173,12 @@ void PaintTileSplash::update()
 void PaintTileSplash::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
 	this->AnimationObject::draw(sprite_batch, this->_rectangle, camera);
+}
+void PaintTileSplash::draw_with_colour(SpriteBatch* sprite_batch,
+	const Camera& camera, const Colour& colour) const
+{
+	this->AnimationObject::draw_with(sprite_batch, this->_rectangle, camera,
+		colour, this->get_effects());
 }
 void PaintTileSplash::draw(SpriteBatch* sprite_batch)
 {

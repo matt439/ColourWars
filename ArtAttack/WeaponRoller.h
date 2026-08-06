@@ -25,8 +25,9 @@ private:
 		const MattMath::Vector2F& player_velocity,
 		bool player_facing_right) override;
 
-	void draw(DirectX::SpriteBatch* sprite_batch,
-		const MattMath::Camera& camera, bool debug) override;
+	// The roller's draw was a verbatim copy of Weapon::draw apart from this one
+	// colour choice, so it is expressed as a hook instead of a duplicate.
+	MattMath::Colour get_draw_colour() const override;
 };
 
 #endif // !WEAPONROLLER_H

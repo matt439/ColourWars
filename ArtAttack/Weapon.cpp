@@ -59,27 +59,30 @@ void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug)
         effects = SpriteEffects_FlipHorizontally;
     }
 
-    TextureObject::set_element_name(this->get_details().frame_name);
-    DrawObject::set_origin(origin);
-    DrawObject::set_effects(effects);
-    DrawObject::set_draw_rotation(this->get_rotation());
-
-    TextureObject::draw(sprite_batch, draw_rectangle, camera);
+    // Pure read: every per-draw value is a local passed to draw_with, not a
+    // member assigned first. draw() is entered by every render worker on the
+    // same Weapon at once, and assigning the std::string element name from
+    // several threads is heap corruption, not just a torn frame.
+    TextureObject::draw_with(sprite_batch, draw_rectangle, camera,
+        this->get_details().frame_name, this->get_draw_colour(),
+        origin, effects, this->get_rotation());
 
     if (debug)
     {
         // draw nozzle
-        TextureObject::set_element_name("nozzle");
         RectangleF draw_rectangle_noz = this->get_nozzle_rectangle();
         Vector2F origin_noz = this->calculate_sprite_origin(
             this->get_nozzle_size(), rotation_origin::CENTER);
 
-        TextureObject::set_origin(origin_noz);
-        TextureObject::set_effects(SpriteEffects_None);
-        TextureObject::set_draw_rotation(0.0f);
-
-        TextureObject::draw(sprite_batch, draw_rectangle_noz, camera);
+        TextureObject::draw_with(sprite_batch, draw_rectangle_noz, camera,
+            "nozzle", this->get_draw_colour(),
+            origin_noz, SpriteEffects_None, 0.0f);
     }
+}
+
+MattMath::Colour Weapon::get_draw_colour() const
+{
+    return this->get_colour();
 }
 void Weapon::draw(SpriteBatch* sprite_batch, bool debug)
 {

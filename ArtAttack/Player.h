@@ -186,6 +186,10 @@ private:
 
     player_animation_state calculate_animation_state() const;
 
+    // Selects the animation clip for this frame. Called from update(), never
+    // from draw() - draw runs concurrently on every render worker.
+    void update_animation_state();
+
     static const PlayerAnimationInfo& get_animation_info(player_animation_state state);
 
     void respawn();

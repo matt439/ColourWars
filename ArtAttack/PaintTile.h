@@ -42,6 +42,11 @@ public:
 	void update() override;
 	void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Camera& camera) override;
 	void draw(DirectX::SpriteBatch* sprite_batch) override;
+
+	// Draws with the given tint without storing it. See TextureObject::draw_with.
+	void draw_with_colour(DirectX::SpriteBatch* sprite_batch,
+		const MattMath::Camera& camera, const MattMath::Colour& colour) const;
+
 	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
 private:
 	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;

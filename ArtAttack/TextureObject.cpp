@@ -67,3 +67,24 @@ void TextureObject::draw(SpriteBatch* sprite_batch,
 	float view_scale = camera.calculate_view_scale(scale);
 	this->draw(sprite_batch, view_pos, view_scale);
 }
+
+void TextureObject::draw_with(SpriteBatch* sprite_batch,
+	const RectangleF& destination_rectangle,
+	const Camera& camera,
+	const std::string& element_name,
+	const Colour& colour,
+	const Vector2F& origin,
+	SpriteEffects effects,
+	float rotation) const
+{
+	SpriteSheet* sprite_sheet = SpriteSheetObject::get_sprite_sheet();
+
+	sprite_sheet->draw(sprite_batch,
+		element_name,
+		camera.calculate_view_rectangle(destination_rectangle).get_rectangle_i(),
+		colour,
+		rotation,
+		origin,
+		effects,
+		this->get_layer_depth());
+}
