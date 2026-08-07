@@ -1,0 +1,88 @@
+#include "game/pch.h"
+#include "game/objects/level_builder.h"
+
+using namespace DirectX;
+using namespace MattMath;
+using namespace rapidjson;
+
+LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
+	const float* dt,
+	RenderResources* render_resources,
+	const AudioResources* audio_resources,
+	const Registry<LevelLoadedInfo>* level_infos,
+	ID3D11SamplerState* sampler_state,
+	ResolutionManager* resolution_manager,
+	ThreadPool* thread_pool,
+	const Partitioner* partitioner) :
+	_render_resources(render_resources),
+	_audio_resources(audio_resources),
+	_level_infos(level_infos),
+	_dt(dt),
+	_viewport_manager(viewport_manager),
+	_sampler_state(sampler_state),
+	_resolution_manager(resolution_manager),
+	_thread_pool(thread_pool),
+	_partitioner(partitioner)
+{
+	this->_team_colour = std::make_unique<TeamColourTools>();
+	this->_player_builder = std::make_unique<PlayerBuilder>();
+
+	this->_level_object_builder = std::make_unique<LevelObjectBuilder>(
+		this->_render_resources, this->_audio_resources, this->_dt);
+}
+
+std::unique_ptr<Level>
+	LevelBuilder::build_level(const MenuLevelSettings& settings)
+{
+	const LevelLoadedInfo* load_info =
+		this->_level_infos->get(level_asset_name(settings.get_stage()));
+
+	const TeamColour team_colours = _team_colour->generate_random_team_colour();
+
+	const Value& collision_objects_json =
+		load_info->get_collision_objects_json();
+
+	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> collision_objects =
+		this->_level_object_builder->build_collision_objects(collision_objects_json, team_colours);
+
+	const Value& non_collision_objects_json =
+		load_info->get_non_collision_objects_json();
+
+	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_collision_objects =
+		this->_level_object_builder->build_non_collision_objects(non_collision_objects_json);
+
+	std::unique_ptr<std::vector<std::unique_ptr<Player>>> players =
+		this->_player_builder->build_players(settings, load_info, team_colours,
+			this->_render_resources, this->_audio_resources,
+			this->_viewport_manager, this->_dt);
+
+	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers =
+		this->_level_object_builder->build_viewport_dividers(this->_viewport_manager);
+
+
+	return std::make_unique<Level>(
+		std::move(non_collision_objects),
+		std::move(collision_objects),
+		std::move(players),
+		std::move(viewport_dividers),
+		settings.get_stage(),
+		team_colours,
+		load_info->get_out_of_bounds_rectangle(),
+		load_info->get_camera_bounds_rectangle(),
+		load_info->get_zoom_out_start_bounds_rectangle(),
+		load_info->get_zoom_out_finish_bounds_rectangle(),
+		load_info->get_team_a_spawns(),
+		load_info->get_team_b_spawns(),
+		load_info->get_sound_bank_name(),
+		load_info->get_music_name(),
+		load_info->get_music_volume(),
+		this->_dt,
+		this->_sampler_state,
+		load_info->get_level_name(),
+		this->_resolution_manager,
+		this->_viewport_manager,
+		this->_render_resources,
+		this->_audio_resources,
+		this->_thread_pool,
+		this->_partitioner);
+}
