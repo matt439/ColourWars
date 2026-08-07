@@ -3,7 +3,7 @@
 
 #include "IGameObject.h"
 #include "collision_object_type.h"
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 
 class ICollisionGameObject : public IGameObject
 {

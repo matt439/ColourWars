@@ -1,7 +1,7 @@
 #ifndef IGAMEOBJECT_H
 #define IGAMEOBJECT_H
 
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 
 class IGameObject
 {

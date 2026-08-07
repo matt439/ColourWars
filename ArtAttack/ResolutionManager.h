@@ -2,7 +2,7 @@
 #define RESOLUTIONMANAGER_H
 
 #include <string>
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 #include "screen_resolution.h"
 
 class ResolutionManager

@@ -1,7 +1,7 @@
 #ifndef WEAPON_DETAILS_H
 #define WEAPON_DETAILS_H
 
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 #include "Projectile.h"
 
 enum class add_player_velocity

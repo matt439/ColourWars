@@ -1,7 +1,7 @@
 #ifndef MOVINGOBJECT_H
 #define MOVINGOBJECT_H
 
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 
 class MovingObject
 {

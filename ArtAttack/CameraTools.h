@@ -2,7 +2,7 @@
 #define CAMERATOOLS_H
 
 #include "BorderThickness.h"
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 
 namespace camera_consts
 {

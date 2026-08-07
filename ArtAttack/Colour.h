@@ -1,7 +1,7 @@
 #ifndef COLOUR_H
 #define COLOUR_H
 
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 
 namespace colour_consts
 {	

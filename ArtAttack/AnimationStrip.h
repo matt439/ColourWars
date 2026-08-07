@@ -1,7 +1,7 @@
 #ifndef ANIMATIONSTRIP_H
 #define ANIMATIONSTRIP_H
 
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 
 class AnimationStrip
 {

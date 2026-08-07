@@ -3,7 +3,7 @@
 
 #include "IGameObject.h"
 #include "TextureObject.h"
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 
 class Visual final : public IGameObject, public TextureObject
 {

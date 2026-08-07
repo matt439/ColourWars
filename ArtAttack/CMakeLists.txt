@@ -3,23 +3,6 @@
 find_package(xaudio2redist CONFIG REQUIRED)
 find_package(directxtk CONFIG REQUIRED)
 
-# --- MattMath — the math static library ----------------------------------
-# First row of the target table (docs/design/ARCHITECTURE.md). Its sources
-# compile in place today and move to engine/math/ with the split; the
-# target exists now so tests link a library instead of including
-# implementation files.
-add_library(MattMath STATIC
-    CollisionTools.cpp
-    EricsonMath.cpp
-    MattMath.cpp
-)
-target_include_directories(MattMath PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
-target_link_libraries(MattMath
-    PUBLIC Microsoft::DirectXTK
-    PRIVATE artattack_settings
-)
-target_precompile_headers(MattMath PRIVATE pch.h)
-
 # --- ArtAttack — the paint-shooter ---------------------------------------
 add_executable(ArtAttack WIN32
     AnimatedSprite.cpp

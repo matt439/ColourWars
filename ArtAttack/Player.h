@@ -6,12 +6,12 @@
 #include "player_team.h"
 #include "PlayerInputData.h"
 #include "Weapon.h"
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 #include "AnimationObject.h"
 #include "ICollisionGameObject.h"
 #include "MovingObject.h"
 #include "SoundBank.h"
-#include "CollisionTools.h"
+#include "engine/math/collision_tools.h"
 
 enum class player_state
 {

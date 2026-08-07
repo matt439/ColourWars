@@ -194,10 +194,19 @@ void ResourceLoader::load_sound_bank(const std::string& wave_bank_path,
     const std::string& json_path,
     const std::string& sound_bank_name)
 {
-	auto wb = std::make_unique<WaveBank>(
-        this->_audio_engine,
-        std::wstring(wave_bank_path.begin(),
-        wave_bank_path.end()).c_str());
+	std::unique_ptr<WaveBank> wb;
+	try
+	{
+		wb = std::make_unique<WaveBank>(
+			this->_audio_engine,
+			std::wstring(wave_bank_path.begin(),
+			wave_bank_path.end()).c_str());
+	}
+	catch (const std::exception&)
+	{
+		// DirectXTK's what() is just "WaveBank" — T6 wants the path.
+		throw std::runtime_error("Failed to load wave bank: " + wave_bank_path);
+	}
 
 	auto sb = std::make_unique<SoundBank>(
         std::move(wb));

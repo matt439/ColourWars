@@ -4,7 +4,7 @@
 #include "ResolutionManager.h"
 #include "GameData.h"
 #include "GameStates.h"
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 
 using namespace DirectX;
 
@@ -93,6 +93,8 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
     if (FAILED(hr))
         return 1;
 
+    try
+    {
     g_save = std::make_unique<Save>();
     g_resolution_manager = std::make_unique<ResolutionManager>();
 
@@ -206,6 +208,16 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
         //g_game->Initialize(hwnd, rc.right - rc.left, rc.bottom - rc.top);
         g_game->initialize(g_game_data.get());
         g_game->transition_to(std::make_unique<GameMenu>(g_game_data.get()));
+    }
+    }
+    catch (const std::exception& e)
+    {
+        // T6: a broken contract stops the game dead with the reason on
+        // screen, never a silent abort.
+        fprintf(stderr, "startup failure: %s\n", e.what());
+        MessageBoxA(nullptr, e.what(), "ArtAttack - startup failure",
+            MB_OK | MB_ICONERROR);
+        return 1;
     }
 
     // Main message loop

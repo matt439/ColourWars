@@ -5,7 +5,7 @@
 #include "player_team.h"
 #include "ResourceManager.h"
 #include "colour.h"
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 
 namespace interface_consts
 {

@@ -1,7 +1,7 @@
 #ifndef SPRITEFRAME_H
 #define SPRITEFRAME_H
 
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 
 class SpriteFrame
 {

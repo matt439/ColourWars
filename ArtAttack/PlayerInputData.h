@@ -2,7 +2,7 @@
 #define PLAYER_INPUT_H
 
 #include "connection_state.h"
-#include "MattMath.h"
+#include "engine/math/matt_math.h"
 
 struct PlayerInputData
 {
