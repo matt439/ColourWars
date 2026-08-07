@@ -36,7 +36,7 @@ void PaintTile::update()
 {
 	this->splash_.update();
 }
-void PaintTile::draw(SpriteBatch* sprite_batch, const Camera& camera)
+void PaintTile::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {
 	// Pure read. StructurePaintable::draw walks every tile it owns, and is
 	// itself entered by every render worker at once, so assigning the tile's
@@ -54,7 +54,7 @@ void PaintTile::draw(SpriteBatch* sprite_batch, const Camera& camera)
 		this->frame(), tint, this->origin(),
 		this->effects(), this->draw_rotation());
 }
-void PaintTile::draw(SpriteBatch* sprite_batch)
+void PaintTile::draw(SpriteBatch* sprite_batch) const
 {
 	this->draw(sprite_batch, Camera::DEFAULT_CAMERA);
 }
@@ -171,7 +171,7 @@ void PaintTileSplash::update()
 {
 	this->AnimationObject::update();
 }
-void PaintTileSplash::draw(SpriteBatch* sprite_batch, const Camera& camera)
+void PaintTileSplash::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {
 	this->AnimationObject::draw(sprite_batch, this->rectangle_, camera);
 }
@@ -181,7 +181,7 @@ void PaintTileSplash::draw_with_colour(SpriteBatch* sprite_batch,
 	this->AnimationObject::draw_with(sprite_batch, this->rectangle_, camera,
 		colour, this->effects());
 }
-void PaintTileSplash::draw(SpriteBatch* sprite_batch)
+void PaintTileSplash::draw(SpriteBatch* sprite_batch) const
 {
 	this->AnimationObject::draw(sprite_batch, this->rectangle_);
 }

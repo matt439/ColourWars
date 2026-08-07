@@ -77,7 +77,7 @@ void Player::update_animation_state()
     }
 }
 
-void Player::draw(SpriteBatch* sprite_batch, const Camera& camera)
+void Player::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {
     if (this->state_ == PlayerState::dead)
     {
@@ -104,7 +104,7 @@ void Player::draw(SpriteBatch* sprite_batch, const Camera& camera)
 
     this->primary_->draw(sprite_batch, camera, this->showing_debug_);
 }
-void Player::draw(SpriteBatch* sprite_batch)
+void Player::draw(SpriteBatch* sprite_batch) const
 {
     AnimationObject::draw(sprite_batch, this->rectangle_, Camera::DEFAULT_CAMERA);
 	this->primary_->draw(sprite_batch, Camera::DEFAULT_CAMERA);

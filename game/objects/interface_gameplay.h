@@ -48,6 +48,13 @@ class InterfaceGameplay : public artattack::Drawer
 public:
     InterfaceGameplay(artattack::RenderResources* render_resources, const float* dt);
 
+    // const for the same reason IGameObject::draw is. There is one
+    // InterfaceGameplay for the whole level, and every render worker calls this
+    // on it at once with its own view's health, ammo and timer - so the HUD is
+    // the most tempting place in the level to stash per-view state on a shared
+    // object, and the only reason it is safe is that all of it arrives as
+    // parameters. Level holds this by unique_ptr, which does not pass its
+    // constness on, so this has to say const itself to mean anything.
 	void draw_gameplay_interface(DirectX::SpriteBatch* sprite_batch,
         const mattmath::Vector2F& resolution,
         float health,
@@ -56,7 +63,7 @@ public:
         const mattmath::Colour& team_colour,
         ID3D11SamplerState* sampler_state,
         float respawn_timer,
-        bool show_respawn_timer);
+        bool show_respawn_timer) const;
 
 private:
     void draw_ammo(DirectX::SpriteBatch* sprite_batch,

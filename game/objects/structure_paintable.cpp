@@ -43,19 +43,19 @@ void StructurePaintable::update()
 	}
 }
 
-void StructurePaintable::draw(SpriteBatch* sprite_batch, const Camera& camera)
+void StructurePaintable::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {
 	Structure::draw(sprite_batch, camera);
-	for (auto& paint_tile : this->paint_tiles_)
+	for (const auto& paint_tile : this->paint_tiles_)
 	{
 		paint_tile.draw(sprite_batch, camera);
 	}
 }
 
-void StructurePaintable::draw(SpriteBatch* sprite_batch)
+void StructurePaintable::draw(SpriteBatch* sprite_batch) const
 {
 	Structure::draw(sprite_batch);
-	for (auto& paint_tile : this->paint_tiles_)
+	for (const auto& paint_tile : this->paint_tiles_)
 	{
 		paint_tile.draw(sprite_batch);
 	}

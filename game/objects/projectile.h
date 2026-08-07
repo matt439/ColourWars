@@ -36,7 +36,7 @@ public:
 
 	void update() override = 0;
 	void draw(DirectX::SpriteBatch* sprite_batch,
-		const mattmath::Camera& camera) override = 0;
+		const mattmath::Camera& camera) const override = 0;
 	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override = 0;
 
 	bool is_colliding(const ICollisionGameObject* other) const override = 0;
@@ -100,7 +100,7 @@ public:
 
 	void update() override = 0;
 	void draw(DirectX::SpriteBatch* sprite_batch,
-		const mattmath::Camera& camera) override = 0;
+		const mattmath::Camera& camera) const override = 0;
 	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override = 0;
 
 	bool is_colliding(const ICollisionGameObject* other) const override = 0;

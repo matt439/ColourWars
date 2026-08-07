@@ -29,9 +29,15 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
+	// const for the same reason IGameObject::draw is, even though a Weapon is
+	// not one: Player::draw reaches its weapon, so it sits under the same
+	// per-view fan-out and every worker enters this on the same Weapon at once.
+	// The const does not come for free through Player - primary_ is a
+	// unique_ptr, and a const unique_ptr still hands out a non-const pointee -
+	// so it has to be declared here to be enforced at all.
 	virtual void draw(DirectX::SpriteBatch* sprite_batch,
-		const mattmath::Camera& camera, bool debug = false);
-	virtual void draw(DirectX::SpriteBatch* sprite_batch, bool debug = false);
+		const mattmath::Camera& camera, bool debug = false) const;
+	virtual void draw(DirectX::SpriteBatch* sprite_batch, bool debug = false) const;
 
 	virtual std::vector<std::unique_ptr<ICollisionGameObject>>
 		update_and_get_projectiles(PlayerInputData input,

@@ -86,8 +86,9 @@ public:
     void update() override;
     std::vector<std::unique_ptr<ICollisionGameObject>>
         update_weapon_and_get_projectiles() const;
-    void draw(DirectX::SpriteBatch* sprite_batch, const mattmath::Camera& camera) override;
-    void draw(DirectX::SpriteBatch* sprite_batch) override;
+    void draw(DirectX::SpriteBatch* sprite_batch,
+        const mattmath::Camera& camera) const override;
+    void draw(DirectX::SpriteBatch* sprite_batch) const override;
 
     bool is_visible_in_viewport(const mattmath::RectangleF& view) const override;
 

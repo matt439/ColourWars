@@ -40,11 +40,11 @@ void ProjectileJet::update()
 
 	AnimationObject::update();
 }
-void ProjectileJet::draw(SpriteBatch* sprite_batch, const Camera& camera)
+void ProjectileJet::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {
 	this->AnimationObject::draw(sprite_batch, this->rectangle_, camera);
 }
-void ProjectileJet::draw(SpriteBatch* sprite_batch)
+void ProjectileJet::draw(SpriteBatch* sprite_batch) const
 {
 	this->AnimationObject::draw(sprite_batch, this->rectangle_);
 }

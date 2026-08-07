@@ -29,11 +29,11 @@ void Structure::update()
 {
 	
 }
-void Structure::draw(SpriteBatch* sprite_batch, const Camera& camera)
+void Structure::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {
 	this->TextureObject::draw(sprite_batch, this->sprite_rectangle_, camera);
 }
-void Structure::draw(SpriteBatch* sprite_batch)
+void Structure::draw(SpriteBatch* sprite_batch) const
 {
 	this->TextureObject::draw(sprite_batch, this->sprite_rectangle_);
 }
