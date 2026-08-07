@@ -1,5 +1,4 @@
-#ifndef COLLISION_OBJECT_TYPE_H
-#define COLLISION_OBJECT_TYPE_H
+#pragma once
 
 enum class collision_object_type
 {
@@ -86,5 +85,3 @@ inline bool is_structure_ramp(collision_object_type type)
 	return type == collision_object_type::STRUCTURE_RAMP_LEFT ||
 		type == collision_object_type::STRUCTURE_RAMP_RIGHT;
 }
-
-#endif // !COLLISION_OBJECT_TYPE_H

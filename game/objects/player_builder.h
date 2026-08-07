@@ -1,5 +1,4 @@
-#ifndef PLAYERBUILDER_H
-#define PLAYERBUILDER_H
+#pragma once
 
 #include "game/objects/player.h"
 #include "game/states/menu_level_settings.h"
@@ -24,5 +23,3 @@ public:
 private:
 	std::unique_ptr<WeaponBuilder> _weapon_builder = nullptr;
 };
-
-#endif // !PLAYERBUILDER_H

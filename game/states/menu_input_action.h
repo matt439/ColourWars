@@ -1,5 +1,4 @@
-#ifndef MENU_INPUT_ACTION_H
-#define MENU_INPUT_ACTION_H
+#pragma once
 
 enum class menu_input_action
 {
@@ -8,4 +7,3 @@ enum class menu_input_action
     PAUSE,
     NONE
 };
-#endif // !MENU_INPUT_ACTION_H

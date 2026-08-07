@@ -1,5 +1,4 @@
-#ifndef WEAPON_DETAILS_H
-#define WEAPON_DETAILS_H
+#pragma once
 
 #include "engine/math/matt_math.h"
 #include "game/objects/projectile.h"
@@ -47,5 +46,3 @@ struct WeaponDetails
 	std::string shoot_sound_name = "";
 	float shoot_sound_volume = 1.0f;
 };
-
-#endif // !WEAPON_DETAILS_H

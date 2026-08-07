@@ -1,5 +1,4 @@
-#ifndef PAUSEMENUDATA_H
-#define PAUSEMENUDATA_H
+#pragma once
 
 #include "game/states/menu_data.h"
 #include "game/states/pause_menu_action.h"
@@ -18,5 +17,3 @@ private:
 	int _player_num = -1;
 	pause_menu_action* _action = nullptr;
 };
-
-#endif // !PAUSEMENUDATE_H

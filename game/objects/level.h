@@ -1,5 +1,4 @@
-#ifndef LEVEL_H
-#define LEVEL_H
+#pragma once
 
 #include "game/objects/i_collision_game_object.h"
 #include "game/objects/team_colour.h"
@@ -185,5 +184,3 @@ private:
 	void draw_countdown_text(DirectX::SpriteBatch* sprite_batch,
 		const MattMath::Camera& viewport_camera) const;
 };
-
-#endif

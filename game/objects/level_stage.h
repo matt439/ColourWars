@@ -1,5 +1,4 @@
-#ifndef LEVEL_STAGE_H
-#define LEVEL_STAGE_H
+#pragma once
 
 #include <string>
 
@@ -20,5 +19,3 @@ enum class level_stage
 // Throws std::invalid_argument for RANDOM: it is a menu choice, not a stage,
 // and has to be resolved to a real one before anything asks for its level.
 std::string level_asset_name(level_stage stage);
-
-#endif // !LEVEL_STAGE_H

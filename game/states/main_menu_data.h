@@ -1,5 +1,4 @@
-#ifndef MAINMENUDATA_H
-#define MAINMENUDATA_H
+#pragma once
 
 #include "game/states/menu_data.h"
 #include "game/states/menu_input.h"
@@ -20,5 +19,3 @@ private:
 	MenuLevelSettings* _menu_level_settings = nullptr;
 	bool* _is_ready_to_load_level = nullptr;
 };
-
-#endif // !MAINMENUDATA_H

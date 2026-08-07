@@ -1,5 +1,4 @@
-#ifndef PLAYER_INPUT_H
-#define PLAYER_INPUT_H
+#pragma once
 
 #include "engine/input/connection_state.h"
 #include "engine/math/matt_math.h"
@@ -21,5 +20,3 @@ struct PlayerInputData
 	MattMath::Vector2F left_analog_stick = { 0.0f, 0.0f };
 	MattMath::Vector2F right_analog_stick = { 0.0f, 0.0f };
 };
-
-#endif // !PLAYER_INPUT_H

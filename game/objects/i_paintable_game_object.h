@@ -1,5 +1,4 @@
-#ifndef IPAINTABLEGAMEOBJECT_H
-#define IPAINTABLEGAMEOBJECT_H
+#pragma once
 
 struct PaintTotal
 {
@@ -13,5 +12,3 @@ public:
 	virtual ~IPaintableGameObject() = default;
 	virtual PaintTotal get_paint_total() const = 0;
 };
-
-#endif // !IPAINTABLE_H

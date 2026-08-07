@@ -1,5 +1,4 @@
-#ifndef WEAPON_CONSTS_H
-#define WEAPON_CONSTS_H
+#pragma once
 
 #include "game/objects/weapon_details.h"
 #include "game/objects/projectile_consts.h"
@@ -171,5 +170,3 @@ namespace weapon_consts
         1.0f,
     };
 }
-
-#endif // !WEAPON_CONSTS_H

@@ -1,5 +1,4 @@
-#ifndef PROJECTILE_CONSTS_H
-#define PROJECTILE_CONSTS_H
+#pragma once
 
 #include "game/objects/projectile_details.h"
 
@@ -105,5 +104,3 @@ namespace projectile_consts
         "projectile_3",                        //animation_strip_name
     };
 }
-
-#endif // !PROJECTILE_CONSTS_H

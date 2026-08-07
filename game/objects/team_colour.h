@@ -1,5 +1,4 @@
-#ifndef TEAMCOLOUR_H
-#define TEAMCOLOUR_H
+#pragma once
 
 #include "game/objects/player_team.h"
 #include "engine/math/colour.h"
@@ -53,5 +52,3 @@ public:
 	static MattMath::Colour get_team_colour(TeamColour team_colours,
 		player_team team);
 };
-
-#endif // !TEAM_COLOURS_H

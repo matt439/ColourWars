@@ -1,5 +1,4 @@
-#ifndef WEAPONROLLER_H
-#define WEAPONROLLER_H
+#pragma once
 
 #include "game/objects/weapon.h"
 
@@ -30,5 +29,3 @@ private:
 	// colour choice, so it is expressed as a hook instead of a duplicate.
 	MattMath::Colour get_draw_colour() const override;
 };
-
-#endif // !WEAPONROLLER_H

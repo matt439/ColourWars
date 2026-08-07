@@ -1,5 +1,4 @@
-#ifndef PAUSEMENU_H
-#define PAUSEMENU_H
+#pragma once
 
 #include "game/states/pause_menu_data.h"
 #include "engine/ui/widget.h"
@@ -112,5 +111,3 @@ private:
 	confirmation_type _type = confirmation_type::RESTART;
 	static std::string get_question_text(confirmation_type type);
 };
-
-#endif // !PAUSEMENU_H

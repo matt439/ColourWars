@@ -1,5 +1,4 @@
-#ifndef PROJECTILE_H
-#define PROJECTILE_H
+#pragma once
 
 #include "game/objects/player_team.h"
 #include "game/objects/projectile_consts.h"
@@ -112,5 +111,3 @@ private:
 	DiffusionDetails _diffusion_details = DiffusionDetails();
 	const MattMath::Vector2F& get_base_size() const;
 };
-
-#endif // !PROJECTILE_H

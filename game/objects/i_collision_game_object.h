@@ -1,5 +1,4 @@
-#ifndef ICOLLISIONGAMEOBJECT_H
-#define ICOLLISIONGAMEOBJECT_H
+#pragma once
 
 #include "engine/core/i_game_object.h"
 #include "game/objects/collision_object_type.h"
@@ -20,5 +19,3 @@ public:
 	// ignore this by default.
 	virtual void set_for_deletion(bool /*for_deletion*/) {}
 };
-
-#endif // !ICOLLISIONGAMEOBJECT_H

@@ -1,5 +1,5 @@
-#ifndef MENULEVELSETTINGS_H
-#define MENULEVELSETTINGS_H
+#pragma once
+
 #include <vector>
 #include "game/objects/level_mode.h"
 #include "game/objects/level_stage.h"
@@ -35,4 +35,3 @@ private:
 	level_stage _stage = level_stage::KING_OF_THE_HILL;
 	screen_layout _screen_layout = screen_layout::ONE_PLAYER;
 };
-#endif

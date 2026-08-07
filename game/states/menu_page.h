@@ -1,5 +1,4 @@
-#ifndef MENUPAGE_H
-#define MENUPAGE_H
+#pragma once
 
 #include "engine/ui/widget.h"
 #include "game/states/menu_data.h"
@@ -60,4 +59,3 @@ private:
 	MattMath::Vector2F _widget_size = { 300.0f, 75.0f };
 	MattMath::Vector2F _widget_spacing = { 250.0f, 150.0f };
 };
-#endif // !MENUPAGE_H

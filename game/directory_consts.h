@@ -1,5 +1,4 @@
-#ifndef DIRECTORY_CONSTS_H
-#define DIRECTORY_CONSTS_H
+#pragma once
 
 #include <string>
 
@@ -11,5 +10,3 @@ namespace directory_consts
 	const static std::string MANIFEST_PATH = "./manifest.json";
 	const static std::string SAVE_FILE_PATH = "./save/save_data.json";
 }
-
-#endif // !DIRECTORY_CONSTS_H

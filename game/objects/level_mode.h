@@ -1,5 +1,4 @@
-#ifndef LEVEL_MODE_H
-#define LEVEL_MODE_H
+#pragma once
 
 enum class level_mode
 {
@@ -8,5 +7,3 @@ enum class level_mode
     DEATHMATCH,
     PRACTICE,
 };
-
-#endif // !LEVEL_MODE_H

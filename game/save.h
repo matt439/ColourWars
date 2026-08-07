@@ -1,5 +1,4 @@
-#ifndef SAVE_H
-#define SAVE_H
+#pragma once
 
 #include <iostream>
 #include <chrono>
@@ -37,5 +36,3 @@ private:
 	MattMath::Vector2I convert_resolution_to_ivec(
 		screen_resolution resolution) const;
 };
-
-#endif // !SAVE_H

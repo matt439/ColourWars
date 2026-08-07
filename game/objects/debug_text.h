@@ -1,5 +1,4 @@
-#ifndef DEBUGTEXT_H
-#define DEBUGTEXT_H
+#pragma once
 
 #include "engine/render/drawer.h"
 #include "engine/render/resolution_manager.h"
@@ -35,5 +34,3 @@ private:
 	// per player per frame when it is on at all.
 	RenderResources::FontHandle _font;
 };
-
-#endif // !DEBUGTEXT_H

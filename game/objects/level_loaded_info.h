@@ -1,5 +1,4 @@
-#ifndef LEVELLOADEDINFO_H
-#define LEVELLOADEDINFO_H
+#pragma once
 
 #include <cstdio>
 #include "rapidjson/document.h"
@@ -39,4 +38,3 @@ private:
 	static rapidjson::Document load_from_json(const char* json_path);
 
 };
-#endif // !LEVEL_LOADED_INFO_H

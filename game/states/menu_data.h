@@ -1,5 +1,4 @@
-#ifndef MENUDATA_H
-#define MENUDATA_H
+#pragma once
 
 #include "game/game_data.h"
 #include "game/states/menu_input.h"
@@ -15,5 +14,3 @@ public:
 private:
 	MenuInput* _input = nullptr;
 };
-
-#endif // !MENUDATA_H

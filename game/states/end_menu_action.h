@@ -1,5 +1,4 @@
-#ifndef END_MENU_ACTION_H
-#define END_MENU_ACTION_H
+#pragma once
 
 enum class end_menu_action
 {
@@ -10,4 +9,3 @@ enum class end_menu_action
 	EXIT,
 	NONE
 };
-#endif // !END_MENU_ACTION_H

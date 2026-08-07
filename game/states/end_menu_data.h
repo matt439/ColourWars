@@ -1,5 +1,4 @@
-#ifndef ENDMENUDATA_H
-#define ENDMENUDATA_H
+#pragma once
 
 #include "game/states/menu_data.h"
 #include "game/states/end_menu_action.h"
@@ -15,5 +14,3 @@ public:
 private:
 	end_menu_action* _action = nullptr;
 };
-
-#endif // !ENDMENUDATA_H

@@ -1,5 +1,4 @@
-#ifndef RESULTSMENU_H
-#define RESULTSMENU_H
+#pragma once
 
 #include "game/states/results_menu_data.h"
 #include "engine/math/colour.h"
@@ -111,5 +110,3 @@ private:
 	void update_team_a_fill() const;
 	void update_team_b_fill() const;
 };
-
-#endif // !RESULTSMENU_H

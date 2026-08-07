@@ -1,5 +1,4 @@
-#ifndef PLAYERCONSTS_H
-#define PLAYERCONSTS_H
+#pragma once
 
 #include "game/objects/player_team.h"
 #include "game/objects/wep_type.h"
@@ -120,5 +119,3 @@ namespace player_consts
         FLT_MIN
     };
 }
-
-#endif // !PLAYERCONSTS_H

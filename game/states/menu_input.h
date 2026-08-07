@@ -1,5 +1,4 @@
-#ifndef MENUINPUT_H
-#define MENUINPUT_H
+#pragma once
 
 #include <vector>
 #include "game/states/menu_input_action.h"
@@ -59,5 +58,3 @@ private:
 	                                               const RawMenuInput& previous);
 	DirectX::GamePad* _gamepad = nullptr;
 };
-
-#endif // !MENUINPUT_H

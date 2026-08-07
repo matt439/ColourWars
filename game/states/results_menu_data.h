@@ -1,5 +1,4 @@
-#ifndef RESULTSMENUDATA_H
-#define RESULTSMENUDATA_H
+#pragma once
 
 #include "game/states/menu_data.h"
 #include "game/objects/level_end_info.h"
@@ -20,5 +19,3 @@ private:
 	LevelEndInfo _level_end_info = LevelEndInfo();
 	results_menu_action* _action = nullptr;
 };
-
-#endif // !RESULTSMENUDATA_H

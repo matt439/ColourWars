@@ -1,5 +1,4 @@
-#ifndef WEAPONBUILDER_H
-#define WEAPONBUILDER_H
+#pragma once
 
 #include "game/objects/weapon_sprayer.h"
 #include "game/objects/weapon_sniper.h"
@@ -21,5 +20,3 @@ public:
 		const AudioResources* audio_resources,
 		const float* dt);
 };
-
-#endif // !WEAPONBUILDER_H

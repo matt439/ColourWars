@@ -1,5 +1,4 @@
-#ifndef STRUCTURE_H
-#define STRUCTURE_H
+#pragma once
 
 #include "game/objects/i_collision_game_object.h"
 #include "engine/render/texture_object.h"
@@ -39,5 +38,3 @@ private:
 	MattMath::RectangleF _sprite_rectangle = MattMath::RectangleF::ZERO;
 	std::unique_ptr<MattMath::Shape> _collision_shape = nullptr;
 };
-
-#endif // !STRUCTURE_H

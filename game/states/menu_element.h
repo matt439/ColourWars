@@ -1,5 +1,4 @@
-#ifndef MENU_ELEMENT_H
-#define MENU_ELEMENT_H
+#pragma once
 
 enum class menu_element
 {
@@ -28,5 +27,3 @@ enum class menu_element
 
 	NONE,
 };
-
-#endif // !MENU_ELEMENT_H

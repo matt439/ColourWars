@@ -1,5 +1,4 @@
-#ifndef ENDMENU_H
-#define ENDMENU_H
+#pragma once
 
 #include "game/states/end_menu_data.h"
 #include "engine/ui/widget.h"
@@ -77,6 +76,3 @@ private:
 	std::unique_ptr<MTextDropShadow> _restart = nullptr;
 	std::unique_ptr<MTextDropShadow> _exit = nullptr;
 };
-
-
-#endif // !ENDMENU_H

@@ -1,5 +1,4 @@
-#ifndef PLAYER_H
-#define PLAYER_H
+#pragma once
 
 #include "game/objects/player_consts.h"
 #include "game/objects/wep_type.h"
@@ -263,5 +262,3 @@ private:
 	bool is_on_ground() const;
     bool is_on_ramp() const;
 };
-
-#endif // !PLAYER_H

@@ -1,5 +1,4 @@
-#ifndef PROJECTILE_DETAILS_H
-#define PROJECTILE_DETAILS_H
+#pragma once
 
 #include "engine/render/rotation_origin.h"
 #include "engine/math/matt_math.h"
@@ -31,5 +30,3 @@ struct DiffusionDetails
     MattMath::Vector2F end_scale = { -1.0f, -1.0f };
     diffusion_type type = diffusion_type::NO_DIFFUSION;
 };
-
-#endif // !PROJECTILE_DETAILS_H

@@ -1,5 +1,4 @@
-#ifndef LEVELOBJECTBUILDER_H
-#define LEVELOBJECTBUILDER_H
+#pragma once
 
 #include "game/objects/i_collision_game_object.h"
 #include <memory>
@@ -38,5 +37,3 @@ private:
 	std::unique_ptr<IGameObject>
 		build_non_collision_object(const rapidjson::Value& json) const;
 };
-
-#endif // !LEVELOBJECTBUILDER_H

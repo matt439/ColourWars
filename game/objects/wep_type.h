@@ -1,5 +1,4 @@
-#ifndef WEP_TYPE_H
-#define WEP_TYPE_H
+#pragma once
 
 enum class wep_type
 {
@@ -16,5 +15,3 @@ enum class wep_type
     NONE,
     MAX_PRIM_WEP = RANDOM_PRIMARY
 };
-
-#endif // !WEP_TYPE_H

@@ -1,5 +1,4 @@
-#ifndef WEAPON_H
-#define WEAPON_H
+#pragma once
 
 #include "game/objects/player_team.h"
 #include "game/objects/wep_type.h"
@@ -210,5 +209,3 @@ protected:
 private:
 	RelativeWeaponDetails _rel_details = weapon_consts::DETAILS_RELATIVE_DEFAULT;
 };
-
-#endif // !WEAPON_H

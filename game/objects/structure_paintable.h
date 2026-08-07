@@ -1,5 +1,4 @@
-#ifndef STRUCTUREPAINTABLE_H
-#define STRUCTUREPAINTABLE_H
+#pragma once
 
 #include "game/objects/i_paintable_game_object.h"
 #include "game/objects/structure.h"
@@ -74,4 +73,3 @@ private:
 
 
 };
-#endif // !STRUCTUREPAINTABLE_H

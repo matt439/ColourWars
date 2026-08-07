@@ -1,5 +1,4 @@
-#ifndef PAINTTILE_H
-#define PAINTTILE_H
+#pragma once
 
 #include "game/objects/player_team.h"
 #include "engine/render/texture_object.h"
@@ -87,5 +86,3 @@ private:
 	const float* _dt = nullptr;
 	PaintTileSplash _splash;
 };
-
-#endif // !PAINTTILE_H

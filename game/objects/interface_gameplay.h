@@ -1,5 +1,4 @@
-#ifndef INTERFACEGAMEPLAY_H
-#define INTERFACEGAMEPLAY_H
+#pragma once
 
 #include "engine/render/drawer.h"
 #include "game/objects/player_team.h"
@@ -88,4 +87,3 @@ private:
     RenderResources::FontHandle _timer_font;
     RenderResources::FontHandle _respawn_timer_font;
 };
-#endif // !INTERFACEGAMEPLAY_H

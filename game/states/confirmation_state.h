@@ -1,10 +1,7 @@
-#ifndef CONFIRMATION_STATE_H
-#define CONFIRMATION_STATE_H
+#pragma once
 
 enum class confirmation_state
 {
     CONFIRMED,
     UNCONFIRMED
 };
-
-#endif // !CONFIRMATION_STATE_H

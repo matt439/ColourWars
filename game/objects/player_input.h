@@ -1,5 +1,4 @@
-#ifndef PLAYERINPUT_H
-#define PLAYERINPUT_H
+#pragma once
 
 #include <vector>
 #include "game/objects/player_input_data.h"
@@ -45,5 +44,3 @@ private:
 	                                              const RawPlayerInput& previous);
 	DirectX::GamePad* _gamepad = nullptr;
 };
-
-#endif // !PLAYER_INPUT_H

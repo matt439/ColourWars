@@ -1,5 +1,4 @@
-#ifndef PROJECTILEBUILDER_H
-#define PROJECTILEBUILDER_H
+#pragma once
 
 #include "game/objects/projectile.h"
 #include "game/objects/projectile_spray.h"
@@ -42,4 +41,3 @@ private:
 		float layer_depth = 0.0f);
 
 };
-#endif // !PROJECTILEBUILDER_H

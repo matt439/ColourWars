@@ -1,5 +1,4 @@
-#ifndef LEVEL_END_INFO_H
-#define LEVEL_END_INFO_H
+#pragma once
 
 #include "game/objects/team_colour.h"
 #include "game/objects/player_team.h"
@@ -25,5 +24,3 @@ struct LevelEndInfo
 	float winning_percentage() const;
 	float losing_percentage() const;
 };
-
-#endif // !LEVEL_END_INFO_H

@@ -1,5 +1,4 @@
-#ifndef GAMESTATES_H
-#define GAMESTATES_H
+#pragma once
 
 #include "engine/core/state.h"
 #include "game/states/menu_level_settings.h"
@@ -77,5 +76,3 @@ private:
         const std::vector<PlayerInputData>& player_inputs);
     GameData* get_data() const;
 };
-
-#endif // !GAMELEVEL_H

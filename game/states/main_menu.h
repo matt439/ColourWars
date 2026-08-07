@@ -1,5 +1,4 @@
-#ifndef MAINMENU_H
-#define MAINMENU_H
+#pragma once
 
 #include "engine/ui/widget.h"
 #include "game/objects/player_team.h"
@@ -329,5 +328,3 @@ private:
 	void cycle_stages(menu_direction direction);
 	void set_level_settings() const;
 };
-
-#endif

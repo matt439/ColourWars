@@ -1,5 +1,4 @@
-#ifndef LEVELBUILDER_H
-#define LEVELBUILDER_H
+#pragma once
 
 #include "game/objects/level.h"
 #include "game/states/menu_level_settings.h"
@@ -44,5 +43,3 @@ private:
 	ThreadPool* _thread_pool = nullptr;
 	const Partitioner* _partitioner = nullptr;
 };
-
-#endif // !LEVELBUILDER_H

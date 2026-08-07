@@ -1,5 +1,4 @@
-#ifndef PROJECTILEROLLING_H
-#define PROJECTILEROLLING_H
+#pragma once
 
 #include "game/objects/projectile.h"
 
@@ -29,5 +28,3 @@ public:
 private:
 	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
 };
-
-#endif // !PROJECTILEROLLING_H

@@ -1,5 +1,4 @@
-#ifndef WEAPONSPRAYER_H
-#define WEAPONSPRAYER_H
+#pragma once
 
 #include "game/objects/weapon.h"
 
@@ -20,5 +19,3 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 };
-
-#endif // !WEAPONSPRAYER_H

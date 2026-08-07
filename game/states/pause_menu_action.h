@@ -1,5 +1,4 @@
-#ifndef PAUSE_MENU_ACTION_H
-#define PAUSE_MENU_ACTION_H
+#pragma once
 
 enum class pause_menu_action
 {
@@ -8,5 +7,3 @@ enum class pause_menu_action
 	QUIT,
 	NONE
 };
-
-#endif // !PAUSE_MENU_ACTION_H

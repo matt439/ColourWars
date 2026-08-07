@@ -1,5 +1,4 @@
-#ifndef GAMEDATA_H
-#define GAMEDATA_H
+#pragma once
 
 #include "engine/app/application.h"
 #include "engine/core/registry.h"
@@ -59,4 +58,3 @@ private:
     // definition means nothing to the engine, so the engine does not cache it.
     Registry<LevelLoadedInfo>* _level_infos = nullptr;
 };
-#endif // !GAMEDATA_H

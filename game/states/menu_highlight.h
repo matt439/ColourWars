@@ -1,5 +1,4 @@
-#ifndef MENUHIGHLIGHT_H
-#define MENUHIGHLIGHT_H
+#pragma once
 
 #include "engine/math/colour.h"
 #include "engine/ui/widget.h"
@@ -28,5 +27,3 @@ private:
 	MattMath::Colour _highlight_colour = colour_consts::WHITE;
 	MattMath::Colour _unhighlight_colour = colour_consts::GRAY;
 };
-
-#endif // !MENUPAGEHIGHLIGHT_H

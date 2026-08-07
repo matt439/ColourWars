@@ -1,5 +1,4 @@
-#ifndef PROJECTILESPRAY_H
-#define PROJECTILESPRAY_H
+#pragma once
 
 #include "game/objects/projectile.h"
 
@@ -30,4 +29,3 @@ public:
 private:
 	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
 };
-#endif // !PROJECTILESPRAY_H

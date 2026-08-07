@@ -1,5 +1,4 @@
-#ifndef WEAPONSNIPER_H
-#define WEAPONSNIPER_H
+#pragma once
 
 #include "game/objects/weapon.h"
 
@@ -22,5 +21,3 @@ public:
 protected:
 	void handle_shoot_sound(bool shooting_this_update, bool holding_shoot) override;
 };
-
-#endif // !WEAPONSNIPER_H
