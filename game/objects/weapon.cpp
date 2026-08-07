@@ -41,7 +41,7 @@ Weapon::Weapon(const WeaponDetails& details,
         resolve_sprite_frame(NOZZLE_FRAME);
 }
 
-void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug)
+void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug) const
 {
     //draw weapon
     Vector2F draw_pos = this->draw_pos();
@@ -92,7 +92,7 @@ mattmath::Colour Weapon::draw_colour() const
 {
     return this->colour();
 }
-void Weapon::draw(SpriteBatch* sprite_batch, bool debug)
+void Weapon::draw(SpriteBatch* sprite_batch, bool debug) const
 {
     this->draw(sprite_batch, Camera::DEFAULT_CAMERA, debug);
 }

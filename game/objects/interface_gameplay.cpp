@@ -29,7 +29,7 @@ void InterfaceGameplay::draw_gameplay_interface(SpriteBatch* sprite_batch,
 	const Colour& team_colour,
 	ID3D11SamplerState* sampler_state,
 	float respawn_timer,
-	bool show_respawn_timer)
+	bool show_respawn_timer) const
 {
 	
 	sprite_batch->Begin();

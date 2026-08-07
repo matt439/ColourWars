@@ -34,11 +34,12 @@ void ProjectileRolling::update()
 	Projectile::update_movement(details.gravity,
 		details.wind_resistance);
 }
-void ProjectileRolling::draw(SpriteBatch* /*sprite_batch*/, const Camera& /*camera*/)
+void ProjectileRolling::draw(SpriteBatch* /*sprite_batch*/,
+	const Camera& /*camera*/) const
 {
 	// do nothing
 }
-void ProjectileRolling::draw(SpriteBatch* /*sprite_batch*/)
+void ProjectileRolling::draw(SpriteBatch* /*sprite_batch*/) const
 {
 	// do nothing
 }
