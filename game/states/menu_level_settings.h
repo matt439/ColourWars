@@ -29,9 +29,9 @@ public:
 	void set_player_num(int player_index, int player_num);
 
 private:
-	level_mode _game_mode = level_mode::STANDARD_MODE;
-	std::vector<MenuPlayerSettings> _player_settings;
-	int _player_count = 0;
-	level_stage _stage = level_stage::KING_OF_THE_HILL;
-	screen_layout _screen_layout = screen_layout::ONE_PLAYER;
+	level_mode game_mode_ = level_mode::STANDARD_MODE;
+	std::vector<MenuPlayerSettings> player_settings_;
+	int player_count_ = 0;
+	level_stage stage_ = level_stage::KING_OF_THE_HILL;
+	screen_layout screen_layout_ = screen_layout::ONE_PLAYER;
 };

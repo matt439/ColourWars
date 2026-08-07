@@ -33,8 +33,8 @@ public:
 protected:
 	const MattMath::RectangleF& get_rectangle() const;
 private:
-	collision_object_type _collision_type =
+	collision_object_type collision_type_ =
 		collision_object_type::STRUCTURE;
-	MattMath::RectangleF _sprite_rectangle = MattMath::RectangleF::ZERO;
-	std::unique_ptr<MattMath::Shape> _collision_shape = nullptr;
+	MattMath::RectangleF sprite_rectangle_ = MattMath::RectangleF::ZERO;
+	std::unique_ptr<MattMath::Shape> collision_shape_ = nullptr;
 };

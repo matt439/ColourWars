@@ -66,16 +66,16 @@ protected:
 	virtual void update_movement(float gravity, float wind_resistance);
 	float get_dt() const;
 private:
-	ProjectileDetails _details = ProjectileDetails();
-	float _timer = 0.0f;
-	int _player_num = -1;
-	MattMath::Colour _team_colour = colour_consts::GRAY;
-	projectile_type _type = SPRAY;
+	ProjectileDetails details_ = ProjectileDetails();
+	float timer_ = 0.0f;
+	int player_num_ = -1;
+	MattMath::Colour team_colour_ = colour_consts::GRAY;
+	projectile_type type_ = SPRAY;
 
-	player_team _team = player_team::NONE;
-	bool _for_deletion = false;
+	player_team team_ = player_team::NONE;
+	bool for_deletion_ = false;
 
-	const float* _dt = nullptr;
+	const float* dt_ = nullptr;
 };
 
 class DiffusingProjectile : public Projectile
@@ -108,6 +108,6 @@ public:
 protected:
 	MattMath::Vector2F calculate_diffusion_size() const;
 private:
-	DiffusionDetails _diffusion_details = DiffusionDetails();
+	DiffusionDetails diffusion_details_ = DiffusionDetails();
 	const MattMath::Vector2F& get_base_size() const;
 };

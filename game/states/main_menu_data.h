@@ -16,6 +16,6 @@ public:
 	bool* get_is_ready_to_load_level() const;
 	void set_is_ready_to_load_level(bool* is_ready_to_load_level);
 private:
-	MenuLevelSettings* _menu_level_settings = nullptr;
-	bool* _is_ready_to_load_level = nullptr;
+	MenuLevelSettings* menu_level_settings_ = nullptr;
+	bool* is_ready_to_load_level_ = nullptr;
 };

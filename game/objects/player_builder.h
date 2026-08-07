@@ -21,5 +21,5 @@ public:
 		const ViewportManager* viewport_manager,
 		const float* dt) const;
 private:
-	std::unique_ptr<WeaponBuilder> _weapon_builder = nullptr;
+	std::unique_ptr<WeaponBuilder> weapon_builder_ = nullptr;
 };

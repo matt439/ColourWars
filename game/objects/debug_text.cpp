@@ -9,8 +9,8 @@ DebugText::DebugText(RenderResources* render_resources,
     const float* dt,
     const ResolutionManager* resolution_manager) :
     Drawer(render_resources, dt),
-    _resolution_manager(resolution_manager),
-    _font(render_resources->resolve_sprite_font(DEBUG_FONT))
+    resolution_manager_(resolution_manager),
+    font_(render_resources->resolve_sprite_font(DEBUG_FONT))
 {
 	
 }
@@ -25,7 +25,7 @@ void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
     Vector2F center = player->get_center();
     Vector2F vel = player->get_velocity();
     Camera camera = player->get_camera();
-    Vector2F resolution = this->_resolution_manager->get_resolution_vec();
+    Vector2F resolution = this->resolution_manager_->get_resolution_vec();
     Viewport viewport = player->get_viewport();
     float x_movement = player->get_input_x_movement();
     Vector2F shoot_direction = player->
@@ -104,7 +104,7 @@ void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
     Vector2F text_pos = DEBUG_POSITION;
 
     SpriteFont* sprite_font = this->get_render_resources()->get_sprite_font(
-        this->_font);
+        this->font_);
 
     sprite_batch->Begin();
 

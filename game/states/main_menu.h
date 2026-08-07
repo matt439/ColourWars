@@ -120,14 +120,14 @@ protected:
 	// Every sound this page family can make, resolved once when the page is
 	// built. The music is an effect rather than a wave because it loops and is
 	// stopped on the way into a match; the rest are fire-and-forget.
-	SoundBank::WaveHandle _direction_sound;
-	SoundBank::WaveHandle _confirm_sound;
-	SoundBank::WaveHandle _cancel_sound;
-	SoundBank::WaveHandle _error_sound;
-	SoundBank::WaveHandle _ready_sound;
-	SoundBank::EffectHandle _music;
+	SoundBank::WaveHandle direction_sound_;
+	SoundBank::WaveHandle confirm_sound_;
+	SoundBank::WaveHandle cancel_sound_;
+	SoundBank::WaveHandle error_sound_;
+	SoundBank::WaveHandle ready_sound_;
+	SoundBank::EffectHandle music_;
 private:
-	MainMenuData* _data = nullptr;
+	MainMenuData* data_ = nullptr;
 };
 
 class MainMenuTitle final : public MainMenuPage
@@ -138,11 +138,11 @@ public:
 	void draw() override;
 	void init() override;
 private:
-	std::unique_ptr<MContainer> _texture_container = nullptr;
-	std::unique_ptr<MContainer> _text_container = nullptr;
-	std::unique_ptr<MTexture> _background = nullptr;
-	std::unique_ptr<MTextDropShadow> _title = nullptr;
-	std::unique_ptr<MTextDropShadow> _start = nullptr;
+	std::unique_ptr<MContainer> texture_container_ = nullptr;
+	std::unique_ptr<MContainer> text_container_ = nullptr;
+	std::unique_ptr<MTexture> background_ = nullptr;
+	std::unique_ptr<MTextDropShadow> title_ = nullptr;
+	std::unique_ptr<MTextDropShadow> start_ = nullptr;
 };
 
 class MainMenuHome final : public MainMenuPage, public MenuHighlight
@@ -153,13 +153,13 @@ public:
 	void draw() override;
 	void init() override;
 private:
-	std::unique_ptr<MContainer> _texture_container = nullptr;
-	std::unique_ptr<MContainer> _text_container = nullptr;
-	std::unique_ptr<MTexture> _background = nullptr;
-	std::unique_ptr<MTextDropShadow> _heading = nullptr;
-	std::unique_ptr<MTextDropShadow> _play = nullptr;
-	std::unique_ptr<MTextDropShadow> _options = nullptr;
-	std::unique_ptr<MTextDropShadow> _exit = nullptr;
+	std::unique_ptr<MContainer> texture_container_ = nullptr;
+	std::unique_ptr<MContainer> text_container_ = nullptr;
+	std::unique_ptr<MTexture> background_ = nullptr;
+	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<MTextDropShadow> play_ = nullptr;
+	std::unique_ptr<MTextDropShadow> options_ = nullptr;
+	std::unique_ptr<MTextDropShadow> exit_ = nullptr;
 };
 
 class MainMenuOptions final : public MainMenuPage, public MenuHighlight
@@ -170,18 +170,18 @@ public:
 	void draw() override;
 	void init() override;
 private:
-	std::unique_ptr<MContainer> _texture_container = nullptr;
-	std::unique_ptr<MContainer> _text_container = nullptr;
-	std::unique_ptr<MTexture> _background = nullptr;
-	std::unique_ptr<MTextDropShadow> _heading = nullptr;
-	std::unique_ptr<MTextDropShadow> _resolution_element = nullptr;
-	std::unique_ptr<MTextDropShadow> _resolution_value = nullptr;
-	std::unique_ptr<MTextDropShadow> _full_screen = nullptr;
-	std::unique_ptr<MTextDropShadow> _full_screen_value = nullptr;
-	std::unique_ptr<MTextDropShadow> _apply = nullptr;
-	std::unique_ptr<MTextDropShadow> _back = nullptr;
-	screen_resolution _resolution_selection = screen_resolution::S_1920_1080;
-	bool _full_screen_selection = true;
+	std::unique_ptr<MContainer> texture_container_ = nullptr;
+	std::unique_ptr<MContainer> text_container_ = nullptr;
+	std::unique_ptr<MTexture> background_ = nullptr;
+	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<MTextDropShadow> resolution_element_ = nullptr;
+	std::unique_ptr<MTextDropShadow> resolution_value_ = nullptr;
+	std::unique_ptr<MTextDropShadow> full_screen_ = nullptr;
+	std::unique_ptr<MTextDropShadow> full_screen_value_ = nullptr;
+	std::unique_ptr<MTextDropShadow> apply_ = nullptr;
+	std::unique_ptr<MTextDropShadow> back_ = nullptr;
+	screen_resolution resolution_selection_ = screen_resolution::S_1920_1080;
+	bool full_screen_selection_ = true;
 	void cycle_resolution(menu_direction direction);
 	void update_resolution_selection_text();
 	void update_full_screen_selection_text() const;
@@ -196,15 +196,15 @@ public:
 	void draw() override;
 	void init() override;
 private:
-	std::unique_ptr<MContainer> _texture_container = nullptr;
-	std::unique_ptr<MContainer> _text_container = nullptr;
-	std::unique_ptr<MTexture> _background = nullptr;
-	std::unique_ptr<MTextDropShadow> _heading = nullptr;
-	std::unique_ptr<MTextDropShadow> _standard = nullptr;
-	std::unique_ptr<MTextDropShadow> _tdm = nullptr;
-	std::unique_ptr<MTextDropShadow> _dm = nullptr;
-	std::unique_ptr<MTextDropShadow> _practice = nullptr;
-	std::unique_ptr<MTextDropShadow> _back = nullptr;
+	std::unique_ptr<MContainer> texture_container_ = nullptr;
+	std::unique_ptr<MContainer> text_container_ = nullptr;
+	std::unique_ptr<MTexture> background_ = nullptr;
+	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<MTextDropShadow> standard_ = nullptr;
+	std::unique_ptr<MTextDropShadow> tdm_ = nullptr;
+	std::unique_ptr<MTextDropShadow> dm_ = nullptr;
+	std::unique_ptr<MTextDropShadow> practice_ = nullptr;
+	std::unique_ptr<MTextDropShadow> back_ = nullptr;
 	static menu_element convert_mode_to_element(level_mode mode);
 };
 
@@ -216,15 +216,15 @@ public:
 	void draw() override;
 	void init() override;
 private:
-	std::unique_ptr<MContainer> _texture_container = nullptr;
-	std::unique_ptr<MContainer> _text_container = nullptr;
-	std::unique_ptr<MTexture> _background = nullptr;
-	std::unique_ptr<MTextDropShadow> _heading = nullptr;
+	std::unique_ptr<MContainer> texture_container_ = nullptr;
+	std::unique_ptr<MContainer> text_container_ = nullptr;
+	std::unique_ptr<MTexture> background_ = nullptr;
+	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<MTextDropShadow> _1_player = nullptr;
 	std::unique_ptr<MTextDropShadow> _2_players = nullptr;
 	std::unique_ptr<MTextDropShadow> _3_players = nullptr;
 	std::unique_ptr<MTextDropShadow> _4_players = nullptr;
-	std::unique_ptr<MTextDropShadow> _back = nullptr;
+	std::unique_ptr<MTextDropShadow> back_ = nullptr;
 	static menu_element convert_player_count_to_element(int player_count);
 };
 
@@ -249,13 +249,13 @@ private:
 		std::unique_ptr<MTexture> player_center = nullptr;
 		std::unique_ptr<MTexture> player_b = nullptr;
 	};
-	std::unique_ptr<MContainer> _texture_container = nullptr;
-	std::unique_ptr<MContainer> _text_container = nullptr;
-	std::unique_ptr<MTexture> _background = nullptr;
-	std::unique_ptr<MTextDropShadow> _heading = nullptr;
+	std::unique_ptr<MContainer> texture_container_ = nullptr;
+	std::unique_ptr<MContainer> text_container_ = nullptr;
+	std::unique_ptr<MTexture> background_ = nullptr;
+	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
 
-	std::vector<std::unique_ptr<PlayerWidgets>> _player_widgets;
-	std::vector<TeamSelectState> _select_states;
+	std::vector<std::unique_ptr<PlayerWidgets>> player_widgets_;
+	std::vector<TeamSelectState> select_states_;
 	void update_team_select_visuals();
 	void deselect_and_unconfirm_all_widgets();
 	bool all_players_confirmed() const;
@@ -284,12 +284,12 @@ private:
 		std::unique_ptr<MTextDropShadow> weapon_name = nullptr;
 		std::unique_ptr<MTextDropShadow> weapon_description = nullptr;
 	};
-	std::unique_ptr<MContainer> _texture_container = nullptr;
-	std::unique_ptr<MContainer> _text_container = nullptr;
-	std::unique_ptr<MTexture> _background = nullptr;
-	std::unique_ptr<MTextDropShadow> _heading = nullptr;
-	std::vector<std::unique_ptr<Widgets>> _player_widgets;
-	std::vector<SelectState> _select_states;
+	std::unique_ptr<MContainer> texture_container_ = nullptr;
+	std::unique_ptr<MContainer> text_container_ = nullptr;
+	std::unique_ptr<MTexture> background_ = nullptr;
+	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
+	std::vector<std::unique_ptr<Widgets>> player_widgets_;
+	std::vector<SelectState> select_states_;
 	void update_weapon_select_visuals();
 	void unconfirm_all_widgets();
 	bool all_players_confirmed() const;
@@ -314,14 +314,14 @@ private:
 		level_stage stage = level_stage::KING_OF_THE_HILL;
 		confirmation_state state = confirmation_state::UNCONFIRMED;
 	};
-	std::unique_ptr<MContainer> _texture_container = nullptr;
-	std::unique_ptr<MContainer> _text_container = nullptr;
-	std::unique_ptr<MTexture> _background = nullptr;
-	std::unique_ptr<MTextDropShadow> _heading = nullptr;
-	std::unique_ptr<MTexture> _stage_icon = nullptr;
-	std::unique_ptr<MTextDropShadow> _stage_name = nullptr;
-	std::unique_ptr<MTextDropShadow> _ready = nullptr;
-	SelectState _select_state = SelectState();
+	std::unique_ptr<MContainer> texture_container_ = nullptr;
+	std::unique_ptr<MContainer> text_container_ = nullptr;
+	std::unique_ptr<MTexture> background_ = nullptr;
+	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<MTexture> stage_icon_ = nullptr;
+	std::unique_ptr<MTextDropShadow> stage_name_ = nullptr;
+	std::unique_ptr<MTextDropShadow> ready_ = nullptr;
+	SelectState select_state_ = SelectState();
 	void update_stage_select_visuals();
 	void unconfirm_all_widgets();
 	static level_stage get_random_stage();

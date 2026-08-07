@@ -48,7 +48,7 @@ public:
 
 	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
 private:
-	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
+	MattMath::RectangleF rectangle_ = MattMath::RectangleF::ZERO;
 };
 
 
@@ -80,9 +80,9 @@ public:
 	bool get_for_deletion() const override;
 	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
 private:
-	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
-	player_team _team = player_team::NONE;
-	TeamColour _team_colours = TeamColour();
-	const float* _dt = nullptr;
-	PaintTileSplash _splash;
+	MattMath::RectangleF rectangle_ = MattMath::RectangleF::ZERO;
+	player_team team_ = player_team::NONE;
+	TeamColour team_colours_ = TeamColour();
+	const float* dt_ = nullptr;
+	PaintTileSplash splash_;
 };

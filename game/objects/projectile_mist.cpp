@@ -20,11 +20,11 @@ ProjectileMist::ProjectileMist(const RectangleF& rectangle,
 		SPRAY, dt, render_resources,
 		DETAILS_MIST, DIFFUSION_DETAILS_MIST,
 		team_colour, rotation, origin, effects, layer_depth),
-	_rectangle(rectangle)
+	rectangle_(rectangle)
 {
 	Vector2F size = this->get_details().col_rect_size;
 
-	this->_rectangle.offset(-size.x / 2.0f, -size.y / 2.0f);
+	this->rectangle_.offset(-size.x / 2.0f, -size.y / 2.0f);
 }
 
 void ProjectileMist::update()
@@ -34,24 +34,24 @@ void ProjectileMist::update()
 	Projectile::update_movement(details.gravity,
 		details.wind_resistance);
 
-	this->_rectangle.inflate_to_size(calculate_diffusion_size());
+	this->rectangle_.inflate_to_size(calculate_diffusion_size());
 
-	this->_rectangle.offset(MovingObject::get_dx_x(),
+	this->rectangle_.offset(MovingObject::get_dx_x(),
 		MovingObject::get_dx_y());
 
 	AnimationObject::update();
 }
 void ProjectileMist::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
-	this->AnimationObject::draw(sprite_batch, this->_rectangle, camera);
+	this->AnimationObject::draw(sprite_batch, this->rectangle_, camera);
 }
 void ProjectileMist::draw(SpriteBatch* sprite_batch)
 {
-	this->AnimationObject::draw(sprite_batch, this->_rectangle);
+	this->AnimationObject::draw(sprite_batch, this->rectangle_);
 }
 bool ProjectileMist::is_visible_in_viewport(const RectangleF& view) const
 {
-	return this->_rectangle.intersects(view);
+	return this->rectangle_.intersects(view);
 }
 bool ProjectileMist::is_colliding(const ICollisionGameObject* other) const
 {
@@ -87,5 +87,5 @@ bool ProjectileMist::is_colliding(const ICollisionGameObject* other) const
 }
 const Shape* ProjectileMist::get_shape() const
 {
-	return &this->_rectangle;
+	return &this->rectangle_;
 }

@@ -57,13 +57,13 @@ void Save::load_save_file()
 
     try
     {
-        this->_save_data = this->load_from_json(SAVE_FILE_PATH.c_str());
+        this->save_data_ = this->load_from_json(SAVE_FILE_PATH.c_str());
     }
     catch (const std::exception&)
     {
         // A missing, unreadable or corrupt save is not fatal - the defaults are
         // perfectly playable, and the next settings change overwrites the file.
-        this->_save_data = SaveData();
+        this->save_data_ = SaveData();
     }
 }
 
@@ -109,7 +109,7 @@ void Save::save_to_file() const
     auto legacy_start = std::chrono::system_clock::to_time_t(start);
     char buffer[30];
     std::cout << ctime_s(buffer, sizeof(buffer), &legacy_start) << " Saving...\n";
-    if (write_save_file(this->_save_data))
+    if (write_save_file(this->save_data_))
     {
 		std::cout << "Save was successful.\n";
 	}
@@ -121,13 +121,13 @@ void Save::save_to_file() const
 
 void Save::set_resolution_and_save(screen_resolution resolution)
 {
-    this->_save_data.resolution = resolution;
+    this->save_data_.resolution = resolution;
     this->save_to_file();
 }
 
 void Save::set_full_screen_and_save(bool full_screen)
 {
-    this->_save_data.fullscreen = full_screen;
+    this->save_data_.fullscreen = full_screen;
 	this->save_to_file();
 }
 screen_resolution Save::convert_ivec_to_resolution(
@@ -174,15 +174,15 @@ Vector2I Save::convert_resolution_to_ivec(
 
 SaveData Save::get_save_data() const
 {
-	return this->_save_data;
+	return this->save_data_;
 }
 
 screen_resolution Save::get_resolution() const
 {
-	return this->_save_data.resolution;
+	return this->save_data_.resolution;
 }
 
 bool Save::get_fullscreen() const
 {
-	return this->_save_data.fullscreen;
+	return this->save_data_.fullscreen;
 }

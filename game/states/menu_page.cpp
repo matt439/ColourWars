@@ -4,40 +4,40 @@
 using namespace DirectX;
 using namespace MattMath;
 
-MenuPage::MenuPage(MenuData* data) : _data(data)
+MenuPage::MenuPage(MenuData* data) : data_(data)
 {
 
 }
 
 Vector2F MenuPage::get_widget_position() const
 {
-	return this->_widget_position;
+	return this->widget_position_;
 }
 Vector2F MenuPage::get_widget_spacing() const
 {
-	return this->_widget_spacing;
+	return this->widget_spacing_;
 }
 Vector2F MenuPage::get_widget_size() const
 {
-	return this->_widget_size;
+	return this->widget_size_;
 }
 void MenuPage::set_widget_position(const Vector2F& widget_position)
 {
-	this->_widget_position = widget_position;
+	this->widget_position_ = widget_position;
 }
 void MenuPage::set_widget_spacing(const Vector2F& widget_spacing)
 {
-	this->_widget_spacing = widget_spacing;
+	this->widget_spacing_ = widget_spacing;
 }
 void MenuPage::set_widget_size(const Vector2F& widget_size)
 {
-	this->_widget_size = widget_size;
+	this->widget_size_ = widget_size;
 }
 Vector2F MenuPage::calculate_widget_position(int h_index, int v_index) const
 {
-	Vector2F result = this->_widget_position;
-	result.x += h_index * this->_widget_spacing.x;
-	result.y += v_index * this->_widget_spacing.y;
+	Vector2F result = this->widget_position_;
+	result.x += h_index * this->widget_spacing_.x;
+	result.y += v_index * this->widget_spacing_.y;
 	return result;
 }
 
@@ -59,35 +59,35 @@ float MenuPage::calculate_center_position(
 
 MenuData* MenuPage::get_data() const
 {
-	return this->_data;
+	return this->data_;
 }
 MenuInput* MenuPage::get_input() const
 {
-	return this->_data->get_input();
+	return this->data_->get_input();
 }
 ResolutionManager* MenuPage::get_resolution_manager() const
 {
-	return this->_data->get_resolution_manager();
+	return this->data_->get_resolution_manager();
 }
 Save* MenuPage::get_save() const
 {
-	return this->_data->get_save();
+	return this->data_->get_save();
 }
 RenderResources* MenuPage::get_render_resources() const
 {
-	return this->_data->get_render_resources();
+	return this->data_->get_render_resources();
 }
 const AudioResources* MenuPage::get_audio_resources() const
 {
-	return this->_data->get_audio_resources();
+	return this->data_->get_audio_resources();
 }
 //SpriteBatch* MenuPage::get_sprite_batch() const
 //{
-//	return this->_data->get_sprite_batches()->at(0);
+//	return this->data_->get_sprite_batches()->at(0);
 //}
 ViewportManager* MenuPage::get_viewport_manager() const
 {
-	return this->_data->get_viewport_manager();
+	return this->data_->get_viewport_manager();
 }
 
 void MenuPage::draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,

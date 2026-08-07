@@ -27,5 +27,5 @@ public:
 	const MattMath::Shape* get_shape() const override;
 
 private:
-	MattMath::RectangleF _rectangle = MattMath::RectangleF::ZERO;
+	MattMath::RectangleF rectangle_ = MattMath::RectangleF::ZERO;
 };

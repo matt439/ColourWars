@@ -20,11 +20,11 @@ ProjectileJet::ProjectileJet(const RectangleF& rectangle,
 		JET, dt, render_resources,
 		DETAILS_JET,
 		team_colour, rotation, origin, effects, layer_depth),
-	_rectangle(rectangle)
+	rectangle_(rectangle)
 {
 	Vector2F col_size = this->get_details().col_rect_size;
 	
-	this->_rectangle.offset(-col_size.x / 2.0f, -col_size.y / 2.0f);
+	this->rectangle_.offset(-col_size.x / 2.0f, -col_size.y / 2.0f);
 }
 
 void ProjectileJet::update()
@@ -34,22 +34,22 @@ void ProjectileJet::update()
 	Projectile::update_movement(details.gravity,
 		details.wind_resistance);
 
-	this->_rectangle.offset(MovingObject::get_dx_x(),
+	this->rectangle_.offset(MovingObject::get_dx_x(),
 		MovingObject::get_dx_y());
 
 	AnimationObject::update();
 }
 void ProjectileJet::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
-	this->AnimationObject::draw(sprite_batch, this->_rectangle, camera);
+	this->AnimationObject::draw(sprite_batch, this->rectangle_, camera);
 }
 void ProjectileJet::draw(SpriteBatch* sprite_batch)
 {
-	this->AnimationObject::draw(sprite_batch, this->_rectangle);
+	this->AnimationObject::draw(sprite_batch, this->rectangle_);
 }
 bool ProjectileJet::is_visible_in_viewport(const RectangleF& view) const
 {
-	return this->_rectangle.intersects(view);
+	return this->rectangle_.intersects(view);
 }
 bool ProjectileJet::is_colliding(const ICollisionGameObject* other) const
 {
@@ -85,5 +85,5 @@ bool ProjectileJet::is_colliding(const ICollisionGameObject* other) const
 }
 const Shape* ProjectileJet::get_shape() const
 {
-	return &this->_rectangle;
+	return &this->rectangle_;
 }

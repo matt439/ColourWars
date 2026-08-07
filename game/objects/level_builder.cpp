@@ -14,50 +14,50 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	ResolutionManager* resolution_manager,
 	ThreadPool* thread_pool,
 	const Partitioner* partitioner) :
-	_render_resources(render_resources),
-	_audio_resources(audio_resources),
-	_level_infos(level_infos),
-	_dt(dt),
-	_viewport_manager(viewport_manager),
-	_sampler_state(sampler_state),
-	_resolution_manager(resolution_manager),
-	_thread_pool(thread_pool),
-	_partitioner(partitioner)
+	render_resources_(render_resources),
+	audio_resources_(audio_resources),
+	level_infos_(level_infos),
+	dt_(dt),
+	viewport_manager_(viewport_manager),
+	sampler_state_(sampler_state),
+	resolution_manager_(resolution_manager),
+	thread_pool_(thread_pool),
+	partitioner_(partitioner)
 {
-	this->_team_colour = std::make_unique<TeamColourTools>();
-	this->_player_builder = std::make_unique<PlayerBuilder>();
+	this->team_colour_ = std::make_unique<TeamColourTools>();
+	this->player_builder_ = std::make_unique<PlayerBuilder>();
 
-	this->_level_object_builder = std::make_unique<LevelObjectBuilder>(
-		this->_render_resources, this->_audio_resources, this->_dt);
+	this->level_object_builder_ = std::make_unique<LevelObjectBuilder>(
+		this->render_resources_, this->audio_resources_, this->dt_);
 }
 
 std::unique_ptr<Level>
 	LevelBuilder::build_level(const MenuLevelSettings& settings)
 {
 	const LevelLoadedInfo* load_info =
-		this->_level_infos->get(level_asset_name(settings.get_stage()));
+		this->level_infos_->get(level_asset_name(settings.get_stage()));
 
-	const TeamColour team_colours = _team_colour->generate_random_team_colour();
+	const TeamColour team_colours = team_colour_->generate_random_team_colour();
 
 	const Value& collision_objects_json =
 		load_info->get_collision_objects_json();
 
 	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> collision_objects =
-		this->_level_object_builder->build_collision_objects(collision_objects_json, team_colours);
+		this->level_object_builder_->build_collision_objects(collision_objects_json, team_colours);
 
 	const Value& non_collision_objects_json =
 		load_info->get_non_collision_objects_json();
 
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_collision_objects =
-		this->_level_object_builder->build_non_collision_objects(non_collision_objects_json);
+		this->level_object_builder_->build_non_collision_objects(non_collision_objects_json);
 
 	std::unique_ptr<std::vector<std::unique_ptr<Player>>> players =
-		this->_player_builder->build_players(settings, load_info, team_colours,
-			this->_render_resources, this->_audio_resources,
-			this->_viewport_manager, this->_dt);
+		this->player_builder_->build_players(settings, load_info, team_colours,
+			this->render_resources_, this->audio_resources_,
+			this->viewport_manager_, this->dt_);
 
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers =
-		this->_level_object_builder->build_viewport_dividers(this->_viewport_manager);
+		this->level_object_builder_->build_viewport_dividers(this->viewport_manager_);
 
 
 	return std::make_unique<Level>(
@@ -76,13 +76,13 @@ std::unique_ptr<Level>
 		load_info->get_sound_bank_name(),
 		load_info->get_music_name(),
 		load_info->get_music_volume(),
-		this->_dt,
-		this->_sampler_state,
+		this->dt_,
+		this->sampler_state_,
 		load_info->get_level_name(),
-		this->_resolution_manager,
-		this->_viewport_manager,
-		this->_render_resources,
-		this->_audio_resources,
-		this->_thread_pool,
-		this->_partitioner);
+		this->resolution_manager_,
+		this->viewport_manager_,
+		this->render_resources_,
+		this->audio_resources_,
+		this->thread_pool_,
+		this->partitioner_);
 }

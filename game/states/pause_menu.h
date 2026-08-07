@@ -67,12 +67,12 @@ protected:
 
 	// Every sound this page family can make, resolved once when the page is
 	// built. A press then plays an index, not a name (T7, T8).
-	SoundBank::WaveHandle _direction_sound;
-	SoundBank::WaveHandle _confirm_sound;
-	SoundBank::WaveHandle _cancel_sound;
-	SoundBank::WaveHandle _window_open_sound;
+	SoundBank::WaveHandle direction_sound_;
+	SoundBank::WaveHandle confirm_sound_;
+	SoundBank::WaveHandle cancel_sound_;
+	SoundBank::WaveHandle window_open_sound_;
 private:
-	PauseMenuData* _data = nullptr;
+	PauseMenuData* data_ = nullptr;
 };
 
 
@@ -84,13 +84,13 @@ public:
 	void update() override;
 	void draw() override;
 private:
-	std::unique_ptr<MContainer> _texture_container = nullptr;
-	std::unique_ptr<MContainer> _text_container = nullptr;
-	std::unique_ptr<MTexture> _box = nullptr;
-	std::unique_ptr<MTextDropShadow> _player_num = nullptr;
-	std::unique_ptr<MTextDropShadow> _resume = nullptr;
-	std::unique_ptr<MTextDropShadow> _restart = nullptr;
-	std::unique_ptr<MTextDropShadow> _quit = nullptr;
+	std::unique_ptr<MContainer> texture_container_ = nullptr;
+	std::unique_ptr<MContainer> text_container_ = nullptr;
+	std::unique_ptr<MTexture> box_ = nullptr;
+	std::unique_ptr<MTextDropShadow> player_num_ = nullptr;
+	std::unique_ptr<MTextDropShadow> resume_ = nullptr;
+	std::unique_ptr<MTextDropShadow> restart_ = nullptr;
+	std::unique_ptr<MTextDropShadow> quit_ = nullptr;
 };
 
 class PauseMenuConfirmation final : public PauseMenuPage
@@ -101,13 +101,13 @@ public:
 	void update() override;
 	void draw() override;
 private:
-	std::unique_ptr<MContainer> _texture_container = nullptr;
-	std::unique_ptr<MContainer> _text_container = nullptr;
-	std::unique_ptr<MTexture> _box = nullptr;
-	std::unique_ptr<MTextDropShadow> _player_num = nullptr;
-	std::unique_ptr<MTextDropShadow> _question = nullptr;
-	std::unique_ptr<MTextDropShadow> _yes = nullptr;
-	std::unique_ptr<MTextDropShadow> _no = nullptr;
-	confirmation_type _type = confirmation_type::RESTART;
+	std::unique_ptr<MContainer> texture_container_ = nullptr;
+	std::unique_ptr<MContainer> text_container_ = nullptr;
+	std::unique_ptr<MTexture> box_ = nullptr;
+	std::unique_ptr<MTextDropShadow> player_num_ = nullptr;
+	std::unique_ptr<MTextDropShadow> question_ = nullptr;
+	std::unique_ptr<MTextDropShadow> yes_ = nullptr;
+	std::unique_ptr<MTextDropShadow> no_ = nullptr;
+	confirmation_type type_ = confirmation_type::RESTART;
 	static std::string get_question_text(confirmation_type type);
 };

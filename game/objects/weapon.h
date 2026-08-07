@@ -47,22 +47,22 @@ public:
 	virtual void stop_sounds() const;
 
 protected:
-	SoundBank* _sound_bank = nullptr;
-	WeaponDetails _details = weapon_consts::DETAILS_DEFAULT;
+	SoundBank* sound_bank_ = nullptr;
+	WeaponDetails details_ = weapon_consts::DETAILS_DEFAULT;
 
 	// This weapon's looping SoundEffectInstance, resolved once at construction.
 	// Left unresolved for weapons that fire a one-shot wave instead - which is
 	// what handle_shoot_sound and stop_sounds read as "nothing to do". The
 	// default Handle is inert precisely so an absent thing can be spelt this
 	// way instead of with a sentinel string.
-	SoundBank::EffectHandle _loop_sound;
+	SoundBank::EffectHandle loop_sound_;
 
 	// The one-shot fire wave, for the weapons that use one. Unconditionally
 	// resolved, unlike the loop above: every weapon definition names one, so a
 	// name the bank does not have is a content bug and should say so here.
-	SoundBank::WaveHandle _shoot_sound;
+	SoundBank::WaveHandle shoot_sound_;
 
-	bool _shooting_this_update = false;
+	bool shooting_this_update_ = false;
 
 	virtual void handle_shoot_sound(bool shooting_this_update, bool holding_shoot);
 
@@ -141,29 +141,29 @@ private:
 		const SoundBank& sound_bank, wep_type type, player_team team,
 		int player_num);
 
-	std::unique_ptr<ProjectileBuilder> _proj_builder = nullptr;
-	const float* _dt = nullptr;
-	RenderResources* _render_resources = nullptr;
+	std::unique_ptr<ProjectileBuilder> proj_builder_ = nullptr;
+	const float* dt_ = nullptr;
+	RenderResources* render_resources_ = nullptr;
 
 	// Resolved once at construction like every other element name, even though
 	// only the debug draw reads it - a name resolved on the draw path is a
 	// name resolved on the draw path, however rarely that path is taken.
-	SpriteSheet::frame_handle _nozzle_frame;
+	SpriteSheet::frame_handle nozzle_frame_;
 
-	float _ammo = weapon_consts::STARTING_AMMO;
-	float _shoot_timer = 0.0f;
-	float _rotation = 0.0f;
-	bool _invert_x = false;
-	bool _invert_y = false;
-	bool _gun_player_aligned = true;
+	float ammo_ = weapon_consts::STARTING_AMMO;
+	float shoot_timer_ = 0.0f;
+	float rotation_ = 0.0f;
+	bool invert_x_ = false;
+	bool invert_y_ = false;
+	bool gun_player_aligned_ = true;
 
-	float _ammo_timer = 0.0f;
+	float ammo_timer_ = 0.0f;
 
-	player_team _team = player_team::NONE;
-	int _player_num = -1;
-	MattMath::Colour _team_colour = colour_consts::GRAY;
-	wep_type _type = wep_type::NONE;
-	MattMath::Vector2F _player_center = { 0.0f, 0.0f };
+	player_team team_ = player_team::NONE;
+	int player_num_ = -1;
+	MattMath::Colour team_colour_ = colour_consts::GRAY;
+	wep_type type_ = wep_type::NONE;
+	MattMath::Vector2F player_center_ = { 0.0f, 0.0f };
 
 	MattMath::Vector2F get_wep_rotation_origin_offset(
 		bool facing_left) const;
@@ -207,5 +207,5 @@ protected:
 		const MattMath::Vector2F& player_velocity) const;
 
 private:
-	RelativeWeaponDetails _rel_details = weapon_consts::DETAILS_RELATIVE_DEFAULT;
+	RelativeWeaponDetails rel_details_ = weapon_consts::DETAILS_RELATIVE_DEFAULT;
 };

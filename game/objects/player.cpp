@@ -30,24 +30,24 @@ Player::Player(const RectangleF& rectangle,
                     render_resources, DEFAULT_PLAYER_COLOUR, rotation, origin, effects, layer_depth),
     TextureObject(animation_info.sprite_sheet, animation_info.uniform_texture,
                   render_resources, team_colour, rotation, origin, effects, layer_depth),
-    _primary(std::move(primary_weapon)),
-    _player_num(player_num),
-    _team(team),
-    _primary_type(primary),
-    _secondary_type(secondary),
-    _team_colour(team_colour),
-    _viewport(view_port),
-    _rectangle(rectangle),
-    _prev_rectangle(rectangle),
-    _respawn_position(respawn_position),
-    _dt(dt)
+    primary_(std::move(primary_weapon)),
+    player_num_(player_num),
+    team_(team),
+    primary_type_(primary),
+    secondary_type_(secondary),
+    team_colour_(team_colour),
+    viewport_(view_port),
+    rectangle_(rectangle),
+    prev_rectangle_(rectangle),
+    respawn_position_(respawn_position),
+    dt_(dt)
 {
-    this->_sound_bank = audio_resources->get_sound_bank(SOUND_BANK);
+    this->sound_bank_ = audio_resources->get_sound_bank(SOUND_BANK);
 
-    this->_damage_sound = this->_sound_bank->resolve_wave(DAMAGE_SOUND);
-    this->_death_sound = this->_sound_bank->resolve_wave(DEATH_SOUND);
-    this->_jump_sound = this->_sound_bank->resolve_wave(JUMP_SOUND);
-    this->_respawn_sound = this->_sound_bank->resolve_wave(RESPAWN_SOUND);
+    this->damage_sound_ = this->sound_bank_->resolve_wave(DAMAGE_SOUND);
+    this->death_sound_ = this->sound_bank_->resolve_wave(DEATH_SOUND);
+    this->jump_sound_ = this->sound_bank_->resolve_wave(JUMP_SOUND);
+    this->respawn_sound_ = this->sound_bank_->resolve_wave(RESPAWN_SOUND);
 }
 
 void Player::update_animation_state()
@@ -55,12 +55,12 @@ void Player::update_animation_state()
     const player_animation_state new_animation_state =
         this->calculate_animation_state();
 
-    if (this->_animation_state == new_animation_state)
+    if (this->animation_state_ == new_animation_state)
     {
         return;
     }
 
-    this->_animation_state = new_animation_state;
+    this->animation_state_ = new_animation_state;
 
     const PlayerAnimationInfo& info = this->get_animation_info(new_animation_state);
     TextureObject::set_frame(info.sprite_sheet, info.uniform_texture);
@@ -78,7 +78,7 @@ void Player::update_animation_state()
 
 void Player::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
-    if (this->_state == player_state::DEAD)
+    if (this->state_ == player_state::DEAD)
     {
         return;
     }
@@ -92,27 +92,27 @@ void Player::draw(SpriteBatch* sprite_batch, const Camera& camera)
     // Every base call is explicitly qualified: Player inherits DrawObject
     // twice, once through TextureObject and once through AnimationObject, and
     // the two subobjects carry independent colour/origin/rotation.
-    TextureObject::draw_with(sprite_batch, this->_rectangle, camera,
+    TextureObject::draw_with(sprite_batch, this->rectangle_, camera,
         this->TextureObject::get_frame(),
         this->TextureObject::get_colour(),
         this->TextureObject::get_origin(), effects,
         this->TextureObject::get_draw_rotation());
 
-    AnimationObject::draw_with(sprite_batch, this->_rectangle, camera,
+    AnimationObject::draw_with(sprite_batch, this->rectangle_, camera,
         this->AnimationObject::get_colour(), effects);
 
-    this->_primary->draw(sprite_batch, camera, this->_showing_debug);
+    this->primary_->draw(sprite_batch, camera, this->showing_debug_);
 }
 void Player::draw(SpriteBatch* sprite_batch)
 {
-    AnimationObject::draw(sprite_batch, this->_rectangle, Camera::DEFAULT_CAMERA);
-	this->_primary->draw(sprite_batch, Camera::DEFAULT_CAMERA);
+    AnimationObject::draw(sprite_batch, this->rectangle_, Camera::DEFAULT_CAMERA);
+	this->primary_->draw(sprite_batch, Camera::DEFAULT_CAMERA);
 }
 collision_object_type Player::get_collision_object_type() const
 {
-    if (this->_state == player_state::ALIVE)
+    if (this->state_ == player_state::ALIVE)
     {
-        switch (this->_team)
+        switch (this->team_)
         {
         case player_team::A:
             return collision_object_type::PLAYER_TEAM_A;
@@ -122,9 +122,9 @@ collision_object_type Player::get_collision_object_type() const
             throw std::exception("Invalid player team");
         };
     }
-    else if (this->_state == player_state::DEAD)
+    else if (this->state_ == player_state::DEAD)
 	{
-		switch (this->_team)
+		switch (this->team_)
 		{
 		case player_team::A:
 			return collision_object_type::PLAYER_TEAM_A_DEAD;
@@ -151,7 +151,7 @@ bool Player::get_for_deletion() const
 
 const RectangleF* Player::get_collision_rectangle() const
 {
-	return &this->_rectangle;
+	return &this->rectangle_;
 }
 
 bool Player::is_matching_collision_object_type(
@@ -163,7 +163,7 @@ bool Player::is_matching_collision_object_type(
 bool Player::is_colliding(const ICollisionGameObject* other) const
 {
     // dead check
-    if (this->_state == player_state::DEAD)
+    if (this->state_ == player_state::DEAD)
 	{
 		return false;
 	}
@@ -211,7 +211,7 @@ void Player::on_collision(const ICollisionGameObject* other)
 
 	bool structure_ramp_collision = is_structure_ramp(other_type);
 
-    player_team team = this->_team;
+    player_team team = this->team_;
     bool projectile_collision = false;
     if (team == player_team::A)
     {
@@ -295,7 +295,7 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
             direction == Vector2F::DIRECTION_DOWN_LEFT ||
             direction == Vector2F::DIRECTION_DOWN_RIGHT)
         {
-            CollisionTools::resolve_object_collision(&this->_rectangle,
+            CollisionTools::resolve_object_collision(&this->rectangle_,
                 other->get_shape(), Vector2F::DIRECTION_DOWN);
 
             this->set_move_state(player_move_state::ON_RAMP_LEFT);
@@ -315,7 +315,7 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
 	{
         if (direction == Vector2F::DIRECTION_DOWN)
         {
-            CollisionTools::resolve_object_collision(&this->_rectangle,
+            CollisionTools::resolve_object_collision(&this->rectangle_,
                 other->get_shape(), Vector2F::DIRECTION_DOWN);
 
             this->set_move_state(player_move_state::ON_RAMP_RIGHT);
@@ -324,7 +324,7 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
         }
         else if (direction == Vector2F::DIRECTION_RIGHT)
         {
-            CollisionTools::resolve_object_collision(&this->_rectangle,
+            CollisionTools::resolve_object_collision(&this->rectangle_,
                 other->get_shape(), Vector2F::DIRECTION_DOWN);
 
             this->set_move_state(player_move_state::ON_RAMP_RIGHT);
@@ -333,7 +333,7 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
         }
         else if (direction == Vector2F::DIRECTION_DOWN_LEFT)
         {
-            CollisionTools::resolve_object_collision(&this->_rectangle,
+            CollisionTools::resolve_object_collision(&this->rectangle_,
                 other->get_shape(), Vector2F::DIRECTION_DOWN);
 
             this->set_move_state(player_move_state::ON_RAMP_RIGHT);
@@ -355,7 +355,7 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
 				(player_center.y < ramp_top.y && !moving_up))
 
             {
-                CollisionTools::resolve_object_collision(&this->_rectangle,
+                CollisionTools::resolve_object_collision(&this->rectangle_,
                     other->get_shape(), Vector2F::DIRECTION_DOWN);
 
                 this->set_move_state(player_move_state::ON_RAMP_RIGHT);
@@ -364,7 +364,7 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
             }
             else
             {
-                CollisionTools::resolve_object_collision(&this->_rectangle,
+                CollisionTools::resolve_object_collision(&this->rectangle_,
                     other->get_shape(), Vector2F::DIRECTION_LEFT);
 
 				this->set_velocity_x(0.0f);
@@ -372,7 +372,7 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
         }
         else if (direction == Vector2F::DIRECTION_DOWN_RIGHT)
         {
-            CollisionTools::resolve_object_collision(&this->_rectangle,
+            CollisionTools::resolve_object_collision(&this->rectangle_,
                 other->get_shape(), Vector2F::DIRECTION_DOWN);
 
             this->set_move_state(player_move_state::ON_RAMP_RIGHT);
@@ -405,7 +405,7 @@ void Player::on_structure_jump_through_collision(const ICollisionGameObject* oth
         dir == direction::DOWN_RIGHT;
 
     const RectangleF& other_rect = other->get_shape()->get_bounding_box();
-    bool was_above = this->_prev_rectangle.get_bottom() <= other_rect.get_top();
+    bool was_above = this->prev_rectangle_.get_bottom() <= other_rect.get_top();
 
     player_move_state move_state = this->get_move_state();
 
@@ -414,7 +414,7 @@ void Player::on_structure_jump_through_collision(const ICollisionGameObject* oth
         MovingObject::set_velocity_y(0.0f);
 
         const RectangleF& rect = other->get_shape()->get_bounding_box();
-        this->_rectangle.set_position_y_from_bottom(rect.get_top());
+        this->rectangle_.set_position_y_from_bottom(rect.get_top());
         this->set_move_state(player_move_state::ON_DROP_DOWN_GROUND);
 	}
 	else
@@ -441,7 +441,7 @@ void Player::on_structure_collision(const ICollisionGameObject* other)
 	//if (cardinal_col_direction == Vector2F::DIRECTION_LEFT ||
 	//	cardinal_col_direction == Vector2F::DIRECTION_RIGHT)
 	//{
- //       CollisionTools::resolve_object_collision(&this->_rectangle,
+ //       CollisionTools::resolve_object_collision(&this->rectangle_,
  //           other->get_shape(), Vector2F(col_direction.x, 0.0f));
 
  //       this->on_wall_collision();
@@ -455,14 +455,14 @@ void Player::on_structure_collision(const ICollisionGameObject* other)
 	////	{
 	////		this->on_ground_collision();
 
- ////           CollisionTools::resolve_object_collision(&this->_rectangle,
+ ////           CollisionTools::resolve_object_collision(&this->rectangle_,
  ////               other->get_shape(), Vector2F(0.0f, col_direction.y));
 	////	}
 	////	else if (player_direction.y < 0.0f)
 	////	{
 	////		this->on_ceiling_collision();
 
- ////           CollisionTools::resolve_object_collision(&this->_rectangle,
+ ////           CollisionTools::resolve_object_collision(&this->rectangle_,
  ////               other->get_shape(), Vector2F(0.0f, col_direction.y));
 	////	}
 	////}
@@ -475,18 +475,18 @@ void Player::on_structure_collision(const ICollisionGameObject* other)
  //       Vector2F amount = CollisionTools::calculate_object_collision_depth(
 	//		this->get_shape(), other->get_shape(), cardinal_col_direction);
 
- //       //CollisionTools::resolve_object_collision(&this->_rectangle,
+ //       //CollisionTools::resolve_object_collision(&this->rectangle_,
  //       //    other->get_shape(), Vector2F(cardinal_col_direction.x, 0.0f));
  //       
  //       if (amount.abs_x_greater_than_y())
  //       {
- //           CollisionTools::resolve_object_collision(&this->_rectangle,
+ //           CollisionTools::resolve_object_collision(&this->rectangle_,
  //               other->get_shape(), Vector2F(0.0f, cardinal_col_direction.y));
  //           this->on_ceiling_collision();
  //       }
  //       else
  //       {
-	//		CollisionTools::resolve_object_collision(&this->_rectangle,
+	//		CollisionTools::resolve_object_collision(&this->rectangle_,
 	//			other->get_shape(), Vector2F(cardinal_col_direction.x, 0.0f));
 	//		this->on_wall_collision();
  //       }
@@ -502,13 +502,13 @@ void Player::on_structure_collision(const ICollisionGameObject* other)
 
 	//	if (amount.abs_x_greater_than_y())
 	//	{
-	//		CollisionTools::resolve_object_collision(&this->_rectangle,
+	//		CollisionTools::resolve_object_collision(&this->rectangle_,
 	//			other->get_shape(), Vector2F(0.0f, cardinal_col_direction.y));
 	//		this->on_ground_collision();
 	//	}
 	//	else
 	//	{
-	//		CollisionTools::resolve_object_collision(&this->_rectangle,
+	//		CollisionTools::resolve_object_collision(&this->rectangle_,
 	//			other->get_shape(), Vector2F(cardinal_col_direction.x, 0.0f));
 	//		this->on_wall_collision();
 	//	}
@@ -581,7 +581,7 @@ void Player::on_top_collision(const ICollisionGameObject* other)
 {
     MovingObject::set_velocity_y(0.0f);
 
-    CollisionTools::resolve_object_collision(&this->_rectangle,
+    CollisionTools::resolve_object_collision(&this->rectangle_,
         other->get_shape(), Vector2F::DIRECTION_UP);
 
 	this->set_move_state(player_move_state::ON_CEILING);
@@ -590,7 +590,7 @@ void Player::on_bottom_collision(const ICollisionGameObject* other)
 {
     MovingObject::set_velocity_y(0.0f);
 
-    CollisionTools::resolve_object_collision(&this->_rectangle,
+    CollisionTools::resolve_object_collision(&this->rectangle_,
         other->get_shape(), Vector2F::DIRECTION_DOWN);
 
     this->set_move_state(player_move_state::ON_GROUND);
@@ -599,14 +599,14 @@ void Player::on_left_collision(const ICollisionGameObject* other)
 {
     this->set_velocity_x(0.0f);
 
-    CollisionTools::resolve_object_collision(&this->_rectangle,
+    CollisionTools::resolve_object_collision(&this->rectangle_,
         other->get_shape(), Vector2F::DIRECTION_LEFT);
 }
 void Player::on_right_collision(const ICollisionGameObject* other)
 {
     this->set_velocity_x(0.0f);
 
-    CollisionTools::resolve_object_collision(&this->_rectangle,
+    CollisionTools::resolve_object_collision(&this->rectangle_,
         other->get_shape(), Vector2F::DIRECTION_RIGHT);
 }
 void Player::on_top_left_collision(const ICollisionGameObject* other)
@@ -676,7 +676,7 @@ void Player::on_bottom_right_collision(const ICollisionGameObject* other)
 
 void Player::update_weapon_position() const
 {
-    this->_primary->set_player_center(this->get_center());
+    this->primary_->set_player_center(this->get_center());
 }
 void Player::on_projectile_collision(const ICollisionGameObject* other)
 {
@@ -685,53 +685,53 @@ void Player::on_projectile_collision(const ICollisionGameObject* other)
     if (other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
         other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_B)
     {
-		this->_health -= SPRAY_DAMAGE;
-        //this->_health_regen_timer = 0.0f;
+		this->health_ -= SPRAY_DAMAGE;
+        //this->health_regen_timer_ = 0.0f;
 	}
 	else if (other_type == collision_object_type::PROJECTILE_JET_TEAM_A ||
 		other_type == collision_object_type::PROJECTILE_JET_TEAM_B)
 	{
-		this->_health -= JET_DAMAGE;
-        //this->_health_regen_timer = 0.0f;
+		this->health_ -= JET_DAMAGE;
+        //this->health_regen_timer_ = 0.0f;
 	}
 	else if (other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
 		other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_B)
 	{
-		this->_health -= ROLLING_DAMAGE;
-        //this->_health_regen_timer = 0.0f;
+		this->health_ -= ROLLING_DAMAGE;
+        //this->health_regen_timer_ = 0.0f;
 	}
 	else if (other_type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
 		other_type == collision_object_type::PROJECTILE_BALL_TEAM_B)
 	{
-		this->_health -= BALL_DAMAGE;
-        //this->_health_regen_timer = 0.0f;
+		this->health_ -= BALL_DAMAGE;
+        //this->health_regen_timer_ = 0.0f;
 	}
 	else if (other_type == collision_object_type::PROJECTILE_MIST_TEAM_A ||
 		other_type == collision_object_type::PROJECTILE_MIST_TEAM_B)
 	{
-		this->_health -= MIST_DAMAGE;
-        //this->_health_regen_timer = 0.0f;
+		this->health_ -= MIST_DAMAGE;
+        //this->health_regen_timer_ = 0.0f;
 	}
 	else
 	{
 		throw std::exception("Invalid projectile type.");
     }
-    this->_health_regen_timer = 0.0f;
+    this->health_regen_timer_ = 0.0f;
 
-    if (this->_damage_sound_timer >= DAMAGE_SOUND_DELAY)
+    if (this->damage_sound_timer_ >= DAMAGE_SOUND_DELAY)
 	{
-		this->_sound_bank->play_wave(this->_damage_sound, DAMAGE_SOUND_VOLUME);
-		this->_damage_sound_timer = 0.0f;
+		this->sound_bank_->play_wave(this->damage_sound_, DAMAGE_SOUND_VOLUME);
+		this->damage_sound_timer_ = 0.0f;
 	}
 }
 
 float Player::get_dt() const
 {
-	return *this->_dt;
+	return *this->dt_;
 }
 void Player::update()
 {
-    if (this->_state == player_state::ALIVE)
+    if (this->state_ == player_state::ALIVE)
     {
         this->update_movement();
 
@@ -745,48 +745,48 @@ void Player::update()
 
         AnimationObject::update();
 
-        if (this->_health <= 0.0f)
+        if (this->health_ <= 0.0f)
         {
-			this->_state = player_state::DEAD;
-			this->_sound_bank->play_wave(this->_death_sound, DEATH_SOUND_VOLUME);
+			this->state_ = player_state::DEAD;
+			this->sound_bank_->play_wave(this->death_sound_, DEATH_SOUND_VOLUME);
         }
 
-        this->_damage_sound_timer += this->get_dt();
+        this->damage_sound_timer_ += this->get_dt();
     }
-    else if (this->_state == player_state::DEAD)
+    else if (this->state_ == player_state::DEAD)
     {
-        this->_respawn_timer -= this->get_dt();
+        this->respawn_timer_ -= this->get_dt();
 
-        if (this->_respawn_timer <= 0.0f)
+        if (this->respawn_timer_ <= 0.0f)
         {
             this->respawn();
-            this->_respawn_timer = RESPAWN_DELAY;
+            this->respawn_timer_ = RESPAWN_DELAY;
         }
     }
 	else
 	{
 		throw std::exception("Invalid player state.");
 	}
-    if (this->_input.toggle_debug)
+    if (this->input_.toggle_debug)
     {
-        this->_showing_debug = !this->_showing_debug;
+        this->showing_debug_ = !this->showing_debug_;
     }
 
     //ammo regen
-    if (this->_health_regen_timer >= HEALTH_REGEN_DELAY)
+    if (this->health_regen_timer_ >= HEALTH_REGEN_DELAY)
     {
-        this->_health += HEALTH_REGEN_RATE * this->get_dt();
-        if (this->_health > 1.0f)
+        this->health_ += HEALTH_REGEN_RATE * this->get_dt();
+        if (this->health_ > 1.0f)
         {
-            this->_health = 1.0f;
+            this->health_ = 1.0f;
         }
     }
-    this->_health_regen_timer += this->get_dt();
+    this->health_regen_timer_ += this->get_dt();
 }
 std::vector<std::unique_ptr<ICollisionGameObject>>
     Player::update_weapon_and_get_projectiles() const
 {
-    return this->_primary->update_and_get_projectiles(
+    return this->primary_->update_and_get_projectiles(
         this->get_input(),
         this->get_center(),
         MovingObject::get_velocity(),
@@ -794,18 +794,18 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 }
 void Player::update_prev_rectangle()
 {
-	this->_prev_rectangle = this->_rectangle;
+	this->prev_rectangle_ = this->rectangle_;
 }
 
 void Player::update_movement()
 {
-    const PlayerInputData input = this->_input;
+    const PlayerInputData input = this->input_;
     const float x_input = input.x_movement;
     const player_move_state move_state = this->get_move_state();
     const float dt = this->get_dt();
-    const bool analog_stick_down = this->_input.left_analog_stick.y >
+    const bool analog_stick_down = this->input_.left_analog_stick.y >
         DROP_DOWN_ANALOG_THRESHOLD;
-    const bool jump_pressed = this->_input.jump_pressed;
+    const bool jump_pressed = this->input_.jump_pressed;
 
     //If the player's velocity is zero and the user is requesting to move the player
     if (are_equal(MovingObject::get_velocity_x(), 0.0f) && x_input != 0.0f)
@@ -896,7 +896,7 @@ void Player::update_movement()
     MovingObject::set_dx_x(MovingObject::get_velocity_x() * dt);
     MovingObject::set_dx_y(MovingObject::get_velocity_y() * dt);
 
-    this->_rectangle.offset(MovingObject::get_dx_x(),
+    this->rectangle_.offset(MovingObject::get_dx_x(),
         MovingObject::get_dx_y());
 
     if (x_input > 0.0f)
@@ -912,8 +912,8 @@ void Player::update_movement()
 void Player::do_jump()
 {
     const player_move_state move_state = this->get_move_state();
-    const bool jump_pressed = this->_input.jump_pressed;
-    const bool jump_held = this->_input.jump_held;
+    const bool jump_pressed = this->input_.jump_pressed;
+    const bool jump_held = this->input_.jump_held;
     const float dt = this->get_dt();
    
     if (this->is_on_ground() && jump_pressed)
@@ -921,7 +921,7 @@ void Player::do_jump()
 		MovingObject::set_velocity_y(JUMP_LAUNCH_VELOCITY);
 		this->set_air_time(0.0f);
 		this->set_move_state(player_move_state::JUMPING);
-		this->_sound_bank->play_wave(this->_jump_sound, JUMP_SOUND_VOLUME);
+		this->sound_bank_->play_wave(this->jump_sound_, JUMP_SOUND_VOLUME);
 	}
 	else if (move_state == player_move_state::ON_CEILING)
 	{
@@ -959,22 +959,22 @@ void Player::do_jump()
 
 bool Player::is_visible_in_viewport(const RectangleF& view) const
 {
-    RectangleF player_and_weapon_rect = this->_rectangle;
+    RectangleF player_and_weapon_rect = this->rectangle_;
     player_and_weapon_rect.inflate(Vector2F(200.0f, 200.0f));
     return player_and_weapon_rect.intersects(view);
 }
 void Player::set_player_input(const PlayerInputData& input)
 {
-	this->_input = input;
+	this->input_ = input;
 }
 
 const RectangleF& Player::get_rectangle() const
 {
-	return this->_rectangle;
+	return this->rectangle_;
 }
 Vector2F Player::get_center() const
 {
-	return this->_rectangle.get_center();
+	return this->rectangle_.get_center();
 }
 const Vector2F& Player::get_velocity() const
 {
@@ -982,39 +982,39 @@ const Vector2F& Player::get_velocity() const
 }
 const Camera& Player::get_camera() const
 {
-	return this->_camera;
+	return this->camera_;
 }
 const Viewport& Player::get_viewport() const
 {
-	return this->_viewport;
+	return this->viewport_;
 }
 float Player::get_input_x_movement() const
 {
-	return this->_input.x_movement;
+	return this->input_.x_movement;
 }
 const Vector2F& Player::get_input_shoot_direction() const
 {
-	return this->_input.shoot_direction;
+	return this->input_.shoot_direction;
 }
 bool Player::get_input_primary_shoot() const
 {
-	return this->_input.primary_shoot;
+	return this->input_.primary_shoot;
 }
 bool Player::get_input_jump_pressed() const
 {
-	return this->_input.jump_pressed;
+	return this->input_.jump_pressed;
 }
 bool Player::get_input_jump_held() const
 {
-	return this->_input.jump_held;
+	return this->input_.jump_held;
 }
 player_move_state Player::get_move_state() const
 {
-	return this->_move_state;
+	return this->move_state_;
 }
 bool Player::get_showing_debug() const
 {
-	return this->_showing_debug;
+	return this->showing_debug_;
 }
 const PlayerAnimationInfo& Player::get_animation_info(player_animation_state state)
 {
@@ -1036,14 +1036,14 @@ const PlayerAnimationInfo& Player::get_animation_info(player_animation_state sta
 }
 void Player::respawn()
 {
-    this->_rectangle.set_position(this->_respawn_position);
+    this->rectangle_.set_position(this->respawn_position_);
     MovingObject::set_rotation(0.0f);
     MovingObject::set_velocity(Vector2F::ZERO);
     MovingObject::set_dx(Vector2F::ZERO);
-	this->_health = 1.0f;
-	this->_primary->reset_ammo();
-	this->_state = player_state::ALIVE;
-    this->_sound_bank->play_wave(this->_respawn_sound, RESPAWN_SOUND_VOLUME);
+	this->health_ = 1.0f;
+	this->primary_->reset_ammo();
+	this->state_ = player_state::ALIVE;
+    this->sound_bank_->play_wave(this->respawn_sound_, RESPAWN_SOUND_VOLUME);
 }
 player_animation_state Player::calculate_animation_state() const
 {
@@ -1091,175 +1091,175 @@ player_animation_state Player::calculate_animation_state() const
 }
 void Player::stop_sounds() const
 {
-    this->_primary->stop_sounds();
+    this->primary_->stop_sounds();
 }
 void Player::set_move_state(player_move_state state)
 {
-	this->_move_state = state;
+	this->move_state_ = state;
 }
 
 void Player::set_air_time(float time)
 {
-	this->_air_time = time;
+	this->air_time_ = time;
 }
 
 void Player::alter_air_time(float time)
 {
-	this->_air_time += time;
+	this->air_time_ += time;
 }
 
 void Player::set_facing_right(bool facing_right)
 {
-	this->_facing_right = facing_right;
+	this->facing_right_ = facing_right;
 }
 
 bool Player::get_facing_right() const
 {
-	return this->_facing_right;
+	return this->facing_right_;
 }
 
 int Player::get_player_num() const
 {
-	return this->_player_num;
+	return this->player_num_;
 }
 
 float Player::get_health() const
 {
-	return this->_health;
+	return this->health_;
 }
 
 void Player::set_health(float health)
 {
-	this->_health = health;
+	this->health_ = health;
 }
 
 void Player::alter_health(float change)
 {
-	this->_health += change;
+	this->health_ += change;
 }
 
 void Player::set_respawn_timer(float respawn_timer)
 {
-	this->_respawn_timer = respawn_timer;
+	this->respawn_timer_ = respawn_timer;
 }
 
 void Player::alter_respawn_timer(float change)
 {
-	this->_respawn_timer += change;
+	this->respawn_timer_ += change;
 }
 
 void Player::set_score(int score)
 {
-	this->_score = score;
+	this->score_ = score;
 }
 
 void Player::alter_score(int change)
 {
-	this->_score += change;
+	this->score_ += change;
 }
 
 int Player::get_score() const
 {
-	return this->_score;
+	return this->score_;
 }
 
 void Player::set_team(player_team team)
 {
-	this->_team = team;
+	this->team_ = team;
 }
 
 void Player::set_team_colour(const Colour& team_colour)
 {
-	this->_team_colour = team_colour;
+	this->team_colour_ = team_colour;
 }
 
 void Player::set_viewport(const Viewport& viewport)
 {
-	this->_viewport = viewport;
+	this->viewport_ = viewport;
 }
 
 void Player::set_input(const PlayerInputData& input)
 {
-	this->_input = input;
+	this->input_ = input;
 }
 
 wep_type Player::get_primary() const
 {
-	return this->_primary_type;
+	return this->primary_type_;
 }
 
 void Player::set_primary(wep_type primary)
 {
-	this->_primary_type = primary;
+	this->primary_type_ = primary;
 }
 
 wep_type Player::get_secondary() const
 {
-	return this->_secondary_type;
+	return this->secondary_type_;
 }
 
 void Player::set_secondary(wep_type secondary)
 {
-	this->_secondary_type = secondary;
+	this->secondary_type_ = secondary;
 }
 
 void Player::set_showing_debug(bool showing_debug)
 {
-	this->_showing_debug = showing_debug;
+	this->showing_debug_ = showing_debug;
 }
 
 void Player::set_player_num(int player_num)
 {
-	this->_player_num = player_num;
+	this->player_num_ = player_num;
 }
 
 void Player::set_camera(const Camera& camera)
 {
-	this->_camera = camera;
+	this->camera_ = camera;
 }
 
 float Player::get_weapon_ammo() const
 {
-	return this->_primary->get_ammo();
+	return this->primary_->get_ammo();
 }
 
 const Colour& Player::get_team_colour() const
 {
-	return this->_team_colour;
+	return this->team_colour_;
 }
 
 player_state Player::get_state() const
 {
-	return this->_state;
+	return this->state_;
 }
 void Player::set_state(player_state state)
 {
-	this->_state = state;
+	this->state_ = state;
 }
 
 player_team Player::get_team() const
 {
-	return this->_team;
+	return this->team_;
 }
 
 float Player::get_respawn_timer() const
 {
-	return this->_respawn_timer;
+	return this->respawn_timer_;
 }
 
 float Player::get_air_time() const
 {
-	return this->_air_time;
+	return this->air_time_;
 }
 
 const PlayerInputData& Player::get_input() const
 {
-	return this->_input;
+	return this->input_;
 }
 
 std::string Player::get_player_move_state_string() const
 {
-    switch (this->_move_state)
+    switch (this->move_state_)
     {
     case player_move_state::ON_GROUND:
         return "on_ground";
@@ -1281,16 +1281,16 @@ std::string Player::get_player_move_state_string() const
 
 bool Player::is_on_ground() const
 {
-	return this->_move_state == player_move_state::ON_GROUND ||
-		this->_move_state == player_move_state::ON_DROP_DOWN_GROUND ||
-		this->_move_state == player_move_state::ON_RAMP_LEFT ||
-		this->_move_state == player_move_state::ON_RAMP_RIGHT;
+	return this->move_state_ == player_move_state::ON_GROUND ||
+		this->move_state_ == player_move_state::ON_DROP_DOWN_GROUND ||
+		this->move_state_ == player_move_state::ON_RAMP_LEFT ||
+		this->move_state_ == player_move_state::ON_RAMP_RIGHT;
 }
 
 bool Player::is_on_ramp() const
 {
-	return this->_move_state == player_move_state::ON_RAMP_LEFT ||
-		this->_move_state == player_move_state::ON_RAMP_RIGHT;
+	return this->move_state_ == player_move_state::ON_RAMP_LEFT ||
+		this->move_state_ == player_move_state::ON_RAMP_RIGHT;
 }
 
 void Player::on_no_collision()

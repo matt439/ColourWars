@@ -94,64 +94,64 @@ public:
 
 private:
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
-		_non_collision_objects = nullptr;
+		non_collision_objects_ = nullptr;
 
 	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>>
-		_collision_objects = nullptr;
+		collision_objects_ = nullptr;
 
 	std::unique_ptr<std::vector<std::unique_ptr<Player>>>
-		_player_objects = nullptr;
+		player_objects_ = nullptr;
 
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
-		_viewport_dividers = nullptr;
+		viewport_dividers_ = nullptr;
 
-	SoundBank* _sound_bank = nullptr;
+	SoundBank* sound_bank_ = nullptr;
 
 	// The level's own music comes from its definition file, so its name is not
 	// known until here - but it is known once, at construction, which is where
 	// it stops being a name. Same for the two fixed sounds the level plays.
-	SoundBank::EffectHandle _music;
-	SoundBank::EffectHandle _zoom_out_sound;
-	SoundBank::WaveHandle _countdown_sound;
-	float _music_volume = 0.0f;
+	SoundBank::EffectHandle music_;
+	SoundBank::EffectHandle zoom_out_sound_;
+	SoundBank::WaveHandle countdown_sound_;
+	float music_volume_ = 0.0f;
 
-	std::unique_ptr<TextDropShadow> _countdown_text = nullptr;
+	std::unique_ptr<TextDropShadow> countdown_text_ = nullptr;
 
-	std::unique_ptr<CameraTools> _camera_tools = nullptr;
-	std::unique_ptr<InterfaceGameplay> _interface_gameplay = nullptr;
+	std::unique_ptr<CameraTools> camera_tools_ = nullptr;
+	std::unique_ptr<InterfaceGameplay> interface_gameplay_ = nullptr;
 
-	std::string _level_name = "";
-	const ResolutionManager* _resolution_manager = nullptr;
-	ViewportManager* _viewport_manager = nullptr;
-	RenderResources* _render_resources = nullptr;
+	std::string level_name_ = "";
+	const ResolutionManager* resolution_manager_ = nullptr;
+	ViewportManager* viewport_manager_ = nullptr;
+	RenderResources* render_resources_ = nullptr;
 
-	float _timer = level_consts::TIMER;
-	float _start_timer = level_consts::START_TIMER;
-	float _zoom_out_timer = level_consts::ZOOM_OUT_TIMER;
-	float _overview_timer = level_consts::OVERVIEW_TIMER;
+	float timer_ = level_consts::TIMER;
+	float start_timer_ = level_consts::START_TIMER;
+	float zoom_out_timer_ = level_consts::ZOOM_OUT_TIMER;
+	float overview_timer_ = level_consts::OVERVIEW_TIMER;
 
-	MattMath::Camera _zoom_out_camera = MattMath::Camera::DEFAULT_CAMERA;
+	MattMath::Camera zoom_out_camera_ = MattMath::Camera::DEFAULT_CAMERA;
 
-	TeamColour _team_colours = TeamColour();
-	level_stage _stage = level_stage::KING_OF_THE_HILL;
+	TeamColour team_colours_ = TeamColour();
+	level_stage stage_ = level_stage::KING_OF_THE_HILL;
 
-	MattMath::RectangleF _out_of_bounds = MattMath::RectangleF::ZERO;
-	MattMath::RectangleF _camera_bounds = MattMath::RectangleF::ZERO;
-	MattMath::RectangleF _zoom_out_start_bounds = MattMath::RectangleF::ZERO;
-	MattMath::RectangleF _zoom_out_finish_bounds = MattMath::RectangleF::ZERO;
+	MattMath::RectangleF out_of_bounds_ = MattMath::RectangleF::ZERO;
+	MattMath::RectangleF camera_bounds_ = MattMath::RectangleF::ZERO;
+	MattMath::RectangleF zoom_out_start_bounds_ = MattMath::RectangleF::ZERO;
+	MattMath::RectangleF zoom_out_finish_bounds_ = MattMath::RectangleF::ZERO;
 
-	std::vector<MattMath::Vector2F> _team_a_spawns = std::vector<MattMath::Vector2F>();
-	std::vector<MattMath::Vector2F> _team_b_spawns = std::vector<MattMath::Vector2F>();
+	std::vector<MattMath::Vector2F> team_a_spawns_ = std::vector<MattMath::Vector2F>();
+	std::vector<MattMath::Vector2F> team_b_spawns_ = std::vector<MattMath::Vector2F>();
 
-	level_state _state = level_state::START_COUNTDOWN;
-	const float* _dt = nullptr;
-	ID3D11SamplerState* _sampler_state = nullptr;
+	level_state state_ = level_state::START_COUNTDOWN;
+	const float* dt_ = nullptr;
+	ID3D11SamplerState* sampler_state_ = nullptr;
 
-	std::vector<PlayerInputData> _player_inputs = std::vector<PlayerInputData>();
-	std::unique_ptr<DebugText> _debug_text = nullptr;
+	std::vector<PlayerInputData> player_inputs_ = std::vector<PlayerInputData>();
+	std::unique_ptr<DebugText> debug_text_ = nullptr;
 
-	ThreadPool* _thread_pool = nullptr;
-	const Partitioner* _partitioner = nullptr;
+	ThreadPool* thread_pool_ = nullptr;
+	const Partitioner* partitioner_ = nullptr;
 
 	int count_projectiles() const;
 	float get_dt() const;

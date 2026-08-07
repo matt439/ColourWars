@@ -20,11 +20,11 @@ ProjectileBall::ProjectileBall(const RectangleF& rectangle,
 		BALL, dt, render_resources,
 		DETAILS_BALL,
 		team_colour, rotation, origin, effects, layer_depth),
-	_rectangle(rectangle)
+	rectangle_(rectangle)
 {
 	Vector2F size = this->get_details().col_rect_size;
 	
-	this->_rectangle.offset(-size.x / 2.0f, -size.y / 2.0f);
+	this->rectangle_.offset(-size.x / 2.0f, -size.y / 2.0f);
 }
 
 void ProjectileBall::update()
@@ -34,7 +34,7 @@ void ProjectileBall::update()
 	Projectile::update_movement(details.gravity,
 		details.wind_resistance);
 
-	this->_rectangle.offset(MovingObject::get_dx_x(),
+	this->rectangle_.offset(MovingObject::get_dx_x(),
 		MovingObject::get_dx_y());
 
 	AnimationObject::update();
@@ -42,15 +42,15 @@ void ProjectileBall::update()
 void ProjectileBall::draw(SpriteBatch* sprite_batch,
 	const Camera& camera)
 {
-	this->AnimationObject::draw(sprite_batch, this->_rectangle, camera);
+	this->AnimationObject::draw(sprite_batch, this->rectangle_, camera);
 }
 void ProjectileBall::draw(SpriteBatch* sprite_batch)
 {
-	this->AnimationObject::draw(sprite_batch, this->_rectangle);
+	this->AnimationObject::draw(sprite_batch, this->rectangle_);
 }
 bool ProjectileBall::is_visible_in_viewport(const RectangleF& view) const
 {
-	return this->_rectangle.intersects(view);
+	return this->rectangle_.intersects(view);
 }
 bool ProjectileBall::is_colliding(const ICollisionGameObject* other) const
 {
@@ -86,5 +86,5 @@ bool ProjectileBall::is_colliding(const ICollisionGameObject* other) const
 }
 const Shape* ProjectileBall::get_shape() const
 {
-	return &this->_rectangle;
+	return &this->rectangle_;
 }

@@ -138,46 +138,46 @@ public:
 	void on_no_collision();
 
 private:
-    MattMath::Camera _camera = MattMath::Camera::DEFAULT_CAMERA;
+    MattMath::Camera camera_ = MattMath::Camera::DEFAULT_CAMERA;
 
-    std::unique_ptr<Weapon> _primary = nullptr;
+    std::unique_ptr<Weapon> primary_ = nullptr;
 
-    float _health = player_consts::STARTING_HEALTH;
-    float _damage_sound_timer = 0.0f;
-    float _air_time = 0.0f;
-    bool _facing_right = true;
-    int _score = 0;
-    bool _showing_debug = false;
-    player_state _state = player_state::ALIVE;
-    float _respawn_timer = player_consts::RESPAWN_DELAY;
-    PlayerInputData _input = PlayerInputData();
-    player_move_state _move_state = player_move_state::IN_AIR;
-    player_animation_state _animation_state = player_animation_state::IDLE;
+    float health_ = player_consts::STARTING_HEALTH;
+    float damage_sound_timer_ = 0.0f;
+    float air_time_ = 0.0f;
+    bool facing_right_ = true;
+    int score_ = 0;
+    bool showing_debug_ = false;
+    player_state state_ = player_state::ALIVE;
+    float respawn_timer_ = player_consts::RESPAWN_DELAY;
+    PlayerInputData input_ = PlayerInputData();
+    player_move_state move_state_ = player_move_state::IN_AIR;
+    player_animation_state animation_state_ = player_animation_state::IDLE;
 
-    int _player_num = player_consts::DEFAULT_PLAYER_NUM;
-    player_team _team = player_consts::DEFAULT_TEAM;
-    wep_type _primary_type = player_consts::DEFAULT_PRIMARY;
-    wep_type _secondary_type = player_consts::DEFAULT_SECONDARY;
-    MattMath::Colour _team_colour = player_consts::DEFAULT_TEAM_COLOUR;
-    MattMath::Viewport _viewport = MattMath::Viewport();
+    int player_num_ = player_consts::DEFAULT_PLAYER_NUM;
+    player_team team_ = player_consts::DEFAULT_TEAM;
+    wep_type primary_type_ = player_consts::DEFAULT_PRIMARY;
+    wep_type secondary_type_ = player_consts::DEFAULT_SECONDARY;
+    MattMath::Colour team_colour_ = player_consts::DEFAULT_TEAM_COLOUR;
+    MattMath::Viewport viewport_ = MattMath::Viewport();
 
-    MattMath::RectangleF _rectangle = player_consts::DEFAULT_BOUNDS;
-    MattMath::RectangleF _prev_rectangle = player_consts::DEFAULT_BOUNDS;
+    MattMath::RectangleF rectangle_ = player_consts::DEFAULT_BOUNDS;
+    MattMath::RectangleF prev_rectangle_ = player_consts::DEFAULT_BOUNDS;
 
-    MattMath::Vector2F _respawn_position = MattMath::Vector2F::ZERO;
+    MattMath::Vector2F respawn_position_ = MattMath::Vector2F::ZERO;
 
-    SoundBank* _sound_bank = nullptr;
+    SoundBank* sound_bank_ = nullptr;
 
     // Resolved once at construction. These fire from update(), so the map
     // descent they used to cost was on the frame loop (T7, T8).
-    SoundBank::WaveHandle _damage_sound;
-    SoundBank::WaveHandle _death_sound;
-    SoundBank::WaveHandle _jump_sound;
-    SoundBank::WaveHandle _respawn_sound;
+    SoundBank::WaveHandle damage_sound_;
+    SoundBank::WaveHandle death_sound_;
+    SoundBank::WaveHandle jump_sound_;
+    SoundBank::WaveHandle respawn_sound_;
 
-    const float* _dt = nullptr;
+    const float* dt_ = nullptr;
 
-    float _health_regen_timer = 0.0f;
+    float health_regen_timer_ = 0.0f;
 
 	const MattMath::RectangleF* get_collision_rectangle() const;
 

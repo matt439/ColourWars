@@ -25,18 +25,18 @@ StructurePaintable::StructurePaintable(
 	Structure(sheet_name, frame_name, sprite_rectangle, collision_shape,
 		render_resources, collision_type, color, rotation, origin,
 		effects, layer_depth),
-		_team_colours(team_colours),
-		_faces(faces),
-		_dt(dt)
+		team_colours_(team_colours),
+		faces_(faces),
+		dt_(dt)
 {
-	this->_paint_tiles = this->generate_paint_tiles();
-	this->_sound_bank = audio_resources->get_sound_bank(SOUND_BANK_NAME);
-	this->_paint_sound = this->_sound_bank->resolve_wave(SOUND_NAME);
+	this->paint_tiles_ = this->generate_paint_tiles();
+	this->sound_bank_ = audio_resources->get_sound_bank(SOUND_BANK_NAME);
+	this->paint_sound_ = this->sound_bank_->resolve_wave(SOUND_NAME);
 }
 
 void StructurePaintable::update()
 {
-	for (auto& paint_tile : this->_paint_tiles)
+	for (auto& paint_tile : this->paint_tiles_)
 	{
 		paint_tile.update();
 	}
@@ -45,7 +45,7 @@ void StructurePaintable::update()
 void StructurePaintable::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
 	Structure::draw(sprite_batch, camera);
-	for (auto& paint_tile : this->_paint_tiles)
+	for (auto& paint_tile : this->paint_tiles_)
 	{
 		paint_tile.draw(sprite_batch, camera);
 	}
@@ -54,7 +54,7 @@ void StructurePaintable::draw(SpriteBatch* sprite_batch, const Camera& camera)
 void StructurePaintable::draw(SpriteBatch* sprite_batch)
 {
 	Structure::draw(sprite_batch);
-	for (auto& paint_tile : this->_paint_tiles)
+	for (auto& paint_tile : this->paint_tiles_)
 	{
 		paint_tile.draw(sprite_batch);
 	}
@@ -86,7 +86,7 @@ void StructurePaintable::on_collision(const ICollisionGameObject* other)
 	bool tile_painted = false;
 
 	// check projectile against paint tiles
-	for (auto& paint_tile : this->_paint_tiles)
+	for (auto& paint_tile : this->paint_tiles_)
 	{
 		if (paint_tile.is_colliding(other))
 		{
@@ -94,7 +94,7 @@ void StructurePaintable::on_collision(const ICollisionGameObject* other)
 
 			if (!tile_painted)
 			{
-				this->_sound_bank->play_wave(this->_paint_sound, SOUND_VOLUME);
+				this->sound_bank_->play_wave(this->paint_sound_, SOUND_VOLUME);
 			}
 			tile_painted = true;
 		}
@@ -116,7 +116,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 		this->get_rectangle().get_height() / num_paint_tiles_y;
 
 	// top edge
-	if (this->_faces.top)
+	if (this->faces_.top)
 	{
 		for (int i = 0; i < num_paint_tiles_x; i++)
 		{
@@ -128,15 +128,15 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
 			                            this->get_render_resources(),
-			                            this->_team_colours,
-			                            this->_dt);
+			                            this->team_colours_,
+			                            this->dt_);
 			paint_tiles.push_back(paint_tile);
 
 		}
 	}
 
 	// bottom edge
-	if (this->_faces.bottom)
+	if (this->faces_.bottom)
 	{
 		for (int i = 0; i < num_paint_tiles_x; i++)
 		{
@@ -148,14 +148,14 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
 			                            this->get_render_resources(),
-			                            this->_team_colours,
-			                            this->_dt);
+			                            this->team_colours_,
+			                            this->dt_);
 			paint_tiles.push_back(paint_tile);
 		}
 	}
 
 	// left edge
-	if (this->_faces.left)
+	if (this->faces_.left)
 	{
 		for (int i = 0; i < num_paint_tiles_y; i++)
 		{
@@ -167,14 +167,14 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
 			                            this->get_render_resources(),
-			                            this->_team_colours,
-			                            this->_dt);
+			                            this->team_colours_,
+			                            this->dt_);
 			paint_tiles.push_back(paint_tile);
 		}
 	}
 
 	// right edge
-	if (this->_faces.right)
+	if (this->faces_.right)
 	{
 		for (int i = 0; i < num_paint_tiles_y; i++)
 		{
@@ -186,8 +186,8 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
 			                            this->get_render_resources(),
-			                            this->_team_colours,
-			                            this->_dt);
+			                            this->team_colours_,
+			                            this->dt_);
 			paint_tiles.push_back(paint_tile);
 		}
 	}
@@ -197,7 +197,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 PaintTotal StructurePaintable::get_paint_total() const
 {
 	auto total = PaintTotal();
-	for (auto& paint_tile : this->_paint_tiles)
+	for (auto& paint_tile : this->paint_tiles_)
 	{
 		player_team team = paint_tile.get_team();
 		switch (team)

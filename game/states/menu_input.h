@@ -52,9 +52,9 @@ public:
 	// XInput pad slot. Absent pads carry DISCONNECTED and neutral input.
 	std::vector<ProcessedMenuInput> update_and_get_menu_inputs();
 private:
-	RawMenuInput _prev_inputs[menu_input_consts::MAX_PAD_COUNT];
+	RawMenuInput prev_inputs_[menu_input_consts::MAX_PAD_COUNT];
 	RawMenuInput get_raw_input(int gamepad_num) const;
 	static ProcessedMenuInput calculate_menu_input(const RawMenuInput& current,
 	                                               const RawMenuInput& previous);
-	DirectX::GamePad* _gamepad = nullptr;
+	DirectX::GamePad* gamepad_ = nullptr;
 };

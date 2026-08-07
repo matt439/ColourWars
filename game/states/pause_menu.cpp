@@ -10,12 +10,12 @@ PauseMenuPage::PauseMenuPage(PauseMenuData* data) :
 	MenuPage(data),
 	SoundBankObject(pause_menu_consts::SOUND_BANK,
 		this->get_audio_resources()),
-	_data(data)
+	data_(data)
 {
-	this->_direction_sound = this->resolve_wave(DIRECTION_SOUND);
-	this->_confirm_sound = this->resolve_wave(CONFIRM_SOUND);
-	this->_cancel_sound = this->resolve_wave(CANCEL_SOUND);
-	this->_window_open_sound = this->resolve_wave(WINDOW_OPEN_SOUND);
+	this->direction_sound_ = this->resolve_wave(DIRECTION_SOUND);
+	this->confirm_sound_ = this->resolve_wave(CONFIRM_SOUND);
+	this->cancel_sound_ = this->resolve_wave(CANCEL_SOUND);
+	this->window_open_sound_ = this->resolve_wave(WINDOW_OPEN_SOUND);
 }
 
 std::string PauseMenuPage::get_player_number_text(int player_num)
@@ -37,7 +37,7 @@ std::string PauseMenuPage::get_player_number_text(int player_num)
 
 PauseMenuData* PauseMenuPage::get_pause_menu_data() const
 {
-	return this->_data;
+	return this->data_;
 }
 
 ProcessedMenuInput PauseMenuPage::get_pausing_player_input(
@@ -69,27 +69,27 @@ void PauseMenuInitial::update()
 	if (input.action == menu_input_action::BACK ||
 		input.action == menu_input_action::PAUSE)
 	{
-		this->play_wave(this->_cancel_sound);
+		this->play_wave(this->cancel_sound_);
 		*this->get_pause_menu_data()->get_action() = pause_menu_action::RESUME;
 	}
 	else if (input.action == menu_input_action::PROCEED)
 	{
 		if (highlighted_element == "resume")
 		{
-			this->play_wave(this->_confirm_sound);
+			this->play_wave(this->confirm_sound_);
 			*this->get_pause_menu_data()->get_action() =
 				pause_menu_action::RESUME;
 		}
 		else if (highlighted_element == "restart")
 		{
-			this->play_wave(this->_confirm_sound);
+			this->play_wave(this->confirm_sound_);
 			this->get_context()->transition_to(std::make_unique<
 				PauseMenuConfirmation>(this->get_pause_menu_data(),
 					confirmation_type::RESTART));
 		}
 		else if (highlighted_element == "quit")
 		{
-			this->play_wave(this->_cancel_sound);
+			this->play_wave(this->cancel_sound_);
 			this->get_context()->transition_to(std::make_unique<
 				PauseMenuConfirmation>(this->get_pause_menu_data(),
 					confirmation_type::QUIT));
@@ -97,34 +97,34 @@ void PauseMenuInitial::update()
 	}
 	else if (input.direction == menu_direction::UP)
 	{
-		this->play_wave(this->_direction_sound);
+		this->play_wave(this->direction_sound_);
 		if (highlighted_element == "resume")
 		{
-			this->change_highlight(this->_quit.get());
+			this->change_highlight(this->quit_.get());
 		}
 		else if (highlighted_element == "restart")
 		{
-			this->change_highlight(this->_resume.get());
+			this->change_highlight(this->resume_.get());
 		}
 		else if (highlighted_element == "quit")
 		{
-			this->change_highlight(this->_restart.get());
+			this->change_highlight(this->restart_.get());
 		}
 	}
 	else if (input.direction == menu_direction::DOWN)
 	{
-		this->play_wave(this->_direction_sound);
+		this->play_wave(this->direction_sound_);
 		if (highlighted_element == "resume")
 		{
-			this->change_highlight(this->_restart.get());
+			this->change_highlight(this->restart_.get());
 		}
 		else if (highlighted_element == "restart")
 		{
-			this->change_highlight(this->_quit.get());
+			this->change_highlight(this->quit_.get());
 		}
 		else if (highlighted_element == "quit")
 		{
-			this->change_highlight(this->_resume.get());
+			this->change_highlight(this->resume_.get());
 		}
 	}
 }
@@ -133,20 +133,20 @@ void PauseMenuInitial::init()
 	this->set_highlight_colour(STANDARD_HIGHLIGHT);
 	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
 
-	this->_box = std::make_unique<MTexture>(
+	this->box_ = std::make_unique<MTexture>(
 		"box",
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, PAUSE_MENU_BOX_SIZE),
 		this->get_render_resources(),
 		PAUSE_MENU_BOX_COLOUR);
-	this->_box->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
+	this->box_->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
 
 	this->set_widget_position(PAUSE_MENU_INITIAL_WIDGET_POSITION);
 	this->set_widget_size(PAUSE_MENU_INITIAL_WIDGET_SIZE);
 	this->set_widget_spacing(PAUSE_MENU_INITIAL_WIDGET_SPACING);
 
-	this->_player_num = std::make_unique<MTextDropShadow>(
+	this->player_num_ = std::make_unique<MTextDropShadow>(
 		"player_num",
 		this->get_player_number_text(
 			this->get_pause_menu_data()->get_player_num()),
@@ -157,7 +157,7 @@ void PauseMenuInitial::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->_resume = std::make_unique<MTextDropShadow>(
+	this->resume_ = std::make_unique<MTextDropShadow>(
 		"resume",
 		"Resume",
 		ITEM_FONT,
@@ -167,7 +167,7 @@ void PauseMenuInitial::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_restart = std::make_unique<MTextDropShadow>(
+	this->restart_ = std::make_unique<MTextDropShadow>(
 		"restart",
 		"Restart",
 		ITEM_FONT,
@@ -177,7 +177,7 @@ void PauseMenuInitial::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_quit = std::make_unique<MTextDropShadow>(
+	this->quit_ = std::make_unique<MTextDropShadow>(
 		"quit",
 		"Quit",
 		ITEM_FONT,
@@ -187,43 +187,43 @@ void PauseMenuInitial::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->set_highlighted_widget(this->_resume.get());
+	this->set_highlighted_widget(this->resume_.get());
 
 	const Vector2F resolution = this->get_float_resolution();
 
-	this->_texture_container = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<MContainer>(
 		"texture_container");
-	this->_texture_container->add_child(this->_box.get());
+	this->texture_container_->add_child(this->box_.get());
 
-	this->_text_container = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<MContainer>(
 		"text_container");
-	this->_text_container->add_child(this->_player_num.get());
-	this->_text_container->add_child(this->_resume.get());
-	this->_text_container->add_child(this->_restart.get());
-	this->_text_container->add_child(this->_quit.get());
+	this->text_container_->add_child(this->player_num_.get());
+	this->text_container_->add_child(this->resume_.get());
+	this->text_container_->add_child(this->restart_.get());
+	this->text_container_->add_child(this->quit_.get());
 
-	this->_texture_container->scale_objects_to_new_resolution(
+	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
-	this->_text_container->scale_objects_to_new_resolution(
+	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->play_wave(this->_window_open_sound);
+	this->play_wave(this->window_open_sound_);
 }
 void PauseMenuInitial::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+	mobjects.push_back(std::make_pair(this->texture_container_.get(),
 		this->get_point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
 	this->draw_mobjects_in_viewports(&mobjects);
 }
 
 PauseMenuConfirmation::PauseMenuConfirmation(PauseMenuData* data,
 	confirmation_type type) :
-	PauseMenuPage(data), _type(type)
+	PauseMenuPage(data), type_(type)
 {
 
 }
@@ -237,7 +237,7 @@ void PauseMenuConfirmation::update()
 
 	if (input.action == menu_input_action::BACK)
 	{
-		this->play_wave(this->_cancel_sound);
+		this->play_wave(this->cancel_sound_);
 		this->get_context()->transition_to(std::make_unique<PauseMenuInitial>(
 			this->get_pause_menu_data()));
 		return;
@@ -246,15 +246,15 @@ void PauseMenuConfirmation::update()
 	{
 		if (highlighted_element == "yes")
 		{
-			switch (this->_type)
+			switch (this->type_)
 			{
 			case confirmation_type::RESTART:
-				this->play_wave(this->_confirm_sound);
+				this->play_wave(this->confirm_sound_);
 				*this->get_pause_menu_data()->get_action() =
 					pause_menu_action::RESTART;
 				break;
 			case confirmation_type::QUIT:
-				this->play_wave(this->_cancel_sound);
+				this->play_wave(this->cancel_sound_);
 				*this->get_pause_menu_data()->get_action() =
 					pause_menu_action::QUIT;
 				break;
@@ -262,7 +262,7 @@ void PauseMenuConfirmation::update()
 		}
 		else if (highlighted_element == "no")
 		{
-			this->play_wave(this->_cancel_sound);
+			this->play_wave(this->cancel_sound_);
 			this->get_context()->transition_to(
 				std::make_unique<PauseMenuInitial>(
 					this->get_pause_menu_data()));
@@ -272,14 +272,14 @@ void PauseMenuConfirmation::update()
 	else if (input.direction == menu_direction::UP ||
 		input.direction == menu_direction::DOWN)
 	{
-		this->play_wave(this->_direction_sound);
+		this->play_wave(this->direction_sound_);
 		if (highlighted_element == "yes")
 		{
-			this->change_highlight(this->_no.get());
+			this->change_highlight(this->no_.get());
 		}
 		else if (highlighted_element == "no")
 		{
-			this->change_highlight(this->_yes.get());
+			this->change_highlight(this->yes_.get());
 		}
 	}
 }
@@ -289,20 +289,20 @@ void PauseMenuConfirmation::init()
 	this->set_highlight_colour(STANDARD_HIGHLIGHT);
 	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
 
-	this->_box = std::make_unique<MTexture>(
+	this->box_ = std::make_unique<MTexture>(
 		"box",
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, PAUSE_MENU_BOX_SIZE),
 		this->get_render_resources(),
 		PAUSE_MENU_BOX_COLOUR);
-	this->_box->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
+	this->box_->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
 
 	this->set_widget_position(PAUSE_MENU_INITIAL_WIDGET_POSITION);
 	this->set_widget_size(PAUSE_MENU_INITIAL_WIDGET_SIZE);
 	this->set_widget_spacing(PAUSE_MENU_INITIAL_WIDGET_SPACING);
 
-	this->_player_num = std::make_unique<MTextDropShadow>(
+	this->player_num_ = std::make_unique<MTextDropShadow>(
 		"player_num",
 		this->get_player_number_text(
 			this->get_pause_menu_data()->get_player_num()),
@@ -313,9 +313,9 @@ void PauseMenuConfirmation::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->_question = std::make_unique<MTextDropShadow>(
+	this->question_ = std::make_unique<MTextDropShadow>(
 		"question",
-		get_question_text(this->_type),
+		get_question_text(this->type_),
 		DETAIL_FONT,
 		this->calculate_widget_position(0, 2),
 		this->get_render_resources(),
@@ -323,7 +323,7 @@ void PauseMenuConfirmation::init()
 		SHADOW_COLOUR,
 		DETAIL_SHADOW_OFFSET);
 
-	this->_yes = std::make_unique<MTextDropShadow>(
+	this->yes_ = std::make_unique<MTextDropShadow>(
 		"yes",
 		"Yes",
 		ITEM_FONT,
@@ -333,7 +333,7 @@ void PauseMenuConfirmation::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_no = std::make_unique<MTextDropShadow>(
+	this->no_ = std::make_unique<MTextDropShadow>(
 		"no",
 		"No",
 		ITEM_FONT,
@@ -343,23 +343,23 @@ void PauseMenuConfirmation::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->set_highlighted_widget(this->_no.get());
+	this->set_highlighted_widget(this->no_.get());
 
-	this->_texture_container = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<MContainer>(
 		"texture_container");
-	this->_texture_container->add_child(this->_box.get());
+	this->texture_container_->add_child(this->box_.get());
 
-	this->_text_container = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<MContainer>(
 		"text_container");
-	this->_text_container->add_child(this->_player_num.get());
-	this->_text_container->add_child(this->_question.get());
-	this->_text_container->add_child(this->_yes.get());
-	this->_text_container->add_child(this->_no.get());
+	this->text_container_->add_child(this->player_num_.get());
+	this->text_container_->add_child(this->question_.get());
+	this->text_container_->add_child(this->yes_.get());
+	this->text_container_->add_child(this->no_.get());
 
 	const Vector2F resolution = this->get_float_resolution();
-	this->_texture_container->scale_objects_to_new_resolution(
+	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
-	this->_text_container->scale_objects_to_new_resolution(
+	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 }
 
@@ -367,10 +367,10 @@ void PauseMenuConfirmation::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+	mobjects.push_back(std::make_pair(this->texture_container_.get(),
 		this->get_point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
 	this->draw_mobjects_in_viewports(&mobjects);
 }

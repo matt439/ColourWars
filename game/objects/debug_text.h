@@ -28,9 +28,9 @@ public:
 		const Player* player, int num_projectiles) const;
 
 private:
-	const ResolutionManager* _resolution_manager = nullptr;
+	const ResolutionManager* resolution_manager_ = nullptr;
 
 	// Resolved once, like every other font name. The debug overlay is drawn
 	// per player per frame when it is on at all.
-	RenderResources::FontHandle _font;
+	RenderResources::FontHandle font_;
 };

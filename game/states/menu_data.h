@@ -12,5 +12,5 @@ public:
 	void set_input(MenuInput* input);
 	MenuData* get_menu_data();
 private:
-	MenuInput* _input = nullptr;
+	MenuInput* input_ = nullptr;
 };

@@ -6,9 +6,9 @@ using namespace MattMath;
 using namespace menu_input_consts;
 
 MenuInput::MenuInput(GamePad* gamepad) :
-    _gamepad(gamepad)
+    gamepad_(gamepad)
 {
-    for (auto& prev_input : this->_prev_inputs)
+    for (auto& prev_input : this->prev_inputs_)
     {
 	    prev_input = RawMenuInput();
     }
@@ -17,7 +17,7 @@ MenuInput::MenuInput(GamePad* gamepad) :
 RawMenuInput MenuInput::get_raw_input(int gamepad_num) const
 {
 	auto result = RawMenuInput();
-	const auto pad = this->_gamepad->GetState(gamepad_num, GamePad::DEAD_ZONE_NONE);
+	const auto pad = this->gamepad_->GetState(gamepad_num, GamePad::DEAD_ZONE_NONE);
     if (pad.IsConnected())
     {
         result.left_analog_stick = Vector2F(pad.thumbSticks.leftX,
@@ -145,9 +145,9 @@ std::vector<ProcessedMenuInput> MenuInput::update_and_get_menu_inputs()
     {
         if (current[i].connected)
         {
-            result[i] = calculate_menu_input(current[i], this->_prev_inputs[i]);
+            result[i] = calculate_menu_input(current[i], this->prev_inputs_[i]);
         }
-        this->_prev_inputs[i] = current[i];
+        this->prev_inputs_[i] = current[i];
     }
     return result;
 }

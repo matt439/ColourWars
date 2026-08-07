@@ -51,11 +51,11 @@ protected:
 
 	// Every sound this page family can make, resolved once when the page is
 	// built. A press then plays an index, not a name (T7, T8).
-	SoundBank::WaveHandle _direction_sound;
-	SoundBank::WaveHandle _confirm_sound;
-	SoundBank::WaveHandle _cancel_sound;
+	SoundBank::WaveHandle direction_sound_;
+	SoundBank::WaveHandle confirm_sound_;
+	SoundBank::WaveHandle cancel_sound_;
 private:
-	EndMenuData* _data = nullptr;
+	EndMenuData* data_ = nullptr;
 };
 
 class EndMenuInitial final : public EndMenuPage
@@ -66,13 +66,13 @@ public:
 	void update() override;
 	void draw() override;
 private:
-	std::unique_ptr<MContainer> _texture_container = nullptr;
-	std::unique_ptr<MContainer> _text_container = nullptr;
-	std::unique_ptr<MTexture> _box = nullptr;
-	std::unique_ptr<MTextDropShadow> _heading = nullptr;
-	std::unique_ptr<MTextDropShadow> _change_teams = nullptr;
-	std::unique_ptr<MTextDropShadow> _change_weapons = nullptr;
-	std::unique_ptr<MTextDropShadow> _change_level = nullptr;
-	std::unique_ptr<MTextDropShadow> _restart = nullptr;
-	std::unique_ptr<MTextDropShadow> _exit = nullptr;
+	std::unique_ptr<MContainer> texture_container_ = nullptr;
+	std::unique_ptr<MContainer> text_container_ = nullptr;
+	std::unique_ptr<MTexture> box_ = nullptr;
+	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<MTextDropShadow> change_teams_ = nullptr;
+	std::unique_ptr<MTextDropShadow> change_weapons_ = nullptr;
+	std::unique_ptr<MTextDropShadow> change_level_ = nullptr;
+	std::unique_ptr<MTextDropShadow> restart_ = nullptr;
+	std::unique_ptr<MTextDropShadow> exit_ = nullptr;
 };

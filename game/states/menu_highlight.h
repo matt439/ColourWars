@@ -23,7 +23,7 @@ protected:
 	void set_unhighlight_colour(MattMath::Colour colour);
 
 private:
-	MWidget* _highlighted_widget = nullptr;
-	MattMath::Colour _highlight_colour = colour_consts::WHITE;
-	MattMath::Colour _unhighlight_colour = colour_consts::GRAY;
+	MWidget* highlighted_widget_ = nullptr;
+	MattMath::Colour highlight_colour_ = colour_consts::WHITE;
+	MattMath::Colour unhighlight_colour_ = colour_consts::GRAY;
 };

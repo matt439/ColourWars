@@ -12,5 +12,5 @@ public:
 	void set_action(end_menu_action* action);
 
 private:
-	end_menu_action* _action = nullptr;
+	end_menu_action* action_ = nullptr;
 };

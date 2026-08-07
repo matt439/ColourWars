@@ -20,11 +20,11 @@ ProjectileRolling::ProjectileRolling(const RectangleF& rectangle,
 		ROLLING, dt, render_resources,
 		DETAILS_ROLLING,
 		team_colour, rotation, origin, effects, layer_depth),
-	_rectangle(rectangle)
+	rectangle_(rectangle)
 {
 	Vector2F col_size = this->get_details().col_rect_size;
 
-	this->_rectangle.offset(-col_size.x / 2.0f, -col_size.y / 2.0f);
+	this->rectangle_.offset(-col_size.x / 2.0f, -col_size.y / 2.0f);
 }
 void ProjectileRolling::update()
 {
@@ -79,5 +79,5 @@ bool ProjectileRolling::is_colliding(const ICollisionGameObject* other) const
 }
 const Shape* ProjectileRolling::get_shape() const
 {
-	return &this->_rectangle;
+	return &this->rectangle_;
 }

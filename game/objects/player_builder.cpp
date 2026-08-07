@@ -7,7 +7,7 @@ using namespace player_consts;
 
 PlayerBuilder::PlayerBuilder()
 {
-    this->_weapon_builder = std::make_unique<WeaponBuilder>();
+    this->weapon_builder_ = std::make_unique<WeaponBuilder>();
 }
 
 std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_players(
@@ -46,7 +46,7 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 			setting.num,
 			setting.team,
 			setting.weapon,
-			this->_weapon_builder->build_weapon(
+			this->weapon_builder_->build_weapon(
 				setting.team,
 				setting.num,
 				team_colours.get_team_colour(setting.team),

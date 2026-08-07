@@ -6,18 +6,18 @@ using namespace MattMath;
 using namespace player_input_consts;
 
 PlayerInput::PlayerInput(GamePad* gamepad) :
-    _gamepad(gamepad)
+    gamepad_(gamepad)
 {
-    for (auto& _prev_input : this->_prev_inputs)
+    for (auto& prev_input_ : this->prev_inputs_)
     {
-	    _prev_input = RawPlayerInput();
+	    prev_input_ = RawPlayerInput();
     }
 }
 
 RawPlayerInput PlayerInput::get_raw_input(int gamepad_num) const
 {
 	auto result = RawPlayerInput();
-    auto pad = this->_gamepad->GetState(gamepad_num, GamePad::DEAD_ZONE_CIRCULAR);
+    auto pad = this->gamepad_->GetState(gamepad_num, GamePad::DEAD_ZONE_CIRCULAR);
     if (pad.IsConnected())
     {
         result.left_analog_stick = Vector2F(pad.thumbSticks.leftX,
@@ -137,9 +137,9 @@ std::vector<PlayerInputData> PlayerInput::update_and_get_player_inputs()
         if (current[i].connected)
         {
             result[i] = calculate_player_input(current[i],
-                this->_prev_inputs[i]);
+                this->prev_inputs_[i]);
         }
-        this->_prev_inputs[i] = current[i];
+        this->prev_inputs_[i] = current[i];
     }
     return result;
 }

@@ -38,9 +38,9 @@ public:
 	// neutral input rather than being omitted.
 	std::vector<PlayerInputData> update_and_get_player_inputs();
 private:
-	RawPlayerInput _prev_inputs[player_input_consts::MAX_PAD_COUNT];
+	RawPlayerInput prev_inputs_[player_input_consts::MAX_PAD_COUNT];
 	RawPlayerInput get_raw_input(int gamepad_num) const;
 	static PlayerInputData calculate_player_input(const RawPlayerInput& current,
 	                                              const RawPlayerInput& previous);
-	DirectX::GamePad* _gamepad = nullptr;
+	DirectX::GamePad* gamepad_ = nullptr;
 };

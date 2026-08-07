@@ -20,13 +20,13 @@ public:
     void init() override;
 
 private:
-    GameData* _game_data = nullptr; // need this to pass to GameLevel
-    std::unique_ptr<StateContext> _menu = nullptr;
-    std::unique_ptr<MenuInput> _menu_input = nullptr;
-    std::unique_ptr<MainMenuData> _menu_data = nullptr;
-    std::unique_ptr<MenuLevelSettings> _menu_level_settings = nullptr;
-    std::unique_ptr<bool> _is_ready_to_load_level = nullptr;
-    main_menu_screen _screen = main_menu_screen::TITLE;
+    GameData* game_data_ = nullptr; // need this to pass to GameLevel
+    std::unique_ptr<StateContext> menu_ = nullptr;
+    std::unique_ptr<MenuInput> menu_input_ = nullptr;
+    std::unique_ptr<MainMenuData> menu_data_ = nullptr;
+    std::unique_ptr<MenuLevelSettings> menu_level_settings_ = nullptr;
+    std::unique_ptr<bool> is_ready_to_load_level_ = nullptr;
+    main_menu_screen screen_ = main_menu_screen::TITLE;
     void set_main_menu_data_ptrs();
     void order_level_creation();
     GameData* get_data() const;
@@ -51,22 +51,22 @@ public:
     void init() override;
 
 private:
-    GameData* _game_data = nullptr;
-    MenuLevelSettings _settings = MenuLevelSettings();
-    std::unique_ptr<Level> _level = nullptr;
-    std::unique_ptr<LevelBuilder> _level_builder = nullptr;
-    std::unique_ptr<PlayerInput> _player_input = nullptr;
-    std::unique_ptr<StateContext> _pause_menu = nullptr;
-    std::unique_ptr<pause_menu_action> _pause_menu_action = nullptr;
-    std::unique_ptr<PauseMenuData> _pause_menu_data = nullptr;
-    std::unique_ptr<MenuInput> _menu_input = nullptr;
-    std::unique_ptr<StateContext> _results_menu = nullptr;
-    std::unique_ptr<results_menu_action> _results_menu_action = nullptr;
-    std::unique_ptr<ResultsMenuData> _results_menu_data = nullptr;
-    std::unique_ptr<StateContext> _end_menu = nullptr;
-    std::unique_ptr<end_menu_action> _end_menu_action = nullptr;
-    std::unique_ptr<EndMenuData> _end_menu_data = nullptr;
-    game_level_state _state = game_level_state::FIRST_UPDATE;
+    GameData* game_data_ = nullptr;
+    MenuLevelSettings settings_ = MenuLevelSettings();
+    std::unique_ptr<Level> level_ = nullptr;
+    std::unique_ptr<LevelBuilder> level_builder_ = nullptr;
+    std::unique_ptr<PlayerInput> player_input_ = nullptr;
+    std::unique_ptr<StateContext> pause_menu_ = nullptr;
+    std::unique_ptr<pause_menu_action> pause_menu_action_ = nullptr;
+    std::unique_ptr<PauseMenuData> pause_menu_data_ = nullptr;
+    std::unique_ptr<MenuInput> menu_input_ = nullptr;
+    std::unique_ptr<StateContext> results_menu_ = nullptr;
+    std::unique_ptr<results_menu_action> results_menu_action_ = nullptr;
+    std::unique_ptr<ResultsMenuData> results_menu_data_ = nullptr;
+    std::unique_ptr<StateContext> end_menu_ = nullptr;
+    std::unique_ptr<end_menu_action> end_menu_action_ = nullptr;
+    std::unique_ptr<EndMenuData> end_menu_data_ = nullptr;
+    game_level_state state_ = game_level_state::FIRST_UPDATE;
     // Sets the screen layout from the settings, then builds the level. Used by
     // init() and by every restart path, so they cannot drift apart.
     void build_and_enter_level();

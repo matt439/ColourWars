@@ -60,7 +60,7 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData /*input*/,
 MattMath::Colour WeaponRoller::get_draw_colour() const
 {
     // The roller tints to the team colour while it is laying paint.
-    return this->_shooting_this_update
+    return this->shooting_this_update_
         ? this->get_team_colour()
         : colour_consts::WHITE;
 }

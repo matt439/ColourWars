@@ -54,8 +54,8 @@ protected:
 	MattMath::Vector2F get_float_resolution() const;
 	MattMath::Vector2I get_int_resolution() const;
 private:
-	MenuData* _data = nullptr;
-	MattMath::Vector2F _widget_position = { 150.0f, 150.0f };
-	MattMath::Vector2F _widget_size = { 300.0f, 75.0f };
-	MattMath::Vector2F _widget_spacing = { 250.0f, 150.0f };
+	MenuData* data_ = nullptr;
+	MattMath::Vector2F widget_position_ = { 150.0f, 150.0f };
+	MattMath::Vector2F widget_size_ = { 300.0f, 75.0f };
+	MattMath::Vector2F widget_spacing_ = { 250.0f, 150.0f };
 };

@@ -57,19 +57,19 @@ public:
 	PaintTotal get_paint_total() const override;
 
 private:
-	std::vector<PaintTile> _paint_tiles = std::vector<PaintTile>();
-	TeamColour _team_colours = TeamColour();
+	std::vector<PaintTile> paint_tiles_ = std::vector<PaintTile>();
+	TeamColour team_colours_ = TeamColour();
 	// By value. This was a reference bound to a vector local to
 	// LevelObjectBuilder::build_collision_object, so it dangled for the whole
 	// life of every paintable structure in the level.
-	PaintableFaces _faces = PaintableFaces();
-	const float* _dt = nullptr;
+	PaintableFaces faces_ = PaintableFaces();
+	const float* dt_ = nullptr;
 	std::vector<PaintTile> generate_paint_tiles() const;
-	SoundBank* _sound_bank = nullptr;
+	SoundBank* sound_bank_ = nullptr;
 
 	// Resolved once at construction. This plays from update(), on any tile
 	// that was just painted, so it was a map descent per splash per frame.
-	SoundBank::WaveHandle _paint_sound;
+	SoundBank::WaveHandle paint_sound_;
 
 
 };

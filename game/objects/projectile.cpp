@@ -20,12 +20,12 @@ Projectile::Projectile(const Vector2F& velocity,
     MovingObject(velocity, rotation),
     AnimationObject(dt, details.sheet_name, details.animation_strip_name,
                     render_resources, color, rotation, origin, effects, layer_depth),
-    _details(details),
-    _player_num(player_num),
-    _team_colour(team_colour),
-    _type(type),
-    _team(team),
-    _dt(dt)
+    details_(details),
+    player_num_(player_num),
+    team_colour_(team_colour),
+    type_(type),
+    team_(team),
+    dt_(dt)
 {
 
 }
@@ -49,7 +49,7 @@ DiffusingProjectile::DiffusingProjectile(
         team_colour, type, dt,
         render_resources, details, color, rotation,
         origin, effects, layer_depth),
-    _diffusion_details(diffusion_details)
+    diffusion_details_(diffusion_details)
 {
 
 }
@@ -61,7 +61,7 @@ const Vector2F& DiffusingProjectile::get_base_size() const
 Vector2F DiffusingProjectile::calculate_diffusion_size() const
 {
     const float time = this->get_timer();
-    const DiffusionDetails& details = this->_diffusion_details;
+    const DiffusionDetails& details = this->diffusion_details_;
     const Vector2F& base_size = this->get_base_size();
     Vector2F multiple;
     if (time < details.start_time)
@@ -195,39 +195,39 @@ collision_object_type Projectile::get_collision_object_type() const
 }
 player_team Projectile::get_team() const
 {
-    return this->_team;
+    return this->team_;
 }
 bool Projectile::get_for_deletion() const
 {
-    return this->_for_deletion;
+    return this->for_deletion_;
 }
 void Projectile::set_for_deletion(bool for_deletion)
 {
-    this->_for_deletion = for_deletion;
+    this->for_deletion_ = for_deletion;
 }
 int Projectile::get_player_num() const
 {
-    return this->_player_num;
+    return this->player_num_;
 }
 const Colour& Projectile::get_team_colour() const
 {
-    return this->_team_colour;
+    return this->team_colour_;
 }
 projectile_type Projectile::get_type() const
 {
-    return this->_type;
+    return this->type_;
 }
 float Projectile::get_timer() const
 {
-    return this->_timer;
+    return this->timer_;
 }
 void Projectile::alter_timer(float time)
 {
-    this->_timer += time;
+    this->timer_ += time;
 }
 float Projectile::get_dt() const
 {
-	return *this->_dt;
+	return *this->dt_;
 }
 void Projectile::update_movement(float gravity, float wind_resistance)
 {
@@ -302,5 +302,5 @@ float Projectile::get_player_damage() const
 
 const ProjectileDetails& Projectile::get_details() const
 {
-	return this->_details;
+	return this->details_;
 }

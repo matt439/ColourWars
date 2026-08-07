@@ -72,11 +72,11 @@ protected:
 	// Every sound this page family can make, resolved once when the page is
 	// built. The drum roll is an effect rather than a wave because it is
 	// looped and then stopped; the rest are fire-and-forget.
-	SoundBank::WaveHandle _confirm_sound;
-	SoundBank::WaveHandle _winner_sound;
-	SoundBank::EffectHandle _fill_sound;
+	SoundBank::WaveHandle confirm_sound_;
+	SoundBank::WaveHandle winner_sound_;
+	SoundBank::EffectHandle fill_sound_;
 private:
-	ResultsMenuData* _data = nullptr;
+	ResultsMenuData* data_ = nullptr;
 };
 
 class ResultsMenuInitial final : public ResultsMenuPage
@@ -87,21 +87,21 @@ public:
 	void update() override;
 	void draw() override;
 private:
-	std::unique_ptr<MContainer> _texture_container = nullptr;
-	std::unique_ptr<MContainer> _text_container = nullptr;
-	std::unique_ptr<MTexture> _box = nullptr;
-	std::unique_ptr<MTextDropShadow> _heading = nullptr;
-	std::unique_ptr<MTexture> _fill_box = nullptr;
-	std::unique_ptr<MTexture> _team_a_fill = nullptr;
-	std::unique_ptr<MTexture> _team_b_fill = nullptr;
-	std::unique_ptr<MTextDropShadow> _team_a_percentage = nullptr;
-	std::unique_ptr<MTextDropShadow> _team_b_percentage = nullptr;
-	std::unique_ptr<MTextDropShadow> _winner = nullptr;
-	std::unique_ptr<MTextDropShadow> _proceed = nullptr;
-	bool _winner_sound_played = false;
-	float _delay_timer = 0.0f;
-	float _fill_timer = 0.0f;
-	float _show_results_timer = 0.0f;
+	std::unique_ptr<MContainer> texture_container_ = nullptr;
+	std::unique_ptr<MContainer> text_container_ = nullptr;
+	std::unique_ptr<MTexture> box_ = nullptr;
+	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<MTexture> fill_box_ = nullptr;
+	std::unique_ptr<MTexture> team_a_fill_ = nullptr;
+	std::unique_ptr<MTexture> team_b_fill_ = nullptr;
+	std::unique_ptr<MTextDropShadow> team_a_percentage_ = nullptr;
+	std::unique_ptr<MTextDropShadow> team_b_percentage_ = nullptr;
+	std::unique_ptr<MTextDropShadow> winner_ = nullptr;
+	std::unique_ptr<MTextDropShadow> proceed_ = nullptr;
+	bool winner_sound_played_ = false;
+	float delay_timer_ = 0.0f;
+	float fill_timer_ = 0.0f;
+	float show_results_timer_ = 0.0f;
 	LevelEndInfo get_level_end_info() const;
 	float fill_time_ratio() const;
 	MattMath::Vector2F calculate_team_b_fill_top_right_position() const;

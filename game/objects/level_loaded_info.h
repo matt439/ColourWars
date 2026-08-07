@@ -30,7 +30,7 @@ public:
 	float get_music_volume() const;
 
 private:
-	rapidjson::Document _json_doc;
+	rapidjson::Document json_doc_;
 
 	static std::vector<MattMath::Vector2F>
 		decode_team_spawns_json(const rapidjson::Value& json);

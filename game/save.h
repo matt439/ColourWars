@@ -25,7 +25,7 @@ public:
 	bool get_fullscreen() const;
 	void set_full_screen_and_save(bool full_screen);
 private:
-	SaveData _save_data = SaveData();
+	SaveData save_data_ = SaveData();
 	SaveData load_from_json(const char* json_path) const;
 	bool write_save_file(const SaveData& data) const;
 	static bool check_if_save_file_exists();

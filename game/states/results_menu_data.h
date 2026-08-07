@@ -16,6 +16,6 @@ public:
 	void set_action(results_menu_action* action);
 
 private:
-	LevelEndInfo _level_end_info = LevelEndInfo();
-	results_menu_action* _action = nullptr;
+	LevelEndInfo level_end_info_ = LevelEndInfo();
+	results_menu_action* action_ = nullptr;
 };

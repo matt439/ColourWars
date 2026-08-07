@@ -10,19 +10,19 @@ MainMenuPage::MainMenuPage(MainMenuData* data) :
 	MenuPage(data),
 	SoundBankObject(main_menu_consts::SOUND_BANK,
 		this->get_audio_resources()),
-	_data(data)
+	data_(data)
 {
-	this->_direction_sound = this->resolve_wave(DIRECTION_SOUND);
-	this->_confirm_sound = this->resolve_wave(CONFIRM_SOUND);
-	this->_cancel_sound = this->resolve_wave(CANCEL_SOUND);
-	this->_error_sound = this->resolve_wave(ERROR_SOUND);
-	this->_ready_sound = this->resolve_wave(READY_SOUND);
-	this->_music = this->resolve_effect(MUSIC);
+	this->direction_sound_ = this->resolve_wave(DIRECTION_SOUND);
+	this->confirm_sound_ = this->resolve_wave(CONFIRM_SOUND);
+	this->cancel_sound_ = this->resolve_wave(CANCEL_SOUND);
+	this->error_sound_ = this->resolve_wave(ERROR_SOUND);
+	this->ready_sound_ = this->resolve_wave(READY_SOUND);
+	this->music_ = this->resolve_effect(MUSIC);
 }
 
 MainMenuData* MainMenuPage::get_main_menu_data() const
 {
-	return this->_data;
+	return this->data_;
 }
 int MainMenuPage::get_player_count() const
 { 
@@ -42,10 +42,10 @@ void MainMenuTitle::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+	mobjects.push_back(std::make_pair(this->texture_container_.get(),
 		this->get_point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
 	this->draw_mobjects_in_viewports(&mobjects);
 }
@@ -56,7 +56,7 @@ void MainMenuTitle::update()
 	{
 		if (inputs[i].action == menu_input_action::PROCEED)
 		{
-			this->play_wave(this->_confirm_sound);
+			this->play_wave(this->confirm_sound_);
 			this->get_context()->transition_to(std::make_unique<MainMenuHome>(
 				this->get_main_menu_data()));
 			return;
@@ -65,7 +65,7 @@ void MainMenuTitle::update()
 }
 void MainMenuTitle::init()
 {
-	this->_background = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<MTexture>(
 		"background",
 		"sprite_sheet_1",
 		"square_white_4",
@@ -73,7 +73,7 @@ void MainMenuTitle::init()
 		this->get_render_resources(),
 		TITLE_BACKGROUND_COLOUR);
 
-	this->_title = std::make_unique<MTextDropShadow>(
+	this->title_ = std::make_unique<MTextDropShadow>(
 		"title",
 		"Colour Wars",
 		TITLE_FONT,
@@ -83,7 +83,7 @@ void MainMenuTitle::init()
 		SHADOW_COLOUR,
 		TITLE_SHADOW_OFFSET);
 
-	this->_start = std::make_unique<MTextDropShadow>(
+	this->start_ = std::make_unique<MTextDropShadow>(
 		"start",
 		"Start",
 		ITEM_FONT,
@@ -93,22 +93,22 @@ void MainMenuTitle::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_texture_container = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<MContainer>(
 		"texture_container");
-	this->_texture_container->add_child(this->_background.get());
+	this->texture_container_->add_child(this->background_.get());
 
-	this->_text_container = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<MContainer>(
 		"text_container");
-	this->_text_container->add_child(this->_title.get());
-	this->_text_container->add_child(this->_start.get());
+	this->text_container_->add_child(this->title_.get());
+	this->text_container_->add_child(this->start_.get());
 
 	Vector2F resolution = this->get_float_resolution();
-	this->_texture_container->scale_objects_to_new_resolution(
+	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
-	this->_text_container->scale_objects_to_new_resolution(
+	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->play_effect(this->_music, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
 
 #pragma endregion MainMenuTitle
@@ -125,10 +125,10 @@ void MainMenuHome::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+	mobjects.push_back(std::make_pair(this->texture_container_.get(),
 		this->get_point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
 	this->draw_mobjects_in_viewports(&mobjects);
 }
@@ -143,7 +143,7 @@ void MainMenuHome::update()
 	{		
 		if (inputs[i].action == menu_input_action::BACK)
 		{
-			this->play_wave(this->_cancel_sound);
+			this->play_wave(this->cancel_sound_);
 			this->get_context()->transition_to(
 				std::make_unique<MainMenuTitle>(this->get_main_menu_data()));
 			return;
@@ -152,7 +152,7 @@ void MainMenuHome::update()
 		{
 			if (highlighted_element == "play")
 			{
-				this->play_wave(this->_confirm_sound);
+				this->play_wave(this->confirm_sound_);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuModeSelect>(
 						this->get_main_menu_data()));
@@ -160,7 +160,7 @@ void MainMenuHome::update()
 			}
 			if (highlighted_element == "options")
 			{
-				this->play_wave(this->_confirm_sound);
+				this->play_wave(this->confirm_sound_);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuOptions>(
 						this->get_main_menu_data()));
@@ -173,34 +173,34 @@ void MainMenuHome::update()
 		}
 		else if (inputs[i].direction == menu_direction::UP)
 		{
-			this->play_wave(this->_direction_sound);
+			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "play")
 			{
-				this->change_highlight(this->_exit.get());
+				this->change_highlight(this->exit_.get());
 			}
 			else if (highlighted_element == "options")
 			{
-				this->change_highlight(this->_play.get());
+				this->change_highlight(this->play_.get());
 			}
 			else if (highlighted_element == "exit")
 			{
-				this->change_highlight(this->_options.get());
+				this->change_highlight(this->options_.get());
 			}
 		}
 		else if (inputs[i].direction == menu_direction::DOWN)
 		{
-			this->play_wave(this->_direction_sound);
+			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "play")
 			{
-				this->change_highlight(this->_options.get());
+				this->change_highlight(this->options_.get());
 			}
 			else if (highlighted_element == "options")
 			{
-				this->change_highlight(this->_exit.get());
+				this->change_highlight(this->exit_.get());
 			}
 			else if (highlighted_element == "exit")
 			{
-				this->change_highlight(this->_play.get());
+				this->change_highlight(this->play_.get());
 			}
 		}
 	}
@@ -210,7 +210,7 @@ void MainMenuHome::init()
 	this->set_highlight_colour(STANDARD_HIGHLIGHT);
 	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
 
-	this->_background = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<MTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -218,7 +218,7 @@ void MainMenuHome::init()
 		this->get_render_resources(),
 		HOME_BACKGROUND_COLOUR);
 
-	this->_heading = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
 		"Main Menu",
 		HEADING_FONT,
@@ -228,7 +228,7 @@ void MainMenuHome::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->_play = std::make_unique<MTextDropShadow>(
+	this->play_ = std::make_unique<MTextDropShadow>(
 		"play",
 		"Play",
 		ITEM_FONT,
@@ -238,7 +238,7 @@ void MainMenuHome::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_options = std::make_unique<MTextDropShadow>(
+	this->options_ = std::make_unique<MTextDropShadow>(
 		"options",
 		"Options",
 		ITEM_FONT,
@@ -248,7 +248,7 @@ void MainMenuHome::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_exit = std::make_unique<MTextDropShadow>(
+	this->exit_ = std::make_unique<MTextDropShadow>(
 		"exit",
 		"Exit",
 		ITEM_FONT,
@@ -258,26 +258,26 @@ void MainMenuHome::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_texture_container = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<MContainer>(
 		"texture_container");
-	this->_texture_container->add_child(this->_background.get());
+	this->texture_container_->add_child(this->background_.get());
 
-	this->_text_container = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<MContainer>(
 		"text_container");
-	this->_text_container->add_child(this->_heading.get());
-	this->_text_container->add_child(this->_play.get());
-	this->_text_container->add_child(this->_options.get());
-	this->_text_container->add_child(this->_exit.get());
+	this->text_container_->add_child(this->heading_.get());
+	this->text_container_->add_child(this->play_.get());
+	this->text_container_->add_child(this->options_.get());
+	this->text_container_->add_child(this->exit_.get());
 
 	Vector2F resolution = this->get_float_resolution();
-	this->_texture_container->scale_objects_to_new_resolution(
+	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
-	this->_text_container->scale_objects_to_new_resolution(
+	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->set_highlighted_widget(this->_play.get());
+	this->set_highlighted_widget(this->play_.get());
 
-	this->play_effect(this->_music, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
 
 #pragma endregion MainMenuHome
@@ -294,10 +294,10 @@ void MainMenuOptions::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+	mobjects.push_back(std::make_pair(this->texture_container_.get(),
 		this->get_point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
 	this->draw_mobjects_in_viewports(&mobjects);
 }
@@ -312,7 +312,7 @@ void MainMenuOptions::update()
 	{
 		if (inputs[i].action == menu_input_action::BACK)
 		{
-			this->play_wave(this->_cancel_sound);
+			this->play_wave(this->cancel_sound_);
 			this->get_context()->transition_to(std::make_unique<MainMenuHome>(
 				this->get_main_menu_data()));
 			return;
@@ -321,37 +321,37 @@ void MainMenuOptions::update()
 		{
 			if (highlighted_element == "apply")
 			{
-				this->play_wave(this->_confirm_sound);
+				this->play_wave(this->confirm_sound_);
 				
 				auto prev_resolution = this->get_resolution_manager()->get_resolution_vec();
 				
 				this->get_resolution_manager()->set_resolution(
-					this->_resolution_selection);
+					this->resolution_selection_);
 
 				//std::string res_string = this->get_resolution_manager()->
 				//	get_resolution_string();
-				this->get_save()->set_resolution_and_save(this->_resolution_selection);
+				this->get_save()->set_resolution_and_save(this->resolution_selection_);
 
 				auto res_f = this->get_float_resolution();
 
 				this->get_data()->get_application()->set_resolution(
-					this->_resolution_selection);
+					this->resolution_selection_);
 
-				bool fs = this->_full_screen_selection;
+				bool fs = this->full_screen_selection_;
 				this->get_save()->set_full_screen_and_save(fs);
 				this->apply_fullscreen_setting(fs);
 
 				//update window and its children's sizes and positions
-				this->_texture_container->scale_objects_to_new_resolution(
+				this->texture_container_->scale_objects_to_new_resolution(
 					prev_resolution, res_f);
-				this->_text_container->scale_objects_to_new_resolution(
+				this->text_container_->scale_objects_to_new_resolution(
 					prev_resolution, res_f);
 				
-				//this->_background->update_resolution(prev_resolution, res_f);
+				//this->background_->update_resolution(prev_resolution, res_f);
 			}
 			else if (highlighted_element == "back")
 			{
-				this->play_wave(this->_cancel_sound);
+				this->play_wave(this->cancel_sound_);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuHome>(
 						this->get_main_menu_data()));
@@ -360,54 +360,54 @@ void MainMenuOptions::update()
 		}
 		else if (inputs[i].direction == menu_direction::DOWN)
 		{
-			this->play_wave(this->_direction_sound);
+			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "resolution_element")
 			{
-				this->change_highlight(this->_full_screen.get());
+				this->change_highlight(this->full_screen_.get());
 			}
 			else if (highlighted_element == "full_screen")
 			{
-				this->change_highlight(this->_apply.get());
+				this->change_highlight(this->apply_.get());
 			}
 			else if (highlighted_element == "apply")
 			{
-				this->change_highlight(this->_back.get());
+				this->change_highlight(this->back_.get());
 			}
 			else if (highlighted_element == "back")
 			{
-				this->change_highlight(this->_resolution_element.get());
+				this->change_highlight(this->resolution_element_.get());
 			}
 		}
 		else if (inputs[i].direction == menu_direction::UP)
 		{
-			this->play_wave(this->_direction_sound);
+			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "resolution_element")
 			{
-				this->change_highlight(this->_back.get());
+				this->change_highlight(this->back_.get());
 			}
 			else if (highlighted_element == "full_screen")
 			{
-				this->change_highlight(this->_resolution_element.get());
+				this->change_highlight(this->resolution_element_.get());
 			}
 			else if (highlighted_element == "apply")
 			{
-				this->change_highlight(this->_full_screen.get());
+				this->change_highlight(this->full_screen_.get());
 			}
 			else if (highlighted_element == "back")
 			{
-				this->change_highlight(this->_apply.get());
+				this->change_highlight(this->apply_.get());
 			}
 		}
 		else if (highlighted_element == "resolution_element")
 		{
 			if (inputs[i].direction == menu_direction::LEFT)
 			{
-				this->play_wave(this->_direction_sound);
+				this->play_wave(this->direction_sound_);
 				this->cycle_resolution(menu_direction::LEFT);
 			}
 			else if (inputs[i].direction == menu_direction::RIGHT)
 			{
-				this->play_wave(this->_direction_sound);
+				this->play_wave(this->direction_sound_);
 				this->cycle_resolution(menu_direction::RIGHT);
 			}
 		}
@@ -415,8 +415,8 @@ void MainMenuOptions::update()
 			(inputs[i].direction == menu_direction::LEFT ||
 			inputs[i].direction == menu_direction::RIGHT))
 		{
-			this->play_wave(this->_direction_sound);
-			this->_full_screen_selection = !this->_full_screen_selection;
+			this->play_wave(this->direction_sound_);
+			this->full_screen_selection_ = !this->full_screen_selection_;
 			this->update_full_screen_selection_text();
 		}
 	}
@@ -433,10 +433,10 @@ void MainMenuOptions::init()
 	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
 	Vector2F widget_size = this->get_widget_size();
 
-	this->_resolution_selection = this->get_resolution_manager()->get_resolution();
-	this->_full_screen_selection = this->get_save()->get_fullscreen();
+	this->resolution_selection_ = this->get_resolution_manager()->get_resolution();
+	this->full_screen_selection_ = this->get_save()->get_fullscreen();
 
-	this->_background = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<MTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -444,7 +444,7 @@ void MainMenuOptions::init()
 		this->get_render_resources(),
 		OPTIONS_BACKGROUND_COLOUR);
 
-	this->_heading = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
 		"Options",
 		HEADING_FONT,
@@ -454,7 +454,7 @@ void MainMenuOptions::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->_resolution_element = std::make_unique<MTextDropShadow>(
+	this->resolution_element_ = std::make_unique<MTextDropShadow>(
 		"resolution_element",
 		"Resolution",
 		ITEM_FONT,
@@ -464,7 +464,7 @@ void MainMenuOptions::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_resolution_value = std::make_unique<MTextDropShadow>(
+	this->resolution_value_ = std::make_unique<MTextDropShadow>(
 		"resolution_value",
 		"null",
 		ITEM_FONT,
@@ -476,7 +476,7 @@ void MainMenuOptions::init()
 
 	this->update_resolution_selection_text();
 
-	this->_full_screen = std::make_unique<MTextDropShadow>(
+	this->full_screen_ = std::make_unique<MTextDropShadow>(
 		"full_screen",
 		"Fullscreen",
 		ITEM_FONT,
@@ -486,7 +486,7 @@ void MainMenuOptions::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_full_screen_value = std::make_unique<MTextDropShadow>(
+	this->full_screen_value_ = std::make_unique<MTextDropShadow>(
 		"full_screen_value",
 		"null",
 		ITEM_FONT,
@@ -498,7 +498,7 @@ void MainMenuOptions::init()
 
 	this->update_full_screen_selection_text();
 
-	this->_apply = std::make_unique<MTextDropShadow>(
+	this->apply_ = std::make_unique<MTextDropShadow>(
 		"apply",
 		"Apply",
 		ITEM_FONT,
@@ -508,7 +508,7 @@ void MainMenuOptions::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_back = std::make_unique<MTextDropShadow>(
+	this->back_ = std::make_unique<MTextDropShadow>(
 		"back",
 		"Back",
 		ITEM_FONT,
@@ -518,29 +518,29 @@ void MainMenuOptions::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_texture_container = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<MContainer>(
 		"texture_container");
-	this->_texture_container->add_child(this->_background.get());
+	this->texture_container_->add_child(this->background_.get());
 
-	this->_text_container = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<MContainer>(
 		"text_container");
-	this->_text_container->add_child(this->_heading.get());
-	this->_text_container->add_child(this->_resolution_element.get());
-	this->_text_container->add_child(this->_resolution_value.get());
-	this->_text_container->add_child(this->_full_screen.get());
-	this->_text_container->add_child(this->_full_screen_value.get());
-	this->_text_container->add_child(this->_apply.get());
-	this->_text_container->add_child(this->_back.get());
+	this->text_container_->add_child(this->heading_.get());
+	this->text_container_->add_child(this->resolution_element_.get());
+	this->text_container_->add_child(this->resolution_value_.get());
+	this->text_container_->add_child(this->full_screen_.get());
+	this->text_container_->add_child(this->full_screen_value_.get());
+	this->text_container_->add_child(this->apply_.get());
+	this->text_container_->add_child(this->back_.get());
 
 	Vector2F resolution = this->get_float_resolution();
-	this->_texture_container->scale_objects_to_new_resolution(
+	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
-	this->_text_container->scale_objects_to_new_resolution(
+	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->set_highlighted_widget(this->_resolution_element.get());
+	this->set_highlighted_widget(this->resolution_element_.get());
 
-	this->play_effect(this->_music, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
 
 void MainMenuOptions::cycle_resolution(
@@ -548,7 +548,7 @@ void MainMenuOptions::cycle_resolution(
 {
 	int enum_max = static_cast<int>(screen_resolution::MAX);
 	int enum_pos =
-		static_cast<int>(this->_resolution_selection);
+		static_cast<int>(this->resolution_selection_);
 	if (direction == menu_direction::LEFT)
 	{
 		if (enum_pos == 0)
@@ -571,7 +571,7 @@ void MainMenuOptions::cycle_resolution(
 			enum_pos++;
 		}
 	}
-	this->_resolution_selection =
+	this->resolution_selection_ =
 		static_cast<screen_resolution>(enum_pos);
 	this->update_resolution_selection_text();
 }
@@ -579,13 +579,13 @@ void MainMenuOptions::cycle_resolution(
 void MainMenuOptions::update_resolution_selection_text()
 {
 	std::string res_text = this->get_resolution_manager()->
-		convert_resolution_to_string(this->_resolution_selection);
-	this->_resolution_value->set_text(res_text);
+		convert_resolution_to_string(this->resolution_selection_);
+	this->resolution_value_->set_text(res_text);
 }
 
 void MainMenuOptions::update_full_screen_selection_text() const
 {
-	bool fs = this->_full_screen_selection; //this->get_context()->get_data()->get_save()->get_full_screen();
+	bool fs = this->full_screen_selection_; //this->get_context()->get_data()->get_save()->get_full_screen();
 	std::string fs_text = "";
 	if (fs)
 	{
@@ -595,7 +595,7 @@ void MainMenuOptions::update_full_screen_selection_text() const
 	{
 		fs_text = "Off";
 	}
-	this->_full_screen_value->set_text(fs_text);
+	this->full_screen_value_->set_text(fs_text);
 }
 
 #pragma endregion MainMenuOptions
@@ -612,10 +612,10 @@ void MainMenuModeSelect::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+	mobjects.push_back(std::make_pair(this->texture_container_.get(),
 		this->get_point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
 	this->draw_mobjects_in_viewports(&mobjects);
 }
@@ -630,7 +630,7 @@ void MainMenuModeSelect::update()
 	{
 		if (inputs[i].action == menu_input_action::BACK)
 		{
-			this->play_wave(this->_cancel_sound);
+			this->play_wave(this->cancel_sound_);
 			this->get_context()->transition_to(std::make_unique<MainMenuHome>(
 				this->get_main_menu_data()));
 			return;
@@ -639,7 +639,7 @@ void MainMenuModeSelect::update()
 		{
 			if (highlighted_element == "standard")
 			{
-				this->play_wave(this->_confirm_sound);
+				this->play_wave(this->confirm_sound_);
 				this->get_main_menu_data()->get_level_settings()->
 					set_game_mode(level_mode::STANDARD_MODE);
 				this->get_context()->transition_to(
@@ -649,19 +649,19 @@ void MainMenuModeSelect::update()
 			}
 			if (highlighted_element == "tdm")
 			{
-				this->play_wave(this->_error_sound);
+				this->play_wave(this->error_sound_);
 			}
 			else if (highlighted_element == "dm")
 			{
-				this->play_wave(this->_error_sound);
+				this->play_wave(this->error_sound_);
 			}
 			else if (highlighted_element == "practice")
 			{
-				this->play_wave(this->_error_sound);
+				this->play_wave(this->error_sound_);
 			}
 			else if (highlighted_element == "back")
 			{
-				this->play_wave(this->_cancel_sound);
+				this->play_wave(this->cancel_sound_);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuHome>(
 						this->get_main_menu_data()));
@@ -670,50 +670,50 @@ void MainMenuModeSelect::update()
 		}
 		else if (inputs[i].direction == menu_direction::UP)
 		{
-			this->play_wave(this->_direction_sound);
+			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "standard")
 			{
-				this->change_highlight(this->_back.get());
+				this->change_highlight(this->back_.get());
 			}
 			else if (highlighted_element == "tdm")
 			{
-				this->change_highlight(this->_standard.get());
+				this->change_highlight(this->standard_.get());
 			}
 			else if (highlighted_element == "dm")
 			{
-				this->change_highlight(this->_tdm.get());
+				this->change_highlight(this->tdm_.get());
 			}
 			else if (highlighted_element == "practice")
 			{
-				this->change_highlight(this->_dm.get());
+				this->change_highlight(this->dm_.get());
 			}
 			else if (highlighted_element == "back")
 			{
-				this->change_highlight(this->_practice.get());
+				this->change_highlight(this->practice_.get());
 			}
 		}
 		else if (inputs[i].direction == menu_direction::DOWN)
 		{
-			this->play_wave(this->_direction_sound);
+			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "standard")
 			{
-				this->change_highlight(this->_tdm.get());
+				this->change_highlight(this->tdm_.get());
 			}
 			else if (highlighted_element == "tdm")
 			{
-				this->change_highlight(this->_dm.get());
+				this->change_highlight(this->dm_.get());
 			}
 			else if (highlighted_element == "dm")
 			{
-				this->change_highlight(this->_practice.get());
+				this->change_highlight(this->practice_.get());
 			}
 			else if (highlighted_element == "practice")
 			{
-				this->change_highlight(this->_back.get());
+				this->change_highlight(this->back_.get());
 			}
 			else if (highlighted_element == "back")
 			{
-				this->change_highlight(this->_standard.get());
+				this->change_highlight(this->standard_.get());
 			}
 		}
 	}
@@ -742,7 +742,7 @@ void MainMenuModeSelect::init()
 	//this->set_widget_position(MODE_SELECT_WIDGET_POSITION);
 	this->set_widget_spacing(MODE_SELECT_WIDGET_SPACING);
 
-	this->_background = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<MTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -750,7 +750,7 @@ void MainMenuModeSelect::init()
 		this->get_render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
-	this->_heading = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
 		"Mode Select",
 		HEADING_FONT,
@@ -760,7 +760,7 @@ void MainMenuModeSelect::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->_standard = std::make_unique<MTextDropShadow>(
+	this->standard_ = std::make_unique<MTextDropShadow>(
 		"standard",
 		"Standard",
 		ITEM_FONT,
@@ -770,7 +770,7 @@ void MainMenuModeSelect::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_tdm = std::make_unique<MTextDropShadow>(
+	this->tdm_ = std::make_unique<MTextDropShadow>(
 		"tdm",
 		"Team Deathmatch",
 		ITEM_FONT,
@@ -780,7 +780,7 @@ void MainMenuModeSelect::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_dm = std::make_unique<MTextDropShadow>(
+	this->dm_ = std::make_unique<MTextDropShadow>(
 		"dm",
 		"Deathmatch",
 		ITEM_FONT,
@@ -790,7 +790,7 @@ void MainMenuModeSelect::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_practice = std::make_unique<MTextDropShadow>(
+	this->practice_ = std::make_unique<MTextDropShadow>(
 		"practice",
 		"Practice",
 		ITEM_FONT,
@@ -800,7 +800,7 @@ void MainMenuModeSelect::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_back = std::make_unique<MTextDropShadow>(
+	this->back_ = std::make_unique<MTextDropShadow>(
 		"back",
 		"Back",
 		ITEM_FONT,
@@ -810,28 +810,28 @@ void MainMenuModeSelect::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_texture_container = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<MContainer>(
 		"texture_container");
-	this->_texture_container->add_child(this->_background.get());
+	this->texture_container_->add_child(this->background_.get());
 
-	this->_text_container = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<MContainer>(
 		"text_container");
-	this->_text_container->add_child(this->_heading.get());
-	this->_text_container->add_child(this->_standard.get());
-	this->_text_container->add_child(this->_tdm.get());
-	this->_text_container->add_child(this->_dm.get());
-	this->_text_container->add_child(this->_practice.get());
-	this->_text_container->add_child(this->_back.get());
+	this->text_container_->add_child(this->heading_.get());
+	this->text_container_->add_child(this->standard_.get());
+	this->text_container_->add_child(this->tdm_.get());
+	this->text_container_->add_child(this->dm_.get());
+	this->text_container_->add_child(this->practice_.get());
+	this->text_container_->add_child(this->back_.get());
 
 	Vector2F resolution = this->get_float_resolution();
-	this->_texture_container->scale_objects_to_new_resolution(
+	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
-	this->_text_container->scale_objects_to_new_resolution(
+	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->set_highlighted_widget(this->_standard.get());
+	this->set_highlighted_widget(this->standard_.get());
 
-	this->play_effect(this->_music, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
 
 #pragma endregion MainMenuModeSelect
@@ -847,10 +847,10 @@ void MainMenuPlayerCount::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+	mobjects.push_back(std::make_pair(this->texture_container_.get(),
 		this->get_point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
 	this->draw_mobjects_in_viewports(&mobjects);
 }
@@ -865,7 +865,7 @@ void MainMenuPlayerCount::update()
 	{
 		if (inputs[i].action == menu_input_action::BACK)
 		{
-			this->play_wave(this->_cancel_sound);
+			this->play_wave(this->cancel_sound_);
 			this->get_context()->transition_to(
 				std::make_unique<MainMenuModeSelect>(
 					this->get_main_menu_data()));
@@ -875,7 +875,7 @@ void MainMenuPlayerCount::update()
 		{
 			if (highlighted_element == "1_player")
 			{
-				this->play_wave(this->_confirm_sound);
+				this->play_wave(this->confirm_sound_);
 				this->get_main_menu_data()->get_level_settings()->
 					set_player_count(1);
 				this->get_main_menu_data()->get_level_settings()->
@@ -891,7 +891,7 @@ void MainMenuPlayerCount::update()
 			}
 			if (highlighted_element == "2_players")
 			{
-				this->play_wave(this->_confirm_sound);
+				this->play_wave(this->confirm_sound_);
 				this->get_main_menu_data()->get_level_settings()->
 					set_player_count(2);
 				this->get_main_menu_data()->get_level_settings()->
@@ -903,7 +903,7 @@ void MainMenuPlayerCount::update()
 			}
 			if (highlighted_element == "3_players")
 			{
-				this->play_wave(this->_confirm_sound);
+				this->play_wave(this->confirm_sound_);
 				this->get_main_menu_data()->get_level_settings()->
 					set_player_count(3);
 				this->get_main_menu_data()->get_level_settings()->
@@ -915,7 +915,7 @@ void MainMenuPlayerCount::update()
 			}
 			if (highlighted_element == "4_players")
 			{
-				this->play_wave(this->_confirm_sound);
+				this->play_wave(this->confirm_sound_);
 				this->get_main_menu_data()->get_level_settings()->
 					set_player_count(4);
 				this->get_main_menu_data()->get_level_settings()->
@@ -927,7 +927,7 @@ void MainMenuPlayerCount::update()
 			}
 			if (highlighted_element == "back")
 			{
-				this->play_wave(this->_cancel_sound);
+				this->play_wave(this->cancel_sound_);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuModeSelect>(
 						this->get_main_menu_data()));
@@ -936,10 +936,10 @@ void MainMenuPlayerCount::update()
 		}
 		else if (inputs[i].direction == menu_direction::UP)
 		{
-			this->play_wave(this->_direction_sound);
+			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "1_player")
 			{
-				this->change_highlight(this->_back.get());
+				this->change_highlight(this->back_.get());
 			}
 			else if (highlighted_element == "2_players")
 			{
@@ -960,7 +960,7 @@ void MainMenuPlayerCount::update()
 		}
 		else if (inputs[i].direction == menu_direction::DOWN)
 		{
-			this->play_wave(this->_direction_sound);
+			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "1_player")
 			{
 				this->change_highlight(this->_2_players.get());
@@ -975,7 +975,7 @@ void MainMenuPlayerCount::update()
 			}
 			else if (highlighted_element == "4_players")
 			{
-				this->change_highlight(this->_back.get());
+				this->change_highlight(this->back_.get());
 			}
 			else if (highlighted_element == "back")
 			{
@@ -1009,7 +1009,7 @@ void MainMenuPlayerCount::init()
 	//this->set_widget_position(PLAYER_COUNT_WIDGET_POSITION);
 	this->set_widget_spacing(PLAYER_COUNT_WIDGET_SPACING);
 
-	this->_background = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<MTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -1017,7 +1017,7 @@ void MainMenuPlayerCount::init()
 		this->get_render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
-	this->_heading = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
 		"Number of Players",
 		HEADING_FONT,
@@ -1067,7 +1067,7 @@ void MainMenuPlayerCount::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_back = std::make_unique<MTextDropShadow>(
+	this->back_ = std::make_unique<MTextDropShadow>(
 		"back",
 		"Back",
 		ITEM_FONT,
@@ -1077,28 +1077,28 @@ void MainMenuPlayerCount::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_texture_container = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<MContainer>(
 		"texture_container");
-	this->_texture_container->add_child(this->_background.get());
+	this->texture_container_->add_child(this->background_.get());
 
-	this->_text_container = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<MContainer>(
 		"text_container");
-	this->_text_container->add_child(this->_heading.get());
-	this->_text_container->add_child(this->_1_player.get());
-	this->_text_container->add_child(this->_2_players.get());
-	this->_text_container->add_child(this->_3_players.get());
-	this->_text_container->add_child(this->_4_players.get());
-	this->_text_container->add_child(this->_back.get());
+	this->text_container_->add_child(this->heading_.get());
+	this->text_container_->add_child(this->_1_player.get());
+	this->text_container_->add_child(this->_2_players.get());
+	this->text_container_->add_child(this->_3_players.get());
+	this->text_container_->add_child(this->_4_players.get());
+	this->text_container_->add_child(this->back_.get());
 
 	Vector2F resolution = this->get_float_resolution();
-	this->_texture_container->scale_objects_to_new_resolution(
+	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
-	this->_text_container->scale_objects_to_new_resolution(
+	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
 	this->set_highlighted_widget(this->_1_player.get());
 
-	this->play_effect(this->_music, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
 
 #pragma endregion MainMenuPlayerCount
@@ -1121,10 +1121,10 @@ void MainMenuTeamSelect::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+	mobjects.push_back(std::make_pair(this->texture_container_.get(),
 		this->get_point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
 	this->draw_mobjects_in_viewports(&mobjects);
 }
@@ -1140,51 +1140,51 @@ void MainMenuTeamSelect::update()
 		{
 			if (this->all_players_unconfirmed())
 			{
-				this->play_wave(this->_cancel_sound);
+				this->play_wave(this->cancel_sound_);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuPlayerCount>(
 						this->get_main_menu_data()));
 				return;
 			}
-			if (this->_select_states[i].state == confirmation_state::CONFIRMED)
+			if (this->select_states_[i].state == confirmation_state::CONFIRMED)
 			{
-				this->play_wave(this->_cancel_sound);
-				this->_select_states[i].state =
+				this->play_wave(this->cancel_sound_);
+				this->select_states_[i].state =
 					confirmation_state::UNCONFIRMED;
 			}
 			//no break here as I want simultaneous input from players to be possible
 		}
 		else if (inputs[i].action == menu_input_action::PROCEED &&
-			this->_select_states[i].team != player_team::NONE)
+			this->select_states_[i].team != player_team::NONE)
 		{
-			this->play_wave(this->_confirm_sound);
-			this->_select_states[i].state = confirmation_state::CONFIRMED;
+			this->play_wave(this->confirm_sound_);
+			this->select_states_[i].state = confirmation_state::CONFIRMED;
 		}
-		else if (this->_select_states[i].state ==
+		else if (this->select_states_[i].state ==
 			confirmation_state::UNCONFIRMED)
 		{
 			if (inputs[i].direction == menu_direction::LEFT)
 			{
-				this->play_wave(this->_direction_sound);
-				if (this->_select_states[i].team == player_team::NONE)
+				this->play_wave(this->direction_sound_);
+				if (this->select_states_[i].team == player_team::NONE)
 				{
-					this->_select_states[i].team = player_team::A;
+					this->select_states_[i].team = player_team::A;
 				}
-				else if (this->_select_states[i].team == player_team::B)
+				else if (this->select_states_[i].team == player_team::B)
 				{
-					this->_select_states[i].team = player_team::NONE;
+					this->select_states_[i].team = player_team::NONE;
 				}
 			}
 			else if (inputs[i].direction == menu_direction::RIGHT)
 			{
-				this->play_wave(this->_direction_sound);
-				if (this->_select_states[i].team == player_team::NONE)
+				this->play_wave(this->direction_sound_);
+				if (this->select_states_[i].team == player_team::NONE)
 				{
-					this->_select_states[i].team = player_team::B;
+					this->select_states_[i].team = player_team::B;
 				}
-				else if (this->_select_states[i].team == player_team::A)
+				else if (this->select_states_[i].team == player_team::A)
 				{
-					this->_select_states[i].team = player_team::NONE;
+					this->select_states_[i].team = player_team::NONE;
 				}
 			}
 		}
@@ -1204,7 +1204,7 @@ void MainMenuTeamSelect::set_level_settings() const
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
 		this->get_main_menu_data()->get_level_settings()->
-			set_player_team(i, this->_select_states[i].team);
+			set_player_team(i, this->select_states_[i].team);
 
 		this->get_main_menu_data()->get_level_settings()->
 			set_player_num(i, i);
@@ -1214,7 +1214,7 @@ bool MainMenuTeamSelect::all_players_confirmed() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		if (this->_select_states[i].state != confirmation_state::CONFIRMED)
+		if (this->select_states_[i].state != confirmation_state::CONFIRMED)
 		{
 			return false;
 		}
@@ -1225,7 +1225,7 @@ bool MainMenuTeamSelect::all_players_unconfirmed() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		if (this->_select_states[i].state == confirmation_state::CONFIRMED)
+		if (this->select_states_[i].state == confirmation_state::CONFIRMED)
 		{
 			return false;
 		}
@@ -1239,25 +1239,25 @@ void MainMenuTeamSelect::update_team_select_visuals()
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
 		MWidget* selected_widget = nullptr;
-		switch (this->_select_states[i].team)
+		switch (this->select_states_[i].team)
 		{
 		case player_team::A:
-			this->_player_widgets[i]->player_a->set_sprite_frame(
+			this->player_widgets_[i]->player_a->set_sprite_frame(
 				"team_select_a_selected");
-			selected_widget = this->_player_widgets[i]->player_a.get();
+			selected_widget = this->player_widgets_[i]->player_a.get();
 			break;
 		case player_team::NONE:
-			this->_player_widgets[i]->player_center->set_sprite_frame(
+			this->player_widgets_[i]->player_center->set_sprite_frame(
 				"team_select_center_selected");
-			selected_widget = this->_player_widgets[i]->player_center.get();
+			selected_widget = this->player_widgets_[i]->player_center.get();
 			break;
 		case player_team::B:
-			this->_player_widgets[i]->player_b->set_sprite_frame(
+			this->player_widgets_[i]->player_b->set_sprite_frame(
 				"team_select_b_selected");
-			selected_widget = this->_player_widgets[i]->player_b.get();
+			selected_widget = this->player_widgets_[i]->player_b.get();
 			break;
 		}
-		if (this->_select_states[i].state ==
+		if (this->select_states_[i].state ==
 			confirmation_state::CONFIRMED)
 		{
 			selected_widget->set_colour(
@@ -1269,18 +1269,18 @@ void MainMenuTeamSelect::deselect_and_unconfirm_all_widgets()
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		this->_player_widgets[i]->player_a->set_sprite_frame(
+		this->player_widgets_[i]->player_a->set_sprite_frame(
 			"team_select_a");
-		this->_player_widgets[i]->player_center->set_sprite_frame(
+		this->player_widgets_[i]->player_center->set_sprite_frame(
 			"team_select_center");
-		this->_player_widgets[i]->player_b->set_sprite_frame(
+		this->player_widgets_[i]->player_b->set_sprite_frame(
 			"team_select_b");
 
-		this->_player_widgets[i]->player_a->set_colour(
+		this->player_widgets_[i]->player_a->set_colour(
 			main_menu_consts::TEAM_SELECT_UNSELECTED_COLOUR);
-		this->_player_widgets[i]->player_center->set_colour(
+		this->player_widgets_[i]->player_center->set_colour(
 			main_menu_consts::TEAM_SELECT_UNSELECTED_COLOUR);
-		this->_player_widgets[i]->player_b->set_colour(
+		this->player_widgets_[i]->player_b->set_colour(
 			main_menu_consts::TEAM_SELECT_UNSELECTED_COLOUR);
 	}
 }
@@ -1290,13 +1290,13 @@ void MainMenuTeamSelect::init()
 
 	const Vector2F resolution = this->get_float_resolution();
 
-	this->_texture_container = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<MContainer>(
 		"texture_container");
 	
-	this->_text_container = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<MContainer>(
 		"text_container");
 
-	this->_background = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<MTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -1304,9 +1304,9 @@ void MainMenuTeamSelect::init()
 		this->get_render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
-	this->_texture_container->add_child(this->_background.get());
+	this->texture_container_->add_child(this->background_.get());
 
-	this->_heading = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
 		"Team Select",
 		HEADING_FONT,
@@ -1316,7 +1316,7 @@ void MainMenuTeamSelect::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->_text_container->add_child(this->_heading.get());
+	this->text_container_->add_child(this->heading_.get());
 
 	
 	for (int i = 0; i < this->get_player_count(); i++)
@@ -1325,7 +1325,7 @@ void MainMenuTeamSelect::init()
 		state.state = confirmation_state::UNCONFIRMED;
 		state.team = this->get_main_menu_data()->get_level_settings()->
 			get_player_team(i);
-		this->_select_states.push_back(state);
+		this->select_states_.push_back(state);
 
 		auto widgets = std::make_unique<PlayerWidgets>();
 
@@ -1367,21 +1367,21 @@ void MainMenuTeamSelect::init()
 				TEAM_SELECT_TEAM_WIDGET_SIZE),
 			this->get_render_resources());
 
-		this->_texture_container->add_child(widgets->player_a.get());
-		this->_texture_container->add_child(widgets->player_center.get());
-		this->_texture_container->add_child(widgets->player_b.get());
+		this->texture_container_->add_child(widgets->player_a.get());
+		this->texture_container_->add_child(widgets->player_center.get());
+		this->texture_container_->add_child(widgets->player_b.get());
 
-		this->_text_container->add_child(widgets->player.get());
+		this->text_container_->add_child(widgets->player.get());
 
-		this->_player_widgets.push_back(std::move(widgets));
+		this->player_widgets_.push_back(std::move(widgets));
 	}
 
-	this->_texture_container->scale_objects_to_new_resolution(
+	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
-	this->_text_container->scale_objects_to_new_resolution(
+	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->play_effect(this->_music, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
 
 #pragma endregion MainMenuTeamSelect
@@ -1404,10 +1404,10 @@ void MainMenuWeaponSelect::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+	mobjects.push_back(std::make_pair(this->texture_container_.get(),
 		this->get_point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
 	this->draw_mobjects_in_viewports(&mobjects);
 }
@@ -1423,7 +1423,7 @@ void MainMenuWeaponSelect::update()
 		{
 			if (this->all_players_unconfirmed())
 			{
-				this->play_wave(this->_cancel_sound);
+				this->play_wave(this->cancel_sound_);
 				if (this->get_player_count() == 1)
 				{
 					this->get_context()->transition_to(
@@ -1438,11 +1438,11 @@ void MainMenuWeaponSelect::update()
 				}
 				return;
 			}
-			if (this->_select_states[i].state ==
+			if (this->select_states_[i].state ==
 				confirmation_state::CONFIRMED)
 			{
-				this->play_wave(this->_cancel_sound);
-				this->_select_states[i].state =
+				this->play_wave(this->cancel_sound_);
+				this->select_states_[i].state =
 					confirmation_state::UNCONFIRMED;
 			}
 			//no break here as I want simultaneous input
@@ -1450,20 +1450,20 @@ void MainMenuWeaponSelect::update()
 		}
 		else if (inputs[i].action == menu_input_action::PROCEED)
 		{
-			this->play_wave(this->_confirm_sound);
-			this->_select_states[i].state = confirmation_state::CONFIRMED;
+			this->play_wave(this->confirm_sound_);
+			this->select_states_[i].state = confirmation_state::CONFIRMED;
 		}
-		else if (this->_select_states[i].state ==
+		else if (this->select_states_[i].state ==
 			confirmation_state::UNCONFIRMED)
 		{
 			if (inputs[i].direction == menu_direction::LEFT)
 			{
-				this->play_wave(this->_direction_sound);
+				this->play_wave(this->direction_sound_);
 				this->cycle_weapons(menu_direction::LEFT, i);
 			}
 			else if (inputs[i].direction == menu_direction::RIGHT)
 			{
-				this->play_wave(this->_direction_sound);
+				this->play_wave(this->direction_sound_);
 				this->cycle_weapons(menu_direction::RIGHT, i);
 			}
 		}
@@ -1473,9 +1473,9 @@ void MainMenuWeaponSelect::update()
 		//check if any players have selected random then pick a random weapon.
 		for (int i = 0; i < this->get_player_count(); i++)
 		{
-			if (this->_select_states[i].type == wep_type::RANDOM_PRIMARY)
+			if (this->select_states_[i].type == wep_type::RANDOM_PRIMARY)
 			{
-				this->_select_states[i].type = get_random_weapon();
+				this->select_states_[i].type = get_random_weapon();
 			}
 		}
 		this->set_level_settings();
@@ -1490,7 +1490,7 @@ void MainMenuWeaponSelect::set_level_settings() const
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
 		this->get_main_menu_data()->get_level_settings()->
-			set_player_weapon(i, this->_select_states[i].type);
+			set_player_weapon(i, this->select_states_[i].type);
 	}
 }
 wep_type MainMenuWeaponSelect::get_random_weapon()
@@ -1503,7 +1503,7 @@ void MainMenuWeaponSelect::cycle_weapons(
 {
 	int enum_max = static_cast<int>(wep_type::MAX_PRIM_WEP);
 	int enum_pos =
-		static_cast<int>(this->_select_states[player_index].type);
+		static_cast<int>(this->select_states_[player_index].type);
 	if (direction == menu_direction::LEFT)
 	{
 		if (enum_pos == 0)
@@ -1526,14 +1526,14 @@ void MainMenuWeaponSelect::cycle_weapons(
 			enum_pos++;
 		}
 	}
-	this->_select_states[player_index].type =
+	this->select_states_[player_index].type =
 		static_cast<wep_type>(enum_pos);
 }
 bool MainMenuWeaponSelect::all_players_confirmed() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		if (this->_select_states[i].state != confirmation_state::CONFIRMED)
+		if (this->select_states_[i].state != confirmation_state::CONFIRMED)
 		{
 			return false;
 		}
@@ -1544,7 +1544,7 @@ bool MainMenuWeaponSelect::all_players_unconfirmed() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		if (this->_select_states[i].state == confirmation_state::CONFIRMED)
+		if (this->select_states_[i].state == confirmation_state::CONFIRMED)
 		{
 			return false;
 		}
@@ -1557,57 +1557,57 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		switch (this->_select_states[i].type)
+		switch (this->select_states_[i].type)
 		{
 		case wep_type::SPRAYER:
-			this->_player_widgets[i]->weapon_icon->set_sprite_frame("sprayer");
-			this->_player_widgets[i]->weapon_name->set_text("Sprayer");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sprayer");
+			this->player_widgets_[i]->weapon_name->set_text("Sprayer");
 			break;
 		case wep_type::SNIPER:
-			this->_player_widgets[i]->weapon_icon->set_sprite_frame("sniper");
-			this->_player_widgets[i]->weapon_name->set_text("Sniper");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sniper");
+			this->player_widgets_[i]->weapon_name->set_text("Sniper");
 			break;
 		case wep_type::ROLLER:
-			this->_player_widgets[i]->weapon_icon->set_sprite_frame("roller");
-			this->_player_widgets[i]->weapon_name->set_text("Roller");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("roller");
+			this->player_widgets_[i]->weapon_name->set_text("Roller");
 			break;
 		case wep_type::MISTER:
-			this->_player_widgets[i]->weapon_icon->set_sprite_frame("mister");
-			this->_player_widgets[i]->weapon_name->set_text("Mister");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("mister");
+			this->player_widgets_[i]->weapon_name->set_text("Mister");
 			break;
 		case wep_type::BUCKET:
-			this->_player_widgets[i]->weapon_icon->set_sprite_frame("bucket");
-			this->_player_widgets[i]->weapon_name->set_text("Bucket");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("bucket");
+			this->player_widgets_[i]->weapon_name->set_text("Bucket");
 			break;
 		case wep_type::RANDOM_PRIMARY:
-			this->_player_widgets[i]->weapon_icon->set_sprite_frame("random");
-			this->_player_widgets[i]->weapon_name->set_text("Random");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("random");
+			this->player_widgets_[i]->weapon_name->set_text("Random");
 			break;
 		default:
-			this->_player_widgets[i]->weapon_icon->set_sprite_frame("error");
-			this->_player_widgets[i]->weapon_name->set_text("ERROR");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("error");
+			this->player_widgets_[i]->weapon_name->set_text("ERROR");
 			break;
 		}
 
-		if (this->_select_states[i].state == confirmation_state::CONFIRMED)
+		if (this->select_states_[i].state == confirmation_state::CONFIRMED)
 		{
-			this->_player_widgets[i]->weapon_icon->
+			this->player_widgets_[i]->weapon_icon->
 				set_colour(WEAPON_SELECT_SELECTED_COLOUR);
-			this->_player_widgets[i]->weapon_name->
+			this->player_widgets_[i]->weapon_name->
 				set_colour(WEAPON_SELECT_SELECTED_COLOUR);
 		}
 
-		this->_player_widgets[i]->weapon_description->set_text(
-			this->weapon_description(this->_select_states[i].type));
+		this->player_widgets_[i]->weapon_description->set_text(
+			this->weapon_description(this->select_states_[i].type));
 	}
 }
 void MainMenuWeaponSelect::unconfirm_all_widgets()
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		this->_player_widgets[i]->weapon_icon->set_colour(
+		this->player_widgets_[i]->weapon_icon->set_colour(
 			WEAPON_SELECT_UNSELECTED_COLOUR);
-		this->_player_widgets[i]->weapon_name->set_colour(
+		this->player_widgets_[i]->weapon_name->set_colour(
 			WEAPON_SELECT_UNSELECTED_COLOUR);
 	}
 }
@@ -1617,13 +1617,13 @@ void MainMenuWeaponSelect::init()
 
 	const Vector2F resolution = this->get_float_resolution();
 
-	this->_texture_container = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<MContainer>(
 		"texture_container");
 	
-	this->_text_container = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<MContainer>(
 		"text_container");
 
-	this->_background = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<MTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -1631,9 +1631,9 @@ void MainMenuWeaponSelect::init()
 		this->get_render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
-	this->_texture_container->add_child(this->_background.get());
+	this->texture_container_->add_child(this->background_.get());
 
-	this->_heading = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
 		"Weapon Select",
 		HEADING_FONT,
@@ -1643,7 +1643,7 @@ void MainMenuWeaponSelect::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->_text_container->add_child(this->_heading.get());
+	this->text_container_->add_child(this->heading_.get());
 
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
@@ -1651,7 +1651,7 @@ void MainMenuWeaponSelect::init()
 		state.state = confirmation_state::UNCONFIRMED;
 		state.type = this->get_main_menu_data()->get_level_settings()
 			->get_player_weapon(i);
-		this->_select_states.push_back(state);
+		this->select_states_.push_back(state);
 
 		auto widgets = std::make_unique<Widgets>();
 
@@ -1696,19 +1696,19 @@ void MainMenuWeaponSelect::init()
 			SHADOW_COLOUR,
 			WEAPON_DESCRIPTION_SHADOW_OFFSET);
 
-		this->_texture_container->add_child(widgets->weapon_icon.get());
-		this->_text_container->add_child(widgets->weapon_name.get());
-		this->_text_container->add_child(widgets->player.get());
-		this->_text_container->add_child(widgets->weapon_description.get());
+		this->texture_container_->add_child(widgets->weapon_icon.get());
+		this->text_container_->add_child(widgets->weapon_name.get());
+		this->text_container_->add_child(widgets->player.get());
+		this->text_container_->add_child(widgets->weapon_description.get());
 
-		this->_player_widgets.push_back(std::move(widgets));
+		this->player_widgets_.push_back(std::move(widgets));
 	}
-	this->_texture_container->scale_objects_to_new_resolution(
+	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
-	this->_text_container->scale_objects_to_new_resolution(
+	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->play_effect(this->_music, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
 std::string MainMenuWeaponSelect::weapon_description(wep_type type)
 {
@@ -1751,10 +1751,10 @@ void MainMenuStageSelect::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+	mobjects.push_back(std::make_pair(this->texture_container_.get(),
 		this->get_point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
 	this->draw_mobjects_in_viewports(&mobjects);
 }
@@ -1768,31 +1768,31 @@ void MainMenuStageSelect::update()
 	{
 		if (inputs[i].action == menu_input_action::BACK)
 		{
-			if (this->_select_state.state == confirmation_state::UNCONFIRMED)
+			if (this->select_state_.state == confirmation_state::UNCONFIRMED)
 			{
-				this->play_wave(this->_cancel_sound);
+				this->play_wave(this->cancel_sound_);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuWeaponSelect>(
 						this->get_main_menu_data()));
 				return;
 			}
-			if (this->_select_state.state == confirmation_state::CONFIRMED)
+			if (this->select_state_.state == confirmation_state::CONFIRMED)
 			{
-				this->play_wave(this->_cancel_sound);
-				this->_select_state.state =
+				this->play_wave(this->cancel_sound_);
+				this->select_state_.state =
 					confirmation_state::UNCONFIRMED;
 			}
 			//no break here as I want simultaneous input from players to be possible
 		}
 		else if (inputs[i].action == menu_input_action::PROCEED)
 		{
-			if (this->_select_state.state == confirmation_state::CONFIRMED)
+			if (this->select_state_.state == confirmation_state::CONFIRMED)
 			{
-				this->play_wave(this->_confirm_sound);
-				this->stop_effect(this->_music, true);
-				if (this->_select_state.stage == level_stage::RANDOM)
+				this->play_wave(this->confirm_sound_);
+				this->stop_effect(this->music_, true);
+				if (this->select_state_.stage == level_stage::RANDOM)
 				{
-					this->_select_state.stage = this->get_random_stage();
+					this->select_state_.stage = this->get_random_stage();
 				}
 				this->set_level_settings();
 				*this->get_main_menu_data()->
@@ -1801,20 +1801,20 @@ void MainMenuStageSelect::update()
 			}
 			else
 			{
-				this->play_wave(this->_ready_sound);
-				this->_select_state.state = confirmation_state::CONFIRMED;
+				this->play_wave(this->ready_sound_);
+				this->select_state_.state = confirmation_state::CONFIRMED;
 			}
 		}
-		else if (this->_select_state.state == confirmation_state::UNCONFIRMED)
+		else if (this->select_state_.state == confirmation_state::UNCONFIRMED)
 		{
 			if (inputs[i].direction == menu_direction::LEFT)
 			{
-				this->play_wave(this->_direction_sound);
+				this->play_wave(this->direction_sound_);
 				this->cycle_stages(menu_direction::LEFT);
 			}
 			else if (inputs[i].direction == menu_direction::RIGHT)
 			{
-				this->play_wave(this->_direction_sound);
+				this->play_wave(this->direction_sound_);
 				this->cycle_stages(menu_direction::RIGHT);
 			}
 		}
@@ -1824,47 +1824,47 @@ void MainMenuStageSelect::update()
 void MainMenuStageSelect::set_level_settings() const
 {
 	this->get_main_menu_data()->get_level_settings()->set_stage(
-		this->_select_state.stage);
+		this->select_state_.stage);
 }
 void MainMenuStageSelect::update_stage_select_visuals()
 {
 	this->unconfirm_all_widgets();
 
-	switch (this->_select_state.stage)
+	switch (this->select_state_.stage)
 	{
 	case level_stage::KING_OF_THE_HILL:
-		this->_stage_icon->set_sprite_frame("stage_king_of_the_hill");
-		this->_stage_name->set_text("King of the Hill");
+		this->stage_icon_->set_sprite_frame("stage_king_of_the_hill");
+		this->stage_name_->set_text("King of the Hill");
 		break;
 	case level_stage::TURBULENCE:
-		this->_stage_icon->set_sprite_frame("stage_turbulence");
-		this->_stage_name->set_text("Turbulence");
+		this->stage_icon_->set_sprite_frame("stage_turbulence");
+		this->stage_name_->set_text("Turbulence");
 		break;
 	case level_stage::CLOSE_QUARTERS:
-		this->_stage_icon->set_sprite_frame("stage_close_quarters");
-		this->_stage_name->set_text("Close Quarters");
+		this->stage_icon_->set_sprite_frame("stage_close_quarters");
+		this->stage_name_->set_text("Close Quarters");
 		break;
 	case level_stage::RANDOM:
-		this->_stage_icon->set_sprite_frame("random");
-		this->_stage_name->set_text("Random");
+		this->stage_icon_->set_sprite_frame("random");
+		this->stage_name_->set_text("Random");
 		break;
 	default:
-		this->_stage_icon->set_sprite_frame("error");
-		this->_stage_name->set_text("ERROR");
+		this->stage_icon_->set_sprite_frame("error");
+		this->stage_name_->set_text("ERROR");
 		break;
 	}
-	if (this->_select_state.state == confirmation_state::CONFIRMED)
+	if (this->select_state_.state == confirmation_state::CONFIRMED)
 	{
-		this->_ready->set_hidden(false);
+		this->ready_->set_hidden(false);
 	}
 }
 void MainMenuStageSelect::unconfirm_all_widgets()
 {
-	this->_stage_icon->set_colour(
+	this->stage_icon_->set_colour(
 		main_menu_consts::STAGE_SELECT_UNSELECTED_COLOUR);
-	this->_stage_name->set_colour(
+	this->stage_name_->set_colour(
 		main_menu_consts::STAGE_SELECT_UNSELECTED_COLOUR);
-	this->_ready->set_hidden(true);
+	this->ready_->set_hidden(true);
 }
 level_stage MainMenuStageSelect::get_random_stage()
 {
@@ -1874,12 +1874,12 @@ level_stage MainMenuStageSelect::get_random_stage()
 }
 void MainMenuStageSelect::init()
 {
-	this->_select_state.stage = this->get_main_menu_data()->
+	this->select_state_.stage = this->get_main_menu_data()->
 		get_level_settings()->get_stage();
 
 	this->set_widget_spacing(STAGE_SELECT_WIDGET_SPACING);
 
-	this->_background = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<MTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -1887,7 +1887,7 @@ void MainMenuStageSelect::init()
 		this->get_render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
-	this->_heading = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
 		"Stage Select",
 		HEADING_FONT,
@@ -1898,7 +1898,7 @@ void MainMenuStageSelect::init()
 		HEADING_SHADOW_OFFSET);
 
 
-	this->_stage_icon = std::make_unique<MTexture>(
+	this->stage_icon_ = std::make_unique<MTexture>(
 		"stage_icon",
 		"sprite_sheet_1",
 		"stage_test_1",
@@ -1906,7 +1906,7 @@ void MainMenuStageSelect::init()
 		this->get_render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
-	this->_stage_name = std::make_unique<MTextDropShadow>(
+	this->stage_name_ = std::make_unique<MTextDropShadow>(
 		"stage_name",
 		"Test 1",
 		ITEM_FONT,
@@ -1916,11 +1916,11 @@ void MainMenuStageSelect::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_ready = std::make_unique<MTextDropShadow>(
+	this->ready_ = std::make_unique<MTextDropShadow>(
 		"ready",
 		"READY?",
 		ANNOUNCEMENT_FONT,
-		this->_background->get_rectangle().get_center() - Vector2F(400.0f, 100.0f),
+		this->background_->get_rectangle().get_center() - Vector2F(400.0f, 100.0f),
 		this->get_render_resources(),
 		STAGE_SELECT_SELECTED_COLOUR,
 		SHADOW_COLOUR,
@@ -1929,26 +1929,26 @@ void MainMenuStageSelect::init()
 
 	const Vector2F resolution = this->get_float_resolution();
 
-	this->_texture_container = std::make_unique<MContainer>("texture_container");
-	this->_texture_container->add_child(this->_background.get());
-	this->_texture_container->add_child(this->_stage_icon.get());
+	this->texture_container_ = std::make_unique<MContainer>("texture_container");
+	this->texture_container_->add_child(this->background_.get());
+	this->texture_container_->add_child(this->stage_icon_.get());
 
-	this->_text_container = std::make_unique<MContainer>("text_container");
-	this->_text_container->add_child(this->_heading.get());
-	this->_text_container->add_child(this->_stage_name.get());
-	this->_text_container->add_child(this->_ready.get());
+	this->text_container_ = std::make_unique<MContainer>("text_container");
+	this->text_container_->add_child(this->heading_.get());
+	this->text_container_->add_child(this->stage_name_.get());
+	this->text_container_->add_child(this->ready_.get());
 
-	this->_texture_container->scale_objects_to_new_resolution(
+	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
-	this->_text_container->scale_objects_to_new_resolution(
+	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->play_effect(this->_music, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
 void MainMenuStageSelect::cycle_stages(menu_direction direction)
 {
 	int enum_max = static_cast<int>(level_stage::MAX_STAGE);
-	int enum_pos = static_cast<int>(this->_select_state.stage);
+	int enum_pos = static_cast<int>(this->select_state_.stage);
 	if (direction == menu_direction::LEFT)
 	{
 		if (enum_pos == 0)
@@ -1971,7 +1971,7 @@ void MainMenuStageSelect::cycle_stages(menu_direction direction)
 			enum_pos++;
 		}
 	}
-	this->_select_state.stage = static_cast<level_stage>(enum_pos);
+	this->select_state_.stage = static_cast<level_stage>(enum_pos);
 }
 
 #pragma endregion MainMenuStageSelect

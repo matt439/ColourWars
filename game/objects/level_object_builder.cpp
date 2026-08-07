@@ -7,9 +7,9 @@ using namespace MattMath;
 LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
 	const AudioResources* audio_resources,
 	const float* dt) :
-	_render_resources(render_resources),
-	_audio_resources(audio_resources),
-	_dt(dt)
+	render_resources_(render_resources),
+	audio_resources_(audio_resources),
+	dt_(dt)
 {
 
 }
@@ -62,7 +62,7 @@ std::unique_ptr<ICollisionGameObject>
 			json["frame_name"].GetString(),
 			rectangle,
 			&rectangle,
-			this->_render_resources,
+			this->render_resources_,
 			col_type,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
@@ -121,12 +121,12 @@ std::unique_ptr<ICollisionGameObject>
 			json["frame_name"].GetString(),
 			rectangle,
 			&rectangle,
-			this->_render_resources,
-			this->_audio_resources,
+			this->render_resources_,
+			this->audio_resources_,
 			col_type,
 			team_colours,
 			faces,
-			this->_dt,
+			this->dt_,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
 	if (type == "StructureRamp")
@@ -159,7 +159,7 @@ std::unique_ptr<ICollisionGameObject>
 			json["frame_name"].GetString(),
 			triangle.get_bounding_box(),
 			&triangle,
-			this->_render_resources,
+			this->render_resources_,
 			col_type,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
@@ -180,7 +180,7 @@ std::unique_ptr<IGameObject>
 				json["rectangle"]["y"].GetFloat(),
 				json["rectangle"]["width"].GetFloat(),
 				json["rectangle"]["height"].GetFloat()),
-			this->_render_resources,
+			this->render_resources_,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
 
@@ -225,7 +225,7 @@ std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
 			viewport_consts::DIVIDER_SHEET_NAME,
 			viewport_consts::DIVIDER_FRAME_NAME,
 			rectangle,
-			this->_render_resources,
+			this->render_resources_,
 			viewport_consts::DIVIDER_COLOUR));
 	}
 

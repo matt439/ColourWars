@@ -10,16 +10,16 @@ ResultsMenuPage::ResultsMenuPage(ResultsMenuData* data) :
 	MenuPage(data),
 	SoundBankObject(results_menu_consts::SOUND_BANK,
 		this->get_audio_resources()),
-	_data(data)
+	data_(data)
 {
-	this->_confirm_sound = this->resolve_wave(CONFIRM_SOUND);
-	this->_winner_sound = this->resolve_wave(WINNER_SOUND);
-	this->_fill_sound = this->resolve_effect(FILL_SOUND);
+	this->confirm_sound_ = this->resolve_wave(CONFIRM_SOUND);
+	this->winner_sound_ = this->resolve_wave(WINNER_SOUND);
+	this->fill_sound_ = this->resolve_effect(FILL_SOUND);
 }
 
 ResultsMenuData* ResultsMenuPage::get_results_menu_data() const
 {
-	return this->_data;
+	return this->data_;
 }
 
 ResultsMenuInitial::ResultsMenuInitial(ResultsMenuData* data) :
@@ -34,41 +34,41 @@ void ResultsMenuInitial::update()
 	std::vector<ProcessedMenuInput> menu_inputs = this->get_menu_inputs();
 	
 
-	if (this->_delay_timer < RESULTS_MENU_TEAM_FILL_DELAY)
+	if (this->delay_timer_ < RESULTS_MENU_TEAM_FILL_DELAY)
 	{
-		this->_delay_timer += dt;
+		this->delay_timer_ += dt;
 	}
 	else
 	{		
 		this->update_fill_box();
-		if (this->_fill_timer >= RESULTS_MENU_TEAM_FILL_TIME)
+		if (this->fill_timer_ >= RESULTS_MENU_TEAM_FILL_TIME)
 		{
 			// only play winner sound once
-			if (!this->_winner_sound_played)
+			if (!this->winner_sound_played_)
 			{
-				this->_winner_sound_played = true;
-				this->stop_effect(this->_fill_sound, true);
-				this->play_wave(this->_winner_sound, WINNER_VOLUME);
+				this->winner_sound_played_ = true;
+				this->stop_effect(this->fill_sound_, true);
+				this->play_wave(this->winner_sound_, WINNER_VOLUME);
 			}
-			this->_team_a_percentage->set_hidden(false);
-			this->_team_b_percentage->set_hidden(false);
-			this->_winner->set_hidden(false);
+			this->team_a_percentage_->set_hidden(false);
+			this->team_b_percentage_->set_hidden(false);
+			this->winner_->set_hidden(false);
 			
-			if (this->_show_results_timer >= RESULTS_MENU_SHOW_RESULTS_DELAY)
+			if (this->show_results_timer_ >= RESULTS_MENU_SHOW_RESULTS_DELAY)
 			{
-				this->_proceed->set_hidden(false);
+				this->proceed_->set_hidden(false);
 				int continue_input = this->check_for_continue_input(menu_inputs);
 
 				if (continue_input != -1)
 				{
-					this->play_wave(this->_confirm_sound);
+					this->play_wave(this->confirm_sound_);
 					*this->get_results_menu_data()->get_action() =
 						results_menu_action::CONTINUE_TO_END_MENU;
 				}
 			}
-			this->_show_results_timer += dt;
+			this->show_results_timer_ += dt;
 		}
-		this->_fill_timer += dt;
+		this->fill_timer_ += dt;
 	}
 }
 
@@ -76,16 +76,16 @@ void ResultsMenuInitial::init()
 {
 	const LevelEndInfo end_info = this->get_level_end_info();
 
-	this->_box = std::make_unique<MTexture>(
+	this->box_ = std::make_unique<MTexture>(
 		"box",
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, RESULTS_MENU_BOX_SIZE),
 		this->get_render_resources(),
 		RESULTS_MENU_BOX_COLOUR);
-	this->_box->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
+	this->box_->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
 
-	this->_heading = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<MTextDropShadow>(
 		"title",
 		"Results",
 		HEADING_FONT,
@@ -95,7 +95,7 @@ void ResultsMenuInitial::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->_fill_box = std::make_unique<MTexture>(
+	this->fill_box_ = std::make_unique<MTexture>(
 		"fill_box",
 		"sprite_sheet_1",
 		"results_menu_fill_box",
@@ -104,11 +104,11 @@ void ResultsMenuInitial::init()
 		RESULTS_MENU_BOX_COLOUR);
 	auto fill_box_position = Vector2F(
 		this->calculate_center_position(
-		this->_fill_box->get_rectangle().get_width(), DEFAULT_RESOLUTION.x),
-		this->_box->get_rectangle().get_position().y + RESULTS_MENU_FILL_BOX_Y_OFFSET);
-	this->_fill_box->set_position(fill_box_position);
+		this->fill_box_->get_rectangle().get_width(), DEFAULT_RESOLUTION.x),
+		this->box_->get_rectangle().get_position().y + RESULTS_MENU_FILL_BOX_Y_OFFSET);
+	this->fill_box_->set_position(fill_box_position);
 
-	this->_team_a_fill = std::make_unique<MTexture>(
+	this->team_a_fill_ = std::make_unique<MTexture>(
 		"team_a_fill",
 		"sprite_sheet_1",
 		"results_menu_team_a_fill",
@@ -116,10 +116,10 @@ void ResultsMenuInitial::init()
 			Vector2F(0.0f, RESULTS_MENU_TEAM_FILL_SIZE.y)),
 		this->get_render_resources(),
 		this->get_results_menu_data()->get_level_end_info().team_colours.team_a);
-	this->_team_a_fill->set_position(this->_fill_box->get_rectangle().get_position() +
+	this->team_a_fill_->set_position(this->fill_box_->get_rectangle().get_position() +
 		RESULTS_MENU_TEAM_FILL_BORDER);
 
-	this->_team_b_fill = std::make_unique<MTexture>(
+	this->team_b_fill_ = std::make_unique<MTexture>(
 		"team_b_fill",
 		"sprite_sheet_1",
 		"results_menu_team_b_fill",
@@ -128,18 +128,18 @@ void ResultsMenuInitial::init()
 		this->get_render_resources(),
 		this->get_results_menu_data()->get_level_end_info().team_colours.team_b);
 
-	this->_team_a_percentage = std::make_unique<MTextDropShadow>(
+	this->team_a_percentage_ = std::make_unique<MTextDropShadow>(
 		"team_a_percentage",
 		end_info.team_a_percentage_string(),
 		DETAIL_FONT,
-		this->_team_a_fill->get_rectangle().get_position(),
+		this->team_a_fill_->get_rectangle().get_position(),
 		this->get_render_resources(),
 		PERCENTAGE_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		DETAIL_SHADOW_OFFSET,
 		true);
 
-	this->_team_b_percentage = std::make_unique<MTextDropShadow>(
+	this->team_b_percentage_ = std::make_unique<MTextDropShadow>(
 		"team_b_percentage",
 		end_info.team_b_percentage_string(),
 		DETAIL_FONT,
@@ -149,12 +149,12 @@ void ResultsMenuInitial::init()
 		SHADOW_COLOUR,
 		DETAIL_SHADOW_OFFSET,
 		true);
-	this->_team_b_percentage->set_position(Vector2F(
+	this->team_b_percentage_->set_position(Vector2F(
 		this->calculate_center_position(this->get_widget_size().x, DEFAULT_RESOLUTION.x) +
 		TEAM_B_PERCENTAGE_X_OFFSET,
 		this->calculate_team_b_fill_top_right_position().y));
 
-	this->_winner = std::make_unique<MTextDropShadow>(
+	this->winner_ = std::make_unique<MTextDropShadow>(
 		"winner",
 		end_info.winning_team_string(),
 		ITEM_FONT,
@@ -165,7 +165,7 @@ void ResultsMenuInitial::init()
 		DETAIL_SHADOW_OFFSET,
 		true);
 
-	this->_proceed = std::make_unique<MTextDropShadow>(
+	this->proceed_ = std::make_unique<MTextDropShadow>(
 		"proceed",
 		"Press A to proceed",
 		DETAIL_FONT,
@@ -176,39 +176,39 @@ void ResultsMenuInitial::init()
 		DETAIL_SHADOW_OFFSET,
 		true);
 
-	this->_texture_container = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<MContainer>(
 		"texture_container");
-	this->_texture_container->add_child(this->_box.get());
-	this->_texture_container->add_child(this->_fill_box.get());
-	this->_texture_container->add_child(this->_team_a_fill.get());
-	this->_texture_container->add_child(this->_team_b_fill.get());
+	this->texture_container_->add_child(this->box_.get());
+	this->texture_container_->add_child(this->fill_box_.get());
+	this->texture_container_->add_child(this->team_a_fill_.get());
+	this->texture_container_->add_child(this->team_b_fill_.get());
 
-	this->_text_container = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<MContainer>(
 		"text_container");
-	this->_text_container->add_child(this->_heading.get());
-	this->_text_container->add_child(this->_team_a_percentage.get());
-	this->_text_container->add_child(this->_team_b_percentage.get());
-	this->_text_container->add_child(this->_winner.get());
-	this->_text_container->add_child(this->_proceed.get());
+	this->text_container_->add_child(this->heading_.get());
+	this->text_container_->add_child(this->team_a_percentage_.get());
+	this->text_container_->add_child(this->team_b_percentage_.get());
+	this->text_container_->add_child(this->winner_.get());
+	this->text_container_->add_child(this->proceed_.get());
 
 	const Vector2F resolution = this->get_float_resolution();
 
-	this->_texture_container->scale_objects_to_new_resolution(
+	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
-	this->_text_container->scale_objects_to_new_resolution(
+	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->play_effect(this->_fill_sound, true, FILL_VOLUME);
+	this->play_effect(this->fill_sound_, true, FILL_VOLUME);
 }
 
 void ResultsMenuInitial::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+	mobjects.push_back(std::make_pair(this->texture_container_.get(),
 		this->get_point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
 	this->draw_mobjects_in_viewports(&mobjects);
 }
@@ -221,7 +221,7 @@ void ResultsMenuInitial::update_fill_box() const
 
 float ResultsMenuInitial::fill_time_ratio() const
 {
-	return this->_fill_timer / RESULTS_MENU_TEAM_FILL_TIME;
+	return this->fill_timer_ / RESULTS_MENU_TEAM_FILL_TIME;
 }
 
 void ResultsMenuInitial::update_team_a_fill() const
@@ -235,7 +235,7 @@ void ResultsMenuInitial::update_team_a_fill() const
 		fill = 1.0f;
 	}
 	float width = fill * max_width;
-	this->_team_a_fill->set_width(width);
+	this->team_a_fill_->set_width(width);
 }
 
 void ResultsMenuInitial::update_team_b_fill() const
@@ -248,15 +248,15 @@ void ResultsMenuInitial::update_team_b_fill() const
 		fill = 1.0f;
 	}
 	float width = fill * max_width;
-	this->_team_b_fill->set_width(width);
-	this->_team_b_fill->set_position_from_top_right_origin(
+	this->team_b_fill_->set_width(width);
+	this->team_b_fill_->set_position_from_top_right_origin(
 		this->calculate_team_b_fill_top_right_position());
 }
 
 Vector2F ResultsMenuInitial::calculate_team_b_fill_top_right_position() const
 {
-	Vector2F team_b_top_right_position = this->_fill_box->get_rectangle().get_position() +
-		Vector2F(this->_fill_box->get_rectangle().get_width(), 0.0f) +
+	Vector2F team_b_top_right_position = this->fill_box_->get_rectangle().get_position() +
+		Vector2F(this->fill_box_->get_rectangle().get_width(), 0.0f) +
 			Vector2F(-RESULTS_MENU_TEAM_FILL_BORDER.x,
 				RESULTS_MENU_TEAM_FILL_BORDER.y);
 	return team_b_top_right_position;

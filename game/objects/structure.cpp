@@ -17,9 +17,9 @@ Structure::Structure(const std::string& sheet_name,
 	float layer_depth) :
 	TextureObject(sheet_name, frame_name, render_resources,
 		color, rotation, origin, effects, layer_depth),
-	_collision_type(collision_type),
-	_sprite_rectangle(sprite_rectangle),
-	_collision_shape(collision_shape->clone())
+	collision_type_(collision_type),
+	sprite_rectangle_(sprite_rectangle),
+	collision_shape_(collision_shape->clone())
 {
 
 }
@@ -30,15 +30,15 @@ void Structure::update()
 }
 void Structure::draw(SpriteBatch* sprite_batch, const Camera& camera)
 {
-	this->TextureObject::draw(sprite_batch, this->_sprite_rectangle, camera);
+	this->TextureObject::draw(sprite_batch, this->sprite_rectangle_, camera);
 }
 void Structure::draw(SpriteBatch* sprite_batch)
 {
-	this->TextureObject::draw(sprite_batch, this->_sprite_rectangle);
+	this->TextureObject::draw(sprite_batch, this->sprite_rectangle_);
 }
 bool Structure::is_visible_in_viewport(const RectangleF& view) const
 {
-	return this->_sprite_rectangle.intersects(view);
+	return this->sprite_rectangle_.intersects(view);
 }
 bool Structure::is_colliding(const ICollisionGameObject* /*other*/) const
 {
@@ -50,11 +50,11 @@ void Structure::on_collision(const ICollisionGameObject* /*other*/)
 }
 collision_object_type Structure::get_collision_object_type() const
 {
-	return this->_collision_type;
+	return this->collision_type_;
 }
 const Shape* Structure::get_shape() const
 {
-	return this->_collision_shape.get();
+	return this->collision_shape_.get();
 }
 bool Structure::get_for_deletion() const
 {
@@ -62,5 +62,5 @@ bool Structure::get_for_deletion() const
 }
 const RectangleF& Structure::get_rectangle() const
 {
-	return this->_sprite_rectangle;
+	return this->sprite_rectangle_;
 }

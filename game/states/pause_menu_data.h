@@ -14,6 +14,6 @@ public:
 	pause_menu_action* get_action() const;
 	void set_action(pause_menu_action* action);
 private:
-	int _player_num = -1;
-	pause_menu_action* _action = nullptr;
+	int player_num_ = -1;
+	pause_menu_action* action_ = nullptr;
 };

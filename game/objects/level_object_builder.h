@@ -26,9 +26,9 @@ public:
 		build_viewport_dividers(const ViewportManager* viewport_manager) const;
 
 private:
-	RenderResources* _render_resources = nullptr;
-	const AudioResources* _audio_resources = nullptr;
-	const float* _dt = nullptr;
+	RenderResources* render_resources_ = nullptr;
+	const AudioResources* audio_resources_ = nullptr;
+	const float* dt_ = nullptr;
 
 	std::unique_ptr<ICollisionGameObject>
 		build_collision_object(const rapidjson::Value& json,

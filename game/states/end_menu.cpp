@@ -8,16 +8,16 @@ using namespace end_menu_consts;
 EndMenuPage::EndMenuPage(EndMenuData* data) :
 	MenuPage(data),
 	SoundBankObject(SOUND_BANK, this->get_audio_resources()),
-	_data(data)
+	data_(data)
 {
-	this->_direction_sound = this->resolve_wave(DIRECTION_SOUND);
-	this->_confirm_sound = this->resolve_wave(CONFIRM_SOUND);
-	this->_cancel_sound = this->resolve_wave(CANCEL_SOUND);
+	this->direction_sound_ = this->resolve_wave(DIRECTION_SOUND);
+	this->confirm_sound_ = this->resolve_wave(CONFIRM_SOUND);
+	this->cancel_sound_ = this->resolve_wave(CANCEL_SOUND);
 }
 
 EndMenuData* EndMenuPage::get_end_menu_data() const
 {
-	return this->_data;
+	return this->data_;
 }
 
 EndMenuInitial::EndMenuInitial(EndMenuData* data) : EndMenuPage(data)
@@ -37,35 +37,35 @@ void EndMenuInitial::update()
 		{
 			if (highlighted_element == "change_teams")
 			{
-				this->play_wave(this->_confirm_sound);
+				this->play_wave(this->confirm_sound_);
 				*this->get_end_menu_data()->get_action() =
 					end_menu_action::CHANGE_TEAMS;
 				return;
 			}
 			else if (highlighted_element == "change_weapons")
 			{
-				this->play_wave(this->_confirm_sound);
+				this->play_wave(this->confirm_sound_);
 				*this->get_end_menu_data()->get_action() =
 					end_menu_action::CHANGE_WEAPONS;
 				return;
 			}
 			else if (highlighted_element == "change_level")
 			{
-				this->play_wave(this->_confirm_sound);
+				this->play_wave(this->confirm_sound_);
 				*this->get_end_menu_data()->get_action() =
 					end_menu_action::CHANGE_LEVEL;
 				return;
 			}
 			else if (highlighted_element == "restart")
 			{
-				this->play_wave(this->_confirm_sound);
+				this->play_wave(this->confirm_sound_);
 				*this->get_end_menu_data()->get_action() =
 					end_menu_action::RESTART;
 				return;
 			}
 			else if (highlighted_element == "exit")
 			{
-				this->play_wave(this->_cancel_sound);
+				this->play_wave(this->cancel_sound_);
 				*this->get_end_menu_data()->get_action() =
 					end_menu_action::EXIT;
 				return;
@@ -73,59 +73,59 @@ void EndMenuInitial::update()
 		}
 		else if (inputs[i].direction == menu_direction::UP)
 		{
-			this->play_wave(this->_direction_sound);
+			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "change_teams")
 			{
-				this->change_highlight(this->_exit.get());
+				this->change_highlight(this->exit_.get());
 				return;
 			}
 			else if (highlighted_element == "change_weapons")
 			{
-				this->change_highlight(this->_change_teams.get());
+				this->change_highlight(this->change_teams_.get());
 				return;
 			}
 			else if (highlighted_element == "change_level")
 			{
-				this->change_highlight(this->_change_weapons.get());
+				this->change_highlight(this->change_weapons_.get());
 				return;
 			}
 			else if (highlighted_element == "restart")
 			{
-				this->change_highlight(this->_change_level.get());
+				this->change_highlight(this->change_level_.get());
 				return;
 			}
 			else if (highlighted_element == "exit")
 			{
-				this->change_highlight(this->_restart.get());
+				this->change_highlight(this->restart_.get());
 				return;
 			}
 		}
 		else if (inputs[i].direction == menu_direction::DOWN)
 		{
-			this->play_wave(this->_direction_sound);
+			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "change_teams")
 			{
-				this->change_highlight(this->_change_weapons.get());
+				this->change_highlight(this->change_weapons_.get());
 				return;
 			}
 			else if (highlighted_element == "change_weapons")
 			{
-				this->change_highlight(this->_change_level.get());
+				this->change_highlight(this->change_level_.get());
 				return;
 			}
 			else if (highlighted_element == "change_level")
 			{
-				this->change_highlight(this->_restart.get());
+				this->change_highlight(this->restart_.get());
 				return;
 			}
 			else if (highlighted_element == "restart")
 			{
-				this->change_highlight(this->_exit.get());
+				this->change_highlight(this->exit_.get());
 				return;
 			}
 			else if (highlighted_element == "exit")
 			{
-				this->change_highlight(this->_change_teams.get());
+				this->change_highlight(this->change_teams_.get());
 				return;
 			}
 		}
@@ -136,20 +136,20 @@ void EndMenuInitial::init()
 	this->set_highlight_colour(STANDARD_HIGHLIGHT);
 	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
 
-	this->_box = std::make_unique<MTexture>(
+	this->box_ = std::make_unique<MTexture>(
 		"box",
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, END_MENU_BOX_SIZE),
 		this->get_render_resources(),
 		END_MENU_BOX_COLOUR);
-	this->_box->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
+	this->box_->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
 
 	this->set_widget_position(END_MENU_INITIAL_WIDGET_POSITION);
 	this->set_widget_size(END_MENU_INITIAL_WIDGET_SIZE);
 	this->set_widget_spacing(END_MENU_INITIAL_WIDGET_SPACING);
 
-	this->_heading = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
 		"Level End",
 		HEADING_FONT,
@@ -159,7 +159,7 @@ void EndMenuInitial::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->_change_teams = std::make_unique<MTextDropShadow>(
+	this->change_teams_ = std::make_unique<MTextDropShadow>(
 		"change_teams",
 		"Change Teams",
 		ITEM_FONT,
@@ -169,7 +169,7 @@ void EndMenuInitial::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_change_weapons = std::make_unique<MTextDropShadow>(
+	this->change_weapons_ = std::make_unique<MTextDropShadow>(
 		"change_weapons",
 		"Change Weapons",
 		ITEM_FONT,
@@ -179,7 +179,7 @@ void EndMenuInitial::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_change_level = std::make_unique<MTextDropShadow>(
+	this->change_level_ = std::make_unique<MTextDropShadow>(
 		"change_level",
 		"Change Level",
 		ITEM_FONT,
@@ -189,7 +189,7 @@ void EndMenuInitial::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_restart = std::make_unique<MTextDropShadow>(
+	this->restart_ = std::make_unique<MTextDropShadow>(
 		"restart",
 		"Restart",
 		ITEM_FONT,
@@ -199,7 +199,7 @@ void EndMenuInitial::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_exit = std::make_unique<MTextDropShadow>(
+	this->exit_ = std::make_unique<MTextDropShadow>(
 		"exit",
 		"Exit to Main Menu",
 		ITEM_FONT,
@@ -209,36 +209,36 @@ void EndMenuInitial::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->set_highlighted_widget(this->_change_teams.get());
+	this->set_highlighted_widget(this->change_teams_.get());
 
-	this->_texture_container = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<MContainer>(
 		"texture_container");
-	this->_texture_container->add_child(this->_box.get());
+	this->texture_container_->add_child(this->box_.get());
 
-	this->_text_container = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<MContainer>(
 		"text_container");
-	this->_text_container->add_child(this->_heading.get());
-	this->_text_container->add_child(this->_change_teams.get());
-	this->_text_container->add_child(this->_change_weapons.get());
-	this->_text_container->add_child(this->_change_level.get());
-	this->_text_container->add_child(this->_restart.get());
-	this->_text_container->add_child(this->_exit.get());
+	this->text_container_->add_child(this->heading_.get());
+	this->text_container_->add_child(this->change_teams_.get());
+	this->text_container_->add_child(this->change_weapons_.get());
+	this->text_container_->add_child(this->change_level_.get());
+	this->text_container_->add_child(this->restart_.get());
+	this->text_container_->add_child(this->exit_.get());
 
 	const Vector2F resolution = this->get_float_resolution();
 
-	this->_texture_container->scale_objects_to_new_resolution(
+	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
-	this->_text_container->scale_objects_to_new_resolution(
+	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 }
 void EndMenuInitial::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
-	mobjects.push_back(std::make_pair(this->_texture_container.get(),
+	mobjects.push_back(std::make_pair(this->texture_container_.get(),
 		this->get_point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->_text_container.get(), nullptr));
+	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
 	this->draw_mobjects_in_viewports(&mobjects);
 }

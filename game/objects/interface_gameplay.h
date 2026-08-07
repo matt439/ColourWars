@@ -80,10 +80,10 @@ private:
     // the same two fonts. All five names are resolved in the constructor, so
     // the four draw_* calls below - which run every frame, for every split
     // screen viewport - index rather than search. Declaration order matters:
-    // the frames are resolved against _sheet.
-    RenderResources::SpriteSheetHandle _sheet;
-    SpriteSheet::frame_handle _empty_box_frame;
-    SpriteSheet::frame_handle _fill_frame;
-    RenderResources::FontHandle _timer_font;
-    RenderResources::FontHandle _respawn_timer_font;
+    // the frames are resolved against sheet_.
+    RenderResources::SpriteSheetHandle sheet_;
+    SpriteSheet::frame_handle empty_box_frame_;
+    SpriteSheet::frame_handle fill_frame_;
+    RenderResources::FontHandle timer_font_;
+    RenderResources::FontHandle respawn_timer_font_;
 };

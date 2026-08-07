@@ -30,16 +30,16 @@ public:
 	std::unique_ptr<Level> build_level(const MenuLevelSettings& settings);
 
 private:
-	std::unique_ptr<TeamColourTools> _team_colour = nullptr;
-	std::unique_ptr<PlayerBuilder> _player_builder = nullptr;
-	RenderResources* _render_resources = nullptr;
-	const AudioResources* _audio_resources = nullptr;
-	const Registry<LevelLoadedInfo>* _level_infos = nullptr;
-	const float* _dt = nullptr;
-	ViewportManager* _viewport_manager = nullptr;
-	std::unique_ptr<LevelObjectBuilder> _level_object_builder = nullptr;
-	ID3D11SamplerState* _sampler_state = nullptr;
-	ResolutionManager* _resolution_manager = nullptr;
-	ThreadPool* _thread_pool = nullptr;
-	const Partitioner* _partitioner = nullptr;
+	std::unique_ptr<TeamColourTools> team_colour_ = nullptr;
+	std::unique_ptr<PlayerBuilder> player_builder_ = nullptr;
+	RenderResources* render_resources_ = nullptr;
+	const AudioResources* audio_resources_ = nullptr;
+	const Registry<LevelLoadedInfo>* level_infos_ = nullptr;
+	const float* dt_ = nullptr;
+	ViewportManager* viewport_manager_ = nullptr;
+	std::unique_ptr<LevelObjectBuilder> level_object_builder_ = nullptr;
+	ID3D11SamplerState* sampler_state_ = nullptr;
+	ResolutionManager* resolution_manager_ = nullptr;
+	ThreadPool* thread_pool_ = nullptr;
+	const Partitioner* partitioner_ = nullptr;
 };

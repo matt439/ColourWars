@@ -51,10 +51,10 @@ public:
     GameData* get_game_data();
 
 private:
-    Application* _application = nullptr;
-    Save* _save = nullptr;
+    Application* application_ = nullptr;
+    Save* save_ = nullptr;
 
     // The game's own resource registry, beside the engine's: a level
     // definition means nothing to the engine, so the engine does not cache it.
-    Registry<LevelLoadedInfo>* _level_infos = nullptr;
+    Registry<LevelLoadedInfo>* level_infos_ = nullptr;
 };
