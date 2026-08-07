@@ -1,77 +1,62 @@
 #ifndef GAMEDATA_H
 #define GAMEDATA_H
 
-#include "engine/render/resolution_manager.h"
-#include "game/save.h"
-#include "game/objects/level_loaded_info.h"
-#include "engine/render/render_resources.h"
-#include "engine/audio/audio_resources.h"
+#include "engine/app/application.h"
 #include "engine/core/registry.h"
-#include "engine/render/device_resources.h"
-#include "engine/render/viewport_manager.h"
-#include "engine/core/thread_pool.h"
-#include "engine/collision/partitioner.h"
+#include "game/objects/level_loaded_info.h"
+#include "game/save.h"
 
+// The service bag every state, object and drawable in this game is handed at
+// construction.
+//
+// Three things go in it, and only three: the engine's application shell, this
+// game's save file, and this game's level registry. Everything below that
+// looks like a service is a forward to the shell, so the accessors the whole
+// game already calls keep working while the ownership sits where it belongs -
+// a game that owned a ThreadPool would be a game doing the engine's job (T1).
+//
+// All three are borrowed and all three outlive it: main() declares them above
+// the Application whose states hold this.
 class GameData
 {
 public:
     GameData() = default;
     explicit GameData(const GameData* game_data);
 
-    void set_window(HWND window);
-    HWND get_window() const;
-    void set_resolution_manager(ResolutionManager* resolution_manager);
+    void set_application(Application* application);
+    void set_save(Save* save);
+    void set_level_infos(Registry<LevelLoadedInfo>* level_infos);
+
+    // The game's own two.
+    Save* get_save() const;
+    Registry<LevelLoadedInfo>* get_level_infos() const;
+
+    // The engine's, forwarded. Created once by the shell and never reseated,
+    // so anything here may be held for an object's whole life.
+    Application* get_application() const;
     ResolutionManager* get_resolution_manager() const;
     float* get_dt() const;
-    void set_dt(float* dt);
-    void set_save(Save* save);
-    Save* get_save() const;
-    void set_render_resources(RenderResources* render_resources);
     RenderResources* get_render_resources() const;
-    void set_audio_resources(AudioResources* audio_resources);
     AudioResources* get_audio_resources() const;
-    void set_level_infos(Registry<LevelLoadedInfo>* level_infos);
-    Registry<LevelLoadedInfo>* get_level_infos() const;
-    void set_gamepad(DirectX::GamePad* gamepad);
     DirectX::GamePad* get_gamepad() const;
-    void set_device_resources(DX::DeviceResources* device_resources);
     DX::DeviceResources* get_device_resources() const;
-    void set_viewport_manager(ViewportManager* viewport_manager);
     ViewportManager* get_viewport_manager() const;
-    void set_common_states(DirectX::CommonStates* common_states);
+    ThreadPool* get_thread_pool() const;
+    const Partitioner* get_partitioner() const;
+
+    // Recreated on device loss, so unlike the rest these change identity
+    // across one and must be read through this each time they are needed.
     DirectX::CommonStates* get_common_states() const;
     std::vector<DirectX::SpriteBatch*>* get_sprite_batches() const;
-    void set_sprite_batches(std::vector<DirectX::SpriteBatch*>* sprite_batches);
-    void set_thread_pool(ThreadPool* thread_pool);
-    ThreadPool* get_thread_pool() const;
-	void set_partitioner(const Partitioner* partitioner);
-	const Partitioner* get_partitioner() const;
 
     GameData* get_game_data();
 
 private:
+    Application* _application = nullptr;
     Save* _save = nullptr;
-    ResolutionManager* _resolution_manager = nullptr;
-    HWND _window = nullptr;
-    float* _dt = nullptr;
-
-    // No ResourceLoader here. Loading happens once, at startup and after a
-    // device restore, both of which Game drives directly - publishing the
-    // loader to every state that ever reads GameData advertised a load-time
-    // service to per-frame code, and nothing ever took it up.
-    RenderResources* _render_resources = nullptr;
-    AudioResources* _audio_resources = nullptr;
 
     // The game's own resource registry, beside the engine's: a level
     // definition means nothing to the engine, so the engine does not cache it.
     Registry<LevelLoadedInfo>* _level_infos = nullptr;
-
-    DirectX::GamePad* _gamepad = nullptr;
-    DX::DeviceResources* _device_resources = nullptr;
-    ViewportManager* _viewport_manager = nullptr;
-    DirectX::CommonStates* _common_states = nullptr;
-	std::vector<DirectX::SpriteBatch*>* _sprite_batches = nullptr;
-    ThreadPool* _thread_pool = nullptr;
-	const Partitioner* _partitioner = nullptr;
 };
 #endif // !GAMEDATA_H

@@ -9,7 +9,6 @@ find_package(directxtk CONFIG REQUIRED)
 # project file format and no code generation: this file is the whole of it
 # (ARCHITECTURE.md, A game project).
 add_executable(ArtAttackGame WIN32
-    game.cpp
     game_data.cpp
     main.cpp
     save.cpp

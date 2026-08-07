@@ -2,52 +2,16 @@
 #include "game/game_data.h"
 
 GameData::GameData(const GameData* game_data) :
-    _save(game_data->get_save()),
-    _resolution_manager(game_data->get_resolution_manager()),
-    _window(game_data->get_window()),
-    _dt(game_data->get_dt()),
-    _render_resources(game_data->get_render_resources()),
-    _audio_resources(game_data->get_audio_resources()),
-    _level_infos(game_data->get_level_infos()),
-    _gamepad(game_data->get_gamepad()),
-    _device_resources(game_data->get_device_resources()),
-    _viewport_manager(game_data->get_viewport_manager()),
-    _common_states(game_data->get_common_states()),
-	_sprite_batches(game_data->get_sprite_batches()),
-	_thread_pool(game_data->get_thread_pool()),
-	_partitioner(game_data->get_partitioner())
+	_application(game_data->get_application()),
+	_save(game_data->get_save()),
+	_level_infos(game_data->get_level_infos())
 {
 
 }
 
-void GameData::set_window(HWND window)
+void GameData::set_application(Application* application)
 {
-	this->_window = window;
-}
-
-HWND GameData::get_window() const
-{
-	return this->_window;
-}
-
-void GameData::set_resolution_manager(ResolutionManager* resolution_manager)
-{
-	this->_resolution_manager = resolution_manager;
-}
-
-ResolutionManager* GameData::get_resolution_manager() const
-{
-	return this->_resolution_manager;
-}
-
-float* GameData::get_dt() const
-{
-	return this->_dt;
-}
-
-void GameData::set_dt(float* dt)
-{
-	this->_dt = dt;
+	this->_application = application;
 }
 
 void GameData::set_save(Save* save)
@@ -55,34 +19,19 @@ void GameData::set_save(Save* save)
 	this->_save = save;
 }
 
-Save* GameData::get_save() const
-{
-	return this->_save;
-}
-
-void GameData::set_render_resources(RenderResources* render_resources)
-{
-	this->_render_resources = render_resources;
-}
-
-RenderResources* GameData::get_render_resources() const
-{
-	return this->_render_resources;
-}
-
-void GameData::set_audio_resources(AudioResources* audio_resources)
-{
-	this->_audio_resources = audio_resources;
-}
-
-AudioResources* GameData::get_audio_resources() const
-{
-	return this->_audio_resources;
-}
-
 void GameData::set_level_infos(Registry<LevelLoadedInfo>* level_infos)
 {
 	this->_level_infos = level_infos;
+}
+
+Application* GameData::get_application() const
+{
+	return this->_application;
+}
+
+Save* GameData::get_save() const
+{
+	return this->_save;
 }
 
 Registry<LevelLoadedInfo>* GameData::get_level_infos() const
@@ -90,77 +39,69 @@ Registry<LevelLoadedInfo>* GameData::get_level_infos() const
 	return this->_level_infos;
 }
 
-void GameData::set_gamepad(DirectX::GamePad* gamepad)
+// Everything below forwards. There is deliberately no cached copy of any of
+// them: a copy would be a second place for a service pointer to be wrong.
+
+ResolutionManager* GameData::get_resolution_manager() const
 {
-	this->_gamepad = gamepad;
+	return this->_application->resolution_manager();
+}
+
+float* GameData::get_dt() const
+{
+	// The shell hands out a const float* because nothing downstream should be
+	// writing the frame's own timestep. The game's older signatures still take
+	// a float*, so the cast lives here, in one place, rather than at each of
+	// the several dozen call sites - and goes when those signatures do.
+	return const_cast<float*>(this->_application->dt());
+}
+
+RenderResources* GameData::get_render_resources() const
+{
+	return this->_application->render_resources();
+}
+
+AudioResources* GameData::get_audio_resources() const
+{
+	return this->_application->audio_resources();
 }
 
 DirectX::GamePad* GameData::get_gamepad() const
 {
-	return this->_gamepad;
-}
-
-void GameData::set_device_resources(DX::DeviceResources* device_resources)
-{
-	this->_device_resources = device_resources;
+	return this->_application->gamepad();
 }
 
 DX::DeviceResources* GameData::get_device_resources() const
 {
-	return this->_device_resources;
-}
-
-void GameData::set_viewport_manager(ViewportManager* viewport_manager)
-{
-	this->_viewport_manager = viewport_manager;
+	return this->_application->device_resources();
 }
 
 ViewportManager* GameData::get_viewport_manager() const
 {
-	return this->_viewport_manager;
+	return this->_application->viewport_manager();
 }
 
-void GameData::set_common_states(DirectX::CommonStates* common_states)
+ThreadPool* GameData::get_thread_pool() const
 {
-	this->_common_states = common_states;
+	return this->_application->thread_pool();
+}
+
+const Partitioner* GameData::get_partitioner() const
+{
+	return this->_application->partitioner();
 }
 
 DirectX::CommonStates* GameData::get_common_states() const
 {
-	return this->_common_states;
+	return this->_application->common_states();
+}
+
+std::vector<DirectX::SpriteBatch*>* GameData::get_sprite_batches() const
+{
+	return this->_application->sprite_batches();
 }
 
 GameData* GameData::get_game_data()
 {
 	return this;
-}
-
-std::vector<DirectX::SpriteBatch*>* GameData::get_sprite_batches() const
-{
-	return this->_sprite_batches;
-}
-
-void GameData::set_sprite_batches(std::vector<DirectX::SpriteBatch*>* sprite_batches)
-{
-	this->_sprite_batches = sprite_batches;
-}
-
-void GameData::set_thread_pool(ThreadPool* thread_pool)
-{
-	this->_thread_pool = thread_pool;
-}
-
-ThreadPool* GameData::get_thread_pool() const
-{
-	return this->_thread_pool;
-}
-
-void GameData::set_partitioner(const Partitioner* partitioner)
-{
-	this->_partitioner = partitioner;
-}
-
-const Partitioner* GameData::get_partitioner() const
-{
-	return this->_partitioner;
 }

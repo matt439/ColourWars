@@ -168,7 +168,7 @@ void MainMenuHome::update()
 			}
 			if (highlighted_element == "exit")
 			{
-				DestroyWindow(this->get_main_menu_data()->get_window());
+				this->get_main_menu_data()->get_application()->quit();
 			}
 		}
 		else if (inputs[i].direction == menu_direction::UP)
@@ -333,15 +333,9 @@ void MainMenuOptions::update()
 				this->get_save()->set_resolution_and_save(this->_resolution_selection);
 
 				auto res_f = this->get_float_resolution();
-				auto res_i = this->get_resolution_manager()->get_resolution_ivec();
 
-				SetWindowPos(this->get_data()->get_window(),
-										HWND_TOP,
-										0,
-										0,
-										res_i.x,
-										res_i.y,
-										SWP_NOMOVE | SWP_NOZORDER);
+				this->get_data()->get_application()->set_resolution(
+					this->_resolution_selection);
 
 				bool fs = this->_full_screen_selection;
 				this->get_save()->set_full_screen_and_save(fs);
@@ -430,28 +424,7 @@ void MainMenuOptions::update()
 
 void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
 {
-	HWND hWnd = this->get_data()->get_window();
-	if (fullscreen)
-	{
-		SetWindowLongPtr(hWnd, GWL_STYLE, WS_POPUP);
-		SetWindowLongPtr(hWnd, GWL_EXSTYLE, WS_EX_TOPMOST);
-
-		SetWindowPos(hWnd,
-			HWND_TOP, 0, 0, 0, 0,
-				SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED);
-		ShowWindow(hWnd, SW_SHOWMAXIMIZED);
-	}
-	else // windowed
-	{
-		SetWindowLongPtr(hWnd, GWL_STYLE, WS_OVERLAPPEDWINDOW);
-		SetWindowLongPtr(hWnd, GWL_EXSTYLE, 0);
-
-		Vector2I res_i = this->get_resolution_manager()->get_resolution_ivec();
-
-		ShowWindow(hWnd, SW_SHOWNORMAL);
-		SetWindowPos(hWnd, HWND_TOP, 0, 0, res_i.x, res_i.y,
-			SWP_NOMOVE | SWP_NOZORDER | SWP_FRAMECHANGED);
-	}
+	this->get_data()->get_application()->set_fullscreen(fullscreen);
 }
 
 void MainMenuOptions::init()
