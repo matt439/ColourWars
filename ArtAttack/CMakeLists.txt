@@ -73,14 +73,22 @@ target_precompile_headers(ArtAttack PRIVATE pch.h)
 # The game resolves content relative to its working directory
 # (directory_consts.h), so mirror the content folders beside the built exe
 # and it runs from anywhere.
+#
+# Its own target, not a POST_BUILD step on ArtAttack: a POST_BUILD only runs
+# when the exe relinks, so editing or adding an asset without touching a source
+# file never reached the build directory - the build said "no work to do" and
+# ran against stale content. This runs every build; copy_directory_if_different
+# skips what has not changed.
+add_custom_target(artattack_content ALL)
 foreach(content_dir textures levels fonts sounds)
-    add_custom_command(TARGET ArtAttack POST_BUILD
+    add_custom_command(TARGET artattack_content POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different
             "${CMAKE_CURRENT_SOURCE_DIR}/${content_dir}"
             "$<TARGET_FILE_DIR:ArtAttack>/${content_dir}"
         VERBATIM
     )
 endforeach()
+add_dependencies(ArtAttack artattack_content)
 
 add_custom_command(TARGET ArtAttack POST_BUILD
     COMMAND "${CMAKE_COMMAND}"
