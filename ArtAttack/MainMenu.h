@@ -1,7 +1,7 @@
 #ifndef MAINMENU_H
 #define MAINMENU_H
 
-#include "Mh.h"
+#include "engine/ui/widget.h"
 #include "player_team.h"
 #include "MainMenuData.h"
 #include "confirmation_state.h"
@@ -9,7 +9,7 @@
 #include "menu_element.h"
 #include "MenuPage.h"
 #include "engine/core/state_context.h"
-#include "SoundBankObject.h"
+#include "engine/audio/sound_bank_object.h"
 
 namespace main_menu_consts
 {

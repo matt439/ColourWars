@@ -12,7 +12,7 @@
 #include "engine/render/camera_tools.h"
 #include "InterfaceGameplay.h"
 #include "LevelEndInfo.h"
-#include "TextDropShadow.h"
+#include "engine/render/text_drop_shadow.h"
 #include "engine/audio/sound_bank.h"
 #include "IPaintableGameObject.h"
 #include "engine/assets/resource_manager.h"

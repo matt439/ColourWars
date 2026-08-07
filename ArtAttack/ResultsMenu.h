@@ -4,7 +4,7 @@
 #include "ResultsMenuData.h"
 #include "engine/math/colour.h"
 #include "MenuPage.h"
-#include "SoundBankObject.h"
+#include "engine/audio/sound_bank_object.h"
 
 namespace results_menu_consts
 {

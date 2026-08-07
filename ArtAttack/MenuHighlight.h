@@ -2,7 +2,7 @@
 #define MENUHIGHLIGHT_H
 
 #include "engine/math/colour.h"
-#include "Mh.h"
+#include "engine/ui/widget.h"
 #include "engine/math/matt_math.h"
 
 class MenuHighlight

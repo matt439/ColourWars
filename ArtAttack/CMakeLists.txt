@@ -5,10 +5,7 @@ find_package(directxtk CONFIG REQUIRED)
 
 # --- ArtAttack — the paint-shooter ---------------------------------------
 add_executable(ArtAttack WIN32
-    AnimationObject.cpp
     DebugText.cpp
-    DrawObject.cpp
-    Drawer.cpp
     EndMenu.cpp
     EndMenuData.cpp
     Game.cpp
@@ -29,7 +26,6 @@ add_executable(ArtAttack WIN32
     MenuInput.cpp
     MenuLevelSettings.cpp
     MenuPage.cpp
-    Mh.cpp
     PaintTile.cpp
     PauseMenu.cpp
     PauseMenuData.cpp
@@ -47,19 +43,12 @@ add_executable(ArtAttack WIN32
     ResultsMenu.cpp
     ResultsMenuData.cpp
     Save.cpp
-    SoundBankObject.cpp
-    SpriteSheetObject.cpp
     Structure.cpp
     StructurePaintable.cpp
     StructureRamp.cpp
     StructureRampLeft.cpp
     StructureRampRight.cpp
     TeamColour.cpp
-    Text.cpp
-    TextDropShadow.cpp
-    TextObject.cpp
-    TextureObject.cpp
-    Visual.cpp
     Weapon.cpp
     WeaponBucket.cpp
     WeaponBuilder.cpp

@@ -7,7 +7,7 @@
 #include "PlayerInputData.h"
 #include "Weapon.h"
 #include "engine/math/matt_math.h"
-#include "AnimationObject.h"
+#include "engine/render/animation_object.h"
 #include "ICollisionGameObject.h"
 #include "engine/core/moving_object.h"
 #include "engine/audio/sound_bank.h"

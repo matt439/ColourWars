@@ -5,7 +5,7 @@
 #include <memory>
 #include "rapidjson/document.h"
 #include "StructurePaintable.h"
-#include "Visual.h"
+#include "engine/render/visual.h"
 #include "engine/render/viewport_manager.h"
 //#include "StructureRampLeft.h"
 //#include "StructureRampRight.h"

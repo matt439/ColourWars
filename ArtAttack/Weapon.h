@@ -7,7 +7,7 @@
 #include "weapon_consts.h"
 #include "PlayerInputData.h"
 #include "engine/math/colour.h"
-#include "TextureObject.h"
+#include "engine/render/texture_object.h"
 #include "ProjectileBuilder.h"
 #include "engine/audio/sound_bank.h"
 

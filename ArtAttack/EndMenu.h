@@ -2,11 +2,11 @@
 #define ENDMENU_H
 
 #include "EndMenuData.h"
-#include "Mh.h"
+#include "engine/ui/widget.h"
 #include "MenuHighlight.h"
 #include "MenuPage.h"
 #include "engine/core/state_context.h"
-#include "SoundBankObject.h"
+#include "engine/audio/sound_bank_object.h"
 
 namespace end_menu_consts
 {

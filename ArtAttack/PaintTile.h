@@ -2,10 +2,10 @@
 #define PAINTTILE_H
 
 #include "player_team.h"
-#include "TextureObject.h"
+#include "engine/render/texture_object.h"
 #include "TeamColour.h"
 #include "ICollisionGameObject.h"
-#include "AnimationObject.h"
+#include "engine/render/animation_object.h"
 
 namespace paint_tile_consts
 {

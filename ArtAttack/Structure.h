@@ -2,7 +2,7 @@
 #define STRUCTURE_H
 
 #include "ICollisionGameObject.h"
-#include "TextureObject.h"
+#include "engine/render/texture_object.h"
 
 class Structure : public TextureObject, public ICollisionGameObject
 {

@@ -1,7 +1,7 @@
 #ifndef DEBUGTEXT_H
 #define DEBUGTEXT_H
 
-#include "Drawer.h"
+#include "engine/render/drawer.h"
 #include "engine/render/resolution_manager.h"
 #include "engine/math/matt_math.h"
 #include "Player.h"
