@@ -309,9 +309,12 @@ public:
 	void draw() override;
 	void init() override;
 private:
+	// The cursor runs over every stage the manifest named and then one slot
+	// past the end, which is Random - a menu affordance rather than a stage,
+	// which is why it is a position here and not an entry in the list.
 	struct SelectState
 	{
-		LevelStage stage = LevelStage::king_of_the_hill;
+		int slot = 0;
 		ConfirmationState state = ConfirmationState::unconfirmed;
 	};
 	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
@@ -324,7 +327,14 @@ private:
 	SelectState select_state_ = SelectState();
 	void update_stage_select_visuals();
 	void unconfirm_all_widgets();
-	static LevelStage random_stage();
+	// Where a stage name sits in the list. An empty or unrecognised name is
+	// the first stage, which is what makes "no choice yet" mean "the first
+	// one" without a default spelt anywhere.
+	int slot_of(const std::string& stage_name) const;
+	// The slot the Random option sits in - one past the last stage.
+	int random_slot() const;
+	// A real stage's slot, chosen uniformly.
+	int pick_random_stage() const;
 	void cycle_stages(MenuDirection direction);
 	void set_level_settings() const;
 };

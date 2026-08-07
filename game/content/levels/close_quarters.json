@@ -1,5 +1,6 @@
 {
-    "level_name": "close_quarters",
+    "display_name": "Close Quarters",
+    "icon_frame": "stage_close_quarters",
     "sound":
     {
         "sound_bank_name": "sound_bank_1",

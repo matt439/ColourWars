@@ -12,7 +12,12 @@ class LevelLoadedInfo
 public:
 	explicit LevelLoadedInfo(const char* json_path);
 
-	std::string level_name() const;
+	// How the stage-select menu names and pictures this level. They live in
+	// the level file rather than in a table beside the menu, so that adding a
+	// stage is a .json plus a manifest line and nothing else (T7).
+	std::string display_name() const;
+	std::string icon_frame() const;
+
 	std::vector<mattmath::Vector2F> team_a_spawns() const;
 	std::vector<mattmath::Vector2F> team_b_spawns() const;
 
@@ -31,6 +36,15 @@ public:
 
 private:
 	rapidjson::Document json_doc_;
+	std::string path_;
+
+	// Reads a string the level file must carry, and throws naming the file and
+	// the key if it does not. The rest of this class still reaches into the
+	// document unchecked - that is the loaders' standing validation debt, and
+	// it is not paid here. These two are checked because they are the keys a
+	// person adding a stage has to write by hand, so getting one wrong is the
+	// likely mistake rather than a corrupt file (T6).
+	std::string required_string(const char* key) const;
 
 	static std::vector<mattmath::Vector2F>
 		decode_team_spawns_json(const rapidjson::Value& json);

@@ -40,12 +40,12 @@ LevelMode MenuLevelSettings::game_mode() const
 	return this->game_mode_;
 }
 
-void MenuLevelSettings::set_stage(LevelStage stage)
+void MenuLevelSettings::set_stage(const std::string& stage)
 {
 	this->stage_ = stage;
 }
 
-LevelStage MenuLevelSettings::stage() const
+const std::string& MenuLevelSettings::stage() const
 {
 	return this->stage_;
 }

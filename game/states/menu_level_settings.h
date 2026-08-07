@@ -1,8 +1,8 @@
 #pragma once
 
+#include <string>
 #include <vector>
 #include "game/objects/level_mode.h"
-#include "game/objects/level_stage.h"
 #include "game/objects/weapon_type.h"
 #include "game/states/menu_player_settings.h"
 #include "engine/render/screen_layout.h"
@@ -16,8 +16,11 @@ public:
 	int player_count() const;
 	void set_game_mode(LevelMode game_mode);
 	LevelMode game_mode() const;
-	void set_stage(LevelStage stage);
-	LevelStage stage() const;
+	// The chosen stage, by name - which is the manifest's name for its level,
+	// and so the key its definition sits under. Empty until the stage-select
+	// screen sets one.
+	void set_stage(const std::string& stage);
+	const std::string& stage() const;
 	artattack::ScreenLayout screen_layout() const;
 	void set_screen_layout(artattack::ScreenLayout screen_layout);
 
@@ -32,6 +35,6 @@ private:
 	LevelMode game_mode_ = LevelMode::standard_mode;
 	std::vector<MenuPlayerSettings> player_settings_;
 	int player_count_ = 0;
-	LevelStage stage_ = LevelStage::king_of_the_hill;
+	std::string stage_;
 	artattack::ScreenLayout screen_layout_ = artattack::ScreenLayout::one_player;
 };

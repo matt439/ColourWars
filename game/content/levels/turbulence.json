@@ -1,5 +1,6 @@
 {
-    "level_name": "turbulence",
+    "display_name": "Turbulence",
+    "icon_frame": "stage_turbulence",
     "sound":
     {
         "sound_bank_name": "sound_bank_1",

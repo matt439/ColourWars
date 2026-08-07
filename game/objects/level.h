@@ -2,7 +2,6 @@
 
 #include "game/objects/i_collision_game_object.h"
 #include "game/objects/team_colour.h"
-#include "game/objects/level_stage.h"
 #include "game/objects/player_input.h"
 #include "game/objects/player.h"
 #include "engine/render/resolution_manager.h"
@@ -59,7 +58,6 @@ public:
 		std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> collision_objects,
 		std::unique_ptr<std::vector<std::unique_ptr<Player>>> player_objects,
 		std::unique_ptr<std::vector<std::unique_ptr<artattack::IGameObject>>> viewport_dividers,
-		LevelStage stage,
 		const TeamColour& team_colours,
 		const mattmath::RectangleF& out_of_bounds,
 		const mattmath::RectangleF& camera_bounds,
@@ -72,7 +70,6 @@ public:
 		float music_volume,
 		const float* dt,
 		ID3D11SamplerState* sampler_state,
-		const std::string& level_name,
 		const artattack::ResolutionManager* resolution_manager,
 		artattack::ViewportManager* viewport_manager,
 		artattack::RenderResources* render_resources,
@@ -120,7 +117,6 @@ private:
 	std::unique_ptr<artattack::CameraTools> camera_tools_ = nullptr;
 	std::unique_ptr<InterfaceGameplay> interface_gameplay_ = nullptr;
 
-	std::string level_name_ = "";
 	const artattack::ResolutionManager* resolution_manager_ = nullptr;
 	artattack::ViewportManager* viewport_manager_ = nullptr;
 	artattack::RenderResources* render_resources_ = nullptr;
@@ -133,7 +129,6 @@ private:
 	mattmath::Camera zoom_out_camera_ = mattmath::Camera::DEFAULT_CAMERA;
 
 	TeamColour team_colours_ = TeamColour();
-	LevelStage stage_ = LevelStage::king_of_the_hill;
 
 	mattmath::RectangleF out_of_bounds_ = mattmath::RectangleF::ZERO;
 	mattmath::RectangleF camera_bounds_ = mattmath::RectangleF::ZERO;

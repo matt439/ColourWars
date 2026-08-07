@@ -8,14 +8,31 @@ using namespace rapidjson;
 using namespace artattack;
 
 LevelLoadedInfo::LevelLoadedInfo(const char* json_path) :
-	json_doc_(load_from_json(json_path))
+	json_doc_(load_from_json(json_path)),
+	path_(json_path)
 {
 
 }
 
-std::string LevelLoadedInfo::level_name() const
+std::string LevelLoadedInfo::required_string(const char* key) const
 {
-	return this->json_doc_["level_name"].GetString();
+	const auto member = this->json_doc_.FindMember(key);
+	if (member == this->json_doc_.MemberEnd() || !member->value.IsString())
+	{
+		throw std::runtime_error("level '" + this->path_ + "' has no string \"" +
+			key + "\" - every level names and pictures itself for the "
+			"stage-select menu.");
+	}
+	return member->value.GetString();
+}
+
+std::string LevelLoadedInfo::display_name() const
+{
+	return this->required_string("display_name");
+}
+std::string LevelLoadedInfo::icon_frame() const
+{
+	return this->required_string("icon_frame");
 }
 std::vector<Vector2F> LevelLoadedInfo::team_a_spawns() const
 { 

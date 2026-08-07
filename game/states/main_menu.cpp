@@ -1791,9 +1791,9 @@ void MainMenuStageSelect::update()
 			{
 				this->play_wave(this->confirm_sound_);
 				this->stop_effect(this->music_, true);
-				if (this->select_state_.stage == LevelStage::random)
+				if (this->select_state_.slot == this->random_slot())
 				{
-					this->select_state_.stage = this->random_stage();
+					this->select_state_.slot = this->pick_random_stage();
 				}
 				this->set_level_settings();
 				*this->main_menu_data()->
@@ -1825,34 +1825,32 @@ void MainMenuStageSelect::update()
 void MainMenuStageSelect::set_level_settings() const
 {
 	this->main_menu_data()->level_settings()->set_stage(
-		this->select_state_.stage);
+		this->main_menu_data()->stages()->at(
+			static_cast<size_t>(this->select_state_.slot)).name);
 }
 void MainMenuStageSelect::update_stage_select_visuals()
 {
 	this->unconfirm_all_widgets();
 
-	switch (this->select_state_.stage)
+	// Every stage names and pictures itself, from its own level file, so this
+	// reads the list rather than a switch that has to grow a case per stage.
+	const StageList* stages = this->main_menu_data()->stages();
+	const int slot = this->select_state_.slot;
+	if (slot == this->random_slot())
 	{
-	case LevelStage::king_of_the_hill:
-		this->stage_icon_->set_sprite_frame("stage_king_of_the_hill");
-		this->stage_name_->set_text("King of the Hill");
-		break;
-	case LevelStage::turbulence:
-		this->stage_icon_->set_sprite_frame("stage_turbulence");
-		this->stage_name_->set_text("Turbulence");
-		break;
-	case LevelStage::close_quarters:
-		this->stage_icon_->set_sprite_frame("stage_close_quarters");
-		this->stage_name_->set_text("Close Quarters");
-		break;
-	case LevelStage::random:
 		this->stage_icon_->set_sprite_frame("random");
 		this->stage_name_->set_text("Random");
-		break;
-	default:
+	}
+	else if (slot >= 0 && slot < static_cast<int>(stages->size()))
+	{
+		const Stage& stage = stages->at(static_cast<size_t>(slot));
+		this->stage_icon_->set_sprite_frame(stage.icon_frame);
+		this->stage_name_->set_text(stage.display_name);
+	}
+	else
+	{
 		this->stage_icon_->set_sprite_frame("error");
 		this->stage_name_->set_text("ERROR");
-		break;
 	}
 	if (this->select_state_.state == ConfirmationState::confirmed)
 	{
@@ -1867,16 +1865,30 @@ void MainMenuStageSelect::unconfirm_all_widgets()
 		main_menu_consts::STAGE_SELECT_UNSELECTED_COLOUR);
 	this->ready_->set_hidden(true);
 }
-LevelStage MainMenuStageSelect::random_stage()
+int MainMenuStageSelect::slot_of(const std::string& stage_name) const
 {
-	int random = static_cast<int>(rand() %
-		static_cast<int>(LevelStage::max_stage));
-	return static_cast<LevelStage>(random);
+	const StageList* stages = this->main_menu_data()->stages();
+	for (size_t i = 0; i < stages->size(); i++)
+	{
+		if (stages->at(i).name == stage_name)
+		{
+			return static_cast<int>(i);
+		}
+	}
+	return 0;
+}
+int MainMenuStageSelect::random_slot() const
+{
+	return static_cast<int>(this->main_menu_data()->stages()->size());
+}
+int MainMenuStageSelect::pick_random_stage() const
+{
+	return rand() % this->random_slot();
 }
 void MainMenuStageSelect::init()
 {
-	this->select_state_.stage = this->main_menu_data()->
-		level_settings()->stage();
+	this->select_state_.slot = this->slot_of(this->main_menu_data()->
+		level_settings()->stage());
 
 	this->set_widget_spacing(STAGE_SELECT_WIDGET_SPACING);
 
@@ -1948,31 +1960,18 @@ void MainMenuStageSelect::init()
 }
 void MainMenuStageSelect::cycle_stages(MenuDirection direction)
 {
-	int enum_max = static_cast<int>(LevelStage::max_stage);
-	int enum_pos = static_cast<int>(this->select_state_.stage);
+	// Slots run 0..n-1 for the stages and n for Random, and the cursor wraps.
+	const int last = this->random_slot();
+	int slot = this->select_state_.slot;
 	if (direction == MenuDirection::left)
 	{
-		if (enum_pos == 0)
-		{
-			enum_pos = enum_max;
-		}
-		else
-		{
-			enum_pos--;
-		}
+		slot = (slot == 0) ? last : slot - 1;
 	}
 	else if (direction == MenuDirection::right)
 	{
-		if (enum_pos == enum_max)
-		{
-			enum_pos = 0;
-		}
-		else
-		{
-			enum_pos++;
-		}
+		slot = (slot == last) ? 0 : slot + 1;
 	}
-	this->select_state_.stage = static_cast<LevelStage>(enum_pos);
+	this->select_state_.slot = slot;
 }
 
 #pragma endregion MainMenuStageSelect

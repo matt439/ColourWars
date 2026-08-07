@@ -5,7 +5,8 @@ using namespace artattack;
 GameData::GameData(const GameData* game_data) :
 	application_(game_data->application()),
 	save_(game_data->save()),
-	level_infos_(game_data->level_infos())
+	level_infos_(game_data->level_infos()),
+	stages_(game_data->stages())
 {
 
 }
@@ -25,6 +26,11 @@ void GameData::set_level_infos(Registry<LevelLoadedInfo>* level_infos)
 	this->level_infos_ = level_infos;
 }
 
+void GameData::set_stages(const StageList* stages)
+{
+	this->stages_ = stages;
+}
+
 Application* GameData::application() const
 {
 	return this->application_;
@@ -33,6 +39,11 @@ Application* GameData::application() const
 Save* GameData::save() const
 {
 	return this->save_;
+}
+
+const StageList* GameData::stages() const
+{
+	return this->stages_;
 }
 
 Registry<LevelLoadedInfo>* GameData::level_infos() const

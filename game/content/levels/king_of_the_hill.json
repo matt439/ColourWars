@@ -1,5 +1,6 @@
 {
-    "level_name": "king_of_the_hill",
+    "display_name": "King of the Hill",
+    "icon_frame": "stage_king_of_the_hill",
     "sound":
     {
         "sound_bank_name": "sound_bank_1",

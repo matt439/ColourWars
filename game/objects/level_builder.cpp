@@ -36,7 +36,7 @@ std::unique_ptr<Level>
 	LevelBuilder::build_level(const MenuLevelSettings& settings)
 {
 	const LevelLoadedInfo* load_info =
-		this->level_infos_->get(level_asset_name(settings.stage()));
+		this->level_infos_->get(settings.stage());
 
 	const TeamColour team_colours = team_colour_->generate_random_team_colour();
 
@@ -66,7 +66,6 @@ std::unique_ptr<Level>
 		std::move(collision_objects),
 		std::move(players),
 		std::move(viewport_dividers),
-		settings.stage(),
 		team_colours,
 		load_info->out_of_bounds_rectangle(),
 		load_info->camera_bounds_rectangle(),
@@ -79,7 +78,6 @@ std::unique_ptr<Level>
 		load_info->music_volume(),
 		this->dt_,
 		this->sampler_state_,
-		load_info->level_name(),
 		this->resolution_manager_,
 		this->viewport_manager_,
 		this->render_resources_,

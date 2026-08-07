@@ -42,6 +42,11 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		// one. Declared before the Application so that it outlives every state
 		// that borrows from it.
 		Registry<LevelLoadedInfo> level_infos("Level");
+
+		// And the pickable stages, which are those same levels in the order
+		// the manifest names them. There is no second list to keep in step:
+		// this one is built by the loader that fills the registry above.
+		StageList stages;
 		GameData data;
 
 		Application app(std::move(options));
@@ -54,20 +59,34 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		// LevelLoadedInfo* the game holds still pointing at them.
 		app.resource_loader()->register_kind("level",
 			{
-				[&level_infos](const std::string& directory,
+				[&level_infos, &stages](const std::string& directory,
 					const std::string& name)
 				{
-					level_infos.add(name, std::make_unique<LevelLoadedInfo>(
-						(directory + name + ".json").c_str()));
+					auto info = std::make_unique<LevelLoadedInfo>(
+						(directory + name + ".json").c_str());
+					stages.push_back(Stage{ name, info->display_name(),
+						info->icon_frame() });
+					level_infos.add(name, std::move(info));
 				},
 				nullptr
 			});
 
 		app.load_manifest(MANIFEST_PATH);
 
+		// A game with no levels has nothing to offer the stage-select menu,
+		// and the menu would rather not discover that by dividing by zero
+		// three screens later (T6).
+		if (stages.empty())
+		{
+			throw std::runtime_error(
+				"no levels: the manifest names no assets of kind 'level', so "
+				"there is no stage to play.");
+		}
+
 		data.set_application(&app);
 		data.set_save(&save);
 		data.set_level_infos(&level_infos);
+		data.set_stages(&stages);
 
 		return app.run(std::make_unique<GameMenu>(&data));
 	}
