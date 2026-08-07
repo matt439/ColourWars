@@ -6,10 +6,10 @@ using namespace mattmath;
 using namespace weapon_consts;
 
 
-WeaponSniper::WeaponSniper(player_team team,
+WeaponSniper::WeaponSniper(PlayerTeam team,
     int player_num,
     const Colour& team_colour,
-    wep_type type,
+    WeaponType type,
     const Vector2F& player_center,
     RenderResources* render_resources,
     const AudioResources* audio_resources,

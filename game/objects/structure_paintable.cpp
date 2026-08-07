@@ -13,7 +13,7 @@ StructurePaintable::StructurePaintable(
 	const Shape* collision_shape,
 	RenderResources* render_resources,
 	const AudioResources* audio_resources,
-	collision_object_type collision_type,
+	CollisionObjectType collision_type,
 	const TeamColour& team_colours,
 	const PaintableFaces& faces,
 	const float* dt,
@@ -64,18 +64,18 @@ void StructurePaintable::draw(SpriteBatch* sprite_batch)
 void StructurePaintable::on_collision(const ICollisionGameObject* other)
 {
 	// check if offensive projectile
-	collision_object_type other_type = other->get_collision_object_type();
+	CollisionObjectType other_type = other->get_collision_object_type();
 	bool is_offensive_projectile =
-		other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_JET_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_JET_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_BALL_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_MIST_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_MIST_TEAM_B;
+		other_type == CollisionObjectType::projectile_spray_team_a ||
+		other_type == CollisionObjectType::projectile_spray_team_b ||
+		other_type == CollisionObjectType::projectile_jet_team_a ||
+		other_type == CollisionObjectType::projectile_jet_team_b ||
+		other_type == CollisionObjectType::projectile_rolling_team_a ||
+		other_type == CollisionObjectType::projectile_rolling_team_b ||
+		other_type == CollisionObjectType::projectile_ball_team_a ||
+		other_type == CollisionObjectType::projectile_ball_team_b ||
+		other_type == CollisionObjectType::projectile_mist_team_a ||
+		other_type == CollisionObjectType::projectile_mist_team_b;
 
 	// if not offensive projectile, return
 	if (!is_offensive_projectile)
@@ -199,13 +199,13 @@ PaintTotal StructurePaintable::get_paint_total() const
 	auto total = PaintTotal();
 	for (auto& paint_tile : this->paint_tiles_)
 	{
-		player_team team = paint_tile.get_team();
+		PlayerTeam team = paint_tile.get_team();
 		switch (team)
 		{
-		case player_team::A:
+		case PlayerTeam::a:
 			total.team_a += paint_tile.get_area();
 			break;
-		case player_team::B:
+		case PlayerTeam::b:
 			total.team_b += paint_tile.get_area();
 			break;
 		default:

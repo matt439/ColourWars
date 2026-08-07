@@ -10,13 +10,13 @@ TeamColour::TeamColour(const Colour& team_a, const Colour& team_b)
 
 }
 
-const Colour& TeamColour::get_team_colour(player_team team) const
+const Colour& TeamColour::get_team_colour(PlayerTeam team) const
 {
 	switch (team)
 	{
-	case player_team::A:
+	case PlayerTeam::a:
 		return this->team_a;
-	case player_team::B:
+	case PlayerTeam::b:
 		return this->team_b;
 	default:
 		throw std::exception("Invalid team.");
@@ -25,7 +25,7 @@ const Colour& TeamColour::get_team_colour(player_team team) const
 
 TeamColour TeamColourTools::generate_random_team_colour()
 {
-	int enum_max = static_cast<int>(team_colour_enum::MAX);
+	int enum_max = static_cast<int>(TeamColourPair::max);
 	int random = rand() % enum_max;
 	switch (random)
 	{
@@ -40,15 +40,15 @@ TeamColour TeamColourTools::generate_random_team_colour()
 	}
 }
 
-TeamColour TeamColourTools::get_team_colours(team_colour_enum team_colour)
+TeamColour TeamColourTools::get_team_colours(TeamColourPair team_colour)
 {
 	switch (team_colour)
 	{
-	case team_colour_enum::BLUE_ORANGE:
+	case TeamColourPair::blue_orange:
 		return BLUE_ORANGE;
-	case team_colour_enum::PINK_GREEN:
+	case TeamColourPair::pink_green:
 		return PINK_GREEN;
-	case team_colour_enum::BLUE_YELLOW:
+	case TeamColourPair::blue_yellow:
 		return BLUE_YELLOW;
 	default:
 		return BLUE_ORANGE;
@@ -56,13 +56,13 @@ TeamColour TeamColourTools::get_team_colours(team_colour_enum team_colour)
 }
 
 Colour TeamColourTools::get_team_colour(TeamColour team_colours,
-	player_team team)
+	PlayerTeam team)
 {
 	switch (team)
 	{
-	case player_team::A:
+	case PlayerTeam::a:
 		return team_colours.team_a;
-	case player_team::B:
+	case PlayerTeam::b:
 		return team_colours.team_b;
 	default:
 		return team_colours.team_a;

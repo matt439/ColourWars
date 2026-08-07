@@ -21,7 +21,7 @@ class Projectile : public MovingObject,
 public:
 	Projectile() = default;
 	Projectile(const mattmath::Vector2F& velocity,
-		player_team team,
+		PlayerTeam team,
 		int player_num,
 		const mattmath::Colour& team_colour,
 		projectile_type type,
@@ -41,7 +41,7 @@ public:
 
 	bool is_colliding(const ICollisionGameObject* other) const override = 0;
 	void on_collision(const ICollisionGameObject* other) override;
-	collision_object_type get_collision_object_type() const override;
+	CollisionObjectType get_collision_object_type() const override;
 	const mattmath::Shape* get_shape() const override = 0;
 	bool get_for_deletion() const override;
 	void set_for_deletion(bool for_deletion) override;
@@ -52,7 +52,7 @@ public:
 protected:
 	const ProjectileDetails& get_details() const;
 
-	player_team get_team() const;
+	PlayerTeam get_team() const;
 
 	virtual bool is_matching_collision_object_type(const ICollisionGameObject* other) const;
 
@@ -72,7 +72,7 @@ private:
 	mattmath::Colour team_colour_ = colour_consts::GRAY;
 	projectile_type type_ = SPRAY;
 
-	player_team team_ = player_team::NONE;
+	PlayerTeam team_ = PlayerTeam::none;
 	bool for_deletion_ = false;
 
 	const float* dt_ = nullptr;
@@ -82,7 +82,7 @@ class DiffusingProjectile : public Projectile
 {
 public:
 	DiffusingProjectile(const mattmath::Vector2F& velocity,
-		player_team team,
+		PlayerTeam team,
 		int player_num,
 		const mattmath::Colour& team_colour,
 		projectile_type type,

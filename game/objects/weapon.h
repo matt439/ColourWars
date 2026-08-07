@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/objects/player_team.h"
-#include "game/objects/wep_type.h"
+#include "game/objects/weapon_type.h"
 #include "game/objects/weapon_details.h"
 #include "game/objects/weapon_consts.h"
 #include "game/objects/player_input_data.h"
@@ -15,10 +15,10 @@ class Weapon : public TextureObject
 {
 public:
 	Weapon(const WeaponDetails& details,
-		player_team team,
+		PlayerTeam team,
 		int player_num,
 		const mattmath::Colour& team_colour,
-		wep_type type,
+		WeaponType type,
 		const mattmath::Vector2F& player_center,
 		RenderResources* render_resources,
 		const AudioResources* audio_resources,
@@ -73,10 +73,10 @@ protected:
 	const mattmath::Vector2F& get_player_center() const;
 
 
-	player_team get_team() const;
+	PlayerTeam get_team() const;
 	int get_player_num() const;
 	const mattmath::Colour& get_team_colour() const;
-	wep_type get_type() const;
+	WeaponType get_type() const;
 	mattmath::RectangleF get_nozzle_rectangle() const;
 
 
@@ -120,7 +120,7 @@ protected:
 		float starting_velocity) const;
 
 	static mattmath::Vector2F calculate_sprite_origin(
-		const mattmath::Vector2F& size, rotation_origin origin);
+		const mattmath::Vector2F& size, RotationOrigin origin);
 
 	virtual bool check_if_shooting_and_ammo_update(PlayerInputData input,
 		const mattmath::Vector2F& player_center,
@@ -138,7 +138,7 @@ protected:
 
 private:
 	static SoundBank::EffectHandle resolve_loop_sound(
-		const SoundBank& sound_bank, wep_type type, player_team team,
+		const SoundBank& sound_bank, WeaponType type, PlayerTeam team,
 		int player_num);
 
 	std::unique_ptr<ProjectileBuilder> proj_builder_ = nullptr;
@@ -159,10 +159,10 @@ private:
 
 	float ammo_timer_ = 0.0f;
 
-	player_team team_ = player_team::NONE;
+	PlayerTeam team_ = PlayerTeam::none;
 	int player_num_ = -1;
 	mattmath::Colour team_colour_ = colour_consts::GRAY;
-	wep_type type_ = wep_type::NONE;
+	WeaponType type_ = WeaponType::none;
 	mattmath::Vector2F player_center_ = { 0.0f, 0.0f };
 
 	mattmath::Vector2F get_wep_rotation_origin_offset(
@@ -174,10 +174,10 @@ class RelativeVelocityWeapon : public Weapon
 public:
 	RelativeVelocityWeapon(const WeaponDetails& details,
 		RelativeWeaponDetails rel_details,
-		player_team team,
+		PlayerTeam team,
 		int player_num,
 		const mattmath::Colour& team_colour,
-		wep_type type,
+		WeaponType type,
 		const mattmath::Vector2F& player_center,
 		RenderResources* render_resources,
 		const AudioResources* audio_resources,
@@ -199,7 +199,7 @@ protected:
 		const mattmath::Vector2F& shoot_direction,
 		float starting_velocity,
 		const mattmath::Vector2F& player_velocity,
-		add_player_velocity add_player_vel,
+		AddPlayerVelocity add_player_vel,
 		float player_vel_amount) const;
 
 	virtual std::vector<std::unique_ptr<ICollisionGameObject>> shoot(

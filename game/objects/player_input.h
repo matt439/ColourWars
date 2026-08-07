@@ -34,7 +34,7 @@ public:
 	explicit PlayerInput(DirectX::GamePad* gamepad);
 
 	// Returns exactly player_input_consts::MAX_PAD_COUNT entries, indexed by
-	// XInput pad slot. Absent pads carry connection_state::DISCONNECTED and
+	// XInput pad slot. Absent pads carry ConnectionState::disconnected and
 	// neutral input rather than being omitted.
 	std::vector<PlayerInputData> update_and_get_player_inputs();
 private:

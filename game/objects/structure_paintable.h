@@ -39,7 +39,7 @@ public:
 		const mattmath::Shape* collision_shape,
 		RenderResources* render_resources,
 		const AudioResources* audio_resources,
-		collision_object_type collision_type,
+		CollisionObjectType collision_type,
 		const TeamColour& team_colours,
 		const PaintableFaces& faces,
 		const float* dt,

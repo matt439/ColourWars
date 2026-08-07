@@ -27,35 +27,35 @@ void GameMenu::init()
 
     switch (this->screen_)
     {
-    case main_menu_screen::TITLE:
+    case MainMenuScreen::title:
         this->menu_->transition_to(std::make_unique<MainMenuTitle>(
             this->menu_data_.get()));
         break;
-    case main_menu_screen::HOME:
+    case MainMenuScreen::home:
         this->menu_->transition_to(std::make_unique<MainMenuHome>(
             this->menu_data_.get()));
         break;
-    case main_menu_screen::OPTIONS:
+    case MainMenuScreen::options:
         this->menu_->transition_to(std::make_unique<MainMenuOptions>(
             this->menu_data_.get()));
         break;
-    case main_menu_screen::MODE_SELECT:
+    case MainMenuScreen::mode_select:
         this->menu_->transition_to(std::make_unique<MainMenuModeSelect>(
             this->menu_data_.get()));
         break;
-    case main_menu_screen::PLAYER_COUNT:
+    case MainMenuScreen::player_count:
         this->menu_->transition_to(std::make_unique<MainMenuPlayerCount>(
             this->menu_data_.get()));
         break;
-    case main_menu_screen::TEAM_SELECT:
+    case MainMenuScreen::team_select:
         this->menu_->transition_to(std::make_unique<MainMenuTeamSelect>(
             this->menu_data_.get(), this->menu_level_settings_.get()));
         break;
-    case main_menu_screen::WEAPON_SELECT:
+    case MainMenuScreen::weapon_select:
         this->menu_->transition_to(std::make_unique<MainMenuWeaponSelect>(
             this->menu_data_.get(), this->menu_level_settings_.get()));
         break;
-    case main_menu_screen::STAGE_SELECT:
+    case MainMenuScreen::stage_select:
         this->menu_->transition_to(std::make_unique<MainMenuStageSelect>(
             this->menu_data_.get(), this->menu_level_settings_.get()));
         break;
@@ -140,13 +140,13 @@ void GameLevel::update()
 
     switch (this->state_)
     {
-    case game_level_state::FIRST_UPDATE:
-        this->state_ = game_level_state::SECOND_UPDATE;
+    case GameLevelState::first_update:
+        this->state_ = GameLevelState::second_update;
         return;
-    case game_level_state::SECOND_UPDATE:
-        this->state_ = game_level_state::ACTIVE;
+    case GameLevelState::second_update:
+        this->state_ = GameLevelState::active;
         //no break here so it goes to active
-    case game_level_state::ACTIVE:
+    case GameLevelState::active:
     {
         std::vector<PlayerInputData> player_inputs =
             this->player_input_->update_and_get_player_inputs();
@@ -155,10 +155,10 @@ void GameLevel::update()
         int pause_menu_player = this->check_for_pause_input(player_inputs);
         if (pause_menu_player != -1)
         {
-            this->state_ = game_level_state::PAUSE_MENU;
+            this->state_ = GameLevelState::pause_menu;
 
-            this->pause_menu_action_ = std::make_unique<pause_menu_action>(
-                pause_menu_action::NONE);
+            this->pause_menu_action_ = std::make_unique<PauseMenuAction>(
+                PauseMenuAction::none);
 
             this->pause_menu_data_ = std::make_unique<PauseMenuData>(
                 this->get_data(),
@@ -171,13 +171,13 @@ void GameLevel::update()
                 std::make_unique<PauseMenuInitial>(
                     this->pause_menu_data_.get()));
         }
-        else if (this->level_->get_state() == level_state::FINISHED)
+        else if (this->level_->get_state() == LevelState::finished)
         {
             LevelEndInfo end_info = this->level_->get_level_end_info();
-            this->state_ = game_level_state::RESULTS;
+            this->state_ = GameLevelState::results;
 
-            this->results_menu_action_ = std::make_unique<results_menu_action>(
-                results_menu_action::NONE);
+            this->results_menu_action_ = std::make_unique<ResultsMenuAction>(
+                ResultsMenuAction::none);
 
             this->results_menu_data_ = std::make_unique<ResultsMenuData>(
                 this->get_data(),
@@ -196,43 +196,43 @@ void GameLevel::update()
         }
         break;
     }
-    case game_level_state::PAUSE_MENU:
+    case GameLevelState::pause_menu:
     {
         this->pause_menu_->update();
 
-        pause_menu_action action = *this->pause_menu_action_;
+        PauseMenuAction action = *this->pause_menu_action_;
 
         switch (action)
         {
-        case pause_menu_action::RESUME:
-            this->state_ = game_level_state::ACTIVE;
+        case PauseMenuAction::resume:
+            this->state_ = GameLevelState::active;
             break;
-        case pause_menu_action::RESTART:
+        case PauseMenuAction::restart:
             this->level_->stop_music();
             this->build_and_enter_level();
-            this->state_ = game_level_state::FIRST_UPDATE;
+            this->state_ = GameLevelState::first_update;
             break;
-        case pause_menu_action::QUIT:
+        case PauseMenuAction::quit:
             this->level_->stop_music();
             MainMenuMidwayLoadSettings settings;
             settings.settings = MenuLevelSettings();
-            settings.screen = main_menu_screen::HOME;
+            settings.screen = MainMenuScreen::home;
             this->get_context()->transition_to(
                 std::make_unique<GameMenu>(this->get_data(), settings));
             break;
         }
         break;
     }
-    case game_level_state::RESULTS:
+    case GameLevelState::results:
     {
         this->results_menu_->update();
-        results_menu_action action = *this->results_menu_action_;
-        if (action == results_menu_action::CONTINUE_TO_END_MENU)
+        ResultsMenuAction action = *this->results_menu_action_;
+        if (action == ResultsMenuAction::continue_to_end_menu)
         {
-            this->state_ = game_level_state::END_MENU;
+            this->state_ = GameLevelState::end_menu;
 
-            this->end_menu_action_ = std::make_unique<end_menu_action>(
-                end_menu_action::NONE);
+            this->end_menu_action_ = std::make_unique<EndMenuAction>(
+                EndMenuAction::none);
 
             this->end_menu_data_ = std::make_unique<EndMenuData>(
                 this->get_data(),
@@ -246,55 +246,55 @@ void GameLevel::update()
         }
         break;
     }
-    case game_level_state::END_MENU:
+    case GameLevelState::end_menu:
     {
         this->end_menu_->update();
-        end_menu_action action = *this->end_menu_action_;
+        EndMenuAction action = *this->end_menu_action_;
         switch (action)
         {
-        case end_menu_action::CHANGE_TEAMS:
+        case EndMenuAction::change_teams:
         {
             this->level_->stop_music();
             MainMenuMidwayLoadSettings settings;
             settings.settings = this->settings_;
-            settings.screen = main_menu_screen::TEAM_SELECT;
+            settings.screen = MainMenuScreen::team_select;
             this->get_context()->transition_to(
                 std::make_unique<GameMenu>(this->get_data(), settings));
             break;
         }
-        case end_menu_action::CHANGE_WEAPONS:
+        case EndMenuAction::change_weapons:
         {
             this->level_->stop_music();
             MainMenuMidwayLoadSettings settings;
             settings.settings = this->settings_;
-            settings.screen = main_menu_screen::WEAPON_SELECT;
+            settings.screen = MainMenuScreen::weapon_select;
             this->get_context()->transition_to(
                 std::make_unique<GameMenu>(this->get_data(), settings));
             break;
         }
-        case end_menu_action::CHANGE_LEVEL:
+        case EndMenuAction::change_level:
         {
             this->level_->stop_music();
             MainMenuMidwayLoadSettings settings;
             settings.settings = this->settings_;
-            settings.screen = main_menu_screen::STAGE_SELECT;
+            settings.screen = MainMenuScreen::stage_select;
             this->get_context()->transition_to(
                 std::make_unique<GameMenu>(this->get_data(), settings));
             break;
         }
-        case end_menu_action::RESTART:
+        case EndMenuAction::restart:
         {
             this->level_->stop_music();
             this->build_and_enter_level();
-            this->state_ = game_level_state::FIRST_UPDATE;
+            this->state_ = GameLevelState::first_update;
             break;
         }
-        case end_menu_action::EXIT:
+        case EndMenuAction::exit:
         {
             this->level_->stop_music();
             MainMenuMidwayLoadSettings settings;
 			settings.settings = MenuLevelSettings();
-			settings.screen = main_menu_screen::HOME;
+			settings.screen = MainMenuScreen::home;
 			this->get_context()->transition_to(
 				std::make_unique<GameMenu>(this->get_data(), settings));
 			break;
@@ -310,8 +310,8 @@ void GameLevel::update()
 
 void GameLevel::draw()
 {
-	if (this->state_ == game_level_state::FIRST_UPDATE ||
-		this->state_ == game_level_state::SECOND_UPDATE)
+	if (this->state_ == GameLevelState::first_update ||
+		this->state_ == GameLevelState::second_update)
 	{
 		return;
 	}
@@ -339,15 +339,15 @@ void GameLevel::draw()
 
     switch (this->state_)
     {
-    case game_level_state::ACTIVE:
+    case GameLevelState::active:
         break;
-    case game_level_state::PAUSE_MENU:
+    case GameLevelState::pause_menu:
         this->pause_menu_->draw();
         break;
-    case game_level_state::RESULTS:
+    case GameLevelState::results:
         this->results_menu_->draw();
         break;
-    case game_level_state::END_MENU:
+    case GameLevelState::end_menu:
         this->end_menu_->draw();
         break;
     }

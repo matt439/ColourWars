@@ -21,15 +21,15 @@ std::unique_ptr<ICollisionGameObject>
 	std::string type = json["type"].GetString();
 	if (type == "Structure")
 	{
-		collision_object_type col_type;
+		CollisionObjectType col_type;
 		std::string collision_type = json["collision_type"].GetString();
 		if (collision_type == "STRUCTURE")
 		{
-			col_type = collision_object_type::STRUCTURE;
+			col_type = CollisionObjectType::structure;
 		}
 		else if (collision_type == "STRUCTURE_JUMP_THROUGH")
 		{
-			col_type = collision_object_type::STRUCTURE_JUMP_THROUGH;
+			col_type = CollisionObjectType::structure_jump_through;
 		}
 		else
 		{
@@ -68,11 +68,11 @@ std::unique_ptr<ICollisionGameObject>
 	}
 	if (type == "StructurePaintable")
 	{
-		collision_object_type col_type;
+		CollisionObjectType col_type;
 		std::string collision_type = json["collision_type"].GetString();
 		if (collision_type == "STRUCTURE_PAINTABLE")
 		{
-			col_type = collision_object_type::STRUCTURE_PAINTABLE;
+			col_type = CollisionObjectType::structure_paintable;
 		}
 		else
 		{
@@ -131,15 +131,15 @@ std::unique_ptr<ICollisionGameObject>
 	}
 	if (type == "StructureRamp")
 	{
-		collision_object_type col_type;
+		CollisionObjectType col_type;
 		std::string collision_type = json["collision_type"].GetString();
 		if (collision_type == "STRUCTURE_RAMP_RIGHT")
 		{
-			col_type = collision_object_type::STRUCTURE_RAMP_RIGHT;
+			col_type = CollisionObjectType::structure_ramp_right;
 		}
 		else if (collision_type == "STRUCTURE_RAMP_LEFT")
 		{
-			col_type = collision_object_type::STRUCTURE_RAMP_LEFT;
+			col_type = CollisionObjectType::structure_ramp_left;
 		}
 		else
 		{

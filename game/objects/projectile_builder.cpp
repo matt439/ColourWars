@@ -9,7 +9,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 	ProjectileBuilder::build_projectiles(
 		const Vector2F& position,
 		const Vector2F& velocity,
-		player_team team,
+		PlayerTeam team,
 		int player_num,
 		const Colour& team_colour,
 		projectile_type type,
@@ -117,7 +117,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 	ProjectileBuilder::build_mist_projectiles(
 	const Vector2F& position,
 	const Vector2F& velocity,
-	player_team team,
+	PlayerTeam team,
 	int player_num,
 	const Colour& team_colour,
 	projectile_type /*type*/,	// always MIST here

@@ -9,7 +9,7 @@ Structure::Structure(const std::string& sheet_name,
 	const RectangleF& sprite_rectangle,
 	const mattmath::Shape* collision_shape,
 	RenderResources* render_resources,
-	collision_object_type collision_type,
+	CollisionObjectType collision_type,
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
@@ -48,7 +48,7 @@ void Structure::on_collision(const ICollisionGameObject* /*other*/)
 {
 	// do nothing
 }
-collision_object_type Structure::get_collision_object_type() const
+CollisionObjectType Structure::get_collision_object_type() const
 {
 	return this->collision_type_;
 }

@@ -5,10 +5,10 @@ using namespace DirectX;
 using namespace mattmath;
 using namespace weapon_consts;
 
-WeaponBucket::WeaponBucket(player_team team,
+WeaponBucket::WeaponBucket(PlayerTeam team,
     int player_num,
     const Colour& team_colour,
-    wep_type type,
+    WeaponType type,
     const Vector2F& player_center,
     RenderResources* render_resources,
     const AudioResources* audio_resources,

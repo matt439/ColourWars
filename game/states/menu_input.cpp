@@ -48,15 +48,15 @@ ProcessedMenuInput MenuInput::calculate_menu_input(const RawMenuInput& current,
 
     if (proceed)
     {
-        result.action = menu_input_action::PROCEED;
+        result.action = MenuInputAction::proceed;
     }
     else if (back)
     {
-        result.action = menu_input_action::BACK;
+        result.action = MenuInputAction::back;
     }
 	else if (pause)
 	{
-		result.action = menu_input_action::PAUSE;
+		result.action = MenuInputAction::pause;
 	}
     else if ((proceed && back) ||
         (proceed && pause) ||
@@ -67,7 +67,7 @@ ProcessedMenuInput MenuInput::calculate_menu_input(const RawMenuInput& current,
     }
     else
     {
-        result.action = menu_input_action::NONE;
+        result.action = MenuInputAction::none;
     }
 
     bool analog_down = previous.left_analog_stick.y >
@@ -102,19 +102,19 @@ ProcessedMenuInput MenuInput::calculate_menu_input(const RawMenuInput& current,
 
     if (up)
     {
-        result.direction = menu_direction::UP;
+        result.direction = MenuDirection::up;
     }
     else if (down)
     {
-        result.direction = menu_direction::DOWN;
+        result.direction = MenuDirection::down;
     }
     else if (left)
     {
-        result.direction = menu_direction::LEFT;
+        result.direction = MenuDirection::left;
     }
     else if (right)
     {
-        result.direction = menu_direction::RIGHT;
+        result.direction = MenuDirection::right;
     }
     else if (up && down && left && right)
     {
@@ -123,9 +123,9 @@ ProcessedMenuInput MenuInput::calculate_menu_input(const RawMenuInput& current,
     }
     else
     {
-        result.direction = menu_direction::NONE;
+        result.direction = MenuDirection::none;
     }
-    result.connection = connection_state::CONNECTED;
+    result.connection = ConnectionState::connected;
     return result;
 }
 

@@ -3,17 +3,17 @@
 #include "engine/math/matt_math.h"
 #include "game/objects/projectile.h"
 
-enum class add_player_velocity
+enum class AddPlayerVelocity
 {
-	X_AND_Y,
-	X_ONLY,
-	Y_ONLY,
-	NONE
+	x_and_y,
+	x_only,
+	y_only,
+	none
 };
 
 struct RelativeWeaponDetails
 {
-	add_player_velocity add_vel = add_player_velocity::NONE;
+	AddPlayerVelocity add_vel = AddPlayerVelocity::none;
 	float player_vel_amount = 0.0f;
 };
 
@@ -28,7 +28,7 @@ struct SoundEffectInstanceWeaponDetails
 	std::string shoot_sound_name_b2 = "";
 	std::string shoot_sound_name_b3 = "";
 
-	const std::string& get_sound_name(player_team team, int index) const;
+	const std::string& get_sound_name(PlayerTeam team, int index) const;
 };
 
 struct WeaponDetails

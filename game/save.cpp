@@ -119,7 +119,7 @@ void Save::save_to_file() const
 	}
 }
 
-void Save::set_resolution_and_save(screen_resolution resolution)
+void Save::set_resolution_and_save(ScreenResolution resolution)
 {
     this->save_data_.resolution = resolution;
     this->save_to_file();
@@ -130,42 +130,42 @@ void Save::set_full_screen_and_save(bool full_screen)
     this->save_data_.fullscreen = full_screen;
 	this->save_to_file();
 }
-screen_resolution Save::convert_ivec_to_resolution(
+ScreenResolution Save::convert_ivec_to_resolution(
     const Vector2I& vec) const
 {
     if (vec.x == 1280 && vec.y == 720)
     {
-        return screen_resolution::S_1280_720;
+        return ScreenResolution::s_1280_720;
     }
     else if (vec.x == 1920 && vec.y == 1080)
     {
-        return screen_resolution::S_1920_1080;
+        return ScreenResolution::s_1920_1080;
     }
     else if (vec.x == 2560 && vec.y == 1440)
     {
-        return screen_resolution::S_2560_1440;
+        return ScreenResolution::s_2560_1440;
     }
     else if (vec.x == 3840 && vec.y == 2160)
     {
-        return screen_resolution::S_3840_2160;
+        return ScreenResolution::s_3840_2160;
     }
     else
     {
-        return screen_resolution::S_1280_720;
+        return ScreenResolution::s_1280_720;
     }
 }
 Vector2I Save::convert_resolution_to_ivec(
-    screen_resolution resolution) const
+    ScreenResolution resolution) const
 {
     switch (resolution)
     {
-    case screen_resolution::S_1280_720:
+    case ScreenResolution::s_1280_720:
         return {1280, 720};
-    case screen_resolution::S_1920_1080:
+    case ScreenResolution::s_1920_1080:
         return {1920, 1080};
-    case screen_resolution::S_2560_1440:
+    case ScreenResolution::s_2560_1440:
         return {2560, 1440};
-    case screen_resolution::S_3840_2160:
+    case ScreenResolution::s_3840_2160:
         return {3840, 2160};
     default:
         return {-1, -1};
@@ -177,7 +177,7 @@ SaveData Save::get_save_data() const
 	return this->save_data_;
 }
 
-screen_resolution Save::get_resolution() const
+ScreenResolution Save::get_resolution() const
 {
 	return this->save_data_.resolution;
 }

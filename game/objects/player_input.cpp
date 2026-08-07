@@ -108,7 +108,7 @@ PlayerInputData PlayerInput::calculate_player_input(
         result.shoot_direction_requested = false;
 	}
 
-    result.connection = connection_state::CONNECTED;
+    result.connection = ConnectionState::connected;
 
     result.left_analog_stick = current.left_analog_stick;
     result.right_analog_stick = current.right_analog_stick;

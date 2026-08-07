@@ -63,7 +63,7 @@ void ResultsMenuInitial::update()
 				{
 					this->play_wave(this->confirm_sound_);
 					*this->get_results_menu_data()->get_action() =
-						results_menu_action::CONTINUE_TO_END_MENU;
+						ResultsMenuAction::continue_to_end_menu;
 				}
 			}
 			this->show_results_timer_ += dt;
@@ -226,7 +226,7 @@ float ResultsMenuInitial::fill_time_ratio() const
 
 void ResultsMenuInitial::update_team_a_fill() const
 {
-	//float score = this->get_team_percentage(player_team::A);
+	//float score = this->get_team_percentage(PlayerTeam::a);
 	float score = this->get_level_end_info().team_a_ratio();
 	float max_width = RESULTS_MENU_TEAM_FILL_SIZE.x * score;
 	float fill = this->fill_time_ratio();
@@ -267,7 +267,7 @@ int ResultsMenuInitial::check_for_continue_input(
 {
 	for (int i = 0; i < menu_input.size(); i++)
 	{
-		if (menu_input[i].action == menu_input_action::PROCEED)
+		if (menu_input[i].action == MenuInputAction::proceed)
 		{
 			return i;
 		}

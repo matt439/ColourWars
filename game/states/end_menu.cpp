@@ -33,45 +33,45 @@ void EndMenuInitial::update()
 
 	for (int i = 0; i < inputs.size(); i++)
 	{
-		if (inputs[i].action == menu_input_action::PROCEED)
+		if (inputs[i].action == MenuInputAction::proceed)
 		{
 			if (highlighted_element == "change_teams")
 			{
 				this->play_wave(this->confirm_sound_);
 				*this->get_end_menu_data()->get_action() =
-					end_menu_action::CHANGE_TEAMS;
+					EndMenuAction::change_teams;
 				return;
 			}
 			else if (highlighted_element == "change_weapons")
 			{
 				this->play_wave(this->confirm_sound_);
 				*this->get_end_menu_data()->get_action() =
-					end_menu_action::CHANGE_WEAPONS;
+					EndMenuAction::change_weapons;
 				return;
 			}
 			else if (highlighted_element == "change_level")
 			{
 				this->play_wave(this->confirm_sound_);
 				*this->get_end_menu_data()->get_action() =
-					end_menu_action::CHANGE_LEVEL;
+					EndMenuAction::change_level;
 				return;
 			}
 			else if (highlighted_element == "restart")
 			{
 				this->play_wave(this->confirm_sound_);
 				*this->get_end_menu_data()->get_action() =
-					end_menu_action::RESTART;
+					EndMenuAction::restart;
 				return;
 			}
 			else if (highlighted_element == "exit")
 			{
 				this->play_wave(this->cancel_sound_);
 				*this->get_end_menu_data()->get_action() =
-					end_menu_action::EXIT;
+					EndMenuAction::exit;
 				return;
 			}
 		}
-		else if (inputs[i].direction == menu_direction::UP)
+		else if (inputs[i].direction == MenuDirection::up)
 		{
 			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "change_teams")
@@ -100,7 +100,7 @@ void EndMenuInitial::update()
 				return;
 			}
 		}
-		else if (inputs[i].direction == menu_direction::DOWN)
+		else if (inputs[i].direction == MenuDirection::down)
 		{
 			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "change_teams")

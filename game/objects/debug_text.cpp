@@ -39,7 +39,7 @@ void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
 		get_input_jump_pressed();
     bool jump_held = player->
         get_input_jump_held();
-    player_state state = player->get_state();
+    PlayerState state = player->get_state();
 
     std::vector<std::string> lines;
 
@@ -92,10 +92,10 @@ void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
     std::string state_string = "state: ";
     switch (state)
     {
-    case player_state::ALIVE:
+    case PlayerState::alive:
         state_string += "alive";
         break;
-    case player_state::DEAD:
+    case PlayerState::dead:
         state_string += "dead";
         break;
     };

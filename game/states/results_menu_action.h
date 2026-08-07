@@ -1,7 +1,7 @@
 #pragma once
 
-enum class results_menu_action
+enum class ResultsMenuAction
 {
-	CONTINUE_TO_END_MENU,
-	NONE
+	continue_to_end_menu,
+	none
 };

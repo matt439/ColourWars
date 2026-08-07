@@ -2,7 +2,7 @@
 #include "game/states/results_menu_data.h"
 
 ResultsMenuData::ResultsMenuData(const GameData* game_data, MenuInput* input,
-	const LevelEndInfo& info, results_menu_action* action) :
+	const LevelEndInfo& info, ResultsMenuAction* action) :
 	MenuData(game_data, input),
 	level_end_info_(info),
 	action_(action)
@@ -20,12 +20,12 @@ void ResultsMenuData::set_level_end_info(const LevelEndInfo& level_end_info)
 	this->level_end_info_ = level_end_info;
 }
 
-results_menu_action* ResultsMenuData::get_action() const
+ResultsMenuAction* ResultsMenuData::get_action() const
 {
 	return this->action_;
 }
 
-void ResultsMenuData::set_action(results_menu_action* action)
+void ResultsMenuData::set_action(ResultsMenuAction* action)
 {
 	this->action_ = action;
 }

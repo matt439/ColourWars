@@ -71,17 +71,17 @@ public:
 	void draw(DirectX::SpriteBatch* sprite_batch) override;
 	void update() override;
 	float get_area() const;
-	player_team get_team() const;
+	PlayerTeam get_team() const;
 	bool is_colliding(const ICollisionGameObject* other) const override;
 	const mattmath::Shape* get_shape() const override;
 
 	void on_collision(const ICollisionGameObject* other) override;
-	collision_object_type get_collision_object_type() const override;
+	CollisionObjectType get_collision_object_type() const override;
 	bool get_for_deletion() const override;
 	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override;
 private:
 	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
-	player_team team_ = player_team::NONE;
+	PlayerTeam team_ = PlayerTeam::none;
 	TeamColour team_colours_ = TeamColour();
 	const float* dt_ = nullptr;
 	PaintTileSplash splash_;

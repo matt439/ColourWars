@@ -2,11 +2,11 @@
 #include "game/objects/weapon_details.h"
 
 const std::string& SoundEffectInstanceWeaponDetails::get_sound_name(
-	player_team team, int index) const
+	PlayerTeam team, int index) const
 {
 	switch (team)
 	{
-	case player_team::A:
+	case PlayerTeam::a:
 		switch (index)
 		{
 		case 0:
@@ -20,7 +20,7 @@ const std::string& SoundEffectInstanceWeaponDetails::get_sound_name(
 		default:
 			throw std::exception("Invalid index");
 		}
-	case player_team::B:
+	case PlayerTeam::b:
 		switch (index)
 		{
 		case 0:

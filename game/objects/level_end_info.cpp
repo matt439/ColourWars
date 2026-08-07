@@ -1,18 +1,18 @@
 #include "game/pch.h"
 #include "game/objects/level_end_info.h"
 
-player_team LevelEndInfo::winning_team() const
+PlayerTeam LevelEndInfo::winning_team() const
 {
 	if (this->team_a_area > this->team_b_area)
 	{
-		return player_team::A;
+		return PlayerTeam::a;
 	}
 	else if (this->team_b_area > this->team_a_area)
 	{
-		return player_team::B;
+		return PlayerTeam::b;
 	}
 	// draw
-	return player_team::NONE;
+	return PlayerTeam::none;
 }
 
 float LevelEndInfo::team_a_ratio() const
@@ -61,16 +61,16 @@ std::string LevelEndInfo::team_b_percentage_string() const
 }
 std::string LevelEndInfo::winning_team_string() const
 {
-	player_team winning = this->winning_team();
-	if (winning == player_team::A)
+	PlayerTeam winning = this->winning_team();
+	if (winning == PlayerTeam::a)
 	{
 		return "Team A Wins!";
 	}
-	else if (winning == player_team::B)
+	else if (winning == PlayerTeam::b)
 	{
 		return "Team B Wins!";
 	}
-	else if (winning == player_team::NONE)
+	else if (winning == PlayerTeam::none)
 	{
 		return "Draw!";
 	}
@@ -78,16 +78,16 @@ std::string LevelEndInfo::winning_team_string() const
 }
 float LevelEndInfo::winning_score() const
 {
-	player_team winning = this->winning_team();
-	if (winning == player_team::A)
+	PlayerTeam winning = this->winning_team();
+	if (winning == PlayerTeam::a)
 	{
 		return this->team_a_area;
 	}
-	if (winning == player_team::B)
+	if (winning == PlayerTeam::b)
 	{
 		return this->team_b_area;
 	}
-	if (winning == player_team::NONE)
+	if (winning == PlayerTeam::none)
 	{
 		return this->team_a_area;
 	}
@@ -95,16 +95,16 @@ float LevelEndInfo::winning_score() const
 }
 float LevelEndInfo::losing_score() const
 {
-	player_team winning = this->winning_team();
-	if (winning == player_team::A)
+	PlayerTeam winning = this->winning_team();
+	if (winning == PlayerTeam::a)
 	{
 		return this->team_b_area;
 	}
-	if (winning == player_team::B)
+	if (winning == PlayerTeam::b)
 	{
 		return this->team_a_area;
 	}
-	if (winning == player_team::NONE)
+	if (winning == PlayerTeam::none)
 	{
 		return this->team_a_area;
 	}

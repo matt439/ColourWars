@@ -7,7 +7,7 @@ using namespace projectile_consts;
 
 ProjectileSpray::ProjectileSpray(const RectangleF& rectangle,
 	const Vector2F& velocity,
-	player_team team,
+	PlayerTeam team,
 	int player_num,
 	const Colour& team_colour,
 	const float* dt,
@@ -70,8 +70,8 @@ bool ProjectileSpray::is_colliding(const ICollisionGameObject* other) const
 	{
 		// if the other object is a rectangle, then we have a collision
 		// since the AABB check passed
-		shape_type other_shape_type = other->get_shape()->get_shape_type();
-		if (other_shape_type == shape_type::RECTANGLE)
+		ShapeType other_shape_type = other->get_shape()->get_shape_type();
+		if (other_shape_type == ShapeType::rectangle)
 		{
 			return true;
 		}

@@ -6,10 +6,10 @@ using namespace mattmath;
 using namespace weapon_consts;
 
 
-WeaponRoller::WeaponRoller(player_team team,
+WeaponRoller::WeaponRoller(PlayerTeam team,
     int player_num,
     const Colour& team_colour,
-    wep_type type,
+    WeaponType type,
     const Vector2F& player_center,
     RenderResources* render_resources,
     const AudioResources* audio_resources,

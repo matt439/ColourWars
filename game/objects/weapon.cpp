@@ -6,10 +6,10 @@ using namespace mattmath;
 using namespace weapon_consts;
 
 Weapon::Weapon(const WeaponDetails& details,
-    player_team team,
+    PlayerTeam team,
     int player_num,
     const Colour& team_colour,
-    wep_type type,
+    WeaponType type,
     const Vector2F& player_center,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
@@ -47,7 +47,7 @@ void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug)
     auto draw_rectangle = RectangleF(draw_pos, this->get_details().size);
 
     Vector2F origin = this->calculate_sprite_origin(
-        this->get_details().size, rotation_origin::LEFT_CENTER);
+        this->get_details().size, RotationOrigin::left_center);
 
     SpriteEffects effects = SpriteEffects_None;
     bool invert_y = this->get_invert_y();
@@ -79,7 +79,7 @@ void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug)
         // draw nozzle
         RectangleF draw_rectangle_noz = this->get_nozzle_rectangle();
         Vector2F origin_noz = this->calculate_sprite_origin(
-            this->get_nozzle_size(), rotation_origin::CENTER);
+            this->get_nozzle_size(), RotationOrigin::center);
 
         TextureObject::draw_with(sprite_batch, draw_rectangle_noz, camera,
             this->nozzle_frame_, this->get_draw_colour(),
@@ -96,15 +96,15 @@ void Weapon::draw(SpriteBatch* sprite_batch, bool debug)
     this->draw(sprite_batch, Camera::DEFAULT_CAMERA, debug);
 }
 
-Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, rotation_origin origin)
+Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, RotationOrigin origin)
 {
     switch (origin)
     {
-    case rotation_origin::CENTER:
+    case RotationOrigin::center:
         return Vector2F(size) / 2.0f;
-    case rotation_origin::LEFT_CENTER:
+    case RotationOrigin::left_center:
         return {0.0f, size.y / 2.0f};
-    case rotation_origin::TOP_LEFT:
+    case RotationOrigin::top_left:
         return Vector2F::ZERO;
     default:
         return Vector2F::ZERO;
@@ -272,7 +272,7 @@ void Weapon::stop_sounds() const
     this->sound_bank_->stop_effect(this->loop_sound_, true);
 }
 SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
-    wep_type type, player_team team, int player_num)
+    WeaponType type, PlayerTeam team, int player_num)
 {
     // Sniper and Bucket fire a one-shot wave (see their handle_shoot_sound
     // overrides) and have no looping instance at all. They get an unresolved
@@ -283,7 +283,7 @@ SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
     // a teardown path with no catch anywhere above it - cannot throw. That
     // mattered more when this searched a map by name; it is now also the
     // difference between an index and a string compare per frame of firing.
-    if (team != player_team::A && team != player_team::B)
+    if (team != PlayerTeam::a && team != PlayerTeam::b)
     {
         return {};
     }
@@ -294,13 +294,13 @@ SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
 
     switch (type)
     {
-    case wep_type::SPRAYER:
+    case WeaponType::sprayer:
         return sound_bank.resolve_effect(
             SPRAYER_SOUND_DETAILS.get_sound_name(team, player_num));
-    case wep_type::ROLLER:
+    case WeaponType::roller:
         return sound_bank.resolve_effect(
             ROLLER_SOUND_DETAILS.get_sound_name(team, player_num));
-    case wep_type::MISTER:
+    case WeaponType::mister:
         return sound_bank.resolve_effect(
             MISTER_SOUND_DETAILS.get_sound_name(team, player_num));
     default:
@@ -492,7 +492,7 @@ void Weapon::set_player_center(const Vector2F& player_center)
 	this->player_center_ = player_center;
 }
 
-player_team Weapon::get_team() const
+PlayerTeam Weapon::get_team() const
 {
 	return this->team_;
 }
@@ -507,7 +507,7 @@ const Colour& Weapon::get_team_colour() const
 	return this->team_colour_;
 }
 
-wep_type Weapon::get_type() const
+WeaponType Weapon::get_type() const
 {
 	return this->type_;
 }
@@ -537,10 +537,10 @@ RenderResources* Weapon::get_render_resources() const
 RelativeVelocityWeapon::RelativeVelocityWeapon(
     const WeaponDetails& details,
     RelativeWeaponDetails rel_details,
-    player_team team,
+    PlayerTeam team,
     int player_num,
     const Colour& team_colour,
-    wep_type type,
+    WeaponType type,
     const Vector2F& player_center,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
@@ -562,20 +562,20 @@ Vector2F RelativeVelocityWeapon::calculate_projectile_launch_velocity(
     const Vector2F& shoot_direction,
     float starting_velocity,
     const Vector2F& player_velocity,
-    add_player_velocity add_player_vel,
+    AddPlayerVelocity add_player_vel,
     float player_vel_amount) const
 {
     Vector2F result = shoot_direction * starting_velocity;
 
-    if (add_player_vel == add_player_velocity::X_AND_Y)
+    if (add_player_vel == AddPlayerVelocity::x_and_y)
     {
         result += player_velocity * player_vel_amount;
     }
-    else if (add_player_vel == add_player_velocity::X_ONLY)
+    else if (add_player_vel == AddPlayerVelocity::x_only)
     {
         result.x += player_velocity.x * player_vel_amount;
     }
-    else //if (add_player_vel == add_player_velocity::Y_ONLY)
+    else //if (add_player_vel == AddPlayerVelocity::y_only)
     {
         result.y += player_velocity.y * player_vel_amount;
     }
@@ -588,7 +588,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>> RelativeVelocityWeapon::shoot
 {
     RelativeWeaponDetails rel_details = this->rel_details_;
     
-    add_player_velocity add_player_vel = rel_details.add_vel;
+    AddPlayerVelocity add_player_vel = rel_details.add_vel;
 
     Vector2F launch_velocity = this->calculate_projectile_launch_velocity(
         shoot_direction, this->get_starting_vel_length(),

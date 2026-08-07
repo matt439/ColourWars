@@ -1,11 +1,11 @@
 #pragma once
 
-enum class end_menu_action
+enum class EndMenuAction
 {
-	CHANGE_TEAMS,
-	CHANGE_WEAPONS,
-	CHANGE_LEVEL,
-	RESTART,
-	EXIT,
-	NONE
+	change_teams,
+	change_weapons,
+	change_level,
+	restart,
+	exit,
+	none
 };

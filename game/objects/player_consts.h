@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/objects/player_team.h"
-#include "game/objects/wep_type.h"
+#include "game/objects/weapon_type.h"
 #include "engine/math/colour.h"
 
 struct PlayerAnimationInfo
@@ -41,10 +41,10 @@ namespace player_consts
     constexpr float JUMP_ACCELERATION = -1300.0f;
     constexpr float RESPAWN_DELAY = 3.0f;
     constexpr int DEFAULT_PLAYER_NUM = 0;
-    constexpr auto DEFAULT_TEAM = player_team::A;
+    constexpr auto DEFAULT_TEAM = PlayerTeam::a;
     const mattmath::Colour DEFAULT_TEAM_COLOUR = colour_consts::GRAY;
-    constexpr auto DEFAULT_PRIMARY = wep_type::SPRAYER;
-    constexpr auto DEFAULT_SECONDARY = wep_type::GRENADE_STD;
+    constexpr auto DEFAULT_PRIMARY = WeaponType::sprayer;
+    constexpr auto DEFAULT_SECONDARY = WeaponType::grenade_std;
     const std::string DEFAULT_SHEET = "sprite_sheet_1";
     const std::string DEFAULT_ANIMATION_STRIP = "player_right_walk";
     const std::string DEFAULT_UNIFORM_TEXTURE = "player_right_walk_uniform";

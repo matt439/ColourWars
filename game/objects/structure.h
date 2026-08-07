@@ -12,7 +12,7 @@ public:
 		const mattmath::RectangleF& sprite_rectangle,
 		const mattmath::Shape* collision_shape,
 		RenderResources* render_resources,
-		collision_object_type collision_type,
+		CollisionObjectType collision_type,
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
@@ -27,14 +27,14 @@ public:
 
 	bool is_colliding(const ICollisionGameObject* other) const override;
 	void on_collision(const ICollisionGameObject* other) override;
-	collision_object_type get_collision_object_type() const override;
+	CollisionObjectType get_collision_object_type() const override;
 	const mattmath::Shape* get_shape() const override;
 	bool get_for_deletion() const override;
 protected:
 	const mattmath::RectangleF& get_rectangle() const;
 private:
-	collision_object_type collision_type_ =
-		collision_object_type::STRUCTURE;
+	CollisionObjectType collision_type_ =
+		CollisionObjectType::structure;
 	mattmath::RectangleF sprite_rectangle_ = mattmath::RectangleF::ZERO;
 	std::unique_ptr<mattmath::Shape> collision_shape_ = nullptr;
 };

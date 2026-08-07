@@ -14,7 +14,7 @@ namespace projectile_consts
     {
         2500.0f,                        //gravity
         20.0f,                          //wind_resistance
-        rotation_origin::NO_ROTATION,   //rotat_origin
+        RotationOrigin::no_rotation,   //rotat_origin
         1.0f,                           //delete_timer
         0.0f,                           //player_damage
         mattmath::Vector2F(15.0f, 15.0f),        //size
@@ -27,7 +27,7 @@ namespace projectile_consts
     {
         2500.0f,                        //gravity
         20.0f,                          //wind_resistance
-        rotation_origin::NO_ROTATION,   //rotat_origin
+        RotationOrigin::no_rotation,   //rotat_origin
         5.0f,                           //delete_timer
         -0.1f,                           //player_damage
         mattmath::Vector2F(15.0f, 15.0f),        //size
@@ -41,14 +41,14 @@ namespace projectile_consts
         0.2f,      //start_time
         1.0f,      //end_time
         1.5f,      //end_size
-        diffusion_type::LINEAR_SIZE_AND_COL_RECT, //diffusion_type
+        DiffusionType::linear_size_and_col_rect, //DiffusionType
     };
 
     static const ProjectileDetails DETAILS_JET =
     {
         0.0f,                           //gravity
         0.0f,                           //wind_resistance
-        rotation_origin::CENTER,        //rotat_origin
+        RotationOrigin::center,        //rotat_origin
         5.0f,                           //delete_timer
         -0.5f,                           //player_damage
         mattmath::Vector2F(20.0f, 20.0f),         //size
@@ -61,7 +61,7 @@ namespace projectile_consts
     {
         0.0f,                           //gravity
         0.0f,                           //wind_resistance
-        rotation_origin::NO_ROTATION,   //rotat_origin
+        RotationOrigin::no_rotation,   //rotat_origin
         0.000001f,                           //delete_timer
         -1000.0f,                        //player_damage
         mattmath::Vector2F(50.0f, 50.0f),        //size
@@ -74,7 +74,7 @@ namespace projectile_consts
     {
         0.0f,                        //gravity
         0.0f,                          //wind_resistance
-        rotation_origin::NO_ROTATION,   //rotat_origin
+        RotationOrigin::no_rotation,   //rotat_origin
         5.0f,                           //delete_timer
         -0.05f,                           //player_damage
         mattmath::Vector2F(5.0f, 5.0f),        //size
@@ -88,14 +88,14 @@ namespace projectile_consts
         0.2f,      //start_time
         2.0f,      //end_time
         5.0f,      //end_size
-        diffusion_type::LINEAR_SIZE_AND_COL_RECT,
+        DiffusionType::linear_size_and_col_rect,
     };
 
     static const ProjectileDetails DETAILS_BALL =
     {
         2500.0f,                        //gravity
         20.0f,                          //wind_resistance
-        rotation_origin::NO_ROTATION,   //rotat_origin
+        RotationOrigin::no_rotation,   //rotat_origin
         5.0f,                           //delete_timer
         -0.1f,                           //player_damage
         mattmath::Vector2F(100.0f, 100.0f),        //size

@@ -6,11 +6,11 @@
 class EndMenuData : public MenuData
 {
 public:
-	EndMenuData(GameData* game_data, MenuInput* input, end_menu_action* action);
+	EndMenuData(GameData* game_data, MenuInput* input, EndMenuAction* action);
 
-	end_menu_action* get_action() const;
-	void set_action(end_menu_action* action);
+	EndMenuAction* get_action() const;
+	void set_action(EndMenuAction* action);
 
 private:
-	end_menu_action* action_ = nullptr;
+	EndMenuAction* action_ = nullptr;
 };

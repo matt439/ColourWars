@@ -27,20 +27,20 @@ struct RawMenuInput
 	bool connected = false;
 };
 
-enum class menu_direction
+enum class MenuDirection
 {
-	UP,
-	DOWN,
-	LEFT,
-	RIGHT,
-	NONE
+	up,
+	down,
+	left,
+	right,
+	none
 };
 
 struct ProcessedMenuInput
 {
-	menu_direction direction = menu_direction::NONE;
-	menu_input_action action = menu_input_action::NONE;
-	connection_state connection = connection_state::DISCONNECTED;
+	MenuDirection direction = MenuDirection::none;
+	MenuInputAction action = MenuInputAction::none;
+	ConnectionState connection = ConnectionState::disconnected;
 };
 
 class MenuInput

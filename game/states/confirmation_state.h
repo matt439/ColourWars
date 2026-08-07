@@ -1,7 +1,7 @@
 #pragma once
 
-enum class confirmation_state
+enum class ConfirmationState
 {
-    CONFIRMED,
-    UNCONFIRMED
+    confirmed,
+    unconfirmed
 };

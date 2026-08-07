@@ -66,36 +66,36 @@ void PauseMenuInitial::update()
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
 
-	if (input.action == menu_input_action::BACK ||
-		input.action == menu_input_action::PAUSE)
+	if (input.action == MenuInputAction::back ||
+		input.action == MenuInputAction::pause)
 	{
 		this->play_wave(this->cancel_sound_);
-		*this->get_pause_menu_data()->get_action() = pause_menu_action::RESUME;
+		*this->get_pause_menu_data()->get_action() = PauseMenuAction::resume;
 	}
-	else if (input.action == menu_input_action::PROCEED)
+	else if (input.action == MenuInputAction::proceed)
 	{
 		if (highlighted_element == "resume")
 		{
 			this->play_wave(this->confirm_sound_);
 			*this->get_pause_menu_data()->get_action() =
-				pause_menu_action::RESUME;
+				PauseMenuAction::resume;
 		}
 		else if (highlighted_element == "restart")
 		{
 			this->play_wave(this->confirm_sound_);
 			this->get_context()->transition_to(std::make_unique<
 				PauseMenuConfirmation>(this->get_pause_menu_data(),
-					confirmation_type::RESTART));
+					ConfirmationType::restart));
 		}
 		else if (highlighted_element == "quit")
 		{
 			this->play_wave(this->cancel_sound_);
 			this->get_context()->transition_to(std::make_unique<
 				PauseMenuConfirmation>(this->get_pause_menu_data(),
-					confirmation_type::QUIT));
+					ConfirmationType::quit));
 		}
 	}
-	else if (input.direction == menu_direction::UP)
+	else if (input.direction == MenuDirection::up)
 	{
 		this->play_wave(this->direction_sound_);
 		if (highlighted_element == "resume")
@@ -111,7 +111,7 @@ void PauseMenuInitial::update()
 			this->change_highlight(this->restart_.get());
 		}
 	}
-	else if (input.direction == menu_direction::DOWN)
+	else if (input.direction == MenuDirection::down)
 	{
 		this->play_wave(this->direction_sound_);
 		if (highlighted_element == "resume")
@@ -222,7 +222,7 @@ void PauseMenuInitial::draw()
 }
 
 PauseMenuConfirmation::PauseMenuConfirmation(PauseMenuData* data,
-	confirmation_type type) :
+	ConfirmationType type) :
 	PauseMenuPage(data), type_(type)
 {
 
@@ -235,28 +235,28 @@ void PauseMenuConfirmation::update()
 	std::string highlighted_element =
 		this->get_highlighted_widget()->get_name();
 
-	if (input.action == menu_input_action::BACK)
+	if (input.action == MenuInputAction::back)
 	{
 		this->play_wave(this->cancel_sound_);
 		this->get_context()->transition_to(std::make_unique<PauseMenuInitial>(
 			this->get_pause_menu_data()));
 		return;
 	}
-	else if (input.action == menu_input_action::PROCEED)
+	else if (input.action == MenuInputAction::proceed)
 	{
 		if (highlighted_element == "yes")
 		{
 			switch (this->type_)
 			{
-			case confirmation_type::RESTART:
+			case ConfirmationType::restart:
 				this->play_wave(this->confirm_sound_);
 				*this->get_pause_menu_data()->get_action() =
-					pause_menu_action::RESTART;
+					PauseMenuAction::restart;
 				break;
-			case confirmation_type::QUIT:
+			case ConfirmationType::quit:
 				this->play_wave(this->cancel_sound_);
 				*this->get_pause_menu_data()->get_action() =
-					pause_menu_action::QUIT;
+					PauseMenuAction::quit;
 				break;
 			}
 		}
@@ -269,8 +269,8 @@ void PauseMenuConfirmation::update()
 			return;
 		}
 	}
-	else if (input.direction == menu_direction::UP ||
-		input.direction == menu_direction::DOWN)
+	else if (input.direction == MenuDirection::up ||
+		input.direction == MenuDirection::down)
 	{
 		this->play_wave(this->direction_sound_);
 		if (highlighted_element == "yes")
@@ -376,13 +376,13 @@ void PauseMenuConfirmation::draw()
 }
 
 std::string PauseMenuConfirmation::get_question_text(
-	confirmation_type type)
+	ConfirmationType type)
 {
 	switch (type)
 	{
-	case confirmation_type::RESTART:
+	case ConfirmationType::restart:
 		return "Are you sure you want to restart?";
-	case confirmation_type::QUIT:
+	case ConfirmationType::quit:
 		return "Are you sure you want to quit?";
 	default:
 		return "Error";

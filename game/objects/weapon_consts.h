@@ -32,7 +32,7 @@ namespace weapon_consts
 
     static constexpr RelativeWeaponDetails DETAILS_RELATIVE_DEFAULT =
     {
-        add_player_velocity::NONE,
+        AddPlayerVelocity::none,
         1.0f,
     };
 
@@ -54,7 +54,7 @@ namespace weapon_consts
 
     static constexpr RelativeWeaponDetails DETAILS_RELATIVE_SPRAYER =
     {
-        add_player_velocity::X_ONLY,
+        AddPlayerVelocity::x_only,
         1.0f,
     };
 
@@ -132,7 +132,7 @@ namespace weapon_consts
 
     static constexpr RelativeWeaponDetails DETAILS_RELATIVE_MISTER =
     {
-        add_player_velocity::X_ONLY,
+        AddPlayerVelocity::x_only,
         1.0f,
     };
 
@@ -166,7 +166,7 @@ namespace weapon_consts
 
     static constexpr RelativeWeaponDetails DETAILS_RELATIVE_BUCKET =
     {
-        add_player_velocity::X_ONLY,
+        AddPlayerVelocity::x_only,
         1.0f,
     };
 }

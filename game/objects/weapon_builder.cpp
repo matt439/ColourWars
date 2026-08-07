@@ -5,10 +5,10 @@ using namespace mattmath;
 using namespace DirectX;
 
 std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
-    player_team team,
+    PlayerTeam team,
     int player_num,
     const Colour& team_colour,
-    wep_type type,
+    WeaponType type,
     const Vector2F& player_center,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
@@ -16,23 +16,23 @@ std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
 {
     switch (type)
     {
-    case wep_type::SPRAYER:
+    case WeaponType::sprayer:
         return std::make_unique<WeaponSprayer>(
             team, player_num, team_colour, type, player_center,
             render_resources, audio_resources, dt);
-    case wep_type::SNIPER:
+    case WeaponType::sniper:
         return std::make_unique<WeaponSniper>(team, player_num, team_colour,
             type, player_center,
             render_resources, audio_resources, dt);
-    case wep_type::ROLLER:
+    case WeaponType::roller:
         return std::make_unique<WeaponRoller>(team, player_num, team_colour,
             type, player_center,
             render_resources, audio_resources, dt);
-    case wep_type::MISTER:
+    case WeaponType::mister:
         return std::make_unique<WeaponMister>(team, player_num, team_colour,
             type, player_center,
             render_resources, audio_resources, dt);
-    case wep_type::BUCKET:
+    case WeaponType::bucket:
         return std::make_unique<WeaponBucket>(team, player_num, team_colour,
             type, player_center,
             render_resources, audio_resources, dt);

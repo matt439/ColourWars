@@ -87,21 +87,21 @@ namespace main_menu_consts
 	const static std::string RANDOM_DESC = "Randomly selects a weapon for you.\nIndecisiveness is nothing to be ashamed of.";
 }
 
-enum class main_menu_screen
+enum class MainMenuScreen
 {
-	TITLE,
-	HOME,
-	OPTIONS,
-	MODE_SELECT,
-	PLAYER_COUNT,
-	TEAM_SELECT,
-	WEAPON_SELECT,
-	STAGE_SELECT
+	title,
+	home,
+	options,
+	mode_select,
+	player_count,
+	team_select,
+	weapon_select,
+	stage_select
 };
 
 struct MainMenuMidwayLoadSettings
 {
-	main_menu_screen screen = main_menu_screen::TITLE;
+	MainMenuScreen screen = MainMenuScreen::title;
 	MenuLevelSettings settings = MenuLevelSettings();
 };
 
@@ -180,9 +180,9 @@ private:
 	std::unique_ptr<MTextDropShadow> full_screen_value_ = nullptr;
 	std::unique_ptr<MTextDropShadow> apply_ = nullptr;
 	std::unique_ptr<MTextDropShadow> back_ = nullptr;
-	screen_resolution resolution_selection_ = screen_resolution::S_1920_1080;
+	ScreenResolution resolution_selection_ = ScreenResolution::s_1920_1080;
 	bool full_screen_selection_ = true;
-	void cycle_resolution(menu_direction direction);
+	void cycle_resolution(MenuDirection direction);
 	void update_resolution_selection_text();
 	void update_full_screen_selection_text() const;
 	void apply_fullscreen_setting(bool fullscreen);
@@ -205,7 +205,7 @@ private:
 	std::unique_ptr<MTextDropShadow> dm_ = nullptr;
 	std::unique_ptr<MTextDropShadow> practice_ = nullptr;
 	std::unique_ptr<MTextDropShadow> back_ = nullptr;
-	static menu_element convert_mode_to_element(level_mode mode);
+	static MenuElement convert_mode_to_element(LevelMode mode);
 };
 
 class MainMenuPlayerCount final : public MainMenuPage, public MenuHighlight
@@ -225,7 +225,7 @@ private:
 	std::unique_ptr<MTextDropShadow> _3_players = nullptr;
 	std::unique_ptr<MTextDropShadow> _4_players = nullptr;
 	std::unique_ptr<MTextDropShadow> back_ = nullptr;
-	static menu_element convert_player_count_to_element(int player_count);
+	static MenuElement convert_player_count_to_element(int player_count);
 };
 
 class MainMenuTeamSelect final : public MainMenuPage
@@ -239,8 +239,8 @@ public:
 private:
 	struct TeamSelectState
 	{
-		player_team team = player_team::NONE;
-		confirmation_state state = confirmation_state::UNCONFIRMED;
+		PlayerTeam team = PlayerTeam::none;
+		ConfirmationState state = ConfirmationState::unconfirmed;
 	};
 	struct PlayerWidgets
 	{
@@ -274,8 +274,8 @@ public:
 private:
 	struct SelectState
 	{
-		wep_type type = wep_type::SPRAYER;
-		confirmation_state state = confirmation_state::UNCONFIRMED;
+		WeaponType type = WeaponType::sprayer;
+		ConfirmationState state = ConfirmationState::unconfirmed;
 	};
 	struct Widgets
 	{
@@ -294,10 +294,10 @@ private:
 	void unconfirm_all_widgets();
 	bool all_players_confirmed() const;
 	bool all_players_unconfirmed() const;
-	static wep_type get_random_weapon();
+	static WeaponType get_random_weapon();
 	void set_level_settings() const;
-	void cycle_weapons(menu_direction direction, int player_index);
-	static std::string weapon_description(wep_type type);
+	void cycle_weapons(MenuDirection direction, int player_index);
+	static std::string weapon_description(WeaponType type);
 };
 
 class MainMenuStageSelect final : public MainMenuPage
@@ -311,8 +311,8 @@ public:
 private:
 	struct SelectState
 	{
-		level_stage stage = level_stage::KING_OF_THE_HILL;
-		confirmation_state state = confirmation_state::UNCONFIRMED;
+		LevelStage stage = LevelStage::king_of_the_hill;
+		ConfirmationState state = ConfirmationState::unconfirmed;
 	};
 	std::unique_ptr<MContainer> texture_container_ = nullptr;
 	std::unique_ptr<MContainer> text_container_ = nullptr;
@@ -324,7 +324,7 @@ private:
 	SelectState select_state_ = SelectState();
 	void update_stage_select_visuals();
 	void unconfirm_all_widgets();
-	static level_stage get_random_stage();
-	void cycle_stages(menu_direction direction);
+	static LevelStage get_random_stage();
+	void cycle_stages(MenuDirection direction);
 	void set_level_settings() const;
 };

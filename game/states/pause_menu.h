@@ -59,10 +59,10 @@ protected:
 	ProcessedMenuInput get_pausing_player_input(
 		const std::vector<ProcessedMenuInput>& inputs) const;
 
-	enum class confirmation_type
+	enum class ConfirmationType
 	{
-		RESTART,
-		QUIT
+		restart,
+		quit
 	};
 
 	// Every sound this page family can make, resolved once when the page is
@@ -96,7 +96,7 @@ private:
 class PauseMenuConfirmation final : public PauseMenuPage
 {
 public:
-	PauseMenuConfirmation(PauseMenuData* data, confirmation_type type);
+	PauseMenuConfirmation(PauseMenuData* data, ConfirmationType type);
 	void init() override;
 	void update() override;
 	void draw() override;
@@ -108,6 +108,6 @@ private:
 	std::unique_ptr<MTextDropShadow> question_ = nullptr;
 	std::unique_ptr<MTextDropShadow> yes_ = nullptr;
 	std::unique_ptr<MTextDropShadow> no_ = nullptr;
-	confirmation_type type_ = confirmation_type::RESTART;
-	static std::string get_question_text(confirmation_type type);
+	ConfirmationType type_ = ConfirmationType::restart;
+	static std::string get_question_text(ConfirmationType type);
 };

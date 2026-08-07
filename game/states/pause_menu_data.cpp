@@ -2,7 +2,7 @@
 #include "game/states/pause_menu_data.h"
 
 PauseMenuData::PauseMenuData(GameData* game_data, MenuInput* input,
-	int player_num, pause_menu_action* action) :
+	int player_num, PauseMenuAction* action) :
 	MenuData(game_data, input),
 	player_num_(player_num),
 	action_(action)
@@ -20,12 +20,12 @@ void PauseMenuData::set_player_num(int player_num)
 	this->player_num_ = player_num;
 }
 
-pause_menu_action* PauseMenuData::get_action() const
+PauseMenuAction* PauseMenuData::get_action() const
 {
 	return this->action_;
 }
 
-void PauseMenuData::set_action(pause_menu_action* action)
+void PauseMenuData::set_action(PauseMenuAction* action)
 {
 	this->action_ = action;
 }

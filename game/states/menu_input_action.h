@@ -1,9 +1,9 @@
 #pragma once
 
-enum class menu_input_action
+enum class MenuInputAction
 {
-    PROCEED,
-    BACK,
-    PAUSE,
-    NONE
+    proceed,
+    back,
+    pause,
+    none
 };

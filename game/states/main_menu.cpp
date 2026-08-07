@@ -54,7 +54,7 @@ void MainMenuTitle::update()
 	const std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
 	for (int i = 0; i < inputs.size(); i++)
 	{
-		if (inputs[i].action == menu_input_action::PROCEED)
+		if (inputs[i].action == MenuInputAction::proceed)
 		{
 			this->play_wave(this->confirm_sound_);
 			this->get_context()->transition_to(std::make_unique<MainMenuHome>(
@@ -141,14 +141,14 @@ void MainMenuHome::update()
 
 	for (int i = 0; i < num_inputs; i++)
 	{		
-		if (inputs[i].action == menu_input_action::BACK)
+		if (inputs[i].action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
 			this->get_context()->transition_to(
 				std::make_unique<MainMenuTitle>(this->get_main_menu_data()));
 			return;
 		}
-		if (inputs[i].action == menu_input_action::PROCEED)
+		if (inputs[i].action == MenuInputAction::proceed)
 		{
 			if (highlighted_element == "play")
 			{
@@ -171,7 +171,7 @@ void MainMenuHome::update()
 				this->get_main_menu_data()->get_application()->quit();
 			}
 		}
-		else if (inputs[i].direction == menu_direction::UP)
+		else if (inputs[i].direction == MenuDirection::up)
 		{
 			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "play")
@@ -187,7 +187,7 @@ void MainMenuHome::update()
 				this->change_highlight(this->options_.get());
 			}
 		}
-		else if (inputs[i].direction == menu_direction::DOWN)
+		else if (inputs[i].direction == MenuDirection::down)
 		{
 			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "play")
@@ -310,14 +310,14 @@ void MainMenuOptions::update()
 
 	for (int i = 0; i < num_inputs; i++)
 	{
-		if (inputs[i].action == menu_input_action::BACK)
+		if (inputs[i].action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
 			this->get_context()->transition_to(std::make_unique<MainMenuHome>(
 				this->get_main_menu_data()));
 			return;
 		}
-		else if (inputs[i].action == menu_input_action::PROCEED)
+		else if (inputs[i].action == MenuInputAction::proceed)
 		{
 			if (highlighted_element == "apply")
 			{
@@ -358,7 +358,7 @@ void MainMenuOptions::update()
 				return;
 			}
 		}
-		else if (inputs[i].direction == menu_direction::DOWN)
+		else if (inputs[i].direction == MenuDirection::down)
 		{
 			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "resolution_element")
@@ -378,7 +378,7 @@ void MainMenuOptions::update()
 				this->change_highlight(this->resolution_element_.get());
 			}
 		}
-		else if (inputs[i].direction == menu_direction::UP)
+		else if (inputs[i].direction == MenuDirection::up)
 		{
 			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "resolution_element")
@@ -400,20 +400,20 @@ void MainMenuOptions::update()
 		}
 		else if (highlighted_element == "resolution_element")
 		{
-			if (inputs[i].direction == menu_direction::LEFT)
+			if (inputs[i].direction == MenuDirection::left)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_resolution(menu_direction::LEFT);
+				this->cycle_resolution(MenuDirection::left);
 			}
-			else if (inputs[i].direction == menu_direction::RIGHT)
+			else if (inputs[i].direction == MenuDirection::right)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_resolution(menu_direction::RIGHT);
+				this->cycle_resolution(MenuDirection::right);
 			}
 		}
 		else if (highlighted_element == "full_screen" &&
-			(inputs[i].direction == menu_direction::LEFT ||
-			inputs[i].direction == menu_direction::RIGHT))
+			(inputs[i].direction == MenuDirection::left ||
+			inputs[i].direction == MenuDirection::right))
 		{
 			this->play_wave(this->direction_sound_);
 			this->full_screen_selection_ = !this->full_screen_selection_;
@@ -544,12 +544,12 @@ void MainMenuOptions::init()
 }
 
 void MainMenuOptions::cycle_resolution(
-	menu_direction direction)
+	MenuDirection direction)
 {
-	int enum_max = static_cast<int>(screen_resolution::MAX);
+	int enum_max = static_cast<int>(ScreenResolution::max);
 	int enum_pos =
 		static_cast<int>(this->resolution_selection_);
-	if (direction == menu_direction::LEFT)
+	if (direction == MenuDirection::left)
 	{
 		if (enum_pos == 0)
 		{
@@ -560,7 +560,7 @@ void MainMenuOptions::cycle_resolution(
 			enum_pos--;
 		}
 	}
-	else if (direction == menu_direction::RIGHT)
+	else if (direction == MenuDirection::right)
 	{
 		if (enum_pos == enum_max)
 		{
@@ -572,7 +572,7 @@ void MainMenuOptions::cycle_resolution(
 		}
 	}
 	this->resolution_selection_ =
-		static_cast<screen_resolution>(enum_pos);
+		static_cast<ScreenResolution>(enum_pos);
 	this->update_resolution_selection_text();
 }
 
@@ -628,20 +628,20 @@ void MainMenuModeSelect::update()
 
 	for (int i = 0; i < num_inputs; i++)
 	{
-		if (inputs[i].action == menu_input_action::BACK)
+		if (inputs[i].action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
 			this->get_context()->transition_to(std::make_unique<MainMenuHome>(
 				this->get_main_menu_data()));
 			return;
 		}
-		if (inputs[i].action == menu_input_action::PROCEED)
+		if (inputs[i].action == MenuInputAction::proceed)
 		{
 			if (highlighted_element == "standard")
 			{
 				this->play_wave(this->confirm_sound_);
 				this->get_main_menu_data()->get_level_settings()->
-					set_game_mode(level_mode::STANDARD_MODE);
+					set_game_mode(LevelMode::standard_mode);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuPlayerCount>(
 						this->get_main_menu_data()));
@@ -668,7 +668,7 @@ void MainMenuModeSelect::update()
 				return;
 			}
 		}
-		else if (inputs[i].direction == menu_direction::UP)
+		else if (inputs[i].direction == MenuDirection::up)
 		{
 			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "standard")
@@ -692,7 +692,7 @@ void MainMenuModeSelect::update()
 				this->change_highlight(this->practice_.get());
 			}
 		}
-		else if (inputs[i].direction == menu_direction::DOWN)
+		else if (inputs[i].direction == MenuDirection::down)
 		{
 			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "standard")
@@ -718,20 +718,20 @@ void MainMenuModeSelect::update()
 		}
 	}
 }
-menu_element MainMenuModeSelect::convert_mode_to_element(level_mode mode)
+MenuElement MainMenuModeSelect::convert_mode_to_element(LevelMode mode)
 {
 	switch (mode)
 	{
-	case level_mode::STANDARD_MODE:
-		return menu_element::MAIN_MENU_STANDARD_MODE;
-	case level_mode::TEAM_DEATHMATCH:
-		return menu_element::MAIN_MENU_TEAM_DEATHMATCH;
-	case level_mode::DEATHMATCH:
-		return menu_element::MAIN_MENU_DEATHMATCH;
-	case level_mode::PRACTICE:
-		return menu_element::MAIN_MENU_PRACTICE;
+	case LevelMode::standard_mode:
+		return MenuElement::main_menu_standard_mode;
+	case LevelMode::team_deathmatch:
+		return MenuElement::main_menu_team_deathmatch;
+	case LevelMode::deathmatch:
+		return MenuElement::main_menu_deathmatch;
+	case LevelMode::practice:
+		return MenuElement::main_menu_practice;
 	default:
-		return menu_element::MAIN_MENU_STANDARD_MODE;
+		return MenuElement::main_menu_standard_mode;
 	}
 }
 void MainMenuModeSelect::init()
@@ -863,7 +863,7 @@ void MainMenuPlayerCount::update()
 
 	for (int i = 0; i < num_inputs; i++)
 	{
-		if (inputs[i].action == menu_input_action::BACK)
+		if (inputs[i].action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
 			this->get_context()->transition_to(
@@ -871,7 +871,7 @@ void MainMenuPlayerCount::update()
 					this->get_main_menu_data()));
 			return;
 		}
-		if (inputs[i].action == menu_input_action::PROCEED)
+		if (inputs[i].action == MenuInputAction::proceed)
 		{
 			if (highlighted_element == "1_player")
 			{
@@ -879,9 +879,9 @@ void MainMenuPlayerCount::update()
 				this->get_main_menu_data()->get_level_settings()->
 					set_player_count(1);
 				this->get_main_menu_data()->get_level_settings()->
-					set_player_team(0, player_team::A);
+					set_player_team(0, PlayerTeam::a);
 				this->get_main_menu_data()->get_level_settings()->
-					set_screen_layout(screen_layout::ONE_PLAYER);
+					set_screen_layout(ScreenLayout::one_player);
 				this->get_main_menu_data()->get_level_settings()->
 					set_player_num(0, 0);
 				this->get_context()->transition_to(
@@ -895,7 +895,7 @@ void MainMenuPlayerCount::update()
 				this->get_main_menu_data()->get_level_settings()->
 					set_player_count(2);
 				this->get_main_menu_data()->get_level_settings()->
-					set_screen_layout(screen_layout::TWO_PLAYER);
+					set_screen_layout(ScreenLayout::two_player);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuTeamSelect>(
 						get_main_menu_data()));
@@ -907,7 +907,7 @@ void MainMenuPlayerCount::update()
 				this->get_main_menu_data()->get_level_settings()->
 					set_player_count(3);
 				this->get_main_menu_data()->get_level_settings()->
-					set_screen_layout(screen_layout::THREE_PLAYER);
+					set_screen_layout(ScreenLayout::three_player);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuTeamSelect>(
 						get_main_menu_data()));
@@ -919,7 +919,7 @@ void MainMenuPlayerCount::update()
 				this->get_main_menu_data()->get_level_settings()->
 					set_player_count(4);
 				this->get_main_menu_data()->get_level_settings()->
-					set_screen_layout(screen_layout::FOUR_PLAYER);
+					set_screen_layout(ScreenLayout::four_player);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuTeamSelect>(
 					get_main_menu_data()));
@@ -934,7 +934,7 @@ void MainMenuPlayerCount::update()
 				return;
 			}
 		}
-		else if (inputs[i].direction == menu_direction::UP)
+		else if (inputs[i].direction == MenuDirection::up)
 		{
 			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "1_player")
@@ -958,7 +958,7 @@ void MainMenuPlayerCount::update()
 				this->change_highlight(this->_4_players.get());
 			}
 		}
-		else if (inputs[i].direction == menu_direction::DOWN)
+		else if (inputs[i].direction == MenuDirection::down)
 		{
 			this->play_wave(this->direction_sound_);
 			if (highlighted_element == "1_player")
@@ -984,21 +984,21 @@ void MainMenuPlayerCount::update()
 		}
 	}
 }
-menu_element MainMenuPlayerCount::convert_player_count_to_element(
+MenuElement MainMenuPlayerCount::convert_player_count_to_element(
 	int player_count)
 {
 	switch (player_count)
 	{
 	case 1:
-		return menu_element::MAIN_MENU_ONE_PLAYER;
+		return MenuElement::main_menu_one_player;
 	case 2:
-		return menu_element::MAIN_MENU_TWO_PLAYERS;
+		return MenuElement::main_menu_two_players;
 	case 3:
-		return menu_element::MAIN_MENU_THREE_PLAYERS;
+		return MenuElement::main_menu_three_players;
 	case 4:
-		return menu_element::MAIN_MENU_FOUR_PLAYERS;
+		return MenuElement::main_menu_four_players;
 	default:
-		return menu_element::MAIN_MENU_ONE_PLAYER;
+		return MenuElement::main_menu_one_player;
 	}
 }
 void MainMenuPlayerCount::init()
@@ -1136,7 +1136,7 @@ void MainMenuTeamSelect::update()
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
 	{
-		if (inputs[i].action == menu_input_action::BACK)
+		if (inputs[i].action == MenuInputAction::back)
 		{
 			if (this->all_players_unconfirmed())
 			{
@@ -1146,45 +1146,45 @@ void MainMenuTeamSelect::update()
 						this->get_main_menu_data()));
 				return;
 			}
-			if (this->select_states_[i].state == confirmation_state::CONFIRMED)
+			if (this->select_states_[i].state == ConfirmationState::confirmed)
 			{
 				this->play_wave(this->cancel_sound_);
 				this->select_states_[i].state =
-					confirmation_state::UNCONFIRMED;
+					ConfirmationState::unconfirmed;
 			}
 			//no break here as I want simultaneous input from players to be possible
 		}
-		else if (inputs[i].action == menu_input_action::PROCEED &&
-			this->select_states_[i].team != player_team::NONE)
+		else if (inputs[i].action == MenuInputAction::proceed &&
+			this->select_states_[i].team != PlayerTeam::none)
 		{
 			this->play_wave(this->confirm_sound_);
-			this->select_states_[i].state = confirmation_state::CONFIRMED;
+			this->select_states_[i].state = ConfirmationState::confirmed;
 		}
 		else if (this->select_states_[i].state ==
-			confirmation_state::UNCONFIRMED)
+			ConfirmationState::unconfirmed)
 		{
-			if (inputs[i].direction == menu_direction::LEFT)
+			if (inputs[i].direction == MenuDirection::left)
 			{
 				this->play_wave(this->direction_sound_);
-				if (this->select_states_[i].team == player_team::NONE)
+				if (this->select_states_[i].team == PlayerTeam::none)
 				{
-					this->select_states_[i].team = player_team::A;
+					this->select_states_[i].team = PlayerTeam::a;
 				}
-				else if (this->select_states_[i].team == player_team::B)
+				else if (this->select_states_[i].team == PlayerTeam::b)
 				{
-					this->select_states_[i].team = player_team::NONE;
+					this->select_states_[i].team = PlayerTeam::none;
 				}
 			}
-			else if (inputs[i].direction == menu_direction::RIGHT)
+			else if (inputs[i].direction == MenuDirection::right)
 			{
 				this->play_wave(this->direction_sound_);
-				if (this->select_states_[i].team == player_team::NONE)
+				if (this->select_states_[i].team == PlayerTeam::none)
 				{
-					this->select_states_[i].team = player_team::B;
+					this->select_states_[i].team = PlayerTeam::b;
 				}
-				else if (this->select_states_[i].team == player_team::A)
+				else if (this->select_states_[i].team == PlayerTeam::a)
 				{
-					this->select_states_[i].team = player_team::NONE;
+					this->select_states_[i].team = PlayerTeam::none;
 				}
 			}
 		}
@@ -1214,7 +1214,7 @@ bool MainMenuTeamSelect::all_players_confirmed() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		if (this->select_states_[i].state != confirmation_state::CONFIRMED)
+		if (this->select_states_[i].state != ConfirmationState::confirmed)
 		{
 			return false;
 		}
@@ -1225,7 +1225,7 @@ bool MainMenuTeamSelect::all_players_unconfirmed() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		if (this->select_states_[i].state == confirmation_state::CONFIRMED)
+		if (this->select_states_[i].state == ConfirmationState::confirmed)
 		{
 			return false;
 		}
@@ -1241,24 +1241,24 @@ void MainMenuTeamSelect::update_team_select_visuals()
 		MWidget* selected_widget = nullptr;
 		switch (this->select_states_[i].team)
 		{
-		case player_team::A:
+		case PlayerTeam::a:
 			this->player_widgets_[i]->player_a->set_sprite_frame(
 				"team_select_a_selected");
 			selected_widget = this->player_widgets_[i]->player_a.get();
 			break;
-		case player_team::NONE:
+		case PlayerTeam::none:
 			this->player_widgets_[i]->player_center->set_sprite_frame(
 				"team_select_center_selected");
 			selected_widget = this->player_widgets_[i]->player_center.get();
 			break;
-		case player_team::B:
+		case PlayerTeam::b:
 			this->player_widgets_[i]->player_b->set_sprite_frame(
 				"team_select_b_selected");
 			selected_widget = this->player_widgets_[i]->player_b.get();
 			break;
 		}
 		if (this->select_states_[i].state ==
-			confirmation_state::CONFIRMED)
+			ConfirmationState::confirmed)
 		{
 			selected_widget->set_colour(
 				main_menu_consts::TEAM_SELECT_SELECTED_COLOUR);
@@ -1322,7 +1322,7 @@ void MainMenuTeamSelect::init()
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
 		auto state = TeamSelectState();
-		state.state = confirmation_state::UNCONFIRMED;
+		state.state = ConfirmationState::unconfirmed;
 		state.team = this->get_main_menu_data()->get_level_settings()->
 			get_player_team(i);
 		this->select_states_.push_back(state);
@@ -1419,7 +1419,7 @@ void MainMenuWeaponSelect::update()
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
 	{
-		if (inputs[i].action == menu_input_action::BACK)
+		if (inputs[i].action == MenuInputAction::back)
 		{
 			if (this->all_players_unconfirmed())
 			{
@@ -1439,32 +1439,32 @@ void MainMenuWeaponSelect::update()
 				return;
 			}
 			if (this->select_states_[i].state ==
-				confirmation_state::CONFIRMED)
+				ConfirmationState::confirmed)
 			{
 				this->play_wave(this->cancel_sound_);
 				this->select_states_[i].state =
-					confirmation_state::UNCONFIRMED;
+					ConfirmationState::unconfirmed;
 			}
 			//no break here as I want simultaneous input
 			// from players to be possible
 		}
-		else if (inputs[i].action == menu_input_action::PROCEED)
+		else if (inputs[i].action == MenuInputAction::proceed)
 		{
 			this->play_wave(this->confirm_sound_);
-			this->select_states_[i].state = confirmation_state::CONFIRMED;
+			this->select_states_[i].state = ConfirmationState::confirmed;
 		}
 		else if (this->select_states_[i].state ==
-			confirmation_state::UNCONFIRMED)
+			ConfirmationState::unconfirmed)
 		{
-			if (inputs[i].direction == menu_direction::LEFT)
+			if (inputs[i].direction == MenuDirection::left)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_weapons(menu_direction::LEFT, i);
+				this->cycle_weapons(MenuDirection::left, i);
 			}
-			else if (inputs[i].direction == menu_direction::RIGHT)
+			else if (inputs[i].direction == MenuDirection::right)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_weapons(menu_direction::RIGHT, i);
+				this->cycle_weapons(MenuDirection::right, i);
 			}
 		}
 	}
@@ -1473,7 +1473,7 @@ void MainMenuWeaponSelect::update()
 		//check if any players have selected random then pick a random weapon.
 		for (int i = 0; i < this->get_player_count(); i++)
 		{
-			if (this->select_states_[i].type == wep_type::RANDOM_PRIMARY)
+			if (this->select_states_[i].type == WeaponType::random_primary)
 			{
 				this->select_states_[i].type = get_random_weapon();
 			}
@@ -1493,18 +1493,18 @@ void MainMenuWeaponSelect::set_level_settings() const
 			set_player_weapon(i, this->select_states_[i].type);
 	}
 }
-wep_type MainMenuWeaponSelect::get_random_weapon()
+WeaponType MainMenuWeaponSelect::get_random_weapon()
 {
-	int random = rand() % static_cast<int>(wep_type::MAX_PRIM_WEP);
-	return static_cast<wep_type>(random);
+	int random = rand() % static_cast<int>(WeaponType::max_prim_wep);
+	return static_cast<WeaponType>(random);
 }
 void MainMenuWeaponSelect::cycle_weapons(
-	menu_direction direction, int player_index)
+	MenuDirection direction, int player_index)
 {
-	int enum_max = static_cast<int>(wep_type::MAX_PRIM_WEP);
+	int enum_max = static_cast<int>(WeaponType::max_prim_wep);
 	int enum_pos =
 		static_cast<int>(this->select_states_[player_index].type);
-	if (direction == menu_direction::LEFT)
+	if (direction == MenuDirection::left)
 	{
 		if (enum_pos == 0)
 		{
@@ -1515,7 +1515,7 @@ void MainMenuWeaponSelect::cycle_weapons(
 			enum_pos--;
 		}
 	}
-	else if (direction == menu_direction::RIGHT)
+	else if (direction == MenuDirection::right)
 	{
 		if (enum_pos == enum_max)
 		{
@@ -1527,13 +1527,13 @@ void MainMenuWeaponSelect::cycle_weapons(
 		}
 	}
 	this->select_states_[player_index].type =
-		static_cast<wep_type>(enum_pos);
+		static_cast<WeaponType>(enum_pos);
 }
 bool MainMenuWeaponSelect::all_players_confirmed() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		if (this->select_states_[i].state != confirmation_state::CONFIRMED)
+		if (this->select_states_[i].state != ConfirmationState::confirmed)
 		{
 			return false;
 		}
@@ -1544,7 +1544,7 @@ bool MainMenuWeaponSelect::all_players_unconfirmed() const
 {
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
-		if (this->select_states_[i].state == confirmation_state::CONFIRMED)
+		if (this->select_states_[i].state == ConfirmationState::confirmed)
 		{
 			return false;
 		}
@@ -1559,27 +1559,27 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 	{
 		switch (this->select_states_[i].type)
 		{
-		case wep_type::SPRAYER:
+		case WeaponType::sprayer:
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sprayer");
 			this->player_widgets_[i]->weapon_name->set_text("Sprayer");
 			break;
-		case wep_type::SNIPER:
+		case WeaponType::sniper:
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sniper");
 			this->player_widgets_[i]->weapon_name->set_text("Sniper");
 			break;
-		case wep_type::ROLLER:
+		case WeaponType::roller:
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame("roller");
 			this->player_widgets_[i]->weapon_name->set_text("Roller");
 			break;
-		case wep_type::MISTER:
+		case WeaponType::mister:
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame("mister");
 			this->player_widgets_[i]->weapon_name->set_text("Mister");
 			break;
-		case wep_type::BUCKET:
+		case WeaponType::bucket:
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame("bucket");
 			this->player_widgets_[i]->weapon_name->set_text("Bucket");
 			break;
-		case wep_type::RANDOM_PRIMARY:
+		case WeaponType::random_primary:
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame("random");
 			this->player_widgets_[i]->weapon_name->set_text("Random");
 			break;
@@ -1589,7 +1589,7 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 			break;
 		}
 
-		if (this->select_states_[i].state == confirmation_state::CONFIRMED)
+		if (this->select_states_[i].state == ConfirmationState::confirmed)
 		{
 			this->player_widgets_[i]->weapon_icon->
 				set_colour(WEAPON_SELECT_SELECTED_COLOUR);
@@ -1648,7 +1648,7 @@ void MainMenuWeaponSelect::init()
 	for (int i = 0; i < this->get_player_count(); i++)
 	{
 		SelectState state;
-		state.state = confirmation_state::UNCONFIRMED;
+		state.state = ConfirmationState::unconfirmed;
 		state.type = this->get_main_menu_data()->get_level_settings()
 			->get_player_weapon(i);
 		this->select_states_.push_back(state);
@@ -1687,7 +1687,7 @@ void MainMenuWeaponSelect::init()
 
 		widgets->weapon_description = std::make_unique<MTextDropShadow>(
 			name + "_wep_desc",
-			this->weapon_description(wep_type::SPRAYER),
+			this->weapon_description(WeaponType::sprayer),
 			WEAPON_DESCRIPTION_FONT,
 			widgets->weapon_icon->get_rectangle().get_position() +
 				Vector2F(WEAPON_DESC_X_OFFSET, 0.0f),
@@ -1710,21 +1710,21 @@ void MainMenuWeaponSelect::init()
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
-std::string MainMenuWeaponSelect::weapon_description(wep_type type)
+std::string MainMenuWeaponSelect::weapon_description(WeaponType type)
 {
 	switch (type)
 	{
-	case wep_type::SPRAYER:
+	case WeaponType::sprayer:
 		return SPRAYER_DESC;
-	case wep_type::SNIPER:
+	case WeaponType::sniper:
 		return SNIPER_DESC;
-	case wep_type::ROLLER:
+	case WeaponType::roller:
 		return ROLLER_DESC;
-	case wep_type::MISTER:
+	case WeaponType::mister:
 		return MISTER_DESC;
-	case wep_type::BUCKET:
+	case WeaponType::bucket:
 		return BUCKET_DESC;
-	case wep_type::RANDOM_PRIMARY:
+	case WeaponType::random_primary:
 		return RANDOM_DESC;
 	default:
 		return "ERROR";
@@ -1766,9 +1766,9 @@ void MainMenuStageSelect::update()
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
 	{
-		if (inputs[i].action == menu_input_action::BACK)
+		if (inputs[i].action == MenuInputAction::back)
 		{
-			if (this->select_state_.state == confirmation_state::UNCONFIRMED)
+			if (this->select_state_.state == ConfirmationState::unconfirmed)
 			{
 				this->play_wave(this->cancel_sound_);
 				this->get_context()->transition_to(
@@ -1776,21 +1776,21 @@ void MainMenuStageSelect::update()
 						this->get_main_menu_data()));
 				return;
 			}
-			if (this->select_state_.state == confirmation_state::CONFIRMED)
+			if (this->select_state_.state == ConfirmationState::confirmed)
 			{
 				this->play_wave(this->cancel_sound_);
 				this->select_state_.state =
-					confirmation_state::UNCONFIRMED;
+					ConfirmationState::unconfirmed;
 			}
 			//no break here as I want simultaneous input from players to be possible
 		}
-		else if (inputs[i].action == menu_input_action::PROCEED)
+		else if (inputs[i].action == MenuInputAction::proceed)
 		{
-			if (this->select_state_.state == confirmation_state::CONFIRMED)
+			if (this->select_state_.state == ConfirmationState::confirmed)
 			{
 				this->play_wave(this->confirm_sound_);
 				this->stop_effect(this->music_, true);
-				if (this->select_state_.stage == level_stage::RANDOM)
+				if (this->select_state_.stage == LevelStage::random)
 				{
 					this->select_state_.stage = this->get_random_stage();
 				}
@@ -1802,20 +1802,20 @@ void MainMenuStageSelect::update()
 			else
 			{
 				this->play_wave(this->ready_sound_);
-				this->select_state_.state = confirmation_state::CONFIRMED;
+				this->select_state_.state = ConfirmationState::confirmed;
 			}
 		}
-		else if (this->select_state_.state == confirmation_state::UNCONFIRMED)
+		else if (this->select_state_.state == ConfirmationState::unconfirmed)
 		{
-			if (inputs[i].direction == menu_direction::LEFT)
+			if (inputs[i].direction == MenuDirection::left)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_stages(menu_direction::LEFT);
+				this->cycle_stages(MenuDirection::left);
 			}
-			else if (inputs[i].direction == menu_direction::RIGHT)
+			else if (inputs[i].direction == MenuDirection::right)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_stages(menu_direction::RIGHT);
+				this->cycle_stages(MenuDirection::right);
 			}
 		}
 	}
@@ -1832,19 +1832,19 @@ void MainMenuStageSelect::update_stage_select_visuals()
 
 	switch (this->select_state_.stage)
 	{
-	case level_stage::KING_OF_THE_HILL:
+	case LevelStage::king_of_the_hill:
 		this->stage_icon_->set_sprite_frame("stage_king_of_the_hill");
 		this->stage_name_->set_text("King of the Hill");
 		break;
-	case level_stage::TURBULENCE:
+	case LevelStage::turbulence:
 		this->stage_icon_->set_sprite_frame("stage_turbulence");
 		this->stage_name_->set_text("Turbulence");
 		break;
-	case level_stage::CLOSE_QUARTERS:
+	case LevelStage::close_quarters:
 		this->stage_icon_->set_sprite_frame("stage_close_quarters");
 		this->stage_name_->set_text("Close Quarters");
 		break;
-	case level_stage::RANDOM:
+	case LevelStage::random:
 		this->stage_icon_->set_sprite_frame("random");
 		this->stage_name_->set_text("Random");
 		break;
@@ -1853,7 +1853,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 		this->stage_name_->set_text("ERROR");
 		break;
 	}
-	if (this->select_state_.state == confirmation_state::CONFIRMED)
+	if (this->select_state_.state == ConfirmationState::confirmed)
 	{
 		this->ready_->set_hidden(false);
 	}
@@ -1866,11 +1866,11 @@ void MainMenuStageSelect::unconfirm_all_widgets()
 		main_menu_consts::STAGE_SELECT_UNSELECTED_COLOUR);
 	this->ready_->set_hidden(true);
 }
-level_stage MainMenuStageSelect::get_random_stage()
+LevelStage MainMenuStageSelect::get_random_stage()
 {
 	int random = static_cast<int>(rand() %
-		static_cast<int>(level_stage::MAX_STAGE));
-	return static_cast<level_stage>(random);
+		static_cast<int>(LevelStage::max_stage));
+	return static_cast<LevelStage>(random);
 }
 void MainMenuStageSelect::init()
 {
@@ -1945,11 +1945,11 @@ void MainMenuStageSelect::init()
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
-void MainMenuStageSelect::cycle_stages(menu_direction direction)
+void MainMenuStageSelect::cycle_stages(MenuDirection direction)
 {
-	int enum_max = static_cast<int>(level_stage::MAX_STAGE);
+	int enum_max = static_cast<int>(LevelStage::max_stage);
 	int enum_pos = static_cast<int>(this->select_state_.stage);
-	if (direction == menu_direction::LEFT)
+	if (direction == MenuDirection::left)
 	{
 		if (enum_pos == 0)
 		{
@@ -1960,7 +1960,7 @@ void MainMenuStageSelect::cycle_stages(menu_direction direction)
 			enum_pos--;
 		}
 	}
-	else if (direction == menu_direction::RIGHT)
+	else if (direction == MenuDirection::right)
 	{
 		if (enum_pos == enum_max)
 		{
@@ -1971,7 +1971,7 @@ void MainMenuStageSelect::cycle_stages(menu_direction direction)
 			enum_pos++;
 		}
 	}
-	this->select_state_.stage = static_cast<level_stage>(enum_pos);
+	this->select_state_.stage = static_cast<LevelStage>(enum_pos);
 }
 
 #pragma endregion MainMenuStageSelect

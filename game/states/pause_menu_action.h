@@ -1,9 +1,9 @@
 #pragma once
 
-enum class pause_menu_action
+enum class PauseMenuAction
 {
-	RESUME,
-	RESTART,
-	QUIT,
-	NONE
+	resume,
+	restart,
+	quit,
+	none
 };

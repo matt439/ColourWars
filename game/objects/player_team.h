@@ -1,8 +1,8 @@
 #pragma once
 
-enum class player_team
+enum class PlayerTeam
 {
-	A,
-	B,
-	NONE
+	a,
+	b,
+	none
 };

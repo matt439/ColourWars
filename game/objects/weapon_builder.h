@@ -11,10 +11,10 @@ class WeaponBuilder
 public:
 	WeaponBuilder() = default;
 	static std::unique_ptr<Weapon> build_weapon(
-		player_team team,
+		PlayerTeam team,
 		int player_num,
 		const mattmath::Colour& team_colour,
-		wep_type type,
+		WeaponType type,
 		const mattmath::Vector2F& player_center,
 		RenderResources* render_resources,
 		const AudioResources* audio_resources,

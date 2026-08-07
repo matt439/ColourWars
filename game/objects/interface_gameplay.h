@@ -38,7 +38,7 @@ struct InterfaceDraw
     mattmath::Vector2I resolution = { -1, -1 };
     float health = 0.0f;
     float ammo = 0.0f;
-    player_team team = player_team::A;
+    PlayerTeam team = PlayerTeam::a;
     float timer = 0.0f;
     mattmath::Colour team_colour = colour_consts::GRAY;
 };

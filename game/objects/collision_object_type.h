@@ -1,87 +1,86 @@
 #pragma once
 
-enum class collision_object_type
+enum class CollisionObjectType
 {
-	STRUCTURE,
-	STRUCTURE_PAINTABLE,
-	STRUCTURE_JUMP_THROUGH,
-	STRUCTURE_RAMP_LEFT,
-	STRUCTURE_RAMP_RIGHT,
-	PLAYER_TEAM_A,
-	PLAYER_TEAM_B,
-	PLAYER_TEAM_A_DEAD,
-	PLAYER_TEAM_B_DEAD,
-	PROJECTILE_SPRAY_TEAM_A,
-	PROJECTILE_SPRAY_TEAM_B,
-	PROJECTILE_JET_TEAM_A,
-	PROJECTILE_JET_TEAM_B,
-	PROJECTILE_ROLLING_TEAM_A,
-	PROJECTILE_ROLLING_TEAM_B,
-	PROJECTILE_BALL_TEAM_A,
-	PROJECTILE_BALL_TEAM_B,
-	PROJECTILE_MIST_TEAM_A,
-	PROJECTILE_MIST_TEAM_B,
-	PAINT_TILE,
-	POWER_UP,
-	DEFAULT,
-	NONE
+	structure,
+	structure_paintable,
+	structure_jump_through,
+	structure_ramp_left,
+	structure_ramp_right,
+	player_team_a,
+	player_team_b,
+	player_team_a_dead,
+	player_team_b_dead,
+	projectile_spray_team_a,
+	projectile_spray_team_b,
+	projectile_jet_team_a,
+	projectile_jet_team_b,
+	projectile_rolling_team_a,
+	projectile_rolling_team_b,
+	projectile_ball_team_a,
+	projectile_ball_team_b,
+	projectile_mist_team_a,
+	projectile_mist_team_b,
+	paint_tile,
+	power_up,
+	none
 };
 
-inline bool is_player(collision_object_type type)
+inline bool is_player(CollisionObjectType type)
 {
-	return type == collision_object_type::PLAYER_TEAM_A ||
-		type == collision_object_type::PLAYER_TEAM_B;
+	return type == CollisionObjectType::player_team_a ||
+		type == CollisionObjectType::player_team_b;
 }
 
-inline bool is_dead_player(collision_object_type type)
+inline bool is_dead_player(CollisionObjectType type)
 {
-	return type == collision_object_type::PLAYER_TEAM_A_DEAD ||
-		type == collision_object_type::PLAYER_TEAM_B_DEAD;
+	return type == CollisionObjectType::player_team_a_dead ||
+		type == CollisionObjectType::player_team_b_dead;
 }
 
-inline bool is_projectile(collision_object_type type)
+inline bool is_projectile(CollisionObjectType type)
 {
-	return type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
-		type == collision_object_type::PROJECTILE_SPRAY_TEAM_B ||
-		type == collision_object_type::PROJECTILE_JET_TEAM_A ||
-		type == collision_object_type::PROJECTILE_JET_TEAM_B ||
-		type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
-		type == collision_object_type::PROJECTILE_ROLLING_TEAM_B ||
-		type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
-		type == collision_object_type::PROJECTILE_BALL_TEAM_B ||
-		type == collision_object_type::PROJECTILE_MIST_TEAM_A ||
-		type == collision_object_type::PROJECTILE_MIST_TEAM_B;
+	return type == CollisionObjectType::projectile_spray_team_a ||
+		type == CollisionObjectType::projectile_spray_team_b ||
+		type == CollisionObjectType::projectile_jet_team_a ||
+		type == CollisionObjectType::projectile_jet_team_b ||
+		type == CollisionObjectType::projectile_rolling_team_a ||
+		type == CollisionObjectType::projectile_rolling_team_b ||
+		type == CollisionObjectType::projectile_ball_team_a ||
+		type == CollisionObjectType::projectile_ball_team_b ||
+		type == CollisionObjectType::projectile_mist_team_a ||
+		type == CollisionObjectType::projectile_mist_team_b;
 }
 
-inline bool is_team_a_projectile(collision_object_type type)
+inline bool is_team_a_projectile(CollisionObjectType type)
 {
-	return type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
-		type == collision_object_type::PROJECTILE_JET_TEAM_A ||
-		type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
-		type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
-		type == collision_object_type::PROJECTILE_MIST_TEAM_A;
+	return type == CollisionObjectType::projectile_spray_team_a ||
+		type == CollisionObjectType::projectile_jet_team_a ||
+		type == CollisionObjectType::projectile_rolling_team_a ||
+		type == CollisionObjectType::projectile_ball_team_a ||
+		type == CollisionObjectType::projectile_mist_team_a;
 }
 
-inline bool is_team_b_projectile(collision_object_type type)
+inline bool is_team_b_projectile(CollisionObjectType type)
 {
-	return type == collision_object_type::PROJECTILE_SPRAY_TEAM_B ||
-		type == collision_object_type::PROJECTILE_JET_TEAM_B ||
-		type == collision_object_type::PROJECTILE_ROLLING_TEAM_B ||
-		type == collision_object_type::PROJECTILE_BALL_TEAM_B ||
-		type == collision_object_type::PROJECTILE_MIST_TEAM_B;
+	return type == CollisionObjectType::projectile_spray_team_b ||
+		type == CollisionObjectType::projectile_jet_team_b ||
+		type == CollisionObjectType::projectile_rolling_team_b ||
+		type == CollisionObjectType::projectile_ball_team_b ||
+		type == CollisionObjectType::projectile_mist_team_b;
 }
 
-inline bool is_structure(collision_object_type type)
+inline bool is_structure(CollisionObjectType type)
 {
-	return type == collision_object_type::STRUCTURE ||
-		type == collision_object_type::STRUCTURE_PAINTABLE ||
-		type == collision_object_type::STRUCTURE_JUMP_THROUGH ||
-		type == collision_object_type::STRUCTURE_RAMP_LEFT ||
-		type == collision_object_type::STRUCTURE_RAMP_RIGHT;
+	return type == CollisionObjectType::structure ||
+		type == CollisionObjectType::structure_paintable ||
+		type == CollisionObjectType::structure_jump_through ||
+		type == CollisionObjectType::structure_ramp_left ||
+		type == CollisionObjectType::structure_ramp_right;
 }
 
-inline bool is_structure_ramp(collision_object_type type)
+inline bool is_structure_ramp(CollisionObjectType type)
 {
-	return type == collision_object_type::STRUCTURE_RAMP_LEFT ||
-		type == collision_object_type::STRUCTURE_RAMP_RIGHT;
+	return type == CollisionObjectType::structure_ramp_left ||
+		type == CollisionObjectType::structure_ramp_right;
 }

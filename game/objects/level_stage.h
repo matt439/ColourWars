@@ -2,13 +2,13 @@
 
 #include <string>
 
-enum class level_stage
+enum class LevelStage
 {
-    KING_OF_THE_HILL,
-    TURBULENCE,
-    CLOSE_QUARTERS,
-    RANDOM,
-    MAX_STAGE = RANDOM,
+    king_of_the_hill,
+    turbulence,
+    close_quarters,
+    random,
+    max_stage = random,
 };
 
 // The registry name a stage's level definition is loaded and looked up under.
@@ -18,4 +18,4 @@ enum class level_stage
 //
 // Throws std::invalid_argument for RANDOM: it is a menu choice, not a stage,
 // and has to be resolved to a real one before anything asks for its level.
-std::string level_asset_name(level_stage stage);
+std::string level_asset_name(LevelStage stage);

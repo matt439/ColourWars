@@ -9,7 +9,7 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_coll
 	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> collision_objects,
 	std::unique_ptr<std::vector<std::unique_ptr<Player>>> player_objects,
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers,
-	level_stage stage,
+	LevelStage stage,
 	const TeamColour& team_colours,
 	const RectangleF& out_of_bounds,
 	const RectangleF& camera_bounds,
@@ -68,7 +68,7 @@ void Level::stop_music() const
 }
 void Level::update(const std::vector<PlayerInputData>& player_inputs)
 {
-	if (this->state_ == level_state::START_COUNTDOWN ||
+	if (this->state_ == LevelState::start_countdown ||
 		this->start_timer_ > -1.0f)
 	{
 		// first update
@@ -120,33 +120,33 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 
 		if (this->start_timer_ <= 0.0f)
 		{
-			this->state_ = level_state::ACTIVE;
+			this->state_ = LevelState::active;
 		}
 		else
 		{
 			return;
 		}
 	}
-	if (this->state_ == level_state::ACTIVE)
+	if (this->state_ == LevelState::active)
 	{
 		this->update_level_logic(player_inputs);
 		
 		this->timer_ -= this->get_dt();
 		if (this->timer_ <= 0.0f)
 		{
-			this->state_ = level_state::ZOOM_OUT;
+			this->state_ = LevelState::zoom_out;
 			this->sound_bank_->stop_effect(this->music_, true);
 			this->stop_player_sounds();
 			this->sound_bank_->play_effect(this->zoom_out_sound_, false, ZOOM_OUT_SOUND_VOLUME);
 		}
 	}
-	else if (this->state_ == level_state::ZOOM_OUT)
+	else if (this->state_ == LevelState::zoom_out)
 	{		
 		this->zoom_out_timer_ -= this->get_dt();
 
 		if (this->zoom_out_timer_ <= 0.0f)
 		{
-			this->state_ = level_state::OVERVIEW;
+			this->state_ = LevelState::overview;
 			this->zoom_out_timer_ = 0.0f;
 			this->sound_bank_->stop_effect(this->zoom_out_sound_, true);
 		}
@@ -162,15 +162,15 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 		this->zoom_out_camera_ = Camera::calculate_intermediate_camera(
 			start_camera, finish_camera, this->zoom_out_camera_ratio());
 	}
-	else if (this->state_ == level_state::OVERVIEW)
+	else if (this->state_ == LevelState::overview)
 	{
 		this->overview_timer_ -= this->get_dt();
 		if (this->overview_timer_ <= 0.0f)
 		{
-			this->state_ = level_state::FINISHED;
+			this->state_ = LevelState::finished;
 		}
 	}
-	else if (this->state_ == level_state::FINISHED)
+	else if (this->state_ == LevelState::finished)
 	{
 		this->sound_bank_->stop_effect(this->music_, true);
 		return;
@@ -350,23 +350,23 @@ void Level::stop_player_sounds() const
 }
 //void Level::draw()
 //{		
-//	if (this->state_ == level_state::START_COUNTDOWN)
+//	if (this->state_ == LevelState::start_countdown)
 //	{
 //		this->draw_active_level();
 //	}
-//	else if (this->state_ == level_state::ACTIVE)
+//	else if (this->state_ == LevelState::active)
 //	{
 //		this->draw_active_level();
 //	}
-//	else if (this->state_ == level_state::ZOOM_OUT)
+//	else if (this->state_ == LevelState::zoom_out)
 //	{
 //		this->draw_zoom_out_level();
 //	}
-//	else if (this->state_ == level_state::OVERVIEW)
+//	else if (this->state_ == LevelState::overview)
 //	{
 //		this->draw_zoom_out_level();
 //	}
-//	else if (this->state_ == level_state::FINISHED)
+//	else if (this->state_ == LevelState::finished)
 //	{
 //		this->draw_zoom_out_level();
 //	}
@@ -375,16 +375,16 @@ void Level::draw(std::vector<ID3D11DeviceContext*>* deferred_contexts,
 	std::vector<ID3D11CommandList*>* command_lists,
 	std::vector<SpriteBatch*>* sprite_batches) const
 {
-	if (this->state_ == level_state::START_COUNTDOWN ||
-		this->state_ == level_state::ACTIVE)
+	if (this->state_ == LevelState::start_countdown ||
+		this->state_ == LevelState::active)
 	{
 		this->draw_active_level(deferred_contexts,
 			command_lists,
 			sprite_batches);
 	}
-	else if (this->state_ == level_state::ZOOM_OUT ||
-		this->state_ == level_state::OVERVIEW ||
-		this->state_ == level_state::FINISHED)
+	else if (this->state_ == LevelState::zoom_out ||
+		this->state_ == LevelState::overview ||
+		this->state_ == LevelState::finished)
 	{
 		this->draw_zoom_out_level(deferred_contexts,
 			command_lists,
@@ -474,7 +474,7 @@ void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contex
 //
 //		this->sprite_batch_->End();
 //
-//		const player_state state = player->get_state();
+//		const PlayerState state = player->get_state();
 //
 //		// draw interface
 //		Vector2F viewport_size = player_vp.get_size();
@@ -487,7 +487,7 @@ void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contex
 //			player->get_team_colour(),
 //			this->sampler_state_,
 //			player->get_respawn_timer(),
-//			state == player_state::DEAD);
+//			state == PlayerState::dead);
 //
 //		// draw debug info
 //		if (player->get_showing_debug())
@@ -499,7 +499,7 @@ void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contex
 //		this->sprite_batch_->Begin();
 //
 //		// draw countdown text
-//		if (this->state_ == level_state::START_COUNTDOWN ||
+//		if (this->state_ == LevelState::start_countdown ||
 //			this->start_timer_ > -1.0f)
 //		{
 //			this->countdown_text_->draw(viewport_camera);
@@ -572,7 +572,7 @@ void Level::draw_player_view_level(int start, int end,
 
 		sprite_batches->at(i)->End();
 
-		const player_state state =  this->player_objects_->at(i)->get_state();
+		const PlayerState state =  this->player_objects_->at(i)->get_state();
 
 		// draw interface
 		Vector2F viewport_size = player_vp.get_size();
@@ -586,7 +586,7 @@ void Level::draw_player_view_level(int start, int end,
 			this->player_objects_->at(i)->get_team_colour(),
 			this->sampler_state_,
 			this->player_objects_->at(i)->get_respawn_timer(),
-			state == player_state::DEAD);
+			state == PlayerState::dead);
 
 		// draw debug info
 		if (this->player_objects_->at(i)->get_showing_debug())
@@ -598,7 +598,7 @@ void Level::draw_player_view_level(int start, int end,
 		}
 
 		// draw countdown text
-		if (this->state_ == level_state::START_COUNTDOWN ||
+		if (this->state_ == LevelState::start_countdown ||
 			this->start_timer_ > -1.0f)
 		{
 			this->draw_countdown_text(sprite_batches->at(i), viewport_camera);
@@ -675,7 +675,7 @@ void Level::draw_zoom_out_level_component(
 	}
 }
 
-level_state Level::get_state() const
+LevelState Level::get_state() const
 {
 	return this->state_;
 }
@@ -685,19 +685,19 @@ int Level::count_projectiles() const
 	int count = 0;
 	for (const auto& object : *this->collision_objects_)
 	{
-		collision_object_type type = object->get_collision_object_type();
+		CollisionObjectType type = object->get_collision_object_type();
 
 		bool is_projectile =
-			type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
-			type == collision_object_type::PROJECTILE_SPRAY_TEAM_B ||
-			type == collision_object_type::PROJECTILE_JET_TEAM_A ||
-			type == collision_object_type::PROJECTILE_JET_TEAM_B ||
-			type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
-			type == collision_object_type::PROJECTILE_ROLLING_TEAM_B ||
-			type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
-			type == collision_object_type::PROJECTILE_BALL_TEAM_B ||
-			type == collision_object_type::PROJECTILE_MIST_TEAM_A ||
-			type == collision_object_type::PROJECTILE_MIST_TEAM_B;
+			type == CollisionObjectType::projectile_spray_team_a ||
+			type == CollisionObjectType::projectile_spray_team_b ||
+			type == CollisionObjectType::projectile_jet_team_a ||
+			type == CollisionObjectType::projectile_jet_team_b ||
+			type == CollisionObjectType::projectile_rolling_team_a ||
+			type == CollisionObjectType::projectile_rolling_team_b ||
+			type == CollisionObjectType::projectile_ball_team_a ||
+			type == CollisionObjectType::projectile_ball_team_b ||
+			type == CollisionObjectType::projectile_mist_team_a ||
+			type == CollisionObjectType::projectile_mist_team_b;
 		if (is_projectile)
 		{
 			count++;
@@ -723,7 +723,7 @@ void Level::draw_end_screen()
 	// TODO
 }
 
-void Level::set_state(level_state state)
+void Level::set_state(LevelState state)
 {
 	this->state_ = state;
 }
@@ -735,9 +735,9 @@ LevelEndInfo Level::get_level_end_info() const
 
 	for (auto& object : *this->collision_objects_)
 	{
-		collision_object_type type = object->get_collision_object_type();
+		CollisionObjectType type = object->get_collision_object_type();
 
-		if (type == collision_object_type::STRUCTURE_PAINTABLE)
+		if (type == CollisionObjectType::structure_paintable)
 		{
 			// dynamic_cast on a POINTER returns nullptr on failure; only the
 			// reference form throws bad_cast. The catch here could never fire,

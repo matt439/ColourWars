@@ -9,7 +9,7 @@
 
 struct SaveData
 {
-	screen_resolution resolution = screen_resolution::S_1280_720;
+	ScreenResolution resolution = ScreenResolution::s_1280_720;
 	bool fullscreen = false;
 };
 
@@ -20,8 +20,8 @@ public:
 	void load_save_file();
 	void save_to_file() const;
 	SaveData get_save_data() const;
-	void set_resolution_and_save(screen_resolution resolution);
-	screen_resolution get_resolution() const;
+	void set_resolution_and_save(ScreenResolution resolution);
+	ScreenResolution get_resolution() const;
 	bool get_fullscreen() const;
 	void set_full_screen_and_save(bool full_screen);
 private:
@@ -30,9 +30,9 @@ private:
 	bool write_save_file(const SaveData& data) const;
 	static bool check_if_save_file_exists();
 
-	screen_resolution convert_ivec_to_resolution(
+	ScreenResolution convert_ivec_to_resolution(
 		const mattmath::Vector2I& vec) const;
 
 	mattmath::Vector2I convert_resolution_to_ivec(
-		screen_resolution resolution) const;
+		ScreenResolution resolution) const;
 };

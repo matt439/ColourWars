@@ -1,7 +1,7 @@
 #pragma once
 
 #include "game/objects/player_consts.h"
-#include "game/objects/wep_type.h"
+#include "game/objects/weapon_type.h"
 #include "game/objects/player_team.h"
 #include "game/objects/player_input_data.h"
 #include "game/objects/weapon.h"
@@ -13,51 +13,51 @@
 #include "engine/audio/audio_resources.h"
 #include "engine/math/collision_tools.h"
 
-enum class player_state
+enum class PlayerState
 {
-    ALIVE,
-    DEAD
+    alive,
+    dead
 };
 
-enum class player_move_state
+enum class PlayerMoveState
 {
-	ON_GROUND,
-    ON_DROP_DOWN_GROUND,
-    ON_RAMP_LEFT,
-	ON_RAMP_RIGHT,
-    DROPPING_DOWN,
-	ON_CEILING,
-    JUMPING,
-    IN_AIR,
+	on_ground,
+    on_drop_down_ground,
+    on_ramp_left,
+	on_ramp_right,
+    dropping_down,
+	on_ceiling,
+    jumping,
+    in_air,
 };
 
-enum class player_animation_state
+enum class PlayerAnimationState
 {
-	IDLE,
-	WALKING,
-	JUMPING,
-	FALLING,
-    RUNNING,
+	idle,
+	walking,
+	jumping,
+	falling,
+    running,
 };
 
 //enum class player_collision_type
 //{
-//    TOP_EDGE,
-//    BOTTOM_EDGE,
-//    LEFT_EDGE,
-//    RIGHT_EDGE,
-//    TOP_AND_BOTTOM_EDGES,
-//    LEFT_AND_RIGHT_EDGES,
-//    TOP_AND_LEFT_EDGES,
-//    TOP_AND_RIGHT_EDGES,
-//    BOTTOM_AND_LEFT_EDGES,
-//    BOTTOM_AND_RIGHT_EDGES,
-//    TOP_AND_BOTTOM_AND_LEFT_EDGES,
-//    TOP_AND_BOTTOM_AND_RIGHT_EDGES,
-//    LEFT_AND_RIGHT_AND_TOP_EDGES,
-//    LEFT_AND_RIGHT_AND_BOTTOM_EDGES,
-//    CONTAINED_INSIDE_OTHER,
-//    CONTAINS_OTHER,
+//    top_edge,
+//    bottom_edge,
+//    left_edge,
+//    right_edge,
+//    top_and_bottom_edges,
+//    left_and_right_edges,
+//    top_and_left_edges,
+//    top_and_right_edges,
+//    bottom_and_left_edges,
+//    bottom_and_right_edges,
+//    top_and_bottom_and_left_edges,
+//    top_and_bottom_and_right_edges,
+//    left_and_right_and_top_edges,
+//    left_and_right_and_bottom_edges,
+//    contained_inside_other,
+//    contains_other,
 //};
 
 class Player final : public MovingObject, public ICollisionGameObject,
@@ -69,10 +69,10 @@ public:
         RenderResources* render_resources,
         const AudioResources* audio_resources,
         int player_num,
-        player_team team,
-        wep_type primary,
+        PlayerTeam team,
+        WeaponType primary,
         std::unique_ptr<Weapon> primary_weapon,
-        wep_type secondary,
+        WeaponType secondary,
         const mattmath::Colour& team_colour,
         const mattmath::Viewport& view_port,
         const float* dt,
@@ -93,7 +93,7 @@ public:
 
     bool is_colliding(const ICollisionGameObject* other) const override;
     void on_collision(const ICollisionGameObject* other) override;
-    collision_object_type get_collision_object_type() const override;
+    CollisionObjectType get_collision_object_type() const override;
     const mattmath::Shape* get_shape() const override;
     bool get_for_deletion() const override;
 
@@ -110,7 +110,7 @@ public:
 	bool get_input_primary_shoot() const;
 	bool get_input_jump_pressed() const;
 	bool get_input_jump_held() const;
-	player_move_state get_move_state() const;
+	PlayerMoveState get_move_state() const;
     int get_player_num() const;
 
 	bool get_showing_debug() const;
@@ -122,10 +122,10 @@ public:
 
     const PlayerInputData& get_input() const;
 
-    player_state get_state() const;
-    void set_state(player_state state);
+    PlayerState get_state() const;
+    void set_state(PlayerState state);
 
-    player_team get_team() const;
+    PlayerTeam get_team() const;
 
     float get_respawn_timer() const;
 
@@ -148,16 +148,16 @@ private:
     bool facing_right_ = true;
     int score_ = 0;
     bool showing_debug_ = false;
-    player_state state_ = player_state::ALIVE;
+    PlayerState state_ = PlayerState::alive;
     float respawn_timer_ = player_consts::RESPAWN_DELAY;
     PlayerInputData input_ = PlayerInputData();
-    player_move_state move_state_ = player_move_state::IN_AIR;
-    player_animation_state animation_state_ = player_animation_state::IDLE;
+    PlayerMoveState move_state_ = PlayerMoveState::in_air;
+    PlayerAnimationState animation_state_ = PlayerAnimationState::idle;
 
     int player_num_ = player_consts::DEFAULT_PLAYER_NUM;
-    player_team team_ = player_consts::DEFAULT_TEAM;
-    wep_type primary_type_ = player_consts::DEFAULT_PRIMARY;
-    wep_type secondary_type_ = player_consts::DEFAULT_SECONDARY;
+    PlayerTeam team_ = player_consts::DEFAULT_TEAM;
+    WeaponType primary_type_ = player_consts::DEFAULT_PRIMARY;
+    WeaponType secondary_type_ = player_consts::DEFAULT_SECONDARY;
     mattmath::Colour team_colour_ = player_consts::DEFAULT_TEAM_COLOUR;
     mattmath::Viewport viewport_ = mattmath::Viewport();
 
@@ -192,13 +192,13 @@ private:
 	void update_movement();
 	void do_jump();
 
-    player_animation_state calculate_animation_state() const;
+    PlayerAnimationState calculate_animation_state() const;
 
     // Selects the animation clip for this frame. Called from update(), never
     // from draw() - draw runs concurrently on every render worker.
     void update_animation_state();
 
-    static const PlayerAnimationInfo& get_animation_info(player_animation_state state);
+    static const PlayerAnimationInfo& get_animation_info(PlayerAnimationState state);
 
     void respawn();
 
@@ -224,13 +224,13 @@ private:
     void set_player_num(int player_num);
 
 
-    void set_team(player_team team);
+    void set_team(PlayerTeam team);
 
-    wep_type get_primary() const;
-    void set_primary(wep_type primary);
+    WeaponType get_primary() const;
+    void set_primary(WeaponType primary);
 
-    wep_type get_secondary() const;
-    void set_secondary(wep_type secondary);
+    WeaponType get_secondary() const;
+    void set_secondary(WeaponType secondary);
 
     void set_team_colour(const mattmath::Colour& team_colour);
 
@@ -257,7 +257,7 @@ private:
 
     void set_showing_debug(bool showing_debug);
 
-    void set_move_state(player_move_state move_state);
+    void set_move_state(PlayerMoveState move_state);
 
 	bool is_on_ground() const;
     bool is_on_ramp() const;

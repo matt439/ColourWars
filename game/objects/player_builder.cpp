@@ -28,7 +28,7 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 	for (auto& setting : settings.get_player_settings())
 	{
 		Vector2F position = Vector2F::ZERO;
-		if (setting.team == player_team::A)
+		if (setting.team == PlayerTeam::a)
 		{
 			position = team_a_spawns[i];
 		}
@@ -55,7 +55,7 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 				render_resources,
 				audio_resources,
 				dt),
-			wep_type::GRENADE_STD,
+			WeaponType::grenade_std,
 			team_colours.get_team_colour(setting.team),
 			viewport_manager->
 				get_player_viewport(setting.num),

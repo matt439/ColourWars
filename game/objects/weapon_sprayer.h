@@ -5,10 +5,10 @@
 class WeaponSprayer final : public RelativeVelocityWeapon
 {
 public:
-	WeaponSprayer(player_team team,
+	WeaponSprayer(PlayerTeam team,
 		int player_num,
 		const mattmath::Colour& team_colour,
-		wep_type type,
+		WeaponType type,
 		const mattmath::Vector2F& player_center,
 		RenderResources* render_resources,
 		const AudioResources* audio_resources,

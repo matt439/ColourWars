@@ -9,7 +9,7 @@ struct LevelEndInfo
 	float team_a_area = 0.0f;
 	float team_b_area = 0.0f;
 
-	player_team winning_team() const;
+	PlayerTeam winning_team() const;
 	float team_a_ratio() const;
 	float team_b_ratio() const;
 	float team_a_percentage() const;

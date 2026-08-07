@@ -1,9 +1,9 @@
 #pragma once
 
-enum class level_mode
+enum class LevelMode
 {
-    STANDARD_MODE,
-    TEAM_DEATHMATCH,
-    DEATHMATCH,
-    PRACTICE,
+    standard_mode,
+    team_deathmatch,
+    deathmatch,
+    practice,
 };

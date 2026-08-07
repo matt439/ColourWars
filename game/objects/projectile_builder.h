@@ -14,7 +14,7 @@ public:
 	std::vector<std::unique_ptr<ICollisionGameObject>> build_projectiles(
 		const mattmath::Vector2F& position,
 		const mattmath::Vector2F& velocity,
-		player_team team,
+		PlayerTeam team,
 		int player_num,
 		const mattmath::Colour& team_colour,
 		projectile_type type,
@@ -29,7 +29,7 @@ private:
 	static std::vector<std::unique_ptr<ICollisionGameObject>> build_mist_projectiles(
 		const mattmath::Vector2F& position,
 		const mattmath::Vector2F& velocity,
-		player_team team,
+		PlayerTeam team,
 		int player_num,
 		const mattmath::Colour& team_colour,
 		projectile_type type,

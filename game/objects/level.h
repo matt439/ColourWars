@@ -19,13 +19,13 @@
 #include "engine/core/thread_pool.h"
 #include "engine/collision/partitioner.h"
 
-enum class level_state
+enum class LevelState
 {
-	START_COUNTDOWN,
-	ACTIVE,
-	ZOOM_OUT,
-	OVERVIEW,
-	FINISHED,
+	start_countdown,
+	active,
+	zoom_out,
+	overview,
+	finished,
 };
 
 namespace level_consts
@@ -59,7 +59,7 @@ public:
 		std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> collision_objects,
 		std::unique_ptr<std::vector<std::unique_ptr<Player>>> player_objects,
 		std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers,
-		level_stage stage,
+		LevelStage stage,
 		const TeamColour& team_colours,
 		const mattmath::RectangleF& out_of_bounds,
 		const mattmath::RectangleF& camera_bounds,
@@ -85,8 +85,8 @@ public:
 		std::vector<ID3D11CommandList*>* command_lists,
 		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
 
-	level_state get_state() const;
-	void set_state(level_state state);
+	LevelState get_state() const;
+	void set_state(LevelState state);
 
 	LevelEndInfo get_level_end_info() const;
 
@@ -133,7 +133,7 @@ private:
 	mattmath::Camera zoom_out_camera_ = mattmath::Camera::DEFAULT_CAMERA;
 
 	TeamColour team_colours_ = TeamColour();
-	level_stage stage_ = level_stage::KING_OF_THE_HILL;
+	LevelStage stage_ = LevelStage::king_of_the_hill;
 
 	mattmath::RectangleF out_of_bounds_ = mattmath::RectangleF::ZERO;
 	mattmath::RectangleF camera_bounds_ = mattmath::RectangleF::ZERO;
@@ -143,7 +143,7 @@ private:
 	std::vector<mattmath::Vector2F> team_a_spawns_ = std::vector<mattmath::Vector2F>();
 	std::vector<mattmath::Vector2F> team_b_spawns_ = std::vector<mattmath::Vector2F>();
 
-	level_state state_ = level_state::START_COUNTDOWN;
+	LevelState state_ = LevelState::start_countdown;
 	const float* dt_ = nullptr;
 	ID3D11SamplerState* sampler_state_ = nullptr;
 

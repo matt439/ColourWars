@@ -8,7 +8,7 @@ public:
 	ProjectileMist() = delete;
 	ProjectileMist(const mattmath::RectangleF& rectangle,
 		const mattmath::Vector2F& velocity,
-		player_team team,
+		PlayerTeam team,
 		int player_num,
 		const mattmath::Colour& team_colour,
 		const float* dt,

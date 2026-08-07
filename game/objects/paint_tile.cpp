@@ -41,7 +41,7 @@ void PaintTile::draw(SpriteBatch* sprite_batch, const Camera& camera)
 	// itself entered by every render worker at once, so assigning the tile's
 	// and the splash's colour here was an unsynchronised write to state shared
 	// by all of them.
-	if (this->team_ == player_team::NONE)
+	if (this->team_ == PlayerTeam::none)
 	{
 		return;
 	}
@@ -61,7 +61,7 @@ float PaintTile::get_area() const
 {
 	return this->rectangle_.get_area();
 }
-player_team PaintTile::get_team() const
+PlayerTeam PaintTile::get_team() const
 {
 	return this->team_;
 }
@@ -76,8 +76,8 @@ bool PaintTile::is_colliding(const ICollisionGameObject* other) const
     {
         // if the other object is a rectangle, then we have a collision
         // since the AABB check passed
-        shape_type other_shape_type = other->get_shape()->get_shape_type();
-        if (other_shape_type == shape_type::RECTANGLE)
+        ShapeType other_shape_type = other->get_shape()->get_shape_type();
+        if (other_shape_type == ShapeType::rectangle)
         {
             return true;
         }
@@ -97,23 +97,23 @@ const Shape* PaintTile::get_shape() const
 }
 void PaintTile::on_collision(const ICollisionGameObject* other)
 {
-	collision_object_type other_type = other->get_collision_object_type();
-	player_team other_team;
-	if (other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_JET_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_BALL_TEAM_A ||
-		other_type == collision_object_type::PROJECTILE_MIST_TEAM_A)
+	CollisionObjectType other_type = other->get_collision_object_type();
+	PlayerTeam other_team;
+	if (other_type == CollisionObjectType::projectile_spray_team_a ||
+		other_type == CollisionObjectType::projectile_jet_team_a ||
+		other_type == CollisionObjectType::projectile_rolling_team_a ||
+		other_type == CollisionObjectType::projectile_ball_team_a ||
+		other_type == CollisionObjectType::projectile_mist_team_a)
 	{
-		other_team = player_team::A;
+		other_team = PlayerTeam::a;
 	}
-	else if (other_type == collision_object_type::PROJECTILE_SPRAY_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_JET_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_ROLLING_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_BALL_TEAM_B ||
-		other_type == collision_object_type::PROJECTILE_MIST_TEAM_B)
+	else if (other_type == CollisionObjectType::projectile_spray_team_b ||
+		other_type == CollisionObjectType::projectile_jet_team_b ||
+		other_type == CollisionObjectType::projectile_rolling_team_b ||
+		other_type == CollisionObjectType::projectile_ball_team_b ||
+		other_type == CollisionObjectType::projectile_mist_team_b)
 	{
-		other_team = player_team::B;
+		other_team = PlayerTeam::b;
 	}
 	else
 	{
@@ -122,9 +122,9 @@ void PaintTile::on_collision(const ICollisionGameObject* other)
 	this->team_ = other_team;
 	this->splash_.reset_and_play();
 }
-collision_object_type PaintTile::get_collision_object_type() const
+CollisionObjectType PaintTile::get_collision_object_type() const
 {
-	return collision_object_type::PAINT_TILE;
+	return CollisionObjectType::paint_tile;
 }
 bool PaintTile::get_for_deletion() const
 {

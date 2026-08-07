@@ -10,7 +10,7 @@ public:
 	~ICollisionGameObject() override = default;
 	virtual bool is_colliding(const ICollisionGameObject* other) const = 0;
 	virtual void on_collision(const ICollisionGameObject* other) = 0;
-	virtual collision_object_type get_collision_object_type() const = 0;
+	virtual CollisionObjectType get_collision_object_type() const = 0;
 	virtual const mattmath::Shape* get_shape() const = 0;
 	virtual bool get_for_deletion() const = 0;
 

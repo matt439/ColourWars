@@ -8,14 +8,14 @@ class ResultsMenuData : public MenuData
 {
 public:
 	ResultsMenuData(const GameData* game_data, MenuInput* input,
-		const LevelEndInfo& info, results_menu_action* action);
+		const LevelEndInfo& info, ResultsMenuAction* action);
 
 	LevelEndInfo get_level_end_info() const;
 	void set_level_end_info(const LevelEndInfo& level_end_info);
-	results_menu_action* get_action() const;
-	void set_action(results_menu_action* action);
+	ResultsMenuAction* get_action() const;
+	void set_action(ResultsMenuAction* action);
 
 private:
 	LevelEndInfo level_end_info_ = LevelEndInfo();
-	results_menu_action* action_ = nullptr;
+	ResultsMenuAction* action_ = nullptr;
 };
