@@ -12,7 +12,9 @@ ResultsMenuPage::ResultsMenuPage(ResultsMenuData* data) :
 		this->get_audio_resources()),
 	_data(data)
 {
-
+	this->_confirm_sound = this->resolve_wave(CONFIRM_SOUND);
+	this->_winner_sound = this->resolve_wave(WINNER_SOUND);
+	this->_fill_sound = this->resolve_effect(FILL_SOUND);
 }
 
 ResultsMenuData* ResultsMenuPage::get_results_menu_data() const
@@ -45,8 +47,8 @@ void ResultsMenuInitial::update()
 			if (!this->_winner_sound_played)
 			{
 				this->_winner_sound_played = true;
-				this->stop_effect(FILL_SOUND, true);
-				this->play_wave(WINNER_SOUND, WINNER_VOLUME);
+				this->stop_effect(this->_fill_sound, true);
+				this->play_wave(this->_winner_sound, WINNER_VOLUME);
 			}
 			this->_team_a_percentage->set_hidden(false);
 			this->_team_b_percentage->set_hidden(false);
@@ -59,7 +61,7 @@ void ResultsMenuInitial::update()
 
 				if (continue_input != -1)
 				{
-					this->play_wave(CONFIRM_SOUND);
+					this->play_wave(this->_confirm_sound);
 					*this->get_results_menu_data()->get_action() =
 						results_menu_action::CONTINUE_TO_END_MENU;
 				}
@@ -196,7 +198,7 @@ void ResultsMenuInitial::init()
 	this->_text_container->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->play_effect(FILL_SOUND, true, FILL_VOLUME);
+	this->play_effect(this->_fill_sound, true, FILL_VOLUME);
 }
 
 void ResultsMenuInitial::draw()

@@ -43,6 +43,11 @@ Player::Player(const RectangleF& rectangle,
     _dt(dt)
 {
     this->_sound_bank = audio_resources->get_sound_bank(SOUND_BANK);
+
+    this->_damage_sound = this->_sound_bank->resolve_wave(DAMAGE_SOUND);
+    this->_death_sound = this->_sound_bank->resolve_wave(DEATH_SOUND);
+    this->_jump_sound = this->_sound_bank->resolve_wave(JUMP_SOUND);
+    this->_respawn_sound = this->_sound_bank->resolve_wave(RESPAWN_SOUND);
 }
 
 void Player::update_animation_state()
@@ -715,7 +720,7 @@ void Player::on_projectile_collision(const ICollisionGameObject* other)
 
     if (this->_damage_sound_timer >= DAMAGE_SOUND_DELAY)
 	{
-		this->_sound_bank->play_wave(DAMAGE_SOUND, DAMAGE_SOUND_VOLUME);
+		this->_sound_bank->play_wave(this->_damage_sound, DAMAGE_SOUND_VOLUME);
 		this->_damage_sound_timer = 0.0f;
 	}
 }
@@ -743,7 +748,7 @@ void Player::update()
         if (this->_health <= 0.0f)
         {
 			this->_state = player_state::DEAD;
-			this->_sound_bank->play_wave(DEATH_SOUND, DEATH_SOUND_VOLUME);
+			this->_sound_bank->play_wave(this->_death_sound, DEATH_SOUND_VOLUME);
         }
 
         this->_damage_sound_timer += this->get_dt();
@@ -916,7 +921,7 @@ void Player::do_jump()
 		MovingObject::set_velocity_y(JUMP_LAUNCH_VELOCITY);
 		this->set_air_time(0.0f);
 		this->set_move_state(player_move_state::JUMPING);
-		this->_sound_bank->play_wave(JUMP_SOUND, JUMP_SOUND_VOLUME);
+		this->_sound_bank->play_wave(this->_jump_sound, JUMP_SOUND_VOLUME);
 	}
 	else if (move_state == player_move_state::ON_CEILING)
 	{
@@ -1038,7 +1043,7 @@ void Player::respawn()
 	this->_health = 1.0f;
 	this->_primary->reset_ammo();
 	this->_state = player_state::ALIVE;
-    this->_sound_bank->play_wave(RESPAWN_SOUND, RESPAWN_SOUND_VOLUME);
+    this->_sound_bank->play_wave(this->_respawn_sound, RESPAWN_SOUND_VOLUME);
 }
 player_animation_state Player::calculate_animation_state() const
 {

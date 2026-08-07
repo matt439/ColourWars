@@ -68,6 +68,10 @@ private:
 	std::vector<PaintTile> generate_paint_tiles() const;
 	SoundBank* _sound_bank = nullptr;
 
+	// Resolved once at construction. This plays from update(), on any tile
+	// that was just painted, so it was a map descent per splash per frame.
+	SoundBank::WaveHandle _paint_sound;
+
 
 };
 #endif // !STRUCTUREPAINTABLE_H

@@ -10,7 +10,9 @@ EndMenuPage::EndMenuPage(EndMenuData* data) :
 	SoundBankObject(SOUND_BANK, this->get_audio_resources()),
 	_data(data)
 {
-
+	this->_direction_sound = this->resolve_wave(DIRECTION_SOUND);
+	this->_confirm_sound = this->resolve_wave(CONFIRM_SOUND);
+	this->_cancel_sound = this->resolve_wave(CANCEL_SOUND);
 }
 
 EndMenuData* EndMenuPage::get_end_menu_data() const
@@ -35,35 +37,35 @@ void EndMenuInitial::update()
 		{
 			if (highlighted_element == "change_teams")
 			{
-				this->play_wave(CONFIRM_SOUND);
+				this->play_wave(this->_confirm_sound);
 				*this->get_end_menu_data()->get_action() =
 					end_menu_action::CHANGE_TEAMS;
 				return;
 			}
 			else if (highlighted_element == "change_weapons")
 			{
-				this->play_wave(CONFIRM_SOUND);
+				this->play_wave(this->_confirm_sound);
 				*this->get_end_menu_data()->get_action() =
 					end_menu_action::CHANGE_WEAPONS;
 				return;
 			}
 			else if (highlighted_element == "change_level")
 			{
-				this->play_wave(CONFIRM_SOUND);
+				this->play_wave(this->_confirm_sound);
 				*this->get_end_menu_data()->get_action() =
 					end_menu_action::CHANGE_LEVEL;
 				return;
 			}
 			else if (highlighted_element == "restart")
 			{
-				this->play_wave(CONFIRM_SOUND);
+				this->play_wave(this->_confirm_sound);
 				*this->get_end_menu_data()->get_action() =
 					end_menu_action::RESTART;
 				return;
 			}
 			else if (highlighted_element == "exit")
 			{
-				this->play_wave(CANCEL_SOUND);
+				this->play_wave(this->_cancel_sound);
 				*this->get_end_menu_data()->get_action() =
 					end_menu_action::EXIT;
 				return;
@@ -71,7 +73,7 @@ void EndMenuInitial::update()
 		}
 		else if (inputs[i].direction == menu_direction::UP)
 		{
-			this->play_wave(DIRECTION_SOUND);
+			this->play_wave(this->_direction_sound);
 			if (highlighted_element == "change_teams")
 			{
 				this->change_highlight(this->_exit.get());
@@ -100,7 +102,7 @@ void EndMenuInitial::update()
 		}
 		else if (inputs[i].direction == menu_direction::DOWN)
 		{
-			this->play_wave(DIRECTION_SOUND);
+			this->play_wave(this->_direction_sound);
 			if (highlighted_element == "change_teams")
 			{
 				this->change_highlight(this->_change_weapons.get());

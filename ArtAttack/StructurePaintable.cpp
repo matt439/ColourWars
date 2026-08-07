@@ -31,6 +31,7 @@ StructurePaintable::StructurePaintable(
 {
 	this->_paint_tiles = this->generate_paint_tiles();
 	this->_sound_bank = audio_resources->get_sound_bank(SOUND_BANK_NAME);
+	this->_paint_sound = this->_sound_bank->resolve_wave(SOUND_NAME);
 }
 
 void StructurePaintable::update()
@@ -93,7 +94,7 @@ void StructurePaintable::on_collision(const ICollisionGameObject* other)
 
 			if (!tile_painted)
 			{
-				this->_sound_bank->play_wave(SOUND_NAME, SOUND_VOLUME);
+				this->_sound_bank->play_wave(this->_paint_sound, SOUND_VOLUME);
 			}
 			tile_painted = true;
 		}

@@ -32,7 +32,10 @@ Weapon::Weapon(const WeaponDetails& details,
 {
     this->_proj_builder = std::make_unique<ProjectileBuilder>();
     this->_sound_bank = audio_resources->get_sound_bank(details.sound_bank_name);
-    this->_loop_sound_name = resolve_loop_sound_name(type, team, player_num);
+    this->_loop_sound = resolve_loop_sound(*this->_sound_bank, type, team,
+        player_num);
+    this->_shoot_sound = this->_sound_bank->resolve_wave(
+        details.shoot_sound_name);
     this->_nozzle_frame = this->get_sprite_sheet()->
         resolve_sprite_frame(NOZZLE_FRAME);
 }
@@ -243,7 +246,7 @@ bool Weapon::check_if_shooting_and_ammo_update(
 }
 void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
 {
-    if (this->_loop_sound_name.empty())
+    if (!this->_loop_sound.valid())
     {
         return;
     }
@@ -251,32 +254,35 @@ void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
     if (holding_shoot || shooting_this_update)
     {
         this->_sound_bank->play_effect(
-            this->_loop_sound_name,
+            this->_loop_sound,
             true,
             this->_details.shoot_sound_volume);
     }
     else
     {
-        this->_sound_bank->stop_effect(this->_loop_sound_name, true);
+        this->_sound_bank->stop_effect(this->_loop_sound, true);
     }
 }
 void Weapon::stop_sounds() const
 {
-    if (this->_loop_sound_name.empty())
+    if (!this->_loop_sound.valid())
     {
         return;
     }
-    this->_sound_bank->stop_effect(this->_loop_sound_name, true);
+    this->_sound_bank->stop_effect(this->_loop_sound, true);
 }
-std::string Weapon::resolve_loop_sound_name(wep_type type,
-    player_team team, int player_num)
+SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
+    wep_type type, player_team team, int player_num)
 {
     // Sniper and Bucket fire a one-shot wave (see their handle_shoot_sound
-    // overrides) and have no looping instance at all. They get an empty name,
-    // which both handle_shoot_sound and stop_sounds read as "nothing to do".
+    // overrides) and have no looping instance at all. They get an unresolved
+    // handle, which both handle_shoot_sound and stop_sounds read as "nothing
+    // to do".
     //
     // Resolved once here rather than looked up per call so that stop_sounds -
-    // a teardown path with no catch anywhere above it - cannot throw.
+    // a teardown path with no catch anywhere above it - cannot throw. That
+    // mattered more when this searched a map by name; it is now also the
+    // difference between an index and a string compare per frame of firing.
     if (team != player_team::A && team != player_team::B)
     {
         return {};
@@ -289,11 +295,14 @@ std::string Weapon::resolve_loop_sound_name(wep_type type,
     switch (type)
     {
     case wep_type::SPRAYER:
-        return SPRAYER_SOUND_DETAILS.get_sound_name(team, player_num);
+        return sound_bank.resolve_effect(
+            SPRAYER_SOUND_DETAILS.get_sound_name(team, player_num));
     case wep_type::ROLLER:
-        return ROLLER_SOUND_DETAILS.get_sound_name(team, player_num);
+        return sound_bank.resolve_effect(
+            ROLLER_SOUND_DETAILS.get_sound_name(team, player_num));
     case wep_type::MISTER:
-        return MISTER_SOUND_DETAILS.get_sound_name(team, player_num);
+        return sound_bank.resolve_effect(
+            MISTER_SOUND_DETAILS.get_sound_name(team, player_num));
     default:
         return {};
     }

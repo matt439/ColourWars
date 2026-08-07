@@ -107,7 +107,13 @@ private:
 		_viewport_dividers = nullptr;
 
 	SoundBank* _sound_bank = nullptr;
-	std::string _music_name = "";
+
+	// The level's own music comes from its definition file, so its name is not
+	// known until here - but it is known once, at construction, which is where
+	// it stops being a name. Same for the two fixed sounds the level plays.
+	SoundBank::EffectHandle _music;
+	SoundBank::EffectHandle _zoom_out_sound;
+	SoundBank::WaveHandle _countdown_sound;
 	float _music_volume = 0.0f;
 
 	std::unique_ptr<TextDropShadow> _countdown_text = nullptr;

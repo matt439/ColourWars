@@ -49,6 +49,12 @@ public:
 	void draw() override = 0;
 protected:
 	EndMenuData* get_end_menu_data() const;
+
+	// Every sound this page family can make, resolved once when the page is
+	// built. A press then plays an index, not a name (T7, T8).
+	SoundBank::WaveHandle _direction_sound;
+	SoundBank::WaveHandle _confirm_sound;
+	SoundBank::WaveHandle _cancel_sound;
 private:
 	EndMenuData* _data = nullptr;
 };

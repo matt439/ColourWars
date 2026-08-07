@@ -75,7 +75,6 @@ namespace main_menu_consts
 	const std::string DIRECTION_SOUND = "UI_Clicks14";
 	const std::string CONFIRM_SOUND = "UI_Clicks01";
 	const std::string CANCEL_SOUND = "UI_Clicks17";
-	const std::string TITLE_SOUND = "UI_Clicks01";
 	const std::string ERROR_SOUND = "UIerror2";
 	const std::string READY_SOUND = "Whoosh2";
 	const std::string MUSIC = "Top_Of_The_Morning";
@@ -118,6 +117,16 @@ public:
 protected:
 	MainMenuData* get_main_menu_data() const;
 	int get_player_count() const;
+
+	// Every sound this page family can make, resolved once when the page is
+	// built. The music is an effect rather than a wave because it loops and is
+	// stopped on the way into a match; the rest are fire-and-forget.
+	SoundBank::WaveHandle _direction_sound;
+	SoundBank::WaveHandle _confirm_sound;
+	SoundBank::WaveHandle _cancel_sound;
+	SoundBank::WaveHandle _error_sound;
+	SoundBank::WaveHandle _ready_sound;
+	SoundBank::EffectHandle _music;
 private:
 	MainMenuData* _data = nullptr;
 };
@@ -135,7 +144,6 @@ private:
 	std::unique_ptr<MTexture> _background = nullptr;
 	std::unique_ptr<MTextDropShadow> _title = nullptr;
 	std::unique_ptr<MTextDropShadow> _start = nullptr;
-	std::unique_ptr<DirectX::SoundEffectInstance> _music = nullptr;
 };
 
 class MainMenuHome final : public MainMenuPage, public MenuHighlight

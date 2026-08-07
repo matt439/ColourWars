@@ -12,7 +12,12 @@ MainMenuPage::MainMenuPage(MainMenuData* data) :
 		this->get_audio_resources()),
 	_data(data)
 {
-
+	this->_direction_sound = this->resolve_wave(DIRECTION_SOUND);
+	this->_confirm_sound = this->resolve_wave(CONFIRM_SOUND);
+	this->_cancel_sound = this->resolve_wave(CANCEL_SOUND);
+	this->_error_sound = this->resolve_wave(ERROR_SOUND);
+	this->_ready_sound = this->resolve_wave(READY_SOUND);
+	this->_music = this->resolve_effect(MUSIC);
 }
 
 MainMenuData* MainMenuPage::get_main_menu_data() const
@@ -51,8 +56,7 @@ void MainMenuTitle::update()
 	{
 		if (inputs[i].action == menu_input_action::PROCEED)
 		{
-			this->play_wave(CONFIRM_SOUND);
-			//this->_music->Stop();
+			this->play_wave(this->_confirm_sound);
 			this->get_context()->transition_to(std::make_unique<MainMenuHome>(
 				this->get_main_menu_data()));
 			return;
@@ -104,7 +108,7 @@ void MainMenuTitle::init()
 	this->_text_container->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->play_effect(MUSIC, true, MUSIC_VOLUME);
+	this->play_effect(this->_music, true, MUSIC_VOLUME);
 }
 
 #pragma endregion MainMenuTitle
@@ -139,7 +143,7 @@ void MainMenuHome::update()
 	{		
 		if (inputs[i].action == menu_input_action::BACK)
 		{
-			this->play_wave(CANCEL_SOUND);
+			this->play_wave(this->_cancel_sound);
 			this->get_context()->transition_to(
 				std::make_unique<MainMenuTitle>(this->get_main_menu_data()));
 			return;
@@ -148,7 +152,7 @@ void MainMenuHome::update()
 		{
 			if (highlighted_element == "play")
 			{
-				this->play_wave(CONFIRM_SOUND);
+				this->play_wave(this->_confirm_sound);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuModeSelect>(
 						this->get_main_menu_data()));
@@ -156,7 +160,7 @@ void MainMenuHome::update()
 			}
 			if (highlighted_element == "options")
 			{
-				this->play_wave(CONFIRM_SOUND);
+				this->play_wave(this->_confirm_sound);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuOptions>(
 						this->get_main_menu_data()));
@@ -169,7 +173,7 @@ void MainMenuHome::update()
 		}
 		else if (inputs[i].direction == menu_direction::UP)
 		{
-			this->play_wave(DIRECTION_SOUND);
+			this->play_wave(this->_direction_sound);
 			if (highlighted_element == "play")
 			{
 				this->change_highlight(this->_exit.get());
@@ -185,7 +189,7 @@ void MainMenuHome::update()
 		}
 		else if (inputs[i].direction == menu_direction::DOWN)
 		{
-			this->play_wave(DIRECTION_SOUND);
+			this->play_wave(this->_direction_sound);
 			if (highlighted_element == "play")
 			{
 				this->change_highlight(this->_options.get());
@@ -273,7 +277,7 @@ void MainMenuHome::init()
 
 	this->set_highlighted_widget(this->_play.get());
 
-	this->play_effect(MUSIC, true, MUSIC_VOLUME);
+	this->play_effect(this->_music, true, MUSIC_VOLUME);
 }
 
 #pragma endregion MainMenuHome
@@ -308,7 +312,7 @@ void MainMenuOptions::update()
 	{
 		if (inputs[i].action == menu_input_action::BACK)
 		{
-			this->play_wave(CANCEL_SOUND);
+			this->play_wave(this->_cancel_sound);
 			this->get_context()->transition_to(std::make_unique<MainMenuHome>(
 				this->get_main_menu_data()));
 			return;
@@ -317,7 +321,7 @@ void MainMenuOptions::update()
 		{
 			if (highlighted_element == "apply")
 			{
-				this->play_wave(CONFIRM_SOUND);
+				this->play_wave(this->_confirm_sound);
 				
 				auto prev_resolution = this->get_resolution_manager()->get_resolution_vec();
 				
@@ -353,7 +357,7 @@ void MainMenuOptions::update()
 			}
 			else if (highlighted_element == "back")
 			{
-				this->play_wave(CANCEL_SOUND);
+				this->play_wave(this->_cancel_sound);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuHome>(
 						this->get_main_menu_data()));
@@ -362,7 +366,7 @@ void MainMenuOptions::update()
 		}
 		else if (inputs[i].direction == menu_direction::DOWN)
 		{
-			this->play_wave(DIRECTION_SOUND);
+			this->play_wave(this->_direction_sound);
 			if (highlighted_element == "resolution_element")
 			{
 				this->change_highlight(this->_full_screen.get());
@@ -382,7 +386,7 @@ void MainMenuOptions::update()
 		}
 		else if (inputs[i].direction == menu_direction::UP)
 		{
-			this->play_wave(DIRECTION_SOUND);
+			this->play_wave(this->_direction_sound);
 			if (highlighted_element == "resolution_element")
 			{
 				this->change_highlight(this->_back.get());
@@ -404,12 +408,12 @@ void MainMenuOptions::update()
 		{
 			if (inputs[i].direction == menu_direction::LEFT)
 			{
-				this->play_wave(DIRECTION_SOUND);
+				this->play_wave(this->_direction_sound);
 				this->cycle_resolution(menu_direction::LEFT);
 			}
 			else if (inputs[i].direction == menu_direction::RIGHT)
 			{
-				this->play_wave(DIRECTION_SOUND);
+				this->play_wave(this->_direction_sound);
 				this->cycle_resolution(menu_direction::RIGHT);
 			}
 		}
@@ -417,7 +421,7 @@ void MainMenuOptions::update()
 			(inputs[i].direction == menu_direction::LEFT ||
 			inputs[i].direction == menu_direction::RIGHT))
 		{
-			this->play_wave(DIRECTION_SOUND);
+			this->play_wave(this->_direction_sound);
 			this->_full_screen_selection = !this->_full_screen_selection;
 			this->update_full_screen_selection_text();
 		}
@@ -563,7 +567,7 @@ void MainMenuOptions::init()
 
 	this->set_highlighted_widget(this->_resolution_element.get());
 
-	this->play_effect(MUSIC, true, MUSIC_VOLUME);
+	this->play_effect(this->_music, true, MUSIC_VOLUME);
 }
 
 void MainMenuOptions::cycle_resolution(
@@ -653,7 +657,7 @@ void MainMenuModeSelect::update()
 	{
 		if (inputs[i].action == menu_input_action::BACK)
 		{
-			this->play_wave(CANCEL_SOUND);
+			this->play_wave(this->_cancel_sound);
 			this->get_context()->transition_to(std::make_unique<MainMenuHome>(
 				this->get_main_menu_data()));
 			return;
@@ -662,7 +666,7 @@ void MainMenuModeSelect::update()
 		{
 			if (highlighted_element == "standard")
 			{
-				this->play_wave(CONFIRM_SOUND);
+				this->play_wave(this->_confirm_sound);
 				this->get_main_menu_data()->get_level_settings()->
 					set_game_mode(level_mode::STANDARD_MODE);
 				this->get_context()->transition_to(
@@ -672,19 +676,19 @@ void MainMenuModeSelect::update()
 			}
 			if (highlighted_element == "tdm")
 			{
-				this->play_wave(ERROR_SOUND);
+				this->play_wave(this->_error_sound);
 			}
 			else if (highlighted_element == "dm")
 			{
-				this->play_wave(ERROR_SOUND);
+				this->play_wave(this->_error_sound);
 			}
 			else if (highlighted_element == "practice")
 			{
-				this->play_wave(ERROR_SOUND);
+				this->play_wave(this->_error_sound);
 			}
 			else if (highlighted_element == "back")
 			{
-				this->play_wave(CANCEL_SOUND);
+				this->play_wave(this->_cancel_sound);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuHome>(
 						this->get_main_menu_data()));
@@ -693,7 +697,7 @@ void MainMenuModeSelect::update()
 		}
 		else if (inputs[i].direction == menu_direction::UP)
 		{
-			this->play_wave(DIRECTION_SOUND);
+			this->play_wave(this->_direction_sound);
 			if (highlighted_element == "standard")
 			{
 				this->change_highlight(this->_back.get());
@@ -717,7 +721,7 @@ void MainMenuModeSelect::update()
 		}
 		else if (inputs[i].direction == menu_direction::DOWN)
 		{
-			this->play_wave(DIRECTION_SOUND);
+			this->play_wave(this->_direction_sound);
 			if (highlighted_element == "standard")
 			{
 				this->change_highlight(this->_tdm.get());
@@ -854,7 +858,7 @@ void MainMenuModeSelect::init()
 
 	this->set_highlighted_widget(this->_standard.get());
 
-	this->play_effect(MUSIC, true, MUSIC_VOLUME);
+	this->play_effect(this->_music, true, MUSIC_VOLUME);
 }
 
 #pragma endregion MainMenuModeSelect
@@ -888,7 +892,7 @@ void MainMenuPlayerCount::update()
 	{
 		if (inputs[i].action == menu_input_action::BACK)
 		{
-			this->play_wave(CANCEL_SOUND);
+			this->play_wave(this->_cancel_sound);
 			this->get_context()->transition_to(
 				std::make_unique<MainMenuModeSelect>(
 					this->get_main_menu_data()));
@@ -898,7 +902,7 @@ void MainMenuPlayerCount::update()
 		{
 			if (highlighted_element == "1_player")
 			{
-				this->play_wave(CONFIRM_SOUND);
+				this->play_wave(this->_confirm_sound);
 				this->get_main_menu_data()->get_level_settings()->
 					set_player_count(1);
 				this->get_main_menu_data()->get_level_settings()->
@@ -914,7 +918,7 @@ void MainMenuPlayerCount::update()
 			}
 			if (highlighted_element == "2_players")
 			{
-				this->play_wave(CONFIRM_SOUND);
+				this->play_wave(this->_confirm_sound);
 				this->get_main_menu_data()->get_level_settings()->
 					set_player_count(2);
 				this->get_main_menu_data()->get_level_settings()->
@@ -926,7 +930,7 @@ void MainMenuPlayerCount::update()
 			}
 			if (highlighted_element == "3_players")
 			{
-				this->play_wave(CONFIRM_SOUND);
+				this->play_wave(this->_confirm_sound);
 				this->get_main_menu_data()->get_level_settings()->
 					set_player_count(3);
 				this->get_main_menu_data()->get_level_settings()->
@@ -938,7 +942,7 @@ void MainMenuPlayerCount::update()
 			}
 			if (highlighted_element == "4_players")
 			{
-				this->play_wave(CONFIRM_SOUND);
+				this->play_wave(this->_confirm_sound);
 				this->get_main_menu_data()->get_level_settings()->
 					set_player_count(4);
 				this->get_main_menu_data()->get_level_settings()->
@@ -950,7 +954,7 @@ void MainMenuPlayerCount::update()
 			}
 			if (highlighted_element == "back")
 			{
-				this->play_wave(CANCEL_SOUND);
+				this->play_wave(this->_cancel_sound);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuModeSelect>(
 						this->get_main_menu_data()));
@@ -959,7 +963,7 @@ void MainMenuPlayerCount::update()
 		}
 		else if (inputs[i].direction == menu_direction::UP)
 		{
-			this->play_wave(DIRECTION_SOUND);
+			this->play_wave(this->_direction_sound);
 			if (highlighted_element == "1_player")
 			{
 				this->change_highlight(this->_back.get());
@@ -983,7 +987,7 @@ void MainMenuPlayerCount::update()
 		}
 		else if (inputs[i].direction == menu_direction::DOWN)
 		{
-			this->play_wave(DIRECTION_SOUND);
+			this->play_wave(this->_direction_sound);
 			if (highlighted_element == "1_player")
 			{
 				this->change_highlight(this->_2_players.get());
@@ -1121,7 +1125,7 @@ void MainMenuPlayerCount::init()
 
 	this->set_highlighted_widget(this->_1_player.get());
 
-	this->play_effect(MUSIC, true, MUSIC_VOLUME);
+	this->play_effect(this->_music, true, MUSIC_VOLUME);
 }
 
 #pragma endregion MainMenuPlayerCount
@@ -1163,7 +1167,7 @@ void MainMenuTeamSelect::update()
 		{
 			if (this->all_players_unconfirmed())
 			{
-				this->play_wave(CANCEL_SOUND);
+				this->play_wave(this->_cancel_sound);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuPlayerCount>(
 						this->get_main_menu_data()));
@@ -1171,7 +1175,7 @@ void MainMenuTeamSelect::update()
 			}
 			if (this->_select_states[i].state == confirmation_state::CONFIRMED)
 			{
-				this->play_wave(CANCEL_SOUND);
+				this->play_wave(this->_cancel_sound);
 				this->_select_states[i].state =
 					confirmation_state::UNCONFIRMED;
 			}
@@ -1180,7 +1184,7 @@ void MainMenuTeamSelect::update()
 		else if (inputs[i].action == menu_input_action::PROCEED &&
 			this->_select_states[i].team != player_team::NONE)
 		{
-			this->play_wave(CONFIRM_SOUND);
+			this->play_wave(this->_confirm_sound);
 			this->_select_states[i].state = confirmation_state::CONFIRMED;
 		}
 		else if (this->_select_states[i].state ==
@@ -1188,7 +1192,7 @@ void MainMenuTeamSelect::update()
 		{
 			if (inputs[i].direction == menu_direction::LEFT)
 			{
-				this->play_wave(DIRECTION_SOUND);
+				this->play_wave(this->_direction_sound);
 				if (this->_select_states[i].team == player_team::NONE)
 				{
 					this->_select_states[i].team = player_team::A;
@@ -1200,7 +1204,7 @@ void MainMenuTeamSelect::update()
 			}
 			else if (inputs[i].direction == menu_direction::RIGHT)
 			{
-				this->play_wave(DIRECTION_SOUND);
+				this->play_wave(this->_direction_sound);
 				if (this->_select_states[i].team == player_team::NONE)
 				{
 					this->_select_states[i].team = player_team::B;
@@ -1404,7 +1408,7 @@ void MainMenuTeamSelect::init()
 	this->_text_container->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->play_effect(MUSIC, true, MUSIC_VOLUME);
+	this->play_effect(this->_music, true, MUSIC_VOLUME);
 }
 
 #pragma endregion MainMenuTeamSelect
@@ -1446,7 +1450,7 @@ void MainMenuWeaponSelect::update()
 		{
 			if (this->all_players_unconfirmed())
 			{
-				this->play_wave(CANCEL_SOUND);
+				this->play_wave(this->_cancel_sound);
 				if (this->get_player_count() == 1)
 				{
 					this->get_context()->transition_to(
@@ -1464,7 +1468,7 @@ void MainMenuWeaponSelect::update()
 			if (this->_select_states[i].state ==
 				confirmation_state::CONFIRMED)
 			{
-				this->play_wave(CANCEL_SOUND);
+				this->play_wave(this->_cancel_sound);
 				this->_select_states[i].state =
 					confirmation_state::UNCONFIRMED;
 			}
@@ -1473,7 +1477,7 @@ void MainMenuWeaponSelect::update()
 		}
 		else if (inputs[i].action == menu_input_action::PROCEED)
 		{
-			this->play_wave(CONFIRM_SOUND);
+			this->play_wave(this->_confirm_sound);
 			this->_select_states[i].state = confirmation_state::CONFIRMED;
 		}
 		else if (this->_select_states[i].state ==
@@ -1481,12 +1485,12 @@ void MainMenuWeaponSelect::update()
 		{
 			if (inputs[i].direction == menu_direction::LEFT)
 			{
-				this->play_wave(DIRECTION_SOUND);
+				this->play_wave(this->_direction_sound);
 				this->cycle_weapons(menu_direction::LEFT, i);
 			}
 			else if (inputs[i].direction == menu_direction::RIGHT)
 			{
-				this->play_wave(DIRECTION_SOUND);
+				this->play_wave(this->_direction_sound);
 				this->cycle_weapons(menu_direction::RIGHT, i);
 			}
 		}
@@ -1731,7 +1735,7 @@ void MainMenuWeaponSelect::init()
 	this->_text_container->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->play_effect(MUSIC, true, MUSIC_VOLUME);
+	this->play_effect(this->_music, true, MUSIC_VOLUME);
 }
 std::string MainMenuWeaponSelect::weapon_description(wep_type type)
 {
@@ -1793,7 +1797,7 @@ void MainMenuStageSelect::update()
 		{
 			if (this->_select_state.state == confirmation_state::UNCONFIRMED)
 			{
-				this->play_wave(CANCEL_SOUND);
+				this->play_wave(this->_cancel_sound);
 				this->get_context()->transition_to(
 					std::make_unique<MainMenuWeaponSelect>(
 						this->get_main_menu_data()));
@@ -1801,7 +1805,7 @@ void MainMenuStageSelect::update()
 			}
 			if (this->_select_state.state == confirmation_state::CONFIRMED)
 			{
-				this->play_wave(CANCEL_SOUND);
+				this->play_wave(this->_cancel_sound);
 				this->_select_state.state =
 					confirmation_state::UNCONFIRMED;
 			}
@@ -1811,8 +1815,8 @@ void MainMenuStageSelect::update()
 		{
 			if (this->_select_state.state == confirmation_state::CONFIRMED)
 			{
-				this->play_wave(CONFIRM_SOUND);
-				this->stop_effect(MUSIC, true);
+				this->play_wave(this->_confirm_sound);
+				this->stop_effect(this->_music, true);
 				if (this->_select_state.stage == level_stage::RANDOM)
 				{
 					this->_select_state.stage = this->get_random_stage();
@@ -1824,7 +1828,7 @@ void MainMenuStageSelect::update()
 			}
 			else
 			{
-				this->play_wave(READY_SOUND);
+				this->play_wave(this->_ready_sound);
 				this->_select_state.state = confirmation_state::CONFIRMED;
 			}
 		}
@@ -1832,12 +1836,12 @@ void MainMenuStageSelect::update()
 		{
 			if (inputs[i].direction == menu_direction::LEFT)
 			{
-				this->play_wave(DIRECTION_SOUND);
+				this->play_wave(this->_direction_sound);
 				this->cycle_stages(menu_direction::LEFT);
 			}
 			else if (inputs[i].direction == menu_direction::RIGHT)
 			{
-				this->play_wave(DIRECTION_SOUND);
+				this->play_wave(this->_direction_sound);
 				this->cycle_stages(menu_direction::RIGHT);
 			}
 		}
@@ -1966,7 +1970,7 @@ void MainMenuStageSelect::init()
 	this->_text_container->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->play_effect(MUSIC, true, MUSIC_VOLUME);
+	this->play_effect(this->_music, true, MUSIC_VOLUME);
 }
 void MainMenuStageSelect::cycle_stages(menu_direction direction)
 {

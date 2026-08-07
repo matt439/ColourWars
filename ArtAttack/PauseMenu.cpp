@@ -12,7 +12,10 @@ PauseMenuPage::PauseMenuPage(PauseMenuData* data) :
 		this->get_audio_resources()),
 	_data(data)
 {
-
+	this->_direction_sound = this->resolve_wave(DIRECTION_SOUND);
+	this->_confirm_sound = this->resolve_wave(CONFIRM_SOUND);
+	this->_cancel_sound = this->resolve_wave(CANCEL_SOUND);
+	this->_window_open_sound = this->resolve_wave(WINDOW_OPEN_SOUND);
 }
 
 std::string PauseMenuPage::get_player_number_text(int player_num)
@@ -66,27 +69,27 @@ void PauseMenuInitial::update()
 	if (input.action == menu_input_action::BACK ||
 		input.action == menu_input_action::PAUSE)
 	{
-		this->play_wave(CANCEL_SOUND);
+		this->play_wave(this->_cancel_sound);
 		*this->get_pause_menu_data()->get_action() = pause_menu_action::RESUME;
 	}
 	else if (input.action == menu_input_action::PROCEED)
 	{
 		if (highlighted_element == "resume")
 		{
-			this->play_wave(CONFIRM_SOUND);
+			this->play_wave(this->_confirm_sound);
 			*this->get_pause_menu_data()->get_action() =
 				pause_menu_action::RESUME;
 		}
 		else if (highlighted_element == "restart")
 		{
-			this->play_wave(CONFIRM_SOUND);
+			this->play_wave(this->_confirm_sound);
 			this->get_context()->transition_to(std::make_unique<
 				PauseMenuConfirmation>(this->get_pause_menu_data(),
 					confirmation_type::RESTART));
 		}
 		else if (highlighted_element == "quit")
 		{
-			this->play_wave(CANCEL_SOUND);
+			this->play_wave(this->_cancel_sound);
 			this->get_context()->transition_to(std::make_unique<
 				PauseMenuConfirmation>(this->get_pause_menu_data(),
 					confirmation_type::QUIT));
@@ -94,7 +97,7 @@ void PauseMenuInitial::update()
 	}
 	else if (input.direction == menu_direction::UP)
 	{
-		this->play_wave(DIRECTION_SOUND);
+		this->play_wave(this->_direction_sound);
 		if (highlighted_element == "resume")
 		{
 			this->change_highlight(this->_quit.get());
@@ -110,7 +113,7 @@ void PauseMenuInitial::update()
 	}
 	else if (input.direction == menu_direction::DOWN)
 	{
-		this->play_wave(DIRECTION_SOUND);
+		this->play_wave(this->_direction_sound);
 		if (highlighted_element == "resume")
 		{
 			this->change_highlight(this->_restart.get());
@@ -204,7 +207,7 @@ void PauseMenuInitial::init()
 	this->_text_container->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->play_wave(WINDOW_OPEN_SOUND);
+	this->play_wave(this->_window_open_sound);
 }
 void PauseMenuInitial::draw()
 {
@@ -234,7 +237,7 @@ void PauseMenuConfirmation::update()
 
 	if (input.action == menu_input_action::BACK)
 	{
-		this->play_wave(CANCEL_SOUND);
+		this->play_wave(this->_cancel_sound);
 		this->get_context()->transition_to(std::make_unique<PauseMenuInitial>(
 			this->get_pause_menu_data()));
 		return;
@@ -246,12 +249,12 @@ void PauseMenuConfirmation::update()
 			switch (this->_type)
 			{
 			case confirmation_type::RESTART:
-				this->play_wave(CONFIRM_SOUND);
+				this->play_wave(this->_confirm_sound);
 				*this->get_pause_menu_data()->get_action() =
 					pause_menu_action::RESTART;
 				break;
 			case confirmation_type::QUIT:
-				this->play_wave(CANCEL_SOUND);
+				this->play_wave(this->_cancel_sound);
 				*this->get_pause_menu_data()->get_action() =
 					pause_menu_action::QUIT;
 				break;
@@ -259,7 +262,7 @@ void PauseMenuConfirmation::update()
 		}
 		else if (highlighted_element == "no")
 		{
-			this->play_wave(CANCEL_SOUND);
+			this->play_wave(this->_cancel_sound);
 			this->get_context()->transition_to(
 				std::make_unique<PauseMenuInitial>(
 					this->get_pause_menu_data()));
@@ -269,7 +272,7 @@ void PauseMenuConfirmation::update()
 	else if (input.direction == menu_direction::UP ||
 		input.direction == menu_direction::DOWN)
 	{
-		this->play_wave(DIRECTION_SOUND);
+		this->play_wave(this->_direction_sound);
 		if (highlighted_element == "yes")
 		{
 			this->change_highlight(this->_no.get());

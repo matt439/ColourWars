@@ -169,6 +169,13 @@ private:
 
     SoundBank* _sound_bank = nullptr;
 
+    // Resolved once at construction. These fire from update(), so the map
+    // descent they used to cost was on the frame loop (T7, T8).
+    SoundBank::WaveHandle _damage_sound;
+    SoundBank::WaveHandle _death_sound;
+    SoundBank::WaveHandle _jump_sound;
+    SoundBank::WaveHandle _respawn_sound;
+
     const float* _dt = nullptr;
 
     float _health_regen_timer = 0.0f;

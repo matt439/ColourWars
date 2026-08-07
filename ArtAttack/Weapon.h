@@ -51,9 +51,17 @@ protected:
 	SoundBank* _sound_bank = nullptr;
 	WeaponDetails _details = weapon_consts::DETAILS_DEFAULT;
 
-	// Name of this weapon's looping SoundEffectInstance, resolved once at
-	// construction. Empty for weapons that fire a one-shot wave instead.
-	std::string _loop_sound_name;
+	// This weapon's looping SoundEffectInstance, resolved once at construction.
+	// Left unresolved for weapons that fire a one-shot wave instead - which is
+	// what handle_shoot_sound and stop_sounds read as "nothing to do". The
+	// default Handle is inert precisely so an absent thing can be spelt this
+	// way instead of with a sentinel string.
+	SoundBank::EffectHandle _loop_sound;
+
+	// The one-shot fire wave, for the weapons that use one. Unconditionally
+	// resolved, unlike the loop above: every weapon definition names one, so a
+	// name the bank does not have is a content bug and should say so here.
+	SoundBank::WaveHandle _shoot_sound;
 
 	bool _shooting_this_update = false;
 
@@ -130,8 +138,9 @@ protected:
 	RenderResources* get_render_resources() const override;
 
 private:
-	static std::string resolve_loop_sound_name(wep_type type,
-		player_team team, int player_num);
+	static SoundBank::EffectHandle resolve_loop_sound(
+		const SoundBank& sound_bank, wep_type type, player_team team,
+		int player_num);
 
 	std::unique_ptr<ProjectileBuilder> _proj_builder = nullptr;
 	const float* _dt = nullptr;

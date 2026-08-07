@@ -65,6 +65,13 @@ protected:
 		RESTART,
 		QUIT
 	};
+
+	// Every sound this page family can make, resolved once when the page is
+	// built. A press then plays an index, not a name (T7, T8).
+	SoundBank::WaveHandle _direction_sound;
+	SoundBank::WaveHandle _confirm_sound;
+	SoundBank::WaveHandle _cancel_sound;
+	SoundBank::WaveHandle _window_open_sound;
 private:
 	PauseMenuData* _data = nullptr;
 };

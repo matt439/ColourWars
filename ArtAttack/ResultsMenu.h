@@ -52,9 +52,7 @@ namespace results_menu_consts
 	const static MattMath::Vector2F DETAIL_SHADOW_OFFSET = { 1.0f, 1.0f };
 
 	const std::string SOUND_BANK = "sound_bank_1";
-	const std::string DIRECTION_SOUND = "UI_Clicks14";
 	const std::string CONFIRM_SOUND = "UI_Clicks01";
-	const std::string CANCEL_SOUND = "UI_Clicks17";
 	const std::string WINNER_SOUND = "party_horn";
 	constexpr float WINNER_VOLUME = 1.0f;
 	const std::string FILL_SOUND = "DrumRoll";
@@ -71,6 +69,13 @@ public:
 	void draw() override = 0;
 protected:
 	ResultsMenuData* get_results_menu_data() const;
+
+	// Every sound this page family can make, resolved once when the page is
+	// built. The drum roll is an effect rather than a wave because it is
+	// looped and then stopped; the rest are fire-and-forget.
+	SoundBank::WaveHandle _confirm_sound;
+	SoundBank::WaveHandle _winner_sound;
+	SoundBank::EffectHandle _fill_sound;
 private:
 	ResultsMenuData* _data = nullptr;
 };

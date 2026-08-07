@@ -33,7 +33,6 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_coll
 	_collision_objects(std::move(collision_objects)),
 	_player_objects(std::move(player_objects)),
 	_viewport_dividers(std::move(viewport_dividers)),
-	_music_name(music_name),
 	_music_volume(music_volume),
 	_level_name(level_name),
 	_resolution_manager(resolution_manager),
@@ -58,10 +57,14 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_coll
 	this->_interface_gameplay = std::make_unique<InterfaceGameplay>(
 		render_resources, dt);
 	this->_sound_bank = audio_resources->get_sound_bank(sound_bank_name);
+
+	this->_music = this->_sound_bank->resolve_effect(music_name);
+	this->_zoom_out_sound = this->_sound_bank->resolve_effect(ZOOM_OUT_SOUND);
+	this->_countdown_sound = this->_sound_bank->resolve_wave(COUNTDOWN_SOUND);
 }
 void Level::stop_music() const
 {
-	this->_sound_bank->stop_effect(this->_music_name, true);
+	this->_sound_bank->stop_effect(this->_music, true);
 }
 void Level::update(const std::vector<PlayerInputData>& player_inputs)
 {
@@ -71,8 +74,8 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 		// first update
 		if (this->_start_timer >= START_TIMER)
 		{
-			this->_sound_bank->play_effect(this->_music_name, true, this->_music_volume);
-			this->_sound_bank->play_wave(COUNTDOWN_SOUND, COUNTDOWN_SOUND_VOLUME);
+			this->_sound_bank->play_effect(this->_music, true, this->_music_volume);
+			this->_sound_bank->play_wave(this->_countdown_sound, COUNTDOWN_SOUND_VOLUME);
 			
 			// update player cameras
 			int player_index = 0;
@@ -132,9 +135,9 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 		if (this->_timer <= 0.0f)
 		{
 			this->_state = level_state::ZOOM_OUT;
-			this->_sound_bank->stop_effect(this->_music_name, true);
+			this->_sound_bank->stop_effect(this->_music, true);
 			this->stop_player_sounds();
-			this->_sound_bank->play_effect(ZOOM_OUT_SOUND, false, ZOOM_OUT_SOUND_VOLUME);
+			this->_sound_bank->play_effect(this->_zoom_out_sound, false, ZOOM_OUT_SOUND_VOLUME);
 		}
 	}
 	else if (this->_state == level_state::ZOOM_OUT)
@@ -145,7 +148,7 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 		{
 			this->_state = level_state::OVERVIEW;
 			this->_zoom_out_timer = 0.0f;
-			this->_sound_bank->stop_effect(ZOOM_OUT_SOUND, true);
+			this->_sound_bank->stop_effect(this->_zoom_out_sound, true);
 		}
 
 		Camera start_camera = Camera::calculate_camera_from_view_rectangle(
@@ -169,7 +172,7 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 	}
 	else if (this->_state == level_state::FINISHED)
 	{
-		this->_sound_bank->stop_effect(this->_music_name, true);
+		this->_sound_bank->stop_effect(this->_music, true);
 		return;
 	}
 	
