@@ -1,7 +1,7 @@
 #ifndef PROJECTILE_DETAILS_H
 #define PROJECTILE_DETAILS_H
 
-#include "rotation_origin.h"
+#include "engine/render/rotation_origin.h"
 #include "engine/math/matt_math.h"
 
 struct ProjectileDetails

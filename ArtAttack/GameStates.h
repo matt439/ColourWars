@@ -1,7 +1,7 @@
 #ifndef GAMESTATES_H
 #define GAMESTATES_H
 
-#include "State.h"
+#include "engine/core/state.h"
 #include "MenuLevelSettings.h"
 #include "GameData.h"
 #include "LevelBuilder.h"

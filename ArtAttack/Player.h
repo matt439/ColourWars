@@ -9,8 +9,8 @@
 #include "engine/math/matt_math.h"
 #include "AnimationObject.h"
 #include "ICollisionGameObject.h"
-#include "MovingObject.h"
-#include "SoundBank.h"
+#include "engine/core/moving_object.h"
+#include "engine/audio/sound_bank.h"
 #include "engine/math/collision_tools.h"
 
 enum class player_state

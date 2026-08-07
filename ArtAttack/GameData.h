@@ -1,14 +1,14 @@
 #ifndef GAMEDATA_H
 #define GAMEDATA_H
 
-#include "ResolutionManager.h"
+#include "engine/render/resolution_manager.h"
 #include "Save.h"
 #include "ResourceLoader.h"
 #include "ResourceManager.h"
-#include "DeviceResources.h"
-#include "ViewportManager.h"
-#include "ThreadPool.h"
-#include "Partitioner.h"
+#include "engine/render/device_resources.h"
+#include "engine/render/viewport_manager.h"
+#include "engine/core/thread_pool.h"
+#include "engine/collision/partitioner.h"
 
 class GameData
 {

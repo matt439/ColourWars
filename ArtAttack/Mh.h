@@ -1,7 +1,7 @@
 #ifndef MH_H
 #define MH_H
 
-#include "IGameObject.h"
+#include "engine/core/i_game_object.h"
 #include "TextureObject.h"
 #include "TextDropShadow.h"
 

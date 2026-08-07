@@ -3,11 +3,11 @@
 
 #include <map>
 #include <string>
-#include "SpriteSheet.h"
+#include "engine/render/sprite_sheet.h"
 #include "level_stage.h"
 #include "LevelLoadedInfo.h"
 #include <Audio.h>
-#include "SoundBank.h"
+#include "engine/audio/sound_bank.h"
 
 class ResourceManager
 {

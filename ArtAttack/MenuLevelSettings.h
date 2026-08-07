@@ -5,7 +5,7 @@
 #include "level_stage.h"
 #include "wep_type.h"
 #include "MenuPlayerSettings.h"
-#include "screen_layout.h"
+#include "engine/render/screen_layout.h"
 
 class MenuLevelSettings
 {

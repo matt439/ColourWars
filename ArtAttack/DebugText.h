@@ -2,7 +2,7 @@
 #define DEBUGTEXT_H
 
 #include "Drawer.h"
-#include "ResolutionManager.h"
+#include "engine/render/resolution_manager.h"
 #include "engine/math/matt_math.h"
 #include "Player.h"
 

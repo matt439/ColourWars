@@ -1,7 +1,7 @@
 #ifndef SOUNDBANKOBJECT_H
 #define SOUNDBANKOBJECT_H
 
-#include "SoundBank.h"
+#include "engine/audio/sound_bank.h"
 #include "ResourceManager.h"
 
 class SoundBankObject

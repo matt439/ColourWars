@@ -1,7 +1,7 @@
 #ifndef ICOLLISIONGAMEOBJECT_H
 #define ICOLLISIONGAMEOBJECT_H
 
-#include "IGameObject.h"
+#include "engine/core/i_game_object.h"
 #include "collision_object_type.h"
 #include "engine/math/matt_math.h"
 

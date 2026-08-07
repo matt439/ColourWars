@@ -3,7 +3,7 @@
 
 #include "player_team.h"
 #include "wep_type.h"
-#include "Colour.h"
+#include "engine/math/colour.h"
 
 struct PlayerAnimationInfo
 {

@@ -5,7 +5,7 @@
 #include "MenuLevelSettings.h"
 #include "TeamColour.h"
 #include "WeaponBuilder.h"
-#include "ViewportManager.h"
+#include "engine/render/viewport_manager.h"
 
 class PlayerBuilder
 {

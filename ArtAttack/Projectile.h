@@ -4,7 +4,7 @@
 #include "player_team.h"
 #include "projectile_consts.h"
 #include "AnimationObject.h"
-#include "MovingObject.h"
+#include "engine/core/moving_object.h"
 #include "ICollisionGameObject.h"
 
 enum projectile_type

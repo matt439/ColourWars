@@ -2,7 +2,7 @@
 #define ANIMATIONOBJECT_H
 
 #include "SpriteSheetObject.h"
-#include "AnimatedSprite.h"
+#include "engine/render/animated_sprite.h"
 
 class AnimationObject : public SpriteSheetObject
 {

@@ -5,12 +5,12 @@
 #include "MenuLevelSettings.h"
 #include "TeamColour.h"
 #include "PlayerBuilder.h"
-#include "ResolutionManager.h"
+#include "engine/render/resolution_manager.h"
 #include "ResourceManager.h"
 #include "LevelObjectBuilder.h"
 #include "rapidjson/document.h"
-#include "ViewportManager.h"
-#include "Partitioner.h"
+#include "engine/render/viewport_manager.h"
+#include "engine/collision/partitioner.h"
 
 class LevelBuilder
 {

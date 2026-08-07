@@ -1,7 +1,7 @@
 #ifndef VISUAL_H
 #define VISUAL_H
 
-#include "IGameObject.h"
+#include "engine/core/i_game_object.h"
 #include "TextureObject.h"
 #include "engine/math/matt_math.h"
 

@@ -5,7 +5,7 @@
 #include "Structure.h"
 #include "PaintTile.h"
 #include "TeamColour.h"
-#include "SoundBank.h"
+#include "engine/audio/sound_bank.h"
 
 namespace structure_paintable_consts
 {

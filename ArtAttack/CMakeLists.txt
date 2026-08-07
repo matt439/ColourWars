@@ -5,12 +5,8 @@ find_package(directxtk CONFIG REQUIRED)
 
 # --- ArtAttack — the paint-shooter ---------------------------------------
 add_executable(ArtAttack WIN32
-    AnimatedSprite.cpp
     AnimationObject.cpp
-    AnimationStrip.cpp
-    CameraTools.cpp
     DebugText.cpp
-    DeviceResources.cpp
     DrawObject.cpp
     Drawer.cpp
     EndMenu.cpp
@@ -19,7 +15,6 @@ add_executable(ArtAttack WIN32
     GameData.cpp
     GameStates.cpp
     InterfaceGameplay.cpp
-    JsonLoader.cpp
     Level.cpp
     LevelBuilder.cpp
     LevelEndInfo.cpp
@@ -34,9 +29,7 @@ add_executable(ArtAttack WIN32
     MenuLevelSettings.cpp
     MenuPage.cpp
     Mh.cpp
-    MovingObject.cpp
     PaintTile.cpp
-    Partitioner.cpp
     PauseMenu.cpp
     PauseMenuData.cpp
     Player.cpp
@@ -49,19 +42,13 @@ add_executable(ArtAttack WIN32
     ProjectileMist.cpp
     ProjectileRolling.cpp
     ProjectileSpray.cpp
-    ResolutionManager.cpp
     ResourceLoader.cpp
     ResourceManager.cpp
     ResultsMenu.cpp
     ResultsMenuData.cpp
     Save.cpp
-    SoundBank.cpp
     SoundBankObject.cpp
-    SpriteFrame.cpp
-    SpriteSheet.cpp
     SpriteSheetObject.cpp
-    State.cpp
-    StateContext.cpp
     Structure.cpp
     StructurePaintable.cpp
     StructureRamp.cpp
@@ -72,8 +59,6 @@ add_executable(ArtAttack WIN32
     TextDropShadow.cpp
     TextObject.cpp
     TextureObject.cpp
-    ThreadPool.cpp
-    ViewportManager.cpp
     Visual.cpp
     Weapon.cpp
     WeaponBucket.cpp
@@ -90,12 +75,9 @@ target_include_directories(ArtAttack PRIVATE
     "${CMAKE_SOURCE_DIR}/external/rapidjson/include"
 )
 target_link_libraries(ArtAttack PRIVATE
-    MattMath
+    ArtAttackEngine
     Microsoft::DirectXTK
     artattack_settings
-    d3d11
-    dxgi
-    dxguid
 )
 target_precompile_headers(ArtAttack PRIVATE pch.h)
 

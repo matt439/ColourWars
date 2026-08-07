@@ -1,12 +1,12 @@
 #ifndef  GAME_H
 #define GAME_H
 
-#include "DeviceResources.h"
-#include "StepTimer.h"
+#include "engine/render/device_resources.h"
+#include "engine/core/step_timer.h"
 #include "GameData.h"
 #include "ResourceManager.h"
-#include "StateContext.h"
-#include "ThreadPool.h"
+#include "engine/core/state_context.h"
+#include "engine/core/thread_pool.h"
 #include <Audio.h>
 
 constexpr int TARGET_FPS = 60;

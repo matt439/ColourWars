@@ -1,7 +1,7 @@
 #ifndef MENUHIGHLIGHT_H
 #define MENUHIGHLIGHT_H
 
-#include "Colour.h"
+#include "engine/math/colour.h"
 #include "Mh.h"
 #include "engine/math/matt_math.h"
 

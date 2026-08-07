@@ -1,7 +1,7 @@
 #ifndef PLAYER_INPUT_H
 #define PLAYER_INPUT_H
 
-#include "connection_state.h"
+#include "engine/input/connection_state.h"
 #include "engine/math/matt_math.h"
 
 struct PlayerInputData

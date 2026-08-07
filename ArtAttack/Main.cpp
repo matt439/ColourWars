@@ -1,7 +1,7 @@
 #include "pch.h"
 #include "Game.h"
 #include "Save.h"
-#include "ResolutionManager.h"
+#include "engine/render/resolution_manager.h"
 #include "GameData.h"
 #include "GameStates.h"
 #include "engine/math/matt_math.h"

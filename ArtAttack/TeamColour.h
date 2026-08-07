@@ -2,7 +2,7 @@
 #define TEAMCOLOUR_H
 
 #include "player_team.h"
-#include "colour.h"
+#include "engine/math/colour.h"
 
 struct TeamColour
 {

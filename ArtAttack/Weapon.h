@@ -6,10 +6,10 @@
 #include "WeaponDetails.h"
 #include "weapon_consts.h"
 #include "PlayerInputData.h"
-#include "Colour.h"
+#include "engine/math/colour.h"
 #include "TextureObject.h"
 #include "ProjectileBuilder.h"
-#include "SoundBank.h"
+#include "engine/audio/sound_bank.h"
 
 class Weapon : public TextureObject
 {

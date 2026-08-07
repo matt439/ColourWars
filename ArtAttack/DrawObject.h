@@ -1,7 +1,7 @@
 #ifndef DRAWOBJECT_H
 #define DRAWOBJECT_H
 
-#include "Colour.h"
+#include "engine/math/colour.h"
 #include "ResourceManager.h"
 
 class DrawObject
