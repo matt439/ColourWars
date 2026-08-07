@@ -2,7 +2,7 @@
 #define SOUNDBANKOBJECT_H
 
 #include "engine/audio/sound_bank.h"
-#include "ResourceManager.h"
+#include "engine/assets/resource_manager.h"
 
 class SoundBankObject
 {

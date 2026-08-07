@@ -20,6 +20,7 @@ add_executable(ArtAttack WIN32
     LevelEndInfo.cpp
     LevelLoadedInfo.cpp
     LevelObjectBuilder.cpp
+    level_stage.cpp
     Main.cpp
     MainMenu.cpp
     MainMenuData.cpp
@@ -43,7 +44,6 @@ add_executable(ArtAttack WIN32
     ProjectileRolling.cpp
     ProjectileSpray.cpp
     ResourceLoader.cpp
-    ResourceManager.cpp
     ResultsMenu.cpp
     ResultsMenuData.cpp
     Save.cpp

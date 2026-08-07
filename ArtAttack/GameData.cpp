@@ -8,6 +8,7 @@ GameData::GameData(const GameData* game_data) :
     _dt(game_data->get_dt()),
     _resource_loader(game_data->get_resource_loader()),
     _resource_manager(game_data->get_resource_manager()),
+    _level_infos(game_data->get_level_infos()),
     _gamepad(game_data->get_gamepad()),
     _device_resources(game_data->get_device_resources()),
     _viewport_manager(game_data->get_viewport_manager()),
@@ -77,6 +78,16 @@ void GameData::set_resource_manager(ResourceManager* resource_manager)
 ResourceManager* GameData::get_resource_manager() const
 {
 	return this->_resource_manager;
+}
+
+void GameData::set_level_infos(Registry<LevelLoadedInfo>* level_infos)
+{
+	this->_level_infos = level_infos;
+}
+
+Registry<LevelLoadedInfo>* GameData::get_level_infos() const
+{
+	return this->_level_infos;
 }
 
 void GameData::set_gamepad(DirectX::GamePad* gamepad)

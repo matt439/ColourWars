@@ -8,11 +8,13 @@ using namespace rapidjson;
 LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	const float* dt,
 	ResourceManager* resource_manager,
+	const Registry<LevelLoadedInfo>* level_infos,
 	ID3D11SamplerState* sampler_state,
 	ResolutionManager* resolution_manager,
 	ThreadPool* thread_pool,
 	const Partitioner* partitioner) :
 	_resource_manager(resource_manager),
+	_level_infos(level_infos),
 	_dt(dt),
 	_viewport_manager(viewport_manager),
 	_sampler_state(sampler_state),
@@ -31,7 +33,7 @@ std::unique_ptr<Level>
 	LevelBuilder::build_level(const MenuLevelSettings& settings)
 {
 	const LevelLoadedInfo* load_info =
-		this->_resource_manager->get_level_info(settings.get_stage());
+		this->_level_infos->get(level_asset_name(settings.get_stage()));
 
 	const TeamColour team_colours = _team_colour->generate_random_team_colour();
 

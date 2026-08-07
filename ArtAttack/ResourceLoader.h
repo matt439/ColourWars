@@ -1,15 +1,21 @@
 #ifndef RESOURCELOADER_H
 #define RESOURCELOADER_H
 
-#include "ResourceManager.h"
+#include "engine/assets/resource_manager.h"
+#include "engine/assets/registry.h"
 #include "directory_consts.h"
 #include "level_stage.h"
+#include "LevelLoadedInfo.h"
 #include <Audio.h>
 
 class ResourceLoader
 {
 public:
-	ResourceLoader(ResourceManager* resource_manager, ID3D11Device1* device,
+	// The engine's ResourceManager caches the resource kinds the engine knows
+	// about; the level registry is the game's own, and is handed in for the
+	// same reason - the loader fills stores, it does not own them.
+	ResourceLoader(ResourceManager* resource_manager,
+		Registry<LevelLoadedInfo>* level_infos, ID3D11Device1* device,
 		DirectX::AudioEngine* audio_engine);
 
 	void load_all_resources();
@@ -45,9 +51,9 @@ public:
 		const std::string& name) const;
 
 	void load_level_info(const std::string& json_path,
-		level_stage stage) const;
+		const std::string& level_name) const;
 	void load_level_info_from_directory(const std::string& directory,
-		const std::string& level_name, level_stage stage) const;
+		const std::string& level_name) const;
 
 	void load_sound_bank(const std::string& wave_bank_path,
 		const std::string& json_path,
@@ -57,6 +63,7 @@ public:
 
 private:
 	ResourceManager* _resource_manager = nullptr;
+	Registry<LevelLoadedInfo>* _level_infos = nullptr;
 	ID3D11Device1* _device = nullptr;
 	DirectX::AudioEngine* _audio_engine = nullptr;
 
@@ -72,7 +79,7 @@ private:
 
 	void load_textures();
 	void load_fonts();
-	void load_level_info() const;
+	void load_levels() const;
 	void load_sounds();
 
 	// Reloads the sheet's .dds and points the existing SpriteSheet at it. The

@@ -4,7 +4,9 @@
 #include "engine/render/resolution_manager.h"
 #include "Save.h"
 #include "ResourceLoader.h"
-#include "ResourceManager.h"
+#include "LevelLoadedInfo.h"
+#include "engine/assets/resource_manager.h"
+#include "engine/assets/registry.h"
 #include "engine/render/device_resources.h"
 #include "engine/render/viewport_manager.h"
 #include "engine/core/thread_pool.h"
@@ -28,6 +30,8 @@ public:
     ResourceLoader* get_resource_loader() const;
     void set_resource_manager(ResourceManager* resource_manager);
     ResourceManager* get_resource_manager() const;
+    void set_level_infos(Registry<LevelLoadedInfo>* level_infos);
+    Registry<LevelLoadedInfo>* get_level_infos() const;
     void set_gamepad(DirectX::GamePad* gamepad);
     DirectX::GamePad* get_gamepad() const;
     void set_device_resources(DX::DeviceResources* device_resources);
@@ -52,6 +56,11 @@ private:
     float* _dt = nullptr;
     ResourceLoader* _resource_loader = nullptr;
     ResourceManager* _resource_manager = nullptr;
+
+    // The game's own resource registry, beside the engine's: a level
+    // definition means nothing to the engine, so the engine does not cache it.
+    Registry<LevelLoadedInfo>* _level_infos = nullptr;
+
     DirectX::GamePad* _gamepad = nullptr;
     DX::DeviceResources* _device_resources = nullptr;
     ViewportManager* _viewport_manager = nullptr;

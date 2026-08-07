@@ -6,7 +6,9 @@
 #include "TeamColour.h"
 #include "PlayerBuilder.h"
 #include "engine/render/resolution_manager.h"
-#include "ResourceManager.h"
+#include "engine/assets/resource_manager.h"
+#include "engine/assets/registry.h"
+#include "LevelLoadedInfo.h"
 #include "LevelObjectBuilder.h"
 #include "rapidjson/document.h"
 #include "engine/render/viewport_manager.h"
@@ -18,6 +20,7 @@ public:
 	LevelBuilder(ViewportManager* viewport_manager,
 		const float* dt,
 		ResourceManager* resource_manager,
+		const Registry<LevelLoadedInfo>* level_infos,
 		ID3D11SamplerState* sampler_state,
 		ResolutionManager* resolution_manager,
 		ThreadPool* thread_pool,
@@ -29,6 +32,7 @@ private:
 	std::unique_ptr<TeamColourTools> _team_colour = nullptr;
 	std::unique_ptr<PlayerBuilder> _player_builder = nullptr;
 	ResourceManager* _resource_manager = nullptr;
+	const Registry<LevelLoadedInfo>* _level_infos = nullptr;
 	const float* _dt = nullptr;
 	ViewportManager* _viewport_manager = nullptr;
 	std::unique_ptr<LevelObjectBuilder> _level_object_builder = nullptr;

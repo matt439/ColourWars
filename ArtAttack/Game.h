@@ -4,7 +4,7 @@
 #include "engine/render/device_resources.h"
 #include "engine/core/step_timer.h"
 #include "GameData.h"
-#include "ResourceManager.h"
+#include "engine/assets/resource_manager.h"
 #include "engine/core/state_context.h"
 #include "engine/core/thread_pool.h"
 #include <Audio.h>
@@ -74,6 +74,11 @@ private:
     std::unique_ptr<DirectX::AudioEngine> _audio_engine = nullptr;
 
     std::unique_ptr<ResourceManager> _resource_manager = nullptr;
+
+    // Levels are the game's kind of resource, not the engine's, so the game
+    // keeps their registry itself and hands it to whoever needs it.
+    std::unique_ptr<Registry<LevelLoadedInfo>> _level_infos = nullptr;
+
     std::unique_ptr<ResourceLoader> _resource_loader = nullptr;
 
     std::unique_ptr<DirectX::CommonStates> _states = nullptr;

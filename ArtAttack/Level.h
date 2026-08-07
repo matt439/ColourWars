@@ -15,7 +15,7 @@
 #include "TextDropShadow.h"
 #include "engine/audio/sound_bank.h"
 #include "IPaintableGameObject.h"
-#include "ResourceManager.h"
+#include "engine/assets/resource_manager.h"
 #include "engine/core/thread_pool.h"
 #include "engine/collision/partitioner.h"
 

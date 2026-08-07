@@ -6,8 +6,10 @@ using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
 ResourceLoader::ResourceLoader(ResourceManager* resource_manager,
-    ID3D11Device1* device, DirectX::AudioEngine* audio_engine) :
+    Registry<LevelLoadedInfo>* level_infos, ID3D11Device1* device,
+    DirectX::AudioEngine* audio_engine) :
     _resource_manager(resource_manager),
+    _level_infos(level_infos),
     _device(device),
     _audio_engine(audio_engine)
 {
@@ -76,18 +78,29 @@ void ResourceLoader::load_sounds()
     this->load_sound_bank_from_directory(SOUNDS_DIRECTORY, "sound_bank_1");
 }
 
-void ResourceLoader::load_level_info() const
+// The stages that have a level to load. level_asset_name owns the enum-to-name
+// table, so the names live in one place instead of being spelt again here.
+void ResourceLoader::load_levels() const
 {
-    this->load_level_info_from_directory(LEVEL_DIRECTORY, "king_of_the_hill", level_stage::KING_OF_THE_HILL);
-    this->load_level_info_from_directory(LEVEL_DIRECTORY, "turbulence", level_stage::TURBULENCE);
-    this->load_level_info_from_directory(LEVEL_DIRECTORY, "close_quarters", level_stage::CLOSE_QUARTERS);
+    const level_stage stages[] =
+    {
+        level_stage::KING_OF_THE_HILL,
+        level_stage::TURBULENCE,
+        level_stage::CLOSE_QUARTERS,
+    };
+
+    for (const level_stage stage : stages)
+    {
+        this->load_level_info_from_directory(LEVEL_DIRECTORY,
+            level_asset_name(stage));
+    }
 }
 
 void ResourceLoader::load_all_resources()
 {
     this->load_fonts();
     this->load_textures();
-    this->load_level_info();
+    this->load_levels();
     this->load_sounds();
 }
 
@@ -175,19 +188,18 @@ void ResourceLoader::load_sprite_sheet_from_directory(
 }
 
 void ResourceLoader::load_level_info(const std::string& json_path,
-    level_stage stage) const
+    const std::string& level_name) const
 {
 	auto lli = std::make_unique<LevelLoadedInfo>(json_path.c_str());
-    this->_resource_manager->add_level_info(stage, std::move(lli));
+    this->_level_infos->add(level_name, std::move(lli));
 }
 
 void ResourceLoader::load_level_info_from_directory(
     const std::string& directory,
-    const std::string& level_name,
-    level_stage stage) const
+    const std::string& level_name) const
 {
     std::string path = directory + level_name + ".json";
-    this->load_level_info(path, stage);
+    this->load_level_info(path, level_name);
 }
 
 void ResourceLoader::load_sound_bank(const std::string& wave_bank_path,

@@ -3,6 +3,7 @@
 
 #include "Player.h"
 #include "MenuLevelSettings.h"
+#include "LevelLoadedInfo.h"
 #include "TeamColour.h"
 #include "WeaponBuilder.h"
 #include "engine/render/viewport_manager.h"

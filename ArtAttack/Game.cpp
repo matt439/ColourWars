@@ -230,8 +230,12 @@ void Game::create_services()
     this->_resource_manager = std::make_unique<ResourceManager>();
     this->_data->set_resource_manager(this->_resource_manager.get());
 
+    this->_level_infos = std::make_unique<Registry<LevelLoadedInfo>>("Level");
+    this->_data->set_level_infos(this->_level_infos.get());
+
     this->_resource_loader = std::make_unique<ResourceLoader>(
-        this->_resource_manager.get(), device, this->_audio_engine.get());
+        this->_resource_manager.get(), this->_level_infos.get(), device,
+        this->_audio_engine.get());
     this->_data->set_resource_loader(this->_resource_loader.get());
 
     this->_dt = std::make_unique<float>(0.f);

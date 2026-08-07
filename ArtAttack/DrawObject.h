@@ -2,7 +2,7 @@
 #define DRAWOBJECT_H
 
 #include "engine/math/colour.h"
-#include "ResourceManager.h"
+#include "engine/assets/resource_manager.h"
 
 class DrawObject
 {
