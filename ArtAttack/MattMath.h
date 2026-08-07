@@ -5,6 +5,7 @@
 #include "shape_type.h"
 #include <d3d11.h>
 #include <cmath>
+#include <memory>
 #include <vector>
 
 namespace MattMath
