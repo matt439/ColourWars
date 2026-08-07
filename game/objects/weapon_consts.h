@@ -8,7 +8,7 @@ namespace weapon_consts
     constexpr float AMMO_REGEN_DELAY = 0.5f;
     constexpr float AMMO_REGEN_RATE = 0.4f;
     constexpr float STARTING_AMMO = 1.0f;
-    const static MattMath::Vector2F NOZZLE_SIZE = { 5.0f, 5.0f };
+    const static mattmath::Vector2F NOZZLE_SIZE = { 5.0f, 5.0f };
 
     // The debug nozzle marker. Every weapon's sheet carries this frame, which
     // is why it is one name here rather than a field on WeaponDetails.

@@ -2,12 +2,12 @@
 #include "game/objects/structure.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 
 Structure::Structure(const std::string& sheet_name,
 	const std::string& frame_name,
 	const RectangleF& sprite_rectangle,
-	const MattMath::Shape* collision_shape,
+	const mattmath::Shape* collision_shape,
 	RenderResources* render_resources,
 	collision_object_type collision_type,
 	const Colour& color,

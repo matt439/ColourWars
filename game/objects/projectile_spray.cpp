@@ -2,7 +2,7 @@
 #include "game/objects/projectile_spray.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace projectile_consts;
 
 ProjectileSpray::ProjectileSpray(const RectangleF& rectangle,

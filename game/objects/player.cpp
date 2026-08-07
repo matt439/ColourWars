@@ -2,7 +2,7 @@
 #include "game/objects/player.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace player_consts;
 using namespace colour_consts;
 
@@ -18,7 +18,7 @@ Player::Player(const RectangleF& rectangle,
     const Colour& team_colour,
     const Viewport& view_port,
     const float* dt,
-    const MattMath::Vector2F& respawn_position,
+    const mattmath::Vector2F& respawn_position,
     const Vector2F& velocity,
     float rotation,
     const Vector2F& origin,
@@ -347,7 +347,7 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
 			Point2F player_center = this->get_center();
             Point2F ramp_top = ramp_rect.get_top();
 
-            MattMath::direction dir = this->get_velocity().get_direction();
+            mattmath::direction dir = this->get_velocity().get_direction();
             bool moving_up = dir == direction::UP || dir == direction::UP_LEFT ||
                 dir == direction::UP_RIGHT;
 

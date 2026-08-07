@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/states/end_menu.h"
 
-using namespace MattMath;
+using namespace mattmath;
 using namespace colour_consts;
 using namespace end_menu_consts;
 

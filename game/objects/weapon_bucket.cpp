@@ -2,7 +2,7 @@
 #include "game/objects/weapon_bucket.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace weapon_consts;
 
 WeaponBucket::WeaponBucket(player_team team,

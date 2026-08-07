@@ -64,7 +64,7 @@ class Player final : public MovingObject, public ICollisionGameObject,
                      public AnimationObject, public TextureObject
 {
 public:
-    Player(const MattMath::RectangleF& rectangle,
+    Player(const mattmath::RectangleF& rectangle,
         const PlayerAnimationInfo& animation_info,
         RenderResources* render_resources,
         const AudioResources* audio_resources,
@@ -73,40 +73,40 @@ public:
         wep_type primary,
         std::unique_ptr<Weapon> primary_weapon,
         wep_type secondary,
-        const MattMath::Colour& team_colour,
-        const MattMath::Viewport& view_port,
+        const mattmath::Colour& team_colour,
+        const mattmath::Viewport& view_port,
         const float* dt,
-        const MattMath::Vector2F& respawn_position,
-        const MattMath::Vector2F& velocity = MattMath::Vector2F::ZERO,
+        const mattmath::Vector2F& respawn_position,
+        const mattmath::Vector2F& velocity = mattmath::Vector2F::ZERO,
         float rotation = 0.0f,
-        const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
+        const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
         DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
         float layer_depth = 0.0f);
 
     void update() override;
     std::vector<std::unique_ptr<ICollisionGameObject>>
         update_weapon_and_get_projectiles() const;
-    void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Camera& camera) override;
+    void draw(DirectX::SpriteBatch* sprite_batch, const mattmath::Camera& camera) override;
     void draw(DirectX::SpriteBatch* sprite_batch) override;
 
-    bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
+    bool is_visible_in_viewport(const mattmath::RectangleF& view) const override;
 
     bool is_colliding(const ICollisionGameObject* other) const override;
     void on_collision(const ICollisionGameObject* other) override;
     collision_object_type get_collision_object_type() const override;
-    const MattMath::Shape* get_shape() const override;
+    const mattmath::Shape* get_shape() const override;
     bool get_for_deletion() const override;
 
 	void set_player_input(const PlayerInputData& input);
-    void set_camera(const MattMath::Camera& camera);
+    void set_camera(const mattmath::Camera& camera);
 
-	const MattMath::RectangleF& get_rectangle() const;
-	MattMath::Vector2F get_center() const;
-    const MattMath::Vector2F& get_velocity() const override;
-	const MattMath::Camera& get_camera() const;
-	const MattMath::Viewport& get_viewport() const;
+	const mattmath::RectangleF& get_rectangle() const;
+	mattmath::Vector2F get_center() const;
+    const mattmath::Vector2F& get_velocity() const override;
+	const mattmath::Camera& get_camera() const;
+	const mattmath::Viewport& get_viewport() const;
 	float get_input_x_movement() const;
-	const MattMath::Vector2F& get_input_shoot_direction() const;
+	const mattmath::Vector2F& get_input_shoot_direction() const;
 	bool get_input_primary_shoot() const;
 	bool get_input_jump_pressed() const;
 	bool get_input_jump_held() const;
@@ -118,7 +118,7 @@ public:
     float get_health() const;
 
     float get_weapon_ammo() const;
-    const MattMath::Colour& get_team_colour() const;
+    const mattmath::Colour& get_team_colour() const;
 
     const PlayerInputData& get_input() const;
 
@@ -138,7 +138,7 @@ public:
 	void on_no_collision();
 
 private:
-    MattMath::Camera camera_ = MattMath::Camera::DEFAULT_CAMERA;
+    mattmath::Camera camera_ = mattmath::Camera::DEFAULT_CAMERA;
 
     std::unique_ptr<Weapon> primary_ = nullptr;
 
@@ -158,13 +158,13 @@ private:
     player_team team_ = player_consts::DEFAULT_TEAM;
     wep_type primary_type_ = player_consts::DEFAULT_PRIMARY;
     wep_type secondary_type_ = player_consts::DEFAULT_SECONDARY;
-    MattMath::Colour team_colour_ = player_consts::DEFAULT_TEAM_COLOUR;
-    MattMath::Viewport viewport_ = MattMath::Viewport();
+    mattmath::Colour team_colour_ = player_consts::DEFAULT_TEAM_COLOUR;
+    mattmath::Viewport viewport_ = mattmath::Viewport();
 
-    MattMath::RectangleF rectangle_ = player_consts::DEFAULT_BOUNDS;
-    MattMath::RectangleF prev_rectangle_ = player_consts::DEFAULT_BOUNDS;
+    mattmath::RectangleF rectangle_ = player_consts::DEFAULT_BOUNDS;
+    mattmath::RectangleF prev_rectangle_ = player_consts::DEFAULT_BOUNDS;
 
-    MattMath::Vector2F respawn_position_ = MattMath::Vector2F::ZERO;
+    mattmath::Vector2F respawn_position_ = mattmath::Vector2F::ZERO;
 
     SoundBank* sound_bank_ = nullptr;
 
@@ -179,7 +179,7 @@ private:
 
     float health_regen_timer_ = 0.0f;
 
-	const MattMath::RectangleF* get_collision_rectangle() const;
+	const mattmath::RectangleF* get_collision_rectangle() const;
 
     static bool is_matching_collision_object_type(
         const ICollisionGameObject* other);
@@ -232,9 +232,9 @@ private:
     wep_type get_secondary() const;
     void set_secondary(wep_type secondary);
 
-    void set_team_colour(const MattMath::Colour& team_colour);
+    void set_team_colour(const mattmath::Colour& team_colour);
 
-    void set_viewport(const MattMath::Viewport& viewport);
+    void set_viewport(const mattmath::Viewport& viewport);
 
     bool get_facing_right() const;
     void set_facing_right(bool facing_right);

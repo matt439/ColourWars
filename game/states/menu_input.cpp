@@ -2,7 +2,7 @@
 #include "game/states/menu_input.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace menu_input_consts;
 
 MenuInput::MenuInput(GamePad* gamepad) :

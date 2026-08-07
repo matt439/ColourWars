@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/projectile_builder.h"
 
-using namespace MattMath;
+using namespace mattmath;
 using namespace DirectX;
 using namespace projectile_consts;
 
@@ -146,7 +146,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 	projectiles.push_back(
 		std::make_unique<ProjectileMist>(
 			RectangleF(position, DETAILS_MIST.col_rect_size),
-			Vector2F::rotate_vector(velocity, MattMath::PI / 12.0f),
+			Vector2F::rotate_vector(velocity, mattmath::PI / 12.0f),
 			team,
 			player_num,
 			team_colour,
@@ -160,7 +160,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 	projectiles.push_back(
 		std::make_unique<ProjectileMist>(
 			RectangleF(position, DETAILS_MIST.col_rect_size),
-			Vector2F::rotate_vector(velocity, -MattMath::PI / 12.0f),
+			Vector2F::rotate_vector(velocity, -mattmath::PI / 12.0f),
 			team,
 			player_num,
 			team_colour,
@@ -174,7 +174,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 	projectiles.push_back(
 		std::make_unique<ProjectileMist>(
 			RectangleF(position, DETAILS_MIST.col_rect_size),
-			Vector2F::rotate_vector(velocity, MattMath::PI / 6.0f),
+			Vector2F::rotate_vector(velocity, mattmath::PI / 6.0f),
 			team,
 			player_num,
 			team_colour,
@@ -188,7 +188,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 	projectiles.push_back(
 		std::make_unique<ProjectileMist>(
 			RectangleF(position, DETAILS_MIST.col_rect_size),
-			Vector2F::rotate_vector(velocity, -MattMath::PI / 6.0f),
+			Vector2F::rotate_vector(velocity, -mattmath::PI / 6.0f),
 			team,
 			player_num,
 			team_colour,

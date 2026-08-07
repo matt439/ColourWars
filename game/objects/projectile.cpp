@@ -2,7 +2,7 @@
 #include "game/objects/projectile.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 
 Projectile::Projectile(const Vector2F& velocity,
     player_team team,

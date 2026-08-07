@@ -2,7 +2,7 @@
 #include "game/objects/weapon_mister.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace weapon_consts;
 
 WeaponMister::WeaponMister(player_team team,

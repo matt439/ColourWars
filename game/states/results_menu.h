@@ -7,17 +7,17 @@
 
 namespace results_menu_consts
 {
-	const static MattMath::Vector2F DEFAULT_RESOLUTION = { 1920.0f, 1080.0f };
+	const static mattmath::Vector2F DEFAULT_RESOLUTION = { 1920.0f, 1080.0f };
 	
-	const static MattMath::Vector2F RESULTS_MENU_BOX_SIZE = { 900.0f, 600.0f };
-	const static MattMath::Colour RESULTS_MENU_BOX_COLOUR = colour_consts::LIGHT_SLATE_GRAY;
-	const static MattMath::Colour RESULTS_MENU_HEADING_TEXT_COLOUR = colour_consts::GOLDENROD;
+	const static mattmath::Vector2F RESULTS_MENU_BOX_SIZE = { 900.0f, 600.0f };
+	const static mattmath::Colour RESULTS_MENU_BOX_COLOUR = colour_consts::LIGHT_SLATE_GRAY;
+	const static mattmath::Colour RESULTS_MENU_HEADING_TEXT_COLOUR = colour_consts::GOLDENROD;
 
-	const static MattMath::Vector2F RESULTS_MENU_FILL_BOX_SIZE = { 700.0f, 200.0f };
+	const static mattmath::Vector2F RESULTS_MENU_FILL_BOX_SIZE = { 700.0f, 200.0f };
 	constexpr float RESULTS_MENU_FILL_BOX_Y_OFFSET = 300.0f;
 
-	const static MattMath::Vector2F RESULTS_MENU_TEAM_FILL_BORDER = { 10.0f, 10.0f };
-	const static MattMath::Vector2F RESULTS_MENU_TEAM_FILL_SIZE =
+	const static mattmath::Vector2F RESULTS_MENU_TEAM_FILL_BORDER = { 10.0f, 10.0f };
+	const static mattmath::Vector2F RESULTS_MENU_TEAM_FILL_SIZE =
 		results_menu_consts::RESULTS_MENU_FILL_BOX_SIZE -
 		results_menu_consts::RESULTS_MENU_TEAM_FILL_BORDER * 2.0f;
 
@@ -32,7 +32,7 @@ namespace results_menu_consts
 
 	constexpr float WINNER_TEXT_Y_OFFSET = 10.0f;
 
-	const static MattMath::Colour PERCENTAGE_TEXT_COLOUR = colour_consts::DARK_GRAY;
+	const static mattmath::Colour PERCENTAGE_TEXT_COLOUR = colour_consts::DARK_GRAY;
 
 	constexpr float TEAM_B_PERCENTAGE_X_OFFSET = 325.0f;
 
@@ -40,15 +40,15 @@ namespace results_menu_consts
 	const static std::string HEADING_FONT = "gill_sans_mt_bold_72";
 	const static std::string DETAIL_FONT = "gill_sans_mt_bold_36";
 
-	const static MattMath::Vector2F PROCEED_POSITION = { 725.0f, 750.0f };
-	const static MattMath::Vector2F HEADING_POSITION = { 800.0f, 235.0f };
-	const static MattMath::Vector2F WINNER_POSITION = { 750.0f, 400.0f };
+	const static mattmath::Vector2F PROCEED_POSITION = { 725.0f, 750.0f };
+	const static mattmath::Vector2F HEADING_POSITION = { 800.0f, 235.0f };
+	const static mattmath::Vector2F WINNER_POSITION = { 750.0f, 400.0f };
 
-	const static MattMath::Colour SHADOW_COLOUR = colour_consts::BLACK;
-	const static MattMath::Vector2F TITLE_SHADOW_OFFSET = { 6.0f, 6.0f };
-	const static MattMath::Vector2F HEADING_SHADOW_OFFSET = { 2.5f, 2.5f };
-	const static MattMath::Vector2F ITEM_SHADOW_OFFSET = { 1.5f, 1.5f };
-	const static MattMath::Vector2F DETAIL_SHADOW_OFFSET = { 1.0f, 1.0f };
+	const static mattmath::Colour SHADOW_COLOUR = colour_consts::BLACK;
+	const static mattmath::Vector2F TITLE_SHADOW_OFFSET = { 6.0f, 6.0f };
+	const static mattmath::Vector2F HEADING_SHADOW_OFFSET = { 2.5f, 2.5f };
+	const static mattmath::Vector2F ITEM_SHADOW_OFFSET = { 1.5f, 1.5f };
+	const static mattmath::Vector2F DETAIL_SHADOW_OFFSET = { 1.0f, 1.0f };
 
 	const std::string SOUND_BANK = "sound_bank_1";
 	const std::string CONFIRM_SOUND = "UI_Clicks01";
@@ -104,7 +104,7 @@ private:
 	float show_results_timer_ = 0.0f;
 	LevelEndInfo get_level_end_info() const;
 	float fill_time_ratio() const;
-	MattMath::Vector2F calculate_team_b_fill_top_right_position() const;
+	mattmath::Vector2F calculate_team_b_fill_top_right_position() const;
 	static int check_for_continue_input(const std::vector<ProcessedMenuInput>& menu_input);
 	void update_fill_box() const;
 	void update_team_a_fill() const;

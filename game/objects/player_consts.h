@@ -16,13 +16,13 @@ struct PlayerAnimationInfo
 
 namespace player_consts
 {
-    const MattMath::Vector2F DEFAULT_STARTING_POSITION = { 0.0f, 0.0f };
-    const MattMath::Vector2F DEFAULT_SIZE = { 52.0f, 120.0f };
-    const MattMath::RectangleF DEFAULT_BOUNDS = { DEFAULT_STARTING_POSITION, DEFAULT_SIZE };
-    const MattMath::RectangleF DEFAULT_COLLISION_BOUNDS = { 0.0f, 0.0f, 50.0f, 50.0f };
-    const MattMath::Vector2F STARTING_DX = { 0.0f, 0.0f };
-    const MattMath::Vector2F STARTING_VELOCITY = { 0.0f, 0.0f };
-    const MattMath::Vector2F MAX_VELOCITY = { 800.0f, 1900.0f };
+    const mattmath::Vector2F DEFAULT_STARTING_POSITION = { 0.0f, 0.0f };
+    const mattmath::Vector2F DEFAULT_SIZE = { 52.0f, 120.0f };
+    const mattmath::RectangleF DEFAULT_BOUNDS = { DEFAULT_STARTING_POSITION, DEFAULT_SIZE };
+    const mattmath::RectangleF DEFAULT_COLLISION_BOUNDS = { 0.0f, 0.0f, 50.0f, 50.0f };
+    const mattmath::Vector2F STARTING_DX = { 0.0f, 0.0f };
+    const mattmath::Vector2F STARTING_VELOCITY = { 0.0f, 0.0f };
+    const mattmath::Vector2F MAX_VELOCITY = { 800.0f, 1900.0f };
     constexpr float X_INITIAL_VELOCITY = 100.0f;
     constexpr float X_ACCELERATION = 900.0f;
     constexpr float X_DEACCELERATION = 2500.0f;
@@ -42,14 +42,14 @@ namespace player_consts
     constexpr float RESPAWN_DELAY = 3.0f;
     constexpr int DEFAULT_PLAYER_NUM = 0;
     constexpr auto DEFAULT_TEAM = player_team::A;
-    const MattMath::Colour DEFAULT_TEAM_COLOUR = colour_consts::GRAY;
+    const mattmath::Colour DEFAULT_TEAM_COLOUR = colour_consts::GRAY;
     constexpr auto DEFAULT_PRIMARY = wep_type::SPRAYER;
     constexpr auto DEFAULT_SECONDARY = wep_type::GRENADE_STD;
     const std::string DEFAULT_SHEET = "sprite_sheet_1";
     const std::string DEFAULT_ANIMATION_STRIP = "player_right_walk";
     const std::string DEFAULT_UNIFORM_TEXTURE = "player_right_walk_uniform";
 
-    const MattMath::Colour DEFAULT_PLAYER_COLOUR = colour_consts::BURLYWOOD;
+    const mattmath::Colour DEFAULT_PLAYER_COLOUR = colour_consts::BURLYWOOD;
 
     const std::string SOUND_BANK = "sound_bank_1";
     const std::string DAMAGE_SOUND = "SplittingFireWood";
@@ -69,10 +69,10 @@ namespace player_consts
 
     const static std::string COUNTDOWN_TEXT = "3";
     const static std::string COUNTDOWN_FONT_NAME = "gill_sans_mt_bold_72";
-    const static MattMath::Colour COUNTDOWN_COLOUR = colour_consts::DARK_GRAY;
-    const static MattMath::Colour COUNTDOWN_SHADOW_COLOUR = colour_consts::BLACK;
+    const static mattmath::Colour COUNTDOWN_COLOUR = colour_consts::DARK_GRAY;
+    const static mattmath::Colour COUNTDOWN_SHADOW_COLOUR = colour_consts::BLACK;
     constexpr float COUNTDOWN_SCALE = 1.0f;
-    const static MattMath::Vector2F COUNTDOWN_SHADOW_OFFSET = { 2.0f, 2.0f };
+    const static mattmath::Vector2F COUNTDOWN_SHADOW_OFFSET = { 2.0f, 2.0f };
     constexpr float COUNTDOWN_TEXT_WIDTH = 400.0f;
     constexpr float COUNTDOWN_TEXT_HEIGHT = 600.0f;
 

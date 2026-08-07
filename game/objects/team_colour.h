@@ -5,12 +5,12 @@
 
 struct TeamColour
 {
-	MattMath::Colour team_a = colour_consts::TEAM_BLUE;
-	MattMath::Colour team_b = colour_consts::TEAM_YELLOW;
+	mattmath::Colour team_a = colour_consts::TEAM_BLUE;
+	mattmath::Colour team_b = colour_consts::TEAM_YELLOW;
 
 	TeamColour() = default;
-	TeamColour(const MattMath::Colour& team_a, const MattMath::Colour& team_b);
-	const MattMath::Colour& get_team_colour(player_team team) const;
+	TeamColour(const mattmath::Colour& team_a, const mattmath::Colour& team_b);
+	const mattmath::Colour& get_team_colour(player_team team) const;
 };
 
 enum class team_colour_enum
@@ -49,6 +49,6 @@ public:
 
 	static TeamColour get_team_colours(team_colour_enum team_colour);
 
-	static MattMath::Colour get_team_colour(TeamColour team_colours,
+	static mattmath::Colour get_team_colour(TeamColour team_colours,
 		player_team team);
 };

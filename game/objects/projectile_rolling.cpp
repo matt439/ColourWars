@@ -2,7 +2,7 @@
 #include "game/objects/projectile_rolling.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace projectile_consts;
 
 ProjectileRolling::ProjectileRolling(const RectangleF& rectangle,

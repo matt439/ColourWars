@@ -3,7 +3,7 @@
 #include "engine/assets/json_loader.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace rapidjson;
 
 LevelLoadedInfo::LevelLoadedInfo(const char* json_path) :

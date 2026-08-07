@@ -2,7 +2,7 @@
 #include "game/objects/level_builder.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace rapidjson;
 
 LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,

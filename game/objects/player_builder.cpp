@@ -2,7 +2,7 @@
 #include "game/objects/player_builder.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace player_consts;
 
 PlayerBuilder::PlayerBuilder()

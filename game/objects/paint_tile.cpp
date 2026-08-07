@@ -2,7 +2,7 @@
 #include "game/objects/paint_tile.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace paint_tile_consts;
 
 PaintTile::PaintTile(const RectangleF& rectangle,

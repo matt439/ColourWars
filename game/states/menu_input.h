@@ -16,7 +16,7 @@ namespace menu_input_consts
 
 struct RawMenuInput
 {
-	MattMath::Vector2F left_analog_stick = MattMath::Vector2F::ZERO;
+	mattmath::Vector2F left_analog_stick = mattmath::Vector2F::ZERO;
 	bool proceed = false;
 	bool back = false;
 	bool up = false;

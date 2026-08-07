@@ -2,7 +2,7 @@
 #include "game/states/menu_page.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 
 MenuPage::MenuPage(MenuData* data) : data_(data)
 {

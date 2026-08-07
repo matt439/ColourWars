@@ -20,34 +20,34 @@ class Projectile : public MovingObject,
 {
 public:
 	Projectile() = default;
-	Projectile(const MattMath::Vector2F& velocity,
+	Projectile(const mattmath::Vector2F& velocity,
 		player_team team,
 		int player_num,
-		const MattMath::Colour& team_colour,
+		const mattmath::Colour& team_colour,
 		projectile_type type,
 		const float* dt,
 		RenderResources* render_resources,
 		const ProjectileDetails& details,
-		const MattMath::Colour& color = colour_consts::WHITE,
+		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
-		const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
+		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
 	void update() override = 0;
 	void draw(DirectX::SpriteBatch* sprite_batch,
-		const MattMath::Camera& camera) override = 0;
-	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override = 0;
+		const mattmath::Camera& camera) override = 0;
+	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override = 0;
 
 	bool is_colliding(const ICollisionGameObject* other) const override = 0;
 	void on_collision(const ICollisionGameObject* other) override;
 	collision_object_type get_collision_object_type() const override;
-	const MattMath::Shape* get_shape() const override = 0;
+	const mattmath::Shape* get_shape() const override = 0;
 	bool get_for_deletion() const override;
 	void set_for_deletion(bool for_deletion) override;
 
 	float get_delete_timer() const;
-	MattMath::Vector2F get_col_rect_size() const;
+	mattmath::Vector2F get_col_rect_size() const;
 	float get_player_damage() const;
 protected:
 	const ProjectileDetails& get_details() const;
@@ -57,7 +57,7 @@ protected:
 	virtual bool is_matching_collision_object_type(const ICollisionGameObject* other) const;
 
 	int get_player_num() const;
-	const MattMath::Colour& get_team_colour() const;
+	const mattmath::Colour& get_team_colour() const;
 	projectile_type get_type() const;
 
 	float get_timer() const;
@@ -69,7 +69,7 @@ private:
 	ProjectileDetails details_ = ProjectileDetails();
 	float timer_ = 0.0f;
 	int player_num_ = -1;
-	MattMath::Colour team_colour_ = colour_consts::GRAY;
+	mattmath::Colour team_colour_ = colour_consts::GRAY;
 	projectile_type type_ = SPRAY;
 
 	player_team team_ = player_team::NONE;
@@ -81,18 +81,18 @@ private:
 class DiffusingProjectile : public Projectile
 {
 public:
-	DiffusingProjectile(const MattMath::Vector2F& velocity,
+	DiffusingProjectile(const mattmath::Vector2F& velocity,
 		player_team team,
 		int player_num,
-		const MattMath::Colour& team_colour,
+		const mattmath::Colour& team_colour,
 		projectile_type type,
 		const float* dt,
 		RenderResources* render_resources,
 		const ProjectileDetails& details,
 		const DiffusionDetails& diffusion_details,
-		const MattMath::Colour& color = colour_consts::WHITE,
+		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
-		const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
+		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 	~DiffusingProjectile() override = default;
@@ -100,14 +100,14 @@ public:
 
 	void update() override = 0;
 	void draw(DirectX::SpriteBatch* sprite_batch,
-		const MattMath::Camera& camera) override = 0;
-	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override = 0;
+		const mattmath::Camera& camera) override = 0;
+	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override = 0;
 
 	bool is_colliding(const ICollisionGameObject* other) const override = 0;
-	const MattMath::Shape* get_shape() const override = 0;
+	const mattmath::Shape* get_shape() const override = 0;
 protected:
-	MattMath::Vector2F calculate_diffusion_size() const;
+	mattmath::Vector2F calculate_diffusion_size() const;
 private:
 	DiffusionDetails diffusion_details_ = DiffusionDetails();
-	const MattMath::Vector2F& get_base_size() const;
+	const mattmath::Vector2F& get_base_size() const;
 };

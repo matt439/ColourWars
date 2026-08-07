@@ -2,7 +2,7 @@
 #include "game/objects/weapon_roller.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace weapon_consts;
 
 
@@ -57,7 +57,7 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData /*input*/,
     }
 }
 
-MattMath::Colour WeaponRoller::get_draw_colour() const
+mattmath::Colour WeaponRoller::get_draw_colour() const
 {
     // The roller tints to the team colour while it is laying paint.
     return this->shooting_this_update_

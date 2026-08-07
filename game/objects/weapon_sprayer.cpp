@@ -2,7 +2,7 @@
 #include "game/objects/weapon_sprayer.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace weapon_consts;
 
 WeaponSprayer::WeaponSprayer(player_team team,

@@ -31,8 +31,8 @@ private:
 	static bool check_if_save_file_exists();
 
 	screen_resolution convert_ivec_to_resolution(
-		const MattMath::Vector2I& vec) const;
+		const mattmath::Vector2I& vec) const;
 
-	MattMath::Vector2I convert_resolution_to_ivec(
+	mattmath::Vector2I convert_resolution_to_ivec(
 		screen_resolution resolution) const;
 };

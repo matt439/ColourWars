@@ -2,7 +2,7 @@
 #include "game/objects/weapon.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace weapon_consts;
 
 Weapon::Weapon(const WeaponDetails& details,
@@ -87,7 +87,7 @@ void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug)
     }
 }
 
-MattMath::Colour Weapon::get_draw_colour() const
+mattmath::Colour Weapon::get_draw_colour() const
 {
     return this->get_colour();
 }
@@ -583,8 +583,8 @@ Vector2F RelativeVelocityWeapon::calculate_projectile_launch_velocity(
 }
 
 std::vector<std::unique_ptr<ICollisionGameObject>> RelativeVelocityWeapon::shoot(
-    const MattMath::Vector2F& shoot_direction,
-    const MattMath::Vector2F& player_velocity) const
+    const mattmath::Vector2F& shoot_direction,
+    const mattmath::Vector2F& player_velocity) const
 {
     RelativeWeaponDetails rel_details = this->rel_details_;
     

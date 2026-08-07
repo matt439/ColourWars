@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/weapon_builder.h"
 
-using namespace MattMath;
+using namespace mattmath;
 using namespace DirectX;
 
 std::unique_ptr<Weapon> WeaponBuilder::build_weapon(

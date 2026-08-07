@@ -17,8 +17,8 @@ namespace player_input_consts
 
 struct RawPlayerInput
 {
-	MattMath::Vector2F left_analog_stick = { 0.0f, 0.0f };
-	MattMath::Vector2F right_analog_stick = { 0.0f, 0.0f };
+	mattmath::Vector2F left_analog_stick = { 0.0f, 0.0f };
+	mattmath::Vector2F right_analog_stick = { 0.0f, 0.0f };
 	bool jump_button = false;
 	float jump_trigger = 0.0f;
 	float primary_shoot = 0.0f;

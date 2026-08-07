@@ -17,31 +17,31 @@ public:
 	Weapon(const WeaponDetails& details,
 		player_team team,
 		int player_num,
-		const MattMath::Colour& team_colour,
+		const mattmath::Colour& team_colour,
 		wep_type type,
-		const MattMath::Vector2F& player_center,
+		const mattmath::Vector2F& player_center,
 		RenderResources* render_resources,
 		const AudioResources* audio_resources,
 		const float* dt,
-		const MattMath::Colour& color = colour_consts::WHITE,
+		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
-		const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
+		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
 	virtual void draw(DirectX::SpriteBatch* sprite_batch,
-		const MattMath::Camera& camera, bool debug = false);
+		const mattmath::Camera& camera, bool debug = false);
 	virtual void draw(DirectX::SpriteBatch* sprite_batch, bool debug = false);
 
 	virtual std::vector<std::unique_ptr<ICollisionGameObject>>
 		update_and_get_projectiles(PlayerInputData input,
-			const MattMath::Vector2F& player_center,
-			const MattMath::Vector2F& player_velocity,
+			const mattmath::Vector2F& player_center,
+			const mattmath::Vector2F& player_velocity,
 			bool player_facing_right);
 
 	float get_ammo() const;
 	void reset_ammo();
-	void set_player_center(const MattMath::Vector2F& player_center);
+	void set_player_center(const mattmath::Vector2F& player_center);
 
 	// Never throws: weapons with no looping fire sound stop nothing.
 	virtual void stop_sounds() const;
@@ -68,21 +68,21 @@ protected:
 
 	// Tint for this frame's draw. A hook rather than a member assignment so
 	// draw() stays a pure read - the render workers all enter it at once.
-	virtual MattMath::Colour get_draw_colour() const;
+	virtual mattmath::Colour get_draw_colour() const;
 
-	const MattMath::Vector2F& get_player_center() const;
+	const mattmath::Vector2F& get_player_center() const;
 
 
 	player_team get_team() const;
 	int get_player_num() const;
-	const MattMath::Colour& get_team_colour() const;
+	const mattmath::Colour& get_team_colour() const;
 	wep_type get_type() const;
-	MattMath::RectangleF get_nozzle_rectangle() const;
+	mattmath::RectangleF get_nozzle_rectangle() const;
 
 
 	const WeaponDetails& get_details() const;
-	const MattMath::Vector2F& get_offset() const;
-	const MattMath::Vector2F& get_nozzle_offset() const;
+	const mattmath::Vector2F& get_offset() const;
+	const mattmath::Vector2F& get_nozzle_offset() const;
 	float get_shoot_interval() const;
 	float get_starting_vel_length() const;
 	float get_ammo_usage() const;
@@ -107,28 +107,28 @@ protected:
 	void alter_ammo_timer(float dt);
 
 
-	MattMath::Vector2F get_draw_pos() const;
-	MattMath::Vector2F get_nozzle_pos() const;
-	static MattMath::Vector2F get_nozzle_size();
+	mattmath::Vector2F get_draw_pos() const;
+	mattmath::Vector2F get_nozzle_pos() const;
+	static mattmath::Vector2F get_nozzle_size();
 	static bool facing_left(float rotation);
 
 	virtual std::vector<std::unique_ptr<ICollisionGameObject>> shoot(
-		const MattMath::Vector2F& shoot_direction) const;
+		const mattmath::Vector2F& shoot_direction) const;
 
-	virtual MattMath::Vector2F calculate_projectile_launch_velocity(
-		const MattMath::Vector2F& shoot_direction,
+	virtual mattmath::Vector2F calculate_projectile_launch_velocity(
+		const mattmath::Vector2F& shoot_direction,
 		float starting_velocity) const;
 
-	static MattMath::Vector2F calculate_sprite_origin(
-		const MattMath::Vector2F& size, rotation_origin origin);
+	static mattmath::Vector2F calculate_sprite_origin(
+		const mattmath::Vector2F& size, rotation_origin origin);
 
 	virtual bool check_if_shooting_and_ammo_update(PlayerInputData input,
-		const MattMath::Vector2F& player_center,
-		const MattMath::Vector2F& player_velocity);
+		const mattmath::Vector2F& player_center,
+		const mattmath::Vector2F& player_velocity);
 
 	virtual void update_movement_and_rotation(PlayerInputData input,
-		const MattMath::Vector2F& player_center,
-		const MattMath::Vector2F& player_velocity,
+		const mattmath::Vector2F& player_center,
+		const mattmath::Vector2F& player_velocity,
 		bool player_facing_right);
 
 	ProjectileBuilder* get_projectile_builder() const;
@@ -161,11 +161,11 @@ private:
 
 	player_team team_ = player_team::NONE;
 	int player_num_ = -1;
-	MattMath::Colour team_colour_ = colour_consts::GRAY;
+	mattmath::Colour team_colour_ = colour_consts::GRAY;
 	wep_type type_ = wep_type::NONE;
-	MattMath::Vector2F player_center_ = { 0.0f, 0.0f };
+	mattmath::Vector2F player_center_ = { 0.0f, 0.0f };
 
-	MattMath::Vector2F get_wep_rotation_origin_offset(
+	mattmath::Vector2F get_wep_rotation_origin_offset(
 		bool facing_left) const;
 };
 
@@ -176,35 +176,35 @@ public:
 		RelativeWeaponDetails rel_details,
 		player_team team,
 		int player_num,
-		const MattMath::Colour& team_colour,
+		const mattmath::Colour& team_colour,
 		wep_type type,
-		const MattMath::Vector2F& player_center,
+		const mattmath::Vector2F& player_center,
 		RenderResources* render_resources,
 		const AudioResources* audio_resources,
 		const float* dt,
-		const MattMath::Colour& color = colour_consts::WHITE,
+		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
-		const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
+		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
 	std::vector<std::unique_ptr<ICollisionGameObject>>
 		update_and_get_projectiles(PlayerInputData input,
-			const MattMath::Vector2F& player_center,
-			const MattMath::Vector2F& player_velocity,
+			const mattmath::Vector2F& player_center,
+			const mattmath::Vector2F& player_velocity,
 			bool player_facing_right) override;
 
 protected:
-	virtual MattMath::Vector2F calculate_projectile_launch_velocity(
-		const MattMath::Vector2F& shoot_direction,
+	virtual mattmath::Vector2F calculate_projectile_launch_velocity(
+		const mattmath::Vector2F& shoot_direction,
 		float starting_velocity,
-		const MattMath::Vector2F& player_velocity,
+		const mattmath::Vector2F& player_velocity,
 		add_player_velocity add_player_vel,
 		float player_vel_amount) const;
 
 	virtual std::vector<std::unique_ptr<ICollisionGameObject>> shoot(
-		const MattMath::Vector2F& shoot_direction,
-		const MattMath::Vector2F& player_velocity) const;
+		const mattmath::Vector2F& shoot_direction,
+		const mattmath::Vector2F& player_velocity) const;
 
 private:
 	RelativeWeaponDetails rel_details_ = weapon_consts::DETAILS_RELATIVE_DEFAULT;

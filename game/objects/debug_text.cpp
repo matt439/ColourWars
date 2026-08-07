@@ -2,7 +2,7 @@
 #include "game/objects/debug_text.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace debug_text_consts;
 
 DebugText::DebugText(RenderResources* render_resources,

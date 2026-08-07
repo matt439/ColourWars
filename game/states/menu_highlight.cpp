@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/states/menu_highlight.h"
 
-using namespace MattMath;
+using namespace mattmath;
 
 void MenuHighlight::highlight_widget(MWidget* widget) const
 {

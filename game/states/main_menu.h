@@ -12,11 +12,11 @@
 
 namespace main_menu_consts
 {
-	const static MattMath::Vector2F DEFAULT_RESOLUTION = { 1920.0f, 1080.0f };
+	const static mattmath::Vector2F DEFAULT_RESOLUTION = { 1920.0f, 1080.0f };
 	
-	const static MattMath::Colour TITLE_TEXT_COLOUR = colour_consts::GOLDENROD;
-	const static MattMath::Colour TITLE_START_TEXT_COLOUR = colour_consts::WHITE_SMOKE;
-	const static MattMath::Colour TITLE_BACKGROUND_COLOUR = colour_consts::DARK_SLATE_BLUE;
+	const static mattmath::Colour TITLE_TEXT_COLOUR = colour_consts::GOLDENROD;
+	const static mattmath::Colour TITLE_START_TEXT_COLOUR = colour_consts::WHITE_SMOKE;
+	const static mattmath::Colour TITLE_BACKGROUND_COLOUR = colour_consts::DARK_SLATE_BLUE;
 
 	const static std::string TITLE_FONT = "gill_sans_ultra_bold_144";
 	const static std::string ITEM_FONT = "gill_sans_mt_bold_48";
@@ -25,48 +25,48 @@ namespace main_menu_consts
 	const static std::string ANNOUNCEMENT_FONT = "gill_sans_mt_bold_144";
 	const static std::string WEAPON_DESCRIPTION_FONT = "gill_sans_mt_bold_24";
 
-	const static MattMath::Colour HEADING_COLOUR = colour_consts::TEAM_ORANGE;
+	const static mattmath::Colour HEADING_COLOUR = colour_consts::TEAM_ORANGE;
 
-	const static MattMath::Colour STANDARD_HIGHLIGHT = colour_consts::WHITE;
-	const static MattMath::Colour STANDARD_UNHIGHLIGHT = colour_consts::BLUE;
+	const static mattmath::Colour STANDARD_HIGHLIGHT = colour_consts::WHITE;
+	const static mattmath::Colour STANDARD_UNHIGHLIGHT = colour_consts::BLUE;
 
-	const static MattMath::Colour OPTIONS_VALUE_COLOUR = colour_consts::DARK_TURQUOISE;
+	const static mattmath::Colour OPTIONS_VALUE_COLOUR = colour_consts::DARK_TURQUOISE;
 
-	const static MattMath::Colour WEAPON_DESCRIPTION_FONT_COLOUR = colour_consts::WHITE_SMOKE;
+	const static mattmath::Colour WEAPON_DESCRIPTION_FONT_COLOUR = colour_consts::WHITE_SMOKE;
 
-	const static MattMath::Colour SHADOW_COLOUR = colour_consts::BLACK;
-	const static MattMath::Vector2F TITLE_SHADOW_OFFSET = { 6.0f, 6.0f };
-	const static MattMath::Vector2F HEADING_SHADOW_OFFSET = { 2.5f, 2.5f };
-	const static MattMath::Vector2F ITEM_SHADOW_OFFSET = { 1.5f, 1.5f };
-	const static MattMath::Vector2F DETAIL_SHADOW_OFFSET = { 1.0f, 1.0f };
-	const static MattMath::Vector2F WEAPON_DESCRIPTION_SHADOW_OFFSET = { 1.0f, 1.0f };
+	const static mattmath::Colour SHADOW_COLOUR = colour_consts::BLACK;
+	const static mattmath::Vector2F TITLE_SHADOW_OFFSET = { 6.0f, 6.0f };
+	const static mattmath::Vector2F HEADING_SHADOW_OFFSET = { 2.5f, 2.5f };
+	const static mattmath::Vector2F ITEM_SHADOW_OFFSET = { 1.5f, 1.5f };
+	const static mattmath::Vector2F DETAIL_SHADOW_OFFSET = { 1.0f, 1.0f };
+	const static mattmath::Vector2F WEAPON_DESCRIPTION_SHADOW_OFFSET = { 1.0f, 1.0f };
 
-	const static MattMath::Vector2F MODE_SELECT_WIDGET_SPACING = { 250.0f, 100.0f };
+	const static mattmath::Vector2F MODE_SELECT_WIDGET_SPACING = { 250.0f, 100.0f };
 
-	const static MattMath::Vector2F PLAYER_COUNT_WIDGET_SPACING = { 250.0f, 100.0f };
+	const static mattmath::Vector2F PLAYER_COUNT_WIDGET_SPACING = { 250.0f, 100.0f };
 
-	const static MattMath::Vector2F TEAM_SELECT_WIDGET_SPACING = { 250.0f, 125.0f };
-	const static MattMath::Vector2F TEAM_SELECT_TEAM_WIDGET_SIZE = { 50.0f, 50.0f };
+	const static mattmath::Vector2F TEAM_SELECT_WIDGET_SPACING = { 250.0f, 125.0f };
+	const static mattmath::Vector2F TEAM_SELECT_TEAM_WIDGET_SIZE = { 50.0f, 50.0f };
 
-	const static MattMath::Vector2F WEAPON_SELECT_WIDGET_SPACING = { 250.0f, 125.0f };
-	const static MattMath::Vector2F WEAPON_SELECT_WEAPON_WIDGET_SIZE = { 50.0f, 50.0f };
+	const static mattmath::Vector2F WEAPON_SELECT_WIDGET_SPACING = { 250.0f, 125.0f };
+	const static mattmath::Vector2F WEAPON_SELECT_WEAPON_WIDGET_SIZE = { 50.0f, 50.0f };
 
-	const static MattMath::Vector2F STAGE_SELECT_WIDGET_SPACING = { 0.0f, 150.0f };
+	const static mattmath::Vector2F STAGE_SELECT_WIDGET_SPACING = { 0.0f, 150.0f };
 
-	const static MattMath::Colour HOME_BACKGROUND_COLOUR = colour_consts::DODGER_BLUE;
-	const static MattMath::Colour OPTIONS_BACKGROUND_COLOUR = colour_consts::DODGER_BLUE;
-	const static MattMath::Colour PLAY_BACKGROUND_COLOUR = colour_consts::DODGER_BLUE;
+	const static mattmath::Colour HOME_BACKGROUND_COLOUR = colour_consts::DODGER_BLUE;
+	const static mattmath::Colour OPTIONS_BACKGROUND_COLOUR = colour_consts::DODGER_BLUE;
+	const static mattmath::Colour PLAY_BACKGROUND_COLOUR = colour_consts::DODGER_BLUE;
 
-	const static MattMath::Colour TEAM_SELECT_SELECTED_COLOUR = colour_consts::LIGHT_CORAL;
-	const static MattMath::Colour TEAM_SELECT_UNSELECTED_COLOUR = colour_consts::WHITE;
+	const static mattmath::Colour TEAM_SELECT_SELECTED_COLOUR = colour_consts::LIGHT_CORAL;
+	const static mattmath::Colour TEAM_SELECT_UNSELECTED_COLOUR = colour_consts::WHITE;
 
-	const static MattMath::Colour WEAPON_SELECT_SELECTED_COLOUR = colour_consts::LIGHT_CORAL;
-	const static MattMath::Colour WEAPON_SELECT_UNSELECTED_COLOUR = colour_consts::WHITE;
+	const static mattmath::Colour WEAPON_SELECT_SELECTED_COLOUR = colour_consts::LIGHT_CORAL;
+	const static mattmath::Colour WEAPON_SELECT_UNSELECTED_COLOUR = colour_consts::WHITE;
 
-	const static MattMath::Colour STAGE_SELECT_SELECTED_COLOUR = colour_consts::FIRE_BRICK;
-	const static MattMath::Colour STAGE_SELECT_UNSELECTED_COLOUR = colour_consts::WHITE;
-	const static MattMath::Vector2F STAGE_SELECT_ICON_SIZE = { 800.0f, 600.0f };
-	const static MattMath::Vector2F STAGE_SELECT_READY_SIZE = { 1500.0f, 300.0f };
+	const static mattmath::Colour STAGE_SELECT_SELECTED_COLOUR = colour_consts::FIRE_BRICK;
+	const static mattmath::Colour STAGE_SELECT_UNSELECTED_COLOUR = colour_consts::WHITE;
+	const static mattmath::Vector2F STAGE_SELECT_ICON_SIZE = { 800.0f, 600.0f };
+	const static mattmath::Vector2F STAGE_SELECT_READY_SIZE = { 1500.0f, 300.0f };
 
 	constexpr float WEAPON_DESC_X_OFFSET = 250.0f;
 

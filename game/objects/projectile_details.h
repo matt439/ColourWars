@@ -10,8 +10,8 @@ struct ProjectileDetails
     rotation_origin rotat_origin = rotation_origin::NO_ROTATION;
     float delete_timer = -1.0f;
     float player_damage = -1.0f;
-    MattMath::Vector2F size = { 0.0f, 0.0f };
-    MattMath::Vector2F col_rect_size = { 0.0f, 0.0f };
+    mattmath::Vector2F size = { 0.0f, 0.0f };
+    mattmath::Vector2F col_rect_size = { 0.0f, 0.0f };
     std::string sheet_name = "";
     std::string animation_strip_name = "";
 };
@@ -27,6 +27,6 @@ struct DiffusionDetails
 {
     float start_time = -1.0f;
     float end_time = -1.0f;
-    MattMath::Vector2F end_scale = { -1.0f, -1.0f };
+    mattmath::Vector2F end_scale = { -1.0f, -1.0f };
     diffusion_type type = diffusion_type::NO_DIFFUSION;
 };

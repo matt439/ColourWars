@@ -2,7 +2,7 @@
 #include "game/objects/interface_gameplay.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace interface_consts;
 using namespace colour_consts;
 

@@ -2,7 +2,7 @@
 #include "game/objects/level_object_builder.h"
 
 using namespace rapidjson;
-using namespace MattMath;
+using namespace mattmath;
 
 LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
 	const AudioResources* audio_resources,

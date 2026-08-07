@@ -9,32 +9,32 @@ public:
 	Structure() = default;
 	Structure(const std::string& sheet_name,
 		const std::string& frame_name,
-		const MattMath::RectangleF& sprite_rectangle,
-		const MattMath::Shape* collision_shape,
+		const mattmath::RectangleF& sprite_rectangle,
+		const mattmath::Shape* collision_shape,
 		RenderResources* render_resources,
 		collision_object_type collision_type,
-		const MattMath::Colour& color = colour_consts::WHITE,
+		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
-		const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
+		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
 	void update() override;
 	void draw(DirectX::SpriteBatch* sprite_batch,
-		const MattMath::Camera& camera) override;
+		const mattmath::Camera& camera) override;
 	void draw(DirectX::SpriteBatch* sprite_batch) override;
-	bool is_visible_in_viewport(const MattMath::RectangleF& view) const override;
+	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override;
 
 	bool is_colliding(const ICollisionGameObject* other) const override;
 	void on_collision(const ICollisionGameObject* other) override;
 	collision_object_type get_collision_object_type() const override;
-	const MattMath::Shape* get_shape() const override;
+	const mattmath::Shape* get_shape() const override;
 	bool get_for_deletion() const override;
 protected:
-	const MattMath::RectangleF& get_rectangle() const;
+	const mattmath::RectangleF& get_rectangle() const;
 private:
 	collision_object_type collision_type_ =
 		collision_object_type::STRUCTURE;
-	MattMath::RectangleF sprite_rectangle_ = MattMath::RectangleF::ZERO;
-	std::unique_ptr<MattMath::Shape> collision_shape_ = nullptr;
+	mattmath::RectangleF sprite_rectangle_ = mattmath::RectangleF::ZERO;
+	std::unique_ptr<mattmath::Shape> collision_shape_ = nullptr;
 };

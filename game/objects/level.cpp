@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
 
-using namespace MattMath;
+using namespace mattmath;
 using namespace DirectX;
 using namespace level_consts;
 
@@ -762,7 +762,7 @@ LevelEndInfo Level::get_level_end_info() const
 }
 
 void Level::draw_countdown_text(SpriteBatch* sprite_batch,
-	const MattMath::Camera& viewport_camera) const
+	const mattmath::Camera& viewport_camera) const
 {
 	sprite_batch->Begin();
 	

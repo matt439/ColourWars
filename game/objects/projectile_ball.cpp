@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/projectile_ball.h"
 
-using namespace MattMath;
+using namespace mattmath;
 using namespace DirectX;
 using namespace projectile_consts;
 

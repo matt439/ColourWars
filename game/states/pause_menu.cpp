@@ -2,7 +2,7 @@
 #include "game/states/pause_menu.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace pause_menu_consts;
 using namespace colour_consts;
 

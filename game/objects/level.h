@@ -34,10 +34,10 @@ namespace level_consts
 	constexpr float START_TIMER = 3.0f;
 	const static std::string COUNTDOWN_TEXT = "3";
 	const static std::string COUNTDOWN_FONT_NAME = "gill_sans_mt_bold_144";
-	const static MattMath::Colour COUNTDOWN_COLOUR = colour_consts::DARK_GRAY;
-	const static MattMath::Colour COUNTDOWN_SHADOW_COLOUR = colour_consts::BLACK;
+	const static mattmath::Colour COUNTDOWN_COLOUR = colour_consts::DARK_GRAY;
+	const static mattmath::Colour COUNTDOWN_SHADOW_COLOUR = colour_consts::BLACK;
 	constexpr float COUNTDOWN_SCALE = 2.0f;
-	const static MattMath::Vector2F COUNTDOWN_SHADOW_OFFSET = { 5.0f, 5.0f };
+	const static mattmath::Vector2F COUNTDOWN_SHADOW_OFFSET = { 5.0f, 5.0f };
 	constexpr float COUNTDOWN_TEXT_WIDTH = 400.0f;
 	constexpr float COUNTDOWN_TEXT_HEIGHT = 600.0f;
 
@@ -61,12 +61,12 @@ public:
 		std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers,
 		level_stage stage,
 		const TeamColour& team_colours,
-		const MattMath::RectangleF& out_of_bounds,
-		const MattMath::RectangleF& camera_bounds,
-		const MattMath::RectangleF& zoom_out_start_bounds,
-		const MattMath::RectangleF& zoom_out_finish_bounds,
-		const std::vector<MattMath::Vector2F>& team_a_spawns,
-		const std::vector<MattMath::Vector2F>& team_b_spawns,
+		const mattmath::RectangleF& out_of_bounds,
+		const mattmath::RectangleF& camera_bounds,
+		const mattmath::RectangleF& zoom_out_start_bounds,
+		const mattmath::RectangleF& zoom_out_finish_bounds,
+		const std::vector<mattmath::Vector2F>& team_a_spawns,
+		const std::vector<mattmath::Vector2F>& team_b_spawns,
 		const std::string& sound_bank_name,
 		const std::string& music_name,
 		float music_volume,
@@ -130,18 +130,18 @@ private:
 	float zoom_out_timer_ = level_consts::ZOOM_OUT_TIMER;
 	float overview_timer_ = level_consts::OVERVIEW_TIMER;
 
-	MattMath::Camera zoom_out_camera_ = MattMath::Camera::DEFAULT_CAMERA;
+	mattmath::Camera zoom_out_camera_ = mattmath::Camera::DEFAULT_CAMERA;
 
 	TeamColour team_colours_ = TeamColour();
 	level_stage stage_ = level_stage::KING_OF_THE_HILL;
 
-	MattMath::RectangleF out_of_bounds_ = MattMath::RectangleF::ZERO;
-	MattMath::RectangleF camera_bounds_ = MattMath::RectangleF::ZERO;
-	MattMath::RectangleF zoom_out_start_bounds_ = MattMath::RectangleF::ZERO;
-	MattMath::RectangleF zoom_out_finish_bounds_ = MattMath::RectangleF::ZERO;
+	mattmath::RectangleF out_of_bounds_ = mattmath::RectangleF::ZERO;
+	mattmath::RectangleF camera_bounds_ = mattmath::RectangleF::ZERO;
+	mattmath::RectangleF zoom_out_start_bounds_ = mattmath::RectangleF::ZERO;
+	mattmath::RectangleF zoom_out_finish_bounds_ = mattmath::RectangleF::ZERO;
 
-	std::vector<MattMath::Vector2F> team_a_spawns_ = std::vector<MattMath::Vector2F>();
-	std::vector<MattMath::Vector2F> team_b_spawns_ = std::vector<MattMath::Vector2F>();
+	std::vector<mattmath::Vector2F> team_a_spawns_ = std::vector<mattmath::Vector2F>();
+	std::vector<mattmath::Vector2F> team_b_spawns_ = std::vector<mattmath::Vector2F>();
 
 	level_state state_ = level_state::START_COUNTDOWN;
 	const float* dt_ = nullptr;
@@ -182,5 +182,5 @@ private:
 		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
 
 	void draw_countdown_text(DirectX::SpriteBatch* sprite_batch,
-		const MattMath::Camera& viewport_camera) const;
+		const mattmath::Camera& viewport_camera) const;
 };

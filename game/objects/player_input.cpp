@@ -2,7 +2,7 @@
 #include "game/objects/player_input.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace player_input_consts;
 
 PlayerInput::PlayerInput(GamePad* gamepad) :

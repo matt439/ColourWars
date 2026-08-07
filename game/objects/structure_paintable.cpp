@@ -2,7 +2,7 @@
 #include "game/objects/structure_paintable.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace paint_tile_consts;
 using namespace structure_paintable_consts;
 

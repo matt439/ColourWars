@@ -4,11 +4,11 @@
 
 namespace projectile_consts
 {
-    const MattMath::Vector2F DEFAULT_STARTING_POSITION = { 0.0f, 0.0f };
-    const MattMath::Vector2F DEFAULT_SIZE = { 10.0f, 10.0f };
-    const MattMath::Vector2F STARTING_DX = { 0.0f, 0.0f };
-    const MattMath::Vector2F STARTING_VELOCITY = { 0.0f, 0.0f };
-    const MattMath::Vector2F MAX_VELOCITY = { 5000.0f, 5000.0f };
+    const mattmath::Vector2F DEFAULT_STARTING_POSITION = { 0.0f, 0.0f };
+    const mattmath::Vector2F DEFAULT_SIZE = { 10.0f, 10.0f };
+    const mattmath::Vector2F STARTING_DX = { 0.0f, 0.0f };
+    const mattmath::Vector2F STARTING_VELOCITY = { 0.0f, 0.0f };
+    const mattmath::Vector2F MAX_VELOCITY = { 5000.0f, 5000.0f };
 
     static const ProjectileDetails DETAILS_DEFAULT =
     {
@@ -17,8 +17,8 @@ namespace projectile_consts
         rotation_origin::NO_ROTATION,   //rotat_origin
         1.0f,                           //delete_timer
         0.0f,                           //player_damage
-        MattMath::Vector2F(15.0f, 15.0f),        //size
-        MattMath::Vector2F(15.0f, 15.0f),         //col_rect_size
+        mattmath::Vector2F(15.0f, 15.0f),        //size
+        mattmath::Vector2F(15.0f, 15.0f),         //col_rect_size
         "sprite_sheet_1",               //sheet_name
         "test",                        //animation_strip_name
     };
@@ -30,8 +30,8 @@ namespace projectile_consts
         rotation_origin::NO_ROTATION,   //rotat_origin
         5.0f,                           //delete_timer
         -0.1f,                           //player_damage
-        MattMath::Vector2F(15.0f, 15.0f),        //size
-        MattMath::Vector2F(15.0f, 15.0f),         //col_rect_size
+        mattmath::Vector2F(15.0f, 15.0f),        //size
+        mattmath::Vector2F(15.0f, 15.0f),         //col_rect_size
         "sprite_sheet_1",               //sheet_name
         "projectile_3",                        //animation_strip_name
     };
@@ -51,8 +51,8 @@ namespace projectile_consts
         rotation_origin::CENTER,        //rotat_origin
         5.0f,                           //delete_timer
         -0.5f,                           //player_damage
-        MattMath::Vector2F(20.0f, 20.0f),         //size
-        MattMath::Vector2F(20.0f, 20.0f),           //col_rect_size
+        mattmath::Vector2F(20.0f, 20.0f),         //size
+        mattmath::Vector2F(20.0f, 20.0f),           //col_rect_size
         "sprite_sheet_1",               //sheet_name
         "projectile_3",                        //animation_strip_name
     };
@@ -64,8 +64,8 @@ namespace projectile_consts
         rotation_origin::NO_ROTATION,   //rotat_origin
         0.000001f,                           //delete_timer
         -1000.0f,                        //player_damage
-        MattMath::Vector2F(50.0f, 50.0f),        //size
-        MattMath::Vector2F(50.0f, 50.0f),         //col_rect_size
+        mattmath::Vector2F(50.0f, 50.0f),        //size
+        mattmath::Vector2F(50.0f, 50.0f),         //col_rect_size
         "sprite_sheet_1",               //sheet_name
         "projectile_3",                        //animation_strip_name
     };
@@ -77,8 +77,8 @@ namespace projectile_consts
         rotation_origin::NO_ROTATION,   //rotat_origin
         5.0f,                           //delete_timer
         -0.05f,                           //player_damage
-        MattMath::Vector2F(5.0f, 5.0f),        //size
-        MattMath::Vector2F(5.0f, 5.0f),         //col_rect_size
+        mattmath::Vector2F(5.0f, 5.0f),        //size
+        mattmath::Vector2F(5.0f, 5.0f),         //col_rect_size
         "sprite_sheet_1",               //sheet_name
         "projectile_3",                        //animation_strip_name
     };
@@ -98,8 +98,8 @@ namespace projectile_consts
         rotation_origin::NO_ROTATION,   //rotat_origin
         5.0f,                           //delete_timer
         -0.1f,                           //player_damage
-        MattMath::Vector2F(100.0f, 100.0f),        //size
-        MattMath::Vector2F(100.0f, 100.0f),         //col_rect_size.
+        mattmath::Vector2F(100.0f, 100.0f),        //size
+        mattmath::Vector2F(100.0f, 100.0f),         //col_rect_size.
         "sprite_sheet_1",               //sheet_name
         "projectile_3",                        //animation_strip_name
     };

@@ -9,7 +9,7 @@
 
 using namespace rapidjson;
 using namespace directory_consts;
-using namespace MattMath;
+using namespace mattmath;
 
 SaveData Save::load_from_json(const char* json_path) const
 {

@@ -2,7 +2,7 @@
 #include "game/objects/projectile_mist.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace projectile_consts;
 
 ProjectileMist::ProjectileMist(const RectangleF& rectangle,

@@ -13,9 +13,9 @@ public:
 	static std::unique_ptr<Weapon> build_weapon(
 		player_team team,
 		int player_num,
-		const MattMath::Colour& team_colour,
+		const mattmath::Colour& team_colour,
 		wep_type type,
-		const MattMath::Vector2F& player_center,
+		const mattmath::Vector2F& player_center,
 		RenderResources* render_resources,
 		const AudioResources* audio_resources,
 		const float* dt);

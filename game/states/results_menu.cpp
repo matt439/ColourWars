@@ -2,7 +2,7 @@
 #include "game/states/results_menu.h"
 
 using namespace DirectX;
-using namespace MattMath;
+using namespace mattmath;
 using namespace results_menu_consts;
 using namespace colour_consts;
 

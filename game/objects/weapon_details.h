@@ -33,9 +33,9 @@ struct SoundEffectInstanceWeaponDetails
 
 struct WeaponDetails
 {
-	MattMath::Vector2F offset = { 0.0f, 0.0f }; //from player center to weapon sprite top-left
-	MattMath::Vector2F size = { 0.0f, 0.0f };
-	MattMath::Vector2F nozzle_offset = { 0.0f, 0.0f }; //from right center of weapon sprite to nozzle
+	mattmath::Vector2F offset = { 0.0f, 0.0f }; //from player center to weapon sprite top-left
+	mattmath::Vector2F size = { 0.0f, 0.0f };
+	mattmath::Vector2F nozzle_offset = { 0.0f, 0.0f }; //from right center of weapon sprite to nozzle
 	float shoot_interval = 0.0f;
 	float starting_vel_length = 1100.0f;
 	float ammo_usage = 0.0f;

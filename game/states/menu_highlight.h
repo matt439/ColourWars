@@ -16,14 +16,14 @@ protected:
 	void unhighlight_widget(MWidget* widget) const;
 	void change_highlight(MWidget* next_highlight);
 
-	MattMath::Colour get_highlight_colour() const;
-	void set_highlight_colour(MattMath::Colour colour);
+	mattmath::Colour get_highlight_colour() const;
+	void set_highlight_colour(mattmath::Colour colour);
 
-	MattMath::Colour get_unhighlight_colour() const;
-	void set_unhighlight_colour(MattMath::Colour colour);
+	mattmath::Colour get_unhighlight_colour() const;
+	void set_unhighlight_colour(mattmath::Colour colour);
 
 private:
 	MWidget* highlighted_widget_ = nullptr;
-	MattMath::Colour highlight_colour_ = colour_consts::WHITE;
-	MattMath::Colour unhighlight_colour_ = colour_consts::GRAY;
+	mattmath::Colour highlight_colour_ = colour_consts::WHITE;
+	mattmath::Colour unhighlight_colour_ = colour_consts::GRAY;
 };

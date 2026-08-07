@@ -35,22 +35,22 @@ public:
 	StructurePaintable() = default;
 	StructurePaintable(const std::string& sheet_name,
 		const std::string& frame_name,
-		const MattMath::RectangleF& sprite_rectangle,
-		const MattMath::Shape* collision_shape,
+		const mattmath::RectangleF& sprite_rectangle,
+		const mattmath::Shape* collision_shape,
 		RenderResources* render_resources,
 		const AudioResources* audio_resources,
 		collision_object_type collision_type,
 		const TeamColour& team_colours,
 		const PaintableFaces& faces,
 		const float* dt,
-		const MattMath::Colour& color = colour_consts::WHITE,
+		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
-		const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
+		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
 	void update() override;
-	void draw(DirectX::SpriteBatch* sprite_batch, const MattMath::Camera& camera) override;
+	void draw(DirectX::SpriteBatch* sprite_batch, const mattmath::Camera& camera) override;
 	void draw(DirectX::SpriteBatch* sprite_batch) override;
 	void on_collision(const ICollisionGameObject* other) override;
 
