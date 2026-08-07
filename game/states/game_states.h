@@ -29,7 +29,7 @@ private:
     MainMenuScreen screen_ = MainMenuScreen::title;
     void set_main_menu_data_ptrs();
     void order_level_creation();
-    GameData* get_data() const;
+    GameData* data() const;
 };
 
 enum class GameLevelState
@@ -74,5 +74,5 @@ private:
     // Returns the XInput pad slot of the player who pressed pause, or -1.
     static int check_for_pause_input(
         const std::vector<PlayerInputData>& player_inputs);
-    GameData* get_data() const;
+    GameData* data() const;
 };

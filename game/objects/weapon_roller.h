@@ -27,5 +27,5 @@ private:
 
 	// The roller's draw was a verbatim copy of Weapon::draw apart from this one
 	// colour choice, so it is expressed as a hook instead of a duplicate.
-	mattmath::Colour get_draw_colour() const override;
+	mattmath::Colour draw_colour() const override;
 };

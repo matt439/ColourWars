@@ -14,9 +14,9 @@ public:
 	void draw() override = 0;
 	void init() override = 0;
 protected:
-	mattmath::Vector2F get_widget_position() const;
-	mattmath::Vector2F get_widget_size() const;
-	mattmath::Vector2F get_widget_spacing() const;
+	mattmath::Vector2F widget_position() const;
+	mattmath::Vector2F widget_size() const;
+	mattmath::Vector2F widget_spacing() const;
 
 	void set_widget_position(const mattmath::Vector2F& widget_position);
 	void set_widget_size(const mattmath::Vector2F& widget_size);
@@ -27,13 +27,13 @@ protected:
 		const mattmath::Vector2F& widget_size,
 		const mattmath::Vector2F& resolution);
 	static float calculate_center_position(float widget_size, float resolution);
-	MenuData* get_data() const;
-	MenuInput* get_input() const;
-	ResolutionManager* get_resolution_manager() const;
-	Save* get_save() const;
-	RenderResources* get_render_resources() const;
-	const AudioResources* get_audio_resources() const;
-	ViewportManager* get_viewport_manager() const;
+	MenuData* data() const;
+	MenuInput* input() const;
+	ResolutionManager* resolution_manager() const;
+	Save* save() const;
+	RenderResources* render_resources() const;
+	const AudioResources* audio_resources() const;
+	ViewportManager* viewport_manager() const;
 
 	void draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,
 		ID3D11CommandList*& command_list,
@@ -49,10 +49,10 @@ protected:
 		std::vector<ID3D11CommandList*>* command_lists,
 		std::vector<DirectX::SpriteBatch*>* sprite_batches);
 
-	ID3D11SamplerState* get_point_clamp_sampler_state() const;
-	std::vector<ProcessedMenuInput> get_menu_inputs() const;
-	mattmath::Vector2F get_float_resolution() const;
-	mattmath::Vector2I get_int_resolution() const;
+	ID3D11SamplerState* point_clamp_sampler_state() const;
+	std::vector<ProcessedMenuInput> menu_inputs() const;
+	mattmath::Vector2F float_resolution() const;
+	mattmath::Vector2I int_resolution() const;
 private:
 	MenuData* data_ = nullptr;
 	mattmath::Vector2F widget_position_ = { 150.0f, 150.0f };

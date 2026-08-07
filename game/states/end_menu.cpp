@@ -7,7 +7,7 @@ using namespace end_menu_consts;
 
 EndMenuPage::EndMenuPage(EndMenuData* data) :
 	MenuPage(data),
-	SoundBankObject(SOUND_BANK, this->get_audio_resources()),
+	SoundBankObject(SOUND_BANK, this->audio_resources()),
 	data_(data)
 {
 	this->direction_sound_ = this->resolve_wave(DIRECTION_SOUND);
@@ -15,7 +15,7 @@ EndMenuPage::EndMenuPage(EndMenuData* data) :
 	this->cancel_sound_ = this->resolve_wave(CANCEL_SOUND);
 }
 
-EndMenuData* EndMenuPage::get_end_menu_data() const
+EndMenuData* EndMenuPage::end_menu_data() const
 {
 	return this->data_;
 }
@@ -27,9 +27,9 @@ EndMenuInitial::EndMenuInitial(EndMenuData* data) : EndMenuPage(data)
 
 void EndMenuInitial::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	std::string highlighted_element =
-		this->get_highlighted_widget()->get_name();
+		this->highlighted_widget()->name();
 
 	for (int i = 0; i < inputs.size(); i++)
 	{
@@ -38,35 +38,35 @@ void EndMenuInitial::update()
 			if (highlighted_element == "change_teams")
 			{
 				this->play_wave(this->confirm_sound_);
-				*this->get_end_menu_data()->get_action() =
+				*this->end_menu_data()->action() =
 					EndMenuAction::change_teams;
 				return;
 			}
 			else if (highlighted_element == "change_weapons")
 			{
 				this->play_wave(this->confirm_sound_);
-				*this->get_end_menu_data()->get_action() =
+				*this->end_menu_data()->action() =
 					EndMenuAction::change_weapons;
 				return;
 			}
 			else if (highlighted_element == "change_level")
 			{
 				this->play_wave(this->confirm_sound_);
-				*this->get_end_menu_data()->get_action() =
+				*this->end_menu_data()->action() =
 					EndMenuAction::change_level;
 				return;
 			}
 			else if (highlighted_element == "restart")
 			{
 				this->play_wave(this->confirm_sound_);
-				*this->get_end_menu_data()->get_action() =
+				*this->end_menu_data()->action() =
 					EndMenuAction::restart;
 				return;
 			}
 			else if (highlighted_element == "exit")
 			{
 				this->play_wave(this->cancel_sound_);
-				*this->get_end_menu_data()->get_action() =
+				*this->end_menu_data()->action() =
 					EndMenuAction::exit;
 				return;
 			}
@@ -141,7 +141,7 @@ void EndMenuInitial::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, END_MENU_BOX_SIZE),
-		this->get_render_resources(),
+		this->render_resources(),
 		END_MENU_BOX_COLOUR);
 	this->box_->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
 
@@ -154,7 +154,7 @@ void EndMenuInitial::init()
 		"Level End",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_render_resources(),
+		this->render_resources(),
 		END_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -164,8 +164,8 @@ void EndMenuInitial::init()
 		"Change Teams",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_render_resources(),
-		this->get_highlight_colour(),
+		this->render_resources(),
+		this->highlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -174,8 +174,8 @@ void EndMenuInitial::init()
 		"Change Weapons",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -184,8 +184,8 @@ void EndMenuInitial::init()
 		"Change Level",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -194,8 +194,8 @@ void EndMenuInitial::init()
 		"Restart",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -204,8 +204,8 @@ void EndMenuInitial::init()
 		"Exit to Main Menu",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -224,7 +224,7 @@ void EndMenuInitial::init()
 	this->text_container_->add_child(this->restart_.get());
 	this->text_container_->add_child(this->exit_.get());
 
-	const Vector2F resolution = this->get_float_resolution();
+	const Vector2F resolution = this->float_resolution();
 
 	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
@@ -236,7 +236,7 @@ void EndMenuInitial::draw()
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
 	mobjects.push_back(std::make_pair(this->texture_container_.get(),
-		this->get_point_clamp_sampler_state()));
+		this->point_clamp_sampler_state()));
 
 	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 

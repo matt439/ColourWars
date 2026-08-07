@@ -10,7 +10,7 @@ struct TeamColour
 
 	TeamColour() = default;
 	TeamColour(const mattmath::Colour& team_a, const mattmath::Colour& team_b);
-	const mattmath::Colour& get_team_colour(PlayerTeam team) const;
+	const mattmath::Colour& team_colour(PlayerTeam team) const;
 };
 
 enum class TeamColourPair
@@ -47,8 +47,8 @@ public:
 
 	static TeamColour generate_random_team_colour();
 
-	static TeamColour get_team_colours(TeamColourPair team_colour);
+	static TeamColour team_colours(TeamColourPair team_colour);
 
-	static mattmath::Colour get_team_colour(TeamColour team_colours,
+	static mattmath::Colour team_colour(TeamColour team_colours,
 		PlayerTeam team);
 };

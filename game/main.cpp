@@ -31,8 +31,8 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		ApplicationOptions options;
 		options.window_class_name = L"ArtAttackWindowClass";
 		options.window_title = L"Colour Wars";
-		options.resolution = save.get_resolution();
-		options.fullscreen = save.get_fullscreen();
+		options.resolution = save.resolution();
+		options.fullscreen = save.fullscreen();
 		options.target_fps = 60;
 		options.max_threads = 16;
 

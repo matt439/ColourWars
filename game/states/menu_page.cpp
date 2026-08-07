@@ -9,15 +9,15 @@ MenuPage::MenuPage(MenuData* data) : data_(data)
 
 }
 
-Vector2F MenuPage::get_widget_position() const
+Vector2F MenuPage::widget_position() const
 {
 	return this->widget_position_;
 }
-Vector2F MenuPage::get_widget_spacing() const
+Vector2F MenuPage::widget_spacing() const
 {
 	return this->widget_spacing_;
 }
-Vector2F MenuPage::get_widget_size() const
+Vector2F MenuPage::widget_size() const
 {
 	return this->widget_size_;
 }
@@ -57,37 +57,37 @@ float MenuPage::calculate_center_position(
 	return (resolution - widget_size) / 2.0f;
 }
 
-MenuData* MenuPage::get_data() const
+MenuData* MenuPage::data() const
 {
 	return this->data_;
 }
-MenuInput* MenuPage::get_input() const
+MenuInput* MenuPage::input() const
 {
-	return this->data_->get_input();
+	return this->data_->input();
 }
-ResolutionManager* MenuPage::get_resolution_manager() const
+ResolutionManager* MenuPage::resolution_manager() const
 {
-	return this->data_->get_resolution_manager();
+	return this->data_->resolution_manager();
 }
-Save* MenuPage::get_save() const
+Save* MenuPage::save() const
 {
-	return this->data_->get_save();
+	return this->data_->save();
 }
-RenderResources* MenuPage::get_render_resources() const
+RenderResources* MenuPage::render_resources() const
 {
-	return this->data_->get_render_resources();
+	return this->data_->render_resources();
 }
-const AudioResources* MenuPage::get_audio_resources() const
+const AudioResources* MenuPage::audio_resources() const
 {
-	return this->data_->get_audio_resources();
+	return this->data_->audio_resources();
 }
-//SpriteBatch* MenuPage::get_sprite_batch() const
+//SpriteBatch* MenuPage::sprite_batch() const
 //{
-//	return this->data_->get_sprite_batches()->at(0);
+//	return this->data_->sprite_batches()->at(0);
 //}
-ViewportManager* MenuPage::get_viewport_manager() const
+ViewportManager* MenuPage::viewport_manager() const
 {
-	return this->data_->get_viewport_manager();
+	return this->data_->viewport_manager();
 }
 
 void MenuPage::draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,
@@ -101,12 +101,12 @@ void MenuPage::draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,
 	}
 
 	std::vector<Viewport> viewports =
-	 	this->get_viewport_manager()->get_all_viewports();
+	 	this->viewport_manager()->all_viewports();
 
 	size_t num_viewports = viewports.size();
 	for (size_t i = 0; i < num_viewports; i++)
 	{
-		this->get_viewport_manager()->apply_player_viewport(
+		this->viewport_manager()->apply_player_viewport(
 			static_cast<int>(i), deferred_context, sprite_batch);
 
 		sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, sampler_state);
@@ -126,17 +126,17 @@ void MenuPage::draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,
 void MenuPage::draw_mobjects_in_viewports(std::vector<std::pair<MObject*,
 	ID3D11SamplerState*>>* mobjects)
 {
-	auto deferred_contexts = this->get_data()->get_device_resources()->get_deferred_contexts();
+	auto deferred_contexts = this->data()->device_resources()->deferred_contexts();
 	std::vector<ID3D11CommandList*> command_lists(deferred_contexts->size(), nullptr);
-	auto sprite_batches = this->get_data()->get_sprite_batches();
-	auto partitioner = this->get_data()->get_partitioner();
-	int num_threads = this->get_data()->get_thread_pool()->get_max_num_threads();
+	auto sprite_batches = this->data()->sprite_batches();
+	auto partitioner = this->data()->partitioner();
+	int num_threads = this->data()->thread_pool()->max_num_threads();
 
 	// partition MObjects objects
 	auto partitioned_mobjects =
 		partitioner->partition(mobjects->size(), num_threads);
 
-	auto thread_pool = this->get_data()->get_thread_pool();
+	auto thread_pool = this->data()->thread_pool();
 
 	// draw MObjects objects
 	for (int i = 0; i < partitioned_mobjects.size(); i++)
@@ -151,7 +151,7 @@ void MenuPage::draw_mobjects_in_viewports(std::vector<std::pair<MObject*,
 	}
 	thread_pool->wait_for_tasks_to_complete();
 
-	auto immediate_context = this->get_data()->get_device_resources()->GetD3DDeviceContext();
+	auto immediate_context = this->data()->device_resources()->GetD3DDeviceContext();
 
 	for (size_t i = 0; i < command_lists.size(); i++)
 	{
@@ -181,22 +181,22 @@ void MenuPage::draw_range_of_mobjects_in_viewports(int start, int end,
 	}
 }
 
-ID3D11SamplerState* MenuPage::get_point_clamp_sampler_state() const
+ID3D11SamplerState* MenuPage::point_clamp_sampler_state() const
 {
-	return this->get_data()->get_common_states()->PointClamp();
+	return this->data()->common_states()->PointClamp();
 }
 
-std::vector<ProcessedMenuInput> MenuPage::get_menu_inputs() const
+std::vector<ProcessedMenuInput> MenuPage::menu_inputs() const
 {
-	return this->get_data()->get_input()->update_and_get_menu_inputs();
+	return this->data()->input()->update_and_get_menu_inputs();
 }
 
-Vector2F MenuPage::get_float_resolution() const
+Vector2F MenuPage::float_resolution() const
 {
-	return this->get_data()->get_resolution_manager()->get_resolution_vec();
+	return this->data()->resolution_manager()->resolution_vec();
 }
 
-Vector2I MenuPage::get_int_resolution() const
+Vector2I MenuPage::int_resolution() const
 {
-	return this->get_data()->get_resolution_manager()->get_resolution_ivec();
+	return this->data()->resolution_manager()->resolution_ivec();
 }

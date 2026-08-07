@@ -10,9 +10,9 @@ public:
 	ResultsMenuData(const GameData* game_data, MenuInput* input,
 		const LevelEndInfo& info, ResultsMenuAction* action);
 
-	LevelEndInfo get_level_end_info() const;
+	LevelEndInfo level_end_info() const;
 	void set_level_end_info(const LevelEndInfo& level_end_info);
-	ResultsMenuAction* get_action() const;
+	ResultsMenuAction* action() const;
 	void set_action(ResultsMenuAction* action);
 
 private:

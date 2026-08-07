@@ -21,7 +21,7 @@ void MenuHighlight::unhighlight_widget(MWidget* widget) const
 	widget->set_colour(this->unhighlight_colour_);
 }
 
-MWidget* MenuHighlight::get_highlighted_widget() const
+MWidget* MenuHighlight::highlighted_widget() const
 {
 	return this->highlighted_widget_;
 }
@@ -33,12 +33,12 @@ void MenuHighlight::set_highlighted_widget(MWidget* widget)
 
 void MenuHighlight::change_highlight(MWidget* next_highlight)
 {
-	this->unhighlight_widget(this->get_highlighted_widget());
+	this->unhighlight_widget(this->highlighted_widget());
 	this->highlight_widget(next_highlight);
 	this->set_highlighted_widget(next_highlight);
 }
 
-Colour MenuHighlight::get_highlight_colour() const
+Colour MenuHighlight::highlight_colour() const
 {
 	return this->highlight_colour_;
 }
@@ -47,7 +47,7 @@ void MenuHighlight::set_highlight_colour(Colour colour)
 	this->highlight_colour_ = colour;
 }
 
-Colour MenuHighlight::get_unhighlight_colour() const
+Colour MenuHighlight::unhighlight_colour() const
 {
 	return this->unhighlight_colour_;
 }

@@ -70,14 +70,14 @@ public:
 	void draw(DirectX::SpriteBatch* sprite_batch, const mattmath::Camera& camera) override;
 	void draw(DirectX::SpriteBatch* sprite_batch) override;
 	void update() override;
-	float get_area() const;
-	PlayerTeam get_team() const;
+	float area() const;
+	PlayerTeam team() const;
 	bool is_colliding(const ICollisionGameObject* other) const override;
-	const mattmath::Shape* get_shape() const override;
+	const mattmath::Shape* shape() const override;
 
 	void on_collision(const ICollisionGameObject* other) override;
-	CollisionObjectType get_collision_object_type() const override;
-	bool get_for_deletion() const override;
+	CollisionObjectType collision_object_type() const override;
+	bool for_deletion() const override;
 	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override;
 private:
 	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;

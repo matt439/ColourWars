@@ -9,7 +9,7 @@ EndMenuData::EndMenuData(GameData* game_data, MenuInput* input,
 
 }
 
-EndMenuAction* EndMenuData::get_action() const
+EndMenuAction* EndMenuData::action() const
 {
 	return this->action_;
 }

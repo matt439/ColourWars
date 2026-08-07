@@ -49,14 +49,14 @@ public:
 	void update() override = 0;
 	void draw() override = 0;
 protected:
-	static std::string get_player_number_text(int player_num);
-	PauseMenuData* get_pause_menu_data() const;
+	static std::string player_number_text(int player_num);
+	PauseMenuData* pause_menu_data() const;
 
 	// The input for the pad that opened this pause menu, or a neutral input if
 	// that slot is out of range. This is the only menu page that reads a single
 	// player's input rather than looping every slot, so it is the only one that
 	// needs the bound check.
-	ProcessedMenuInput get_pausing_player_input(
+	ProcessedMenuInput pausing_player_input(
 		const std::vector<ProcessedMenuInput>& inputs) const;
 
 	enum class ConfirmationType
@@ -109,5 +109,5 @@ private:
 	std::unique_ptr<MTextDropShadow> yes_ = nullptr;
 	std::unique_ptr<MTextDropShadow> no_ = nullptr;
 	ConfirmationType type_ = ConfirmationType::restart;
-	static std::string get_question_text(ConfirmationType type);
+	static std::string question_text(ConfirmationType type);
 };

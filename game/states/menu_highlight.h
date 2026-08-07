@@ -10,16 +10,16 @@ public:
 	MenuHighlight() = default;
 
 protected:
-	MWidget* get_highlighted_widget() const;
+	MWidget* highlighted_widget() const;
 	void set_highlighted_widget(MWidget* widget);
 	void highlight_widget(MWidget* widget) const;
 	void unhighlight_widget(MWidget* widget) const;
 	void change_highlight(MWidget* next_highlight);
 
-	mattmath::Colour get_highlight_colour() const;
+	mattmath::Colour highlight_colour() const;
 	void set_highlight_colour(mattmath::Colour colour);
 
-	mattmath::Colour get_unhighlight_colour() const;
+	mattmath::Colour unhighlight_colour() const;
 	void set_unhighlight_colour(mattmath::Colour colour);
 
 private:

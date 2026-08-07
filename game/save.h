@@ -19,10 +19,10 @@ public:
 	Save() = default;
 	void load_save_file();
 	void save_to_file() const;
-	SaveData get_save_data() const;
+	SaveData save_data() const;
 	void set_resolution_and_save(ScreenResolution resolution);
-	ScreenResolution get_resolution() const;
-	bool get_fullscreen() const;
+	ScreenResolution resolution() const;
+	bool fullscreen() const;
 	void set_full_screen_and_save(bool full_screen);
 private:
 	SaveData save_data_ = SaveData();

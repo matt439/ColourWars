@@ -11,21 +11,21 @@ class MenuLevelSettings
 {
 public:
 	MenuLevelSettings() = default;
-	std::vector<MenuPlayerSettings> get_player_settings() const;
+	std::vector<MenuPlayerSettings> player_settings() const;
 	void set_player_count(int player_count);
-	int get_player_count() const;
+	int player_count() const;
 	void set_game_mode(LevelMode game_mode);
-	LevelMode get_game_mode() const;
+	LevelMode game_mode() const;
 	void set_stage(LevelStage stage);
-	LevelStage get_stage() const;
-	ScreenLayout get_screen_layout() const;
+	LevelStage stage() const;
+	ScreenLayout screen_layout() const;
 	void set_screen_layout(ScreenLayout ScreenLayout);
 
 	void set_player_setting(int player_index, MenuPlayerSettings player_settings);
 	void set_player_team(int player_index, PlayerTeam team);
-	PlayerTeam get_player_team(int player_index) const;
+	PlayerTeam player_team(int player_index) const;
 	void set_player_weapon(int player_index, WeaponType weapon);
-	WeaponType get_player_weapon(int player_index) const;
+	WeaponType player_weapon(int player_index) const;
 	void set_player_num(int player_index, int player_num);
 
 private:

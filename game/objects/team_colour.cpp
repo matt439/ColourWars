@@ -10,7 +10,7 @@ TeamColour::TeamColour(const Colour& team_a, const Colour& team_b)
 
 }
 
-const Colour& TeamColour::get_team_colour(PlayerTeam team) const
+const Colour& TeamColour::team_colour(PlayerTeam team) const
 {
 	switch (team)
 	{
@@ -40,7 +40,7 @@ TeamColour TeamColourTools::generate_random_team_colour()
 	}
 }
 
-TeamColour TeamColourTools::get_team_colours(TeamColourPair team_colour)
+TeamColour TeamColourTools::team_colours(TeamColourPair team_colour)
 {
 	switch (team_colour)
 	{
@@ -55,7 +55,7 @@ TeamColour TeamColourTools::get_team_colours(TeamColourPair team_colour)
 	}
 }
 
-Colour TeamColourTools::get_team_colour(TeamColour team_colours,
+Colour TeamColourTools::team_colour(TeamColour team_colours,
 	PlayerTeam team)
 {
 	switch (team)

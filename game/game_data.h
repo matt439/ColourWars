@@ -27,28 +27,28 @@ public:
     void set_level_infos(Registry<LevelLoadedInfo>* level_infos);
 
     // The game's own two.
-    Save* get_save() const;
-    Registry<LevelLoadedInfo>* get_level_infos() const;
+    Save* save() const;
+    Registry<LevelLoadedInfo>* level_infos() const;
 
     // The engine's, forwarded. Created once by the shell and never reseated,
     // so anything here may be held for an object's whole life.
-    Application* get_application() const;
-    ResolutionManager* get_resolution_manager() const;
-    float* get_dt() const;
-    RenderResources* get_render_resources() const;
-    AudioResources* get_audio_resources() const;
-    DirectX::GamePad* get_gamepad() const;
-    DX::DeviceResources* get_device_resources() const;
-    ViewportManager* get_viewport_manager() const;
-    ThreadPool* get_thread_pool() const;
-    const Partitioner* get_partitioner() const;
+    Application* application() const;
+    ResolutionManager* resolution_manager() const;
+    float* dt() const;
+    RenderResources* render_resources() const;
+    AudioResources* audio_resources() const;
+    DirectX::GamePad* gamepad() const;
+    DX::DeviceResources* device_resources() const;
+    ViewportManager* viewport_manager() const;
+    ThreadPool* thread_pool() const;
+    const Partitioner* partitioner() const;
 
     // Recreated on device loss, so unlike the rest these change identity
     // across one and must be read through this each time they are needed.
-    DirectX::CommonStates* get_common_states() const;
-    std::vector<DirectX::SpriteBatch*>* get_sprite_batches() const;
+    DirectX::CommonStates* common_states() const;
+    std::vector<DirectX::SpriteBatch*>* sprite_batches() const;
 
-    GameData* get_game_data();
+    GameData* game_data();
 
 private:
     Application* application_ = nullptr;

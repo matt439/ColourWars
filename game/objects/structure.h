@@ -27,11 +27,11 @@ public:
 
 	bool is_colliding(const ICollisionGameObject* other) const override;
 	void on_collision(const ICollisionGameObject* other) override;
-	CollisionObjectType get_collision_object_type() const override;
-	const mattmath::Shape* get_shape() const override;
-	bool get_for_deletion() const override;
+	CollisionObjectType collision_object_type() const override;
+	const mattmath::Shape* shape() const override;
+	bool for_deletion() const override;
 protected:
-	const mattmath::RectangleF& get_rectangle() const;
+	const mattmath::RectangleF& rectangle() const;
 private:
 	CollisionObjectType collision_type_ =
 		CollisionObjectType::structure;

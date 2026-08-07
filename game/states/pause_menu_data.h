@@ -9,9 +9,9 @@ public:
 	PauseMenuData(GameData* game_data, MenuInput* input, int player_num,
 		PauseMenuAction* action);
 
-	int get_player_num() const;
+	int player_num() const;
 	void set_player_num(int player_num);
-	PauseMenuAction* get_action() const;
+	PauseMenuAction* action() const;
 	void set_action(PauseMenuAction* action);
 private:
 	int player_num_ = -1;

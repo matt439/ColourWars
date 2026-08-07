@@ -21,11 +21,11 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 {
 	auto players = std::make_unique<std::vector<std::unique_ptr<Player>>>();
 
-	const std::vector<Vector2F> team_a_spawns = load_info->get_team_a_spawns();
-	const std::vector<Vector2F> team_b_spawns = load_info->get_team_b_spawns();
+	const std::vector<Vector2F> team_a_spawns = load_info->team_a_spawns();
+	const std::vector<Vector2F> team_b_spawns = load_info->team_b_spawns();
 
 	int i = 0;
-	for (auto& setting : settings.get_player_settings())
+	for (auto& setting : settings.player_settings())
 	{
 		Vector2F position = Vector2F::ZERO;
 		if (setting.team == PlayerTeam::a)
@@ -49,16 +49,16 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 			this->weapon_builder_->build_weapon(
 				setting.team,
 				setting.num,
-				team_colours.get_team_colour(setting.team),
+				team_colours.team_colour(setting.team),
 				setting.weapon,
-				rect.get_center(),
+				rect.center(),
 				render_resources,
 				audio_resources,
 				dt),
 			WeaponType::grenade_std,
-			team_colours.get_team_colour(setting.team),
+			team_colours.team_colour(setting.team),
 			viewport_manager->
-				get_player_viewport(setting.num),
+				player_viewport(setting.num),
 			dt,
 			position);
 

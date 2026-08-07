@@ -85,10 +85,10 @@ public:
 		std::vector<ID3D11CommandList*>* command_lists,
 		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
 
-	LevelState get_state() const;
+	LevelState state() const;
 	void set_state(LevelState state);
 
-	LevelEndInfo get_level_end_info() const;
+	LevelEndInfo level_end_info() const;
 
 	void stop_music() const;
 
@@ -154,7 +154,7 @@ private:
 	const Partitioner* partitioner_ = nullptr;
 
 	int count_projectiles() const;
-	float get_dt() const;
+	float dt() const;
 	bool is_object_out_of_bounds(const ICollisionGameObject* object) const;
 	void draw_end_screen();
 

@@ -67,7 +67,7 @@ public:
 	void update() override = 0;
 	void draw() override = 0;
 protected:
-	ResultsMenuData* get_results_menu_data() const;
+	ResultsMenuData* results_menu_data() const;
 
 	// Every sound this page family can make, resolved once when the page is
 	// built. The drum roll is an effect rather than a wave because it is
@@ -102,7 +102,7 @@ private:
 	float delay_timer_ = 0.0f;
 	float fill_timer_ = 0.0f;
 	float show_results_timer_ = 0.0f;
-	LevelEndInfo get_level_end_info() const;
+	LevelEndInfo level_end_info() const;
 	float fill_time_ratio() const;
 	mattmath::Vector2F calculate_team_b_fill_top_right_position() const;
 	static int check_for_continue_input(const std::vector<ProcessedMenuInput>& menu_input);

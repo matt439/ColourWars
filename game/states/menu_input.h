@@ -53,7 +53,7 @@ public:
 	std::vector<ProcessedMenuInput> update_and_get_menu_inputs();
 private:
 	RawMenuInput prev_inputs_[menu_input_consts::MAX_PAD_COUNT];
-	RawMenuInput get_raw_input(int gamepad_num) const;
+	RawMenuInput raw_input(int gamepad_num) const;
 	static ProcessedMenuInput calculate_menu_input(const RawMenuInput& current,
 	                                               const RawMenuInput& previous);
 	DirectX::GamePad* gamepad_ = nullptr;

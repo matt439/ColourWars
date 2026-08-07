@@ -9,7 +9,7 @@ using namespace colour_consts;
 MainMenuPage::MainMenuPage(MainMenuData* data) :
 	MenuPage(data),
 	SoundBankObject(main_menu_consts::SOUND_BANK,
-		this->get_audio_resources()),
+		this->audio_resources()),
 	data_(data)
 {
 	this->direction_sound_ = this->resolve_wave(DIRECTION_SOUND);
@@ -20,14 +20,14 @@ MainMenuPage::MainMenuPage(MainMenuData* data) :
 	this->music_ = this->resolve_effect(MUSIC);
 }
 
-MainMenuData* MainMenuPage::get_main_menu_data() const
+MainMenuData* MainMenuPage::main_menu_data() const
 {
 	return this->data_;
 }
-int MainMenuPage::get_player_count() const
+int MainMenuPage::player_count() const
 { 
-	return this->get_main_menu_data()->get_level_settings()->
-		get_player_count();
+	return this->main_menu_data()->level_settings()->
+		player_count();
 }
 
 #pragma region MainMenuTitle
@@ -43,7 +43,7 @@ void MainMenuTitle::draw()
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
 	mobjects.push_back(std::make_pair(this->texture_container_.get(),
-		this->get_point_clamp_sampler_state()));
+		this->point_clamp_sampler_state()));
 
 	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
@@ -51,14 +51,14 @@ void MainMenuTitle::draw()
 }
 void MainMenuTitle::update()
 {
-	const std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
+	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	for (int i = 0; i < inputs.size(); i++)
 	{
 		if (inputs[i].action == MenuInputAction::proceed)
 		{
 			this->play_wave(this->confirm_sound_);
-			this->get_context()->transition_to(std::make_unique<MainMenuHome>(
-				this->get_main_menu_data()));
+			this->context()->transition_to(std::make_unique<MainMenuHome>(
+				this->main_menu_data()));
 			return;
 		}
 	}
@@ -70,7 +70,7 @@ void MainMenuTitle::init()
 		"sprite_sheet_1",
 		"square_white_4",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_render_resources(),
+		this->render_resources(),
 		TITLE_BACKGROUND_COLOUR);
 
 	this->title_ = std::make_unique<MTextDropShadow>(
@@ -78,7 +78,7 @@ void MainMenuTitle::init()
 		"Colour Wars",
 		TITLE_FONT,
 		Vector2F(200.0f, 300.0f),
-		this->get_render_resources(),
+		this->render_resources(),
 		TITLE_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		TITLE_SHADOW_OFFSET);
@@ -88,7 +88,7 @@ void MainMenuTitle::init()
 		"Start",
 		ITEM_FONT,
 		Vector2F(250.0f, 700.0f),
-		this->get_render_resources(),
+		this->render_resources(),
 		TITLE_START_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -102,7 +102,7 @@ void MainMenuTitle::init()
 	this->text_container_->add_child(this->title_.get());
 	this->text_container_->add_child(this->start_.get());
 
-	Vector2F resolution = this->get_float_resolution();
+	Vector2F resolution = this->float_resolution();
 	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 	this->text_container_->scale_objects_to_new_resolution(
@@ -126,7 +126,7 @@ void MainMenuHome::draw()
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
 	mobjects.push_back(std::make_pair(this->texture_container_.get(),
-		this->get_point_clamp_sampler_state()));
+		this->point_clamp_sampler_state()));
 
 	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
@@ -134,18 +134,18 @@ void MainMenuHome::draw()
 }
 void MainMenuHome::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	std::string highlighted_element =
-		this->get_highlighted_widget()->get_name();
+		this->highlighted_widget()->name();
 
 	for (int i = 0; i < num_inputs; i++)
 	{		
 		if (inputs[i].action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
-			this->get_context()->transition_to(
-				std::make_unique<MainMenuTitle>(this->get_main_menu_data()));
+			this->context()->transition_to(
+				std::make_unique<MainMenuTitle>(this->main_menu_data()));
 			return;
 		}
 		if (inputs[i].action == MenuInputAction::proceed)
@@ -153,22 +153,22 @@ void MainMenuHome::update()
 			if (highlighted_element == "play")
 			{
 				this->play_wave(this->confirm_sound_);
-				this->get_context()->transition_to(
+				this->context()->transition_to(
 					std::make_unique<MainMenuModeSelect>(
-						this->get_main_menu_data()));
+						this->main_menu_data()));
 				return;
 			}
 			if (highlighted_element == "options")
 			{
 				this->play_wave(this->confirm_sound_);
-				this->get_context()->transition_to(
+				this->context()->transition_to(
 					std::make_unique<MainMenuOptions>(
-						this->get_main_menu_data()));
+						this->main_menu_data()));
 				return;
 			}
 			if (highlighted_element == "exit")
 			{
-				this->get_main_menu_data()->get_application()->quit();
+				this->main_menu_data()->application()->quit();
 			}
 		}
 		else if (inputs[i].direction == MenuDirection::up)
@@ -215,7 +215,7 @@ void MainMenuHome::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_render_resources(),
+		this->render_resources(),
 		HOME_BACKGROUND_COLOUR);
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
@@ -223,7 +223,7 @@ void MainMenuHome::init()
 		"Main Menu",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_render_resources(),
+		this->render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -233,8 +233,8 @@ void MainMenuHome::init()
 		"Play",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_render_resources(),
-		this->get_highlight_colour(),
+		this->render_resources(),
+		this->highlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -243,8 +243,8 @@ void MainMenuHome::init()
 		"Options",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -253,8 +253,8 @@ void MainMenuHome::init()
 		"Exit",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -269,7 +269,7 @@ void MainMenuHome::init()
 	this->text_container_->add_child(this->options_.get());
 	this->text_container_->add_child(this->exit_.get());
 
-	Vector2F resolution = this->get_float_resolution();
+	Vector2F resolution = this->float_resolution();
 	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 	this->text_container_->scale_objects_to_new_resolution(
@@ -295,7 +295,7 @@ void MainMenuOptions::draw()
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
 	mobjects.push_back(std::make_pair(this->texture_container_.get(),
-		this->get_point_clamp_sampler_state()));
+		this->point_clamp_sampler_state()));
 
 	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
@@ -303,18 +303,18 @@ void MainMenuOptions::draw()
 }
 void MainMenuOptions::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	std::string highlighted_element =
-		this->get_highlighted_widget()->get_name();
+		this->highlighted_widget()->name();
 
 	for (int i = 0; i < num_inputs; i++)
 	{
 		if (inputs[i].action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
-			this->get_context()->transition_to(std::make_unique<MainMenuHome>(
-				this->get_main_menu_data()));
+			this->context()->transition_to(std::make_unique<MainMenuHome>(
+				this->main_menu_data()));
 			return;
 		}
 		else if (inputs[i].action == MenuInputAction::proceed)
@@ -323,22 +323,22 @@ void MainMenuOptions::update()
 			{
 				this->play_wave(this->confirm_sound_);
 				
-				auto prev_resolution = this->get_resolution_manager()->get_resolution_vec();
+				auto prev_resolution = this->resolution_manager()->resolution_vec();
 				
-				this->get_resolution_manager()->set_resolution(
+				this->resolution_manager()->set_resolution(
 					this->resolution_selection_);
 
-				//std::string res_string = this->get_resolution_manager()->
-				//	get_resolution_string();
-				this->get_save()->set_resolution_and_save(this->resolution_selection_);
+				//std::string res_string = this->resolution_manager()->
+				//	resolution_string();
+				this->save()->set_resolution_and_save(this->resolution_selection_);
 
-				auto res_f = this->get_float_resolution();
+				auto res_f = this->float_resolution();
 
-				this->get_data()->get_application()->set_resolution(
+				this->data()->application()->set_resolution(
 					this->resolution_selection_);
 
 				bool fs = this->full_screen_selection_;
-				this->get_save()->set_full_screen_and_save(fs);
+				this->save()->set_full_screen_and_save(fs);
 				this->apply_fullscreen_setting(fs);
 
 				//update window and its children's sizes and positions
@@ -352,9 +352,9 @@ void MainMenuOptions::update()
 			else if (highlighted_element == "back")
 			{
 				this->play_wave(this->cancel_sound_);
-				this->get_context()->transition_to(
+				this->context()->transition_to(
 					std::make_unique<MainMenuHome>(
-						this->get_main_menu_data()));
+						this->main_menu_data()));
 				return;
 			}
 		}
@@ -424,24 +424,24 @@ void MainMenuOptions::update()
 
 void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
 {
-	this->get_data()->get_application()->set_fullscreen(fullscreen);
+	this->data()->application()->set_fullscreen(fullscreen);
 }
 
 void MainMenuOptions::init()
 {
 	this->set_highlight_colour(STANDARD_HIGHLIGHT);
 	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
-	Vector2F widget_size = this->get_widget_size();
+	Vector2F widget_size = this->widget_size();
 
-	this->resolution_selection_ = this->get_resolution_manager()->get_resolution();
-	this->full_screen_selection_ = this->get_save()->get_fullscreen();
+	this->resolution_selection_ = this->resolution_manager()->resolution();
+	this->full_screen_selection_ = this->save()->fullscreen();
 
 	this->background_ = std::make_unique<MTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_render_resources(),
+		this->render_resources(),
 		OPTIONS_BACKGROUND_COLOUR);
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
@@ -449,7 +449,7 @@ void MainMenuOptions::init()
 		"Options",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_render_resources(),
+		this->render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -459,8 +459,8 @@ void MainMenuOptions::init()
 		"Resolution",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_render_resources(),
-		this->get_highlight_colour(),
+		this->render_resources(),
+		this->highlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -469,7 +469,7 @@ void MainMenuOptions::init()
 		"null",
 		ITEM_FONT,
 		this->calculate_widget_position(2, 2),
-		this->get_render_resources(),
+		this->render_resources(),
 		OPTIONS_VALUE_COLOUR,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -481,8 +481,8 @@ void MainMenuOptions::init()
 		"Fullscreen",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -491,7 +491,7 @@ void MainMenuOptions::init()
 		"null",
 		ITEM_FONT,
 		this->calculate_widget_position(2, 3),
-		this->get_render_resources(),
+		this->render_resources(),
 		OPTIONS_VALUE_COLOUR,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -503,8 +503,8 @@ void MainMenuOptions::init()
 		"Apply",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -513,8 +513,8 @@ void MainMenuOptions::init()
 		"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -532,7 +532,7 @@ void MainMenuOptions::init()
 	this->text_container_->add_child(this->apply_.get());
 	this->text_container_->add_child(this->back_.get());
 
-	Vector2F resolution = this->get_float_resolution();
+	Vector2F resolution = this->float_resolution();
 	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 	this->text_container_->scale_objects_to_new_resolution(
@@ -578,14 +578,14 @@ void MainMenuOptions::cycle_resolution(
 
 void MainMenuOptions::update_resolution_selection_text()
 {
-	std::string res_text = this->get_resolution_manager()->
+	std::string res_text = this->resolution_manager()->
 		convert_resolution_to_string(this->resolution_selection_);
 	this->resolution_value_->set_text(res_text);
 }
 
 void MainMenuOptions::update_full_screen_selection_text() const
 {
-	bool fs = this->full_screen_selection_; //this->get_context()->get_data()->get_save()->get_full_screen();
+	bool fs = this->full_screen_selection_; //this->context()->data()->save()->full_screen();
 	std::string fs_text = "";
 	if (fs)
 	{
@@ -613,7 +613,7 @@ void MainMenuModeSelect::draw()
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
 	mobjects.push_back(std::make_pair(this->texture_container_.get(),
-		this->get_point_clamp_sampler_state()));
+		this->point_clamp_sampler_state()));
 
 	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
@@ -621,18 +621,18 @@ void MainMenuModeSelect::draw()
 }
 void MainMenuModeSelect::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	std::string highlighted_element =
-		this->get_highlighted_widget()->get_name();
+		this->highlighted_widget()->name();
 
 	for (int i = 0; i < num_inputs; i++)
 	{
 		if (inputs[i].action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
-			this->get_context()->transition_to(std::make_unique<MainMenuHome>(
-				this->get_main_menu_data()));
+			this->context()->transition_to(std::make_unique<MainMenuHome>(
+				this->main_menu_data()));
 			return;
 		}
 		if (inputs[i].action == MenuInputAction::proceed)
@@ -640,11 +640,11 @@ void MainMenuModeSelect::update()
 			if (highlighted_element == "standard")
 			{
 				this->play_wave(this->confirm_sound_);
-				this->get_main_menu_data()->get_level_settings()->
+				this->main_menu_data()->level_settings()->
 					set_game_mode(LevelMode::standard_mode);
-				this->get_context()->transition_to(
+				this->context()->transition_to(
 					std::make_unique<MainMenuPlayerCount>(
-						this->get_main_menu_data()));
+						this->main_menu_data()));
 				return;
 			}
 			if (highlighted_element == "tdm")
@@ -662,9 +662,9 @@ void MainMenuModeSelect::update()
 			else if (highlighted_element == "back")
 			{
 				this->play_wave(this->cancel_sound_);
-				this->get_context()->transition_to(
+				this->context()->transition_to(
 					std::make_unique<MainMenuHome>(
-						this->get_main_menu_data()));
+						this->main_menu_data()));
 				return;
 			}
 		}
@@ -747,7 +747,7 @@ void MainMenuModeSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_render_resources(),
+		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
@@ -755,7 +755,7 @@ void MainMenuModeSelect::init()
 		"Mode Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_render_resources(),
+		this->render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -765,8 +765,8 @@ void MainMenuModeSelect::init()
 		"Standard",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_render_resources(),
-		this->get_highlight_colour(),
+		this->render_resources(),
+		this->highlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -775,8 +775,8 @@ void MainMenuModeSelect::init()
 		"Team Deathmatch",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -785,8 +785,8 @@ void MainMenuModeSelect::init()
 		"Deathmatch",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -795,8 +795,8 @@ void MainMenuModeSelect::init()
 		"Practice",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -805,8 +805,8 @@ void MainMenuModeSelect::init()
 		"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -823,7 +823,7 @@ void MainMenuModeSelect::init()
 	this->text_container_->add_child(this->practice_.get());
 	this->text_container_->add_child(this->back_.get());
 
-	Vector2F resolution = this->get_float_resolution();
+	Vector2F resolution = this->float_resolution();
 	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 	this->text_container_->scale_objects_to_new_resolution(
@@ -848,7 +848,7 @@ void MainMenuPlayerCount::draw()
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
 	mobjects.push_back(std::make_pair(this->texture_container_.get(),
-		this->get_point_clamp_sampler_state()));
+		this->point_clamp_sampler_state()));
 
 	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
@@ -856,19 +856,19 @@ void MainMenuPlayerCount::draw()
 }
 void MainMenuPlayerCount::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
 	std::string highlighted_element =
-		this->get_highlighted_widget()->get_name();
+		this->highlighted_widget()->name();
 
 	for (int i = 0; i < num_inputs; i++)
 	{
 		if (inputs[i].action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
-			this->get_context()->transition_to(
+			this->context()->transition_to(
 				std::make_unique<MainMenuModeSelect>(
-					this->get_main_menu_data()));
+					this->main_menu_data()));
 			return;
 		}
 		if (inputs[i].action == MenuInputAction::proceed)
@@ -876,61 +876,61 @@ void MainMenuPlayerCount::update()
 			if (highlighted_element == "1_player")
 			{
 				this->play_wave(this->confirm_sound_);
-				this->get_main_menu_data()->get_level_settings()->
+				this->main_menu_data()->level_settings()->
 					set_player_count(1);
-				this->get_main_menu_data()->get_level_settings()->
+				this->main_menu_data()->level_settings()->
 					set_player_team(0, PlayerTeam::a);
-				this->get_main_menu_data()->get_level_settings()->
+				this->main_menu_data()->level_settings()->
 					set_screen_layout(ScreenLayout::one_player);
-				this->get_main_menu_data()->get_level_settings()->
+				this->main_menu_data()->level_settings()->
 					set_player_num(0, 0);
-				this->get_context()->transition_to(
+				this->context()->transition_to(
 					std::make_unique<MainMenuWeaponSelect>(
-						get_main_menu_data()));
+						main_menu_data()));
 				return;
 			}
 			if (highlighted_element == "2_players")
 			{
 				this->play_wave(this->confirm_sound_);
-				this->get_main_menu_data()->get_level_settings()->
+				this->main_menu_data()->level_settings()->
 					set_player_count(2);
-				this->get_main_menu_data()->get_level_settings()->
+				this->main_menu_data()->level_settings()->
 					set_screen_layout(ScreenLayout::two_player);
-				this->get_context()->transition_to(
+				this->context()->transition_to(
 					std::make_unique<MainMenuTeamSelect>(
-						get_main_menu_data()));
+						main_menu_data()));
 				return;
 			}
 			if (highlighted_element == "3_players")
 			{
 				this->play_wave(this->confirm_sound_);
-				this->get_main_menu_data()->get_level_settings()->
+				this->main_menu_data()->level_settings()->
 					set_player_count(3);
-				this->get_main_menu_data()->get_level_settings()->
+				this->main_menu_data()->level_settings()->
 					set_screen_layout(ScreenLayout::three_player);
-				this->get_context()->transition_to(
+				this->context()->transition_to(
 					std::make_unique<MainMenuTeamSelect>(
-						get_main_menu_data()));
+						main_menu_data()));
 				return;
 			}
 			if (highlighted_element == "4_players")
 			{
 				this->play_wave(this->confirm_sound_);
-				this->get_main_menu_data()->get_level_settings()->
+				this->main_menu_data()->level_settings()->
 					set_player_count(4);
-				this->get_main_menu_data()->get_level_settings()->
+				this->main_menu_data()->level_settings()->
 					set_screen_layout(ScreenLayout::four_player);
-				this->get_context()->transition_to(
+				this->context()->transition_to(
 					std::make_unique<MainMenuTeamSelect>(
-					get_main_menu_data()));
+					main_menu_data()));
 				return;
 			}
 			if (highlighted_element == "back")
 			{
 				this->play_wave(this->cancel_sound_);
-				this->get_context()->transition_to(
+				this->context()->transition_to(
 					std::make_unique<MainMenuModeSelect>(
-						this->get_main_menu_data()));
+						this->main_menu_data()));
 				return;
 			}
 		}
@@ -1014,7 +1014,7 @@ void MainMenuPlayerCount::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_render_resources(),
+		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
@@ -1022,7 +1022,7 @@ void MainMenuPlayerCount::init()
 		"Number of Players",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_render_resources(),
+		this->render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -1032,8 +1032,8 @@ void MainMenuPlayerCount::init()
 		"1 Player",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_render_resources(),
-		this->get_highlight_colour(),
+		this->render_resources(),
+		this->highlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -1042,8 +1042,8 @@ void MainMenuPlayerCount::init()
 		"2 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -1052,8 +1052,8 @@ void MainMenuPlayerCount::init()
 		"3 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -1062,8 +1062,8 @@ void MainMenuPlayerCount::init()
 		"4 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -1072,8 +1072,8 @@ void MainMenuPlayerCount::init()
 		"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
-		this->get_render_resources(),
-		this->get_unhighlight_colour(),
+		this->render_resources(),
+		this->unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -1090,7 +1090,7 @@ void MainMenuPlayerCount::init()
 	this->text_container_->add_child(this->_4_players.get());
 	this->text_container_->add_child(this->back_.get());
 
-	Vector2F resolution = this->get_float_resolution();
+	Vector2F resolution = this->float_resolution();
 	this->texture_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 	this->text_container_->scale_objects_to_new_resolution(
@@ -1115,14 +1115,14 @@ MainMenuTeamSelect::MainMenuTeamSelect(MainMenuData* data,
 	MenuLevelSettings* settings) :
 	MainMenuPage(data)
 {
-	this->get_main_menu_data()->set_level_settings(settings);
+	this->main_menu_data()->set_level_settings(settings);
 }
 void MainMenuTeamSelect::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
 	mobjects.push_back(std::make_pair(this->texture_container_.get(),
-		this->get_point_clamp_sampler_state()));
+		this->point_clamp_sampler_state()));
 
 	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
@@ -1130,9 +1130,9 @@ void MainMenuTeamSelect::draw()
 }
 void MainMenuTeamSelect::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
-	int player_count = this->get_player_count();
+	int player_count = this->player_count();
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
 	{
@@ -1141,9 +1141,9 @@ void MainMenuTeamSelect::update()
 			if (this->all_players_unconfirmed())
 			{
 				this->play_wave(this->cancel_sound_);
-				this->get_context()->transition_to(
+				this->context()->transition_to(
 					std::make_unique<MainMenuPlayerCount>(
-						this->get_main_menu_data()));
+						this->main_menu_data()));
 				return;
 			}
 			if (this->select_states_[i].state == ConfirmationState::confirmed)
@@ -1192,27 +1192,27 @@ void MainMenuTeamSelect::update()
 	if (this->all_players_confirmed())
 	{
 		this->set_level_settings();
-		this->get_context()->transition_to(
+		this->context()->transition_to(
 			std::make_unique<MainMenuWeaponSelect>(
-				this->get_main_menu_data()));
+				this->main_menu_data()));
 		return;
 	}
 	this->update_team_select_visuals();
 }
 void MainMenuTeamSelect::set_level_settings() const
 {
-	for (int i = 0; i < this->get_player_count(); i++)
+	for (int i = 0; i < this->player_count(); i++)
 	{
-		this->get_main_menu_data()->get_level_settings()->
+		this->main_menu_data()->level_settings()->
 			set_player_team(i, this->select_states_[i].team);
 
-		this->get_main_menu_data()->get_level_settings()->
+		this->main_menu_data()->level_settings()->
 			set_player_num(i, i);
 	}
 }
 bool MainMenuTeamSelect::all_players_confirmed() const
 {
-	for (int i = 0; i < this->get_player_count(); i++)
+	for (int i = 0; i < this->player_count(); i++)
 	{
 		if (this->select_states_[i].state != ConfirmationState::confirmed)
 		{
@@ -1223,7 +1223,7 @@ bool MainMenuTeamSelect::all_players_confirmed() const
 }
 bool MainMenuTeamSelect::all_players_unconfirmed() const
 {
-	for (int i = 0; i < this->get_player_count(); i++)
+	for (int i = 0; i < this->player_count(); i++)
 	{
 		if (this->select_states_[i].state == ConfirmationState::confirmed)
 		{
@@ -1236,7 +1236,7 @@ void MainMenuTeamSelect::update_team_select_visuals()
 {
 	this->deselect_and_unconfirm_all_widgets();
 
-	for (int i = 0; i < this->get_player_count(); i++)
+	for (int i = 0; i < this->player_count(); i++)
 	{
 		MWidget* selected_widget = nullptr;
 		switch (this->select_states_[i].team)
@@ -1267,7 +1267,7 @@ void MainMenuTeamSelect::update_team_select_visuals()
 }
 void MainMenuTeamSelect::deselect_and_unconfirm_all_widgets()
 {
-	for (int i = 0; i < this->get_player_count(); i++)
+	for (int i = 0; i < this->player_count(); i++)
 	{
 		this->player_widgets_[i]->player_a->set_sprite_frame(
 			"team_select_a");
@@ -1288,7 +1288,7 @@ void MainMenuTeamSelect::init()
 {
 	this->set_widget_spacing(TEAM_SELECT_WIDGET_SPACING);
 
-	const Vector2F resolution = this->get_float_resolution();
+	const Vector2F resolution = this->float_resolution();
 
 	this->texture_container_ = std::make_unique<MContainer>(
 		"texture_container");
@@ -1301,7 +1301,7 @@ void MainMenuTeamSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_render_resources(),
+		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
 	this->texture_container_->add_child(this->background_.get());
@@ -1311,7 +1311,7 @@ void MainMenuTeamSelect::init()
 		"Team Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_render_resources(),
+		this->render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -1319,12 +1319,12 @@ void MainMenuTeamSelect::init()
 	this->text_container_->add_child(this->heading_.get());
 
 	
-	for (int i = 0; i < this->get_player_count(); i++)
+	for (int i = 0; i < this->player_count(); i++)
 	{
 		auto state = TeamSelectState();
 		state.state = ConfirmationState::unconfirmed;
-		state.team = this->get_main_menu_data()->get_level_settings()->
-			get_player_team(i);
+		state.team = this->main_menu_data()->level_settings()->
+			player_team(i);
 		this->select_states_.push_back(state);
 
 		auto widgets = std::make_unique<PlayerWidgets>();
@@ -1337,7 +1337,7 @@ void MainMenuTeamSelect::init()
 			label_text,
 			ITEM_FONT,
 			this->calculate_widget_position(0, i + 2),
-			this->get_render_resources(),
+			this->render_resources(),
 			TEAM_SELECT_UNSELECTED_COLOUR,
 			SHADOW_COLOUR,
 			ITEM_SHADOW_OFFSET);
@@ -1347,7 +1347,7 @@ void MainMenuTeamSelect::init()
 			"sprite_sheet_1",
 			"team_select_a",
 			RectangleF(this->calculate_widget_position(2, i + 2), TEAM_SELECT_TEAM_WIDGET_SIZE),
-			this->get_render_resources());
+			this->render_resources());
 
 		auto move = Vector2F(TEAM_SELECT_TEAM_WIDGET_SIZE.x, 0.0f);
 
@@ -1355,17 +1355,17 @@ void MainMenuTeamSelect::init()
 			name + "_center",
 			"sprite_sheet_1",
 			"team_select_center",
-			RectangleF(widgets->player_a->get_rectangle().get_position() + move,
+			RectangleF(widgets->player_a->rectangle().position() + move,
 				TEAM_SELECT_TEAM_WIDGET_SIZE),
-			this->get_render_resources());
+			this->render_resources());
 
 		widgets->player_b = std::make_unique<MTexture>(
 			name + "_b",
 			"sprite_sheet_1",
 			"team_select_b",
-			RectangleF(widgets->player_center->get_rectangle().get_position() + move,
+			RectangleF(widgets->player_center->rectangle().position() + move,
 				TEAM_SELECT_TEAM_WIDGET_SIZE),
-			this->get_render_resources());
+			this->render_resources());
 
 		this->texture_container_->add_child(widgets->player_a.get());
 		this->texture_container_->add_child(widgets->player_center.get());
@@ -1398,14 +1398,14 @@ MainMenuWeaponSelect::MainMenuWeaponSelect(MainMenuData* data,
 	MenuLevelSettings* settings) :
 	MainMenuPage(data)
 {
-	this->get_main_menu_data()->set_level_settings(settings);
+	this->main_menu_data()->set_level_settings(settings);
 }
 void MainMenuWeaponSelect::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
 	mobjects.push_back(std::make_pair(this->texture_container_.get(),
-		this->get_point_clamp_sampler_state()));
+		this->point_clamp_sampler_state()));
 
 	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
@@ -1413,8 +1413,8 @@ void MainMenuWeaponSelect::draw()
 }
 void MainMenuWeaponSelect::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
-	int player_count = this->get_player_count();
+	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
+	int player_count = this->player_count();
 	int num_inputs = static_cast<int>(inputs.size());
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
@@ -1424,17 +1424,17 @@ void MainMenuWeaponSelect::update()
 			if (this->all_players_unconfirmed())
 			{
 				this->play_wave(this->cancel_sound_);
-				if (this->get_player_count() == 1)
+				if (this->player_count() == 1)
 				{
-					this->get_context()->transition_to(
+					this->context()->transition_to(
 						std::make_unique<MainMenuModeSelect>(
-							this->get_main_menu_data()));
+							this->main_menu_data()));
 				}
 				else
 				{
-					this->get_context()->transition_to(
+					this->context()->transition_to(
 						std::make_unique<MainMenuTeamSelect>(
-							this->get_main_menu_data()));
+							this->main_menu_data()));
 				}
 				return;
 			}
@@ -1471,29 +1471,29 @@ void MainMenuWeaponSelect::update()
 	if (this->all_players_confirmed())
 	{
 		//check if any players have selected random then pick a random weapon.
-		for (int i = 0; i < this->get_player_count(); i++)
+		for (int i = 0; i < this->player_count(); i++)
 		{
 			if (this->select_states_[i].type == WeaponType::random_primary)
 			{
-				this->select_states_[i].type = get_random_weapon();
+				this->select_states_[i].type = random_weapon();
 			}
 		}
 		this->set_level_settings();
-		this->get_context()->transition_to(
-			std::make_unique<MainMenuStageSelect>(this->get_main_menu_data()));
+		this->context()->transition_to(
+			std::make_unique<MainMenuStageSelect>(this->main_menu_data()));
 		return;
 	}
 	this->update_weapon_select_visuals();
 }
 void MainMenuWeaponSelect::set_level_settings() const
 {
-	for (int i = 0; i < this->get_player_count(); i++)
+	for (int i = 0; i < this->player_count(); i++)
 	{
-		this->get_main_menu_data()->get_level_settings()->
+		this->main_menu_data()->level_settings()->
 			set_player_weapon(i, this->select_states_[i].type);
 	}
 }
-WeaponType MainMenuWeaponSelect::get_random_weapon()
+WeaponType MainMenuWeaponSelect::random_weapon()
 {
 	int random = rand() % static_cast<int>(WeaponType::max_prim_wep);
 	return static_cast<WeaponType>(random);
@@ -1531,7 +1531,7 @@ void MainMenuWeaponSelect::cycle_weapons(
 }
 bool MainMenuWeaponSelect::all_players_confirmed() const
 {
-	for (int i = 0; i < this->get_player_count(); i++)
+	for (int i = 0; i < this->player_count(); i++)
 	{
 		if (this->select_states_[i].state != ConfirmationState::confirmed)
 		{
@@ -1542,7 +1542,7 @@ bool MainMenuWeaponSelect::all_players_confirmed() const
 }
 bool MainMenuWeaponSelect::all_players_unconfirmed() const
 {
-	for (int i = 0; i < this->get_player_count(); i++)
+	for (int i = 0; i < this->player_count(); i++)
 	{
 		if (this->select_states_[i].state == ConfirmationState::confirmed)
 		{
@@ -1555,7 +1555,7 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 {
 	this->unconfirm_all_widgets();
 
-	for (int i = 0; i < this->get_player_count(); i++)
+	for (int i = 0; i < this->player_count(); i++)
 	{
 		switch (this->select_states_[i].type)
 		{
@@ -1603,7 +1603,7 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 }
 void MainMenuWeaponSelect::unconfirm_all_widgets()
 {
-	for (int i = 0; i < this->get_player_count(); i++)
+	for (int i = 0; i < this->player_count(); i++)
 	{
 		this->player_widgets_[i]->weapon_icon->set_colour(
 			WEAPON_SELECT_UNSELECTED_COLOUR);
@@ -1615,7 +1615,7 @@ void MainMenuWeaponSelect::init()
 {
 	this->set_widget_spacing(WEAPON_SELECT_WIDGET_SPACING);
 
-	const Vector2F resolution = this->get_float_resolution();
+	const Vector2F resolution = this->float_resolution();
 
 	this->texture_container_ = std::make_unique<MContainer>(
 		"texture_container");
@@ -1628,7 +1628,7 @@ void MainMenuWeaponSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_render_resources(),
+		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
 	this->texture_container_->add_child(this->background_.get());
@@ -1638,19 +1638,19 @@ void MainMenuWeaponSelect::init()
 		"Weapon Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_render_resources(),
+		this->render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
 	this->text_container_->add_child(this->heading_.get());
 
-	for (int i = 0; i < this->get_player_count(); i++)
+	for (int i = 0; i < this->player_count(); i++)
 	{
 		SelectState state;
 		state.state = ConfirmationState::unconfirmed;
-		state.type = this->get_main_menu_data()->get_level_settings()
-			->get_player_weapon(i);
+		state.type = this->main_menu_data()->level_settings()
+			->player_weapon(i);
 		this->select_states_.push_back(state);
 
 		auto widgets = std::make_unique<Widgets>();
@@ -1663,7 +1663,7 @@ void MainMenuWeaponSelect::init()
 			label_text,
 			ITEM_FONT,
 			this->calculate_widget_position(0, i + 2),
-			this->get_render_resources(),
+			this->render_resources(),
 			WEAPON_SELECT_UNSELECTED_COLOUR);
 
 		widgets->weapon_icon = std::make_unique<MTexture>(
@@ -1671,16 +1671,16 @@ void MainMenuWeaponSelect::init()
 			"sprite_sheet_1",
 			"sprayer",
 			RectangleF(this->calculate_widget_position(2, i + 2), WEAPON_SELECT_WEAPON_WIDGET_SIZE),
-			this->get_render_resources(),
+			this->render_resources(),
 			PLAY_BACKGROUND_COLOUR);
 
 		widgets->weapon_name = std::make_unique<MTextDropShadow>(
 			name + "_wep_name",
 			"Sprayer",
 			DETAIL_FONT,
-			widgets->weapon_icon->get_rectangle().get_position() +
+			widgets->weapon_icon->rectangle().position() +
 				Vector2F(0.0f, WEAPON_SELECT_WEAPON_WIDGET_SIZE.y),
-			this->get_render_resources(),
+			this->render_resources(),
 			WEAPON_SELECT_UNSELECTED_COLOUR,
 			SHADOW_COLOUR,
 			DETAIL_SHADOW_OFFSET);
@@ -1689,9 +1689,9 @@ void MainMenuWeaponSelect::init()
 			name + "_wep_desc",
 			this->weapon_description(WeaponType::sprayer),
 			WEAPON_DESCRIPTION_FONT,
-			widgets->weapon_icon->get_rectangle().get_position() +
+			widgets->weapon_icon->rectangle().position() +
 				Vector2F(WEAPON_DESC_X_OFFSET, 0.0f),
-			this->get_render_resources(),
+			this->render_resources(),
 			WEAPON_DESCRIPTION_FONT_COLOUR,
 			SHADOW_COLOUR,
 			WEAPON_DESCRIPTION_SHADOW_OFFSET);
@@ -1745,14 +1745,14 @@ MainMenuStageSelect::MainMenuStageSelect(MainMenuData* data,
 	MenuLevelSettings* settings) :
 	MainMenuPage(data)
 {
-	this->get_main_menu_data()->set_level_settings(settings);
+	this->main_menu_data()->set_level_settings(settings);
 }
 void MainMenuStageSelect::draw()
 {
 	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
 
 	mobjects.push_back(std::make_pair(this->texture_container_.get(),
-		this->get_point_clamp_sampler_state()));
+		this->point_clamp_sampler_state()));
 
 	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
@@ -1760,9 +1760,9 @@ void MainMenuStageSelect::draw()
 }
 void MainMenuStageSelect::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->get_menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
-	int player_count = this->get_player_count();
+	int player_count = this->player_count();
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
 	{
@@ -1771,9 +1771,9 @@ void MainMenuStageSelect::update()
 			if (this->select_state_.state == ConfirmationState::unconfirmed)
 			{
 				this->play_wave(this->cancel_sound_);
-				this->get_context()->transition_to(
+				this->context()->transition_to(
 					std::make_unique<MainMenuWeaponSelect>(
-						this->get_main_menu_data()));
+						this->main_menu_data()));
 				return;
 			}
 			if (this->select_state_.state == ConfirmationState::confirmed)
@@ -1792,11 +1792,11 @@ void MainMenuStageSelect::update()
 				this->stop_effect(this->music_, true);
 				if (this->select_state_.stage == LevelStage::random)
 				{
-					this->select_state_.stage = this->get_random_stage();
+					this->select_state_.stage = this->random_stage();
 				}
 				this->set_level_settings();
-				*this->get_main_menu_data()->
-					get_is_ready_to_load_level() = true;
+				*this->main_menu_data()->
+					is_ready_to_load_level() = true;
 				//no need to transition here as we should be going to load level
 			}
 			else
@@ -1823,7 +1823,7 @@ void MainMenuStageSelect::update()
 }
 void MainMenuStageSelect::set_level_settings() const
 {
-	this->get_main_menu_data()->get_level_settings()->set_stage(
+	this->main_menu_data()->level_settings()->set_stage(
 		this->select_state_.stage);
 }
 void MainMenuStageSelect::update_stage_select_visuals()
@@ -1866,7 +1866,7 @@ void MainMenuStageSelect::unconfirm_all_widgets()
 		main_menu_consts::STAGE_SELECT_UNSELECTED_COLOUR);
 	this->ready_->set_hidden(true);
 }
-LevelStage MainMenuStageSelect::get_random_stage()
+LevelStage MainMenuStageSelect::random_stage()
 {
 	int random = static_cast<int>(rand() %
 		static_cast<int>(LevelStage::max_stage));
@@ -1874,8 +1874,8 @@ LevelStage MainMenuStageSelect::get_random_stage()
 }
 void MainMenuStageSelect::init()
 {
-	this->select_state_.stage = this->get_main_menu_data()->
-		get_level_settings()->get_stage();
+	this->select_state_.stage = this->main_menu_data()->
+		level_settings()->stage();
 
 	this->set_widget_spacing(STAGE_SELECT_WIDGET_SPACING);
 
@@ -1884,7 +1884,7 @@ void MainMenuStageSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_render_resources(),
+		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
@@ -1892,7 +1892,7 @@ void MainMenuStageSelect::init()
 		"Stage Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_render_resources(),
+		this->render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -1903,7 +1903,7 @@ void MainMenuStageSelect::init()
 		"sprite_sheet_1",
 		"stage_test_1",
 		RectangleF(this->calculate_widget_position(0, 1), STAGE_SELECT_ICON_SIZE),
-		this->get_render_resources(),
+		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
 	this->stage_name_ = std::make_unique<MTextDropShadow>(
@@ -1911,7 +1911,7 @@ void MainMenuStageSelect::init()
 		"Test 1",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_render_resources(),
+		this->render_resources(),
 		STAGE_SELECT_UNSELECTED_COLOUR,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -1920,14 +1920,14 @@ void MainMenuStageSelect::init()
 		"ready",
 		"READY?",
 		ANNOUNCEMENT_FONT,
-		this->background_->get_rectangle().get_center() - Vector2F(400.0f, 100.0f),
-		this->get_render_resources(),
+		this->background_->rectangle().center() - Vector2F(400.0f, 100.0f),
+		this->render_resources(),
 		STAGE_SELECT_SELECTED_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET,
 		true);
 
-	const Vector2F resolution = this->get_float_resolution();
+	const Vector2F resolution = this->float_resolution();
 
 	this->texture_container_ = std::make_unique<MContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());

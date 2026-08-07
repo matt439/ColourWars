@@ -56,7 +56,7 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_coll
 	this->camera_tools_ = std::make_unique<CameraTools>();
 	this->interface_gameplay_ = std::make_unique<InterfaceGameplay>(
 		render_resources, dt);
-	this->sound_bank_ = audio_resources->get_sound_bank(sound_bank_name);
+	this->sound_bank_ = audio_resources->sound_bank(sound_bank_name);
 
 	this->music_ = this->sound_bank_->resolve_effect(music_name);
 	this->zoom_out_sound_ = this->sound_bank_->resolve_effect(ZOOM_OUT_SOUND);
@@ -82,16 +82,16 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 			for (auto& object : *this->player_objects_)
 			{
 				Camera camera = this->camera_tools_->calculate_camera(
-					object->get_center(),
-					this->viewport_manager_->get_player_viewport(player_index).get_size(),
-					object->get_camera(),
+					object->center(),
+					this->viewport_manager_->player_viewport(player_index).size(),
+					object->camera(),
 					this->camera_bounds_);
 				object->set_camera(camera);
 				player_index++;
 			}
 
 			// create countdown text
-			Vector2F resolution = this->resolution_manager_->get_resolution_vec();
+			Vector2F resolution = this->resolution_manager_->resolution_vec();
 			Vector2F position = resolution / 2.0f;
 			position = position - Vector2F(COUNTDOWN_TEXT_WIDTH / 2.0f,
 								COUNTDOWN_TEXT_HEIGHT / 2.0f);
@@ -107,7 +107,7 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 				COUNTDOWN_SCALE,
 				COUNTDOWN_SCALE);
 		}
-		this->start_timer_ -= this->get_dt();
+		this->start_timer_ -= this->dt();
 		if (this->start_timer_ > 0.0f)
 		{
 			this->countdown_text_->set_text(std::to_string(
@@ -131,7 +131,7 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 	{
 		this->update_level_logic(player_inputs);
 		
-		this->timer_ -= this->get_dt();
+		this->timer_ -= this->dt();
 		if (this->timer_ <= 0.0f)
 		{
 			this->state_ = LevelState::zoom_out;
@@ -142,7 +142,7 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 	}
 	else if (this->state_ == LevelState::zoom_out)
 	{		
-		this->zoom_out_timer_ -= this->get_dt();
+		this->zoom_out_timer_ -= this->dt();
 
 		if (this->zoom_out_timer_ <= 0.0f)
 		{
@@ -153,18 +153,18 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 
 		Camera start_camera = Camera::calculate_camera_from_view_rectangle(
 			this->zoom_out_start_bounds_,
-			RectangleF(Vector2F::ZERO, this->resolution_manager_->get_resolution_vec()));
+			RectangleF(Vector2F::ZERO, this->resolution_manager_->resolution_vec()));
 
 		Camera finish_camera = Camera::calculate_camera_from_view_rectangle(
 			this->zoom_out_finish_bounds_,
-			RectangleF(Vector2F::ZERO, this->resolution_manager_->get_resolution_vec()));
+			RectangleF(Vector2F::ZERO, this->resolution_manager_->resolution_vec()));
 
 		this->zoom_out_camera_ = Camera::calculate_intermediate_camera(
 			start_camera, finish_camera, this->zoom_out_camera_ratio());
 	}
 	else if (this->state_ == LevelState::overview)
 	{
-		this->overview_timer_ -= this->get_dt();
+		this->overview_timer_ -= this->dt();
 		if (this->overview_timer_ <= 0.0f)
 		{
 			this->state_ = LevelState::finished;
@@ -195,7 +195,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 		// Index by the player's own pad slot, not by position in this loop.
 		// player_inputs is one entry per pad slot; a running counter only
 		// happened to agree while every pad stayed connected.
-		const int player_index = object->get_player_num();
+		const int player_index = object->player_num();
 
 		if (player_index >= 0 &&
 			static_cast<size_t>(player_index) < player_inputs.size())
@@ -210,9 +210,9 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 
 		// update player camera
 		Camera camera = this->camera_tools_->calculate_camera(
-			object->get_center(),
-			this->viewport_manager_->get_player_viewport(player_index).get_size(),
-			object->get_camera(),
+			object->center(),
+			this->viewport_manager_->player_viewport(player_index).size(),
+			object->camera(),
 			this->camera_bounds_);
 		object->set_camera(camera);
 
@@ -240,7 +240,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 		// check player collisions with collision objects
 		for (auto& other_object : *this->collision_objects_)
 		{
-			if (other_object->get_for_deletion())
+			if (other_object->for_deletion())
 			{
 				continue;
 			}
@@ -249,7 +249,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 				player->on_collision(other_object.get());
 				other_object->on_collision(player.get());
 
-				if (is_structure(other_object->get_collision_object_type()))
+				if (is_structure(other_object->collision_object_type()))
 				{
 					player_colliding_with_structure = true;
 				}
@@ -275,7 +275,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 		// check collision object collisions with players
 			for (auto& player : *this->player_objects_)
 			{
-				if (object->get_for_deletion() || player->get_for_deletion())
+				if (object->for_deletion() || player->for_deletion())
 				{
 					continue;
 				}
@@ -290,7 +290,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 		// check collision object collisions with other collision objects
 		for (auto& object_2 : *this->collision_objects_)
 		{
-			if (object->get_for_deletion() || object_2->get_for_deletion())
+			if (object->for_deletion() || object_2->for_deletion())
 			{
 				continue;
 			}
@@ -311,7 +311,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	// terminated the process because nothing on the tick path catches.
 	for (auto& object : *this->collision_objects_)
 	{
-		if (!object->get_for_deletion() &&
+		if (!object->for_deletion() &&
 			this->is_object_out_of_bounds(object.get()))
 		{
 			object->set_for_deletion(true);
@@ -321,7 +321,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	// check for deletable objects
 	for (size_t i = 0; i < this->collision_objects_->size(); i++)
 	{
-		if (this->collision_objects_->at(i)->get_for_deletion())
+		if (this->collision_objects_->at(i)->for_deletion())
 		{
 			this->collision_objects_->at(i) = std::move(
 				this->collision_objects_->back());
@@ -396,7 +396,7 @@ void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contex
 		std::vector<ID3D11CommandList*>* command_lists,
 		std::vector<SpriteBatch*>* sprite_batches) const
 {
-	int num_threads = this->thread_pool_->get_max_num_threads();
+	int num_threads = this->thread_pool_->max_num_threads();
 
 	// partition player objects
 	auto partitioned_players =
@@ -425,15 +425,15 @@ void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contex
 //{
 //	for (auto& player : *this->player_objects_)
 //	{
-//		const int player_num = player->get_player_num();
+//		const int player_num = player->player_num();
 //
 //		// apply player viewport
 //		this->viewport_manager_->apply_player_viewport(
 //			player_num);
 //
-//		const Camera& camera = player->get_camera();
+//		const Camera& camera = player->camera();
 //		const RectangleF camera_view =
-//			this->viewport_manager_->get_camera_adjusted_player_viewport_rect(
+//			this->viewport_manager_->camera_adjusted_player_viewport_rect(
 //				player_num, camera);
 //
 //		this->sprite_batch_->Begin(SpriteSortMode_Deferred, nullptr, this->sampler_state_);
@@ -465,7 +465,7 @@ void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contex
 //
 //		// draw viewport dividers
 //		const Viewport player_vp =
-//			this->viewport_manager_->get_player_viewport(player_num);
+//			this->viewport_manager_->player_viewport(player_num);
 //		const auto viewport_camera = Camera(player_vp);
 //		for (const auto& divider : *this->viewport_dividers_)
 //		{
@@ -474,23 +474,23 @@ void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contex
 //
 //		this->sprite_batch_->End();
 //
-//		const PlayerState state = player->get_state();
+//		const PlayerState state = player->state();
 //
 //		// draw interface
-//		Vector2F viewport_size = player_vp.get_size();
+//		Vector2F viewport_size = player_vp.size();
 //
 //		this->interface_gameplay_->draw_gameplay_interface(
 //			viewport_size,
-//			player->get_health(),
-//			player->get_weapon_ammo(),
+//			player->health(),
+//			player->weapon_ammo(),
 //			this->timer_,
-//			player->get_team_colour(),
+//			player->team_colour(),
 //			this->sampler_state_,
-//			player->get_respawn_timer(),
+//			player->respawn_timer(),
 //			state == PlayerState::dead);
 //
 //		// draw debug info
-//		if (player->get_showing_debug())
+//		if (player->showing_debug())
 //		{
 //			int num_projectiles = this->count_projectiles();
 //			this->debug_text_->draw_debug_info(player.get(), num_projectiles);
@@ -520,14 +520,14 @@ void Level::draw_player_view_level(int start, int end,
 			throw std::exception("Deferred context not created");
 		}
 
-		const int player_num = this->player_objects_->at(i)->get_player_num();
+		const int player_num = this->player_objects_->at(i)->player_num();
 
 		this->viewport_manager_->apply_player_viewport(
 			player_num, deferred_contexts->at(i), sprite_batches->at(i));
 
-		const Camera& camera = this->player_objects_->at(i)->get_camera();
+		const Camera& camera = this->player_objects_->at(i)->camera();
 		const RectangleF camera_view =
-			this->viewport_manager_->get_camera_adjusted_player_viewport_rect(
+			this->viewport_manager_->camera_adjusted_player_viewport_rect(
 				player_num, camera);
 
 		sprite_batches->at(i)->Begin(SpriteSortMode_Deferred, nullptr, this->sampler_state_);
@@ -561,7 +561,7 @@ void Level::draw_player_view_level(int start, int end,
 
 		// draw viewport dividers
 		const Viewport player_vp =
-			this->viewport_manager_->get_player_viewport(player_num);
+			this->viewport_manager_->player_viewport(player_num);
 
 		const Camera viewport_camera = Camera(player_vp);
 
@@ -572,24 +572,24 @@ void Level::draw_player_view_level(int start, int end,
 
 		sprite_batches->at(i)->End();
 
-		const PlayerState state =  this->player_objects_->at(i)->get_state();
+		const PlayerState state =  this->player_objects_->at(i)->state();
 
 		// draw interface
-		Vector2F viewport_size = player_vp.get_size();
+		Vector2F viewport_size = player_vp.size();
 
 		this->interface_gameplay_->draw_gameplay_interface(
 			sprite_batches->at(i),
 			viewport_size,
-			this->player_objects_->at(i)->get_health(),
-			this->player_objects_->at(i)->get_weapon_ammo(),
+			this->player_objects_->at(i)->health(),
+			this->player_objects_->at(i)->weapon_ammo(),
 			this->timer_,
-			this->player_objects_->at(i)->get_team_colour(),
+			this->player_objects_->at(i)->team_colour(),
 			this->sampler_state_,
-			this->player_objects_->at(i)->get_respawn_timer(),
+			this->player_objects_->at(i)->respawn_timer(),
 			state == PlayerState::dead);
 
 		// draw debug info
-		if (this->player_objects_->at(i)->get_showing_debug())
+		if (this->player_objects_->at(i)->showing_debug())
 		{
 			int num_projectiles = this->count_projectiles();
 
@@ -644,7 +644,7 @@ void Level::draw_zoom_out_level_component(
 	// was never restored, so restarting a 2-4 player match rendered every
 	// camera into one fullscreen viewport with no split-screen dividers.
 	const D3D11_VIEWPORT viewport =
-		this->viewport_manager_->get_fullscreen_d3d11_viewport();
+		this->viewport_manager_->fullscreen_d3d11_viewport();
 	context->RSSetViewports(1, &viewport);
 	sprite_batch->SetViewport(viewport);
 
@@ -675,7 +675,7 @@ void Level::draw_zoom_out_level_component(
 	}
 }
 
-LevelState Level::get_state() const
+LevelState Level::state() const
 {
 	return this->state_;
 }
@@ -685,7 +685,7 @@ int Level::count_projectiles() const
 	int count = 0;
 	for (const auto& object : *this->collision_objects_)
 	{
-		CollisionObjectType type = object->get_collision_object_type();
+		CollisionObjectType type = object->collision_object_type();
 
 		bool is_projectile =
 			type == CollisionObjectType::projectile_spray_team_a ||
@@ -706,7 +706,7 @@ int Level::count_projectiles() const
 	return count;
 }
 
-float Level::get_dt() const
+float Level::dt() const
 {
 	return *this->dt_;
 }
@@ -714,7 +714,7 @@ float Level::get_dt() const
 bool Level::is_object_out_of_bounds(const ICollisionGameObject* object) const
 {
 	bool object_in_bounds =
-		this->out_of_bounds_.intersects(object->get_shape()->get_bounding_box());
+		this->out_of_bounds_.intersects(object->shape()->bounding_box());
 	return !object_in_bounds;
 }
 
@@ -728,14 +728,14 @@ void Level::set_state(LevelState state)
 	this->state_ = state;
 }
 
-LevelEndInfo Level::get_level_end_info() const
+LevelEndInfo Level::level_end_info() const
 {
 	auto result = LevelEndInfo();
 	result.team_colours = this->team_colours_;
 
 	for (auto& object : *this->collision_objects_)
 	{
-		CollisionObjectType type = object->get_collision_object_type();
+		CollisionObjectType type = object->collision_object_type();
 
 		if (type == CollisionObjectType::structure_paintable)
 		{
@@ -751,7 +751,7 @@ LevelEndInfo Level::get_level_end_info() const
 					"Object tagged STRUCTURE_PAINTABLE is not an IPaintableGameObject");
 			}
 
-			PaintTotal paint = paintable_object->get_paint_total();
+			PaintTotal paint = paintable_object->paint_total();
 
 			result.team_a_area += paint.team_a;
 			result.team_b_area += paint.team_b;

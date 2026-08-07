@@ -30,7 +30,7 @@ StructurePaintable::StructurePaintable(
 		dt_(dt)
 {
 	this->paint_tiles_ = this->generate_paint_tiles();
-	this->sound_bank_ = audio_resources->get_sound_bank(SOUND_BANK_NAME);
+	this->sound_bank_ = audio_resources->sound_bank(SOUND_BANK_NAME);
 	this->paint_sound_ = this->sound_bank_->resolve_wave(SOUND_NAME);
 }
 
@@ -64,7 +64,7 @@ void StructurePaintable::draw(SpriteBatch* sprite_batch)
 void StructurePaintable::on_collision(const ICollisionGameObject* other)
 {
 	// check if offensive projectile
-	CollisionObjectType other_type = other->get_collision_object_type();
+	CollisionObjectType other_type = other->collision_object_type();
 	bool is_offensive_projectile =
 		other_type == CollisionObjectType::projectile_spray_team_a ||
 		other_type == CollisionObjectType::projectile_spray_team_b ||
@@ -106,14 +106,14 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 	auto paint_tiles = std::vector<PaintTile>();
 
 	const int num_paint_tiles_x =
-		static_cast<int>(std::fabs(this->get_rectangle().get_width() / WIDTH));
+		static_cast<int>(std::fabs(this->rectangle().width / WIDTH));
 	const float paint_tile_width =
-		this->get_rectangle().get_width() / num_paint_tiles_x;
+		this->rectangle().width / num_paint_tiles_x;
 
 	const int num_paint_tiles_y =
-		static_cast<int>(std::fabs(this->get_rectangle().get_height() / HEIGHT));
+		static_cast<int>(std::fabs(this->rectangle().height / HEIGHT));
 	const float paint_tile_height =
-		this->get_rectangle().get_height() / num_paint_tiles_y;
+		this->rectangle().height / num_paint_tiles_y;
 
 	// top edge
 	if (this->faces_.top)
@@ -121,13 +121,13 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 		for (int i = 0; i < num_paint_tiles_x; i++)
 		{
 			auto paint_tile_rectangle = RectangleF(
-				this->get_rectangle().get_left() + (paint_tile_width * i),
-				this->get_rectangle().get_top(),
+				this->rectangle().left() + (paint_tile_width * i),
+				this->rectangle().top(),
 				paint_tile_width,
 				THICKNESS);
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
-			                            this->get_render_resources(),
+			                            this->render_resources(),
 			                            this->team_colours_,
 			                            this->dt_);
 			paint_tiles.push_back(paint_tile);
@@ -141,13 +141,13 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 		for (int i = 0; i < num_paint_tiles_x; i++)
 		{
 			auto paint_tile_rectangle = RectangleF(
-				this->get_rectangle().get_left() + (paint_tile_width * i),
-				this->get_rectangle().get_bottom() - THICKNESS,
+				this->rectangle().left() + (paint_tile_width * i),
+				this->rectangle().bottom() - THICKNESS,
 				paint_tile_width,
 				THICKNESS);
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
-			                            this->get_render_resources(),
+			                            this->render_resources(),
 			                            this->team_colours_,
 			                            this->dt_);
 			paint_tiles.push_back(paint_tile);
@@ -160,13 +160,13 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 		for (int i = 0; i < num_paint_tiles_y; i++)
 		{
 			auto paint_tile_rectangle = RectangleF(
-				this->get_rectangle().get_left(),
-				this->get_rectangle().get_top() + (paint_tile_height * i),
+				this->rectangle().left(),
+				this->rectangle().top() + (paint_tile_height * i),
 				THICKNESS,
 				paint_tile_height);
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
-			                            this->get_render_resources(),
+			                            this->render_resources(),
 			                            this->team_colours_,
 			                            this->dt_);
 			paint_tiles.push_back(paint_tile);
@@ -179,13 +179,13 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 		for (int i = 0; i < num_paint_tiles_y; i++)
 		{
 			auto paint_tile_rectangle = RectangleF(
-				this->get_rectangle().get_right() - THICKNESS,
-				this->get_rectangle().get_top() + (paint_tile_height * i),
+				this->rectangle().right() - THICKNESS,
+				this->rectangle().top() + (paint_tile_height * i),
 				THICKNESS,
 				paint_tile_height);
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
-			                            this->get_render_resources(),
+			                            this->render_resources(),
 			                            this->team_colours_,
 			                            this->dt_);
 			paint_tiles.push_back(paint_tile);
@@ -194,19 +194,19 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 
 	return paint_tiles;
 }
-PaintTotal StructurePaintable::get_paint_total() const
+PaintTotal StructurePaintable::paint_total() const
 {
 	auto total = PaintTotal();
 	for (auto& paint_tile : this->paint_tiles_)
 	{
-		PlayerTeam team = paint_tile.get_team();
+		PlayerTeam team = paint_tile.team();
 		switch (team)
 		{
 		case PlayerTeam::a:
-			total.team_a += paint_tile.get_area();
+			total.team_a += paint_tile.area();
 			break;
 		case PlayerTeam::b:
-			total.team_b += paint_tile.get_area();
+			total.team_b += paint_tile.area();
 			break;
 		default:
 			break;

@@ -12,22 +12,22 @@ LevelLoadedInfo::LevelLoadedInfo(const char* json_path) :
 
 }
 
-std::string LevelLoadedInfo::get_level_name() const
+std::string LevelLoadedInfo::level_name() const
 {
 	return this->json_doc_["level_name"].GetString();
 }
-std::vector<Vector2F> LevelLoadedInfo::get_team_a_spawns() const
+std::vector<Vector2F> LevelLoadedInfo::team_a_spawns() const
 { 
 	const Value& spawn_locations_a = this->json_doc_["spawn_locations"]["team_a"];
 	return this->decode_team_spawns_json(spawn_locations_a);
 }
-std::vector<Vector2F> LevelLoadedInfo::get_team_b_spawns() const
+std::vector<Vector2F> LevelLoadedInfo::team_b_spawns() const
 { 
 	const Value& spawn_locations_b = this->json_doc_["spawn_locations"]["team_b"];
 	return this->decode_team_spawns_json(spawn_locations_b);
 }
 
-RectangleF LevelLoadedInfo::get_out_of_bounds_rectangle() const
+RectangleF LevelLoadedInfo::out_of_bounds_rectangle() const
 {
 	return RectangleF(
 		this->json_doc_["level_bounds"]["out_of_bounds"]["x"].GetFloat(),
@@ -35,7 +35,7 @@ RectangleF LevelLoadedInfo::get_out_of_bounds_rectangle() const
 		this->json_doc_["level_bounds"]["out_of_bounds"]["width"].GetFloat(),
 		this->json_doc_["level_bounds"]["out_of_bounds"]["height"].GetFloat());
 }
-RectangleF LevelLoadedInfo::get_camera_bounds_rectangle() const
+RectangleF LevelLoadedInfo::camera_bounds_rectangle() const
 {
 	return RectangleF(
 		this->json_doc_["level_bounds"]["camera_bounds"]["x"].GetFloat(),
@@ -43,7 +43,7 @@ RectangleF LevelLoadedInfo::get_camera_bounds_rectangle() const
 		this->json_doc_["level_bounds"]["camera_bounds"]["width"].GetFloat(),
 		this->json_doc_["level_bounds"]["camera_bounds"]["height"].GetFloat());
 }
-RectangleF LevelLoadedInfo::get_zoom_out_start_bounds_rectangle() const
+RectangleF LevelLoadedInfo::zoom_out_start_bounds_rectangle() const
 {
 	return RectangleF(
 		this->json_doc_["level_bounds"]["zoom_out_start_bounds"]["x"].GetFloat(),
@@ -52,7 +52,7 @@ RectangleF LevelLoadedInfo::get_zoom_out_start_bounds_rectangle() const
 		this->json_doc_["level_bounds"]["zoom_out_start_bounds"]["height"].GetFloat());
 
 }
-RectangleF LevelLoadedInfo::get_zoom_out_finish_bounds_rectangle() const
+RectangleF LevelLoadedInfo::zoom_out_finish_bounds_rectangle() const
 {
 	return RectangleF(
 		this->json_doc_["level_bounds"]["zoom_out_finish_bounds"]["x"].GetFloat(),
@@ -61,23 +61,23 @@ RectangleF LevelLoadedInfo::get_zoom_out_finish_bounds_rectangle() const
 		this->json_doc_["level_bounds"]["zoom_out_finish_bounds"]["height"].GetFloat());
 }
 
-const Value& LevelLoadedInfo::get_collision_objects_json() const
+const Value& LevelLoadedInfo::collision_objects_json() const
 {
 	return this->json_doc_["collision_objects"];
 }
-const Value& LevelLoadedInfo::get_non_collision_objects_json() const
+const Value& LevelLoadedInfo::non_collision_objects_json() const
 {
 	return this->json_doc_["non_collision_objects"];
 }
-std::string LevelLoadedInfo::get_sound_bank_name() const
+std::string LevelLoadedInfo::sound_bank_name() const
 {
 	return this->json_doc_["sound"]["sound_bank_name"].GetString();
 }
-std::string LevelLoadedInfo::get_music_name() const
+std::string LevelLoadedInfo::music_name() const
 {
 	return this->json_doc_["sound"]["music_name"].GetString();
 }
-float LevelLoadedInfo::get_music_volume() const
+float LevelLoadedInfo::music_volume() const
 {
 	return this->json_doc_["sound"]["music_volume"].GetFloat();
 }

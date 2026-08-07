@@ -10,7 +10,7 @@ PauseMenuData::PauseMenuData(GameData* game_data, MenuInput* input,
 
 }
 
-int PauseMenuData::get_player_num() const
+int PauseMenuData::player_num() const
 {
 	return this->player_num_;
 }
@@ -20,7 +20,7 @@ void PauseMenuData::set_player_num(int player_num)
 	this->player_num_ = player_num;
 }
 
-PauseMenuAction* PauseMenuData::get_action() const
+PauseMenuAction* PauseMenuData::action() const
 {
 	return this->action_;
 }

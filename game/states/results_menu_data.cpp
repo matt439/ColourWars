@@ -10,7 +10,7 @@ ResultsMenuData::ResultsMenuData(const GameData* game_data, MenuInput* input,
 
 }
 
-LevelEndInfo ResultsMenuData::get_level_end_info() const
+LevelEndInfo ResultsMenuData::level_end_info() const
 {
 	return this->level_end_info_;
 }
@@ -20,7 +20,7 @@ void ResultsMenuData::set_level_end_info(const LevelEndInfo& level_end_info)
 	this->level_end_info_ = level_end_info;
 }
 
-ResultsMenuAction* ResultsMenuData::get_action() const
+ResultsMenuAction* ResultsMenuData::action() const
 {
 	return this->action_;
 }

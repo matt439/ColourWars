@@ -13,7 +13,7 @@ MenuData::MenuData(const GameData* game_data, MenuInput* input) :
 
 }
 
-MenuInput* MenuData::get_input() const
+MenuInput* MenuData::input() const
 {
 	return this->input_;
 }
@@ -23,7 +23,7 @@ void MenuData::set_input(MenuInput* input)
 	this->input_ = input;
 }
 
-MenuData* MenuData::get_menu_data()
+MenuData* MenuData::menu_data()
 {
 	return this;
 }

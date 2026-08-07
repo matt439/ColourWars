@@ -53,16 +53,16 @@ DiffusingProjectile::DiffusingProjectile(
 {
 
 }
-const Vector2F& DiffusingProjectile::get_base_size() const
+const Vector2F& DiffusingProjectile::base_size() const
 {
-	return this->get_details().size;
+	return this->details().size;
 }
 
 Vector2F DiffusingProjectile::calculate_diffusion_size() const
 {
-    const float time = this->get_timer();
+    const float time = this->timer();
     const DiffusionDetails& details = this->diffusion_details_;
-    const Vector2F& base_size = this->get_base_size();
+    const Vector2F& base_size = this->base_size();
     Vector2F multiple;
     if (time < details.start_time)
     {
@@ -93,7 +93,7 @@ Vector2F DiffusingProjectile::calculate_diffusion_size() const
 bool Projectile::is_matching_collision_object_type(
     const ICollisionGameObject* other) const
 {
-    CollisionObjectType other_type = other->get_collision_object_type();
+    CollisionObjectType other_type = other->collision_object_type();
 
     bool structure_collision =
         other_type == CollisionObjectType::structure ||
@@ -105,7 +105,7 @@ bool Projectile::is_matching_collision_object_type(
 		return true;
 	}
 
-    PlayerTeam team = this->get_team();
+    PlayerTeam team = this->team();
 
     switch (team)
     {
@@ -119,7 +119,7 @@ bool Projectile::is_matching_collision_object_type(
 }
 void Projectile::on_collision(const ICollisionGameObject* other)
 {
-    CollisionObjectType other_type = other->get_collision_object_type();
+    CollisionObjectType other_type = other->collision_object_type();
 
     bool structure_collision =
         other_type == CollisionObjectType::structure ||
@@ -132,7 +132,7 @@ void Projectile::on_collision(const ICollisionGameObject* other)
     }
     else
     {
-        PlayerTeam team = this->get_team();
+        PlayerTeam team = this->team();
         switch (team)
         {
         case PlayerTeam::a:
@@ -152,10 +152,10 @@ void Projectile::on_collision(const ICollisionGameObject* other)
         }
     }
 }
-CollisionObjectType Projectile::get_collision_object_type() const
+CollisionObjectType Projectile::collision_object_type() const
 {
-    projectile_type type = this->get_type();
-    switch (this->get_team())
+    projectile_type type = this->type();
+    switch (this->team())
     {
     case PlayerTeam::a:
         switch (type)
@@ -193,11 +193,11 @@ CollisionObjectType Projectile::get_collision_object_type() const
         throw std::exception("Invalid PlayerTeam value.");
     }
 }
-PlayerTeam Projectile::get_team() const
+PlayerTeam Projectile::team() const
 {
     return this->team_;
 }
-bool Projectile::get_for_deletion() const
+bool Projectile::for_deletion() const
 {
     return this->for_deletion_;
 }
@@ -205,19 +205,19 @@ void Projectile::set_for_deletion(bool for_deletion)
 {
     this->for_deletion_ = for_deletion;
 }
-int Projectile::get_player_num() const
+int Projectile::player_num() const
 {
     return this->player_num_;
 }
-const Colour& Projectile::get_team_colour() const
+const Colour& Projectile::team_colour() const
 {
     return this->team_colour_;
 }
-projectile_type Projectile::get_type() const
+projectile_type Projectile::type() const
 {
     return this->type_;
 }
-float Projectile::get_timer() const
+float Projectile::timer() const
 {
     return this->timer_;
 }
@@ -225,30 +225,30 @@ void Projectile::alter_timer(float time)
 {
     this->timer_ += time;
 }
-float Projectile::get_dt() const
+float Projectile::dt() const
 {
 	return *this->dt_;
 }
 void Projectile::update_movement(float gravity, float wind_resistance)
 {
-    const float dt = this->get_dt();
+    const float dt = this->dt();
 
     //gravity
     MovingObject::alter_velocity_y(gravity * dt);
-    if (MovingObject::get_velocity_y() > projectile_consts::MAX_VELOCITY.y)
+    if (MovingObject::velocity_y() > projectile_consts::MAX_VELOCITY.y)
 	{
         MovingObject::set_velocity_y(projectile_consts::MAX_VELOCITY.y);
 	}
-	else if (MovingObject::get_velocity_y() < -projectile_consts::MAX_VELOCITY.y)
+	else if (MovingObject::velocity_y() < -projectile_consts::MAX_VELOCITY.y)
 	{
         MovingObject::set_velocity_y(-projectile_consts::MAX_VELOCITY.y);
 	}
 
     //wind resistance
-    if (std::fabs(MovingObject::get_velocity_x()) > wind_resistance * 4.0f)
+    if (std::fabs(MovingObject::velocity_x()) > wind_resistance * 4.0f)
     {
         //right
-        if (MovingObject::get_velocity_x() > 0.0f)
+        if (MovingObject::velocity_x() > 0.0f)
         {
             MovingObject::alter_velocity_x(-wind_resistance * dt);
         }
@@ -262,45 +262,45 @@ void Projectile::update_movement(float gravity, float wind_resistance)
 	{
         MovingObject::set_velocity_x(0.0f);
 	}
-    if (MovingObject::get_velocity_x() > projectile_consts::MAX_VELOCITY.x)
+    if (MovingObject::velocity_x() > projectile_consts::MAX_VELOCITY.x)
     {
         MovingObject::set_velocity_x(projectile_consts::MAX_VELOCITY.x);
     }
-    else if (MovingObject::get_velocity_x() < -projectile_consts::MAX_VELOCITY.x)
+    else if (MovingObject::velocity_x() < -projectile_consts::MAX_VELOCITY.x)
     {
         MovingObject::set_velocity_x(-projectile_consts::MAX_VELOCITY.x);
     }
 
     //displacement
-    MovingObject::set_dx_x(MovingObject::get_velocity_x() * dt);
-    MovingObject::set_dx_y(MovingObject::get_velocity_y() * dt);
+    MovingObject::set_dx_x(MovingObject::velocity_x() * dt);
+    MovingObject::set_dx_y(MovingObject::velocity_y() * dt);
 
     // Age first, then test: testing before the increment let a projectile
     // survive one frame past its deadline.
     this->alter_timer(dt);
 
-    if (this->get_timer() > this->get_delete_timer())
+    if (this->timer() > this->delete_timer())
 	{
 		this->set_for_deletion(true);
 	}
 }
 
-float Projectile::get_delete_timer() const
+float Projectile::delete_timer() const
 {
-	return this->get_details().delete_timer;
+	return this->details().delete_timer;
 }
 
-Vector2F Projectile::get_col_rect_size() const
+Vector2F Projectile::col_rect_size() const
 {
-	return this->get_details().size;
+	return this->details().size;
 }
 
-float Projectile::get_player_damage() const
+float Projectile::player_damage() const
 {
-	return this->get_details().player_damage;
+	return this->details().player_damage;
 }
 
-const ProjectileDetails& Projectile::get_details() const
+const ProjectileDetails& Projectile::details() const
 {
 	return this->details_;
 }

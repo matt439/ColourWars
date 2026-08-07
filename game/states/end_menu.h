@@ -47,7 +47,7 @@ public:
 	void update() override = 0;
 	void draw() override = 0;
 protected:
-	EndMenuData* get_end_menu_data() const;
+	EndMenuData* end_menu_data() const;
 
 	// Every sound this page family can make, resolved once when the page is
 	// built. A press then plays an index, not a name (T7, T8).

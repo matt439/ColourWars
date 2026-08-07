@@ -28,7 +28,7 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 
 	// The splash is always centred on the tile and the tile never moves, so
 	// this is set once here rather than re-assigned on every draw call.
-	this->splash_.set_rectangle_center(rectangle.get_center());
+	this->splash_.set_rectangle_center(rectangle.center());
 }
 
 void PaintTile::update()
@@ -45,30 +45,30 @@ void PaintTile::draw(SpriteBatch* sprite_batch, const Camera& camera)
 	{
 		return;
 	}
-	const Colour tint = this->team_colours_.get_team_colour(this->team_);
+	const Colour tint = this->team_colours_.team_colour(this->team_);
 
 	this->splash_.draw_with_colour(sprite_batch, camera, tint);
 
 	this->TextureObject::draw_with(sprite_batch, this->rectangle_, camera,
-		this->get_frame(), tint, this->get_origin(),
-		this->get_effects(), this->get_draw_rotation());
+		this->frame(), tint, this->origin(),
+		this->effects(), this->draw_rotation());
 }
 void PaintTile::draw(SpriteBatch* sprite_batch)
 {
 	this->draw(sprite_batch, Camera::DEFAULT_CAMERA);
 }
-float PaintTile::get_area() const
+float PaintTile::area() const
 {
-	return this->rectangle_.get_area();
+	return this->rectangle_.area();
 }
-PlayerTeam PaintTile::get_team() const
+PlayerTeam PaintTile::team() const
 {
 	return this->team_;
 }
 bool PaintTile::is_colliding(const ICollisionGameObject* other) const
 {
     // aabb check
-    if (!this->get_shape()->AABB_intersects(other->get_shape()))
+    if (!this->shape()->AABB_intersects(other->shape()))
     {
         return false;
     }
@@ -76,7 +76,7 @@ bool PaintTile::is_colliding(const ICollisionGameObject* other) const
     {
         // if the other object is a rectangle, then we have a collision
         // since the AABB check passed
-        ShapeType other_shape_type = other->get_shape()->get_shape_type();
+        ShapeType other_shape_type = other->shape()->shape_type();
         if (other_shape_type == ShapeType::rectangle)
         {
             return true;
@@ -84,20 +84,20 @@ bool PaintTile::is_colliding(const ICollisionGameObject* other) const
     }
 
     // narrow phase check
-    if (this->get_shape()->intersects(other->get_shape()))
+    if (this->shape()->intersects(other->shape()))
     {
         return true;
     }
 
     return false;
 }
-const Shape* PaintTile::get_shape() const
+const Shape* PaintTile::shape() const
 {
     return &this->rectangle_;
 }
 void PaintTile::on_collision(const ICollisionGameObject* other)
 {
-	CollisionObjectType other_type = other->get_collision_object_type();
+	CollisionObjectType other_type = other->collision_object_type();
 	PlayerTeam other_team;
 	if (other_type == CollisionObjectType::projectile_spray_team_a ||
 		other_type == CollisionObjectType::projectile_jet_team_a ||
@@ -122,11 +122,11 @@ void PaintTile::on_collision(const ICollisionGameObject* other)
 	this->team_ = other_team;
 	this->splash_.reset_and_play();
 }
-CollisionObjectType PaintTile::get_collision_object_type() const
+CollisionObjectType PaintTile::collision_object_type() const
 {
 	return CollisionObjectType::paint_tile;
 }
-bool PaintTile::get_for_deletion() const
+bool PaintTile::for_deletion() const
 {
 	return false;
 }
@@ -178,7 +178,7 @@ void PaintTileSplash::draw_with_colour(SpriteBatch* sprite_batch,
 	const Camera& camera, const Colour& colour) const
 {
 	this->AnimationObject::draw_with(sprite_batch, this->rectangle_, camera,
-		colour, this->get_effects());
+		colour, this->effects());
 }
 void PaintTileSplash::draw(SpriteBatch* sprite_batch)
 {

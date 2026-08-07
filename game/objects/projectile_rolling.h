@@ -24,7 +24,7 @@ public:
 	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override;
 
 	bool is_colliding(const ICollisionGameObject* other) const override;
-	const mattmath::Shape* get_shape() const override;
+	const mattmath::Shape* shape() const override;
 private:
 	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
 };

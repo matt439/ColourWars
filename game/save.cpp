@@ -172,17 +172,17 @@ Vector2I Save::convert_resolution_to_ivec(
     }
 }
 
-SaveData Save::get_save_data() const
+SaveData Save::save_data() const
 {
 	return this->save_data_;
 }
 
-ScreenResolution Save::get_resolution() const
+ScreenResolution Save::resolution() const
 {
 	return this->save_data_.resolution;
 }
 
-bool Save::get_fullscreen() const
+bool Save::fullscreen() const
 {
 	return this->save_data_.fullscreen;
 }

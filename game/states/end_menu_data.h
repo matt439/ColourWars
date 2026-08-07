@@ -8,7 +8,7 @@ class EndMenuData : public MenuData
 public:
 	EndMenuData(GameData* game_data, MenuInput* input, EndMenuAction* action);
 
-	EndMenuAction* get_action() const;
+	EndMenuAction* action() const;
 	void set_action(EndMenuAction* action);
 
 private:

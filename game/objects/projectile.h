@@ -41,30 +41,30 @@ public:
 
 	bool is_colliding(const ICollisionGameObject* other) const override = 0;
 	void on_collision(const ICollisionGameObject* other) override;
-	CollisionObjectType get_collision_object_type() const override;
-	const mattmath::Shape* get_shape() const override = 0;
-	bool get_for_deletion() const override;
+	CollisionObjectType collision_object_type() const override;
+	const mattmath::Shape* shape() const override = 0;
+	bool for_deletion() const override;
 	void set_for_deletion(bool for_deletion) override;
 
-	float get_delete_timer() const;
-	mattmath::Vector2F get_col_rect_size() const;
-	float get_player_damage() const;
+	float delete_timer() const;
+	mattmath::Vector2F col_rect_size() const;
+	float player_damage() const;
 protected:
-	const ProjectileDetails& get_details() const;
+	const ProjectileDetails& details() const;
 
-	PlayerTeam get_team() const;
+	PlayerTeam team() const;
 
 	virtual bool is_matching_collision_object_type(const ICollisionGameObject* other) const;
 
-	int get_player_num() const;
-	const mattmath::Colour& get_team_colour() const;
-	projectile_type get_type() const;
+	int player_num() const;
+	const mattmath::Colour& team_colour() const;
+	projectile_type type() const;
 
-	float get_timer() const;
+	float timer() const;
 	void alter_timer(float time);
 
 	virtual void update_movement(float gravity, float wind_resistance);
-	float get_dt() const;
+	float dt() const;
 private:
 	ProjectileDetails details_ = ProjectileDetails();
 	float timer_ = 0.0f;
@@ -104,10 +104,10 @@ public:
 	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override = 0;
 
 	bool is_colliding(const ICollisionGameObject* other) const override = 0;
-	const mattmath::Shape* get_shape() const override = 0;
+	const mattmath::Shape* shape() const override = 0;
 protected:
 	mattmath::Vector2F calculate_diffusion_size() const;
 private:
 	DiffusionDetails diffusion_details_ = DiffusionDetails();
-	const mattmath::Vector2F& get_base_size() const;
+	const mattmath::Vector2F& base_size() const;
 };

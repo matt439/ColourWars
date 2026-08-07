@@ -10,5 +10,5 @@ class IPaintableGameObject
 {
 public:
 	virtual ~IPaintableGameObject() = default;
-	virtual PaintTotal get_paint_total() const = 0;
+	virtual PaintTotal paint_total() const = 0;
 };

@@ -16,7 +16,7 @@ MainMenuData::MainMenuData(GameData* game_data, MenuInput* input,
 
 }
 
-MenuLevelSettings* MainMenuData::get_level_settings() const
+MenuLevelSettings* MainMenuData::level_settings() const
 {
 	return this->menu_level_settings_;
 }
@@ -26,7 +26,7 @@ void MainMenuData::set_level_settings(MenuLevelSettings* level_settings)
 	this->menu_level_settings_ = level_settings;
 }
 
-bool* MainMenuData::get_is_ready_to_load_level() const
+bool* MainMenuData::is_ready_to_load_level() const
 {
 	return this->is_ready_to_load_level_;
 }

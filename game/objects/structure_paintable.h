@@ -17,7 +17,7 @@ namespace structure_paintable_consts
 // Which faces of a paintable structure generate paint tiles.
 //
 // These used to be encoded as a std::vector<Segment> of the matching edges and
-// decoded back by matching positional indices against RectangleF::get_edges().
+// decoded back by matching positional indices against RectangleF::edges().
 // That ordering is {top, bottom, left, right} but the decoder assumed
 // {top, right, bottom, left}, so three of the four faces painted on the wrong
 // side. Passing the booleans through directly removes the round trip.
@@ -54,7 +54,7 @@ public:
 	void draw(DirectX::SpriteBatch* sprite_batch) override;
 	void on_collision(const ICollisionGameObject* other) override;
 
-	PaintTotal get_paint_total() const override;
+	PaintTotal paint_total() const override;
 
 private:
 	std::vector<PaintTile> paint_tiles_ = std::vector<PaintTile>();

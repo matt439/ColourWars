@@ -14,7 +14,7 @@ MenuInput::MenuInput(GamePad* gamepad) :
     }
 }
 
-RawMenuInput MenuInput::get_raw_input(int gamepad_num) const
+RawMenuInput MenuInput::raw_input(int gamepad_num) const
 {
 	auto result = RawMenuInput();
 	const auto pad = this->gamepad_->GetState(gamepad_num, GamePad::DEAD_ZONE_NONE);
@@ -134,7 +134,7 @@ std::vector<ProcessedMenuInput> MenuInput::update_and_get_menu_inputs()
     RawMenuInput current[MAX_PAD_COUNT];
     for (int i = 0; i < MAX_PAD_COUNT; i++)
     {
-        current[i] = this->get_raw_input(i);
+        current[i] = this->raw_input(i);
     }
 
     // One entry per pad slot, always - see PlayerInput for why. Slots with no

@@ -35,18 +35,18 @@ std::unique_ptr<Level>
 	LevelBuilder::build_level(const MenuLevelSettings& settings)
 {
 	const LevelLoadedInfo* load_info =
-		this->level_infos_->get(level_asset_name(settings.get_stage()));
+		this->level_infos_->get(level_asset_name(settings.stage()));
 
 	const TeamColour team_colours = team_colour_->generate_random_team_colour();
 
 	const Value& collision_objects_json =
-		load_info->get_collision_objects_json();
+		load_info->collision_objects_json();
 
 	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> collision_objects =
 		this->level_object_builder_->build_collision_objects(collision_objects_json, team_colours);
 
 	const Value& non_collision_objects_json =
-		load_info->get_non_collision_objects_json();
+		load_info->non_collision_objects_json();
 
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_collision_objects =
 		this->level_object_builder_->build_non_collision_objects(non_collision_objects_json);
@@ -65,20 +65,20 @@ std::unique_ptr<Level>
 		std::move(collision_objects),
 		std::move(players),
 		std::move(viewport_dividers),
-		settings.get_stage(),
+		settings.stage(),
 		team_colours,
-		load_info->get_out_of_bounds_rectangle(),
-		load_info->get_camera_bounds_rectangle(),
-		load_info->get_zoom_out_start_bounds_rectangle(),
-		load_info->get_zoom_out_finish_bounds_rectangle(),
-		load_info->get_team_a_spawns(),
-		load_info->get_team_b_spawns(),
-		load_info->get_sound_bank_name(),
-		load_info->get_music_name(),
-		load_info->get_music_volume(),
+		load_info->out_of_bounds_rectangle(),
+		load_info->camera_bounds_rectangle(),
+		load_info->zoom_out_start_bounds_rectangle(),
+		load_info->zoom_out_finish_bounds_rectangle(),
+		load_info->team_a_spawns(),
+		load_info->team_b_spawns(),
+		load_info->sound_bank_name(),
+		load_info->music_name(),
+		load_info->music_volume(),
 		this->dt_,
 		this->sampler_state_,
-		load_info->get_level_name(),
+		load_info->level_name(),
 		this->resolution_manager_,
 		this->viewport_manager_,
 		this->render_resources_,

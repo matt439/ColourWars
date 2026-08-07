@@ -93,47 +93,47 @@ public:
 
     bool is_colliding(const ICollisionGameObject* other) const override;
     void on_collision(const ICollisionGameObject* other) override;
-    CollisionObjectType get_collision_object_type() const override;
-    const mattmath::Shape* get_shape() const override;
-    bool get_for_deletion() const override;
+    CollisionObjectType collision_object_type() const override;
+    const mattmath::Shape* shape() const override;
+    bool for_deletion() const override;
 
 	void set_player_input(const PlayerInputData& input);
     void set_camera(const mattmath::Camera& camera);
 
-	const mattmath::RectangleF& get_rectangle() const;
-	mattmath::Vector2F get_center() const;
-    const mattmath::Vector2F& get_velocity() const override;
-	const mattmath::Camera& get_camera() const;
-	const mattmath::Viewport& get_viewport() const;
-	float get_input_x_movement() const;
-	const mattmath::Vector2F& get_input_shoot_direction() const;
-	bool get_input_primary_shoot() const;
-	bool get_input_jump_pressed() const;
-	bool get_input_jump_held() const;
-	PlayerMoveState get_move_state() const;
-    int get_player_num() const;
+	const mattmath::RectangleF& rectangle() const;
+	mattmath::Vector2F center() const;
+    const mattmath::Vector2F& velocity() const override;
+	const mattmath::Camera& camera() const;
+	const mattmath::Viewport& viewport() const;
+	float input_x_movement() const;
+	const mattmath::Vector2F& input_shoot_direction() const;
+	bool input_primary_shoot() const;
+	bool input_jump_pressed() const;
+	bool input_jump_held() const;
+	PlayerMoveState move_state() const;
+    int player_num() const;
 
-	bool get_showing_debug() const;
+	bool showing_debug() const;
 
-    float get_health() const;
+    float health() const;
 
-    float get_weapon_ammo() const;
-    const mattmath::Colour& get_team_colour() const;
+    float weapon_ammo() const;
+    const mattmath::Colour& team_colour() const;
 
-    const PlayerInputData& get_input() const;
+    const PlayerInputData& input() const;
 
-    PlayerState get_state() const;
+    PlayerState state() const;
     void set_state(PlayerState state);
 
-    PlayerTeam get_team() const;
+    PlayerTeam team() const;
 
-    float get_respawn_timer() const;
+    float respawn_timer() const;
 
     void update_weapon_position() const;
     void update_prev_rectangle();
     void stop_sounds() const;
 
-	std::string get_player_move_state_string() const;
+	std::string player_move_state_string() const;
 
 	void on_no_collision();
 
@@ -179,7 +179,7 @@ private:
 
     float health_regen_timer_ = 0.0f;
 
-	const mattmath::RectangleF* get_collision_rectangle() const;
+	const mattmath::RectangleF* collision_rectangle() const;
 
     static bool is_matching_collision_object_type(
         const ICollisionGameObject* other);
@@ -187,7 +187,7 @@ private:
 	void on_projectile_collision(const ICollisionGameObject* other);
 	void on_structure_collision(const ICollisionGameObject* other);
 
-	float get_dt() const;
+	float dt() const;
 
 	void update_movement();
 	void do_jump();
@@ -198,7 +198,7 @@ private:
     // from draw() - draw runs concurrently on every render worker.
     void update_animation_state();
 
-    static const PlayerAnimationInfo& get_animation_info(PlayerAnimationState state);
+    static const PlayerAnimationInfo& animation_info(PlayerAnimationState state);
 
     void respawn();
 
@@ -226,17 +226,17 @@ private:
 
     void set_team(PlayerTeam team);
 
-    WeaponType get_primary() const;
+    WeaponType primary() const;
     void set_primary(WeaponType primary);
 
-    WeaponType get_secondary() const;
+    WeaponType secondary() const;
     void set_secondary(WeaponType secondary);
 
     void set_team_colour(const mattmath::Colour& team_colour);
 
     void set_viewport(const mattmath::Viewport& viewport);
 
-    bool get_facing_right() const;
+    bool facing_right() const;
     void set_facing_right(bool facing_right);
 
     void set_input(const PlayerInputData& input);
@@ -247,11 +247,11 @@ private:
     void set_respawn_timer(float respawn_timer);
     void alter_respawn_timer(float change);
 
-    float get_air_time() const;
+    float air_time() const;
     void set_air_time(float air_time);
     void alter_air_time(float change);
 
-    int get_score() const;
+    int score() const;
     void set_score(int score);
     void alter_score(int change);
 

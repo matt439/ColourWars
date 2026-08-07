@@ -14,7 +14,7 @@ PlayerInput::PlayerInput(GamePad* gamepad) :
     }
 }
 
-RawPlayerInput PlayerInput::get_raw_input(int gamepad_num) const
+RawPlayerInput PlayerInput::raw_input(int gamepad_num) const
 {
 	auto result = RawPlayerInput();
     auto pad = this->gamepad_->GetState(gamepad_num, GamePad::DEAD_ZONE_CIRCULAR);
@@ -121,7 +121,7 @@ std::vector<PlayerInputData> PlayerInput::update_and_get_player_inputs()
     RawPlayerInput current[MAX_PAD_COUNT];
     for (int i = 0; i < MAX_PAD_COUNT; i++)
     {
-        current[i] = this->get_raw_input(i);
+        current[i] = this->raw_input(i);
     }
 
     // Always one entry per pad slot. Pushing back only for connected pads made

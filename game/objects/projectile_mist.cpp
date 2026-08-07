@@ -22,22 +22,22 @@ ProjectileMist::ProjectileMist(const RectangleF& rectangle,
 		team_colour, rotation, origin, effects, layer_depth),
 	rectangle_(rectangle)
 {
-	Vector2F size = this->get_details().col_rect_size;
+	Vector2F size = this->details().col_rect_size;
 
 	this->rectangle_.offset(-size.x / 2.0f, -size.y / 2.0f);
 }
 
 void ProjectileMist::update()
 {
-	const ProjectileDetails& details = this->get_details();
+	const ProjectileDetails& details = this->details();
 
 	Projectile::update_movement(details.gravity,
 		details.wind_resistance);
 
 	this->rectangle_.inflate_to_size(calculate_diffusion_size());
 
-	this->rectangle_.offset(MovingObject::get_dx_x(),
-		MovingObject::get_dx_y());
+	this->rectangle_.offset(MovingObject::dx_x(),
+		MovingObject::dx_y());
 
 	AnimationObject::update();
 }
@@ -62,7 +62,7 @@ bool ProjectileMist::is_colliding(const ICollisionGameObject* other) const
 	}
 
 	// aabb check
-	if (!this->get_shape()->AABB_intersects(other->get_shape()))
+	if (!this->shape()->AABB_intersects(other->shape()))
 	{
 		return false;
 	}
@@ -70,7 +70,7 @@ bool ProjectileMist::is_colliding(const ICollisionGameObject* other) const
 	{
 		// if the other object is a rectangle, then we have a collision
 		// since the AABB check passed
-		ShapeType other_shape_type = other->get_shape()->get_shape_type();
+		ShapeType other_shape_type = other->shape()->shape_type();
 		if (other_shape_type == ShapeType::rectangle)
 		{
 			return true;
@@ -78,14 +78,14 @@ bool ProjectileMist::is_colliding(const ICollisionGameObject* other) const
 	}
 
 	// narrow phase check
-	if (this->get_shape()->intersects(other->get_shape()))
+	if (this->shape()->intersects(other->shape()))
 	{
 		return true;
 	}
 
 	return false;
 }
-const Shape* ProjectileMist::get_shape() const
+const Shape* ProjectileMist::shape() const
 {
 	return &this->rectangle_;
 }

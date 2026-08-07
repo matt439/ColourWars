@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/weapon_details.h"
 
-const std::string& SoundEffectInstanceWeaponDetails::get_sound_name(
+const std::string& SoundEffectInstanceWeaponDetails::sound_name(
 	PlayerTeam team, int index) const
 {
 	switch (team)

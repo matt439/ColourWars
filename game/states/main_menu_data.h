@@ -11,9 +11,9 @@ public:
 	MainMenuData(GameData* game_data, MenuInput* input,
 		MenuLevelSettings* settings, bool* ready_to_load);
 
-	MenuLevelSettings* get_level_settings() const;
+	MenuLevelSettings* level_settings() const;
 	void set_level_settings(MenuLevelSettings* level_settings);
-	bool* get_is_ready_to_load_level() const;
+	bool* is_ready_to_load_level() const;
 	void set_is_ready_to_load_level(bool* is_ready_to_load_level);
 private:
 	MenuLevelSettings* menu_level_settings_ = nullptr;

@@ -48,19 +48,19 @@ void Structure::on_collision(const ICollisionGameObject* /*other*/)
 {
 	// do nothing
 }
-CollisionObjectType Structure::get_collision_object_type() const
+CollisionObjectType Structure::collision_object_type() const
 {
 	return this->collision_type_;
 }
-const Shape* Structure::get_shape() const
+const Shape* Structure::shape() const
 {
 	return this->collision_shape_.get();
 }
-bool Structure::get_for_deletion() const
+bool Structure::for_deletion() const
 {
 	return false;
 }
-const RectangleF& Structure::get_rectangle() const
+const RectangleF& Structure::rectangle() const
 {
 	return this->sprite_rectangle_;
 }

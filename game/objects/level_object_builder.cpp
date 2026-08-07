@@ -107,7 +107,7 @@ std::unique_ptr<ICollisionGameObject>
 		}
 
 		// Pass the booleans straight through. Encoding them as Segments and
-		// recovering them by positional index against get_edges() put three of
+		// recovering them by positional index against edges() put three of
 		// the four faces on the wrong side of the structure.
 		const rapidjson::Value& faces_json = json["paintable_faces"];
 		PaintableFaces faces;
@@ -157,7 +157,7 @@ std::unique_ptr<ICollisionGameObject>
 		return std::make_unique<Structure>(
 			json["sheet_name"].GetString(),
 			json["frame_name"].GetString(),
-			triangle.get_bounding_box(),
+			triangle.bounding_box(),
 			&triangle,
 			this->render_resources_,
 			col_type,
@@ -218,7 +218,7 @@ std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
 	auto viewport_dividers = std::make_unique<std::vector<std::unique_ptr<IGameObject>>>();
 
 	std::vector<RectangleF> viewport_rectangles =
-		viewport_manager->get_viewport_dividers();
+		viewport_manager->viewport_dividers();
 	for (auto& rectangle : viewport_rectangles)
 	{
 		viewport_dividers->push_back(std::make_unique<Visual>(

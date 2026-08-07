@@ -19,27 +19,27 @@ DebugText::DebugText(RenderResources* render_resources,
 void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
     const Player* player, int num_projectiles) const
 {
-    const PlayerInputData& input = player->get_input();
+    const PlayerInputData& input = player->input();
     
-    RectangleF rect = player->get_rectangle();
-    Vector2F center = player->get_center();
-    Vector2F vel = player->get_velocity();
-    Camera camera = player->get_camera();
-    Vector2F resolution = this->resolution_manager_->get_resolution_vec();
-    Viewport viewport = player->get_viewport();
-    float x_movement = player->get_input_x_movement();
+    RectangleF rect = player->rectangle();
+    Vector2F center = player->center();
+    Vector2F vel = player->velocity();
+    Camera camera = player->camera();
+    Vector2F resolution = this->resolution_manager_->resolution_vec();
+    Viewport viewport = player->viewport();
+    float x_movement = player->input_x_movement();
     Vector2F shoot_direction = player->
-        get_input_shoot_direction();
+        input_shoot_direction();
     float shoot_angle = input.shoot_angle;
     Vector2F left_stick = input.left_analog_stick;
     Vector2F right_stick = input.right_analog_stick;
     bool primary_shooting = player->
-        get_input_primary_shoot();
+        input_primary_shoot();
     bool jump_pressed = player->
-		get_input_jump_pressed();
+		input_jump_pressed();
     bool jump_held = player->
-        get_input_jump_held();
-    PlayerState state = player->get_state();
+        input_jump_held();
+    PlayerState state = player->state();
 
     std::vector<std::string> lines;
 
@@ -78,14 +78,14 @@ void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
     }
     lines.push_back(primary_shooting_string);
 
-    lines.push_back("dt: " + std::to_string(this->get_dt()));
-    lines.push_back("fps: " + std::to_string(1.0f / this->get_dt()));
+    lines.push_back("dt: " + std::to_string(this->dt()));
+    lines.push_back("fps: " + std::to_string(1.0f / this->dt()));
     lines.push_back("proj_count: " + std::to_string(num_projectiles));
     lines.push_back("jump_pressed: " + std::to_string(jump_pressed));
     lines.push_back("jump_held: " + std::to_string(jump_held));
 
     std::string move_state_string = "move_state: ";
-	move_state_string += player->get_player_move_state_string();
+	move_state_string += player->player_move_state_string();
 
     lines.push_back(move_state_string);
 
@@ -103,7 +103,7 @@ void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
 
     Vector2F text_pos = DEBUG_POSITION;
 
-    SpriteFont* sprite_font = this->get_render_resources()->get_sprite_font(
+    SpriteFont* sprite_font = this->render_resources()->sprite_font(
         this->font_);
 
     sprite_batch->Begin();
@@ -115,19 +115,19 @@ void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
         sprite_font->DrawString(
             sprite_batch,
             lines[i].c_str(),
-            shadow_pos.get_xm_vector(),
-            DEBUG_SHADOW_COLOR.get_xm_vector(),
+            shadow_pos.xm_vector(),
+            DEBUG_SHADOW_COLOR.xm_vector(),
             0.0f,
-            Vector2F::ZERO.get_xm_vector(),
+            Vector2F::ZERO.xm_vector(),
             DEBUG_SHADOW_SCALE);
 
         sprite_font->DrawString(
             sprite_batch,
             lines[i].c_str(),
-            text_pos.get_xm_vector(),
-            DEBUG_COLOR.get_xm_vector(),
+            text_pos.xm_vector(),
+            DEBUG_COLOR.xm_vector(),
             0.0f,
-            Vector2F::ZERO.get_xm_vector(),
+            Vector2F::ZERO.xm_vector(),
             DEBUG_FONT_SCALE);
 
         text_pos.y += DEBUG_LINE_SPACING;

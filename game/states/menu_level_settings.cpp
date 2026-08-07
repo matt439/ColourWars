@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/states/menu_level_settings.h"
 
-std::vector<MenuPlayerSettings> MenuLevelSettings::get_player_settings() const
+std::vector<MenuPlayerSettings> MenuLevelSettings::player_settings() const
 {
 	return this->player_settings_;
 }
@@ -24,7 +24,7 @@ void MenuLevelSettings::set_player_count(int player_count)
 	}
 }
 
-int MenuLevelSettings::get_player_count() const
+int MenuLevelSettings::player_count() const
 {
 	return this->player_count_;
 }
@@ -34,7 +34,7 @@ void MenuLevelSettings::set_game_mode(LevelMode game_mode)
 	this->game_mode_ = game_mode;
 }
 
-LevelMode MenuLevelSettings::get_game_mode() const
+LevelMode MenuLevelSettings::game_mode() const
 {
 	return this->game_mode_;
 }
@@ -44,12 +44,12 @@ void MenuLevelSettings::set_stage(LevelStage stage)
 	this->stage_ = stage;
 }
 
-LevelStage MenuLevelSettings::get_stage() const
+LevelStage MenuLevelSettings::stage() const
 {
 	return this->stage_;
 }
 
-ScreenLayout MenuLevelSettings::get_screen_layout() const
+ScreenLayout MenuLevelSettings::screen_layout() const
 {
 	return this->screen_layout_;
 }
@@ -67,7 +67,7 @@ void MenuLevelSettings::set_player_team(int player_index, PlayerTeam team)
 {
 	this->player_settings_[player_index].team = team;
 }
-PlayerTeam MenuLevelSettings::get_player_team(int player_index) const
+PlayerTeam MenuLevelSettings::player_team(int player_index) const
 {
 	return this->player_settings_[player_index].team;
 }
@@ -75,7 +75,7 @@ void MenuLevelSettings::set_player_weapon(int player_index, WeaponType weapon)
 {
 	this->player_settings_[player_index].weapon = weapon;
 }
-WeaponType MenuLevelSettings::get_player_weapon(int player_index) const
+WeaponType MenuLevelSettings::player_weapon(int player_index) const
 {
 	return this->player_settings_[player_index].weapon;
 }

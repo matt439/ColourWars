@@ -31,27 +31,27 @@ Weapon::Weapon(const WeaponDetails& details,
         player_center_(player_center)
 {
     this->proj_builder_ = std::make_unique<ProjectileBuilder>();
-    this->sound_bank_ = audio_resources->get_sound_bank(details.sound_bank_name);
+    this->sound_bank_ = audio_resources->sound_bank(details.sound_bank_name);
     this->loop_sound_ = resolve_loop_sound(*this->sound_bank_, type, team,
         player_num);
     this->shoot_sound_ = this->sound_bank_->resolve_wave(
         details.shoot_sound_name);
-    this->nozzle_frame_ = this->get_sprite_sheet()->
+    this->nozzle_frame_ = this->sprite_sheet()->
         resolve_sprite_frame(NOZZLE_FRAME);
 }
 
 void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug)
 {
     //draw weapon
-    Vector2F draw_pos = this->get_draw_pos();
-    auto draw_rectangle = RectangleF(draw_pos, this->get_details().size);
+    Vector2F draw_pos = this->draw_pos();
+    auto draw_rectangle = RectangleF(draw_pos, this->details().size);
 
     Vector2F origin = this->calculate_sprite_origin(
-        this->get_details().size, RotationOrigin::left_center);
+        this->details().size, RotationOrigin::left_center);
 
     SpriteEffects effects = SpriteEffects_None;
-    bool invert_y = this->get_invert_y();
-    bool invert_x = this->get_invert_x();
+    bool invert_y = this->invert_y();
+    bool invert_x = this->invert_x();
     if (invert_y && invert_x)
     {
         effects = SpriteEffects_FlipBoth;
@@ -71,25 +71,25 @@ void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug)
     // assigning it from several threads was heap corruption, not just a torn
     // frame.
     TextureObject::draw_with(sprite_batch, draw_rectangle, camera,
-        this->get_frame(), this->get_draw_colour(),
-        origin, effects, this->get_rotation());
+        this->frame(), this->draw_colour(),
+        origin, effects, this->rotation());
 
     if (debug)
     {
         // draw nozzle
-        RectangleF draw_rectangle_noz = this->get_nozzle_rectangle();
+        RectangleF draw_rectangle_noz = this->nozzle_rectangle();
         Vector2F origin_noz = this->calculate_sprite_origin(
-            this->get_nozzle_size(), RotationOrigin::center);
+            this->nozzle_size(), RotationOrigin::center);
 
         TextureObject::draw_with(sprite_batch, draw_rectangle_noz, camera,
-            this->nozzle_frame_, this->get_draw_colour(),
+            this->nozzle_frame_, this->draw_colour(),
             origin_noz, SpriteEffects_None, 0.0f);
     }
 }
 
-mattmath::Colour Weapon::get_draw_colour() const
+mattmath::Colour Weapon::draw_colour() const
 {
-    return this->get_colour();
+    return this->colour();
 }
 void Weapon::draw(SpriteBatch* sprite_batch, bool debug)
 {
@@ -111,14 +111,14 @@ Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, RotationOrigin or
     }
 }
 
-RectangleF Weapon::get_nozzle_rectangle() const
+RectangleF Weapon::nozzle_rectangle() const
 {
-	Vector2F nozzle_pos = this->get_nozzle_pos();
+	Vector2F nozzle_pos = this->nozzle_pos();
 
     return { nozzle_pos, NOZZLE_SIZE };
 }
 
-Vector2F Weapon::get_nozzle_size()
+Vector2F Weapon::nozzle_size()
 {
 	return NOZZLE_SIZE;
 }
@@ -126,9 +126,9 @@ Vector2F Weapon::get_nozzle_size()
 
 
 
-Vector2F Weapon::get_draw_pos() const
+Vector2F Weapon::draw_pos() const
 {
-	Vector2F result = this->get_player_center();
+	Vector2F result = this->player_center();
 	if (this->facing_left(this->rotation_))
 	{
 		result.x -= this->details_.offset.x;
@@ -154,18 +154,18 @@ bool Weapon::facing_left(float rotation)
 	return false;
 }
 
-Vector2F Weapon::get_nozzle_pos() const
+Vector2F Weapon::nozzle_pos() const
 {
 	Vector2F result = this->details_.nozzle_offset;
 	result.x += this->details_.size.x;
 	result = Vector2F::rotate_vector(result, this->rotation_);
-	result += this->get_wep_rotation_origin_offset(
+	result += this->wep_rotation_origin_offset(
 		facing_left(this->rotation_));
-	result += this->get_player_center();
+	result += this->player_center();
 	return result;
 }
 
-Vector2F Weapon::get_wep_rotation_origin_offset(bool facing_left) const
+Vector2F Weapon::wep_rotation_origin_offset(bool facing_left) const
 {
 	if (facing_left)
 	{
@@ -188,7 +188,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
     if (this->check_if_shooting_and_ammo_update(input, player_center,
         player_velocity))
     {
-        return this->shoot(Vector2F::unit_vec_from_angle(this->get_rotation()));
+        return this->shoot(Vector2F::unit_vec_from_angle(this->rotation()));
 	}
 	else
 	{
@@ -203,22 +203,22 @@ bool Weapon::check_if_shooting_and_ammo_update(
 {
     const float dt = *this->dt_;
     bool normal_gun_ok_to_shoot = input.primary_shoot &&
-        this->get_gun_player_aligned();
+        this->gun_player_aligned();
 
     bool ok_to_shoot = normal_gun_ok_to_shoot;
 
 
     bool result = false;
 
-    if (this->get_shoot_timer() > this->get_shoot_interval() &&
-        this->get_ammo() > 0.0f &&
+    if (this->shoot_timer() > this->shoot_interval() &&
+        this->ammo() > 0.0f &&
         ok_to_shoot)
     {
         result = true;
 
         this->set_shoot_timer(0.0f);
-        this->alter_ammo(-this->get_ammo_usage());
-        if (this->get_ammo() < 0.0f)
+        this->alter_ammo(-this->ammo_usage());
+        if (this->ammo() < 0.0f)
         {
             this->set_ammo(0.0f);
         }
@@ -226,10 +226,10 @@ bool Weapon::check_if_shooting_and_ammo_update(
     }
 
     //ammo regen
-    if (this->get_ammo_timer() >= AMMO_REGEN_DELAY)
+    if (this->ammo_timer() >= AMMO_REGEN_DELAY)
     {
         this->alter_ammo(weapon_consts::AMMO_REGEN_RATE * dt);
-        if (this->get_ammo() > 1.0f)
+        if (this->ammo() > 1.0f)
         {
             this->set_ammo(1.0f);
         }
@@ -237,7 +237,7 @@ bool Weapon::check_if_shooting_and_ammo_update(
     this->alter_ammo_timer(dt);
     this->alter_shoot_timer(dt);
 
-    this->shooting_this_update_ = ok_to_shoot && this->get_ammo() > 0.0f;
+    this->shooting_this_update_ = ok_to_shoot && this->ammo() > 0.0f;
 
     this->handle_shoot_sound(result, this->shooting_this_update_);
 
@@ -296,13 +296,13 @@ SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
     {
     case WeaponType::sprayer:
         return sound_bank.resolve_effect(
-            SPRAYER_SOUND_DETAILS.get_sound_name(team, player_num));
+            SPRAYER_SOUND_DETAILS.sound_name(team, player_num));
     case WeaponType::roller:
         return sound_bank.resolve_effect(
-            ROLLER_SOUND_DETAILS.get_sound_name(team, player_num));
+            ROLLER_SOUND_DETAILS.sound_name(team, player_num));
     case WeaponType::mister:
         return sound_bank.resolve_effect(
-            MISTER_SOUND_DETAILS.get_sound_name(team, player_num));
+            MISTER_SOUND_DETAILS.sound_name(team, player_num));
     default:
         return {};
     }
@@ -331,7 +331,7 @@ void Weapon::update_movement_and_rotation(PlayerInputData input,
     this->set_player_center(player_center);
 
     //gun facing left
-    if (facing_left(this->get_rotation()))
+    if (facing_left(this->rotation()))
     {
         this->set_invert_y(true);
     }
@@ -346,15 +346,15 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 Weapon::shoot(const Vector2F& shoot_direction) const
 {
     Vector2F launch_velocity = this->calculate_projectile_launch_velocity(
-        shoot_direction, this->get_starting_vel_length());
+        shoot_direction, this->starting_vel_length());
 
     return this->proj_builder_->build_projectiles(
-        this->get_nozzle_pos(),
+        this->nozzle_pos(),
         launch_velocity,
-        this->get_team(),
-        this->get_player_num(),
-        this->get_team_colour(),
-        this->get_details().proj_type,
+        this->team(),
+        this->player_num(),
+        this->team_colour(),
+        this->details().proj_type,
         this->dt_,
         this->render_resources_);
 }
@@ -372,7 +372,7 @@ void Weapon::set_gun_player_aligned(bool gun_player_aligned)
 	this->gun_player_aligned_ = gun_player_aligned;
 }
 
-bool Weapon::get_gun_player_aligned() const
+bool Weapon::gun_player_aligned() const
 {
 	return this->gun_player_aligned_;
 }
@@ -387,7 +387,7 @@ void Weapon::alter_shoot_timer(float dt)
 	this->shoot_timer_ += dt;
 }
 
-float Weapon::get_shoot_timer() const
+float Weapon::shoot_timer() const
 {
 	return this->shoot_timer_;
 }
@@ -402,7 +402,7 @@ void Weapon::alter_ammo(float ammo)
 	this->ammo_ += ammo;
 }
 
-float Weapon::get_ammo_timer() const
+float Weapon::ammo_timer() const
 {
 	return this->ammo_timer_;
 }
@@ -417,42 +417,42 @@ void Weapon::alter_ammo_timer(float dt)
 	this->ammo_timer_ += dt;
 }
 
-float Weapon::get_ammo() const
+float Weapon::ammo() const
 {
 	return this->ammo_;
 }
 
-const WeaponDetails& Weapon::get_details() const
+const WeaponDetails& Weapon::details() const
 {
 	return this->details_;
 }
 
-const Vector2F& Weapon::get_offset() const
+const Vector2F& Weapon::offset() const
 {
 	return this->details_.offset;
 }
 
-const Vector2F& Weapon::get_nozzle_offset() const
+const Vector2F& Weapon::nozzle_offset() const
 {
 	return this->details_.nozzle_offset;
 }
 
-float Weapon::get_shoot_interval() const
+float Weapon::shoot_interval() const
 {
 	return this->details_.shoot_interval;
 }
 
-float Weapon::get_starting_vel_length() const
+float Weapon::starting_vel_length() const
 {
 	return this->details_.starting_vel_length;
 }
 
-float Weapon::get_ammo_usage() const
+float Weapon::ammo_usage() const
 {
 	return this->details_.ammo_usage;
 }
 
-float Weapon::get_rotation() const
+float Weapon::rotation() const
 {
 	return this->rotation_;
 }
@@ -462,7 +462,7 @@ void Weapon::set_rotation(float rotation)
 	this->rotation_ = rotation;
 }
 
-bool Weapon::get_invert_x() const
+bool Weapon::invert_x() const
 {
 	return this->invert_x_;
 }
@@ -472,7 +472,7 @@ void Weapon::set_invert_x(bool invert_x)
 	this->invert_x_ = invert_x;
 }
 
-bool Weapon::get_invert_y() const
+bool Weapon::invert_y() const
 {
 	return this->invert_y_;
 }
@@ -482,7 +482,7 @@ void Weapon::set_invert_y(bool invert_y)
 	this->invert_y_ = invert_y;
 }
 
-const Vector2F& Weapon::get_player_center() const
+const Vector2F& Weapon::player_center() const
 {
 	return this->player_center_;
 }
@@ -492,22 +492,22 @@ void Weapon::set_player_center(const Vector2F& player_center)
 	this->player_center_ = player_center;
 }
 
-PlayerTeam Weapon::get_team() const
+PlayerTeam Weapon::team() const
 {
 	return this->team_;
 }
 
-int Weapon::get_player_num() const
+int Weapon::player_num() const
 {
 	return this->player_num_;
 }
 
-const Colour& Weapon::get_team_colour() const
+const Colour& Weapon::team_colour() const
 {
 	return this->team_colour_;
 }
 
-WeaponType Weapon::get_type() const
+WeaponType Weapon::type() const
 {
 	return this->type_;
 }
@@ -517,19 +517,19 @@ void Weapon::reset_ammo()
 	this->ammo_ = 1.0f;
 }
 
-ProjectileBuilder* Weapon::get_projectile_builder() const
+ProjectileBuilder* Weapon::projectile_builder() const
 {
 	return this->proj_builder_.get();
 }
-const float* Weapon::get_dt_ptr() const
+const float* Weapon::dt_ptr() const
 {
 	return this->dt_;
 }
-float Weapon::get_dt() const
+float Weapon::dt() const
 {
 	return *this->dt_;
 }
-RenderResources* Weapon::get_render_resources() const
+RenderResources* Weapon::render_resources() const
 {
 	return this->render_resources_;
 }
@@ -591,19 +591,19 @@ std::vector<std::unique_ptr<ICollisionGameObject>> RelativeVelocityWeapon::shoot
     AddPlayerVelocity add_player_vel = rel_details.add_vel;
 
     Vector2F launch_velocity = this->calculate_projectile_launch_velocity(
-        shoot_direction, this->get_starting_vel_length(),
+        shoot_direction, this->starting_vel_length(),
         player_velocity, add_player_vel,
         rel_details.player_vel_amount);
     
-    return this->get_projectile_builder()->build_projectiles(
-        this->get_nozzle_pos(),
+    return this->projectile_builder()->build_projectiles(
+        this->nozzle_pos(),
         launch_velocity,
-        this->get_team(),
-        this->get_player_num(),
-        this->get_team_colour(),
-        this->get_details().proj_type,
-        this->get_dt_ptr(),
-        this->get_render_resources());
+        this->team(),
+        this->player_num(),
+        this->team_colour(),
+        this->details().proj_type,
+        this->dt_ptr(),
+        this->render_resources());
 }
 
 std::vector<std::unique_ptr<ICollisionGameObject>>
@@ -619,7 +619,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 		player_velocity))
     {
         return this->shoot(
-            Vector2F::unit_vec_from_angle(this->get_rotation()), player_velocity);
+            Vector2F::unit_vec_from_angle(this->rotation()), player_velocity);
 	}
     else
     {

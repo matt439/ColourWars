@@ -39,7 +39,7 @@ public:
 	std::vector<PlayerInputData> update_and_get_player_inputs();
 private:
 	RawPlayerInput prev_inputs_[player_input_consts::MAX_PAD_COUNT];
-	RawPlayerInput get_raw_input(int gamepad_num) const;
+	RawPlayerInput raw_input(int gamepad_num) const;
 	static PlayerInputData calculate_player_input(const RawPlayerInput& current,
 	                                              const RawPlayerInput& previous);
 	DirectX::GamePad* gamepad_ = nullptr;

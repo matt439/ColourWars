@@ -39,7 +39,7 @@ public:
 			const mattmath::Vector2F& player_velocity,
 			bool player_facing_right);
 
-	float get_ammo() const;
+	float ammo() const;
 	void reset_ammo();
 	void set_player_center(const mattmath::Vector2F& player_center);
 
@@ -68,48 +68,48 @@ protected:
 
 	// Tint for this frame's draw. A hook rather than a member assignment so
 	// draw() stays a pure read - the render workers all enter it at once.
-	virtual mattmath::Colour get_draw_colour() const;
+	virtual mattmath::Colour draw_colour() const;
 
-	const mattmath::Vector2F& get_player_center() const;
-
-
-	PlayerTeam get_team() const;
-	int get_player_num() const;
-	const mattmath::Colour& get_team_colour() const;
-	WeaponType get_type() const;
-	mattmath::RectangleF get_nozzle_rectangle() const;
+	const mattmath::Vector2F& player_center() const;
 
 
-	const WeaponDetails& get_details() const;
-	const mattmath::Vector2F& get_offset() const;
-	const mattmath::Vector2F& get_nozzle_offset() const;
-	float get_shoot_interval() const;
-	float get_starting_vel_length() const;
-	float get_ammo_usage() const;
+	PlayerTeam team() const;
+	int player_num() const;
+	const mattmath::Colour& team_colour() const;
+	WeaponType type() const;
+	mattmath::RectangleF nozzle_rectangle() const;
 
-	float get_rotation() const;
+
+	const WeaponDetails& details() const;
+	const mattmath::Vector2F& offset() const;
+	const mattmath::Vector2F& nozzle_offset() const;
+	float shoot_interval() const;
+	float starting_vel_length() const;
+	float ammo_usage() const;
+
+	float rotation() const;
 	void set_rotation(float rotation);
-	bool get_invert_x() const;
+	bool invert_x() const;
 	void set_invert_x(bool invert_x);
-	bool get_invert_y() const;
+	bool invert_y() const;
 	void set_invert_y(bool invert_y);
 
 	void set_gun_player_aligned(bool gun_player_aligned);
-	bool get_gun_player_aligned() const;
-	float get_shoot_timer() const;
+	bool gun_player_aligned() const;
+	float shoot_timer() const;
 	void set_shoot_timer(float shoot_timer);
 	void alter_shoot_timer(float dt);
 
 	void set_ammo(float ammo);
 	void alter_ammo(float ammo);
-	float get_ammo_timer() const;
+	float ammo_timer() const;
 	void set_ammo_timer(float ammo_timer);
 	void alter_ammo_timer(float dt);
 
 
-	mattmath::Vector2F get_draw_pos() const;
-	mattmath::Vector2F get_nozzle_pos() const;
-	static mattmath::Vector2F get_nozzle_size();
+	mattmath::Vector2F draw_pos() const;
+	mattmath::Vector2F nozzle_pos() const;
+	static mattmath::Vector2F nozzle_size();
 	static bool facing_left(float rotation);
 
 	virtual std::vector<std::unique_ptr<ICollisionGameObject>> shoot(
@@ -131,10 +131,10 @@ protected:
 		const mattmath::Vector2F& player_velocity,
 		bool player_facing_right);
 
-	ProjectileBuilder* get_projectile_builder() const;
-	const float* get_dt_ptr() const;
-	float get_dt() const;
-	RenderResources* get_render_resources() const override;
+	ProjectileBuilder* projectile_builder() const;
+	const float* dt_ptr() const;
+	float dt() const;
+	RenderResources* render_resources() const override;
 
 private:
 	static SoundBank::EffectHandle resolve_loop_sound(
@@ -165,7 +165,7 @@ private:
 	WeaponType type_ = WeaponType::none;
 	mattmath::Vector2F player_center_ = { 0.0f, 0.0f };
 
-	mattmath::Vector2F get_wep_rotation_origin_offset(
+	mattmath::Vector2F wep_rotation_origin_offset(
 		bool facing_left) const;
 };
 

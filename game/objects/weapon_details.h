@@ -28,7 +28,7 @@ struct SoundEffectInstanceWeaponDetails
 	std::string shoot_sound_name_b2 = "";
 	std::string shoot_sound_name_b3 = "";
 
-	const std::string& get_sound_name(PlayerTeam team, int index) const;
+	const std::string& sound_name(PlayerTeam team, int index) const;
 };
 
 struct WeaponDetails

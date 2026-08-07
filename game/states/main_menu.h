@@ -114,8 +114,8 @@ public:
 	void update() override = 0;
 	void draw() override = 0;
 protected:
-	MainMenuData* get_main_menu_data() const;
-	int get_player_count() const;
+	MainMenuData* main_menu_data() const;
+	int player_count() const;
 
 	// Every sound this page family can make, resolved once when the page is
 	// built. The music is an effect rather than a wave because it loops and is
@@ -294,7 +294,7 @@ private:
 	void unconfirm_all_widgets();
 	bool all_players_confirmed() const;
 	bool all_players_unconfirmed() const;
-	static WeaponType get_random_weapon();
+	static WeaponType random_weapon();
 	void set_level_settings() const;
 	void cycle_weapons(MenuDirection direction, int player_index);
 	static std::string weapon_description(WeaponType type);
@@ -324,7 +324,7 @@ private:
 	SelectState select_state_ = SelectState();
 	void update_stage_select_visuals();
 	void unconfirm_all_widgets();
-	static LevelStage get_random_stage();
+	static LevelStage random_stage();
 	void cycle_stages(MenuDirection direction);
 	void set_level_settings() const;
 };

@@ -9,9 +9,9 @@ using namespace colour_consts;
 InterfaceGameplay::InterfaceGameplay(RenderResources* render_resources, const float* dt) :
 	Drawer(render_resources, dt),
 	sheet_(render_resources->resolve_sprite_sheet(SPRITE_SHEET)),
-	empty_box_frame_(render_resources->get_sprite_sheet(this->sheet_)->
+	empty_box_frame_(render_resources->sprite_sheet(this->sheet_)->
 		resolve_sprite_frame(EMPTY_BOX_FRAME)),
-	fill_frame_(render_resources->get_sprite_sheet(this->sheet_)->
+	fill_frame_(render_resources->sprite_sheet(this->sheet_)->
 		resolve_sprite_frame(FILL_FRAME)),
 	timer_font_(render_resources->resolve_sprite_font(TIMER_FONT)),
 	respawn_timer_font_(
@@ -71,8 +71,8 @@ void InterfaceGameplay::draw_ammo(SpriteBatch* sprite_batch,
 		static_cast<int>(size.x),
 		static_cast<int>(size.y));
 
-	SpriteSheet* sprite_sheet = this->get_render_resources()->
-		get_sprite_sheet(this->sheet_);
+	SpriteSheet* sprite_sheet = this->render_resources()->
+		sprite_sheet(this->sheet_);
 
 	sprite_sheet->draw(
 		sprite_batch,
@@ -115,8 +115,8 @@ void InterfaceGameplay::draw_health(SpriteBatch* sprite_batch,
 		static_cast<int>(size.x),
 		static_cast<int>(size.y));
 
-	SpriteSheet* sprite_sheet = this->get_render_resources()->
-		get_sprite_sheet(this->sheet_);
+	SpriteSheet* sprite_sheet = this->render_resources()->
+		sprite_sheet(this->sheet_);
 
 	sprite_sheet->draw(
 		sprite_batch,
@@ -152,14 +152,14 @@ void InterfaceGameplay::draw_timer(SpriteBatch* sprite_batch,
 
 	float scale = resolution.x / TIMER_SCALE_FACTOR;
 
-	SpriteFont* sprite_font = this->get_render_resources()->
-		get_sprite_font(this->timer_font_);
+	SpriteFont* sprite_font = this->render_resources()->
+		sprite_font(this->timer_font_);
 
 	sprite_font->DrawString(
 		sprite_batch,
 		std::to_string(static_cast<int>(std::ceil(timer))).c_str(),
-		(pos + (TIMER_SHADOW_OFFSET * scale)).get_xm_vector(),
-		TIMER_SHADOW_COLOUR.get_xm_vector(),
+		(pos + (TIMER_SHADOW_OFFSET * scale)).xm_vector(),
+		TIMER_SHADOW_COLOUR.xm_vector(),
 		0.0f,
 		XMFLOAT2(0.0f, 0.0f),
 		scale);
@@ -167,8 +167,8 @@ void InterfaceGameplay::draw_timer(SpriteBatch* sprite_batch,
 	sprite_font->DrawString(
 		sprite_batch,
 		std::to_string(static_cast<int>(std::ceil(timer))).c_str(),
-		pos.get_xm_vector(),
-		TIMER_COLOUR.get_xm_vector(),
+		pos.xm_vector(),
+		TIMER_COLOUR.xm_vector(),
 		0.0f,
 		XMFLOAT2(0.0f, 0.0f),
 		scale);
@@ -182,20 +182,20 @@ void InterfaceGameplay::draw_respawn_timer(SpriteBatch* sprite_batch,
 		resolution.x / 2.0f - (resolution.x * RESPAWN_TIMER_OFFSET.x),
 		resolution.y * RESPAWN_TIMER_OFFSET.y);
 
-	SpriteFont* sprite_font = this->get_render_resources()->
-		get_sprite_font(this->respawn_timer_font_);
+	SpriteFont* sprite_font = this->render_resources()->
+		sprite_font(this->respawn_timer_font_);
 
 	std::string text = std::to_string(static_cast<int>(timer) + 1);
 
 	sprite_font->DrawString(
 		sprite_batch,
 		text.c_str(),
-		(pos + RESPAWN_TIMER_SHADOW_OFFSET).get_xm_vector(),
-		RESPAWN_TIMER_SHADOW_COLOUR.get_xm_vector());
+		(pos + RESPAWN_TIMER_SHADOW_OFFSET).xm_vector(),
+		RESPAWN_TIMER_SHADOW_COLOUR.xm_vector());
 
 	sprite_font->DrawString(
 		sprite_batch,
 		text.c_str(),
-		pos.get_xm_vector(),
-		RESPAWN_TIMER_COLOUR.get_xm_vector());
+		pos.xm_vector(),
+		RESPAWN_TIMER_COLOUR.xm_vector());
 }
