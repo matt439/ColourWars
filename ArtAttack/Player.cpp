@@ -58,8 +58,7 @@ void Player::update_animation_state()
     this->_animation_state = new_animation_state;
 
     const PlayerAnimationInfo& info = this->get_animation_info(new_animation_state);
-    TextureObject::set_sprite_sheet_name(info.sprite_sheet);
-    TextureObject::set_element_name(info.uniform_texture);
+    TextureObject::set_frame(info.sprite_sheet, info.uniform_texture);
 
     set_animation_strip_and_reset(info.sprite_sheet, info.animation);
     if (info.frame_time != FLT_MIN)
@@ -89,7 +88,7 @@ void Player::draw(SpriteBatch* sprite_batch, const Camera& camera)
     // twice, once through TextureObject and once through AnimationObject, and
     // the two subobjects carry independent colour/origin/rotation.
     TextureObject::draw_with(sprite_batch, this->_rectangle, camera,
-        this->TextureObject::get_element_name(),
+        this->TextureObject::get_frame(),
         this->TextureObject::get_colour(),
         this->TextureObject::get_origin(), effects,
         this->TextureObject::get_draw_rotation());

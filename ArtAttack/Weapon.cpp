@@ -33,6 +33,8 @@ Weapon::Weapon(const WeaponDetails& details,
     this->_proj_builder = std::make_unique<ProjectileBuilder>();
     this->_sound_bank = audio_resources->get_sound_bank(details.sound_bank_name);
     this->_loop_sound_name = resolve_loop_sound_name(type, team, player_num);
+    this->_nozzle_frame = this->get_sprite_sheet()->
+        resolve_sprite_frame(NOZZLE_FRAME);
 }
 
 void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug)
@@ -62,10 +64,11 @@ void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug)
 
     // Pure read: every per-draw value is a local passed to draw_with, not a
     // member assigned first. draw() is entered by every render worker on the
-    // same Weapon at once, and assigning the std::string element name from
-    // several threads is heap corruption, not just a torn frame.
+    // same Weapon at once, and back when the element was a std::string,
+    // assigning it from several threads was heap corruption, not just a torn
+    // frame.
     TextureObject::draw_with(sprite_batch, draw_rectangle, camera,
-        this->get_details().frame_name, this->get_draw_colour(),
+        this->get_frame(), this->get_draw_colour(),
         origin, effects, this->get_rotation());
 
     if (debug)
@@ -76,7 +79,7 @@ void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug)
             this->get_nozzle_size(), rotation_origin::CENTER);
 
         TextureObject::draw_with(sprite_batch, draw_rectangle_noz, camera,
-            "nozzle", this->get_draw_colour(),
+            this->_nozzle_frame, this->get_draw_colour(),
             origin_noz, SpriteEffects_None, 0.0f);
     }
 }

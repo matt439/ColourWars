@@ -137,6 +137,11 @@ private:
 	const float* _dt = nullptr;
 	RenderResources* _render_resources = nullptr;
 
+	// Resolved once at construction like every other element name, even though
+	// only the debug draw reads it - a name resolved on the draw path is a
+	// name resolved on the draw path, however rarely that path is taken.
+	SpriteSheet::frame_handle _nozzle_frame;
+
 	float _ammo = weapon_consts::STARTING_AMMO;
 	float _shoot_timer = 0.0f;
 	float _rotation = 0.0f;

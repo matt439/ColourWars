@@ -50,8 +50,11 @@ void ResourceLoader::load_fonts()
 
 void ResourceLoader::reload_device_resources()
 {
-    // Fonts hold GPU textures, so they have to be rebuilt outright. Nothing
-    // caches a SpriteFont* - every text object looks its font up by name.
+    // Fonts hold GPU textures, so they have to be rebuilt outright. Every text
+    // object is holding a handle to the font it resolved at construction, and
+    // those keep working across this: a handle names a registry slot, and
+    // re-adding a name refills its slot rather than claiming a new one. Which
+    // is why nothing here may create a *differently named* font on the rebuild.
     std::vector<asset_record> fonts = this->_loaded_fonts;
     this->_loaded_fonts.clear();
     for (const asset_record& font : fonts)

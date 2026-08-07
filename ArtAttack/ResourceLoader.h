@@ -29,8 +29,13 @@ public:
 	//
 	// Sound banks, level info and the SpriteSheet objects themselves are NOT
 	// recreated: they are not device resources, and callers hold raw
-	// SoundBank*, LevelLoadedInfo* and SpriteSheet* pointers to them. Each
-	// SpriteSheet has its texture re-seated in place instead.
+	// SoundBank* and LevelLoadedInfo* pointers to them. Each SpriteSheet has
+	// its texture re-seated in place instead - which also keeps every frame
+	// and animation-strip handle resolved against it valid, those indexing
+	// tables the sheet never rebuilds.
+	//
+	// It must replay the same *names*, not merely the same count: drawables
+	// hold handles to registry slots, and a slot belongs to a name.
 	void reload_device_resources();
 
 	// The device changes identity on restore, so the loader has to be told.

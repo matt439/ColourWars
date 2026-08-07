@@ -76,5 +76,16 @@ private:
     void draw_respawn_timer(DirectX::SpriteBatch* sprite_batch,
         const MattMath::Vector2F& resolution,
         float timer) const;
+
+    // The HUD always draws out of the same sheet, with the same two frames and
+    // the same two fonts. All five names are resolved in the constructor, so
+    // the four draw_* calls below - which run every frame, for every split
+    // screen viewport - index rather than search. Declaration order matters:
+    // the frames are resolved against _sheet.
+    RenderResources::SpriteSheetHandle _sheet;
+    SpriteSheet::frame_handle _empty_box_frame;
+    SpriteSheet::frame_handle _fill_frame;
+    RenderResources::FontHandle _timer_font;
+    RenderResources::FontHandle _respawn_timer_font;
 };
 #endif // !INTERFACEGAMEPLAY_H

@@ -30,6 +30,10 @@ public:
 
 private:
 	const ResolutionManager* _resolution_manager = nullptr;
+
+	// Resolved once, like every other font name. The debug overlay is drawn
+	// per player per frame when it is on at all.
+	RenderResources::FontHandle _font;
 };
 
 #endif // !DEBUGTEXT_H

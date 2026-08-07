@@ -50,7 +50,7 @@ void PaintTile::draw(SpriteBatch* sprite_batch, const Camera& camera)
 	this->_splash.draw_with_colour(sprite_batch, camera, tint);
 
 	this->TextureObject::draw_with(sprite_batch, this->_rectangle, camera,
-		this->get_element_name(), tint, this->get_origin(),
+		this->get_frame(), tint, this->get_origin(),
 		this->get_effects(), this->get_draw_rotation());
 }
 void PaintTile::draw(SpriteBatch* sprite_batch)
