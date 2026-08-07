@@ -3,6 +3,7 @@
 
 #include "engine/render/device_resources.h"
 #include "engine/core/step_timer.h"
+#include "engine/assets/resource_loader.h"
 #include "GameData.h"
 #include "engine/render/render_resources.h"
 #include "engine/audio/audio_resources.h"

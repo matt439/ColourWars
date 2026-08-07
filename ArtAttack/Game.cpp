@@ -1,9 +1,12 @@
 #include "pch.h"
 #include "Game.h"
+#include "engine/assets/asset_manifest_loader.h"
+#include "directory_consts.h"
 
 extern void ExitGame() noexcept;
 
 using namespace DirectX;
+using namespace directory_consts;
 
 using Microsoft::WRL::ComPtr;
 
@@ -238,8 +241,23 @@ void Game::create_services()
 
     this->_resource_loader = std::make_unique<ResourceLoader>(
         this->_render_resources.get(), this->_audio_resources.get(),
-        this->_level_infos.get(), device, this->_audio_engine.get());
-    this->_data->set_resource_loader(this->_resource_loader.get());
+        device, this->_audio_engine.get());
+
+    // A level definition means nothing to the engine, so the engine cannot
+    // build one and does not pretend to: the manifest may say "level" because
+    // the game taught the loader what one is. Levels are not device resources,
+    // so there is no reload half - a device restore must leave them where they
+    // are, with every LevelLoadedInfo* the game holds still pointing at them.
+    Registry<LevelLoadedInfo>* level_infos = this->_level_infos.get();
+    this->_resource_loader->register_kind("level",
+        {
+            [level_infos](const std::string& directory, const std::string& name)
+            {
+                level_infos->add(name, std::make_unique<LevelLoadedInfo>(
+                    (directory + name + ".json").c_str()));
+            },
+            nullptr
+        });
 
     this->_dt = std::make_unique<float>(0.f);
     this->_data->set_dt(this->_dt.get());
@@ -286,7 +304,8 @@ void Game::create_device_dependent_resources()
     }
     else
     {
-        this->_resource_loader->load_all_resources();
+        this->_resource_loader->load_manifest(
+            asset_manifest_loader::load(MANIFEST_PATH.c_str()));
         this->_resources_loaded = true;
     }
 }

@@ -1,0 +1,40 @@
+{
+    "assets": [
+        {
+            "kind": "font",
+            "directory": "./fonts/",
+            "names": [
+                "gill_sans_ultra_bold_144",
+                "gill_sans_mt_bold_24",
+                "gill_sans_mt_bold_36",
+                "gill_sans_mt_bold_48",
+                "gill_sans_mt_bold_72",
+                "gill_sans_mt_bold_144",
+                "courier_new_bold_16"
+            ]
+        },
+        {
+            "kind": "sprite_sheet",
+            "directory": "./textures/",
+            "names": [
+                "sprite_sheet_1"
+            ]
+        },
+        {
+            "kind": "level",
+            "directory": "./levels/",
+            "names": [
+                "king_of_the_hill",
+                "turbulence",
+                "close_quarters"
+            ]
+        },
+        {
+            "kind": "sound_bank",
+            "directory": "./sounds/",
+            "names": [
+                "sound_bank_1"
+            ]
+        }
+    ]
+}

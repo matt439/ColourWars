@@ -3,7 +3,6 @@
 
 #include "engine/render/resolution_manager.h"
 #include "Save.h"
-#include "ResourceLoader.h"
 #include "LevelLoadedInfo.h"
 #include "engine/render/render_resources.h"
 #include "engine/audio/audio_resources.h"
@@ -27,8 +26,6 @@ public:
     void set_dt(float* dt);
     void set_save(Save* save);
     Save* get_save() const;
-    void set_resource_loader(ResourceLoader* texture_loader);
-    ResourceLoader* get_resource_loader() const;
     void set_render_resources(RenderResources* render_resources);
     RenderResources* get_render_resources() const;
     void set_audio_resources(AudioResources* audio_resources);
@@ -57,7 +54,11 @@ private:
     ResolutionManager* _resolution_manager = nullptr;
     HWND _window = nullptr;
     float* _dt = nullptr;
-    ResourceLoader* _resource_loader = nullptr;
+
+    // No ResourceLoader here. Loading happens once, at startup and after a
+    // device restore, both of which Game drives directly - publishing the
+    // loader to every state that ever reads GameData advertised a load-time
+    // service to per-frame code, and nothing ever took it up.
     RenderResources* _render_resources = nullptr;
     AudioResources* _audio_resources = nullptr;
 

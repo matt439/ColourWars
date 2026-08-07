@@ -6,7 +6,6 @@ GameData::GameData(const GameData* game_data) :
     _resolution_manager(game_data->get_resolution_manager()),
     _window(game_data->get_window()),
     _dt(game_data->get_dt()),
-    _resource_loader(game_data->get_resource_loader()),
     _render_resources(game_data->get_render_resources()),
     _audio_resources(game_data->get_audio_resources()),
     _level_infos(game_data->get_level_infos()),
@@ -59,16 +58,6 @@ void GameData::set_save(Save* save)
 Save* GameData::get_save() const
 {
 	return this->_save;
-}
-
-void GameData::set_resource_loader(ResourceLoader* texture_loader)
-{
-	this->_resource_loader = texture_loader;
-}
-
-ResourceLoader* GameData::get_resource_loader() const
-{
-	return this->_resource_loader;
 }
 
 void GameData::set_render_resources(RenderResources* render_resources)

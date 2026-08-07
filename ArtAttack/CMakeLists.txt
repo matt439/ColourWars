@@ -39,7 +39,6 @@ add_executable(ArtAttack WIN32
     ProjectileMist.cpp
     ProjectileRolling.cpp
     ProjectileSpray.cpp
-    ResourceLoader.cpp
     ResultsMenu.cpp
     ResultsMenuData.cpp
     Save.cpp
@@ -71,15 +70,22 @@ target_link_libraries(ArtAttack PRIVATE
 target_precompile_headers(ArtAttack PRIVATE pch.h)
 
 # The game resolves content relative to its working directory
-# (directory_consts.h), so mirror the content folders beside the built exe
-# and it runs from anywhere.
+# (directory_consts.h), so mirror the manifest and the content folders it names
+# beside the built exe and it runs from anywhere.
 #
 # Its own target, not a POST_BUILD step on ArtAttack: a POST_BUILD only runs
 # when the exe relinks, so editing or adding an asset without touching a source
 # file never reached the build directory - the build said "no work to do" and
-# ran against stale content. This runs every build; copy_directory_if_different
-# skips what has not changed.
+# ran against stale content. That now includes the manifest itself, which is
+# edited to add an asset and never triggers a relink at all. This runs every
+# build; the if_different copies skip what has not changed.
 add_custom_target(artattack_content ALL)
+add_custom_command(TARGET artattack_content POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/manifest.json"
+        "$<TARGET_FILE_DIR:ArtAttack>/manifest.json"
+    VERBATIM
+)
 foreach(content_dir textures levels fonts sounds)
     add_custom_command(TARGET artattack_content POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different
