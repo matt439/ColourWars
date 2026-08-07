@@ -40,7 +40,7 @@ struct ProcessedMenuInput
 {
 	MenuDirection direction = MenuDirection::none;
 	MenuInputAction action = MenuInputAction::none;
-	ConnectionState connection = ConnectionState::disconnected;
+	artattack::ConnectionState connection = artattack::ConnectionState::disconnected;
 };
 
 class MenuInput

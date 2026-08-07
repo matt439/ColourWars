@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/weapon_details.h"
+using namespace artattack;
 
 const std::string& SoundEffectInstanceWeaponDetails::sound_name(
 	PlayerTeam team, int index) const

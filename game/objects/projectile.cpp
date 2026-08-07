@@ -3,6 +3,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
+using namespace artattack;
 
 Projectile::Projectile(const Vector2F& velocity,
     PlayerTeam team,

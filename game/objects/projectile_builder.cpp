@@ -4,6 +4,7 @@
 using namespace mattmath;
 using namespace DirectX;
 using namespace projectile_consts;
+using namespace artattack;
 
 std::vector<std::unique_ptr<ICollisionGameObject>>
 	ProjectileBuilder::build_projectiles(

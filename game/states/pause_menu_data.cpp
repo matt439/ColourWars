@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/pause_menu_data.h"
+using namespace artattack;
 
 PauseMenuData::PauseMenuData(GameData* game_data, MenuInput* input,
 	int player_num, PauseMenuAction* action) :

@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/game_data.h"
+using namespace artattack;
 
 GameData::GameData(const GameData* game_data) :
 	application_(game_data->application()),
@@ -71,7 +72,7 @@ DirectX::GamePad* GameData::gamepad() const
 	return this->application_->gamepad();
 }
 
-DX::DeviceResources* GameData::device_resources() const
+artattack::DeviceResources* GameData::device_resources() const
 {
 	return this->application_->device_resources();
 }

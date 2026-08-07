@@ -58,7 +58,7 @@ namespace results_menu_consts
 	constexpr float FILL_VOLUME = 1.0f;
 }
 
-class ResultsMenuPage : public MenuPage, public SoundBankObject
+class ResultsMenuPage : public MenuPage, public artattack::SoundBankObject
 {
 public:
 	explicit ResultsMenuPage(ResultsMenuData* data);
@@ -72,9 +72,9 @@ protected:
 	// Every sound this page family can make, resolved once when the page is
 	// built. The drum roll is an effect rather than a wave because it is
 	// looped and then stopped; the rest are fire-and-forget.
-	SoundBank::WaveHandle confirm_sound_;
-	SoundBank::WaveHandle winner_sound_;
-	SoundBank::EffectHandle fill_sound_;
+	artattack::SoundBank::WaveHandle confirm_sound_;
+	artattack::SoundBank::WaveHandle winner_sound_;
+	artattack::SoundBank::EffectHandle fill_sound_;
 private:
 	ResultsMenuData* data_ = nullptr;
 };
@@ -87,17 +87,17 @@ public:
 	void update() override;
 	void draw() override;
 private:
-	std::unique_ptr<MContainer> texture_container_ = nullptr;
-	std::unique_ptr<MContainer> text_container_ = nullptr;
-	std::unique_ptr<MTexture> box_ = nullptr;
-	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<MTexture> fill_box_ = nullptr;
-	std::unique_ptr<MTexture> team_a_fill_ = nullptr;
-	std::unique_ptr<MTexture> team_b_fill_ = nullptr;
-	std::unique_ptr<MTextDropShadow> team_a_percentage_ = nullptr;
-	std::unique_ptr<MTextDropShadow> team_b_percentage_ = nullptr;
-	std::unique_ptr<MTextDropShadow> winner_ = nullptr;
-	std::unique_ptr<MTextDropShadow> proceed_ = nullptr;
+	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::MTexture> box_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<artattack::MTexture> fill_box_ = nullptr;
+	std::unique_ptr<artattack::MTexture> team_a_fill_ = nullptr;
+	std::unique_ptr<artattack::MTexture> team_b_fill_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> team_a_percentage_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> team_b_percentage_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> winner_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> proceed_ = nullptr;
 	bool winner_sound_played_ = false;
 	float delay_timer_ = 0.0f;
 	float fill_timer_ = 0.0f;

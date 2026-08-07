@@ -19,7 +19,7 @@ namespace paint_tile_consts
 	const static mattmath::RectangleF SPLASH_RECTANGLE = { 0.0f, 0.0f, THICKNESS * 2.0f, THICKNESS * 2.0f };
 }
 
-class PaintTileSplash final : public AnimationObject, public IGameObject
+class PaintTileSplash final : public artattack::AnimationObject, public artattack::IGameObject
 {
 public:
 	PaintTileSplash() = default;
@@ -27,7 +27,7 @@ public:
 		const mattmath::RectangleF& rectangle,
 		const std::string& sheet_name,
 		const std::string& animation_strip_name,
-		RenderResources* render_resources,
+		artattack::RenderResources* render_resources,
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
@@ -52,14 +52,14 @@ private:
 };
 
 
-class PaintTile final : public TextureObject, public ICollisionGameObject
+class PaintTile final : public artattack::TextureObject, public ICollisionGameObject
 {
 public:
 	PaintTile() = default;
 	PaintTile(const mattmath::RectangleF& rectangle,
 		const std::string& sheet_name,
 		const std::string& frame_name,
-		RenderResources* render_resources,
+		artattack::RenderResources* render_resources,
 		const TeamColour& team_colours,
 		const float* dt,
 		const mattmath::Colour& color = colour_consts::WHITE,

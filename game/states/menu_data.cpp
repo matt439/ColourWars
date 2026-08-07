@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/menu_data.h"
+using namespace artattack;
 
 MenuData::MenuData(const GameData* game_data) :
 	GameData(game_data)

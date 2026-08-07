@@ -5,6 +5,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace rapidjson;
+using namespace artattack;
 
 LevelLoadedInfo::LevelLoadedInfo(const char* json_path) :
 	json_doc_(load_from_json(json_path))
@@ -95,5 +96,5 @@ std::vector<Vector2F>
 
 Document LevelLoadedInfo::load_from_json(const char* json_path)
 {
-	return json_loader::parse_file(json_path);
+	return read_json_file(json_path);
 }

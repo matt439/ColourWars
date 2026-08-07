@@ -60,14 +60,14 @@ enum class PlayerAnimationState
 //    contains_other,
 //};
 
-class Player final : public MovingObject, public ICollisionGameObject,
-                     public AnimationObject, public TextureObject
+class Player final : public artattack::MovingObject, public ICollisionGameObject,
+                     public artattack::AnimationObject, public artattack::TextureObject
 {
 public:
     Player(const mattmath::RectangleF& rectangle,
         const PlayerAnimationInfo& animation_info,
-        RenderResources* render_resources,
-        const AudioResources* audio_resources,
+        artattack::RenderResources* render_resources,
+        const artattack::AudioResources* audio_resources,
         int player_num,
         PlayerTeam team,
         WeaponType primary,
@@ -166,14 +166,14 @@ private:
 
     mattmath::Vector2F respawn_position_ = mattmath::Vector2F::ZERO;
 
-    SoundBank* sound_bank_ = nullptr;
+    artattack::SoundBank* sound_bank_ = nullptr;
 
     // Resolved once at construction. These fire from update(), so the map
     // descent they used to cost was on the frame loop (T7, T8).
-    SoundBank::WaveHandle damage_sound_;
-    SoundBank::WaveHandle death_sound_;
-    SoundBank::WaveHandle jump_sound_;
-    SoundBank::WaveHandle respawn_sound_;
+    artattack::SoundBank::WaveHandle damage_sound_;
+    artattack::SoundBank::WaveHandle death_sound_;
+    artattack::SoundBank::WaveHandle jump_sound_;
+    artattack::SoundBank::WaveHandle respawn_sound_;
 
     const float* dt_ = nullptr;
 

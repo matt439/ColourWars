@@ -4,6 +4,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace weapon_consts;
+using namespace artattack;
 
 Weapon::Weapon(const WeaponDetails& details,
     PlayerTeam team,

@@ -105,7 +105,7 @@ struct MainMenuMidwayLoadSettings
 	MenuLevelSettings settings = MenuLevelSettings();
 };
 
-class MainMenuPage : public MenuPage, public SoundBankObject
+class MainMenuPage : public MenuPage, public artattack::SoundBankObject
 {
 public:
 	explicit MainMenuPage(MainMenuData* data);
@@ -120,12 +120,12 @@ protected:
 	// Every sound this page family can make, resolved once when the page is
 	// built. The music is an effect rather than a wave because it loops and is
 	// stopped on the way into a match; the rest are fire-and-forget.
-	SoundBank::WaveHandle direction_sound_;
-	SoundBank::WaveHandle confirm_sound_;
-	SoundBank::WaveHandle cancel_sound_;
-	SoundBank::WaveHandle error_sound_;
-	SoundBank::WaveHandle ready_sound_;
-	SoundBank::EffectHandle music_;
+	artattack::SoundBank::WaveHandle direction_sound_;
+	artattack::SoundBank::WaveHandle confirm_sound_;
+	artattack::SoundBank::WaveHandle cancel_sound_;
+	artattack::SoundBank::WaveHandle error_sound_;
+	artattack::SoundBank::WaveHandle ready_sound_;
+	artattack::SoundBank::EffectHandle music_;
 private:
 	MainMenuData* data_ = nullptr;
 };
@@ -138,11 +138,11 @@ public:
 	void draw() override;
 	void init() override;
 private:
-	std::unique_ptr<MContainer> texture_container_ = nullptr;
-	std::unique_ptr<MContainer> text_container_ = nullptr;
-	std::unique_ptr<MTexture> background_ = nullptr;
-	std::unique_ptr<MTextDropShadow> title_ = nullptr;
-	std::unique_ptr<MTextDropShadow> start_ = nullptr;
+	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::MTexture> background_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> title_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> start_ = nullptr;
 };
 
 class MainMenuHome final : public MainMenuPage, public MenuHighlight
@@ -153,13 +153,13 @@ public:
 	void draw() override;
 	void init() override;
 private:
-	std::unique_ptr<MContainer> texture_container_ = nullptr;
-	std::unique_ptr<MContainer> text_container_ = nullptr;
-	std::unique_ptr<MTexture> background_ = nullptr;
-	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<MTextDropShadow> play_ = nullptr;
-	std::unique_ptr<MTextDropShadow> options_ = nullptr;
-	std::unique_ptr<MTextDropShadow> exit_ = nullptr;
+	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::MTexture> background_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> play_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> options_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> exit_ = nullptr;
 };
 
 class MainMenuOptions final : public MainMenuPage, public MenuHighlight
@@ -170,17 +170,17 @@ public:
 	void draw() override;
 	void init() override;
 private:
-	std::unique_ptr<MContainer> texture_container_ = nullptr;
-	std::unique_ptr<MContainer> text_container_ = nullptr;
-	std::unique_ptr<MTexture> background_ = nullptr;
-	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<MTextDropShadow> resolution_element_ = nullptr;
-	std::unique_ptr<MTextDropShadow> resolution_value_ = nullptr;
-	std::unique_ptr<MTextDropShadow> full_screen_ = nullptr;
-	std::unique_ptr<MTextDropShadow> full_screen_value_ = nullptr;
-	std::unique_ptr<MTextDropShadow> apply_ = nullptr;
-	std::unique_ptr<MTextDropShadow> back_ = nullptr;
-	ScreenResolution resolution_selection_ = ScreenResolution::s_1920_1080;
+	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::MTexture> background_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> resolution_element_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> resolution_value_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> full_screen_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> full_screen_value_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> apply_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> back_ = nullptr;
+	artattack::ScreenResolution resolution_selection_ = artattack::ScreenResolution::s_1920_1080;
 	bool full_screen_selection_ = true;
 	void cycle_resolution(MenuDirection direction);
 	void update_resolution_selection_text();
@@ -196,15 +196,15 @@ public:
 	void draw() override;
 	void init() override;
 private:
-	std::unique_ptr<MContainer> texture_container_ = nullptr;
-	std::unique_ptr<MContainer> text_container_ = nullptr;
-	std::unique_ptr<MTexture> background_ = nullptr;
-	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<MTextDropShadow> standard_ = nullptr;
-	std::unique_ptr<MTextDropShadow> tdm_ = nullptr;
-	std::unique_ptr<MTextDropShadow> dm_ = nullptr;
-	std::unique_ptr<MTextDropShadow> practice_ = nullptr;
-	std::unique_ptr<MTextDropShadow> back_ = nullptr;
+	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::MTexture> background_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> standard_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> tdm_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> dm_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> practice_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> back_ = nullptr;
 	static MenuElement convert_mode_to_element(LevelMode mode);
 };
 
@@ -216,15 +216,15 @@ public:
 	void draw() override;
 	void init() override;
 private:
-	std::unique_ptr<MContainer> texture_container_ = nullptr;
-	std::unique_ptr<MContainer> text_container_ = nullptr;
-	std::unique_ptr<MTexture> background_ = nullptr;
-	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<MTextDropShadow> _1_player = nullptr;
-	std::unique_ptr<MTextDropShadow> _2_players = nullptr;
-	std::unique_ptr<MTextDropShadow> _3_players = nullptr;
-	std::unique_ptr<MTextDropShadow> _4_players = nullptr;
-	std::unique_ptr<MTextDropShadow> back_ = nullptr;
+	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::MTexture> background_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> _1_player = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> _2_players = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> _3_players = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> _4_players = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> back_ = nullptr;
 	static MenuElement convert_player_count_to_element(int player_count);
 };
 
@@ -244,15 +244,15 @@ private:
 	};
 	struct PlayerWidgets
 	{
-		std::unique_ptr<MTextDropShadow> player = nullptr;
-		std::unique_ptr<MTexture> player_a = nullptr;
-		std::unique_ptr<MTexture> player_center = nullptr;
-		std::unique_ptr<MTexture> player_b = nullptr;
+		std::unique_ptr<artattack::MTextDropShadow> player = nullptr;
+		std::unique_ptr<artattack::MTexture> player_a = nullptr;
+		std::unique_ptr<artattack::MTexture> player_center = nullptr;
+		std::unique_ptr<artattack::MTexture> player_b = nullptr;
 	};
-	std::unique_ptr<MContainer> texture_container_ = nullptr;
-	std::unique_ptr<MContainer> text_container_ = nullptr;
-	std::unique_ptr<MTexture> background_ = nullptr;
-	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::MTexture> background_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> heading_ = nullptr;
 
 	std::vector<std::unique_ptr<PlayerWidgets>> player_widgets_;
 	std::vector<TeamSelectState> select_states_;
@@ -279,15 +279,15 @@ private:
 	};
 	struct Widgets
 	{
-		std::unique_ptr<MTextDropShadow> player = nullptr;
-		std::unique_ptr<MTexture> weapon_icon = nullptr;
-		std::unique_ptr<MTextDropShadow> weapon_name = nullptr;
-		std::unique_ptr<MTextDropShadow> weapon_description = nullptr;
+		std::unique_ptr<artattack::MTextDropShadow> player = nullptr;
+		std::unique_ptr<artattack::MTexture> weapon_icon = nullptr;
+		std::unique_ptr<artattack::MTextDropShadow> weapon_name = nullptr;
+		std::unique_ptr<artattack::MTextDropShadow> weapon_description = nullptr;
 	};
-	std::unique_ptr<MContainer> texture_container_ = nullptr;
-	std::unique_ptr<MContainer> text_container_ = nullptr;
-	std::unique_ptr<MTexture> background_ = nullptr;
-	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::MTexture> background_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> heading_ = nullptr;
 	std::vector<std::unique_ptr<Widgets>> player_widgets_;
 	std::vector<SelectState> select_states_;
 	void update_weapon_select_visuals();
@@ -314,13 +314,13 @@ private:
 		LevelStage stage = LevelStage::king_of_the_hill;
 		ConfirmationState state = ConfirmationState::unconfirmed;
 	};
-	std::unique_ptr<MContainer> texture_container_ = nullptr;
-	std::unique_ptr<MContainer> text_container_ = nullptr;
-	std::unique_ptr<MTexture> background_ = nullptr;
-	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<MTexture> stage_icon_ = nullptr;
-	std::unique_ptr<MTextDropShadow> stage_name_ = nullptr;
-	std::unique_ptr<MTextDropShadow> ready_ = nullptr;
+	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::MTexture> background_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<artattack::MTexture> stage_icon_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> stage_name_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> ready_ = nullptr;
 	SelectState select_state_ = SelectState();
 	void update_stage_select_visuals();
 	void unconfirm_all_widgets();

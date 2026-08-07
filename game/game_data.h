@@ -22,26 +22,26 @@ public:
     GameData() = default;
     explicit GameData(const GameData* game_data);
 
-    void set_application(Application* application);
+    void set_application(artattack::Application* application);
     void set_save(Save* save);
-    void set_level_infos(Registry<LevelLoadedInfo>* level_infos);
+    void set_level_infos(artattack::Registry<LevelLoadedInfo>* level_infos);
 
     // The game's own two.
     Save* save() const;
-    Registry<LevelLoadedInfo>* level_infos() const;
+    artattack::Registry<LevelLoadedInfo>* level_infos() const;
 
     // The engine's, forwarded. Created once by the shell and never reseated,
     // so anything here may be held for an object's whole life.
-    Application* application() const;
-    ResolutionManager* resolution_manager() const;
+    artattack::Application* application() const;
+    artattack::ResolutionManager* resolution_manager() const;
     float* dt() const;
-    RenderResources* render_resources() const;
-    AudioResources* audio_resources() const;
+    artattack::RenderResources* render_resources() const;
+    artattack::AudioResources* audio_resources() const;
     DirectX::GamePad* gamepad() const;
-    DX::DeviceResources* device_resources() const;
-    ViewportManager* viewport_manager() const;
-    ThreadPool* thread_pool() const;
-    const Partitioner* partitioner() const;
+    artattack::DeviceResources* device_resources() const;
+    artattack::ViewportManager* viewport_manager() const;
+    artattack::ThreadPool* thread_pool() const;
+    const artattack::Partitioner* partitioner() const;
 
     // Recreated on device loss, so unlike the rest these change identity
     // across one and must be read through this each time they are needed.
@@ -51,10 +51,10 @@ public:
     GameData* game_data();
 
 private:
-    Application* application_ = nullptr;
+    artattack::Application* application_ = nullptr;
     Save* save_ = nullptr;
 
     // The game's own resource registry, beside the engine's: a level
     // definition means nothing to the engine, so the engine does not cache it.
-    Registry<LevelLoadedInfo>* level_infos_ = nullptr;
+    artattack::Registry<LevelLoadedInfo>* level_infos_ = nullptr;
 };

@@ -4,7 +4,7 @@
 #include "game/objects/collision_object_type.h"
 #include "engine/math/matt_math.h"
 
-class ICollisionGameObject : public IGameObject
+class ICollisionGameObject : public artattack::IGameObject
 {
 public:
 	~ICollisionGameObject() override = default;

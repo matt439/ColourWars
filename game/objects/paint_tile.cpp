@@ -4,6 +4,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace paint_tile_consts;
+using namespace artattack;
 
 PaintTile::PaintTile(const RectangleF& rectangle,
 	const std::string& sheet_name,

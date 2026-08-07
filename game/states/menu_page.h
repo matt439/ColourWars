@@ -5,7 +5,7 @@
 #include "engine/core/state.h"
 #include "engine/math/matt_math.h"
 
-class MenuPage : public State
+class MenuPage : public artattack::State
 {
 public:
 	explicit MenuPage(MenuData* data);
@@ -29,22 +29,22 @@ protected:
 	static float calculate_center_position(float widget_size, float resolution);
 	MenuData* data() const;
 	MenuInput* input() const;
-	ResolutionManager* resolution_manager() const;
+	artattack::ResolutionManager* resolution_manager() const;
 	Save* save() const;
-	RenderResources* render_resources() const;
-	const AudioResources* audio_resources() const;
-	ViewportManager* viewport_manager() const;
+	artattack::RenderResources* render_resources() const;
+	const artattack::AudioResources* audio_resources() const;
+	artattack::ViewportManager* viewport_manager() const;
 
 	void draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,
 		ID3D11CommandList*& command_list,
-		DirectX::SpriteBatch* sprite_batch, MObject* widget,
+		DirectX::SpriteBatch* sprite_batch, artattack::MObject* widget,
 		ID3D11SamplerState* sampler_state = nullptr);
 
-	void draw_mobjects_in_viewports(std::vector<std::pair<MObject*,
+	void draw_mobjects_in_viewports(std::vector<std::pair<artattack::MObject*,
 		ID3D11SamplerState*>>* mobjects);
 
 	void draw_range_of_mobjects_in_viewports(int start, int end,
-		std::vector<std::pair<MObject*, ID3D11SamplerState*>>*mobjects,
+		std::vector<std::pair<artattack::MObject*, ID3D11SamplerState*>>*mobjects,
 		std::vector<ID3D11DeviceContext*>* deferred_contexts,
 		std::vector<ID3D11CommandList*>* command_lists,
 		std::vector<DirectX::SpriteBatch*>* sprite_batches);

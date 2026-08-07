@@ -37,8 +37,8 @@ public:
 		const std::string& frame_name,
 		const mattmath::RectangleF& sprite_rectangle,
 		const mattmath::Shape* collision_shape,
-		RenderResources* render_resources,
-		const AudioResources* audio_resources,
+		artattack::RenderResources* render_resources,
+		const artattack::AudioResources* audio_resources,
 		CollisionObjectType collision_type,
 		const TeamColour& team_colours,
 		const PaintableFaces& faces,
@@ -65,11 +65,11 @@ private:
 	PaintableFaces faces_ = PaintableFaces();
 	const float* dt_ = nullptr;
 	std::vector<PaintTile> generate_paint_tiles() const;
-	SoundBank* sound_bank_ = nullptr;
+	artattack::SoundBank* sound_bank_ = nullptr;
 
 	// Resolved once at construction. This plays from update(), on any tile
 	// that was just painted, so it was a map descent per splash per frame.
-	SoundBank::WaveHandle paint_sound_;
+	artattack::SoundBank::WaveHandle paint_sound_;
 
 
 };

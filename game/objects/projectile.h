@@ -15,8 +15,8 @@ enum projectile_type
 	BALL
 };
 
-class Projectile : public MovingObject,
-	public AnimationObject, public ICollisionGameObject
+class Projectile : public artattack::MovingObject,
+	public artattack::AnimationObject, public ICollisionGameObject
 {
 public:
 	Projectile() = default;
@@ -26,7 +26,7 @@ public:
 		const mattmath::Colour& team_colour,
 		projectile_type type,
 		const float* dt,
-		RenderResources* render_resources,
+		artattack::RenderResources* render_resources,
 		const ProjectileDetails& details,
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
@@ -87,7 +87,7 @@ public:
 		const mattmath::Colour& team_colour,
 		projectile_type type,
 		const float* dt,
-		RenderResources* render_resources,
+		artattack::RenderResources* render_resources,
 		const ProjectileDetails& details,
 		const DiffusionDetails& diffusion_details,
 		const mattmath::Colour& color = colour_consts::WHITE,

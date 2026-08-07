@@ -11,7 +11,7 @@
 #include "engine/audio/sound_bank.h"
 #include "engine/audio/audio_resources.h"
 
-class Weapon : public TextureObject
+class Weapon : public artattack::TextureObject
 {
 public:
 	Weapon(const WeaponDetails& details,
@@ -20,8 +20,8 @@ public:
 		const mattmath::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
-		RenderResources* render_resources,
-		const AudioResources* audio_resources,
+		artattack::RenderResources* render_resources,
+		const artattack::AudioResources* audio_resources,
 		const float* dt,
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
@@ -47,7 +47,7 @@ public:
 	virtual void stop_sounds() const;
 
 protected:
-	SoundBank* sound_bank_ = nullptr;
+	artattack::SoundBank* sound_bank_ = nullptr;
 	WeaponDetails details_ = weapon_consts::DETAILS_DEFAULT;
 
 	// This weapon's looping SoundEffectInstance, resolved once at construction.
@@ -55,12 +55,12 @@ protected:
 	// what handle_shoot_sound and stop_sounds read as "nothing to do". The
 	// default Handle is inert precisely so an absent thing can be spelt this
 	// way instead of with a sentinel string.
-	SoundBank::EffectHandle loop_sound_;
+	artattack::SoundBank::EffectHandle loop_sound_;
 
 	// The one-shot fire wave, for the weapons that use one. Unconditionally
 	// resolved, unlike the loop above: every weapon definition names one, so a
 	// name the bank does not have is a content bug and should say so here.
-	SoundBank::WaveHandle shoot_sound_;
+	artattack::SoundBank::WaveHandle shoot_sound_;
 
 	bool shooting_this_update_ = false;
 
@@ -120,7 +120,7 @@ protected:
 		float starting_velocity) const;
 
 	static mattmath::Vector2F calculate_sprite_origin(
-		const mattmath::Vector2F& size, RotationOrigin origin);
+		const mattmath::Vector2F& size, artattack::RotationOrigin origin);
 
 	virtual bool check_if_shooting_and_ammo_update(PlayerInputData input,
 		const mattmath::Vector2F& player_center,
@@ -134,21 +134,21 @@ protected:
 	ProjectileBuilder* projectile_builder() const;
 	const float* dt_ptr() const;
 	float dt() const;
-	RenderResources* render_resources() const override;
+	artattack::RenderResources* render_resources() const override;
 
 private:
-	static SoundBank::EffectHandle resolve_loop_sound(
-		const SoundBank& sound_bank, WeaponType type, PlayerTeam team,
+	static artattack::SoundBank::EffectHandle resolve_loop_sound(
+		const artattack::SoundBank& sound_bank, WeaponType type, PlayerTeam team,
 		int player_num);
 
 	std::unique_ptr<ProjectileBuilder> proj_builder_ = nullptr;
 	const float* dt_ = nullptr;
-	RenderResources* render_resources_ = nullptr;
+	artattack::RenderResources* render_resources_ = nullptr;
 
 	// Resolved once at construction like every other element name, even though
 	// only the debug draw reads it - a name resolved on the draw path is a
 	// name resolved on the draw path, however rarely that path is taken.
-	SpriteSheet::frame_handle nozzle_frame_;
+	artattack::SpriteSheet::frame_handle nozzle_frame_;
 
 	float ammo_ = weapon_consts::STARTING_AMMO;
 	float shoot_timer_ = 0.0f;
@@ -179,8 +179,8 @@ public:
 		const mattmath::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
-		RenderResources* render_resources,
-		const AudioResources* audio_resources,
+		artattack::RenderResources* render_resources,
+		const artattack::AudioResources* audio_resources,
 		const float* dt,
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,

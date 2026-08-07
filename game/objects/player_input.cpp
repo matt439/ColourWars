@@ -4,6 +4,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace player_input_consts;
+using namespace artattack;
 
 PlayerInput::PlayerInput(GamePad* gamepad) :
     gamepad_(gamepad)

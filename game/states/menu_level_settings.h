@@ -18,8 +18,8 @@ public:
 	LevelMode game_mode() const;
 	void set_stage(LevelStage stage);
 	LevelStage stage() const;
-	ScreenLayout screen_layout() const;
-	void set_screen_layout(ScreenLayout ScreenLayout);
+	artattack::ScreenLayout screen_layout() const;
+	void set_screen_layout(artattack::ScreenLayout screen_layout);
 
 	void set_player_setting(int player_index, MenuPlayerSettings player_settings);
 	void set_player_team(int player_index, PlayerTeam team);
@@ -33,5 +33,5 @@ private:
 	std::vector<MenuPlayerSettings> player_settings_;
 	int player_count_ = 0;
 	LevelStage stage_ = LevelStage::king_of_the_hill;
-	ScreenLayout screen_layout_ = ScreenLayout::one_player;
+	artattack::ScreenLayout screen_layout_ = artattack::ScreenLayout::one_player;
 };

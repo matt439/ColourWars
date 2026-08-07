@@ -16,7 +16,7 @@ public:
 		const mattmath::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
-		RenderResources* render_resources,
-		const AudioResources* audio_resources,
+		artattack::RenderResources* render_resources,
+		const artattack::AudioResources* audio_resources,
 		const float* dt);
 };

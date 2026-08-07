@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level_end_info.h"
+using namespace artattack;
 
 PlayerTeam LevelEndInfo::winning_team() const
 {

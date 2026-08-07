@@ -4,6 +4,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace projectile_consts;
+using namespace artattack;
 
 ProjectileJet::ProjectileJet(const RectangleF& rectangle,
 	const Vector2F& velocity,

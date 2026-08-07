@@ -5,6 +5,7 @@ using namespace DirectX;
 using namespace mattmath;
 using namespace paint_tile_consts;
 using namespace structure_paintable_consts;
+using namespace artattack;
 
 StructurePaintable::StructurePaintable(
 	const std::string& sheet_name,

@@ -14,7 +14,7 @@ namespace projectile_consts
     {
         2500.0f,                        //gravity
         20.0f,                          //wind_resistance
-        RotationOrigin::no_rotation,   //rotat_origin
+        artattack::RotationOrigin::no_rotation,   //rotat_origin
         1.0f,                           //delete_timer
         0.0f,                           //player_damage
         mattmath::Vector2F(15.0f, 15.0f),        //size
@@ -27,7 +27,7 @@ namespace projectile_consts
     {
         2500.0f,                        //gravity
         20.0f,                          //wind_resistance
-        RotationOrigin::no_rotation,   //rotat_origin
+        artattack::RotationOrigin::no_rotation,   //rotat_origin
         5.0f,                           //delete_timer
         -0.1f,                           //player_damage
         mattmath::Vector2F(15.0f, 15.0f),        //size
@@ -48,7 +48,7 @@ namespace projectile_consts
     {
         0.0f,                           //gravity
         0.0f,                           //wind_resistance
-        RotationOrigin::center,        //rotat_origin
+        artattack::RotationOrigin::center,        //rotat_origin
         5.0f,                           //delete_timer
         -0.5f,                           //player_damage
         mattmath::Vector2F(20.0f, 20.0f),         //size
@@ -61,7 +61,7 @@ namespace projectile_consts
     {
         0.0f,                           //gravity
         0.0f,                           //wind_resistance
-        RotationOrigin::no_rotation,   //rotat_origin
+        artattack::RotationOrigin::no_rotation,   //rotat_origin
         0.000001f,                           //delete_timer
         -1000.0f,                        //player_damage
         mattmath::Vector2F(50.0f, 50.0f),        //size
@@ -74,7 +74,7 @@ namespace projectile_consts
     {
         0.0f,                        //gravity
         0.0f,                          //wind_resistance
-        RotationOrigin::no_rotation,   //rotat_origin
+        artattack::RotationOrigin::no_rotation,   //rotat_origin
         5.0f,                           //delete_timer
         -0.05f,                           //player_damage
         mattmath::Vector2F(5.0f, 5.0f),        //size
@@ -95,7 +95,7 @@ namespace projectile_consts
     {
         2500.0f,                        //gravity
         20.0f,                          //wind_resistance
-        RotationOrigin::no_rotation,   //rotat_origin
+        artattack::RotationOrigin::no_rotation,   //rotat_origin
         5.0f,                           //delete_timer
         -0.1f,                           //player_damage
         mattmath::Vector2F(100.0f, 100.0f),        //size

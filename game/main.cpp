@@ -9,6 +9,7 @@
 
 using namespace DirectX;
 using namespace directory_consts;
+using namespace artattack;
 
 // Indicates to hybrid graphics systems to prefer the discrete part by default.
 extern "C"

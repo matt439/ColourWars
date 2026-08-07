@@ -17,20 +17,20 @@ namespace debug_text_consts
 	constexpr float DEBUG_SHADOW_SCALE = 1.0f;
 }
 
-class DebugText : public Drawer
+class DebugText : public artattack::Drawer
 {
 public:
-	DebugText(RenderResources* render_resources,
+	DebugText(artattack::RenderResources* render_resources,
 		const float* dt,
-		const ResolutionManager* resolution_manager);
+		const artattack::ResolutionManager* resolution_manager);
 
 	void draw_debug_info(DirectX::SpriteBatch* sprite_batch,
 		const Player* player, int num_projectiles) const;
 
 private:
-	const ResolutionManager* resolution_manager_ = nullptr;
+	const artattack::ResolutionManager* resolution_manager_ = nullptr;
 
 	// Resolved once, like every other font name. The debug overlay is drawn
 	// per player per frame when it is on at all.
-	RenderResources::FontHandle font_;
+	artattack::RenderResources::FontHandle font_;
 };

@@ -5,6 +5,7 @@ using namespace DirectX;
 using namespace mattmath;
 using namespace interface_consts;
 using namespace colour_consts;
+using namespace artattack;
 
 InterfaceGameplay::InterfaceGameplay(RenderResources* render_resources, const float* dt) :
 	Drawer(render_resources, dt),

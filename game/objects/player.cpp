@@ -5,6 +5,7 @@ using namespace DirectX;
 using namespace mattmath;
 using namespace player_consts;
 using namespace colour_consts;
+using namespace artattack;
 
 Player::Player(const RectangleF& rectangle,
     const PlayerAnimationInfo& animation_info,

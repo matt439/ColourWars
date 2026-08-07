@@ -43,10 +43,10 @@ struct InterfaceDraw
     mattmath::Colour team_colour = colour_consts::GRAY;
 };
 
-class InterfaceGameplay : public Drawer
+class InterfaceGameplay : public artattack::Drawer
 {
 public:
-    InterfaceGameplay(RenderResources* render_resources, const float* dt);
+    InterfaceGameplay(artattack::RenderResources* render_resources, const float* dt);
 
 	void draw_gameplay_interface(DirectX::SpriteBatch* sprite_batch,
         const mattmath::Vector2F& resolution,
@@ -81,9 +81,9 @@ private:
     // the four draw_* calls below - which run every frame, for every split
     // screen viewport - index rather than search. Declaration order matters:
     // the frames are resolved against sheet_.
-    RenderResources::SpriteSheetHandle sheet_;
-    SpriteSheet::frame_handle empty_box_frame_;
-    SpriteSheet::frame_handle fill_frame_;
-    RenderResources::FontHandle timer_font_;
-    RenderResources::FontHandle respawn_timer_font_;
+    artattack::RenderResources::SpriteSheetHandle sheet_;
+    artattack::SpriteSheet::frame_handle empty_box_frame_;
+    artattack::SpriteSheet::frame_handle fill_frame_;
+    artattack::RenderResources::FontHandle timer_font_;
+    artattack::RenderResources::FontHandle respawn_timer_font_;
 };

@@ -9,7 +9,7 @@
 
 struct SaveData
 {
-	ScreenResolution resolution = ScreenResolution::s_1280_720;
+	artattack::ScreenResolution resolution = artattack::ScreenResolution::s_1280_720;
 	bool fullscreen = false;
 };
 
@@ -20,8 +20,8 @@ public:
 	void load_save_file();
 	void save_to_file() const;
 	SaveData save_data() const;
-	void set_resolution_and_save(ScreenResolution resolution);
-	ScreenResolution resolution() const;
+	void set_resolution_and_save(artattack::ScreenResolution resolution);
+	artattack::ScreenResolution resolution() const;
 	bool fullscreen() const;
 	void set_full_screen_and_save(bool full_screen);
 private:
@@ -30,9 +30,9 @@ private:
 	bool write_save_file(const SaveData& data) const;
 	static bool check_if_save_file_exists();
 
-	ScreenResolution convert_ivec_to_resolution(
+	artattack::ScreenResolution convert_ivec_to_resolution(
 		const mattmath::Vector2I& vec) const;
 
 	mattmath::Vector2I convert_resolution_to_ivec(
-		ScreenResolution resolution) const;
+		artattack::ScreenResolution resolution) const;
 };

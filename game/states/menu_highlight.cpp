@@ -2,6 +2,7 @@
 #include "game/states/menu_highlight.h"
 
 using namespace mattmath;
+using namespace artattack;
 
 void MenuHighlight::highlight_widget(MWidget* widget) const
 {

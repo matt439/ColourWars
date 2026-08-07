@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level_stage.h"
+using namespace artattack;
 
 std::string level_asset_name(LevelStage stage)
 {

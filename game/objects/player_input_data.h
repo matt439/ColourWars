@@ -15,7 +15,7 @@ struct PlayerInputData
 	bool secondary_shoot = false;
 	bool toggle_debug = false;
 	bool toggle_pause_menu = false;
-	ConnectionState connection = ConnectionState::disconnected;
+	artattack::ConnectionState connection = artattack::ConnectionState::disconnected;
 
 	mattmath::Vector2F left_analog_stick = { 0.0f, 0.0f };
 	mattmath::Vector2F right_analog_stick = { 0.0f, 0.0f };

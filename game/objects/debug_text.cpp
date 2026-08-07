@@ -4,6 +4,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace debug_text_consts;
+using namespace artattack;
 
 DebugText::DebugText(RenderResources* render_resources,
     const float* dt,

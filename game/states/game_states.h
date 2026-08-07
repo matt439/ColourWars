@@ -10,7 +10,7 @@
 #include "game/states/end_menu.h"
 #include "game/objects/player_input.h"
 
-class GameMenu final : public State
+class GameMenu final : public artattack::State
 {
 public:
 	explicit GameMenu(GameData* game_data);
@@ -21,7 +21,7 @@ public:
 
 private:
     GameData* game_data_ = nullptr; // need this to pass to GameLevel
-    std::unique_ptr<StateContext> menu_ = nullptr;
+    std::unique_ptr<artattack::StateContext> menu_ = nullptr;
     std::unique_ptr<MenuInput> menu_input_ = nullptr;
     std::unique_ptr<MainMenuData> menu_data_ = nullptr;
     std::unique_ptr<MenuLevelSettings> menu_level_settings_ = nullptr;
@@ -42,7 +42,7 @@ enum class GameLevelState
     end_menu,
 };
 
-class GameLevel final : public State
+class GameLevel final : public artattack::State
 {
 public:
     GameLevel(GameData* game_data, const MenuLevelSettings& settings);
@@ -56,14 +56,14 @@ private:
     std::unique_ptr<Level> level_ = nullptr;
     std::unique_ptr<LevelBuilder> level_builder_ = nullptr;
     std::unique_ptr<PlayerInput> player_input_ = nullptr;
-    std::unique_ptr<StateContext> pause_menu_ = nullptr;
+    std::unique_ptr<artattack::StateContext> pause_menu_ = nullptr;
     std::unique_ptr<PauseMenuAction> pause_menu_action_ = nullptr;
     std::unique_ptr<PauseMenuData> pause_menu_data_ = nullptr;
     std::unique_ptr<MenuInput> menu_input_ = nullptr;
-    std::unique_ptr<StateContext> results_menu_ = nullptr;
+    std::unique_ptr<artattack::StateContext> results_menu_ = nullptr;
     std::unique_ptr<ResultsMenuAction> results_menu_action_ = nullptr;
     std::unique_ptr<ResultsMenuData> results_menu_data_ = nullptr;
-    std::unique_ptr<StateContext> end_menu_ = nullptr;
+    std::unique_ptr<artattack::StateContext> end_menu_ = nullptr;
     std::unique_ptr<EndMenuAction> end_menu_action_ = nullptr;
     std::unique_ptr<EndMenuData> end_menu_data_ = nullptr;
     GameLevelState state_ = GameLevelState::first_update;

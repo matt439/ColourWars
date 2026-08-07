@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/results_menu_data.h"
+using namespace artattack;
 
 ResultsMenuData::ResultsMenuData(const GameData* game_data, MenuInput* input,
 	const LevelEndInfo& info, ResultsMenuAction* action) :

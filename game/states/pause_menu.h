@@ -40,7 +40,7 @@ namespace pause_menu_consts
 	const std::string WINDOW_OPEN_SOUND = "UI_Clicks01";
 }
 
-class PauseMenuPage : public MenuPage, public MenuHighlight, public SoundBankObject
+class PauseMenuPage : public MenuPage, public MenuHighlight, public artattack::SoundBankObject
 {
 public:
 	explicit PauseMenuPage(PauseMenuData* data);
@@ -67,10 +67,10 @@ protected:
 
 	// Every sound this page family can make, resolved once when the page is
 	// built. A press then plays an index, not a name (T7, T8).
-	SoundBank::WaveHandle direction_sound_;
-	SoundBank::WaveHandle confirm_sound_;
-	SoundBank::WaveHandle cancel_sound_;
-	SoundBank::WaveHandle window_open_sound_;
+	artattack::SoundBank::WaveHandle direction_sound_;
+	artattack::SoundBank::WaveHandle confirm_sound_;
+	artattack::SoundBank::WaveHandle cancel_sound_;
+	artattack::SoundBank::WaveHandle window_open_sound_;
 private:
 	PauseMenuData* data_ = nullptr;
 };
@@ -84,13 +84,13 @@ public:
 	void update() override;
 	void draw() override;
 private:
-	std::unique_ptr<MContainer> texture_container_ = nullptr;
-	std::unique_ptr<MContainer> text_container_ = nullptr;
-	std::unique_ptr<MTexture> box_ = nullptr;
-	std::unique_ptr<MTextDropShadow> player_num_ = nullptr;
-	std::unique_ptr<MTextDropShadow> resume_ = nullptr;
-	std::unique_ptr<MTextDropShadow> restart_ = nullptr;
-	std::unique_ptr<MTextDropShadow> quit_ = nullptr;
+	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::MTexture> box_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> player_num_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> resume_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> restart_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> quit_ = nullptr;
 };
 
 class PauseMenuConfirmation final : public PauseMenuPage
@@ -101,13 +101,13 @@ public:
 	void update() override;
 	void draw() override;
 private:
-	std::unique_ptr<MContainer> texture_container_ = nullptr;
-	std::unique_ptr<MContainer> text_container_ = nullptr;
-	std::unique_ptr<MTexture> box_ = nullptr;
-	std::unique_ptr<MTextDropShadow> player_num_ = nullptr;
-	std::unique_ptr<MTextDropShadow> question_ = nullptr;
-	std::unique_ptr<MTextDropShadow> yes_ = nullptr;
-	std::unique_ptr<MTextDropShadow> no_ = nullptr;
+	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::MTexture> box_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> player_num_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> question_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> yes_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> no_ = nullptr;
 	ConfirmationType type_ = ConfirmationType::restart;
 	static std::string question_text(ConfirmationType type);
 };

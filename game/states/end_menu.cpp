@@ -4,6 +4,7 @@
 using namespace mattmath;
 using namespace colour_consts;
 using namespace end_menu_consts;
+using namespace artattack;
 
 EndMenuPage::EndMenuPage(EndMenuData* data) :
 	MenuPage(data),

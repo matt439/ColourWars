@@ -16,9 +16,9 @@ public:
 		const MenuLevelSettings& settings,
 		const LevelLoadedInfo* load_info,
 		TeamColour team_colours,
-		RenderResources* render_resources,
-		const AudioResources* audio_resources,
-		const ViewportManager* viewport_manager,
+		artattack::RenderResources* render_resources,
+		const artattack::AudioResources* audio_resources,
+		const artattack::ViewportManager* viewport_manager,
 		const float* dt) const;
 private:
 	std::unique_ptr<WeaponBuilder> weapon_builder_ = nullptr;

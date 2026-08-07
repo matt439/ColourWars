@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/end_menu_data.h"
+using namespace artattack;
 
 EndMenuData::EndMenuData(GameData* game_data, MenuInput* input,
 	EndMenuAction* action) :

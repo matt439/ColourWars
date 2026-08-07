@@ -11,29 +11,29 @@
 class LevelObjectBuilder
 {
 public:
-	LevelObjectBuilder(RenderResources* render_resources,
-		const AudioResources* audio_resources,
+	LevelObjectBuilder(artattack::RenderResources* render_resources,
+		const artattack::AudioResources* audio_resources,
 		const float* dt);
 
 	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> 
 		build_collision_objects(const rapidjson::Value& json,
 			const TeamColour& team_colours) const;
 
-	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> 
+	std::unique_ptr<std::vector<std::unique_ptr<artattack::IGameObject>>> 
 		build_non_collision_objects(const rapidjson::Value& json) const;
 
-	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> 
-		build_viewport_dividers(const ViewportManager* viewport_manager) const;
+	std::unique_ptr<std::vector<std::unique_ptr<artattack::IGameObject>>> 
+		build_viewport_dividers(const artattack::ViewportManager* viewport_manager) const;
 
 private:
-	RenderResources* render_resources_ = nullptr;
-	const AudioResources* audio_resources_ = nullptr;
+	artattack::RenderResources* render_resources_ = nullptr;
+	const artattack::AudioResources* audio_resources_ = nullptr;
 	const float* dt_ = nullptr;
 
 	std::unique_ptr<ICollisionGameObject>
 		build_collision_object(const rapidjson::Value& json,
 			const TeamColour& team_colours) const;
 
-	std::unique_ptr<IGameObject>
+	std::unique_ptr<artattack::IGameObject>
 		build_non_collision_object(const rapidjson::Value& json) const;
 };

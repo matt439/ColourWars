@@ -7,7 +7,7 @@ struct ProjectileDetails
 {
     float gravity = -1.0f;
     float wind_resistance = -1.0f;
-    RotationOrigin rotat_origin = RotationOrigin::no_rotation;
+    artattack::RotationOrigin rotat_origin = artattack::RotationOrigin::no_rotation;
     float delete_timer = -1.0f;
     float player_damage = -1.0f;
     mattmath::Vector2F size = { 0.0f, 0.0f };

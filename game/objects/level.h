@@ -55,10 +55,10 @@ class Level
 {
 public:
 	Level() = default;
-	Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_collision_objects,
+	Level(std::unique_ptr<std::vector<std::unique_ptr<artattack::IGameObject>>> non_collision_objects,
 		std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> collision_objects,
 		std::unique_ptr<std::vector<std::unique_ptr<Player>>> player_objects,
-		std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers,
+		std::unique_ptr<std::vector<std::unique_ptr<artattack::IGameObject>>> viewport_dividers,
 		LevelStage stage,
 		const TeamColour& team_colours,
 		const mattmath::RectangleF& out_of_bounds,
@@ -73,12 +73,12 @@ public:
 		const float* dt,
 		ID3D11SamplerState* sampler_state,
 		const std::string& level_name,
-		const ResolutionManager* resolution_manager,
-		ViewportManager* viewport_manager,
-		RenderResources* render_resources,
-		const AudioResources* audio_resources,
-		ThreadPool* thread_pool,
-		const Partitioner* partitioner);
+		const artattack::ResolutionManager* resolution_manager,
+		artattack::ViewportManager* viewport_manager,
+		artattack::RenderResources* render_resources,
+		const artattack::AudioResources* audio_resources,
+		artattack::ThreadPool* thread_pool,
+		const artattack::Partitioner* partitioner);
 
 	void update(const std::vector<PlayerInputData>& player_inputs);
 	void draw(std::vector<ID3D11DeviceContext*>* deferred_contexts,
@@ -93,7 +93,7 @@ public:
 	void stop_music() const;
 
 private:
-	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
+	std::unique_ptr<std::vector<std::unique_ptr<artattack::IGameObject>>>
 		non_collision_objects_ = nullptr;
 
 	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>>
@@ -102,28 +102,28 @@ private:
 	std::unique_ptr<std::vector<std::unique_ptr<Player>>>
 		player_objects_ = nullptr;
 
-	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
+	std::unique_ptr<std::vector<std::unique_ptr<artattack::IGameObject>>>
 		viewport_dividers_ = nullptr;
 
-	SoundBank* sound_bank_ = nullptr;
+	artattack::SoundBank* sound_bank_ = nullptr;
 
 	// The level's own music comes from its definition file, so its name is not
 	// known until here - but it is known once, at construction, which is where
 	// it stops being a name. Same for the two fixed sounds the level plays.
-	SoundBank::EffectHandle music_;
-	SoundBank::EffectHandle zoom_out_sound_;
-	SoundBank::WaveHandle countdown_sound_;
+	artattack::SoundBank::EffectHandle music_;
+	artattack::SoundBank::EffectHandle zoom_out_sound_;
+	artattack::SoundBank::WaveHandle countdown_sound_;
 	float music_volume_ = 0.0f;
 
-	std::unique_ptr<TextDropShadow> countdown_text_ = nullptr;
+	std::unique_ptr<artattack::TextDropShadow> countdown_text_ = nullptr;
 
-	std::unique_ptr<CameraTools> camera_tools_ = nullptr;
+	std::unique_ptr<artattack::CameraTools> camera_tools_ = nullptr;
 	std::unique_ptr<InterfaceGameplay> interface_gameplay_ = nullptr;
 
 	std::string level_name_ = "";
-	const ResolutionManager* resolution_manager_ = nullptr;
-	ViewportManager* viewport_manager_ = nullptr;
-	RenderResources* render_resources_ = nullptr;
+	const artattack::ResolutionManager* resolution_manager_ = nullptr;
+	artattack::ViewportManager* viewport_manager_ = nullptr;
+	artattack::RenderResources* render_resources_ = nullptr;
 
 	float timer_ = level_consts::TIMER;
 	float start_timer_ = level_consts::START_TIMER;
@@ -150,8 +150,8 @@ private:
 	std::vector<PlayerInputData> player_inputs_ = std::vector<PlayerInputData>();
 	std::unique_ptr<DebugText> debug_text_ = nullptr;
 
-	ThreadPool* thread_pool_ = nullptr;
-	const Partitioner* partitioner_ = nullptr;
+	artattack::ThreadPool* thread_pool_ = nullptr;
+	const artattack::Partitioner* partitioner_ = nullptr;
 
 	int count_projectiles() const;
 	float dt() const;

@@ -3,6 +3,7 @@
 
 using namespace rapidjson;
 using namespace mattmath;
+using namespace artattack;
 
 LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
 	const AudioResources* audio_resources,
@@ -222,11 +223,11 @@ std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
 	for (auto& rectangle : viewport_rectangles)
 	{
 		viewport_dividers->push_back(std::make_unique<Visual>(
-			viewport_consts::DIVIDER_SHEET_NAME,
-			viewport_consts::DIVIDER_FRAME_NAME,
+			ViewportManager::DIVIDER_SHEET_NAME,
+			ViewportManager::DIVIDER_FRAME_NAME,
 			rectangle,
 			this->render_resources_,
-			viewport_consts::DIVIDER_COLOUR));
+			ViewportManager::DIVIDER_COLOUR));
 	}
 
 	return viewport_dividers;

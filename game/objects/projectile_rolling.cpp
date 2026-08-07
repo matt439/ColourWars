@@ -4,6 +4,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace projectile_consts;
+using namespace artattack;
 
 ProjectileRolling::ProjectileRolling(const RectangleF& rectangle,
 	const Vector2F& velocity,

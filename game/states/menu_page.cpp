@@ -3,6 +3,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
+using namespace artattack;
 
 MenuPage::MenuPage(MenuData* data) : data_(data)
 {

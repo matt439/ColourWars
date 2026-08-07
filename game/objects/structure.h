@@ -3,7 +3,7 @@
 #include "game/objects/i_collision_game_object.h"
 #include "engine/render/texture_object.h"
 
-class Structure : public TextureObject, public ICollisionGameObject
+class Structure : public artattack::TextureObject, public ICollisionGameObject
 {
 public:
 	Structure() = default;
@@ -11,7 +11,7 @@ public:
 		const std::string& frame_name,
 		const mattmath::RectangleF& sprite_rectangle,
 		const mattmath::Shape* collision_shape,
-		RenderResources* render_resources,
+		artattack::RenderResources* render_resources,
 		CollisionObjectType collision_type,
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,

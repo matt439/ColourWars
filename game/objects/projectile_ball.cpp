@@ -4,6 +4,7 @@
 using namespace mattmath;
 using namespace DirectX;
 using namespace projectile_consts;
+using namespace artattack;
 
 ProjectileBall::ProjectileBall(const RectangleF& rectangle,
 	const Vector2F& velocity,

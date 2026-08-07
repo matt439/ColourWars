@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/menu_level_settings.h"
+using namespace artattack;
 
 std::vector<MenuPlayerSettings> MenuLevelSettings::player_settings() const
 {
@@ -54,9 +55,9 @@ ScreenLayout MenuLevelSettings::screen_layout() const
 	return this->screen_layout_;
 }
 
-void MenuLevelSettings::set_screen_layout(ScreenLayout ScreenLayout)
+void MenuLevelSettings::set_screen_layout(ScreenLayout screen_layout)
 {
-	this->screen_layout_ = ScreenLayout;
+	this->screen_layout_ = screen_layout;
 }
 
 void MenuLevelSettings::set_player_setting(int player_index, MenuPlayerSettings player_settings)

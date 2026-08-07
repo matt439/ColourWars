@@ -4,6 +4,7 @@
 using namespace mattmath;
 using namespace DirectX;
 using namespace level_consts;
+using namespace artattack;
 
 Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_collision_objects,
 	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> collision_objects,

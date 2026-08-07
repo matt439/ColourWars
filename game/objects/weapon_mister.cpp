@@ -4,6 +4,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace weapon_consts;
+using namespace artattack;
 
 WeaponMister::WeaponMister(PlayerTeam team,
     int player_num,

@@ -3,6 +3,7 @@
 
 using namespace mattmath;
 using namespace DirectX;
+using namespace artattack;
 
 std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
     PlayerTeam team,

@@ -38,7 +38,7 @@ namespace end_menu_consts
 	const std::string CANCEL_SOUND = "UI_Clicks17";
 }
 
-class EndMenuPage : public MenuPage, public MenuHighlight, public SoundBankObject
+class EndMenuPage : public MenuPage, public MenuHighlight, public artattack::SoundBankObject
 {
 public:
 	explicit EndMenuPage(EndMenuData* data);
@@ -51,9 +51,9 @@ protected:
 
 	// Every sound this page family can make, resolved once when the page is
 	// built. A press then plays an index, not a name (T7, T8).
-	SoundBank::WaveHandle direction_sound_;
-	SoundBank::WaveHandle confirm_sound_;
-	SoundBank::WaveHandle cancel_sound_;
+	artattack::SoundBank::WaveHandle direction_sound_;
+	artattack::SoundBank::WaveHandle confirm_sound_;
+	artattack::SoundBank::WaveHandle cancel_sound_;
 private:
 	EndMenuData* data_ = nullptr;
 };
@@ -66,13 +66,13 @@ public:
 	void update() override;
 	void draw() override;
 private:
-	std::unique_ptr<MContainer> texture_container_ = nullptr;
-	std::unique_ptr<MContainer> text_container_ = nullptr;
-	std::unique_ptr<MTexture> box_ = nullptr;
-	std::unique_ptr<MTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<MTextDropShadow> change_teams_ = nullptr;
-	std::unique_ptr<MTextDropShadow> change_weapons_ = nullptr;
-	std::unique_ptr<MTextDropShadow> change_level_ = nullptr;
-	std::unique_ptr<MTextDropShadow> restart_ = nullptr;
-	std::unique_ptr<MTextDropShadow> exit_ = nullptr;
+	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::MTexture> box_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> change_teams_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> change_weapons_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> change_level_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> restart_ = nullptr;
+	std::unique_ptr<artattack::MTextDropShadow> exit_ = nullptr;
 };

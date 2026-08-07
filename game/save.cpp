@@ -10,10 +10,11 @@
 using namespace rapidjson;
 using namespace directory_consts;
 using namespace mattmath;
+using namespace artattack;
 
 SaveData Save::load_from_json(const char* json_path) const
 {
-    Document d = json_loader::parse_file(json_path);
+    Document d = read_json_file(json_path);
 
     // Every field is optional: a save written by an older build, or one a user
     // has hand-edited, must degrade to the default rather than crash.
