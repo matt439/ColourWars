@@ -3,6 +3,8 @@
 
 #include "engine/render/render_resources.h"
 #include "engine/audio/audio_resources.h"
+#include "engine/assets/sprite_sheet_loader.h"
+#include "engine/assets/sound_bank_loader.h"
 #include "engine/core/registry.h"
 #include "directory_consts.h"
 #include "level_stage.h"

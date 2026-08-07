@@ -172,12 +172,9 @@ void ResourceLoader::load_sprite_sheet(
 {
     this->load_texture(texture_path, texture_name);
 
-    auto ss = std::make_unique<SpriteSheet>(
-        this->_render_resources->get_texture(texture_name));
-
-    ss->load_from_json(json_path.c_str());
-
-    this->_render_resources->add_sprite_sheet(sprite_sheet_name, std::move(ss));
+    this->_render_resources->add_sprite_sheet(sprite_sheet_name,
+        sprite_sheet_loader::load(json_path.c_str(),
+            this->_render_resources->get_texture(texture_name)));
 }
 
 void ResourceLoader::load_sprite_sheet_from_directory(
@@ -222,12 +219,8 @@ void ResourceLoader::load_sound_bank(const std::string& wave_bank_path,
 		throw std::runtime_error("Failed to load wave bank: " + wave_bank_path);
 	}
 
-	auto sb = std::make_unique<SoundBank>(
-        std::move(wb));
-
-    sb->load_from_json(json_path.c_str());
-
-    this->_audio_resources->add_sound_bank(sound_bank_name, std::move(sb));
+    this->_audio_resources->add_sound_bank(sound_bank_name,
+        sound_bank_loader::load(json_path.c_str(), std::move(wb)));
 
 }
 void ResourceLoader::load_sound_bank_from_directory(const std::string& directory,
