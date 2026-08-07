@@ -227,15 +227,18 @@ void Game::create_services()
     this->_thread_pool = std::make_unique<ThreadPool>(NUM_THREADS_MIN, NUM_THREADS_MAX);
     this->_data->set_thread_pool(this->_thread_pool.get());
 
-    this->_resource_manager = std::make_unique<ResourceManager>();
-    this->_data->set_resource_manager(this->_resource_manager.get());
+    this->_render_resources = std::make_unique<RenderResources>();
+    this->_data->set_render_resources(this->_render_resources.get());
+
+    this->_audio_resources = std::make_unique<AudioResources>();
+    this->_data->set_audio_resources(this->_audio_resources.get());
 
     this->_level_infos = std::make_unique<Registry<LevelLoadedInfo>>("Level");
     this->_data->set_level_infos(this->_level_infos.get());
 
     this->_resource_loader = std::make_unique<ResourceLoader>(
-        this->_resource_manager.get(), this->_level_infos.get(), device,
-        this->_audio_engine.get());
+        this->_render_resources.get(), this->_audio_resources.get(),
+        this->_level_infos.get(), device, this->_audio_engine.get());
     this->_data->set_resource_loader(this->_resource_loader.get());
 
     this->_dt = std::make_unique<float>(0.f);
@@ -273,7 +276,7 @@ void Game::create_device_dependent_resources()
     _states = std::make_unique<CommonStates>(device);
     this->_data->set_common_states(_states.get());
 
-    // Reload the GPU-side assets into the existing ResourceManager, so every
+    // Reload the GPU-side assets into the existing RenderResources, so every
     // borrowed SpriteSheet*/SoundBank* pointer stays valid.
     this->_resource_loader->set_device(device);
 
@@ -308,8 +311,8 @@ void Game::OnDeviceLost()
     _states.reset();
     this->_data->set_common_states(nullptr);
 
-    this->_resource_manager->reset_all_textures();
-    this->_resource_manager->reset_all_sprite_fonts();
+    this->_render_resources->reset_all_textures();
+    this->_render_resources->reset_all_sprite_fonts();
 }
 
 void Game::OnDeviceRestored()

@@ -9,7 +9,7 @@ using namespace colour_consts;
 MainMenuPage::MainMenuPage(MainMenuData* data) :
 	MenuPage(data),
 	SoundBankObject(main_menu_consts::SOUND_BANK,
-		this->get_resource_manager()),
+		this->get_audio_resources()),
 	_data(data)
 {
 
@@ -66,7 +66,7 @@ void MainMenuTitle::init()
 		"sprite_sheet_1",
 		"square_white_4",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		TITLE_BACKGROUND_COLOUR);
 
 	this->_title = std::make_unique<MTextDropShadow>(
@@ -74,7 +74,7 @@ void MainMenuTitle::init()
 		"Colour Wars",
 		TITLE_FONT,
 		Vector2F(200.0f, 300.0f),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		TITLE_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		TITLE_SHADOW_OFFSET);
@@ -84,7 +84,7 @@ void MainMenuTitle::init()
 		"Start",
 		ITEM_FONT,
 		Vector2F(250.0f, 700.0f),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		TITLE_START_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -211,7 +211,7 @@ void MainMenuHome::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		HOME_BACKGROUND_COLOUR);
 
 	this->_heading = std::make_unique<MTextDropShadow>(
@@ -219,7 +219,7 @@ void MainMenuHome::init()
 		"Main Menu",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -229,7 +229,7 @@ void MainMenuHome::init()
 		"Play",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -239,7 +239,7 @@ void MainMenuHome::init()
 		"Options",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -249,7 +249,7 @@ void MainMenuHome::init()
 		"Exit",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -464,7 +464,7 @@ void MainMenuOptions::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		OPTIONS_BACKGROUND_COLOUR);
 
 	this->_heading = std::make_unique<MTextDropShadow>(
@@ -472,7 +472,7 @@ void MainMenuOptions::init()
 		"Options",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -482,7 +482,7 @@ void MainMenuOptions::init()
 		"Resolution",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -492,7 +492,7 @@ void MainMenuOptions::init()
 		"null",
 		ITEM_FONT,
 		this->calculate_widget_position(2, 2),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		OPTIONS_VALUE_COLOUR,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -504,7 +504,7 @@ void MainMenuOptions::init()
 		"Fullscreen",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -514,7 +514,7 @@ void MainMenuOptions::init()
 		"null",
 		ITEM_FONT,
 		this->calculate_widget_position(2, 3),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		OPTIONS_VALUE_COLOUR,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -526,7 +526,7 @@ void MainMenuOptions::init()
 		"Apply",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -536,7 +536,7 @@ void MainMenuOptions::init()
 		"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -770,7 +770,7 @@ void MainMenuModeSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
 	this->_heading = std::make_unique<MTextDropShadow>(
@@ -778,7 +778,7 @@ void MainMenuModeSelect::init()
 		"Mode Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -788,7 +788,7 @@ void MainMenuModeSelect::init()
 		"Standard",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -798,7 +798,7 @@ void MainMenuModeSelect::init()
 		"Team Deathmatch",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -808,7 +808,7 @@ void MainMenuModeSelect::init()
 		"Deathmatch",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -818,7 +818,7 @@ void MainMenuModeSelect::init()
 		"Practice",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -828,7 +828,7 @@ void MainMenuModeSelect::init()
 		"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -1037,7 +1037,7 @@ void MainMenuPlayerCount::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
 	this->_heading = std::make_unique<MTextDropShadow>(
@@ -1045,7 +1045,7 @@ void MainMenuPlayerCount::init()
 		"Number of Players",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -1055,7 +1055,7 @@ void MainMenuPlayerCount::init()
 		"1 Player",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -1065,7 +1065,7 @@ void MainMenuPlayerCount::init()
 		"2 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -1075,7 +1075,7 @@ void MainMenuPlayerCount::init()
 		"3 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -1085,7 +1085,7 @@ void MainMenuPlayerCount::init()
 		"4 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -1095,7 +1095,7 @@ void MainMenuPlayerCount::init()
 		"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -1324,7 +1324,7 @@ void MainMenuTeamSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
 	this->_texture_container->add_child(this->_background.get());
@@ -1334,7 +1334,7 @@ void MainMenuTeamSelect::init()
 		"Team Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -1360,7 +1360,7 @@ void MainMenuTeamSelect::init()
 			label_text,
 			ITEM_FONT,
 			this->calculate_widget_position(0, i + 2),
-			this->get_resource_manager(),
+			this->get_render_resources(),
 			TEAM_SELECT_UNSELECTED_COLOUR,
 			SHADOW_COLOUR,
 			ITEM_SHADOW_OFFSET);
@@ -1370,7 +1370,7 @@ void MainMenuTeamSelect::init()
 			"sprite_sheet_1",
 			"team_select_a",
 			RectangleF(this->calculate_widget_position(2, i + 2), TEAM_SELECT_TEAM_WIDGET_SIZE),
-			this->get_resource_manager());
+			this->get_render_resources());
 
 		auto move = Vector2F(TEAM_SELECT_TEAM_WIDGET_SIZE.x, 0.0f);
 
@@ -1380,7 +1380,7 @@ void MainMenuTeamSelect::init()
 			"team_select_center",
 			RectangleF(widgets->player_a->get_rectangle().get_position() + move,
 				TEAM_SELECT_TEAM_WIDGET_SIZE),
-			this->get_resource_manager());
+			this->get_render_resources());
 
 		widgets->player_b = std::make_unique<MTexture>(
 			name + "_b",
@@ -1388,7 +1388,7 @@ void MainMenuTeamSelect::init()
 			"team_select_b",
 			RectangleF(widgets->player_center->get_rectangle().get_position() + move,
 				TEAM_SELECT_TEAM_WIDGET_SIZE),
-			this->get_resource_manager());
+			this->get_render_resources());
 
 		this->_texture_container->add_child(widgets->player_a.get());
 		this->_texture_container->add_child(widgets->player_center.get());
@@ -1651,7 +1651,7 @@ void MainMenuWeaponSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
 	this->_texture_container->add_child(this->_background.get());
@@ -1661,7 +1661,7 @@ void MainMenuWeaponSelect::init()
 		"Weapon Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -1686,7 +1686,7 @@ void MainMenuWeaponSelect::init()
 			label_text,
 			ITEM_FONT,
 			this->calculate_widget_position(0, i + 2),
-			this->get_resource_manager(),
+			this->get_render_resources(),
 			WEAPON_SELECT_UNSELECTED_COLOUR);
 
 		widgets->weapon_icon = std::make_unique<MTexture>(
@@ -1694,7 +1694,7 @@ void MainMenuWeaponSelect::init()
 			"sprite_sheet_1",
 			"sprayer",
 			RectangleF(this->calculate_widget_position(2, i + 2), WEAPON_SELECT_WEAPON_WIDGET_SIZE),
-			this->get_resource_manager(),
+			this->get_render_resources(),
 			PLAY_BACKGROUND_COLOUR);
 
 		widgets->weapon_name = std::make_unique<MTextDropShadow>(
@@ -1703,7 +1703,7 @@ void MainMenuWeaponSelect::init()
 			DETAIL_FONT,
 			widgets->weapon_icon->get_rectangle().get_position() +
 				Vector2F(0.0f, WEAPON_SELECT_WEAPON_WIDGET_SIZE.y),
-			this->get_resource_manager(),
+			this->get_render_resources(),
 			WEAPON_SELECT_UNSELECTED_COLOUR,
 			SHADOW_COLOUR,
 			DETAIL_SHADOW_OFFSET);
@@ -1714,7 +1714,7 @@ void MainMenuWeaponSelect::init()
 			WEAPON_DESCRIPTION_FONT,
 			widgets->weapon_icon->get_rectangle().get_position() +
 				Vector2F(WEAPON_DESC_X_OFFSET, 0.0f),
-			this->get_resource_manager(),
+			this->get_render_resources(),
 			WEAPON_DESCRIPTION_FONT_COLOUR,
 			SHADOW_COLOUR,
 			WEAPON_DESCRIPTION_SHADOW_OFFSET);
@@ -1907,7 +1907,7 @@ void MainMenuStageSelect::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
 	this->_heading = std::make_unique<MTextDropShadow>(
@@ -1915,7 +1915,7 @@ void MainMenuStageSelect::init()
 		"Stage Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		HEADING_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -1926,7 +1926,7 @@ void MainMenuStageSelect::init()
 		"sprite_sheet_1",
 		"stage_test_1",
 		RectangleF(this->calculate_widget_position(0, 1), STAGE_SELECT_ICON_SIZE),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
 	this->_stage_name = std::make_unique<MTextDropShadow>(
@@ -1934,7 +1934,7 @@ void MainMenuStageSelect::init()
 		"Test 1",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		STAGE_SELECT_UNSELECTED_COLOUR,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -1944,7 +1944,7 @@ void MainMenuStageSelect::init()
 		"READY?",
 		ANNOUNCEMENT_FONT,
 		this->_background->get_rectangle().get_center() - Vector2F(400.0f, 100.0f),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		STAGE_SELECT_SELECTED_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET,

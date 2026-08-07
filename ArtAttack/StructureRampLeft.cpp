@@ -7,13 +7,13 @@
 //StructureRampLeft::StructureRampLeft(const std::string& sheet_name,
 //	const std::string& frame_name,
 //	const TriangleRightAxisAligned& triangle,
-//	ResourceManager* resource_manager,
+//	RenderResources* render_resources,
 //	const Colour& color,
 //	float rotation,
 //	const Vector2F& origin,
 //	SpriteEffects effects,
 //	float layer_depth) :
-//	StructureRamp(sheet_name, frame_name, triangle, resource_manager,
+//	StructureRamp(sheet_name, frame_name, triangle, render_resources,
 //		collision_object_type::STRUCTURE_RAMP_LEFT,
 //		color, rotation, origin, effects, layer_depth)
 //{

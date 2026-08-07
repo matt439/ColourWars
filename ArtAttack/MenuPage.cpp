@@ -73,9 +73,13 @@ Save* MenuPage::get_save() const
 {
 	return this->_data->get_save();
 }
-ResourceManager* MenuPage::get_resource_manager() const
+RenderResources* MenuPage::get_render_resources() const
 {
-	return this->_data->get_resource_manager();
+	return this->_data->get_render_resources();
+}
+const AudioResources* MenuPage::get_audio_resources() const
+{
+	return this->_data->get_audio_resources();
 }
 //SpriteBatch* MenuPage::get_sprite_batch() const
 //{

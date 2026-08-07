@@ -9,7 +9,7 @@ using namespace colour_consts;
 ResultsMenuPage::ResultsMenuPage(ResultsMenuData* data) :
 	MenuPage(data),
 	SoundBankObject(results_menu_consts::SOUND_BANK,
-		this->get_resource_manager()),
+		this->get_audio_resources()),
 	_data(data)
 {
 
@@ -79,7 +79,7 @@ void ResultsMenuInitial::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, RESULTS_MENU_BOX_SIZE),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		RESULTS_MENU_BOX_COLOUR);
 	this->_box->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
 
@@ -88,7 +88,7 @@ void ResultsMenuInitial::init()
 		"Results",
 		HEADING_FONT,
 		HEADING_POSITION,
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		RESULTS_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -98,7 +98,7 @@ void ResultsMenuInitial::init()
 		"sprite_sheet_1",
 		"results_menu_fill_box",
 		RectangleF(Vector2F::ZERO, RESULTS_MENU_FILL_BOX_SIZE),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		RESULTS_MENU_BOX_COLOUR);
 	auto fill_box_position = Vector2F(
 		this->calculate_center_position(
@@ -112,7 +112,7 @@ void ResultsMenuInitial::init()
 		"results_menu_team_a_fill",
 		RectangleF(Vector2F::ZERO,
 			Vector2F(0.0f, RESULTS_MENU_TEAM_FILL_SIZE.y)),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_results_menu_data()->get_level_end_info().team_colours.team_a);
 	this->_team_a_fill->set_position(this->_fill_box->get_rectangle().get_position() +
 		RESULTS_MENU_TEAM_FILL_BORDER);
@@ -123,7 +123,7 @@ void ResultsMenuInitial::init()
 		"results_menu_team_b_fill",
 		RectangleF(Vector2F::ZERO,
 			Vector2F(0.0f, RESULTS_MENU_TEAM_FILL_SIZE.y)),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_results_menu_data()->get_level_end_info().team_colours.team_b);
 
 	this->_team_a_percentage = std::make_unique<MTextDropShadow>(
@@ -131,7 +131,7 @@ void ResultsMenuInitial::init()
 		end_info.team_a_percentage_string(),
 		DETAIL_FONT,
 		this->_team_a_fill->get_rectangle().get_position(),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		PERCENTAGE_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		DETAIL_SHADOW_OFFSET,
@@ -142,7 +142,7 @@ void ResultsMenuInitial::init()
 		end_info.team_b_percentage_string(),
 		DETAIL_FONT,
 		Vector2F::ZERO,
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		PERCENTAGE_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		DETAIL_SHADOW_OFFSET,
@@ -157,7 +157,7 @@ void ResultsMenuInitial::init()
 		end_info.winning_team_string(),
 		ITEM_FONT,
 		WINNER_POSITION,
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		RESULTS_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		DETAIL_SHADOW_OFFSET,
@@ -168,7 +168,7 @@ void ResultsMenuInitial::init()
 		"Press A to proceed",
 		DETAIL_FONT,
 		PROCEED_POSITION,
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		RESULTS_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		DETAIL_SHADOW_OFFSET,

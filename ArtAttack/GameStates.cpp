@@ -113,7 +113,8 @@ void GameLevel::init()
     this->_level_builder = std::make_unique<LevelBuilder>(
         this->get_data()->get_viewport_manager(),
         this->get_data()->get_dt(),
-        this->get_data()->get_resource_manager(),
+        this->get_data()->get_render_resources(),
+        this->get_data()->get_audio_resources(),
         this->get_data()->get_level_infos(),
         this->get_data()->get_common_states()->PointClamp(),
         this->get_data()->get_resolution_manager(),

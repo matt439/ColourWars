@@ -4,7 +4,8 @@
 #include "engine/render/device_resources.h"
 #include "engine/core/step_timer.h"
 #include "GameData.h"
-#include "engine/assets/resource_manager.h"
+#include "engine/render/render_resources.h"
+#include "engine/audio/audio_resources.h"
 #include "engine/core/state_context.h"
 #include "engine/core/thread_pool.h"
 #include <Audio.h>
@@ -67,13 +68,14 @@ private:
     //
     // Members destruct in reverse declaration order. DirectXTK requires the
     // AudioEngine to outlive every WaveBank and SoundEffectInstance - their
-    // destructors unregister themselves from it - and ResourceManager owns the
+    // destructors unregister themselves from it - and AudioResources owns the
     // SoundBanks that own those. So _audio_engine is declared FIRST, and dies
     // LAST. It used to be declared near the end and was destroyed before the
     // banks it owns, on every normal exit.
     std::unique_ptr<DirectX::AudioEngine> _audio_engine = nullptr;
 
-    std::unique_ptr<ResourceManager> _resource_manager = nullptr;
+    std::unique_ptr<AudioResources> _audio_resources = nullptr;
+    std::unique_ptr<RenderResources> _render_resources = nullptr;
 
     // Levels are the game's kind of resource, not the engine's, so the game
     // keeps their registry itself and hands it to whoever needs it.

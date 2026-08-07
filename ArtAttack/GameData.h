@@ -5,8 +5,9 @@
 #include "Save.h"
 #include "ResourceLoader.h"
 #include "LevelLoadedInfo.h"
-#include "engine/assets/resource_manager.h"
-#include "engine/assets/registry.h"
+#include "engine/render/render_resources.h"
+#include "engine/audio/audio_resources.h"
+#include "engine/core/registry.h"
 #include "engine/render/device_resources.h"
 #include "engine/render/viewport_manager.h"
 #include "engine/core/thread_pool.h"
@@ -28,8 +29,10 @@ public:
     Save* get_save() const;
     void set_resource_loader(ResourceLoader* texture_loader);
     ResourceLoader* get_resource_loader() const;
-    void set_resource_manager(ResourceManager* resource_manager);
-    ResourceManager* get_resource_manager() const;
+    void set_render_resources(RenderResources* render_resources);
+    RenderResources* get_render_resources() const;
+    void set_audio_resources(AudioResources* audio_resources);
+    AudioResources* get_audio_resources() const;
     void set_level_infos(Registry<LevelLoadedInfo>* level_infos);
     Registry<LevelLoadedInfo>* get_level_infos() const;
     void set_gamepad(DirectX::GamePad* gamepad);
@@ -55,7 +58,8 @@ private:
     HWND _window = nullptr;
     float* _dt = nullptr;
     ResourceLoader* _resource_loader = nullptr;
-    ResourceManager* _resource_manager = nullptr;
+    RenderResources* _render_resources = nullptr;
+    AudioResources* _audio_resources = nullptr;
 
     // The game's own resource registry, beside the engine's: a level
     // definition means nothing to the engine, so the engine does not cache it.

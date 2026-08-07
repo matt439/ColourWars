@@ -11,6 +11,7 @@
 #include "ICollisionGameObject.h"
 #include "engine/core/moving_object.h"
 #include "engine/audio/sound_bank.h"
+#include "engine/audio/audio_resources.h"
 #include "engine/math/collision_tools.h"
 
 enum class player_state
@@ -66,7 +67,8 @@ class Player final : public MovingObject, public ICollisionGameObject,
 public:
     Player(const MattMath::RectangleF& rectangle,
         const PlayerAnimationInfo& animation_info,
-        ResourceManager* resource_manager,
+        RenderResources* render_resources,
+        const AudioResources* audio_resources,
         int player_num,
         player_team team,
         wep_type primary,

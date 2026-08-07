@@ -17,7 +17,8 @@ public:
 		const MenuLevelSettings& settings,
 		const LevelLoadedInfo* load_info,
 		TeamColour team_colours,
-		ResourceManager* resource_manager,
+		RenderResources* render_resources,
+		const AudioResources* audio_resources,
 		const ViewportManager* viewport_manager,
 		const float* dt) const;
 private:

@@ -11,18 +11,19 @@ Weapon::Weapon(const WeaponDetails& details,
     const Colour& team_colour,
     wep_type type,
     const Vector2F& player_center,
-    ResourceManager* resource_manager,
+    RenderResources* render_resources,
+    const AudioResources* audio_resources,
     const float* dt,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
     SpriteEffects effects,
     float layer_depth) :
-    TextureObject(details.sheet_name, details.frame_name, resource_manager,
+    TextureObject(details.sheet_name, details.frame_name, render_resources,
                   color, rotation, origin, effects, layer_depth),
         _details(details),
         _dt(dt),
-        _resource_manager(resource_manager),
+        _render_resources(render_resources),
         _team(team),
         _player_num(player_num),
         _team_colour(team_colour),
@@ -30,7 +31,7 @@ Weapon::Weapon(const WeaponDetails& details,
         _player_center(player_center)
 {
     this->_proj_builder = std::make_unique<ProjectileBuilder>();
-    this->_sound_bank = resource_manager->get_sound_bank(details.sound_bank_name);
+    this->_sound_bank = audio_resources->get_sound_bank(details.sound_bank_name);
     this->_loop_sound_name = resolve_loop_sound_name(type, team, player_num);
 }
 
@@ -343,7 +344,7 @@ Weapon::shoot(const Vector2F& shoot_direction) const
         this->get_team_colour(),
         this->get_details().proj_type,
         this->_dt,
-        this->_resource_manager);
+        this->_render_resources);
 }
 
 Vector2F Weapon::calculate_projectile_launch_velocity(
@@ -516,9 +517,9 @@ float Weapon::get_dt() const
 {
 	return *this->_dt;
 }
-ResourceManager* Weapon::get_resource_manager() const
+RenderResources* Weapon::get_render_resources() const
 {
-	return this->_resource_manager;
+	return this->_render_resources;
 }
 
 RelativeVelocityWeapon::RelativeVelocityWeapon(
@@ -529,7 +530,8 @@ RelativeVelocityWeapon::RelativeVelocityWeapon(
     const Colour& team_colour,
     wep_type type,
     const Vector2F& player_center,
-    ResourceManager* resource_manager,
+    RenderResources* render_resources,
+    const AudioResources* audio_resources,
     const float* dt,
     const Colour& color,
     float rotation,
@@ -537,7 +539,7 @@ RelativeVelocityWeapon::RelativeVelocityWeapon(
     DirectX::SpriteEffects effects,
     float layer_depth) :
     Weapon(details, team, player_num, team_colour, type,
-        player_center, resource_manager, dt,
+        player_center, render_resources, audio_resources, dt,
         color, rotation, origin, effects, layer_depth),
     _rel_details(rel_details)
 {
@@ -589,7 +591,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>> RelativeVelocityWeapon::shoot
         this->get_team_colour(),
         this->get_details().proj_type,
         this->get_dt_ptr(),
-        this->get_resource_manager());
+        this->get_render_resources());
 }
 
 std::vector<std::unique_ptr<ICollisionGameObject>>

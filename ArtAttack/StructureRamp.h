@@ -9,7 +9,7 @@
 //	StructureRamp(const std::string& sheet_name,
 //		const std::string& frame_name,
 //		const MattMath::TriangleRightAxisAligned& triangle,
-//		ResourceManager* resource_manager,
+//		RenderResources* render_resources,
 //		collision_object_type collision_type,
 //		const MattMath::Colour& color = colour_consts::WHITE,
 //		float rotation = 0.0f,

@@ -12,7 +12,7 @@ public:
 		const std::string& frame_name,
 		const MattMath::RectangleF& sprite_rectangle,
 		const MattMath::Shape* collision_shape,
-		ResourceManager* resource_manager,
+		RenderResources* render_resources,
 		collision_object_type collision_type,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,

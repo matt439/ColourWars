@@ -5,10 +5,10 @@ using namespace DirectX;
 using namespace MattMath;
 using namespace debug_text_consts;
 
-DebugText::DebugText(ResourceManager* resource_manager,
+DebugText::DebugText(RenderResources* render_resources,
     const float* dt,
     const ResolutionManager* resolution_manager) :
-    Drawer(resource_manager, dt),
+    Drawer(render_resources, dt),
     _resolution_manager(resolution_manager)
 {
 	
@@ -102,7 +102,7 @@ void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
 
     Vector2F text_pos = DEBUG_POSITION;
 
-    SpriteFont* sprite_font = this->get_resource_manager()->get_sprite_font(
+    SpriteFont* sprite_font = this->get_render_resources()->get_sprite_font(
         DEBUG_FONT);
 
     sprite_batch->Begin();

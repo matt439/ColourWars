@@ -14,7 +14,8 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 	const MenuLevelSettings& settings,
 	const LevelLoadedInfo* load_info,
 	TeamColour team_colours,
-	ResourceManager* resource_manager,
+	RenderResources* render_resources,
+	const AudioResources* audio_resources,
 	const ViewportManager* viewport_manager,
 	const float* dt) const
 {
@@ -40,7 +41,8 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 		auto player = std::make_unique<Player>(
 			rect,
 			DEFAULT_ANIMATION_INFO,
-			resource_manager,
+			render_resources,
+			audio_resources,
 			setting.num,
 			setting.team,
 			setting.weapon,
@@ -50,7 +52,8 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 				team_colours.get_team_colour(setting.team),
 				setting.weapon,
 				rect.get_center(),
-				resource_manager,
+				render_resources,
+				audio_resources,
 				dt),
 			wep_type::GRENADE_STD,
 			team_colours.get_team_colour(setting.team),

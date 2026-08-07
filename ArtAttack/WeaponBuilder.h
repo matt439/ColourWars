@@ -17,7 +17,8 @@ public:
 		const MattMath::Colour& team_colour,
 		wep_type type,
 		const MattMath::Vector2F& player_center,
-		ResourceManager* resource_manager,
+		RenderResources* render_resources,
+		const AudioResources* audio_resources,
 		const float* dt);
 };
 

@@ -3,7 +3,7 @@
 
 #include "engine/render/drawer.h"
 #include "player_team.h"
-#include "engine/assets/resource_manager.h"
+#include "engine/render/render_resources.h"
 #include "engine/math/colour.h"
 #include "engine/math/matt_math.h"
 
@@ -47,7 +47,7 @@ struct InterfaceDraw
 class InterfaceGameplay : public Drawer
 {
 public:
-    InterfaceGameplay(ResourceManager* resource_manager, const float* dt);
+    InterfaceGameplay(RenderResources* render_resources, const float* dt);
 
 	void draw_gameplay_interface(DirectX::SpriteBatch* sprite_batch,
         const MattMath::Vector2F& resolution,

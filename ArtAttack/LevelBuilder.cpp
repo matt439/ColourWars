@@ -7,13 +7,15 @@ using namespace rapidjson;
 
 LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	const float* dt,
-	ResourceManager* resource_manager,
+	RenderResources* render_resources,
+	const AudioResources* audio_resources,
 	const Registry<LevelLoadedInfo>* level_infos,
 	ID3D11SamplerState* sampler_state,
 	ResolutionManager* resolution_manager,
 	ThreadPool* thread_pool,
 	const Partitioner* partitioner) :
-	_resource_manager(resource_manager),
+	_render_resources(render_resources),
+	_audio_resources(audio_resources),
 	_level_infos(level_infos),
 	_dt(dt),
 	_viewport_manager(viewport_manager),
@@ -26,7 +28,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	this->_player_builder = std::make_unique<PlayerBuilder>();
 
 	this->_level_object_builder = std::make_unique<LevelObjectBuilder>(
-		this->_resource_manager, this->_dt);
+		this->_render_resources, this->_audio_resources, this->_dt);
 }
 
 std::unique_ptr<Level>
@@ -51,8 +53,8 @@ std::unique_ptr<Level>
 
 	std::unique_ptr<std::vector<std::unique_ptr<Player>>> players =
 		this->_player_builder->build_players(settings, load_info, team_colours,
-			this->_resource_manager, this->_viewport_manager,
-			this->_dt);
+			this->_render_resources, this->_audio_resources,
+			this->_viewport_manager, this->_dt);
 
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers =
 		this->_level_object_builder->build_viewport_dividers(this->_viewport_manager);
@@ -79,7 +81,8 @@ std::unique_ptr<Level>
 		load_info->get_level_name(),
 		this->_resolution_manager,
 		this->_viewport_manager,
-		this->_resource_manager,
+		this->_render_resources,
+		this->_audio_resources,
 		this->_thread_pool,
 		this->_partitioner);
 }

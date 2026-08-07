@@ -4,6 +4,7 @@
 #include "IPaintableGameObject.h"
 #include "Structure.h"
 #include "PaintTile.h"
+#include "engine/audio/audio_resources.h"
 #include "TeamColour.h"
 #include "engine/audio/sound_bank.h"
 
@@ -37,7 +38,8 @@ public:
 		const std::string& frame_name,
 		const MattMath::RectangleF& sprite_rectangle,
 		const MattMath::Shape* collision_shape,
-		ResourceManager* resource_manager,
+		RenderResources* render_resources,
+		const AudioResources* audio_resources,
 		collision_object_type collision_type,
 		const TeamColour& team_colours,
 		const PaintableFaces& faces,

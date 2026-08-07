@@ -7,7 +7,7 @@ using namespace end_menu_consts;
 
 EndMenuPage::EndMenuPage(EndMenuData* data) :
 	MenuPage(data),
-	SoundBankObject(SOUND_BANK, this->get_resource_manager()),
+	SoundBankObject(SOUND_BANK, this->get_audio_resources()),
 	_data(data)
 {
 
@@ -139,7 +139,7 @@ void EndMenuInitial::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, END_MENU_BOX_SIZE),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		END_MENU_BOX_COLOUR);
 	this->_box->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
 
@@ -152,7 +152,7 @@ void EndMenuInitial::init()
 		"Level End",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		END_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -162,7 +162,7 @@ void EndMenuInitial::init()
 		"Change Teams",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -172,7 +172,7 @@ void EndMenuInitial::init()
 		"Change Weapons",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -182,7 +182,7 @@ void EndMenuInitial::init()
 		"Change Level",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -192,7 +192,7 @@ void EndMenuInitial::init()
 		"Restart",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -202,7 +202,7 @@ void EndMenuInitial::init()
 		"Exit to Main Menu",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);

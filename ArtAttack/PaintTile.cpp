@@ -8,7 +8,7 @@ using namespace paint_tile_consts;
 PaintTile::PaintTile(const RectangleF& rectangle,
 	const std::string& sheet_name,
 	const std::string& frame_name,
-	ResourceManager* resource_manager,
+	RenderResources* render_resources,
 	const TeamColour& team_colours,
 	const float* dt,
 	const Colour& color,
@@ -16,7 +16,7 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
-	TextureObject(sheet_name, frame_name, resource_manager,
+	TextureObject(sheet_name, frame_name, render_resources,
 		color, rotation, origin, effects, layer_depth),
 	_rectangle(rectangle),
 	_team_colours(team_colours),
@@ -24,7 +24,7 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 {
 	this->_splash = PaintTileSplash(
 		dt, SPLASH_RECTANGLE, SPLASH_SPRITE_SHEET_NAME, SPLASH_ANIMATION_STRIP_NAME,
-		resource_manager);
+		render_resources);
 
 	// The splash is always centred on the tile and the tile never moves, so
 	// this is set once here rather than re-assigned on every draw call.
@@ -139,14 +139,14 @@ PaintTileSplash::PaintTileSplash(const float* dt,
 	const RectangleF& rectangle,
 	const std::string& sheet_name,
 	const std::string& animation_strip_name,
-	ResourceManager* resource_manager,
+	RenderResources* render_resources,
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
 	AnimationObject(dt, sheet_name, animation_strip_name,
-		resource_manager,
+		render_resources,
 		color, rotation, origin, effects, layer_depth),
 	_rectangle(rectangle)
 {

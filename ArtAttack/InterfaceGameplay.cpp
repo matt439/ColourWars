@@ -6,8 +6,8 @@ using namespace MattMath;
 using namespace interface_consts;
 using namespace colour_consts;
 
-InterfaceGameplay::InterfaceGameplay(ResourceManager* resource_manager, const float* dt) :
-	Drawer(resource_manager, dt)
+InterfaceGameplay::InterfaceGameplay(RenderResources* render_resources, const float* dt) :
+	Drawer(render_resources, dt)
 {
 
 }
@@ -63,7 +63,7 @@ void InterfaceGameplay::draw_ammo(SpriteBatch* sprite_batch,
 		static_cast<int>(size.x),
 		static_cast<int>(size.y));
 
-	SpriteSheet* sprite_sheet = this->get_resource_manager()->
+	SpriteSheet* sprite_sheet = this->get_render_resources()->
 		get_sprite_sheet(SPRITE_SHEET);
 
 	sprite_sheet->draw(
@@ -85,7 +85,7 @@ void InterfaceGameplay::draw_ammo(SpriteBatch* sprite_batch,
 		static_cast<int>(fill_size.x),
 		static_cast<int>(fill_size.y));
 
-	sprite_sheet = this->get_resource_manager()->
+	sprite_sheet = this->get_render_resources()->
 		get_sprite_sheet(SPRITE_SHEET);
 
 	sprite_sheet->draw(
@@ -110,7 +110,7 @@ void InterfaceGameplay::draw_health(SpriteBatch* sprite_batch,
 		static_cast<int>(size.x),
 		static_cast<int>(size.y));
 
-	SpriteSheet* sprite_sheet = this->get_resource_manager()->
+	SpriteSheet* sprite_sheet = this->get_render_resources()->
 		get_sprite_sheet(SPRITE_SHEET);
 
 	sprite_sheet->draw(
@@ -132,7 +132,7 @@ void InterfaceGameplay::draw_health(SpriteBatch* sprite_batch,
 		static_cast<int>(fill_size.x),
 		static_cast<int>(fill_size.y));
 
-	sprite_sheet = this->get_resource_manager()->
+	sprite_sheet = this->get_render_resources()->
 		get_sprite_sheet(SPRITE_SHEET);
 
 	sprite_sheet->draw(
@@ -150,7 +150,7 @@ void InterfaceGameplay::draw_timer(SpriteBatch* sprite_batch,
 
 	float scale = resolution.x / TIMER_SCALE_FACTOR;
 
-	SpriteFont* sprite_font = this->get_resource_manager()->
+	SpriteFont* sprite_font = this->get_render_resources()->
 		get_sprite_font(TIMER_FONT);
 
 	sprite_font->DrawString(
@@ -180,7 +180,7 @@ void InterfaceGameplay::draw_respawn_timer(SpriteBatch* sprite_batch,
 		resolution.x / 2.0f - (resolution.x * RESPAWN_TIMER_OFFSET.x),
 		resolution.y * RESPAWN_TIMER_OFFSET.y);
 
-	SpriteFont* sprite_font = this->get_resource_manager()->
+	SpriteFont* sprite_font = this->get_render_resources()->
 		get_sprite_font(RESPAWN_TIMER_FONT);
 
 	std::string text = std::to_string(static_cast<int>(timer) + 1);

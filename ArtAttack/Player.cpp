@@ -8,7 +8,8 @@ using namespace colour_consts;
 
 Player::Player(const RectangleF& rectangle,
     const PlayerAnimationInfo& animation_info,
-    ResourceManager* resource_manager,
+    RenderResources* render_resources,
+    const AudioResources* audio_resources,
     int player_num,
     player_team team,
     wep_type primary,
@@ -26,9 +27,9 @@ Player::Player(const RectangleF& rectangle,
     MovingObject(velocity),
     AnimationObject(dt, animation_info.sprite_sheet,
                     animation_info.animation,
-                    resource_manager, DEFAULT_PLAYER_COLOUR, rotation, origin, effects, layer_depth),
+                    render_resources, DEFAULT_PLAYER_COLOUR, rotation, origin, effects, layer_depth),
     TextureObject(animation_info.sprite_sheet, animation_info.uniform_texture,
-                  resource_manager, team_colour, rotation, origin, effects, layer_depth),
+                  render_resources, team_colour, rotation, origin, effects, layer_depth),
     _primary(std::move(primary_weapon)),
     _player_num(player_num),
     _team(team),
@@ -41,7 +42,7 @@ Player::Player(const RectangleF& rectangle,
     _respawn_position(respawn_position),
     _dt(dt)
 {
-    this->_sound_bank = resource_manager->get_sound_bank(SOUND_BANK);
+    this->_sound_bank = audio_resources->get_sound_bank(SOUND_BANK);
 }
 
 void Player::update_animation_state()

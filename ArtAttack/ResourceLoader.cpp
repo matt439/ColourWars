@@ -5,10 +5,12 @@ using namespace directory_consts;
 using namespace DirectX;
 using Microsoft::WRL::ComPtr;
 
-ResourceLoader::ResourceLoader(ResourceManager* resource_manager,
+ResourceLoader::ResourceLoader(RenderResources* render_resources,
+    AudioResources* audio_resources,
     Registry<LevelLoadedInfo>* level_infos, ID3D11Device1* device,
     DirectX::AudioEngine* audio_engine) :
-    _resource_manager(resource_manager),
+    _render_resources(render_resources),
+    _audio_resources(audio_resources),
     _level_infos(level_infos),
     _device(device),
     _audio_engine(audio_engine)
@@ -70,8 +72,8 @@ void ResourceLoader::reload_sprite_sheet_texture(const std::string& directory,
     const std::string texture_path = directory + name + ".dds";
     this->load_texture(texture_path, name);
 
-    this->_resource_manager->get_sprite_sheet(name)->set_texture(
-        this->_resource_manager->get_texture(name));
+    this->_render_resources->get_sprite_sheet(name)->set_texture(
+        this->_render_resources->get_texture(name));
 }
 void ResourceLoader::load_sounds()
 {
@@ -123,7 +125,7 @@ void ResourceLoader::load_texture(const std::string& texture_path,
     CD3D11_TEXTURE2D_DESC texture_desc;
     texture->GetDesc(&texture_desc);
 
-    this->_resource_manager->add_texture(texture_name, m_texture.Get());
+    this->_render_resources->add_texture(texture_name, m_texture.Get());
 }
 
 void ResourceLoader::load_texture_from_directory(
@@ -139,7 +141,7 @@ void ResourceLoader::load_sprite_font(const std::string& font_path,
 {
     try
     {
-        this->_resource_manager->add_sprite_font(font_name,
+        this->_render_resources->add_sprite_font(font_name,
             std::make_unique<SpriteFont>(
                 this->_device,
                 std::wstring(font_path.begin(),
@@ -171,11 +173,11 @@ void ResourceLoader::load_sprite_sheet(
     this->load_texture(texture_path, texture_name);
 
     auto ss = std::make_unique<SpriteSheet>(
-        this->_resource_manager->get_texture(texture_name));
+        this->_render_resources->get_texture(texture_name));
 
     ss->load_from_json(json_path.c_str());
 
-    this->_resource_manager->add_sprite_sheet(sprite_sheet_name, std::move(ss));
+    this->_render_resources->add_sprite_sheet(sprite_sheet_name, std::move(ss));
 }
 
 void ResourceLoader::load_sprite_sheet_from_directory(
@@ -225,7 +227,7 @@ void ResourceLoader::load_sound_bank(const std::string& wave_bank_path,
 
     sb->load_from_json(json_path.c_str());
 
-    this->_resource_manager->add_sound_bank(sound_bank_name, std::move(sb));
+    this->_audio_resources->add_sound_bank(sound_bank_name, std::move(sb));
 
 }
 void ResourceLoader::load_sound_bank_from_directory(const std::string& directory,

@@ -10,6 +10,7 @@
 #include "engine/render/texture_object.h"
 #include "ProjectileBuilder.h"
 #include "engine/audio/sound_bank.h"
+#include "engine/audio/audio_resources.h"
 
 class Weapon : public TextureObject
 {
@@ -20,7 +21,8 @@ public:
 		const MattMath::Colour& team_colour,
 		wep_type type,
 		const MattMath::Vector2F& player_center,
-		ResourceManager* resource_manager,
+		RenderResources* render_resources,
+		const AudioResources* audio_resources,
 		const float* dt,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
@@ -125,7 +127,7 @@ protected:
 	ProjectileBuilder* get_projectile_builder() const;
 	const float* get_dt_ptr() const;
 	float get_dt() const;
-	ResourceManager* get_resource_manager() const override;
+	RenderResources* get_render_resources() const override;
 
 private:
 	static std::string resolve_loop_sound_name(wep_type type,
@@ -133,7 +135,7 @@ private:
 
 	std::unique_ptr<ProjectileBuilder> _proj_builder = nullptr;
 	const float* _dt = nullptr;
-	ResourceManager* _resource_manager = nullptr;
+	RenderResources* _render_resources = nullptr;
 
 	float _ammo = weapon_consts::STARTING_AMMO;
 	float _shoot_timer = 0.0f;
@@ -164,7 +166,8 @@ public:
 		const MattMath::Colour& team_colour,
 		wep_type type,
 		const MattMath::Vector2F& player_center,
-		ResourceManager* resource_manager,
+		RenderResources* render_resources,
+		const AudioResources* audio_resources,
 		const float* dt,
 		const MattMath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,

@@ -25,7 +25,8 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_coll
 	const std::string& level_name,
 	const ResolutionManager* resolution_manager,
 	ViewportManager* viewport_manager,
-	ResourceManager* resource_manager,
+	RenderResources* render_resources,
+	const AudioResources* audio_resources,
 	ThreadPool* thread_pool,
 	const Partitioner* partitioner) :
 	_non_collision_objects(std::move(non_collision_objects)),
@@ -37,7 +38,7 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_coll
 	_level_name(level_name),
 	_resolution_manager(resolution_manager),
 	_viewport_manager(viewport_manager),
-	_resource_manager(resource_manager),
+	_render_resources(render_resources),
 	_team_colours(team_colours),
 	_stage(stage),
 	_out_of_bounds(out_of_bounds),
@@ -52,11 +53,11 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_coll
 	_partitioner(partitioner)
 {
 	this->_debug_text = std::make_unique<DebugText>(
-		resource_manager, dt, resolution_manager);
+		render_resources, dt, resolution_manager);
 	this->_camera_tools = std::make_unique<CameraTools>();
 	this->_interface_gameplay = std::make_unique<InterfaceGameplay>(
-		resource_manager, dt);
-	this->_sound_bank = resource_manager->get_sound_bank(sound_bank_name);
+		render_resources, dt);
+	this->_sound_bank = audio_resources->get_sound_bank(sound_bank_name);
 }
 void Level::stop_music() const
 {
@@ -96,7 +97,7 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 				COUNTDOWN_TEXT,
 				COUNTDOWN_FONT_NAME,
 				position,
-				this->_resource_manager,
+				this->_render_resources,
 				COUNTDOWN_COLOUR,
 				COUNTDOWN_SHADOW_COLOUR,
 				COUNTDOWN_SHADOW_OFFSET,

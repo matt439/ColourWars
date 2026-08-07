@@ -7,7 +7,8 @@ GameData::GameData(const GameData* game_data) :
     _window(game_data->get_window()),
     _dt(game_data->get_dt()),
     _resource_loader(game_data->get_resource_loader()),
-    _resource_manager(game_data->get_resource_manager()),
+    _render_resources(game_data->get_render_resources()),
+    _audio_resources(game_data->get_audio_resources()),
     _level_infos(game_data->get_level_infos()),
     _gamepad(game_data->get_gamepad()),
     _device_resources(game_data->get_device_resources()),
@@ -70,14 +71,24 @@ ResourceLoader* GameData::get_resource_loader() const
 	return this->_resource_loader;
 }
 
-void GameData::set_resource_manager(ResourceManager* resource_manager)
+void GameData::set_render_resources(RenderResources* render_resources)
 {
-	this->_resource_manager = resource_manager;
+	this->_render_resources = render_resources;
 }
 
-ResourceManager* GameData::get_resource_manager() const
+RenderResources* GameData::get_render_resources() const
 {
-	return this->_resource_manager;
+	return this->_render_resources;
+}
+
+void GameData::set_audio_resources(AudioResources* audio_resources)
+{
+	this->_audio_resources = audio_resources;
+}
+
+AudioResources* GameData::get_audio_resources() const
+{
+	return this->_audio_resources;
 }
 
 void GameData::set_level_infos(Registry<LevelLoadedInfo>* level_infos)

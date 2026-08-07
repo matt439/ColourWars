@@ -21,7 +21,7 @@ namespace debug_text_consts
 class DebugText : public Drawer
 {
 public:
-	DebugText(ResourceManager* resource_manager,
+	DebugText(RenderResources* render_resources,
 		const float* dt,
 		const ResolutionManager* resolution_manager);
 

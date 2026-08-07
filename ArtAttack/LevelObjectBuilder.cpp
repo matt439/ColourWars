@@ -4,9 +4,11 @@
 using namespace rapidjson;
 using namespace MattMath;
 
-LevelObjectBuilder::LevelObjectBuilder(ResourceManager* resource_manager,
+LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
+	const AudioResources* audio_resources,
 	const float* dt) :
-	_resource_manager(resource_manager),
+	_render_resources(render_resources),
+	_audio_resources(audio_resources),
 	_dt(dt)
 {
 
@@ -60,7 +62,7 @@ std::unique_ptr<ICollisionGameObject>
 			json["frame_name"].GetString(),
 			rectangle,
 			&rectangle,
-			this->_resource_manager,
+			this->_render_resources,
 			col_type,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
@@ -119,7 +121,8 @@ std::unique_ptr<ICollisionGameObject>
 			json["frame_name"].GetString(),
 			rectangle,
 			&rectangle,
-			this->_resource_manager,
+			this->_render_resources,
+			this->_audio_resources,
 			col_type,
 			team_colours,
 			faces,
@@ -156,7 +159,7 @@ std::unique_ptr<ICollisionGameObject>
 			json["frame_name"].GetString(),
 			triangle.get_bounding_box(),
 			&triangle,
-			this->_resource_manager,
+			this->_render_resources,
 			col_type,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
@@ -177,7 +180,7 @@ std::unique_ptr<IGameObject>
 				json["rectangle"]["y"].GetFloat(),
 				json["rectangle"]["width"].GetFloat(),
 				json["rectangle"]["height"].GetFloat()),
-			this->_resource_manager,
+			this->_render_resources,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
 
@@ -222,7 +225,7 @@ std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
 			viewport_consts::DIVIDER_SHEET_NAME,
 			viewport_consts::DIVIDER_FRAME_NAME,
 			rectangle,
-			this->_resource_manager,
+			this->_render_resources,
 			viewport_consts::DIVIDER_COLOUR));
 	}
 

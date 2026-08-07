@@ -11,7 +11,8 @@ StructurePaintable::StructurePaintable(
 	const std::string& frame_name,
 	const RectangleF& sprite_rectangle,
 	const Shape* collision_shape,
-	ResourceManager* resource_manager,
+	RenderResources* render_resources,
+	const AudioResources* audio_resources,
 	collision_object_type collision_type,
 	const TeamColour& team_colours,
 	const PaintableFaces& faces,
@@ -22,14 +23,14 @@ StructurePaintable::StructurePaintable(
 	SpriteEffects effects,
 	float layer_depth) :
 	Structure(sheet_name, frame_name, sprite_rectangle, collision_shape,
-		resource_manager, collision_type, color, rotation, origin,
+		render_resources, collision_type, color, rotation, origin,
 		effects, layer_depth),
 		_team_colours(team_colours),
 		_faces(faces),
 		_dt(dt)
 {
 	this->_paint_tiles = this->generate_paint_tiles();
-	this->_sound_bank = resource_manager->get_sound_bank(SOUND_BANK_NAME);
+	this->_sound_bank = audio_resources->get_sound_bank(SOUND_BANK_NAME);
 }
 
 void StructurePaintable::update()
@@ -125,7 +126,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 				THICKNESS);
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
-			                            this->get_resource_manager(),
+			                            this->get_render_resources(),
 			                            this->_team_colours,
 			                            this->_dt);
 			paint_tiles.push_back(paint_tile);
@@ -145,7 +146,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 				THICKNESS);
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
-			                            this->get_resource_manager(),
+			                            this->get_render_resources(),
 			                            this->_team_colours,
 			                            this->_dt);
 			paint_tiles.push_back(paint_tile);
@@ -164,7 +165,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 				paint_tile_height);
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
-			                            this->get_resource_manager(),
+			                            this->get_render_resources(),
 			                            this->_team_colours,
 			                            this->_dt);
 			paint_tiles.push_back(paint_tile);
@@ -183,7 +184,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 				paint_tile_height);
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
-			                            this->get_resource_manager(),
+			                            this->get_render_resources(),
 			                            this->_team_colours,
 			                            this->_dt);
 			paint_tiles.push_back(paint_tile);

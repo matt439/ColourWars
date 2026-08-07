@@ -5,6 +5,7 @@
 #include <memory>
 #include "rapidjson/document.h"
 #include "StructurePaintable.h"
+#include "engine/audio/audio_resources.h"
 #include "engine/render/visual.h"
 #include "engine/render/viewport_manager.h"
 //#include "StructureRampLeft.h"
@@ -13,7 +14,8 @@
 class LevelObjectBuilder
 {
 public:
-	LevelObjectBuilder(ResourceManager* resource_manager,
+	LevelObjectBuilder(RenderResources* render_resources,
+		const AudioResources* audio_resources,
 		const float* dt);
 
 	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> 
@@ -27,7 +29,8 @@ public:
 		build_viewport_dividers(const ViewportManager* viewport_manager) const;
 
 private:
-	ResourceManager* _resource_manager = nullptr;
+	RenderResources* _render_resources = nullptr;
+	const AudioResources* _audio_resources = nullptr;
 	const float* _dt = nullptr;
 
 	std::unique_ptr<ICollisionGameObject>

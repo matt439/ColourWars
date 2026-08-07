@@ -1,8 +1,9 @@
 #ifndef RESOURCELOADER_H
 #define RESOURCELOADER_H
 
-#include "engine/assets/resource_manager.h"
-#include "engine/assets/registry.h"
+#include "engine/render/render_resources.h"
+#include "engine/audio/audio_resources.h"
+#include "engine/core/registry.h"
 #include "directory_consts.h"
 #include "level_stage.h"
 #include "LevelLoadedInfo.h"
@@ -11,10 +12,11 @@
 class ResourceLoader
 {
 public:
-	// The engine's ResourceManager caches the resource kinds the engine knows
-	// about; the level registry is the game's own, and is handed in for the
-	// same reason - the loader fills stores, it does not own them.
-	ResourceLoader(ResourceManager* resource_manager,
+	// Three stores to fill: the engine's two, and the level registry the game
+	// keeps because a level definition means nothing to the engine. All are
+	// handed in - the loader fills stores, it does not own them.
+	ResourceLoader(RenderResources* render_resources,
+		AudioResources* audio_resources,
 		Registry<LevelLoadedInfo>* level_infos, ID3D11Device1* device,
 		DirectX::AudioEngine* audio_engine);
 
@@ -62,7 +64,8 @@ public:
 		const std::string& wave_bank_name);
 
 private:
-	ResourceManager* _resource_manager = nullptr;
+	RenderResources* _render_resources = nullptr;
+	AudioResources* _audio_resources = nullptr;
 	Registry<LevelLoadedInfo>* _level_infos = nullptr;
 	ID3D11Device1* _device = nullptr;
 	DirectX::AudioEngine* _audio_engine = nullptr;

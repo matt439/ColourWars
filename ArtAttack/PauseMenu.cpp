@@ -9,7 +9,7 @@ using namespace colour_consts;
 PauseMenuPage::PauseMenuPage(PauseMenuData* data) :
 	MenuPage(data),
 	SoundBankObject(pause_menu_consts::SOUND_BANK,
-		this->get_resource_manager()),
+		this->get_audio_resources()),
 	_data(data)
 {
 
@@ -135,7 +135,7 @@ void PauseMenuInitial::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, PAUSE_MENU_BOX_SIZE),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		PAUSE_MENU_BOX_COLOUR);
 	this->_box->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
 
@@ -149,7 +149,7 @@ void PauseMenuInitial::init()
 			this->get_pause_menu_data()->get_player_num()),
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		PAUSE_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -159,7 +159,7 @@ void PauseMenuInitial::init()
 		"Resume",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 2),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -169,7 +169,7 @@ void PauseMenuInitial::init()
 		"Restart",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 3),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -179,7 +179,7 @@ void PauseMenuInitial::init()
 		"Quit",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 4),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -291,7 +291,7 @@ void PauseMenuConfirmation::init()
 		"sprite_sheet_1",
 		"pixel",
 		RectangleF(Vector2F::ZERO, PAUSE_MENU_BOX_SIZE),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		PAUSE_MENU_BOX_COLOUR);
 	this->_box->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
 
@@ -305,7 +305,7 @@ void PauseMenuConfirmation::init()
 			this->get_pause_menu_data()->get_player_num()),
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		PAUSE_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
@@ -315,7 +315,7 @@ void PauseMenuConfirmation::init()
 		get_question_text(this->_type),
 		DETAIL_FONT,
 		this->calculate_widget_position(0, 2),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		PAUSE_MENU_HEADING_TEXT_COLOUR,
 		SHADOW_COLOUR,
 		DETAIL_SHADOW_OFFSET);
@@ -325,7 +325,7 @@ void PauseMenuConfirmation::init()
 		"Yes",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 3),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_unhighlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
@@ -335,7 +335,7 @@ void PauseMenuConfirmation::init()
 		"No",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 4),
-		this->get_resource_manager(),
+		this->get_render_resources(),
 		this->get_highlight_colour(),
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);

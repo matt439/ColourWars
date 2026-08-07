@@ -11,7 +11,8 @@ WeaponRoller::WeaponRoller(player_team team,
     const Colour& team_colour,
     wep_type type,
     const Vector2F& player_center,
-    ResourceManager* resource_manager,
+    RenderResources* render_resources,
+    const AudioResources* audio_resources,
     const float* dt,
     const Colour& color,
     float rotation,
@@ -20,7 +21,7 @@ WeaponRoller::WeaponRoller(player_team team,
     float layer_depth) :
     Weapon(DETAILS_ROLLER,
         team, player_num, team_colour, type, player_center,
-        resource_manager, dt,
+        render_resources, audio_resources, dt,
         color, rotation, origin, effects, layer_depth)
 {
 

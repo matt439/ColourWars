@@ -15,7 +15,8 @@
 #include "engine/render/text_drop_shadow.h"
 #include "engine/audio/sound_bank.h"
 #include "IPaintableGameObject.h"
-#include "engine/assets/resource_manager.h"
+#include "engine/render/render_resources.h"
+#include "engine/audio/audio_resources.h"
 #include "engine/core/thread_pool.h"
 #include "engine/collision/partitioner.h"
 
@@ -75,7 +76,8 @@ public:
 		const std::string& level_name,
 		const ResolutionManager* resolution_manager,
 		ViewportManager* viewport_manager,
-		ResourceManager* resource_manager,
+		RenderResources* render_resources,
+		const AudioResources* audio_resources,
 		ThreadPool* thread_pool,
 		const Partitioner* partitioner);
 
@@ -116,7 +118,7 @@ private:
 	std::string _level_name = "";
 	const ResolutionManager* _resolution_manager = nullptr;
 	ViewportManager* _viewport_manager = nullptr;
-	ResourceManager* _resource_manager = nullptr;
+	RenderResources* _render_resources = nullptr;
 
 	float _timer = level_consts::TIMER;
 	float _start_timer = level_consts::START_TIMER;

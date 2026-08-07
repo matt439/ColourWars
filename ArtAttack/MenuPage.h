@@ -32,7 +32,8 @@ protected:
 	MenuInput* get_input() const;
 	ResolutionManager* get_resolution_manager() const;
 	Save* get_save() const;
-	ResourceManager* get_resource_manager() const;
+	RenderResources* get_render_resources() const;
+	const AudioResources* get_audio_resources() const;
 	ViewportManager* get_viewport_manager() const;
 
 	void draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,

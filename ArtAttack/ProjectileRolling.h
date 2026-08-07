@@ -13,7 +13,7 @@ public:
 		int player_num,
 		const MattMath::Colour& team_colour,
 		const float* dt,
-		ResourceManager* resource_manager,
+		RenderResources* render_resources,
 		float rotation = 0.0f,
 		const MattMath::Vector2F& origin = MattMath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
