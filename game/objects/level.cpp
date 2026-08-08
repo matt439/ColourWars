@@ -439,7 +439,7 @@ void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contex
 //		// draw non-collision objects
 //		for (const auto& object : *this->non_collision_objects_)
 //		{
-//			if (object->is_visible_in_viewport(camera_view))
+//			if (object->bounds().intersects(camera_view))
 //			{
 //				object->draw(camera);
 //			}
@@ -447,7 +447,7 @@ void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contex
 //		// draw collision objects
 //		for (const auto& object : *this->collision_objects_)
 //		{
-//			if (object->is_visible_in_viewport(camera_view))
+//			if (object->bounds().intersects(camera_view))
 //			{
 //				object->draw(camera);
 //			}
@@ -455,7 +455,7 @@ void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contex
 //		// draw player objects
 //		for (const auto& object : *this->player_objects_)
 //		{
-//			if (object->is_visible_in_viewport(camera_view))
+//			if (object->bounds().intersects(camera_view))
 //			{
 //				object->draw(camera);
 //			}
@@ -533,7 +533,7 @@ void Level::draw_player_view_level(int start, int end,
 		// draw non-collision objects
 		for (auto& object : *this->non_collision_objects_)
 		{
-			if (object->is_visible_in_viewport(camera_view))
+			if (object->bounds().intersects(camera_view))
 			{
 				object->draw(sprite_batches->at(i), camera);
 			}
@@ -542,7 +542,7 @@ void Level::draw_player_view_level(int start, int end,
 		// draw collision objects
 		for (auto& object : *this->collision_objects_)
 		{
-			if (object->is_visible_in_viewport(camera_view))
+			if (object->bounds().intersects(camera_view))
 			{
 				object->draw(sprite_batches->at(i), camera);
 			}
@@ -551,7 +551,7 @@ void Level::draw_player_view_level(int start, int end,
 		// draw player objects
 		for (auto& object : *this->player_objects_)
 		{
-			if (object->is_visible_in_viewport(camera_view))
+			if (object->bounds().intersects(camera_view))
 			{
 				object->draw(sprite_batches->at(i), camera);
 			}

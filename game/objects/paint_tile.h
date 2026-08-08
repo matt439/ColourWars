@@ -46,7 +46,7 @@ public:
 	void draw_with_colour(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera, const mattmath::Colour& colour) const;
 
-	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override;
+	mattmath::RectangleF bounds() const override;
 private:
 	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
 };
@@ -77,7 +77,7 @@ public:
 	void on_collision(const ICollisionGameObject* other) override;
 	CollisionObjectType collision_object_type() const override;
 	bool for_deletion() const override;
-	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override;
+	mattmath::RectangleF bounds() const override;
 private:
 	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
 	PlayerTeam team_ = PlayerTeam::none;

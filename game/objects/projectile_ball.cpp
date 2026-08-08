@@ -44,9 +44,9 @@ void ProjectileBall::draw(SpriteBatch* sprite_batch,
 {
 	this->AnimationObject::draw(sprite_batch, this->rectangle_, camera);
 }
-bool ProjectileBall::is_visible_in_viewport(const RectangleF& view) const
+RectangleF ProjectileBall::bounds() const
 {
-	return this->rectangle_.intersects(view);
+	return this->rectangle_;
 }
 bool ProjectileBall::is_colliding(const ICollisionGameObject* other) const
 {

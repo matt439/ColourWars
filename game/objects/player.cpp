@@ -946,11 +946,13 @@ void Player::do_jump(float dt)
     }
 }
 
-bool Player::is_visible_in_viewport(const RectangleF& view) const
+RectangleF Player::bounds() const
 {
+    // Inflated to take in the weapon, which is drawn from Player::draw but
+    // is not inside the player's own rectangle.
     RectangleF player_and_weapon_rect = this->rectangle_;
     player_and_weapon_rect.inflate(Vector2F(200.0f, 200.0f));
-    return player_and_weapon_rect.intersects(view);
+    return player_and_weapon_rect;
 }
 void Player::set_player_input(const PlayerInputData& input)
 {

@@ -125,9 +125,9 @@ bool PaintTile::for_deletion() const
 {
 	return false;
 }
-bool PaintTile::is_visible_in_viewport(const RectangleF& view) const
+RectangleF PaintTile::bounds() const
 {
-	return this->rectangle_.intersects(view);
+	return this->rectangle_;
 }
 
 PaintTileSplash::PaintTileSplash(
@@ -175,7 +175,7 @@ void PaintTileSplash::draw_with_colour(SpriteBatch* sprite_batch,
 	this->AnimationObject::draw_with(sprite_batch, this->rectangle_, camera,
 		colour, this->effects());
 }
-bool PaintTileSplash::is_visible_in_viewport(const RectangleF& view) const
+RectangleF PaintTileSplash::bounds() const
 {
-	return this->rectangle_.intersects(view);
+	return this->rectangle_;
 }

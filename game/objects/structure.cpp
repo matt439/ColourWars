@@ -33,9 +33,9 @@ void Structure::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {
 	this->TextureObject::draw(sprite_batch, this->sprite_rectangle_, camera);
 }
-bool Structure::is_visible_in_viewport(const RectangleF& view) const
+RectangleF Structure::bounds() const
 {
-	return this->sprite_rectangle_.intersects(view);
+	return this->sprite_rectangle_;
 }
 bool Structure::is_colliding(const ICollisionGameObject* /*other*/) const
 {

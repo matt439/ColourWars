@@ -38,9 +38,12 @@ void ProjectileRolling::draw(SpriteBatch* /*sprite_batch*/,
 {
 	// do nothing
 }
-bool ProjectileRolling::is_visible_in_viewport(const RectangleF& /*view*/) const
+RectangleF ProjectileRolling::bounds() const
 {
-	return false;
+	// This used to report itself never visible. bounds() cannot say that, and
+	// should not: the projectile is somewhere, it collides there, it just does
+	// not draw. draw() is the no-op that says so.
+	return this->rectangle_;
 }
 bool ProjectileRolling::is_colliding(const ICollisionGameObject* other) const
 {

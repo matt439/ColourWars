@@ -88,7 +88,7 @@ public:
     void draw(DirectX::SpriteBatch* sprite_batch,
         const mattmath::Camera& camera) const override;
 
-    bool is_visible_in_viewport(const mattmath::RectangleF& view) const override;
+    mattmath::RectangleF bounds() const override;
 
     bool is_colliding(const ICollisionGameObject* other) const override;
     void on_collision(const ICollisionGameObject* other) override;

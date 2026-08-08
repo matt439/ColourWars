@@ -45,9 +45,9 @@ void ProjectileMist::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {
 	this->AnimationObject::draw(sprite_batch, this->rectangle_, camera);
 }
-bool ProjectileMist::is_visible_in_viewport(const RectangleF& view) const
+RectangleF ProjectileMist::bounds() const
 {
-	return this->rectangle_.intersects(view);
+	return this->rectangle_;
 }
 bool ProjectileMist::is_colliding(const ICollisionGameObject* other) const
 {
