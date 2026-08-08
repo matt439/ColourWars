@@ -36,7 +36,23 @@ public:
 	// Returns exactly player_input_consts::MAX_PAD_COUNT entries, indexed by
 	// XInput pad slot. Absent pads carry ConnectionState::disconnected and
 	// neutral input rather than being omitted.
+	//
+	// jump is a *press* edge and pause/debug are *release* edges, all computed
+	// against the previous frame. Read that together with prime().
 	std::vector<PlayerInputData> update_and_get_player_inputs();
+
+	// Seeds the previous-frame state from the pads as they are right now.
+	//
+	// Call it whenever gameplay becomes the thing reading input. "Previous"
+	// only advances on frames update_and_get_player_inputs() is called, and
+	// that stops while a menu is up - so a player who paused mid-jump came
+	// back with previous.jump_button still true, and
+	// `current && !previous` swallowed their first jump on the way out.
+	//
+	// Same defect as MenuInput::prime(), in the other direction: an edge
+	// detector whose "previous" only advances on frames its owner happens to
+	// be running.
+	void prime();
 private:
 	RawPlayerInput prev_inputs_[player_input_consts::MAX_PAD_COUNT];
 	RawPlayerInput raw_input(int gamepad_num) const;

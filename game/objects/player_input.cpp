@@ -117,6 +117,14 @@ PlayerInputData PlayerInput::calculate_player_input(
     return result;
 }
 
+void PlayerInput::prime()
+{
+    for (int i = 0; i < MAX_PAD_COUNT; i++)
+    {
+        this->prev_inputs_[i] = this->raw_input(i);
+    }
+}
+
 std::vector<PlayerInputData> PlayerInput::update_and_get_player_inputs()
 {
     RawPlayerInput current[MAX_PAD_COUNT];

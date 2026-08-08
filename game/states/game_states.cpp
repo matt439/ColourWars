@@ -21,6 +21,9 @@ void GameMenu::init()
 {
     this->menu_input_ = std::make_unique<MenuInput>(
         this->menu_data_->gamepad());
+    // A button held on the way in - the A that confirmed the level's end
+    // menu, say - must be released before it counts here.
+    this->menu_input_->prime();
     this->is_ready_to_load_level_ = std::make_unique<bool>(false);
     this->set_main_menu_data_ptrs();
 
@@ -134,6 +137,11 @@ void GameLevel::build_and_enter_level()
         set_layout(this->settings_.screen_layout());
 
     this->level_ = this->level_builder_->build_level(this->settings_);
+
+    // Gameplay takes the input back. Whoever pressed A to start the match is
+    // probably still holding it, and without this it lands as a jump on frame
+    // one; the same call covers both restart paths.
+    this->player_input_->prime();
 }
 void GameLevel::update()
 {
@@ -156,6 +164,7 @@ void GameLevel::update()
         if (pause_menu_player != -1)
         {
             this->state_ = GameLevelState::pause_menu;
+            this->menu_input_->prime();
 
             this->pause_menu_action_ = std::make_unique<PauseMenuAction>(
                 PauseMenuAction::none);
@@ -175,6 +184,7 @@ void GameLevel::update()
         {
             LevelEndInfo end_info = this->level_->level_end_info();
             this->state_ = GameLevelState::results;
+            this->menu_input_->prime();
 
             this->results_menu_action_ = std::make_unique<ResultsMenuAction>(
                 ResultsMenuAction::none);
@@ -207,6 +217,10 @@ void GameLevel::update()
         {
         case PauseMenuAction::resume:
             this->state_ = GameLevelState::active;
+            // The A that chose Resume is still down. Without this the player
+            // has to release and press again before their first jump - or,
+            // if they paused mid-jump, loses it outright.
+            this->player_input_->prime();
             break;
         case PauseMenuAction::restart:
             this->level_->stop_music();
@@ -231,6 +245,7 @@ void GameLevel::update()
         if (action == ResultsMenuAction::continue_to_end_menu)
         {
             this->state_ = GameLevelState::end_menu;
+            this->menu_input_->prime();
 
             this->end_menu_action_ = std::make_unique<EndMenuAction>(
                 EndMenuAction::none);

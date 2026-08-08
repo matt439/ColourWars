@@ -47,7 +47,26 @@ public:
 
 	// Returns exactly menu_input_consts::MAX_PAD_COUNT entries, indexed by
 	// XInput pad slot. Absent pads carry DISCONNECTED and neutral input.
+	//
+	// Every action here is a *release* edge, computed against the previous
+	// frame. That contract was written down nowhere, which is how the bug
+	// prime() fixes survived: read the two together.
 	std::vector<ProcessedMenuInput> update_and_get_menu_inputs();
+
+	// Seeds the previous-frame state from the pads as they are right now.
+	//
+	// Call it whenever this input becomes the one being read. "Previous" only
+	// advances on frames update_and_get_menu_inputs() is called, which is only
+	// while a menu is on screen - so without priming, a button already held
+	// when the menu opens is seen as a press the menu itself received, and its
+	// release is delivered as an action.
+	//
+	// It was reachable in one sitting: A is jump, so holding A and tapping
+	// Start opened the pause menu, and the pause menu closed itself the
+	// instant the player let go of jump - confirming its default row, Resume.
+	// After priming, a button held across a transition must be released and
+	// pressed again to count.
+	void prime();
 private:
 	RawMenuInput prev_inputs_[menu_input_consts::MAX_PAD_COUNT];
 	RawMenuInput raw_input(int gamepad_num) const;

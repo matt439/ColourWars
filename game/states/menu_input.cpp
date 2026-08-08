@@ -130,6 +130,14 @@ ProcessedMenuInput MenuInput::calculate_menu_input(const RawMenuInput& current,
     return result;
 }
 
+void MenuInput::prime()
+{
+    for (int i = 0; i < MAX_PAD_COUNT; i++)
+    {
+        this->prev_inputs_[i] = this->raw_input(i);
+    }
+}
+
 std::vector<ProcessedMenuInput> MenuInput::update_and_get_menu_inputs()
 {
     RawMenuInput current[MAX_PAD_COUNT];
