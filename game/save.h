@@ -3,7 +3,6 @@
 #include <iostream>
 #include <chrono>
 #include "game/directory_consts.h"
-#include <rapidjson/document.h>
 #include "engine/math/matt_math.h"
 #include "engine/render/screen_resolution.h"
 

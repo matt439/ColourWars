@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/level_object_builder.h"
+#include <initializer_list>
 
-using namespace rapidjson;
 using namespace mattmath;
 using namespace artattack;
 
@@ -17,17 +17,92 @@ namespace
 
 	// colour_from_name now says so when a name is not one of the CSS colours,
 	// instead of quietly answering white. This file already throws on every
-	// other unreadable field, so it throws on this one too - and names it,
-	// which "invalid colour" would not.
-	Colour colour_named(const char* name)
+	// other unreadable field, so it throws on this one too - and JsonValue
+	// says which file and which object, which "invalid colour" would not.
+	Colour colour_of(const JsonValue& json)
 	{
+		const std::string name = json.string("colour");
 		const std::optional<Colour> colour = colour_from_name(name);
 		if (!colour)
 		{
-			throw std::runtime_error(
-				std::string("Unknown colour name: ") + name);
+			throw std::runtime_error(json.where() +
+				": '" + name + "' is not a colour name");
 		}
 		return *colour;
+	}
+
+	// A level file may give a rectangle either way round, and both spellings
+	// are in the shipped levels. Neither is optional in the sense of having a
+	// default: an object with no rectangle at all is a level that cannot be
+	// built, so say which object and which spellings were looked for.
+	RectangleF decode_rectangle(const JsonValue& json)
+	{
+		if (json.has("rectangle"))
+		{
+			const JsonValue rectangle = json.object("rectangle");
+			return RectangleF(
+				rectangle.number("x"),
+				rectangle.number("y"),
+				rectangle.number("width"),
+				rectangle.number("height"));
+		}
+		if (json.has("rectangle_tlbr"))
+		{
+			const JsonValue rectangle = json.object("rectangle_tlbr");
+			return RectangleF::from_top_left_bottom_right(
+				Vector2F(rectangle.number("left"), rectangle.number("top")),
+				Vector2F(rectangle.number("right"), rectangle.number("bottom")));
+		}
+		throw std::runtime_error(json.where() +
+			" has neither a 'rectangle' nor a 'rectangle_tlbr'");
+	}
+
+	CollisionObjectType collision_type_named(const JsonValue& json,
+		const std::string& name)
+	{
+		if (name == "STRUCTURE")
+		{
+			return CollisionObjectType::structure;
+		}
+		if (name == "STRUCTURE_JUMP_THROUGH")
+		{
+			return CollisionObjectType::structure_jump_through;
+		}
+		if (name == "STRUCTURE_PAINTABLE")
+		{
+			return CollisionObjectType::structure_paintable;
+		}
+		if (name == "STRUCTURE_RAMP_RIGHT")
+		{
+			return CollisionObjectType::structure_ramp_right;
+		}
+		if (name == "STRUCTURE_RAMP_LEFT")
+		{
+			return CollisionObjectType::structure_ramp_left;
+		}
+		throw std::runtime_error(json.where() +
+			": '" + name + "' is not a collision type");
+	}
+
+	// Which collision types a given object type is allowed to claim. The check
+	// used to be a per-branch if-chain repeating the spellings, and its throw
+	// said "Invalid collision type" without saying which file, which object or
+	// which type.
+	CollisionObjectType collision_type_of(const JsonValue& json,
+		const std::string& object_type,
+		std::initializer_list<CollisionObjectType> allowed)
+	{
+		const std::string name = json.string("collision_type");
+		const CollisionObjectType type = collision_type_named(json, name);
+		for (CollisionObjectType candidate : allowed)
+		{
+			if (candidate == type)
+			{
+				return type;
+			}
+		}
+		throw std::runtime_error(json.where() + ": a " + object_type +
+			" may not have collision type '" + name + "'");
 	}
 }
 
@@ -39,197 +114,132 @@ LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
 
 }
 
-std::unique_ptr<artattack::CollisionObject>
-	LevelObjectBuilder::build_collision_object(const Value& json,
+std::unique_ptr<CollisionObject>
+	LevelObjectBuilder::build_collision_object(const JsonValue& json,
 		const TeamColour& team_colours) const
 {
-	std::string type = json["type"].GetString();
+	const std::string type = json.string("type");
 	if (type == "Structure")
 	{
-		CollisionObjectType col_type;
-		std::string collision_type = json["collision_type"].GetString();
-		if (collision_type == "STRUCTURE")
-		{
-			col_type = CollisionObjectType::structure;
-		}
-		else if (collision_type == "STRUCTURE_JUMP_THROUGH")
-		{
-			col_type = CollisionObjectType::structure_jump_through;
-		}
-		else
-		{
-			throw std::exception("Invalid collision type");
-		}
+		const CollisionObjectType collision_type = collision_type_of(json, type,
+			{ CollisionObjectType::structure,
+			  CollisionObjectType::structure_jump_through });
 
-		RectangleF rectangle = RectangleF::ZERO;
-		if (json.HasMember("rectangle"))
-		{
-			rectangle = RectangleF(json["rectangle"]["x"].GetFloat(),
-				json["rectangle"]["y"].GetFloat(),
-				json["rectangle"]["width"].GetFloat(),
-				json["rectangle"]["height"].GetFloat());
-		}
-		else if (json.HasMember("rectangle_tlbr"))
-		{
-			Vector2F top_left = Vector2F(json["rectangle_tlbr"]["left"].GetFloat(),
-				json["rectangle_tlbr"]["top"].GetFloat());
-			Vector2F bottom_right = Vector2F(json["rectangle_tlbr"]["right"].GetFloat(),
-				json["rectangle_tlbr"]["bottom"].GetFloat());
-			rectangle = RectangleF::from_top_left_bottom_right(top_left, bottom_right);
-		}
-		else
-		{
-			throw std::exception("Invalid rectangle type");
-		}
+		const RectangleF rectangle = decode_rectangle(json);
 
 		return std::make_unique<Structure>(
-			json["sheet_name"].GetString(),
-			json["frame_name"].GetString(),
+			json.string("sheet_name"),
+			json.string("frame_name"),
 			rectangle,
 			&rectangle,
 			this->render_resources_,
-			col_type,
-			colour_named(json["colour"].GetString()));
+			collision_type,
+			colour_of(json));
 	}
 	if (type == "StructurePaintable")
 	{
-		CollisionObjectType col_type;
-		std::string collision_type = json["collision_type"].GetString();
-		if (collision_type == "STRUCTURE_PAINTABLE")
-		{
-			col_type = CollisionObjectType::structure_paintable;
-		}
-		else
-		{
-			throw std::exception("Invalid collision type");
-		}
+		const CollisionObjectType collision_type = collision_type_of(json, type,
+			{ CollisionObjectType::structure_paintable });
 
-		RectangleF rectangle = RectangleF::ZERO;
-		if (json.HasMember("rectangle"))
-		{
-			rectangle = RectangleF(json["rectangle"]["x"].GetFloat(),
-				json["rectangle"]["y"].GetFloat(),
-				json["rectangle"]["width"].GetFloat(),
-				json["rectangle"]["height"].GetFloat());
-		}
-		else if (json.HasMember("rectangle_tlbr"))
-		{
-			Vector2F top_left = Vector2F(json["rectangle_tlbr"]["left"].GetFloat(),
-				json["rectangle_tlbr"]["top"].GetFloat());
-			Vector2F bottom_right = Vector2F(json["rectangle_tlbr"]["right"].GetFloat(),
-				json["rectangle_tlbr"]["bottom"].GetFloat());
-			rectangle = RectangleF::from_top_left_bottom_right(top_left, bottom_right);
-		}
-		else
-		{
-			throw std::exception("Invalid rectangle type");
-		}
-
-		if (!json.HasMember("paintable_faces"))
-		{
-			throw std::runtime_error(
-				"StructurePaintable is missing its paintable_faces object");
-		}
+		const RectangleF rectangle = decode_rectangle(json);
 
 		// Pass the booleans straight through. Encoding them as Segments and
 		// recovering them by positional index against edges() put three of
 		// the four faces on the wrong side of the structure.
-		const rapidjson::Value& faces_json = json["paintable_faces"];
+		const JsonValue faces_json = json.object("paintable_faces");
 		PaintableFaces faces;
-		faces.left = faces_json["left"].GetBool();
-		faces.top = faces_json["top"].GetBool();
-		faces.right = faces_json["right"].GetBool();
-		faces.bottom = faces_json["bottom"].GetBool();
+		faces.left = faces_json.boolean("left");
+		faces.top = faces_json.boolean("top");
+		faces.right = faces_json.boolean("right");
+		faces.bottom = faces_json.boolean("bottom");
 
 		return std::make_unique<StructurePaintable>(
-			json["sheet_name"].GetString(),
-			json["frame_name"].GetString(),
+			json.string("sheet_name"),
+			json.string("frame_name"),
 			rectangle,
 			&rectangle,
 			this->render_resources_,
 			this->audio_resources_,
-			col_type,
+			collision_type,
 			team_colours,
 			faces,
-			colour_named(json["colour"].GetString()));
+			colour_of(json));
 	}
 	if (type == "StructureRamp")
 	{
-		CollisionObjectType col_type;
-		std::string collision_type = json["collision_type"].GetString();
-		if (collision_type == "STRUCTURE_RAMP_RIGHT")
-		{
-			col_type = CollisionObjectType::structure_ramp_right;
-		}
-		else if (collision_type == "STRUCTURE_RAMP_LEFT")
-		{
-			col_type = CollisionObjectType::structure_ramp_left;
-		}
-		else
-		{
-			throw std::exception("Invalid collision type");
-		}
-		
-		TriangleRightAxisAligned triangle = TriangleRightAxisAligned(
-			json["triangle"]["x1"].GetFloat(),
-			json["triangle"]["y1"].GetFloat(),
-			json["triangle"]["x2"].GetFloat(),
-			json["triangle"]["y2"].GetFloat(),
-			json["triangle"]["x3"].GetFloat(),
-			json["triangle"]["y3"].GetFloat());
+		const CollisionObjectType collision_type = collision_type_of(json, type,
+			{ CollisionObjectType::structure_ramp_right,
+			  CollisionObjectType::structure_ramp_left });
+
+		const JsonValue triangle_json = json.object("triangle");
+		const TriangleRightAxisAligned triangle = TriangleRightAxisAligned(
+			triangle_json.number("x1"),
+			triangle_json.number("y1"),
+			triangle_json.number("x2"),
+			triangle_json.number("y2"),
+			triangle_json.number("x3"),
+			triangle_json.number("y3"));
 
 		return std::make_unique<Structure>(
-			json["sheet_name"].GetString(),
-			json["frame_name"].GetString(),
+			json.string("sheet_name"),
+			json.string("frame_name"),
 			triangle.bounding_box(),
 			&triangle,
 			this->render_resources_,
-			col_type,
-			colour_named(json["colour"].GetString()));
+			collision_type,
+			colour_of(json));
 	}
 
-	throw std::exception("Invalid collision object type");
+	throw std::runtime_error(json.where() +
+		": '" + type + "' is not a collision object type");
 }
 
 std::unique_ptr<GameObject>
-	LevelObjectBuilder::build_non_collision_object(const Value& json) const
+	LevelObjectBuilder::build_non_collision_object(const JsonValue& json) const
 {
-	std::string type = json["type"].GetString();
+	const std::string type = json.string("type");
 	if (type == "Visual")
 	{
+		const JsonValue rectangle = json.object("rectangle");
+
 		return std::make_unique<Visual>(
-			json["sheet_name"].GetString(),
-			json["frame_name"].GetString(),
-			RectangleF(json["rectangle"]["x"].GetFloat(),
-				json["rectangle"]["y"].GetFloat(),
-				json["rectangle"]["width"].GetFloat(),
-				json["rectangle"]["height"].GetFloat()),
+			json.string("sheet_name"),
+			json.string("frame_name"),
+			RectangleF(rectangle.number("x"),
+				rectangle.number("y"),
+				rectangle.number("width"),
+				rectangle.number("height")),
 			this->render_resources_,
-			colour_named(json["colour"].GetString()));
+			colour_of(json));
 	}
 
-	throw std::exception("Invalid non-collision object type");
+	throw std::runtime_error(json.where() +
+		": '" + type + "' is not a non-collision object type");
 }
 
-std::vector<std::unique_ptr<artattack::CollisionObject>>
-	LevelObjectBuilder::build_collision_objects(const Value& json,
+std::vector<std::unique_ptr<CollisionObject>>
+	LevelObjectBuilder::build_collision_objects(const JsonValue& json,
 		const TeamColour& team_colours) const
 {
-	std::vector<std::unique_ptr<artattack::CollisionObject>> collision_objects;
-	for (auto& object : json.GetArray())
+	std::vector<std::unique_ptr<CollisionObject>> collision_objects;
+	collision_objects.reserve(json.size());
+	for (size_t index = 0; index < json.size(); ++index)
 	{
-		collision_objects.push_back(build_collision_object(object, team_colours));
+		collision_objects.push_back(
+			build_collision_object(json.at(index), team_colours));
 	}
 	return collision_objects;
 }
 
 std::vector<std::unique_ptr<GameObject>>
-	LevelObjectBuilder::build_non_collision_objects(const Value& json) const
+	LevelObjectBuilder::build_non_collision_objects(const JsonValue& json) const
 {
 	std::vector<std::unique_ptr<GameObject>> non_collision_objects;
-	for (auto& object : json.GetArray())
+	non_collision_objects.reserve(json.size());
+	for (size_t index = 0; index < json.size(); ++index)
 	{
-		non_collision_objects.push_back(build_non_collision_object(object));
+		non_collision_objects.push_back(
+			build_non_collision_object(json.at(index)));
 	}
 	return non_collision_objects;
 }

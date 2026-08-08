@@ -10,7 +10,6 @@
 #include "engine/core/registry.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/level_object_builder.h"
-#include "rapidjson/document.h"
 #include "engine/render/viewport_manager.h"
 #include "engine/collision/partitioner.h"
 

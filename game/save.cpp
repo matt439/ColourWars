@@ -1,9 +1,13 @@
 #include "game/pch.h"
 #include "game/save.h"
-#include "engine/assets/json_loader.h"
+#include "engine/assets/json.h"
 #include <cstdio>
 #include <filesystem>
 #include <system_error>
+// The save file is the one JSON this project writes rather than reads, and the
+// engine's assets module only reads. So rapidjson is here on the game's own
+// account - which is what game/CMakeLists.txt asks for it for.
+#include "rapidjson/document.h"
 #include "rapidjson/filewritestream.h"
 #include "rapidjson/writer.h"
 
@@ -14,25 +18,32 @@ using namespace artattack;
 
 SaveData Save::load_from_json(const char* json_path) const
 {
-    Document d = read_json_file(json_path);
+    const JsonDocument document = read_json_file(json_path);
+    const JsonValue root = document.root();
 
-    // Every field is optional: a save written by an older build, or one a user
-    // has hand-edited, must degrade to the default rather than crash.
     auto data = SaveData();
 
-    if (d.IsObject() &&
-        d.HasMember("resolution") && d["resolution"].IsObject() &&
-        d["resolution"].HasMember("x") && d["resolution"]["x"].IsInt() &&
-        d["resolution"].HasMember("y") && d["resolution"]["y"].IsInt())
+    // This is the one file in the project where a bad value is not an error, so
+    // it is the one place that turns the loaders' loud failure (T6) back into a
+    // shrug. A save written by an older build, or one a user has hand-edited,
+    // degrades to the default - and per field, so a garbled resolution does not
+    // also cost the fullscreen setting.
+    try
     {
+        const JsonValue resolution = root.object("resolution");
         data.resolution = this->convert_ivec_to_resolution(
-            Vector2I(d["resolution"]["x"].GetInt(), d["resolution"]["y"].GetInt()));
+            Vector2I(resolution.integer("x"), resolution.integer("y")));
+    }
+    catch (const std::runtime_error&)
+    {
     }
 
-    if (d.IsObject() &&
-        d.HasMember("fullscreen") && d["fullscreen"].IsBool())
+    try
     {
-        data.fullscreen = d["fullscreen"].GetBool();
+        data.fullscreen = root.boolean("fullscreen");
+    }
+    catch (const std::runtime_error&)
+    {
     }
 
     return data;

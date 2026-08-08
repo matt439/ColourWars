@@ -3,7 +3,6 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace rapidjson;
 using namespace artattack;
 
 LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,

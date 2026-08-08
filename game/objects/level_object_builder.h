@@ -1,8 +1,8 @@
 #pragma once
 
+#include "engine/assets/json.h"
 #include "engine/collision/collision_object.h"
 #include <memory>
-#include "rapidjson/document.h"
 #include "game/objects/structure_paintable.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/render/visual.h"
@@ -20,11 +20,11 @@ public:
 	// site, which is what `unique_ptr<vector<unique_ptr<T>>>` costs and all it
 	// costs.
 	std::vector<std::unique_ptr<artattack::CollisionObject>>
-		build_collision_objects(const rapidjson::Value& json,
+		build_collision_objects(const artattack::JsonValue& json,
 			const TeamColour& team_colours) const;
 
 	std::vector<std::unique_ptr<artattack::GameObject>>
-		build_non_collision_objects(const rapidjson::Value& json) const;
+		build_non_collision_objects(const artattack::JsonValue& json) const;
 
 	std::vector<std::unique_ptr<artattack::GameObject>>
 		build_viewport_dividers(const artattack::ViewportManager* viewport_manager) const;
@@ -34,9 +34,9 @@ private:
 	const artattack::AudioResources* audio_resources_ = nullptr;
 
 	std::unique_ptr<artattack::CollisionObject>
-		build_collision_object(const rapidjson::Value& json,
+		build_collision_object(const artattack::JsonValue& json,
 			const TeamColour& team_colours) const;
 
 	std::unique_ptr<artattack::GameObject>
-		build_non_collision_object(const rapidjson::Value& json) const;
+		build_non_collision_object(const artattack::JsonValue& json) const;
 };

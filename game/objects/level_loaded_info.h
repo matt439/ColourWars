@@ -1,11 +1,9 @@
 #pragma once
 
-#include <cstdio>
-#include "rapidjson/document.h"
+#include "engine/assets/json.h"
+#include "engine/math/matt_math.h"
 #include <string>
 #include <vector>
-#include <map>
-#include "engine/math/matt_math.h"
 
 class LevelLoadedInfo
 {
@@ -27,28 +25,27 @@ public:
 	mattmath::RectangleF zoom_out_start_bounds_rectangle() const;
 	mattmath::RectangleF zoom_out_finish_bounds_rectangle() const;
 
-	const rapidjson::Value& collision_objects_json() const;
-	const rapidjson::Value& non_collision_objects_json() const;
+	// The two object lists, handed on undecoded: what an entry in them means is
+	// LevelObjectBuilder's vocabulary, not this class's.
+	artattack::JsonValue collision_objects_json() const;
+	artattack::JsonValue non_collision_objects_json() const;
 
 	std::string sound_bank_name() const;
 	std::string music_name() const;
 	float music_volume() const;
 
 private:
-	rapidjson::Document json_doc_;
-	std::string path_;
+	// A level file is written by hand, so every read of one is checked and says
+	// which file and which key when it fails (T6). Two of the reads below used
+	// to be; the rest reached into the document with rapidjson's asserting
+	// accessors, which NDEBUG turns from a stopped debug build into a null
+	// dereference in a shipped one. JsonValue is what closed that, and it
+	// closed it for the engine's own loaders in the same pass.
+	artattack::JsonDocument json_doc_;
 
-	// Reads a string the level file must carry, and throws naming the file and
-	// the key if it does not. The rest of this class still reaches into the
-	// document unchecked - that is the loaders' standing validation debt, and
-	// it is not paid here. These two are checked because they are the keys a
-	// person adding a stage has to write by hand, so getting one wrong is the
-	// likely mistake rather than a corrupt file (T6).
-	std::string required_string(const char* key) const;
+	// The four bounds rectangles differ only in which key they sit under.
+	mattmath::RectangleF bounds_rectangle(const char* key) const;
 
 	static std::vector<mattmath::Vector2F>
-		decode_team_spawns_json(const rapidjson::Value& json);
-
-	static rapidjson::Document load_from_json(const char* json_path);
-
+		decode_team_spawns(const artattack::JsonValue& json);
 };

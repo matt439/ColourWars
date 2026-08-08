@@ -1,117 +1,93 @@
 #include "game/pch.h"
 #include "game/objects/level_loaded_info.h"
-#include "engine/assets/json_loader.h"
 
-using namespace DirectX;
 using namespace mattmath;
-using namespace rapidjson;
 using namespace artattack;
 
 LevelLoadedInfo::LevelLoadedInfo(const char* json_path) :
-	json_doc_(load_from_json(json_path)),
-	path_(json_path)
+	json_doc_(read_json_file(json_path))
 {
 
-}
-
-std::string LevelLoadedInfo::required_string(const char* key) const
-{
-	const auto member = this->json_doc_.FindMember(key);
-	if (member == this->json_doc_.MemberEnd() || !member->value.IsString())
-	{
-		throw std::runtime_error("level '" + this->path_ + "' has no string \"" +
-			key + "\" - every level names and pictures itself for the "
-			"stage-select menu.");
-	}
-	return member->value.GetString();
 }
 
 std::string LevelLoadedInfo::display_name() const
 {
-	return this->required_string("display_name");
+	return this->json_doc_.root().string("display_name");
 }
 std::string LevelLoadedInfo::icon_frame() const
 {
-	return this->required_string("icon_frame");
+	return this->json_doc_.root().string("icon_frame");
 }
 std::vector<Vector2F> LevelLoadedInfo::team_a_spawns() const
-{ 
-	const Value& spawn_locations_a = this->json_doc_["spawn_locations"]["team_a"];
-	return this->decode_team_spawns_json(spawn_locations_a);
+{
+	return decode_team_spawns(
+		this->json_doc_.root().object("spawn_locations").array("team_a"));
 }
 std::vector<Vector2F> LevelLoadedInfo::team_b_spawns() const
-{ 
-	const Value& spawn_locations_b = this->json_doc_["spawn_locations"]["team_b"];
-	return this->decode_team_spawns_json(spawn_locations_b);
+{
+	return decode_team_spawns(
+		this->json_doc_.root().object("spawn_locations").array("team_b"));
+}
+
+RectangleF LevelLoadedInfo::bounds_rectangle(const char* key) const
+{
+	const JsonValue bounds =
+		this->json_doc_.root().object("level_bounds").object(key);
+
+	return RectangleF(
+		bounds.number("x"),
+		bounds.number("y"),
+		bounds.number("width"),
+		bounds.number("height"));
 }
 
 RectangleF LevelLoadedInfo::out_of_bounds_rectangle() const
 {
-	return RectangleF(
-		this->json_doc_["level_bounds"]["out_of_bounds"]["x"].GetFloat(),
-		this->json_doc_["level_bounds"]["out_of_bounds"]["y"].GetFloat(),
-		this->json_doc_["level_bounds"]["out_of_bounds"]["width"].GetFloat(),
-		this->json_doc_["level_bounds"]["out_of_bounds"]["height"].GetFloat());
+	return this->bounds_rectangle("out_of_bounds");
 }
 RectangleF LevelLoadedInfo::camera_bounds_rectangle() const
 {
-	return RectangleF(
-		this->json_doc_["level_bounds"]["camera_bounds"]["x"].GetFloat(),
-		this->json_doc_["level_bounds"]["camera_bounds"]["y"].GetFloat(),
-		this->json_doc_["level_bounds"]["camera_bounds"]["width"].GetFloat(),
-		this->json_doc_["level_bounds"]["camera_bounds"]["height"].GetFloat());
+	return this->bounds_rectangle("camera_bounds");
 }
 RectangleF LevelLoadedInfo::zoom_out_start_bounds_rectangle() const
 {
-	return RectangleF(
-		this->json_doc_["level_bounds"]["zoom_out_start_bounds"]["x"].GetFloat(),
-		this->json_doc_["level_bounds"]["zoom_out_start_bounds"]["y"].GetFloat(),
-		this->json_doc_["level_bounds"]["zoom_out_start_bounds"]["width"].GetFloat(),
-		this->json_doc_["level_bounds"]["zoom_out_start_bounds"]["height"].GetFloat());
-
+	return this->bounds_rectangle("zoom_out_start_bounds");
 }
 RectangleF LevelLoadedInfo::zoom_out_finish_bounds_rectangle() const
 {
-	return RectangleF(
-		this->json_doc_["level_bounds"]["zoom_out_finish_bounds"]["x"].GetFloat(),
-		this->json_doc_["level_bounds"]["zoom_out_finish_bounds"]["y"].GetFloat(),
-		this->json_doc_["level_bounds"]["zoom_out_finish_bounds"]["width"].GetFloat(),
-		this->json_doc_["level_bounds"]["zoom_out_finish_bounds"]["height"].GetFloat());
+	return this->bounds_rectangle("zoom_out_finish_bounds");
 }
 
-const Value& LevelLoadedInfo::collision_objects_json() const
+JsonValue LevelLoadedInfo::collision_objects_json() const
 {
-	return this->json_doc_["collision_objects"];
+	return this->json_doc_.root().array("collision_objects");
 }
-const Value& LevelLoadedInfo::non_collision_objects_json() const
+JsonValue LevelLoadedInfo::non_collision_objects_json() const
 {
-	return this->json_doc_["non_collision_objects"];
+	return this->json_doc_.root().array("non_collision_objects");
 }
 std::string LevelLoadedInfo::sound_bank_name() const
 {
-	return this->json_doc_["sound"]["sound_bank_name"].GetString();
+	return this->json_doc_.root().object("sound").string("sound_bank_name");
 }
 std::string LevelLoadedInfo::music_name() const
 {
-	return this->json_doc_["sound"]["music_name"].GetString();
+	return this->json_doc_.root().object("sound").string("music_name");
 }
 float LevelLoadedInfo::music_volume() const
 {
-	return this->json_doc_["sound"]["music_volume"].GetFloat();
+	return this->json_doc_.root().object("sound").number("music_volume");
 }
 
 std::vector<Vector2F>
-	LevelLoadedInfo::decode_team_spawns_json(const Value& json)
+	LevelLoadedInfo::decode_team_spawns(const JsonValue& json)
 {
 	std::vector<Vector2F> spawns;
-	for (auto& spawn : json.GetArray())
+	spawns.reserve(json.size());
+	for (size_t index = 0; index < json.size(); ++index)
 	{
-		spawns.push_back(Vector2F(spawn["x"].GetFloat(), spawn["y"].GetFloat()));
+		const JsonValue spawn = json.at(index);
+		spawns.push_back(Vector2F(spawn.number("x"), spawn.number("y")));
 	}
 	return spawns;
-}
-
-Document LevelLoadedInfo::load_from_json(const char* json_path)
-{
-	return read_json_file(json_path);
 }
