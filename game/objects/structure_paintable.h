@@ -42,14 +42,13 @@ public:
 		CollisionObjectType collision_type,
 		const TeamColour& team_colours,
 		const PaintableFaces& faces,
-		const float* dt,
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
-	void update() override;
+	void update(float dt) override;
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera) const override;
 	void on_collision(const ICollisionGameObject* other) override;
@@ -63,7 +62,6 @@ private:
 	// LevelObjectBuilder::build_collision_object, so it dangled for the whole
 	// life of every paintable structure in the level.
 	PaintableFaces faces_ = PaintableFaces();
-	const float* dt_ = nullptr;
 	std::vector<PaintTile> generate_paint_tiles() const;
 	artattack::SoundBank* sound_bank_ = nullptr;
 

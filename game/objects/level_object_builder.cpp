@@ -6,11 +6,9 @@ using namespace mattmath;
 using namespace artattack;
 
 LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
-	const AudioResources* audio_resources,
-	const float* dt) :
+	const AudioResources* audio_resources) :
 	render_resources_(render_resources),
-	audio_resources_(audio_resources),
-	dt_(dt)
+	audio_resources_(audio_resources)
 {
 
 }
@@ -127,7 +125,6 @@ std::unique_ptr<ICollisionGameObject>
 			col_type,
 			team_colours,
 			faces,
-			this->dt_,
 			colour_consts::colour_from_name(json["colour"].GetString()));
 	}
 	if (type == "StructureRamp")

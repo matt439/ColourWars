@@ -7,7 +7,6 @@ using namespace rapidjson;
 using namespace artattack;
 
 LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
-	const float* dt,
 	RenderResources* render_resources,
 	const AudioResources* audio_resources,
 	const Registry<LevelLoadedInfo>* level_infos,
@@ -18,7 +17,6 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	render_resources_(render_resources),
 	audio_resources_(audio_resources),
 	level_infos_(level_infos),
-	dt_(dt),
 	viewport_manager_(viewport_manager),
 	sampler_state_(sampler_state),
 	resolution_manager_(resolution_manager),
@@ -29,7 +27,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	this->player_builder_ = std::make_unique<PlayerBuilder>();
 
 	this->level_object_builder_ = std::make_unique<LevelObjectBuilder>(
-		this->render_resources_, this->audio_resources_, this->dt_);
+		this->render_resources_, this->audio_resources_);
 }
 
 std::unique_ptr<Level>
@@ -55,7 +53,7 @@ std::unique_ptr<Level>
 	std::unique_ptr<std::vector<std::unique_ptr<Player>>> players =
 		this->player_builder_->build_players(settings, load_info, team_colours,
 			this->render_resources_, this->audio_resources_,
-			this->viewport_manager_, this->dt_);
+			this->viewport_manager_);
 
 	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers =
 		this->level_object_builder_->build_viewport_dividers(this->viewport_manager_);
@@ -76,7 +74,6 @@ std::unique_ptr<Level>
 		load_info->sound_bank_name(),
 		load_info->music_name(),
 		load_info->music_volume(),
-		this->dt_,
 		this->sampler_state_,
 		this->resolution_manager_,
 		this->viewport_manager_,

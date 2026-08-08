@@ -12,7 +12,6 @@ public:
 		const mattmath::Vector2F& player_center,
 		artattack::RenderResources* render_resources,
 		const artattack::AudioResources* audio_resources,
-		const float* dt,
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,

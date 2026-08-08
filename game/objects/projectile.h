@@ -25,7 +25,6 @@ public:
 		int player_num,
 		const mattmath::Colour& team_colour,
 		projectile_type type,
-		const float* dt,
 		artattack::RenderResources* render_resources,
 		const ProjectileDetails& details,
 		const mattmath::Colour& color = colour_consts::WHITE,
@@ -34,7 +33,7 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
-	void update() override = 0;
+	void update(float dt) override = 0;
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera) const override = 0;
 	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override = 0;
@@ -63,8 +62,7 @@ protected:
 	float timer() const;
 	void alter_timer(float time);
 
-	virtual void update_movement(float gravity, float wind_resistance);
-	float dt() const;
+	virtual void update_movement(float gravity, float wind_resistance, float dt);
 private:
 	ProjectileDetails details_ = ProjectileDetails();
 	float timer_ = 0.0f;
@@ -75,7 +73,6 @@ private:
 	PlayerTeam team_ = PlayerTeam::none;
 	bool for_deletion_ = false;
 
-	const float* dt_ = nullptr;
 };
 
 class DiffusingProjectile : public Projectile
@@ -86,7 +83,6 @@ public:
 		int player_num,
 		const mattmath::Colour& team_colour,
 		projectile_type type,
-		const float* dt,
 		artattack::RenderResources* render_resources,
 		const ProjectileDetails& details,
 		const DiffusionDetails& diffusion_details,
@@ -98,7 +94,7 @@ public:
 	~DiffusingProjectile() override = default;
 
 
-	void update() override = 0;
+	void update(float dt) override = 0;
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera) const override = 0;
 	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override = 0;

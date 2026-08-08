@@ -17,8 +17,7 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 	TeamColour team_colours,
 	RenderResources* render_resources,
 	const AudioResources* audio_resources,
-	const ViewportManager* viewport_manager,
-	const float* dt) const
+	const ViewportManager* viewport_manager) const
 {
 	auto players = std::make_unique<std::vector<std::unique_ptr<Player>>>();
 
@@ -54,13 +53,11 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 				setting.weapon,
 				rect.center(),
 				render_resources,
-				audio_resources,
-				dt),
+				audio_resources),
 			WeaponType::grenade_std,
 			team_colours.team_colour(setting.team),
 			viewport_manager->
 				player_viewport(setting.num),
-			dt,
 			position);
 
 		players->push_back(std::move(player));

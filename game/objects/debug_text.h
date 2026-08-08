@@ -21,11 +21,10 @@ class DebugText : public artattack::Drawer
 {
 public:
 	DebugText(artattack::RenderResources* render_resources,
-		const float* dt,
 		const artattack::ResolutionManager* resolution_manager);
 
 	void draw_debug_info(DirectX::SpriteBatch* sprite_batch,
-		const Player* player, int num_projectiles) const;
+		const Player* player, int num_projectiles, float dt) const;
 
 private:
 	const artattack::ResolutionManager* resolution_manager_ = nullptr;

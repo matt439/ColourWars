@@ -22,7 +22,6 @@ public:
 		const mattmath::Vector2F& player_center,
 		artattack::RenderResources* render_resources,
 		const artattack::AudioResources* audio_resources,
-		const float* dt,
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
@@ -42,7 +41,8 @@ public:
 		update_and_get_projectiles(PlayerInputData input,
 			const mattmath::Vector2F& player_center,
 			const mattmath::Vector2F& player_velocity,
-			bool player_facing_right);
+			bool player_facing_right,
+		float dt);
 
 	float ammo() const;
 	void reset_ammo();
@@ -129,7 +129,8 @@ protected:
 
 	virtual bool check_if_shooting_and_ammo_update(PlayerInputData input,
 		const mattmath::Vector2F& player_center,
-		const mattmath::Vector2F& player_velocity);
+		const mattmath::Vector2F& player_velocity,
+		float dt);
 
 	virtual void update_movement_and_rotation(PlayerInputData input,
 		const mattmath::Vector2F& player_center,
@@ -137,8 +138,6 @@ protected:
 		bool player_facing_right);
 
 	ProjectileBuilder* projectile_builder() const;
-	const float* dt_ptr() const;
-	float dt() const;
 	artattack::RenderResources* render_resources() const override;
 
 private:
@@ -147,7 +146,6 @@ private:
 		int player_num);
 
 	std::unique_ptr<ProjectileBuilder> proj_builder_ = nullptr;
-	const float* dt_ = nullptr;
 	artattack::RenderResources* render_resources_ = nullptr;
 
 	// Resolved once at construction like every other element name, even though
@@ -186,7 +184,6 @@ public:
 		const mattmath::Vector2F& player_center,
 		artattack::RenderResources* render_resources,
 		const artattack::AudioResources* audio_resources,
-		const float* dt,
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
@@ -197,7 +194,8 @@ public:
 		update_and_get_projectiles(PlayerInputData input,
 			const mattmath::Vector2F& player_center,
 			const mattmath::Vector2F& player_velocity,
-			bool player_facing_right) override;
+			bool player_facing_right,
+			float dt) override;
 
 protected:
 	virtual mattmath::Vector2F calculate_projectile_launch_velocity(

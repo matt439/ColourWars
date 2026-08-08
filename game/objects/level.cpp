@@ -20,7 +20,6 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_coll
 	const std::string& sound_bank_name,
 	const std::string& music_name,
 	float music_volume,
-	const float* dt,
 	ID3D11SamplerState* sampler_state,
 	const ResolutionManager* resolution_manager,
 	ViewportManager* viewport_manager,
@@ -43,16 +42,15 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_coll
 	zoom_out_finish_bounds_(zoom_out_finish_bounds),
 	team_a_spawns_(team_a_spawns),
 	team_b_spawns_(team_b_spawns),
-	dt_(dt),
 	sampler_state_(sampler_state),
 	thread_pool_(thread_pool),
 	partitioner_(partitioner)
 {
 	this->debug_text_ = std::make_unique<DebugText>(
-		render_resources, dt, resolution_manager);
+		render_resources, resolution_manager);
 	this->camera_tools_ = std::make_unique<CameraTools>();
 	this->interface_gameplay_ = std::make_unique<InterfaceGameplay>(
-		render_resources, dt);
+		render_resources);
 	this->sound_bank_ = audio_resources->sound_bank(sound_bank_name);
 
 	this->music_ = this->sound_bank_->resolve_effect(music_name);
@@ -63,8 +61,10 @@ void Level::stop_music() const
 {
 	this->sound_bank_->stop_effect(this->music_, true);
 }
-void Level::update(const std::vector<PlayerInputData>& player_inputs)
+void Level::update(const std::vector<PlayerInputData>& player_inputs,
+	float dt)
 {
+	this->frame_dt_ = dt;
 	if (this->state_ == LevelState::start_countdown ||
 		this->start_timer_ > -1.0f)
 	{
@@ -104,7 +104,7 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 				COUNTDOWN_SCALE,
 				COUNTDOWN_SCALE);
 		}
-		this->start_timer_ -= this->dt();
+		this->start_timer_ -= dt;
 		if (this->start_timer_ > 0.0f)
 		{
 			this->countdown_text_->set_text(std::to_string(
@@ -126,9 +126,9 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 	}
 	if (this->state_ == LevelState::active)
 	{
-		this->update_level_logic(player_inputs);
+		this->update_level_logic(player_inputs, dt);
 		
-		this->timer_ -= this->dt();
+		this->timer_ -= dt;
 		if (this->timer_ <= 0.0f)
 		{
 			this->state_ = LevelState::zoom_out;
@@ -139,7 +139,7 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 	}
 	else if (this->state_ == LevelState::zoom_out)
 	{		
-		this->zoom_out_timer_ -= this->dt();
+		this->zoom_out_timer_ -= dt;
 
 		if (this->zoom_out_timer_ <= 0.0f)
 		{
@@ -161,7 +161,7 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs)
 	}
 	else if (this->state_ == LevelState::overview)
 	{
-		this->overview_timer_ -= this->dt();
+		this->overview_timer_ -= dt;
 		if (this->overview_timer_ <= 0.0f)
 		{
 			this->state_ = LevelState::finished;
@@ -178,12 +178,13 @@ float Level::zoom_out_camera_ratio() const
 {
 	return 1.0f - (this->zoom_out_timer_ / ZOOM_OUT_TIMER);
 }
-void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs) const
+void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs,
+	float dt) const
 {
 	// update collision objects
 	for (const auto& object : *this->collision_objects_)
 	{
-		object->update();
+		object->update(dt);
 	}
 	
 	// update player objects
@@ -203,7 +204,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 		{
 			object->set_player_input(PlayerInputData());
 		}
-		object->update();
+		object->update(dt);
 
 		// update player camera
 		Camera camera = this->camera_tools_->calculate_camera(
@@ -215,7 +216,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 
 		// update player weapon
 		std::vector<std::unique_ptr<ICollisionGameObject>> new_projs =
-			object->update_weapon_and_get_projectiles();
+			object->update_weapon_and_get_projectiles(dt);
 		// add new projectiles to collision objects
 		for (auto& proj : new_projs)
 		{
@@ -226,7 +227,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	// update non-collision objects
 	for (const auto& object : *this->non_collision_objects_)
 	{
-		object->update();
+		object->update(dt);
 	}
 
 	// check player collisions
@@ -591,7 +592,8 @@ void Level::draw_player_view_level(int start, int end,
 			int num_projectiles = this->count_projectiles();
 
 			this->debug_text_->draw_debug_info(sprite_batches->at(i),
-				this->player_objects_->at(i).get(), num_projectiles);
+				this->player_objects_->at(i).get(), num_projectiles,
+				this->frame_dt_);
 		}
 
 		// draw countdown text
@@ -703,10 +705,6 @@ int Level::count_projectiles() const
 	return count;
 }
 
-float Level::dt() const
-{
-	return *this->dt_;
-}
 
 bool Level::is_object_out_of_bounds(const ICollisionGameObject* object) const
 {

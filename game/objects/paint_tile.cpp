@@ -11,7 +11,6 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	const std::string& frame_name,
 	RenderResources* render_resources,
 	const TeamColour& team_colours,
-	const float* dt,
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
@@ -20,11 +19,10 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	TextureObject(sheet_name, frame_name, render_resources,
 		color, rotation, origin, effects, layer_depth),
 	rectangle_(rectangle),
-	team_colours_(team_colours),
-	dt_(dt)
+	team_colours_(team_colours)
 {
 	this->splash_ = PaintTileSplash(
-		dt, SPLASH_RECTANGLE, SPLASH_SPRITE_SHEET_NAME, SPLASH_ANIMATION_STRIP_NAME,
+		SPLASH_RECTANGLE, SPLASH_SPRITE_SHEET_NAME, SPLASH_ANIMATION_STRIP_NAME,
 		render_resources);
 
 	// The splash is always centred on the tile and the tile never moves, so
@@ -32,9 +30,9 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	this->splash_.set_rectangle_center(rectangle.center());
 }
 
-void PaintTile::update()
+void PaintTile::update(float dt)
 {
-	this->splash_.update();
+	this->splash_.update(dt);
 }
 void PaintTile::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {
@@ -132,7 +130,7 @@ bool PaintTile::is_visible_in_viewport(const RectangleF& view) const
 	return this->rectangle_.intersects(view);
 }
 
-PaintTileSplash::PaintTileSplash(const float* dt,
+PaintTileSplash::PaintTileSplash(
 	const RectangleF& rectangle,
 	const std::string& sheet_name,
 	const std::string& animation_strip_name,
@@ -142,7 +140,7 @@ PaintTileSplash::PaintTileSplash(const float* dt,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
-	AnimationObject(dt, sheet_name, animation_strip_name,
+	AnimationObject(sheet_name, animation_strip_name,
 		render_resources,
 		color, rotation, origin, effects, layer_depth),
 	rectangle_(rectangle)
@@ -163,9 +161,9 @@ void PaintTileSplash::set_colour(const Colour& colour)
 {
 	this->AnimationObject::set_colour(colour);
 }
-void PaintTileSplash::update()
+void PaintTileSplash::update(float dt)
 {
-	this->AnimationObject::update();
+	this->AnimationObject::update(dt);
 }
 void PaintTileSplash::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {

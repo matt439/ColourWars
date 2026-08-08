@@ -10,7 +10,6 @@ Projectile::Projectile(const Vector2F& velocity,
     int player_num,
     const Colour& team_colour,
     projectile_type type,
-    const float* dt,
     RenderResources* render_resources,
     const ProjectileDetails& details,
     const Colour& color,
@@ -19,14 +18,13 @@ Projectile::Projectile(const Vector2F& velocity,
     SpriteEffects effects,
     float layer_depth) :
     MovingObject(velocity, rotation),
-    AnimationObject(dt, details.sheet_name, details.animation_strip_name,
+    AnimationObject(details.sheet_name, details.animation_strip_name,
                     render_resources, color, rotation, origin, effects, layer_depth),
     details_(details),
     player_num_(player_num),
     team_colour_(team_colour),
     type_(type),
-    team_(team),
-    dt_(dt)
+    team_(team)
 {
 
 }
@@ -37,7 +35,6 @@ DiffusingProjectile::DiffusingProjectile(
     int player_num,
     const Colour& team_colour,
     projectile_type type,
-    const float* dt,
     RenderResources* render_resources,
     const ProjectileDetails& details,
     const DiffusionDetails& diffusion_details,
@@ -47,7 +44,7 @@ DiffusingProjectile::DiffusingProjectile(
     SpriteEffects effects,
     float layer_depth) :
     Projectile(velocity, team, player_num,
-        team_colour, type, dt,
+        team_colour, type,
         render_resources, details, color, rotation,
         origin, effects, layer_depth),
     diffusion_details_(diffusion_details)
@@ -226,13 +223,8 @@ void Projectile::alter_timer(float time)
 {
     this->timer_ += time;
 }
-float Projectile::dt() const
+void Projectile::update_movement(float gravity, float wind_resistance, float dt)
 {
-	return *this->dt_;
-}
-void Projectile::update_movement(float gravity, float wind_resistance)
-{
-    const float dt = this->dt();
 
     //gravity
     MovingObject::alter_velocity_y(gravity * dt);

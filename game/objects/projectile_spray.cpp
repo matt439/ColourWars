@@ -11,14 +11,13 @@ ProjectileSpray::ProjectileSpray(const RectangleF& rectangle,
 	PlayerTeam team,
 	int player_num,
 	const Colour& team_colour,
-	const float* dt,
 	RenderResources* render_resources,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
 	DiffusingProjectile(velocity, team, player_num, team_colour,
-		SPRAY, dt, render_resources,
+		SPRAY, render_resources,
 		DETAILS_SPRAY, DIFFUSION_DETAILS_SPRAY,
 		team_colour, rotation, origin, effects, layer_depth),
 	rectangle_(rectangle)
@@ -28,19 +27,19 @@ ProjectileSpray::ProjectileSpray(const RectangleF& rectangle,
 	this->rectangle_.offset(-size.x / 2.0f, -size.y / 2.0f);
 }
 
-void ProjectileSpray::update()
+void ProjectileSpray::update(float dt)
 {
 	const ProjectileDetails& details = this->details();
 	
 	Projectile::update_movement(details.gravity,
-		details.wind_resistance);
+		details.wind_resistance, dt);
 
 	this->rectangle_.inflate_to_size(calculate_diffusion_size());
 
 	this->rectangle_.offset(MovingObject::dx_x(),
 		MovingObject::dx_y());
 
-	AnimationObject::update();
+	AnimationObject::update(dt);
 }
 void ProjectileSpray::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {

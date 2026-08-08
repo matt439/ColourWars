@@ -18,7 +18,6 @@ Player::Player(const RectangleF& rectangle,
     WeaponType secondary,
     const Colour& team_colour,
     const Viewport& view_port,
-    const float* dt,
     const mattmath::Vector2F& respawn_position,
     const Vector2F& velocity,
     float rotation,
@@ -26,7 +25,7 @@ Player::Player(const RectangleF& rectangle,
     SpriteEffects effects,
     float layer_depth) :
     MovingObject(velocity),
-    AnimationObject(dt, animation_info.sprite_sheet,
+    AnimationObject(animation_info.sprite_sheet,
                     animation_info.animation,
                     render_resources, DEFAULT_PLAYER_COLOUR, rotation, origin, effects, layer_depth),
     TextureObject(animation_info.sprite_sheet, animation_info.uniform_texture,
@@ -40,8 +39,7 @@ Player::Player(const RectangleF& rectangle,
     viewport_(view_port),
     rectangle_(rectangle),
     prev_rectangle_(rectangle),
-    respawn_position_(respawn_position),
-    dt_(dt)
+    respawn_position_(respawn_position)
 {
     this->sound_bank_ = audio_resources->sound_bank(SOUND_BANK);
 
@@ -721,15 +719,11 @@ void Player::on_projectile_collision(const ICollisionGameObject* other)
 	}
 }
 
-float Player::dt() const
-{
-	return *this->dt_;
-}
-void Player::update()
+void Player::update(float dt)
 {
     if (this->state_ == PlayerState::alive)
     {
-        this->update_movement();
+        this->update_movement(dt);
 
         // Clip selection has to happen here, once per frame, not in draw().
         // draw() runs once per viewport, concurrently on every render worker,
@@ -739,7 +733,7 @@ void Player::update()
         // because Level guards the draw call with is_visible_in_viewport.
         this->update_animation_state();
 
-        AnimationObject::update();
+        AnimationObject::update(dt);
 
         if (this->health_ <= 0.0f)
         {
@@ -747,11 +741,11 @@ void Player::update()
 			this->sound_bank_->play_wave(this->death_sound_, DEATH_SOUND_VOLUME);
         }
 
-        this->damage_sound_timer_ += this->dt();
+        this->damage_sound_timer_ += dt;
     }
     else if (this->state_ == PlayerState::dead)
     {
-        this->respawn_timer_ -= this->dt();
+        this->respawn_timer_ -= dt;
 
         if (this->respawn_timer_ <= 0.0f)
         {
@@ -771,34 +765,34 @@ void Player::update()
     //ammo regen
     if (this->health_regen_timer_ >= HEALTH_REGEN_DELAY)
     {
-        this->health_ += HEALTH_REGEN_RATE * this->dt();
+        this->health_ += HEALTH_REGEN_RATE * dt;
         if (this->health_ > 1.0f)
         {
             this->health_ = 1.0f;
         }
     }
-    this->health_regen_timer_ += this->dt();
+    this->health_regen_timer_ += dt;
 }
 std::vector<std::unique_ptr<ICollisionGameObject>>
-    Player::update_weapon_and_get_projectiles() const
+    Player::update_weapon_and_get_projectiles(float dt) const
 {
     return this->primary_->update_and_get_projectiles(
         this->input(),
         this->center(),
         MovingObject::velocity(),
-        this->facing_right());
+        this->facing_right(),
+        dt);
 }
 void Player::update_prev_rectangle()
 {
 	this->prev_rectangle_ = this->rectangle_;
 }
 
-void Player::update_movement()
+void Player::update_movement(float dt)
 {
     const PlayerInputData input = this->input_;
     const float x_input = input.x_movement;
     const PlayerMoveState move_state = this->move_state();
-    const float dt = this->dt();
     const bool analog_stick_down = this->input_.left_analog_stick.y >
         DROP_DOWN_ANALOG_THRESHOLD;
     const bool jump_pressed = this->input_.jump_pressed;
@@ -886,7 +880,7 @@ void Player::update_movement()
     }
 	else
 	{
-        this->do_jump();
+        this->do_jump(dt);
 	}
 
     MovingObject::set_dx_x(MovingObject::velocity_x() * dt);
@@ -905,12 +899,11 @@ void Player::update_movement()
     }
 }
 
-void Player::do_jump()
+void Player::do_jump(float dt)
 {
     const PlayerMoveState move_state = this->move_state();
     const bool jump_pressed = this->input_.jump_pressed;
     const bool jump_held = this->input_.jump_held;
-    const float dt = this->dt();
    
     if (this->is_on_ground() && jump_pressed)
     {

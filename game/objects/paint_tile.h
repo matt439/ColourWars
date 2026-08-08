@@ -23,7 +23,7 @@ class PaintTileSplash final : public artattack::AnimationObject, public artattac
 {
 public:
 	PaintTileSplash() = default;
-	PaintTileSplash(const float* dt,
+	PaintTileSplash(
 		const mattmath::RectangleF& rectangle,
 		const std::string& sheet_name,
 		const std::string& animation_strip_name,
@@ -38,7 +38,7 @@ public:
 	void reset_and_play();
 	void set_colour(const mattmath::Colour& colour) override;
 
-	void update() override;
+	void update(float dt) override;
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera) const override;
 
@@ -61,7 +61,6 @@ public:
 		const std::string& frame_name,
 		artattack::RenderResources* render_resources,
 		const TeamColour& team_colours,
-		const float* dt,
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
@@ -69,7 +68,7 @@ public:
 		float layer_depth = 0.0f);
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera) const override;
-	void update() override;
+	void update(float dt) override;
 	float area() const;
 	PlayerTeam team() const;
 	bool is_colliding(const ICollisionGameObject* other) const override;
@@ -83,6 +82,5 @@ private:
 	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
 	PlayerTeam team_ = PlayerTeam::none;
 	TeamColour team_colours_ = TeamColour();
-	const float* dt_ = nullptr;
 	PaintTileSplash splash_;
 };

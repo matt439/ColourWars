@@ -12,31 +12,30 @@ std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
     WeaponType type,
     const Vector2F& player_center,
     RenderResources* render_resources,
-    const AudioResources* audio_resources,
-    const float* dt)
+    const AudioResources* audio_resources)
 {
     switch (type)
     {
     case WeaponType::sprayer:
         return std::make_unique<WeaponSprayer>(
             team, player_num, team_colour, type, player_center,
-            render_resources, audio_resources, dt);
+            render_resources, audio_resources);
     case WeaponType::sniper:
         return std::make_unique<WeaponSniper>(team, player_num, team_colour,
             type, player_center,
-            render_resources, audio_resources, dt);
+            render_resources, audio_resources);
     case WeaponType::roller:
         return std::make_unique<WeaponRoller>(team, player_num, team_colour,
             type, player_center,
-            render_resources, audio_resources, dt);
+            render_resources, audio_resources);
     case WeaponType::mister:
         return std::make_unique<WeaponMister>(team, player_num, team_colour,
             type, player_center,
-            render_resources, audio_resources, dt);
+            render_resources, audio_resources);
     case WeaponType::bucket:
         return std::make_unique<WeaponBucket>(team, player_num, team_colour,
             type, player_center,
-            render_resources, audio_resources, dt);
+            render_resources, audio_resources);
     default:
         throw std::exception("Invalid weapon type");
     }

@@ -7,8 +7,8 @@ using namespace interface_consts;
 using namespace colour_consts;
 using namespace artattack;
 
-InterfaceGameplay::InterfaceGameplay(RenderResources* render_resources, const float* dt) :
-	Drawer(render_resources, dt),
+InterfaceGameplay::InterfaceGameplay(RenderResources* render_resources) :
+	Drawer(render_resources),
 	sheet_(render_resources->resolve_sprite_sheet(SPRITE_SHEET)),
 	empty_box_frame_(render_resources->sprite_sheet(this->sheet_)->
 		resolve_sprite_frame(EMPTY_BOX_FRAME)),

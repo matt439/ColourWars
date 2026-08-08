@@ -13,7 +13,6 @@ WeaponBucket::WeaponBucket(PlayerTeam team,
     const Vector2F& player_center,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
-    const float* dt,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
@@ -22,8 +21,7 @@ WeaponBucket::WeaponBucket(PlayerTeam team,
     RelativeVelocityWeapon(DETAILS_BUCKET,
         DETAILS_RELATIVE_BUCKET,
         team, player_num, team_colour, type, player_center,
-        render_resources, audio_resources, dt,
-        color, rotation, origin, effects, layer_depth)
+        render_resources, audio_resources,        color, rotation, origin, effects, layer_depth)
 {
 
 }

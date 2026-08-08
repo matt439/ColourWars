@@ -11,14 +11,13 @@ ProjectileJet::ProjectileJet(const RectangleF& rectangle,
 	PlayerTeam team,
 	int player_num,
 	const Colour& team_colour,
-	const float* dt,
 	RenderResources* render_resources,
 	float rotation,
 	const Vector2F& origin,
 	SpriteEffects effects,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
-		JET, dt, render_resources,
+		JET, render_resources,
 		DETAILS_JET,
 		team_colour, rotation, origin, effects, layer_depth),
 	rectangle_(rectangle)
@@ -28,17 +27,17 @@ ProjectileJet::ProjectileJet(const RectangleF& rectangle,
 	this->rectangle_.offset(-col_size.x / 2.0f, -col_size.y / 2.0f);
 }
 
-void ProjectileJet::update()
+void ProjectileJet::update(float dt)
 {
 	const ProjectileDetails& details = this->details();
 
 	Projectile::update_movement(details.gravity,
-		details.wind_resistance);
+		details.wind_resistance, dt);
 
 	this->rectangle_.offset(MovingObject::dx_x(),
 		MovingObject::dx_y());
 
-	AnimationObject::update();
+	AnimationObject::update(dt);
 }
 void ProjectileJet::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {

@@ -17,7 +17,6 @@ StructurePaintable::StructurePaintable(
 	CollisionObjectType collision_type,
 	const TeamColour& team_colours,
 	const PaintableFaces& faces,
-	const float* dt,
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
@@ -27,19 +26,18 @@ StructurePaintable::StructurePaintable(
 		render_resources, collision_type, color, rotation, origin,
 		effects, layer_depth),
 		team_colours_(team_colours),
-		faces_(faces),
-		dt_(dt)
+		faces_(faces)
 {
 	this->paint_tiles_ = this->generate_paint_tiles();
 	this->sound_bank_ = audio_resources->sound_bank(SOUND_BANK_NAME);
 	this->paint_sound_ = this->sound_bank_->resolve_wave(SOUND_NAME);
 }
 
-void StructurePaintable::update()
+void StructurePaintable::update(float dt)
 {
 	for (auto& paint_tile : this->paint_tiles_)
 	{
-		paint_tile.update();
+		paint_tile.update(dt);
 	}
 }
 
@@ -119,8 +117,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
 			                            this->render_resources(),
-			                            this->team_colours_,
-			                            this->dt_);
+			                            this->team_colours_);
 			paint_tiles.push_back(paint_tile);
 
 		}
@@ -139,8 +136,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
 			                            this->render_resources(),
-			                            this->team_colours_,
-			                            this->dt_);
+			                            this->team_colours_);
 			paint_tiles.push_back(paint_tile);
 		}
 	}
@@ -158,8 +154,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
 			                            this->render_resources(),
-			                            this->team_colours_,
-			                            this->dt_);
+			                            this->team_colours_);
 			paint_tiles.push_back(paint_tile);
 		}
 	}
@@ -177,8 +172,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles() const
 			auto paint_tile = PaintTile(paint_tile_rectangle,
 			                            SHEET_NAME, FRAME_NAME,
 			                            this->render_resources(),
-			                            this->team_colours_,
-			                            this->dt_);
+			                            this->team_colours_);
 			paint_tiles.push_back(paint_tile);
 		}
 	}

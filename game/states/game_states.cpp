@@ -113,7 +113,6 @@ void GameLevel::init()
 
     this->level_builder_ = std::make_unique<LevelBuilder>(
         this->data()->viewport_manager(),
-        this->data()->dt(),
         this->data()->render_resources(),
         this->data()->audio_resources(),
         this->data()->level_infos(),
@@ -193,7 +192,8 @@ void GameLevel::update()
         }
         else
         {
-            this->level_->update(player_inputs);
+            this->level_->update(player_inputs,
+                *this->game_data_->dt());
         }
         break;
     }

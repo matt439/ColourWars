@@ -7,9 +7,8 @@ using namespace debug_text_consts;
 using namespace artattack;
 
 DebugText::DebugText(RenderResources* render_resources,
-    const float* dt,
     const ResolutionManager* resolution_manager) :
-    Drawer(render_resources, dt),
+    Drawer(render_resources),
     resolution_manager_(resolution_manager),
     font_(render_resources->resolve_sprite_font(DEBUG_FONT))
 {
@@ -18,7 +17,7 @@ DebugText::DebugText(RenderResources* render_resources,
 
 
 void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
-    const Player* player, int num_projectiles) const
+    const Player* player, int num_projectiles, float dt) const
 {
     const PlayerInputData& input = player->input();
     
@@ -79,8 +78,8 @@ void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
     }
     lines.push_back(primary_shooting_string);
 
-    lines.push_back("dt: " + std::to_string(this->dt()));
-    lines.push_back("fps: " + std::to_string(1.0f / this->dt()));
+    lines.push_back("dt: " + std::to_string(dt));
+    lines.push_back("fps: " + std::to_string(1.0f / dt));
     lines.push_back("proj_count: " + std::to_string(num_projectiles));
     lines.push_back("jump_pressed: " + std::to_string(jump_pressed));
     lines.push_back("jump_held: " + std::to_string(jump_held));

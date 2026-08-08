@@ -14,7 +14,6 @@ Weapon::Weapon(const WeaponDetails& details,
     const Vector2F& player_center,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
-    const float* dt,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
@@ -23,7 +22,6 @@ Weapon::Weapon(const WeaponDetails& details,
     TextureObject(details.sheet_name, details.frame_name, render_resources,
                   color, rotation, origin, effects, layer_depth),
         details_(details),
-        dt_(dt),
         render_resources_(render_resources),
         team_(team),
         player_num_(player_num),
@@ -176,13 +174,14 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
     Weapon::update_and_get_projectiles(PlayerInputData input,
     const Vector2F& player_center,
     const Vector2F& player_velocity,
-    bool player_facing_right)
+    bool player_facing_right,
+    float dt)
 {
     this->update_movement_and_rotation(input, player_center,
 		player_velocity, player_facing_right);
 
     if (this->check_if_shooting_and_ammo_update(input, player_center,
-        player_velocity))
+        player_velocity, dt))
     {
         return this->shoot(Vector2F::unit_vec_from_angle(this->rotation()));
 	}
@@ -195,9 +194,9 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 bool Weapon::check_if_shooting_and_ammo_update(
     PlayerInputData input,
     const Vector2F& /*player_center*/,
-    const Vector2F& /*player_velocity*/)
+    const Vector2F& /*player_velocity*/,
+    float dt)
 {
-    const float dt = *this->dt_;
     bool normal_gun_ok_to_shoot = input.primary_shoot &&
         this->gun_player_aligned();
 
@@ -351,7 +350,6 @@ Weapon::shoot(const Vector2F& shoot_direction) const
         this->player_num(),
         this->team_colour(),
         this->details().proj_type,
-        this->dt_,
         this->render_resources_);
 }
 
@@ -517,14 +515,6 @@ ProjectileBuilder* Weapon::projectile_builder() const
 {
 	return this->proj_builder_.get();
 }
-const float* Weapon::dt_ptr() const
-{
-	return this->dt_;
-}
-float Weapon::dt() const
-{
-	return *this->dt_;
-}
 RenderResources* Weapon::render_resources() const
 {
 	return this->render_resources_;
@@ -540,14 +530,13 @@ RelativeVelocityWeapon::RelativeVelocityWeapon(
     const Vector2F& player_center,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
-    const float* dt,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
     DirectX::SpriteEffects effects,
     float layer_depth) :
     Weapon(details, team, player_num, team_colour, type,
-        player_center, render_resources, audio_resources, dt,
+        player_center, render_resources, audio_resources,
         color, rotation, origin, effects, layer_depth),
     rel_details_(rel_details)
 {
@@ -598,7 +587,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>> RelativeVelocityWeapon::shoot
         this->player_num(),
         this->team_colour(),
         this->details().proj_type,
-        this->dt_ptr(),
         this->render_resources());
 }
 
@@ -606,13 +594,14 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
     RelativeVelocityWeapon::update_and_get_projectiles(PlayerInputData input,
     const Vector2F& player_center,
     const Vector2F& player_velocity,
-    bool player_facing_right)
+    bool player_facing_right,
+    float dt)
 {
     Weapon::update_movement_and_rotation(input, player_center,
         player_velocity, player_facing_right);
 
     if (Weapon::check_if_shooting_and_ammo_update(input, player_center,
-		player_velocity))
+		player_velocity, dt))
     {
         return this->shoot(
             Vector2F::unit_vec_from_angle(this->rotation()), player_velocity);

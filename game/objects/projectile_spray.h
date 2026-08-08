@@ -11,14 +11,13 @@ public:
 		PlayerTeam team,
 		int player_num,
 		const mattmath::Colour& team_colour,
-		const float* dt,
 		artattack::RenderResources* render_resources,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
-	void update() override;
+	void update(float dt) override;
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera) const override;
 	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override;

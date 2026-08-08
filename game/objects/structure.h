@@ -19,7 +19,7 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
-	void update() override;
+	void update(float dt) override;
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera) const override;
 	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override;

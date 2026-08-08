@@ -18,7 +18,6 @@ class LevelBuilder
 {
 public:
 	LevelBuilder(artattack::ViewportManager* viewport_manager,
-		const float* dt,
 		artattack::RenderResources* render_resources,
 		const artattack::AudioResources* audio_resources,
 		const artattack::Registry<LevelLoadedInfo>* level_infos,
@@ -35,7 +34,6 @@ private:
 	artattack::RenderResources* render_resources_ = nullptr;
 	const artattack::AudioResources* audio_resources_ = nullptr;
 	const artattack::Registry<LevelLoadedInfo>* level_infos_ = nullptr;
-	const float* dt_ = nullptr;
 	artattack::ViewportManager* viewport_manager_ = nullptr;
 	std::unique_ptr<LevelObjectBuilder> level_object_builder_ = nullptr;
 	ID3D11SamplerState* sampler_state_ = nullptr;

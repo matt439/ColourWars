@@ -46,7 +46,7 @@ struct InterfaceDraw
 class InterfaceGameplay : public artattack::Drawer
 {
 public:
-    InterfaceGameplay(artattack::RenderResources* render_resources, const float* dt);
+    InterfaceGameplay(artattack::RenderResources* render_resources);
 
     // const for the same reason IGameObject::draw is. There is one
     // InterfaceGameplay for the whole level, and every render worker calls this

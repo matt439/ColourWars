@@ -68,7 +68,6 @@ public:
 		const std::string& sound_bank_name,
 		const std::string& music_name,
 		float music_volume,
-		const float* dt,
 		ID3D11SamplerState* sampler_state,
 		const artattack::ResolutionManager* resolution_manager,
 		artattack::ViewportManager* viewport_manager,
@@ -77,7 +76,7 @@ public:
 		artattack::ThreadPool* thread_pool,
 		const artattack::Partitioner* partitioner);
 
-	void update(const std::vector<PlayerInputData>& player_inputs);
+	void update(const std::vector<PlayerInputData>& player_inputs, float dt);
 	void draw(std::vector<ID3D11DeviceContext*>* deferred_contexts,
 		std::vector<ID3D11CommandList*>* command_lists,
 		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
@@ -112,6 +111,14 @@ private:
 	artattack::SoundBank::WaveHandle countdown_sound_;
 	float music_volume_ = 0.0f;
 
+	// This frame's dt, for the debug overlay's dt/fps readout - the only thing
+	// on the draw path that wants frame timing. Written once in update() and
+	// read by the render workers, which is the same shape as every other
+	// member they read: written on the single-threaded tick, never during the
+	// draw. It replaces a const float* handed in at construction, so what used
+	// to be a pointer that device loss could invalidate is now a value.
+	float frame_dt_ = 0.0f;
+
 	std::unique_ptr<artattack::TextDropShadow> countdown_text_ = nullptr;
 
 	std::unique_ptr<artattack::CameraTools> camera_tools_ = nullptr;
@@ -139,7 +146,6 @@ private:
 	std::vector<mattmath::Vector2F> team_b_spawns_ = std::vector<mattmath::Vector2F>();
 
 	LevelState state_ = LevelState::start_countdown;
-	const float* dt_ = nullptr;
 	ID3D11SamplerState* sampler_state_ = nullptr;
 
 	std::vector<PlayerInputData> player_inputs_ = std::vector<PlayerInputData>();
@@ -149,11 +155,11 @@ private:
 	const artattack::Partitioner* partitioner_ = nullptr;
 
 	int count_projectiles() const;
-	float dt() const;
 	bool is_object_out_of_bounds(const ICollisionGameObject* object) const;
 	void draw_end_screen();
 
-	void update_level_logic(const std::vector<PlayerInputData>& player_inputs) const;
+	void update_level_logic(const std::vector<PlayerInputData>& player_inputs,
+		float dt) const;
 
 	void draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contexts,
 		std::vector<ID3D11CommandList*>* command_lists,

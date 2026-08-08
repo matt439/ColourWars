@@ -17,6 +17,5 @@ public:
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
 		artattack::RenderResources* render_resources,
-		const artattack::AudioResources* audio_resources,
-		const float* dt);
+		const artattack::AudioResources* audio_resources);
 };

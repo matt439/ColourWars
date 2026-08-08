@@ -12,8 +12,7 @@ class LevelObjectBuilder
 {
 public:
 	LevelObjectBuilder(artattack::RenderResources* render_resources,
-		const artattack::AudioResources* audio_resources,
-		const float* dt);
+		const artattack::AudioResources* audio_resources);
 
 	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> 
 		build_collision_objects(const rapidjson::Value& json,
@@ -28,7 +27,6 @@ public:
 private:
 	artattack::RenderResources* render_resources_ = nullptr;
 	const artattack::AudioResources* audio_resources_ = nullptr;
-	const float* dt_ = nullptr;
 
 	std::unique_ptr<ICollisionGameObject>
 		build_collision_object(const rapidjson::Value& json,

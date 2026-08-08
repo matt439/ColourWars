@@ -18,8 +18,7 @@ public:
 		TeamColour team_colours,
 		artattack::RenderResources* render_resources,
 		const artattack::AudioResources* audio_resources,
-		const artattack::ViewportManager* viewport_manager,
-		const float* dt) const;
+		const artattack::ViewportManager* viewport_manager) const;
 private:
 	std::unique_ptr<WeaponBuilder> weapon_builder_ = nullptr;
 };

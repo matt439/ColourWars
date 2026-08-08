@@ -75,7 +75,6 @@ public:
         WeaponType secondary,
         const mattmath::Colour& team_colour,
         const mattmath::Viewport& view_port,
-        const float* dt,
         const mattmath::Vector2F& respawn_position,
         const mattmath::Vector2F& velocity = mattmath::Vector2F::ZERO,
         float rotation = 0.0f,
@@ -83,9 +82,9 @@ public:
         DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
         float layer_depth = 0.0f);
 
-    void update() override;
+    void update(float dt) override;
     std::vector<std::unique_ptr<ICollisionGameObject>>
-        update_weapon_and_get_projectiles() const;
+        update_weapon_and_get_projectiles(float dt) const;
     void draw(DirectX::SpriteBatch* sprite_batch,
         const mattmath::Camera& camera) const override;
 
@@ -175,7 +174,6 @@ private:
     artattack::SoundBank::WaveHandle jump_sound_;
     artattack::SoundBank::WaveHandle respawn_sound_;
 
-    const float* dt_ = nullptr;
 
     float health_regen_timer_ = 0.0f;
 
@@ -187,10 +185,9 @@ private:
 	void on_projectile_collision(const ICollisionGameObject* other);
 	void on_structure_collision(const ICollisionGameObject* other);
 
-	float dt() const;
 
-	void update_movement();
-	void do_jump();
+	void update_movement(float dt);
+	void do_jump(float dt);
 
     PlayerAnimationState calculate_animation_state() const;
 

@@ -25,7 +25,7 @@ Structure::Structure(const std::string& sheet_name,
 
 }
 
-void Structure::update()
+void Structure::update(float /*dt*/)
 {
 	
 }
