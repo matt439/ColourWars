@@ -2,6 +2,7 @@
 
 #include "engine/render/drawer.h"
 #include "engine/render/resolution_manager.h"
+#include "engine/render/text_encoding.h"
 #include "engine/math/matt_math.h"
 #include "game/objects/player.h"
 

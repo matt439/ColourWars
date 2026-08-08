@@ -41,62 +41,62 @@ void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
         input_jump_held();
     PlayerState state = player->state();
 
-    std::vector<std::string> lines;
+    std::vector<std::wstring> lines;
 
-    lines.push_back("rect: " + std::to_string(rect.x) + ", " +
-        std::to_string(rect.y) + ", " + std::to_string(rect.width) + ", " +
-        std::to_string(rect.height));
-    lines.push_back("center: " + std::to_string(center.x) + ", " +
-        std::to_string(center.y));
-    lines.push_back("vel: " + std::to_string(vel.x) + ", " +
-        std::to_string(vel.y));
-    lines.push_back("camera: " + std::to_string(camera.translation.x) + ", " +
-        std::to_string(camera.translation.y) + ", " + std::to_string(camera.scale));
-    lines.push_back("resolution: " + std::to_string(resolution.x) + ", " +
-        std::to_string(resolution.y));
-    lines.push_back("viewport: " + std::to_string(viewport.x) + ", " +
-        std::to_string(viewport.y) + ", " +
-        std::to_string(viewport.width) + ", " +
-        std::to_string(viewport.height));
-    lines.push_back("x-input: " + std::to_string(x_movement));
-    lines.push_back("shoot-direction: " + std::to_string(shoot_direction.x) +
-        ", " + std::to_string(shoot_direction.y));
-    lines.push_back("shoot-angle: " + std::to_string(shoot_angle));
-    lines.push_back("left-stick: " + std::to_string(left_stick.x) + ", " +
-        std::to_string(left_stick.y));
-    lines.push_back("right-stick: " + std::to_string(right_stick.x) + ", " +
-        std::to_string(right_stick.y));
+    lines.push_back(L"rect: " + std::to_wstring(rect.x) + L", " +
+        std::to_wstring(rect.y) + L", " + std::to_wstring(rect.width) + L", " +
+        std::to_wstring(rect.height));
+    lines.push_back(L"center: " + std::to_wstring(center.x) + L", " +
+        std::to_wstring(center.y));
+    lines.push_back(L"vel: " + std::to_wstring(vel.x) + L", " +
+        std::to_wstring(vel.y));
+    lines.push_back(L"camera: " + std::to_wstring(camera.translation.x) + L", " +
+        std::to_wstring(camera.translation.y) + L", " + std::to_wstring(camera.scale));
+    lines.push_back(L"resolution: " + std::to_wstring(resolution.x) + L", " +
+        std::to_wstring(resolution.y));
+    lines.push_back(L"viewport: " + std::to_wstring(viewport.x) + L", " +
+        std::to_wstring(viewport.y) + L", " +
+        std::to_wstring(viewport.width) + L", " +
+        std::to_wstring(viewport.height));
+    lines.push_back(L"x-input: " + std::to_wstring(x_movement));
+    lines.push_back(L"shoot-direction: " + std::to_wstring(shoot_direction.x) +
+        L", " + std::to_wstring(shoot_direction.y));
+    lines.push_back(L"shoot-angle: " + std::to_wstring(shoot_angle));
+    lines.push_back(L"left-stick: " + std::to_wstring(left_stick.x) + L", " +
+        std::to_wstring(left_stick.y));
+    lines.push_back(L"right-stick: " + std::to_wstring(right_stick.x) + L", " +
+        std::to_wstring(right_stick.y));
 
-    std::string primary_shooting_string = "primary-shooting: ";
+    std::wstring primary_shooting_string = L"primary-shooting: ";
     if (primary_shooting)
     {
-        primary_shooting_string += "true";
+        primary_shooting_string += L"true";
     }
     else
     {
-        primary_shooting_string += "false";
+        primary_shooting_string += L"false";
     }
     lines.push_back(primary_shooting_string);
 
-    lines.push_back("dt: " + std::to_string(dt));
-    lines.push_back("fps: " + std::to_string(1.0f / dt));
-    lines.push_back("proj_count: " + std::to_string(num_projectiles));
-    lines.push_back("jump_pressed: " + std::to_string(jump_pressed));
-    lines.push_back("jump_held: " + std::to_string(jump_held));
+    lines.push_back(L"dt: " + std::to_wstring(dt));
+    lines.push_back(L"fps: " + std::to_wstring(1.0f / dt));
+    lines.push_back(L"proj_count: " + std::to_wstring(num_projectiles));
+    lines.push_back(L"jump_pressed: " + std::to_wstring(jump_pressed));
+    lines.push_back(L"jump_held: " + std::to_wstring(jump_held));
 
-    std::string move_state_string = "move_state: ";
-	move_state_string += player->player_move_state_string();
+    std::wstring move_state_string = L"move_state: ";
+	move_state_string += widen(player->player_move_state_string());
 
     lines.push_back(move_state_string);
 
-    std::string state_string = "state: ";
+    std::wstring state_string = L"state: ";
     switch (state)
     {
     case PlayerState::alive:
-        state_string += "alive";
+        state_string += L"alive";
         break;
     case PlayerState::dead:
-        state_string += "dead";
+        state_string += L"dead";
         break;
     };
     lines.push_back(state_string);

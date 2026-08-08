@@ -31,7 +31,7 @@ namespace level_consts
 {
 	constexpr float TIMER = 240.0f;
 	constexpr float START_TIMER = 3.0f;
-	const static std::string COUNTDOWN_TEXT = "3";
+	const static std::wstring COUNTDOWN_TEXT = L"3";
 	const static std::string COUNTDOWN_FONT_NAME = "gill_sans_mt_bold_144";
 	const static mattmath::Colour COUNTDOWN_COLOUR = colour_consts::DARK_GRAY;
 	const static mattmath::Colour COUNTDOWN_SHADOW_COLOUR = colour_consts::BLACK;

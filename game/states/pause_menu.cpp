@@ -19,20 +19,20 @@ PauseMenuPage::PauseMenuPage(PauseMenuData* data) :
 	this->window_open_sound_ = this->resolve_wave(WINDOW_OPEN_SOUND);
 }
 
-std::string PauseMenuPage::player_number_text(int player_num)
+std::wstring PauseMenuPage::player_number_text(int player_num)
 {
 	switch (player_num)
 	{
 	case 0:
-		return "Pause Menu P1";
+		return L"Pause Menu P1";
 	case 1:
-		return "Pause Menu P2";
+		return L"Pause Menu P2";
 	case 2:
-		return "Pause Menu P3";
+		return L"Pause Menu P3";
 	case 3:
-		return "Pause Menu P4";
+		return L"Pause Menu P4";
 	default:
-		return "Pause Menu P error";
+		return L"Pause Menu P error";
 	};
 }
 
@@ -160,7 +160,7 @@ void PauseMenuInitial::init()
 
 	this->resume_ = std::make_unique<MTextDropShadow>(
 		"resume",
-		"Resume",
+		L"Resume",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 2),
 		this->render_resources(),
@@ -170,7 +170,7 @@ void PauseMenuInitial::init()
 
 	this->restart_ = std::make_unique<MTextDropShadow>(
 		"restart",
-		"Restart",
+		L"Restart",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 3),
 		this->render_resources(),
@@ -180,7 +180,7 @@ void PauseMenuInitial::init()
 
 	this->quit_ = std::make_unique<MTextDropShadow>(
 		"quit",
-		"Quit",
+		L"Quit",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 4),
 		this->render_resources(),
@@ -326,7 +326,7 @@ void PauseMenuConfirmation::init()
 
 	this->yes_ = std::make_unique<MTextDropShadow>(
 		"yes",
-		"Yes",
+		L"Yes",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 3),
 		this->render_resources(),
@@ -336,7 +336,7 @@ void PauseMenuConfirmation::init()
 
 	this->no_ = std::make_unique<MTextDropShadow>(
 		"no",
-		"No",
+		L"No",
 		ITEM_FONT,
 		this->calculate_widget_position(1, 4),
 		this->render_resources(),
@@ -376,16 +376,16 @@ void PauseMenuConfirmation::draw()
 	this->draw_mobjects_in_viewports(&mobjects);
 }
 
-std::string PauseMenuConfirmation::question_text(
+std::wstring PauseMenuConfirmation::question_text(
 	ConfirmationType type)
 {
 	switch (type)
 	{
 	case ConfirmationType::restart:
-		return "Are you sure you want to restart?";
+		return L"Are you sure you want to restart?";
 	case ConfirmationType::quit:
-		return "Are you sure you want to quit?";
+		return L"Are you sure you want to quit?";
 	default:
-		return "Error";
+		return L"Error";
 	}
 }

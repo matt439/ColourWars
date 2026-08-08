@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/ui/widget.h"
+#include "engine/render/text_encoding.h"
 #include "game/objects/player_team.h"
 #include "game/states/main_menu_data.h"
 #include "game/states/confirmation_state.h"
@@ -79,12 +80,12 @@ namespace main_menu_consts
 	const std::string MUSIC = "Top_Of_The_Morning";
 	constexpr float MUSIC_VOLUME = 0.03f;
 
-	const static std::string SPRAYER_DESC = "Fires a powerful stream of paint in an arc pattern.\nGood for beginners.";
-	const static std::string SNIPER_DESC = "Slowly fires powerful, accurate shots.\nCan dispatch players quickly if you have skill.";
-	const static std::string ROLLER_DESC = "Rolls paint in a wide area in front of you.\nCan be used to cover large floor areas quickly.";
-	const static std::string MISTER_DESC = "Produces a mist of slow-moving, diffusing paint particles.";
-	const static std::string BUCKET_DESC = "Throws a bucket of paint in a short arc pattern.\nIdeal for defeating other players.";
-	const static std::string RANDOM_DESC = "Randomly selects a weapon for you.\nIndecisiveness is nothing to be ashamed of.";
+	const static std::wstring SPRAYER_DESC = L"Fires a powerful stream of paint in an arc pattern.\nGood for beginners.";
+	const static std::wstring SNIPER_DESC = L"Slowly fires powerful, accurate shots.\nCan dispatch players quickly if you have skill.";
+	const static std::wstring ROLLER_DESC = L"Rolls paint in a wide area in front of you.\nCan be used to cover large floor areas quickly.";
+	const static std::wstring MISTER_DESC = L"Produces a mist of slow-moving, diffusing paint particles.";
+	const static std::wstring BUCKET_DESC = L"Throws a bucket of paint in a short arc pattern.\nIdeal for defeating other players.";
+	const static std::wstring RANDOM_DESC = L"Randomly selects a weapon for you.\nIndecisiveness is nothing to be ashamed of.";
 }
 
 enum class MainMenuScreen
@@ -297,7 +298,7 @@ private:
 	static WeaponType random_weapon();
 	void set_level_settings() const;
 	void cycle_weapons(MenuDirection direction, int player_index);
-	static std::string weapon_description(WeaponType type);
+	static std::wstring weapon_description(WeaponType type);
 };
 
 class MainMenuStageSelect final : public MainMenuPage

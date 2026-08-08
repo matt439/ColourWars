@@ -107,12 +107,12 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs,
 		this->start_timer_ -= dt;
 		if (this->start_timer_ > 0.0f)
 		{
-			this->countdown_text_->set_text(std::to_string(
+			this->countdown_text_->set_text(std::to_wstring(
 				static_cast<int>(this->start_timer_) + 1));
 		}
 		else
 		{
-			this->countdown_text_->set_text("GO!");
+			this->countdown_text_->set_text(L"GO!");
 		}
 
 		if (this->start_timer_ <= 0.0f)

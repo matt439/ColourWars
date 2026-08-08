@@ -152,7 +152,7 @@ void EndMenuInitial::init()
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
-		"Level End",
+		L"Level End",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -162,7 +162,7 @@ void EndMenuInitial::init()
 
 	this->change_teams_ = std::make_unique<MTextDropShadow>(
 		"change_teams",
-		"Change Teams",
+		L"Change Teams",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
@@ -172,7 +172,7 @@ void EndMenuInitial::init()
 
 	this->change_weapons_ = std::make_unique<MTextDropShadow>(
 		"change_weapons",
-		"Change Weapons",
+		L"Change Weapons",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
@@ -182,7 +182,7 @@ void EndMenuInitial::init()
 
 	this->change_level_ = std::make_unique<MTextDropShadow>(
 		"change_level",
-		"Change Level",
+		L"Change Level",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
@@ -192,7 +192,7 @@ void EndMenuInitial::init()
 
 	this->restart_ = std::make_unique<MTextDropShadow>(
 		"restart",
-		"Restart",
+		L"Restart",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
@@ -202,7 +202,7 @@ void EndMenuInitial::init()
 
 	this->exit_ = std::make_unique<MTextDropShadow>(
 		"exit",
-		"Exit to Main Menu",
+		L"Exit to Main Menu",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
 		this->render_resources(),

@@ -156,9 +156,14 @@ void InterfaceGameplay::draw_timer(SpriteBatch* sprite_batch,
 	SpriteFont* sprite_font = this->render_resources()->
 		sprite_font(this->timer_font_);
 
+	// Wide, because the narrow overload converts through a buffer owned by
+	// this shared SpriteFont and every player's render worker is in here.
+	const std::wstring text =
+		std::to_wstring(static_cast<int>(std::ceil(timer)));
+
 	sprite_font->DrawString(
 		sprite_batch,
-		std::to_string(static_cast<int>(std::ceil(timer))).c_str(),
+		text.c_str(),
 		(pos + (TIMER_SHADOW_OFFSET * scale)).xm_vector(),
 		TIMER_SHADOW_COLOUR.xm_vector(),
 		0.0f,
@@ -167,7 +172,7 @@ void InterfaceGameplay::draw_timer(SpriteBatch* sprite_batch,
 
 	sprite_font->DrawString(
 		sprite_batch,
-		std::to_string(static_cast<int>(std::ceil(timer))).c_str(),
+		text.c_str(),
 		pos.xm_vector(),
 		TIMER_COLOUR.xm_vector(),
 		0.0f,
@@ -186,7 +191,7 @@ void InterfaceGameplay::draw_respawn_timer(SpriteBatch* sprite_batch,
 	SpriteFont* sprite_font = this->render_resources()->
 		sprite_font(this->respawn_timer_font_);
 
-	std::string text = std::to_string(static_cast<int>(timer) + 1);
+	const std::wstring text = std::to_wstring(static_cast<int>(timer) + 1);
 
 	sprite_font->DrawString(
 		sprite_batch,

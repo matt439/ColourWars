@@ -49,7 +49,7 @@ public:
 	void update() override = 0;
 	void draw() override = 0;
 protected:
-	static std::string player_number_text(int player_num);
+	static std::wstring player_number_text(int player_num);
 	PauseMenuData* pause_menu_data() const;
 
 	// The input for the pad that opened this pause menu, or a neutral input if
@@ -109,5 +109,5 @@ private:
 	std::unique_ptr<artattack::MTextDropShadow> yes_ = nullptr;
 	std::unique_ptr<artattack::MTextDropShadow> no_ = nullptr;
 	ConfirmationType type_ = ConfirmationType::restart;
-	static std::string question_text(ConfirmationType type);
+	static std::wstring question_text(ConfirmationType type);
 };

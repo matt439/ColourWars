@@ -76,7 +76,7 @@ void MainMenuTitle::init()
 
 	this->title_ = std::make_unique<MTextDropShadow>(
 		"title",
-		"Colour Wars",
+		L"Colour Wars",
 		TITLE_FONT,
 		Vector2F(200.0f, 300.0f),
 		this->render_resources(),
@@ -86,7 +86,7 @@ void MainMenuTitle::init()
 
 	this->start_ = std::make_unique<MTextDropShadow>(
 		"start",
-		"Start",
+		L"Start",
 		ITEM_FONT,
 		Vector2F(250.0f, 700.0f),
 		this->render_resources(),
@@ -221,7 +221,7 @@ void MainMenuHome::init()
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
-		"Main Menu",
+		L"Main Menu",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -231,7 +231,7 @@ void MainMenuHome::init()
 
 	this->play_ = std::make_unique<MTextDropShadow>(
 		"play",
-		"Play",
+		L"Play",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
@@ -241,7 +241,7 @@ void MainMenuHome::init()
 
 	this->options_ = std::make_unique<MTextDropShadow>(
 		"options",
-		"Options",
+		L"Options",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
@@ -251,7 +251,7 @@ void MainMenuHome::init()
 
 	this->exit_ = std::make_unique<MTextDropShadow>(
 		"exit",
-		"Exit",
+		L"Exit",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
@@ -447,7 +447,7 @@ void MainMenuOptions::init()
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
-		"Options",
+		L"Options",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -457,7 +457,7 @@ void MainMenuOptions::init()
 
 	this->resolution_element_ = std::make_unique<MTextDropShadow>(
 		"resolution_element",
-		"Resolution",
+		L"Resolution",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
@@ -467,7 +467,7 @@ void MainMenuOptions::init()
 
 	this->resolution_value_ = std::make_unique<MTextDropShadow>(
 		"resolution_value",
-		"null",
+		L"null",
 		ITEM_FONT,
 		this->calculate_widget_position(2, 2),
 		this->render_resources(),
@@ -479,7 +479,7 @@ void MainMenuOptions::init()
 
 	this->full_screen_ = std::make_unique<MTextDropShadow>(
 		"full_screen",
-		"Fullscreen",
+		L"Fullscreen",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
@@ -489,7 +489,7 @@ void MainMenuOptions::init()
 
 	this->full_screen_value_ = std::make_unique<MTextDropShadow>(
 		"full_screen_value",
-		"null",
+		L"null",
 		ITEM_FONT,
 		this->calculate_widget_position(2, 3),
 		this->render_resources(),
@@ -501,7 +501,7 @@ void MainMenuOptions::init()
 
 	this->apply_ = std::make_unique<MTextDropShadow>(
 		"apply",
-		"Apply",
+		L"Apply",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
@@ -511,7 +511,7 @@ void MainMenuOptions::init()
 
 	this->back_ = std::make_unique<MTextDropShadow>(
 		"back",
-		"Back",
+		L"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
@@ -579,22 +579,24 @@ void MainMenuOptions::cycle_resolution(
 
 void MainMenuOptions::update_resolution_selection_text()
 {
-	std::string res_text = this->resolution_manager()->
+	// The resolution string round-trips through the save file, so it stays
+	// narrow at its source and comes across here.
+	const std::string res_text = this->resolution_manager()->
 		convert_resolution_to_string(this->resolution_selection_);
-	this->resolution_value_->set_text(res_text);
+	this->resolution_value_->set_text(widen(res_text));
 }
 
 void MainMenuOptions::update_full_screen_selection_text() const
 {
 	bool fs = this->full_screen_selection_; //this->context()->data()->save()->full_screen();
-	std::string fs_text = "";
+	std::wstring fs_text = L"";
 	if (fs)
 	{
-		fs_text = "On";
+		fs_text = L"On";
 	}
 	else
 	{
-		fs_text = "Off";
+		fs_text = L"Off";
 	}
 	this->full_screen_value_->set_text(fs_text);
 }
@@ -753,7 +755,7 @@ void MainMenuModeSelect::init()
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
-		"Mode Select",
+		L"Mode Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -763,7 +765,7 @@ void MainMenuModeSelect::init()
 
 	this->standard_ = std::make_unique<MTextDropShadow>(
 		"standard",
-		"Standard",
+		L"Standard",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
@@ -773,7 +775,7 @@ void MainMenuModeSelect::init()
 
 	this->tdm_ = std::make_unique<MTextDropShadow>(
 		"tdm",
-		"Team Deathmatch",
+		L"Team Deathmatch",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
@@ -783,7 +785,7 @@ void MainMenuModeSelect::init()
 
 	this->dm_ = std::make_unique<MTextDropShadow>(
 		"dm",
-		"Deathmatch",
+		L"Deathmatch",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
@@ -793,7 +795,7 @@ void MainMenuModeSelect::init()
 
 	this->practice_ = std::make_unique<MTextDropShadow>(
 		"practice",
-		"Practice",
+		L"Practice",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
@@ -803,7 +805,7 @@ void MainMenuModeSelect::init()
 
 	this->back_ = std::make_unique<MTextDropShadow>(
 		"back",
-		"Back",
+		L"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
 		this->render_resources(),
@@ -1020,7 +1022,7 @@ void MainMenuPlayerCount::init()
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
-		"Number of Players",
+		L"Number of Players",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -1030,7 +1032,7 @@ void MainMenuPlayerCount::init()
 
 	this->_1_player = std::make_unique<MTextDropShadow>(
 		"1_player",
-		"1 Player",
+		L"1 Player",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
@@ -1040,7 +1042,7 @@ void MainMenuPlayerCount::init()
 
 	this->_2_players = std::make_unique<MTextDropShadow>(
 		"2_players",
-		"2 Players",
+		L"2 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
@@ -1050,7 +1052,7 @@ void MainMenuPlayerCount::init()
 
 	this->_3_players = std::make_unique<MTextDropShadow>(
 		"3_players",
-		"3 Players",
+		L"3 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
@@ -1060,7 +1062,7 @@ void MainMenuPlayerCount::init()
 
 	this->_4_players = std::make_unique<MTextDropShadow>(
 		"4_players",
-		"4 Players",
+		L"4 Players",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
@@ -1070,7 +1072,7 @@ void MainMenuPlayerCount::init()
 
 	this->back_ = std::make_unique<MTextDropShadow>(
 		"back",
-		"Back",
+		L"Back",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
 		this->render_resources(),
@@ -1309,7 +1311,7 @@ void MainMenuTeamSelect::init()
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
-		"Team Select",
+		L"Team Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -1331,7 +1333,7 @@ void MainMenuTeamSelect::init()
 		auto widgets = std::make_unique<PlayerWidgets>();
 
 		std::string name = "player_" + std::to_string(i + 1);
-		std::string label_text = "Player " + std::to_string(i + 1);
+		std::wstring label_text = L"Player " + std::to_wstring(i + 1);
 
 		widgets->player = std::make_unique<MTextDropShadow>(
 			name,
@@ -1562,31 +1564,31 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 		{
 		case WeaponType::sprayer:
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sprayer");
-			this->player_widgets_[i]->weapon_name->set_text("Sprayer");
+			this->player_widgets_[i]->weapon_name->set_text(L"Sprayer");
 			break;
 		case WeaponType::sniper:
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sniper");
-			this->player_widgets_[i]->weapon_name->set_text("Sniper");
+			this->player_widgets_[i]->weapon_name->set_text(L"Sniper");
 			break;
 		case WeaponType::roller:
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame("roller");
-			this->player_widgets_[i]->weapon_name->set_text("Roller");
+			this->player_widgets_[i]->weapon_name->set_text(L"Roller");
 			break;
 		case WeaponType::mister:
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame("mister");
-			this->player_widgets_[i]->weapon_name->set_text("Mister");
+			this->player_widgets_[i]->weapon_name->set_text(L"Mister");
 			break;
 		case WeaponType::bucket:
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame("bucket");
-			this->player_widgets_[i]->weapon_name->set_text("Bucket");
+			this->player_widgets_[i]->weapon_name->set_text(L"Bucket");
 			break;
 		case WeaponType::random_primary:
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame("random");
-			this->player_widgets_[i]->weapon_name->set_text("Random");
+			this->player_widgets_[i]->weapon_name->set_text(L"Random");
 			break;
 		default:
 			this->player_widgets_[i]->weapon_icon->set_sprite_frame("error");
-			this->player_widgets_[i]->weapon_name->set_text("ERROR");
+			this->player_widgets_[i]->weapon_name->set_text(L"ERROR");
 			break;
 		}
 
@@ -1636,7 +1638,7 @@ void MainMenuWeaponSelect::init()
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
-		"Weapon Select",
+		L"Weapon Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -1657,7 +1659,7 @@ void MainMenuWeaponSelect::init()
 		auto widgets = std::make_unique<Widgets>();
 
 		std::string name = "player_" + std::to_string(i + 1);
-		std::string label_text = "Player " + std::to_string(i + 1);
+		std::wstring label_text = L"Player " + std::to_wstring(i + 1);
 
 		widgets->player = std::make_unique<MTextDropShadow>(
 			name,
@@ -1677,7 +1679,7 @@ void MainMenuWeaponSelect::init()
 
 		widgets->weapon_name = std::make_unique<MTextDropShadow>(
 			name + "_wep_name",
-			"Sprayer",
+			L"Sprayer",
 			DETAIL_FONT,
 			widgets->weapon_icon->rectangle().position() +
 				Vector2F(0.0f, WEAPON_SELECT_WEAPON_WIDGET_SIZE.y),
@@ -1711,7 +1713,7 @@ void MainMenuWeaponSelect::init()
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
-std::string MainMenuWeaponSelect::weapon_description(WeaponType type)
+std::wstring MainMenuWeaponSelect::weapon_description(WeaponType type)
 {
 	switch (type)
 	{
@@ -1728,7 +1730,7 @@ std::string MainMenuWeaponSelect::weapon_description(WeaponType type)
 	case WeaponType::random_primary:
 		return RANDOM_DESC;
 	default:
-		return "ERROR";
+		return L"ERROR";
 	}
 }
 
@@ -1839,18 +1841,18 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	if (slot == this->random_slot())
 	{
 		this->stage_icon_->set_sprite_frame("random");
-		this->stage_name_->set_text("Random");
+		this->stage_name_->set_text(L"Random");
 	}
 	else if (slot >= 0 && slot < static_cast<int>(stages->size()))
 	{
 		const Stage& stage = stages->at(static_cast<size_t>(slot));
 		this->stage_icon_->set_sprite_frame(stage.icon_frame);
-		this->stage_name_->set_text(stage.display_name);
+		this->stage_name_->set_text(widen(stage.display_name));
 	}
 	else
 	{
 		this->stage_icon_->set_sprite_frame("error");
-		this->stage_name_->set_text("ERROR");
+		this->stage_name_->set_text(L"ERROR");
 	}
 	if (this->select_state_.state == ConfirmationState::confirmed)
 	{
@@ -1902,7 +1904,7 @@ void MainMenuStageSelect::init()
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
 		"heading",
-		"Stage Select",
+		L"Stage Select",
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -1921,7 +1923,7 @@ void MainMenuStageSelect::init()
 
 	this->stage_name_ = std::make_unique<MTextDropShadow>(
 		"stage_name",
-		"Test 1",
+		L"Test 1",
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
@@ -1931,7 +1933,7 @@ void MainMenuStageSelect::init()
 
 	this->ready_ = std::make_unique<MTextDropShadow>(
 		"ready",
-		"READY?",
+		L"READY?",
 		ANNOUNCEMENT_FONT,
 		this->background_->rectangle().center() - Vector2F(400.0f, 100.0f),
 		this->render_resources(),

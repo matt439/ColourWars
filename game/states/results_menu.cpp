@@ -88,7 +88,7 @@ void ResultsMenuInitial::init()
 
 	this->heading_ = std::make_unique<MTextDropShadow>(
 		"title",
-		"Results",
+		L"Results",
 		HEADING_FONT,
 		HEADING_POSITION,
 		this->render_resources(),
@@ -168,7 +168,7 @@ void ResultsMenuInitial::init()
 
 	this->proceed_ = std::make_unique<MTextDropShadow>(
 		"proceed",
-		"Press A to proceed",
+		L"Press A to proceed",
 		DETAIL_FONT,
 		PROCEED_POSITION,
 		this->render_resources(),

@@ -14,13 +14,7 @@ struct LevelEndInfo
 	float team_b_ratio() const;
 	float team_a_percentage() const;
 	float team_b_percentage() const;
-	std::string team_a_percentage_string() const;
-	std::string team_b_percentage_string() const;
-	std::string winning_team_string() const;
-	float winning_score() const;
-	float losing_score() const;
-	float winning_ratio() const;
-	float losing_ratio() const;
-	float winning_percentage() const;
-	float losing_percentage() const;
+	std::wstring team_a_percentage_string() const;
+	std::wstring team_b_percentage_string() const;
+	std::wstring winning_team_string() const;
 };
