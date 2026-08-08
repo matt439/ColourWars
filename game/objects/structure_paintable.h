@@ -6,6 +6,7 @@
 #include "engine/audio/audio_resources.h"
 #include "game/objects/team_colour.h"
 #include "engine/audio/sound_bank.h"
+#include "engine/render/colour.h"
 
 namespace structure_paintable_consts
 {
@@ -42,7 +43,7 @@ public:
 		CollisionObjectType collision_type,
 		const TeamColour& team_colours,
 		const PaintableFaces& faces,
-		const mattmath::Colour& color = colour_consts::WHITE,
+		const artattack::Colour& color = artattack::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		artattack::SpriteFlip flip = artattack::SpriteFlip::none,

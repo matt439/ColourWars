@@ -86,7 +86,7 @@ void Weapon::draw(DrawList& draw_list, bool debug) const
     }
 }
 
-mattmath::Colour Weapon::draw_colour() const
+artattack::Colour Weapon::draw_colour() const
 {
     return this->colour();
 }

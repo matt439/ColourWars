@@ -5,7 +5,6 @@ using namespace DirectX;
 using namespace mattmath;
 using namespace results_menu_consts;
 using namespace menu_consts;
-using namespace colour_consts;
 using namespace artattack;
 
 ResultsMenuPage::ResultsMenuPage(MenuContext* context,

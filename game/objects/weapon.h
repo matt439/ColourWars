@@ -5,7 +5,7 @@
 #include "game/objects/weapon_details.h"
 #include "game/objects/weapon_consts.h"
 #include "game/objects/player_input_data.h"
-#include "engine/math/colour.h"
+#include "engine/render/colour.h"
 #include "engine/render/texture_object.h"
 #include "game/objects/projectile_builder.h"
 #include "engine/audio/sound_bank.h"
@@ -17,12 +17,12 @@ public:
 	Weapon(const WeaponDetails& details,
 		PlayerTeam team,
 		int player_num,
-		const mattmath::Colour& team_colour,
+		const artattack::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
 		artattack::RenderResources* render_resources,
 		const artattack::AudioResources* audio_resources,
-		const mattmath::Colour& color = colour_consts::WHITE,
+		const artattack::Colour& color = artattack::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
@@ -80,14 +80,14 @@ protected:
 
 	// Tint for this frame's draw. A hook rather than a member assignment so
 	// draw() stays a pure read - the render workers all enter it at once.
-	virtual mattmath::Colour draw_colour() const;
+	virtual artattack::Colour draw_colour() const;
 
 	const mattmath::Vector2F& player_center() const;
 
 
 	PlayerTeam team() const;
 	int player_num() const;
-	const mattmath::Colour& team_colour() const;
+	const artattack::Colour& team_colour() const;
 	WeaponType type() const;
 	mattmath::RectangleF nozzle_rectangle() const;
 
@@ -171,7 +171,7 @@ private:
 
 	PlayerTeam team_ = PlayerTeam::none;
 	int player_num_ = -1;
-	mattmath::Colour team_colour_ = colour_consts::GRAY;
+	artattack::Colour team_colour_ = artattack::Colour::gray;
 	WeaponType type_ = WeaponType::none;
 	mattmath::Vector2F player_center_ = { 0.0f, 0.0f };
 
@@ -186,12 +186,12 @@ public:
 		RelativeWeaponDetails rel_details,
 		PlayerTeam team,
 		int player_num,
-		const mattmath::Colour& team_colour,
+		const artattack::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
 		artattack::RenderResources* render_resources,
 		const artattack::AudioResources* audio_resources,
-		const mattmath::Colour& color = colour_consts::WHITE,
+		const artattack::Colour& color = artattack::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		artattack::SpriteFlip flip = artattack::SpriteFlip::none,

@@ -6,6 +6,7 @@
 #include "game/objects/projectile_ball.h"
 #include "game/objects/projectile_mist.h"
 #include "game/objects/projectile_rolling.h"
+#include "engine/render/colour.h"
 
 class ProjectileBuilder
 {
@@ -16,7 +17,7 @@ public:
 		const mattmath::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
-		const mattmath::Colour& team_colour,
+		const artattack::Colour& team_colour,
 		projectile_type type,
 		artattack::RenderResources* render_resources,
 		float rotation = 0.0f,
@@ -30,7 +31,7 @@ private:
 		const mattmath::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
-		const mattmath::Colour& team_colour,
+		const artattack::Colour& team_colour,
 		projectile_type type,
 		artattack::RenderResources* render_resources,
 		float rotation = 0.0f,

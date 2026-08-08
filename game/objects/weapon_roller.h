@@ -1,18 +1,19 @@
 #pragma once
 
 #include "game/objects/weapon.h"
+#include "engine/render/colour.h"
 
 class WeaponRoller final : public Weapon
 {
 public:
 	WeaponRoller(PlayerTeam team,
 		int player_num,
-		const mattmath::Colour& team_colour,
+		const artattack::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
 		artattack::RenderResources* render_resources,
 		const artattack::AudioResources* audio_resources,
-		const mattmath::Colour& color = colour_consts::WHITE,
+		const artattack::Colour& color = artattack::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
@@ -26,5 +27,5 @@ private:
 
 	// The roller's draw was a verbatim copy of Weapon::draw apart from this one
 	// colour choice, so it is expressed as a hook instead of a duplicate.
-	mattmath::Colour draw_colour() const override;
+	artattack::Colour draw_colour() const override;
 };

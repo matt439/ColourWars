@@ -2,7 +2,7 @@
 
 #include "game/objects/player_team.h"
 #include "engine/render/render_resources.h"
-#include "engine/math/colour.h"
+#include "engine/render/colour.h"
 #include "engine/math/matt_math.h"
 
 namespace interface_consts
@@ -14,11 +14,11 @@ namespace interface_consts
     constexpr float BOX_FILL_BORDER = 0.003f;
     const static mattmath::Vector2F TIMER_OFFSET = { 0.01f, 0.05f };
     const static std::string TIMER_FONT = "gill_sans_mt_bold_48";
-    const static mattmath::Colour HEALTH_COLOUR = colour_consts::GREEN;
+    const static artattack::Colour HEALTH_COLOUR = artattack::Colour::green;
     const static mattmath::Vector2F TIMER_SHADOW_OFFSET = { 2.0f, 2.0f };
 
-    const static mattmath::Colour TIMER_COLOUR = colour_consts::GRAY;
-    const static mattmath::Colour TIMER_SHADOW_COLOUR = colour_consts::BLACK;
+    const static artattack::Colour TIMER_COLOUR = artattack::Colour::gray;
+    const static artattack::Colour TIMER_SHADOW_COLOUR = artattack::Colour::black;
     constexpr float TIMER_SCALE_FACTOR = 1920.0f;
 
     const static std::string SPRITE_SHEET = "sprite_sheet_1";
@@ -28,8 +28,8 @@ namespace interface_consts
     const static mattmath::Vector2F RESPAWN_TIMER_OFFSET = { 0.05f, 0.1f };
     const static std::string RESPAWN_TIMER_FONT = "gill_sans_mt_bold_144";
     const static mattmath::Vector2F RESPAWN_TIMER_SHADOW_OFFSET = { 2.0f, 2.0f };
-    const static mattmath::Colour RESPAWN_TIMER_COLOUR = colour_consts::WHITE;
-    const static mattmath::Colour RESPAWN_TIMER_SHADOW_COLOUR = colour_consts::BLACK;
+    const static artattack::Colour RESPAWN_TIMER_COLOUR = artattack::Colour::white;
+    const static artattack::Colour RESPAWN_TIMER_SHADOW_COLOUR = artattack::Colour::black;
 }
 
 struct InterfaceDraw
@@ -39,7 +39,7 @@ struct InterfaceDraw
     float ammo = 0.0f;
     PlayerTeam team = PlayerTeam::a;
     float timer = 0.0f;
-    mattmath::Colour team_colour = colour_consts::GRAY;
+    artattack::Colour team_colour = artattack::Colour::gray;
 };
 
 class InterfaceGameplay
@@ -59,7 +59,7 @@ public:
         float health,
         float ammo,
         float timer,
-        const mattmath::Colour& team_colour,
+        const artattack::Colour& team_colour,
         float respawn_timer,
         bool show_respawn_timer) const;
 
@@ -67,7 +67,7 @@ private:
     void draw_ammo(artattack::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
         float ammo,
-        const mattmath::Colour& team_colour,
+        const artattack::Colour& team_colour,
         const mattmath::Vector2F& position) const;
     void draw_health(artattack::DrawList& draw_list,
         const mattmath::Vector2F& resolution,

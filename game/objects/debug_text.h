@@ -5,6 +5,7 @@
 #include "engine/render/text_encoding.h"
 #include "engine/math/matt_math.h"
 #include "game/objects/player.h"
+#include "engine/render/colour.h"
 
 namespace debug_text_consts
 {
@@ -12,8 +13,8 @@ namespace debug_text_consts
 	constexpr float DEBUG_FONT_SCALE = 1.0f;
 	constexpr float DEBUG_LINE_SPACING = 18.0f;
 	const static mattmath::Vector2F DEBUG_POSITION = mattmath::Vector2F::ZERO;
-	const static mattmath::Colour DEBUG_COLOR = colour_consts::LIGHT_GRAY;
-	const static mattmath::Colour DEBUG_SHADOW_COLOR = colour_consts::BLACK;
+	const static artattack::Colour DEBUG_COLOR = artattack::Colour::light_gray;
+	const static artattack::Colour DEBUG_SHADOW_COLOR = artattack::Colour::black;
 	const static mattmath::Vector2F DEBUG_SHADOW_OFFSET = { 1.0f, 1.0f };
 	constexpr float DEBUG_SHADOW_SCALE = 1.0f;
 }

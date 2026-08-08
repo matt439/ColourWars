@@ -5,6 +5,24 @@ using namespace rapidjson;
 using namespace mattmath;
 using namespace artattack;
 
+namespace
+{
+	// colour_from_name now says so when a name is not one of the CSS colours,
+	// instead of quietly answering white. This file already throws on every
+	// other unreadable field, so it throws on this one too - and names it,
+	// which "invalid colour" would not.
+	Colour colour_named(const char* name)
+	{
+		const std::optional<Colour> colour = colour_from_name(name);
+		if (!colour)
+		{
+			throw std::runtime_error(
+				std::string("Unknown colour name: ") + name);
+		}
+		return *colour;
+	}
+}
+
 LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
 	const AudioResources* audio_resources) :
 	render_resources_(render_resources),
@@ -63,7 +81,7 @@ std::unique_ptr<artattack::CollisionObject>
 			&rectangle,
 			this->render_resources_,
 			col_type,
-			colour_consts::colour_from_name(json["colour"].GetString()));
+			colour_named(json["colour"].GetString()));
 	}
 	if (type == "StructurePaintable")
 	{
@@ -125,7 +143,7 @@ std::unique_ptr<artattack::CollisionObject>
 			col_type,
 			team_colours,
 			faces,
-			colour_consts::colour_from_name(json["colour"].GetString()));
+			colour_named(json["colour"].GetString()));
 	}
 	if (type == "StructureRamp")
 	{
@@ -159,7 +177,7 @@ std::unique_ptr<artattack::CollisionObject>
 			&triangle,
 			this->render_resources_,
 			col_type,
-			colour_consts::colour_from_name(json["colour"].GetString()));
+			colour_named(json["colour"].GetString()));
 	}
 
 	throw std::exception("Invalid collision object type");
@@ -179,7 +197,7 @@ std::unique_ptr<GameObject>
 				json["rectangle"]["width"].GetFloat(),
 				json["rectangle"]["height"].GetFloat()),
 			this->render_resources_,
-			colour_consts::colour_from_name(json["colour"].GetString()));
+			colour_named(json["colour"].GetString()));
 	}
 
 	throw std::exception("Invalid non-collision object type");

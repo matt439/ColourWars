@@ -1,15 +1,15 @@
 #pragma once
 
 #include "game/objects/level_end_info.h"
-#include "engine/math/colour.h"
+#include "engine/render/colour.h"
 #include "game/states/menu_page.h"
 #include "engine/audio/sound_bank_object.h"
 
 namespace results_menu_consts
 {
 	const static mattmath::Vector2F RESULTS_MENU_BOX_SIZE = { 900.0f, 600.0f };
-	const static mattmath::Colour RESULTS_MENU_BOX_COLOUR = colour_consts::LIGHT_SLATE_GRAY;
-	const static mattmath::Colour RESULTS_MENU_HEADING_TEXT_COLOUR = colour_consts::GOLDENROD;
+	const static artattack::Colour RESULTS_MENU_BOX_COLOUR = artattack::Colour::light_slate_gray;
+	const static artattack::Colour RESULTS_MENU_HEADING_TEXT_COLOUR = artattack::Colour::goldenrod;
 
 	const static mattmath::Vector2F RESULTS_MENU_FILL_BOX_SIZE = { 700.0f, 200.0f };
 	constexpr float RESULTS_MENU_FILL_BOX_Y_OFFSET = 300.0f;
@@ -30,7 +30,7 @@ namespace results_menu_consts
 
 	constexpr float WINNER_TEXT_Y_OFFSET = 10.0f;
 
-	const static mattmath::Colour PERCENTAGE_TEXT_COLOUR = colour_consts::DARK_GRAY;
+	const static artattack::Colour PERCENTAGE_TEXT_COLOUR = artattack::Colour::dark_gray;
 
 	constexpr float TEAM_B_PERCENTAGE_X_OFFSET = 325.0f;
 
@@ -42,7 +42,7 @@ namespace results_menu_consts
 	const static mattmath::Vector2F HEADING_POSITION = { 800.0f, 235.0f };
 	const static mattmath::Vector2F WINNER_POSITION = { 750.0f, 400.0f };
 
-	const static mattmath::Colour SHADOW_COLOUR = colour_consts::BLACK;
+	const static artattack::Colour SHADOW_COLOUR = artattack::Colour::black;
 	const static mattmath::Vector2F TITLE_SHADOW_OFFSET = { 6.0f, 6.0f };
 	const static mattmath::Vector2F HEADING_SHADOW_OFFSET = { 2.5f, 2.5f };
 	const static mattmath::Vector2F ITEM_SHADOW_OFFSET = { 1.5f, 1.5f };

@@ -5,7 +5,6 @@ using namespace DirectX;
 using namespace mattmath;
 using namespace pause_menu_consts;
 using namespace menu_consts;
-using namespace colour_consts;
 using namespace artattack;
 
 PauseMenuPage::PauseMenuPage(MenuContext* context, int player_num) :

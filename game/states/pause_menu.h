@@ -5,16 +5,20 @@
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"
 #include "engine/audio/sound_bank_object.h"
+#include "engine/render/colour.h"
 
 namespace pause_menu_consts
 {
 	const static mattmath::Vector2F PAUSE_MENU_BOX_SIZE = { 900.0f, 600.0f };
-	const static mattmath::Colour PAUSE_MENU_BOX_COLOUR = colour_consts::DODGER_BLUE;
+	const static artattack::Colour PAUSE_MENU_BOX_COLOUR = artattack::Colour::dodger_blue;
 
-	const static mattmath::Colour PAUSE_MENU_HEADING_TEXT_COLOUR = colour_consts::TEAM_ORANGE; //colour_consts::DARK_KHAKI;
+	// The value it always had, written where it is used. It was
+	// colour_consts::TEAM_ORANGE - a menu heading is not a team, and it
+	// only ever shared the number.
+	const static artattack::Colour PAUSE_MENU_HEADING_TEXT_COLOUR = artattack::Colour(255, 127, 0); //artattack::Colour::dark_khaki;
 
-	const static mattmath::Colour STANDARD_HIGHLIGHT = colour_consts::WHITE;
-	const static mattmath::Colour STANDARD_UNHIGHLIGHT = colour_consts::BLUE;
+	const static artattack::Colour STANDARD_HIGHLIGHT = artattack::Colour::white;
+	const static artattack::Colour STANDARD_UNHIGHLIGHT = artattack::Colour::blue;
 
 	const static mattmath::Vector2F PAUSE_MENU_INITIAL_WIDGET_SIZE = { 100.0f, 50.0f };
 	const static mattmath::Vector2F PAUSE_MENU_INITIAL_WIDGET_POSITION = { 610.0f, 300.0f };
@@ -24,7 +28,7 @@ namespace pause_menu_consts
 	const static std::string HEADING_FONT = "gill_sans_mt_bold_72";
 	const static std::string DETAIL_FONT = "gill_sans_mt_bold_36";
 
-	const static mattmath::Colour SHADOW_COLOUR = colour_consts::BLACK;
+	const static artattack::Colour SHADOW_COLOUR = artattack::Colour::black;
 	const static mattmath::Vector2F TITLE_SHADOW_OFFSET = { 6.0f, 6.0f };
 	const static mattmath::Vector2F HEADING_SHADOW_OFFSET = { 2.5f, 2.5f };
 	const static mattmath::Vector2F ITEM_SHADOW_OFFSET = { 1.5f, 1.5f };

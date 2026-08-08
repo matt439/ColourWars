@@ -2,7 +2,7 @@
 
 #include "game/objects/player_team.h"
 #include "game/objects/weapon_type.h"
-#include "engine/math/colour.h"
+#include "engine/render/colour.h"
 
 struct PlayerAnimationInfo
 {
@@ -42,14 +42,14 @@ namespace player_consts
     constexpr float RESPAWN_DELAY = 3.0f;
     constexpr int DEFAULT_PLAYER_NUM = 0;
     constexpr auto DEFAULT_TEAM = PlayerTeam::a;
-    const mattmath::Colour DEFAULT_TEAM_COLOUR = colour_consts::GRAY;
+    const artattack::Colour DEFAULT_TEAM_COLOUR = artattack::Colour::gray;
     constexpr auto DEFAULT_PRIMARY = WeaponType::sprayer;
     constexpr auto DEFAULT_SECONDARY = WeaponType::grenade_std;
     const std::string DEFAULT_SHEET = "sprite_sheet_1";
     const std::string DEFAULT_ANIMATION_STRIP = "player_right_walk";
     const std::string DEFAULT_UNIFORM_TEXTURE = "player_right_walk_uniform";
 
-    const mattmath::Colour DEFAULT_PLAYER_COLOUR = colour_consts::BURLYWOOD;
+    const artattack::Colour DEFAULT_PLAYER_COLOUR = artattack::Colour::burlywood;
 
     const std::string SOUND_BANK = "sound_bank_1";
     const std::string DAMAGE_SOUND = "SplittingFireWood";
@@ -69,8 +69,8 @@ namespace player_consts
 
     const static std::string COUNTDOWN_TEXT = "3";
     const static std::string COUNTDOWN_FONT_NAME = "gill_sans_mt_bold_72";
-    const static mattmath::Colour COUNTDOWN_COLOUR = colour_consts::DARK_GRAY;
-    const static mattmath::Colour COUNTDOWN_SHADOW_COLOUR = colour_consts::BLACK;
+    const static artattack::Colour COUNTDOWN_COLOUR = artattack::Colour::dark_gray;
+    const static artattack::Colour COUNTDOWN_SHADOW_COLOUR = artattack::Colour::black;
     constexpr float COUNTDOWN_SCALE = 1.0f;
     const static mattmath::Vector2F COUNTDOWN_SHADOW_OFFSET = { 2.0f, 2.0f };
     constexpr float COUNTDOWN_TEXT_WIDTH = 400.0f;

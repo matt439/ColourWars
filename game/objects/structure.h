@@ -3,6 +3,7 @@
 #include "engine/collision/collision_object.h"
 #include "engine/render/texture_object.h"
 #include "game/objects/collision_object_type.h"
+#include "engine/render/colour.h"
 
 class Structure : public artattack::TextureObject, public artattack::CollisionObject
 {
@@ -14,7 +15,7 @@ public:
 		const mattmath::Shape* collision_shape,
 		artattack::RenderResources* render_resources,
 		CollisionObjectType collision_type,
-		const mattmath::Colour& color = colour_consts::WHITE,
+		const artattack::Colour& color = artattack::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		artattack::SpriteFlip flip = artattack::SpriteFlip::none,

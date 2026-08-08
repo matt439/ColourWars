@@ -7,12 +7,13 @@
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"
 #include "engine/audio/sound_bank_object.h"
+#include "engine/render/colour.h"
 
 namespace main_menu_consts
 {
-	const static mattmath::Colour TITLE_TEXT_COLOUR = colour_consts::GOLDENROD;
-	const static mattmath::Colour TITLE_START_TEXT_COLOUR = colour_consts::WHITE_SMOKE;
-	const static mattmath::Colour TITLE_BACKGROUND_COLOUR = colour_consts::DARK_SLATE_BLUE;
+	const static artattack::Colour TITLE_TEXT_COLOUR = artattack::Colour::goldenrod;
+	const static artattack::Colour TITLE_START_TEXT_COLOUR = artattack::Colour::white_smoke;
+	const static artattack::Colour TITLE_BACKGROUND_COLOUR = artattack::Colour::dark_slate_blue;
 
 	const static std::string TITLE_FONT = "gill_sans_ultra_bold_144";
 	const static std::string ITEM_FONT = "gill_sans_mt_bold_48";
@@ -21,16 +22,19 @@ namespace main_menu_consts
 	const static std::string ANNOUNCEMENT_FONT = "gill_sans_mt_bold_144";
 	const static std::string WEAPON_DESCRIPTION_FONT = "gill_sans_mt_bold_24";
 
-	const static mattmath::Colour HEADING_COLOUR = colour_consts::TEAM_ORANGE;
+	// The value it always had, written where it is used. It was
+	// colour_consts::TEAM_ORANGE - a menu heading is not a team, and it
+	// only ever shared the number.
+	const static artattack::Colour HEADING_COLOUR = artattack::Colour(255, 127, 0);
 
-	const static mattmath::Colour STANDARD_HIGHLIGHT = colour_consts::WHITE;
-	const static mattmath::Colour STANDARD_UNHIGHLIGHT = colour_consts::BLUE;
+	const static artattack::Colour STANDARD_HIGHLIGHT = artattack::Colour::white;
+	const static artattack::Colour STANDARD_UNHIGHLIGHT = artattack::Colour::blue;
 
-	const static mattmath::Colour OPTIONS_VALUE_COLOUR = colour_consts::DARK_TURQUOISE;
+	const static artattack::Colour OPTIONS_VALUE_COLOUR = artattack::Colour::dark_turquoise;
 
-	const static mattmath::Colour WEAPON_DESCRIPTION_FONT_COLOUR = colour_consts::WHITE_SMOKE;
+	const static artattack::Colour WEAPON_DESCRIPTION_FONT_COLOUR = artattack::Colour::white_smoke;
 
-	const static mattmath::Colour SHADOW_COLOUR = colour_consts::BLACK;
+	const static artattack::Colour SHADOW_COLOUR = artattack::Colour::black;
 	const static mattmath::Vector2F TITLE_SHADOW_OFFSET = { 6.0f, 6.0f };
 	const static mattmath::Vector2F HEADING_SHADOW_OFFSET = { 2.5f, 2.5f };
 	const static mattmath::Vector2F ITEM_SHADOW_OFFSET = { 1.5f, 1.5f };
@@ -49,18 +53,18 @@ namespace main_menu_consts
 
 	const static mattmath::Vector2F STAGE_SELECT_WIDGET_SPACING = { 0.0f, 150.0f };
 
-	const static mattmath::Colour HOME_BACKGROUND_COLOUR = colour_consts::DODGER_BLUE;
-	const static mattmath::Colour OPTIONS_BACKGROUND_COLOUR = colour_consts::DODGER_BLUE;
-	const static mattmath::Colour PLAY_BACKGROUND_COLOUR = colour_consts::DODGER_BLUE;
+	const static artattack::Colour HOME_BACKGROUND_COLOUR = artattack::Colour::dodger_blue;
+	const static artattack::Colour OPTIONS_BACKGROUND_COLOUR = artattack::Colour::dodger_blue;
+	const static artattack::Colour PLAY_BACKGROUND_COLOUR = artattack::Colour::dodger_blue;
 
-	const static mattmath::Colour TEAM_SELECT_SELECTED_COLOUR = colour_consts::LIGHT_CORAL;
-	const static mattmath::Colour TEAM_SELECT_UNSELECTED_COLOUR = colour_consts::WHITE;
+	const static artattack::Colour TEAM_SELECT_SELECTED_COLOUR = artattack::Colour::light_coral;
+	const static artattack::Colour TEAM_SELECT_UNSELECTED_COLOUR = artattack::Colour::white;
 
-	const static mattmath::Colour WEAPON_SELECT_SELECTED_COLOUR = colour_consts::LIGHT_CORAL;
-	const static mattmath::Colour WEAPON_SELECT_UNSELECTED_COLOUR = colour_consts::WHITE;
+	const static artattack::Colour WEAPON_SELECT_SELECTED_COLOUR = artattack::Colour::light_coral;
+	const static artattack::Colour WEAPON_SELECT_UNSELECTED_COLOUR = artattack::Colour::white;
 
-	const static mattmath::Colour STAGE_SELECT_SELECTED_COLOUR = colour_consts::FIRE_BRICK;
-	const static mattmath::Colour STAGE_SELECT_UNSELECTED_COLOUR = colour_consts::WHITE;
+	const static artattack::Colour STAGE_SELECT_SELECTED_COLOUR = artattack::Colour::fire_brick;
+	const static artattack::Colour STAGE_SELECT_UNSELECTED_COLOUR = artattack::Colour::white;
 	const static mattmath::Vector2F STAGE_SELECT_ICON_SIZE = { 800.0f, 600.0f };
 	const static mattmath::Vector2F STAGE_SELECT_READY_SIZE = { 1500.0f, 300.0f };
 

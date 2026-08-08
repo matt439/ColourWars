@@ -3,7 +3,6 @@
 
 using namespace mattmath;
 using namespace interface_consts;
-using namespace colour_consts;
 using namespace artattack;
 
 InterfaceGameplay::InterfaceGameplay(RenderResources* render_resources) :
@@ -82,7 +81,7 @@ void InterfaceGameplay::draw_ammo(DrawList& draw_list,
 		draw_list,
 		this->empty_box_frame_,
 		empty_box_rect,
-		WHITE);
+		Colour::white);
 
 	//fill box
 	float border = resolution.x * BOX_FILL_BORDER;
@@ -114,7 +113,7 @@ void InterfaceGameplay::draw_health(DrawList& draw_list,
 		draw_list,
 		this->empty_box_frame_,
 		RectangleF(position, size),
-		WHITE);
+		Colour::white);
 
 	//fill box
 	float border = resolution.x * BOX_FILL_BORDER;

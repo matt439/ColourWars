@@ -12,6 +12,7 @@
 #include "engine/core/moving_object.h"
 #include "engine/audio/sound_bank.h"
 #include "engine/audio/audio_resources.h"
+#include "engine/render/colour.h"
 
 enum class PlayerState
 {
@@ -74,7 +75,7 @@ public:
         WeaponType primary,
         std::unique_ptr<Weapon> primary_weapon,
         WeaponType secondary,
-        const mattmath::Colour& team_colour,
+        const artattack::Colour& team_colour,
         const mattmath::Viewport& view_port,
         const mattmath::Vector2F& respawn_position,
         const mattmath::Vector2F& velocity = mattmath::Vector2F::ZERO,
@@ -136,7 +137,7 @@ public:
     float health() const;
 
     float weapon_ammo() const;
-    const mattmath::Colour& team_colour() const;
+    const artattack::Colour& team_colour() const;
 
     const PlayerInputData& input() const;
 
@@ -179,7 +180,7 @@ private:
     PlayerTeam team_ = player_consts::DEFAULT_TEAM;
     WeaponType primary_type_ = player_consts::DEFAULT_PRIMARY;
     WeaponType secondary_type_ = player_consts::DEFAULT_SECONDARY;
-    mattmath::Colour team_colour_ = player_consts::DEFAULT_TEAM_COLOUR;
+    artattack::Colour team_colour_ = player_consts::DEFAULT_TEAM_COLOUR;
     mattmath::Viewport viewport_ = mattmath::Viewport();
 
     mattmath::RectangleF rectangle_ = player_consts::DEFAULT_BOUNDS;
@@ -247,7 +248,7 @@ private:
     WeaponType secondary() const;
     void set_secondary(WeaponType secondary);
 
-    void set_team_colour(const mattmath::Colour& team_colour);
+    void set_team_colour(const artattack::Colour& team_colour);
 
     void set_viewport(const mattmath::Viewport& viewport);
 

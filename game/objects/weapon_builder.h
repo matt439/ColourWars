@@ -5,6 +5,7 @@
 #include "game/objects/weapon_bucket.h"
 #include "game/objects/weapon_mister.h"
 #include "game/objects/weapon_roller.h"
+#include "engine/render/colour.h"
 
 class WeaponBuilder
 {
@@ -13,7 +14,7 @@ public:
 	static std::unique_ptr<Weapon> build_weapon(
 		PlayerTeam team,
 		int player_num,
-		const mattmath::Colour& team_colour,
+		const artattack::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
 		artattack::RenderResources* render_resources,

@@ -17,6 +17,7 @@
 #include "engine/render/render_resources.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/scene/scene.h"
+#include "engine/render/colour.h"
 
 enum class LevelState
 {
@@ -33,8 +34,8 @@ namespace level_consts
 	constexpr float START_TIMER = 3.0f;
 	const static std::wstring COUNTDOWN_TEXT = L"3";
 	const static std::string COUNTDOWN_FONT_NAME = "gill_sans_mt_bold_144";
-	const static mattmath::Colour COUNTDOWN_COLOUR = colour_consts::DARK_GRAY;
-	const static mattmath::Colour COUNTDOWN_SHADOW_COLOUR = colour_consts::BLACK;
+	const static artattack::Colour COUNTDOWN_COLOUR = artattack::Colour::dark_gray;
+	const static artattack::Colour COUNTDOWN_SHADOW_COLOUR = artattack::Colour::black;
 	constexpr float COUNTDOWN_SCALE = 2.0f;
 	const static mattmath::Vector2F COUNTDOWN_SHADOW_OFFSET = { 5.0f, 5.0f };
 	constexpr float COUNTDOWN_TEXT_WIDTH = 400.0f;

@@ -6,6 +6,7 @@
 #include "engine/core/moving_object.h"
 #include "engine/collision/collision_object.h"
 #include "game/objects/collision_object_type.h"
+#include "engine/render/colour.h"
 
 enum projectile_type
 {
@@ -24,11 +25,11 @@ public:
 	Projectile(const mattmath::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
-		const mattmath::Colour& team_colour,
+		const artattack::Colour& team_colour,
 		projectile_type type,
 		artattack::RenderResources* render_resources,
 		const ProjectileDetails& details,
-		const mattmath::Colour& color = colour_consts::WHITE,
+		const artattack::Colour& color = artattack::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
@@ -58,7 +59,7 @@ protected:
 	CollisionObjectType collision_type() const;
 
 	int player_num() const;
-	const mattmath::Colour& team_colour() const;
+	const artattack::Colour& team_colour() const;
 	projectile_type type() const;
 
 	float timer() const;
@@ -74,7 +75,7 @@ private:
 	ProjectileDetails details_ = ProjectileDetails();
 	float timer_ = 0.0f;
 	int player_num_ = -1;
-	mattmath::Colour team_colour_ = colour_consts::GRAY;
+	artattack::Colour team_colour_ = artattack::Colour::gray;
 	projectile_type type_ = SPRAY;
 
 	PlayerTeam team_ = PlayerTeam::none;
@@ -88,12 +89,12 @@ public:
 	DiffusingProjectile(const mattmath::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
-		const mattmath::Colour& team_colour,
+		const artattack::Colour& team_colour,
 		projectile_type type,
 		artattack::RenderResources* render_resources,
 		const ProjectileDetails& details,
 		const DiffusionDetails& diffusion_details,
-		const mattmath::Colour& color = colour_consts::WHITE,
+		const artattack::Colour& color = artattack::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		artattack::SpriteFlip flip = artattack::SpriteFlip::none,

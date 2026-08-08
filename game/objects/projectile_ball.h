@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/objects/projectile.h"
+#include "engine/render/colour.h"
 
 class ProjectileBall final : public Projectile
 {
@@ -10,7 +11,7 @@ public:
 		const mattmath::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
-		const mattmath::Colour& team_colour,
+		const artattack::Colour& team_colour,
 		artattack::RenderResources* render_resources,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,

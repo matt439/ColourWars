@@ -5,6 +5,7 @@
 #include "game/objects/team_colour.h"
 #include "engine/core/game_object.h"
 #include "engine/render/animation_object.h"
+#include "engine/render/colour.h"
 
 namespace paint_tile_consts
 {
@@ -28,7 +29,7 @@ public:
 		const std::string& sheet_name,
 		const std::string& animation_strip_name,
 		artattack::RenderResources* render_resources,
-		const mattmath::Colour& color = colour_consts::WHITE,
+		const artattack::Colour& color = artattack::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
@@ -36,14 +37,14 @@ public:
 
 	void set_rectangle_center(const mattmath::Vector2F& center);
 	void reset_and_play();
-	void set_colour(const mattmath::Colour& colour) override;
+	void set_colour(const artattack::Colour& colour) override;
 
 	void update(float dt) override;
 	void draw(artattack::DrawList& draw_list) const override;
 
 	// Draws with the given tint without storing it. See TextureObject::draw_with.
 	void draw_with_colour(artattack::DrawList& draw_list,
-		const mattmath::Colour& colour) const;
+		const artattack::Colour& colour) const;
 
 	mattmath::RectangleF bounds() const override;
 private:
@@ -69,7 +70,7 @@ public:
 		const std::string& frame_name,
 		artattack::RenderResources* render_resources,
 		const TeamColour& team_colours,
-		const mattmath::Colour& color = colour_consts::WHITE,
+		const artattack::Colour& color = artattack::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
