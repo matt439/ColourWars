@@ -4,6 +4,7 @@
 using namespace mattmath;
 using namespace colour_consts;
 using namespace end_menu_consts;
+using namespace menu_consts;
 using namespace artattack;
 
 EndMenuPage::EndMenuPage(EndMenuData* data) :
@@ -54,7 +55,7 @@ void EndMenuInitial::init()
 		RectangleF(Vector2F::ZERO, END_MENU_BOX_SIZE),
 		this->render_resources(),
 		END_MENU_BOX_COLOUR);
-	this->box_->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
+	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(END_MENU_INITIAL_WIDGET_POSITION);
 	this->set_widget_size(END_MENU_INITIAL_WIDGET_SIZE);
@@ -132,13 +133,6 @@ void EndMenuInitial::init()
 	this->text_container_->add_child(this->change_level_.get());
 	this->text_container_->add_child(this->restart_.get());
 	this->text_container_->add_child(this->exit_.get());
-
-	const Vector2F resolution = this->float_resolution();
-
-	this->texture_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-	this->text_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
 
 	const auto choose = [this](EndMenuAction action, bool confirm)
 		{

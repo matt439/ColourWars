@@ -6,6 +6,19 @@
 #include "engine/core/state.h"
 #include "engine/math/matt_math.h"
 
+namespace menu_consts
+{
+	// The resolution every menu is authored against. Widget positions, box
+	// sizes and font sizes are all in these units and stay in them; the
+	// mapping onto whatever the screen actually is happens once, at draw
+	// time, in MenuPage::ui_camera().
+	//
+	// It is not the *default* resolution, which is 1280x720 - and the four
+	// per-menu constants that used to carry that name, one per header, all
+	// held 1920x1080 and could have disagreed at any time.
+	inline const mattmath::Vector2F DESIGN_RESOLUTION = { 1920.0f, 1080.0f };
+}
+
 class MenuPage : public artattack::State
 {
 public:
@@ -64,7 +77,15 @@ protected:
 	// to use it at all. T11 names inheritance a tool of last resort.
 	artattack::FocusGroup focus_;
 	mattmath::Vector2F float_resolution() const;
-	mattmath::Vector2I int_resolution() const;
+
+	// Design space to this viewport's local space, in one place.
+	//
+	// Widgets hold the geometry they were authored with and never have it
+	// rewritten; this is the whole of what makes 1920x1080 layout show up
+	// correctly on a 1280x720 screen. Its predecessor was a destructive walk
+	// over the widget tree in engine/ui, called at 26 sites, which left no
+	// authoritative geometry behind for anything that wrote a position later.
+	mattmath::Camera ui_camera(const mattmath::Viewport& viewport) const;
 private:
 	MenuData* data_ = nullptr;
 	mattmath::Vector2F widget_position_ = { 150.0f, 150.0f };

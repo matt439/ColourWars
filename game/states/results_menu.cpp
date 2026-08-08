@@ -4,6 +4,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace results_menu_consts;
+using namespace menu_consts;
 using namespace colour_consts;
 using namespace artattack;
 
@@ -84,7 +85,7 @@ void ResultsMenuInitial::init()
 		RectangleF(Vector2F::ZERO, RESULTS_MENU_BOX_SIZE),
 		this->render_resources(),
 		RESULTS_MENU_BOX_COLOUR);
-	this->box_->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
+	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"title",
@@ -105,7 +106,7 @@ void ResultsMenuInitial::init()
 		RESULTS_MENU_BOX_COLOUR);
 	auto fill_box_position = Vector2F(
 		this->calculate_center_position(
-		this->fill_box_->rectangle().width, DEFAULT_RESOLUTION.x),
+		this->fill_box_->rectangle().width, DESIGN_RESOLUTION.x),
 		this->box_->rectangle().position().y + RESULTS_MENU_FILL_BOX_Y_OFFSET);
 	this->fill_box_->set_position(fill_box_position);
 
@@ -151,7 +152,7 @@ void ResultsMenuInitial::init()
 		DETAIL_SHADOW_OFFSET,
 		true);
 	this->team_b_percentage_->set_position(Vector2F(
-		this->calculate_center_position(this->widget_size().x, DEFAULT_RESOLUTION.x) +
+		this->calculate_center_position(this->widget_size().x, DESIGN_RESOLUTION.x) +
 		TEAM_B_PERCENTAGE_X_OFFSET,
 		this->calculate_team_b_fill_top_right_position().y));
 
@@ -191,13 +192,6 @@ void ResultsMenuInitial::init()
 	this->text_container_->add_child(this->team_b_percentage_.get());
 	this->text_container_->add_child(this->winner_.get());
 	this->text_container_->add_child(this->proceed_.get());
-
-	const Vector2F resolution = this->float_resolution();
-
-	this->texture_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-	this->text_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
 
 	this->play_effect(this->fill_sound_, true, FILL_VOLUME);
 }

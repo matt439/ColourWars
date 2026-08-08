@@ -4,6 +4,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace main_menu_consts;
+using namespace menu_consts;
 using namespace colour_consts;
 using namespace artattack;
 
@@ -70,7 +71,7 @@ void MainMenuTitle::init()
 		"background",
 		"sprite_sheet_1",
 		"square_white_4",
-		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
+		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		TITLE_BACKGROUND_COLOUR);
 
@@ -102,12 +103,6 @@ void MainMenuTitle::init()
 		"text_container");
 	this->text_container_->add_child(this->title_.get());
 	this->text_container_->add_child(this->start_.get());
-
-	Vector2F resolution = this->float_resolution();
-	this->texture_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-	this->text_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
@@ -174,7 +169,7 @@ void MainMenuHome::init()
 		"background",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
+		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		HOME_BACKGROUND_COLOUR);
 
@@ -229,16 +224,9 @@ void MainMenuHome::init()
 	this->text_container_->add_child(this->options_.get());
 	this->text_container_->add_child(this->exit_.get());
 
-	Vector2F resolution = this->float_resolution();
-	this->texture_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-	this->text_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-
-	// Registered after the rescale: navigation walks bounds(), so the widgets
-	// have to be where they will actually be drawn. Declaration order does not
-	// decide adjacency - position does - so the four-way if-chains this
-	// replaces are not written anywhere any more.
+	// Navigation walks bounds(), in the design space the widgets were built
+	// in. Declaration order does not decide adjacency - position does - so the
+	// four-way if-chains this replaces are not written anywhere any more.
 	this->focus_.add(this->play_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
@@ -340,12 +328,8 @@ void MainMenuOptions::apply_settings()
 {
 	this->play_wave(this->confirm_sound_);
 
-	auto prev_resolution = this->resolution_manager()->resolution_vec();
-
 	this->resolution_manager()->set_resolution(this->resolution_selection_);
 	this->save()->set_resolution_and_save(this->resolution_selection_);
-
-	auto res_f = this->float_resolution();
 
 	this->data()->application()->set_resolution(this->resolution_selection_);
 
@@ -353,16 +337,13 @@ void MainMenuOptions::apply_settings()
 	this->save()->set_full_screen_and_save(fs);
 	this->apply_fullscreen_setting(fs);
 
-	// Update the window's children's sizes and positions.
-	this->texture_container_->scale_objects_to_new_resolution(
-		prev_resolution, res_f);
-	this->text_container_->scale_objects_to_new_resolution(
-		prev_resolution, res_f);
-
-	// Nothing needs telling that the widgets moved. Navigation reads bounds()
-	// at the moment of the press, so the adjacency is whatever the rescale
-	// made it - which is the difference between deriving the graph and
-	// maintaining a table of it.
+	// The widgets are not touched. This is the page that changes the
+	// resolution while its own widgets are on screen, so it is the page that
+	// used to have to rescale them from the old size to the new one by hand -
+	// the only site of the twenty-six that was not a one-off at construction.
+	// ui_camera() reads the resolution every frame, so the next draw is
+	// already at the new size, and navigation reads bounds() at the moment of
+	// the press, in design space, where nothing moved at all.
 }
 
 void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
@@ -382,7 +363,7 @@ void MainMenuOptions::init()
 		"background",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
+		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		OPTIONS_BACKGROUND_COLOUR);
 
@@ -473,12 +454,6 @@ void MainMenuOptions::init()
 	this->text_container_->add_child(this->full_screen_value_.get());
 	this->text_container_->add_child(this->apply_.get());
 	this->text_container_->add_child(this->back_.get());
-
-	Vector2F resolution = this->float_resolution();
-	this->texture_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-	this->text_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
 
 	// The two value rows are focusable and do nothing on A; left and right are
 	// what they answer to. A button with no action is a normal thing to have.
@@ -608,7 +583,7 @@ void MainMenuModeSelect::init()
 		"background",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
+		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -684,12 +659,6 @@ void MainMenuModeSelect::init()
 	this->text_container_->add_child(this->dm_.get());
 	this->text_container_->add_child(this->practice_.get());
 	this->text_container_->add_child(this->back_.get());
-
-	Vector2F resolution = this->float_resolution();
-	this->texture_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-	this->text_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
 
 	this->focus_.add(this->standard_.get(), [this]
 		{
@@ -770,7 +739,7 @@ void MainMenuPlayerCount::init()
 		"background",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
+		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -846,12 +815,6 @@ void MainMenuPlayerCount::init()
 	this->text_container_->add_child(this->_3_players.get());
 	this->text_container_->add_child(this->_4_players.get());
 	this->text_container_->add_child(this->back_.get());
-
-	Vector2F resolution = this->float_resolution();
-	this->texture_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-	this->text_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
 
 	// One player skips team select: there is no other team to be on.
 	this->focus_.add(this->_1_player.get(), [this]
@@ -1079,8 +1042,6 @@ void MainMenuTeamSelect::init()
 {
 	this->set_widget_spacing(TEAM_SELECT_WIDGET_SPACING);
 
-	const Vector2F resolution = this->float_resolution();
-
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	
@@ -1091,7 +1052,7 @@ void MainMenuTeamSelect::init()
 		"background",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
+		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -1166,11 +1127,6 @@ void MainMenuTeamSelect::init()
 
 		this->player_widgets_.push_back(std::move(widgets));
 	}
-
-	this->texture_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-	this->text_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
@@ -1406,8 +1362,6 @@ void MainMenuWeaponSelect::init()
 {
 	this->set_widget_spacing(WEAPON_SELECT_WIDGET_SPACING);
 
-	const Vector2F resolution = this->float_resolution();
-
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	
@@ -1418,7 +1372,7 @@ void MainMenuWeaponSelect::init()
 		"background",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
+		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -1494,11 +1448,6 @@ void MainMenuWeaponSelect::init()
 
 		this->player_widgets_.push_back(std::move(widgets));
 	}
-	this->texture_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-	this->text_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
 std::wstring MainMenuWeaponSelect::weapon_description(WeaponType type)
@@ -1686,7 +1635,7 @@ void MainMenuStageSelect::init()
 		"background",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, DEFAULT_RESOLUTION),
+		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
@@ -1730,8 +1679,6 @@ void MainMenuStageSelect::init()
 		HEADING_SHADOW_OFFSET,
 		true);
 
-	const Vector2F resolution = this->float_resolution();
-
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
 	this->texture_container_->add_child(this->stage_icon_.get());
@@ -1740,11 +1687,6 @@ void MainMenuStageSelect::init()
 	this->text_container_->add_child(this->heading_.get());
 	this->text_container_->add_child(this->stage_name_.get());
 	this->text_container_->add_child(this->ready_.get());
-
-	this->texture_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-	this->text_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }

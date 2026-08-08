@@ -7,8 +7,6 @@
 
 namespace results_menu_consts
 {
-	const static mattmath::Vector2F DEFAULT_RESOLUTION = { 1920.0f, 1080.0f };
-	
 	const static mattmath::Vector2F RESULTS_MENU_BOX_SIZE = { 900.0f, 600.0f };
 	const static mattmath::Colour RESULTS_MENU_BOX_COLOUR = colour_consts::LIGHT_SLATE_GRAY;
 	const static mattmath::Colour RESULTS_MENU_HEADING_TEXT_COLOUR = colour_consts::GOLDENROD;

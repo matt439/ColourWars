@@ -112,7 +112,7 @@ void MenuPage::draw_ui_object_in_viewports(ID3D11DeviceContext* deferred_context
 
 		sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, sampler_state);
 
-		ui_object->draw(sprite_batch, viewports[i]);
+		ui_object->draw(sprite_batch, this->ui_camera(viewports[i]));
 
 		sprite_batch->End();
 	}
@@ -197,7 +197,21 @@ Vector2F MenuPage::float_resolution() const
 	return this->data()->resolution_manager()->resolution_vec();
 }
 
-Vector2I MenuPage::int_resolution() const
+// A Camera maps world to view as (world - translation) * scale. Here "world"
+// is design space, and the view a menu draws into is the viewport's own
+// space: apply_player_viewport() has already offset and clipped rendering to
+// the viewport's screen rectangle, so a widget at design position p has to
+// land at p * s - viewport_origin, where s carries 1920 wide onto the screen.
+// Solving for the camera's translation gives viewport_origin / s.
+//
+// One scale rather than two: every supported resolution is 16:9, so the
+// horizontal and vertical ratios against a 16:9 design space are the same
+// number, and a Camera carries one. A non-16:9 resolution would need a
+// letterbox rule, which is a decision nobody has had to make yet - and
+// ResolutionManager snaps anything it does not recognise to 720p, so nobody
+// can reach it by accident.
+Camera MenuPage::ui_camera(const Viewport& viewport) const
 {
-	return this->data()->resolution_manager()->resolution_ivec();
+	const float scale = this->float_resolution().x / menu_consts::DESIGN_RESOLUTION.x;
+	return Camera(viewport.position() / scale, scale);
 }

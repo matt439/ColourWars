@@ -11,8 +11,6 @@
 
 namespace main_menu_consts
 {
-	const static mattmath::Vector2F DEFAULT_RESOLUTION = { 1920.0f, 1080.0f };
-	
 	const static mattmath::Colour TITLE_TEXT_COLOUR = colour_consts::GOLDENROD;
 	const static mattmath::Colour TITLE_START_TEXT_COLOUR = colour_consts::WHITE_SMOKE;
 	const static mattmath::Colour TITLE_BACKGROUND_COLOUR = colour_consts::DARK_SLATE_BLUE;

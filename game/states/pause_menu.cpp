@@ -4,6 +4,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace pause_menu_consts;
+using namespace menu_consts;
 using namespace colour_consts;
 using namespace artattack;
 
@@ -91,7 +92,7 @@ void PauseMenuInitial::init()
 		RectangleF(Vector2F::ZERO, PAUSE_MENU_BOX_SIZE),
 		this->render_resources(),
 		PAUSE_MENU_BOX_COLOUR);
-	this->box_->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
+	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(PAUSE_MENU_INITIAL_WIDGET_POSITION);
 	this->set_widget_size(PAUSE_MENU_INITIAL_WIDGET_SIZE);
@@ -138,8 +139,6 @@ void PauseMenuInitial::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	const Vector2F resolution = this->float_resolution();
-
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->box_.get());
@@ -150,11 +149,6 @@ void PauseMenuInitial::init()
 	this->text_container_->add_child(this->resume_.get());
 	this->text_container_->add_child(this->restart_.get());
 	this->text_container_->add_child(this->quit_.get());
-
-	this->texture_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-	this->text_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
 
 	this->focus_.add(this->resume_.get(), [this]
 		{
@@ -228,7 +222,7 @@ void PauseMenuConfirmation::init()
 		RectangleF(Vector2F::ZERO, PAUSE_MENU_BOX_SIZE),
 		this->render_resources(),
 		PAUSE_MENU_BOX_COLOUR);
-	this->box_->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
+	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(PAUSE_MENU_INITIAL_WIDGET_POSITION);
 	this->set_widget_size(PAUSE_MENU_INITIAL_WIDGET_SIZE);
@@ -286,12 +280,6 @@ void PauseMenuConfirmation::init()
 	this->text_container_->add_child(this->question_.get());
 	this->text_container_->add_child(this->yes_.get());
 	this->text_container_->add_child(this->no_.get());
-
-	const Vector2F resolution = this->float_resolution();
-	this->texture_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
-	this->text_container_->scale_objects_to_new_resolution(
-		DEFAULT_RESOLUTION, resolution);
 
 	// "No" first, because the first widget added takes the focus and a
 	// confirmation dialogue defaults to the safe answer. Adding it first also
