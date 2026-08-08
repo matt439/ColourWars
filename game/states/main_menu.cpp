@@ -8,11 +8,10 @@ using namespace menu_consts;
 using namespace colour_consts;
 using namespace artattack;
 
-MainMenuPage::MainMenuPage(MainMenuData* data) :
-	MenuPage(data),
+MainMenuPage::MainMenuPage(MenuContext* context) :
+	MenuPage(context),
 	SoundBankObject(main_menu_consts::SOUND_BANK,
-		this->audio_resources()),
-	data_(data)
+		this->audio_resources())
 {
 	this->direction_sound_ = this->resolve_wave(DIRECTION_SOUND);
 	this->confirm_sound_ = this->resolve_wave(CONFIRM_SOUND);
@@ -22,20 +21,16 @@ MainMenuPage::MainMenuPage(MainMenuData* data) :
 	this->music_ = this->resolve_effect(MUSIC);
 }
 
-MainMenuData* MainMenuPage::main_menu_data() const
-{
-	return this->data_;
-}
 int MainMenuPage::player_count() const
 { 
-	return this->main_menu_data()->level_settings()->
+	return this->level_settings()->
 		player_count();
 }
 
 #pragma region MainMenuTitle
 
-MainMenuTitle::MainMenuTitle(MainMenuData* data) :
-	MainMenuPage(data)
+MainMenuTitle::MainMenuTitle(MenuContext* context) :
+	MainMenuPage(context)
 {
 
 }
@@ -59,7 +54,7 @@ void MainMenuTitle::update(float /*dt*/)
 		{
 			this->play_wave(this->confirm_sound_);
 			this->context()->transition_to(std::make_unique<MainMenuHome>(
-				this->main_menu_data()));
+				this->menu_context()));
 			return;
 		}
 	}
@@ -110,8 +105,8 @@ void MainMenuTitle::init()
 
 #pragma region MainMenuHome
 
-MainMenuHome::MainMenuHome(MainMenuData* data) :
-	MainMenuPage(data)
+MainMenuHome::MainMenuHome(MenuContext* context) :
+	MainMenuPage(context)
 {
 
 }
@@ -140,7 +135,7 @@ void MainMenuHome::update(float /*dt*/)
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(
-				std::make_unique<MainMenuTitle>(this->main_menu_data()));
+				std::make_unique<MainMenuTitle>(this->menu_context()));
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)
@@ -229,17 +224,17 @@ void MainMenuHome::init()
 		{
 			this->play_wave(this->confirm_sound_);
 			this->context()->transition_to(
-				std::make_unique<MainMenuModeSelect>(this->main_menu_data()));
+				std::make_unique<MainMenuModeSelect>(this->menu_context()));
 		});
 	this->focus_.add(this->options_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
 			this->context()->transition_to(
-				std::make_unique<MainMenuOptions>(this->main_menu_data()));
+				std::make_unique<MainMenuOptions>(this->menu_context()));
 		});
 	this->focus_.add(this->exit_.get(), [this]
 		{
-			this->main_menu_data()->application()->quit();
+			this->data()->application()->quit();
 		});
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
@@ -249,8 +244,8 @@ void MainMenuHome::init()
 
 #pragma region MainMenuOptions
 
-MainMenuOptions::MainMenuOptions(MainMenuData* data) :
-	MainMenuPage(data)
+MainMenuOptions::MainMenuOptions(MenuContext* context) :
+	MainMenuPage(context)
 {
 
 }
@@ -273,7 +268,7 @@ void MainMenuOptions::update(float /*dt*/)
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(std::make_unique<MainMenuHome>(
-				this->main_menu_data()));
+				this->menu_context()));
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)
@@ -461,7 +456,7 @@ void MainMenuOptions::init()
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(
-				std::make_unique<MainMenuHome>(this->main_menu_data()));
+				std::make_unique<MainMenuHome>(this->menu_context()));
 		});
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
@@ -528,8 +523,8 @@ void MainMenuOptions::update_full_screen_selection_text() const
 
 #pragma region MainMenuModeSelect
 
-MainMenuModeSelect::MainMenuModeSelect(MainMenuData* data) :
-	MainMenuPage(data)
+MainMenuModeSelect::MainMenuModeSelect(MenuContext* context) :
+	MainMenuPage(context)
 {
 
 }
@@ -552,7 +547,7 @@ void MainMenuModeSelect::update(float /*dt*/)
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(std::make_unique<MainMenuHome>(
-				this->main_menu_data()));
+				this->menu_context()));
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)
@@ -660,7 +655,7 @@ void MainMenuModeSelect::init()
 		{
 			this->play_wave(this->confirm_sound_);
 			this->context()->transition_to(
-				std::make_unique<MainMenuPlayerCount>(this->main_menu_data()));
+				std::make_unique<MainMenuPlayerCount>(this->menu_context()));
 		});
 	// Three modes that are not built yet. They answer with an error beep, and
 	// they say so here rather than in an if-chain three screens away.
@@ -674,7 +669,7 @@ void MainMenuModeSelect::init()
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(
-				std::make_unique<MainMenuHome>(this->main_menu_data()));
+				std::make_unique<MainMenuHome>(this->menu_context()));
 		});
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
@@ -684,8 +679,8 @@ void MainMenuModeSelect::init()
 
 #pragma region MainMenuPlayerCount
 
-MainMenuPlayerCount::MainMenuPlayerCount(MainMenuData* data) :
-	MainMenuPage(data)
+MainMenuPlayerCount::MainMenuPlayerCount(MenuContext* context) :
+	MainMenuPage(context)
 {
 
 }
@@ -707,7 +702,7 @@ void MainMenuPlayerCount::update(float /*dt*/)
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(
-				std::make_unique<MainMenuModeSelect>(this->main_menu_data()));
+				std::make_unique<MainMenuModeSelect>(this->menu_context()));
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)
@@ -816,13 +811,13 @@ void MainMenuPlayerCount::init()
 		{
 			this->play_wave(this->confirm_sound_);
 			MenuLevelSettings* settings =
-				this->main_menu_data()->level_settings();
+				this->level_settings();
 			settings->set_player_count(1);
 			settings->set_player_team(0, PlayerTeam::a);
 			settings->set_screen_layout(ScreenLayout::one_player);
 			settings->set_player_num(0, 0);
 			this->context()->transition_to(
-				std::make_unique<MainMenuWeaponSelect>(this->main_menu_data()));
+				std::make_unique<MainMenuWeaponSelect>(this->menu_context()));
 		});
 	this->focus_.add(this->_2_players.get(),
 		[this] { this->start_team_select(2, ScreenLayout::two_player); });
@@ -834,7 +829,7 @@ void MainMenuPlayerCount::init()
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(
-				std::make_unique<MainMenuModeSelect>(this->main_menu_data()));
+				std::make_unique<MainMenuModeSelect>(this->menu_context()));
 		});
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
@@ -843,29 +838,23 @@ void MainMenuPlayerCount::init()
 void MainMenuPlayerCount::start_team_select(int players, ScreenLayout layout)
 {
 	this->play_wave(this->confirm_sound_);
-	MenuLevelSettings* settings = this->main_menu_data()->level_settings();
+	MenuLevelSettings* settings = this->level_settings();
 	settings->set_player_count(players);
 	settings->set_screen_layout(layout);
 	this->context()->transition_to(
-		std::make_unique<MainMenuTeamSelect>(this->main_menu_data()));
+		std::make_unique<MainMenuTeamSelect>(this->menu_context()));
 }
 
 #pragma endregion MainMenuPlayerCount
 
 #pragma region MainMenuTeamSelect
 
-MainMenuTeamSelect::MainMenuTeamSelect(MainMenuData* data) :
-	MainMenuPage(data)
+MainMenuTeamSelect::MainMenuTeamSelect(MenuContext* context) :
+	MainMenuPage(context)
 {
 
 }
 
-MainMenuTeamSelect::MainMenuTeamSelect(MainMenuData* data,
-	MenuLevelSettings* settings) :
-	MainMenuPage(data)
-{
-	this->main_menu_data()->set_level_settings(settings);
-}
 void MainMenuTeamSelect::draw(Renderer& renderer) const
 {
 	std::vector<UiLayer> layers;
@@ -891,7 +880,7 @@ void MainMenuTeamSelect::update(float /*dt*/)
 				this->play_wave(this->cancel_sound_);
 				this->context()->transition_to(
 					std::make_unique<MainMenuPlayerCount>(
-						this->main_menu_data()));
+						this->menu_context()));
 				return;
 			}
 			if (this->select_states_[i].state == ConfirmationState::confirmed)
@@ -942,7 +931,7 @@ void MainMenuTeamSelect::update(float /*dt*/)
 		this->set_level_settings();
 		this->context()->transition_to(
 			std::make_unique<MainMenuWeaponSelect>(
-				this->main_menu_data()));
+				this->menu_context()));
 		return;
 	}
 	this->update_team_select_visuals();
@@ -951,10 +940,10 @@ void MainMenuTeamSelect::set_level_settings() const
 {
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		this->main_menu_data()->level_settings()->
+		this->level_settings()->
 			set_player_team(i, this->select_states_[i].team);
 
-		this->main_menu_data()->level_settings()->
+		this->level_settings()->
 			set_player_num(i, i);
 	}
 }
@@ -1069,7 +1058,7 @@ void MainMenuTeamSelect::init()
 	{
 		auto state = TeamSelectState();
 		state.state = ConfirmationState::unconfirmed;
-		state.team = this->main_menu_data()->level_settings()->
+		state.team = this->level_settings()->
 			player_team(i);
 		this->select_states_.push_back(state);
 
@@ -1129,18 +1118,12 @@ void MainMenuTeamSelect::init()
 
 #pragma region MainMenuWeaponSelect
 
-MainMenuWeaponSelect::MainMenuWeaponSelect(MainMenuData* data) :
-	MainMenuPage(data)
+MainMenuWeaponSelect::MainMenuWeaponSelect(MenuContext* context) :
+	MainMenuPage(context)
 {
 
 }
 
-MainMenuWeaponSelect::MainMenuWeaponSelect(MainMenuData* data,
-	MenuLevelSettings* settings) :
-	MainMenuPage(data)
-{
-	this->main_menu_data()->set_level_settings(settings);
-}
 void MainMenuWeaponSelect::draw(Renderer& renderer) const
 {
 	std::vector<UiLayer> layers;
@@ -1168,13 +1151,13 @@ void MainMenuWeaponSelect::update(float /*dt*/)
 				{
 					this->context()->transition_to(
 						std::make_unique<MainMenuModeSelect>(
-							this->main_menu_data()));
+							this->menu_context()));
 				}
 				else
 				{
 					this->context()->transition_to(
 						std::make_unique<MainMenuTeamSelect>(
-							this->main_menu_data()));
+							this->menu_context()));
 				}
 				return;
 			}
@@ -1220,7 +1203,7 @@ void MainMenuWeaponSelect::update(float /*dt*/)
 		}
 		this->set_level_settings();
 		this->context()->transition_to(
-			std::make_unique<MainMenuStageSelect>(this->main_menu_data()));
+			std::make_unique<MainMenuStageSelect>(this->menu_context()));
 		return;
 	}
 	this->update_weapon_select_visuals();
@@ -1229,7 +1212,7 @@ void MainMenuWeaponSelect::set_level_settings() const
 {
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		this->main_menu_data()->level_settings()->
+		this->level_settings()->
 			set_player_weapon(i, this->select_states_[i].type);
 	}
 }
@@ -1387,7 +1370,7 @@ void MainMenuWeaponSelect::init()
 	{
 		SelectState state;
 		state.state = ConfirmationState::unconfirmed;
-		state.type = this->main_menu_data()->level_settings()
+		state.type = this->level_settings()
 			->player_weapon(i);
 		this->select_states_.push_back(state);
 
@@ -1468,18 +1451,12 @@ std::wstring MainMenuWeaponSelect::weapon_description(WeaponType type)
 
 #pragma region MainMenuStageSelect
 
-MainMenuStageSelect::MainMenuStageSelect(MainMenuData* data) :
-	MainMenuPage(data)
+MainMenuStageSelect::MainMenuStageSelect(MenuContext* context) :
+	MainMenuPage(context)
 {
 
 }
 
-MainMenuStageSelect::MainMenuStageSelect(MainMenuData* data,
-	MenuLevelSettings* settings) :
-	MainMenuPage(data)
-{
-	this->main_menu_data()->set_level_settings(settings);
-}
 void MainMenuStageSelect::draw(Renderer& renderer) const
 {
 	std::vector<UiLayer> layers;
@@ -1505,7 +1482,7 @@ void MainMenuStageSelect::update(float /*dt*/)
 				this->play_wave(this->cancel_sound_);
 				this->context()->transition_to(
 					std::make_unique<MainMenuWeaponSelect>(
-						this->main_menu_data()));
+						this->menu_context()));
 				return;
 			}
 			if (this->select_state_.state == ConfirmationState::confirmed)
@@ -1527,9 +1504,13 @@ void MainMenuStageSelect::update(float /*dt*/)
 					this->select_state_.slot = this->pick_random_stage();
 				}
 				this->set_level_settings();
-				*this->main_menu_data()->
-					is_ready_to_load_level() = true;
-				//no need to transition here as we should be going to load level
+
+				// The end of the main menu, and the whole of what it reports:
+				// the settings it assembled are already in the MenuContext
+				// GameMenu owns, so closing is the message. It used to write
+				// true through a heap-allocated bool that GameMenu read on
+				// every frame of every menu page to find out.
+				this->context()->pop();
 			}
 			else
 			{
@@ -1555,8 +1536,8 @@ void MainMenuStageSelect::update(float /*dt*/)
 }
 void MainMenuStageSelect::set_level_settings() const
 {
-	this->main_menu_data()->level_settings()->set_stage(
-		this->main_menu_data()->stages()->at(
+	this->level_settings()->set_stage(
+		this->data()->stages()->at(
 			static_cast<size_t>(this->select_state_.slot)).name);
 }
 void MainMenuStageSelect::update_stage_select_visuals()
@@ -1565,7 +1546,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 
 	// Every stage names and pictures itself, from its own level file, so this
 	// reads the list rather than a switch that has to grow a case per stage.
-	const StageList* stages = this->main_menu_data()->stages();
+	const StageList* stages = this->data()->stages();
 	const int slot = this->select_state_.slot;
 	if (slot == this->random_slot())
 	{
@@ -1598,7 +1579,7 @@ void MainMenuStageSelect::unconfirm_all_widgets()
 }
 int MainMenuStageSelect::slot_of(const std::string& stage_name) const
 {
-	const StageList* stages = this->main_menu_data()->stages();
+	const StageList* stages = this->data()->stages();
 	for (size_t i = 0; i < stages->size(); i++)
 	{
 		if (stages->at(i).name == stage_name)
@@ -1610,7 +1591,7 @@ int MainMenuStageSelect::slot_of(const std::string& stage_name) const
 }
 int MainMenuStageSelect::random_slot() const
 {
-	return static_cast<int>(this->main_menu_data()->stages()->size());
+	return static_cast<int>(this->data()->stages()->size());
 }
 int MainMenuStageSelect::pick_random_stage() const
 {
@@ -1618,8 +1599,7 @@ int MainMenuStageSelect::pick_random_stage() const
 }
 void MainMenuStageSelect::init()
 {
-	this->select_state_.slot = this->slot_of(this->main_menu_data()->
-		level_settings()->stage());
+	this->select_state_.slot = this->slot_of(this->level_settings()->stage());
 
 	this->set_widget_spacing(STAGE_SELECT_WIDGET_SPACING);
 

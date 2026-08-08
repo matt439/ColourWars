@@ -266,6 +266,22 @@ void Weapon::stop_sounds() const
     }
     this->sound_bank_->stop_effect(this->loop_sound_, true);
 }
+void Weapon::pause_sounds() const
+{
+    if (!this->loop_sound_.valid())
+    {
+        return;
+    }
+    this->sound_bank_->pause_effect(this->loop_sound_);
+}
+void Weapon::resume_sounds() const
+{
+    if (!this->loop_sound_.valid())
+    {
+        return;
+    }
+    this->sound_bank_->resume_effect(this->loop_sound_);
+}
 SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
     WeaponType type, PlayerTeam team, int player_num)
 {

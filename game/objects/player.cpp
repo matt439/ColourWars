@@ -998,6 +998,14 @@ void Player::stop_sounds() const
 {
     this->primary_->stop_sounds();
 }
+void Player::pause_sounds() const
+{
+    this->primary_->pause_sounds();
+}
+void Player::resume_sounds() const
+{
+    this->primary_->resume_sounds();
+}
 void Player::set_move_state(PlayerMoveState state)
 {
 	this->move_state_ = state;

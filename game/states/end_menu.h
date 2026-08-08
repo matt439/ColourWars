@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/states/end_menu_data.h"
+#include "game/states/end_menu_action.h"
 #include "engine/ui/widget.h"
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"
@@ -38,27 +38,27 @@ namespace end_menu_consts
 class EndMenuPage : public MenuPage, public artattack::SoundBankObject
 {
 public:
-	explicit EndMenuPage(EndMenuData* data);
+	explicit EndMenuPage(MenuContext* context);
 	~EndMenuPage() override = default;
 	void init() override = 0;
 	void update(float dt) override = 0;
 	void draw(artattack::Renderer& renderer) const override = 0;
 protected:
-	EndMenuData* end_menu_data() const;
+	// Closes the end menu with what the player chose. EndMenuData held nothing
+	// but the out-parameter this replaces, so it is gone entirely.
+	void finish(EndMenuAction action) const;
 
 	// Every sound this page family can make, resolved once when the page is
 	// built. A press then plays an index, not a name (T7, T8).
 	artattack::SoundBank::WaveHandle direction_sound_;
 	artattack::SoundBank::WaveHandle confirm_sound_;
 	artattack::SoundBank::WaveHandle cancel_sound_;
-private:
-	EndMenuData* data_ = nullptr;
 };
 
 class EndMenuInitial final : public EndMenuPage
 {
 public:
-	explicit EndMenuInitial(EndMenuData* data);
+	explicit EndMenuInitial(MenuContext* context);
 	void init() override;
 	void update(float dt) override;
 	void draw(artattack::Renderer& renderer) const override;

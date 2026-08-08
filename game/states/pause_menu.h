@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/states/pause_menu_data.h"
+#include "game/states/pause_menu_action.h"
 #include "engine/ui/widget.h"
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"
@@ -40,14 +40,27 @@ namespace pause_menu_consts
 class PauseMenuPage : public MenuPage, public artattack::SoundBankObject
 {
 public:
-	explicit PauseMenuPage(PauseMenuData* data);
+	// The pad slot that opened the menu is a constant for the whole time it is
+	// up, so it is a constructor parameter. It used to live on a PauseMenuData
+	// that existed mostly to carry the *result* out - and the result comes back
+	// down the stack now.
+	PauseMenuPage(MenuContext* context, int player_num);
 	~PauseMenuPage() override = default;
 	void init() override = 0;
 	void update(float dt) override = 0;
 	void draw(artattack::Renderer& renderer) const override = 0;
 protected:
 	static std::wstring player_number_text(int player_num);
-	PauseMenuData* pause_menu_data() const;
+
+	// Not player_num_, which is the name both pages of this family already use
+	// for the heading widget that spells it out.
+	int pausing_player() const;
+
+	// Closes the whole pause menu with an answer for the match underneath.
+	// Every page of this family ends in one of these, including the one two
+	// transitions deep: the result belongs to the pushed frame, not to the page
+	// that happens to be in it (state_context.h).
+	void finish(PauseMenuAction action) const;
 
 	// The input for the pad that opened this pause menu, or a neutral input if
 	// that slot is out of range. This is the only menu page that reads a single
@@ -69,14 +82,14 @@ protected:
 	artattack::SoundBank::WaveHandle cancel_sound_;
 	artattack::SoundBank::WaveHandle window_open_sound_;
 private:
-	PauseMenuData* data_ = nullptr;
+	int pausing_player_ = -1;
 };
 
 
 class PauseMenuInitial final : public PauseMenuPage
 {
 public:
-	explicit PauseMenuInitial(PauseMenuData* data);
+	PauseMenuInitial(MenuContext* context, int player_num);
 	void init() override;
 	void update(float dt) override;
 	void draw(artattack::Renderer& renderer) const override;
@@ -93,7 +106,8 @@ private:
 class PauseMenuConfirmation final : public PauseMenuPage
 {
 public:
-	PauseMenuConfirmation(PauseMenuData* data, ConfirmationType type);
+	PauseMenuConfirmation(MenuContext* context, int player_num,
+		ConfirmationType type);
 	void init() override;
 	void update(float dt) override;
 	void draw(artattack::Renderer& renderer) const override;

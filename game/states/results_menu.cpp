@@ -8,24 +8,26 @@ using namespace menu_consts;
 using namespace colour_consts;
 using namespace artattack;
 
-ResultsMenuPage::ResultsMenuPage(ResultsMenuData* data) :
-	MenuPage(data),
+ResultsMenuPage::ResultsMenuPage(MenuContext* context,
+	const LevelEndInfo& end_info) :
+	MenuPage(context),
 	SoundBankObject(results_menu_consts::SOUND_BANK,
 		this->audio_resources()),
-	data_(data)
+	level_end_info_(end_info)
 {
 	this->confirm_sound_ = this->resolve_wave(CONFIRM_SOUND);
 	this->winner_sound_ = this->resolve_wave(WINNER_SOUND);
 	this->fill_sound_ = this->resolve_effect(FILL_SOUND);
 }
 
-ResultsMenuData* ResultsMenuPage::results_menu_data() const
+LevelEndInfo ResultsMenuPage::level_end_info() const
 {
-	return this->data_;
+	return this->level_end_info_;
 }
 
-ResultsMenuInitial::ResultsMenuInitial(ResultsMenuData* data) :
-	ResultsMenuPage(data)
+ResultsMenuInitial::ResultsMenuInitial(MenuContext* context,
+	const LevelEndInfo& end_info) :
+	ResultsMenuPage(context, end_info)
 {
 
 }
@@ -63,8 +65,12 @@ void ResultsMenuInitial::update(float dt)
 				if (continue_input != -1)
 				{
 					this->play_wave(this->confirm_sound_);
-					*this->results_menu_data()->action() =
-						ResultsMenuAction::continue_to_end_menu;
+
+					// This screen has exactly one exit, so it closes rather
+					// than answering. ResultsMenuAction was an enum with one
+					// value and a `none`, polled every frame to find out
+					// whether the one value had happened yet.
+					this->context()->pop();
 				}
 			}
 			this->show_results_timer_ += dt;
@@ -116,7 +122,7 @@ void ResultsMenuInitial::init()
 		RectangleF(Vector2F::ZERO,
 			Vector2F(0.0f, RESULTS_MENU_TEAM_FILL_SIZE.y)),
 		this->render_resources(),
-		this->results_menu_data()->level_end_info().team_colours.team_a);
+		this->level_end_info().team_colours.team_a);
 	this->team_a_fill_->set_position(this->fill_box_->rectangle().position() +
 		RESULTS_MENU_TEAM_FILL_BORDER);
 
@@ -127,7 +133,7 @@ void ResultsMenuInitial::init()
 		RectangleF(Vector2F::ZERO,
 			Vector2F(0.0f, RESULTS_MENU_TEAM_FILL_SIZE.y)),
 		this->render_resources(),
-		this->results_menu_data()->level_end_info().team_colours.team_b);
+		this->level_end_info().team_colours.team_b);
 
 	this->team_a_percentage_ = std::make_unique<UiTextDropShadow>(
 		"team_a_percentage",
@@ -266,8 +272,4 @@ int ResultsMenuInitial::check_for_continue_input(
 		}
 	}
 	return -1;
-}
-LevelEndInfo ResultsMenuInitial::level_end_info() const
-{
-	return this->results_menu_data()->level_end_info();
 }

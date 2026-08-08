@@ -3,7 +3,6 @@
 #include "engine/ui/widget.h"
 #include "engine/render/text_encoding.h"
 #include "game/objects/player_team.h"
-#include "game/states/main_menu_data.h"
 #include "game/states/confirmation_state.h"
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"
@@ -96,22 +95,15 @@ enum class MainMenuScreen
 	stage_select
 };
 
-struct MainMenuMidwayLoadSettings
-{
-	MainMenuScreen screen = MainMenuScreen::title;
-	MenuLevelSettings settings = MenuLevelSettings();
-};
-
 class MainMenuPage : public MenuPage, public artattack::SoundBankObject
 {
 public:
-	explicit MainMenuPage(MainMenuData* data);
+	explicit MainMenuPage(MenuContext* context);
 	~MainMenuPage() override = default;
 	void init() override = 0;
 	void update(float dt) override = 0;
 	void draw(artattack::Renderer& renderer) const override = 0;
 protected:
-	MainMenuData* main_menu_data() const;
 	int player_count() const;
 
 	// Every sound this page family can make, resolved once when the page is
@@ -123,14 +115,12 @@ protected:
 	artattack::SoundBank::WaveHandle error_sound_;
 	artattack::SoundBank::WaveHandle ready_sound_;
 	artattack::SoundBank::EffectHandle music_;
-private:
-	MainMenuData* data_ = nullptr;
 };
 
 class MainMenuTitle final : public MainMenuPage
 {
 public:
-	explicit MainMenuTitle(MainMenuData* data);
+	explicit MainMenuTitle(MenuContext* context);
 	void update(float dt) override;
 	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
@@ -145,7 +135,7 @@ private:
 class MainMenuHome final : public MainMenuPage
 {
 public:
-	explicit MainMenuHome(MainMenuData* data);
+	explicit MainMenuHome(MenuContext* context);
 	void update(float dt) override;
 	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
@@ -162,7 +152,7 @@ private:
 class MainMenuOptions final : public MainMenuPage
 {
 public:
-	explicit MainMenuOptions(MainMenuData* data);
+	explicit MainMenuOptions(MenuContext* context);
 	void update(float dt) override;
 	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
@@ -192,7 +182,7 @@ private:
 class MainMenuModeSelect final : public MainMenuPage
 {
 public:
-	explicit MainMenuModeSelect(MainMenuData* data);
+	explicit MainMenuModeSelect(MenuContext* context);
 	void update(float dt) override;
 	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
@@ -211,7 +201,7 @@ private:
 class MainMenuPlayerCount final : public MainMenuPage
 {
 public:
-	explicit MainMenuPlayerCount(MainMenuData* data);
+	explicit MainMenuPlayerCount(MenuContext* context);
 	void update(float dt) override;
 	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
@@ -233,8 +223,7 @@ private:
 class MainMenuTeamSelect final : public MainMenuPage
 {
 public:
-	explicit MainMenuTeamSelect(MainMenuData* data);
-	MainMenuTeamSelect(MainMenuData* data, MenuLevelSettings* settings);
+	explicit MainMenuTeamSelect(MenuContext* context);
 	void update(float dt) override;
 	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
@@ -268,8 +257,7 @@ private:
 class MainMenuWeaponSelect final : public MainMenuPage
 {
 public:
-	explicit MainMenuWeaponSelect(MainMenuData* data);
-	MainMenuWeaponSelect(MainMenuData* data, MenuLevelSettings* settings);
+	explicit MainMenuWeaponSelect(MenuContext* context);
 	void update(float dt) override;
 	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
@@ -305,8 +293,7 @@ private:
 class MainMenuStageSelect final : public MainMenuPage
 {
 public:
-	explicit MainMenuStageSelect(MainMenuData* data);
-	MainMenuStageSelect(MainMenuData* data, MenuLevelSettings* settings);
+	explicit MainMenuStageSelect(MenuContext* context);
 	void update(float dt) override;
 	void draw(artattack::Renderer& renderer) const override;
 	void init() override;

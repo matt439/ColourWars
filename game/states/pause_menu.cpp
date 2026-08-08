@@ -8,11 +8,11 @@ using namespace menu_consts;
 using namespace colour_consts;
 using namespace artattack;
 
-PauseMenuPage::PauseMenuPage(PauseMenuData* data) :
-	MenuPage(data),
+PauseMenuPage::PauseMenuPage(MenuContext* context, int player_num) :
+	MenuPage(context),
 	SoundBankObject(pause_menu_consts::SOUND_BANK,
 		this->audio_resources()),
-	data_(data)
+	pausing_player_(player_num)
 {
 	this->direction_sound_ = this->resolve_wave(DIRECTION_SOUND);
 	this->confirm_sound_ = this->resolve_wave(CONFIRM_SOUND);
@@ -37,26 +37,29 @@ std::wstring PauseMenuPage::player_number_text(int player_num)
 	};
 }
 
-PauseMenuData* PauseMenuPage::pause_menu_data() const
+int PauseMenuPage::pausing_player() const
 {
-	return this->data_;
+	return this->pausing_player_;
+}
+
+void PauseMenuPage::finish(PauseMenuAction action) const
+{
+	this->context()->pop(action);
 }
 
 ProcessedMenuInput PauseMenuPage::pausing_player_input(
 	const std::vector<ProcessedMenuInput>& inputs) const
 {
-	const int player_num = this->pause_menu_data()->player_num();
-
-	if (player_num < 0 ||
-		static_cast<size_t>(player_num) >= inputs.size())
+	if (this->pausing_player_ < 0 ||
+		static_cast<size_t>(this->pausing_player_) >= inputs.size())
 	{
 		return ProcessedMenuInput();
 	}
-	return inputs[static_cast<size_t>(player_num)];
+	return inputs[static_cast<size_t>(this->pausing_player_)];
 }
 
-PauseMenuInitial::PauseMenuInitial(PauseMenuData* data) :
-	PauseMenuPage(data)
+PauseMenuInitial::PauseMenuInitial(MenuContext* context, int player_num) :
+	PauseMenuPage(context, player_num)
 {
 
 }
@@ -70,7 +73,7 @@ void PauseMenuInitial::update(float /*dt*/)
 		input.action == MenuInputAction::pause)
 	{
 		this->play_wave(this->cancel_sound_);
-		*this->pause_menu_data()->action() = PauseMenuAction::resume;
+		this->finish(PauseMenuAction::resume);
 	}
 	else if (input.action == MenuInputAction::proceed)
 	{
@@ -100,8 +103,7 @@ void PauseMenuInitial::init()
 
 	this->player_num_ = std::make_unique<UiTextDropShadow>(
 		"player_num",
-		this->player_number_text(
-			this->pause_menu_data()->player_num()),
+		this->player_number_text(this->pausing_player()),
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -153,19 +155,21 @@ void PauseMenuInitial::init()
 	this->focus_.add(this->resume_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
-			*this->pause_menu_data()->action() = PauseMenuAction::resume;
+			this->finish(PauseMenuAction::resume);
 		});
 	this->focus_.add(this->restart_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
 			this->context()->transition_to(std::make_unique<PauseMenuConfirmation>(
-				this->pause_menu_data(), ConfirmationType::restart));
+				this->menu_context(), this->pausing_player(),
+				ConfirmationType::restart));
 		});
 	this->focus_.add(this->quit_.get(), [this]
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(std::make_unique<PauseMenuConfirmation>(
-				this->pause_menu_data(), ConfirmationType::quit));
+				this->menu_context(), this->pausing_player(),
+				ConfirmationType::quit));
 		});
 
 	this->play_wave(this->window_open_sound_);
@@ -181,9 +185,9 @@ void PauseMenuInitial::draw(Renderer& renderer) const
 	this->draw_ui_layers(renderer, layers);
 }
 
-PauseMenuConfirmation::PauseMenuConfirmation(PauseMenuData* data,
-	ConfirmationType type) :
-	PauseMenuPage(data), type_(type)
+PauseMenuConfirmation::PauseMenuConfirmation(MenuContext* context,
+	int player_num, ConfirmationType type) :
+	PauseMenuPage(context, player_num), type_(type)
 {
 
 }
@@ -197,7 +201,7 @@ void PauseMenuConfirmation::update(float /*dt*/)
 	{
 		this->play_wave(this->cancel_sound_);
 		this->context()->transition_to(std::make_unique<PauseMenuInitial>(
-			this->pause_menu_data()));
+			this->menu_context(), this->pausing_player()));
 		return;
 	}
 	if (input.action == MenuInputAction::proceed)
@@ -229,8 +233,7 @@ void PauseMenuConfirmation::init()
 
 	this->player_num_ = std::make_unique<UiTextDropShadow>(
 		"player_num",
-		this->player_number_text(
-			this->pause_menu_data()->player_num()),
+		this->player_number_text(this->pausing_player()),
 		HEADING_FONT,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -288,7 +291,7 @@ void PauseMenuConfirmation::init()
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(std::make_unique<PauseMenuInitial>(
-				this->pause_menu_data()));
+				this->menu_context(), this->pausing_player()));
 		});
 	this->focus_.add(this->yes_.get(), [this]
 		{
@@ -296,11 +299,11 @@ void PauseMenuConfirmation::init()
 			{
 			case ConfirmationType::restart:
 				this->play_wave(this->confirm_sound_);
-				*this->pause_menu_data()->action() = PauseMenuAction::restart;
+				this->finish(PauseMenuAction::restart);
 				break;
 			case ConfirmationType::quit:
 				this->play_wave(this->cancel_sound_);
-				*this->pause_menu_data()->action() = PauseMenuAction::quit;
+				this->finish(PauseMenuAction::quit);
 				break;
 			}
 		});

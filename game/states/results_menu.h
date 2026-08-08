@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/states/results_menu_data.h"
+#include "game/objects/level_end_info.h"
 #include "engine/math/colour.h"
 #include "game/states/menu_page.h"
 #include "engine/audio/sound_bank_object.h"
@@ -59,13 +59,15 @@ namespace results_menu_consts
 class ResultsMenuPage : public MenuPage, public artattack::SoundBankObject
 {
 public:
-	explicit ResultsMenuPage(ResultsMenuData* data);
+	// The scores are fixed the moment the match ends, so they arrive as a value
+	// rather than through a data class that also had to carry the result out.
+	ResultsMenuPage(MenuContext* context, const LevelEndInfo& end_info);
 	~ResultsMenuPage() override = default;
 	void init() override = 0;
 	void update(float dt) override = 0;
 	void draw(artattack::Renderer& renderer) const override = 0;
 protected:
-	ResultsMenuData* results_menu_data() const;
+	LevelEndInfo level_end_info() const;
 
 	// Every sound this page family can make, resolved once when the page is
 	// built. The drum roll is an effect rather than a wave because it is
@@ -74,13 +76,13 @@ protected:
 	artattack::SoundBank::WaveHandle winner_sound_;
 	artattack::SoundBank::EffectHandle fill_sound_;
 private:
-	ResultsMenuData* data_ = nullptr;
+	LevelEndInfo level_end_info_ = LevelEndInfo();
 };
 
 class ResultsMenuInitial final : public ResultsMenuPage
 {
 public:
-	explicit ResultsMenuInitial(ResultsMenuData* data);
+	ResultsMenuInitial(MenuContext* context, const LevelEndInfo& end_info);
 	void init() override;
 	void update(float dt) override;
 	void draw(artattack::Renderer& renderer) const override;
@@ -100,7 +102,6 @@ private:
 	float delay_timer_ = 0.0f;
 	float fill_timer_ = 0.0f;
 	float show_results_timer_ = 0.0f;
-	LevelEndInfo level_end_info() const;
 	float fill_time_ratio() const;
 	mattmath::Vector2F calculate_team_b_fill_top_right_position() const;
 	static int check_for_continue_input(const std::vector<ProcessedMenuInput>& menu_input);

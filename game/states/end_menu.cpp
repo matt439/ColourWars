@@ -7,22 +7,21 @@ using namespace end_menu_consts;
 using namespace menu_consts;
 using namespace artattack;
 
-EndMenuPage::EndMenuPage(EndMenuData* data) :
-	MenuPage(data),
-	SoundBankObject(SOUND_BANK, this->audio_resources()),
-	data_(data)
+EndMenuPage::EndMenuPage(MenuContext* context) :
+	MenuPage(context),
+	SoundBankObject(SOUND_BANK, this->audio_resources())
 {
 	this->direction_sound_ = this->resolve_wave(DIRECTION_SOUND);
 	this->confirm_sound_ = this->resolve_wave(CONFIRM_SOUND);
 	this->cancel_sound_ = this->resolve_wave(CANCEL_SOUND);
 }
 
-EndMenuData* EndMenuPage::end_menu_data() const
+void EndMenuPage::finish(EndMenuAction action) const
 {
-	return this->data_;
+	this->context()->pop(action);
 }
 
-EndMenuInitial::EndMenuInitial(EndMenuData* data) : EndMenuPage(data)
+EndMenuInitial::EndMenuInitial(MenuContext* context) : EndMenuPage(context)
 {
 
 }
@@ -137,7 +136,7 @@ void EndMenuInitial::init()
 	const auto choose = [this](EndMenuAction action, bool confirm)
 		{
 			this->play_wave(confirm ? this->confirm_sound_ : this->cancel_sound_);
-			*this->end_menu_data()->action() = action;
+			this->finish(action);
 		};
 
 	this->focus_.add(this->change_teams_.get(),

@@ -5,7 +5,7 @@ using namespace DirectX;
 using namespace mattmath;
 using namespace artattack;
 
-MenuPage::MenuPage(MenuData* data) : data_(data)
+MenuPage::MenuPage(MenuContext* context) : context_(context)
 {
 
 }
@@ -58,33 +58,41 @@ float MenuPage::calculate_center_position(
 	return (resolution - widget_size) / 2.0f;
 }
 
-MenuData* MenuPage::data() const
+MenuContext* MenuPage::menu_context() const
 {
-	return this->data_;
+	return this->context_;
+}
+GameData* MenuPage::data() const
+{
+	return this->context_->data();
+}
+MenuLevelSettings* MenuPage::level_settings() const
+{
+	return this->context_->level_settings();
 }
 MenuInput* MenuPage::input() const
 {
-	return this->data_->input();
+	return this->context_->input();
 }
 ResolutionManager* MenuPage::resolution_manager() const
 {
-	return this->data_->resolution_manager();
+	return this->data()->resolution_manager();
 }
 Save* MenuPage::save() const
 {
-	return this->data_->save();
+	return this->data()->save();
 }
 RenderResources* MenuPage::render_resources() const
 {
-	return this->data_->render_resources();
+	return this->data()->render_resources();
 }
 const AudioResources* MenuPage::audio_resources() const
 {
-	return this->data_->audio_resources();
+	return this->data()->audio_resources();
 }
 ViewportManager* MenuPage::viewport_manager() const
 {
-	return this->data_->viewport_manager();
+	return this->data()->viewport_manager();
 }
 
 void MenuPage::draw_ui_layers(Renderer& renderer,
@@ -115,12 +123,12 @@ void MenuPage::draw_ui_layers(Renderer& renderer,
 
 std::vector<ProcessedMenuInput> MenuPage::menu_inputs() const
 {
-	return this->data()->input()->update_and_get_menu_inputs();
+	return this->input()->update_and_get_menu_inputs();
 }
 
 Vector2F MenuPage::float_resolution() const
 {
-	return this->data()->resolution_manager()->resolution_vec();
+	return this->resolution_manager()->resolution_vec();
 }
 
 // A Camera maps world to view as (world - translation) * scale. Here "world"

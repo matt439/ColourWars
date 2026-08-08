@@ -51,6 +51,13 @@ public:
 	// Never throws: weapons with no looping fire sound stop nothing.
 	virtual void stop_sounds() const;
 
+	// Pause, not stop. A weapon held down across a pause menu comes back on the
+	// same voice rather than restarting its loop from the top - and, more to
+	// the point, comes back at all: the loop is ended by update(), and update()
+	// is precisely what a menu above the match stops.
+	virtual void pause_sounds() const;
+	virtual void resume_sounds() const;
+
 protected:
 	artattack::SoundBank* sound_bank_ = nullptr;
 	WeaponDetails details_ = weapon_consts::DETAILS_DEFAULT;

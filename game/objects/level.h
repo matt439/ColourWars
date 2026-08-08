@@ -53,7 +53,8 @@ namespace level_consts
 class Level
 {
 public:
-	Level() = default;
+	// No default constructor. One never had a sound bank or an object list, and
+	// the destructor below now speaks to both.
 	Level(std::unique_ptr<std::vector<std::unique_ptr<artattack::GameObject>>> non_collision_objects,
 		std::unique_ptr<std::vector<std::unique_ptr<CollisionObject>>> collision_objects,
 		std::unique_ptr<std::vector<std::unique_ptr<Player>>> player_objects,
@@ -75,6 +76,27 @@ public:
 		artattack::ThreadPool* thread_pool,
 		const artattack::Partitioner* partitioner);
 
+	// Silences everything this level started.
+	//
+	// It replaces stop_music(), which was public and called by hand at seven
+	// GameLevel exits - so the level's music was as long-lived as whoever
+	// remembered, and a restart path that forgot left two tracks over each
+	// other. The track belongs to the match; this is where a match ends.
+	~Level();
+
+	Level(const Level&) = delete;
+	Level& operator=(const Level&) = delete;
+
+	// A menu went up over the match, or came back down.
+	//
+	// Not the same as stopping: a paused weapon loop resumes mid-voice where a
+	// stopped one has to be restarted from the top. Both walk the players
+	// because a looping fire sound belongs to a weapon, and Level::update is
+	// the only thing that ever ends one - which is why "pause" that only
+	// skipped update() left a sustained tone playing under the menu.
+	void suspend() const;
+	void resume() const;
+
 	void update(const std::vector<PlayerInputData>& player_inputs, float dt);
 
 	// Declares this frame's views and fills them. Three caller obligations
@@ -88,8 +110,6 @@ public:
 	void set_state(LevelState state);
 
 	LevelEndInfo level_end_info() const;
-
-	void stop_music() const;
 
 private:
 	std::unique_ptr<std::vector<std::unique_ptr<artattack::GameObject>>>
@@ -170,6 +190,14 @@ private:
 	float zoom_out_camera_ratio() const;
 
 	void stop_player_sounds() const;
+	void pause_player_sounds() const;
+	void resume_player_sounds() const;
+
+	// Positions the countdown text and gives every player the camera their
+	// first frame is drawn through. Both used to happen on the first update(),
+	// which is why GameLevel had two states whose whole job was to not draw
+	// through a null pointer and a default camera.
+	void build_opening_frame();
 
 	// One player's pane. The parallelism axis is views, so this is what a
 	// render worker runs - every worker on a different i, all of them reading

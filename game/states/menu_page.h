@@ -2,7 +2,7 @@
 
 #include "engine/ui/focus.h"
 #include "engine/ui/widget.h"
-#include "game/states/menu_data.h"
+#include "game/states/menu_context.h"
 #include "engine/core/state.h"
 #include "engine/math/matt_math.h"
 
@@ -22,11 +22,16 @@ namespace menu_consts
 class MenuPage : public artattack::State
 {
 public:
-	explicit MenuPage(MenuData* data);
+	explicit MenuPage(MenuContext* context);
 	~MenuPage() override = default;
 	void update(float dt) override = 0;
 	void draw(artattack::Renderer& renderer) const override = 0;
 	void init() override = 0;
+
+	// A menu is a box over whatever is behind it, and behind it is either
+	// nothing or a match that has to keep drawing (state.h). The main menu's
+	// own pages sit at the bottom of the stack, where it makes no difference.
+	bool covers_screen() const override { return false; }
 protected:
 	mattmath::Vector2F widget_position() const;
 	mattmath::Vector2F widget_size() const;
@@ -41,7 +46,13 @@ protected:
 		const mattmath::Vector2F& widget_size,
 		const mattmath::Vector2F& resolution);
 	static float calculate_center_position(float widget_size, float resolution);
-	MenuData* data() const;
+	// What every page of every menu shares, and what a page hands to the next
+	// page it builds. One accessor, where there used to be one per menu family
+	// returning one subclass each.
+	MenuContext* menu_context() const;
+
+	GameData* data() const;
+	MenuLevelSettings* level_settings() const;
 	MenuInput* input() const;
 	artattack::ResolutionManager* resolution_manager() const;
 	Save* save() const;
@@ -89,7 +100,7 @@ protected:
 	// authoritative geometry behind for anything that wrote a position later.
 	mattmath::Camera ui_camera(const mattmath::Viewport& viewport) const;
 private:
-	MenuData* data_ = nullptr;
+	MenuContext* context_ = nullptr;
 	mattmath::Vector2F widget_position_ = { 150.0f, 150.0f };
 	mattmath::Vector2F widget_size_ = { 300.0f, 75.0f };
 	mattmath::Vector2F widget_spacing_ = { 250.0f, 150.0f };

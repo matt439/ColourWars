@@ -134,6 +134,11 @@ public:
     void update_prev_rectangle();
     void stop_sounds() const;
 
+    // Everything this player is making a noise with, quieted while a menu is
+    // over the match and brought back when it goes.
+    void pause_sounds() const;
+    void resume_sounds() const;
+
 	std::string player_move_state_string() const;
 
 	void on_no_collision();

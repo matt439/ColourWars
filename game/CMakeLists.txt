@@ -44,18 +44,14 @@ add_executable(ArtAttackGame WIN32
     objects/weapon_sprayer.cpp
 
     states/end_menu.cpp
-    states/end_menu_data.cpp
     states/game_states.cpp
     states/main_menu.cpp
-    states/main_menu_data.cpp
-    states/menu_data.cpp
+    states/menu_context.cpp
     states/menu_input.cpp
     states/menu_level_settings.cpp
     states/menu_page.cpp
     states/pause_menu.cpp
-    states/pause_menu_data.cpp
     states/results_menu.cpp
-    states/results_menu_data.cpp
 
     resource.rc
     settings.manifest

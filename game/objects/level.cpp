@@ -54,10 +54,59 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<GameObject>>> non_colli
 	this->music_ = this->sound_bank_->resolve_effect(music_name);
 	this->zoom_out_sound_ = this->sound_bank_->resolve_effect(ZOOM_OUT_SOUND);
 	this->countdown_sound_ = this->sound_bank_->resolve_wave(COUNTDOWN_SOUND);
+
+	this->build_opening_frame();
 }
-void Level::stop_music() const
+
+Level::~Level()
 {
 	this->sound_bank_->stop_effect(this->music_, true);
+	this->sound_bank_->stop_effect(this->zoom_out_sound_, true);
+	this->stop_player_sounds();
+}
+
+void Level::build_opening_frame()
+{
+	int player_index = 0;
+	for (auto& object : *this->player_objects_)
+	{
+		Camera camera = this->camera_tools_->calculate_camera(
+			object->center(),
+			this->viewport_manager_->player_viewport(player_index).size(),
+			object->camera(),
+			this->camera_bounds_);
+		object->set_camera(camera);
+		player_index++;
+	}
+
+	const Vector2F resolution = this->resolution_manager_->resolution_vec();
+	const Vector2F position = resolution / 2.0f -
+		Vector2F(COUNTDOWN_TEXT_WIDTH / 2.0f, COUNTDOWN_TEXT_HEIGHT / 2.0f);
+
+	this->countdown_text_ = std::make_unique<TextDropShadow>(
+		COUNTDOWN_TEXT,
+		COUNTDOWN_FONT_NAME,
+		position,
+		this->render_resources_,
+		COUNTDOWN_COLOUR,
+		COUNTDOWN_SHADOW_COLOUR,
+		COUNTDOWN_SHADOW_OFFSET,
+		COUNTDOWN_SCALE,
+		COUNTDOWN_SCALE);
+}
+
+void Level::suspend() const
+{
+	this->sound_bank_->pause_effect(this->music_);
+	this->sound_bank_->pause_effect(this->zoom_out_sound_);
+	this->pause_player_sounds();
+}
+
+void Level::resume() const
+{
+	this->sound_bank_->resume_effect(this->music_);
+	this->sound_bank_->resume_effect(this->zoom_out_sound_);
+	this->resume_player_sounds();
 }
 void Level::update(const std::vector<PlayerInputData>& player_inputs,
 	float dt)
@@ -66,41 +115,14 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs,
 	if (this->state_ == LevelState::start_countdown ||
 		this->start_timer_ > -1.0f)
 	{
-		// first update
+		// The first update, and now the only thing left in it: the cameras and
+		// the countdown text are built with the level, because the frame drawn
+		// before this one is a real frame and used to be skipped rather than
+		// made correct.
 		if (this->start_timer_ >= START_TIMER)
 		{
 			this->sound_bank_->play_effect(this->music_, true, this->music_volume_);
 			this->sound_bank_->play_wave(this->countdown_sound_, COUNTDOWN_SOUND_VOLUME);
-			
-			// update player cameras
-			int player_index = 0;
-			for (auto& object : *this->player_objects_)
-			{
-				Camera camera = this->camera_tools_->calculate_camera(
-					object->center(),
-					this->viewport_manager_->player_viewport(player_index).size(),
-					object->camera(),
-					this->camera_bounds_);
-				object->set_camera(camera);
-				player_index++;
-			}
-
-			// create countdown text
-			Vector2F resolution = this->resolution_manager_->resolution_vec();
-			Vector2F position = resolution / 2.0f;
-			position = position - Vector2F(COUNTDOWN_TEXT_WIDTH / 2.0f,
-								COUNTDOWN_TEXT_HEIGHT / 2.0f);
-
-			this->countdown_text_ = std::make_unique<TextDropShadow>(
-				COUNTDOWN_TEXT,
-				COUNTDOWN_FONT_NAME,
-				position,
-				this->render_resources_,
-				COUNTDOWN_COLOUR,
-				COUNTDOWN_SHADOW_COLOUR,
-				COUNTDOWN_SHADOW_OFFSET,
-				COUNTDOWN_SCALE,
-				COUNTDOWN_SCALE);
 		}
 		this->start_timer_ -= dt;
 		if (this->start_timer_ > 0.0f)
@@ -343,6 +365,20 @@ void Level::stop_player_sounds() const
 		player->stop_sounds();
 	}
 
+}
+void Level::pause_player_sounds() const
+{
+	for (const auto& player : *this->player_objects_)
+	{
+		player->pause_sounds();
+	}
+}
+void Level::resume_player_sounds() const
+{
+	for (const auto& player : *this->player_objects_)
+	{
+		player->resume_sounds();
+	}
 }
 void Level::draw(Renderer& renderer) const
 {
