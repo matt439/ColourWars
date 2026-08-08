@@ -57,8 +57,12 @@ add_executable(ArtAttackGame WIN32
     resource.rc
     settings.manifest
 )
-target_include_directories(ArtAttackGame PRIVATE
-    "${CMAKE_SOURCE_DIR}/external/rapidjson/include"
+# The game parses its own level and save files, so it asks for rapidjson
+# itself rather than receiving it through the engine, which no longer passes
+# it on. SYSTEM, because a third party's headers are not measured against
+# /W4 /WX.
+target_include_directories(ArtAttackGame SYSTEM PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/../external/rapidjson/include"
 )
 target_link_libraries(ArtAttackGame PRIVATE
     ArtAttackEngine
@@ -98,6 +102,6 @@ add_custom_command(TARGET ArtAttackGame POST_BUILD
     COMMAND "${CMAKE_COMMAND}"
         "-Dsrc=${CMAKE_CURRENT_SOURCE_DIR}/content/save"
         "-Ddst_parent=$<TARGET_FILE_DIR:ArtAttackGame>"
-        -P "${CMAKE_SOURCE_DIR}/cmake/seed_save.cmake"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/seed_save.cmake"
     VERBATIM
 )
