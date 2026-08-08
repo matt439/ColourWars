@@ -49,7 +49,6 @@ add_executable(ArtAttackGame WIN32
     states/main_menu.cpp
     states/main_menu_data.cpp
     states/menu_data.cpp
-    states/menu_highlight.cpp
     states/menu_input.cpp
     states/menu_level_settings.cpp
     states/menu_page.cpp

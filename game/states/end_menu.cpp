@@ -28,114 +28,24 @@ EndMenuInitial::EndMenuInitial(EndMenuData* data) : EndMenuPage(data)
 
 void EndMenuInitial::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
-	std::string highlighted_element =
-		this->highlighted_widget()->name();
-
-	for (int i = 0; i < inputs.size(); i++)
+	for (const ProcessedMenuInput& input : this->menu_inputs())
 	{
-		if (inputs[i].action == MenuInputAction::proceed)
+		if (input.action == MenuInputAction::proceed)
 		{
-			if (highlighted_element == "change_teams")
+			if (this->focus_.activate(0))
 			{
-				this->play_wave(this->confirm_sound_);
-				*this->end_menu_data()->action() =
-					EndMenuAction::change_teams;
-				return;
-			}
-			else if (highlighted_element == "change_weapons")
-			{
-				this->play_wave(this->confirm_sound_);
-				*this->end_menu_data()->action() =
-					EndMenuAction::change_weapons;
-				return;
-			}
-			else if (highlighted_element == "change_level")
-			{
-				this->play_wave(this->confirm_sound_);
-				*this->end_menu_data()->action() =
-					EndMenuAction::change_level;
-				return;
-			}
-			else if (highlighted_element == "restart")
-			{
-				this->play_wave(this->confirm_sound_);
-				*this->end_menu_data()->action() =
-					EndMenuAction::restart;
-				return;
-			}
-			else if (highlighted_element == "exit")
-			{
-				this->play_wave(this->cancel_sound_);
-				*this->end_menu_data()->action() =
-					EndMenuAction::exit;
 				return;
 			}
 		}
-		else if (inputs[i].direction == MenuDirection::up)
+		else if (this->focus_.move(0, input.direction))
 		{
 			this->play_wave(this->direction_sound_);
-			if (highlighted_element == "change_teams")
-			{
-				this->change_highlight(this->exit_.get());
-				return;
-			}
-			else if (highlighted_element == "change_weapons")
-			{
-				this->change_highlight(this->change_teams_.get());
-				return;
-			}
-			else if (highlighted_element == "change_level")
-			{
-				this->change_highlight(this->change_weapons_.get());
-				return;
-			}
-			else if (highlighted_element == "restart")
-			{
-				this->change_highlight(this->change_level_.get());
-				return;
-			}
-			else if (highlighted_element == "exit")
-			{
-				this->change_highlight(this->restart_.get());
-				return;
-			}
-		}
-		else if (inputs[i].direction == MenuDirection::down)
-		{
-			this->play_wave(this->direction_sound_);
-			if (highlighted_element == "change_teams")
-			{
-				this->change_highlight(this->change_weapons_.get());
-				return;
-			}
-			else if (highlighted_element == "change_weapons")
-			{
-				this->change_highlight(this->change_level_.get());
-				return;
-			}
-			else if (highlighted_element == "change_level")
-			{
-				this->change_highlight(this->restart_.get());
-				return;
-			}
-			else if (highlighted_element == "restart")
-			{
-				this->change_highlight(this->exit_.get());
-				return;
-			}
-			else if (highlighted_element == "exit")
-			{
-				this->change_highlight(this->change_teams_.get());
-				return;
-			}
 		}
 	}
 }
 void EndMenuInitial::init()
 {
-	this->set_highlight_colour(STANDARD_HIGHLIGHT);
-	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
+	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
 
 	this->box_ = std::make_unique<UiTexture>(
 		"box",
@@ -166,7 +76,7 @@ void EndMenuInitial::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
-		this->highlight_colour(),
+		STANDARD_HIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -176,7 +86,7 @@ void EndMenuInitial::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -186,7 +96,7 @@ void EndMenuInitial::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -196,7 +106,7 @@ void EndMenuInitial::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -206,11 +116,9 @@ void EndMenuInitial::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
-
-	this->set_highlighted_widget(this->change_teams_.get());
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -231,6 +139,23 @@ void EndMenuInitial::init()
 		DEFAULT_RESOLUTION, resolution);
 	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
+
+	const auto choose = [this](EndMenuAction action, bool confirm)
+		{
+			this->play_wave(confirm ? this->confirm_sound_ : this->cancel_sound_);
+			*this->end_menu_data()->action() = action;
+		};
+
+	this->focus_.add(this->change_teams_.get(),
+		[choose] { choose(EndMenuAction::change_teams, true); });
+	this->focus_.add(this->change_weapons_.get(),
+		[choose] { choose(EndMenuAction::change_weapons, true); });
+	this->focus_.add(this->change_level_.get(),
+		[choose] { choose(EndMenuAction::change_level, true); });
+	this->focus_.add(this->restart_.get(),
+		[choose] { choose(EndMenuAction::restart, true); });
+	this->focus_.add(this->exit_.get(),
+		[choose] { choose(EndMenuAction::exit, false); });
 }
 void EndMenuInitial::draw()
 {

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/ui/focus.h"
 #include "engine/ui/widget.h"
 #include "game/states/menu_data.h"
 #include "engine/core/state.h"
@@ -51,6 +52,17 @@ protected:
 
 	ID3D11SamplerState* point_clamp_sampler_state() const;
 	std::vector<ProcessedMenuInput> menu_inputs() const;
+
+	// The page's focusable widgets, what activating each one means, and which
+	// one the cursor is on. Pages that are not lists - the title card, the
+	// per-player select screens with their own confirmation state machines -
+	// leave it empty and it costs two empty vectors.
+	//
+	// It is a member and not a base class. MenuHighlight, which this replaces,
+	// was inherited by six pages purely to reach a widget pointer and two
+	// colours, with its entire API protected so inheritance was the only way
+	// to use it at all. T11 names inheritance a tool of last resort.
+	artattack::FocusGroup focus_;
 	mattmath::Vector2F float_resolution() const;
 	mattmath::Vector2I int_resolution() const;
 private:

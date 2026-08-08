@@ -135,81 +135,40 @@ void MainMenuHome::draw()
 }
 void MainMenuHome::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
-	int num_inputs = static_cast<int>(inputs.size());
-	std::string highlighted_element =
-		this->highlighted_widget()->name();
-
-	for (int i = 0; i < num_inputs; i++)
-	{		
-		if (inputs[i].action == MenuInputAction::back)
+	// The focus is read inside the loop rather than snapshotted above it. The
+	// old form took the highlighted widget's *name* once and compared all four
+	// pad slots against that string, so pad 0 moving the cursor and pad 1
+	// pressing A in the same frame activated whatever pad 0 had just left -
+	// and two pads pressing down together advanced one step while playing the
+	// click twice. Two pads on a couch-multiplayer menu is the design centre.
+	for (const ProcessedMenuInput& input : this->menu_inputs())
+	{
+		if (input.action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(
 				std::make_unique<MainMenuTitle>(this->main_menu_data()));
 			return;
 		}
-		if (inputs[i].action == MenuInputAction::proceed)
+		if (input.action == MenuInputAction::proceed)
 		{
-			if (highlighted_element == "play")
+			// One activation per frame. Every action on this page leaves the
+			// page, so a second pad's press against a page that is already
+			// going somewhere is not a second decision to honour.
+			if (this->focus_.activate(0))
 			{
-				this->play_wave(this->confirm_sound_);
-				this->context()->transition_to(
-					std::make_unique<MainMenuModeSelect>(
-						this->main_menu_data()));
 				return;
 			}
-			if (highlighted_element == "options")
-			{
-				this->play_wave(this->confirm_sound_);
-				this->context()->transition_to(
-					std::make_unique<MainMenuOptions>(
-						this->main_menu_data()));
-				return;
-			}
-			if (highlighted_element == "exit")
-			{
-				this->main_menu_data()->application()->quit();
-			}
 		}
-		else if (inputs[i].direction == MenuDirection::up)
+		else if (this->focus_.move(0, input.direction))
 		{
 			this->play_wave(this->direction_sound_);
-			if (highlighted_element == "play")
-			{
-				this->change_highlight(this->exit_.get());
-			}
-			else if (highlighted_element == "options")
-			{
-				this->change_highlight(this->play_.get());
-			}
-			else if (highlighted_element == "exit")
-			{
-				this->change_highlight(this->options_.get());
-			}
-		}
-		else if (inputs[i].direction == MenuDirection::down)
-		{
-			this->play_wave(this->direction_sound_);
-			if (highlighted_element == "play")
-			{
-				this->change_highlight(this->options_.get());
-			}
-			else if (highlighted_element == "options")
-			{
-				this->change_highlight(this->exit_.get());
-			}
-			else if (highlighted_element == "exit")
-			{
-				this->change_highlight(this->play_.get());
-			}
 		}
 	}
 }
 void MainMenuHome::init()
 {
-	this->set_highlight_colour(STANDARD_HIGHLIGHT);
-	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
+	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
@@ -235,7 +194,7 @@ void MainMenuHome::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
-		this->highlight_colour(),
+		STANDARD_HIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -245,7 +204,7 @@ void MainMenuHome::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -255,7 +214,7 @@ void MainMenuHome::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -276,7 +235,26 @@ void MainMenuHome::init()
 	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->set_highlighted_widget(this->play_.get());
+	// Registered after the rescale: navigation walks bounds(), so the widgets
+	// have to be where they will actually be drawn. Declaration order does not
+	// decide adjacency - position does - so the four-way if-chains this
+	// replaces are not written anywhere any more.
+	this->focus_.add(this->play_.get(), [this]
+		{
+			this->play_wave(this->confirm_sound_);
+			this->context()->transition_to(
+				std::make_unique<MainMenuModeSelect>(this->main_menu_data()));
+		});
+	this->focus_.add(this->options_.get(), [this]
+		{
+			this->play_wave(this->confirm_sound_);
+			this->context()->transition_to(
+				std::make_unique<MainMenuOptions>(this->main_menu_data()));
+		});
+	this->focus_.add(this->exit_.get(), [this]
+		{
+			this->main_menu_data()->application()->quit();
+		});
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
@@ -304,123 +282,87 @@ void MainMenuOptions::draw()
 }
 void MainMenuOptions::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
-	int num_inputs = static_cast<int>(inputs.size());
-	std::string highlighted_element =
-		this->highlighted_widget()->name();
-
-	for (int i = 0; i < num_inputs; i++)
+	for (const ProcessedMenuInput& input : this->menu_inputs())
 	{
-		if (inputs[i].action == MenuInputAction::back)
+		if (input.action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(std::make_unique<MainMenuHome>(
 				this->main_menu_data()));
 			return;
 		}
-		else if (inputs[i].action == MenuInputAction::proceed)
+		if (input.action == MenuInputAction::proceed)
 		{
-			if (highlighted_element == "apply")
+			if (this->focus_.activate(0))
 			{
-				this->play_wave(this->confirm_sound_);
-				
-				auto prev_resolution = this->resolution_manager()->resolution_vec();
-				
-				this->resolution_manager()->set_resolution(
-					this->resolution_selection_);
-
-				//std::string res_string = this->resolution_manager()->
-				//	resolution_string();
-				this->save()->set_resolution_and_save(this->resolution_selection_);
-
-				auto res_f = this->float_resolution();
-
-				this->data()->application()->set_resolution(
-					this->resolution_selection_);
-
-				bool fs = this->full_screen_selection_;
-				this->save()->set_full_screen_and_save(fs);
-				this->apply_fullscreen_setting(fs);
-
-				//update window and its children's sizes and positions
-				this->texture_container_->scale_objects_to_new_resolution(
-					prev_resolution, res_f);
-				this->text_container_->scale_objects_to_new_resolution(
-					prev_resolution, res_f);
-				
-				//this->background_->update_resolution(prev_resolution, res_f);
-			}
-			else if (highlighted_element == "back")
-			{
-				this->play_wave(this->cancel_sound_);
-				this->context()->transition_to(
-					std::make_unique<MainMenuHome>(
-						this->main_menu_data()));
 				return;
 			}
+			continue;
 		}
-		else if (inputs[i].direction == MenuDirection::down)
+		if (this->focus_.move(0, input.direction))
 		{
 			this->play_wave(this->direction_sound_);
-			if (highlighted_element == "resolution_element")
-			{
-				this->change_highlight(this->full_screen_.get());
-			}
-			else if (highlighted_element == "full_screen")
-			{
-				this->change_highlight(this->apply_.get());
-			}
-			else if (highlighted_element == "apply")
-			{
-				this->change_highlight(this->back_.get());
-			}
-			else if (highlighted_element == "back")
-			{
-				this->change_highlight(this->resolution_element_.get());
-			}
+			continue;
 		}
-		else if (inputs[i].direction == MenuDirection::up)
-		{
-			this->play_wave(this->direction_sound_);
-			if (highlighted_element == "resolution_element")
-			{
-				this->change_highlight(this->back_.get());
-			}
-			else if (highlighted_element == "full_screen")
-			{
-				this->change_highlight(this->resolution_element_.get());
-			}
-			else if (highlighted_element == "apply")
-			{
-				this->change_highlight(this->full_screen_.get());
-			}
-			else if (highlighted_element == "back")
-			{
-				this->change_highlight(this->apply_.get());
-			}
-		}
-		else if (highlighted_element == "resolution_element")
-		{
-			if (inputs[i].direction == MenuDirection::left)
-			{
-				this->play_wave(this->direction_sound_);
-				this->cycle_resolution(MenuDirection::left);
-			}
-			else if (inputs[i].direction == MenuDirection::right)
-			{
-				this->play_wave(this->direction_sound_);
-				this->cycle_resolution(MenuDirection::right);
-			}
-		}
-		else if (highlighted_element == "full_screen" &&
-			(inputs[i].direction == MenuDirection::left ||
-			inputs[i].direction == MenuDirection::right))
-		{
-			this->play_wave(this->direction_sound_);
-			this->full_screen_selection_ = !this->full_screen_selection_;
-			this->update_full_screen_selection_text();
-		}
+
+		// Left and right on the two rows that carry a value. The focus group
+		// deliberately has no opinion here: which rows hold a value and what
+		// cycling one means is this game's, not the engine's. The walk found
+		// nothing to move to - every row shares a centre x - so the press
+		// falls through to the page.
+		this->adjust_focused_value(input.direction);
 	}
+}
+
+void MainMenuOptions::adjust_focused_value(artattack::Direction direction)
+{
+	if (direction != artattack::Direction::left &&
+		direction != artattack::Direction::right)
+	{
+		return;
+	}
+
+	const UiWidget* focused = this->focus_.focused(0);
+	if (focused == this->resolution_element_.get())
+	{
+		this->play_wave(this->direction_sound_);
+		this->cycle_resolution(direction);
+	}
+	else if (focused == this->full_screen_.get())
+	{
+		this->play_wave(this->direction_sound_);
+		this->full_screen_selection_ = !this->full_screen_selection_;
+		this->update_full_screen_selection_text();
+	}
+}
+
+void MainMenuOptions::apply_settings()
+{
+	this->play_wave(this->confirm_sound_);
+
+	auto prev_resolution = this->resolution_manager()->resolution_vec();
+
+	this->resolution_manager()->set_resolution(this->resolution_selection_);
+	this->save()->set_resolution_and_save(this->resolution_selection_);
+
+	auto res_f = this->float_resolution();
+
+	this->data()->application()->set_resolution(this->resolution_selection_);
+
+	bool fs = this->full_screen_selection_;
+	this->save()->set_full_screen_and_save(fs);
+	this->apply_fullscreen_setting(fs);
+
+	// Update the window's children's sizes and positions.
+	this->texture_container_->scale_objects_to_new_resolution(
+		prev_resolution, res_f);
+	this->text_container_->scale_objects_to_new_resolution(
+		prev_resolution, res_f);
+
+	// Nothing needs telling that the widgets moved. Navigation reads bounds()
+	// at the moment of the press, so the adjacency is whatever the rescale
+	// made it - which is the difference between deriving the graph and
+	// maintaining a table of it.
 }
 
 void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
@@ -430,8 +372,7 @@ void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
 
 void MainMenuOptions::init()
 {
-	this->set_highlight_colour(STANDARD_HIGHLIGHT);
-	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
+	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
 	Vector2F widget_size = this->widget_size();
 
 	this->resolution_selection_ = this->resolution_manager()->resolution();
@@ -461,7 +402,7 @@ void MainMenuOptions::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
-		this->highlight_colour(),
+		STANDARD_HIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -483,7 +424,7 @@ void MainMenuOptions::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -505,7 +446,7 @@ void MainMenuOptions::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -515,7 +456,7 @@ void MainMenuOptions::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -539,18 +480,28 @@ void MainMenuOptions::init()
 	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->set_highlighted_widget(this->resolution_element_.get());
+	// The two value rows are focusable and do nothing on A; left and right are
+	// what they answer to. A button with no action is a normal thing to have.
+	this->focus_.add(this->resolution_element_.get());
+	this->focus_.add(this->full_screen_.get());
+	this->focus_.add(this->apply_.get(), [this] { this->apply_settings(); });
+	this->focus_.add(this->back_.get(), [this]
+		{
+			this->play_wave(this->cancel_sound_);
+			this->context()->transition_to(
+				std::make_unique<MainMenuHome>(this->main_menu_data()));
+		});
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
 
 void MainMenuOptions::cycle_resolution(
-	MenuDirection direction)
+	artattack::Direction direction)
 {
 	int enum_max = static_cast<int>(ScreenResolution::max);
 	int enum_pos =
 		static_cast<int>(this->resolution_selection_);
-	if (direction == MenuDirection::left)
+	if (direction == artattack::Direction::left)
 	{
 		if (enum_pos == 0)
 		{
@@ -561,7 +512,7 @@ void MainMenuOptions::cycle_resolution(
 			enum_pos--;
 		}
 	}
-	else if (direction == MenuDirection::right)
+	else if (direction == artattack::Direction::right)
 	{
 		if (enum_pos == enum_max)
 		{
@@ -624,105 +575,31 @@ void MainMenuModeSelect::draw()
 }
 void MainMenuModeSelect::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
-	int num_inputs = static_cast<int>(inputs.size());
-	std::string highlighted_element =
-		this->highlighted_widget()->name();
-
-	for (int i = 0; i < num_inputs; i++)
+	for (const ProcessedMenuInput& input : this->menu_inputs())
 	{
-		if (inputs[i].action == MenuInputAction::back)
+		if (input.action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(std::make_unique<MainMenuHome>(
 				this->main_menu_data()));
 			return;
 		}
-		if (inputs[i].action == MenuInputAction::proceed)
+		if (input.action == MenuInputAction::proceed)
 		{
-			if (highlighted_element == "standard")
+			if (this->focus_.activate(0))
 			{
-				this->play_wave(this->confirm_sound_);
-				this->context()->transition_to(
-					std::make_unique<MainMenuPlayerCount>(
-						this->main_menu_data()));
-				return;
-			}
-			if (highlighted_element == "tdm")
-			{
-				this->play_wave(this->error_sound_);
-			}
-			else if (highlighted_element == "dm")
-			{
-				this->play_wave(this->error_sound_);
-			}
-			else if (highlighted_element == "practice")
-			{
-				this->play_wave(this->error_sound_);
-			}
-			else if (highlighted_element == "back")
-			{
-				this->play_wave(this->cancel_sound_);
-				this->context()->transition_to(
-					std::make_unique<MainMenuHome>(
-						this->main_menu_data()));
 				return;
 			}
 		}
-		else if (inputs[i].direction == MenuDirection::up)
+		else if (this->focus_.move(0, input.direction))
 		{
 			this->play_wave(this->direction_sound_);
-			if (highlighted_element == "standard")
-			{
-				this->change_highlight(this->back_.get());
-			}
-			else if (highlighted_element == "tdm")
-			{
-				this->change_highlight(this->standard_.get());
-			}
-			else if (highlighted_element == "dm")
-			{
-				this->change_highlight(this->tdm_.get());
-			}
-			else if (highlighted_element == "practice")
-			{
-				this->change_highlight(this->dm_.get());
-			}
-			else if (highlighted_element == "back")
-			{
-				this->change_highlight(this->practice_.get());
-			}
-		}
-		else if (inputs[i].direction == MenuDirection::down)
-		{
-			this->play_wave(this->direction_sound_);
-			if (highlighted_element == "standard")
-			{
-				this->change_highlight(this->tdm_.get());
-			}
-			else if (highlighted_element == "tdm")
-			{
-				this->change_highlight(this->dm_.get());
-			}
-			else if (highlighted_element == "dm")
-			{
-				this->change_highlight(this->practice_.get());
-			}
-			else if (highlighted_element == "practice")
-			{
-				this->change_highlight(this->back_.get());
-			}
-			else if (highlighted_element == "back")
-			{
-				this->change_highlight(this->standard_.get());
-			}
 		}
 	}
 }
 void MainMenuModeSelect::init()
 {
-	this->set_highlight_colour(STANDARD_HIGHLIGHT);
-	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
+	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
 
 	//this->set_widget_position(MODE_SELECT_WIDGET_POSITION);
 	this->set_widget_spacing(MODE_SELECT_WIDGET_SPACING);
@@ -751,7 +628,7 @@ void MainMenuModeSelect::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
-		this->highlight_colour(),
+		STANDARD_HIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -761,7 +638,7 @@ void MainMenuModeSelect::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -771,7 +648,7 @@ void MainMenuModeSelect::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -781,7 +658,7 @@ void MainMenuModeSelect::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -791,7 +668,7 @@ void MainMenuModeSelect::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -814,7 +691,26 @@ void MainMenuModeSelect::init()
 	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->set_highlighted_widget(this->standard_.get());
+	this->focus_.add(this->standard_.get(), [this]
+		{
+			this->play_wave(this->confirm_sound_);
+			this->context()->transition_to(
+				std::make_unique<MainMenuPlayerCount>(this->main_menu_data()));
+		});
+	// Three modes that are not built yet. They answer with an error beep, and
+	// they say so here rather than in an if-chain three screens away.
+	this->focus_.add(this->tdm_.get(),
+		[this] { this->play_wave(this->error_sound_); });
+	this->focus_.add(this->dm_.get(),
+		[this] { this->play_wave(this->error_sound_); });
+	this->focus_.add(this->practice_.get(),
+		[this] { this->play_wave(this->error_sound_); });
+	this->focus_.add(this->back_.get(), [this]
+		{
+			this->play_wave(this->cancel_sound_);
+			this->context()->transition_to(
+				std::make_unique<MainMenuHome>(this->main_menu_data()));
+		});
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
@@ -841,138 +737,31 @@ void MainMenuPlayerCount::draw()
 }
 void MainMenuPlayerCount::update()
 {
-	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
-	int num_inputs = static_cast<int>(inputs.size());
-	std::string highlighted_element =
-		this->highlighted_widget()->name();
-
-	for (int i = 0; i < num_inputs; i++)
+	for (const ProcessedMenuInput& input : this->menu_inputs())
 	{
-		if (inputs[i].action == MenuInputAction::back)
+		if (input.action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(
-				std::make_unique<MainMenuModeSelect>(
-					this->main_menu_data()));
+				std::make_unique<MainMenuModeSelect>(this->main_menu_data()));
 			return;
 		}
-		if (inputs[i].action == MenuInputAction::proceed)
+		if (input.action == MenuInputAction::proceed)
 		{
-			if (highlighted_element == "1_player")
+			if (this->focus_.activate(0))
 			{
-				this->play_wave(this->confirm_sound_);
-				this->main_menu_data()->level_settings()->
-					set_player_count(1);
-				this->main_menu_data()->level_settings()->
-					set_player_team(0, PlayerTeam::a);
-				this->main_menu_data()->level_settings()->
-					set_screen_layout(ScreenLayout::one_player);
-				this->main_menu_data()->level_settings()->
-					set_player_num(0, 0);
-				this->context()->transition_to(
-					std::make_unique<MainMenuWeaponSelect>(
-						main_menu_data()));
-				return;
-			}
-			if (highlighted_element == "2_players")
-			{
-				this->play_wave(this->confirm_sound_);
-				this->main_menu_data()->level_settings()->
-					set_player_count(2);
-				this->main_menu_data()->level_settings()->
-					set_screen_layout(ScreenLayout::two_player);
-				this->context()->transition_to(
-					std::make_unique<MainMenuTeamSelect>(
-						main_menu_data()));
-				return;
-			}
-			if (highlighted_element == "3_players")
-			{
-				this->play_wave(this->confirm_sound_);
-				this->main_menu_data()->level_settings()->
-					set_player_count(3);
-				this->main_menu_data()->level_settings()->
-					set_screen_layout(ScreenLayout::three_player);
-				this->context()->transition_to(
-					std::make_unique<MainMenuTeamSelect>(
-						main_menu_data()));
-				return;
-			}
-			if (highlighted_element == "4_players")
-			{
-				this->play_wave(this->confirm_sound_);
-				this->main_menu_data()->level_settings()->
-					set_player_count(4);
-				this->main_menu_data()->level_settings()->
-					set_screen_layout(ScreenLayout::four_player);
-				this->context()->transition_to(
-					std::make_unique<MainMenuTeamSelect>(
-					main_menu_data()));
-				return;
-			}
-			if (highlighted_element == "back")
-			{
-				this->play_wave(this->cancel_sound_);
-				this->context()->transition_to(
-					std::make_unique<MainMenuModeSelect>(
-						this->main_menu_data()));
 				return;
 			}
 		}
-		else if (inputs[i].direction == MenuDirection::up)
+		else if (this->focus_.move(0, input.direction))
 		{
 			this->play_wave(this->direction_sound_);
-			if (highlighted_element == "1_player")
-			{
-				this->change_highlight(this->back_.get());
-			}
-			else if (highlighted_element == "2_players")
-			{
-				this->change_highlight(this->_1_player.get());
-			}
-			else if (highlighted_element == "3_players")
-			{
-				this->change_highlight(this->_2_players.get());
-			}
-			else if (highlighted_element == "4_players")
-			{
-				this->change_highlight(this->_3_players.get());
-			}
-			else if (highlighted_element == "back")
-			{
-				this->change_highlight(this->_4_players.get());
-			}
-		}
-		else if (inputs[i].direction == MenuDirection::down)
-		{
-			this->play_wave(this->direction_sound_);
-			if (highlighted_element == "1_player")
-			{
-				this->change_highlight(this->_2_players.get());
-			}
-			else if (highlighted_element == "2_players")
-			{
-				this->change_highlight(this->_3_players.get());
-			}
-			else if (highlighted_element == "3_players")
-			{
-				this->change_highlight(this->_4_players.get());
-			}
-			else if (highlighted_element == "4_players")
-			{
-				this->change_highlight(this->back_.get());
-			}
-			else if (highlighted_element == "back")
-			{
-				this->change_highlight(this->_1_player.get());
-			}
 		}
 	}
 }
 void MainMenuPlayerCount::init()
 {
-	this->set_highlight_colour(STANDARD_HIGHLIGHT);
-	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
+	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
 
 	//this->set_widget_position(PLAYER_COUNT_WIDGET_POSITION);
 	this->set_widget_spacing(PLAYER_COUNT_WIDGET_SPACING);
@@ -1001,7 +790,7 @@ void MainMenuPlayerCount::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
-		this->highlight_colour(),
+		STANDARD_HIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -1011,7 +800,7 @@ void MainMenuPlayerCount::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -1021,7 +810,7 @@ void MainMenuPlayerCount::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -1031,7 +820,7 @@ void MainMenuPlayerCount::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -1041,7 +830,7 @@ void MainMenuPlayerCount::init()
 		ITEM_FONT,
 		this->calculate_widget_position(0, 6),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -1064,9 +853,43 @@ void MainMenuPlayerCount::init()
 	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
 
-	this->set_highlighted_widget(this->_1_player.get());
+	// One player skips team select: there is no other team to be on.
+	this->focus_.add(this->_1_player.get(), [this]
+		{
+			this->play_wave(this->confirm_sound_);
+			MenuLevelSettings* settings =
+				this->main_menu_data()->level_settings();
+			settings->set_player_count(1);
+			settings->set_player_team(0, PlayerTeam::a);
+			settings->set_screen_layout(ScreenLayout::one_player);
+			settings->set_player_num(0, 0);
+			this->context()->transition_to(
+				std::make_unique<MainMenuWeaponSelect>(this->main_menu_data()));
+		});
+	this->focus_.add(this->_2_players.get(),
+		[this] { this->start_team_select(2, ScreenLayout::two_player); });
+	this->focus_.add(this->_3_players.get(),
+		[this] { this->start_team_select(3, ScreenLayout::three_player); });
+	this->focus_.add(this->_4_players.get(),
+		[this] { this->start_team_select(4, ScreenLayout::four_player); });
+	this->focus_.add(this->back_.get(), [this]
+		{
+			this->play_wave(this->cancel_sound_);
+			this->context()->transition_to(
+				std::make_unique<MainMenuModeSelect>(this->main_menu_data()));
+		});
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
+}
+
+void MainMenuPlayerCount::start_team_select(int players, ScreenLayout layout)
+{
+	this->play_wave(this->confirm_sound_);
+	MenuLevelSettings* settings = this->main_menu_data()->level_settings();
+	settings->set_player_count(players);
+	settings->set_screen_layout(layout);
+	this->context()->transition_to(
+		std::make_unique<MainMenuTeamSelect>(this->main_menu_data()));
 }
 
 #pragma endregion MainMenuPlayerCount
@@ -1131,7 +954,7 @@ void MainMenuTeamSelect::update()
 		else if (this->select_states_[i].state ==
 			ConfirmationState::unconfirmed)
 		{
-			if (inputs[i].direction == MenuDirection::left)
+			if (inputs[i].direction == artattack::Direction::left)
 			{
 				this->play_wave(this->direction_sound_);
 				if (this->select_states_[i].team == PlayerTeam::none)
@@ -1143,7 +966,7 @@ void MainMenuTeamSelect::update()
 					this->select_states_[i].team = PlayerTeam::none;
 				}
 			}
-			else if (inputs[i].direction == MenuDirection::right)
+			else if (inputs[i].direction == artattack::Direction::right)
 			{
 				this->play_wave(this->direction_sound_);
 				if (this->select_states_[i].team == PlayerTeam::none)
@@ -1424,15 +1247,15 @@ void MainMenuWeaponSelect::update()
 		else if (this->select_states_[i].state ==
 			ConfirmationState::unconfirmed)
 		{
-			if (inputs[i].direction == MenuDirection::left)
+			if (inputs[i].direction == artattack::Direction::left)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_weapons(MenuDirection::left, i);
+				this->cycle_weapons(artattack::Direction::left, i);
 			}
-			else if (inputs[i].direction == MenuDirection::right)
+			else if (inputs[i].direction == artattack::Direction::right)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_weapons(MenuDirection::right, i);
+				this->cycle_weapons(artattack::Direction::right, i);
 			}
 		}
 	}
@@ -1467,12 +1290,12 @@ WeaponType MainMenuWeaponSelect::random_weapon()
 	return static_cast<WeaponType>(random);
 }
 void MainMenuWeaponSelect::cycle_weapons(
-	MenuDirection direction, int player_index)
+	artattack::Direction direction, int player_index)
 {
 	int enum_max = static_cast<int>(WeaponType::max_prim_wep);
 	int enum_pos =
 		static_cast<int>(this->select_states_[player_index].type);
-	if (direction == MenuDirection::left)
+	if (direction == artattack::Direction::left)
 	{
 		if (enum_pos == 0)
 		{
@@ -1483,7 +1306,7 @@ void MainMenuWeaponSelect::cycle_weapons(
 			enum_pos--;
 		}
 	}
-	else if (direction == MenuDirection::right)
+	else if (direction == artattack::Direction::right)
 	{
 		if (enum_pos == enum_max)
 		{
@@ -1775,15 +1598,15 @@ void MainMenuStageSelect::update()
 		}
 		else if (this->select_state_.state == ConfirmationState::unconfirmed)
 		{
-			if (inputs[i].direction == MenuDirection::left)
+			if (inputs[i].direction == artattack::Direction::left)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_stages(MenuDirection::left);
+				this->cycle_stages(artattack::Direction::left);
 			}
-			else if (inputs[i].direction == MenuDirection::right)
+			else if (inputs[i].direction == artattack::Direction::right)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_stages(MenuDirection::right);
+				this->cycle_stages(artattack::Direction::right);
 			}
 		}
 	}
@@ -1925,16 +1748,16 @@ void MainMenuStageSelect::init()
 
 	this->play_effect(this->music_, true, MUSIC_VOLUME);
 }
-void MainMenuStageSelect::cycle_stages(MenuDirection direction)
+void MainMenuStageSelect::cycle_stages(artattack::Direction direction)
 {
 	// Slots run 0..n-1 for the stages and n for Random, and the cursor wraps.
 	const int last = this->random_slot();
 	int slot = this->select_state_.slot;
-	if (direction == MenuDirection::left)
+	if (direction == artattack::Direction::left)
 	{
 		slot = (slot == 0) ? last : slot - 1;
 	}
-	else if (direction == MenuDirection::right)
+	else if (direction == artattack::Direction::right)
 	{
 		slot = (slot == last) ? 0 : slot + 1;
 	}

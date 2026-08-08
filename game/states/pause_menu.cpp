@@ -64,8 +64,6 @@ void PauseMenuInitial::update()
 {
 	const ProcessedMenuInput input =
 		this->pausing_player_input(this->menu_inputs());
-	std::string highlighted_element =
-		this->highlighted_widget()->name();
 
 	if (input.action == MenuInputAction::back ||
 		input.action == MenuInputAction::pause)
@@ -75,64 +73,16 @@ void PauseMenuInitial::update()
 	}
 	else if (input.action == MenuInputAction::proceed)
 	{
-		if (highlighted_element == "resume")
-		{
-			this->play_wave(this->confirm_sound_);
-			*this->pause_menu_data()->action() =
-				PauseMenuAction::resume;
-		}
-		else if (highlighted_element == "restart")
-		{
-			this->play_wave(this->confirm_sound_);
-			this->context()->transition_to(std::make_unique<
-				PauseMenuConfirmation>(this->pause_menu_data(),
-					ConfirmationType::restart));
-		}
-		else if (highlighted_element == "quit")
-		{
-			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(std::make_unique<
-				PauseMenuConfirmation>(this->pause_menu_data(),
-					ConfirmationType::quit));
-		}
+		this->focus_.activate(0);
 	}
-	else if (input.direction == MenuDirection::up)
+	else if (this->focus_.move(0, input.direction))
 	{
 		this->play_wave(this->direction_sound_);
-		if (highlighted_element == "resume")
-		{
-			this->change_highlight(this->quit_.get());
-		}
-		else if (highlighted_element == "restart")
-		{
-			this->change_highlight(this->resume_.get());
-		}
-		else if (highlighted_element == "quit")
-		{
-			this->change_highlight(this->restart_.get());
-		}
-	}
-	else if (input.direction == MenuDirection::down)
-	{
-		this->play_wave(this->direction_sound_);
-		if (highlighted_element == "resume")
-		{
-			this->change_highlight(this->restart_.get());
-		}
-		else if (highlighted_element == "restart")
-		{
-			this->change_highlight(this->quit_.get());
-		}
-		else if (highlighted_element == "quit")
-		{
-			this->change_highlight(this->resume_.get());
-		}
 	}
 }
 void PauseMenuInitial::init()
 {
-	this->set_highlight_colour(STANDARD_HIGHLIGHT);
-	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
+	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
 
 	this->box_ = std::make_unique<UiTexture>(
 		"box",
@@ -164,7 +114,7 @@ void PauseMenuInitial::init()
 		ITEM_FONT,
 		this->calculate_widget_position(1, 2),
 		this->render_resources(),
-		this->highlight_colour(),
+		STANDARD_HIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -174,7 +124,7 @@ void PauseMenuInitial::init()
 		ITEM_FONT,
 		this->calculate_widget_position(1, 3),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -184,11 +134,9 @@ void PauseMenuInitial::init()
 		ITEM_FONT,
 		this->calculate_widget_position(1, 4),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
-
-	this->set_highlighted_widget(this->resume_.get());
 
 	const Vector2F resolution = this->float_resolution();
 
@@ -207,6 +155,24 @@ void PauseMenuInitial::init()
 		DEFAULT_RESOLUTION, resolution);
 	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
+
+	this->focus_.add(this->resume_.get(), [this]
+		{
+			this->play_wave(this->confirm_sound_);
+			*this->pause_menu_data()->action() = PauseMenuAction::resume;
+		});
+	this->focus_.add(this->restart_.get(), [this]
+		{
+			this->play_wave(this->confirm_sound_);
+			this->context()->transition_to(std::make_unique<PauseMenuConfirmation>(
+				this->pause_menu_data(), ConfirmationType::restart));
+		});
+	this->focus_.add(this->quit_.get(), [this]
+		{
+			this->play_wave(this->cancel_sound_);
+			this->context()->transition_to(std::make_unique<PauseMenuConfirmation>(
+				this->pause_menu_data(), ConfirmationType::quit));
+		});
 
 	this->play_wave(this->window_open_sound_);
 }
@@ -233,8 +199,6 @@ void PauseMenuConfirmation::update()
 {
 	const ProcessedMenuInput input =
 		this->pausing_player_input(this->menu_inputs());
-	std::string highlighted_element =
-		this->highlighted_widget()->name();
 
 	if (input.action == MenuInputAction::back)
 	{
@@ -243,52 +207,19 @@ void PauseMenuConfirmation::update()
 			this->pause_menu_data()));
 		return;
 	}
-	else if (input.action == MenuInputAction::proceed)
+	if (input.action == MenuInputAction::proceed)
 	{
-		if (highlighted_element == "yes")
-		{
-			switch (this->type_)
-			{
-			case ConfirmationType::restart:
-				this->play_wave(this->confirm_sound_);
-				*this->pause_menu_data()->action() =
-					PauseMenuAction::restart;
-				break;
-			case ConfirmationType::quit:
-				this->play_wave(this->cancel_sound_);
-				*this->pause_menu_data()->action() =
-					PauseMenuAction::quit;
-				break;
-			}
-		}
-		else if (highlighted_element == "no")
-		{
-			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(
-				std::make_unique<PauseMenuInitial>(
-					this->pause_menu_data()));
-			return;
-		}
+		this->focus_.activate(0);
 	}
-	else if (input.direction == MenuDirection::up ||
-		input.direction == MenuDirection::down)
+	else if (this->focus_.move(0, input.direction))
 	{
 		this->play_wave(this->direction_sound_);
-		if (highlighted_element == "yes")
-		{
-			this->change_highlight(this->no_.get());
-		}
-		else if (highlighted_element == "no")
-		{
-			this->change_highlight(this->yes_.get());
-		}
 	}
 }
 
 void PauseMenuConfirmation::init()
 {
-	this->set_highlight_colour(STANDARD_HIGHLIGHT);
-	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
+	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
 
 	this->box_ = std::make_unique<UiTexture>(
 		"box",
@@ -330,7 +261,7 @@ void PauseMenuConfirmation::init()
 		ITEM_FONT,
 		this->calculate_widget_position(1, 3),
 		this->render_resources(),
-		this->unhighlight_colour(),
+		STANDARD_UNHIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
@@ -340,11 +271,10 @@ void PauseMenuConfirmation::init()
 		ITEM_FONT,
 		this->calculate_widget_position(1, 4),
 		this->render_resources(),
-		this->highlight_colour(),
+		STANDARD_HIGHLIGHT,
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->set_highlighted_widget(this->no_.get());
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -362,6 +292,31 @@ void PauseMenuConfirmation::init()
 		DEFAULT_RESOLUTION, resolution);
 	this->text_container_->scale_objects_to_new_resolution(
 		DEFAULT_RESOLUTION, resolution);
+
+	// "No" first, because the first widget added takes the focus and a
+	// confirmation dialogue defaults to the safe answer. Adding it first also
+	// says so, where set_highlighted_widget(no_) at the bottom of a
+	// hundred-line init did not.
+	this->focus_.add(this->no_.get(), [this]
+		{
+			this->play_wave(this->cancel_sound_);
+			this->context()->transition_to(std::make_unique<PauseMenuInitial>(
+				this->pause_menu_data()));
+		});
+	this->focus_.add(this->yes_.get(), [this]
+		{
+			switch (this->type_)
+			{
+			case ConfirmationType::restart:
+				this->play_wave(this->confirm_sound_);
+				*this->pause_menu_data()->action() = PauseMenuAction::restart;
+				break;
+			case ConfirmationType::quit:
+				this->play_wave(this->cancel_sound_);
+				*this->pause_menu_data()->action() = PauseMenuAction::quit;
+				break;
+			}
+		});
 }
 
 void PauseMenuConfirmation::draw()

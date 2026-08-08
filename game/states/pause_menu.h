@@ -2,7 +2,6 @@
 
 #include "game/states/pause_menu_data.h"
 #include "engine/ui/widget.h"
-#include "game/states/menu_highlight.h"
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"
 #include "engine/audio/sound_bank_object.h"
@@ -40,7 +39,7 @@ namespace pause_menu_consts
 	const std::string WINDOW_OPEN_SOUND = "UI_Clicks01";
 }
 
-class PauseMenuPage : public MenuPage, public MenuHighlight, public artattack::SoundBankObject
+class PauseMenuPage : public MenuPage, public artattack::SoundBankObject
 {
 public:
 	explicit PauseMenuPage(PauseMenuData* data);

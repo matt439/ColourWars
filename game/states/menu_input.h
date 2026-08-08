@@ -3,6 +3,7 @@
 #include <vector>
 #include "game/states/menu_input_action.h"
 #include "engine/input/connection_state.h"
+#include "engine/ui/navigation.h"
 #include "engine/math/matt_math.h"
 #include "game/objects/player_input.h"
 
@@ -27,18 +28,14 @@ struct RawMenuInput
 	bool connected = false;
 };
 
-enum class MenuDirection
-{
-	up,
-	down,
-	left,
-	right,
-	none
-};
-
 struct ProcessedMenuInput
 {
-	MenuDirection direction = MenuDirection::none;
+	// artattack::Direction, not a game enum: which way the stick went is the
+	// input to engine/ui's navigation walk, and there is no version of it that
+	// belongs to this game. The pad polling and the edge detection below still
+	// live here - moving those is the input module's job (PLAN.md D2), and
+	// they are written twice in this repository already.
+	artattack::Direction direction = artattack::Direction::none;
 	MenuInputAction action = MenuInputAction::none;
 	artattack::ConnectionState connection = artattack::ConnectionState::disconnected;
 };

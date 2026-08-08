@@ -103,19 +103,19 @@ ProcessedMenuInput MenuInput::calculate_menu_input(const RawMenuInput& current,
 
     if (up)
     {
-        result.direction = MenuDirection::up;
+        result.direction = artattack::Direction::up;
     }
     else if (down)
     {
-        result.direction = MenuDirection::down;
+        result.direction = artattack::Direction::down;
     }
     else if (left)
     {
-        result.direction = MenuDirection::left;
+        result.direction = artattack::Direction::left;
     }
     else if (right)
     {
-        result.direction = MenuDirection::right;
+        result.direction = artattack::Direction::right;
     }
     else if (up && down && left && right)
     {
@@ -124,7 +124,7 @@ ProcessedMenuInput MenuInput::calculate_menu_input(const RawMenuInput& current,
     }
     else
     {
-        result.direction = MenuDirection::none;
+        result.direction = artattack::Direction::none;
     }
     result.connection = ConnectionState::connected;
     return result;

@@ -2,7 +2,6 @@
 
 #include "game/states/end_menu_data.h"
 #include "engine/ui/widget.h"
-#include "game/states/menu_highlight.h"
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"
 #include "engine/audio/sound_bank_object.h"
@@ -38,7 +37,7 @@ namespace end_menu_consts
 	const std::string CANCEL_SOUND = "UI_Clicks17";
 }
 
-class EndMenuPage : public MenuPage, public MenuHighlight, public artattack::SoundBankObject
+class EndMenuPage : public MenuPage, public artattack::SoundBankObject
 {
 public:
 	explicit EndMenuPage(EndMenuData* data);

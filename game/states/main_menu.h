@@ -5,7 +5,6 @@
 #include "game/objects/player_team.h"
 #include "game/states/main_menu_data.h"
 #include "game/states/confirmation_state.h"
-#include "game/states/menu_highlight.h"
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"
 #include "engine/audio/sound_bank_object.h"
@@ -145,7 +144,7 @@ private:
 	std::unique_ptr<artattack::UiTextDropShadow> start_ = nullptr;
 };
 
-class MainMenuHome final : public MainMenuPage, public MenuHighlight
+class MainMenuHome final : public MainMenuPage
 {
 public:
 	explicit MainMenuHome(MainMenuData* data);
@@ -162,7 +161,7 @@ private:
 	std::unique_ptr<artattack::UiTextDropShadow> exit_ = nullptr;
 };
 
-class MainMenuOptions final : public MainMenuPage, public MenuHighlight
+class MainMenuOptions final : public MainMenuPage
 {
 public:
 	explicit MainMenuOptions(MainMenuData* data);
@@ -182,13 +181,17 @@ private:
 	std::unique_ptr<artattack::UiTextDropShadow> back_ = nullptr;
 	artattack::ScreenResolution resolution_selection_ = artattack::ScreenResolution::s_1920_1080;
 	bool full_screen_selection_ = true;
-	void cycle_resolution(MenuDirection direction);
+	void cycle_resolution(artattack::Direction direction);
+	// Left and right on the two rows that carry a value. The focus group has
+	// no opinion about which rows those are: that is this game's content.
+	void adjust_focused_value(artattack::Direction direction);
+	void apply_settings();
 	void update_resolution_selection_text();
 	void update_full_screen_selection_text() const;
 	void apply_fullscreen_setting(bool fullscreen);
 };
 
-class MainMenuModeSelect final : public MainMenuPage, public MenuHighlight
+class MainMenuModeSelect final : public MainMenuPage
 {
 public:
 	explicit MainMenuModeSelect(MainMenuData* data);
@@ -207,7 +210,7 @@ private:
 	std::unique_ptr<artattack::UiTextDropShadow> back_ = nullptr;
 };
 
-class MainMenuPlayerCount final : public MainMenuPage, public MenuHighlight
+class MainMenuPlayerCount final : public MainMenuPage
 {
 public:
 	explicit MainMenuPlayerCount(MainMenuData* data);
@@ -224,6 +227,9 @@ private:
 	std::unique_ptr<artattack::UiTextDropShadow> _3_players = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> _4_players = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> back_ = nullptr;
+
+	// Two, three and four players differ only in the count and the layout.
+	void start_team_select(int players, artattack::ScreenLayout layout);
 };
 
 class MainMenuTeamSelect final : public MainMenuPage
@@ -294,7 +300,7 @@ private:
 	bool all_players_unconfirmed() const;
 	static WeaponType random_weapon();
 	void set_level_settings() const;
-	void cycle_weapons(MenuDirection direction, int player_index);
+	void cycle_weapons(artattack::Direction direction, int player_index);
 	static std::wstring weapon_description(WeaponType type);
 };
 
@@ -333,6 +339,6 @@ private:
 	int random_slot() const;
 	// A real stage's slot, chosen uniformly.
 	int pick_random_stage() const;
-	void cycle_stages(MenuDirection direction);
+	void cycle_stages(artattack::Direction direction);
 	void set_level_settings() const;
 };
