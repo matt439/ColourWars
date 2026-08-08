@@ -7,6 +7,14 @@ using namespace artattack;
 
 namespace
 {
+	// What a split-screen divider is drawn with. These were constants on the
+	// engine's ViewportManager, which named this game's sprite sheet and this
+	// game's frame; the engine hands out divider rectangles and this file is
+	// the only thing that has ever filled them.
+	const std::string DIVIDER_SHEET_NAME = "sprite_sheet_1";
+	const std::string DIVIDER_FRAME_NAME = "pixel";
+	const Colour DIVIDER_COLOUR = Colour::black;
+
 	// colour_from_name now says so when a name is not one of the CSS colours,
 	// instead of quietly answering white. This file already throws on every
 	// other unreadable field, so it throws on this one too - and names it,
@@ -237,11 +245,11 @@ std::vector<std::unique_ptr<GameObject>>
 	for (auto& rectangle : viewport_rectangles)
 	{
 		viewport_dividers.push_back(std::make_unique<Visual>(
-			ViewportManager::DIVIDER_SHEET_NAME,
-			ViewportManager::DIVIDER_FRAME_NAME,
+			DIVIDER_SHEET_NAME,
+			DIVIDER_FRAME_NAME,
 			rectangle,
 			this->render_resources_,
-			ViewportManager::DIVIDER_COLOUR));
+			DIVIDER_COLOUR));
 	}
 
 	return viewport_dividers;
