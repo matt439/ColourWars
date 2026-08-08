@@ -863,11 +863,23 @@ void Player::do_jump(float dt)
 
 RectangleF Player::bounds() const
 {
-    // Inflated to take in the weapon, which is drawn from Player::draw but
-    // is not inside the player's own rectangle.
-    RectangleF player_and_weapon_rect = this->rectangle_;
-    player_and_weapon_rect.inflate(Vector2F(200.0f, 200.0f));
-    return player_and_weapon_rect;
+    // The union of what is actually drawn, rather than a margin large enough
+    // to be sure of covering it.
+    //
+    // The weapon is drawn from Player::draw and reaches outside the player's
+    // own rectangle, which is the real requirement here. Meeting it by
+    // inflating 200 units in every direction turned a 52 x 120 collider into
+    // 452 x 520 - thirty-eight times the area - on the object that is queried
+    // more than any other. bounds() is the coarse extent a broad phase
+    // indexes and the scene culls against (engine/core/game_object.h), so
+    // every unit of slack here is paid for on every query, and a bound this
+    // loose would hide any index that ever tried to use it.
+    if (this->primary_ == nullptr)
+    {
+        return this->rectangle_;
+    }
+
+    return RectangleF::union_of(this->rectangle_, this->primary_->draw_bounds());
 }
 void Player::set_player_input(const PlayerInputData& input)
 {

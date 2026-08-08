@@ -120,6 +120,19 @@ Vector2F Weapon::nozzle_size()
 
 
 
+RectangleF Weapon::draw_bounds() const
+{
+	const Vector2F size = this->details_.size;
+	const Vector2F centre = this->draw_pos();
+
+	// One sprite diagonal in every direction. That covers the sprite for any
+	// rotation about any origin lying inside it, which is what makes this
+	// independent of where draw() happens to put the pivot.
+	const float reach = size.length();
+
+	return RectangleF(centre - Vector2F(reach, reach),
+		Vector2F(reach * 2.0f, reach * 2.0f));
+}
 Vector2F Weapon::draw_pos() const
 {
 	Vector2F result = this->player_center();

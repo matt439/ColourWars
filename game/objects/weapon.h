@@ -58,6 +58,21 @@ public:
 	virtual void pause_sounds() const;
 	virtual void resume_sounds() const;
 
+	// An axis-aligned box that contains the weapon however it is rotated.
+	//
+	// The sprite is drawn at details().size from draw_pos() and spun about an
+	// origin inside itself, so every point of it stays within one sprite
+	// diagonal of that position whatever the rotation and whichever corner the
+	// origin convention picks. Bounding the rotation rather than tracking it
+	// keeps this a pure read, and the slack it costs is the difference between
+	// the gun's diagonal and its longest side - tens of units, not hundreds.
+	//
+	// Public, unlike draw_pos() and the rest of the drawing arithmetic,
+	// because Player::bounds() unions it with the player's own rectangle: a
+	// player is drawn holding a weapon, so the extent the scene culls against
+	// has to contain one.
+	mattmath::RectangleF draw_bounds() const;
+
 protected:
 	artattack::SoundBank* sound_bank_ = nullptr;
 	WeaponDetails details_ = weapon_consts::DETAILS_DEFAULT;
