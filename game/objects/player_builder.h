@@ -12,7 +12,10 @@ class PlayerBuilder
 public:
 	PlayerBuilder();
 
-	std::unique_ptr<std::vector<std::unique_ptr<Player>>> build_players(
+	// In the order the player settings name them, which is the order the level
+	// fills its view list in - so index 0 of this vector is the player whose
+	// pane is view 0.
+	std::vector<std::unique_ptr<Player>> build_players(
 		const MenuLevelSettings& settings,
 		const LevelLoadedInfo* load_info,
 		TeamColour team_colours,

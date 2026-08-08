@@ -96,6 +96,11 @@ public:
     artattack::CollisionTag tag() const override;
     void on_contact(const artattack::CollisionObject& other,
         const mattmath::Vector2F& normal, float penetration) override;
+    // Always false, and Level rests on it: a player is in the same scene
+    // object list as the projectiles it fires, and Level holds bare Player*
+    // for the input, the cameras and the HUD. Returning true here would have
+    // the scene retire the object those pointers name. A dead player respawns;
+    // it does not leave the world.
     bool for_deletion() const override;
 
     // Closes the frame's contact phase for this player.

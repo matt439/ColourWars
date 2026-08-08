@@ -185,41 +185,40 @@ std::unique_ptr<GameObject>
 	throw std::exception("Invalid non-collision object type");
 }
 
-std::unique_ptr<std::vector<std::unique_ptr<artattack::CollisionObject>>>
+std::vector<std::unique_ptr<artattack::CollisionObject>>
 	LevelObjectBuilder::build_collision_objects(const Value& json,
 		const TeamColour& team_colours) const
 {
-	auto collision_objects = std::make_unique<std::vector<std::unique_ptr<artattack::CollisionObject>>>();
+	std::vector<std::unique_ptr<artattack::CollisionObject>> collision_objects;
 	for (auto& object : json.GetArray())
 	{
-		collision_objects->push_back(build_collision_object(object, team_colours));
+		collision_objects.push_back(build_collision_object(object, team_colours));
 	}
 	return collision_objects;
-
 }
 
-std::unique_ptr<std::vector<std::unique_ptr<GameObject>>>
+std::vector<std::unique_ptr<GameObject>>
 	LevelObjectBuilder::build_non_collision_objects(const Value& json) const
 {
-	auto non_collision_objects = std::make_unique<std::vector<std::unique_ptr<GameObject>>>();
+	std::vector<std::unique_ptr<GameObject>> non_collision_objects;
 	for (auto& object : json.GetArray())
 	{
-		non_collision_objects->push_back(build_non_collision_object(object));
+		non_collision_objects.push_back(build_non_collision_object(object));
 	}
 	return non_collision_objects;
 }
 
-std::unique_ptr<std::vector<std::unique_ptr<GameObject>>>
+std::vector<std::unique_ptr<GameObject>>
 	LevelObjectBuilder::build_viewport_dividers(
 		const ViewportManager* viewport_manager) const
 {
-	auto viewport_dividers = std::make_unique<std::vector<std::unique_ptr<GameObject>>>();
+	std::vector<std::unique_ptr<GameObject>> viewport_dividers;
 
 	std::vector<RectangleF> viewport_rectangles =
 		viewport_manager->viewport_dividers();
 	for (auto& rectangle : viewport_rectangles)
 	{
-		viewport_dividers->push_back(std::make_unique<Visual>(
+		viewport_dividers.push_back(std::make_unique<Visual>(
 			ViewportManager::DIVIDER_SHEET_NAME,
 			ViewportManager::DIVIDER_FRAME_NAME,
 			rectangle,

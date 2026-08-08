@@ -14,14 +14,19 @@ public:
 	LevelObjectBuilder(artattack::RenderResources* render_resources,
 		const artattack::AudioResources* audio_resources);
 
-	std::unique_ptr<std::vector<std::unique_ptr<artattack::CollisionObject>>> 
+	// By value. The outer unique_ptr on all three of these was a heap
+	// allocation around a type that already owns its storage and already moves
+	// in constant time - and it bought a second null to check at every use
+	// site, which is what `unique_ptr<vector<unique_ptr<T>>>` costs and all it
+	// costs.
+	std::vector<std::unique_ptr<artattack::CollisionObject>>
 		build_collision_objects(const rapidjson::Value& json,
 			const TeamColour& team_colours) const;
 
-	std::unique_ptr<std::vector<std::unique_ptr<artattack::GameObject>>> 
+	std::vector<std::unique_ptr<artattack::GameObject>>
 		build_non_collision_objects(const rapidjson::Value& json) const;
 
-	std::unique_ptr<std::vector<std::unique_ptr<artattack::GameObject>>> 
+	std::vector<std::unique_ptr<artattack::GameObject>>
 		build_viewport_dividers(const artattack::ViewportManager* viewport_manager) const;
 
 private:

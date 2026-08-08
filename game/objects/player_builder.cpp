@@ -11,7 +11,7 @@ PlayerBuilder::PlayerBuilder()
     this->weapon_builder_ = std::make_unique<WeaponBuilder>();
 }
 
-std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_players(
+std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 	const MenuLevelSettings& settings,
 	const LevelLoadedInfo* load_info,
 	TeamColour team_colours,
@@ -19,7 +19,7 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 	const AudioResources* audio_resources,
 	const ViewportManager* viewport_manager) const
 {
-	auto players = std::make_unique<std::vector<std::unique_ptr<Player>>>();
+	std::vector<std::unique_ptr<Player>> players;
 
 	const std::vector<Vector2F> team_a_spawns = load_info->team_a_spawns();
 	const std::vector<Vector2F> team_b_spawns = load_info->team_b_spawns();
@@ -60,7 +60,7 @@ std::unique_ptr<std::vector<std::unique_ptr<Player>>> PlayerBuilder::build_playe
 				player_viewport(setting.num),
 			position);
 
-		players->push_back(std::move(player));
+		players.push_back(std::move(player));
 
 		i++;
 	}

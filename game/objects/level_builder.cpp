@@ -36,46 +36,55 @@ std::unique_ptr<Level>
 
 	const TeamColour team_colours = team_colour_->generate_random_team_colour();
 
-	const Value& collision_objects_json =
-		load_info->collision_objects_json();
+	// The scene is filled here rather than handed three vectors to unpack,
+	// which is what Level's first four constructor parameters used to be. Every
+	// add is pending until Level ends the scene's first tick.
+	auto scene = std::make_unique<Scene>(this->thread_pool_,
+		this->partitioner_);
 
-	std::unique_ptr<std::vector<std::unique_ptr<artattack::CollisionObject>>> collision_objects =
-		this->level_object_builder_->build_collision_objects(collision_objects_json, team_colours);
+	scene->set_bounds(load_info->out_of_bounds_rectangle());
 
-	const Value& non_collision_objects_json =
-		load_info->non_collision_objects_json();
+	for (std::unique_ptr<GameObject>& object :
+		this->level_object_builder_->build_non_collision_objects(
+			load_info->non_collision_objects_json()))
+	{
+		scene->add(std::move(object));
+	}
 
-	std::unique_ptr<std::vector<std::unique_ptr<GameObject>>> non_collision_objects =
-		this->level_object_builder_->build_non_collision_objects(non_collision_objects_json);
+	for (std::unique_ptr<artattack::CollisionObject>& object :
+		this->level_object_builder_->build_collision_objects(
+			load_info->collision_objects_json(), team_colours))
+	{
+		scene->add(std::move(object));
+	}
 
-	std::unique_ptr<std::vector<std::unique_ptr<Player>>> players =
+	// The players go in the same list as everything else - that is the point of
+	// having one - so Level gets pointers back rather than ownership. Added
+	// last, and in build order, because the view list is filled in this order
+	// and an overlay looks the player up by view index.
+	std::vector<Player*> players;
+	for (std::unique_ptr<Player>& player :
 		this->player_builder_->build_players(settings, load_info, team_colours,
 			this->render_resources_, this->audio_resources_,
-			this->viewport_manager_);
-
-	std::unique_ptr<std::vector<std::unique_ptr<GameObject>>> viewport_dividers =
-		this->level_object_builder_->build_viewport_dividers(this->viewport_manager_);
-
+			this->viewport_manager_))
+	{
+		players.push_back(scene->add(std::move(player)));
+	}
 
 	return std::make_unique<Level>(
-		std::move(non_collision_objects),
-		std::move(collision_objects),
+		std::move(scene),
 		std::move(players),
-		std::move(viewport_dividers),
+		this->level_object_builder_->build_viewport_dividers(
+			this->viewport_manager_),
 		team_colours,
-		load_info->out_of_bounds_rectangle(),
 		load_info->camera_bounds_rectangle(),
 		load_info->zoom_out_start_bounds_rectangle(),
 		load_info->zoom_out_finish_bounds_rectangle(),
-		load_info->team_a_spawns(),
-		load_info->team_b_spawns(),
 		load_info->sound_bank_name(),
 		load_info->music_name(),
 		load_info->music_volume(),
 		this->resolution_manager_,
 		this->viewport_manager_,
 		this->render_resources_,
-		this->audio_resources_,
-		this->thread_pool_,
-		this->partitioner_);
+		this->audio_resources_);
 }
