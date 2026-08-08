@@ -41,14 +41,14 @@ MainMenuTitle::MainMenuTitle(MainMenuData* data) :
 
 void MainMenuTitle::draw()
 {
-	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
+	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
 
-	mobjects.push_back(std::make_pair(this->texture_container_.get(),
+	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
 		this->point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
-	this->draw_mobjects_in_viewports(&mobjects);
+	this->draw_ui_objects_in_viewports(&ui_objects);
 }
 void MainMenuTitle::update()
 {
@@ -66,7 +66,7 @@ void MainMenuTitle::update()
 }
 void MainMenuTitle::init()
 {
-	this->background_ = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<UiTexture>(
 		"background",
 		"sprite_sheet_1",
 		"square_white_4",
@@ -74,7 +74,7 @@ void MainMenuTitle::init()
 		this->render_resources(),
 		TITLE_BACKGROUND_COLOUR);
 
-	this->title_ = std::make_unique<MTextDropShadow>(
+	this->title_ = std::make_unique<UiTextDropShadow>(
 		"title",
 		L"Colour Wars",
 		TITLE_FONT,
@@ -84,7 +84,7 @@ void MainMenuTitle::init()
 		SHADOW_COLOUR,
 		TITLE_SHADOW_OFFSET);
 
-	this->start_ = std::make_unique<MTextDropShadow>(
+	this->start_ = std::make_unique<UiTextDropShadow>(
 		"start",
 		L"Start",
 		ITEM_FONT,
@@ -94,11 +94,11 @@ void MainMenuTitle::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->texture_container_ = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->background_.get());
 
-	this->text_container_ = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->title_.get());
 	this->text_container_->add_child(this->start_.get());
@@ -124,14 +124,14 @@ MainMenuHome::MainMenuHome(MainMenuData* data) :
 
 void MainMenuHome::draw()
 {
-	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
+	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
 
-	mobjects.push_back(std::make_pair(this->texture_container_.get(),
+	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
 		this->point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
-	this->draw_mobjects_in_viewports(&mobjects);
+	this->draw_ui_objects_in_viewports(&ui_objects);
 }
 void MainMenuHome::update()
 {
@@ -211,7 +211,7 @@ void MainMenuHome::init()
 	this->set_highlight_colour(STANDARD_HIGHLIGHT);
 	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
 
-	this->background_ = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<UiTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -219,7 +219,7 @@ void MainMenuHome::init()
 		this->render_resources(),
 		HOME_BACKGROUND_COLOUR);
 
-	this->heading_ = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Main Menu",
 		HEADING_FONT,
@@ -229,7 +229,7 @@ void MainMenuHome::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->play_ = std::make_unique<MTextDropShadow>(
+	this->play_ = std::make_unique<UiTextDropShadow>(
 		"play",
 		L"Play",
 		ITEM_FONT,
@@ -239,7 +239,7 @@ void MainMenuHome::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->options_ = std::make_unique<MTextDropShadow>(
+	this->options_ = std::make_unique<UiTextDropShadow>(
 		"options",
 		L"Options",
 		ITEM_FONT,
@@ -249,7 +249,7 @@ void MainMenuHome::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->exit_ = std::make_unique<MTextDropShadow>(
+	this->exit_ = std::make_unique<UiTextDropShadow>(
 		"exit",
 		L"Exit",
 		ITEM_FONT,
@@ -259,11 +259,11 @@ void MainMenuHome::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->texture_container_ = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->background_.get());
 
-	this->text_container_ = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->heading_.get());
 	this->text_container_->add_child(this->play_.get());
@@ -293,14 +293,14 @@ MainMenuOptions::MainMenuOptions(MainMenuData* data) :
 
 void MainMenuOptions::draw()
 {
-	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
+	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
 
-	mobjects.push_back(std::make_pair(this->texture_container_.get(),
+	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
 		this->point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
-	this->draw_mobjects_in_viewports(&mobjects);
+	this->draw_ui_objects_in_viewports(&ui_objects);
 }
 void MainMenuOptions::update()
 {
@@ -437,7 +437,7 @@ void MainMenuOptions::init()
 	this->resolution_selection_ = this->resolution_manager()->resolution();
 	this->full_screen_selection_ = this->save()->fullscreen();
 
-	this->background_ = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<UiTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -445,7 +445,7 @@ void MainMenuOptions::init()
 		this->render_resources(),
 		OPTIONS_BACKGROUND_COLOUR);
 
-	this->heading_ = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Options",
 		HEADING_FONT,
@@ -455,7 +455,7 @@ void MainMenuOptions::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->resolution_element_ = std::make_unique<MTextDropShadow>(
+	this->resolution_element_ = std::make_unique<UiTextDropShadow>(
 		"resolution_element",
 		L"Resolution",
 		ITEM_FONT,
@@ -465,7 +465,7 @@ void MainMenuOptions::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->resolution_value_ = std::make_unique<MTextDropShadow>(
+	this->resolution_value_ = std::make_unique<UiTextDropShadow>(
 		"resolution_value",
 		L"null",
 		ITEM_FONT,
@@ -477,7 +477,7 @@ void MainMenuOptions::init()
 
 	this->update_resolution_selection_text();
 
-	this->full_screen_ = std::make_unique<MTextDropShadow>(
+	this->full_screen_ = std::make_unique<UiTextDropShadow>(
 		"full_screen",
 		L"Fullscreen",
 		ITEM_FONT,
@@ -487,7 +487,7 @@ void MainMenuOptions::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->full_screen_value_ = std::make_unique<MTextDropShadow>(
+	this->full_screen_value_ = std::make_unique<UiTextDropShadow>(
 		"full_screen_value",
 		L"null",
 		ITEM_FONT,
@@ -499,7 +499,7 @@ void MainMenuOptions::init()
 
 	this->update_full_screen_selection_text();
 
-	this->apply_ = std::make_unique<MTextDropShadow>(
+	this->apply_ = std::make_unique<UiTextDropShadow>(
 		"apply",
 		L"Apply",
 		ITEM_FONT,
@@ -509,7 +509,7 @@ void MainMenuOptions::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->back_ = std::make_unique<MTextDropShadow>(
+	this->back_ = std::make_unique<UiTextDropShadow>(
 		"back",
 		L"Back",
 		ITEM_FONT,
@@ -519,11 +519,11 @@ void MainMenuOptions::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->texture_container_ = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->background_.get());
 
-	this->text_container_ = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->heading_.get());
 	this->text_container_->add_child(this->resolution_element_.get());
@@ -613,14 +613,14 @@ MainMenuModeSelect::MainMenuModeSelect(MainMenuData* data) :
 
 void MainMenuModeSelect::draw()
 {
-	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
+	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
 
-	mobjects.push_back(std::make_pair(this->texture_container_.get(),
+	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
 		this->point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
-	this->draw_mobjects_in_viewports(&mobjects);
+	this->draw_ui_objects_in_viewports(&ui_objects);
 }
 void MainMenuModeSelect::update()
 {
@@ -727,7 +727,7 @@ void MainMenuModeSelect::init()
 	//this->set_widget_position(MODE_SELECT_WIDGET_POSITION);
 	this->set_widget_spacing(MODE_SELECT_WIDGET_SPACING);
 
-	this->background_ = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<UiTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -735,7 +735,7 @@ void MainMenuModeSelect::init()
 		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
-	this->heading_ = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Mode Select",
 		HEADING_FONT,
@@ -745,7 +745,7 @@ void MainMenuModeSelect::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->standard_ = std::make_unique<MTextDropShadow>(
+	this->standard_ = std::make_unique<UiTextDropShadow>(
 		"standard",
 		L"Standard",
 		ITEM_FONT,
@@ -755,7 +755,7 @@ void MainMenuModeSelect::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->tdm_ = std::make_unique<MTextDropShadow>(
+	this->tdm_ = std::make_unique<UiTextDropShadow>(
 		"tdm",
 		L"Team Deathmatch",
 		ITEM_FONT,
@@ -765,7 +765,7 @@ void MainMenuModeSelect::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->dm_ = std::make_unique<MTextDropShadow>(
+	this->dm_ = std::make_unique<UiTextDropShadow>(
 		"dm",
 		L"Deathmatch",
 		ITEM_FONT,
@@ -775,7 +775,7 @@ void MainMenuModeSelect::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->practice_ = std::make_unique<MTextDropShadow>(
+	this->practice_ = std::make_unique<UiTextDropShadow>(
 		"practice",
 		L"Practice",
 		ITEM_FONT,
@@ -785,7 +785,7 @@ void MainMenuModeSelect::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->back_ = std::make_unique<MTextDropShadow>(
+	this->back_ = std::make_unique<UiTextDropShadow>(
 		"back",
 		L"Back",
 		ITEM_FONT,
@@ -795,11 +795,11 @@ void MainMenuModeSelect::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->texture_container_ = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->background_.get());
 
-	this->text_container_ = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->heading_.get());
 	this->text_container_->add_child(this->standard_.get());
@@ -830,14 +830,14 @@ MainMenuPlayerCount::MainMenuPlayerCount(MainMenuData* data) :
 }
 void MainMenuPlayerCount::draw()
 {
-	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
+	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
 
-	mobjects.push_back(std::make_pair(this->texture_container_.get(),
+	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
 		this->point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
-	this->draw_mobjects_in_viewports(&mobjects);
+	this->draw_ui_objects_in_viewports(&ui_objects);
 }
 void MainMenuPlayerCount::update()
 {
@@ -977,7 +977,7 @@ void MainMenuPlayerCount::init()
 	//this->set_widget_position(PLAYER_COUNT_WIDGET_POSITION);
 	this->set_widget_spacing(PLAYER_COUNT_WIDGET_SPACING);
 
-	this->background_ = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<UiTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -985,7 +985,7 @@ void MainMenuPlayerCount::init()
 		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
-	this->heading_ = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Number of Players",
 		HEADING_FONT,
@@ -995,7 +995,7 @@ void MainMenuPlayerCount::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->_1_player = std::make_unique<MTextDropShadow>(
+	this->_1_player = std::make_unique<UiTextDropShadow>(
 		"1_player",
 		L"1 Player",
 		ITEM_FONT,
@@ -1005,7 +1005,7 @@ void MainMenuPlayerCount::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_2_players = std::make_unique<MTextDropShadow>(
+	this->_2_players = std::make_unique<UiTextDropShadow>(
 		"2_players",
 		L"2 Players",
 		ITEM_FONT,
@@ -1015,7 +1015,7 @@ void MainMenuPlayerCount::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_3_players = std::make_unique<MTextDropShadow>(
+	this->_3_players = std::make_unique<UiTextDropShadow>(
 		"3_players",
 		L"3 Players",
 		ITEM_FONT,
@@ -1025,7 +1025,7 @@ void MainMenuPlayerCount::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->_4_players = std::make_unique<MTextDropShadow>(
+	this->_4_players = std::make_unique<UiTextDropShadow>(
 		"4_players",
 		L"4 Players",
 		ITEM_FONT,
@@ -1035,7 +1035,7 @@ void MainMenuPlayerCount::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->back_ = std::make_unique<MTextDropShadow>(
+	this->back_ = std::make_unique<UiTextDropShadow>(
 		"back",
 		L"Back",
 		ITEM_FONT,
@@ -1045,11 +1045,11 @@ void MainMenuPlayerCount::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->texture_container_ = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->background_.get());
 
-	this->text_container_ = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->heading_.get());
 	this->text_container_->add_child(this->_1_player.get());
@@ -1087,14 +1087,14 @@ MainMenuTeamSelect::MainMenuTeamSelect(MainMenuData* data,
 }
 void MainMenuTeamSelect::draw()
 {
-	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
+	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
 
-	mobjects.push_back(std::make_pair(this->texture_container_.get(),
+	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
 		this->point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
-	this->draw_mobjects_in_viewports(&mobjects);
+	this->draw_ui_objects_in_viewports(&ui_objects);
 }
 void MainMenuTeamSelect::update()
 {
@@ -1206,7 +1206,7 @@ void MainMenuTeamSelect::update_team_select_visuals()
 
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		MWidget* selected_widget = nullptr;
+		UiWidget* selected_widget = nullptr;
 		switch (this->select_states_[i].team)
 		{
 		case PlayerTeam::a:
@@ -1258,13 +1258,13 @@ void MainMenuTeamSelect::init()
 
 	const Vector2F resolution = this->float_resolution();
 
-	this->texture_container_ = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	
-	this->text_container_ = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 
-	this->background_ = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<UiTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -1274,7 +1274,7 @@ void MainMenuTeamSelect::init()
 
 	this->texture_container_->add_child(this->background_.get());
 
-	this->heading_ = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Team Select",
 		HEADING_FONT,
@@ -1300,7 +1300,7 @@ void MainMenuTeamSelect::init()
 		std::string name = "player_" + std::to_string(i + 1);
 		std::wstring label_text = L"Player " + std::to_wstring(i + 1);
 
-		widgets->player = std::make_unique<MTextDropShadow>(
+		widgets->player = std::make_unique<UiTextDropShadow>(
 			name,
 			label_text,
 			ITEM_FONT,
@@ -1310,7 +1310,7 @@ void MainMenuTeamSelect::init()
 			SHADOW_COLOUR,
 			ITEM_SHADOW_OFFSET);
 
-		widgets->player_a = std::make_unique<MTexture>(
+		widgets->player_a = std::make_unique<UiTexture>(
 			name + "_a",
 			"sprite_sheet_1",
 			"team_select_a",
@@ -1319,7 +1319,7 @@ void MainMenuTeamSelect::init()
 
 		auto move = Vector2F(TEAM_SELECT_TEAM_WIDGET_SIZE.x, 0.0f);
 
-		widgets->player_center = std::make_unique<MTexture>(
+		widgets->player_center = std::make_unique<UiTexture>(
 			name + "_center",
 			"sprite_sheet_1",
 			"team_select_center",
@@ -1327,7 +1327,7 @@ void MainMenuTeamSelect::init()
 				TEAM_SELECT_TEAM_WIDGET_SIZE),
 			this->render_resources());
 
-		widgets->player_b = std::make_unique<MTexture>(
+		widgets->player_b = std::make_unique<UiTexture>(
 			name + "_b",
 			"sprite_sheet_1",
 			"team_select_b",
@@ -1370,14 +1370,14 @@ MainMenuWeaponSelect::MainMenuWeaponSelect(MainMenuData* data,
 }
 void MainMenuWeaponSelect::draw()
 {
-	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
+	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
 
-	mobjects.push_back(std::make_pair(this->texture_container_.get(),
+	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
 		this->point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
-	this->draw_mobjects_in_viewports(&mobjects);
+	this->draw_ui_objects_in_viewports(&ui_objects);
 }
 void MainMenuWeaponSelect::update()
 {
@@ -1585,13 +1585,13 @@ void MainMenuWeaponSelect::init()
 
 	const Vector2F resolution = this->float_resolution();
 
-	this->texture_container_ = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	
-	this->text_container_ = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 
-	this->background_ = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<UiTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -1601,7 +1601,7 @@ void MainMenuWeaponSelect::init()
 
 	this->texture_container_->add_child(this->background_.get());
 
-	this->heading_ = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Weapon Select",
 		HEADING_FONT,
@@ -1626,7 +1626,7 @@ void MainMenuWeaponSelect::init()
 		std::string name = "player_" + std::to_string(i + 1);
 		std::wstring label_text = L"Player " + std::to_wstring(i + 1);
 
-		widgets->player = std::make_unique<MTextDropShadow>(
+		widgets->player = std::make_unique<UiTextDropShadow>(
 			name,
 			label_text,
 			ITEM_FONT,
@@ -1634,7 +1634,7 @@ void MainMenuWeaponSelect::init()
 			this->render_resources(),
 			WEAPON_SELECT_UNSELECTED_COLOUR);
 
-		widgets->weapon_icon = std::make_unique<MTexture>(
+		widgets->weapon_icon = std::make_unique<UiTexture>(
 			name + "_wep_icon",
 			"sprite_sheet_1",
 			"sprayer",
@@ -1642,7 +1642,7 @@ void MainMenuWeaponSelect::init()
 			this->render_resources(),
 			PLAY_BACKGROUND_COLOUR);
 
-		widgets->weapon_name = std::make_unique<MTextDropShadow>(
+		widgets->weapon_name = std::make_unique<UiTextDropShadow>(
 			name + "_wep_name",
 			L"Sprayer",
 			DETAIL_FONT,
@@ -1653,7 +1653,7 @@ void MainMenuWeaponSelect::init()
 			SHADOW_COLOUR,
 			DETAIL_SHADOW_OFFSET);
 
-		widgets->weapon_description = std::make_unique<MTextDropShadow>(
+		widgets->weapon_description = std::make_unique<UiTextDropShadow>(
 			name + "_wep_desc",
 			this->weapon_description(WeaponType::sprayer),
 			WEAPON_DESCRIPTION_FONT,
@@ -1717,14 +1717,14 @@ MainMenuStageSelect::MainMenuStageSelect(MainMenuData* data,
 }
 void MainMenuStageSelect::draw()
 {
-	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
+	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
 
-	mobjects.push_back(std::make_pair(this->texture_container_.get(),
+	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
 		this->point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
-	this->draw_mobjects_in_viewports(&mobjects);
+	this->draw_ui_objects_in_viewports(&ui_objects);
 }
 void MainMenuStageSelect::update()
 {
@@ -1859,7 +1859,7 @@ void MainMenuStageSelect::init()
 
 	this->set_widget_spacing(STAGE_SELECT_WIDGET_SPACING);
 
-	this->background_ = std::make_unique<MTexture>(
+	this->background_ = std::make_unique<UiTexture>(
 		"background",
 		"sprite_sheet_1",
 		"pixel",
@@ -1867,7 +1867,7 @@ void MainMenuStageSelect::init()
 		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
-	this->heading_ = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Stage Select",
 		HEADING_FONT,
@@ -1878,7 +1878,7 @@ void MainMenuStageSelect::init()
 		HEADING_SHADOW_OFFSET);
 
 
-	this->stage_icon_ = std::make_unique<MTexture>(
+	this->stage_icon_ = std::make_unique<UiTexture>(
 		"stage_icon",
 		"sprite_sheet_1",
 		"stage_test_1",
@@ -1886,7 +1886,7 @@ void MainMenuStageSelect::init()
 		this->render_resources(),
 		PLAY_BACKGROUND_COLOUR);
 
-	this->stage_name_ = std::make_unique<MTextDropShadow>(
+	this->stage_name_ = std::make_unique<UiTextDropShadow>(
 		"stage_name",
 		L"Test 1",
 		ITEM_FONT,
@@ -1896,7 +1896,7 @@ void MainMenuStageSelect::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->ready_ = std::make_unique<MTextDropShadow>(
+	this->ready_ = std::make_unique<UiTextDropShadow>(
 		"ready",
 		L"READY?",
 		ANNOUNCEMENT_FONT,
@@ -1909,11 +1909,11 @@ void MainMenuStageSelect::init()
 
 	const Vector2F resolution = this->float_resolution();
 
-	this->texture_container_ = std::make_unique<MContainer>("texture_container");
+	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
 	this->texture_container_->add_child(this->stage_icon_.get());
 
-	this->text_container_ = std::make_unique<MContainer>("text_container");
+	this->text_container_ = std::make_unique<UiContainer>("text_container");
 	this->text_container_->add_child(this->heading_.get());
 	this->text_container_->add_child(this->stage_name_.get());
 	this->text_container_->add_child(this->ready_.get());

@@ -1,15 +1,15 @@
 #pragma once
 
-#include "engine/core/i_game_object.h"
+#include "engine/core/game_object.h"
 #include "game/objects/collision_object_type.h"
 #include "engine/math/matt_math.h"
 
-class ICollisionGameObject : public artattack::IGameObject
+class CollisionObject : public artattack::GameObject
 {
 public:
-	~ICollisionGameObject() override = default;
-	virtual bool is_colliding(const ICollisionGameObject* other) const = 0;
-	virtual void on_collision(const ICollisionGameObject* other) = 0;
+	~CollisionObject() override = default;
+	virtual bool is_colliding(const CollisionObject* other) const = 0;
+	virtual void on_collision(const CollisionObject* other) = 0;
 	virtual CollisionObjectType collision_object_type() const = 0;
 	virtual const mattmath::Shape* shape() const = 0;
 	virtual bool for_deletion() const = 0;

@@ -89,7 +89,7 @@ Vector2F DiffusingProjectile::calculate_diffusion_size() const
 
 
 bool Projectile::is_matching_collision_object_type(
-    const ICollisionGameObject* other) const
+    const CollisionObject* other) const
 {
     CollisionObjectType other_type = other->collision_object_type();
 
@@ -115,7 +115,7 @@ bool Projectile::is_matching_collision_object_type(
         throw std::exception("Invalid PlayerTeam value.");
     }
 }
-void Projectile::on_collision(const ICollisionGameObject* other)
+void Projectile::on_collision(const CollisionObject* other)
 {
     CollisionObjectType other_type = other->collision_object_type();
 

@@ -149,12 +149,12 @@ const RectangleF* Player::collision_rectangle() const
 }
 
 bool Player::is_matching_collision_object_type(
-    const ICollisionGameObject* other)
+    const CollisionObject* other)
 {
     CollisionObjectType other_type = other->collision_object_type();
     return is_structure(other_type);
 }
-bool Player::is_colliding(const ICollisionGameObject* other) const
+bool Player::is_colliding(const CollisionObject* other) const
 {
     // dead check
     if (this->state_ == PlayerState::dead)
@@ -192,7 +192,7 @@ bool Player::is_colliding(const ICollisionGameObject* other) const
 
     return false;
 }
-void Player::on_collision(const ICollisionGameObject* other)
+void Player::on_collision(const CollisionObject* other)
 {
     CollisionObjectType other_type = other->collision_object_type();
 
@@ -251,7 +251,7 @@ void Player::on_collision(const ICollisionGameObject* other)
 		throw std::exception("Invalid collision object type.");
 	}
 }
-void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
+void Player::on_structure_ramp_collision(const CollisionObject* other)
 {
     Vector2F direction = CollisionTools::calculate_object_collision_direction(
         this->shape(), other->shape());
@@ -387,7 +387,7 @@ void Player::on_structure_ramp_collision(const ICollisionGameObject* other)
 		throw std::exception("Invalid ramp type.");
 	}   
 }
-void Player::on_structure_jump_through_collision(const ICollisionGameObject* other)
+void Player::on_structure_jump_through_collision(const CollisionObject* other)
 {
     // only collide if player is moving down and on previous cycle
     // was above the structure
@@ -416,7 +416,7 @@ void Player::on_structure_jump_through_collision(const ICollisionGameObject* oth
 		// no collision
 	}
 }
-void Player::on_structure_collision(const ICollisionGameObject* other)
+void Player::on_structure_collision(const CollisionObject* other)
 {
 	//Vector2F col_direction = CollisionTools::calculate_object_collision_direction(
 	//	this->shape(), other->shape());
@@ -489,7 +489,7 @@ void Player::on_structure_collision(const ICollisionGameObject* other)
 	}
 }
 
-void Player::on_top_collision(const ICollisionGameObject* other)
+void Player::on_top_collision(const CollisionObject* other)
 {
     MovingObject::set_velocity_y(0.0f);
 
@@ -498,7 +498,7 @@ void Player::on_top_collision(const ICollisionGameObject* other)
 
 	this->set_move_state(PlayerMoveState::on_ceiling);
 }
-void Player::on_bottom_collision(const ICollisionGameObject* other)
+void Player::on_bottom_collision(const CollisionObject* other)
 {
     MovingObject::set_velocity_y(0.0f);
 
@@ -507,21 +507,21 @@ void Player::on_bottom_collision(const ICollisionGameObject* other)
 
     this->set_move_state(PlayerMoveState::on_ground);
 }
-void Player::on_left_collision(const ICollisionGameObject* other)
+void Player::on_left_collision(const CollisionObject* other)
 {
     this->set_velocity_x(0.0f);
 
     CollisionTools::resolve_object_collision(&this->rectangle_,
         other->shape(), Vector2F::DIRECTION_LEFT);
 }
-void Player::on_right_collision(const ICollisionGameObject* other)
+void Player::on_right_collision(const CollisionObject* other)
 {
     this->set_velocity_x(0.0f);
 
     CollisionTools::resolve_object_collision(&this->rectangle_,
         other->shape(), Vector2F::DIRECTION_RIGHT);
 }
-void Player::on_top_left_collision(const ICollisionGameObject* other)
+void Player::on_top_left_collision(const CollisionObject* other)
 {
     Vector2F amount = CollisionTools::calculate_object_collision_depth(
         this->shape(), other->shape(), Vector2F::DIRECTION_UP_LEFT);
@@ -535,7 +535,7 @@ void Player::on_top_left_collision(const ICollisionGameObject* other)
         this->on_left_collision(other);
     }
 }
-void Player::on_top_right_collision(const ICollisionGameObject* other)
+void Player::on_top_right_collision(const CollisionObject* other)
 {
 	Vector2F amount = CollisionTools::calculate_object_collision_depth(
 		this->shape(), other->shape(), Vector2F::DIRECTION_UP_RIGHT);
@@ -549,7 +549,7 @@ void Player::on_top_right_collision(const ICollisionGameObject* other)
         this->on_right_collision(other);
     }
 }
-void Player::on_bottom_left_collision(const ICollisionGameObject* other)
+void Player::on_bottom_left_collision(const CollisionObject* other)
 {
     Direction dir = this->velocity().direction();
     bool moving_up = dir == Direction::up || dir == Direction::up_left ||
@@ -567,7 +567,7 @@ void Player::on_bottom_left_collision(const ICollisionGameObject* other)
         this->on_left_collision(other);
     }
 }
-void Player::on_bottom_right_collision(const ICollisionGameObject* other)
+void Player::on_bottom_right_collision(const CollisionObject* other)
 {
     Direction dir = this->velocity().direction();
     bool moving_up = dir == Direction::up || dir == Direction::up_left ||
@@ -590,7 +590,7 @@ void Player::update_weapon_position() const
 {
     this->primary_->set_player_center(this->center());
 }
-void Player::on_projectile_collision(const ICollisionGameObject* other)
+void Player::on_projectile_collision(const CollisionObject* other)
 {
     CollisionObjectType other_type = other->collision_object_type();
 
@@ -691,7 +691,7 @@ void Player::update(float dt)
     }
     this->health_regen_timer_ += dt;
 }
-std::vector<std::unique_ptr<ICollisionGameObject>>
+std::vector<std::unique_ptr<CollisionObject>>
     Player::update_weapon_and_get_projectiles(float dt) const
 {
     return this->primary_->update_and_get_projectiles(

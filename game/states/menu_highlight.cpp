@@ -4,7 +4,7 @@
 using namespace mattmath;
 using namespace artattack;
 
-void MenuHighlight::highlight_widget(MWidget* widget) const
+void MenuHighlight::highlight_widget(UiWidget* widget) const
 {
 	if (widget == nullptr)
 	{
@@ -13,7 +13,7 @@ void MenuHighlight::highlight_widget(MWidget* widget) const
 	widget->set_colour(this->highlight_colour_);
 }
 
-void MenuHighlight::unhighlight_widget(MWidget* widget) const
+void MenuHighlight::unhighlight_widget(UiWidget* widget) const
 {
 	if (widget == nullptr)
 	{
@@ -22,17 +22,17 @@ void MenuHighlight::unhighlight_widget(MWidget* widget) const
 	widget->set_colour(this->unhighlight_colour_);
 }
 
-MWidget* MenuHighlight::highlighted_widget() const
+UiWidget* MenuHighlight::highlighted_widget() const
 {
 	return this->highlighted_widget_;
 }
 
-void MenuHighlight::set_highlighted_widget(MWidget* widget)
+void MenuHighlight::set_highlighted_widget(UiWidget* widget)
 {
 	this->highlighted_widget_ = widget;
 }
 
-void MenuHighlight::change_highlight(MWidget* next_highlight)
+void MenuHighlight::change_highlight(UiWidget* next_highlight)
 {
 	this->unhighlight_widget(this->highlighted_widget());
 	this->highlight_widget(next_highlight);

@@ -87,17 +87,17 @@ public:
 	void update() override;
 	void draw() override;
 private:
-	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
-	std::unique_ptr<artattack::MTexture> box_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<artattack::MTexture> fill_box_ = nullptr;
-	std::unique_ptr<artattack::MTexture> team_a_fill_ = nullptr;
-	std::unique_ptr<artattack::MTexture> team_b_fill_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> team_a_percentage_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> team_b_percentage_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> winner_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> proceed_ = nullptr;
+	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::UiTexture> box_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<artattack::UiTexture> fill_box_ = nullptr;
+	std::unique_ptr<artattack::UiTexture> team_a_fill_ = nullptr;
+	std::unique_ptr<artattack::UiTexture> team_b_fill_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> team_a_percentage_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> team_b_percentage_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> winner_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> proceed_ = nullptr;
 	bool winner_sound_played_ = false;
 	float delay_timer_ = 0.0f;
 	float fill_timer_ = 0.0f;

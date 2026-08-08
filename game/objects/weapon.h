@@ -28,7 +28,7 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
-	// const for the same reason IGameObject::draw is, even though a Weapon is
+	// const for the same reason GameObject::draw is, even though a Weapon is
 	// not one: Player::draw reaches its weapon, so it sits under the same
 	// per-view fan-out and every worker enters this on the same Weapon at once.
 	// The const does not come for free through Player - primary_ is a
@@ -37,7 +37,7 @@ public:
 	virtual void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera, bool debug = false) const;
 
-	virtual std::vector<std::unique_ptr<ICollisionGameObject>>
+	virtual std::vector<std::unique_ptr<CollisionObject>>
 		update_and_get_projectiles(PlayerInputData input,
 			const mattmath::Vector2F& player_center,
 			const mattmath::Vector2F& player_velocity,
@@ -117,7 +117,7 @@ protected:
 	static mattmath::Vector2F nozzle_size();
 	static bool facing_left(float rotation);
 
-	virtual std::vector<std::unique_ptr<ICollisionGameObject>> shoot(
+	virtual std::vector<std::unique_ptr<CollisionObject>> shoot(
 		const mattmath::Vector2F& shoot_direction) const;
 
 	virtual mattmath::Vector2F calculate_projectile_launch_velocity(
@@ -190,7 +190,7 @@ public:
 		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
 		float layer_depth = 0.0f);
 
-	std::vector<std::unique_ptr<ICollisionGameObject>>
+	std::vector<std::unique_ptr<CollisionObject>>
 		update_and_get_projectiles(PlayerInputData input,
 			const mattmath::Vector2F& player_center,
 			const mattmath::Vector2F& player_velocity,
@@ -205,7 +205,7 @@ protected:
 		AddPlayerVelocity add_player_vel,
 		float player_vel_amount) const;
 
-	virtual std::vector<std::unique_ptr<ICollisionGameObject>> shoot(
+	virtual std::vector<std::unique_ptr<CollisionObject>> shoot(
 		const mattmath::Vector2F& shoot_direction,
 		const mattmath::Vector2F& player_velocity) const;
 

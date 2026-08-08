@@ -6,9 +6,9 @@ struct PaintTotal
 	float team_b = 0.0f;
 };
 
-class IPaintableGameObject
+class PaintableObject
 {
 public:
-	virtual ~IPaintableGameObject() = default;
+	virtual ~PaintableObject() = default;
 	virtual PaintTotal paint_total() const = 0;
 };

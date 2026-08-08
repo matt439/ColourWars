@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/objects/i_collision_game_object.h"
+#include "game/objects/collision_object.h"
 #include <memory>
 #include "rapidjson/document.h"
 #include "game/objects/structure_paintable.h"
@@ -14,24 +14,24 @@ public:
 	LevelObjectBuilder(artattack::RenderResources* render_resources,
 		const artattack::AudioResources* audio_resources);
 
-	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> 
+	std::unique_ptr<std::vector<std::unique_ptr<CollisionObject>>> 
 		build_collision_objects(const rapidjson::Value& json,
 			const TeamColour& team_colours) const;
 
-	std::unique_ptr<std::vector<std::unique_ptr<artattack::IGameObject>>> 
+	std::unique_ptr<std::vector<std::unique_ptr<artattack::GameObject>>> 
 		build_non_collision_objects(const rapidjson::Value& json) const;
 
-	std::unique_ptr<std::vector<std::unique_ptr<artattack::IGameObject>>> 
+	std::unique_ptr<std::vector<std::unique_ptr<artattack::GameObject>>> 
 		build_viewport_dividers(const artattack::ViewportManager* viewport_manager) const;
 
 private:
 	artattack::RenderResources* render_resources_ = nullptr;
 	const artattack::AudioResources* audio_resources_ = nullptr;
 
-	std::unique_ptr<ICollisionGameObject>
+	std::unique_ptr<CollisionObject>
 		build_collision_object(const rapidjson::Value& json,
 			const TeamColour& team_colours) const;
 
-	std::unique_ptr<artattack::IGameObject>
+	std::unique_ptr<artattack::GameObject>
 		build_non_collision_object(const rapidjson::Value& json) const;
 };

@@ -84,13 +84,13 @@ public:
 	void update() override;
 	void draw() override;
 private:
-	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
-	std::unique_ptr<artattack::MTexture> box_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> player_num_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> resume_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> restart_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> quit_ = nullptr;
+	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::UiTexture> box_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> player_num_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> resume_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> restart_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> quit_ = nullptr;
 };
 
 class PauseMenuConfirmation final : public PauseMenuPage
@@ -101,13 +101,13 @@ public:
 	void update() override;
 	void draw() override;
 private:
-	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
-	std::unique_ptr<artattack::MTexture> box_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> player_num_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> question_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> yes_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> no_ = nullptr;
+	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::UiTexture> box_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> player_num_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> question_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> yes_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> no_ = nullptr;
 	ConfirmationType type_ = ConfirmationType::restart;
 	static std::wstring question_text(ConfirmationType type);
 };

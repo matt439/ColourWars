@@ -3,7 +3,7 @@
 #include "game/objects/player_team.h"
 #include "engine/render/texture_object.h"
 #include "game/objects/team_colour.h"
-#include "game/objects/i_collision_game_object.h"
+#include "game/objects/collision_object.h"
 #include "engine/render/animation_object.h"
 
 namespace paint_tile_consts
@@ -19,7 +19,7 @@ namespace paint_tile_consts
 	const static mattmath::RectangleF SPLASH_RECTANGLE = { 0.0f, 0.0f, THICKNESS * 2.0f, THICKNESS * 2.0f };
 }
 
-class PaintTileSplash final : public artattack::AnimationObject, public artattack::IGameObject
+class PaintTileSplash final : public artattack::AnimationObject, public artattack::GameObject
 {
 public:
 	PaintTileSplash() = default;
@@ -52,7 +52,7 @@ private:
 };
 
 
-class PaintTile final : public artattack::TextureObject, public ICollisionGameObject
+class PaintTile final : public artattack::TextureObject, public CollisionObject
 {
 public:
 	PaintTile() = default;
@@ -71,10 +71,10 @@ public:
 	void update(float dt) override;
 	float area() const;
 	PlayerTeam team() const;
-	bool is_colliding(const ICollisionGameObject* other) const override;
+	bool is_colliding(const CollisionObject* other) const override;
 	const mattmath::Shape* shape() const override;
 
-	void on_collision(const ICollisionGameObject* other) override;
+	void on_collision(const CollisionObject* other) override;
 	CollisionObjectType collision_object_type() const override;
 	bool for_deletion() const override;
 	mattmath::RectangleF bounds() const override;

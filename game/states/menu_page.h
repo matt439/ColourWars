@@ -35,16 +35,16 @@ protected:
 	const artattack::AudioResources* audio_resources() const;
 	artattack::ViewportManager* viewport_manager() const;
 
-	void draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,
+	void draw_ui_object_in_viewports(ID3D11DeviceContext* deferred_context,
 		ID3D11CommandList*& command_list,
-		DirectX::SpriteBatch* sprite_batch, artattack::MObject* widget,
+		DirectX::SpriteBatch* sprite_batch, artattack::UiObject* ui_object,
 		ID3D11SamplerState* sampler_state = nullptr);
 
-	void draw_mobjects_in_viewports(std::vector<std::pair<artattack::MObject*,
-		ID3D11SamplerState*>>* mobjects);
+	void draw_ui_objects_in_viewports(std::vector<std::pair<artattack::UiObject*,
+		ID3D11SamplerState*>>* ui_objects);
 
-	void draw_range_of_mobjects_in_viewports(int start, int end,
-		std::vector<std::pair<artattack::MObject*, ID3D11SamplerState*>>*mobjects,
+	void draw_range_of_ui_objects_in_viewports(int start, int end,
+		std::vector<std::pair<artattack::UiObject*, ID3D11SamplerState*>>*ui_objects,
 		std::vector<ID3D11DeviceContext*>* deferred_contexts,
 		std::vector<ID3D11CommandList*>* command_lists,
 		std::vector<DirectX::SpriteBatch*>* sprite_batches);

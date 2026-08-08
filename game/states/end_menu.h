@@ -66,13 +66,13 @@ public:
 	void update() override;
 	void draw() override;
 private:
-	std::unique_ptr<artattack::MContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::MContainer> text_container_ = nullptr;
-	std::unique_ptr<artattack::MTexture> box_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> change_teams_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> change_weapons_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> change_level_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> restart_ = nullptr;
-	std::unique_ptr<artattack::MTextDropShadow> exit_ = nullptr;
+	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
+	std::unique_ptr<artattack::UiTexture> box_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> change_teams_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> change_weapons_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> change_level_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> restart_ = nullptr;
+	std::unique_ptr<artattack::UiTextDropShadow> exit_ = nullptr;
 };

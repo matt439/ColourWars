@@ -7,7 +7,7 @@
 #include "game/objects/weapon.h"
 #include "engine/math/matt_math.h"
 #include "engine/render/animation_object.h"
-#include "game/objects/i_collision_game_object.h"
+#include "game/objects/collision_object.h"
 #include "engine/core/moving_object.h"
 #include "engine/audio/sound_bank.h"
 #include "engine/audio/audio_resources.h"
@@ -60,7 +60,7 @@ enum class PlayerAnimationState
 //    contains_other,
 //};
 
-class Player final : public artattack::MovingObject, public ICollisionGameObject,
+class Player final : public artattack::MovingObject, public CollisionObject,
                      public artattack::AnimationObject, public artattack::TextureObject
 {
 public:
@@ -83,15 +83,15 @@ public:
         float layer_depth = 0.0f);
 
     void update(float dt) override;
-    std::vector<std::unique_ptr<ICollisionGameObject>>
+    std::vector<std::unique_ptr<CollisionObject>>
         update_weapon_and_get_projectiles(float dt) const;
     void draw(DirectX::SpriteBatch* sprite_batch,
         const mattmath::Camera& camera) const override;
 
     mattmath::RectangleF bounds() const override;
 
-    bool is_colliding(const ICollisionGameObject* other) const override;
-    void on_collision(const ICollisionGameObject* other) override;
+    bool is_colliding(const CollisionObject* other) const override;
+    void on_collision(const CollisionObject* other) override;
     CollisionObjectType collision_object_type() const override;
     const mattmath::Shape* shape() const override;
     bool for_deletion() const override;
@@ -183,10 +183,10 @@ private:
 	const mattmath::RectangleF* collision_rectangle() const;
 
     static bool is_matching_collision_object_type(
-        const ICollisionGameObject* other);
+        const CollisionObject* other);
 
-	void on_projectile_collision(const ICollisionGameObject* other);
-	void on_structure_collision(const ICollisionGameObject* other);
+	void on_projectile_collision(const CollisionObject* other);
+	void on_structure_collision(const CollisionObject* other);
 
 
 	void update_movement(float dt);
@@ -202,24 +202,24 @@ private:
 
     void respawn();
 
-    //player_collision_type calculate_collision_type(const ICollisionGameObject* other) const;
+    //player_collision_type calculate_collision_type(const CollisionObject* other) const;
 
-    void on_top_collision(const ICollisionGameObject* other);
-    void on_bottom_collision(const ICollisionGameObject* other);
-    void on_left_collision(const ICollisionGameObject* other);
-    void on_right_collision(const ICollisionGameObject* other);
-    void on_top_left_collision(const ICollisionGameObject* other);
-    void on_top_right_collision(const ICollisionGameObject* other);
-    void on_bottom_left_collision(const ICollisionGameObject* other);
-    void on_bottom_right_collision(const ICollisionGameObject* other);
+    void on_top_collision(const CollisionObject* other);
+    void on_bottom_collision(const CollisionObject* other);
+    void on_left_collision(const CollisionObject* other);
+    void on_right_collision(const CollisionObject* other);
+    void on_top_left_collision(const CollisionObject* other);
+    void on_top_right_collision(const CollisionObject* other);
+    void on_bottom_left_collision(const CollisionObject* other);
+    void on_bottom_right_collision(const CollisionObject* other);
 
 	//void on_ground_collision();
 	//void on_ceiling_collision();
 	//void on_wall_collision();
 
-    void on_structure_jump_through_collision(const ICollisionGameObject* other);
+    void on_structure_jump_through_collision(const CollisionObject* other);
 
-	void on_structure_ramp_collision(const ICollisionGameObject* other);
+	void on_structure_ramp_collision(const CollisionObject* other);
 
     void set_player_num(int player_num);
 

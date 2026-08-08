@@ -50,7 +50,7 @@ void StructurePaintable::draw(SpriteBatch* sprite_batch, const Camera& camera) c
 	}
 }
 
-void StructurePaintable::on_collision(const ICollisionGameObject* other)
+void StructurePaintable::on_collision(const CollisionObject* other)
 {
 	// check if offensive projectile
 	CollisionObjectType other_type = other->collision_object_type();

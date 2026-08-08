@@ -4,7 +4,7 @@
 #include "game/objects/projectile_consts.h"
 #include "engine/render/animation_object.h"
 #include "engine/core/moving_object.h"
-#include "game/objects/i_collision_game_object.h"
+#include "game/objects/collision_object.h"
 
 enum projectile_type
 {
@@ -16,7 +16,7 @@ enum projectile_type
 };
 
 class Projectile : public artattack::MovingObject,
-	public artattack::AnimationObject, public ICollisionGameObject
+	public artattack::AnimationObject, public CollisionObject
 {
 public:
 	Projectile() = default;
@@ -38,8 +38,8 @@ public:
 		const mattmath::Camera& camera) const override = 0;
 	mattmath::RectangleF bounds() const override = 0;
 
-	bool is_colliding(const ICollisionGameObject* other) const override = 0;
-	void on_collision(const ICollisionGameObject* other) override;
+	bool is_colliding(const CollisionObject* other) const override = 0;
+	void on_collision(const CollisionObject* other) override;
 	CollisionObjectType collision_object_type() const override;
 	const mattmath::Shape* shape() const override = 0;
 	bool for_deletion() const override;
@@ -53,7 +53,7 @@ protected:
 
 	PlayerTeam team() const;
 
-	virtual bool is_matching_collision_object_type(const ICollisionGameObject* other) const;
+	virtual bool is_matching_collision_object_type(const CollisionObject* other) const;
 
 	int player_num() const;
 	const mattmath::Colour& team_colour() const;
@@ -104,7 +104,7 @@ public:
 		const mattmath::Camera& camera) const override = 0;
 	mattmath::RectangleF bounds() const override = 0;
 
-	bool is_colliding(const ICollisionGameObject* other) const override = 0;
+	bool is_colliding(const CollisionObject* other) const override = 0;
 	const mattmath::Shape* shape() const override = 0;
 protected:
 	mattmath::Vector2F calculate_diffusion_size() const;

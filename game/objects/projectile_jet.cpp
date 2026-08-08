@@ -46,7 +46,7 @@ RectangleF ProjectileJet::bounds() const
 {
 	return this->rectangle_;
 }
-bool ProjectileJet::is_colliding(const ICollisionGameObject* other) const
+bool ProjectileJet::is_colliding(const CollisionObject* other) const
 {
 	// type check
 	if (!this->is_matching_collision_object_type(other))

@@ -6,10 +6,10 @@ using namespace DirectX;
 using namespace level_consts;
 using namespace artattack;
 
-Level::Level(std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> non_collision_objects,
-	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> collision_objects,
+Level::Level(std::unique_ptr<std::vector<std::unique_ptr<GameObject>>> non_collision_objects,
+	std::unique_ptr<std::vector<std::unique_ptr<CollisionObject>>> collision_objects,
 	std::unique_ptr<std::vector<std::unique_ptr<Player>>> player_objects,
-	std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>> viewport_dividers,
+	std::unique_ptr<std::vector<std::unique_ptr<GameObject>>> viewport_dividers,
 	const TeamColour& team_colours,
 	const RectangleF& out_of_bounds,
 	const RectangleF& camera_bounds,
@@ -215,7 +215,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 		object->set_camera(camera);
 
 		// update player weapon
-		std::vector<std::unique_ptr<ICollisionGameObject>> new_projs =
+		std::vector<std::unique_ptr<CollisionObject>> new_projs =
 			object->update_weapon_and_get_projectiles(dt);
 		// add new projectiles to collision objects
 		for (auto& proj : new_projs)
@@ -594,7 +594,7 @@ int Level::count_projectiles() const
 }
 
 
-bool Level::is_object_out_of_bounds(const ICollisionGameObject* object) const
+bool Level::is_object_out_of_bounds(const CollisionObject* object) const
 {
 	bool object_in_bounds =
 		this->out_of_bounds_.intersects(object->shape()->bounding_box());
@@ -626,12 +626,12 @@ LevelEndInfo Level::level_end_info() const
 			// reference form throws bad_cast. The catch here could never fire,
 			// and the null was dereferenced unchecked one line above it.
 			auto paintable_object =
-				dynamic_cast<IPaintableGameObject*>(object.get());
+				dynamic_cast<PaintableObject*>(object.get());
 
 			if (paintable_object == nullptr)
 			{
 				throw std::runtime_error(
-					"Object tagged STRUCTURE_PAINTABLE is not an IPaintableGameObject");
+					"Object tagged STRUCTURE_PAINTABLE is not an PaintableObject");
 			}
 
 			PaintTotal paint = paintable_object->paint_total();

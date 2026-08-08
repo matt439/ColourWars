@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/objects/i_collision_game_object.h"
+#include "game/objects/collision_object.h"
 #include "game/objects/team_colour.h"
 #include "game/objects/player_input.h"
 #include "game/objects/player.h"
@@ -12,7 +12,7 @@
 #include "game/objects/level_end_info.h"
 #include "engine/render/text_drop_shadow.h"
 #include "engine/audio/sound_bank.h"
-#include "game/objects/i_paintable_game_object.h"
+#include "game/objects/paintable_object.h"
 #include "engine/render/render_resources.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/core/thread_pool.h"
@@ -54,10 +54,10 @@ class Level
 {
 public:
 	Level() = default;
-	Level(std::unique_ptr<std::vector<std::unique_ptr<artattack::IGameObject>>> non_collision_objects,
-		std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>> collision_objects,
+	Level(std::unique_ptr<std::vector<std::unique_ptr<artattack::GameObject>>> non_collision_objects,
+		std::unique_ptr<std::vector<std::unique_ptr<CollisionObject>>> collision_objects,
 		std::unique_ptr<std::vector<std::unique_ptr<Player>>> player_objects,
-		std::unique_ptr<std::vector<std::unique_ptr<artattack::IGameObject>>> viewport_dividers,
+		std::unique_ptr<std::vector<std::unique_ptr<artattack::GameObject>>> viewport_dividers,
 		const TeamColour& team_colours,
 		const mattmath::RectangleF& out_of_bounds,
 		const mattmath::RectangleF& camera_bounds,
@@ -89,16 +89,16 @@ public:
 	void stop_music() const;
 
 private:
-	std::unique_ptr<std::vector<std::unique_ptr<artattack::IGameObject>>>
+	std::unique_ptr<std::vector<std::unique_ptr<artattack::GameObject>>>
 		non_collision_objects_ = nullptr;
 
-	std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>>
+	std::unique_ptr<std::vector<std::unique_ptr<CollisionObject>>>
 		collision_objects_ = nullptr;
 
 	std::unique_ptr<std::vector<std::unique_ptr<Player>>>
 		player_objects_ = nullptr;
 
-	std::unique_ptr<std::vector<std::unique_ptr<artattack::IGameObject>>>
+	std::unique_ptr<std::vector<std::unique_ptr<artattack::GameObject>>>
 		viewport_dividers_ = nullptr;
 
 	artattack::SoundBank* sound_bank_ = nullptr;
@@ -155,7 +155,7 @@ private:
 	const artattack::Partitioner* partitioner_ = nullptr;
 
 	int count_projectiles() const;
-	bool is_object_out_of_bounds(const ICollisionGameObject* object) const;
+	bool is_object_out_of_bounds(const CollisionObject* object) const;
 	void draw_end_screen();
 
 	void update_level_logic(const std::vector<PlayerInputData>& player_inputs,

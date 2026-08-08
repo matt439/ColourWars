@@ -13,7 +13,7 @@ LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
 
 }
 
-std::unique_ptr<ICollisionGameObject>
+std::unique_ptr<CollisionObject>
 	LevelObjectBuilder::build_collision_object(const Value& json,
 		const TeamColour& team_colours) const
 {
@@ -165,7 +165,7 @@ std::unique_ptr<ICollisionGameObject>
 	throw std::exception("Invalid collision object type");
 }
 
-std::unique_ptr<IGameObject>
+std::unique_ptr<GameObject>
 	LevelObjectBuilder::build_non_collision_object(const Value& json) const
 {
 	std::string type = json["type"].GetString();
@@ -185,11 +185,11 @@ std::unique_ptr<IGameObject>
 	throw std::exception("Invalid non-collision object type");
 }
 
-std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>>
+std::unique_ptr<std::vector<std::unique_ptr<CollisionObject>>>
 	LevelObjectBuilder::build_collision_objects(const Value& json,
 		const TeamColour& team_colours) const
 {
-	auto collision_objects = std::make_unique<std::vector<std::unique_ptr<ICollisionGameObject>>>();
+	auto collision_objects = std::make_unique<std::vector<std::unique_ptr<CollisionObject>>>();
 	for (auto& object : json.GetArray())
 	{
 		collision_objects->push_back(build_collision_object(object, team_colours));
@@ -198,10 +198,10 @@ std::unique_ptr<std::vector<std::unique_ptr<ICollisionGameObject>>>
 
 }
 
-std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
+std::unique_ptr<std::vector<std::unique_ptr<GameObject>>>
 	LevelObjectBuilder::build_non_collision_objects(const Value& json) const
 {
-	auto non_collision_objects = std::make_unique<std::vector<std::unique_ptr<IGameObject>>>();
+	auto non_collision_objects = std::make_unique<std::vector<std::unique_ptr<GameObject>>>();
 	for (auto& object : json.GetArray())
 	{
 		non_collision_objects->push_back(build_non_collision_object(object));
@@ -209,11 +209,11 @@ std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
 	return non_collision_objects;
 }
 
-std::unique_ptr<std::vector<std::unique_ptr<IGameObject>>>
+std::unique_ptr<std::vector<std::unique_ptr<GameObject>>>
 	LevelObjectBuilder::build_viewport_dividers(
 		const ViewportManager* viewport_manager) const
 {
-	auto viewport_dividers = std::make_unique<std::vector<std::unique_ptr<IGameObject>>>();
+	auto viewport_dividers = std::make_unique<std::vector<std::unique_ptr<GameObject>>>();
 
 	std::vector<RectangleF> viewport_rectangles =
 		viewport_manager->viewport_dividers();

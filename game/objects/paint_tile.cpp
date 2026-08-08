@@ -60,7 +60,7 @@ PlayerTeam PaintTile::team() const
 {
 	return this->team_;
 }
-bool PaintTile::is_colliding(const ICollisionGameObject* other) const
+bool PaintTile::is_colliding(const CollisionObject* other) const
 {
     // aabb check
     if (!this->shape()->AABB_intersects(other->shape()))
@@ -90,7 +90,7 @@ const Shape* PaintTile::shape() const
 {
     return &this->rectangle_;
 }
-void PaintTile::on_collision(const ICollisionGameObject* other)
+void PaintTile::on_collision(const CollisionObject* other)
 {
 	CollisionObjectType other_type = other->collision_object_type();
 	PlayerTeam other_team;

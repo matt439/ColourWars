@@ -77,7 +77,7 @@ void ResultsMenuInitial::init()
 {
 	const LevelEndInfo end_info = this->level_end_info();
 
-	this->box_ = std::make_unique<MTexture>(
+	this->box_ = std::make_unique<UiTexture>(
 		"box",
 		"sprite_sheet_1",
 		"pixel",
@@ -86,7 +86,7 @@ void ResultsMenuInitial::init()
 		RESULTS_MENU_BOX_COLOUR);
 	this->box_->set_position_at_center(DEFAULT_RESOLUTION / 2.0f);
 
-	this->heading_ = std::make_unique<MTextDropShadow>(
+	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"title",
 		L"Results",
 		HEADING_FONT,
@@ -96,7 +96,7 @@ void ResultsMenuInitial::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->fill_box_ = std::make_unique<MTexture>(
+	this->fill_box_ = std::make_unique<UiTexture>(
 		"fill_box",
 		"sprite_sheet_1",
 		"results_menu_fill_box",
@@ -109,7 +109,7 @@ void ResultsMenuInitial::init()
 		this->box_->rectangle().position().y + RESULTS_MENU_FILL_BOX_Y_OFFSET);
 	this->fill_box_->set_position(fill_box_position);
 
-	this->team_a_fill_ = std::make_unique<MTexture>(
+	this->team_a_fill_ = std::make_unique<UiTexture>(
 		"team_a_fill",
 		"sprite_sheet_1",
 		"results_menu_team_a_fill",
@@ -120,7 +120,7 @@ void ResultsMenuInitial::init()
 	this->team_a_fill_->set_position(this->fill_box_->rectangle().position() +
 		RESULTS_MENU_TEAM_FILL_BORDER);
 
-	this->team_b_fill_ = std::make_unique<MTexture>(
+	this->team_b_fill_ = std::make_unique<UiTexture>(
 		"team_b_fill",
 		"sprite_sheet_1",
 		"results_menu_team_b_fill",
@@ -129,7 +129,7 @@ void ResultsMenuInitial::init()
 		this->render_resources(),
 		this->results_menu_data()->level_end_info().team_colours.team_b);
 
-	this->team_a_percentage_ = std::make_unique<MTextDropShadow>(
+	this->team_a_percentage_ = std::make_unique<UiTextDropShadow>(
 		"team_a_percentage",
 		end_info.team_a_percentage_string(),
 		DETAIL_FONT,
@@ -140,7 +140,7 @@ void ResultsMenuInitial::init()
 		DETAIL_SHADOW_OFFSET,
 		true);
 
-	this->team_b_percentage_ = std::make_unique<MTextDropShadow>(
+	this->team_b_percentage_ = std::make_unique<UiTextDropShadow>(
 		"team_b_percentage",
 		end_info.team_b_percentage_string(),
 		DETAIL_FONT,
@@ -155,7 +155,7 @@ void ResultsMenuInitial::init()
 		TEAM_B_PERCENTAGE_X_OFFSET,
 		this->calculate_team_b_fill_top_right_position().y));
 
-	this->winner_ = std::make_unique<MTextDropShadow>(
+	this->winner_ = std::make_unique<UiTextDropShadow>(
 		"winner",
 		end_info.winning_team_string(),
 		ITEM_FONT,
@@ -166,7 +166,7 @@ void ResultsMenuInitial::init()
 		DETAIL_SHADOW_OFFSET,
 		true);
 
-	this->proceed_ = std::make_unique<MTextDropShadow>(
+	this->proceed_ = std::make_unique<UiTextDropShadow>(
 		"proceed",
 		L"Press A to proceed",
 		DETAIL_FONT,
@@ -177,14 +177,14 @@ void ResultsMenuInitial::init()
 		DETAIL_SHADOW_OFFSET,
 		true);
 
-	this->texture_container_ = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->box_.get());
 	this->texture_container_->add_child(this->fill_box_.get());
 	this->texture_container_->add_child(this->team_a_fill_.get());
 	this->texture_container_->add_child(this->team_b_fill_.get());
 
-	this->text_container_ = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->heading_.get());
 	this->text_container_->add_child(this->team_a_percentage_.get());
@@ -204,14 +204,14 @@ void ResultsMenuInitial::init()
 
 void ResultsMenuInitial::draw()
 {
-	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
+	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
 
-	mobjects.push_back(std::make_pair(this->texture_container_.get(),
+	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
 		this->point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
-	this->draw_mobjects_in_viewports(&mobjects);
+	this->draw_ui_objects_in_viewports(&ui_objects);
 }
 
 void ResultsMenuInitial::update_fill_box() const

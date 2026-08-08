@@ -11,7 +11,7 @@ class ProjectileBuilder
 {
 public:
 	ProjectileBuilder() = default;
-	std::vector<std::unique_ptr<ICollisionGameObject>> build_projectiles(
+	std::vector<std::unique_ptr<CollisionObject>> build_projectiles(
 		const mattmath::Vector2F& position,
 		const mattmath::Vector2F& velocity,
 		PlayerTeam team,
@@ -25,7 +25,7 @@ public:
 		float layer_depth = 0.0f) const;
 
 private:
-	static std::vector<std::unique_ptr<ICollisionGameObject>> build_mist_projectiles(
+	static std::vector<std::unique_ptr<CollisionObject>> build_mist_projectiles(
 		const mattmath::Vector2F& position,
 		const mattmath::Vector2F& velocity,
 		PlayerTeam team,

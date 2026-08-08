@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/objects/i_paintable_game_object.h"
+#include "game/objects/paintable_object.h"
 #include "game/objects/structure.h"
 #include "game/objects/paint_tile.h"
 #include "engine/audio/audio_resources.h"
@@ -29,7 +29,7 @@ struct PaintableFaces
 	bool bottom = false;
 };
 
-class StructurePaintable final : public Structure, public IPaintableGameObject
+class StructurePaintable final : public Structure, public PaintableObject
 {
 public:
 	StructurePaintable() = default;
@@ -51,7 +51,7 @@ public:
 	void update(float dt) override;
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera) const override;
-	void on_collision(const ICollisionGameObject* other) override;
+	void on_collision(const CollisionObject* other) override;
 
 	PaintTotal paint_total() const override;
 

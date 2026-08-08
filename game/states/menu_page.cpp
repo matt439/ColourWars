@@ -91,9 +91,9 @@ ViewportManager* MenuPage::viewport_manager() const
 	return this->data_->viewport_manager();
 }
 
-void MenuPage::draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,
+void MenuPage::draw_ui_object_in_viewports(ID3D11DeviceContext* deferred_context,
 	ID3D11CommandList*& command_list, SpriteBatch* sprite_batch,
-	MObject* widget,
+	UiObject* ui_object,
 	ID3D11SamplerState* sampler_state)
 {
 	if (deferred_context->GetType() != D3D11_DEVICE_CONTEXT_DEFERRED)
@@ -112,7 +112,7 @@ void MenuPage::draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,
 
 		sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, sampler_state);
 
-		widget->draw(sprite_batch, viewports[i]);
+		ui_object->draw(sprite_batch, viewports[i]);
 
 		sprite_batch->End();
 	}
@@ -124,8 +124,8 @@ void MenuPage::draw_mobject_in_viewports(ID3D11DeviceContext* deferred_context,
 	}
 }
 
-void MenuPage::draw_mobjects_in_viewports(std::vector<std::pair<MObject*,
-	ID3D11SamplerState*>>* mobjects)
+void MenuPage::draw_ui_objects_in_viewports(std::vector<std::pair<UiObject*,
+	ID3D11SamplerState*>>* ui_objects)
 {
 	auto deferred_contexts = this->data()->device_resources()->deferred_contexts();
 	std::vector<ID3D11CommandList*> command_lists(deferred_contexts->size(), nullptr);
@@ -133,21 +133,21 @@ void MenuPage::draw_mobjects_in_viewports(std::vector<std::pair<MObject*,
 	auto partitioner = this->data()->partitioner();
 	int num_threads = this->data()->thread_pool()->max_num_threads();
 
-	// partition MObjects objects
-	auto partitioned_mobjects =
-		partitioner->partition(mobjects->size(), num_threads);
+	// partition the objects
+	auto partitioned_ui_objects =
+		partitioner->partition(ui_objects->size(), num_threads);
 
 	auto thread_pool = this->data()->thread_pool();
 
-	// draw MObjects objects
-	for (int i = 0; i < partitioned_mobjects.size(); i++)
+	// draw the objects
+	for (int i = 0; i < partitioned_ui_objects.size(); i++)
 	{
-		thread_pool->add_task([this, i, &partitioned_mobjects, mobjects, deferred_contexts,
+		thread_pool->add_task([this, i, &partitioned_ui_objects, ui_objects, deferred_contexts,
 			&command_lists, sprite_batches]()
 			{
-				this->draw_range_of_mobjects_in_viewports(
-					partitioned_mobjects[i].first, partitioned_mobjects[i].second,
-					mobjects, deferred_contexts, &command_lists, sprite_batches);
+				this->draw_range_of_ui_objects_in_viewports(
+					partitioned_ui_objects[i].first, partitioned_ui_objects[i].second,
+					ui_objects, deferred_contexts, &command_lists, sprite_batches);
 			});
 	}
 	thread_pool->wait_for_tasks_to_complete();
@@ -166,8 +166,8 @@ void MenuPage::draw_mobjects_in_viewports(std::vector<std::pair<MObject*,
 	}
 }
 
-void MenuPage::draw_range_of_mobjects_in_viewports(int start, int end,
-	std::vector<std::pair<MObject*, ID3D11SamplerState*>>* mobjects,
+void MenuPage::draw_range_of_ui_objects_in_viewports(int start, int end,
+	std::vector<std::pair<UiObject*, ID3D11SamplerState*>>* ui_objects,
 	std::vector<ID3D11DeviceContext*>* deferred_contexts,
 	std::vector<ID3D11CommandList*>* command_lists,
 	std::vector<SpriteBatch*>* sprite_batches)
@@ -176,9 +176,9 @@ void MenuPage::draw_range_of_mobjects_in_viewports(int start, int end,
 	{
 		// Use the contexts passed in rather than re-fetching the same ones
 		// through GameData from a worker thread.
-		this->draw_mobject_in_viewports(
+		this->draw_ui_object_in_viewports(
 			deferred_contexts->at(i),
-			command_lists->at(i), sprite_batches->at(i), mobjects->at(i).first, mobjects->at(i).second);
+			command_lists->at(i), sprite_batches->at(i), ui_objects->at(i).first, ui_objects->at(i).second);
 	}
 }
 

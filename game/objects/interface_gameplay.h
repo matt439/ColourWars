@@ -47,7 +47,7 @@ class InterfaceGameplay
 public:
     explicit InterfaceGameplay(artattack::RenderResources* render_resources);
 
-    // const for the same reason IGameObject::draw is. There is one
+    // const for the same reason GameObject::draw is. There is one
     // InterfaceGameplay for the whole level, and every render worker calls this
     // on it at once with its own view's health, ammo and timer - so the HUD is
     // the most tempting place in the level to stash per-view state on a shared

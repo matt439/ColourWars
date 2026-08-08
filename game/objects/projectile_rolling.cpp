@@ -47,7 +47,7 @@ RectangleF ProjectileRolling::bounds() const
 	// not draw. draw() is the no-op that says so.
 	return this->rectangle_;
 }
-bool ProjectileRolling::is_colliding(const ICollisionGameObject* other) const
+bool ProjectileRolling::is_colliding(const CollisionObject* other) const
 {
 	// type check
 	if (!this->is_matching_collision_object_type(other))

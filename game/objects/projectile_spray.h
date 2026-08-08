@@ -22,7 +22,7 @@ public:
 		const mattmath::Camera& camera) const override;
 	mattmath::RectangleF bounds() const override;
 
-	bool is_colliding(const ICollisionGameObject* other) const override;
+	bool is_colliding(const CollisionObject* other) const override;
 	const mattmath::Shape* shape() const override;
 
 private:

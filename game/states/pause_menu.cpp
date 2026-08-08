@@ -134,7 +134,7 @@ void PauseMenuInitial::init()
 	this->set_highlight_colour(STANDARD_HIGHLIGHT);
 	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
 
-	this->box_ = std::make_unique<MTexture>(
+	this->box_ = std::make_unique<UiTexture>(
 		"box",
 		"sprite_sheet_1",
 		"pixel",
@@ -147,7 +147,7 @@ void PauseMenuInitial::init()
 	this->set_widget_size(PAUSE_MENU_INITIAL_WIDGET_SIZE);
 	this->set_widget_spacing(PAUSE_MENU_INITIAL_WIDGET_SPACING);
 
-	this->player_num_ = std::make_unique<MTextDropShadow>(
+	this->player_num_ = std::make_unique<UiTextDropShadow>(
 		"player_num",
 		this->player_number_text(
 			this->pause_menu_data()->player_num()),
@@ -158,7 +158,7 @@ void PauseMenuInitial::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->resume_ = std::make_unique<MTextDropShadow>(
+	this->resume_ = std::make_unique<UiTextDropShadow>(
 		"resume",
 		L"Resume",
 		ITEM_FONT,
@@ -168,7 +168,7 @@ void PauseMenuInitial::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->restart_ = std::make_unique<MTextDropShadow>(
+	this->restart_ = std::make_unique<UiTextDropShadow>(
 		"restart",
 		L"Restart",
 		ITEM_FONT,
@@ -178,7 +178,7 @@ void PauseMenuInitial::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->quit_ = std::make_unique<MTextDropShadow>(
+	this->quit_ = std::make_unique<UiTextDropShadow>(
 		"quit",
 		L"Quit",
 		ITEM_FONT,
@@ -192,11 +192,11 @@ void PauseMenuInitial::init()
 
 	const Vector2F resolution = this->float_resolution();
 
-	this->texture_container_ = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->box_.get());
 
-	this->text_container_ = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->player_num_.get());
 	this->text_container_->add_child(this->resume_.get());
@@ -212,14 +212,14 @@ void PauseMenuInitial::init()
 }
 void PauseMenuInitial::draw()
 {
-	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
+	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
 
-	mobjects.push_back(std::make_pair(this->texture_container_.get(),
+	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
 		this->point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
-	this->draw_mobjects_in_viewports(&mobjects);
+	this->draw_ui_objects_in_viewports(&ui_objects);
 }
 
 PauseMenuConfirmation::PauseMenuConfirmation(PauseMenuData* data,
@@ -290,7 +290,7 @@ void PauseMenuConfirmation::init()
 	this->set_highlight_colour(STANDARD_HIGHLIGHT);
 	this->set_unhighlight_colour(STANDARD_UNHIGHLIGHT);
 
-	this->box_ = std::make_unique<MTexture>(
+	this->box_ = std::make_unique<UiTexture>(
 		"box",
 		"sprite_sheet_1",
 		"pixel",
@@ -303,7 +303,7 @@ void PauseMenuConfirmation::init()
 	this->set_widget_size(PAUSE_MENU_INITIAL_WIDGET_SIZE);
 	this->set_widget_spacing(PAUSE_MENU_INITIAL_WIDGET_SPACING);
 
-	this->player_num_ = std::make_unique<MTextDropShadow>(
+	this->player_num_ = std::make_unique<UiTextDropShadow>(
 		"player_num",
 		this->player_number_text(
 			this->pause_menu_data()->player_num()),
@@ -314,7 +314,7 @@ void PauseMenuConfirmation::init()
 		SHADOW_COLOUR,
 		HEADING_SHADOW_OFFSET);
 
-	this->question_ = std::make_unique<MTextDropShadow>(
+	this->question_ = std::make_unique<UiTextDropShadow>(
 		"question",
 		question_text(this->type_),
 		DETAIL_FONT,
@@ -324,7 +324,7 @@ void PauseMenuConfirmation::init()
 		SHADOW_COLOUR,
 		DETAIL_SHADOW_OFFSET);
 
-	this->yes_ = std::make_unique<MTextDropShadow>(
+	this->yes_ = std::make_unique<UiTextDropShadow>(
 		"yes",
 		L"Yes",
 		ITEM_FONT,
@@ -334,7 +334,7 @@ void PauseMenuConfirmation::init()
 		SHADOW_COLOUR,
 		ITEM_SHADOW_OFFSET);
 
-	this->no_ = std::make_unique<MTextDropShadow>(
+	this->no_ = std::make_unique<UiTextDropShadow>(
 		"no",
 		L"No",
 		ITEM_FONT,
@@ -346,11 +346,11 @@ void PauseMenuConfirmation::init()
 
 	this->set_highlighted_widget(this->no_.get());
 
-	this->texture_container_ = std::make_unique<MContainer>(
+	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->box_.get());
 
-	this->text_container_ = std::make_unique<MContainer>(
+	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->player_num_.get());
 	this->text_container_->add_child(this->question_.get());
@@ -366,14 +366,14 @@ void PauseMenuConfirmation::init()
 
 void PauseMenuConfirmation::draw()
 {
-	std::vector<std::pair<MObject*, ID3D11SamplerState*>> mobjects;
+	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
 
-	mobjects.push_back(std::make_pair(this->texture_container_.get(),
+	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
 		this->point_clamp_sampler_state()));
 
-	mobjects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
 
-	this->draw_mobjects_in_viewports(&mobjects);
+	this->draw_ui_objects_in_viewports(&ui_objects);
 }
 
 std::wstring PauseMenuConfirmation::question_text(

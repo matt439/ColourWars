@@ -170,7 +170,7 @@ Vector2F Weapon::wep_rotation_origin_offset(bool facing_left) const
 	return Vector2F(this->details_.offset.x, this->details_.offset.y);
 }
 
-std::vector<std::unique_ptr<ICollisionGameObject>>
+std::vector<std::unique_ptr<CollisionObject>>
     Weapon::update_and_get_projectiles(PlayerInputData input,
     const Vector2F& player_center,
     const Vector2F& player_velocity,
@@ -187,7 +187,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 	}
 	else
 	{
-		return std::vector<std::unique_ptr<ICollisionGameObject>>();
+		return std::vector<std::unique_ptr<CollisionObject>>();
     }
 }
 
@@ -337,7 +337,7 @@ void Weapon::update_movement_and_rotation(PlayerInputData input,
     }
 }
 
-std::vector<std::unique_ptr<ICollisionGameObject>>
+std::vector<std::unique_ptr<CollisionObject>>
 Weapon::shoot(const Vector2F& shoot_direction) const
 {
     Vector2F launch_velocity = this->calculate_projectile_launch_velocity(
@@ -567,7 +567,7 @@ Vector2F RelativeVelocityWeapon::calculate_projectile_launch_velocity(
     return result;
 }
 
-std::vector<std::unique_ptr<ICollisionGameObject>> RelativeVelocityWeapon::shoot(
+std::vector<std::unique_ptr<CollisionObject>> RelativeVelocityWeapon::shoot(
     const mattmath::Vector2F& shoot_direction,
     const mattmath::Vector2F& player_velocity) const
 {
@@ -590,7 +590,7 @@ std::vector<std::unique_ptr<ICollisionGameObject>> RelativeVelocityWeapon::shoot
         this->render_resources());
 }
 
-std::vector<std::unique_ptr<ICollisionGameObject>>
+std::vector<std::unique_ptr<CollisionObject>>
     RelativeVelocityWeapon::update_and_get_projectiles(PlayerInputData input,
     const Vector2F& player_center,
     const Vector2F& player_velocity,
@@ -608,6 +608,6 @@ std::vector<std::unique_ptr<ICollisionGameObject>>
 	}
     else
     {
-        return std::vector<std::unique_ptr<ICollisionGameObject>>();
+        return std::vector<std::unique_ptr<CollisionObject>>();
     }
 }

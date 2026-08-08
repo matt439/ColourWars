@@ -37,11 +37,11 @@ RectangleF Structure::bounds() const
 {
 	return this->sprite_rectangle_;
 }
-bool Structure::is_colliding(const ICollisionGameObject* /*other*/) const
+bool Structure::is_colliding(const CollisionObject* /*other*/) const
 {
 	return false;
 }
-void Structure::on_collision(const ICollisionGameObject* /*other*/)
+void Structure::on_collision(const CollisionObject* /*other*/)
 {
 	// do nothing
 }
