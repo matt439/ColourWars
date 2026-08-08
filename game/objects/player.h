@@ -13,6 +13,8 @@
 #include "engine/audio/sound_bank.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/render/colour.h"
+#include "engine/render/camera.h"
+#include "engine/render/viewport.h"
 
 enum class PlayerState
 {
@@ -76,7 +78,7 @@ public:
         std::unique_ptr<Weapon> primary_weapon,
         WeaponType secondary,
         const artattack::Colour& team_colour,
-        const mattmath::Viewport& view_port,
+        const artattack::Viewport& view_port,
         const mattmath::Vector2F& respawn_position,
         const mattmath::Vector2F& velocity = mattmath::Vector2F::ZERO,
         float rotation = 0.0f,
@@ -114,7 +116,7 @@ public:
     void end_contacts();
 
 	void set_player_input(const PlayerInputData& input);
-    void set_camera(const mattmath::Camera& camera);
+    void set_camera(const artattack::Camera& camera);
 
 	const mattmath::RectangleF& rectangle() const;
 	mattmath::Vector2F center() const;
@@ -122,8 +124,8 @@ public:
     // never overrode anything meaningfully, and MovingObject's accessors are
     // no longer virtual.
     const mattmath::Vector2F& velocity() const;
-	const mattmath::Camera& camera() const;
-	const mattmath::Viewport& viewport() const;
+	const artattack::Camera& camera() const;
+	const artattack::Viewport& viewport() const;
 	float input_x_movement() const;
 	const mattmath::Vector2F& input_shoot_direction() const;
 	bool input_primary_shoot() const;
@@ -160,7 +162,7 @@ public:
 	std::string player_move_state_string() const;
 
 private:
-    mattmath::Camera camera_ = mattmath::Camera::DEFAULT_CAMERA;
+    artattack::Camera camera_ = artattack::Camera::DEFAULT_CAMERA;
 
     std::unique_ptr<Weapon> primary_ = nullptr;
 
@@ -181,7 +183,7 @@ private:
     WeaponType primary_type_ = player_consts::DEFAULT_PRIMARY;
     WeaponType secondary_type_ = player_consts::DEFAULT_SECONDARY;
     artattack::Colour team_colour_ = player_consts::DEFAULT_TEAM_COLOUR;
-    mattmath::Viewport viewport_ = mattmath::Viewport();
+    artattack::Viewport viewport_ = artattack::Viewport();
 
     mattmath::RectangleF rectangle_ = player_consts::DEFAULT_BOUNDS;
     mattmath::RectangleF prev_rectangle_ = player_consts::DEFAULT_BOUNDS;
@@ -250,7 +252,7 @@ private:
 
     void set_team_colour(const artattack::Colour& team_colour);
 
-    void set_viewport(const mattmath::Viewport& viewport);
+    void set_viewport(const artattack::Viewport& viewport);
 
     bool facing_right() const;
     void set_facing_right(bool facing_right);

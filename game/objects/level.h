@@ -18,6 +18,7 @@
 #include "engine/audio/audio_resources.h"
 #include "engine/scene/scene.h"
 #include "engine/render/colour.h"
+#include "engine/render/camera.h"
 
 enum class LevelState
 {
@@ -195,7 +196,7 @@ private:
 	float zoom_out_timer_ = level_consts::ZOOM_OUT_TIMER;
 	float overview_timer_ = level_consts::OVERVIEW_TIMER;
 
-	mattmath::Camera zoom_out_camera_ = mattmath::Camera::DEFAULT_CAMERA;
+	artattack::Camera zoom_out_camera_ = artattack::Camera::DEFAULT_CAMERA;
 
 	TeamColour team_colours_ = TeamColour();
 

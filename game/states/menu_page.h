@@ -5,6 +5,8 @@
 #include "game/states/menu_context.h"
 #include "engine/core/state.h"
 #include "engine/math/matt_math.h"
+#include "engine/render/camera.h"
+#include "engine/render/viewport.h"
 
 namespace menu_consts
 {
@@ -98,7 +100,7 @@ protected:
 	// correctly on a 1280x720 screen. Its predecessor was a destructive walk
 	// over the widget tree in engine/ui, called at 26 sites, which left no
 	// authoritative geometry behind for anything that wrote a position later.
-	mattmath::Camera ui_camera(const mattmath::Viewport& viewport) const;
+	artattack::Camera ui_camera(const artattack::Viewport& viewport) const;
 private:
 	MenuContext* context_ = nullptr;
 	mattmath::Vector2F widget_position_ = { 150.0f, 150.0f };
