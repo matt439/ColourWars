@@ -1,62 +1,44 @@
 #pragma once
 
-#include <vector>
+#include "engine/input/gamepads.h"
 #include "game/objects/player_input_data.h"
-#include "engine/math/matt_math.h"
+#include <vector>
 
 namespace player_input_consts
 {
-	constexpr float TRIGGER_SHOOT_THRESHOLD = 0.6f;
-	constexpr float TRIGGER_JUMP_THRESHOLD = 0.6f;
-	constexpr float STICK_DEADZONE = 0.5f;
+	constexpr float trigger_shoot_threshold = 0.6f;
+	constexpr float trigger_jump_threshold = 0.6f;
 
-	// XInput slots. An index into the vector returned by
-	// update_and_get_player_inputs() is a pad slot, never an ordinal.
-	constexpr int MAX_PAD_COUNT = 4;
+	// Applied once, radially, and rescaled - see engine/input/gamepad.h. It
+	// used to be applied on top of a circular deadzone the pad API had already
+	// applied, without rescaling, so a stick had half its travel dead and the
+	// other half started at half speed.
+	constexpr float stick_deadzone = 0.5f;
 }
 
-struct RawPlayerInput
-{
-	mattmath::Vector2F left_analog_stick = { 0.0f, 0.0f };
-	mattmath::Vector2F right_analog_stick = { 0.0f, 0.0f };
-	bool jump_button = false;
-	float jump_trigger = 0.0f;
-	float primary_shoot = 0.0f;
-	bool secondary_shoot = false;
-	bool show_debug = false;
-	bool pause_menu = false;
-	bool connected = false;
-};
-
+// What the pads mean to a match, one entry per slot.
+//
+// This is now a mapping and nothing else: no polling, no previous-frame store,
+// no priming. The engine holds the pads and the edges (engine/input/gamepads.h)
+// because an edge is only right when "previous" is genuinely last frame, which
+// it cannot be for a detector that only runs while gameplay is on screen.
 class PlayerInput
 {
 public:
-	explicit PlayerInput(DirectX::GamePad* gamepad);
+	explicit PlayerInput(const artattack::Gamepads* gamepads);
 
-	// Returns exactly player_input_consts::MAX_PAD_COUNT entries, indexed by
-	// XInput pad slot. Absent pads carry ConnectionState::disconnected and
-	// neutral input rather than being omitted.
+	// Returns exactly artattack::Gamepads::max_count entries, indexed by pad
+	// slot. Absent pads carry neutral input rather than being omitted: the
+	// index is a slot and every caller reads it as a player number, so a
+	// vector that skipped empty slots would hand a player someone else's
+	// controller.
 	//
-	// jump is a *press* edge and pause/debug are *release* edges, all computed
-	// against the previous frame. Read that together with prime().
-	std::vector<PlayerInputData> update_and_get_player_inputs();
+	// jump is a *press* edge; pause and debug are *release* edges.
+	std::vector<PlayerInputData> player_inputs() const;
 
-	// Seeds the previous-frame state from the pads as they are right now.
-	//
-	// Call it whenever gameplay becomes the thing reading input. "Previous"
-	// only advances on frames update_and_get_player_inputs() is called, and
-	// that stops while a menu is up - so a player who paused mid-jump came
-	// back with previous.jump_button still true, and
-	// `current && !previous` swallowed their first jump on the way out.
-	//
-	// Same defect as MenuInput::prime(), in the other direction: an edge
-	// detector whose "previous" only advances on frames its owner happens to
-	// be running.
-	void prime();
 private:
-	RawPlayerInput prev_inputs_[player_input_consts::MAX_PAD_COUNT];
-	RawPlayerInput raw_input(int gamepad_num) const;
-	static PlayerInputData calculate_player_input(const RawPlayerInput& current,
-	                                              const RawPlayerInput& previous);
-	DirectX::GamePad* gamepad_ = nullptr;
+	static PlayerInputData player_input(const artattack::Gamepads& gamepads,
+		int slot);
+
+	const artattack::Gamepads* gamepads_ = nullptr;
 };

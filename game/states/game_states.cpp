@@ -14,7 +14,7 @@ GameData* GameMenu::data() const
 
 void GameMenu::init()
 {
-	this->menu_input_ = std::make_unique<MenuInput>(this->data()->gamepad());
+	this->menu_input_ = std::make_unique<MenuInput>(this->data()->gamepads());
 	this->menu_level_settings_ = std::make_unique<MenuLevelSettings>();
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
 		this->menu_input_.get(), this->menu_level_settings_.get());
@@ -37,10 +37,6 @@ void GameMenu::draw(Renderer& /*renderer*/) const
 
 void GameMenu::open_menu(MainMenuScreen screen)
 {
-	// A button held on the way in - the A that confirmed the level's end menu,
-	// say - must be released before it counts here.
-	this->menu_input_->prime();
-
 	// The page frame has one exit and it is the way out, so it closes rather
 	// than answering: the settings it assembled are in the MenuContext this
 	// state owns. That used to be a heap-allocated bool read every frame.
@@ -134,10 +130,10 @@ void GameLevel::init()
 	this->previous_layout_ = this->data()->viewport_manager()->layout();
 
 	this->player_input_ = std::make_unique<PlayerInput>(
-		this->data()->gamepad());
+		this->data()->gamepads());
 
 	this->menu_input_ = std::make_unique<MenuInput>(
-		this->data()->gamepad());
+		this->data()->gamepads());
 
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
 		this->menu_input_.get(), &this->settings_);
@@ -171,10 +167,11 @@ void GameLevel::build_and_enter_level()
 	this->level_.reset();
 	this->level_ = this->level_builder_->build_level(this->settings_);
 
-	// Gameplay takes the input back. Whoever pressed A to start the match is
-	// probably still holding it, and without this it lands as a jump on frame
-	// one; the same call covers both restart paths.
-	this->player_input_->prime();
+	// Whoever pressed A to start the match is probably still holding it, and
+	// it does not land as a jump on frame one: the engine polls the pads every
+	// frame whatever is running, so A was down last frame too and there is no
+	// press edge. That used to be four hand-written prime() calls, one at each
+	// transition, and each of them was a fix for a bug that had shipped.
 
 	// Building a level is a blocking call worth many frames, and the step is
 	// fixed: the next tick would otherwise pay the backlog off by running the
@@ -187,7 +184,7 @@ void GameLevel::build_and_enter_level()
 void GameLevel::update(float dt)
 {
 	const std::vector<PlayerInputData> player_inputs =
-		this->player_input_->update_and_get_player_inputs();
+		this->player_input_->player_inputs();
 
 	const int pause_menu_player = this->check_for_pause_input(player_inputs);
 	if (pause_menu_player != -1)
@@ -217,21 +214,15 @@ void GameLevel::draw(Renderer& renderer) const
 
 void GameLevel::on_suspend()
 {
-	// A menu is taking the input, so the menu's edge detector has to start from
-	// what the pads look like now: "previous" only advances on frames the menu
-	// is read, so a button already held reads as a press the menu received.
-	this->menu_input_->prime();
-
-	// And the half that not-calling-update() could never do. Level::update is
-	// the only thing that ever stops a looping weapon voice, so pausing used to
-	// leave a player who paused mid-burst with a sustained tone running under
-	// the menu, over music still playing at full volume.
+	// What not-calling-update() could never do. Level::update is the only thing
+	// that ever stops a looping weapon voice, so pausing used to leave a player
+	// who paused mid-burst with a sustained tone running under the menu, over
+	// music still playing at full volume.
 	this->level_->suspend();
 }
 
 void GameLevel::on_resume()
 {
-	this->player_input_->prime();
 	this->level_->resume();
 }
 
@@ -251,8 +242,8 @@ void GameLevel::on_pause_menu_closed(const PauseMenuAction& action)
 	switch (action)
 	{
 	case PauseMenuAction::resume:
-		// Nothing: on_resume() has already primed the input and let the mix
-		// back up, which is exactly what resuming means.
+		// Nothing: on_resume() has already let the mix back up, which is
+		// exactly what resuming means.
 		break;
 	case PauseMenuAction::restart:
 		this->build_and_enter_level();

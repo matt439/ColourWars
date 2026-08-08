@@ -1,76 +1,52 @@
 #pragma once
 
-#include <vector>
-#include "game/states/menu_input_action.h"
-#include "engine/input/connection_state.h"
-#include "engine/ui/navigation.h"
+#include "engine/input/gamepads.h"
 #include "engine/math/matt_math.h"
-#include "game/objects/player_input.h"
+#include "engine/ui/navigation.h"
+#include "game/states/menu_input_action.h"
+#include <vector>
 
 namespace menu_input_consts
 {
-	constexpr float DIGITAL_PRESENCE_THRESHOLD = 0.8f;
-	constexpr float DIGITAL_ABSENCE_THRESHOLD = 0.8f;
-
-	using player_input_consts::MAX_PAD_COUNT;
+	// The stick has to pass the first threshold and then fall back inside the
+	// second for a direction to count, so a held stick is one step and not a
+	// stream of them. They are equal today; they are two names because the pair
+	// is a hysteresis band and collapsing them would make a stick resting on
+	// the line stutter.
+	constexpr float digital_presence_threshold = 0.8f;
+	constexpr float digital_absence_threshold = 0.8f;
 }
-
-struct RawMenuInput
-{
-	mattmath::Vector2F left_analog_stick = mattmath::Vector2F::ZERO;
-	bool proceed = false;
-	bool back = false;
-	bool up = false;
-	bool down = false;
-	bool left = false;
-	bool right = false;
-	bool pause = false;
-	bool connected = false;
-};
 
 struct ProcessedMenuInput
 {
 	// artattack::Direction, not a game enum: which way the stick went is the
 	// input to engine/ui's navigation walk, and there is no version of it that
-	// belongs to this game. The pad polling and the edge detection below still
-	// live here - moving those is the input module's job (PLAN.md D2), and
-	// they are written twice in this repository already.
+	// belongs to this game.
 	artattack::Direction direction = artattack::Direction::none;
 	MenuInputAction action = MenuInputAction::none;
-	artattack::ConnectionState connection = artattack::ConnectionState::disconnected;
+	bool connected = false;
 };
 
+// What the pads mean to a menu, one entry per slot.
+//
+// A mapping and nothing else, for the same reason PlayerInput is: the pads and
+// the edges between frames belong to the engine (engine/input/gamepads.h). The
+// polling, the previous-frame store and the prime() that used to live here were
+// the second of two copies, and they had already drifted from the first.
 class MenuInput
 {
 public:
-	explicit MenuInput(DirectX::GamePad* gamepad);
+	explicit MenuInput(const artattack::Gamepads* gamepads);
 
-	// Returns exactly menu_input_consts::MAX_PAD_COUNT entries, indexed by
-	// XInput pad slot. Absent pads carry DISCONNECTED and neutral input.
+	// Returns exactly artattack::Gamepads::max_count entries, indexed by pad
+	// slot. Absent pads carry neutral input.
 	//
-	// Every action here is a *release* edge, computed against the previous
-	// frame. That contract was written down nowhere, which is how the bug
-	// prime() fixes survived: read the two together.
-	std::vector<ProcessedMenuInput> update_and_get_menu_inputs();
+	// Every action here is a *release* edge: the button has to come back up.
+	std::vector<ProcessedMenuInput> menu_inputs() const;
 
-	// Seeds the previous-frame state from the pads as they are right now.
-	//
-	// Call it whenever this input becomes the one being read. "Previous" only
-	// advances on frames update_and_get_menu_inputs() is called, which is only
-	// while a menu is on screen - so without priming, a button already held
-	// when the menu opens is seen as a press the menu itself received, and its
-	// release is delivered as an action.
-	//
-	// It was reachable in one sitting: A is jump, so holding A and tapping
-	// Start opened the pause menu, and the pause menu closed itself the
-	// instant the player let go of jump - confirming its default row, Resume.
-	// After priming, a button held across a transition must be released and
-	// pressed again to count.
-	void prime();
 private:
-	RawMenuInput prev_inputs_[menu_input_consts::MAX_PAD_COUNT];
-	RawMenuInput raw_input(int gamepad_num) const;
-	static ProcessedMenuInput calculate_menu_input(const RawMenuInput& current,
-	                                               const RawMenuInput& previous);
-	DirectX::GamePad* gamepad_ = nullptr;
+	static ProcessedMenuInput menu_input(const artattack::Gamepads& gamepads,
+		int slot);
+
+	const artattack::Gamepads* gamepads_ = nullptr;
 };

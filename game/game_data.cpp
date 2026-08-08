@@ -69,9 +69,9 @@ AudioResources* GameData::audio_resources() const
 	return this->application_->audio_resources();
 }
 
-DirectX::GamePad* GameData::gamepad() const
+Gamepads* GameData::gamepads() const
 {
-	return this->application_->gamepad();
+	return this->application_->gamepads();
 }
 
 ViewportManager* GameData::viewport_manager() const

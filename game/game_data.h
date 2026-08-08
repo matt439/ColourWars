@@ -43,7 +43,7 @@ public:
     artattack::ResolutionManager* resolution_manager() const;
     artattack::RenderResources* render_resources() const;
     artattack::AudioResources* audio_resources() const;
-    DirectX::GamePad* gamepad() const;
+    artattack::Gamepads* gamepads() const;
     artattack::ViewportManager* viewport_manager() const;
     artattack::ThreadPool* thread_pool() const;
     const artattack::Partitioner* partitioner() const;

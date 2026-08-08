@@ -123,7 +123,7 @@ void MenuPage::draw_ui_layers(Renderer& renderer,
 
 std::vector<ProcessedMenuInput> MenuPage::menu_inputs() const
 {
-	return this->input()->update_and_get_menu_inputs();
+	return this->input()->menu_inputs();
 }
 
 Vector2F MenuPage::float_resolution() const

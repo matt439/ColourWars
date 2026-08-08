@@ -1,162 +1,126 @@
 #include "game/pch.h"
 #include "game/states/menu_input.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace menu_input_consts;
 using namespace artattack;
 
-MenuInput::MenuInput(GamePad* gamepad) :
-    gamepad_(gamepad)
+MenuInput::MenuInput(const Gamepads* gamepads) :
+	gamepads_(gamepads)
 {
-    for (auto& prev_input : this->prev_inputs_)
-    {
-	    prev_input = RawMenuInput();
-    }
 }
 
-RawMenuInput MenuInput::raw_input(int gamepad_num) const
+ProcessedMenuInput MenuInput::menu_input(const Gamepads& gamepads, int slot)
 {
-	auto result = RawMenuInput();
-	const auto pad = this->gamepad_->GetState(gamepad_num, GamePad::DEAD_ZONE_NONE);
-    if (pad.IsConnected())
-    {
-        result.left_analog_stick = Vector2F(pad.thumbSticks.leftX,
-            -pad.thumbSticks.leftY);
-        result.proceed = pad.IsAPressed();
-        result.back = pad.IsBPressed();
-        result.up = pad.IsDPadUpPressed();
-        result.down = pad.IsDPadDownPressed();
-        result.left = pad.IsDPadLeftPressed();
-        result.right = pad.IsDPadRightPressed();
-        result.pause = pad.IsStartPressed();
-        result.connected = true;
-    }
-    return result;
-}
+	const GamepadState& now = gamepads.state(slot);
+	const GamepadState& before = gamepads.previous_state(slot);
 
-ProcessedMenuInput MenuInput::calculate_menu_input(const RawMenuInput& current,
-    const RawMenuInput& previous)
-{
-	auto result = ProcessedMenuInput();
-    bool no_press_current = !current.proceed && !current.back && !current.pause;
-    bool prev_proceed = previous.proceed && !previous.back && !previous.pause;
-    bool prev_back = previous.back && !previous.proceed && !previous.pause;
-    bool prev_pause = previous.pause && !previous.proceed && !previous.back;
-    bool proceed = prev_proceed && no_press_current;
-    bool back = prev_back && no_press_current;
-    bool pause = prev_pause && no_press_current;
+	ProcessedMenuInput result;
+	result.connected = true;
 
-    if (proceed)
-    {
-        result.action = MenuInputAction::proceed;
-    }
-    else if (back)
-    {
-        result.action = MenuInputAction::back;
-    }
-	else if (pause)
+	// An action fires when exactly one of the three was down last frame and
+	// none is down now. The "exactly one" is what stops a player holding A and
+	// B together from getting an answer out of releasing both.
+	const bool nothing_down =
+		!now.is_down(GamepadButton::a) &&
+		!now.is_down(GamepadButton::b) &&
+		!now.is_down(GamepadButton::start);
+
+	const auto only_one_was = [&before](GamepadButton wanted)
 	{
-		result.action = MenuInputAction::pause;
+		if (!before.is_down(wanted))
+		{
+			return false;
+		}
+		int down = 0;
+		for (const GamepadButton button : { GamepadButton::a,
+			GamepadButton::b, GamepadButton::start })
+		{
+			if (before.is_down(button))
+			{
+				++down;
+			}
+		}
+		return down == 1;
+	};
+
+	if (nothing_down)
+	{
+		if (only_one_was(GamepadButton::a))
+		{
+			result.action = MenuInputAction::proceed;
+		}
+		else if (only_one_was(GamepadButton::b))
+		{
+			result.action = MenuInputAction::back;
+		}
+		else if (only_one_was(GamepadButton::start))
+		{
+			result.action = MenuInputAction::pause;
+		}
 	}
-    else if ((proceed && back) ||
-        (proceed && pause) ||
-        (pause && back))
-    {
-        throw new std::exception(
-            "2 or more of proceed, back or pause pressed at same time");
-    }
-    else
-    {
-        result.action = MenuInputAction::none;
-    }
 
-    bool analog_down = previous.left_analog_stick.y >
-        menu_input_consts::DIGITAL_PRESENCE_THRESHOLD &&
-            current.left_analog_stick.y <
-            menu_input_consts::DIGITAL_ABSENCE_THRESHOLD;
-    bool analog_up = previous.left_analog_stick.y <
-        -menu_input_consts::DIGITAL_PRESENCE_THRESHOLD &&
-            current.left_analog_stick.y >
-            -menu_input_consts::DIGITAL_ABSENCE_THRESHOLD;
-    bool analog_left = previous.left_analog_stick.x <
-        -menu_input_consts::DIGITAL_PRESENCE_THRESHOLD &&
-            current.left_analog_stick.x >
-            -menu_input_consts::DIGITAL_ABSENCE_THRESHOLD;
-    bool analog_right = previous.left_analog_stick.x >
-        menu_input_consts::DIGITAL_PRESENCE_THRESHOLD &&
-            current.left_analog_stick.x <
-            menu_input_consts::DIGITAL_ABSENCE_THRESHOLD;
+	// A direction also fires on the way back, so a held stick is one step and
+	// not a stream of them: the stick has to have been outside the presence
+	// threshold and be back inside the absence one. The stick is raw here, on
+	// purpose - a menu wants the physical position against its own band, not
+	// something already rescaled for walking speed.
+	const Vector2F stick = now.left_stick;
+	const Vector2F was = before.left_stick;
 
+	const bool analog_up =
+		was.y < -digital_presence_threshold &&
+		stick.y > -digital_absence_threshold;
+	const bool analog_down =
+		was.y > digital_presence_threshold &&
+		stick.y < digital_absence_threshold;
+	const bool analog_left =
+		was.x < -digital_presence_threshold &&
+		stick.x > -digital_absence_threshold;
+	const bool analog_right =
+		was.x > digital_presence_threshold &&
+		stick.x < digital_absence_threshold;
 
-    bool digital_no_direction_press_current = !current.up &&
-        !current.down && !current.left && !current.right;
-    bool digital_up = previous.up && digital_no_direction_press_current;
-    bool digital_down = previous.down && digital_no_direction_press_current;
-    bool digital_left = previous.left && digital_no_direction_press_current;
-    bool digital_right = previous.right && digital_no_direction_press_current;
+	const bool no_dpad_now =
+		!now.is_down(GamepadButton::dpad_up) &&
+		!now.is_down(GamepadButton::dpad_down) &&
+		!now.is_down(GamepadButton::dpad_left) &&
+		!now.is_down(GamepadButton::dpad_right);
 
-    bool up = analog_up || digital_up;
-    bool down = analog_down || digital_down;
-    bool left = analog_left || digital_left;
-	bool right = analog_right || digital_right;
+	const auto dpad_released = [&before, no_dpad_now](GamepadButton button)
+	{
+		return no_dpad_now && before.is_down(button);
+	};
 
-    if (up)
-    {
-        result.direction = artattack::Direction::up;
-    }
-    else if (down)
-    {
-        result.direction = artattack::Direction::down;
-    }
-    else if (left)
-    {
-        result.direction = artattack::Direction::left;
-    }
-    else if (right)
-    {
-        result.direction = artattack::Direction::right;
-    }
-    else if (up && down && left && right)
-    {
-        throw new std::exception(
-            "up, down, left, and right pressed at same time");
-    }
-    else
-    {
-        result.direction = artattack::Direction::none;
-    }
-    result.connection = ConnectionState::connected;
-    return result;
+	if (analog_up || dpad_released(GamepadButton::dpad_up))
+	{
+		result.direction = artattack::Direction::up;
+	}
+	else if (analog_down || dpad_released(GamepadButton::dpad_down))
+	{
+		result.direction = artattack::Direction::down;
+	}
+	else if (analog_left || dpad_released(GamepadButton::dpad_left))
+	{
+		result.direction = artattack::Direction::left;
+	}
+	else if (analog_right || dpad_released(GamepadButton::dpad_right))
+	{
+		result.direction = artattack::Direction::right;
+	}
+
+	return result;
 }
 
-void MenuInput::prime()
+std::vector<ProcessedMenuInput> MenuInput::menu_inputs() const
 {
-    for (int i = 0; i < MAX_PAD_COUNT; i++)
-    {
-        this->prev_inputs_[i] = this->raw_input(i);
-    }
-}
-
-std::vector<ProcessedMenuInput> MenuInput::update_and_get_menu_inputs()
-{
-    RawMenuInput current[MAX_PAD_COUNT];
-    for (int i = 0; i < MAX_PAD_COUNT; i++)
-    {
-        current[i] = this->raw_input(i);
-    }
-
-    // One entry per pad slot, always - see PlayerInput for why. Slots with no
-    // pad keep the default value (direction NONE, action NONE, DISCONNECTED),
-    // which every menu loop already treats as "no input this frame".
-    std::vector<ProcessedMenuInput> result(MAX_PAD_COUNT);
-    for (int i = 0; i < MAX_PAD_COUNT; i++)
-    {
-        if (current[i].connected)
-        {
-            result[i] = calculate_menu_input(current[i], this->prev_inputs_[i]);
-        }
-        this->prev_inputs_[i] = current[i];
-    }
-    return result;
+	std::vector<ProcessedMenuInput> result(Gamepads::max_count);
+	for (int slot = 0; slot < Gamepads::max_count; ++slot)
+	{
+		if (this->gamepads_->connected(slot))
+		{
+			result[slot] = menu_input(*this->gamepads_, slot);
+		}
+	}
+	return result;
 }

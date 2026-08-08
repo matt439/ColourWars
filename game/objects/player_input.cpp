@@ -1,154 +1,70 @@
 #include "game/pch.h"
 #include "game/objects/player_input.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace player_input_consts;
 using namespace artattack;
 
-PlayerInput::PlayerInput(GamePad* gamepad) :
-    gamepad_(gamepad)
+PlayerInput::PlayerInput(const Gamepads* gamepads) :
+	gamepads_(gamepads)
 {
-    for (auto& prev_input_ : this->prev_inputs_)
-    {
-	    prev_input_ = RawPlayerInput();
-    }
 }
 
-RawPlayerInput PlayerInput::raw_input(int gamepad_num) const
+PlayerInputData PlayerInput::player_input(const Gamepads& gamepads, int slot)
 {
-	auto result = RawPlayerInput();
-    auto pad = this->gamepad_->GetState(gamepad_num, GamePad::DEAD_ZONE_CIRCULAR);
-    if (pad.IsConnected())
-    {
-        result.left_analog_stick = Vector2F(pad.thumbSticks.leftX,
-            -pad.thumbSticks.leftY);
-        result.right_analog_stick = Vector2F(pad.thumbSticks.rightX,
-			-pad.thumbSticks.rightY);
-        result.jump_button = pad.buttons.a;
-        result.jump_trigger = pad.triggers.left;
-        result.primary_shoot = pad.triggers.right;
-        result.secondary_shoot = pad.buttons.rightShoulder;
-        result.show_debug = pad.buttons.back;
-        result.pause_menu = pad.buttons.start;
-        result.connected = true;
-    }
-    return result;
+	const GamepadState& pad = gamepads.state(slot);
+
+	PlayerInputData result;
+	result.connected = true;
+
+	// Jump is either A or the left trigger, and the trigger is analogue, so
+	// "pressed" on it means crossing the threshold rather than being past it.
+	result.jump_held = gamepads.held(slot, GamepadButton::a) ||
+		gamepads.trigger_held(slot, GamepadTrigger::left,
+			trigger_jump_threshold);
+	result.jump_pressed = gamepads.pressed(slot, GamepadButton::a) ||
+		gamepads.trigger_pressed(slot, GamepadTrigger::left,
+			trigger_jump_threshold);
+
+	result.primary_shoot = gamepads.trigger_held(slot, GamepadTrigger::right,
+		trigger_shoot_threshold);
+	result.secondary_shoot = gamepads.held(slot,
+		GamepadButton::right_shoulder);
+
+	// Both toggles fire on the way up, not the way down. That was the existing
+	// behaviour and it is deliberate rather than incidental: a menu that opens
+	// under a still-held button would take the release as its own input.
+	result.toggle_pause_menu = gamepads.released(slot, GamepadButton::start);
+	result.toggle_debug = gamepads.released(slot, GamepadButton::back);
+
+	result.x_movement = apply_deadzone(pad.left_stick.x, stick_deadzone);
+
+	// Aim is a direction, so the deadzone is radial and the magnitude is
+	// discarded by the normalise. Past the deadzone the vector is non-zero by
+	// construction, which is the test for "the player asked to aim".
+	const Vector2F aim = apply_deadzone(pad.right_stick, stick_deadzone);
+	result.shoot_direction_requested = aim != Vector2F::ZERO;
+	if (result.shoot_direction_requested)
+	{
+		result.shoot_direction = aim.normalized();
+		result.shoot_angle = result.shoot_direction.angle();
+	}
+
+	result.left_analog_stick = pad.left_stick;
+	result.right_analog_stick = pad.right_stick;
+
+	return result;
 }
 
-PlayerInputData PlayerInput::calculate_player_input(
-    const RawPlayerInput& current, const RawPlayerInput& previous)
+std::vector<PlayerInputData> PlayerInput::player_inputs() const
 {
-	auto result = PlayerInputData();
-
-    result.jump_held = current.jump_button || current.jump_trigger > TRIGGER_JUMP_THRESHOLD;
-
-    bool jump_button_pressed = current.jump_button && !previous.jump_button;
-    bool jump_trigger_pressed = current.jump_trigger > TRIGGER_JUMP_THRESHOLD &&
-        previous.jump_trigger <= TRIGGER_JUMP_THRESHOLD;
-    result.jump_pressed = jump_button_pressed || jump_trigger_pressed;
-    
-    result.secondary_shoot = current.secondary_shoot;
-
-    // pause menu is on key press
-    bool pause_menu = !current.pause_menu && previous.pause_menu;
-    if (pause_menu)
+	std::vector<PlayerInputData> result(Gamepads::max_count);
+	for (int slot = 0; slot < Gamepads::max_count; ++slot)
 	{
-		result.toggle_pause_menu = true;
+		if (this->gamepads_->connected(slot))
+		{
+			result[slot] = player_input(*this->gamepads_, slot);
+		}
 	}
-	else
-	{
-		result.toggle_pause_menu = false;
-	}
-
-    // show debug is on key press
-    bool show_debug = !current.show_debug && previous.show_debug;
-    if (show_debug)
-	{
-		result.toggle_debug = true;
-	}
-	else
-	{
-		result.toggle_debug = false;
-	}
-
-    // primary shoot is analog trigger
-    // so need to check if it has gone past threshold
-    bool primary_shoot = current.primary_shoot > TRIGGER_SHOOT_THRESHOLD;
-    if (primary_shoot)
-	{
-        result.primary_shoot = true;
-	}
-	else
-{
-        result.primary_shoot = false;
-	}
-
-    if (std::fabs(current.left_analog_stick.x) > STICK_DEADZONE)
-    {
-		result.x_movement = current.left_analog_stick.x;
-	}
-    else
-    {
-        result.x_movement = 0.0f;
-    }
-
-
-    Vector2F direction = current.right_analog_stick;
-    if (direction.length() > STICK_DEADZONE)
-	{
-		direction.normalize();
-        result.shoot_angle = direction.angle();
-        result.shoot_direction = direction;
-        result.shoot_direction_requested = true;
-	}
-	else
-	{
-        result.shoot_direction = Vector2F::ZERO;
-        result.shoot_angle = 0.0f;
-        result.shoot_direction_requested = false;
-	}
-
-    result.connection = ConnectionState::connected;
-
-    result.left_analog_stick = current.left_analog_stick;
-    result.right_analog_stick = current.right_analog_stick;
-
-    return result;
-}
-
-void PlayerInput::prime()
-{
-    for (int i = 0; i < MAX_PAD_COUNT; i++)
-    {
-        this->prev_inputs_[i] = this->raw_input(i);
-    }
-}
-
-std::vector<PlayerInputData> PlayerInput::update_and_get_player_inputs()
-{
-    RawPlayerInput current[MAX_PAD_COUNT];
-    for (int i = 0; i < MAX_PAD_COUNT; i++)
-    {
-        current[i] = this->raw_input(i);
-    }
-
-    // Always one entry per pad slot. Pushing back only for connected pads made
-    // the index mean "nth connected pad" while every caller read it as "player
-    // number", so unplugging a pad silently handed a player someone else's
-    // controller and then indexed past the end of the vector.
-    //
-    // Slots with no pad keep the default-constructed value: zeroed axes,
-    // nothing pressed, and connection == DISCONNECTED.
-    std::vector<PlayerInputData> result(MAX_PAD_COUNT);
-    for (int i = 0; i < MAX_PAD_COUNT; i++)
-    {
-        if (current[i].connected)
-        {
-            result[i] = calculate_player_input(current[i],
-                this->prev_inputs_[i]);
-        }
-        this->prev_inputs_[i] = current[i];
-    }
-    return result;
+	return result;
 }
