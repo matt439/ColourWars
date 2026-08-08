@@ -2,7 +2,6 @@
 
 #include <string>
 #include <vector>
-#include "game/objects/level_mode.h"
 #include "game/objects/weapon_type.h"
 #include "game/states/menu_player_settings.h"
 #include "engine/render/screen_layout.h"
@@ -14,8 +13,6 @@ public:
 	std::vector<MenuPlayerSettings> player_settings() const;
 	void set_player_count(int player_count);
 	int player_count() const;
-	void set_game_mode(LevelMode game_mode);
-	LevelMode game_mode() const;
 	// The chosen stage, by name - which is the manifest's name for its level,
 	// and so the key its definition sits under. Empty until the stage-select
 	// screen sets one.
@@ -32,7 +29,6 @@ public:
 	void set_player_num(int player_index, int player_num);
 
 private:
-	LevelMode game_mode_ = LevelMode::standard_mode;
 	std::vector<MenuPlayerSettings> player_settings_;
 	int player_count_ = 0;
 	std::string stage_;

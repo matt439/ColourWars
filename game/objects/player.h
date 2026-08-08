@@ -101,7 +101,10 @@ public:
 
 	const mattmath::RectangleF& rectangle() const;
 	mattmath::Vector2F center() const;
-    const mattmath::Vector2F& velocity() const override;
+    // Republishes MovingObject's protected accessor. Not an override - it
+    // never overrode anything meaningfully, and MovingObject's accessors are
+    // no longer virtual.
+    const mattmath::Vector2F& velocity() const;
 	const mattmath::Camera& camera() const;
 	const mattmath::Viewport& viewport() const;
 	float input_x_movement() const;

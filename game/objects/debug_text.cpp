@@ -8,11 +8,16 @@ using namespace artattack;
 
 DebugText::DebugText(RenderResources* render_resources,
     const ResolutionManager* resolution_manager) :
-    Drawer(render_resources),
+    render_resources_(render_resources),
     resolution_manager_(resolution_manager),
     font_(render_resources->resolve_sprite_font(DEBUG_FONT))
 {
 	
+}
+
+RenderResources* DebugText::render_resources() const
+{
+    return this->render_resources_;
 }
 
 

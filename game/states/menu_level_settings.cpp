@@ -30,16 +30,6 @@ int MenuLevelSettings::player_count() const
 	return this->player_count_;
 }
 
-void MenuLevelSettings::set_game_mode(LevelMode game_mode)
-{
-	this->game_mode_ = game_mode;
-}
-
-LevelMode MenuLevelSettings::game_mode() const
-{
-	return this->game_mode_;
-}
-
 void MenuLevelSettings::set_stage(const std::string& stage)
 {
 	this->stage_ = stage;

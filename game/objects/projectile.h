@@ -62,7 +62,12 @@ protected:
 	float timer() const;
 	void alter_timer(float time);
 
-	virtual void update_movement(float gravity, float wind_resistance, float dt);
+	// Returns this step's displacement rather than leaving it on a member for
+	// the caller to read back. Only the four subclasses immediately below the
+	// call ever wanted it, and a member that is written and read inside one
+	// call chain is a return value that has been talked out of being one.
+	virtual mattmath::Vector2F update_movement(float gravity,
+		float wind_resistance, float dt);
 private:
 	ProjectileDetails details_ = ProjectileDetails();
 	float timer_ = 0.0f;

@@ -643,8 +643,6 @@ void MainMenuModeSelect::update()
 			if (highlighted_element == "standard")
 			{
 				this->play_wave(this->confirm_sound_);
-				this->main_menu_data()->level_settings()->
-					set_game_mode(LevelMode::standard_mode);
 				this->context()->transition_to(
 					std::make_unique<MainMenuPlayerCount>(
 						this->main_menu_data()));
@@ -719,22 +717,6 @@ void MainMenuModeSelect::update()
 				this->change_highlight(this->standard_.get());
 			}
 		}
-	}
-}
-MenuElement MainMenuModeSelect::convert_mode_to_element(LevelMode mode)
-{
-	switch (mode)
-	{
-	case LevelMode::standard_mode:
-		return MenuElement::main_menu_standard_mode;
-	case LevelMode::team_deathmatch:
-		return MenuElement::main_menu_team_deathmatch;
-	case LevelMode::deathmatch:
-		return MenuElement::main_menu_deathmatch;
-	case LevelMode::practice:
-		return MenuElement::main_menu_practice;
-	default:
-		return MenuElement::main_menu_standard_mode;
 	}
 }
 void MainMenuModeSelect::init()
@@ -985,23 +967,6 @@ void MainMenuPlayerCount::update()
 				this->change_highlight(this->_1_player.get());
 			}
 		}
-	}
-}
-MenuElement MainMenuPlayerCount::convert_player_count_to_element(
-	int player_count)
-{
-	switch (player_count)
-	{
-	case 1:
-		return MenuElement::main_menu_one_player;
-	case 2:
-		return MenuElement::main_menu_two_players;
-	case 3:
-		return MenuElement::main_menu_three_players;
-	case 4:
-		return MenuElement::main_menu_four_players;
-	default:
-		return MenuElement::main_menu_one_player;
 	}
 }
 void MainMenuPlayerCount::init()

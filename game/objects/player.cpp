@@ -438,79 +438,12 @@ void Player::on_structure_collision(const ICollisionGameObject* other)
  //       CollisionTools::resolve_object_collision(&this->rectangle_,
  //           other->shape(), Vector2F(col_direction.x, 0.0f));
 
- //       this->on_wall_collision();
-	//}
- ////   // ground or ceiling collision
-	////else
- ////   if (cardinal_col_direction == Vector2F::DIRECTION_UP ||
-	////	cardinal_col_direction == Vector2F::DIRECTION_DOWN)
- ////   {
-	////	if (player_direction.y > 0.0f)
-	////	{
-	////		this->on_ground_collision();
-
  ////           CollisionTools::resolve_object_collision(&this->rectangle_,
  ////               other->shape(), Vector2F(0.0f, col_direction.y));
 	////	}
 	////	else if (player_direction.y < 0.0f)
 	////	{
 	////		this->on_ceiling_collision();
-
- ////           CollisionTools::resolve_object_collision(&this->rectangle_,
- ////               other->shape(), Vector2F(0.0f, col_direction.y));
-	////	}
-	////}
-	//// up collision
-	//else 
- //   if (cardinal_col_direction == Vector2F::DIRECTION_UP_LEFT ||
-	//	cardinal_col_direction == Vector2F::DIRECTION_UP_RIGHT ||
-	//	cardinal_col_direction == Vector2F::DIRECTION_UP)
-	//{
- //       Vector2F amount = CollisionTools::calculate_object_collision_depth(
-	//		this->shape(), other->shape(), cardinal_col_direction);
-
- //       //CollisionTools::resolve_object_collision(&this->rectangle_,
- //       //    other->shape(), Vector2F(cardinal_col_direction.x, 0.0f));
- //       
- //       if (amount.abs_x_greater_than_y())
- //       {
- //           CollisionTools::resolve_object_collision(&this->rectangle_,
- //               other->shape(), Vector2F(0.0f, cardinal_col_direction.y));
- //           this->on_ceiling_collision();
- //       }
- //       else
- //       {
-	//		CollisionTools::resolve_object_collision(&this->rectangle_,
-	//			other->shape(), Vector2F(cardinal_col_direction.x, 0.0f));
-	//		this->on_wall_collision();
- //       }
-	//}
-	//// down collision
-	//else
- //   if (cardinal_col_direction == Vector2F::DIRECTION_DOWN_LEFT ||
-	//	cardinal_col_direction == Vector2F::DIRECTION_DOWN_RIGHT ||
-	//	cardinal_col_direction == Vector2F::DIRECTION_DOWN)
- //   {
- //       Vector2F amount = CollisionTools::calculate_object_collision_depth(
- //           this->shape(), other->shape(), cardinal_col_direction);
-
-	//	if (amount.abs_x_greater_than_y())
-	//	{
-	//		CollisionTools::resolve_object_collision(&this->rectangle_,
-	//			other->shape(), Vector2F(0.0f, cardinal_col_direction.y));
-	//		this->on_ground_collision();
-	//	}
-	//	else
-	//	{
-	//		CollisionTools::resolve_object_collision(&this->rectangle_,
-	//			other->shape(), Vector2F(cardinal_col_direction.x, 0.0f));
-	//		this->on_wall_collision();
-	//	}
- //   }
-	//else
-	//{
-	//	throw std::exception("Invalid collision direction.");
-	//}
 
 	// check if the player is not moving in the same direction as the collision
 
@@ -555,21 +488,6 @@ void Player::on_structure_collision(const ICollisionGameObject* other)
 		throw std::exception("Invalid collision direction.");   
 	}
 }
-
-//void Player::on_ground_collision()
-//{
-//    MovingObject::set_velocity_y(0.0f);
-//    this->set_move_state(PlayerMoveState::on_ground);
-//}
-//void Player::on_ceiling_collision()
-//{
-//	MovingObject::set_velocity_y(0.0f);
-//	this->set_move_state(PlayerMoveState::on_ceiling);
-//}
-//void Player::on_wall_collision()
-//{
-//	MovingObject::set_velocity_x(0.0f);
-//}
 
 void Player::on_top_collision(const ICollisionGameObject* other)
 {
@@ -883,11 +801,8 @@ void Player::update_movement(float dt)
         this->do_jump(dt);
 	}
 
-    MovingObject::set_dx_x(MovingObject::velocity_x() * dt);
-    MovingObject::set_dx_y(MovingObject::velocity_y() * dt);
-
-    this->rectangle_.offset(MovingObject::dx_x(),
-        MovingObject::dx_y());
+    const Vector2F displacement = MovingObject::velocity() * dt;
+    this->rectangle_.offset(displacement.x, displacement.y);
 
     if (x_input > 0.0f)
     {
@@ -1030,7 +945,6 @@ void Player::respawn()
     this->rectangle_.set_position(this->respawn_position_);
     MovingObject::set_rotation(0.0f);
     MovingObject::set_velocity(Vector2F::ZERO);
-    MovingObject::set_dx(Vector2F::ZERO);
 	this->health_ = 1.0f;
 	this->primary_->reset_ammo();
 	this->state_ = PlayerState::alive;

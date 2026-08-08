@@ -8,7 +8,7 @@ using namespace colour_consts;
 using namespace artattack;
 
 InterfaceGameplay::InterfaceGameplay(RenderResources* render_resources) :
-	Drawer(render_resources),
+	render_resources_(render_resources),
 	sheet_(render_resources->resolve_sprite_sheet(SPRITE_SHEET)),
 	empty_box_frame_(render_resources->sprite_sheet(this->sheet_)->
 		resolve_sprite_frame(EMPTY_BOX_FRAME)),
@@ -19,6 +19,11 @@ InterfaceGameplay::InterfaceGameplay(RenderResources* render_resources) :
 		render_resources->resolve_sprite_font(RESPAWN_TIMER_FONT))
 {
 
+}
+
+RenderResources* InterfaceGameplay::render_resources() const
+{
+	return this->render_resources_;
 }
 
 void InterfaceGameplay::draw_gameplay_interface(SpriteBatch* sprite_batch,

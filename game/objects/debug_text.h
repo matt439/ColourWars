@@ -1,6 +1,6 @@
 #pragma once
 
-#include "engine/render/drawer.h"
+#include "engine/render/render_resources.h"
 #include "engine/render/resolution_manager.h"
 #include "engine/render/text_encoding.h"
 #include "engine/math/matt_math.h"
@@ -18,7 +18,7 @@ namespace debug_text_consts
 	constexpr float DEBUG_SHADOW_SCALE = 1.0f;
 }
 
-class DebugText : public artattack::Drawer
+class DebugText
 {
 public:
 	DebugText(artattack::RenderResources* render_resources,
@@ -28,6 +28,10 @@ public:
 		const Player* player, int num_projectiles, float dt) const;
 
 private:
+	artattack::RenderResources* render_resources() const;
+
+	// Borrowed, not owned - see InterfaceGameplay.
+	artattack::RenderResources* render_resources_ = nullptr;
 	const artattack::ResolutionManager* resolution_manager_ = nullptr;
 
 	// Resolved once, like every other font name. The debug overlay is drawn

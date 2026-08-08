@@ -1,6 +1,5 @@
 #pragma once
 
-#include "engine/render/drawer.h"
 #include "game/objects/player_team.h"
 #include "engine/render/render_resources.h"
 #include "engine/math/colour.h"
@@ -43,10 +42,10 @@ struct InterfaceDraw
     mattmath::Colour team_colour = colour_consts::GRAY;
 };
 
-class InterfaceGameplay : public artattack::Drawer
+class InterfaceGameplay
 {
 public:
-    InterfaceGameplay(artattack::RenderResources* render_resources);
+    explicit InterfaceGameplay(artattack::RenderResources* render_resources);
 
     // const for the same reason IGameObject::draw is. There is one
     // InterfaceGameplay for the whole level, and every render worker calls this
@@ -82,6 +81,13 @@ private:
     void draw_respawn_timer(DirectX::SpriteBatch* sprite_batch,
         const mattmath::Vector2F& resolution,
         float timer) const;
+
+    artattack::RenderResources* render_resources() const;
+
+    // Borrowed, not owned: the services outlive every object that snapshots
+    // them. Held here rather than inherited from a base class whose only
+    // other members were three helpers nothing called.
+    artattack::RenderResources* render_resources_ = nullptr;
 
     // The HUD always draws out of the same sheet, with the same two frames and
     // the same two fonts. All five names are resolved in the constructor, so

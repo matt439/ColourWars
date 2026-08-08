@@ -223,7 +223,7 @@ void Projectile::alter_timer(float time)
 {
     this->timer_ += time;
 }
-void Projectile::update_movement(float gravity, float wind_resistance, float dt)
+Vector2F Projectile::update_movement(float gravity, float wind_resistance, float dt)
 {
 
     //gravity
@@ -264,9 +264,7 @@ void Projectile::update_movement(float gravity, float wind_resistance, float dt)
         MovingObject::set_velocity_x(-projectile_consts::MAX_VELOCITY.x);
     }
 
-    //displacement
-    MovingObject::set_dx_x(MovingObject::velocity_x() * dt);
-    MovingObject::set_dx_y(MovingObject::velocity_y() * dt);
+    const Vector2F displacement = MovingObject::velocity() * dt;
 
     // Age first, then test: testing before the increment let a projectile
     // survive one frame past its deadline.
@@ -276,6 +274,8 @@ void Projectile::update_movement(float gravity, float wind_resistance, float dt)
 	{
 		this->set_for_deletion(true);
 	}
+
+    return displacement;
 }
 
 float Projectile::delete_timer() const

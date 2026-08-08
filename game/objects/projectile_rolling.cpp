@@ -30,7 +30,9 @@ void ProjectileRolling::update(float dt)
 {
 	const ProjectileDetails& details = this->details();
 
-	Projectile::update_movement(details.gravity,
+	// The displacement is discarded: a rolling projectile is positioned by
+	// whatever it is rolling along, not by its own velocity.
+	std::ignore = Projectile::update_movement(details.gravity,
 		details.wind_resistance, dt);
 }
 void ProjectileRolling::draw(SpriteBatch* /*sprite_batch*/,

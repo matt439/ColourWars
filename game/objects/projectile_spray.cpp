@@ -31,13 +31,12 @@ void ProjectileSpray::update(float dt)
 {
 	const ProjectileDetails& details = this->details();
 	
-	Projectile::update_movement(details.gravity,
-		details.wind_resistance, dt);
+	const Vector2F displacement = Projectile::update_movement(
+		details.gravity, details.wind_resistance, dt);
 
 	this->rectangle_.inflate_to_size(calculate_diffusion_size());
 
-	this->rectangle_.offset(MovingObject::dx_x(),
-		MovingObject::dx_y());
+	this->rectangle_.offset(displacement.x, displacement.y);
 
 	AnimationObject::update(dt);
 }

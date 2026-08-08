@@ -6,7 +6,6 @@
 #include "game/states/main_menu_data.h"
 #include "game/states/confirmation_state.h"
 #include "game/states/menu_highlight.h"
-#include "game/states/menu_element.h"
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"
 #include "engine/audio/sound_bank_object.h"
@@ -206,7 +205,6 @@ private:
 	std::unique_ptr<artattack::MTextDropShadow> dm_ = nullptr;
 	std::unique_ptr<artattack::MTextDropShadow> practice_ = nullptr;
 	std::unique_ptr<artattack::MTextDropShadow> back_ = nullptr;
-	static MenuElement convert_mode_to_element(LevelMode mode);
 };
 
 class MainMenuPlayerCount final : public MainMenuPage, public MenuHighlight
@@ -226,7 +224,6 @@ private:
 	std::unique_ptr<artattack::MTextDropShadow> _3_players = nullptr;
 	std::unique_ptr<artattack::MTextDropShadow> _4_players = nullptr;
 	std::unique_ptr<artattack::MTextDropShadow> back_ = nullptr;
-	static MenuElement convert_player_count_to_element(int player_count);
 };
 
 class MainMenuTeamSelect final : public MainMenuPage
