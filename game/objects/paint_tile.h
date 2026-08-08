@@ -41,7 +41,6 @@ public:
 	void update() override;
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera) const override;
-	void draw(DirectX::SpriteBatch* sprite_batch) const override;
 
 	// Draws with the given tint without storing it. See TextureObject::draw_with.
 	void draw_with_colour(DirectX::SpriteBatch* sprite_batch,
@@ -70,7 +69,6 @@ public:
 		float layer_depth = 0.0f);
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera) const override;
-	void draw(DirectX::SpriteBatch* sprite_batch) const override;
 	void update() override;
 	float area() const;
 	PlayerTeam team() const;

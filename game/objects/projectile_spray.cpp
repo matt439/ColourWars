@@ -46,10 +46,6 @@ void ProjectileSpray::draw(SpriteBatch* sprite_batch, const Camera& camera) cons
 {
 	this->AnimationObject::draw(sprite_batch, this->rectangle_, camera);
 }
-void ProjectileSpray::draw(SpriteBatch* sprite_batch) const
-{
-	this->AnimationObject::draw(sprite_batch, this->rectangle_);
-}
 bool ProjectileSpray::is_visible_in_viewport(const RectangleF& view) const
 {
 	return this->rectangle_.intersects(view);

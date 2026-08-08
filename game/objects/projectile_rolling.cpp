@@ -39,10 +39,6 @@ void ProjectileRolling::draw(SpriteBatch* /*sprite_batch*/,
 {
 	// do nothing
 }
-void ProjectileRolling::draw(SpriteBatch* /*sprite_batch*/) const
-{
-	// do nothing
-}
 bool ProjectileRolling::is_visible_in_viewport(const RectangleF& /*view*/) const
 {
 	return false;

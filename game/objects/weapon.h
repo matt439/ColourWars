@@ -37,7 +37,6 @@ public:
 	// so it has to be declared here to be enforced at all.
 	virtual void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera, bool debug = false) const;
-	virtual void draw(DirectX::SpriteBatch* sprite_batch, bool debug = false) const;
 
 	virtual std::vector<std::unique_ptr<ICollisionGameObject>>
 		update_and_get_projectiles(PlayerInputData input,

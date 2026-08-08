@@ -22,7 +22,6 @@ public:
 	void update() override;
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera) const override;
-	void draw(DirectX::SpriteBatch* sprite_batch) const override;
 	bool is_visible_in_viewport(const mattmath::RectangleF& view) const override;
 
 	bool is_colliding(const ICollisionGameObject* other) const override;

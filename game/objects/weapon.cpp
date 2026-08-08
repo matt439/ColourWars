@@ -92,11 +92,6 @@ mattmath::Colour Weapon::draw_colour() const
 {
     return this->colour();
 }
-void Weapon::draw(SpriteBatch* sprite_batch, bool debug) const
-{
-    this->draw(sprite_batch, Camera::DEFAULT_CAMERA, debug);
-}
-
 Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, RotationOrigin origin)
 {
     switch (origin)

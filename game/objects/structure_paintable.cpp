@@ -52,16 +52,6 @@ void StructurePaintable::draw(SpriteBatch* sprite_batch, const Camera& camera) c
 	}
 }
 
-void StructurePaintable::draw(SpriteBatch* sprite_batch) const
-{
-	Structure::draw(sprite_batch);
-	for (const auto& paint_tile : this->paint_tiles_)
-	{
-		paint_tile.draw(sprite_batch);
-	}
-
-}
-
 void StructurePaintable::on_collision(const ICollisionGameObject* other)
 {
 	// check if offensive projectile

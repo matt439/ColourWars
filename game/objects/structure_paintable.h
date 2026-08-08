@@ -52,7 +52,6 @@ public:
 	void update() override;
 	void draw(DirectX::SpriteBatch* sprite_batch,
 		const mattmath::Camera& camera) const override;
-	void draw(DirectX::SpriteBatch* sprite_batch) const override;
 	void on_collision(const ICollisionGameObject* other) override;
 
 	PaintTotal paint_total() const override;

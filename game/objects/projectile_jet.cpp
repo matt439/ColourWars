@@ -44,10 +44,6 @@ void ProjectileJet::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 {
 	this->AnimationObject::draw(sprite_batch, this->rectangle_, camera);
 }
-void ProjectileJet::draw(SpriteBatch* sprite_batch) const
-{
-	this->AnimationObject::draw(sprite_batch, this->rectangle_);
-}
 bool ProjectileJet::is_visible_in_viewport(const RectangleF& view) const
 {
 	return this->rectangle_.intersects(view);

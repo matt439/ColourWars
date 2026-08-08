@@ -104,11 +104,6 @@ void Player::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 
     this->primary_->draw(sprite_batch, camera, this->showing_debug_);
 }
-void Player::draw(SpriteBatch* sprite_batch) const
-{
-    AnimationObject::draw(sprite_batch, this->rectangle_, Camera::DEFAULT_CAMERA);
-	this->primary_->draw(sprite_batch, Camera::DEFAULT_CAMERA);
-}
 CollisionObjectType Player::collision_object_type() const
 {
     if (this->state_ == PlayerState::alive)

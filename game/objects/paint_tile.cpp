@@ -54,10 +54,6 @@ void PaintTile::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 		this->frame(), tint, this->origin(),
 		this->effects(), this->draw_rotation());
 }
-void PaintTile::draw(SpriteBatch* sprite_batch) const
-{
-	this->draw(sprite_batch, Camera::DEFAULT_CAMERA);
-}
 float PaintTile::area() const
 {
 	return this->rectangle_.area();
@@ -180,10 +176,6 @@ void PaintTileSplash::draw_with_colour(SpriteBatch* sprite_batch,
 {
 	this->AnimationObject::draw_with(sprite_batch, this->rectangle_, camera,
 		colour, this->effects());
-}
-void PaintTileSplash::draw(SpriteBatch* sprite_batch) const
-{
-	this->AnimationObject::draw(sprite_batch, this->rectangle_);
 }
 bool PaintTileSplash::is_visible_in_viewport(const RectangleF& view) const
 {
