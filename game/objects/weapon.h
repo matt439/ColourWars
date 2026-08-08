@@ -25,7 +25,7 @@ public:
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
+		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 	// const for the same reason GameObject::draw is, even though a Weapon is
@@ -34,8 +34,8 @@ public:
 	// The const does not come for free through Player - primary_ is a
 	// unique_ptr, and a const unique_ptr still hands out a non-const pointee -
 	// so it has to be declared here to be enforced at all.
-	virtual void draw(DirectX::SpriteBatch* sprite_batch,
-		const mattmath::Camera& camera, bool debug = false) const;
+	virtual void draw(artattack::DrawList& draw_list,
+		bool debug = false) const;
 
 	virtual std::vector<std::unique_ptr<CollisionObject>>
 		update_and_get_projectiles(PlayerInputData input,
@@ -187,7 +187,7 @@ public:
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
+		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 	std::vector<std::unique_ptr<CollisionObject>>

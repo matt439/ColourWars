@@ -14,10 +14,10 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
-	SpriteEffects effects,
+	SpriteFlip flip,
 	float layer_depth) :
 	TextureObject(sheet_name, frame_name, render_resources,
-		color, rotation, origin, effects, layer_depth),
+		color, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle),
 	team_colours_(team_colours)
 {
@@ -34,7 +34,7 @@ void PaintTile::update(float dt)
 {
 	this->splash_.update(dt);
 }
-void PaintTile::draw(SpriteBatch* sprite_batch, const Camera& camera) const
+void PaintTile::draw(DrawList& draw_list) const
 {
 	// Pure read. StructurePaintable::draw walks every tile it owns, and is
 	// itself entered by every render worker at once, so assigning the tile's
@@ -46,11 +46,11 @@ void PaintTile::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 	}
 	const Colour tint = this->team_colours_.team_colour(this->team_);
 
-	this->splash_.draw_with_colour(sprite_batch, camera, tint);
+	this->splash_.draw_with_colour(draw_list, tint);
 
-	this->TextureObject::draw_with(sprite_batch, this->rectangle_, camera,
+	this->TextureObject::draw_with(draw_list, this->rectangle_,
 		this->frame(), tint, this->origin(),
-		this->effects(), this->draw_rotation());
+		this->flip(), this->draw_rotation());
 }
 float PaintTile::area() const
 {
@@ -138,11 +138,11 @@ PaintTileSplash::PaintTileSplash(
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
-	SpriteEffects effects,
+	SpriteFlip flip,
 	float layer_depth) :
 	AnimationObject(sheet_name, animation_strip_name,
 		render_resources,
-		color, rotation, origin, effects, layer_depth),
+		color, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)
 {
 
@@ -165,15 +165,15 @@ void PaintTileSplash::update(float dt)
 {
 	this->AnimationObject::update(dt);
 }
-void PaintTileSplash::draw(SpriteBatch* sprite_batch, const Camera& camera) const
+void PaintTileSplash::draw(DrawList& draw_list) const
 {
-	this->AnimationObject::draw(sprite_batch, this->rectangle_, camera);
+	this->AnimationObject::draw(draw_list, this->rectangle_);
 }
-void PaintTileSplash::draw_with_colour(SpriteBatch* sprite_batch,
-	const Camera& camera, const Colour& colour) const
+void PaintTileSplash::draw_with_colour(DrawList& draw_list,
+	const Colour& colour) const
 {
-	this->AnimationObject::draw_with(sprite_batch, this->rectangle_, camera,
-		colour, this->effects());
+	this->AnimationObject::draw_with(draw_list, this->rectangle_,
+		colour, this->flip());
 }
 RectangleF PaintTileSplash::bounds() const
 {

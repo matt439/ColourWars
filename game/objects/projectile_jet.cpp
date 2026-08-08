@@ -14,12 +14,12 @@ ProjectileJet::ProjectileJet(const RectangleF& rectangle,
 	RenderResources* render_resources,
 	float rotation,
 	const Vector2F& origin,
-	SpriteEffects effects,
+	SpriteFlip flip,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
 		JET, render_resources,
 		DETAILS_JET,
-		team_colour, rotation, origin, effects, layer_depth),
+		team_colour, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)
 {
 	Vector2F col_size = this->details().col_rect_size;
@@ -38,9 +38,9 @@ void ProjectileJet::update(float dt)
 
 	AnimationObject::update(dt);
 }
-void ProjectileJet::draw(SpriteBatch* sprite_batch, const Camera& camera) const
+void ProjectileJet::draw(DrawList& draw_list) const
 {
-	this->AnimationObject::draw(sprite_batch, this->rectangle_, camera);
+	this->AnimationObject::draw(draw_list, this->rectangle_);
 }
 RectangleF ProjectileJet::bounds() const
 {

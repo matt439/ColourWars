@@ -68,7 +68,6 @@ public:
 		const std::string& sound_bank_name,
 		const std::string& music_name,
 		float music_volume,
-		ID3D11SamplerState* sampler_state,
 		const artattack::ResolutionManager* resolution_manager,
 		artattack::ViewportManager* viewport_manager,
 		artattack::RenderResources* render_resources,
@@ -77,9 +76,13 @@ public:
 		const artattack::Partitioner* partitioner);
 
 	void update(const std::vector<PlayerInputData>& player_inputs, float dt);
-	void draw(std::vector<ID3D11DeviceContext*>* deferred_contexts,
-		std::vector<ID3D11CommandList*>* command_lists,
-		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
+
+	// Declares this frame's views and fills them. Three caller obligations
+	// went with the three parameters this used to take: pre-size a vector,
+	// pre-fill it with null, and Release every non-null entry afterwards. All
+	// three are submit()'s now, and stated nowhere because there is nothing
+	// left to state.
+	void draw(artattack::Renderer& renderer) const;
 
 	LevelState state() const;
 	void set_state(LevelState state);
@@ -146,7 +149,6 @@ private:
 	std::vector<mattmath::Vector2F> team_b_spawns_ = std::vector<mattmath::Vector2F>();
 
 	LevelState state_ = LevelState::start_countdown;
-	ID3D11SamplerState* sampler_state_ = nullptr;
 
 	std::vector<PlayerInputData> player_inputs_ = std::vector<PlayerInputData>();
 	std::unique_ptr<DebugText> debug_text_ = nullptr;
@@ -161,27 +163,19 @@ private:
 	void update_level_logic(const std::vector<PlayerInputData>& player_inputs,
 		float dt) const;
 
-	void draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contexts,
-		std::vector<ID3D11CommandList*>* command_lists,
-		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
+	void draw_active_level(artattack::Renderer& renderer) const;
 
-	void draw_zoom_out_level(std::vector<ID3D11DeviceContext*>* deferred_contexts,
-		std::vector<ID3D11CommandList*>* command_lists,
-		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
+	void draw_zoom_out_level(artattack::Renderer& renderer) const;
 
 	float zoom_out_camera_ratio() const;
 
 	void stop_player_sounds() const;
 
+	// One player's pane. The parallelism axis is views, so this is what a
+	// render worker runs - every worker on a different i, all of them reading
+	// the same objects.
 	void draw_player_view_level(int start, int end,
-		std::vector<ID3D11DeviceContext*>* deferred_contexts,
-		std::vector<ID3D11CommandList*>* command_lists,
-		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
+		artattack::Renderer& renderer) const;
 
-	void draw_zoom_out_level_component(std::vector<ID3D11DeviceContext*>* deferred_contexts,
-		std::vector<ID3D11CommandList*>* command_lists,
-		std::vector<DirectX::SpriteBatch*>* sprite_batches) const;
-
-	void draw_countdown_text(DirectX::SpriteBatch* sprite_batch,
-		const mattmath::Camera& viewport_camera) const;
+	void draw_countdown_text(artattack::DrawList& draw_list) const;
 };

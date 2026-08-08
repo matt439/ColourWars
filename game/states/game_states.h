@@ -15,8 +15,8 @@ class GameMenu final : public artattack::State
 public:
 	explicit GameMenu(GameData* game_data);
     GameMenu(GameData* game_data, const MainMenuMidwayLoadSettings& settings);
-    void update() override;
-    void draw() override;
+    void update(float dt) override;
+    void draw(artattack::Renderer& renderer) const override;
     void init() override;
 
 private:
@@ -46,8 +46,8 @@ class GameLevel final : public artattack::State
 {
 public:
     GameLevel(GameData* game_data, const MenuLevelSettings& settings);
-    void update() override;
-    void draw() override;
+    void update(float dt) override;
+    void draw(artattack::Renderer& renderer) const override;
     void init() override;
 
 private:

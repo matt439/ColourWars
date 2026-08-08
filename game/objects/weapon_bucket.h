@@ -15,7 +15,7 @@ public:
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
+		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 protected:

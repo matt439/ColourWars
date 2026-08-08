@@ -21,7 +21,7 @@ RenderResources* DebugText::render_resources() const
 }
 
 
-void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
+void DebugText::draw_debug_info(DrawList& draw_list,
     const Player* player, int num_projectiles, float dt) const
 {
     const PlayerInputData& input = player->input();
@@ -108,35 +108,25 @@ void DebugText::draw_debug_info(SpriteBatch* sprite_batch,
 
     Vector2F text_pos = DEBUG_POSITION;
 
-    SpriteFont* sprite_font = this->render_resources()->sprite_font(
-        this->font_);
-
-    sprite_batch->Begin();
+    // The caller has already put the list in the pane's own coordinates; this
+    // is a fixed corner of the viewport and follows no camera. Note that it
+    // does read one - it is the only draw in the level that prints a Camera
+    // rather than transforming by it.
+    draw_list.set_filter(TextureFilter::linear);
 
     for (size_t i = 0; i < lines.size(); i++)
     {
-        Vector2F shadow_pos = text_pos + DEBUG_SHADOW_OFFSET;
-        
-        sprite_font->DrawString(
-            sprite_batch,
-            lines[i].c_str(),
-            shadow_pos.xm_vector(),
-            DEBUG_SHADOW_COLOR.xm_vector(),
-            0.0f,
-            Vector2F::ZERO.xm_vector(),
-            DEBUG_SHADOW_SCALE);
+        const Vector2F shadow_pos = text_pos + DEBUG_SHADOW_OFFSET;
 
-        sprite_font->DrawString(
-            sprite_batch,
-            lines[i].c_str(),
-            text_pos.xm_vector(),
-            DEBUG_COLOR.xm_vector(),
-            0.0f,
-            Vector2F::ZERO.xm_vector(),
-            DEBUG_FONT_SCALE);
+        draw_list.draw_text(this->font_, lines[i], shadow_pos,
+            DEBUG_SHADOW_COLOR, DEBUG_SHADOW_SCALE, 0.0f, Vector2F::ZERO,
+            0.0f);
+
+        draw_list.draw_text(this->font_, lines[i], text_pos, DEBUG_COLOR,
+            DEBUG_FONT_SCALE, 0.0f, Vector2F::ZERO, 0.0f);
 
         text_pos.y += DEBUG_LINE_SPACING;
     }
 
-    sprite_batch->End();
+    draw_list.set_filter(TextureFilter::point);
 }

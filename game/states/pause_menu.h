@@ -43,8 +43,8 @@ public:
 	explicit PauseMenuPage(PauseMenuData* data);
 	~PauseMenuPage() override = default;
 	void init() override = 0;
-	void update() override = 0;
-	void draw() override = 0;
+	void update(float dt) override = 0;
+	void draw(artattack::Renderer& renderer) const override = 0;
 protected:
 	static std::wstring player_number_text(int player_num);
 	PauseMenuData* pause_menu_data() const;
@@ -78,8 +78,8 @@ class PauseMenuInitial final : public PauseMenuPage
 public:
 	explicit PauseMenuInitial(PauseMenuData* data);
 	void init() override;
-	void update() override;
-	void draw() override;
+	void update(float dt) override;
+	void draw(artattack::Renderer& renderer) const override;
 private:
 	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
 	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
@@ -95,8 +95,8 @@ class PauseMenuConfirmation final : public PauseMenuPage
 public:
 	PauseMenuConfirmation(PauseMenuData* data, ConfirmationType type);
 	void init() override;
-	void update() override;
-	void draw() override;
+	void update(float dt) override;
+	void draw(artattack::Renderer& renderer) const override;
 private:
 	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
 	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;

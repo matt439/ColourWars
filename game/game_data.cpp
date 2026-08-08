@@ -59,15 +59,6 @@ ResolutionManager* GameData::resolution_manager() const
 	return this->application_->resolution_manager();
 }
 
-float* GameData::dt() const
-{
-	// The shell hands out a const float* because nothing downstream should be
-	// writing the frame's own timestep. The game's older signatures still take
-	// a float*, so the cast lives here, in one place, rather than at each of
-	// the several dozen call sites - and goes when those signatures do.
-	return const_cast<float*>(this->application_->dt());
-}
-
 RenderResources* GameData::render_resources() const
 {
 	return this->application_->render_resources();
@@ -83,11 +74,6 @@ DirectX::GamePad* GameData::gamepad() const
 	return this->application_->gamepad();
 }
 
-artattack::DeviceResources* GameData::device_resources() const
-{
-	return this->application_->device_resources();
-}
-
 ViewportManager* GameData::viewport_manager() const
 {
 	return this->application_->viewport_manager();
@@ -101,16 +87,6 @@ ThreadPool* GameData::thread_pool() const
 const Partitioner* GameData::partitioner() const
 {
 	return this->application_->partitioner();
-}
-
-DirectX::CommonStates* GameData::common_states() const
-{
-	return this->application_->common_states();
-}
-
-std::vector<DirectX::SpriteBatch*>* GameData::sprite_batches() const
-{
-	return this->application_->sprite_batches();
 }
 
 GameData* GameData::game_data()

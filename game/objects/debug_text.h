@@ -24,7 +24,7 @@ public:
 	DebugText(artattack::RenderResources* render_resources,
 		const artattack::ResolutionManager* resolution_manager);
 
-	void draw_debug_info(DirectX::SpriteBatch* sprite_batch,
+	void draw_debug_info(artattack::DrawList& draw_list,
 		const Player* player, int num_projectiles, float dt) const;
 
 private:
@@ -36,5 +36,5 @@ private:
 
 	// Resolved once, like every other font name. The debug overlay is drawn
 	// per player per frame when it is on at all.
-	artattack::RenderResources::FontHandle font_;
+	artattack::FontHandle font_;
 };

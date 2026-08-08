@@ -41,8 +41,8 @@ public:
 	explicit EndMenuPage(EndMenuData* data);
 	~EndMenuPage() override = default;
 	void init() override = 0;
-	void update() override = 0;
-	void draw() override = 0;
+	void update(float dt) override = 0;
+	void draw(artattack::Renderer& renderer) const override = 0;
 protected:
 	EndMenuData* end_menu_data() const;
 
@@ -60,8 +60,8 @@ class EndMenuInitial final : public EndMenuPage
 public:
 	explicit EndMenuInitial(EndMenuData* data);
 	void init() override;
-	void update() override;
-	void draw() override;
+	void update(float dt) override;
+	void draw(artattack::Renderer& renderer) const override;
 private:
 	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
 	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;

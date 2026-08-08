@@ -20,11 +20,11 @@ StructurePaintable::StructurePaintable(
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
-	SpriteEffects effects,
+	SpriteFlip flip,
 	float layer_depth) :
 	Structure(sheet_name, frame_name, sprite_rectangle, collision_shape,
 		render_resources, collision_type, color, rotation, origin,
-		effects, layer_depth),
+		flip, layer_depth),
 		team_colours_(team_colours),
 		faces_(faces)
 {
@@ -41,12 +41,12 @@ void StructurePaintable::update(float dt)
 	}
 }
 
-void StructurePaintable::draw(SpriteBatch* sprite_batch, const Camera& camera) const
+void StructurePaintable::draw(DrawList& draw_list) const
 {
-	Structure::draw(sprite_batch, camera);
+	Structure::draw(draw_list);
 	for (const auto& paint_tile : this->paint_tiles_)
 	{
-		paint_tile.draw(sprite_batch, camera);
+		paint_tile.draw(draw_list);
 	}
 }
 

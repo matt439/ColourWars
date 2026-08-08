@@ -16,12 +16,12 @@ WeaponBucket::WeaponBucket(PlayerTeam team,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
-    SpriteEffects effects,
+    SpriteFlip flip,
     float layer_depth) :
     RelativeVelocityWeapon(DETAILS_BUCKET,
         DETAILS_RELATIVE_BUCKET,
         team, player_num, team_colour, type, player_center,
-        render_resources, audio_resources,        color, rotation, origin, effects, layer_depth)
+        render_resources, audio_resources,        color, rotation, origin, flip, layer_depth)
 {
 
 }

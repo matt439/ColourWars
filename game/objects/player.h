@@ -79,14 +79,13 @@ public:
         const mattmath::Vector2F& velocity = mattmath::Vector2F::ZERO,
         float rotation = 0.0f,
         const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-        DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
+        artattack::SpriteFlip flip = artattack::SpriteFlip::none,
         float layer_depth = 0.0f);
 
     void update(float dt) override;
     std::vector<std::unique_ptr<CollisionObject>>
         update_weapon_and_get_projectiles(float dt) const;
-    void draw(DirectX::SpriteBatch* sprite_batch,
-        const mattmath::Camera& camera) const override;
+    void draw(artattack::DrawList& draw_list) const override;
 
     mattmath::RectangleF bounds() const override;
 

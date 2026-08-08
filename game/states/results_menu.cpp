@@ -30,9 +30,8 @@ ResultsMenuInitial::ResultsMenuInitial(ResultsMenuData* data) :
 
 }
 
-void ResultsMenuInitial::update()
+void ResultsMenuInitial::update(float dt)
 {
-	const float dt = *this->data()->dt();
 	std::vector<ProcessedMenuInput> menu_inputs = this->menu_inputs();
 	
 
@@ -196,16 +195,15 @@ void ResultsMenuInitial::init()
 	this->play_effect(this->fill_sound_, true, FILL_VOLUME);
 }
 
-void ResultsMenuInitial::draw()
+void ResultsMenuInitial::draw(Renderer& renderer) const
 {
-	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
+	std::vector<UiLayer> layers;
 
-	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
-		this->point_clamp_sampler_state()));
+	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
 
-	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
 
-	this->draw_ui_objects_in_viewports(&ui_objects);
+	this->draw_ui_layers(renderer, layers);
 }
 
 void ResultsMenuInitial::update_fill_box() const

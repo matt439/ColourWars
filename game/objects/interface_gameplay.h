@@ -54,31 +54,30 @@ public:
     // object, and the only reason it is safe is that all of it arrives as
     // parameters. Level holds this by unique_ptr, which does not pass its
     // constness on, so this has to say const itself to mean anything.
-	void draw_gameplay_interface(DirectX::SpriteBatch* sprite_batch,
+	void draw_gameplay_interface(artattack::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
         float health,
         float ammo,
         float timer,
         const mattmath::Colour& team_colour,
-        ID3D11SamplerState* sampler_state,
         float respawn_timer,
         bool show_respawn_timer) const;
 
 private:
-    void draw_ammo(DirectX::SpriteBatch* sprite_batch,
+    void draw_ammo(artattack::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
         float ammo,
         const mattmath::Colour& team_colour,
         const mattmath::Vector2F& position) const;
-    void draw_health(DirectX::SpriteBatch* sprite_batch,
+    void draw_health(artattack::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
         float health,
         const mattmath::Vector2F& position) const;
-    void draw_timer(DirectX::SpriteBatch* sprite_batch,
+    void draw_timer(artattack::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
         float timer) const;
 
-    void draw_respawn_timer(DirectX::SpriteBatch* sprite_batch,
+    void draw_respawn_timer(artattack::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
         float timer) const;
 
@@ -97,6 +96,6 @@ private:
     artattack::RenderResources::SpriteSheetHandle sheet_;
     artattack::SpriteSheet::frame_handle empty_box_frame_;
     artattack::SpriteSheet::frame_handle fill_frame_;
-    artattack::RenderResources::FontHandle timer_font_;
-    artattack::RenderResources::FontHandle respawn_timer_font_;
+    artattack::FontHandle timer_font_;
+    artattack::FontHandle respawn_timer_font_;
 };

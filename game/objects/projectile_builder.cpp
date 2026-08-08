@@ -17,7 +17,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 		RenderResources* render_resources,
 		float rotation,
 		const Vector2F& origin,
-		SpriteEffects effects,
+		SpriteFlip flip,
 		float layer_depth) const
 {
 	switch (type)
@@ -35,7 +35,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 				render_resources,
 				rotation,
 				origin,
-				effects,
+				flip,
 				layer_depth));
 		return projectiles;
 	}
@@ -52,7 +52,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 				render_resources,
 				rotation,
 				origin,
-				effects,
+				flip,
 				layer_depth));
 		return projectiles;
 	}
@@ -69,7 +69,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 				render_resources,
 				rotation,
 				origin,
-				effects,
+				flip,
 				layer_depth));
 		return projectiles;
 	}
@@ -84,7 +84,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 			render_resources,
 			rotation,
 			origin,
-			effects,
+			flip,
 			layer_depth);
 	case BALL:
 	{
@@ -99,7 +99,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 				render_resources,
 				rotation,
 				origin,
-				effects,
+				flip,
 				layer_depth));
 		return projectiles;
 	}
@@ -119,7 +119,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 	RenderResources* render_resources,
 	float rotation,
 	const Vector2F& origin,
-	SpriteEffects effects,
+	SpriteFlip flip,
 	float layer_depth)
 {
 	std::vector<std::unique_ptr<CollisionObject>> projectiles;
@@ -133,7 +133,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 			render_resources,
 			rotation,
 			origin,
-			effects,
+			flip,
 			layer_depth));
 
 	projectiles.push_back(
@@ -146,7 +146,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 			render_resources,
 			rotation,
 			origin,
-			effects,
+			flip,
 			layer_depth));
 
 	projectiles.push_back(
@@ -159,7 +159,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 			render_resources,
 			rotation,
 			origin,
-			effects,
+			flip,
 			layer_depth));
 
 	projectiles.push_back(
@@ -172,7 +172,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 			render_resources,
 			rotation,
 			origin,
-			effects,
+			flip,
 			layer_depth));
 
 	projectiles.push_back(
@@ -185,7 +185,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 			render_resources,
 			rotation,
 			origin,
-			effects,
+			flip,
 			layer_depth));
 	return projectiles;
 }

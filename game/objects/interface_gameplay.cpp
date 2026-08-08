@@ -1,7 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/interface_gameplay.h"
 
-using namespace DirectX;
 using namespace mattmath;
 using namespace interface_consts;
 using namespace colour_consts;
@@ -26,41 +25,44 @@ RenderResources* InterfaceGameplay::render_resources() const
 	return this->render_resources_;
 }
 
-void InterfaceGameplay::draw_gameplay_interface(SpriteBatch* sprite_batch,
+void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	const Vector2F& resolution,
 	float health,
 	float ammo,
 	float timer,
 	const Colour& team_colour,
-	ID3D11SamplerState* sampler_state,
 	float respawn_timer,
 	bool show_respawn_timer) const
 {
-	
-	sprite_batch->Begin();
-	this->draw_timer(sprite_batch, resolution, timer);
-	sprite_batch->End();
+	// The clock is a large face and wants linear; the boxes are pixel art and
+	// want point. That was two Begin/End pairs with two samplers, one of them
+	// a raw ID3D11SamplerState* the caller had cached at construction and held
+	// across a device loss. It is two set_filter calls now, and the state that
+	// produces the filtering belongs to the backend.
+	draw_list.set_filter(TextureFilter::linear);
+	this->draw_timer(draw_list, resolution, timer);
 
-	sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, sampler_state);
+	draw_list.set_filter(TextureFilter::point);
 
 	float x_pos = resolution.x - resolution.x * RIGHT_MARGIN;
 
 	Vector2F ammo_pos = Vector2F(x_pos,
 		resolution.y * AMMO_TOP_MARGIN);
-	this->draw_ammo(sprite_batch, resolution, ammo, team_colour, ammo_pos);
+	this->draw_ammo(draw_list, resolution, ammo, team_colour, ammo_pos);
 
 	Vector2F health_pos = Vector2F(x_pos,
 		resolution.y * HEALTH_TOP_MARGIN);
-	this->draw_health(sprite_batch, resolution, health, health_pos);
+	this->draw_health(draw_list, resolution, health, health_pos);
 
 	if (show_respawn_timer)
 	{
-		this->draw_respawn_timer(sprite_batch, resolution, respawn_timer);
+		draw_list.set_filter(TextureFilter::linear);
+		this->draw_respawn_timer(draw_list, resolution, respawn_timer);
+		draw_list.set_filter(TextureFilter::point);
 	}
-	sprite_batch->End();
 }
 
-void InterfaceGameplay::draw_ammo(SpriteBatch* sprite_batch,
+void InterfaceGameplay::draw_ammo(DrawList& draw_list,
 	const Vector2F& resolution,
 	float ammo,
 	const Colour& team_colour,
@@ -71,17 +73,13 @@ void InterfaceGameplay::draw_ammo(SpriteBatch* sprite_batch,
 		resolution.x * TOP_RIGHT_BOX_SIZE.x,
 		resolution.y * TOP_RIGHT_BOX_SIZE.y);
 
-	RectangleI empty_box_rect = RectangleI(
-		static_cast<int>(position.x),
-		static_cast<int>(position.y),
-		static_cast<int>(size.x),
-		static_cast<int>(size.y));
+	const RectangleF empty_box_rect = RectangleF(position, size);
 
-	SpriteSheet* sprite_sheet = this->render_resources()->
+	const SpriteSheet* sprite_sheet = this->render_resources()->
 		sprite_sheet(this->sheet_);
 
 	sprite_sheet->draw(
-		sprite_batch,
+		draw_list,
 		this->empty_box_frame_,
 		empty_box_rect,
 		WHITE);
@@ -93,19 +91,13 @@ void InterfaceGameplay::draw_ammo(SpriteBatch* sprite_batch,
 		size.y - 2.0f * border);
 	fill_size.x *= ammo;
 
-	RectangleI fill_rect = RectangleI(
-		static_cast<int>(fill_pos.x),
-		static_cast<int>(fill_pos.y),
-		static_cast<int>(fill_size.x),
-		static_cast<int>(fill_size.y));
-
 	sprite_sheet->draw(
-		sprite_batch,
+		draw_list,
 		this->fill_frame_,
-		fill_rect,
+		RectangleF(fill_pos, fill_size),
 		team_colour);
 }
-void InterfaceGameplay::draw_health(SpriteBatch* sprite_batch,
+void InterfaceGameplay::draw_health(DrawList& draw_list,
 	const Vector2F& resolution,
 	float health,
 	const Vector2F& position) const
@@ -115,19 +107,13 @@ void InterfaceGameplay::draw_health(SpriteBatch* sprite_batch,
 		resolution.x * TOP_RIGHT_BOX_SIZE.x,
 		resolution.y * TOP_RIGHT_BOX_SIZE.y);
 
-	RectangleI empty_rect = RectangleI(
-		static_cast<int>(position.x),
-		static_cast<int>(position.y),
-		static_cast<int>(size.x),
-		static_cast<int>(size.y));
-
-	SpriteSheet* sprite_sheet = this->render_resources()->
+	const SpriteSheet* sprite_sheet = this->render_resources()->
 		sprite_sheet(this->sheet_);
 
 	sprite_sheet->draw(
-		sprite_batch,
+		draw_list,
 		this->empty_box_frame_,
-		empty_rect,
+		RectangleF(position, size),
 		WHITE);
 
 	//fill box
@@ -137,19 +123,13 @@ void InterfaceGameplay::draw_health(SpriteBatch* sprite_batch,
 		size.y - 2.0f * border);
 	fill_size.x *= health;
 
-	RectangleI fill_rect = RectangleI(
-		static_cast<int>(fill_pos.x),
-		static_cast<int>(fill_pos.y),
-		static_cast<int>(fill_size.x),
-		static_cast<int>(fill_size.y));
-
 	sprite_sheet->draw(
-		sprite_batch,
+		draw_list,
 		this->fill_frame_,
-		fill_rect,
+		RectangleF(fill_pos, fill_size),
 		HEALTH_COLOUR);
 }
-void InterfaceGameplay::draw_timer(SpriteBatch* sprite_batch,
+void InterfaceGameplay::draw_timer(DrawList& draw_list,
 	const Vector2F& resolution, float timer) const
 {
 	Vector2F pos = Vector2F(
@@ -158,34 +138,20 @@ void InterfaceGameplay::draw_timer(SpriteBatch* sprite_batch,
 
 	float scale = resolution.x / TIMER_SCALE_FACTOR;
 
-	SpriteFont* sprite_font = this->render_resources()->
-		sprite_font(this->timer_font_);
-
 	// Wide, because the narrow overload converts through a buffer owned by
-	// this shared SpriteFont and every player's render worker is in here.
+	// the shared font and every player's render worker is in here.
 	const std::wstring text =
 		std::to_wstring(static_cast<int>(std::ceil(timer)));
 
-	sprite_font->DrawString(
-		sprite_batch,
-		text.c_str(),
-		(pos + (TIMER_SHADOW_OFFSET * scale)).xm_vector(),
-		TIMER_SHADOW_COLOUR.xm_vector(),
-		0.0f,
-		XMFLOAT2(0.0f, 0.0f),
-		scale);
+	draw_list.draw_text(this->timer_font_, text,
+		pos + (TIMER_SHADOW_OFFSET * scale), TIMER_SHADOW_COLOUR, scale,
+		0.0f, Vector2F::ZERO, 0.0f);
 
-	sprite_font->DrawString(
-		sprite_batch,
-		text.c_str(),
-		pos.xm_vector(),
-		TIMER_COLOUR.xm_vector(),
-		0.0f,
-		XMFLOAT2(0.0f, 0.0f),
-		scale);
+	draw_list.draw_text(this->timer_font_, text, pos, TIMER_COLOUR, scale,
+		0.0f, Vector2F::ZERO, 0.0f);
 }
 
-void InterfaceGameplay::draw_respawn_timer(SpriteBatch* sprite_batch,
+void InterfaceGameplay::draw_respawn_timer(DrawList& draw_list,
 	const Vector2F& resolution,
 	float timer) const
 {
@@ -193,20 +159,12 @@ void InterfaceGameplay::draw_respawn_timer(SpriteBatch* sprite_batch,
 		resolution.x / 2.0f - (resolution.x * RESPAWN_TIMER_OFFSET.x),
 		resolution.y * RESPAWN_TIMER_OFFSET.y);
 
-	SpriteFont* sprite_font = this->render_resources()->
-		sprite_font(this->respawn_timer_font_);
-
 	const std::wstring text = std::to_wstring(static_cast<int>(timer) + 1);
 
-	sprite_font->DrawString(
-		sprite_batch,
-		text.c_str(),
-		(pos + RESPAWN_TIMER_SHADOW_OFFSET).xm_vector(),
-		RESPAWN_TIMER_SHADOW_COLOUR.xm_vector());
+	draw_list.draw_text(this->respawn_timer_font_, text,
+		pos + RESPAWN_TIMER_SHADOW_OFFSET, RESPAWN_TIMER_SHADOW_COLOUR,
+		1.0f, 0.0f, Vector2F::ZERO, 0.0f);
 
-	sprite_font->DrawString(
-		sprite_batch,
-		text.c_str(),
-		pos.xm_vector(),
-		RESPAWN_TIMER_COLOUR.xm_vector());
+	draw_list.draw_text(this->respawn_timer_font_, text, pos,
+		RESPAWN_TIMER_COLOUR, 1.0f, 0.0f, Vector2F::ZERO, 0.0f);
 }

@@ -61,7 +61,7 @@ PauseMenuInitial::PauseMenuInitial(PauseMenuData* data) :
 
 }
 
-void PauseMenuInitial::update()
+void PauseMenuInitial::update(float /*dt*/)
 {
 	const ProcessedMenuInput input =
 		this->pausing_player_input(this->menu_inputs());
@@ -170,16 +170,15 @@ void PauseMenuInitial::init()
 
 	this->play_wave(this->window_open_sound_);
 }
-void PauseMenuInitial::draw()
+void PauseMenuInitial::draw(Renderer& renderer) const
 {
-	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
+	std::vector<UiLayer> layers;
 
-	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
-		this->point_clamp_sampler_state()));
+	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
 
-	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
 
-	this->draw_ui_objects_in_viewports(&ui_objects);
+	this->draw_ui_layers(renderer, layers);
 }
 
 PauseMenuConfirmation::PauseMenuConfirmation(PauseMenuData* data,
@@ -189,7 +188,7 @@ PauseMenuConfirmation::PauseMenuConfirmation(PauseMenuData* data,
 
 }
 
-void PauseMenuConfirmation::update()
+void PauseMenuConfirmation::update(float /*dt*/)
 {
 	const ProcessedMenuInput input =
 		this->pausing_player_input(this->menu_inputs());
@@ -307,16 +306,15 @@ void PauseMenuConfirmation::init()
 		});
 }
 
-void PauseMenuConfirmation::draw()
+void PauseMenuConfirmation::draw(Renderer& renderer) const
 {
-	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
+	std::vector<UiLayer> layers;
 
-	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
-		this->point_clamp_sampler_state()));
+	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
 
-	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
 
-	this->draw_ui_objects_in_viewports(&ui_objects);
+	this->draw_ui_layers(renderer, layers);
 }
 
 std::wstring PauseMenuConfirmation::question_text(

@@ -15,11 +15,11 @@ Projectile::Projectile(const Vector2F& velocity,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
-    SpriteEffects effects,
+    SpriteFlip flip,
     float layer_depth) :
     MovingObject(velocity, rotation),
     AnimationObject(details.sheet_name, details.animation_strip_name,
-                    render_resources, color, rotation, origin, effects, layer_depth),
+                    render_resources, color, rotation, origin, flip, layer_depth),
     details_(details),
     player_num_(player_num),
     team_colour_(team_colour),
@@ -41,12 +41,12 @@ DiffusingProjectile::DiffusingProjectile(
     const Colour& color,
     float rotation,
     const Vector2F& origin,
-    SpriteEffects effects,
+    SpriteFlip flip,
     float layer_depth) :
     Projectile(velocity, team, player_num,
         team_colour, type,
         render_resources, details, color, rotation,
-        origin, effects, layer_depth),
+        origin, flip, layer_depth),
     diffusion_details_(diffusion_details)
 {
 

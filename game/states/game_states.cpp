@@ -72,9 +72,9 @@ void GameMenu::set_main_menu_data_ptrs()
     this->menu_data_->set_is_ready_to_load_level(
         this->is_ready_to_load_level_.get());
 }
-void GameMenu::update()
+void GameMenu::update(float dt)
 {
-    this->menu_->update();
+    this->menu_->update(dt);
     if (*this->is_ready_to_load_level_)
     {
         this->order_level_creation();
@@ -86,9 +86,9 @@ void GameMenu::order_level_creation()
         std::make_unique<GameLevel>(this->game_data_,
             *this->menu_data_->level_settings()));
 }
-void GameMenu::draw()
+void GameMenu::draw(Renderer& renderer) const
 {
-    this->menu_->draw();
+    this->menu_->draw(renderer);
 }
 
 GameData* GameMenu::data() const
@@ -119,7 +119,6 @@ void GameLevel::init()
         this->data()->render_resources(),
         this->data()->audio_resources(),
         this->data()->level_infos(),
-        this->data()->common_states()->PointClamp(),
         this->data()->resolution_manager(),
         this->data()->thread_pool(),
 		this->data()->partitioner());
@@ -143,7 +142,7 @@ void GameLevel::build_and_enter_level()
     // one; the same call covers both restart paths.
     this->player_input_->prime();
 }
-void GameLevel::update()
+void GameLevel::update(float dt)
 {
 
     switch (this->state_)
@@ -202,14 +201,13 @@ void GameLevel::update()
         }
         else
         {
-            this->level_->update(player_inputs,
-                *this->game_data_->dt());
+            this->level_->update(player_inputs, dt);
         }
         break;
     }
     case GameLevelState::pause_menu:
     {
-        this->pause_menu_->update();
+        this->pause_menu_->update(dt);
 
         PauseMenuAction action = *this->pause_menu_action_;
 
@@ -240,7 +238,7 @@ void GameLevel::update()
     }
     case GameLevelState::results:
     {
-        this->results_menu_->update();
+        this->results_menu_->update(dt);
         ResultsMenuAction action = *this->results_menu_action_;
         if (action == ResultsMenuAction::continue_to_end_menu)
         {
@@ -264,7 +262,7 @@ void GameLevel::update()
     }
     case GameLevelState::end_menu:
     {
-        this->end_menu_->update();
+        this->end_menu_->update(dt);
         EndMenuAction action = *this->end_menu_action_;
         switch (action)
         {
@@ -324,7 +322,7 @@ void GameLevel::update()
     }
 }
 
-void GameLevel::draw()
+void GameLevel::draw(Renderer& renderer) const
 {
 	if (this->state_ == GameLevelState::first_update ||
 		this->state_ == GameLevelState::second_update)
@@ -332,39 +330,20 @@ void GameLevel::draw()
 		return;
 	}
 
-    auto deferred_contexts = this->data()->device_resources()->deferred_contexts();
-
-    std::vector<ID3D11CommandList*> command_lists(deferred_contexts->size(), nullptr);
-
-    this->level_->draw(this->data()->device_resources()->deferred_contexts(),
-        &command_lists,
-        this->data()->sprite_batches());
-
-    auto immediate_context = this->data()->device_resources()->GetD3DDeviceContext();
-
-    for (int i = 0; i < command_lists.size(); i++)
-    {
-        if (command_lists[i] == nullptr)
-        {
-            continue;
-        }
-
-        immediate_context->ExecuteCommandList(command_lists[i], TRUE);
-        command_lists[i]->Release();
-    }
+    this->level_->draw(renderer);
 
     switch (this->state_)
     {
     case GameLevelState::active:
         break;
     case GameLevelState::pause_menu:
-        this->pause_menu_->draw();
+        this->pause_menu_->draw(renderer);
         break;
     case GameLevelState::results:
-        this->results_menu_->draw();
+        this->results_menu_->draw(renderer);
         break;
     case GameLevelState::end_menu:
-        this->end_menu_->draw();
+        this->end_menu_->draw(renderer);
         break;
     }
 }

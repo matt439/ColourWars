@@ -14,10 +14,10 @@ Structure::Structure(const std::string& sheet_name,
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
-	SpriteEffects effects,
+	SpriteFlip flip,
 	float layer_depth) :
 	TextureObject(sheet_name, frame_name, render_resources,
-		color, rotation, origin, effects, layer_depth),
+		color, rotation, origin, flip, layer_depth),
 	collision_type_(collision_type),
 	sprite_rectangle_(sprite_rectangle),
 	collision_shape_(collision_shape->clone())
@@ -29,9 +29,9 @@ void Structure::update(float /*dt*/)
 {
 	
 }
-void Structure::draw(SpriteBatch* sprite_batch, const Camera& camera) const
+void Structure::draw(DrawList& draw_list) const
 {
-	this->TextureObject::draw(sprite_batch, this->sprite_rectangle_, camera);
+	this->TextureObject::draw(draw_list, this->sprite_rectangle_);
 }
 RectangleF Structure::bounds() const
 {

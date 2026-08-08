@@ -82,109 +82,35 @@ const AudioResources* MenuPage::audio_resources() const
 {
 	return this->data_->audio_resources();
 }
-//SpriteBatch* MenuPage::sprite_batch() const
-//{
-//	return this->data_->sprite_batches()->at(0);
-//}
 ViewportManager* MenuPage::viewport_manager() const
 {
 	return this->data_->viewport_manager();
 }
 
-void MenuPage::draw_ui_object_in_viewports(ID3D11DeviceContext* deferred_context,
-	ID3D11CommandList*& command_list, SpriteBatch* sprite_batch,
-	UiObject* ui_object,
-	ID3D11SamplerState* sampler_state)
+void MenuPage::draw_ui_layers(Renderer& renderer,
+	const std::vector<UiLayer>& layers) const
 {
-	if (deferred_context->GetType() != D3D11_DEVICE_CONTEXT_DEFERRED)
+	const std::vector<Viewport> viewports =
+		this->viewport_manager()->all_viewports();
+
+	renderer.set_view_count(static_cast<int>(viewports.size()));
+
+	for (size_t i = 0; i < viewports.size(); i++)
 	{
-		throw std::exception("Deferred context not created");
-	}
+		DrawList list = renderer.view(static_cast<int>(i));
 
-	std::vector<Viewport> viewports =
-	 	this->viewport_manager()->all_viewports();
+		// Both, once, for the whole pane: the viewport clips it and the
+		// camera carries design space onto it. Every widget below draws in
+		// the units it was authored in and knows about neither.
+		list.set_viewport(viewports[i]);
+		list.set_camera(this->ui_camera(viewports[i]));
 
-	size_t num_viewports = viewports.size();
-	for (size_t i = 0; i < num_viewports; i++)
-	{
-		this->viewport_manager()->apply_player_viewport(
-			static_cast<int>(i), deferred_context, sprite_batch);
-
-		sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, sampler_state);
-
-		ui_object->draw(sprite_batch, this->ui_camera(viewports[i]));
-
-		sprite_batch->End();
-	}
-
-	HRESULT hr = deferred_context->FinishCommandList(FALSE, &command_list);
-	if (FAILED(hr))
-	{
-		throw std::exception("Failed to finish command list");
-	}
-}
-
-void MenuPage::draw_ui_objects_in_viewports(std::vector<std::pair<UiObject*,
-	ID3D11SamplerState*>>* ui_objects)
-{
-	auto deferred_contexts = this->data()->device_resources()->deferred_contexts();
-	std::vector<ID3D11CommandList*> command_lists(deferred_contexts->size(), nullptr);
-	auto sprite_batches = this->data()->sprite_batches();
-	auto partitioner = this->data()->partitioner();
-	int num_threads = this->data()->thread_pool()->max_num_threads();
-
-	// partition the objects
-	auto partitioned_ui_objects =
-		partitioner->partition(ui_objects->size(), num_threads);
-
-	auto thread_pool = this->data()->thread_pool();
-
-	// draw the objects
-	for (int i = 0; i < partitioned_ui_objects.size(); i++)
-	{
-		thread_pool->add_task([this, i, &partitioned_ui_objects, ui_objects, deferred_contexts,
-			&command_lists, sprite_batches]()
-			{
-				this->draw_range_of_ui_objects_in_viewports(
-					partitioned_ui_objects[i].first, partitioned_ui_objects[i].second,
-					ui_objects, deferred_contexts, &command_lists, sprite_batches);
-			});
-	}
-	thread_pool->wait_for_tasks_to_complete();
-
-	auto immediate_context = this->data()->device_resources()->GetD3DDeviceContext();
-
-	for (size_t i = 0; i < command_lists.size(); i++)
-	{
-		if (command_lists[i] == nullptr)
+		for (const UiLayer& layer : layers)
 		{
-			continue;
+			list.set_filter(layer.second);
+			layer.first->draw(list);
 		}
-
-		immediate_context->ExecuteCommandList(command_lists[i], FALSE);
-		command_lists[i]->Release();
 	}
-}
-
-void MenuPage::draw_range_of_ui_objects_in_viewports(int start, int end,
-	std::vector<std::pair<UiObject*, ID3D11SamplerState*>>* ui_objects,
-	std::vector<ID3D11DeviceContext*>* deferred_contexts,
-	std::vector<ID3D11CommandList*>* command_lists,
-	std::vector<SpriteBatch*>* sprite_batches)
-{
-	for (int i = start; i < end; i++)
-	{
-		// Use the contexts passed in rather than re-fetching the same ones
-		// through GameData from a worker thread.
-		this->draw_ui_object_in_viewports(
-			deferred_contexts->at(i),
-			command_lists->at(i), sprite_batches->at(i), ui_objects->at(i).first, ui_objects->at(i).second);
-	}
-}
-
-ID3D11SamplerState* MenuPage::point_clamp_sampler_state() const
-{
-	return this->data()->common_states()->PointClamp();
 }
 
 std::vector<ProcessedMenuInput> MenuPage::menu_inputs() const
@@ -199,7 +125,7 @@ Vector2F MenuPage::float_resolution() const
 
 // A Camera maps world to view as (world - translation) * scale. Here "world"
 // is design space, and the view a menu draws into is the viewport's own
-// space: apply_player_viewport() has already offset and clipped rendering to
+// space: DrawList::set_viewport has already offset and clipped rendering to
 // the viewport's screen rectangle, so a widget at design position p has to
 // land at p * s - viewport_origin, where s carries 1920 wide onto the screen.
 // Solving for the camera's translation gives viewport_origin / s.

@@ -41,19 +41,12 @@ public:
     // so anything here may be held for an object's whole life.
     artattack::Application* application() const;
     artattack::ResolutionManager* resolution_manager() const;
-    float* dt() const;
     artattack::RenderResources* render_resources() const;
     artattack::AudioResources* audio_resources() const;
     DirectX::GamePad* gamepad() const;
-    artattack::DeviceResources* device_resources() const;
     artattack::ViewportManager* viewport_manager() const;
     artattack::ThreadPool* thread_pool() const;
     const artattack::Partitioner* partitioner() const;
-
-    // Recreated on device loss, so unlike the rest these change identity
-    // across one and must be read through this each time they are needed.
-    DirectX::CommonStates* common_states() const;
-    std::vector<DirectX::SpriteBatch*>* sprite_batches() const;
 
     GameData* game_data();
 

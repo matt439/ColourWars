@@ -31,7 +31,7 @@ public:
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
+		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 	void set_rectangle_center(const mattmath::Vector2F& center);
@@ -39,12 +39,11 @@ public:
 	void set_colour(const mattmath::Colour& colour) override;
 
 	void update(float dt) override;
-	void draw(DirectX::SpriteBatch* sprite_batch,
-		const mattmath::Camera& camera) const override;
+	void draw(artattack::DrawList& draw_list) const override;
 
 	// Draws with the given tint without storing it. See TextureObject::draw_with.
-	void draw_with_colour(DirectX::SpriteBatch* sprite_batch,
-		const mattmath::Camera& camera, const mattmath::Colour& colour) const;
+	void draw_with_colour(artattack::DrawList& draw_list,
+		const mattmath::Colour& colour) const;
 
 	mattmath::RectangleF bounds() const override;
 private:
@@ -64,10 +63,9 @@ public:
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
+		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
 		float layer_depth = 0.0f);
-	void draw(DirectX::SpriteBatch* sprite_batch,
-		const mattmath::Camera& camera) const override;
+	void draw(artattack::DrawList& draw_list) const override;
 	void update(float dt) override;
 	float area() const;
 	PlayerTeam team() const;

@@ -62,8 +62,8 @@ public:
 	explicit ResultsMenuPage(ResultsMenuData* data);
 	~ResultsMenuPage() override = default;
 	void init() override = 0;
-	void update() override = 0;
-	void draw() override = 0;
+	void update(float dt) override = 0;
+	void draw(artattack::Renderer& renderer) const override = 0;
 protected:
 	ResultsMenuData* results_menu_data() const;
 
@@ -82,8 +82,8 @@ class ResultsMenuInitial final : public ResultsMenuPage
 public:
 	explicit ResultsMenuInitial(ResultsMenuData* data);
 	void init() override;
-	void update() override;
-	void draw() override;
+	void update(float dt) override;
+	void draw(artattack::Renderer& renderer) const override;
 private:
 	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
 	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;

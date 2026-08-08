@@ -30,12 +30,11 @@ public:
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
+		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 	void update(float dt) override = 0;
-	void draw(DirectX::SpriteBatch* sprite_batch,
-		const mattmath::Camera& camera) const override = 0;
+	void draw(artattack::DrawList& draw_list) const override = 0;
 	mattmath::RectangleF bounds() const override = 0;
 
 	bool is_colliding(const CollisionObject* other) const override = 0;
@@ -94,14 +93,13 @@ public:
 		const mattmath::Colour& color = colour_consts::WHITE,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
+		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
 		float layer_depth = 0.0f);
 	~DiffusingProjectile() override = default;
 
 
 	void update(float dt) override = 0;
-	void draw(DirectX::SpriteBatch* sprite_batch,
-		const mattmath::Camera& camera) const override = 0;
+	void draw(artattack::DrawList& draw_list) const override = 0;
 	mattmath::RectangleF bounds() const override = 0;
 
 	bool is_colliding(const CollisionObject* other) const override = 0;

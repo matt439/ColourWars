@@ -20,7 +20,6 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<GameObject>>> non_colli
 	const std::string& sound_bank_name,
 	const std::string& music_name,
 	float music_volume,
-	ID3D11SamplerState* sampler_state,
 	const ResolutionManager* resolution_manager,
 	ViewportManager* viewport_manager,
 	RenderResources* render_resources,
@@ -42,7 +41,6 @@ Level::Level(std::unique_ptr<std::vector<std::unique_ptr<GameObject>>> non_colli
 	zoom_out_finish_bounds_(zoom_out_finish_bounds),
 	team_a_spawns_(team_a_spawns),
 	team_b_spawns_(team_b_spawns),
-	sampler_state_(sampler_state),
 	thread_pool_(thread_pool),
 	partitioner_(partitioner)
 {
@@ -346,219 +344,162 @@ void Level::stop_player_sounds() const
 	}
 
 }
-void Level::draw(std::vector<ID3D11DeviceContext*>* deferred_contexts,
-	std::vector<ID3D11CommandList*>* command_lists,
-	std::vector<SpriteBatch*>* sprite_batches) const
+void Level::draw(Renderer& renderer) const
 {
 	if (this->state_ == LevelState::start_countdown ||
 		this->state_ == LevelState::active)
 	{
-		this->draw_active_level(deferred_contexts,
-			command_lists,
-			sprite_batches);
+		this->draw_active_level(renderer);
 	}
 	else if (this->state_ == LevelState::zoom_out ||
 		this->state_ == LevelState::overview ||
 		this->state_ == LevelState::finished)
 	{
-		this->draw_zoom_out_level(deferred_contexts,
-			command_lists,
-			sprite_batches);
+		this->draw_zoom_out_level(renderer);
 	}
 }
 
-void Level::draw_active_level(std::vector<ID3D11DeviceContext*>* deferred_contexts,
-		std::vector<ID3D11CommandList*>* command_lists,
-		std::vector<SpriteBatch*>* sprite_batches) const
+void Level::draw_active_level(Renderer& renderer) const
 {
-	int num_threads = this->thread_pool_->max_num_threads();
+	// One view per player, and the partition splits the *views* across the
+	// pool - not the objects. Every worker enters draw() on every object; what
+	// differs between them is which pane they are recording into. That is why
+	// GameObject::draw is const.
+	renderer.set_view_count(static_cast<int>(this->player_objects_->size()));
 
-	// partition player objects
-	auto partitioned_players =
-		this->partitioner_->partition(this->player_objects_->size(), num_threads);
+	const std::vector<std::pair<int, int>> partitioned_views =
+		this->partitioner_->partition(this->player_objects_->size(),
+			this->thread_pool_->max_num_threads());
 
-	// draw player objects
-	for (int i = 0; i < partitioned_players.size(); i++)
+	for (const std::pair<int, int>& range : partitioned_views)
 	{
-		this->thread_pool_->add_task([this, i, partitioned_players,
-			deferred_contexts, command_lists, sprite_batches]()
+		this->thread_pool_->add_task([this, range, &renderer]()
 			{
-				this->draw_player_view_level(partitioned_players[i].first,
-				partitioned_players[i].second,
-				deferred_contexts,
-				command_lists,
-				sprite_batches);
+				this->draw_player_view_level(range.first, range.second,
+					renderer);
 			});
 	}
 
 	this->thread_pool_->wait_for_tasks_to_complete();
 }
 
-void Level::draw_player_view_level(int start, int end,
-	std::vector<ID3D11DeviceContext*>* deferred_contexts,
-	std::vector<ID3D11CommandList*>* command_lists,
-	std::vector<SpriteBatch*>* sprite_batches) const
+void Level::draw_player_view_level(int start, int end, Renderer& renderer) const
 {
 	for (int i = start; i < end; i++)
 	{
-		if (deferred_contexts->at(i)->GetType() != D3D11_DEVICE_CONTEXT_DEFERRED)
-		{
-			throw std::exception("Deferred context not created");
-		}
+		DrawList list = renderer.view(i);
 
 		const int player_num = this->player_objects_->at(i)->player_num();
-
-		this->viewport_manager_->apply_player_viewport(
-			player_num, deferred_contexts->at(i), sprite_batches->at(i));
+		const Viewport player_vp =
+			this->viewport_manager_->player_viewport(player_num);
+		list.set_viewport(player_vp);
 
 		const Camera& camera = this->player_objects_->at(i)->camera();
 		const RectangleF camera_view =
 			this->viewport_manager_->camera_adjusted_player_viewport_rect(
 				player_num, camera);
 
-		sprite_batches->at(i)->Begin(SpriteSortMode_Deferred, nullptr, this->sampler_state_);
+		// The world, through this player's camera.
+		list.set_camera(camera);
 
-		// draw non-collision objects
-		for (auto& object : *this->non_collision_objects_)
+		for (const auto& object : *this->non_collision_objects_)
 		{
 			if (object->bounds().intersects(camera_view))
 			{
-				object->draw(sprite_batches->at(i), camera);
+				object->draw(list);
 			}
 		}
 
-		// draw collision objects
-		for (auto& object : *this->collision_objects_)
+		for (const auto& object : *this->collision_objects_)
 		{
 			if (object->bounds().intersects(camera_view))
 			{
-				object->draw(sprite_batches->at(i), camera);
+				object->draw(list);
 			}
 		}
 
-		// draw player objects
-		for (auto& object : *this->player_objects_)
+		for (const auto& object : *this->player_objects_)
 		{
 			if (object->bounds().intersects(camera_view))
 			{
-				object->draw(sprite_batches->at(i), camera);
+				object->draw(list);
 			}
 		}
 
-		// draw viewport dividers
-		const Viewport player_vp =
-			this->viewport_manager_->player_viewport(player_num);
+		// Everything from here down goes over the world, and this is the case
+		// renderer.h describes for the camera being per draw-range rather than
+		// per view: same viewport, same frame, three different mappings.
+		//
+		// The dividers are authored in screen coordinates, so they are drawn
+		// through a camera that subtracts this pane's screen origin.
+		list.set_camera(Camera(player_vp));
 
-		const Camera viewport_camera = Camera(player_vp);
-
-		for (auto& divider : *this->viewport_dividers_)
+		for (const auto& divider : *this->viewport_dividers_)
 		{
-			divider->draw(sprite_batches->at(i), viewport_camera);
+			divider->draw(list);
 		}
 
-		sprite_batches->at(i)->End();
+		// The HUD is already in pane-local coordinates - it is laid out from
+		// the viewport's own size - so it wants the identity. Both of these
+		// used to be a bare SpriteBatch::Begin() with no camera anywhere near
+		// them, which is what the identity means.
+		list.set_camera(Camera::DEFAULT_CAMERA);
 
-		const PlayerState state =  this->player_objects_->at(i)->state();
-
-		// draw interface
-		Vector2F viewport_size = player_vp.size();
-
-		this->interface_gameplay_->draw_gameplay_interface(
-			sprite_batches->at(i),
-			viewport_size,
+		this->interface_gameplay_->draw_gameplay_interface(list,
+			player_vp.size(),
 			this->player_objects_->at(i)->health(),
 			this->player_objects_->at(i)->weapon_ammo(),
 			this->timer_,
 			this->player_objects_->at(i)->team_colour(),
-			this->sampler_state_,
 			this->player_objects_->at(i)->respawn_timer(),
-			state == PlayerState::dead);
+			this->player_objects_->at(i)->state() == PlayerState::dead);
 
-		// draw debug info
 		if (this->player_objects_->at(i)->showing_debug())
 		{
-			int num_projectiles = this->count_projectiles();
-
-			this->debug_text_->draw_debug_info(sprite_batches->at(i),
-				this->player_objects_->at(i).get(), num_projectiles,
+			this->debug_text_->draw_debug_info(list,
+				this->player_objects_->at(i).get(), this->count_projectiles(),
 				this->frame_dt_);
 		}
 
-		// draw countdown text
 		if (this->state_ == LevelState::start_countdown ||
 			this->start_timer_ > -1.0f)
 		{
-			this->draw_countdown_text(sprite_batches->at(i), viewport_camera);
-		}
-
-		HRESULT hr = deferred_contexts->at(i)->FinishCommandList(TRUE, &command_lists->at(i));
-		if (FAILED(hr))
-		{
-			throw std::exception("Failed to finish command list");
+			// Back to the pane's camera: the countdown is positioned in screen
+			// coordinates like the dividers, not in the HUD's local ones.
+			list.set_camera(Camera(player_vp));
+			this->draw_countdown_text(list);
 		}
 	}
 }
 
-void Level::draw_zoom_out_level(std::vector<ID3D11DeviceContext*>* deferred_contexts,
-	std::vector<ID3D11CommandList*>* command_lists,
-	std::vector<SpriteBatch*>* sprite_batches) const
+void Level::draw_zoom_out_level(Renderer& renderer) const
 {
-	// Submitting exactly one task and then immediately blocking on it gains no
-	// parallelism and pays a full thread-pool round trip. Record it here, on
-	// the calling thread.
-	this->draw_zoom_out_level_component(deferred_contexts, command_lists,
-		sprite_batches);
-}
+	// One fullscreen view, and it is the whole of what "fullscreen" now costs.
+	// Getting here used to mean calling ViewportManager::set_layout(one_player)
+	// from inside a draw - permanently clobbering shared presentation state,
+	// never restoring it, so restarting a 2-4 player match rendered every
+	// camera into one pane with no split-screen dividers. Saying it on the list
+	// says it for this frame and no further.
+	renderer.set_view_count(1);
+	DrawList list = renderer.view(0);
 
-void Level::draw_zoom_out_level_component(
-	std::vector<ID3D11DeviceContext*>* deferred_contexts,
-	std::vector<ID3D11CommandList*>* command_lists,
-	std::vector<DirectX::SpriteBatch*>* sprite_batches) const
-{
-	if (deferred_contexts->at(0)->GetType() != D3D11_DEVICE_CONTEXT_DEFERRED)
-	{
-		throw std::runtime_error("Deferred context not created");
-	}
+	list.set_viewport(this->viewport_manager_->fullscreen_viewport());
+	list.set_camera(this->zoom_out_camera_);
 
-	const Camera& camera = this->zoom_out_camera_;
-
-	ID3D11DeviceContext* context = deferred_contexts->at(0);
-	SpriteBatch* sprite_batch = sprite_batches->at(0);
-
-	// Compute the fullscreen viewport and apply it to this context only.
-	// This used to call ViewportManager::set_layout(ONE_PLAYER), permanently
-	// clobbering shared presentation state from inside a draw call: the layout
-	// was never restored, so restarting a 2-4 player match rendered every
-	// camera into one fullscreen viewport with no split-screen dividers.
-	const D3D11_VIEWPORT viewport =
-		this->viewport_manager_->fullscreen_d3d11_viewport();
-	context->RSSetViewports(1, &viewport);
-	sprite_batch->SetViewport(viewport);
-
-	sprite_batch->Begin(SpriteSortMode_Deferred, nullptr, this->sampler_state_);
-
-	// draw non-collision objects
+	// No bounds() cull here, unlike the player views twenty lines above - and
+	// this is the path that runs for the whole post-match menu flow. Left as
+	// it was: culling is the scene's job and the scene does not exist yet.
 	for (const auto& object : *this->non_collision_objects_)
 	{
-		object->draw(sprite_batch, camera);
+		object->draw(list);
 	}
-	// draw collision objects
 	for (const auto& object : *this->collision_objects_)
 	{
-		object->draw(sprite_batch, camera);
+		object->draw(list);
 	}
-	// draw player objects
 	for (const auto& object : *this->player_objects_)
 	{
-		object->draw(sprite_batch, camera);
-	}
-
-	sprite_batch->End();
-
-	HRESULT hr = deferred_contexts->at(0)->FinishCommandList(TRUE, &command_lists->at(0));
-	if (FAILED(hr))
-	{
-		throw std::exception("Failed to finish command list");
+		object->draw(list);
 	}
 }
 
@@ -644,12 +585,14 @@ LevelEndInfo Level::level_end_info() const
 	return result;
 }
 
-void Level::draw_countdown_text(SpriteBatch* sprite_batch,
-	const mattmath::Camera& viewport_camera) const
+void Level::draw_countdown_text(DrawList& draw_list) const
 {
-	sprite_batch->Begin();
-	
-	this->countdown_text_->draw(sprite_batch, viewport_camera);
-
-	sprite_batch->End();
+	// Linear, because this is the one thing on screen that is not pixel art:
+	// a 144pt face scaled by two. It was a bare SpriteBatch::Begin() before,
+	// which is DirectXTK's LinearClamp by default - the only place in the
+	// level that took it, and now the only place that asks for it. The list
+	// goes back to point so the next range is not surprised by it.
+	draw_list.set_filter(TextureFilter::linear);
+	this->countdown_text_->draw(draw_list);
+	draw_list.set_filter(TextureFilter::point);
 }

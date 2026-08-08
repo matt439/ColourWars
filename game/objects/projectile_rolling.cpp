@@ -14,12 +14,12 @@ ProjectileRolling::ProjectileRolling(const RectangleF& rectangle,
 	RenderResources* render_resources,
 	float rotation,
 	const Vector2F& origin,
-	SpriteEffects effects,
+	SpriteFlip flip,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
 		ROLLING, render_resources,
 		DETAILS_ROLLING,
-		team_colour, rotation, origin, effects, layer_depth),
+		team_colour, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)
 {
 	Vector2F col_size = this->details().col_rect_size;
@@ -35,8 +35,7 @@ void ProjectileRolling::update(float dt)
 	std::ignore = Projectile::update_movement(details.gravity,
 		details.wind_resistance, dt);
 }
-void ProjectileRolling::draw(SpriteBatch* /*sprite_batch*/,
-	const Camera& /*camera*/) const
+void ProjectileRolling::draw(DrawList& /*draw_list*/) const
 {
 	// do nothing
 }

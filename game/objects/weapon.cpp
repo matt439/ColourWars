@@ -17,10 +17,10 @@ Weapon::Weapon(const WeaponDetails& details,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
-    SpriteEffects effects,
+    SpriteFlip flip,
     float layer_depth) :
     TextureObject(details.sheet_name, details.frame_name, render_resources,
-                  color, rotation, origin, effects, layer_depth),
+                  color, rotation, origin, flip, layer_depth),
         details_(details),
         render_resources_(render_resources),
         team_(team),
@@ -39,7 +39,7 @@ Weapon::Weapon(const WeaponDetails& details,
         resolve_sprite_frame(NOZZLE_FRAME);
 }
 
-void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug) const
+void Weapon::draw(DrawList& draw_list, bool debug) const
 {
     //draw weapon
     Vector2F draw_pos = this->draw_pos();
@@ -48,20 +48,20 @@ void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug) c
     Vector2F origin = this->calculate_sprite_origin(
         this->details().size, RotationOrigin::left_center);
 
-    SpriteEffects effects = SpriteEffects_None;
+    SpriteFlip flip = SpriteFlip::none;
     bool invert_y = this->invert_y();
     bool invert_x = this->invert_x();
     if (invert_y && invert_x)
     {
-        effects = SpriteEffects_FlipBoth;
+        flip = SpriteFlip::both;
     }
     else if (invert_y)
     {
-        effects = SpriteEffects_FlipVertically;
+        flip = SpriteFlip::vertical;
     }
     else if (invert_x)
     {
-        effects = SpriteEffects_FlipHorizontally;
+        flip = SpriteFlip::horizontal;
     }
 
     // Pure read: every per-draw value is a local passed to draw_with, not a
@@ -69,9 +69,9 @@ void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug) c
     // same Weapon at once, and back when the element was a std::string,
     // assigning it from several threads was heap corruption, not just a torn
     // frame.
-    TextureObject::draw_with(sprite_batch, draw_rectangle, camera,
+    TextureObject::draw_with(draw_list, draw_rectangle,
         this->frame(), this->draw_colour(),
-        origin, effects, this->rotation());
+        origin, flip, this->rotation());
 
     if (debug)
     {
@@ -80,9 +80,9 @@ void Weapon::draw(SpriteBatch* sprite_batch, const Camera& camera, bool debug) c
         Vector2F origin_noz = this->calculate_sprite_origin(
             this->nozzle_size(), RotationOrigin::center);
 
-        TextureObject::draw_with(sprite_batch, draw_rectangle_noz, camera,
+        TextureObject::draw_with(draw_list, draw_rectangle_noz,
             this->nozzle_frame_, this->draw_colour(),
-            origin_noz, SpriteEffects_None, 0.0f);
+            origin_noz, SpriteFlip::none, 0.0f);
     }
 }
 
@@ -533,11 +533,11 @@ RelativeVelocityWeapon::RelativeVelocityWeapon(
     const Colour& color,
     float rotation,
     const Vector2F& origin,
-    DirectX::SpriteEffects effects,
+    artattack::SpriteFlip flip,
     float layer_depth) :
     Weapon(details, team, player_num, team_colour, type,
         player_center, render_resources, audio_resources,
-        color, rotation, origin, effects, layer_depth),
+        color, rotation, origin, flip, layer_depth),
     rel_details_(rel_details)
 {
 

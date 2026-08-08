@@ -24,8 +24,8 @@ class MenuPage : public artattack::State
 public:
 	explicit MenuPage(MenuData* data);
 	~MenuPage() override = default;
-	void update() override = 0;
-	void draw() override = 0;
+	void update(float dt) override = 0;
+	void draw(artattack::Renderer& renderer) const override = 0;
 	void init() override = 0;
 protected:
 	mattmath::Vector2F widget_position() const;
@@ -49,21 +49,23 @@ protected:
 	const artattack::AudioResources* audio_resources() const;
 	artattack::ViewportManager* viewport_manager() const;
 
-	void draw_ui_object_in_viewports(ID3D11DeviceContext* deferred_context,
-		ID3D11CommandList*& command_list,
-		DirectX::SpriteBatch* sprite_batch, artattack::UiObject* ui_object,
-		ID3D11SamplerState* sampler_state = nullptr);
+	// What a page draws: its widget trees, each with the filtering it wants,
+	// in back-to-front order. Every menu in the game is a call to this and
+	// nothing else.
+	using UiLayer = std::pair<artattack::UiObject*, artattack::TextureFilter>;
 
-	void draw_ui_objects_in_viewports(std::vector<std::pair<artattack::UiObject*,
-		ID3D11SamplerState*>>* ui_objects);
+	// Draws each layer into every viewport the layout covers.
+	//
+	// NO FAN-OUT HERE, and that is the change. This used to partition the
+	// *widget list* across the thread pool and index a deferred context and a
+	// sprite batch by widget ordinal - so a menu with more widgets than the
+	// shell happened to create contexts drew the extras into nothing, and a
+	// menu drawn from sixteen threads ran sixteen non-const helpers on the same
+	// page. The unit of work is a view (renderer.h), there are at most four of
+	// them, and a menu is a handful of quads: the loop below is the whole of it.
+	void draw_ui_layers(artattack::Renderer& renderer,
+		const std::vector<UiLayer>& layers) const;
 
-	void draw_range_of_ui_objects_in_viewports(int start, int end,
-		std::vector<std::pair<artattack::UiObject*, ID3D11SamplerState*>>*ui_objects,
-		std::vector<ID3D11DeviceContext*>* deferred_contexts,
-		std::vector<ID3D11CommandList*>* command_lists,
-		std::vector<DirectX::SpriteBatch*>* sprite_batches);
-
-	ID3D11SamplerState* point_clamp_sampler_state() const;
 	std::vector<ProcessedMenuInput> menu_inputs() const;
 
 	// The page's focusable widgets, what activating each one means, and which

@@ -22,14 +22,14 @@ Player::Player(const RectangleF& rectangle,
     const Vector2F& velocity,
     float rotation,
     const Vector2F& origin,
-    SpriteEffects effects,
+    SpriteFlip flip,
     float layer_depth) :
     MovingObject(velocity),
     AnimationObject(animation_info.sprite_sheet,
                     animation_info.animation,
-                    render_resources, DEFAULT_PLAYER_COLOUR, rotation, origin, effects, layer_depth),
+                    render_resources, DEFAULT_PLAYER_COLOUR, rotation, origin, flip, layer_depth),
     TextureObject(animation_info.sprite_sheet, animation_info.uniform_texture,
-                  render_resources, team_colour, rotation, origin, effects, layer_depth),
+                  render_resources, team_colour, rotation, origin, flip, layer_depth),
     primary_(std::move(primary_weapon)),
     player_num_(player_num),
     team_(team),
@@ -75,7 +75,7 @@ void Player::update_animation_state()
     }
 }
 
-void Player::draw(SpriteBatch* sprite_batch, const Camera& camera) const
+void Player::draw(DrawList& draw_list) const
 {
     if (this->state_ == PlayerState::dead)
     {
@@ -84,23 +84,23 @@ void Player::draw(SpriteBatch* sprite_batch, const Camera& camera) const
 
     // Pure read: nothing below assigns a member. update_animation_state() has
     // already chosen the clip, and the flip is passed as a parameter.
-    const SpriteEffects effects = this->facing_right()
-        ? SpriteEffects_None
-        : SpriteEffects_FlipHorizontally;
+    const SpriteFlip flip = this->facing_right()
+        ? SpriteFlip::none
+        : SpriteFlip::horizontal;
 
     // Every base call is explicitly qualified: Player inherits DrawObject
     // twice, once through TextureObject and once through AnimationObject, and
     // the two subobjects carry independent colour/origin/rotation.
-    TextureObject::draw_with(sprite_batch, this->rectangle_, camera,
+    TextureObject::draw_with(draw_list, this->rectangle_,
         this->TextureObject::frame(),
         this->TextureObject::colour(),
-        this->TextureObject::origin(), effects,
+        this->TextureObject::origin(), flip,
         this->TextureObject::draw_rotation());
 
-    AnimationObject::draw_with(sprite_batch, this->rectangle_, camera,
-        this->AnimationObject::colour(), effects);
+    AnimationObject::draw_with(draw_list, this->rectangle_,
+        this->AnimationObject::colour(), flip);
 
-    this->primary_->draw(sprite_batch, camera, this->showing_debug_);
+    this->primary_->draw(draw_list, this->showing_debug_);
 }
 CollisionObjectType Player::collision_object_type() const
 {

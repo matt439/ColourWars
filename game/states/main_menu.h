@@ -108,8 +108,8 @@ public:
 	explicit MainMenuPage(MainMenuData* data);
 	~MainMenuPage() override = default;
 	void init() override = 0;
-	void update() override = 0;
-	void draw() override = 0;
+	void update(float dt) override = 0;
+	void draw(artattack::Renderer& renderer) const override = 0;
 protected:
 	MainMenuData* main_menu_data() const;
 	int player_count() const;
@@ -131,8 +131,8 @@ class MainMenuTitle final : public MainMenuPage
 {
 public:
 	explicit MainMenuTitle(MainMenuData* data);
-	void update() override;
-	void draw() override;
+	void update(float dt) override;
+	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
 	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
@@ -146,8 +146,8 @@ class MainMenuHome final : public MainMenuPage
 {
 public:
 	explicit MainMenuHome(MainMenuData* data);
-	void update() override;
-	void draw() override;
+	void update(float dt) override;
+	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
 	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
@@ -163,8 +163,8 @@ class MainMenuOptions final : public MainMenuPage
 {
 public:
 	explicit MainMenuOptions(MainMenuData* data);
-	void update() override;
-	void draw() override;
+	void update(float dt) override;
+	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
 	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
@@ -193,8 +193,8 @@ class MainMenuModeSelect final : public MainMenuPage
 {
 public:
 	explicit MainMenuModeSelect(MainMenuData* data);
-	void update() override;
-	void draw() override;
+	void update(float dt) override;
+	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
 	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
@@ -212,8 +212,8 @@ class MainMenuPlayerCount final : public MainMenuPage
 {
 public:
 	explicit MainMenuPlayerCount(MainMenuData* data);
-	void update() override;
-	void draw() override;
+	void update(float dt) override;
+	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
 	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
@@ -235,8 +235,8 @@ class MainMenuTeamSelect final : public MainMenuPage
 public:
 	explicit MainMenuTeamSelect(MainMenuData* data);
 	MainMenuTeamSelect(MainMenuData* data, MenuLevelSettings* settings);
-	void update() override;
-	void draw() override;
+	void update(float dt) override;
+	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
 	struct TeamSelectState
@@ -270,8 +270,8 @@ class MainMenuWeaponSelect final : public MainMenuPage
 public:
 	explicit MainMenuWeaponSelect(MainMenuData* data);
 	MainMenuWeaponSelect(MainMenuData* data, MenuLevelSettings* settings);
-	void update() override;
-	void draw() override;
+	void update(float dt) override;
+	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
 	struct SelectState
@@ -307,8 +307,8 @@ class MainMenuStageSelect final : public MainMenuPage
 public:
 	explicit MainMenuStageSelect(MainMenuData* data);
 	MainMenuStageSelect(MainMenuData* data, MenuLevelSettings* settings);
-	void update() override;
-	void draw() override;
+	void update(float dt) override;
+	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
 	// The cursor runs over every stage the manifest named and then one slot

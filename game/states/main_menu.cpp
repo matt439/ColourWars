@@ -40,18 +40,17 @@ MainMenuTitle::MainMenuTitle(MainMenuData* data) :
 
 }
 
-void MainMenuTitle::draw()
+void MainMenuTitle::draw(Renderer& renderer) const
 {
-	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
+	std::vector<UiLayer> layers;
 
-	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
-		this->point_clamp_sampler_state()));
+	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
 
-	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
 
-	this->draw_ui_objects_in_viewports(&ui_objects);
+	this->draw_ui_layers(renderer, layers);
 }
-void MainMenuTitle::update()
+void MainMenuTitle::update(float /*dt*/)
 {
 	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	for (int i = 0; i < inputs.size(); i++)
@@ -117,18 +116,17 @@ MainMenuHome::MainMenuHome(MainMenuData* data) :
 
 }
 
-void MainMenuHome::draw()
+void MainMenuHome::draw(Renderer& renderer) const
 {
-	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
+	std::vector<UiLayer> layers;
 
-	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
-		this->point_clamp_sampler_state()));
+	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
 
-	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
 
-	this->draw_ui_objects_in_viewports(&ui_objects);
+	this->draw_ui_layers(renderer, layers);
 }
-void MainMenuHome::update()
+void MainMenuHome::update(float /*dt*/)
 {
 	// The focus is read inside the loop rather than snapshotted above it. The
 	// old form took the highlighted widget's *name* once and compared all four
@@ -257,18 +255,17 @@ MainMenuOptions::MainMenuOptions(MainMenuData* data) :
 
 }
 
-void MainMenuOptions::draw()
+void MainMenuOptions::draw(Renderer& renderer) const
 {
-	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
+	std::vector<UiLayer> layers;
 
-	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
-		this->point_clamp_sampler_state()));
+	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
 
-	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
 
-	this->draw_ui_objects_in_viewports(&ui_objects);
+	this->draw_ui_layers(renderer, layers);
 }
-void MainMenuOptions::update()
+void MainMenuOptions::update(float /*dt*/)
 {
 	for (const ProcessedMenuInput& input : this->menu_inputs())
 	{
@@ -537,18 +534,17 @@ MainMenuModeSelect::MainMenuModeSelect(MainMenuData* data) :
 
 }
 
-void MainMenuModeSelect::draw()
+void MainMenuModeSelect::draw(Renderer& renderer) const
 {
-	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
+	std::vector<UiLayer> layers;
 
-	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
-		this->point_clamp_sampler_state()));
+	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
 
-	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
 
-	this->draw_ui_objects_in_viewports(&ui_objects);
+	this->draw_ui_layers(renderer, layers);
 }
-void MainMenuModeSelect::update()
+void MainMenuModeSelect::update(float /*dt*/)
 {
 	for (const ProcessedMenuInput& input : this->menu_inputs())
 	{
@@ -693,18 +689,17 @@ MainMenuPlayerCount::MainMenuPlayerCount(MainMenuData* data) :
 {
 
 }
-void MainMenuPlayerCount::draw()
+void MainMenuPlayerCount::draw(Renderer& renderer) const
 {
-	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
+	std::vector<UiLayer> layers;
 
-	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
-		this->point_clamp_sampler_state()));
+	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
 
-	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
 
-	this->draw_ui_objects_in_viewports(&ui_objects);
+	this->draw_ui_layers(renderer, layers);
 }
-void MainMenuPlayerCount::update()
+void MainMenuPlayerCount::update(float /*dt*/)
 {
 	for (const ProcessedMenuInput& input : this->menu_inputs())
 	{
@@ -871,18 +866,17 @@ MainMenuTeamSelect::MainMenuTeamSelect(MainMenuData* data,
 {
 	this->main_menu_data()->set_level_settings(settings);
 }
-void MainMenuTeamSelect::draw()
+void MainMenuTeamSelect::draw(Renderer& renderer) const
 {
-	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
+	std::vector<UiLayer> layers;
 
-	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
-		this->point_clamp_sampler_state()));
+	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
 
-	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
 
-	this->draw_ui_objects_in_viewports(&ui_objects);
+	this->draw_ui_layers(renderer, layers);
 }
-void MainMenuTeamSelect::update()
+void MainMenuTeamSelect::update(float /*dt*/)
 {
 	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());
@@ -1147,18 +1141,17 @@ MainMenuWeaponSelect::MainMenuWeaponSelect(MainMenuData* data,
 {
 	this->main_menu_data()->set_level_settings(settings);
 }
-void MainMenuWeaponSelect::draw()
+void MainMenuWeaponSelect::draw(Renderer& renderer) const
 {
-	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
+	std::vector<UiLayer> layers;
 
-	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
-		this->point_clamp_sampler_state()));
+	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
 
-	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
 
-	this->draw_ui_objects_in_viewports(&ui_objects);
+	this->draw_ui_layers(renderer, layers);
 }
-void MainMenuWeaponSelect::update()
+void MainMenuWeaponSelect::update(float /*dt*/)
 {
 	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	int player_count = this->player_count();
@@ -1487,18 +1480,17 @@ MainMenuStageSelect::MainMenuStageSelect(MainMenuData* data,
 {
 	this->main_menu_data()->set_level_settings(settings);
 }
-void MainMenuStageSelect::draw()
+void MainMenuStageSelect::draw(Renderer& renderer) const
 {
-	std::vector<std::pair<UiObject*, ID3D11SamplerState*>> ui_objects;
+	std::vector<UiLayer> layers;
 
-	ui_objects.push_back(std::make_pair(this->texture_container_.get(),
-		this->point_clamp_sampler_state()));
+	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
 
-	ui_objects.push_back(std::make_pair(this->text_container_.get(), nullptr));
+	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
 
-	this->draw_ui_objects_in_viewports(&ui_objects);
+	this->draw_ui_layers(renderer, layers);
 }
-void MainMenuStageSelect::update()
+void MainMenuStageSelect::update(float /*dt*/)
 {
 	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	int num_inputs = static_cast<int>(inputs.size());

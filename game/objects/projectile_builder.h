@@ -21,7 +21,7 @@ public:
 		artattack::RenderResources* render_resources,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
+		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
 		float layer_depth = 0.0f) const;
 
 private:
@@ -35,7 +35,7 @@ private:
 		artattack::RenderResources* render_resources,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		DirectX::SpriteEffects effects = DirectX::SpriteEffects_None,
+		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 };

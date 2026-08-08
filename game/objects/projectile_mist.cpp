@@ -14,12 +14,12 @@ ProjectileMist::ProjectileMist(const RectangleF& rectangle,
 	RenderResources* render_resources,
 	float rotation,
 	const Vector2F& origin,
-	SpriteEffects effects,
+	SpriteFlip flip,
 	float layer_depth) :
 	DiffusingProjectile(velocity, team, player_num, team_colour,
 		SPRAY, render_resources,
 		DETAILS_MIST, DIFFUSION_DETAILS_MIST,
-		team_colour, rotation, origin, effects, layer_depth),
+		team_colour, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)
 {
 	Vector2F size = this->details().col_rect_size;
@@ -40,9 +40,9 @@ void ProjectileMist::update(float dt)
 
 	AnimationObject::update(dt);
 }
-void ProjectileMist::draw(SpriteBatch* sprite_batch, const Camera& camera) const
+void ProjectileMist::draw(DrawList& draw_list) const
 {
-	this->AnimationObject::draw(sprite_batch, this->rectangle_, camera);
+	this->AnimationObject::draw(draw_list, this->rectangle_);
 }
 RectangleF ProjectileMist::bounds() const
 {
