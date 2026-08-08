@@ -13,6 +13,7 @@ add_executable(ArtAttackGame WIN32
     main.cpp
     save.cpp
 
+    objects/collision_object_type.cpp
     objects/debug_text.cpp
     objects/interface_gameplay.cpp
     objects/level.cpp

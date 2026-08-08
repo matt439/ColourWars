@@ -50,7 +50,8 @@ public:
 
 	void update(float dt) override;
 	void draw(artattack::DrawList& draw_list) const override;
-	void on_collision(const CollisionObject* other) override;
+	void on_contact(const artattack::CollisionObject& other,
+		const mattmath::Vector2F& normal, float penetration) override;
 
 	PaintTotal paint_total() const override;
 

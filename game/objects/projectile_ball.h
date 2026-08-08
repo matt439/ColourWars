@@ -21,7 +21,6 @@ public:
 	void draw(artattack::DrawList& draw_list) const override;
 	mattmath::RectangleF bounds() const override;
 
-	bool is_colliding(const CollisionObject* other) const override;
 	const mattmath::Shape* shape() const override;
 private:
 	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;

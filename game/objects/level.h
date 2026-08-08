@@ -1,6 +1,8 @@
 #pragma once
 
-#include "game/objects/collision_object.h"
+#include "engine/collision/collision_object.h"
+#include "engine/collision/contacts.h"
+#include "game/objects/collision_object_type.h"
 #include "game/objects/team_colour.h"
 #include "game/objects/player_input.h"
 #include "game/objects/player.h"
@@ -56,7 +58,7 @@ public:
 	// No default constructor. One never had a sound bank or an object list, and
 	// the destructor below now speaks to both.
 	Level(std::unique_ptr<std::vector<std::unique_ptr<artattack::GameObject>>> non_collision_objects,
-		std::unique_ptr<std::vector<std::unique_ptr<CollisionObject>>> collision_objects,
+		std::unique_ptr<std::vector<std::unique_ptr<artattack::CollisionObject>>> collision_objects,
 		std::unique_ptr<std::vector<std::unique_ptr<Player>>> player_objects,
 		std::unique_ptr<std::vector<std::unique_ptr<artattack::GameObject>>> viewport_dividers,
 		const TeamColour& team_colours,
@@ -115,7 +117,7 @@ private:
 	std::unique_ptr<std::vector<std::unique_ptr<artattack::GameObject>>>
 		non_collision_objects_ = nullptr;
 
-	std::unique_ptr<std::vector<std::unique_ptr<CollisionObject>>>
+	std::unique_ptr<std::vector<std::unique_ptr<artattack::CollisionObject>>>
 		collision_objects_ = nullptr;
 
 	std::unique_ptr<std::vector<std::unique_ptr<Player>>>
@@ -173,15 +175,25 @@ private:
 	std::vector<PlayerInputData> player_inputs_ = std::vector<PlayerInputData>();
 	std::unique_ptr<DebugText> debug_text_ = nullptr;
 
+	// Refilled each tick and kept across them, so the frame allocates nothing
+	// once the level has been running for one busy frame.
+	std::vector<artattack::CollisionObject*> collidables_;
+	std::vector<artattack::Contact> contacts_;
+
 	artattack::ThreadPool* thread_pool_ = nullptr;
 	const artattack::Partitioner* partitioner_ = nullptr;
 
 	int count_projectiles() const;
-	bool is_object_out_of_bounds(const CollisionObject* object) const;
+	bool is_object_out_of_bounds(const artattack::CollisionObject* object) const;
 	void draw_end_screen();
 
+	// Not const, and it never should have been: it moves every object in the
+	// level. The declaration used to survive only because the members it
+	// wrote through were pointers, and a const method may write through a
+	// pointer it owns. The two scratch buffers below are values, so the
+	// compiler now says what the review had to.
 	void update_level_logic(const std::vector<PlayerInputData>& player_inputs,
-		float dt) const;
+		float dt);
 
 	void draw_active_level(artattack::Renderer& renderer) const;
 

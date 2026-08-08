@@ -3,7 +3,7 @@
 #include "game/objects/player_team.h"
 #include "engine/render/texture_object.h"
 #include "game/objects/team_colour.h"
-#include "game/objects/collision_object.h"
+#include "engine/core/game_object.h"
 #include "engine/render/animation_object.h"
 
 namespace paint_tile_consts
@@ -51,7 +51,16 @@ private:
 };
 
 
-class PaintTile final : public artattack::TextureObject, public CollisionObject
+// Not a CollisionObject, and never was one usefully.
+//
+// A paint tile has never appeared in the level's object list: a paintable
+// structure owns its own tiles and tests them itself, four thousand at a time,
+// only for the projectile that just hit the structure. Implementing the
+// collision interface bought it a type tag nothing read, a for_deletion()
+// nothing called, and a copy of the AABB-then-narrow block that six other
+// classes also carried - all so a structure could ask a tile a question it
+// could answer with a rectangle.
+class PaintTile final : public artattack::TextureObject, public artattack::GameObject
 {
 public:
 	PaintTile() = default;
@@ -69,12 +78,11 @@ public:
 	void update(float dt) override;
 	float area() const;
 	PlayerTeam team() const;
-	bool is_colliding(const CollisionObject* other) const override;
-	const mattmath::Shape* shape() const override;
 
-	void on_collision(const CollisionObject* other) override;
-	CollisionObjectType collision_object_type() const override;
-	bool for_deletion() const override;
+	// Claims the tile for a team and plays the splash. The caller has already
+	// established that the projectile reached it.
+	void paint(PlayerTeam team);
+
 	mattmath::RectangleF bounds() const override;
 private:
 	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;

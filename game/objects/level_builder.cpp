@@ -39,7 +39,7 @@ std::unique_ptr<Level>
 	const Value& collision_objects_json =
 		load_info->collision_objects_json();
 
-	std::unique_ptr<std::vector<std::unique_ptr<CollisionObject>>> collision_objects =
+	std::unique_ptr<std::vector<std::unique_ptr<artattack::CollisionObject>>> collision_objects =
 		this->level_object_builder_->build_collision_objects(collision_objects_json, team_colours);
 
 	const Value& non_collision_objects_json =

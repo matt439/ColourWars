@@ -1,6 +1,8 @@
 #include "game/pch.h"
 #include "game/objects/player.h"
 
+#include "engine/collision/resolve.h"
+
 using namespace DirectX;
 using namespace mattmath;
 using namespace player_consts;
@@ -102,37 +104,39 @@ void Player::draw(DrawList& draw_list) const
 
     this->primary_->draw(draw_list, this->showing_debug_);
 }
-CollisionObjectType Player::collision_object_type() const
+CollisionObjectType Player::collision_type() const
 {
-    if (this->state_ == PlayerState::alive)
+    switch (this->team_)
     {
-        switch (this->team_)
-        {
-        case PlayerTeam::a:
-            return CollisionObjectType::player_team_a;
-        case PlayerTeam::b:
-            return CollisionObjectType::player_team_b;
-        default:
-            throw std::exception("Invalid player team");
-        };
+    case PlayerTeam::a:
+        return CollisionObjectType::player_team_a;
+    case PlayerTeam::b:
+        return CollisionObjectType::player_team_b;
+    default:
+        throw std::runtime_error("Invalid player team");
     }
-    else if (this->state_ == PlayerState::dead)
-	{
-		switch (this->team_)
-		{
-		case PlayerTeam::a:
-			return CollisionObjectType::player_team_a_dead;
-		case PlayerTeam::b:
-			return CollisionObjectType::player_team_b_dead;
-		default:
-			throw std::exception("Invalid player team");
-		};
-	}
-	else
-	{
-		throw std::exception("Invalid player state");
-	}
-
+}
+CollisionLayer Player::layer() const
+{
+    return collision_layer(this->collision_type());
+}
+CollisionMask Player::mask() const
+{
+    // Dead players collide with nothing, and this is now the only place that
+    // says so. It used to be said twice and disagree: Player::is_colliding
+    // returned false when dead, and separately the type accessor returned a
+    // *_dead enumerator that every hand-written type list quietly omitted. The
+    // enumerators are gone; an empty mask is the same fact, in the one place
+    // that changes.
+    if (this->state_ != PlayerState::alive)
+    {
+        return 0;
+    }
+    return collision_mask(this->collision_type());
+}
+CollisionTag Player::tag() const
+{
+    return to_collision_tag(this->collision_type());
 }
 const Shape* Player::shape() const
 {
@@ -148,441 +152,122 @@ const RectangleF* Player::collision_rectangle() const
 	return &this->rectangle_;
 }
 
-bool Player::is_matching_collision_object_type(
-    const CollisionObject* other)
+void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
+    float penetration)
 {
-    CollisionObjectType other_type = other->collision_object_type();
-    return is_structure(other_type);
+    const CollisionObjectType other_type = to_collision_type(other.tag());
+
+    if (is_projectile(other_type))
+    {
+        this->on_projectile_contact(other_type);
+        return;
+    }
+
+    if (!is_structure(other_type))
+    {
+        // Unreachable through the mask, and loud rather than silent if the
+        // mask and this ever come apart.
+        throw std::runtime_error(
+            "Player contacted an object its mask should have excluded");
+    }
+
+    // Any level geometry counts as ground contact for end_contacts(),
+    // including a drop-through platform the player is rising past. That is
+    // how it has always behaved: the level set its bool from the type, before
+    // any response decided whether to do anything about it.
+    this->touched_structure_ = true;
+
+    if (other_type == CollisionObjectType::structure_jump_through)
+    {
+        this->on_jump_through_contact(other);
+        return;
+    }
+    if (is_structure_ramp(other_type))
+    {
+        this->on_ramp_contact(other_type, normal, penetration);
+        return;
+    }
+    this->on_structure_contact(normal, penetration);
 }
-bool Player::is_colliding(const CollisionObject* other) const
+void Player::end_contacts()
 {
-    // dead check
-    if (this->state_ == PlayerState::dead)
-	{
-		return false;
-	}
-    
-    // type check
-    if (!is_matching_collision_object_type(other))
+    const PlayerMoveState move_state = this->move_state();
+
+    if (!this->touched_structure_ &&
+        (move_state == PlayerMoveState::on_ground ||
+        move_state == PlayerMoveState::on_drop_down_ground ||
+        move_state == PlayerMoveState::on_ramp_left ||
+        move_state == PlayerMoveState::on_ramp_right))
     {
-        return false;
+        this->set_move_state(PlayerMoveState::in_air);
     }
 
-    // aabb check
-    if (!this->shape()->AABB_intersects(other->shape()))
-    {
-        return false;
-    }
-    else // AABBs are intersecting
-    {
-        // if the other object is a rectangle, then we have a collision
-        // since the AABB check passed
-        ShapeType other_shape_type = other->shape()->shape_type();
-        if (other_shape_type == ShapeType::rectangle)
-        {
-            return true;
-        }
-    }
-
-    // narrow phase check
-    if (this->shape()->intersects(other->shape()))
-    {
-        return true;
-    }
-
-    return false;
+    this->touched_structure_ = false;
 }
-void Player::on_collision(const CollisionObject* other)
+void Player::on_structure_contact(const Vector2F& normal, float penetration)
 {
-    CollisionObjectType other_type = other->collision_object_type();
+    this->rectangle_.offset(separation(normal, penetration));
 
-    bool structure_collision =
-        other_type == CollisionObjectType::structure ||
-        other_type == CollisionObjectType::structure_paintable;
-
-    bool structure_jump_through_collision =
-		other_type == CollisionObjectType::structure_jump_through;
-
-	bool structure_ramp_collision = is_structure_ramp(other_type);
-
-    PlayerTeam team = this->team_;
-    bool projectile_collision = false;
-    if (team == PlayerTeam::a)
+    // Structures are axis-aligned, so the normal is exactly one of four. The
+    // comparison rather than an equality test is what keeps this honest if a
+    // rotated one ever arrives.
+    if (std::abs(normal.y) >= std::abs(normal.x))
     {
-            bool projectile_team_b =
-            other_type == CollisionObjectType::projectile_spray_team_b ||
-            other_type == CollisionObjectType::projectile_jet_team_b ||
-            other_type == CollisionObjectType::projectile_rolling_team_b ||
-            other_type == CollisionObjectType::projectile_ball_team_b ||
-            other_type == CollisionObjectType::projectile_mist_team_b;
-
-        projectile_collision = projectile_team_b;
-    }
-    else if (team == PlayerTeam::b)
-    {
-        bool projectile_team_a =
-            other_type == CollisionObjectType::projectile_spray_team_a ||
-            other_type == CollisionObjectType::projectile_jet_team_a ||
-            other_type == CollisionObjectType::projectile_rolling_team_a ||
-            other_type == CollisionObjectType::projectile_ball_team_a ||
-            other_type == CollisionObjectType::projectile_mist_team_a;
-
-        projectile_collision = projectile_team_a;
-    }
-
-    if (projectile_collision)
-	{
-		this->on_projectile_collision(other);
-	}
-    else if (structure_collision)
-    {
-		this->on_structure_collision(other);
-	}
-    else if (structure_jump_through_collision)
-	{
-		this->on_structure_jump_through_collision(other);
-	}
-	else if (structure_ramp_collision)
-	{
-		this->on_structure_ramp_collision(other);
-	}
-	else
-	{
-		throw std::exception("Invalid collision object type.");
-	}
-}
-void Player::on_structure_ramp_collision(const CollisionObject* other)
-{
-    Vector2F direction = CollisionTools::calculate_object_collision_direction(
-        this->shape(), other->shape());
-
-	direction = Vector2F::direction_to_8_cardinal_direction(direction);
-
-	CollisionObjectType other_type = other->collision_object_type();
-
-	bool bottom_edge_collision = direction == Vector2F::DIRECTION_UP ||
-		direction == Vector2F::DIRECTION_UP_LEFT ||
-		direction == Vector2F::DIRECTION_UP_RIGHT;
-
-	bool side_wall_collision = (direction == Vector2F::DIRECTION_RIGHT &&
-        other_type == CollisionObjectType::structure_ramp_left) 
-		|| (direction == Vector2F::DIRECTION_LEFT &&
-			other_type == CollisionObjectType::structure_ramp_right);
-
-	bool perform_structure_collision = bottom_edge_collision || side_wall_collision;
-
-	if (perform_structure_collision)
-	{
-		this->on_structure_collision(other);
-		return;
-    }
-    
-	if (other_type == CollisionObjectType::structure_ramp_left)
-	{
-        // Mirror of the RAMP_RIGHT case below. This was an empty `// TODO`, so
-        // left ramps had no collision response at all - players fell straight
-        // through them. side_wall_collision above already routes a DIRECTION_RIGHT
-        // hit to the flat-structure path, which is a left ramp's wall side, so
-        // the remaining directions are all ramp-surface contacts.
-        if (direction == Vector2F::DIRECTION_DOWN ||
-            direction == Vector2F::DIRECTION_LEFT ||
-            direction == Vector2F::DIRECTION_DOWN_LEFT ||
-            direction == Vector2F::DIRECTION_DOWN_RIGHT)
-        {
-            CollisionTools::resolve_object_collision(&this->rectangle_,
-                other->shape(), Vector2F::DIRECTION_DOWN);
-
-            this->set_move_state(PlayerMoveState::on_ramp_left);
-
-            this->set_velocity_y(0.0f);
-        }
-        else if (direction == Vector2F::ZERO)
-        {
-            throw std::runtime_error("No collision direction.");
-        }
-        else
-        {
-            throw std::runtime_error("Invalid collision direction.");
-        }
-	}
-	else if (other_type == CollisionObjectType::structure_ramp_right)
-	{
-        if (direction == Vector2F::DIRECTION_DOWN)
-        {
-            CollisionTools::resolve_object_collision(&this->rectangle_,
-                other->shape(), Vector2F::DIRECTION_DOWN);
-
-            this->set_move_state(PlayerMoveState::on_ramp_right);
-
-            this->set_velocity_y(0.0f);
-        }
-        else if (direction == Vector2F::DIRECTION_RIGHT)
-        {
-            CollisionTools::resolve_object_collision(&this->rectangle_,
-                other->shape(), Vector2F::DIRECTION_DOWN);
-
-            this->set_move_state(PlayerMoveState::on_ramp_right);
-
-            this->set_velocity_y(0.0f);
-        }
-        else if (direction == Vector2F::DIRECTION_DOWN_LEFT)
-        {
-            CollisionTools::resolve_object_collision(&this->rectangle_,
-                other->shape(), Vector2F::DIRECTION_DOWN);
-
-            this->set_move_state(PlayerMoveState::on_ramp_right);
-
-            this->set_velocity_y(0.0f);
-            
-            /*PlayerMoveState move_state = this->move_state();
-
-			RectangleF ramp_rect = other->shape()->bounding_box();
-
-			Point2F player_center = this->center();
-            Point2F ramp_top = ramp_rect.top();
-
-            mattmath::Direction dir = this->velocity().direction();
-            bool moving_up = dir == Direction::up || dir == Direction::up_left ||
-                dir == Direction::up_right;
-
-            if (move_state == PlayerMoveState::on_ramp_right ||
-				(player_center.y < ramp_top.y && !moving_up))
-
-            {
-                CollisionTools::resolve_object_collision(&this->rectangle_,
-                    other->shape(), Vector2F::DIRECTION_DOWN);
-
-                this->set_move_state(PlayerMoveState::on_ramp_right);
-
-                this->set_velocity_y(0.0f);
-            }
-            else
-            {
-                CollisionTools::resolve_object_collision(&this->rectangle_,
-                    other->shape(), Vector2F::DIRECTION_LEFT);
-
-				this->set_velocity_x(0.0f);
-            }*/
-        }
-        else if (direction == Vector2F::DIRECTION_DOWN_RIGHT)
-        {
-            CollisionTools::resolve_object_collision(&this->rectangle_,
-                other->shape(), Vector2F::DIRECTION_DOWN);
-
-            this->set_move_state(PlayerMoveState::on_ramp_right);
-
-            this->set_velocity_y(0.0f);
-        }
-        else if (direction == Vector2F::ZERO)
-        {
-            throw std::exception("No collision direction.");
-        }
-		else
-        {
-            throw std::exception("Invalid collision direction.");
-        }
-	}
-	else
-	{
-		throw std::exception("Invalid ramp type.");
-	}   
-}
-void Player::on_structure_jump_through_collision(const CollisionObject* other)
-{
-    // only collide if player is moving down and on previous cycle
-    // was above the structure
-    
-    Vector2F velocity = this->velocity();
-    Direction dir = velocity.direction();
-
-    bool moving_down = dir == Direction::down || dir == Direction::down_left ||
-        dir == Direction::down_right;
-
-    const RectangleF& other_rect = other->shape()->bounding_box();
-    bool was_above = this->prev_rectangle_.bottom() <= other_rect.top();
-
-    PlayerMoveState move_state = this->move_state();
-
-    if (moving_down && was_above && move_state != PlayerMoveState::dropping_down)
-	{
         MovingObject::set_velocity_y(0.0f);
+        this->set_move_state(normal.y > 0.0f ?
+            PlayerMoveState::on_ground : PlayerMoveState::on_ceiling);
+    }
+    else
+    {
+        this->set_velocity_x(0.0f);
+    }
+}
+void Player::on_ramp_contact(CollisionObjectType other_type,
+    const Vector2F& normal, float penetration)
+{
+    // A ramp's two right-angled faces are a wall and a flat underside, and
+    // both behave exactly like the flat structure they are part of. Only the
+    // hypotenuse is a ramp, and the normal is how it is recognised. The 130
+    // lines this replaces recognised it by snapping the centre-to-centre
+    // direction to one of eight compass points and then enumerating, per ramp
+    // handedness, which of the eight each face was allowed to produce - and
+    // threw on the ones nobody had listed.
+    if (normal.y <= 0.0f)
+    {
+        this->on_structure_contact(normal, penetration);
+        return;
+    }
 
-        const RectangleF& rect = other->shape()->bounding_box();
-        this->rectangle_.set_position_y_from_bottom(rect.top());
+    // Standing on the slope. Separate straight up rather than along the
+    // slope's own normal: resolving a ground contact along its normal slides
+    // the player back down the hill, so they could never walk up one. The
+    // axis is the vertical one and its sign does not matter - the distance
+    // comes out of the normal.
+    this->rectangle_.offset(
+        separation_along(normal, penetration, Vector2F::DIRECTION_DOWN));
+
+    this->set_move_state(other_type == CollisionObjectType::structure_ramp_left ?
+        PlayerMoveState::on_ramp_left : PlayerMoveState::on_ramp_right);
+
+    MovingObject::set_velocity_y(0.0f);
+}
+void Player::on_jump_through_contact(const CollisionObject& other)
+{
+    // Only lands if the player is moving down and was above the platform on
+    // the previous tick.
+    const Direction dir = this->velocity().direction();
+    const bool moving_down = dir == Direction::down ||
+        dir == Direction::down_left || dir == Direction::down_right;
+
+    const RectangleF other_rect = other.shape()->bounding_box();
+    const bool was_above = this->prev_rectangle_.bottom() <= other_rect.top();
+
+    if (moving_down && was_above &&
+        this->move_state() != PlayerMoveState::dropping_down)
+    {
+        MovingObject::set_velocity_y(0.0f);
+        this->rectangle_.set_position_y_from_bottom(other_rect.top());
         this->set_move_state(PlayerMoveState::on_drop_down_ground);
-	}
-	else
-	{
-		// no collision
-	}
-}
-void Player::on_structure_collision(const CollisionObject* other)
-{
-	//Vector2F col_direction = CollisionTools::calculate_object_collision_direction(
-	//	this->shape(), other->shape());
-
-	//if (col_direction == Vector2F::ZERO)
- //   {
-	//	throw std::exception("Player and structure are not colliding.");
-	//}
- //   
-	//Vector2F cardinal_col_direction = Vector2F::direction_to_8_cardinal_direction(col_direction);
-
- //   Vector2F player_direction = Vector2F::unit_vector(this->dx());
-
- //   
-	//// check for wall collision
-	//if (cardinal_col_direction == Vector2F::DIRECTION_LEFT ||
-	//	cardinal_col_direction == Vector2F::DIRECTION_RIGHT)
-	//{
- //       CollisionTools::resolve_object_collision(&this->rectangle_,
- //           other->shape(), Vector2F(col_direction.x, 0.0f));
-
- ////           CollisionTools::resolve_object_collision(&this->rectangle_,
- ////               other->shape(), Vector2F(0.0f, col_direction.y));
-	////	}
-	////	else if (player_direction.y < 0.0f)
-	////	{
-	////		this->on_ceiling_collision();
-
-	// check if the player is not moving in the same direction as the collision
-
-
-    Vector2F direction = CollisionTools::calculate_object_collision_direction_by_edge(
-    	this->shape(), other->shape());
-
-    if (direction == Vector2F::DIRECTION_UP)
-    {
-		this->on_top_collision(other);
-	}
-	else if (direction == Vector2F::DIRECTION_DOWN)
-	{
-		this->on_bottom_collision(other);
-    }
-	else if (direction == Vector2F::DIRECTION_LEFT)
-	{
-		this->on_left_collision(other);
-    }
-	else if (direction == Vector2F::DIRECTION_RIGHT)
-	{
-		this->on_right_collision(other);
-	}
-	else if (direction == Vector2F::DIRECTION_UP_LEFT)
-	{
-		this->on_top_left_collision(other);
-	}
-	else if (direction == Vector2F::DIRECTION_UP_RIGHT)
-	{
-		this->on_top_right_collision(other);
-	}
-	else if (direction == Vector2F::DIRECTION_DOWN_LEFT)
-	{
-		this->on_bottom_left_collision(other);
-	}
-	else if (direction == Vector2F::DIRECTION_DOWN_RIGHT)
-	{
-		this->on_bottom_right_collision(other);
-	}
-	else
-	{
-		throw std::exception("Invalid collision direction.");   
-	}
-}
-
-void Player::on_top_collision(const CollisionObject* other)
-{
-    MovingObject::set_velocity_y(0.0f);
-
-    CollisionTools::resolve_object_collision(&this->rectangle_,
-        other->shape(), Vector2F::DIRECTION_UP);
-
-	this->set_move_state(PlayerMoveState::on_ceiling);
-}
-void Player::on_bottom_collision(const CollisionObject* other)
-{
-    MovingObject::set_velocity_y(0.0f);
-
-    CollisionTools::resolve_object_collision(&this->rectangle_,
-        other->shape(), Vector2F::DIRECTION_DOWN);
-
-    this->set_move_state(PlayerMoveState::on_ground);
-}
-void Player::on_left_collision(const CollisionObject* other)
-{
-    this->set_velocity_x(0.0f);
-
-    CollisionTools::resolve_object_collision(&this->rectangle_,
-        other->shape(), Vector2F::DIRECTION_LEFT);
-}
-void Player::on_right_collision(const CollisionObject* other)
-{
-    this->set_velocity_x(0.0f);
-
-    CollisionTools::resolve_object_collision(&this->rectangle_,
-        other->shape(), Vector2F::DIRECTION_RIGHT);
-}
-void Player::on_top_left_collision(const CollisionObject* other)
-{
-    Vector2F amount = CollisionTools::calculate_object_collision_depth(
-        this->shape(), other->shape(), Vector2F::DIRECTION_UP_LEFT);
-
-    if (amount.abs_x_greater_than_y())
-    {
-        this->on_top_collision(other);
-    }
-    else
-    {
-        this->on_left_collision(other);
-    }
-}
-void Player::on_top_right_collision(const CollisionObject* other)
-{
-	Vector2F amount = CollisionTools::calculate_object_collision_depth(
-		this->shape(), other->shape(), Vector2F::DIRECTION_UP_RIGHT);
-
-    if (amount.abs_x_greater_than_y())
-    {
-        this->on_top_collision(other);
-    }
-    else
-    {
-        this->on_right_collision(other);
-    }
-}
-void Player::on_bottom_left_collision(const CollisionObject* other)
-{
-    Direction dir = this->velocity().direction();
-    bool moving_up = dir == Direction::up || dir == Direction::up_left ||
-		dir == Direction::up_right;
-
-	Vector2F amount = CollisionTools::calculate_object_collision_depth(
-		this->shape(), other->shape(), Vector2F::DIRECTION_DOWN_LEFT);
-
-    if (amount.abs_x_greater_than_y() && !moving_up)
-    {
-        this->on_bottom_collision(other);
-    }
-    else
-    {
-        this->on_left_collision(other);
-    }
-}
-void Player::on_bottom_right_collision(const CollisionObject* other)
-{
-    Direction dir = this->velocity().direction();
-    bool moving_up = dir == Direction::up || dir == Direction::up_left ||
-        dir == Direction::up_right;
-
-	Vector2F amount = CollisionTools::calculate_object_collision_depth(
-		this->shape(), other->shape(), Vector2F::DIRECTION_DOWN_RIGHT);
-
-    if (amount.abs_x_greater_than_y() && !moving_up)
-    {
-        this->on_bottom_collision(other);
-    }
-    else
-    {
-        this->on_right_collision(other);
     }
 }
 
@@ -590,10 +275,8 @@ void Player::update_weapon_position() const
 {
     this->primary_->set_player_center(this->center());
 }
-void Player::on_projectile_collision(const CollisionObject* other)
+void Player::on_projectile_contact(CollisionObjectType other_type)
 {
-    CollisionObjectType other_type = other->collision_object_type();
-
     if (other_type == CollisionObjectType::projectile_spray_team_a ||
         other_type == CollisionObjectType::projectile_spray_team_b)
     {
@@ -1204,17 +887,4 @@ bool Player::is_on_ramp() const
 {
 	return this->move_state_ == PlayerMoveState::on_ramp_left ||
 		this->move_state_ == PlayerMoveState::on_ramp_right;
-}
-
-void Player::on_no_collision()
-{
-	PlayerMoveState move_state = this->move_state();
-
-	if (move_state == PlayerMoveState::on_ground ||
-		move_state == PlayerMoveState::on_drop_down_ground ||
-		move_state == PlayerMoveState::on_ramp_left ||
-		move_state == PlayerMoveState::on_ramp_right)
-	{
-		this->set_move_state(PlayerMoveState::in_air);
-	}
 }

@@ -4,7 +4,8 @@
 #include "game/objects/projectile_consts.h"
 #include "engine/render/animation_object.h"
 #include "engine/core/moving_object.h"
-#include "game/objects/collision_object.h"
+#include "engine/collision/collision_object.h"
+#include "game/objects/collision_object_type.h"
 
 enum projectile_type
 {
@@ -16,7 +17,7 @@ enum projectile_type
 };
 
 class Projectile : public artattack::MovingObject,
-	public artattack::AnimationObject, public CollisionObject
+	public artattack::AnimationObject, public artattack::CollisionObject
 {
 public:
 	Projectile() = default;
@@ -37,10 +38,12 @@ public:
 	void draw(artattack::DrawList& draw_list) const override = 0;
 	mattmath::RectangleF bounds() const override = 0;
 
-	bool is_colliding(const CollisionObject* other) const override = 0;
-	void on_collision(const CollisionObject* other) override;
-	CollisionObjectType collision_object_type() const override;
 	const mattmath::Shape* shape() const override = 0;
+	artattack::CollisionLayer layer() const override;
+	artattack::CollisionMask mask() const override;
+	artattack::CollisionTag tag() const override;
+	void on_contact(const artattack::CollisionObject& other,
+		const mattmath::Vector2F& normal, float penetration) override;
 	bool for_deletion() const override;
 	void set_for_deletion(bool for_deletion) override;
 
@@ -52,7 +55,7 @@ protected:
 
 	PlayerTeam team() const;
 
-	virtual bool is_matching_collision_object_type(const CollisionObject* other) const;
+	CollisionObjectType collision_type() const;
 
 	int player_num() const;
 	const mattmath::Colour& team_colour() const;
@@ -102,7 +105,6 @@ public:
 	void draw(artattack::DrawList& draw_list) const override = 0;
 	mattmath::RectangleF bounds() const override = 0;
 
-	bool is_colliding(const CollisionObject* other) const override = 0;
 	const mattmath::Shape* shape() const override = 0;
 protected:
 	mattmath::Vector2F calculate_diffusion_size() const;

@@ -37,15 +37,24 @@ RectangleF Structure::bounds() const
 {
 	return this->sprite_rectangle_;
 }
-bool Structure::is_colliding(const CollisionObject* /*other*/) const
+void Structure::on_contact(const CollisionObject& /*other*/,
+	const Vector2F& /*normal*/, float /*penetration*/)
 {
-	return false;
+	// Nothing. A wall does not move and does not care.
 }
-void Structure::on_collision(const CollisionObject* /*other*/)
+CollisionLayer Structure::layer() const
 {
-	// do nothing
+	return collision_layer(this->collision_type_);
 }
-CollisionObjectType Structure::collision_object_type() const
+CollisionMask Structure::mask() const
+{
+	return collision_mask(this->collision_type_);
+}
+CollisionTag Structure::tag() const
+{
+	return to_collision_tag(this->collision_type_);
+}
+CollisionObjectType Structure::collision_type() const
 {
 	return this->collision_type_;
 }

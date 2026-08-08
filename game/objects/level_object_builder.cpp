@@ -13,7 +13,7 @@ LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
 
 }
 
-std::unique_ptr<CollisionObject>
+std::unique_ptr<artattack::CollisionObject>
 	LevelObjectBuilder::build_collision_object(const Value& json,
 		const TeamColour& team_colours) const
 {
@@ -185,11 +185,11 @@ std::unique_ptr<GameObject>
 	throw std::exception("Invalid non-collision object type");
 }
 
-std::unique_ptr<std::vector<std::unique_ptr<CollisionObject>>>
+std::unique_ptr<std::vector<std::unique_ptr<artattack::CollisionObject>>>
 	LevelObjectBuilder::build_collision_objects(const Value& json,
 		const TeamColour& team_colours) const
 {
-	auto collision_objects = std::make_unique<std::vector<std::unique_ptr<CollisionObject>>>();
+	auto collision_objects = std::make_unique<std::vector<std::unique_ptr<artattack::CollisionObject>>>();
 	for (auto& object : json.GetArray())
 	{
 		collision_objects->push_back(build_collision_object(object, team_colours));

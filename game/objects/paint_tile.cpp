@@ -60,70 +60,14 @@ PlayerTeam PaintTile::team() const
 {
 	return this->team_;
 }
-bool PaintTile::is_colliding(const CollisionObject* other) const
+void PaintTile::paint(PlayerTeam team)
 {
-    // aabb check
-    if (!this->shape()->AABB_intersects(other->shape()))
-    {
-        return false;
-    }
-    else // AABBs are intersecting
-    {
-        // if the other object is a rectangle, then we have a collision
-        // since the AABB check passed
-        ShapeType other_shape_type = other->shape()->shape_type();
-        if (other_shape_type == ShapeType::rectangle)
-        {
-            return true;
-        }
-    }
-
-    // narrow phase check
-    if (this->shape()->intersects(other->shape()))
-    {
-        return true;
-    }
-
-    return false;
-}
-const Shape* PaintTile::shape() const
-{
-    return &this->rectangle_;
-}
-void PaintTile::on_collision(const CollisionObject* other)
-{
-	CollisionObjectType other_type = other->collision_object_type();
-	PlayerTeam other_team;
-	if (other_type == CollisionObjectType::projectile_spray_team_a ||
-		other_type == CollisionObjectType::projectile_jet_team_a ||
-		other_type == CollisionObjectType::projectile_rolling_team_a ||
-		other_type == CollisionObjectType::projectile_ball_team_a ||
-		other_type == CollisionObjectType::projectile_mist_team_a)
-	{
-		other_team = PlayerTeam::a;
-	}
-	else if (other_type == CollisionObjectType::projectile_spray_team_b ||
-		other_type == CollisionObjectType::projectile_jet_team_b ||
-		other_type == CollisionObjectType::projectile_rolling_team_b ||
-		other_type == CollisionObjectType::projectile_ball_team_b ||
-		other_type == CollisionObjectType::projectile_mist_team_b)
-	{
-		other_team = PlayerTeam::b;
-	}
-	else
-	{
-		throw std::exception("PaintTile::on_collision() - other_type is not a projectile");
-	}
-	this->team_ = other_team;
+	// The team came off the projectile once, at the structure, instead of
+	// being re-derived from a ten-way enum comparison per tile - which ran
+	// for every tile of the structure that a projectile touched, and
+	// recovered the same answer every time.
+	this->team_ = team;
 	this->splash_.reset_and_play();
-}
-CollisionObjectType PaintTile::collision_object_type() const
-{
-	return CollisionObjectType::paint_tile;
-}
-bool PaintTile::for_deletion() const
-{
-	return false;
 }
 RectangleF PaintTile::bounds() const
 {

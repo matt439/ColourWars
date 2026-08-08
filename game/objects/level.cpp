@@ -199,7 +199,7 @@ float Level::zoom_out_camera_ratio() const
 	return 1.0f - (this->zoom_out_timer_ / ZOOM_OUT_TIMER);
 }
 void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs,
-	float dt) const
+	float dt)
 {
 	// update collision objects
 	for (const auto& object : *this->collision_objects_)
@@ -250,34 +250,35 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 		object->update(dt);
 	}
 
-	// check player collisions
-	for (auto& player : *this->player_objects_)
+	// One sweep, one pass, every pair once.
+	//
+	// What this replaces was three nested loops - players against objects,
+	// then objects against players, then objects against objects with both
+	// orderings - so most pairs were measured twice and a pair's response
+	// depended on which loop reached it first. Both participants' responses
+	// fired off one participant's predicate, and the predicates disagreed:
+	// Player::is_colliding matched structures only, so a player's response to
+	// a projectile ran only because the projectile's predicate had matched.
+	this->collidables_.clear();
+	this->collidables_.reserve(
+		this->collision_objects_->size() + this->player_objects_->size());
+	for (const auto& object : *this->collision_objects_)
 	{
-		bool player_colliding_with_structure = false;
-		
-		// check player collisions with collision objects
-		for (auto& other_object : *this->collision_objects_)
-		{
-			if (other_object->for_deletion())
-			{
-				continue;
-			}
-			if (player->is_colliding(other_object.get()))
-			{
-				player->on_collision(other_object.get());
-				other_object->on_collision(player.get());
+		this->collidables_.push_back(object.get());
+	}
+	for (const auto& player : *this->player_objects_)
+	{
+		this->collidables_.push_back(player.get());
+	}
 
-				if (is_structure(other_object->collision_object_type()))
-				{
-					player_colliding_with_structure = true;
-				}
-			}
-		}
+	find_contacts(this->collidables_, this->contacts_);
+	dispatch_contacts(this->contacts_);
 
-		if (!player_colliding_with_structure)
-		{
-			player->on_no_collision();
-		}
+	// "I touched no ground this tick" is the absence of a contact, so it is
+	// only knowable once they have all been dispatched.
+	for (const auto& player : *this->player_objects_)
+	{
+		player->end_contacts();
 	}
 
 	// update some player things after collisions have possible altered position
@@ -285,43 +286,6 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	{
 		object->update_weapon_position();
 		object->update_prev_rectangle();
-	}
-
-	// check collision objects collisions
-	for (auto& object : *this->collision_objects_)
-	{
-		// check collision object collisions with players
-			for (auto& player : *this->player_objects_)
-			{
-				if (object->for_deletion() || player->for_deletion())
-				{
-					continue;
-				}
-				if (object->is_colliding(player.get()))
-				{
-					object->on_collision(player.get());
-					player->on_collision(object.get());
-				}
-			}
-		
-		
-		// check collision object collisions with other collision objects
-		for (auto& object_2 : *this->collision_objects_)
-		{
-			if (object->for_deletion() || object_2->for_deletion())
-			{
-				continue;
-			}
-			if (object == object_2)
-			{
-				continue;
-			}
-			if (object->is_colliding(object_2.get()))
-			{
-				object->on_collision(object_2.get());
-				object_2->on_collision(object.get());
-			}
-		}
 	}
 
 	// A projectile that leaves the level is ordinary - it missed. Retire it
@@ -549,20 +513,9 @@ int Level::count_projectiles() const
 	int count = 0;
 	for (const auto& object : *this->collision_objects_)
 	{
-		CollisionObjectType type = object->collision_object_type();
-
-		bool is_projectile =
-			type == CollisionObjectType::projectile_spray_team_a ||
-			type == CollisionObjectType::projectile_spray_team_b ||
-			type == CollisionObjectType::projectile_jet_team_a ||
-			type == CollisionObjectType::projectile_jet_team_b ||
-			type == CollisionObjectType::projectile_rolling_team_a ||
-			type == CollisionObjectType::projectile_rolling_team_b ||
-			type == CollisionObjectType::projectile_ball_team_a ||
-			type == CollisionObjectType::projectile_ball_team_b ||
-			type == CollisionObjectType::projectile_mist_team_a ||
-			type == CollisionObjectType::projectile_mist_team_b;
-		if (is_projectile)
+		// The ten-way comparison written out here is is_projectile(), which
+		// already existed two files away.
+		if (is_projectile(to_collision_type(object->tag())))
 		{
 			count++;
 		}
@@ -595,9 +548,8 @@ LevelEndInfo Level::level_end_info() const
 
 	for (auto& object : *this->collision_objects_)
 	{
-		CollisionObjectType type = object->collision_object_type();
-
-		if (type == CollisionObjectType::structure_paintable)
+		if (to_collision_type(object->tag()) ==
+			CollisionObjectType::structure_paintable)
 		{
 			// dynamic_cast on a POINTER returns nullptr on failure; only the
 			// reference form throws bad_cast. The catch here could never fire,

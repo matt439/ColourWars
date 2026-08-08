@@ -88,69 +88,29 @@ Vector2F DiffusingProjectile::calculate_diffusion_size() const
 
 
 
-bool Projectile::is_matching_collision_object_type(
-    const CollisionObject* other) const
+void Projectile::on_contact(const CollisionObject& /*other*/,
+    const Vector2F& /*normal*/, float /*penetration*/)
 {
-    CollisionObjectType other_type = other->collision_object_type();
-
-    bool structure_collision =
-        other_type == CollisionObjectType::structure ||
-        other_type == CollisionObjectType::structure_paintable ||
-        other_type == CollisionObjectType::structure_jump_through;
-
-    if (structure_collision)
-	{
-		return true;
-	}
-
-    PlayerTeam team = this->team();
-
-    switch (team)
-    {
-    case PlayerTeam::a:
-        return other_type == CollisionObjectType::player_team_b;
-    case PlayerTeam::b:
-        return other_type == CollisionObjectType::player_team_a;
-    default:
-        throw std::exception("Invalid PlayerTeam value.");
-    }
+    // Every contact a projectile can have is fatal to it, so there is nothing
+    // to ask. The mask admits flat level geometry and enemy players and
+    // nothing else; the two type lists this replaces - one to decide whether
+    // to test the pair, one to decide whether to die - were re-deriving that
+    // filter twice, and had already disagreed about ramps.
+    this->set_for_deletion(true);
 }
-void Projectile::on_collision(const CollisionObject* other)
+CollisionLayer Projectile::layer() const
 {
-    CollisionObjectType other_type = other->collision_object_type();
-
-    bool structure_collision =
-        other_type == CollisionObjectType::structure ||
-        other_type == CollisionObjectType::structure_paintable ||
-        other_type == CollisionObjectType::structure_jump_through;
-
-    if (structure_collision)
-    {
-        this->set_for_deletion(true);
-    }
-    else
-    {
-        PlayerTeam team = this->team();
-        switch (team)
-        {
-        case PlayerTeam::a:
-            if (other_type == CollisionObjectType::player_team_b)
-            {
-                this->set_for_deletion(true);
-            }
-            break;
-        case PlayerTeam::b:
-            if (other_type == CollisionObjectType::player_team_a)
-            {
-                this->set_for_deletion(true);
-            }
-            break;
-        default:
-            throw std::exception("Invalid PlayerTeam value.");
-        }
-    }
+    return collision_layer(this->collision_type());
 }
-CollisionObjectType Projectile::collision_object_type() const
+CollisionMask Projectile::mask() const
+{
+    return collision_mask(this->collision_type());
+}
+CollisionTag Projectile::tag() const
+{
+    return to_collision_tag(this->collision_type());
+}
+CollisionObjectType Projectile::collision_type() const
 {
     projectile_type type = this->type();
     switch (this->team())

@@ -37,7 +37,7 @@ public:
 	virtual void draw(artattack::DrawList& draw_list,
 		bool debug = false) const;
 
-	virtual std::vector<std::unique_ptr<CollisionObject>>
+	virtual std::vector<std::unique_ptr<artattack::CollisionObject>>
 		update_and_get_projectiles(PlayerInputData input,
 			const mattmath::Vector2F& player_center,
 			const mattmath::Vector2F& player_velocity,
@@ -124,7 +124,7 @@ protected:
 	static mattmath::Vector2F nozzle_size();
 	static bool facing_left(float rotation);
 
-	virtual std::vector<std::unique_ptr<CollisionObject>> shoot(
+	virtual std::vector<std::unique_ptr<artattack::CollisionObject>> shoot(
 		const mattmath::Vector2F& shoot_direction) const;
 
 	virtual mattmath::Vector2F calculate_projectile_launch_velocity(
@@ -197,7 +197,7 @@ public:
 		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
-	std::vector<std::unique_ptr<CollisionObject>>
+	std::vector<std::unique_ptr<artattack::CollisionObject>>
 		update_and_get_projectiles(PlayerInputData input,
 			const mattmath::Vector2F& player_center,
 			const mattmath::Vector2F& player_velocity,
@@ -212,7 +212,7 @@ protected:
 		AddPlayerVelocity add_player_vel,
 		float player_vel_amount) const;
 
-	virtual std::vector<std::unique_ptr<CollisionObject>> shoot(
+	virtual std::vector<std::unique_ptr<artattack::CollisionObject>> shoot(
 		const mattmath::Vector2F& shoot_direction,
 		const mattmath::Vector2F& player_velocity) const;
 

@@ -50,43 +50,44 @@ void StructurePaintable::draw(DrawList& draw_list) const
 	}
 }
 
-void StructurePaintable::on_collision(const CollisionObject* other)
+void StructurePaintable::on_contact(const CollisionObject& other,
+	const Vector2F& /*normal*/, float /*penetration*/)
 {
-	// check if offensive projectile
-	CollisionObjectType other_type = other->collision_object_type();
-	bool is_offensive_projectile =
-		other_type == CollisionObjectType::projectile_spray_team_a ||
-		other_type == CollisionObjectType::projectile_spray_team_b ||
-		other_type == CollisionObjectType::projectile_jet_team_a ||
-		other_type == CollisionObjectType::projectile_jet_team_b ||
-		other_type == CollisionObjectType::projectile_rolling_team_a ||
-		other_type == CollisionObjectType::projectile_rolling_team_b ||
-		other_type == CollisionObjectType::projectile_ball_team_a ||
-		other_type == CollisionObjectType::projectile_ball_team_b ||
-		other_type == CollisionObjectType::projectile_mist_team_a ||
-		other_type == CollisionObjectType::projectile_mist_team_b;
-
-	// if not offensive projectile, return
-	if (!is_offensive_projectile)
+	// Only paint paints. The mask lets players through as well, and a player
+	// walking along a wall leaves nothing behind.
+	const CollisionLayer other_layer = other.layer();
+	if (other_layer != collision_layers::PROJECTILE_TEAM_A &&
+		other_layer != collision_layers::PROJECTILE_TEAM_B)
 	{
 		return;
 	}
 
+	// Once, here, rather than a ten-way enum comparison inside the tile loop
+	// recovering the same answer for every tile of the structure.
+	const PlayerTeam team = other_layer == collision_layers::PROJECTILE_TEAM_A ?
+		PlayerTeam::a : PlayerTeam::b;
+
+	const RectangleF splash = other.shape()->bounding_box();
+
 	bool tile_painted = false;
-
-	// check projectile against paint tiles
-	for (auto& paint_tile : this->paint_tiles_)
+	for (PaintTile& paint_tile : this->paint_tiles_)
 	{
-		if (paint_tile.is_colliding(other))
+		// A tile and a projectile are both axis-aligned rectangles, so this
+		// is the exact test. The AABB-then-narrow block it replaces worked
+		// that out for itself, per tile, after its own first branch had
+		// already returned the answer.
+		if (!paint_tile.bounds().intersects(splash))
 		{
-			paint_tile.on_collision(other);
-
-			if (!tile_painted)
-			{
-				this->sound_bank_->play_wave(this->paint_sound_, SOUND_VOLUME);
-			}
-			tile_painted = true;
+			continue;
 		}
+
+		paint_tile.paint(team);
+
+		if (!tile_painted)
+		{
+			this->sound_bank_->play_wave(this->paint_sound_, SOUND_VOLUME);
+		}
+		tile_painted = true;
 	}
 }
 

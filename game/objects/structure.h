@@ -1,9 +1,10 @@
 #pragma once
 
-#include "game/objects/collision_object.h"
+#include "engine/collision/collision_object.h"
 #include "engine/render/texture_object.h"
+#include "game/objects/collision_object_type.h"
 
-class Structure : public artattack::TextureObject, public CollisionObject
+class Structure : public artattack::TextureObject, public artattack::CollisionObject
 {
 public:
 	Structure() = default;
@@ -23,13 +24,20 @@ public:
 	void draw(artattack::DrawList& draw_list) const override;
 	mattmath::RectangleF bounds() const override;
 
-	bool is_colliding(const CollisionObject* other) const override;
-	void on_collision(const CollisionObject* other) override;
-	CollisionObjectType collision_object_type() const override;
 	const mattmath::Shape* shape() const override;
+	artattack::CollisionLayer layer() const override;
+	artattack::CollisionMask mask() const override;
+	artattack::CollisionTag tag() const override;
+
+	// Level geometry does not respond to being hit; it is what everything
+	// else responds to. StructurePaintable overrides this to take paint.
+	void on_contact(const artattack::CollisionObject& other,
+		const mattmath::Vector2F& normal, float penetration) override;
+
 	bool for_deletion() const override;
 protected:
 	const mattmath::RectangleF& rectangle() const;
+	CollisionObjectType collision_type() const;
 private:
 	CollisionObjectType collision_type_ =
 		CollisionObjectType::structure;

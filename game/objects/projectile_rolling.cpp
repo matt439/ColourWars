@@ -46,38 +46,6 @@ RectangleF ProjectileRolling::bounds() const
 	// not draw. draw() is the no-op that says so.
 	return this->rectangle_;
 }
-bool ProjectileRolling::is_colliding(const CollisionObject* other) const
-{
-	// type check
-	if (!this->is_matching_collision_object_type(other))
-	{
-		return false;
-	}
-
-	// aabb check
-	if (!this->shape()->AABB_intersects(other->shape()))
-	{
-		return false;
-	}
-	else // AABBs are intersecting
-	{
-		// if the other object is a rectangle, then we have a collision
-		// since the AABB check passed
-		ShapeType other_shape_type = other->shape()->shape_type();
-		if (other_shape_type == ShapeType::rectangle)
-		{
-			return true;
-		}
-	}
-
-	// narrow phase check
-	if (this->shape()->intersects(other->shape()))
-	{
-		return true;
-	}
-
-	return false;
-}
 const Shape* ProjectileRolling::shape() const
 {
 	return &this->rectangle_;

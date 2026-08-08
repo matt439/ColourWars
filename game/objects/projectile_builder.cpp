@@ -6,7 +6,7 @@ using namespace DirectX;
 using namespace projectile_consts;
 using namespace artattack;
 
-std::vector<std::unique_ptr<CollisionObject>>
+std::vector<std::unique_ptr<artattack::CollisionObject>>
 	ProjectileBuilder::build_projectiles(
 		const Vector2F& position,
 		const Vector2F& velocity,
@@ -24,7 +24,7 @@ std::vector<std::unique_ptr<CollisionObject>>
     {
     case SPRAY:
 	{
-		std::vector<std::unique_ptr<CollisionObject>> projectiles;
+		std::vector<std::unique_ptr<artattack::CollisionObject>> projectiles;
 		projectiles.push_back(
 			std::make_unique<ProjectileSpray>(
 				RectangleF(position, DETAILS_SPRAY.col_rect_size),
@@ -41,7 +41,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 	}
     case JET:
 	{
-		std::vector<std::unique_ptr<CollisionObject>> projectiles;
+		std::vector<std::unique_ptr<artattack::CollisionObject>> projectiles;
 		projectiles.push_back(
 			std::make_unique<ProjectileJet>(
 				RectangleF(position, DETAILS_JET.col_rect_size),
@@ -58,7 +58,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 	}
 	case ROLLING:
 	{
-		std::vector<std::unique_ptr<CollisionObject>> projectiles;
+		std::vector<std::unique_ptr<artattack::CollisionObject>> projectiles;
 		projectiles.push_back(
 			std::make_unique<ProjectileRolling>(
 				RectangleF(position, DETAILS_ROLLING.col_rect_size),
@@ -88,7 +88,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 			layer_depth);
 	case BALL:
 	{
-		std::vector<std::unique_ptr<CollisionObject>> projectiles;
+		std::vector<std::unique_ptr<artattack::CollisionObject>> projectiles;
 		projectiles.push_back(
 			std::make_unique<ProjectileBall>(
 				RectangleF(position, DETAILS_BALL.col_rect_size),
@@ -108,7 +108,7 @@ std::vector<std::unique_ptr<CollisionObject>>
     };
 }
 
-std::vector<std::unique_ptr<CollisionObject>>
+std::vector<std::unique_ptr<artattack::CollisionObject>>
 	ProjectileBuilder::build_mist_projectiles(
 	const Vector2F& position,
 	const Vector2F& velocity,
@@ -122,7 +122,7 @@ std::vector<std::unique_ptr<CollisionObject>>
 	SpriteFlip flip,
 	float layer_depth)
 {
-	std::vector<std::unique_ptr<CollisionObject>> projectiles;
+	std::vector<std::unique_ptr<artattack::CollisionObject>> projectiles;
 	projectiles.push_back(
 		std::make_unique<ProjectileMist>(
 			RectangleF(position, DETAILS_MIST.col_rect_size),
