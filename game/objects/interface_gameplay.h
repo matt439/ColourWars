@@ -4,33 +4,8 @@
 #include "engine/render/render_resources.h"
 #include "engine/render/colour.h"
 #include "engine/math/matt_math.h"
+#include "game/presentation.h"
 
-namespace interface_consts
-{
-    constexpr float RIGHT_MARGIN = 0.18f;
-    constexpr float AMMO_TOP_MARGIN = 0.15f;
-    constexpr float HEALTH_TOP_MARGIN = 0.05f;
-    const static mattmath::Vector2F TOP_RIGHT_BOX_SIZE = { 0.15f, 0.07f };
-    constexpr float BOX_FILL_BORDER = 0.003f;
-    const static mattmath::Vector2F TIMER_OFFSET = { 0.01f, 0.05f };
-    const static std::string TIMER_FONT = "gill_sans_mt_bold_48";
-    const static artattack::Colour HEALTH_COLOUR = artattack::Colour::green;
-    const static mattmath::Vector2F TIMER_SHADOW_OFFSET = { 2.0f, 2.0f };
-
-    const static artattack::Colour TIMER_COLOUR = artattack::Colour::gray;
-    const static artattack::Colour TIMER_SHADOW_COLOUR = artattack::Colour::black;
-    constexpr float TIMER_SCALE_FACTOR = 1920.0f;
-
-    const static std::string SPRITE_SHEET = "sprite_sheet_1";
-    const static std::string EMPTY_BOX_FRAME = "health_box";
-    const static std::string FILL_FRAME = "pixel";
-
-    const static mattmath::Vector2F RESPAWN_TIMER_OFFSET = { 0.05f, 0.1f };
-    const static std::string RESPAWN_TIMER_FONT = "gill_sans_mt_bold_144";
-    const static mattmath::Vector2F RESPAWN_TIMER_SHADOW_OFFSET = { 2.0f, 2.0f };
-    const static artattack::Colour RESPAWN_TIMER_COLOUR = artattack::Colour::white;
-    const static artattack::Colour RESPAWN_TIMER_SHADOW_COLOUR = artattack::Colour::black;
-}
 
 struct InterfaceDraw
 {
@@ -45,7 +20,9 @@ struct InterfaceDraw
 class InterfaceGameplay
 {
 public:
-    explicit InterfaceGameplay(artattack::RenderResources* render_resources);
+    // The presentation is borrowed and outlives every level: main() owns it.
+    InterfaceGameplay(artattack::RenderResources* render_resources,
+        const HudPresentation* look);
 
     // const for the same reason GameObject::draw is. There is one
     // InterfaceGameplay for the whole level, and every render worker calls this
@@ -87,6 +64,7 @@ private:
     // them. Held here rather than inherited from a base class whose only
     // other members were three helpers nothing called.
     artattack::RenderResources* render_resources_ = nullptr;
+    const HudPresentation* look_ = nullptr;
 
     // The HUD always draws out of the same sheet, with the same two frames and
     // the same two fonts. All five names are resolved in the constructor, so

@@ -63,6 +63,7 @@ public:
 		const mattmath::RectangleF& zoom_out_start_bounds,
 		const mattmath::RectangleF& zoom_out_finish_bounds,
 		const GameTuning* tuning,
+		const Presentation* presentation,
 		const std::string& sound_bank_name,
 		const std::string& music_name,
 		float music_volume,

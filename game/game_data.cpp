@@ -7,7 +7,8 @@ GameData::GameData(const GameData* game_data) :
 	save_(game_data->save()),
 	level_infos_(game_data->level_infos()),
 	stages_(game_data->stages()),
-	tuning_(game_data->tuning())
+	tuning_(game_data->tuning()),
+	presentation_(game_data->presentation())
 {
 
 }
@@ -37,6 +38,11 @@ void GameData::set_tuning(const GameTuning* tuning)
 	this->tuning_ = tuning;
 }
 
+void GameData::set_presentation(const Presentation* presentation)
+{
+	this->presentation_ = presentation;
+}
+
 Application* GameData::application() const
 {
 	return this->application_;
@@ -55,6 +61,11 @@ const StageList* GameData::stages() const
 const GameTuning* GameData::tuning() const
 {
 	return this->tuning_;
+}
+
+const Presentation* GameData::presentation() const
+{
+	return this->presentation_;
 }
 
 Registry<LevelLoadedInfo>* GameData::level_infos() const

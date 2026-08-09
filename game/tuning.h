@@ -77,6 +77,33 @@ struct PlayerAnimationTuning
 	float frame_time = -1.0f;
 };
 
+// The paint itself: how finely a painted surface is divided, how deep the
+// paint sits on a face, and what a splash sounds like.
+//
+// These were paint_tile_consts and structure_paintable_consts - eleven
+// SCREAMING constants in two headers. They are here rather than in
+// presentation.json because they are balance: `size` is the granularity the
+// whole scoring system measures coverage at, and halving it quadruples both
+// the tile count per structure and the resolution of every percentage the
+// results screen shows.
+struct PaintTuning
+{
+	// One tile. A structure is divided into a grid of these.
+	mattmath::Vector2F size = { 0.0f, 0.0f };
+
+	// How far paint reaches in from a painted face.
+	float thickness = 0.0f;
+
+	std::string sheet;
+	std::string frame;
+
+	std::string splash_sheet;
+	std::string splash_animation;
+
+	std::string sound_bank;
+	SoundTuning splash_sound;
+};
+
 struct PlayerTuning
 {
 	mattmath::Vector2F size = { 0.0f, 0.0f };
@@ -160,6 +187,7 @@ public:
 	explicit GameTuning(const char* path);
 
 	const MatchTuning& match() const;
+	const PaintTuning& paint() const;
 	const PlayerTuning& player() const;
 
 	// Shared across every weapon: how fast ammo comes back, and how much of it
@@ -184,6 +212,7 @@ private:
 		static_cast<size_t>(BALL) + 1;
 
 	MatchTuning match_;
+	PaintTuning paint_;
 	PlayerTuning player_;
 
 	float ammo_regen_delay_ = 0.0f;

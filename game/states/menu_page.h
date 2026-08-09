@@ -54,6 +54,16 @@ protected:
 	MenuContext* menu_context() const;
 
 	GameData* data() const;
+
+	// What the shell looks like, and the style every menu family shares.
+	//
+	// Two accessors rather than one because menu() is what almost every call
+	// site wants: the fonts, the shadows and the highlight pair used to be a
+	// copied block in each of the four menu headers, and this is the one they
+	// collapsed into.
+	const Presentation& presentation() const;
+	const MenuStyle& menu_style() const;
+
 	MenuLevelSettings* level_settings() const;
 	MenuInput* input() const;
 	artattack::ResolutionManager* resolution_manager() const;

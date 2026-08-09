@@ -10,6 +10,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	const AudioResources* audio_resources,
 	const Registry<LevelLoadedInfo>* level_infos,
 	const GameTuning* tuning,
+	const Presentation* presentation,
 	ResolutionManager* resolution_manager,
 	ThreadPool* thread_pool,
 	const Partitioner* partitioner) :
@@ -17,6 +18,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	audio_resources_(audio_resources),
 	level_infos_(level_infos),
 	tuning_(tuning),
+	presentation_(presentation),
 	viewport_manager_(viewport_manager),
 	resolution_manager_(resolution_manager),
 	thread_pool_(thread_pool),
@@ -26,7 +28,8 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	this->player_builder_ = std::make_unique<PlayerBuilder>(tuning);
 
 	this->level_object_builder_ = std::make_unique<LevelObjectBuilder>(
-		this->render_resources_, this->audio_resources_);
+		this->render_resources_, this->audio_resources_,
+		&tuning->paint());
 }
 
 std::unique_ptr<Level>
@@ -82,6 +85,7 @@ std::unique_ptr<Level>
 		load_info->zoom_out_start_bounds_rectangle(),
 		load_info->zoom_out_finish_bounds_rectangle(),
 		this->tuning_,
+		this->presentation_,
 		load_info->sound_bank_name(),
 		load_info->music_name(),
 		load_info->music_volume(),

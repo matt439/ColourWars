@@ -3,12 +3,10 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace paint_tile_consts;
 using namespace artattack;
 
 PaintTile::PaintTile(const RectangleF& rectangle,
-	const std::string& sheet_name,
-	const std::string& frame_name,
+	const PaintTuning* paint,
 	RenderResources* render_resources,
 	const TeamColour& team_colours,
 	const Colour& color,
@@ -16,14 +14,17 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	const Vector2F& origin,
 	SpriteFlip flip,
 	float layer_depth) :
-	TextureObject(sheet_name, frame_name, render_resources,
+	TextureObject(paint->sheet, paint->frame, render_resources,
 		color, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle),
 	team_colours_(team_colours)
 {
-	this->splash_ = PaintTileSplash(
-		SPLASH_RECTANGLE, SPLASH_SPRITE_SHEET_NAME, SPLASH_ANIMATION_STRIP_NAME,
-		render_resources);
+	// The splash covers the tile's own depth in both directions, which is what
+	// the SPLASH_RECTANGLE constant said in terms of THICKNESS.
+	const RectangleF splash_rectangle(0.0f, 0.0f,
+		paint->thickness * 2.0f, paint->thickness * 2.0f);
+	this->splash_ = PaintTileSplash(splash_rectangle, paint->splash_sheet,
+		paint->splash_animation, render_resources);
 
 	// The splash is always centred on the tile and the tile never moves, so
 	// this is set once here rather than re-assigned on every draw call.

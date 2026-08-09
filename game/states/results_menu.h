@@ -5,56 +5,6 @@
 #include "game/states/menu_page.h"
 #include "engine/audio/sound_bank_object.h"
 
-namespace results_menu_consts
-{
-	const static mattmath::Vector2F RESULTS_MENU_BOX_SIZE = { 900.0f, 600.0f };
-	const static artattack::Colour RESULTS_MENU_BOX_COLOUR = artattack::Colour::light_slate_gray;
-	const static artattack::Colour RESULTS_MENU_HEADING_TEXT_COLOUR = artattack::Colour::goldenrod;
-
-	const static mattmath::Vector2F RESULTS_MENU_FILL_BOX_SIZE = { 700.0f, 200.0f };
-	constexpr float RESULTS_MENU_FILL_BOX_Y_OFFSET = 300.0f;
-
-	const static mattmath::Vector2F RESULTS_MENU_TEAM_FILL_BORDER = { 10.0f, 10.0f };
-	const static mattmath::Vector2F RESULTS_MENU_TEAM_FILL_SIZE =
-		results_menu_consts::RESULTS_MENU_FILL_BOX_SIZE -
-		results_menu_consts::RESULTS_MENU_TEAM_FILL_BORDER * 2.0f;
-
-	constexpr float RESULTS_MENU_TEAM_FILL_Y_OFFSET = 310.0f;
-
-	constexpr float RESULTS_MENU_TEAM_FILL_DELAY = 1.0f;
-	constexpr float RESULTS_MENU_TEAM_FILL_TIME = 2.0f;
-
-	constexpr float RESULTS_MENU_SHOW_RESULTS_DELAY = 1.0f;
-
-	constexpr float RESULTS_MENU_TITLE_Y_OFFSET = 50.0f;
-
-	constexpr float WINNER_TEXT_Y_OFFSET = 10.0f;
-
-	const static artattack::Colour PERCENTAGE_TEXT_COLOUR = artattack::Colour::dark_gray;
-
-	constexpr float TEAM_B_PERCENTAGE_X_OFFSET = 325.0f;
-
-	const static std::string ITEM_FONT = "gill_sans_mt_bold_48";
-	const static std::string HEADING_FONT = "gill_sans_mt_bold_72";
-	const static std::string DETAIL_FONT = "gill_sans_mt_bold_36";
-
-	const static mattmath::Vector2F PROCEED_POSITION = { 725.0f, 750.0f };
-	const static mattmath::Vector2F HEADING_POSITION = { 800.0f, 235.0f };
-	const static mattmath::Vector2F WINNER_POSITION = { 750.0f, 400.0f };
-
-	const static artattack::Colour SHADOW_COLOUR = artattack::Colour::black;
-	const static mattmath::Vector2F TITLE_SHADOW_OFFSET = { 6.0f, 6.0f };
-	const static mattmath::Vector2F HEADING_SHADOW_OFFSET = { 2.5f, 2.5f };
-	const static mattmath::Vector2F ITEM_SHADOW_OFFSET = { 1.5f, 1.5f };
-	const static mattmath::Vector2F DETAIL_SHADOW_OFFSET = { 1.0f, 1.0f };
-
-	const std::string SOUND_BANK = "sound_bank_1";
-	const std::string CONFIRM_SOUND = "UI_Clicks01";
-	const std::string WINNER_SOUND = "party_horn";
-	constexpr float WINNER_VOLUME = 1.0f;
-	const std::string FILL_SOUND = "DrumRoll";
-	constexpr float FILL_VOLUME = 1.0f;
-}
 
 class ResultsMenuPage : public MenuPage, public artattack::SoundBankObject
 {
@@ -67,6 +17,11 @@ public:
 	void update(float dt) override = 0;
 	void draw(artattack::Renderer& renderer) const override = 0;
 protected:
+	// This menu family's own presentation, beside MenuPage::menu_style()'s
+	// shared one. Named for what a reader is looking for rather than for the
+	// type it returns: `this->look().box_colour` at the call site.
+	const ResultsMenuPresentation& look() const;
+
 	LevelEndInfo level_end_info() const;
 
 	// Every sound this page family can make, resolved once when the page is

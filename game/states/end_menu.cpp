@@ -2,17 +2,22 @@
 #include "game/states/end_menu.h"
 
 using namespace mattmath;
-using namespace end_menu_consts;
 using namespace menu_consts;
 using namespace artattack;
 
 EndMenuPage::EndMenuPage(MenuContext* context) :
 	MenuPage(context),
-	SoundBankObject(SOUND_BANK, this->audio_resources())
+	SoundBankObject(this->menu_style().sound_bank, this->audio_resources())
 {
-	this->direction_sound_ = this->resolve_wave(DIRECTION_SOUND);
-	this->confirm_sound_ = this->resolve_wave(CONFIRM_SOUND);
-	this->cancel_sound_ = this->resolve_wave(CANCEL_SOUND);
+	const MenuStyle& style = this->menu_style();
+	this->direction_sound_ = this->resolve_wave(style.direction_sound);
+	this->confirm_sound_ = this->resolve_wave(style.confirm_sound);
+	this->cancel_sound_ = this->resolve_wave(style.cancel_sound);
+}
+
+const EndMenuPresentation& EndMenuPage::look() const
+{
+	return this->presentation().end_menu();
 }
 
 void EndMenuPage::finish(EndMenuAction action) const
@@ -44,80 +49,83 @@ void EndMenuInitial::update(float /*dt*/)
 }
 void EndMenuInitial::init()
 {
-	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
+	const MenuStyle& style = this->menu_style();
+	const EndMenuPresentation& look = this->look();
+
+	this->focus_.set_style({ style.highlight, style.unhighlight });
 
 	this->box_ = std::make_unique<UiTexture>(
 		"box",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, END_MENU_BOX_SIZE),
+		RectangleF(Vector2F::ZERO, style.box_size),
 		this->render_resources(),
-		END_MENU_BOX_COLOUR);
+		look.box_colour);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
-	this->set_widget_position(END_MENU_INITIAL_WIDGET_POSITION);
-	this->set_widget_size(END_MENU_INITIAL_WIDGET_SIZE);
-	this->set_widget_spacing(END_MENU_INITIAL_WIDGET_SPACING);
+	this->set_widget_position(look.layout.position);
+	this->set_widget_size(look.layout.size);
+	this->set_widget_spacing(look.layout.spacing);
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Level End",
-		HEADING_FONT,
+		style.heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		END_MENU_HEADING_TEXT_COLOUR,
-		SHADOW_COLOUR,
-		HEADING_SHADOW_OFFSET);
+		style.heading_colour,
+		style.shadow_colour,
+		style.heading_shadow_offset);
 
 	this->change_teams_ = std::make_unique<UiTextDropShadow>(
 		"change_teams",
 		L"Change Teams",
-		ITEM_FONT,
+		style.item_font,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
-		STANDARD_HIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		style.highlight,
+		style.shadow_colour,
+		style.item_shadow_offset);
 
 	this->change_weapons_ = std::make_unique<UiTextDropShadow>(
 		"change_weapons",
 		L"Change Weapons",
-		ITEM_FONT,
+		style.item_font,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		style.unhighlight,
+		style.shadow_colour,
+		style.item_shadow_offset);
 
 	this->change_level_ = std::make_unique<UiTextDropShadow>(
 		"change_level",
 		L"Change Level",
-		ITEM_FONT,
+		style.item_font,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		style.unhighlight,
+		style.shadow_colour,
+		style.item_shadow_offset);
 
 	this->restart_ = std::make_unique<UiTextDropShadow>(
 		"restart",
 		L"Restart",
-		ITEM_FONT,
+		style.item_font,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		style.unhighlight,
+		style.shadow_colour,
+		style.item_shadow_offset);
 
 	this->exit_ = std::make_unique<UiTextDropShadow>(
 		"exit",
 		L"Exit to Main Menu",
-		ITEM_FONT,
+		style.item_font,
 		this->calculate_widget_position(0, 6),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		style.unhighlight,
+		style.shadow_colour,
+		style.item_shadow_offset);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");

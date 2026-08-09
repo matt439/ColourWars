@@ -4,6 +4,7 @@
 #include "game/directory_consts.h"
 #include "game/game_data.h"
 #include "game/objects/level_loaded_info.h"
+#include "game/presentation.h"
 #include "game/tuning.h"
 #include "game/states/game_states.h"
 #include "game/save.h"
@@ -56,6 +57,12 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		// it is the file the manifest's assets are used *by*.
 		const GameTuning tuning(TUNING_PATH.c_str());
 
+		// And what the shell looks like: every font, colour, offset and box
+		// size the menus, the HUD and the debug overlay are laid out from.
+		// Read here, beside the tuning, for the same reason - a menu page
+		// borrows it and every page outlives none of this.
+		const Presentation presentation(PRESENTATION_PATH.c_str());
+
 		GameData data;
 
 		Application app(std::move(options));
@@ -97,6 +104,7 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		data.set_level_infos(&level_infos);
 		data.set_stages(&stages);
 		data.set_tuning(&tuning);
+		data.set_presentation(&presentation);
 
 		return app.run(std::make_unique<GameMenu>(&data));
 	}

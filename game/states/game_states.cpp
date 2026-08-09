@@ -144,6 +144,7 @@ void GameLevel::init()
 		this->data()->audio_resources(),
 		this->data()->level_infos(),
 		this->data()->tuning(),
+		this->data()->presentation(),
 		this->data()->resolution_manager(),
 		this->data()->thread_pool(),
 		this->data()->partitioner());

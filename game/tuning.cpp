@@ -148,6 +148,25 @@ namespace
 		return match;
 	}
 
+	PaintTuning read_paint(const JsonValue& root)
+	{
+		const JsonValue json = root.object("paint");
+
+		PaintTuning paint;
+		paint.size = read_vector(json, "size");
+		paint.thickness = json.number("thickness");
+		paint.sheet = json.string("sheet");
+		paint.frame = json.string("frame");
+
+		const JsonValue splash = json.object("splash");
+		paint.splash_sheet = splash.string("sheet");
+		paint.splash_animation = splash.string("animation");
+
+		paint.sound_bank = json.string("sound_bank");
+		paint.splash_sound = read_sound(json, "splash_sound");
+		return paint;
+	}
+
 	PlayerTuning read_player(const JsonValue& root)
 	{
 		const JsonValue json = root.object("player");
@@ -294,6 +313,7 @@ GameTuning::GameTuning(const char* path)
 	const JsonValue root = document.root();
 
 	this->match_ = read_match(root);
+	this->paint_ = read_paint(root);
 	this->player_ = read_player(root);
 
 	const JsonValue weapons = root.object("weapons");
@@ -336,6 +356,11 @@ GameTuning::GameTuning(const char* path)
 const MatchTuning& GameTuning::match() const
 {
 	return this->match_;
+}
+
+const PaintTuning& GameTuning::paint() const
+{
+	return this->paint_;
 }
 
 const PlayerTuning& GameTuning::player() const

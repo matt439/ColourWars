@@ -13,6 +13,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	const RectangleF& zoom_out_start_bounds,
 	const RectangleF& zoom_out_finish_bounds,
 	const GameTuning* tuning,
+	const Presentation* presentation,
 	const std::string& sound_bank_name,
 	const std::string& music_name,
 	float music_volume,
@@ -47,9 +48,10 @@ Level::Level(std::unique_ptr<Scene> scene,
 		Camera::frame(zoom_out_finish_bounds, screen);
 
 	this->debug_text_ = std::make_unique<DebugText>(
-		render_resources, resolution_manager);
+		render_resources, resolution_manager,
+		&presentation->debug_overlay());
 	this->interface_gameplay_ = std::make_unique<InterfaceGameplay>(
-		render_resources);
+		render_resources, &presentation->hud());
 	this->sound_bank_ = audio_resources->sound_bank(sound_bank_name);
 
 	this->music_ = this->sound_bank_->resolve_effect(music_name);

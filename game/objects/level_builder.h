@@ -21,6 +21,7 @@ public:
 		const artattack::AudioResources* audio_resources,
 		const artattack::Registry<LevelLoadedInfo>* level_infos,
 		const GameTuning* tuning,
+		const Presentation* presentation,
 		artattack::ResolutionManager* resolution_manager,
 		artattack::ThreadPool* thread_pool,
 		const artattack::Partitioner* partitioner);
@@ -34,6 +35,7 @@ private:
 	const artattack::AudioResources* audio_resources_ = nullptr;
 	const artattack::Registry<LevelLoadedInfo>* level_infos_ = nullptr;
 	const GameTuning* tuning_ = nullptr;
+	const Presentation* presentation_ = nullptr;
 	artattack::ViewportManager* viewport_manager_ = nullptr;
 	std::unique_ptr<LevelObjectBuilder> level_object_builder_ = nullptr;
 	artattack::ResolutionManager* resolution_manager_ = nullptr;

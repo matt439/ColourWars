@@ -3,20 +3,26 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace pause_menu_consts;
 using namespace menu_consts;
 using namespace artattack;
 
 PauseMenuPage::PauseMenuPage(MenuContext* context, int player_num) :
 	MenuPage(context),
-	SoundBankObject(pause_menu_consts::SOUND_BANK,
+	SoundBankObject(this->menu_style().sound_bank,
 		this->audio_resources()),
 	pausing_player_(player_num)
 {
-	this->direction_sound_ = this->resolve_wave(DIRECTION_SOUND);
-	this->confirm_sound_ = this->resolve_wave(CONFIRM_SOUND);
-	this->cancel_sound_ = this->resolve_wave(CANCEL_SOUND);
-	this->window_open_sound_ = this->resolve_wave(WINDOW_OPEN_SOUND);
+	const MenuStyle& style = this->menu_style();
+	this->direction_sound_ = this->resolve_wave(style.direction_sound);
+	this->confirm_sound_ = this->resolve_wave(style.confirm_sound);
+	this->cancel_sound_ = this->resolve_wave(style.cancel_sound);
+	this->window_open_sound_ =
+		this->resolve_wave(this->look().window_open_sound);
+}
+
+const PauseMenuPresentation& PauseMenuPage::look() const
+{
+	return this->presentation().pause_menu();
 }
 
 std::wstring PauseMenuPage::player_number_text(int player_num)
@@ -85,60 +91,63 @@ void PauseMenuInitial::update(float /*dt*/)
 }
 void PauseMenuInitial::init()
 {
-	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
+	const MenuStyle& style = this->menu_style();
+	const PauseMenuPresentation& look = this->look();
+
+	this->focus_.set_style({ style.highlight, style.unhighlight });
 
 	this->box_ = std::make_unique<UiTexture>(
 		"box",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, PAUSE_MENU_BOX_SIZE),
+		RectangleF(Vector2F::ZERO, style.box_size),
 		this->render_resources(),
-		PAUSE_MENU_BOX_COLOUR);
+		look.box_colour);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
-	this->set_widget_position(PAUSE_MENU_INITIAL_WIDGET_POSITION);
-	this->set_widget_size(PAUSE_MENU_INITIAL_WIDGET_SIZE);
-	this->set_widget_spacing(PAUSE_MENU_INITIAL_WIDGET_SPACING);
+	this->set_widget_position(look.layout.position);
+	this->set_widget_size(look.layout.size);
+	this->set_widget_spacing(look.layout.spacing);
 
 	this->player_num_ = std::make_unique<UiTextDropShadow>(
 		"player_num",
 		this->player_number_text(this->pausing_player()),
-		HEADING_FONT,
+		style.heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		PAUSE_MENU_HEADING_TEXT_COLOUR,
-		SHADOW_COLOUR,
-		HEADING_SHADOW_OFFSET);
+		style.heading_colour,
+		style.shadow_colour,
+		style.heading_shadow_offset);
 
 	this->resume_ = std::make_unique<UiTextDropShadow>(
 		"resume",
 		L"Resume",
-		ITEM_FONT,
+		style.item_font,
 		this->calculate_widget_position(1, 2),
 		this->render_resources(),
-		STANDARD_HIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		style.highlight,
+		style.shadow_colour,
+		style.item_shadow_offset);
 
 	this->restart_ = std::make_unique<UiTextDropShadow>(
 		"restart",
 		L"Restart",
-		ITEM_FONT,
+		style.item_font,
 		this->calculate_widget_position(1, 3),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		style.unhighlight,
+		style.shadow_colour,
+		style.item_shadow_offset);
 
 	this->quit_ = std::make_unique<UiTextDropShadow>(
 		"quit",
 		L"Quit",
-		ITEM_FONT,
+		style.item_font,
 		this->calculate_widget_position(1, 4),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		style.unhighlight,
+		style.shadow_colour,
+		style.item_shadow_offset);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -215,60 +224,63 @@ void PauseMenuConfirmation::update(float /*dt*/)
 
 void PauseMenuConfirmation::init()
 {
-	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
+	const MenuStyle& style = this->menu_style();
+	const PauseMenuPresentation& look = this->look();
+
+	this->focus_.set_style({ style.highlight, style.unhighlight });
 
 	this->box_ = std::make_unique<UiTexture>(
 		"box",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, PAUSE_MENU_BOX_SIZE),
+		RectangleF(Vector2F::ZERO, style.box_size),
 		this->render_resources(),
-		PAUSE_MENU_BOX_COLOUR);
+		look.box_colour);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
-	this->set_widget_position(PAUSE_MENU_INITIAL_WIDGET_POSITION);
-	this->set_widget_size(PAUSE_MENU_INITIAL_WIDGET_SIZE);
-	this->set_widget_spacing(PAUSE_MENU_INITIAL_WIDGET_SPACING);
+	this->set_widget_position(look.layout.position);
+	this->set_widget_size(look.layout.size);
+	this->set_widget_spacing(look.layout.spacing);
 
 	this->player_num_ = std::make_unique<UiTextDropShadow>(
 		"player_num",
 		this->player_number_text(this->pausing_player()),
-		HEADING_FONT,
+		style.heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		PAUSE_MENU_HEADING_TEXT_COLOUR,
-		SHADOW_COLOUR,
-		HEADING_SHADOW_OFFSET);
+		style.heading_colour,
+		style.shadow_colour,
+		style.heading_shadow_offset);
 
 	this->question_ = std::make_unique<UiTextDropShadow>(
 		"question",
 		question_text(this->type_),
-		DETAIL_FONT,
+		style.detail_font,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
-		PAUSE_MENU_HEADING_TEXT_COLOUR,
-		SHADOW_COLOUR,
-		DETAIL_SHADOW_OFFSET);
+		style.heading_colour,
+		style.shadow_colour,
+		style.detail_shadow_offset);
 
 	this->yes_ = std::make_unique<UiTextDropShadow>(
 		"yes",
 		L"Yes",
-		ITEM_FONT,
+		style.item_font,
 		this->calculate_widget_position(1, 3),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		style.unhighlight,
+		style.shadow_colour,
+		style.item_shadow_offset);
 
 	this->no_ = std::make_unique<UiTextDropShadow>(
 		"no",
 		L"No",
-		ITEM_FONT,
+		style.item_font,
 		this->calculate_widget_position(1, 4),
 		this->render_resources(),
-		STANDARD_HIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		style.highlight,
+		style.shadow_colour,
+		style.item_shadow_offset);
 
 
 	this->texture_container_ = std::make_unique<UiContainer>(

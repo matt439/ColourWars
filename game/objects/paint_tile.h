@@ -6,19 +6,8 @@
 #include "engine/core/game_object.h"
 #include "engine/render/animation_object.h"
 #include "engine/render/colour.h"
+#include "game/tuning.h"
 
-namespace paint_tile_consts
-{
-	constexpr float WIDTH = 4.0f;
-	constexpr float HEIGHT = 4.0f;
-	constexpr float THICKNESS = 12.0f;
-	const static std::string SHEET_NAME = "sprite_sheet_1";
-	const static std::string FRAME_NAME = "pixel";
-
-	const static std::string SPLASH_SPRITE_SHEET_NAME = "sprite_sheet_1";
-	const static std::string SPLASH_ANIMATION_STRIP_NAME = "splash_1";
-	const static mattmath::RectangleF SPLASH_RECTANGLE = { 0.0f, 0.0f, THICKNESS * 2.0f, THICKNESS * 2.0f };
-}
 
 class PaintTileSplash final : public artattack::AnimationObject, public artattack::GameObject
 {
@@ -65,9 +54,11 @@ class PaintTile final : public artattack::TextureObject, public artattack::GameO
 {
 public:
 	PaintTile() = default;
+	// The tuning is borrowed and outlives every level: main() owns it. A tile
+	// reads its splash's sheet, animation and size off it, which is what the
+	// three paint_tile_consts entries this replaces were.
 	PaintTile(const mattmath::RectangleF& rectangle,
-		const std::string& sheet_name,
-		const std::string& frame_name,
+		const PaintTuning* paint,
 		artattack::RenderResources* render_resources,
 		const TeamColour& team_colours,
 		const artattack::Colour& color = artattack::Colour::white,

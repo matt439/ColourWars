@@ -3,14 +3,15 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace debug_text_consts;
 using namespace artattack;
 
 DebugText::DebugText(RenderResources* render_resources,
-    const ResolutionManager* resolution_manager) :
+    const ResolutionManager* resolution_manager,
+    const DebugOverlayPresentation* look) :
     render_resources_(render_resources),
     resolution_manager_(resolution_manager),
-    font_(render_resources->resolve_sprite_font(DEBUG_FONT))
+    look_(look),
+    font_(render_resources->resolve_sprite_font(look->font))
 {
 	
 }
@@ -24,6 +25,8 @@ RenderResources* DebugText::render_resources() const
 void DebugText::draw_debug_info(DrawList& draw_list,
     const Player* player, int num_projectiles, float dt) const
 {
+    const DebugOverlayPresentation& look = *this->look_;
+
     const PlayerInputData& input = player->input();
     
     RectangleF rect = player->rectangle();
@@ -106,7 +109,7 @@ void DebugText::draw_debug_info(DrawList& draw_list,
     };
     lines.push_back(state_string);
 
-    Vector2F text_pos = DEBUG_POSITION;
+    Vector2F text_pos = look.position;
 
     // The caller has already put the list in the pane's own coordinates; this
     // is a fixed corner of the viewport and follows no camera. Note that it
@@ -116,16 +119,16 @@ void DebugText::draw_debug_info(DrawList& draw_list,
 
     for (size_t i = 0; i < lines.size(); i++)
     {
-        const Vector2F shadow_pos = text_pos + DEBUG_SHADOW_OFFSET;
+        const Vector2F shadow_pos = text_pos + look.shadow_offset;
 
         draw_list.draw_text(this->font_, lines[i], shadow_pos,
-            DEBUG_SHADOW_COLOR, DEBUG_SHADOW_SCALE, 0.0f, Vector2F::ZERO,
+            look.shadow_colour, look.shadow_scale, 0.0f, Vector2F::ZERO,
             0.0f);
 
-        draw_list.draw_text(this->font_, lines[i], text_pos, DEBUG_COLOR,
-            DEBUG_FONT_SCALE, 0.0f, Vector2F::ZERO, 0.0f);
+        draw_list.draw_text(this->font_, lines[i], text_pos, look.colour,
+            look.font_scale, 0.0f, Vector2F::ZERO, 0.0f);
 
-        text_pos.y += DEBUG_LINE_SPACING;
+        text_pos.y += look.line_spacing;
     }
 
     draw_list.set_filter(TextureFilter::point);

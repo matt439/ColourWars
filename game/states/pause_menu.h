@@ -7,39 +7,6 @@
 #include "engine/audio/sound_bank_object.h"
 #include "engine/render/colour.h"
 
-namespace pause_menu_consts
-{
-	const static mattmath::Vector2F PAUSE_MENU_BOX_SIZE = { 900.0f, 600.0f };
-	const static artattack::Colour PAUSE_MENU_BOX_COLOUR = artattack::Colour::dodger_blue;
-
-	// The value it always had, written where it is used. It was
-	// colour_consts::TEAM_ORANGE - a menu heading is not a team, and it
-	// only ever shared the number.
-	const static artattack::Colour PAUSE_MENU_HEADING_TEXT_COLOUR = artattack::Colour(255, 127, 0); //artattack::Colour::dark_khaki;
-
-	const static artattack::Colour STANDARD_HIGHLIGHT = artattack::Colour::white;
-	const static artattack::Colour STANDARD_UNHIGHLIGHT = artattack::Colour::blue;
-
-	const static mattmath::Vector2F PAUSE_MENU_INITIAL_WIDGET_SIZE = { 100.0f, 50.0f };
-	const static mattmath::Vector2F PAUSE_MENU_INITIAL_WIDGET_POSITION = { 610.0f, 300.0f };
-	const static mattmath::Vector2F PAUSE_MENU_INITIAL_WIDGET_SPACING = { 200.0f, 100.0f };
-
-	const static std::string ITEM_FONT = "gill_sans_mt_bold_48";
-	const static std::string HEADING_FONT = "gill_sans_mt_bold_72";
-	const static std::string DETAIL_FONT = "gill_sans_mt_bold_36";
-
-	const static artattack::Colour SHADOW_COLOUR = artattack::Colour::black;
-	const static mattmath::Vector2F TITLE_SHADOW_OFFSET = { 6.0f, 6.0f };
-	const static mattmath::Vector2F HEADING_SHADOW_OFFSET = { 2.5f, 2.5f };
-	const static mattmath::Vector2F ITEM_SHADOW_OFFSET = { 1.5f, 1.5f };
-	const static mattmath::Vector2F DETAIL_SHADOW_OFFSET = { 1.0f, 1.0f };
-
-	const std::string SOUND_BANK = "sound_bank_1";
-	const std::string DIRECTION_SOUND = "UI_Clicks14";
-	const std::string CONFIRM_SOUND = "UI_Clicks01";
-	const std::string CANCEL_SOUND = "UI_Clicks17";
-	const std::string WINDOW_OPEN_SOUND = "UI_Clicks01";
-}
 
 class PauseMenuPage : public MenuPage, public artattack::SoundBankObject
 {
@@ -54,6 +21,11 @@ public:
 	void update(float dt) override = 0;
 	void draw(artattack::Renderer& renderer) const override = 0;
 protected:
+	// This menu family's own presentation, beside MenuPage::menu_style()'s
+	// shared one. Named for what a reader is looking for rather than for the
+	// type it returns: `this->look().box_colour` at the call site.
+	const PauseMenuPresentation& look() const;
+
 	static std::wstring player_number_text(int player_num);
 
 	// Not player_num_, which is the name both pages of this family already use

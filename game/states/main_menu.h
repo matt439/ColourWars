@@ -9,83 +9,6 @@
 #include "engine/audio/sound_bank_object.h"
 #include "engine/render/colour.h"
 
-namespace main_menu_consts
-{
-	const static artattack::Colour TITLE_TEXT_COLOUR = artattack::Colour::goldenrod;
-	const static artattack::Colour TITLE_START_TEXT_COLOUR = artattack::Colour::white_smoke;
-	const static artattack::Colour TITLE_BACKGROUND_COLOUR = artattack::Colour::dark_slate_blue;
-
-	const static std::string TITLE_FONT = "gill_sans_ultra_bold_144";
-	const static std::string ITEM_FONT = "gill_sans_mt_bold_48";
-	const static std::string DETAIL_FONT = "gill_sans_mt_bold_36";
-	const static std::string HEADING_FONT = "gill_sans_mt_bold_72";
-	const static std::string ANNOUNCEMENT_FONT = "gill_sans_mt_bold_144";
-	const static std::string WEAPON_DESCRIPTION_FONT = "gill_sans_mt_bold_24";
-
-	// The value it always had, written where it is used. It was
-	// colour_consts::TEAM_ORANGE - a menu heading is not a team, and it
-	// only ever shared the number.
-	const static artattack::Colour HEADING_COLOUR = artattack::Colour(255, 127, 0);
-
-	const static artattack::Colour STANDARD_HIGHLIGHT = artattack::Colour::white;
-	const static artattack::Colour STANDARD_UNHIGHLIGHT = artattack::Colour::blue;
-
-	const static artattack::Colour OPTIONS_VALUE_COLOUR = artattack::Colour::dark_turquoise;
-
-	const static artattack::Colour WEAPON_DESCRIPTION_FONT_COLOUR = artattack::Colour::white_smoke;
-
-	const static artattack::Colour SHADOW_COLOUR = artattack::Colour::black;
-	const static mattmath::Vector2F TITLE_SHADOW_OFFSET = { 6.0f, 6.0f };
-	const static mattmath::Vector2F HEADING_SHADOW_OFFSET = { 2.5f, 2.5f };
-	const static mattmath::Vector2F ITEM_SHADOW_OFFSET = { 1.5f, 1.5f };
-	const static mattmath::Vector2F DETAIL_SHADOW_OFFSET = { 1.0f, 1.0f };
-	const static mattmath::Vector2F WEAPON_DESCRIPTION_SHADOW_OFFSET = { 1.0f, 1.0f };
-
-	const static mattmath::Vector2F MODE_SELECT_WIDGET_SPACING = { 250.0f, 100.0f };
-
-	const static mattmath::Vector2F PLAYER_COUNT_WIDGET_SPACING = { 250.0f, 100.0f };
-
-	const static mattmath::Vector2F TEAM_SELECT_WIDGET_SPACING = { 250.0f, 125.0f };
-	const static mattmath::Vector2F TEAM_SELECT_TEAM_WIDGET_SIZE = { 50.0f, 50.0f };
-
-	const static mattmath::Vector2F WEAPON_SELECT_WIDGET_SPACING = { 250.0f, 125.0f };
-	const static mattmath::Vector2F WEAPON_SELECT_WEAPON_WIDGET_SIZE = { 50.0f, 50.0f };
-
-	const static mattmath::Vector2F STAGE_SELECT_WIDGET_SPACING = { 0.0f, 150.0f };
-
-	const static artattack::Colour HOME_BACKGROUND_COLOUR = artattack::Colour::dodger_blue;
-	const static artattack::Colour OPTIONS_BACKGROUND_COLOUR = artattack::Colour::dodger_blue;
-	const static artattack::Colour PLAY_BACKGROUND_COLOUR = artattack::Colour::dodger_blue;
-
-	const static artattack::Colour TEAM_SELECT_SELECTED_COLOUR = artattack::Colour::light_coral;
-	const static artattack::Colour TEAM_SELECT_UNSELECTED_COLOUR = artattack::Colour::white;
-
-	const static artattack::Colour WEAPON_SELECT_SELECTED_COLOUR = artattack::Colour::light_coral;
-	const static artattack::Colour WEAPON_SELECT_UNSELECTED_COLOUR = artattack::Colour::white;
-
-	const static artattack::Colour STAGE_SELECT_SELECTED_COLOUR = artattack::Colour::fire_brick;
-	const static artattack::Colour STAGE_SELECT_UNSELECTED_COLOUR = artattack::Colour::white;
-	const static mattmath::Vector2F STAGE_SELECT_ICON_SIZE = { 800.0f, 600.0f };
-	const static mattmath::Vector2F STAGE_SELECT_READY_SIZE = { 1500.0f, 300.0f };
-
-	constexpr float WEAPON_DESC_X_OFFSET = 250.0f;
-
-	const std::string SOUND_BANK = "sound_bank_1";
-	const std::string DIRECTION_SOUND = "UI_Clicks14";
-	const std::string CONFIRM_SOUND = "UI_Clicks01";
-	const std::string CANCEL_SOUND = "UI_Clicks17";
-	const std::string ERROR_SOUND = "UIerror2";
-	const std::string READY_SOUND = "Whoosh2";
-	const std::string MUSIC = "Top_Of_The_Morning";
-	constexpr float MUSIC_VOLUME = 0.03f;
-
-	const static std::wstring SPRAYER_DESC = L"Fires a powerful stream of paint in an arc pattern.\nGood for beginners.";
-	const static std::wstring SNIPER_DESC = L"Slowly fires powerful, accurate shots.\nCan dispatch players quickly if you have skill.";
-	const static std::wstring ROLLER_DESC = L"Rolls paint in a wide area in front of you.\nCan be used to cover large floor areas quickly.";
-	const static std::wstring MISTER_DESC = L"Produces a mist of slow-moving, diffusing paint particles.";
-	const static std::wstring BUCKET_DESC = L"Throws a bucket of paint in a short arc pattern.\nIdeal for defeating other players.";
-	const static std::wstring RANDOM_DESC = L"Randomly selects a weapon for you.\nIndecisiveness is nothing to be ashamed of.";
-}
 
 enum class MainMenuScreen
 {
@@ -108,6 +31,11 @@ public:
 	void update(float dt) override = 0;
 	void draw(artattack::Renderer& renderer) const override = 0;
 protected:
+	// This menu family's own presentation, beside MenuPage::menu_style()'s
+	// shared one. Named for what a reader is looking for rather than for the
+	// type it returns: `this->look().play_background_colour` at the call site.
+	const MainMenuPresentation& look() const;
+
 	int player_count() const;
 
 	// Every sound this page family can make, resolved once when the page is
@@ -291,7 +219,9 @@ private:
 	static WeaponType random_weapon();
 	void set_level_settings() const;
 	void cycle_weapons(artattack::Direction direction, int player_index);
-	static std::wstring weapon_description(WeaponType type);
+	// Not static any more: the descriptions are content, so they come off
+	// this page's presentation rather than out of six constants in a header.
+	std::wstring weapon_description(WeaponType type) const;
 };
 
 class MainMenuStageSelect final : public MainMenuPage

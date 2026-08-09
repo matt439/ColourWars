@@ -3,21 +3,28 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace main_menu_consts;
 using namespace menu_consts;
 using namespace artattack;
 
 MainMenuPage::MainMenuPage(MenuContext* context) :
 	MenuPage(context),
-	SoundBankObject(main_menu_consts::SOUND_BANK,
+	SoundBankObject(this->menu_style().sound_bank,
 		this->audio_resources())
 {
-	this->direction_sound_ = this->resolve_wave(DIRECTION_SOUND);
-	this->confirm_sound_ = this->resolve_wave(CONFIRM_SOUND);
-	this->cancel_sound_ = this->resolve_wave(CANCEL_SOUND);
-	this->error_sound_ = this->resolve_wave(ERROR_SOUND);
-	this->ready_sound_ = this->resolve_wave(READY_SOUND);
-	this->music_ = this->resolve_effect(MUSIC);
+	const MenuStyle& style = this->menu_style();
+	const MainMenuPresentation& look = this->look();
+
+	this->direction_sound_ = this->resolve_wave(style.direction_sound);
+	this->confirm_sound_ = this->resolve_wave(style.confirm_sound);
+	this->cancel_sound_ = this->resolve_wave(style.cancel_sound);
+	this->error_sound_ = this->resolve_wave(look.error_sound);
+	this->ready_sound_ = this->resolve_wave(look.ready_sound);
+	this->music_ = this->resolve_effect(look.music.name);
+}
+
+const MainMenuPresentation& MainMenuPage::look() const
+{
+	return this->presentation().main_menu();
 }
 
 int MainMenuPage::player_count() const
@@ -66,27 +73,27 @@ void MainMenuTitle::init()
 		"square_white_4",
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		TITLE_BACKGROUND_COLOUR);
+		this->look().title_background_colour);
 
 	this->title_ = std::make_unique<UiTextDropShadow>(
 		"title",
 		L"Colour Wars",
-		TITLE_FONT,
+		this->look().title_font,
 		Vector2F(200.0f, 300.0f),
 		this->render_resources(),
-		TITLE_TEXT_COLOUR,
-		SHADOW_COLOUR,
-		TITLE_SHADOW_OFFSET);
+		this->look().title_text_colour,
+		this->menu_style().shadow_colour,
+		this->menu_style().title_shadow_offset);
 
 	this->start_ = std::make_unique<UiTextDropShadow>(
 		"start",
 		L"Start",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		Vector2F(250.0f, 700.0f),
 		this->render_resources(),
-		TITLE_START_TEXT_COLOUR,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->look().title_start_text_colour,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -97,7 +104,7 @@ void MainMenuTitle::init()
 	this->text_container_->add_child(this->title_.get());
 	this->text_container_->add_child(this->start_.get());
 
-	this->play_effect(this->music_, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, this->look().music.volume);
 }
 
 #pragma endregion MainMenuTitle
@@ -155,7 +162,7 @@ void MainMenuHome::update(float /*dt*/)
 }
 void MainMenuHome::init()
 {
-	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
+	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
@@ -163,47 +170,47 @@ void MainMenuHome::init()
 		"pixel",
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		HOME_BACKGROUND_COLOUR);
+		this->look().home_background_colour);
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Main Menu",
-		HEADING_FONT,
+		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		HEADING_COLOUR,
-		SHADOW_COLOUR,
-		HEADING_SHADOW_OFFSET);
+		this->menu_style().heading_colour,
+		this->menu_style().shadow_colour,
+		this->menu_style().heading_shadow_offset);
 
 	this->play_ = std::make_unique<UiTextDropShadow>(
 		"play",
 		L"Play",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
-		STANDARD_HIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().highlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->options_ = std::make_unique<UiTextDropShadow>(
 		"options",
 		L"Options",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().unhighlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->exit_ = std::make_unique<UiTextDropShadow>(
 		"exit",
 		L"Exit",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().unhighlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -236,7 +243,7 @@ void MainMenuHome::init()
 			this->data()->application()->quit();
 		});
 
-	this->play_effect(this->music_, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, this->look().music.volume);
 }
 
 #pragma endregion MainMenuHome
@@ -344,7 +351,7 @@ void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
 
 void MainMenuOptions::init()
 {
-	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
+	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
 	Vector2F widget_size = this->widget_size();
 
 	this->resolution_selection_ = this->resolution_manager()->resolution();
@@ -356,81 +363,81 @@ void MainMenuOptions::init()
 		"pixel",
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		OPTIONS_BACKGROUND_COLOUR);
+		this->look().options_background_colour);
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Options",
-		HEADING_FONT,
+		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		HEADING_COLOUR,
-		SHADOW_COLOUR,
-		HEADING_SHADOW_OFFSET);
+		this->menu_style().heading_colour,
+		this->menu_style().shadow_colour,
+		this->menu_style().heading_shadow_offset);
 
 	this->resolution_element_ = std::make_unique<UiTextDropShadow>(
 		"resolution_element",
 		L"Resolution",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
-		STANDARD_HIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().highlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->resolution_value_ = std::make_unique<UiTextDropShadow>(
 		"resolution_value",
 		L"null",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(2, 2),
 		this->render_resources(),
-		OPTIONS_VALUE_COLOUR,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->look().options_value_colour,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->update_resolution_selection_text();
 
 	this->full_screen_ = std::make_unique<UiTextDropShadow>(
 		"full_screen",
 		L"Fullscreen",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().unhighlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->full_screen_value_ = std::make_unique<UiTextDropShadow>(
 		"full_screen_value",
 		L"null",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(2, 3),
 		this->render_resources(),
-		OPTIONS_VALUE_COLOUR,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->look().options_value_colour,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->update_full_screen_selection_text();
 
 	this->apply_ = std::make_unique<UiTextDropShadow>(
 		"apply",
 		L"Apply",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().unhighlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->back_ = std::make_unique<UiTextDropShadow>(
 		"back",
 		L"Back",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().unhighlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -458,7 +465,7 @@ void MainMenuOptions::init()
 				std::make_unique<MainMenuHome>(this->menu_context()));
 		});
 
-	this->play_effect(this->music_, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, this->look().music.volume);
 }
 
 void MainMenuOptions::cycle_resolution(
@@ -564,10 +571,9 @@ void MainMenuModeSelect::update(float /*dt*/)
 }
 void MainMenuModeSelect::init()
 {
-	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
+	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
 
-	//this->set_widget_position(MODE_SELECT_WIDGET_POSITION);
-	this->set_widget_spacing(MODE_SELECT_WIDGET_SPACING);
+	this->set_widget_spacing(this->look().mode_select_spacing);
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
@@ -575,67 +581,67 @@ void MainMenuModeSelect::init()
 		"pixel",
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		PLAY_BACKGROUND_COLOUR);
+		this->look().play_background_colour);
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Mode Select",
-		HEADING_FONT,
+		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		HEADING_COLOUR,
-		SHADOW_COLOUR,
-		HEADING_SHADOW_OFFSET);
+		this->menu_style().heading_colour,
+		this->menu_style().shadow_colour,
+		this->menu_style().heading_shadow_offset);
 
 	this->standard_ = std::make_unique<UiTextDropShadow>(
 		"standard",
 		L"Standard",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
-		STANDARD_HIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().highlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->tdm_ = std::make_unique<UiTextDropShadow>(
 		"tdm",
 		L"Team Deathmatch",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().unhighlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->dm_ = std::make_unique<UiTextDropShadow>(
 		"dm",
 		L"Deathmatch",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().unhighlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->practice_ = std::make_unique<UiTextDropShadow>(
 		"practice",
 		L"Practice",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().unhighlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->back_ = std::make_unique<UiTextDropShadow>(
 		"back",
 		L"Back",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 6),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().unhighlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -671,7 +677,7 @@ void MainMenuModeSelect::init()
 				std::make_unique<MainMenuHome>(this->menu_context()));
 		});
 
-	this->play_effect(this->music_, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, this->look().music.volume);
 }
 
 #pragma endregion MainMenuModeSelect
@@ -719,10 +725,9 @@ void MainMenuPlayerCount::update(float /*dt*/)
 }
 void MainMenuPlayerCount::init()
 {
-	this->focus_.set_style({ STANDARD_HIGHLIGHT, STANDARD_UNHIGHLIGHT });
+	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
 
-	//this->set_widget_position(PLAYER_COUNT_WIDGET_POSITION);
-	this->set_widget_spacing(PLAYER_COUNT_WIDGET_SPACING);
+	this->set_widget_spacing(this->look().player_count_spacing);
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
@@ -730,67 +735,67 @@ void MainMenuPlayerCount::init()
 		"pixel",
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		PLAY_BACKGROUND_COLOUR);
+		this->look().play_background_colour);
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Number of Players",
-		HEADING_FONT,
+		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		HEADING_COLOUR,
-		SHADOW_COLOUR,
-		HEADING_SHADOW_OFFSET);
+		this->menu_style().heading_colour,
+		this->menu_style().shadow_colour,
+		this->menu_style().heading_shadow_offset);
 
 	this->_1_player = std::make_unique<UiTextDropShadow>(
 		"1_player",
 		L"1 Player",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
-		STANDARD_HIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().highlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->_2_players = std::make_unique<UiTextDropShadow>(
 		"2_players",
 		L"2 Players",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().unhighlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->_3_players = std::make_unique<UiTextDropShadow>(
 		"3_players",
 		L"3 Players",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().unhighlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->_4_players = std::make_unique<UiTextDropShadow>(
 		"4_players",
 		L"4 Players",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().unhighlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->back_ = std::make_unique<UiTextDropShadow>(
 		"back",
 		L"Back",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 6),
 		this->render_resources(),
-		STANDARD_UNHIGHLIGHT,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->menu_style().unhighlight,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -831,7 +836,7 @@ void MainMenuPlayerCount::init()
 				std::make_unique<MainMenuModeSelect>(this->menu_context()));
 		});
 
-	this->play_effect(this->music_, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, this->look().music.volume);
 }
 
 void MainMenuPlayerCount::start_team_select(int players, ScreenLayout layout)
@@ -997,7 +1002,7 @@ void MainMenuTeamSelect::update_team_select_visuals()
 			ConfirmationState::confirmed)
 		{
 			selected_widget->set_colour(
-				main_menu_consts::TEAM_SELECT_SELECTED_COLOUR);
+				this->look().team_select.selected);
 		}
 	}
 }
@@ -1013,16 +1018,16 @@ void MainMenuTeamSelect::deselect_and_unconfirm_all_widgets()
 			"team_select_b");
 
 		this->player_widgets_[i]->player_a->set_colour(
-			main_menu_consts::TEAM_SELECT_UNSELECTED_COLOUR);
+			this->look().team_select.unselected);
 		this->player_widgets_[i]->player_center->set_colour(
-			main_menu_consts::TEAM_SELECT_UNSELECTED_COLOUR);
+			this->look().team_select.unselected);
 		this->player_widgets_[i]->player_b->set_colour(
-			main_menu_consts::TEAM_SELECT_UNSELECTED_COLOUR);
+			this->look().team_select.unselected);
 	}
 }
 void MainMenuTeamSelect::init()
 {
-	this->set_widget_spacing(TEAM_SELECT_WIDGET_SPACING);
+	this->set_widget_spacing(this->look().team_select.spacing);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -1036,19 +1041,19 @@ void MainMenuTeamSelect::init()
 		"pixel",
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		PLAY_BACKGROUND_COLOUR);
+		this->look().play_background_colour);
 
 	this->texture_container_->add_child(this->background_.get());
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Team Select",
-		HEADING_FONT,
+		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		HEADING_COLOUR,
-		SHADOW_COLOUR,
-		HEADING_SHADOW_OFFSET);
+		this->menu_style().heading_colour,
+		this->menu_style().shadow_colour,
+		this->menu_style().heading_shadow_offset);
 
 	this->text_container_->add_child(this->heading_.get());
 
@@ -1069,28 +1074,28 @@ void MainMenuTeamSelect::init()
 		widgets->player = std::make_unique<UiTextDropShadow>(
 			name,
 			label_text,
-			ITEM_FONT,
+			this->menu_style().item_font,
 			this->calculate_widget_position(0, i + 2),
 			this->render_resources(),
-			TEAM_SELECT_UNSELECTED_COLOUR,
-			SHADOW_COLOUR,
-			ITEM_SHADOW_OFFSET);
+			this->look().team_select.unselected,
+			this->menu_style().shadow_colour,
+			this->menu_style().item_shadow_offset);
 
 		widgets->player_a = std::make_unique<UiTexture>(
 			name + "_a",
 			"sprite_sheet_1",
 			"team_select_a",
-			RectangleF(this->calculate_widget_position(2, i + 2), TEAM_SELECT_TEAM_WIDGET_SIZE),
+			RectangleF(this->calculate_widget_position(2, i + 2), this->look().team_select.size),
 			this->render_resources());
 
-		auto move = Vector2F(TEAM_SELECT_TEAM_WIDGET_SIZE.x, 0.0f);
+		auto move = Vector2F(this->look().team_select.size.x, 0.0f);
 
 		widgets->player_center = std::make_unique<UiTexture>(
 			name + "_center",
 			"sprite_sheet_1",
 			"team_select_center",
 			RectangleF(widgets->player_a->rectangle().position() + move,
-				TEAM_SELECT_TEAM_WIDGET_SIZE),
+				this->look().team_select.size),
 			this->render_resources());
 
 		widgets->player_b = std::make_unique<UiTexture>(
@@ -1098,7 +1103,7 @@ void MainMenuTeamSelect::init()
 			"sprite_sheet_1",
 			"team_select_b",
 			RectangleF(widgets->player_center->rectangle().position() + move,
-				TEAM_SELECT_TEAM_WIDGET_SIZE),
+				this->look().team_select.size),
 			this->render_resources());
 
 		this->texture_container_->add_child(widgets->player_a.get());
@@ -1110,7 +1115,7 @@ void MainMenuTeamSelect::init()
 		this->player_widgets_.push_back(std::move(widgets));
 	}
 
-	this->play_effect(this->music_, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, this->look().music.volume);
 }
 
 #pragma endregion MainMenuTeamSelect
@@ -1314,9 +1319,9 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 		if (this->select_states_[i].state == ConfirmationState::confirmed)
 		{
 			this->player_widgets_[i]->weapon_icon->
-				set_colour(WEAPON_SELECT_SELECTED_COLOUR);
+				set_colour(this->look().weapon_select.selected);
 			this->player_widgets_[i]->weapon_name->
-				set_colour(WEAPON_SELECT_SELECTED_COLOUR);
+				set_colour(this->look().weapon_select.selected);
 		}
 
 		this->player_widgets_[i]->weapon_description->set_text(
@@ -1328,14 +1333,14 @@ void MainMenuWeaponSelect::unconfirm_all_widgets()
 	for (int i = 0; i < this->player_count(); i++)
 	{
 		this->player_widgets_[i]->weapon_icon->set_colour(
-			WEAPON_SELECT_UNSELECTED_COLOUR);
+			this->look().weapon_select.unselected);
 		this->player_widgets_[i]->weapon_name->set_colour(
-			WEAPON_SELECT_UNSELECTED_COLOUR);
+			this->look().weapon_select.unselected);
 	}
 }
 void MainMenuWeaponSelect::init()
 {
-	this->set_widget_spacing(WEAPON_SELECT_WIDGET_SPACING);
+	this->set_widget_spacing(this->look().weapon_select.spacing);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -1349,19 +1354,19 @@ void MainMenuWeaponSelect::init()
 		"pixel",
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		PLAY_BACKGROUND_COLOUR);
+		this->look().play_background_colour);
 
 	this->texture_container_->add_child(this->background_.get());
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Weapon Select",
-		HEADING_FONT,
+		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		HEADING_COLOUR,
-		SHADOW_COLOUR,
-		HEADING_SHADOW_OFFSET);
+		this->menu_style().heading_colour,
+		this->menu_style().shadow_colour,
+		this->menu_style().heading_shadow_offset);
 
 	this->text_container_->add_child(this->heading_.get());
 
@@ -1381,40 +1386,40 @@ void MainMenuWeaponSelect::init()
 		widgets->player = std::make_unique<UiTextDropShadow>(
 			name,
 			label_text,
-			ITEM_FONT,
+			this->menu_style().item_font,
 			this->calculate_widget_position(0, i + 2),
 			this->render_resources(),
-			WEAPON_SELECT_UNSELECTED_COLOUR);
+			this->look().weapon_select.unselected);
 
 		widgets->weapon_icon = std::make_unique<UiTexture>(
 			name + "_wep_icon",
 			"sprite_sheet_1",
 			"sprayer",
-			RectangleF(this->calculate_widget_position(2, i + 2), WEAPON_SELECT_WEAPON_WIDGET_SIZE),
+			RectangleF(this->calculate_widget_position(2, i + 2), this->look().weapon_select.size),
 			this->render_resources(),
-			PLAY_BACKGROUND_COLOUR);
+			this->look().play_background_colour);
 
 		widgets->weapon_name = std::make_unique<UiTextDropShadow>(
 			name + "_wep_name",
 			L"Sprayer",
-			DETAIL_FONT,
+			this->menu_style().detail_font,
 			widgets->weapon_icon->rectangle().position() +
-				Vector2F(0.0f, WEAPON_SELECT_WEAPON_WIDGET_SIZE.y),
+				Vector2F(0.0f, this->look().weapon_select.size.y),
 			this->render_resources(),
-			WEAPON_SELECT_UNSELECTED_COLOUR,
-			SHADOW_COLOUR,
-			DETAIL_SHADOW_OFFSET);
+			this->look().weapon_select.unselected,
+			this->menu_style().shadow_colour,
+			this->menu_style().detail_shadow_offset);
 
 		widgets->weapon_description = std::make_unique<UiTextDropShadow>(
 			name + "_wep_desc",
 			this->weapon_description(WeaponType::sprayer),
-			WEAPON_DESCRIPTION_FONT,
+			this->look().weapon_description_font,
 			widgets->weapon_icon->rectangle().position() +
-				Vector2F(WEAPON_DESC_X_OFFSET, 0.0f),
+				Vector2F(this->look().weapon_description_x_offset, 0.0f),
 			this->render_resources(),
-			WEAPON_DESCRIPTION_FONT_COLOUR,
-			SHADOW_COLOUR,
-			WEAPON_DESCRIPTION_SHADOW_OFFSET);
+			this->look().weapon_description_colour,
+			this->menu_style().shadow_colour,
+			this->look().weapon_description_shadow_offset);
 
 		this->texture_container_->add_child(widgets->weapon_icon.get());
 		this->text_container_->add_child(widgets->weapon_name.get());
@@ -1423,27 +1428,21 @@ void MainMenuWeaponSelect::init()
 
 		this->player_widgets_.push_back(std::move(widgets));
 	}
-	this->play_effect(this->music_, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, this->look().music.volume);
 }
-std::wstring MainMenuWeaponSelect::weapon_description(WeaponType type)
+std::wstring MainMenuWeaponSelect::weapon_description(WeaponType type) const
 {
-	switch (type)
+	// A lookup, where this was a six-branch switch ending in a default that
+	// returned the literal L"ERROR" - a string a player could see on the
+	// weapon-select screen if the enum ever grew a seventh pickable weapon.
+	// An untuned weapon reads as empty instead.
+	const size_t index = static_cast<size_t>(type);
+	const auto& descriptions = this->look().weapon_descriptions;
+	if (index >= descriptions.size())
 	{
-	case WeaponType::sprayer:
-		return SPRAYER_DESC;
-	case WeaponType::sniper:
-		return SNIPER_DESC;
-	case WeaponType::roller:
-		return ROLLER_DESC;
-	case WeaponType::mister:
-		return MISTER_DESC;
-	case WeaponType::bucket:
-		return BUCKET_DESC;
-	case WeaponType::random_primary:
-		return RANDOM_DESC;
-	default:
-		return L"ERROR";
+		return std::wstring();
 	}
+	return descriptions[index];
 }
 
 #pragma endregion MainMenuWeaponSelect
@@ -1571,9 +1570,9 @@ void MainMenuStageSelect::update_stage_select_visuals()
 void MainMenuStageSelect::unconfirm_all_widgets()
 {
 	this->stage_icon_->set_colour(
-		main_menu_consts::STAGE_SELECT_UNSELECTED_COLOUR);
+		this->look().stage_select.unselected);
 	this->stage_name_->set_colour(
-		main_menu_consts::STAGE_SELECT_UNSELECTED_COLOUR);
+		this->look().stage_select.unselected);
 	this->ready_->set_hidden(true);
 }
 int MainMenuStageSelect::slot_of(const std::string& stage_name) const
@@ -1600,7 +1599,7 @@ void MainMenuStageSelect::init()
 {
 	this->select_state_.slot = this->slot_of(this->level_settings()->stage());
 
-	this->set_widget_spacing(STAGE_SELECT_WIDGET_SPACING);
+	this->set_widget_spacing(this->look().stage_select.spacing);
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
@@ -1608,46 +1607,46 @@ void MainMenuStageSelect::init()
 		"pixel",
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		PLAY_BACKGROUND_COLOUR);
+		this->look().play_background_colour);
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		L"Stage Select",
-		HEADING_FONT,
+		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		HEADING_COLOUR,
-		SHADOW_COLOUR,
-		HEADING_SHADOW_OFFSET);
+		this->menu_style().heading_colour,
+		this->menu_style().shadow_colour,
+		this->menu_style().heading_shadow_offset);
 
 
 	this->stage_icon_ = std::make_unique<UiTexture>(
 		"stage_icon",
 		"sprite_sheet_1",
 		"stage_test_1",
-		RectangleF(this->calculate_widget_position(0, 1), STAGE_SELECT_ICON_SIZE),
+		RectangleF(this->calculate_widget_position(0, 1), this->look().stage_select.size),
 		this->render_resources(),
-		PLAY_BACKGROUND_COLOUR);
+		this->look().play_background_colour);
 
 	this->stage_name_ = std::make_unique<UiTextDropShadow>(
 		"stage_name",
 		L"Test 1",
-		ITEM_FONT,
+		this->menu_style().item_font,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
-		STAGE_SELECT_UNSELECTED_COLOUR,
-		SHADOW_COLOUR,
-		ITEM_SHADOW_OFFSET);
+		this->look().stage_select.unselected,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
 
 	this->ready_ = std::make_unique<UiTextDropShadow>(
 		"ready",
 		L"READY?",
-		ANNOUNCEMENT_FONT,
+		this->look().announcement_font,
 		this->background_->rectangle().center() - Vector2F(400.0f, 100.0f),
 		this->render_resources(),
-		STAGE_SELECT_SELECTED_COLOUR,
-		SHADOW_COLOUR,
-		HEADING_SHADOW_OFFSET,
+		this->look().stage_select.selected,
+		this->menu_style().shadow_colour,
+		this->menu_style().heading_shadow_offset,
 		true);
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
@@ -1659,7 +1658,7 @@ void MainMenuStageSelect::init()
 	this->text_container_->add_child(this->stage_name_.get());
 	this->text_container_->add_child(this->ready_.get());
 
-	this->play_effect(this->music_, true, MUSIC_VOLUME);
+	this->play_effect(this->music_, true, this->look().music.volume);
 }
 void MainMenuStageSelect::cycle_stages(artattack::Direction direction)
 {

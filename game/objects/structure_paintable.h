@@ -7,13 +7,8 @@
 #include "game/objects/team_colour.h"
 #include "engine/audio/sound_bank.h"
 #include "engine/render/colour.h"
+#include "game/tuning.h"
 
-namespace structure_paintable_consts
-{
-	const std::string SOUND_BANK_NAME = "sound_bank_1";
-	const std::string SOUND_NAME = "WaterSplashing";
-	constexpr float SOUND_VOLUME = 0.1f;
-}
 
 // Which faces of a paintable structure generate paint tiles.
 //
@@ -40,6 +35,7 @@ public:
 		std::unique_ptr<mattmath::Shape> collision_shape,
 		artattack::RenderResources* render_resources,
 		const artattack::AudioResources* audio_resources,
+		const PaintTuning* paint,
 		CollisionObjectType collision_type,
 		const TeamColour& team_colours,
 		const PaintableFaces& faces,
@@ -63,6 +59,8 @@ private:
 	// LevelObjectBuilder::build_collision_object, so it dangled for the whole
 	// life of every paintable structure in the level.
 	PaintableFaces faces_ = PaintableFaces();
+	// Borrowed, and outlives the level: main() owns it.
+	const PaintTuning* paint_ = nullptr;
 	std::vector<PaintTile> generate_paint_tiles() const;
 	artattack::SoundBank* sound_bank_ = nullptr;
 

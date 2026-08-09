@@ -17,7 +17,24 @@
         }
     },
 
-    "player": {
+    "paint": {
+    "_comment": [
+      "The granularity coverage is scored at, and how deep paint sits on a",
+      "face. These were paint_tile_consts and structure_paintable_consts."
+    ],
+    "size": { "x": 4.0, "y": 4.0 },
+    "thickness": 12.0,
+    "sheet": "sprite_sheet_1",
+    "frame": "pixel",
+    "splash": {
+      "sheet": "sprite_sheet_1",
+      "animation": "splash_1"
+    },
+    "sound_bank": "sound_bank_1",
+    "splash_sound": { "name": "WaterSplashing", "volume": 0.1 }
+  },
+
+  "player": {
         "size": { "x": 52.0, "y": 120.0 },
         "max_velocity": { "x": 800.0, "y": 1900.0 },
         "x_initial_velocity": 100.0,

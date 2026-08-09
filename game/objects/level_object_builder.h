@@ -11,8 +11,12 @@
 class LevelObjectBuilder
 {
 public:
+	// The paint tuning is borrowed and outlives every level: main() owns it.
+	// A paintable structure divides itself into tiles at construction, and
+	// how finely is a balance number rather than a property of the level file.
 	LevelObjectBuilder(artattack::RenderResources* render_resources,
-		const artattack::AudioResources* audio_resources);
+		const artattack::AudioResources* audio_resources,
+		const PaintTuning* paint);
 
 	// By value. The outer unique_ptr on all three of these was a heap
 	// allocation around a type that already owns its storage and already moves
@@ -30,6 +34,7 @@ public:
 		build_viewport_dividers(const artattack::ViewportManager* viewport_manager) const;
 
 private:
+	const PaintTuning* paint_ = nullptr;
 	artattack::RenderResources* render_resources_ = nullptr;
 	const artattack::AudioResources* audio_resources_ = nullptr;
 

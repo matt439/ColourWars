@@ -3,20 +3,25 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace results_menu_consts;
 using namespace menu_consts;
 using namespace artattack;
 
 ResultsMenuPage::ResultsMenuPage(MenuContext* context,
 	const LevelEndInfo& end_info) :
 	MenuPage(context),
-	SoundBankObject(results_menu_consts::SOUND_BANK,
+	SoundBankObject(this->menu_style().sound_bank,
 		this->audio_resources()),
 	level_end_info_(end_info)
 {
-	this->confirm_sound_ = this->resolve_wave(CONFIRM_SOUND);
-	this->winner_sound_ = this->resolve_wave(WINNER_SOUND);
-	this->fill_sound_ = this->resolve_effect(FILL_SOUND);
+	this->confirm_sound_ =
+		this->resolve_wave(this->menu_style().confirm_sound);
+	this->winner_sound_ = this->resolve_wave(this->look().winner_sound.name);
+	this->fill_sound_ = this->resolve_effect(this->look().fill_sound.name);
+}
+
+const ResultsMenuPresentation& ResultsMenuPage::look() const
+{
+	return this->presentation().results_menu();
 }
 
 LevelEndInfo ResultsMenuPage::level_end_info() const
@@ -33,30 +38,32 @@ ResultsMenuInitial::ResultsMenuInitial(MenuContext* context,
 
 void ResultsMenuInitial::update(float dt)
 {
+	const ResultsMenuPresentation& look = this->look();
+
 	std::vector<ProcessedMenuInput> menu_inputs = this->menu_inputs();
 	
 
-	if (this->delay_timer_ < RESULTS_MENU_TEAM_FILL_DELAY)
+	if (this->delay_timer_ < look.team_fill_delay)
 	{
 		this->delay_timer_ += dt;
 	}
 	else
 	{		
 		this->update_fill_box();
-		if (this->fill_timer_ >= RESULTS_MENU_TEAM_FILL_TIME)
+		if (this->fill_timer_ >= look.team_fill_time)
 		{
 			// only play winner sound once
 			if (!this->winner_sound_played_)
 			{
 				this->winner_sound_played_ = true;
 				this->stop_effect(this->fill_sound_, true);
-				this->play_wave(this->winner_sound_, WINNER_VOLUME);
+				this->play_wave(this->winner_sound_, look.winner_sound.volume);
 			}
 			this->team_a_percentage_->set_hidden(false);
 			this->team_b_percentage_->set_hidden(false);
 			this->winner_->set_hidden(false);
 			
-			if (this->show_results_timer_ >= RESULTS_MENU_SHOW_RESULTS_DELAY)
+			if (this->show_results_timer_ >= look.show_results_delay)
 			{
 				this->proceed_->set_hidden(false);
 				int continue_input = this->check_for_continue_input(menu_inputs);
@@ -80,38 +87,41 @@ void ResultsMenuInitial::update(float dt)
 
 void ResultsMenuInitial::init()
 {
+	const MenuStyle& style = this->menu_style();
+	const ResultsMenuPresentation& look = this->look();
+
 	const LevelEndInfo end_info = this->level_end_info();
 
 	this->box_ = std::make_unique<UiTexture>(
 		"box",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, RESULTS_MENU_BOX_SIZE),
+		RectangleF(Vector2F::ZERO, style.box_size),
 		this->render_resources(),
-		RESULTS_MENU_BOX_COLOUR);
+		look.box_colour);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"title",
 		L"Results",
-		HEADING_FONT,
-		HEADING_POSITION,
+		style.heading_font,
+		look.heading_position,
 		this->render_resources(),
-		RESULTS_MENU_HEADING_TEXT_COLOUR,
-		SHADOW_COLOUR,
-		HEADING_SHADOW_OFFSET);
+		look.heading_colour,
+		style.shadow_colour,
+		style.heading_shadow_offset);
 
 	this->fill_box_ = std::make_unique<UiTexture>(
 		"fill_box",
 		"sprite_sheet_1",
 		"results_menu_fill_box",
-		RectangleF(Vector2F::ZERO, RESULTS_MENU_FILL_BOX_SIZE),
+		RectangleF(Vector2F::ZERO, look.fill_box_size),
 		this->render_resources(),
-		RESULTS_MENU_BOX_COLOUR);
+		look.box_colour);
 	auto fill_box_position = Vector2F(
 		this->calculate_center_position(
 		this->fill_box_->rectangle().width, DESIGN_RESOLUTION.x),
-		this->box_->rectangle().position().y + RESULTS_MENU_FILL_BOX_Y_OFFSET);
+		this->box_->rectangle().position().y + look.fill_box_y_offset);
 	this->fill_box_->set_position(fill_box_position);
 
 	this->team_a_fill_ = std::make_unique<UiTexture>(
@@ -119,67 +129,67 @@ void ResultsMenuInitial::init()
 		"sprite_sheet_1",
 		"results_menu_team_a_fill",
 		RectangleF(Vector2F::ZERO,
-			Vector2F(0.0f, RESULTS_MENU_TEAM_FILL_SIZE.y)),
+			Vector2F(0.0f, look.team_fill_size.y)),
 		this->render_resources(),
 		this->level_end_info().team_colours.team_a);
 	this->team_a_fill_->set_position(this->fill_box_->rectangle().position() +
-		RESULTS_MENU_TEAM_FILL_BORDER);
+		look.team_fill_border);
 
 	this->team_b_fill_ = std::make_unique<UiTexture>(
 		"team_b_fill",
 		"sprite_sheet_1",
 		"results_menu_team_b_fill",
 		RectangleF(Vector2F::ZERO,
-			Vector2F(0.0f, RESULTS_MENU_TEAM_FILL_SIZE.y)),
+			Vector2F(0.0f, look.team_fill_size.y)),
 		this->render_resources(),
 		this->level_end_info().team_colours.team_b);
 
 	this->team_a_percentage_ = std::make_unique<UiTextDropShadow>(
 		"team_a_percentage",
 		end_info.team_a_percentage_string(),
-		DETAIL_FONT,
+		style.detail_font,
 		this->team_a_fill_->rectangle().position(),
 		this->render_resources(),
-		PERCENTAGE_TEXT_COLOUR,
-		SHADOW_COLOUR,
-		DETAIL_SHADOW_OFFSET,
+		look.percentage_colour,
+		style.shadow_colour,
+		style.detail_shadow_offset,
 		true);
 
 	this->team_b_percentage_ = std::make_unique<UiTextDropShadow>(
 		"team_b_percentage",
 		end_info.team_b_percentage_string(),
-		DETAIL_FONT,
+		style.detail_font,
 		Vector2F::ZERO,
 		this->render_resources(),
-		PERCENTAGE_TEXT_COLOUR,
-		SHADOW_COLOUR,
-		DETAIL_SHADOW_OFFSET,
+		look.percentage_colour,
+		style.shadow_colour,
+		style.detail_shadow_offset,
 		true);
 	this->team_b_percentage_->set_position(Vector2F(
 		this->calculate_center_position(this->widget_size().x, DESIGN_RESOLUTION.x) +
-		TEAM_B_PERCENTAGE_X_OFFSET,
+		look.team_b_percentage_x_offset,
 		this->calculate_team_b_fill_top_right_position().y));
 
 	this->winner_ = std::make_unique<UiTextDropShadow>(
 		"winner",
 		end_info.winning_team_string(),
-		ITEM_FONT,
-		WINNER_POSITION,
+		style.item_font,
+		look.winner_position,
 		this->render_resources(),
-		RESULTS_MENU_HEADING_TEXT_COLOUR,
-		SHADOW_COLOUR,
-		DETAIL_SHADOW_OFFSET,
+		look.heading_colour,
+		style.shadow_colour,
+		style.detail_shadow_offset,
 		true);
 
 	this->proceed_ = std::make_unique<UiTextDropShadow>(
 		"proceed",
 		L"Press A to proceed",
-		DETAIL_FONT,
-		PROCEED_POSITION,
+		style.detail_font,
+		look.proceed_position,
 		this->render_resources(),
-		RESULTS_MENU_HEADING_TEXT_COLOUR,
-		SHADOW_COLOUR,
-		DETAIL_SHADOW_OFFSET,
+		look.heading_colour,
+		style.shadow_colour,
+		style.detail_shadow_offset,
 		true);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
@@ -197,7 +207,7 @@ void ResultsMenuInitial::init()
 	this->text_container_->add_child(this->winner_.get());
 	this->text_container_->add_child(this->proceed_.get());
 
-	this->play_effect(this->fill_sound_, true, FILL_VOLUME);
+	this->play_effect(this->fill_sound_, true, look.fill_sound.volume);
 }
 
 void ResultsMenuInitial::draw(Renderer& renderer) const
@@ -219,14 +229,18 @@ void ResultsMenuInitial::update_fill_box() const
 
 float ResultsMenuInitial::fill_time_ratio() const
 {
-	return this->fill_timer_ / RESULTS_MENU_TEAM_FILL_TIME;
+	const ResultsMenuPresentation& look = this->look();
+
+	return this->fill_timer_ / look.team_fill_time;
 }
 
 void ResultsMenuInitial::update_team_a_fill() const
 {
+	const ResultsMenuPresentation& look = this->look();
+
 	//float score = this->team_percentage(PlayerTeam::a);
 	float score = this->level_end_info().team_a_ratio();
-	float max_width = RESULTS_MENU_TEAM_FILL_SIZE.x * score;
+	float max_width = look.team_fill_size.x * score;
 	float fill = this->fill_time_ratio();
 	if (fill > 1.0f)
 	{
@@ -238,8 +252,10 @@ void ResultsMenuInitial::update_team_a_fill() const
 
 void ResultsMenuInitial::update_team_b_fill() const
 {
+	const ResultsMenuPresentation& look = this->look();
+
 	float score = this->level_end_info().team_b_ratio();
-	float max_width = RESULTS_MENU_TEAM_FILL_SIZE.x * score;
+	float max_width = look.team_fill_size.x * score;
 	float fill = this->fill_time_ratio();
 	if (fill > 1.0f)
 	{
@@ -253,10 +269,12 @@ void ResultsMenuInitial::update_team_b_fill() const
 
 Vector2F ResultsMenuInitial::calculate_team_b_fill_top_right_position() const
 {
+	const ResultsMenuPresentation& look = this->look();
+
 	Vector2F team_b_top_right_position = this->fill_box_->rectangle().position() +
 		Vector2F(this->fill_box_->rectangle().width, 0.0f) +
-			Vector2F(-RESULTS_MENU_TEAM_FILL_BORDER.x,
-				RESULTS_MENU_TEAM_FILL_BORDER.y);
+			Vector2F(-look.team_fill_border.x,
+				look.team_fill_border.y);
 	return team_b_top_right_position;
 }
 

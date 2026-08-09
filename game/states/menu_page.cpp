@@ -66,6 +66,14 @@ GameData* MenuPage::data() const
 {
 	return this->context_->data();
 }
+const Presentation& MenuPage::presentation() const
+{
+	return *this->context_->data()->presentation();
+}
+const MenuStyle& MenuPage::menu_style() const
+{
+	return this->context_->data()->presentation()->menu();
+}
 MenuLevelSettings* MenuPage::level_settings() const
 {
 	return this->context_->level_settings();
