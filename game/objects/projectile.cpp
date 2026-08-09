@@ -11,16 +11,17 @@ Projectile::Projectile(const Vector2F& velocity,
     const Colour& team_colour,
     projectile_type type,
     RenderResources* render_resources,
-    const ProjectileDetails& details,
+    const ProjectileTuning* tuning,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
     SpriteFlip flip,
     float layer_depth) :
     MovingObject(velocity, rotation),
-    AnimationObject(details.sheet_name, details.animation_strip_name,
+    AnimationObject(tuning->details.sheet_name,
+                    tuning->details.animation_strip_name,
                     render_resources, color, rotation, origin, flip, layer_depth),
-    details_(details),
+    tuning_(tuning),
     player_num_(player_num),
     team_colour_(team_colour),
     type_(type),
@@ -36,8 +37,7 @@ DiffusingProjectile::DiffusingProjectile(
     const Colour& team_colour,
     projectile_type type,
     RenderResources* render_resources,
-    const ProjectileDetails& details,
-    const DiffusionDetails& diffusion_details,
+    const ProjectileTuning* tuning,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
@@ -45,11 +45,14 @@ DiffusingProjectile::DiffusingProjectile(
     float layer_depth) :
     Projectile(velocity, team, player_num,
         team_colour, type,
-        render_resources, details, color, rotation,
-        origin, flip, layer_depth),
-    diffusion_details_(diffusion_details)
+        render_resources, tuning, color, rotation,
+        origin, flip, layer_depth)
 {
 
+}
+const DiffusionDetails& DiffusingProjectile::diffusion_details() const
+{
+    return this->tuning().diffusion;
 }
 const Vector2F& DiffusingProjectile::base_size() const
 {
@@ -59,7 +62,7 @@ const Vector2F& DiffusingProjectile::base_size() const
 Vector2F DiffusingProjectile::calculate_diffusion_size() const
 {
     const float time = this->timer();
-    const DiffusionDetails& details = this->diffusion_details_;
+    const DiffusionDetails& details = this->diffusion_details();
     const Vector2F& base_size = this->base_size();
     Vector2F multiple;
     if (time < details.start_time)
@@ -186,15 +189,17 @@ void Projectile::alter_timer(float time)
 Vector2F Projectile::update_movement(float gravity, float wind_resistance, float dt)
 {
 
+    const Vector2F& max_velocity = this->max_velocity();
+
     //gravity
     MovingObject::alter_velocity_y(gravity * dt);
-    if (MovingObject::velocity_y() > projectile_consts::MAX_VELOCITY.y)
+    if (MovingObject::velocity_y() > max_velocity.y)
 	{
-        MovingObject::set_velocity_y(projectile_consts::MAX_VELOCITY.y);
+        MovingObject::set_velocity_y(max_velocity.y);
 	}
-	else if (MovingObject::velocity_y() < -projectile_consts::MAX_VELOCITY.y)
+	else if (MovingObject::velocity_y() < -max_velocity.y)
 	{
-        MovingObject::set_velocity_y(-projectile_consts::MAX_VELOCITY.y);
+        MovingObject::set_velocity_y(-max_velocity.y);
 	}
 
     //wind resistance
@@ -215,13 +220,13 @@ Vector2F Projectile::update_movement(float gravity, float wind_resistance, float
 	{
         MovingObject::set_velocity_x(0.0f);
 	}
-    if (MovingObject::velocity_x() > projectile_consts::MAX_VELOCITY.x)
+    if (MovingObject::velocity_x() > max_velocity.x)
     {
-        MovingObject::set_velocity_x(projectile_consts::MAX_VELOCITY.x);
+        MovingObject::set_velocity_x(max_velocity.x);
     }
-    else if (MovingObject::velocity_x() < -projectile_consts::MAX_VELOCITY.x)
+    else if (MovingObject::velocity_x() < -max_velocity.x)
     {
-        MovingObject::set_velocity_x(-projectile_consts::MAX_VELOCITY.x);
+        MovingObject::set_velocity_x(-max_velocity.x);
     }
 
     const Vector2F displacement = MovingObject::velocity() * dt;
@@ -253,7 +258,17 @@ float Projectile::player_damage() const
 	return this->details().player_damage;
 }
 
+const ProjectileTuning& Projectile::tuning() const
+{
+	return *this->tuning_;
+}
+
 const ProjectileDetails& Projectile::details() const
 {
-	return this->details_;
+	return this->tuning_->details;
+}
+
+const Vector2F& Projectile::max_velocity() const
+{
+	return this->tuning_->max_velocity;
 }

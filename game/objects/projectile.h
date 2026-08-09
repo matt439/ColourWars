@@ -1,34 +1,34 @@
 #pragma once
 
 #include "game/objects/player_team.h"
-#include "game/objects/projectile_consts.h"
+#include "game/objects/projectile_type.h"
+#include "game/tuning.h"
 #include "engine/render/animation_object.h"
 #include "engine/core/moving_object.h"
 #include "engine/collision/collision_object.h"
 #include "game/objects/collision_object_type.h"
 #include "engine/render/colour.h"
 
-enum projectile_type
-{
-	SPRAY,
-	JET,
-	ROLLING,
-	MIST,
-	BALL
-};
-
 class Projectile : public artattack::MovingObject,
 	public artattack::AnimationObject, public artattack::CollisionObject
 {
 public:
-	Projectile() = default;
+	// `tuning` is borrowed and must outlive this projectile. It points into
+	// the GameTuning main() owns, which outlives the Application and therefore
+	// every level, so this holds for every projectile that can exist.
+	//
+	// Borrowed rather than copied because a sprayer spawns one of these per
+	// frame per firing player, and ProjectileDetails carries two std::strings:
+	// copying the record was two heap allocations on the spawn path for a
+	// value that is identical for every projectile of the type and never
+	// changes after startup (T8).
 	Projectile(const mattmath::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
 		const artattack::Colour& team_colour,
 		projectile_type type,
 		artattack::RenderResources* render_resources,
-		const ProjectileDetails& details,
+		const ProjectileTuning* tuning,
 		const artattack::Colour& color = artattack::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
@@ -52,7 +52,14 @@ public:
 	mattmath::Vector2F col_rect_size() const;
 	float player_damage() const;
 protected:
+	// This projectile kind's whole record, borrowed. Never null.
+	const ProjectileTuning& tuning() const;
+
 	const ProjectileDetails& details() const;
+
+	// The clamp every projectile's integrator applies. One number for all five
+	// kinds, which is why it is not in `details`.
+	const mattmath::Vector2F& max_velocity() const;
 
 	PlayerTeam team() const;
 
@@ -72,7 +79,10 @@ protected:
 	virtual mattmath::Vector2F update_movement(float gravity,
 		float wind_resistance, float dt);
 private:
-	ProjectileDetails details_ = ProjectileDetails();
+	// Never null: every constructor takes one and the builder reads it out of
+	// GameTuning, which throws rather than answering with a missing record.
+	const ProjectileTuning* tuning_ = nullptr;
+
 	float timer_ = 0.0f;
 	int player_num_ = -1;
 	artattack::Colour team_colour_ = artattack::Colour::gray;
@@ -92,8 +102,7 @@ public:
 		const artattack::Colour& team_colour,
 		projectile_type type,
 		artattack::RenderResources* render_resources,
-		const ProjectileDetails& details,
-		const DiffusionDetails& diffusion_details,
+		const ProjectileTuning* tuning,
 		const artattack::Colour& color = artattack::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
@@ -110,6 +119,8 @@ public:
 protected:
 	mattmath::Vector2F calculate_diffusion_size() const;
 private:
-	DiffusionDetails diffusion_details_ = DiffusionDetails();
+	// Read off the same borrowed record the base class holds, rather than
+	// copied beside it.
+	const DiffusionDetails& diffusion_details() const;
 	const mattmath::Vector2F& base_size() const;
 };

@@ -3,7 +3,7 @@
 #include "game/objects/player_team.h"
 #include "game/objects/weapon_type.h"
 #include "game/objects/weapon_details.h"
-#include "game/objects/weapon_consts.h"
+#include "game/tuning.h"
 #include "game/objects/player_input_data.h"
 #include "engine/render/colour.h"
 #include "engine/render/texture_object.h"
@@ -14,7 +14,11 @@
 class Weapon : public artattack::TextureObject
 {
 public:
-	Weapon(const WeaponDetails& details,
+	// `tuning` is borrowed and outlives every weapon: it is the GameTuning
+	// main() owns. A weapon finds its own record in it by `type`, which is why
+	// the five subclasses no longer each name a constant - two of them had
+	// nothing else in them and are gone.
+	Weapon(const GameTuning* tuning,
 		PlayerTeam team,
 		int player_num,
 		const artattack::Colour& team_colour,
@@ -60,7 +64,11 @@ public:
 
 protected:
 	artattack::SoundBank* sound_bank_ = nullptr;
-	WeaponDetails details_ = weapon_consts::DETAILS_DEFAULT;
+
+	// Both borrowed, both never null: the second is the slot in the first this
+	// weapon's type resolved to, kept so the lookup happens once.
+	const GameTuning* tuning_ = nullptr;
+	const WeaponTuning* weapon_tuning_ = nullptr;
 
 	// This weapon's looping SoundEffectInstance, resolved once at construction.
 	// Left unresolved for weapons that fire a one-shot wave instead - which is
@@ -149,8 +157,8 @@ protected:
 
 private:
 	static artattack::SoundBank::EffectHandle resolve_loop_sound(
-		const artattack::SoundBank& sound_bank, WeaponType type, PlayerTeam team,
-		int player_num);
+		const artattack::SoundBank& sound_bank,
+		const WeaponLoopSounds& loop_sounds, PlayerTeam team, int player_num);
 
 	std::unique_ptr<ProjectileBuilder> proj_builder_ = nullptr;
 	artattack::RenderResources* render_resources_ = nullptr;
@@ -160,7 +168,9 @@ private:
 	// name resolved on the draw path, however rarely that path is taken.
 	artattack::SpriteSheet::frame_handle nozzle_frame_;
 
-	float ammo_ = weapon_consts::STARTING_AMMO;
+	// Set from the tuning file in the constructor body, not here: an
+	// initialiser cannot reach a member that is itself being initialised.
+	float ammo_ = 0.0f;
 	float shoot_timer_ = 0.0f;
 	float rotation_ = 0.0f;
 	bool invert_x_ = false;
@@ -182,8 +192,7 @@ private:
 class RelativeVelocityWeapon : public Weapon
 {
 public:
-	RelativeVelocityWeapon(const WeaponDetails& details,
-		RelativeWeaponDetails rel_details,
+	RelativeVelocityWeapon(const GameTuning* tuning,
 		PlayerTeam team,
 		int player_num,
 		const artattack::Colour& team_colour,
@@ -217,5 +226,8 @@ protected:
 		const mattmath::Vector2F& player_velocity) const;
 
 private:
-	RelativeWeaponDetails rel_details_ = weapon_consts::DETAILS_RELATIVE_DEFAULT;
+	// Read off the same borrowed record the base class holds. It used to be a
+	// second constructor parameter, so a weapon could be handed one weapon's
+	// details and another's velocity mode.
+	const RelativeWeaponDetails& rel_details() const;
 };

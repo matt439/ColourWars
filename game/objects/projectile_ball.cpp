@@ -3,7 +3,6 @@
 
 using namespace mattmath;
 using namespace DirectX;
-using namespace projectile_consts;
 using namespace artattack;
 
 ProjectileBall::ProjectileBall(const RectangleF& rectangle,
@@ -12,13 +11,14 @@ ProjectileBall::ProjectileBall(const RectangleF& rectangle,
 	int player_num,
 	const Colour& team_colour,
 	RenderResources* render_resources,
+	const ProjectileTuning* tuning,
 	float rotation,
 	const Vector2F& origin,
 	SpriteFlip flip,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
 		BALL, render_resources,
-		DETAILS_BALL,
+		tuning,
 		team_colour, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)
 {

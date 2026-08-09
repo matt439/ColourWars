@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/collision/collision_layer.h"
+#include "game/objects/projectile_type.h"
 
 // The game's collision vocabulary, in one file: what a thing is, which group
 // the engine files it under, and which groups it answers to.
@@ -95,6 +96,17 @@ inline bool is_projectile(CollisionObjectType type)
 		type == CollisionObjectType::projectile_mist_team_a ||
 		type == CollisionObjectType::projectile_mist_team_b;
 }
+
+// Which of the five kinds of paint this is, with the firing team dropped.
+//
+// The pair of enumerators per kind exists so the engine can filter a team's
+// paint from the other team's by layer. What a hit *does* is the same either
+// way, so the responder wants the kind and not the pair - and reading the
+// number off the projectile's tuning record needs exactly this.
+//
+// Throws for anything is_projectile() rejects, which is the same contract the
+// if-chain in Player::on_projectile_contact had at its end.
+projectile_type to_projectile_type(CollisionObjectType type);
 
 inline bool is_structure(CollisionObjectType type)
 {

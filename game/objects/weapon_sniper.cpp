@@ -3,11 +3,11 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace weapon_consts;
 using namespace artattack;
 
 
-WeaponSniper::WeaponSniper(PlayerTeam team,
+WeaponSniper::WeaponSniper(const GameTuning* tuning,
+    PlayerTeam team,
     int player_num,
     const Colour& team_colour,
     WeaponType type,
@@ -19,7 +19,7 @@ WeaponSniper::WeaponSniper(PlayerTeam team,
     const Vector2F& origin,
     SpriteFlip flip,
     float layer_depth) :
-    Weapon(DETAILS_SNIPER,
+    Weapon(tuning,
         team, player_num, team_colour, type, player_center,
         render_resources, audio_resources,        color, rotation, origin, flip, layer_depth)
 {
@@ -30,6 +30,6 @@ void WeaponSniper::handle_shoot_sound(bool shooting_this_update, bool /*holding_
     if (shooting_this_update)
     {
         this->sound_bank_->play_wave(this->shoot_sound_,
-            this->details_.shoot_sound_volume);
+            this->details().shoot_sound_volume);
     }
 }

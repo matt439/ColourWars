@@ -6,7 +6,8 @@
 class WeaponBucket final : public RelativeVelocityWeapon
 {
 public:
-	WeaponBucket(PlayerTeam team,
+	WeaponBucket(const GameTuning* tuning,
+		PlayerTeam team,
 		int player_num,
 		const artattack::Colour& team_colour,
 		WeaponType type,

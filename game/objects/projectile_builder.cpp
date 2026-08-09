@@ -3,8 +3,12 @@
 
 using namespace mattmath;
 using namespace DirectX;
-using namespace projectile_consts;
 using namespace artattack;
+
+ProjectileBuilder::ProjectileBuilder(const GameTuning* tuning) :
+	tuning_(tuning)
+{
+}
 
 std::vector<std::unique_ptr<artattack::CollisionObject>>
 	ProjectileBuilder::build_projectiles(
@@ -20,92 +24,52 @@ std::vector<std::unique_ptr<artattack::CollisionObject>>
 		SpriteFlip flip,
 		float layer_depth) const
 {
+	// One lookup for every branch below, and it is the line that rejects a
+	// projectile kind the tuning file does not describe - which is what the
+	// `default:` that threw std::exception used to be for.
+	const ProjectileTuning& tuning = this->tuning_->projectile(type);
+	const RectangleF rectangle(position, tuning.details.col_rect_size);
+
+	std::vector<std::unique_ptr<artattack::CollisionObject>> projectiles;
+
 	switch (type)
     {
     case SPRAY:
-	{
-		std::vector<std::unique_ptr<artattack::CollisionObject>> projectiles;
 		projectiles.push_back(
 			std::make_unique<ProjectileSpray>(
-				RectangleF(position, DETAILS_SPRAY.col_rect_size),
-				velocity,
-				team,
-				player_num,
-				team_colour,
-				render_resources,
-				rotation,
-				origin,
-				flip,
+				rectangle, velocity, team, player_num, team_colour,
+				render_resources, &tuning, rotation, origin, flip,
 				layer_depth));
 		return projectiles;
-	}
     case JET:
-	{
-		std::vector<std::unique_ptr<artattack::CollisionObject>> projectiles;
 		projectiles.push_back(
 			std::make_unique<ProjectileJet>(
-				RectangleF(position, DETAILS_JET.col_rect_size),
-				velocity,
-				team,
-				player_num,
-				team_colour,
-				render_resources,
-				rotation,
-				origin,
-				flip,
+				rectangle, velocity, team, player_num, team_colour,
+				render_resources, &tuning, rotation, origin, flip,
 				layer_depth));
 		return projectiles;
-	}
 	case ROLLING:
-	{
-		std::vector<std::unique_ptr<artattack::CollisionObject>> projectiles;
 		projectiles.push_back(
 			std::make_unique<ProjectileRolling>(
-				RectangleF(position, DETAILS_ROLLING.col_rect_size),
-				velocity,
-				team,
-				player_num,
-				team_colour,
-				render_resources,
-				rotation,
-				origin,
-				flip,
+				rectangle, velocity, team, player_num, team_colour,
+				render_resources, &tuning, rotation, origin, flip,
 				layer_depth));
 		return projectiles;
-	}
 	case MIST:
-		return this->build_mist_projectiles(
-			position,
-			velocity,
-			team,
-			player_num,
-			team_colour,
-			type,
-			render_resources,
-			rotation,
-			origin,
-			flip,
-			layer_depth);
+		return build_mist_projectiles(
+			position, velocity, team, player_num, team_colour, &tuning,
+			render_resources, rotation, origin, flip, layer_depth);
 	case BALL:
-	{
-		std::vector<std::unique_ptr<artattack::CollisionObject>> projectiles;
 		projectiles.push_back(
 			std::make_unique<ProjectileBall>(
-				RectangleF(position, DETAILS_BALL.col_rect_size),
-				velocity,
-				team,
-				player_num,
-				team_colour,
-				render_resources,
-				rotation,
-				origin,
-				flip,
+				rectangle, velocity, team, player_num, team_colour,
+				render_resources, &tuning, rotation, origin, flip,
 				layer_depth));
 		return projectiles;
 	}
-	default:
-		throw std::exception("Invalid projectile type");
-    };
+
+	throw std::runtime_error("Projectile type " +
+		std::to_string(static_cast<int>(type)) + " has no builder.");
 }
 
 std::vector<std::unique_ptr<artattack::CollisionObject>>
@@ -115,77 +79,38 @@ std::vector<std::unique_ptr<artattack::CollisionObject>>
 	PlayerTeam team,
 	int player_num,
 	const Colour& team_colour,
-	projectile_type /*type*/,	// always MIST here
+	const ProjectileTuning* mist,
 	RenderResources* render_resources,
 	float rotation,
 	const Vector2F& origin,
 	SpriteFlip flip,
 	float layer_depth)
 {
+	// The spread, as five multiples of a twelfth of pi. Five near-identical
+	// twelve-line blocks is what this was, differing only in this number.
+	constexpr float SPREAD[] = { 0.0f, 1.0f, -1.0f, 2.0f, -2.0f };
+
+	const RectangleF rectangle(position, mist->details.col_rect_size);
+
 	std::vector<std::unique_ptr<artattack::CollisionObject>> projectiles;
-	projectiles.push_back(
-		std::make_unique<ProjectileMist>(
-			RectangleF(position, DETAILS_MIST.col_rect_size),
-			velocity,
-			team,
-			player_num,
-			team_colour,
-			render_resources,
-			rotation,
-			origin,
-			flip,
-			layer_depth));
+	projectiles.reserve(std::size(SPREAD));
 
-	projectiles.push_back(
-		std::make_unique<ProjectileMist>(
-			RectangleF(position, DETAILS_MIST.col_rect_size),
-			Vector2F::rotate_vector(velocity, mattmath::PI / 12.0f),
-			team,
-			player_num,
-			team_colour,
-			render_resources,
-			rotation,
-			origin,
-			flip,
-			layer_depth));
+	for (const float step : SPREAD)
+	{
+		projectiles.push_back(
+			std::make_unique<ProjectileMist>(
+				rectangle,
+				Vector2F::rotate_vector(velocity, step * mattmath::PI / 12.0f),
+				team,
+				player_num,
+				team_colour,
+				render_resources,
+				mist,
+				rotation,
+				origin,
+				flip,
+				layer_depth));
+	}
 
-	projectiles.push_back(
-		std::make_unique<ProjectileMist>(
-			RectangleF(position, DETAILS_MIST.col_rect_size),
-			Vector2F::rotate_vector(velocity, -mattmath::PI / 12.0f),
-			team,
-			player_num,
-			team_colour,
-			render_resources,
-			rotation,
-			origin,
-			flip,
-			layer_depth));
-
-	projectiles.push_back(
-		std::make_unique<ProjectileMist>(
-			RectangleF(position, DETAILS_MIST.col_rect_size),
-			Vector2F::rotate_vector(velocity, mattmath::PI / 6.0f),
-			team,
-			player_num,
-			team_colour,
-			render_resources,
-			rotation,
-			origin,
-			flip,
-			layer_depth));
-
-	projectiles.push_back(
-		std::make_unique<ProjectileMist>(
-			RectangleF(position, DETAILS_MIST.col_rect_size),
-			Vector2F::rotate_vector(velocity, -mattmath::PI / 6.0f),
-			team,
-			player_num,
-			team_colour,
-			render_resources,
-			rotation,
-			origin,
-			flip,
-			layer_depth));
 	return projectiles;
 }

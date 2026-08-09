@@ -3,7 +3,6 @@
 
 using namespace mattmath;
 using namespace DirectX;
-using namespace level_consts;
 using namespace artattack;
 
 Level::Level(std::unique_ptr<Scene> scene,
@@ -13,6 +12,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	const RectangleF& camera_bounds,
 	const RectangleF& zoom_out_start_bounds,
 	const RectangleF& zoom_out_finish_bounds,
+	const GameTuning* tuning,
 	const std::string& sound_bank_name,
 	const std::string& music_name,
 	float music_volume,
@@ -27,10 +27,25 @@ Level::Level(std::unique_ptr<Scene> scene,
 	resolution_manager_(resolution_manager),
 	viewport_manager_(viewport_manager),
 	team_colours_(team_colours),
-	camera_bounds_(camera_bounds),
-	zoom_out_start_bounds_(zoom_out_start_bounds),
-	zoom_out_finish_bounds_(zoom_out_finish_bounds)
+	tuning_(tuning),
+	camera_bounds_(camera_bounds)
 {
+	const MatchTuning& match = tuning->match();
+
+	this->timer_ = match.duration;
+	this->start_timer_ = match.countdown;
+	this->zoom_out_timer_ = match.zoom_out;
+	this->overview_timer_ = match.overview;
+
+	// The whole back buffer, which is what the overview is drawn into - the
+	// pull-back is the one shot with no split.
+	const Viewport screen(
+		RectangleF(Vector2F::ZERO, resolution_manager->resolution_vec()));
+
+	this->zoom_out_start_camera_ = Camera::frame(zoom_out_start_bounds, screen);
+	this->zoom_out_finish_camera_ =
+		Camera::frame(zoom_out_finish_bounds, screen);
+
 	this->debug_text_ = std::make_unique<DebugText>(
 		render_resources, resolution_manager);
 	this->interface_gameplay_ = std::make_unique<InterfaceGameplay>(
@@ -38,8 +53,10 @@ Level::Level(std::unique_ptr<Scene> scene,
 	this->sound_bank_ = audio_resources->sound_bank(sound_bank_name);
 
 	this->music_ = this->sound_bank_->resolve_effect(music_name);
-	this->zoom_out_sound_ = this->sound_bank_->resolve_effect(ZOOM_OUT_SOUND);
-	this->countdown_sound_ = this->sound_bank_->resolve_wave(COUNTDOWN_SOUND);
+	this->zoom_out_sound_ =
+		this->sound_bank_->resolve_effect(match.zoom_out_sound.name);
+	this->countdown_sound_ =
+		this->sound_bank_->resolve_wave(match.countdown_sound.name);
 
 	this->build_opening_frame(render_resources);
 }
@@ -70,22 +87,43 @@ void Level::build_opening_frame(RenderResources* render_resources)
 		player->set_camera(camera);
 	}
 
-	const Vector2F resolution = this->resolution_manager_->resolution_vec();
-	const Vector2F position = resolution / 2.0f -
-		Vector2F(COUNTDOWN_TEXT_WIDTH / 2.0f, COUNTDOWN_TEXT_HEIGHT / 2.0f);
-
+	// The first beat, off the same number the timer starts at: the opening
+	// text used to be a separate constant, so a countdown retuned to five
+	// seconds would have opened on a "3".
+	const MatchTuning& match = this->tuning_->match();
 	this->countdown_text_ = std::make_unique<TextDropShadow>(
-		COUNTDOWN_TEXT,
-		COUNTDOWN_FONT_NAME,
-		position,
+		std::to_wstring(static_cast<int>(match.countdown)),
+		match.countdown_font,
+		Vector2F::ZERO,
 		render_resources,
-		COUNTDOWN_COLOUR,
-		COUNTDOWN_SHADOW_COLOUR,
-		COUNTDOWN_SHADOW_OFFSET,
-		COUNTDOWN_SCALE,
-		COUNTDOWN_SCALE);
+		match.countdown_colour,
+		match.countdown_shadow_colour,
+		match.countdown_shadow_offset,
+		match.countdown_scale,
+		match.countdown_scale);
+	this->centre_countdown_text();
 
 	this->refresh_views();
+}
+
+void Level::set_countdown_text(const std::wstring& text)
+{
+	this->countdown_text_->set_text(text);
+
+	// Every beat is a different width, so the centring is redone with the
+	// text. "3" and "GO!" are 212 and 752 pixels wide in this font at this
+	// scale, and both used to be placed by subtracting half of a 400x600 box
+	// nothing had measured: the digits sat 94px left of centre and the last
+	// beat jumped 270px right, every match, at every resolution.
+	this->centre_countdown_text();
+}
+
+void Level::centre_countdown_text()
+{
+	const Vector2F resolution = this->resolution_manager_->resolution_vec();
+	const Vector2F size = this->countdown_text_->text_bounds().size();
+
+	this->countdown_text_->set_position((resolution - size) / 2.0f);
 }
 
 void Level::suspend() const
@@ -122,20 +160,21 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		// the countdown text are built with the level, because the frame drawn
 		// before this one is a real frame and used to be skipped rather than
 		// made correct.
-		if (this->start_timer_ >= START_TIMER)
+		if (this->start_timer_ >= this->tuning_->match().countdown)
 		{
 			this->sound_bank_->play_effect(this->music_, true, this->music_volume_);
-			this->sound_bank_->play_wave(this->countdown_sound_, COUNTDOWN_SOUND_VOLUME);
+			this->sound_bank_->play_wave(this->countdown_sound_,
+				this->tuning_->match().countdown_sound.volume);
 		}
 		this->start_timer_ -= dt;
 		if (this->start_timer_ > 0.0f)
 		{
-			this->countdown_text_->set_text(std::to_wstring(
+			this->set_countdown_text(std::to_wstring(
 				static_cast<int>(this->start_timer_) + 1));
 		}
 		else
 		{
-			this->countdown_text_->set_text(L"GO!");
+			this->set_countdown_text(L"GO!");
 		}
 
 		if (this->start_timer_ <= 0.0f)
@@ -157,7 +196,8 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			this->state_ = LevelState::zoom_out;
 			this->sound_bank_->stop_effect(this->music_, true);
 			this->stop_player_sounds();
-			this->sound_bank_->play_effect(this->zoom_out_sound_, false, ZOOM_OUT_SOUND_VOLUME);
+			this->sound_bank_->play_effect(this->zoom_out_sound_, false,
+				this->tuning_->match().zoom_out_sound.volume);
 		}
 	}
 	else if (this->state_ == LevelState::zoom_out)
@@ -171,16 +211,13 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			this->sound_bank_->stop_effect(this->zoom_out_sound_, true);
 		}
 
-		Camera start_camera = Camera::calculate_camera_from_view_rectangle(
-			this->zoom_out_start_bounds_,
-			RectangleF(Vector2F::ZERO, this->resolution_manager_->resolution_vec()));
-
-		Camera finish_camera = Camera::calculate_camera_from_view_rectangle(
-			this->zoom_out_finish_bounds_,
-			RectangleF(Vector2F::ZERO, this->resolution_manager_->resolution_vec()));
-
+		// Both endpoints are fixed for the whole match - the bounds come out
+		// of the level file and the resolution does not change mid-zoom - so
+		// they are worked out when the level is built, not per frame. Only
+		// the ratio between them varies.
 		this->zoom_out_camera_ = Camera::calculate_intermediate_camera(
-			start_camera, finish_camera, this->zoom_out_camera_ratio());
+			this->zoom_out_start_camera_, this->zoom_out_finish_camera_,
+			this->zoom_out_camera_ratio());
 	}
 	else if (this->state_ == LevelState::overview)
 	{
@@ -200,7 +237,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 
 float Level::zoom_out_camera_ratio() const
 {
-	return 1.0f - (this->zoom_out_timer_ / ZOOM_OUT_TIMER);
+	return 1.0f - (this->zoom_out_timer_ / this->tuning_->match().zoom_out);
 }
 
 void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs,

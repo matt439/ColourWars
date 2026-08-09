@@ -3,7 +3,6 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace projectile_consts;
 using namespace artattack;
 
 ProjectileMist::ProjectileMist(const RectangleF& rectangle,
@@ -12,13 +11,21 @@ ProjectileMist::ProjectileMist(const RectangleF& rectangle,
 	int player_num,
 	const Colour& team_colour,
 	RenderResources* render_resources,
+	const ProjectileTuning* tuning,
 	float rotation,
 	const Vector2F& origin,
 	SpriteFlip flip,
 	float layer_depth) :
+	// MIST, not SPRAY. It passed SPRAY from the day it was written, so every
+	// mist particle reported itself as spray to collision_type() - the one
+	// reader of type() - and was tagged projectile_spray_team_*. Invisible
+	// while the two shared a layer, a mask and a damage number to four decimal
+	// places; not invisible now that the damage is a number in a file keyed by
+	// exactly this enum, and a mist tuned differently from spray would have
+	// been applied as spray.
 	DiffusingProjectile(velocity, team, player_num, team_colour,
-		SPRAY, render_resources,
-		DETAILS_MIST, DIFFUSION_DETAILS_MIST,
+		MIST, render_resources,
+		tuning,
 		team_colour, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)
 {

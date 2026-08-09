@@ -73,10 +73,10 @@
         },
         "zoom_out_finish_bounds":
         {
-            "x": 0.0,
-            "y": 4000.0,
-            "width": 3840.0,
-            "height": 2160.0
+            "x": -100.0,
+            "y": 3800.0,
+            "width": 6200.0,
+            "height": 3300.0
         }
     },
     "collision_objects":

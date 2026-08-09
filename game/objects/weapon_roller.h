@@ -6,7 +6,8 @@
 class WeaponRoller final : public Weapon
 {
 public:
-	WeaponRoller(PlayerTeam team,
+	WeaponRoller(const GameTuning* tuning,
+		PlayerTeam team,
 		int player_num,
 		const artattack::Colour& team_colour,
 		WeaponType type,

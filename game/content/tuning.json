@@ -1,0 +1,225 @@
+{
+    "match": {
+        "duration": 240.0,
+        "countdown": 3.0,
+        "zoom_out": 2.0,
+        "overview": 2.0,
+        "countdown_text": {
+            "font": "gill_sans_mt_bold_144",
+            "colour": "DARK_GRAY",
+            "shadow_colour": "BLACK",
+            "shadow_offset": { "x": 5.0, "y": 5.0 },
+            "scale": 2.0
+        },
+        "sounds": {
+            "countdown": { "name": "smash_countdown", "volume": 1.0 },
+            "zoom_out": { "name": "slide_whistle_up", "volume": 0.5 }
+        }
+    },
+
+    "player": {
+        "size": { "x": 52.0, "y": 120.0 },
+        "max_velocity": { "x": 800.0, "y": 1900.0 },
+        "x_initial_velocity": 100.0,
+        "x_acceleration": 900.0,
+        "x_deacceleration": 2500.0,
+        "gravity": 2000.0,
+        "ramp_gravity_multiplier": 20.0,
+        "jump_launch_velocity": -600.0,
+        "jump_acceleration": -1300.0,
+        "jump_max_time": 0.35,
+        "drop_down_velocity": 100.0,
+        "drop_down_analog_threshold": 0.8,
+        "starting_health": 1.0,
+        "health_regen_delay": 5.0,
+        "health_regen_rate": 1.0,
+        "respawn_delay": 3.0,
+        "damage_sound_delay": 0.25,
+        "sound_bank": "sound_bank_1",
+        "sounds": {
+            "damage": { "name": "SplittingFireWood", "volume": 0.1 },
+            "death": { "name": "DeathImpactYellSingle", "volume": 1.0 },
+            "jump": { "name": "CartoonBoing", "volume": 0.2 },
+            "respawn": { "name": "ThunderCrack", "volume": 0.2 }
+        },
+        "animations": {
+            "sheet": "sprite_sheet_1",
+            "uniform": "player_right_walk_uniform",
+            "idle": { "strip": "player_right_idle" },
+            "walk": { "strip": "player_right_walk" },
+            "running": { "strip": "player_right_walk", "frame_time": 0.05 },
+            "jumping": { "strip": "player_right_jumping" },
+            "falling": { "strip": "player_right_falling" }
+        }
+    },
+
+    "weapons": {
+        "ammo_regen_delay": 0.5,
+        "ammo_regen_rate": 0.4,
+        "starting_ammo": 1.0,
+
+        "sprayer": {
+            "offset": { "x": 0.0, "y": 0.0 },
+            "size": { "x": 70.0, "y": 30.0 },
+            "nozzle_offset": { "x": 7.5, "y": 0.0 },
+            "shoot_interval": 0.0,
+            "starting_vel_length": 1100.0,
+            "ammo_usage": 0.007,
+            "sheet": "sprite_sheet_1",
+            "frame": "sprayer",
+            "projectile": "spray",
+            "sound_bank": "sound_bank_1",
+            "shoot_sound": { "name": "WaterSprayIntoBucket", "volume": 1.0 },
+            "add_player_velocity": "x_only",
+            "player_velocity_amount": 1.0,
+            "loop_sounds": {
+                "team_a": [ "sprayer_a0", "sprayer_a1", "sprayer_a2", "sprayer_a3" ],
+                "team_b": [ "sprayer_b0", "sprayer_b1", "sprayer_b2", "sprayer_b3" ]
+            }
+        },
+
+        "sniper": {
+            "offset": { "x": 15.0, "y": -20.0 },
+            "size": { "x": 100.0, "y": 30.0 },
+            "nozzle_offset": { "x": 10.0, "y": 0.0 },
+            "shoot_interval": 1.0,
+            "starting_vel_length": 2000.0,
+            "ammo_usage": 0.25,
+            "sheet": "sprite_sheet_1",
+            "frame": "sniper",
+            "projectile": "jet",
+            "sound_bank": "sound_bank_1",
+            "shoot_sound": { "name": "WoodRattle", "volume": 0.8 }
+        },
+
+        "roller": {
+            "offset": { "x": -20.0, "y": -10.0 },
+            "size": { "x": 100.0, "y": 50.0 },
+            "nozzle_offset": { "x": -25.0, "y": 0.0 },
+            "shoot_interval": 0.0001,
+            "starting_vel_length": 0.0,
+            "ammo_usage": 0.004,
+            "sheet": "sprite_sheet_1",
+            "frame": "roller",
+            "projectile": "rolling",
+            "sound_bank": "sound_bank_1",
+            "shoot_sound": { "name": "BowlingBallRoll", "volume": 3.0 },
+            "loop_sounds": {
+                "team_a": [ "roller_a0", "roller_a1", "roller_a2", "roller_a3" ],
+                "team_b": [ "roller_b0", "roller_b1", "roller_b2", "roller_b3" ]
+            }
+        },
+
+        "mister": {
+            "offset": { "x": 20.0, "y": 0.0 },
+            "size": { "x": 60.0, "y": 30.0 },
+            "nozzle_offset": { "x": 2.5, "y": 0.0 },
+            "shoot_interval": 0.1,
+            "starting_vel_length": 300.0,
+            "ammo_usage": 0.01,
+            "sheet": "sprite_sheet_1",
+            "frame": "mister",
+            "projectile": "mist",
+            "sound_bank": "sound_bank_1",
+            "shoot_sound": { "name": "VulcanMachineGunSeries", "volume": 0.2 },
+            "add_player_velocity": "x_only",
+            "player_velocity_amount": 1.0,
+            "loop_sounds": {
+                "team_a": [ "mister_a0", "mister_a1", "mister_a2", "mister_a3" ],
+                "team_b": [ "mister_b0", "mister_b1", "mister_b2", "mister_b3" ]
+            }
+        },
+
+        "bucket": {
+            "offset": { "x": 10.0, "y": -10.0 },
+            "size": { "x": 60.0, "y": 60.0 },
+            "nozzle_offset": { "x": 50.0, "y": 0.0 },
+            "shoot_interval": 0.5,
+            "starting_vel_length": 800.0,
+            "ammo_usage": 0.1,
+            "sheet": "sprite_sheet_1",
+            "frame": "bucket",
+            "projectile": "ball",
+            "sound_bank": "sound_bank_1",
+            "shoot_sound": { "name": "LaserGun", "volume": 0.3 },
+            "add_player_velocity": "x_only",
+            "player_velocity_amount": 1.0
+        }
+    },
+
+    "projectiles": {
+        "max_velocity": { "x": 5000.0, "y": 5000.0 },
+
+        "spray": {
+            "gravity": 2500.0,
+            "wind_resistance": 20.0,
+            "rotation_origin": "no_rotation",
+            "delete_timer": 5.0,
+            "player_damage": 0.01,
+            "size": { "x": 15.0, "y": 15.0 },
+            "collision_size": { "x": 15.0, "y": 15.0 },
+            "sheet": "sprite_sheet_1",
+            "animation": "projectile_3",
+            "diffusion": {
+                "type": "linear_size_and_col_rect",
+                "start_time": 0.2,
+                "end_time": 1.0,
+                "end_scale": { "x": 1.5, "y": 1.5 }
+            }
+        },
+
+        "jet": {
+            "gravity": 0.0,
+            "wind_resistance": 0.0,
+            "rotation_origin": "center",
+            "delete_timer": 5.0,
+            "player_damage": 0.334,
+            "size": { "x": 20.0, "y": 20.0 },
+            "collision_size": { "x": 20.0, "y": 20.0 },
+            "sheet": "sprite_sheet_1",
+            "animation": "projectile_3"
+        },
+
+        "rolling": {
+            "gravity": 0.0,
+            "wind_resistance": 0.0,
+            "rotation_origin": "no_rotation",
+            "delete_timer": 0.000001,
+            "player_damage": 0.015,
+            "size": { "x": 50.0, "y": 50.0 },
+            "collision_size": { "x": 50.0, "y": 50.0 },
+            "sheet": "sprite_sheet_1",
+            "animation": "projectile_3"
+        },
+
+        "mist": {
+            "gravity": 0.0,
+            "wind_resistance": 0.0,
+            "rotation_origin": "no_rotation",
+            "delete_timer": 5.0,
+            "player_damage": 0.01,
+            "size": { "x": 5.0, "y": 5.0 },
+            "collision_size": { "x": 5.0, "y": 5.0 },
+            "sheet": "sprite_sheet_1",
+            "animation": "projectile_3",
+            "diffusion": {
+                "type": "linear_size_and_col_rect",
+                "start_time": 0.2,
+                "end_time": 2.0,
+                "end_scale": { "x": 5.0, "y": 5.0 }
+            }
+        },
+
+        "ball": {
+            "gravity": 2500.0,
+            "wind_resistance": 20.0,
+            "rotation_origin": "no_rotation",
+            "delete_timer": 5.0,
+            "player_damage": 0.201,
+            "size": { "x": 100.0, "y": 100.0 },
+            "collision_size": { "x": 100.0, "y": 100.0 },
+            "sheet": "sprite_sheet_1",
+            "animation": "projectile_3"
+        }
+    }
+}

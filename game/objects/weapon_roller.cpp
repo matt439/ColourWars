@@ -3,11 +3,11 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace weapon_consts;
 using namespace artattack;
 
 
-WeaponRoller::WeaponRoller(PlayerTeam team,
+WeaponRoller::WeaponRoller(const GameTuning* tuning,
+    PlayerTeam team,
     int player_num,
     const Colour& team_colour,
     WeaponType type,
@@ -19,7 +19,7 @@ WeaponRoller::WeaponRoller(PlayerTeam team,
     const Vector2F& origin,
     SpriteFlip flip,
     float layer_depth) :
-    Weapon(DETAILS_ROLLER,
+    Weapon(tuning,
         team, player_num, team_colour, type, player_center,
         render_resources, audio_resources,        color, rotation, origin, flip, layer_depth)
 {

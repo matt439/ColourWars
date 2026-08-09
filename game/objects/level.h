@@ -19,6 +19,7 @@
 #include "engine/scene/scene.h"
 #include "engine/render/colour.h"
 #include "engine/render/camera.h"
+#include "game/tuning.h"
 
 enum class LevelState
 {
@@ -28,29 +29,6 @@ enum class LevelState
 	overview,
 	finished,
 };
-
-namespace level_consts
-{
-	constexpr float TIMER = 240.0f;
-	constexpr float START_TIMER = 3.0f;
-	const static std::wstring COUNTDOWN_TEXT = L"3";
-	const static std::string COUNTDOWN_FONT_NAME = "gill_sans_mt_bold_144";
-	const static artattack::Colour COUNTDOWN_COLOUR = artattack::Colour::dark_gray;
-	const static artattack::Colour COUNTDOWN_SHADOW_COLOUR = artattack::Colour::black;
-	constexpr float COUNTDOWN_SCALE = 2.0f;
-	const static mattmath::Vector2F COUNTDOWN_SHADOW_OFFSET = { 5.0f, 5.0f };
-	constexpr float COUNTDOWN_TEXT_WIDTH = 400.0f;
-	constexpr float COUNTDOWN_TEXT_HEIGHT = 600.0f;
-
-	constexpr float ZOOM_OUT_TIMER = 2.0f;
-	constexpr float OVERVIEW_TIMER = 2.0f;
-
-	const std::string COUNTDOWN_SOUND = "smash_countdown";
-	constexpr float COUNTDOWN_SOUND_VOLUME = 1.0f;
-
-	const std::string ZOOM_OUT_SOUND = "slide_whistle_up";
-	constexpr float ZOOM_OUT_SOUND_VOLUME = 0.5f;
-}
 
 // One paint match: a countdown, a clock, a track, four HUDs and the two
 // cameras a match is watched through.
@@ -84,6 +62,7 @@ public:
 		const mattmath::RectangleF& camera_bounds,
 		const mattmath::RectangleF& zoom_out_start_bounds,
 		const mattmath::RectangleF& zoom_out_finish_bounds,
+		const GameTuning* tuning,
 		const std::string& sound_bank_name,
 		const std::string& music_name,
 		float music_volume,
@@ -191,18 +170,29 @@ private:
 	const artattack::ResolutionManager* resolution_manager_ = nullptr;
 	const artattack::ViewportManager* viewport_manager_ = nullptr;
 
-	float timer_ = level_consts::TIMER;
-	float start_timer_ = level_consts::START_TIMER;
-	float zoom_out_timer_ = level_consts::ZOOM_OUT_TIMER;
-	float overview_timer_ = level_consts::OVERVIEW_TIMER;
+	// All four are set from the match tuning in the constructor body.
+	float timer_ = 0.0f;
+	float start_timer_ = 0.0f;
+	float zoom_out_timer_ = 0.0f;
+	float overview_timer_ = 0.0f;
 
 	artattack::Camera zoom_out_camera_ = artattack::Camera::DEFAULT_CAMERA;
 
 	TeamColour team_colours_ = TeamColour();
 
+	// Borrowed, never null: the durations, the countdown's look and the two
+	// match sounds.
+	const GameTuning* tuning_ = nullptr;
+
 	mattmath::RectangleF camera_bounds_ = mattmath::RectangleF::ZERO;
-	mattmath::RectangleF zoom_out_start_bounds_ = mattmath::RectangleF::ZERO;
-	mattmath::RectangleF zoom_out_finish_bounds_ = mattmath::RectangleF::ZERO;
+
+	// The two ends of the end-of-match pull-back, worked out once when the
+	// level is built. Both come off rectangles in the level file and a screen
+	// size that cannot change mid-zoom, so recomputing them every frame - two
+	// RectangleF constructions, two reads through the resolution manager and
+	// two divisions - produced the same two values 120 times over.
+	artattack::Camera zoom_out_start_camera_ = artattack::Camera::DEFAULT_CAMERA;
+	artattack::Camera zoom_out_finish_camera_ = artattack::Camera::DEFAULT_CAMERA;
 
 	LevelState state_ = LevelState::start_countdown;
 
@@ -249,6 +239,10 @@ private:
 	void draw_player_overlay(int view_index, artattack::DrawList& list) const;
 
 	void draw_countdown_text(artattack::DrawList& draw_list) const;
+
+	// Sets the beat, then re-centres on what it actually measures.
+	void set_countdown_text(const std::wstring& text);
+	void centre_countdown_text();
 
 	float zoom_out_camera_ratio() const;
 

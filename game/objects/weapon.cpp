@@ -3,10 +3,20 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace weapon_consts;
 using namespace artattack;
 
-Weapon::Weapon(const WeaponDetails& details,
+namespace
+{
+    // The debug nozzle marker: a five-pixel square drawn where the barrel is,
+    // and the frame every weapon sheet carries for it. Not tuning - nothing a
+    // player sees depends on either, and they are read only by the debug draw
+    // - so they stay in code rather than going into the tuning file with the
+    // numbers that do matter.
+    const Vector2F nozzle_marker_size = { 5.0f, 5.0f };
+    const std::string nozzle_frame_name = "nozzle";
+}
+
+Weapon::Weapon(const GameTuning* tuning,
     PlayerTeam team,
     int player_num,
     const Colour& team_colour,
@@ -19,9 +29,11 @@ Weapon::Weapon(const WeaponDetails& details,
     const Vector2F& origin,
     SpriteFlip flip,
     float layer_depth) :
-    TextureObject(details.sheet_name, details.frame_name, render_resources,
+    TextureObject(tuning->weapon(type).details.sheet_name,
+                  tuning->weapon(type).details.frame_name, render_resources,
                   color, rotation, origin, flip, layer_depth),
-        details_(details),
+        tuning_(tuning),
+        weapon_tuning_(&tuning->weapon(type)),
         render_resources_(render_resources),
         team_(team),
         player_num_(player_num),
@@ -29,14 +41,17 @@ Weapon::Weapon(const WeaponDetails& details,
         type_(type),
         player_center_(player_center)
 {
-    this->proj_builder_ = std::make_unique<ProjectileBuilder>();
+    const WeaponDetails& details = this->details();
+
+    this->ammo_ = tuning->starting_ammo();
+    this->proj_builder_ = std::make_unique<ProjectileBuilder>(tuning);
     this->sound_bank_ = audio_resources->sound_bank(details.sound_bank_name);
-    this->loop_sound_ = resolve_loop_sound(*this->sound_bank_, type, team,
-        player_num);
+    this->loop_sound_ = resolve_loop_sound(*this->sound_bank_,
+        this->weapon_tuning_->loop_sounds, team, player_num);
     this->shoot_sound_ = this->sound_bank_->resolve_wave(
         details.shoot_sound_name);
     this->nozzle_frame_ = this->sprite_sheet()->
-        resolve_sprite_frame(NOZZLE_FRAME);
+        resolve_sprite_frame(nozzle_frame_name);
 }
 
 void Weapon::draw(DrawList& draw_list, bool debug) const
@@ -109,12 +124,12 @@ RectangleF Weapon::nozzle_rectangle() const
 {
 	Vector2F nozzle_pos = this->nozzle_pos();
 
-    return { nozzle_pos, NOZZLE_SIZE };
+    return { nozzle_pos, nozzle_marker_size };
 }
 
 Vector2F Weapon::nozzle_size()
 {
-	return NOZZLE_SIZE;
+	return nozzle_marker_size;
 }
 
 
@@ -125,13 +140,13 @@ Vector2F Weapon::draw_pos() const
 	Vector2F result = this->player_center();
 	if (this->facing_left(this->rotation_))
 	{
-		result.x -= this->details_.offset.x;
-		result.y += this->details_.offset.y;
+		result.x -= this->details().offset.x;
+		result.y += this->details().offset.y;
 	}
 	//gun facing right
 	else
 	{
-		result += this->details_.offset;
+		result += this->details().offset;
 	}
 	return result;
 }
@@ -150,8 +165,8 @@ bool Weapon::facing_left(float rotation)
 
 Vector2F Weapon::nozzle_pos() const
 {
-	Vector2F result = this->details_.nozzle_offset;
-	result.x += this->details_.size.x;
+	Vector2F result = this->details().nozzle_offset;
+	result.x += this->details().size.x;
 	result = Vector2F::rotate_vector(result, this->rotation_);
 	result += this->wep_rotation_origin_offset(
 		facing_left(this->rotation_));
@@ -163,11 +178,11 @@ Vector2F Weapon::wep_rotation_origin_offset(bool facing_left) const
 {
 	if (facing_left)
 	{
-		return Vector2F(-this->details_.offset.x,
-			this->details_.offset.y);
+		return Vector2F(-this->details().offset.x,
+			this->details().offset.y);
 	}
 	// gun facing right
-	return Vector2F(this->details_.offset.x, this->details_.offset.y);
+	return Vector2F(this->details().offset.x, this->details().offset.y);
 }
 
 std::vector<std::unique_ptr<artattack::CollisionObject>>
@@ -221,9 +236,9 @@ bool Weapon::check_if_shooting_and_ammo_update(
     }
 
     //ammo regen
-    if (this->ammo_timer() >= AMMO_REGEN_DELAY)
+    if (this->ammo_timer() >= this->tuning_->ammo_regen_delay())
     {
-        this->alter_ammo(weapon_consts::AMMO_REGEN_RATE * dt);
+        this->alter_ammo(this->tuning_->ammo_regen_rate() * dt);
         if (this->ammo() > 1.0f)
         {
             this->set_ammo(1.0f);
@@ -251,7 +266,7 @@ void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
         this->sound_bank_->play_effect(
             this->loop_sound_,
             true,
-            this->details_.shoot_sound_volume);
+            this->details().shoot_sound_volume);
     }
     else
     {
@@ -283,12 +298,14 @@ void Weapon::resume_sounds() const
     this->sound_bank_->resume_effect(this->loop_sound_);
 }
 SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
-    WeaponType type, PlayerTeam team, int player_num)
+    const WeaponLoopSounds& loop_sounds, PlayerTeam team, int player_num)
 {
     // Sniper and Bucket fire a one-shot wave (see their handle_shoot_sound
-    // overrides) and have no looping instance at all. They get an unresolved
-    // handle, which both handle_shoot_sound and stop_sounds read as "nothing
-    // to do".
+    // overrides) and have no looping instance at all. Their tuning records
+    // leave the "loop_sounds" block out, and they get an unresolved handle,
+    // which both handle_shoot_sound and stop_sounds read as "nothing to do".
+    // A three-way switch over WeaponType is what this used to be, so a sixth
+    // weapon with a loop meant editing this function as well as its record.
     //
     // Resolved once here rather than looked up per call so that stop_sounds -
     // a teardown path with no catch anywhere above it - cannot throw. That
@@ -303,20 +320,12 @@ SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
         return {};
     }
 
-    switch (type)
+    if (!loop_sounds.present)
     {
-    case WeaponType::sprayer:
-        return sound_bank.resolve_effect(
-            SPRAYER_SOUND_DETAILS.sound_name(team, player_num));
-    case WeaponType::roller:
-        return sound_bank.resolve_effect(
-            ROLLER_SOUND_DETAILS.sound_name(team, player_num));
-    case WeaponType::mister:
-        return sound_bank.resolve_effect(
-            MISTER_SOUND_DETAILS.sound_name(team, player_num));
-    default:
         return {};
     }
+
+    return sound_bank.resolve_effect(loop_sounds.sound_name(team, player_num));
 }
 void Weapon::update_movement_and_rotation(PlayerInputData input,
     const Vector2F& player_center,
@@ -434,32 +443,32 @@ float Weapon::ammo() const
 
 const WeaponDetails& Weapon::details() const
 {
-	return this->details_;
+	return this->weapon_tuning_->details;
 }
 
 const Vector2F& Weapon::offset() const
 {
-	return this->details_.offset;
+	return this->details().offset;
 }
 
 const Vector2F& Weapon::nozzle_offset() const
 {
-	return this->details_.nozzle_offset;
+	return this->details().nozzle_offset;
 }
 
 float Weapon::shoot_interval() const
 {
-	return this->details_.shoot_interval;
+	return this->details().shoot_interval;
 }
 
 float Weapon::starting_vel_length() const
 {
-	return this->details_.starting_vel_length;
+	return this->details().starting_vel_length;
 }
 
 float Weapon::ammo_usage() const
 {
-	return this->details_.ammo_usage;
+	return this->details().ammo_usage;
 }
 
 float Weapon::rotation() const
@@ -537,8 +546,7 @@ RenderResources* Weapon::render_resources() const
 }
 
 RelativeVelocityWeapon::RelativeVelocityWeapon(
-    const WeaponDetails& details,
-    RelativeWeaponDetails rel_details,
+    const GameTuning* tuning,
     PlayerTeam team,
     int player_num,
     const Colour& team_colour,
@@ -551,12 +559,16 @@ RelativeVelocityWeapon::RelativeVelocityWeapon(
     const Vector2F& origin,
     artattack::SpriteFlip flip,
     float layer_depth) :
-    Weapon(details, team, player_num, team_colour, type,
+    Weapon(tuning, team, player_num, team_colour, type,
         player_center, render_resources, audio_resources,
-        color, rotation, origin, flip, layer_depth),
-    rel_details_(rel_details)
+        color, rotation, origin, flip, layer_depth)
 {
 
+}
+
+const RelativeWeaponDetails& RelativeVelocityWeapon::rel_details() const
+{
+    return this->weapon_tuning_->relative;
 }
 
 Vector2F RelativeVelocityWeapon::calculate_projectile_launch_velocity(
@@ -587,8 +599,8 @@ std::vector<std::unique_ptr<artattack::CollisionObject>> RelativeVelocityWeapon:
     const mattmath::Vector2F& shoot_direction,
     const mattmath::Vector2F& player_velocity) const
 {
-    RelativeWeaponDetails rel_details = this->rel_details_;
-    
+    const RelativeWeaponDetails& rel_details = this->rel_details();
+
     AddPlayerVelocity add_player_vel = rel_details.add_vel;
 
     Vector2F launch_velocity = this->calculate_projectile_launch_velocity(

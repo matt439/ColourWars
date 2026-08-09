@@ -4,6 +4,7 @@
 #include "game/directory_consts.h"
 #include "game/game_data.h"
 #include "game/objects/level_loaded_info.h"
+#include "game/tuning.h"
 #include "game/states/game_states.h"
 #include "game/save.h"
 
@@ -47,6 +48,14 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		// the manifest names them. There is no second list to keep in step:
 		// this one is built by the loader that fills the registry above.
 		StageList stages;
+
+		// Every number a paint match is balanced on. Declared here for the
+		// same reason as the registry above: a level's players, weapons and
+		// projectiles all borrow from it, so it has to outlive the
+		// Application. Read before the manifest because it names no asset -
+		// it is the file the manifest's assets are used *by*.
+		const GameTuning tuning(TUNING_PATH.c_str());
+
 		GameData data;
 
 		Application app(std::move(options));
@@ -87,6 +96,7 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		data.set_save(&save);
 		data.set_level_infos(&level_infos);
 		data.set_stages(&stages);
+		data.set_tuning(&tuning);
 
 		return app.run(std::make_unique<GameMenu>(&data));
 	}

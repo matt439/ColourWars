@@ -5,11 +5,18 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace player_consts;
 using namespace artattack;
 
+namespace
+{
+    // The sprite tint the animated half of a player is drawn with; the uniform
+    // half is drawn in the team colour. Not tuning: it is one colour, read
+    // once, and no balance pass ever wants it.
+    const Colour player_tint = Colour::burlywood;
+}
+
 Player::Player(const RectangleF& rectangle,
-    const PlayerAnimationInfo& animation_info,
+    const GameTuning* tuning,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
     int player_num,
@@ -26,11 +33,13 @@ Player::Player(const RectangleF& rectangle,
     SpriteFlip flip,
     float layer_depth) :
     MovingObject(velocity),
-    AnimationObject(animation_info.sprite_sheet,
-                    animation_info.animation,
-                    render_resources, DEFAULT_PLAYER_COLOUR, rotation, origin, flip, layer_depth),
-    TextureObject(animation_info.sprite_sheet, animation_info.uniform_texture,
+    AnimationObject(tuning->player().idle.sheet,
+                    tuning->player().idle.strip,
+                    render_resources, player_tint, rotation, origin, flip, layer_depth),
+    TextureObject(tuning->player().idle.sheet,
+                  tuning->player().idle.uniform_texture,
                   render_resources, team_colour, rotation, origin, flip, layer_depth),
+    tuning_(tuning),
     primary_(std::move(primary_weapon)),
     player_num_(player_num),
     team_(team),
@@ -42,12 +51,21 @@ Player::Player(const RectangleF& rectangle,
     prev_rectangle_(rectangle),
     respawn_position_(respawn_position)
 {
-    this->sound_bank_ = audio_resources->sound_bank(SOUND_BANK);
+    const PlayerTuning& player = tuning->player();
 
-    this->damage_sound_ = this->sound_bank_->resolve_wave(DAMAGE_SOUND);
-    this->death_sound_ = this->sound_bank_->resolve_wave(DEATH_SOUND);
-    this->jump_sound_ = this->sound_bank_->resolve_wave(JUMP_SOUND);
-    this->respawn_sound_ = this->sound_bank_->resolve_wave(RESPAWN_SOUND);
+    this->health_ = player.starting_health;
+    this->respawn_timer_ = player.respawn_delay;
+
+    this->sound_bank_ = audio_resources->sound_bank(player.sound_bank);
+
+    this->damage_sound_ =
+        this->sound_bank_->resolve_wave(player.damage_sound.name);
+    this->death_sound_ =
+        this->sound_bank_->resolve_wave(player.death_sound.name);
+    this->jump_sound_ =
+        this->sound_bank_->resolve_wave(player.jump_sound.name);
+    this->respawn_sound_ =
+        this->sound_bank_->resolve_wave(player.respawn_sound.name);
 }
 
 void Player::update_animation_state()
@@ -62,11 +80,11 @@ void Player::update_animation_state()
 
     this->animation_state_ = new_animation_state;
 
-    const PlayerAnimationInfo& info = this->animation_info(new_animation_state);
-    TextureObject::set_frame(info.sprite_sheet, info.uniform_texture);
+    const PlayerAnimationTuning& info = this->animation_info(new_animation_state);
+    TextureObject::set_frame(info.sheet, info.uniform_texture);
 
-    set_animation_strip_and_reset(info.sprite_sheet, info.animation);
-    if (info.frame_time != FLT_MIN)
+    set_animation_strip_and_reset(info.sheet, info.strip);
+    if (info.frame_time >= 0.0f)
     {
         set_frame_time(info.frame_time);
     }
@@ -276,45 +294,19 @@ void Player::update_weapon_position() const
 }
 void Player::on_projectile_contact(CollisionObjectType other_type)
 {
-    if (other_type == CollisionObjectType::projectile_spray_team_a ||
-        other_type == CollisionObjectType::projectile_spray_team_b)
-    {
-		this->health_ -= SPRAY_DAMAGE;
-        //this->health_regen_timer_ = 0.0f;
-	}
-	else if (other_type == CollisionObjectType::projectile_jet_team_a ||
-		other_type == CollisionObjectType::projectile_jet_team_b)
-	{
-		this->health_ -= JET_DAMAGE;
-        //this->health_regen_timer_ = 0.0f;
-	}
-	else if (other_type == CollisionObjectType::projectile_rolling_team_a ||
-		other_type == CollisionObjectType::projectile_rolling_team_b)
-	{
-		this->health_ -= ROLLING_DAMAGE;
-        //this->health_regen_timer_ = 0.0f;
-	}
-	else if (other_type == CollisionObjectType::projectile_ball_team_a ||
-		other_type == CollisionObjectType::projectile_ball_team_b)
-	{
-		this->health_ -= BALL_DAMAGE;
-        //this->health_regen_timer_ = 0.0f;
-	}
-	else if (other_type == CollisionObjectType::projectile_mist_team_a ||
-		other_type == CollisionObjectType::projectile_mist_team_b)
-	{
-		this->health_ -= MIST_DAMAGE;
-        //this->health_regen_timer_ = 0.0f;
-	}
-	else
-	{
-		throw std::exception("Invalid projectile type.");
-    }
+    // One lookup where a ten-branch if-chain used to be, ending in a throw for
+    // a case its own caller had already excluded. The five numbers it dispatched
+    // to lived in player_consts.h - a second, disagreeing copy of the
+    // player_damage already on ProjectileDetails, which nothing read. There is
+    // one copy now and it is in ./tuning.json, on the projectile.
+    this->health_ -= this->tuning_->projectile(
+        to_projectile_type(other_type)).details.player_damage;
+
     this->health_regen_timer_ = 0.0f;
 
-    if (this->damage_sound_timer_ >= DAMAGE_SOUND_DELAY)
+    if (this->damage_sound_timer_ >= this->player_tuning().damage_sound_delay)
 	{
-		this->sound_bank_->play_wave(this->damage_sound_, DAMAGE_SOUND_VOLUME);
+		this->sound_bank_->play_wave(this->damage_sound_, this->player_tuning().damage_sound.volume);
 		this->damage_sound_timer_ = 0.0f;
 	}
 }
@@ -338,7 +330,7 @@ void Player::update(float dt)
         if (this->health_ <= 0.0f)
         {
 			this->state_ = PlayerState::dead;
-			this->sound_bank_->play_wave(this->death_sound_, DEATH_SOUND_VOLUME);
+			this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume);
         }
 
         this->damage_sound_timer_ += dt;
@@ -350,7 +342,7 @@ void Player::update(float dt)
         if (this->respawn_timer_ <= 0.0f)
         {
             this->respawn();
-            this->respawn_timer_ = RESPAWN_DELAY;
+            this->respawn_timer_ = this->player_tuning().respawn_delay;
         }
     }
 	else
@@ -362,13 +354,15 @@ void Player::update(float dt)
         this->showing_debug_ = !this->showing_debug_;
     }
 
-    //ammo regen
-    if (this->health_regen_timer_ >= HEALTH_REGEN_DELAY)
+    // Health regen. The ceiling is the health a player starts with, which is
+    // what the two hardcoded 1.0f here and in respawn() were assuming.
+    const PlayerTuning& tuning = this->player_tuning();
+    if (this->health_regen_timer_ >= tuning.health_regen_delay)
     {
-        this->health_ += HEALTH_REGEN_RATE * dt;
-        if (this->health_ > 1.0f)
+        this->health_ += tuning.health_regen_rate * dt;
+        if (this->health_ > tuning.starting_health)
         {
-            this->health_ = 1.0f;
+            this->health_ = tuning.starting_health;
         }
     }
     this->health_regen_timer_ += dt;
@@ -394,48 +388,48 @@ void Player::update_movement(float dt)
     const float x_input = input.x_movement;
     const PlayerMoveState move_state = this->move_state();
     const bool analog_stick_down = this->input_.left_analog_stick.y >
-        DROP_DOWN_ANALOG_THRESHOLD;
+        this->player_tuning().drop_down_analog_threshold;
     const bool jump_pressed = this->input_.jump_pressed;
 
     //If the player's velocity is zero and the user is requesting to move the player
     if (are_equal(MovingObject::velocity_x(), 0.0f) && x_input != 0.0f)
     {
-        MovingObject::set_velocity_x(X_INITIAL_VELOCITY * x_input);
+        MovingObject::set_velocity_x(this->player_tuning().x_initial_velocity * x_input);
     }
     //If accelerating in the same direction as currently moving. right
     else if (MovingObject::velocity_x() > 0.0f && x_input > 0.0f)
     {
-        MovingObject::alter_velocity_x(X_ACCELERATION * dt * x_input);
-        if (MovingObject::velocity_x() > MAX_VELOCITY.x)
+        MovingObject::alter_velocity_x(this->player_tuning().x_acceleration * dt * x_input);
+        if (MovingObject::velocity_x() > this->player_tuning().max_velocity.x)
         {
-            MovingObject::set_velocity_x(MAX_VELOCITY.x);
+            MovingObject::set_velocity_x(this->player_tuning().max_velocity.x);
         }
     }
     //If accelerating in the same direction as currently moving. left
     else if (MovingObject::velocity_x() < 0.0f && x_input < 0.0f)
     {
-        MovingObject::alter_velocity_x(X_ACCELERATION * dt * x_input);
-        if (MovingObject::velocity_x() < -MAX_VELOCITY.x)
+        MovingObject::alter_velocity_x(this->player_tuning().x_acceleration * dt * x_input);
+        if (MovingObject::velocity_x() < -this->player_tuning().max_velocity.x)
         {
-            MovingObject::set_velocity_x(-MAX_VELOCITY.x);
+            MovingObject::set_velocity_x(-this->player_tuning().max_velocity.x);
         }
     }
     //If accelerating in the opposite direction as currently moving. right
     else if (MovingObject::velocity_x() > 0.0f && x_input < 0.0f)
     {
-        MovingObject::alter_velocity_x(X_DEACCELERATION * dt * x_input);
-        MovingObject::alter_velocity_x(X_ACCELERATION * dt * x_input);
+        MovingObject::alter_velocity_x(this->player_tuning().x_deacceleration * dt * x_input);
+        MovingObject::alter_velocity_x(this->player_tuning().x_acceleration * dt * x_input);
     }
     //If accelerating in the opposite direction as currently moving. left
     else if (MovingObject::velocity_x() < 0.0f && x_input > 0.0f)
     {
-        MovingObject::alter_velocity_x(X_DEACCELERATION * dt * x_input);
-        MovingObject::alter_velocity_x(X_ACCELERATION * dt * x_input);
+        MovingObject::alter_velocity_x(this->player_tuning().x_deacceleration * dt * x_input);
+        MovingObject::alter_velocity_x(this->player_tuning().x_acceleration * dt * x_input);
     }
     //No key pressed deaccelaration right
     else if (MovingObject::velocity_x() > 0.0f && are_equal(x_input, 0.0f))
     {
-        MovingObject::alter_velocity_x(-X_DEACCELERATION * dt);
+        MovingObject::alter_velocity_x(-this->player_tuning().x_deacceleration * dt);
         if (MovingObject::velocity_x() < 0.0f)
         {
             MovingObject::set_velocity_x(0.0f);
@@ -444,7 +438,7 @@ void Player::update_movement(float dt)
     //No key pressed deaccelaration left
     else if (MovingObject::velocity_x() < 0.0f && are_equal(x_input, 0.0f))
     {
-        MovingObject::alter_velocity_x(X_DEACCELERATION * dt);
+        MovingObject::alter_velocity_x(this->player_tuning().x_deacceleration * dt);
         if (MovingObject::velocity_x() > 0.0f)
         {
             MovingObject::set_velocity_x(0.0f);
@@ -454,15 +448,15 @@ void Player::update_movement(float dt)
     if (this->is_on_ramp())
     {
 		// increase gravity on ramp
-		MovingObject::alter_velocity_y(GRAVITY * RAMP_GRAVITY_MULTIPLIER * dt);
+		MovingObject::alter_velocity_y(this->player_tuning().gravity * this->player_tuning().ramp_gravity_multiplier * dt);
 	}
 	else
 	{
-		MovingObject::alter_velocity_y(GRAVITY * dt);
+		MovingObject::alter_velocity_y(this->player_tuning().gravity * dt);
     }
-    if (MovingObject::velocity_y() > MAX_VELOCITY.y)
+    if (MovingObject::velocity_y() > this->player_tuning().max_velocity.y)
     {
-        MovingObject::set_velocity_y(MAX_VELOCITY.y);
+        MovingObject::set_velocity_y(this->player_tuning().max_velocity.y);
     }
 
     // DROPPING_DOWN state only lasts for one frame
@@ -475,7 +469,7 @@ void Player::update_movement(float dt)
     if (move_state == PlayerMoveState::on_drop_down_ground && analog_stick_down &&
         !jump_pressed)
     {
-        MovingObject::alter_velocity_y(DROP_DOWN_VELOCITY);
+        MovingObject::alter_velocity_y(this->player_tuning().drop_down_velocity);
         this->set_move_state(PlayerMoveState::dropping_down);
     }
 	else
@@ -504,10 +498,10 @@ void Player::do_jump(float dt)
    
     if (this->is_on_ground() && jump_pressed)
     {
-		MovingObject::set_velocity_y(JUMP_LAUNCH_VELOCITY);
+		MovingObject::set_velocity_y(this->player_tuning().jump_launch_velocity);
 		this->set_air_time(0.0f);
 		this->set_move_state(PlayerMoveState::jumping);
-		this->sound_bank_->play_wave(this->jump_sound_, JUMP_SOUND_VOLUME);
+		this->sound_bank_->play_wave(this->jump_sound_, this->player_tuning().jump_sound.volume);
 	}
 	else if (move_state == PlayerMoveState::on_ceiling)
 	{
@@ -517,9 +511,9 @@ void Player::do_jump(float dt)
 	{
 		if (jump_held)
 		{
-			if (this->air_time() <= JUMP_MAX_TIME)
+			if (this->air_time() <= this->player_tuning().jump_max_time)
 			{
-				MovingObject::alter_velocity_y(JUMP_ACCELERATION * dt);
+				MovingObject::alter_velocity_y(this->player_tuning().jump_acceleration * dt);
 			}
 			else
 			{
@@ -537,9 +531,9 @@ void Player::do_jump(float dt)
 		// do nothing
 	}
 
-    if (this->velocity_y() < -MAX_VELOCITY.y)
+    if (this->velocity_y() < -this->player_tuning().max_velocity.y)
     {
-        this->set_velocity_y(-MAX_VELOCITY.y);
+        this->set_velocity_y(-this->player_tuning().max_velocity.y);
     }
 }
 
@@ -604,33 +598,40 @@ bool Player::showing_debug() const
 {
 	return this->showing_debug_;
 }
-const PlayerAnimationInfo& Player::animation_info(PlayerAnimationState state)
+const PlayerTuning& Player::player_tuning() const
+{
+    return this->tuning_->player();
+}
+
+const PlayerAnimationTuning& Player::animation_info(
+    PlayerAnimationState state) const
 {
     switch (state)
     {
     case PlayerAnimationState::idle:
-        return ANIMATION_INFO_IDLE;
+        return this->player_tuning().idle;
     case PlayerAnimationState::walking:
-        return ANIMATION_INFO_WALK;
+        return this->player_tuning().walk;
     case PlayerAnimationState::running:
-        return ANIMATION_INFO_RUNNING;
+        return this->player_tuning().running;
     case PlayerAnimationState::jumping:
-        return ANIMATION_INFO_JUMPING;
+        return this->player_tuning().jumping;
     case PlayerAnimationState::falling:
-        return ANIMATION_INFO_FALLING;
-    default:
-        throw std::exception("Invalid player animation state.");
+        return this->player_tuning().falling;
     }
+
+    throw std::runtime_error("Player animation state " +
+        std::to_string(static_cast<int>(state)) + " has no clip.");
 }
 void Player::respawn()
 {
     this->rectangle_.set_position(this->respawn_position_);
     MovingObject::set_rotation(0.0f);
     MovingObject::set_velocity(Vector2F::ZERO);
-	this->health_ = 1.0f;
+	this->health_ = this->player_tuning().starting_health;
 	this->primary_->reset_ammo();
 	this->state_ = PlayerState::alive;
-    this->sound_bank_->play_wave(this->respawn_sound_, RESPAWN_SOUND_VOLUME);
+    this->sound_bank_->play_wave(this->respawn_sound_, this->player_tuning().respawn_sound.volume);
 }
 PlayerAnimationState Player::calculate_animation_state() const
 {

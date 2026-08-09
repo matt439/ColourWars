@@ -10,7 +10,8 @@
 class PlayerBuilder
 {
 public:
-	PlayerBuilder();
+	// `tuning` is borrowed and outlives every player this makes.
+	explicit PlayerBuilder(const GameTuning* tuning);
 
 	// In the order the player settings name them, which is the order the level
 	// fills its view list in - so index 0 of this vector is the player whose
@@ -23,5 +24,7 @@ public:
 		const artattack::AudioResources* audio_resources,
 		const artattack::ViewportManager* viewport_manager) const;
 private:
+	const GameTuning* tuning_ = nullptr;
+
 	std::unique_ptr<WeaponBuilder> weapon_builder_ = nullptr;
 };

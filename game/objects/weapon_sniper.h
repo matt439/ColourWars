@@ -6,7 +6,8 @@
 class WeaponSniper final : public Weapon
 {
 public:
-	WeaponSniper(PlayerTeam team,
+	WeaponSniper(const GameTuning* tuning,
+		PlayerTeam team,
 		int player_num,
 		const artattack::Colour& team_colour,
 		WeaponType type,

@@ -3,10 +3,10 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace player_consts;
 using namespace artattack;
 
-PlayerBuilder::PlayerBuilder()
+PlayerBuilder::PlayerBuilder(const GameTuning* tuning) :
+	tuning_(tuning)
 {
     this->weapon_builder_ = std::make_unique<WeaponBuilder>();
 }
@@ -36,17 +36,18 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 		{
 			position = team_b_spawns[i];
 		}
-		auto rect = RectangleF(position, DEFAULT_SIZE);
+		auto rect = RectangleF(position, this->tuning_->player().size);
 
 		auto player = std::make_unique<Player>(
 			rect,
-			DEFAULT_ANIMATION_INFO,
+			this->tuning_,
 			render_resources,
 			audio_resources,
 			setting.num,
 			setting.team,
 			setting.weapon,
 			this->weapon_builder_->build_weapon(
+				this->tuning_,
 				setting.team,
 				setting.num,
 				team_colours.team_colour(setting.team),

@@ -6,6 +6,7 @@ using namespace DirectX;
 using namespace artattack;
 
 std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
+    const GameTuning* tuning,
     PlayerTeam team,
     int player_num,
     const Colour& team_colour,
@@ -17,26 +18,26 @@ std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
     switch (type)
     {
     case WeaponType::sprayer:
-        return std::make_unique<WeaponSprayer>(
-            team, player_num, team_colour, type, player_center,
+    case WeaponType::mister:
+        return std::make_unique<RelativeVelocityWeapon>(
+            tuning, team, player_num, team_colour, type, player_center,
             render_resources, audio_resources);
     case WeaponType::sniper:
-        return std::make_unique<WeaponSniper>(team, player_num, team_colour,
-            type, player_center,
+        return std::make_unique<WeaponSniper>(tuning, team, player_num,
+            team_colour, type, player_center,
             render_resources, audio_resources);
     case WeaponType::roller:
-        return std::make_unique<WeaponRoller>(team, player_num, team_colour,
-            type, player_center,
-            render_resources, audio_resources);
-    case WeaponType::mister:
-        return std::make_unique<WeaponMister>(team, player_num, team_colour,
-            type, player_center,
+        return std::make_unique<WeaponRoller>(tuning, team, player_num,
+            team_colour, type, player_center,
             render_resources, audio_resources);
     case WeaponType::bucket:
-        return std::make_unique<WeaponBucket>(team, player_num, team_colour,
-            type, player_center,
+        return std::make_unique<WeaponBucket>(tuning, team, player_num,
+            team_colour, type, player_center,
             render_resources, audio_resources);
     default:
-        throw std::exception("Invalid weapon type");
+        throw std::runtime_error("Weapon type " +
+            std::to_string(static_cast<int>(type)) +
+            " has no builder: ./tuning.json describes the five a player can "
+            "pick, and this is not one of them.");
     }
 }

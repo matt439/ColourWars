@@ -3,10 +3,10 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace weapon_consts;
 using namespace artattack;
 
-WeaponBucket::WeaponBucket(PlayerTeam team,
+WeaponBucket::WeaponBucket(const GameTuning* tuning,
+    PlayerTeam team,
     int player_num,
     const Colour& team_colour,
     WeaponType type,
@@ -18,8 +18,7 @@ WeaponBucket::WeaponBucket(PlayerTeam team,
     const Vector2F& origin,
     SpriteFlip flip,
     float layer_depth) :
-    RelativeVelocityWeapon(DETAILS_BUCKET,
-        DETAILS_RELATIVE_BUCKET,
+    RelativeVelocityWeapon(tuning,
         team, player_num, team_colour, type, player_center,
         render_resources, audio_resources,        color, rotation, origin, flip, layer_depth)
 {
@@ -30,6 +29,6 @@ void WeaponBucket::handle_shoot_sound(bool shooting_this_update, bool /*holding_
     if (shooting_this_update)
     {
         this->sound_bank_->play_wave(this->shoot_sound_,
-            this->details_.shoot_sound_volume);
+            this->details().shoot_sound_volume);
     }
 }

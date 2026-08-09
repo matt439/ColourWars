@@ -3,7 +3,6 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace projectile_consts;
 using namespace artattack;
 
 ProjectileRolling::ProjectileRolling(const RectangleF& rectangle,
@@ -12,13 +11,14 @@ ProjectileRolling::ProjectileRolling(const RectangleF& rectangle,
 	int player_num,
 	const Colour& team_colour,
 	RenderResources* render_resources,
+	const ProjectileTuning* tuning,
 	float rotation,
 	const Vector2F& origin,
 	SpriteFlip flip,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
 		ROLLING, render_resources,
-		DETAILS_ROLLING,
+		tuning,
 		team_colour, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)
 {

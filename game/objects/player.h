@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/objects/player_consts.h"
+#include "game/tuning.h"
 #include "game/objects/weapon_type.h"
 #include "game/objects/player_team.h"
 #include "game/objects/player_input_data.h"
@@ -68,8 +68,12 @@ class Player final : public artattack::MovingObject,
                      public artattack::AnimationObject, public artattack::TextureObject
 {
 public:
+    // `tuning` is borrowed and outlives every player: it is the GameTuning
+    // main() owns. The starting rectangle is the builder's, because a spawn
+    // point is the level's business, but its size and every number the
+    // movement uses come off this.
     Player(const mattmath::RectangleF& rectangle,
-        const PlayerAnimationInfo& animation_info,
+        const GameTuning* tuning,
         artattack::RenderResources* render_resources,
         const artattack::AudioResources* audio_resources,
         int player_num,
@@ -164,29 +168,48 @@ public:
 private:
     artattack::Camera camera_ = artattack::Camera::DEFAULT_CAMERA;
 
+    // Borrowed, never null. Read by update_movement every frame, which is a
+    // pointer hop rather than the 20 constants it replaces - and those were
+    // burned into the object code of every translation unit that included the
+    // header, which is exactly why a balance change was a rebuild.
+    //
+    // The whole table rather than just the player's half, because a hit reads
+    // the damage off the projectile's record: that number belongs to what was
+    // fired, not to who was standing there.
+    const GameTuning* tuning_ = nullptr;
+
+    const PlayerTuning& player_tuning() const;
+
     std::unique_ptr<Weapon> primary_ = nullptr;
 
-    float health_ = player_consts::STARTING_HEALTH;
+    // Both set from `tuning` in the constructor body: a member initialiser
+    // cannot reach a member being initialised beside it.
+    float health_ = 0.0f;
     float damage_sound_timer_ = 0.0f;
     float air_time_ = 0.0f;
     bool facing_right_ = true;
     int score_ = 0;
     bool showing_debug_ = false;
     PlayerState state_ = PlayerState::alive;
-    float respawn_timer_ = player_consts::RESPAWN_DELAY;
+    float respawn_timer_ = 0.0f;
     PlayerInputData input_ = PlayerInputData();
     PlayerMoveState move_state_ = PlayerMoveState::in_air;
     PlayerAnimationState animation_state_ = PlayerAnimationState::idle;
 
-    int player_num_ = player_consts::DEFAULT_PLAYER_NUM;
-    PlayerTeam team_ = player_consts::DEFAULT_TEAM;
-    WeaponType primary_type_ = player_consts::DEFAULT_PRIMARY;
-    WeaponType secondary_type_ = player_consts::DEFAULT_SECONDARY;
-    artattack::Colour team_colour_ = player_consts::DEFAULT_TEAM_COLOUR;
+    // Overwritten by the constructor, every one of them. They are here so the
+    // class has no indeterminate members, not because any of them is a
+    // meaningful default - which is why they are literals rather than the
+    // DEFAULT_* constants they used to be. A default player number, team,
+    // weapon pick and colour are not tuning: nothing reads them.
+    int player_num_ = 0;
+    PlayerTeam team_ = PlayerTeam::none;
+    WeaponType primary_type_ = WeaponType::none;
+    WeaponType secondary_type_ = WeaponType::none;
+    artattack::Colour team_colour_ = artattack::Colour::gray;
     artattack::Viewport viewport_ = artattack::Viewport();
 
-    mattmath::RectangleF rectangle_ = player_consts::DEFAULT_BOUNDS;
-    mattmath::RectangleF prev_rectangle_ = player_consts::DEFAULT_BOUNDS;
+    mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
+    mattmath::RectangleF prev_rectangle_ = mattmath::RectangleF::ZERO;
 
     mattmath::Vector2F respawn_position_ = mattmath::Vector2F::ZERO;
 
@@ -235,7 +258,7 @@ private:
     // from draw() - draw runs concurrently on every render worker.
     void update_animation_state();
 
-    static const PlayerAnimationInfo& animation_info(PlayerAnimationState state);
+    const PlayerAnimationTuning& animation_info(PlayerAnimationState state) const;
 
     void respawn();
 

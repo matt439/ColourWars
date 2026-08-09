@@ -13,6 +13,7 @@ public:
 		int player_num,
 		const artattack::Colour& team_colour,
 		artattack::RenderResources* render_resources,
+		const ProjectileTuning* tuning,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		artattack::SpriteFlip flip = artattack::SpriteFlip::none,

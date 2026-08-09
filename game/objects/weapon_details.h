@@ -1,7 +1,11 @@
 #pragma once
 
+#include "game/objects/player_team.h"
+#include "game/objects/projectile_type.h"
 #include "engine/math/matt_math.h"
-#include "game/objects/projectile.h"
+
+#include <array>
+#include <string>
 
 enum class AddPlayerVelocity
 {
@@ -17,17 +21,23 @@ struct RelativeWeaponDetails
 	float player_vel_amount = 0.0f;
 };
 
-struct SoundEffectInstanceWeaponDetails
+// The looping fire sound, one voice per player per team.
+//
+// Eight named members and a two-level switch over them is what this was - the
+// same table wearing eight names, and a `default:` that threw on an index the
+// caller had already bounds-checked. It is two arrays of four now, which is
+// what the file always said it was.
+struct WeaponLoopSounds
 {
-	std::string shoot_sound_name_a0 = "";
-	std::string shoot_sound_name_a1 = "";
-	std::string shoot_sound_name_a2 = "";
-	std::string shoot_sound_name_a3 = "";
-	std::string shoot_sound_name_b0 = "";
-	std::string shoot_sound_name_b1 = "";
-	std::string shoot_sound_name_b2 = "";
-	std::string shoot_sound_name_b3 = "";
+	std::array<std::string, 4> team_a;
+	std::array<std::string, 4> team_b;
 
+	// True when the weapon holds a loop at all. A weapon that fires a one-shot
+	// wave leaves the block out of its tuning record and gets this false.
+	bool present = false;
+
+	// `index` is the player number, 0-3. Both it and `team` are checked by the
+	// one caller before it asks, so this asserts nothing and simply reads.
 	const std::string& sound_name(PlayerTeam team, int index) const;
 };
 

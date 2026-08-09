@@ -12,6 +12,7 @@ add_executable(ArtAttackGame WIN32
     game_data.cpp
     main.cpp
     save.cpp
+    tuning.cpp
 
     objects/collision_object_type.cpp
     objects/debug_text.cpp
@@ -39,10 +40,8 @@ add_executable(ArtAttackGame WIN32
     objects/weapon_bucket.cpp
     objects/weapon_builder.cpp
     objects/weapon_details.cpp
-    objects/weapon_mister.cpp
     objects/weapon_roller.cpp
     objects/weapon_sniper.cpp
-    objects/weapon_sprayer.cpp
 
     states/end_menu.cpp
     states/game_states.cpp
@@ -82,12 +81,14 @@ target_precompile_headers(ArtAttackGame PRIVATE pch.h)
 # is edited to add an asset and never triggers a relink at all. This runs every
 # build; the if_different copies skip what has not changed.
 add_custom_target(artattack_content ALL)
-add_custom_command(TARGET artattack_content POST_BUILD
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-        "${CMAKE_CURRENT_SOURCE_DIR}/content/manifest.json"
-        "$<TARGET_FILE_DIR:ArtAttackGame>/manifest.json"
-    VERBATIM
-)
+foreach(content_file manifest.json tuning.json)
+    add_custom_command(TARGET artattack_content POST_BUILD
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+            "${CMAKE_CURRENT_SOURCE_DIR}/content/${content_file}"
+            "$<TARGET_FILE_DIR:ArtAttackGame>/${content_file}"
+        VERBATIM
+    )
+endforeach()
 foreach(content_dir textures levels fonts sounds)
     add_custom_command(TARGET artattack_content POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_directory_if_different

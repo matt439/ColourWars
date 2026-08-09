@@ -1,41 +1,11 @@
 #include "game/pch.h"
 #include "game/objects/weapon_details.h"
-using namespace artattack;
 
-const std::string& SoundEffectInstanceWeaponDetails::sound_name(
-	PlayerTeam team, int index) const
+const std::string& WeaponLoopSounds::sound_name(PlayerTeam team,
+	int index) const
 {
-	switch (team)
-	{
-	case PlayerTeam::a:
-		switch (index)
-		{
-		case 0:
-			return shoot_sound_name_a0;
-		case 1:
-			return shoot_sound_name_a1;
-		case 2:
-			return shoot_sound_name_a2;
-		case 3:
-			return shoot_sound_name_a3;
-		default:
-			throw std::exception("Invalid index");
-		}
-	case PlayerTeam::b:
-		switch (index)
-		{
-		case 0:
-			return shoot_sound_name_b0;
-		case 1:
-			return shoot_sound_name_b1;
-		case 2:
-			return shoot_sound_name_b2;
-		case 3:
-			return shoot_sound_name_b3;
-		default:
-			throw std::exception("Invalid index");
-		}
-	default:
-		throw std::exception("Invalid team");
-	}
+	const std::array<std::string, 4>& names =
+		team == PlayerTeam::a ? this->team_a : this->team_b;
+
+	return names[static_cast<size_t>(index)];
 }
