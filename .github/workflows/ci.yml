@@ -47,14 +47,17 @@ jobs:
       # submodules: recursive, because external/labrador is the engine and
       # without it the first configure fails on a missing add_subdirectory.
       #
-      # Labrador is private, so the default GITHUB_TOKEN - scoped to this
-      # repository - cannot fetch it. The token below must be a PAT or an app
-      # token with read access to both. If the checkout fails on the submodule,
-      # that secret is missing or expired; it is not a build problem.
+      # No token is needed for it: Labrador is public. This is worth knowing
+      # because it briefly was not, and the failure was loud and unobvious -
+      # the default GITHUB_TOKEN is scoped to *this* repository, so a private
+      # engine gives "remote: Repository not found" at checkout, before any
+      # build step runs. If Labrador is ever made private again, this needs a
+      # PAT with read access to it:
+      #
+      #     token: ${{ secrets.ENGINE_SUBMODULE_TOKEN }}
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-          token: ${{ secrets.ENGINE_SUBMODULE_TOKEN || github.token }}
 
       # CMakePresets.json reads $env{VCPKG_ROOT} for the toolchain file and
       # configuring fails without it. This is the same one-time step the README

@@ -32,8 +32,8 @@ git clone --recurse-submodules https://github.com/matt439/ColourWars.git
 
 If you already cloned without it: `git submodule update --init --recursive`.
 
-Labrador is a private repository, so the submodule fetch authenticates as you.
-Git Credential Manager or an authenticated `gh` handles this without asking.
+Labrador is public, so the submodule needs no credentials of its own — this
+repository is the private half.
 
 ### Prerequisites
 
