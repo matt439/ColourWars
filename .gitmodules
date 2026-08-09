@@ -1,0 +1,3 @@
+[submodule "external/labrador"]
+	path = external/labrador
+	url = https://github.com/matt439/Labrador.git

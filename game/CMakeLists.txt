@@ -57,6 +57,18 @@ add_executable(ArtAttackGame WIN32
     resource.rc
     settings.manifest
 )
+# This repository's own include root, and it has to be stated here.
+#
+# Includes are written from the repository root (CONVENTIONS), so main.cpp
+# opens with #include "game/pch.h". That used to resolve for free: the engine
+# published the old repository root as a PUBLIC include directory, and that
+# root held game/. After the split the engine publishes its own root, which
+# does not - which is the entire point of the split arriving, and it lands
+# here because this is the half that moved.
+target_include_directories(ArtAttackGame PRIVATE
+    "${CMAKE_CURRENT_SOURCE_DIR}/.."
+)
+
 # The game parses its own level and save files, so it asks for rapidjson
 # itself rather than receiving it through the engine, which no longer passes
 # it on. SYSTEM, because a third party's headers are not measured against
