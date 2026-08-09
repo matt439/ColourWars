@@ -64,10 +64,18 @@ and nothing else.
 
 ## The engine submodule
 
-`external/labrador` pins an exact Labrador revision — currently `c1c1ed4`, the
-commit that stood the engine up as its own repository. A submodule pin is a
-fact about this repository, not a floating reference: the engine can move and
+`external/labrador` pins an exact Labrador revision. A submodule pin is a fact
+about this repository, not a floating reference: the engine can move and
 nothing here changes until the pin is moved on purpose.
+
+To see which revision is pinned right now:
+
+```
+git submodule status
+```
+
+That is the authoritative answer, which is why no revision is written down
+here — a SHA in a README is stale the first time the pin moves.
 
 To move it:
 
