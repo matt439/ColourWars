@@ -112,10 +112,24 @@ in the game changes.
 
 ## About the code
 
-This repository's history runs back to 2023-12-19 and through two earlier
-names — the project began as ColourWars, became ChromaClash, then ArtAttack,
-and the game has now taken its first name back. Most of that history is under
-`ArtAttack/` rather than `game/`; `git log --follow` crosses the rename.
+The project began here on 2022-12-30 as ColourWars, became ChromaClash, then
+ArtAttack, and the game has now taken its first name back — in the same
+repository it started in.
+
+There are two disjoint histories in it, and that is deliberate:
+
+- **`master`** runs back to 2023-12-19. That is the ArtAttack repository's
+  history, filtered to the game's side of the split. Most of it is under
+  `ArtAttack/` rather than `game/`, because the rename to `game/` came late;
+  `git log --follow` crosses it.
+- **`original-2022`** is the first 119 commits, 2022-12-30 to 2023-10-10,
+  exactly as they were. They share no ancestor with `master`: the ArtAttack
+  repository was started fresh and the old sources were copied in by hand
+  ("starting the process of adding all of my old source files back"), so
+  there is no commit to graft onto. The branch is the honest way to keep
+  them — reachable, unmodified, and not pretending to be an ancestor.
+
+`matt439/ChromaClash` holds the middle name's history.
 
 The game is a *client*, and it is held to a client's standard rather than the
 engine's. Labrador's PHILOSOPHY governs the engine's own code and everything it
