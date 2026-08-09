@@ -8,7 +8,7 @@ using namespace artattack;
 Structure::Structure(const std::string& sheet_name,
 	const std::string& frame_name,
 	const RectangleF& sprite_rectangle,
-	const mattmath::Shape* collision_shape,
+	std::unique_ptr<mattmath::Shape> collision_shape,
 	RenderResources* render_resources,
 	CollisionObjectType collision_type,
 	const Colour& color,
@@ -20,7 +20,7 @@ Structure::Structure(const std::string& sheet_name,
 		color, rotation, origin, flip, layer_depth),
 	collision_type_(collision_type),
 	sprite_rectangle_(sprite_rectangle),
-	collision_shape_(collision_shape->clone())
+	collision_shape_(std::move(collision_shape))
 {
 
 }

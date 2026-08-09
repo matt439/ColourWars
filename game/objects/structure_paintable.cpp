@@ -11,7 +11,7 @@ StructurePaintable::StructurePaintable(
 	const std::string& sheet_name,
 	const std::string& frame_name,
 	const RectangleF& sprite_rectangle,
-	const Shape* collision_shape,
+	std::unique_ptr<Shape> collision_shape,
 	RenderResources* render_resources,
 	const AudioResources* audio_resources,
 	CollisionObjectType collision_type,
@@ -22,7 +22,8 @@ StructurePaintable::StructurePaintable(
 	const Vector2F& origin,
 	SpriteFlip flip,
 	float layer_depth) :
-	Structure(sheet_name, frame_name, sprite_rectangle, collision_shape,
+	Structure(sheet_name, frame_name, sprite_rectangle,
+		std::move(collision_shape),
 		render_resources, collision_type, color, rotation, origin,
 		flip, layer_depth),
 		team_colours_(team_colours),

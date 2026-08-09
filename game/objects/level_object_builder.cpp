@@ -131,7 +131,7 @@ std::unique_ptr<CollisionObject>
 			json.string("sheet_name"),
 			json.string("frame_name"),
 			rectangle,
-			&rectangle,
+			std::make_unique<RectangleF>(rectangle),
 			this->render_resources_,
 			collision_type,
 			colour_of(json));
@@ -157,7 +157,7 @@ std::unique_ptr<CollisionObject>
 			json.string("sheet_name"),
 			json.string("frame_name"),
 			rectangle,
-			&rectangle,
+			std::make_unique<RectangleF>(rectangle),
 			this->render_resources_,
 			this->audio_resources_,
 			collision_type,
@@ -184,7 +184,7 @@ std::unique_ptr<CollisionObject>
 			json.string("sheet_name"),
 			json.string("frame_name"),
 			triangle.bounding_box(),
-			&triangle,
+			std::make_unique<TriangleRightAxisAligned>(triangle),
 			this->render_resources_,
 			collision_type,
 			colour_of(json));

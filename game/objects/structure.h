@@ -9,10 +9,15 @@ class Structure : public artattack::TextureObject, public artattack::CollisionOb
 {
 public:
 	Structure() = default;
+	// Takes the collision shape, rather than borrowing and secretly copying
+	// it. The old signature was a `const Shape*` that the constructor cloned,
+	// which is why mattmath::Shape carried a polymorphic clone() for this one
+	// call site - and why every caller passed the address of a stack local
+	// whose lifetime looked, at the call, like it had to outlive the object.
 	Structure(const std::string& sheet_name,
 		const std::string& frame_name,
 		const mattmath::RectangleF& sprite_rectangle,
-		const mattmath::Shape* collision_shape,
+		std::unique_ptr<mattmath::Shape> collision_shape,
 		artattack::RenderResources* render_resources,
 		CollisionObjectType collision_type,
 		const artattack::Colour& color = artattack::Colour::white,

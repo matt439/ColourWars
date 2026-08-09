@@ -37,7 +37,7 @@ public:
 	StructurePaintable(const std::string& sheet_name,
 		const std::string& frame_name,
 		const mattmath::RectangleF& sprite_rectangle,
-		const mattmath::Shape* collision_shape,
+		std::unique_ptr<mattmath::Shape> collision_shape,
 		artattack::RenderResources* render_resources,
 		const artattack::AudioResources* audio_resources,
 		CollisionObjectType collision_type,
