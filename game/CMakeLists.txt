@@ -82,6 +82,19 @@ target_precompile_headers(ArtAttackGame PRIVATE pch.h)
 # is edited to add an asset and never triggers a relink at all. This runs every
 # build; the if_different copies skip what has not changed.
 add_custom_target(artattack_content ALL)
+
+# The wave bank, when its sources are there. cmake/build_wave_bank.cmake says
+# why the built bank is not committed and what a clone without it gets: the
+# manifest marks the bank optional, so the game runs in silence rather than
+# throwing on a file it was never going to have. Before the copy below, so a
+# bank built this run is the one that gets copied.
+add_custom_command(TARGET artattack_content PRE_BUILD
+    COMMAND "${CMAKE_COMMAND}"
+        "-DBANK_DIR=${CMAKE_CURRENT_SOURCE_DIR}/content/sounds"
+        -DBANK_NAME=sound_bank_1
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/build_wave_bank.cmake"
+    VERBATIM
+)
 foreach(content_file manifest.json tuning.json presentation.json)
     add_custom_command(TARGET artattack_content POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different

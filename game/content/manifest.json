@@ -32,6 +32,8 @@
         {
             "kind": "sound_bank",
             "directory": "./sounds/",
+            "_comment": "Optional because the wave bank is built from source audio this repository cannot distribute - see README, 'Audio'. Absent, the game runs in silence rather than throwing at startup.",
+            "optional": true,
             "names": [
                 "sound_bank_1"
             ]

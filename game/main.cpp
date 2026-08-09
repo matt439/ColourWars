@@ -75,8 +75,11 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		// LevelLoadedInfo* the game holds still pointing at them.
 		app.resource_loader()->register_kind("level",
 			{
+				// A level is never optional: a stage the manifest names and
+				// the disk does not have is a content bug, and the stage-select
+				// menu would find out three screens later.
 				[&level_infos, &stages](const std::string& directory,
-					const std::string& name)
+					const std::string& name, bool /*optional*/)
 				{
 					auto info = std::make_unique<LevelLoadedInfo>(
 						(directory + name + ".json").c_str());
