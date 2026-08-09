@@ -65,9 +65,9 @@ void Player::update_animation_state()
     TextureObject::set_frame(info.sprite_sheet, info.uniform_texture);
 
     set_animation_strip_and_reset(info.sprite_sheet, info.animation);
-    if (info.frame_time != FLT_MIN)
+    if (info.frame_time.has_value())
     {
-        set_frame_time(info.frame_time);
+        set_frame_time(*info.frame_time);
     }
     else
     {

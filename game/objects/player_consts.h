@@ -4,14 +4,25 @@
 #include "game/objects/weapon_type.h"
 #include "engine/math/colour.h"
 
+#include <optional>
+
 struct PlayerAnimationInfo
 {
 	std::string sprite_sheet = "";
     std::string animation = "";
     std::string uniform_texture = "";
 
-    // if frame_time is FLT_MIN, then the frame_time will be set to the default
-    float frame_time = FLT_MIN;
+    // Absent means "use the animation's default frame time".
+    //
+    // This was a float defaulting to FLT_MIN, with the absence recovered by
+    // testing `!= FLT_MIN` - a legal, finite, perfectly ordinary number
+    // (2^-126) standing in for a missing one, recovered by exact equality on
+    // a float. Both halves of that are the thing Ericson's numerical chapter
+    // spends the most length warning about, and the sentinel was one careless
+    // assignment away from being indistinguishable from a real value.
+    // std::optional makes the absence unrepresentable as a number, is a
+    // value, and costs nothing.
+    std::optional<float> frame_time = std::nullopt;
 };
 
 namespace player_consts
@@ -81,14 +92,14 @@ namespace player_consts
 		DEFAULT_SHEET,
 		DEFAULT_ANIMATION_STRIP,
 		DEFAULT_UNIFORM_TEXTURE,
-        FLT_MIN
+        std::nullopt
 	};
     const PlayerAnimationInfo ANIMATION_INFO_WALK =
     {
         DEFAULT_SHEET,
         "player_right_walk",
         "player_right_walk_uniform",
-        FLT_MIN
+        std::nullopt
     };
     const PlayerAnimationInfo ANIMATION_INFO_RUNNING =
     {
@@ -102,20 +113,20 @@ namespace player_consts
 		DEFAULT_SHEET,
 		"player_right_idle",
 		"player_right_walk_uniform",
-        FLT_MIN
+        std::nullopt
 	};
     const PlayerAnimationInfo ANIMATION_INFO_JUMPING =
     {
         DEFAULT_SHEET,
         "player_right_jumping",
         "player_right_walk_uniform",
-        FLT_MIN
+        std::nullopt
     };
     const PlayerAnimationInfo ANIMATION_INFO_FALLING =
     {
         DEFAULT_SHEET,
         "player_right_falling",
         "player_right_walk_uniform",
-        FLT_MIN
+        std::nullopt
     };
 }
