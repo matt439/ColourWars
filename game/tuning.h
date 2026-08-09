@@ -8,6 +8,7 @@
 #include "engine/render/colour.h"
 
 #include <array>
+#include <optional>
 #include <string>
 
 // How much, for every number a paint match is balanced on.
@@ -73,8 +74,11 @@ struct PlayerAnimationTuning
 	std::string strip;
 	std::string uniform_texture;
 
-	// Negative means "use the strip's default frame time".
-	float frame_time = -1.0f;
+	// Absent means "use the strip's default frame time". Not a negative
+	// number standing in for absence: a negative frame time is as legal a
+	// float as FLT_MIN was, and recovering "missing" by comparing against a
+	// real value is the thing the sentinel was removed to stop doing.
+	std::optional<float> frame_time = std::nullopt;
 };
 
 // The paint itself: how finely a painted surface is divided, how deep the

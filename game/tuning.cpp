@@ -107,8 +107,9 @@ namespace
 		tuning.sheet = sheet;
 		tuning.uniform_texture = uniform;
 		tuning.strip = clip.string("strip");
-		tuning.frame_time =
-			clip.has("frame_time") ? clip.number("frame_time") : -1.0f;
+		tuning.frame_time = clip.has("frame_time")
+			? std::optional<float>(clip.number("frame_time"))
+			: std::nullopt;
 		return tuning;
 	}
 

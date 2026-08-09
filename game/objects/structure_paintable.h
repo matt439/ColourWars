@@ -61,7 +61,34 @@ private:
 	PaintableFaces faces_ = PaintableFaces();
 	// Borrowed, and outlives the level: main() owns it.
 	const PaintTuning* paint_ = nullptr;
-	std::vector<PaintTile> generate_paint_tiles() const;
+
+	// One face's run of tiles, as an arithmetic rather than a list.
+	//
+	// generate_paint_tiles lays each face down as a contiguous run of equally
+	// sized tiles along one axis, then throws away the fact that it did. That
+	// is what made on_collision a scan: the information needed to jump
+	// straight to the two or three tiles a projectile can possibly touch was
+	// computed and discarded, so the only way left to find them was to ask all
+	// fifteen hundred.
+	//
+	// `origin` is the leading edge of tile `begin`, `pitch` is the tile size
+	// along the strip, and `along_x` says which coordinate advances - x for
+	// the top and bottom faces, y for the left and right.
+	struct PaintStrip
+	{
+		int begin = 0;
+		int count = 0;
+		float origin = 0.0f;
+		float pitch = 1.0f;
+		bool along_x = true;
+	};
+
+	// At most four: one per painted face.
+	std::vector<PaintStrip> paint_strips_ = std::vector<PaintStrip>();
+
+	// Not const: it records each face's run in paint_strips_ as it lays the
+	// tiles down, which is the information on_collision indexes with.
+	std::vector<PaintTile> generate_paint_tiles();
 	artattack::SoundBank* sound_bank_ = nullptr;
 
 	// Resolved once at construction. This plays from update(), on any tile
