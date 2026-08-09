@@ -1,0 +1,132 @@
+# ColourWars
+
+A local split-screen paint-shooter for up to four players. Two teams, one
+arena, and a scoreboard that counts painted surface rather than kills.
+
+It is also the first client of [Labrador](https://github.com/matt439/Labrador),
+a 2D game engine, which this repository consumes as a submodule. The engine is
+the larger project and this is the thing that proves it works — an engine with
+no client is a library of guesses, and ColourWars is what keeps saying "this
+API is awkward" loudly enough to be worth fixing.
+
+```
+game/                 ~12.8k lines   the game: states, objects, content
+external/labrador/                   the engine, as a submodule
+external/rapidjson/                  vendored, for the save and level files
+cmake/                               the wave-bank recipe and the save seeder
+```
+
+## Building
+
+**Windows only**, inherited from the engine: the render backend is Direct3D 11
+and the audio backend is XAudio2.
+
+### Clone
+
+The engine is a submodule, so a plain `git clone` gets you an empty
+`external/labrador` and a CMake error on the first configure.
+
+```
+git clone --recurse-submodules https://github.com/matt439/ColourWars.git
+```
+
+If you already cloned without it: `git submodule update --init --recursive`.
+
+Labrador is a private repository, so the submodule fetch authenticates as you.
+Git Credential Manager or an authenticated `gh` handles this without asking.
+
+### Prerequisites
+
+- **Visual Studio 2022 or newer**, with the "Desktop development with C++"
+  workload. Ninja and CMake come with it.
+- **The Windows 10/11 SDK**, for `d3d11.h` and friends.
+- **vcpkg**, with `VCPKG_ROOT` set. `CMakePresets.json` reads it for the
+  toolchain file, and configuring fails without it. Visual Studio ships a copy
+  at `<VS install>\VC\vcpkg` if you have no other.
+
+DirectX Tool Kit is in `vcpkg.json` and is fetched at configure time.
+
+### Configure and build
+
+```
+cmake --preset x64-debug          # or x64-release
+cmake --build --preset x64-debug
+```
+
+The game runs from its own output directory, which the build fills with
+`game/content/` — so `out/build/x64-debug/game/ArtAttackGame.exe` runs from
+anywhere.
+
+There is no `ctest` step here and that is not an oversight: the tests live with
+the engine. Labrador puts its tests, its benchmark and its sample behind
+`PROJECT_IS_TOP_LEVEL`, so consuming it as a submodule brings in the library
+and nothing else.
+
+## The engine submodule
+
+`external/labrador` pins an exact Labrador revision — currently `c1c1ed4`, the
+commit that stood the engine up as its own repository. A submodule pin is a
+fact about this repository, not a floating reference: the engine can move and
+nothing here changes until the pin is moved on purpose.
+
+To move it:
+
+```
+git -C external/labrador fetch
+git -C external/labrador checkout <rev>
+git add external/labrador
+git commit -m "Move the engine pin to <rev>"
+```
+
+Build before committing the move. The engine's `/W4 /WX` applies here too — the
+game links `artattack_settings`, which Labrador defines and this repository
+deliberately does not copy.
+
+## Audio
+
+**A fresh clone has no sound, and that is expected.** The game runs; it is
+silent, and it says so once on stderr.
+
+The wave bank is built from source `.wav` files that are not in this
+repository. Two reasons: four of the twenty-four waves are commercial music
+tracks nobody can redistribute, and the sources are 148 MB against a built bank
+of 154 MB, past GitHub's per-file limit. See [NOTICE](NOTICE).
+
+What *is* here is the recipe:
+
+- `game/content/sounds/sound_bank_1.json` — the bank's definition, and the
+  authoritative list of the waves it expects.
+- `game/content/sounds/sound_bank_1/XWBTool.exe` — Microsoft's wave-bank
+  compiler.
+- `cmake/build_wave_bank.cmake` — run from the build, it compiles the bank
+  whenever every source wave named by the definition is present, and does
+  nothing when they are not.
+
+To get audio, put a `.wav` for each name in `sound_bank_1.json`'s `waves` array
+into `game/content/sounds/sound_bank_1/` and build. The bank is compiled for
+you.
+
+Absent the bank, `game/content/manifest.json` marks it `"optional": true`, the
+loader substitutes a silent sound bank, and every play is a no-op. Nothing else
+in the game changes.
+
+## About the code
+
+This repository's history runs back to 2023-12-19 and through two earlier
+names — the project began as ColourWars, became ChromaClash, then ArtAttack,
+and the game has now taken its first name back. Most of that history is under
+`ArtAttack/` rather than `game/`; `git log --follow` crosses the rename.
+
+The game is a *client*, and it is held to a client's standard rather than the
+engine's. Labrador's PHILOSOPHY governs the engine's own code and everything it
+ships; game code meets the engine at small interfaces and chooses its own
+grammar behind them. Two rounds of full source review are recorded in the
+engine repository under `docs/review/`, and the findings filed against `game/`
+there refer to this code — read them knowing they were written while the two
+repositories were one.
+
+## Licence
+
+MIT — see [LICENSE](LICENSE). [NOTICE](NOTICE) records the third-party code
+carried here and the content that is deliberately not distributed. The engine
+has its own LICENSE and NOTICE in `external/labrador`.

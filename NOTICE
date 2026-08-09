@@ -1,0 +1,61 @@
+# Third-party code, and content that is not distributed
+
+ColourWars is MIT licensed (see LICENSE). This file records what in the working
+tree is not ColourWars' to license, and what is deliberately absent.
+
+The engine is not covered here. It is a submodule at `external/labrador` with
+its own LICENSE and its own NOTICE, and the third-party code it carries —
+Microsoft's `DeviceResources` and `StepTimer`, Christer Ericson's collision
+routines — is recorded there.
+
+## Code carried in this repository
+
+### rapidjson (MIT)
+
+`external/rapidjson/` is vendored, with its own `license.txt` and `README.md`
+beside it. Copyright (c) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
+
+This is a second copy — the engine vendors one too. That is deliberate rather
+than an oversight of the split: the engine's is PRIVATE and no engine header
+names the parser, so a client that parses files of its own asks for rapidjson
+on its own account. This one is asked for on account of the save file and the
+level files.
+
+### Microsoft content tools (MIT)
+
+Three build tools ship in `game/content/`, alongside the assets they produce:
+
+- `game/content/sounds/sound_bank_1/XWBTool.exe` — the wave-bank compiler.
+- `game/content/fonts/MakeSpriteFont.exe` — the sprite-font compiler.
+- `game/content/textures/texconv.exe` — the texture converter.
+
+Copyright (c) Microsoft Corporation. Licensed under the MIT License.
+Source: https://github.com/microsoft/DirectXTK and
+https://github.com/microsoft/DirectXTex
+
+## Content that is deliberately not distributed
+
+### Audio
+
+`game/content/sounds/` ships the bank's definition (`sound_bank_1.json`), the
+build tool, and the CMake recipe that turns source waves into
+`sound_bank_1.xwb`. It does not ship the waves or the built bank.
+
+Two reasons, and either alone would be enough:
+
+1. **Licence.** Four of the twenty-four waves are commercial music tracks. They
+   are not ColourWars' to redistribute under MIT or any other licence.
+2. **Size.** The sources are 148 MB and the built bank is 154 MB, past
+   GitHub's per-file limit.
+
+A clone therefore has no wave bank, and this is handled rather than broken: the
+manifest marks the bank optional, the loader substitutes a silent one, prints a
+line saying so, and the game runs. See README, "Audio".
+
+### Fonts
+
+`game/content/fonts/` holds compiled `.spritefont` files built from system
+fonts (Gill Sans MT, Courier New) with Microsoft's `MakeSpriteFont`. The
+compiled glyph atlases are redistributed here on the same footing as any other
+game asset built from a licensed system font; the fonts themselves are not
+included and are not ColourWars' to license.
