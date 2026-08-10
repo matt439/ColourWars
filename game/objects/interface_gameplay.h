@@ -1,21 +1,10 @@
 #pragma once
 
-#include "game/objects/player_team.h"
 #include "engine/render/render_resources.h"
 #include "engine/render/colour.h"
 #include "engine/math/matt_math.h"
 #include "game/presentation.h"
 
-
-struct InterfaceDraw
-{
-    mattmath::Vector2I resolution = { -1, -1 };
-    float health = 0.0f;
-    float ammo = 0.0f;
-    PlayerTeam team = PlayerTeam::a;
-    float timer = 0.0f;
-    artattack::Colour team_colour = artattack::Colour::gray;
-};
 
 class InterfaceGameplay
 {

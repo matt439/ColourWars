@@ -72,6 +72,10 @@ public:
     // main() owns. The starting rectangle is the builder's, because a spawn
     // point is the level's business, but its size and every number the
     // movement uses come off this.
+    //
+    // `secondary` is accepted and ignored: there is no second weapon, the
+    // builder passes a fixed type, and nothing ever read the one this used to
+    // store. Dropping it is a change to that call site rather than to here.
     Player(const mattmath::RectangleF& rectangle,
         const GameTuning* tuning,
         artattack::RenderResources* render_resources,
@@ -148,7 +152,6 @@ public:
     const PlayerInputData& input() const;
 
     PlayerState state() const;
-    void set_state(PlayerState state);
 
     PlayerTeam team() const;
 
@@ -188,7 +191,6 @@ private:
     float damage_sound_timer_ = 0.0f;
     float air_time_ = 0.0f;
     bool facing_right_ = true;
-    int score_ = 0;
     bool showing_debug_ = false;
     PlayerState state_ = PlayerState::alive;
     float respawn_timer_ = 0.0f;
@@ -204,7 +206,6 @@ private:
     int player_num_ = 0;
     PlayerTeam team_ = PlayerTeam::none;
     WeaponType primary_type_ = WeaponType::none;
-    WeaponType secondary_type_ = WeaponType::none;
     artattack::Colour team_colour_ = artattack::Colour::gray;
     artattack::Viewport viewport_ = artattack::Viewport();
 
@@ -262,41 +263,12 @@ private:
 
     void respawn();
 
-    void set_player_num(int player_num);
-
-
-    void set_team(PlayerTeam team);
-
-    WeaponType primary() const;
-    void set_primary(WeaponType primary);
-
-    WeaponType secondary() const;
-    void set_secondary(WeaponType secondary);
-
-    void set_team_colour(const artattack::Colour& team_colour);
-
-    void set_viewport(const artattack::Viewport& viewport);
-
     bool facing_right() const;
     void set_facing_right(bool facing_right);
-
-    void set_input(const PlayerInputData& input);
-
-    void alter_health(float change);
-    void set_health(float health);
-
-    void set_respawn_timer(float respawn_timer);
-    void alter_respawn_timer(float change);
 
     float air_time() const;
     void set_air_time(float air_time);
     void alter_air_time(float change);
-
-    int score() const;
-    void set_score(int score);
-    void alter_score(int change);
-
-    void set_showing_debug(bool showing_debug);
 
     void set_move_state(PlayerMoveState move_state);
 

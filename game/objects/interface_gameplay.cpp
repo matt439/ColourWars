@@ -93,7 +93,12 @@ void InterfaceGameplay::draw_ammo(DrawList& draw_list,
 	Vector2F fill_pos = position + Vector2F(border, border);
 	Vector2F fill_size = Vector2F(size.x - 2.0f * border,
 		size.y - 2.0f * border);
-	fill_size.x *= ammo;
+	// The fill is a fraction of the inside of the frame, so anything outside
+	// [0, 1] paints outside the box that is meant to contain it. Clamped here
+	// rather than trusted from the caller: the HUD is handed a raw ammo count
+	// by whichever weapon the player is holding, and one weapon over-filling
+	// its magazine must not be able to draw over the rest of the screen.
+	fill_size.x *= std::clamp(ammo, 0.0f, 1.0f);
 
 	sprite_sheet->draw(
 		draw_list,
@@ -127,7 +132,9 @@ void InterfaceGameplay::draw_health(DrawList& draw_list,
 	Vector2F fill_pos = position + Vector2F(border, border);
 	Vector2F fill_size = Vector2F(size.x - 2.0f * border,
 		size.y - 2.0f * border);
-	fill_size.x *= health;
+	// Clamped for the same reason as the ammo bar above: health is a fraction
+	// of the frame, and nothing on the way here guarantees it stays in [0, 1].
+	fill_size.x *= std::clamp(health, 0.0f, 1.0f);
 
 	sprite_sheet->draw(
 		draw_list,
@@ -169,7 +176,14 @@ void InterfaceGameplay::draw_respawn_timer(DrawList& draw_list,
 		resolution.x / 2.0f - (resolution.x * look.respawn_offset.x),
 		resolution.y * look.respawn_offset.y);
 
-	const std::wstring text = std::to_wstring(static_cast<int>(timer) + 1);
+	// std::ceil, as draw_timer above does, and not truncate-then-add-one: that
+	// is a ceil which is wrong at exactly the integer values, and the first
+	// frame of a respawn is exactly one. Player::update flips state_ to dead in
+	// its *alive* arm, while respawn_timer_ -= dt lives in the dead arm that
+	// does not run until the next tick - so the HUD first reads the delay
+	// undecremented, and a three second respawn opened on "4".
+	const std::wstring text =
+		std::to_wstring(static_cast<int>(std::ceil(timer)));
 
 	draw_list.draw_text(this->respawn_timer_font_, text,
 		pos + look.respawn_shadow_offset, look.respawn_shadow_colour,

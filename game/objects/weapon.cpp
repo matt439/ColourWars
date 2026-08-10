@@ -63,21 +63,13 @@ void Weapon::draw(DrawList& draw_list, bool debug) const
     Vector2F origin = this->calculate_sprite_origin(
         this->details().size, RotationOrigin::left_center);
 
-    SpriteFlip flip = SpriteFlip::none;
-    bool invert_y = this->invert_y();
-    bool invert_x = this->invert_x();
-    if (invert_y && invert_x)
-    {
-        flip = SpriteFlip::both;
-    }
-    else if (invert_y)
-    {
-        flip = SpriteFlip::vertical;
-    }
-    else if (invert_x)
-    {
-        flip = SpriteFlip::horizontal;
-    }
+    // Only the y axis. A weapon facing left is a rotation past +/-PI/2 plus
+    // this flip - which is all update_movement_and_rotation ever sets - so the
+    // horizontal and both cases this used to select were unreachable, and the
+    // x half of the pair they were selected from is gone with them.
+    SpriteFlip flip = this->invert_y()
+        ? SpriteFlip::vertical
+        : SpriteFlip::none;
 
     // Pure read: every per-draw value is a local passed to draw_with, not a
     // member assigned first. draw() is entered by every render worker on the
@@ -225,10 +217,7 @@ bool Weapon::check_if_shooting_and_ammo_update(
     const Vector2F& /*player_velocity*/,
     float dt)
 {
-    bool normal_gun_ok_to_shoot = input.primary_shoot &&
-        this->gun_player_aligned();
-
-    bool ok_to_shoot = normal_gun_ok_to_shoot;
+    bool ok_to_shoot = input.primary_shoot;
 
 
     bool result = false;
@@ -248,13 +237,15 @@ bool Weapon::check_if_shooting_and_ammo_update(
         this->set_ammo_timer(0.0f);
     }
 
-    //ammo regen
+    //ammo regen. The ceiling is the ammo a weapon starts with, which is what
+    //the two hardcoded 1.0f here and in reset_ammo() were assuming.
     if (this->ammo_timer() >= this->tuning_->ammo_regen_delay())
     {
+        const float max_ammo = this->tuning_->starting_ammo();
         this->alter_ammo(this->tuning_->ammo_regen_rate() * dt);
-        if (this->ammo() > 1.0f)
+        if (this->ammo() > max_ammo)
         {
-            this->set_ammo(1.0f);
+            this->set_ammo(max_ammo);
         }
     }
     this->alter_ammo_timer(dt);
@@ -399,16 +390,6 @@ Vector2F Weapon::calculate_projectile_launch_velocity(
     return result;
 }
 
-void Weapon::set_gun_player_aligned(bool gun_player_aligned)
-{
-	this->gun_player_aligned_ = gun_player_aligned;
-}
-
-bool Weapon::gun_player_aligned() const
-{
-	return this->gun_player_aligned_;
-}
-
 void Weapon::set_shoot_timer(float shoot_timer)
 {
 	this->shoot_timer_ = shoot_timer;
@@ -494,16 +475,6 @@ void Weapon::set_rotation(float rotation)
 	this->rotation_ = rotation;
 }
 
-bool Weapon::invert_x() const
-{
-	return this->invert_x_;
-}
-
-void Weapon::set_invert_x(bool invert_x)
-{
-	this->invert_x_ = invert_x;
-}
-
 bool Weapon::invert_y() const
 {
 	return this->invert_y_;
@@ -546,7 +517,9 @@ WeaponType Weapon::type() const
 
 void Weapon::reset_ammo()
 {
-	this->ammo_ = 1.0f;
+	// The same ceiling the regen clamps to, and the same value the constructor
+	// started from: a respawn hands back a full tank, not a hardcoded 1.0f.
+	this->ammo_ = this->tuning_->starting_ammo();
 }
 
 ProjectileBuilder* Weapon::projectile_builder() const
@@ -593,17 +566,23 @@ Vector2F RelativeVelocityWeapon::calculate_projectile_launch_velocity(
 {
     Vector2F result = shoot_direction * starting_velocity;
 
-    if (add_player_vel == AddPlayerVelocity::x_and_y)
+    // Every mode named, no default: the tuning file accepts "none" as well as
+    // the three axis modes, and an if/else chain whose last arm was y_only gave
+    // "none" y-only physics. A switch the compiler can check over the enum is
+    // what makes a fifth mode a build error here rather than a silent one.
+    switch (add_player_vel)
     {
+    case AddPlayerVelocity::x_and_y:
         result += player_velocity * player_vel_amount;
-    }
-    else if (add_player_vel == AddPlayerVelocity::x_only)
-    {
+        break;
+    case AddPlayerVelocity::x_only:
         result.x += player_velocity.x * player_vel_amount;
-    }
-    else //if (add_player_vel == AddPlayerVelocity::y_only)
-    {
+        break;
+    case AddPlayerVelocity::y_only:
         result.y += player_velocity.y * player_vel_amount;
+        break;
+    case AddPlayerVelocity::none:
+        break;
     }
     return result;
 }

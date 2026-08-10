@@ -124,13 +124,9 @@ protected:
 
 	float rotation() const;
 	void set_rotation(float rotation);
-	bool invert_x() const;
-	void set_invert_x(bool invert_x);
 	bool invert_y() const;
 	void set_invert_y(bool invert_y);
 
-	void set_gun_player_aligned(bool gun_player_aligned);
-	bool gun_player_aligned() const;
 	float shoot_timer() const;
 	void set_shoot_timer(float shoot_timer);
 	void alter_shoot_timer(float dt);
@@ -188,9 +184,7 @@ private:
 	float ammo_ = 0.0f;
 	float shoot_timer_ = 0.0f;
 	float rotation_ = 0.0f;
-	bool invert_x_ = false;
 	bool invert_y_ = false;
-	bool gun_player_aligned_ = true;
 
 	float ammo_timer_ = 0.0f;
 

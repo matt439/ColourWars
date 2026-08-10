@@ -78,12 +78,13 @@ void Level::build_opening_frame(RenderResources* render_resources)
 	this->scene_->end_tick();
 	this->projectile_count_ = this->count_projectiles();
 
-	for (Player* player : this->players_)
+	for (size_t i = 0; i < this->players_.size(); ++i)
 	{
+		Player* player = this->players_[i];
 		Camera camera = this->camera_tools_.calculate_camera(
 			player->center(),
 			this->viewport_manager_->player_viewport(
-				player->player_num()).size(),
+				static_cast<int>(i)).size(),
 			player->camera(),
 			this->camera_bounds_);
 		player->set_camera(camera);
@@ -196,6 +197,17 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		if (this->timer_ <= 0.0f)
 		{
 			this->state_ = LevelState::zoom_out;
+
+			// The pull-back starts on this tick, and the arm below that works
+			// the camera out is an `else if` - so it does not run on the tick
+			// the state is entered, while refresh_views() at the end of
+			// update() does. Seeding it here is what stops the first zoom-out
+			// frame being drawn through DEFAULT_CAMERA, which is world (0,0)
+			// at 1:1 and empty background on every stage. It is exactly what
+			// that arm would produce: the ratio is zero until the timer has
+			// been decremented once.
+			this->zoom_out_camera_ = this->zoom_out_start_camera_;
+
 			this->sound_bank_->stop_effect(this->music_, true);
 			this->stop_player_sounds();
 			this->sound_bank_->play_effect(this->zoom_out_sound_, false,
@@ -229,17 +241,31 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			this->state_ = LevelState::finished;
 		}
 	}
-	else if (this->state_ == LevelState::finished)
-	{
-		this->sound_bank_->stop_effect(this->music_, true);
-		return;
-	}
+	// No arm for LevelState::finished. state_ only becomes it in the arm
+	// directly above, in the same chain, so it could never be read on the tick
+	// it was written - and GameLevel::update sees finished and goes to the
+	// results menu instead of calling update() again. The teardown it used to
+	// hold (stopping the music) has already happened on the way into zoom_out,
+	// and ~Level does it again.
 
 }
 
 float Level::zoom_out_camera_ratio() const
 {
-	return 1.0f - (this->zoom_out_timer_ / this->tuning_->match().zoom_out);
+	// A pull-back tuned to zero is 0/0: the arm above zeroes zoom_out_timer_
+	// on the last step before asking for the ratio, and the NaN that comes
+	// back is lerped into zoom_out_camera_, installed as the only view for the
+	// rest of the match and never recomputed. A zoom with no duration is a
+	// zoom that is already over, so it answers 1 and lands on the finish
+	// camera. Camera::frame guards its own division the same way. The proper
+	// home for this is a range check where the tuning is read.
+	const float duration = this->tuning_->match().zoom_out;
+	if (duration <= 0.0f)
+	{
+		return 1.0f;
+	}
+
+	return 1.0f - (this->zoom_out_timer_ / duration);
 }
 
 void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs,
@@ -310,12 +336,13 @@ void Level::apply_player_inputs(
 
 void Level::update_players(float dt)
 {
-	for (Player* player : this->players_)
+	for (size_t i = 0; i < this->players_.size(); ++i)
 	{
+		Player* player = this->players_[i];
 		Camera camera = this->camera_tools_.calculate_camera(
 			player->center(),
 			this->viewport_manager_->player_viewport(
-				player->player_num()).size(),
+				static_cast<int>(i)).size(),
 			player->camera(),
 			this->camera_bounds_);
 		player->set_camera(camera);
@@ -345,11 +372,15 @@ void Level::refresh_views()
 		this->state_ == LevelState::active)
 	{
 		// One pane per player, in player order - which is the order the
-		// overlay reads players_ back in.
-		for (const Player* player : this->players_)
+		// overlay reads players_ back in. The pane index is that position,
+		// never player_num(): the pad slot is a different number the moment
+		// the pads driving a match are not 0..n-1.
+		for (size_t i = 0; i < this->players_.size(); ++i)
 		{
+			const Player* player = this->players_[i];
 			this->scene_->add_view(
-				this->viewport_manager_->player_viewport(player->player_num()),
+				this->viewport_manager_->player_viewport(
+					static_cast<int>(i)),
 				player->camera());
 		}
 	}
@@ -452,13 +483,27 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 			this->projectile_count_, this->frame_dt_);
 	}
 
-	if (this->state_ == LevelState::start_countdown ||
-		this->start_timer_ > -1.0f)
+	// The countdown is positioned in full-screen coordinates, and it used to be
+	// drawn once per pane through that pane's camera so that the panes
+	// reassembled one centred countdown between them. That only works while the
+	// panes tile the whole back buffer, and the three-player layout does not:
+	// it puts players 0, 1 and 2 in the top-left, bottom-right and bottom-left
+	// quadrants and leaves the top-right one belonging to nobody, so nothing
+	// ever rasterised it and the top-right corner of every "3", "2", "1" and
+	// "GO!" was missing.
+	//
+	// Once, over the whole screen, from the last view - whose command list is
+	// executed after every other pane's (renderer.h, submit), so it still lands
+	// over all of them, which is where it was before. The viewport goes back so
+	// this leaves the list as it found it.
+	if (view_index == this->scene_->view_count() - 1 &&
+		(this->state_ == LevelState::start_countdown ||
+			this->start_timer_ > -1.0f))
 	{
-		// Back to the pane's camera: the countdown is positioned in screen
-		// coordinates like the dividers, not in the HUD's local ones.
-		list.set_camera(Camera(player_vp));
+		list.set_viewport(this->viewport_manager_->fullscreen_viewport());
+		list.set_camera(Camera::DEFAULT_CAMERA);
 		this->draw_countdown_text(list);
+		list.set_viewport(player_vp);
 	}
 }
 

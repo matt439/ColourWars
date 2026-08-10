@@ -39,9 +39,6 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData /*input*/,
     {
         this->set_rotation(3.0f * PI / 4.0f);
     }
-    this->set_gun_player_aligned(true);
-    
-
     this->set_player_center(player_center);
 
     //gun facing left

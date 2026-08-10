@@ -26,8 +26,8 @@ const Colour& TeamColour::team_colour(PlayerTeam team) const
 
 TeamColour TeamColourTools::generate_random_team_colour()
 {
-	int enum_max = static_cast<int>(TeamColourPair::max);
-	int random = rand() % enum_max;
+	int enum_count = static_cast<int>(TeamColourPair::count);
+	int random = rand() % enum_count;
 	switch (random)
 	{
 	case 0:
@@ -53,19 +53,5 @@ TeamColour TeamColourTools::team_colours(TeamColourPair team_colour)
 		return BLUE_YELLOW;
 	default:
 		return BLUE_ORANGE;
-	}
-}
-
-Colour TeamColourTools::team_colour(TeamColour team_colours,
-	PlayerTeam team)
-{
-	switch (team)
-	{
-	case PlayerTeam::a:
-		return team_colours.team_a;
-	case PlayerTeam::b:
-		return team_colours.team_b;
-	default:
-		return team_colours.team_a;
 	}
 }

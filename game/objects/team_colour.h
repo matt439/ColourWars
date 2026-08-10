@@ -32,7 +32,13 @@ enum class TeamColourPair
 	blue_orange,
 	pink_green,
 	blue_yellow,
-	max = blue_yellow
+	// One past the last pair, so it is a count and never a valid value - which
+	// is what a random roll needs (rand() % count). This was `max = blue_yellow`,
+	// an alias for a real pair, which made the roll `rand() % 2` and left
+	// blue_yellow - the pair TeamColour also defaults to - impossible to draw.
+	// A new pair goes above this line, exactly as one goes above
+	// weapon_type.h's max_prim_wep.
+	count
 };
 
 namespace team_colour_consts
@@ -50,7 +56,4 @@ public:
 	static TeamColour generate_random_team_colour();
 
 	static TeamColour team_colours(TeamColourPair team_colour);
-
-	static artattack::Colour team_colour(TeamColour team_colours,
-		PlayerTeam team);
 };

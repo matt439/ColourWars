@@ -23,7 +23,7 @@ Player::Player(const RectangleF& rectangle,
     PlayerTeam team,
     WeaponType primary,
     std::unique_ptr<Weapon> primary_weapon,
-    WeaponType secondary,
+    WeaponType /*secondary*/,
     const Colour& team_colour,
     const Viewport& view_port,
     const mattmath::Vector2F& respawn_position,
@@ -44,7 +44,6 @@ Player::Player(const RectangleF& rectangle,
     player_num_(player_num),
     team_(team),
     primary_type_(primary),
-    secondary_type_(secondary),
     team_colour_(team_colour),
     viewport_(view_port),
     rectangle_(rectangle),
@@ -210,11 +209,17 @@ void Player::end_contacts()
 {
     const PlayerMoveState move_state = this->move_state();
 
+    // on_ceiling belongs on this list with the four ground states. Nothing else
+    // clears it, so a head bonk used to leave it set for the whole descent -
+    // harmless to the physics, since do_jump treats it exactly as in_air, but
+    // calculate_animation_state answers it with the idle clip instead of the
+    // falling one.
     if (!this->touched_structure_ &&
         (move_state == PlayerMoveState::on_ground ||
         move_state == PlayerMoveState::on_drop_down_ground ||
         move_state == PlayerMoveState::on_ramp_left ||
-        move_state == PlayerMoveState::on_ramp_right))
+        move_state == PlayerMoveState::on_ramp_right ||
+        move_state == PlayerMoveState::on_ceiling))
     {
         this->set_move_state(PlayerMoveState::in_air);
     }
@@ -370,6 +375,22 @@ void Player::update(float dt)
 std::vector<std::unique_ptr<CollisionObject>>
     Player::update_weapon_and_get_projectiles(float dt) const
 {
+    // A dead player fires nothing. The pad is still read into input_ while the
+    // respawn timer runs, so forwarding it here had a corpse - invisible,
+    // uncollidable and frozen at the death spot - painting in its team colour,
+    // and scoring for it, for the whole respawn delay.
+    //
+    // The loop has to be stopped rather than merely left alone: the weapon ends
+    // its own loop from inside the update being skipped here, so a player who
+    // died mid-fire would otherwise spray audibly until they respawned.
+    // Stopping it every dead frame is the same idempotent call the weapon makes
+    // every frame the trigger is not held.
+    if (this->state_ != PlayerState::alive)
+    {
+        this->stop_sounds();
+        return {};
+    }
+
     return this->primary_->update_and_get_projectiles(
         this->input(),
         this->center(),
@@ -736,91 +757,6 @@ float Player::health() const
 	return this->health_;
 }
 
-void Player::set_health(float health)
-{
-	this->health_ = health;
-}
-
-void Player::alter_health(float change)
-{
-	this->health_ += change;
-}
-
-void Player::set_respawn_timer(float respawn_timer)
-{
-	this->respawn_timer_ = respawn_timer;
-}
-
-void Player::alter_respawn_timer(float change)
-{
-	this->respawn_timer_ += change;
-}
-
-void Player::set_score(int score)
-{
-	this->score_ = score;
-}
-
-void Player::alter_score(int change)
-{
-	this->score_ += change;
-}
-
-int Player::score() const
-{
-	return this->score_;
-}
-
-void Player::set_team(PlayerTeam team)
-{
-	this->team_ = team;
-}
-
-void Player::set_team_colour(const Colour& team_colour)
-{
-	this->team_colour_ = team_colour;
-}
-
-void Player::set_viewport(const Viewport& viewport)
-{
-	this->viewport_ = viewport;
-}
-
-void Player::set_input(const PlayerInputData& input)
-{
-	this->input_ = input;
-}
-
-WeaponType Player::primary() const
-{
-	return this->primary_type_;
-}
-
-void Player::set_primary(WeaponType primary)
-{
-	this->primary_type_ = primary;
-}
-
-WeaponType Player::secondary() const
-{
-	return this->secondary_type_;
-}
-
-void Player::set_secondary(WeaponType secondary)
-{
-	this->secondary_type_ = secondary;
-}
-
-void Player::set_showing_debug(bool showing_debug)
-{
-	this->showing_debug_ = showing_debug;
-}
-
-void Player::set_player_num(int player_num)
-{
-	this->player_num_ = player_num;
-}
-
 void Player::set_camera(const Camera& camera)
 {
 	this->camera_ = camera;
@@ -839,10 +775,6 @@ const Colour& Player::team_colour() const
 PlayerState Player::state() const
 {
 	return this->state_;
-}
-void Player::set_state(PlayerState state)
-{
-	this->state_ = state;
 }
 
 PlayerTeam Player::team() const
@@ -873,6 +805,8 @@ std::string Player::player_move_state_string() const
         return "on_ground";
     case PlayerMoveState::on_drop_down_ground:
         return "on_drop_down_ground";
+    case PlayerMoveState::dropping_down:
+        return "dropping_down";
     case PlayerMoveState::on_ceiling:
         return "on_ceiling";
 	case PlayerMoveState::on_ramp_left:

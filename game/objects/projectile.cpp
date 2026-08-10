@@ -82,9 +82,14 @@ Vector2F DiffusingProjectile::calculate_diffusion_size() const
 
         float ratio = diff_time / diff_length;
 
+        // Interpolating between ONE and end_scale, not between ONE and
+        // ONE + end_scale: the ramp has to arrive at exactly the value the
+        // branch above returns at end_time, or the size steps down in one
+        // frame as it crosses. That step is not only cosmetic - this size is
+        // inflated into the rectangle that is both the sprite and shape(), so
+        // the paint footprint jumps with it.
         multiple = Vector2F::ONE +
-            Vector2F(details.end_scale.x * ratio,
-			details.end_scale.y * ratio);
+            (details.end_scale - Vector2F::ONE) * ratio;
     }
     return base_size * multiple;
 }
@@ -235,10 +240,25 @@ Vector2F Projectile::update_movement(float gravity, float wind_resistance, float
     // survive one frame past its deadline.
     this->alter_timer(dt);
 
-    if (this->timer() > this->delete_timer())
-	{
-		this->set_for_deletion(true);
-	}
+    // Never on the first update, though, or a projectile whose tuned lifetime
+    // is shorter than one step dies without ever being tested against
+    // anything. Scene::add is deferred: an object created during tick N only
+    // joins the scene's collidables at that tick's end_tick(), so the first
+    // update it ever gets is tick N+1's - and Scene::update runs before
+    // Scene::resolve, whose find_contacts and dispatch_contacts both skip
+    // objects already flagged for deletion. Flagging here would retire it at
+    // the end of N+1 having touched nothing. The roller is exactly that case:
+    // its delete_timer is a millionth of a second because it wants to be a
+    // one-step melee volume, and it was painting nothing at all. Surviving one
+    // collision sweep is the minimum a projectile is worth spawning for.
+    if (!this->first_update_done_)
+    {
+        this->first_update_done_ = true;
+    }
+    else if (this->timer() > this->delete_timer())
+    {
+        this->set_for_deletion(true);
+    }
 
     return displacement;
 }
@@ -246,16 +266,6 @@ Vector2F Projectile::update_movement(float gravity, float wind_resistance, float
 float Projectile::delete_timer() const
 {
 	return this->details().delete_timer;
-}
-
-Vector2F Projectile::col_rect_size() const
-{
-	return this->details().size;
-}
-
-float Projectile::player_damage() const
-{
-	return this->details().player_damage;
 }
 
 const ProjectileTuning& Projectile::tuning() const

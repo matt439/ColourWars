@@ -49,8 +49,6 @@ public:
 	void set_for_deletion(bool for_deletion) override;
 
 	float delete_timer() const;
-	mattmath::Vector2F col_rect_size() const;
-	float player_damage() const;
 protected:
 	// This projectile kind's whole record, borrowed. Never null.
 	const ProjectileTuning& tuning() const;
@@ -84,6 +82,12 @@ private:
 	const ProjectileTuning* tuning_ = nullptr;
 
 	float timer_ = 0.0f;
+
+	// False until update_movement has run once. See the comment there: the
+	// lifetime test cannot fire on the update that precedes this projectile's
+	// first collision sweep.
+	bool first_update_done_ = false;
+
 	int player_num_ = -1;
 	artattack::Colour team_colour_ = artattack::Colour::gray;
 	projectile_type type_ = SPRAY;
