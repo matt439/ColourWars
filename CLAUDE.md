@@ -178,6 +178,53 @@ Two rounds of full source review are recorded in the engine repository under
 `external/labrador/docs/review/`; findings filed against `game/` there refer to
 this code, written while the two repositories were one.
 
+## The game is deliberately OOP-heavy — do not "fix" it
+
+This code is full inheritance and virtual dispatch, several levels deep and
+multiple where it suits: `ProjectileMist → DiffusingProjectile → Projectile →
+MovingObject + CollisionObject`, `WeaponBucket → RelativeVelocityWeapon →
+Weapon`, `MainMenuStageSelect → MainMenuPage → MenuPage + SoundBankObject`,
+`StructurePaintable → Structure + PaintableObject`. **That is the design, not
+drift.**
+
+The engine says the opposite about itself and says so loudly, which is exactly
+why this is worth stating. Labrador's **T11** makes inheritance and virtual
+dispatch "tools of last resort, not the default modelling grammar" — and then
+scopes itself, in its own words: T11 is *"not a licence for ... imposing this
+style on the engine's users"*; it governs "the engine's own code and everything
+it ships", while "game code meets the engine at small interfaces and chooses its
+own grammar behind them — full OOP or full performance."
+
+`ARCHITECTURE.md`, "The object model", is explicit that both ends are
+first-class: a game may be "written in full OOP — one registered object per
+entity, hierarchies as deep as its author likes — or for full performance",
+and interface granularity is "the user's performance dial". It names this game
+directly: *"The paint-shooter is a client rather than shipped code and is bound
+by none of it."*
+
+**The rule that follows, and the one that matters here:** a finding that holds
+this code to T11 — "replace the hierarchy with values", "this should be a
+variant", "too much virtual dispatch" — is misfiled. Per PHILOSOPHY, the honest
+answer to it is "the engine's API made that awkward, fix the API" *in Labrador*,
+or nothing at all. Read the `game/` findings in
+`external/labrador/docs/review/` with that in mind; they were written while the
+two repositories were one. Refactoring this game toward value-first C++ to match
+the engine is not a cleanup, it is deleting the demonstration.
+
+## What this game is for
+
+It is the engine's **first and real client** — the proving ground. The README
+puts it plainly: an engine with no client is a library of guesses, and this is
+what keeps saying "this API is awkward" loudly enough to be worth fixing. Its
+OOP-heavy shape is a load-bearing part of that: it exercises the full-OOP end of
+the dial that the engine's own code never will.
+
+It is **not** the copy-me template. That role belongs to the engine's
+`samples/`, which `ARCHITECTURE.md` calls "the permanent second client that
+keeps the boundary honest, and the template a new project copies" — and, unlike
+this game, samples are shipped code and therefore *are* bound by T11. When
+demonstrating engine usage, know which of the two you are pointing at.
+
 ## History
 
 Two disjoint histories, deliberately:
