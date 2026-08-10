@@ -90,8 +90,15 @@ bool Save::write_save_file(const SaveData& data) const
         std::filesystem::create_directories(save_path.parent_path(), ec);
     }
 
+    // Written beside the save and renamed over it, never straight into it.
+    // Opening the real file "wb" truncates it before the replacement exists,
+    // so a write that then fails - a full disk, a read-only Program Files -
+    // has destroyed the settings it was replacing as well as failing to store
+    // the new ones. A rename either happens or does not.
+    const std::string temp_file_path = SAVE_FILE_PATH + ".tmp";
+
     FILE* fp = nullptr;
-    if (fopen_s(&fp, SAVE_FILE_PATH.c_str(), "wb") != 0 || fp == nullptr)
+    if (fopen_s(&fp, temp_file_path.c_str(), "wb") != 0 || fp == nullptr)
     {
         return false;
     }
@@ -108,27 +115,62 @@ bool Save::write_save_file(const SaveData& data) const
     d.AddMember("resolution", resolution, d.GetAllocator());
     d.AddMember("fullscreen", data.fullscreen, d.GetAllocator());
 
+    // Accept() flushes the stream when the top-level value ends, so every byte
+    // has reached fwrite by the time fclose is called below.
     Writer<FileWriteStream> writer(os);
     d.Accept(writer);
 
-    fclose(fp);
-    return true;
+    // fclose is the only call in this function that can report a failed write
+    // for a document this small: FileWriteStream::Flush discards the result of
+    // its fwrite by design, so everything above can "succeed" on a full disk.
+    // Its result is the save's result, which is why it is not discarded.
+    const bool closed = (fclose(fp) == 0);
+
+    std::error_code rename_ec;
+    if (closed)
+    {
+        std::filesystem::rename(temp_file_path, save_path, rename_ec);
+        if (!rename_ec)
+        {
+            return true;
+        }
+    }
+
+    std::error_code remove_ec;
+    std::filesystem::remove(temp_file_path, remove_ec);
+    return false;
 }
 
 void Save::save_to_file() const
 {
     auto start = std::chrono::system_clock::now();
     auto legacy_start = std::chrono::system_clock::to_time_t(start);
-    char buffer[30];
-    std::cout << ctime_s(buffer, sizeof(buffer), &legacy_start) << " Saving...\n";
+    // ctime_s writes the time into `buffer` and returns an errno_t; streaming
+    // that return value printed "0 Saving..." and never read the time at all.
+    // What it writes ends in a newline of its own.
+    char buffer[30] = {};
+    if (ctime_s(buffer, sizeof(buffer), &legacy_start) != 0)
+    {
+        buffer[0] = '\0';
+    }
+    std::cout << buffer << "Saving...\n";
     if (write_save_file(this->save_data_))
     {
 		std::cout << "Save was successful.\n";
+        return;
 	}
-    else
-    {
-		std::cout << "Save was unsuccessful.\n";
-	}
+
+    // A settings change that never reached the disk looks applied - the window
+    // resizes - and then comes back at the default on the next launch, which is
+    // exactly the failure a user cannot diagnose. std::cout above is a trace in
+    // a debugger and nothing else: this is a WIN32-subsystem exe with no
+    // console, so a report that has to be seen goes the way main() sends its
+    // startup failures, stderr paired with a message box (T6).
+    const std::string message = "Could not write " + SAVE_FILE_PATH +
+        ".\nYour settings will not be remembered.";
+    fprintf(stderr, "save failure: %s\n", message.c_str());
+    MessageBoxA(nullptr, message.c_str(), "ArtAttack - save failure",
+        MB_OK | MB_ICONWARNING);
 }
 
 void Save::set_resolution_and_save(ScreenResolution resolution)

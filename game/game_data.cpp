@@ -2,17 +2,6 @@
 #include "game/game_data.h"
 using namespace artattack;
 
-GameData::GameData(const GameData* game_data) :
-	application_(game_data->application()),
-	save_(game_data->save()),
-	level_infos_(game_data->level_infos()),
-	stages_(game_data->stages()),
-	tuning_(game_data->tuning()),
-	presentation_(game_data->presentation())
-{
-
-}
-
 void GameData::set_application(Application* application)
 {
 	this->application_ = application;
@@ -109,9 +98,4 @@ ThreadPool* GameData::thread_pool() const
 const Partitioner* GameData::partitioner() const
 {
 	return this->application_->partitioner();
-}
-
-GameData* GameData::game_data()
-{
-	return this;
 }

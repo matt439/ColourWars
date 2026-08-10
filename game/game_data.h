@@ -25,7 +25,6 @@ class GameData
 {
 public:
     GameData() = default;
-    explicit GameData(const GameData* game_data);
 
     void set_application(artattack::Application* application);
     void set_save(Save* save);
@@ -62,8 +61,6 @@ public:
     artattack::ViewportManager* viewport_manager() const;
     artattack::ThreadPool* thread_pool() const;
     const artattack::Partitioner* partitioner() const;
-
-    GameData* game_data();
 
 private:
     artattack::Application* application_ = nullptr;

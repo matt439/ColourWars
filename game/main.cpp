@@ -8,6 +8,8 @@
 #include "game/tuning.h"
 #include "game/states/game_states.h"
 #include "game/save.h"
+#include <cstdlib>
+#include <ctime>
 
 using namespace DirectX;
 using namespace directory_consts;
@@ -25,6 +27,14 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 {
 	try
 	{
+		// Every random choice the game makes - the random stage, the random
+		// primary weapon, the team colours a match is dealt - goes through
+		// rand(), and an unseeded CRT behaves exactly as srand(1): the same
+		// stage, the same weapon and the same colours on every launch. This is
+		// the one place that runs before any of them, so it is the one place
+		// that seeds.
+		std::srand(static_cast<unsigned int>(std::time(nullptr)));
+
 		Save save;
 		save.load_save_file();
 
