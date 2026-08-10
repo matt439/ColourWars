@@ -1,0 +1,189 @@
+# CLAUDE.md
+
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+
+## What this is
+
+ColourWars is a local split-screen paint-shooter (up to four players, two teams,
+score is painted surface) and the first client of the **Labrador** 2D game
+engine, consumed as a submodule at `external/labrador`. This repository is an
+ordinary C++ application that links the engine; the engine is the larger
+project. Windows-only, inherited from the engine's Direct3D 11 + XAudio2
+backends.
+
+The built executable is still named `ArtAttackGame.exe` and the engine namespace
+is still `artattack::` — the project was ColourWars, then ChromaClash, then
+ArtAttack, and has taken its first name back. Old names in identifiers are
+history, not a rename that was missed.
+
+## Build and run
+
+Requires **VCPKG_ROOT** set (`CMakePresets.json` reads it for the toolchain
+file; configure fails without it), VS 2022+ with the C++ workload, and the
+Windows SDK. The presets use the Ninja generator, so from a plain shell every
+`cmake` step needs the MSVC environment (`vcvars64.bat`) — a Developer prompt or
+the VS-integrated CMake handles this for you.
+
+```
+git clone --recurse-submodules https://github.com/matt439/ColourWars.git
+# or, on an existing clone: git submodule update --init --recursive
+
+cmake --preset x64-debug            # or x64-release
+cmake --build --preset x64-debug
+out/build/x64-debug/game/ArtAttackGame.exe
+```
+
+The build mirrors `game/content/` beside the exe (the `artattack_content`
+target, which runs every build so asset-only edits are picked up), so the game
+runs from anywhere. It resolves content relative to its working directory —
+see [game/directory_consts.h](game/directory_consts.h).
+
+## Tests
+
+**There are no tests in this repository and no `ctest` step, by design.** The
+tests live with the engine, and Labrador puts its tests, benchmark and sample
+behind `PROJECT_IS_TOP_LEVEL` — so consuming it as a submodule brings in the
+library and nothing else. A `ctest` run from here is empty, not broken.
+
+To run engine tests, configure the submodule as its own top-level project:
+
+```
+cmake --preset x64-debug -S external/labrador -B out/labrador/x64-debug
+cmake --build out/labrador/x64-debug
+ctest --test-dir out/labrador/x64-debug --output-on-failure
+ctest --test-dir out/labrador/x64-debug -R <name>    # a single test
+```
+
+CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) configures and builds
+both presets and then checks the game reaches its window — the one thing only a
+consumer can prove is that the pinned engine revision and this game still build
+and link together.
+
+## Audio: a fresh clone is silent, and that is correct
+
+The wave bank is built from `.wav` sources that are not in this repository
+(commercial tracks that cannot be redistributed, and 148 MB of them). What ships
+is the recipe: `game/content/sounds/sound_bank_1.json` (the authoritative list of
+expected waves), `XWBTool.exe`, and
+[cmake/build_wave_bank.cmake](cmake/build_wave_bank.cmake), which compiles the
+bank only when every named source wave is present.
+
+Absent the bank, `manifest.json` marks it `"optional": true`, the loader
+substitutes a silent bank, one line goes to stderr, and nothing else changes. Do
+not "fix" the missing bank. See [NOTICE](NOTICE).
+
+## The engine submodule
+
+`external/labrador` pins an exact revision — a fact about this repository, not a
+floating reference. `git submodule status` is the authoritative answer to which
+revision; deliberately no SHA is written into docs, since it goes stale the first
+time the pin moves. To move it, checkout the new revision inside the submodule,
+**build before committing**, then `git add external/labrador`.
+
+Engine changes belong in the Labrador repository, not here. `artattack_settings`
+— the `/W4 /WX` interface target every real target compiles against — is defined
+by the engine and deliberately *not* copied here; two definitions across two
+repositories would drift.
+
+## Architecture
+
+### Service bag, not globals
+
+[game/game_data.h](game/game_data.h) — `GameData` is handed to every state,
+object and drawable at construction. It holds exactly six borrowed pointers: the
+engine `Application`, this game's `Save`, the level registry, the stage list, the
+tuning and the presentation. Everything else that looks like a service
+(`ThreadPool`, `Gamepads`, `RenderResources`, …) is a forward to the shell. All
+six are owned by `wWinMain` in [game/main.cpp](game/main.cpp) and declared above
+the `Application`, so they outlive every state that borrows them.
+
+### State stack
+
+[game/states/game_states.h](game/states/game_states.h) — two game states over the
+engine's state stack:
+
+```
+[GameMenu]                                  bottom for the whole session; owns
+[GameMenu, MainMenu*Page]                   what the main-menu pages share
+[GameMenu, GameLevel]
+[GameMenu, GameLevel, PauseMenu*Page | ResultsMenu | EndMenu]
+```
+
+A match is pushed *above* the menu, never in place of it, so returning from a
+match returns to a screen that still exists. `GameLevel` restores the screen
+layout it took in its destructor. Menu pages derive from `MenuPage` and share a
+`MenuContext` (services + pad reader + the `MenuLevelSettings` being assembled),
+owned by whichever state owns the screen.
+
+### Level vs Scene
+
+[game/objects/level.h](game/objects/level.h) — `Level` is one paint match: the
+countdown, the clock, the HUDs, the cameras, the music. The generic parts —
+object lists, the tick, the collision sweep, out-of-bounds retirement, per-view
+render fan-out — are `artattack::Scene` in the engine. `Level` holds non-owning
+`Player*` back into the scene that owns them; the index into `players_` is the
+index of that player's view, **not** the player's pad slot (`player_num()` is,
+and the two diverge when a pad is unplugged).
+
+Construction goes through builders — `LevelBuilder` → `PlayerBuilder`,
+`LevelObjectBuilder`, `WeaponBuilder`, `ProjectileBuilder` — which read the level
+definition and the tuning and hand finished objects to the scene.
+
+### Everything numeric is data
+
+Four JSON files are read at startup, before anything else:
+
+| File | What |
+|---|---|
+| `manifest.json` | which fonts, sprite sheets, levels and sound banks exist |
+| `tuning.json` | every number a match is *balanced* on ([game/tuning.h](game/tuning.h)) |
+| `presentation.json` | every font, colour, offset and box size the shell is *laid out* from ([game/presentation.h](game/presentation.h)) |
+| `save/save_data.json` | resolution and fullscreen, read before the window exists |
+
+Tuning and presentation are deliberately two files with two audiences (a balance
+pass and an art pass) and are deliberately *not* manifest entries — they are read
+before every asset and are what those assets are used *by*.
+
+The rule these follow: **C++ says *how*; data says *which* and *how much*.** A
+jump's shape is code, its three numbers are tuning. Anything whose value would
+change the code — animation states the code switches on, member defaults a
+builder overwrites — stays in C++. Moving a number into JSON so it can be a
+scripting layer is the failure mode to avoid.
+
+`main.cpp` teaches the engine's resource loader what a `"level"` kind is
+(`register_kind`), because a level definition means nothing to the engine. Levels
+are never optional; a stage the manifest names and the disk lacks is a content
+bug that must fail at startup, not three screens later.
+
+## Conventions
+
+Includes are written **from the repository root** — `#include "game/pch.h"`,
+`#include "engine/render/camera.h"` — resolved by the one include directory
+[game/CMakeLists.txt](game/CMakeLists.txt) adds. Engine files reaching for
+`"game/..."` is caught by the engine's `check_engine_includes` target, which from
+this tree is the only thing enforcing that direction.
+
+Naming (from the engine's `docs/design/CONVENTIONS.md`, which the game follows):
+`PascalCase` types, `snake_case` everything else, `snake_case_` private members,
+bare `snake_case` public struct fields, `snake_case` enumerators
+(`WeaponType::sprayer`), `SCREAMING_SNAKE` for macros only. Accessors are the
+bare noun (`bounds()`, not `get_bounds()`); setters take `set_`.
+
+The game is a *client* and is held to a client's standard, not the engine's.
+Labrador's `PHILOSOPHY.md` governs engine code; game code meets the engine at
+small interfaces and chooses its own grammar behind them. It still compiles under
+`/W4 /WX`, and `game/pch.h` is the precompiled header for every translation unit.
+
+Two rounds of full source review are recorded in the engine repository under
+`external/labrador/docs/review/`; findings filed against `game/` there refer to
+this code, written while the two repositories were one.
+
+## History
+
+Two disjoint histories, deliberately:
+
+- **`master`** runs back to 2023-12-19 — the ArtAttack repository's history
+  filtered to the game's side of the split. Most of it is under `ArtAttack/`
+  rather than `game/`; use `git log --follow` to cross the rename.
+- **`original-2022`** is the first 119 commits (2022-12-30 to 2023-10-10),
+  unmodified, sharing no ancestor with `master`.
