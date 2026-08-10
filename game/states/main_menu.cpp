@@ -33,6 +33,33 @@ int MainMenuPage::player_count() const
 		player_count();
 }
 
+std::vector<int> MainMenuPage::connected_slots() const
+{
+	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
+	std::vector<int> result;
+	for (int slot = 0; slot < static_cast<int>(inputs.size()); slot++)
+	{
+		if (inputs[slot].connected)
+		{
+			result.push_back(slot);
+		}
+	}
+	return result;
+}
+
+std::vector<ProcessedMenuInput> MainMenuPage::connected_inputs() const
+{
+	std::vector<ProcessedMenuInput> result;
+	for (const ProcessedMenuInput& input : this->menu_inputs())
+	{
+		if (input.connected)
+		{
+			result.push_back(input);
+		}
+	}
+	return result;
+}
+
 #pragma region MainMenuTitle
 
 MainMenuTitle::MainMenuTitle(MenuContext* context) :
@@ -326,12 +353,33 @@ void MainMenuOptions::apply_settings()
 {
 	this->play_wave(this->confirm_sound_);
 
-	this->resolution_manager()->set_resolution(this->resolution_selection_);
-	this->save()->set_resolution_and_save(this->resolution_selection_);
-
-	this->data()->application()->set_resolution(this->resolution_selection_);
-
 	bool fs = this->full_screen_selection_;
+
+	// Fullscreen is a window restyle - WS_POPUP and SW_SHOWMAXIMIZED - and not
+	// a display-mode change, so the back buffer comes out desktop-sized however
+	// small a resolution this page picked. Applying both together left
+	// ViewportManager and ui_camera() sizing from a number the screen does not
+	// have and the game drawing into the top-left corner of it - saved, and
+	// re-applied on every launch after.
+	//
+	// Nothing on ResolutionManager or Application reports the desktop size, so
+	// the coercion is the other way round: while fullscreen is on the
+	// resolution is left alone, and the row goes back to saying what is
+	// actually in effect. Turning fullscreen off applies it as it always did,
+	// and first, because set_fullscreen(false) sizes the window from it.
+	if (fs)
+	{
+		this->resolution_selection_ = this->resolution_manager()->resolution();
+		this->update_resolution_selection_text();
+	}
+	else
+	{
+		this->resolution_manager()->set_resolution(this->resolution_selection_);
+		this->save()->set_resolution_and_save(this->resolution_selection_);
+
+		this->data()->application()->set_resolution(this->resolution_selection_);
+	}
+
 	this->save()->set_full_screen_and_save(fs);
 	this->apply_fullscreen_setting(fs);
 
@@ -819,7 +867,11 @@ void MainMenuPlayerCount::init()
 			settings->set_player_count(1);
 			settings->set_player_team(0, PlayerTeam::a);
 			settings->set_screen_layout(ScreenLayout::one_player);
-			settings->set_player_num(0, 0);
+			// The pad that is actually there, which is not always slot 0. The
+			// match reads a player's input by pad slot, so writing 0 here left
+			// the one player on a lone pad in slot 1 unable to move.
+			const std::vector<int> slots = this->connected_slots();
+			settings->set_player_num(0, slots.empty() ? 0 : slots.front());
 			this->context()->transition_to(
 				std::make_unique<MainMenuWeaponSelect>(this->menu_context()));
 		});
@@ -871,9 +923,13 @@ void MainMenuTeamSelect::draw(Renderer& renderer) const
 }
 void MainMenuTeamSelect::update(float /*dt*/)
 {
-	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
-	int num_inputs = static_cast<int>(inputs.size());
-	int player_count = this->player_count();
+	// The connected pads only, in slot order, so entry i is player i's. Reading
+	// menu_inputs() straight indexes by pad slot instead, and then a couch whose
+	// first pad is in slot 1 leaves player 0 on an empty slot - unable to pick a
+	// team and, since back is read in this same loop, unable to leave.
+	const std::vector<ProcessedMenuInput> inputs = this->connected_inputs();
+	const int num_inputs = static_cast<int>(inputs.size());
+	const int player_count = this->player_count();
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
 	{
@@ -942,13 +998,18 @@ void MainMenuTeamSelect::update(float /*dt*/)
 }
 void MainMenuTeamSelect::set_level_settings() const
 {
+	// Player i's pad slot, which is not i: this page is driven by the connected
+	// pads in slot order, and the match reads a player's input by pad slot, so
+	// the two have to be the same mapping or the match starts on dead pads.
+	const std::vector<int> slots = this->connected_slots();
 	for (int i = 0; i < this->player_count(); i++)
 	{
 		this->level_settings()->
 			set_player_team(i, this->select_states_[i].team);
 
 		this->level_settings()->
-			set_player_num(i, i);
+			set_player_num(i,
+				i < static_cast<int>(slots.size()) ? slots[i] : i);
 	}
 }
 bool MainMenuTeamSelect::all_players_confirmed() const
@@ -1140,9 +1201,12 @@ void MainMenuWeaponSelect::draw(Renderer& renderer) const
 }
 void MainMenuWeaponSelect::update(float /*dt*/)
 {
-	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
-	int player_count = this->player_count();
-	int num_inputs = static_cast<int>(inputs.size());
+	// The connected pads only, in slot order, so entry i is player i's - the
+	// same mapping team select wrote into the settings. Indexed by pad slot, a
+	// player whose pad is not in slot i can neither choose nor go back.
+	const std::vector<ProcessedMenuInput> inputs = this->connected_inputs();
+	const int player_count = this->player_count();
+	const int num_inputs = static_cast<int>(inputs.size());
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
 	{
@@ -1467,9 +1531,12 @@ void MainMenuStageSelect::draw(Renderer& renderer) const
 }
 void MainMenuStageSelect::update(float /*dt*/)
 {
-	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
-	int num_inputs = static_cast<int>(inputs.size());
-	int player_count = this->player_count();
+	// The connected pads only, in slot order, so entry i is player i's - the
+	// same mapping the two pages before this one used. Indexed by pad slot, a
+	// player whose pad is not in slot i can neither cycle the stage nor go back.
+	const std::vector<ProcessedMenuInput> inputs = this->connected_inputs();
+	const int num_inputs = static_cast<int>(inputs.size());
+	const int player_count = this->player_count();
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
 	{
@@ -1489,7 +1556,11 @@ void MainMenuStageSelect::update(float /*dt*/)
 				this->select_state_.state =
 					ConfirmationState::unconfirmed;
 			}
-			//no break here as I want simultaneous input from players to be possible
+			// No break here as I want simultaneous input from players to be
+			// possible. That is about this arm only - unconfirming is a change
+			// to the shared state that two players may make in the same frame.
+			// The proceed arm below can leave the screen, and where it does it
+			// returns instead.
 		}
 		else if (inputs[i].action == MenuInputAction::proceed)
 		{
@@ -1508,7 +1579,13 @@ void MainMenuStageSelect::update(float /*dt*/)
 				// GameMenu owns, so closing is the message. It used to write
 				// true through a heap-allocated bool that GameMenu read on
 				// every frame of every menu page to find out.
+				//
+				// One pop, whatever the other pads did this frame. Both pops
+				// would queue and both would drain (state_context.h), so a
+				// second A on the same tick took GameMenu off the stack too -
+				// out from under this page, taking its result callback with it.
 				this->context()->pop();
+				return;
 			}
 			else
 			{
@@ -1544,24 +1621,12 @@ void MainMenuStageSelect::update_stage_select_visuals()
 
 	// Every stage names and pictures itself, from its own level file, so this
 	// reads the list rather than a switch that has to grow a case per stage.
-	const StageList* stages = this->data()->stages();
+	// init() builds the icon from the same two helpers, so the first frame
+	// painted is the selected stage's and no name that is not in the sheet is
+	// ever handed to the eager resolve.
 	const int slot = this->select_state_.slot;
-	if (slot == this->random_slot())
-	{
-		this->stage_icon_->set_sprite_frame("random");
-		this->stage_name_->set_text(L"Random");
-	}
-	else if (slot >= 0 && slot < static_cast<int>(stages->size()))
-	{
-		const Stage& stage = stages->at(static_cast<size_t>(slot));
-		this->stage_icon_->set_sprite_frame(stage.icon_frame);
-		this->stage_name_->set_text(widen(stage.display_name));
-	}
-	else
-	{
-		this->stage_icon_->set_sprite_frame("error");
-		this->stage_name_->set_text(L"ERROR");
-	}
+	this->stage_icon_->set_sprite_frame(this->slot_icon_frame(slot));
+	this->stage_name_->set_text(this->slot_display_name(slot));
 	if (this->select_state_.state == ConfirmationState::confirmed)
 	{
 		this->ready_->set_hidden(false);
@@ -1590,6 +1655,32 @@ int MainMenuStageSelect::slot_of(const std::string& stage_name) const
 int MainMenuStageSelect::random_slot() const
 {
 	return static_cast<int>(this->data()->stages()->size());
+}
+std::string MainMenuStageSelect::slot_icon_frame(int slot) const
+{
+	if (slot == this->random_slot())
+	{
+		return "random";
+	}
+	const StageList* stages = this->data()->stages();
+	if (slot >= 0 && slot < static_cast<int>(stages->size()))
+	{
+		return stages->at(static_cast<size_t>(slot)).icon_frame;
+	}
+	return "error";
+}
+std::wstring MainMenuStageSelect::slot_display_name(int slot) const
+{
+	if (slot == this->random_slot())
+	{
+		return L"Random";
+	}
+	const StageList* stages = this->data()->stages();
+	if (slot >= 0 && slot < static_cast<int>(stages->size()))
+	{
+		return widen(stages->at(static_cast<size_t>(slot)).display_name);
+	}
+	return L"ERROR";
 }
 int MainMenuStageSelect::pick_random_stage() const
 {
@@ -1620,17 +1711,22 @@ void MainMenuStageSelect::init()
 		this->menu_style().heading_shadow_offset);
 
 
+	// Both are built from the slot the cursor starts on, not from a literal.
+	// The frame is resolved eagerly, inside UiTexture's construction, so a
+	// name that is not in the sheet throws out of here rather than showing
+	// wrong - which is what "stage_test_1" did, a frame the sheet has not
+	// carried for three stages.
 	this->stage_icon_ = std::make_unique<UiTexture>(
 		"stage_icon",
 		"sprite_sheet_1",
-		"stage_test_1",
+		this->slot_icon_frame(this->select_state_.slot),
 		RectangleF(this->calculate_widget_position(0, 1), this->look().stage_select.size),
 		this->render_resources(),
 		this->look().play_background_colour);
 
 	this->stage_name_ = std::make_unique<UiTextDropShadow>(
 		"stage_name",
-		L"Test 1",
+		this->slot_display_name(this->select_state_.slot),
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),

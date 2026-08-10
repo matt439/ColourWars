@@ -38,6 +38,19 @@ protected:
 
 	int player_count() const;
 
+	// The pad slots that actually have a pad in them, in slot order.
+	//
+	// MenuInput answers one entry per slot with the empty ones left neutral, so
+	// a page that is one row per player cannot use the loop index as both the
+	// player and the slot: a lone pad in slot 1 would drive nobody. These two
+	// are what turns "the Nth pad on the couch" into "player N", and the slot
+	// list is what the settings carry into the match, which reads a player's
+	// input by pad slot (game/objects/player_input_data.h).
+	std::vector<int> connected_slots() const;
+
+	// menu_inputs() with the empty slots dropped, so entry i is player i's.
+	std::vector<ProcessedMenuInput> connected_inputs() const;
+
 	// Every sound this page family can make, resolved once when the page is
 	// built. The music is an effect rather than a wave because it loops and is
 	// stopped on the way into a match; the rest are fire-and-forget.
@@ -256,6 +269,13 @@ private:
 	int slot_of(const std::string& stage_name) const;
 	// The slot the Random option sits in - one past the last stage.
 	int random_slot() const;
+	// What a slot shows: the sprite frame and the label beneath it. They are
+	// helpers rather than a block inside update_stage_select_visuals because
+	// init() has to build the icon with a frame that is really in the sheet -
+	// the engine resolves a frame name eagerly, and one that is not there
+	// throws before the page has finished being constructed.
+	std::string slot_icon_frame(int slot) const;
+	std::wstring slot_display_name(int slot) const;
 	// A real stage's slot, chosen uniformly.
 	int pick_random_stage() const;
 	void cycle_stages(artattack::Direction direction);
