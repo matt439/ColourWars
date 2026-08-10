@@ -2,7 +2,7 @@
 
 #include <string>
 
-// The three paths the game knows before it has read anything. Everything else -
+// The four paths the game knows before it has read anything. Everything else -
 // which textures, fonts, levels and sounds exist and which folders they live in
 // - is in the manifest, because it is data (T7).
 //

@@ -17,9 +17,12 @@ beside it. Copyright (c) 2015 THL A29 Limited, a Tencent company, and Milo Yip.
 
 This is a second copy — the engine vendors one too. That is deliberate rather
 than an oversight of the split: the engine's is PRIVATE and no engine header
-names the parser, so a client that parses files of its own asks for rapidjson
-on its own account. This one is asked for on account of the save file and the
-level files.
+names the parser, so a client that needs one asks for rapidjson on its own
+account. This one is asked for on account of the save file, which the game
+*writes* — the engine's assets module only reads, and its `JsonValue`
+deliberately keeps rapidjson out of a client's translation units, so the level
+files need no copy of their own. `game/save.cpp` is the only file here that
+includes it.
 
 ### Microsoft content tools (MIT)
 
