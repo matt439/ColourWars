@@ -31,10 +31,12 @@ namespace
 		return *colour;
 	}
 
-	// A level file may give a rectangle either way round, and both spellings
-	// are in the shipped levels. Neither is optional in the sense of having a
-	// default: an object with no rectangle at all is a level that cannot be
-	// built, so say which object and which spellings were looked for.
+	// A level file may give a rectangle either way round. The shipped levels
+	// use only "rectangle"; "rectangle_tlbr" is kept because it is part of the
+	// format this loader accepts, and dropping an accepted spelling would break
+	// any level file written against it. Neither is optional in the sense of
+	// having a default: an object with no rectangle at all is a level that
+	// cannot be built, so say which object and which spellings were looked for.
 	RectangleF decode_rectangle(const JsonValue& json)
 	{
 		if (json.has("rectangle"))
@@ -183,6 +185,16 @@ std::unique_ptr<CollisionObject>
 			triangle_json.number("x3"),
 			triangle_json.number("y3"));
 
+		// The sheet carries one ramp frame and it is right-handed, so a
+		// left-handed ramp is that frame mirrored. The handedness is already
+		// in the collision type, so it is read from there rather than from a
+		// "flip" field a level author would have to remember to keep in step
+		// with it.
+		const SpriteFlip flip =
+			collision_type == CollisionObjectType::structure_ramp_left
+			? SpriteFlip::horizontal
+			: SpriteFlip::none;
+
 		return std::make_unique<Structure>(
 			json.string("sheet_name"),
 			json.string("frame_name"),
@@ -190,7 +202,10 @@ std::unique_ptr<CollisionObject>
 			std::make_unique<TriangleRightAxisAligned>(triangle),
 			this->render_resources_,
 			collision_type,
-			colour_of(json));
+			colour_of(json),
+			0.0f,
+			Vector2F::ZERO,
+			flip);
 	}
 
 	throw std::runtime_error(json.where() +

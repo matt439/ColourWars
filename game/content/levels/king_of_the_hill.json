@@ -287,9 +287,178 @@
             "collision_type": "STRUCTURE",
             "colour": "SADDLE_BROWN"
         },
+        {
+            "name": "mountain_level_1_ramp_west",
+            "type": "StructureRamp",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "ramp_right_200_100",
+            "triangle":
+            {
+                "x1": 5700.0,
+                "y1": 6000.0,
+                "x2": 4300.0,
+                "y2": 6000.0,
+                "x3": 4300.0,
+                "y3": 5550.0
+            },
+            "collision_type": "STRUCTURE_RAMP_LEFT",
+            "colour": "SADDLE_BROWN"
+        },
 
-
-
+        {
+            "name": "mountain_level_5",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 1900.0,
+                "y": 5500.0,
+                "width": 2200.0,
+                "height": 50.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "GREY"
+        },
+        {
+            "name": "mountain_level_6",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 2100.0,
+                "y": 5400.0,
+                "width": 1800.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "DARK_GREY"
+        },
+        {
+            "name": "mountain_level_7",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 2300.0,
+                "y": 5300.0,
+                "width": 1400.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "GREY"
+        },
+        {
+            "name": "mountain_level_8",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 2400.0,
+                "y": 5200.0,
+                "width": 1200.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "DARK_GREY"
+        },
+        {
+            "name": "mountain_level_9",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 2500.0,
+                "y": 5100.0,
+                "width": 1000.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "GREY"
+        },
+        {
+            "name": "mountain_level_10",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 2600.0,
+                "y": 5000.0,
+                "width": 800.0,
+                "height": 100.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "DARK_GREY"
+        },
+        {
+            "name": "mountain_level_11",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle":
+            {
+                "x": 2850.0,
+                "y": 4870.0,
+                "width": 300.0,
+                "height": 130.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces":
+            {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": false
+            },
+            "colour": "GREY"
+        },
 
 
 
