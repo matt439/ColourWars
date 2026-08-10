@@ -117,12 +117,31 @@ jobs:
             -RedirectStandardError "$dir/startup.err" `
             -RedirectStandardOutput "$dir/startup.out"
           Start-Sleep -Seconds 15
+          $p.Refresh()
           $exited = $p.HasExited
-          if (-not $exited) { $p.Kill() }
+          $window = 0
+          if (-not $exited) {
+            $window = $p.MainWindowHandle.ToInt64()
+            $p.Kill()
+          }
           Write-Output "--- stderr ---"
-          Get-Content "$dir/startup.err" -ErrorAction SilentlyContinue
+          $stderr = Get-Content "$dir/startup.err" -ErrorAction SilentlyContinue
+          $stderr
           if ($exited) {
             Write-Error "the game exited during startup (code $($p.ExitCode))"
+            exit 1
+          }
+          # "Still running" on its own is not the thing this step claims. A
+          # startup throw is caught in wWinMain, which prints the reason and
+          # then opens a modal MessageBox - a call that never returns on a
+          # runner with nobody to click it. So a failure is alive at 15 s and
+          # has a window too, and only the stderr line tells the two apart.
+          if ($stderr -match "startup failure") {
+            Write-Error "the game threw during startup"
+            exit 1
+          }
+          if ($window -eq 0) {
+            Write-Error "the game is running but never opened a window"
             exit 1
           }
           Write-Output "the game reached its window without a wave bank"
