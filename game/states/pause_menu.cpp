@@ -6,6 +6,25 @@ using namespace mattmath;
 using namespace menu_consts;
 using namespace artattack;
 
+bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot)
+{
+	if (slot < 0)
+	{
+		return false;
+	}
+	const std::vector<MenuPlayerSettings> players = settings.player_settings();
+	const int count = std::min(settings.player_count(),
+		static_cast<int>(players.size()));
+	for (int i = 0; i < count; i++)
+	{
+		if (players[static_cast<size_t>(i)].num == slot)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 PauseMenuPage::PauseMenuPage(MenuContext* context, int player_num) :
 	MenuPage(context),
 	SoundBankObject(this->menu_style().sound_bank,
@@ -60,7 +79,35 @@ ProcessedMenuInput PauseMenuPage::pausing_player_input(
 	{
 		return ProcessedMenuInput();
 	}
-	return inputs[static_cast<size_t>(this->pausing_player_)];
+
+	const ProcessedMenuInput& pausing =
+		inputs[static_cast<size_t>(this->pausing_player_)];
+	if (pausing.connected)
+	{
+		return pausing;
+	}
+
+	// The pad that opened this menu has been unplugged. One pad owning the
+	// menu is the design and stays the design - whoever called the pause is
+	// who answers for it - but a slot with nothing in it can never answer, and
+	// the frame below is not being updated, so the match would have no exit
+	// left but the window's close button. Ownership therefore falls back to
+	// the match as a whole, and the first pad still in it that says anything
+	// is heard. Only pads in the match: an idle controller that is on no
+	// player's lap did not earn a vote by being plugged in.
+	const MenuLevelSettings& settings = *this->level_settings();
+	for (size_t slot = 0; slot < inputs.size(); slot++)
+	{
+		const ProcessedMenuInput& input = inputs[slot];
+		if (input.connected &&
+			(input.action != MenuInputAction::none ||
+				input.direction != artattack::Direction::none) &&
+			match_owns_pad_slot(settings, static_cast<int>(slot)))
+		{
+			return input;
+		}
+	}
+	return ProcessedMenuInput();
 }
 
 PauseMenuInitial::PauseMenuInitial(MenuContext* context, int player_num) :

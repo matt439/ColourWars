@@ -8,6 +8,17 @@
 #include "engine/render/colour.h"
 
 
+// Whether a pad slot is one this match is actually being played on.
+//
+// MenuPlayerSettings::num is the pad slot a player was built for; the index
+// into the settings is that player's view, not its pad (level.h). Two callers
+// want the same answer - the match, deciding whose Start button opens a pause
+// menu, and the pause menu, deciding who may drive it once the pad that opened
+// it has gone - so they ask it here instead of each assuming "any of the four
+// slots".
+bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot);
+
+
 class PauseMenuPage : public MenuPage, public artattack::SoundBankObject
 {
 public:
@@ -42,6 +53,12 @@ protected:
 	// that slot is out of range. This is the only menu page that reads a single
 	// player's input rather than looping every slot, so it is the only one that
 	// needs the bound check.
+	//
+	// With one exception, and it is what stands between an unplugged controller
+	// and a match that can never be resumed, restarted or quit: nothing below
+	// this page is updated while it is up, so a pausing pad that is no longer
+	// connected leaves nobody able to answer at all. Then, and only then, any
+	// pad still in the match speaks for it.
 	ProcessedMenuInput pausing_player_input(
 		const std::vector<ProcessedMenuInput>& inputs) const;
 

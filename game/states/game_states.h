@@ -112,7 +112,14 @@ private:
 	void leave_match(EndMenuAction action) const;
 
 	// Returns the XInput pad slot of the player who pressed pause, or -1.
-	static int check_for_pause_input(
-		const std::vector<PlayerInputData>& player_inputs);
+	//
+	// Only slots this match is being played on are asked, which is why it needs
+	// the settings and cannot be static: player_inputs carries an entry for
+	// every connected pad whether or not a player is on it, and a spare
+	// controller down the back of the sofa is not one of the people playing.
+	// Letting one pause was letting it own the menu (pause_menu.h) and walk
+	// Quit -> Yes on everybody else's behalf.
+	int check_for_pause_input(
+		const std::vector<PlayerInputData>& player_inputs) const;
 	GameData* data() const;
 };

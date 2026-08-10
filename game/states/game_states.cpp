@@ -293,11 +293,12 @@ void GameLevel::leave_match(EndMenuAction action) const
 }
 
 int GameLevel::check_for_pause_input(
-	const std::vector<PlayerInputData>& player_inputs)
+	const std::vector<PlayerInputData>& player_inputs) const
 {
 	for (int i = 0; i < static_cast<int>(player_inputs.size()); i++)
 	{
-		if (player_inputs[i].toggle_pause_menu)
+		if (player_inputs[i].toggle_pause_menu &&
+			match_owns_pad_slot(this->settings_, i))
 		{
 			return i;
 		}

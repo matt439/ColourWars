@@ -11,7 +11,6 @@ struct PlayerInputData
 	mattmath::Vector2F shoot_direction = { 0.0f, 0.0f };
 	bool shoot_direction_requested = false;
 	bool primary_shoot = false;
-	bool secondary_shoot = false;
 	bool toggle_debug = false;
 	bool toggle_pause_menu = false;
 
