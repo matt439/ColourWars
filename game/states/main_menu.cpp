@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
+#include "game/drawable_text.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -1868,7 +1869,13 @@ std::wstring MainMenuStageSelect::slot_display_name(int slot) const
 	const StageList* stages = this->data()->stages();
 	if (slot >= 0 && slot < static_cast<int>(stages->size()))
 	{
-		return widen(stages->at(static_cast<size_t>(slot)).display_name);
+		// The same conversion the stage was checked with at load, so the two
+		// cannot disagree about which characters are acceptable. It cannot
+		// throw here: main.cpp ran it over this exact string before the stage
+		// joined the list.
+		return drawable_text::widen_drawable(
+			stages->at(static_cast<size_t>(slot)).display_name,
+			"the stage list");
 	}
 	return L"ERROR";
 }

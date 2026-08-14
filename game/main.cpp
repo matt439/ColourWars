@@ -2,6 +2,7 @@
 #include "engine/app/application.h"
 #include "engine/core/registry.h"
 #include "game/directory_consts.h"
+#include "game/drawable_text.h"
 #include "game/game_data.h"
 #include "game/objects/level_loaded_info.h"
 #include "game/presentation.h"
@@ -100,6 +101,14 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 					// GameLevel::init(), which is after four people have
 					// chosen a stage and pressed A.
 					info->validate();
+
+					// The stage name is the one level value that is drawn as
+					// text rather than used as a key, so it is the one that
+					// can carry a character no font here has a glyph for. The
+					// result is discarded: the menu widens it again at the
+					// point it draws it, and this is the check.
+					drawable_text::widen_drawable(info->display_name(),
+						"the display_name in " + directory + name + ".json");
 
 					stages.push_back(Stage{ name, info->display_name(),
 						info->icon_frame() });

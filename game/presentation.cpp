@@ -3,6 +3,7 @@
 
 #include "engine/assets/json.h"
 #include "engine/render/text_encoding.h"
+#include "game/drawable_text.h"
 
 #include <optional>
 #include <stdexcept>
@@ -181,8 +182,12 @@ namespace
 		const auto describe = [&descriptions, &menu](WeaponType type,
 			const char* key)
 		{
+			// The only authored prose in this file, and the only place a
+			// character the fonts cannot draw could reach a widget - which it
+			// would do at weapon select, four screens after this line read it.
 			menu.weapon_descriptions[static_cast<size_t>(type)] =
-				widen(descriptions.string(key));
+				drawable_text::widen_drawable(descriptions.string(key),
+					descriptions.where() + ": " + key);
 		};
 
 		describe(WeaponType::sprayer, "sprayer");
