@@ -5,11 +5,11 @@
 > answer, and each carries an **exhibit**: the workaround that is in this
 > repository now, written because the engine offered nothing better.
 >
-> **Two are closed and struck below; four are still drafts.** Every engine
+> **Three are closed and struck below; three are still drafts.** Every engine
 > citation was checked against the pinned revision on the day of writing — and
 > `8e43d72` is the *submodule pin*, not the engine's master. That is how report
 > 1 came to describe a bug the engine had fixed the day after the pin was
-> taken. Check master before filing any of the four that are left.
+> taken. Check master before filing any of the three that are left.
 >
 > They are drafted here rather than in the submodule on purpose. CLAUDE.md puts
 > engine *changes* in the Labrador repository; a report is a thing this client
@@ -32,13 +32,13 @@ written in the last three days and did not exist when the gap audit was run.
 |---|---|---|---|
 | 1 | ~~`StateContext` never empties its stack~~ | n/a — unfixable client-side | **closed** — engine `881d3c7`, fixed before this was drafted |
 | 2 | ~~No activation hook on `State`~~ | yes, two of them | **closed** — engine `8c104a7`, filed and landed |
-| 3 | `FocusGroup` has no disabled entry | yes, two of them | file |
+| 3 | ~~`FocusGroup` has no disabled entry~~ | yes, two of them | **closed** — engine `9bc14b3`, filed and landed |
 | 4 | Every UI leaf is `final` | yes | file |
 | 5 | No font default character | yes | file |
 | 6 | No audio bus or master gain | **not yet** | hold |
 
-Both closures are waiting on a submodule pin bump; neither is visible to this
-client until then. What each one lets this repository delete is recorded under
+All three closures are waiting on a submodule pin bump; none of them is visible
+to this client until then. What each one lets this repository delete is recorded under
 its own heading.
 
 ---
@@ -64,7 +64,7 @@ on this side. **What this repository does about it: nothing.**
 The lesson worth keeping is the one about aim rather than about the bug.
 `8e43d72` is what `external/labrador` is pinned at, not what the engine's
 master is, and a report checked against the pin describes a codebase the
-engine may have left. The four reports still open were drafted the same way
+engine may have left. The three reports still open were drafted the same way
 and should be re-checked against master before anyone files them.
 
 The original analysis follows, unedited, because the reasoning is what the
@@ -230,9 +230,39 @@ Bundle with report 1: same header, same test file, one pin bump.
 
 ---
 
-## 3. `FocusGroup` has no disabled or non-focusable entry
+## 3. ~~`FocusGroup` has no disabled or non-focusable entry~~ — CLOSED, filed and landed
 
-**Severity: a menu cannot say "you cannot pick this".**
+**Filed 2026-08-14 and implemented the same day: engine `9bc14b3`, "Let a menu
+say a row is there and cannot be picked".**
+
+`FocusGroup::set_enabled(widget, bool)` and `enabled(widget)`, a third
+`FocusStyle::disabled` colour that `refresh_style()` derives like the other
+two, and `move()` taking its candidates from the enabled entries only — so a
+disabled row between two live ones costs one press, not two. The setter rather
+than an `add_disabled` because the Player Count case decided it: enablement is
+a property that changes, and a permanently dead row is the same call made once.
+
+**`activate()` now returns `Activation`, not `bool`, and that is a source
+break here.** `none` / `ran` / `refused`. The old `bool` already meant two
+things — the engine's own `button.h` says an unbound row is legal and common —
+so a third meaning would have left it useless for exactly the thing this report
+asked for. Five call sites in this repository are `if (this->focus_.activate(0))`
+and become `== Activation::ran`; the two in `pause_menu.cpp` are statements and
+are unaffected.
+
+**What this repository does at the next pin bump:**
+
+- **Mode Select gets its beep back.** The three unbuilt modes go back to being
+  registered — `MainMenuModeSelect::init` — with `set_enabled(row, false)`.
+  The cursor walks past them as it does now, but the player can be on one, so
+  the page can answer the press and say why.
+- **Player Count switches rows instead of refusing by hand.**
+  `start_team_select`'s warning line becomes the `refused` branch, and the row
+  is painted unavailable while it is, which the warning line could not do.
+- Nothing else changes: a group that never calls `set_enabled` behaves exactly
+  as it does today.
+
+The original report follows.
 
 ### What happens
 
