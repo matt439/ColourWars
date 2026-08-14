@@ -674,13 +674,16 @@ void MainMenuModeSelect::init()
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
+	// The three that are not built. They take menu_style().disabled at
+	// construction and keep it, because they are never handed to focus_ - see
+	// the note where the other three rows are registered.
 	this->tdm_ = std::make_unique<UiTextDropShadow>(
 		"tdm",
 		L"Team Deathmatch",
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		this->menu_style().unhighlight,
+		this->menu_style().disabled,
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
@@ -690,7 +693,7 @@ void MainMenuModeSelect::init()
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		this->menu_style().unhighlight,
+		this->menu_style().disabled,
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
@@ -700,7 +703,7 @@ void MainMenuModeSelect::init()
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
-		this->menu_style().unhighlight,
+		this->menu_style().disabled,
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
@@ -733,14 +736,28 @@ void MainMenuModeSelect::init()
 			this->context()->transition_to(
 				std::make_unique<MainMenuPlayerCount>(this->menu_context()));
 		});
-	// Three modes that are not built yet. They answer with an error beep, and
-	// they say so here rather than in an if-chain three screens away.
-	this->focus_.add(this->tdm_.get(),
-		[this] { this->play_wave(this->error_sound_); });
-	this->focus_.add(this->dm_.get(),
-		[this] { this->play_wave(this->error_sound_); });
-	this->focus_.add(this->practice_.get(),
-		[this] { this->play_wave(this->error_sound_); });
+	// Three modes that are not built yet, and so are not added here at all.
+	//
+	// They used to be registered with an action that beeped, which made them
+	// look exactly like every working row - the same unhighlight colour as
+	// Back, one screen after the title - and answer a stranger's second
+	// interaction with the game with a buzz and no explanation. They cannot
+	// instead be registered and recoloured: FocusGroup derives the paint,
+	// repainting every widget it holds from the focus of every slot on every
+	// add, move and set_style, so a disabled colour on a registered widget
+	// survives until the next cursor movement. Its header names the case and
+	// leaves the page to reapply the colour afterwards, which is a repaint
+	// fighting a repaint.
+	//
+	// So the cursor is never on them. focus_.move walks by bounds() rather
+	// than by registration order, so Standard and Back remain neighbours with
+	// three greyed labels drawn between them, and text_container_ still draws
+	// all six.
+	//
+	// The cost is the beep: pressing A while on Standard cannot report that
+	// Deathmatch is unavailable, because there is no way to be on Deathmatch.
+	// That is the better trade while the rows are unbuildable, and the whole
+	// question goes away when they are built.
 	this->focus_.add(this->back_.get(), [this]
 		{
 			this->play_wave(this->cancel_sound_);

@@ -67,6 +67,12 @@ struct MenuStyle
 	artattack::Colour highlight = artattack::Colour::white;
 	artattack::Colour unhighlight = artattack::Colour::blue;
 
+	// A row that is on the screen and cannot be chosen. It is not a third
+	// focus state: FocusGroup repaints every widget it holds from the focus of
+	// every slot on every mutation, so a disabled row is one the group was
+	// never given, and this is the colour it keeps for its whole life.
+	artattack::Colour disabled = artattack::Colour::dim_gray;
+
 	// The heading colour three of the four menus use. It was written as
 	// colour_consts::TEAM_ORANGE in each of them - a menu heading is not a
 	// team, and it only ever shared the number.
