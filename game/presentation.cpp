@@ -141,6 +141,8 @@ namespace
 		menu.title_text_colour = read_colour(json, "title_text_colour");
 		menu.title_start_text_colour =
 			read_colour(json, "title_start_text_colour");
+		menu.title_no_pad_text_colour =
+			read_colour(json, "title_no_pad_text_colour");
 
 		const JsonValue backgrounds = json.object("backgrounds");
 		menu.title_background_colour = read_colour(backgrounds, "title");

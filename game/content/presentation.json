@@ -45,6 +45,7 @@
     },
     "title_text_colour": "GOLDENROD",
     "title_start_text_colour": "WHITE_SMOKE",
+    "title_no_pad_text_colour": "GOLD",
     "backgrounds": {
       "title": "DARK_SLATE_BLUE",
       "home": "DODGER_BLUE",

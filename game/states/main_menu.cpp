@@ -80,6 +80,10 @@ void MainMenuTitle::draw(Renderer& renderer) const
 }
 void MainMenuTitle::update(float /*dt*/)
 {
+	// A pad can arrive at any moment, and asking for one is the whole purpose
+	// of the line, so the answer is refreshed rather than remembered.
+	this->no_pad_->set_hidden(!this->connected_slots().empty());
+
 	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	for (int i = 0; i < inputs.size(); i++)
 	{
@@ -122,6 +126,24 @@ void MainMenuTitle::init()
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
+	// Every input this game has is a gamepad button. With nothing plugged in
+	// the title screen answers no key and there is no other screen to get to,
+	// so a correct build with no pad on the desk looks exactly like a hung one
+	// - which is the first thing a reader of this repository sees.
+	//
+	// Hidden here and revealed by update() rather than the other way round, so
+	// the ordinary case never flashes it.
+	this->no_pad_ = std::make_unique<UiTextDropShadow>(
+		"no_pad",
+		L"Connect a controller",
+		this->menu_style().item_font,
+		Vector2F(250.0f, 800.0f),
+		this->render_resources(),
+		this->look().title_no_pad_text_colour,
+		this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset,
+		true);
+
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->background_.get());
@@ -130,6 +152,7 @@ void MainMenuTitle::init()
 		"text_container");
 	this->text_container_->add_child(this->title_.get());
 	this->text_container_->add_child(this->start_.get());
+	this->text_container_->add_child(this->no_pad_.get());
 
 	this->play_effect(this->music_, true, this->look().music.volume);
 }

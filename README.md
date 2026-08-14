@@ -3,6 +3,11 @@
 A local split-screen paint-shooter for up to four players. Two teams, one
 arena, and a scoreboard that counts painted surface rather than kills.
 
+**It is played on gamepads, and only on gamepads** — one per player, XInput.
+There is no keyboard or mouse path anywhere, including the menus, so a build
+launched with nothing plugged in stops at a title screen that answers no key.
+The title screen says so when that happens.
+
 It is also the first client of [Labrador](https://github.com/matt439/Labrador),
 a 2D game engine, which this repository consumes as a submodule. The engine is
 the larger project and this is the thing that proves it works — an engine with

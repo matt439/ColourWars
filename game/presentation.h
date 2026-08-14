@@ -115,6 +115,11 @@ struct MainMenuPresentation
 	artattack::Colour title_text_colour = artattack::Colour::white;
 	artattack::Colour title_start_text_colour = artattack::Colour::white;
 
+	// The line under Start that appears only when no pad is plugged in. The
+	// game is gamepad-only and the title screen is the one place that has to
+	// say so, because with no pad it is the only screen anyone can reach.
+	artattack::Colour title_no_pad_text_colour = artattack::Colour::white;
+
 	// Four screens, four keys, and they hold the same colour today. Unlike the
 	// fonts and shadows MenuStyle absorbed, these are not four copies of one
 	// idea - they are four screens somebody might theme apart, and collapsing

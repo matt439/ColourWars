@@ -75,6 +75,11 @@ private:
 	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> title_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> start_ = nullptr;
+
+	// Shown only while no pad is connected. Its visibility is refreshed every
+	// frame rather than set once, because plugging one in is exactly what this
+	// line is asking for and the page must notice when it happens.
+	std::unique_ptr<artattack::UiTextDropShadow> no_pad_ = nullptr;
 };
 
 class MainMenuHome final : public MainMenuPage
