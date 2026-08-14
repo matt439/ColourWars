@@ -5,11 +5,11 @@
 > answer, and each carries an **exhibit**: the workaround that is in this
 > repository now, written because the engine offered nothing better.
 >
-> **Three are closed and struck below; three are still drafts.** Every engine
+> **Four are closed and struck below; two are still drafts.** Every engine
 > citation was checked against the pinned revision on the day of writing — and
 > `8e43d72` is the *submodule pin*, not the engine's master. That is how report
 > 1 came to describe a bug the engine had fixed the day after the pin was
-> taken. Check master before filing any of the three that are left.
+> taken. Check master before filing either of the two that are left.
 >
 > They are drafted here rather than in the submodule on purpose. CLAUDE.md puts
 > engine *changes* in the Labrador repository; a report is a thing this client
@@ -33,11 +33,11 @@ written in the last three days and did not exist when the gap audit was run.
 | 1 | ~~`StateContext` never empties its stack~~ | n/a — unfixable client-side | **closed** — engine `881d3c7`, fixed before this was drafted |
 | 2 | ~~No activation hook on `State`~~ | yes, two of them | **closed** — engine `8c104a7`, filed and landed |
 | 3 | ~~`FocusGroup` has no disabled entry~~ | yes, two of them | **closed** — engine `9bc14b3`, filed and landed |
-| 4 | Every UI leaf is `final` | yes | file |
+| 4 | ~~Every UI leaf is `final`~~ | yes | **closed** — engine `93821c7`, filed and landed |
 | 5 | No font default character | yes | file |
 | 6 | No audio bus or master gain | **not yet** | hold |
 
-All three closures are waiting on a submodule pin bump; none of them is visible
+All four closures are waiting on a submodule pin bump; none of them is visible
 to this client until then. What each one lets this repository delete is recorded under
 its own heading.
 
@@ -64,7 +64,7 @@ on this side. **What this repository does about it: nothing.**
 The lesson worth keeping is the one about aim rather than about the bug.
 `8e43d72` is what `external/labrador` is pinned at, not what the engine's
 master is, and a report checked against the pin describes a codebase the
-engine may have left. The three reports still open were drafted the same way
+engine may have left. The two reports still open were drafted the same way
 and should be re-checked against master before anyone files them.
 
 The original analysis follows, unedited, because the reasoning is what the
@@ -307,9 +307,45 @@ reportable to the page so it can say why, rather than silently doing nothing.
 
 ---
 
-## 4. Every UI leaf is `final`, and `UiContainer` is not a `UiWidget`
+## 4. ~~Every UI leaf is `final`, and `UiContainer` is not a `UiWidget`~~ — CLOSED, filed and landed
 
-**Severity: a client cannot write a compound widget.**
+**Filed 2026-08-14 and implemented: engine `93821c7`, "Open the widget set,
+and let a container be focused".**
+
+Both halves, and the ask's second option was not needed. `UiTexture`, `UiText`
+and `UiTextDropShadow` lose `final`; `UiContainer` becomes a `UiWidget` and
+loses `final` too, so there is no `UiCompound` and nothing new to learn — a
+compound widget is a class deriving from the container that was already there.
+
+The header now gives the reason the old ones did not. Dropping `final` costs
+nothing structural, because `~GameObject` is virtual and every leaf was
+already safe to hold and delete as a `UiWidget*` — which is the answer to this
+report's closing point that the silence read as unconsidered rather than
+decided.
+
+**How the container got a colour without narrowing anything.**
+`UiObject::set_colour` is now a virtual no-op, and `UiWidget` re-declares it
+`override = 0`. So a container forwards the paint to children it knows only as
+`UiObject*` with no cast and no narrowing of `add_child`, and painting a thing
+that has no colour is nothing rather than an error. Nesting works by
+composition: a nested container forwards in turn.
+
+**What this repository does at the next pin bump.** Nothing is forced —
+`add_child` is unchanged and a group that never held a container behaves as it
+did — but two things become writable:
+
+- **`PromptBar` derives instead of composing.** `class PromptBar final :
+  public artattack::UiTextDropShadow` with the one extra constructor, and the
+  four forwarding functions in `prompt_bar.cpp` go. Its header comment naming
+  this report goes with them.
+- **The options page can have rows and sliders.** A row that is a label and a
+  value is `class OptionRow : public artattack::UiContainer`, handed to
+  `FocusGroup::add`, painted whole. That removes the pointer-comparison walk
+  in `MainMenuOptions` that recovers label-to-value by testing the focused
+  widget against each label in turn — and it is what report 6's volume
+  setting needed somewhere to be drawn.
+
+The original report follows.
 
 ### What happens
 
