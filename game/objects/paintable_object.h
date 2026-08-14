@@ -4,6 +4,12 @@ struct PaintTotal
 {
 	float team_a = 0.0f;
 	float team_b = 0.0f;
+
+	// Every tile the object has, whichever team holds it and including the
+	// ones nobody has painted. team_a + team_b is what was painted; this is
+	// what there was to paint, and the difference is the only way to ask how
+	// much of the arena a match covered rather than who covered more of it.
+	float total = 0.0f;
 };
 
 class PaintableObject

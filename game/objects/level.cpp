@@ -532,6 +532,26 @@ LevelEndInfo Level::level_end_info() const
 	auto result = LevelEndInfo();
 	result.team_colours = this->team_colours_;
 
+	// Which teams were in the match, asked of the players rather than of the
+	// settings, because this is the object that holds them and a team with no
+	// player in it is exactly what the results screen must not report on.
+	result.team_a_played = false;
+	result.team_b_played = false;
+	for (const Player* player : this->players_)
+	{
+		switch (player->team())
+		{
+		case PlayerTeam::a:
+			result.team_a_played = true;
+			break;
+		case PlayerTeam::b:
+			result.team_b_played = true;
+			break;
+		default:
+			break;
+		}
+	}
+
 	for (CollisionObject* object : this->scene_->collision_objects())
 	{
 		if (to_collision_type(object->tag()) ==
@@ -552,6 +572,7 @@ LevelEndInfo Level::level_end_info() const
 
 			result.team_a_area += paint.team_a;
 			result.team_b_area += paint.team_b;
+			result.total_area += paint.total;
 		}
 	}
 

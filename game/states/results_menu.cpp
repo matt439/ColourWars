@@ -59,8 +59,17 @@ void ResultsMenuInitial::update(float dt)
 				this->stop_effect(this->fill_sound_, true);
 				this->play_wave(this->winner_sound_, look.winner_sound.volume);
 			}
-			this->team_a_percentage_->set_hidden(false);
-			this->team_b_percentage_->set_hidden(false);
+			// A team nobody played for reveals neither a bar nor a figure.
+			// Both start hidden and are shown here, so leaving one out is
+			// declining to show it rather than hiding it again.
+			if (this->level_end_info().team_a_played)
+			{
+				this->team_a_percentage_->set_hidden(false);
+			}
+			if (this->level_end_info().team_b_played)
+			{
+				this->team_b_percentage_->set_hidden(false);
+			}
 			this->winner_->set_hidden(false);
 			
 			if (this->show_results_timer_ >= look.show_results_delay)
@@ -191,6 +200,13 @@ void ResultsMenuInitial::init()
 		style.shadow_colour,
 		style.detail_shadow_offset,
 		true);
+
+	// The fills are not hidden by default the way the two figures are, so the
+	// team with nobody on it is hidden here. Its width is still driven every
+	// frame by update_team_b_fill, which is harmless and keeps the fill pass
+	// free of a special case.
+	this->team_a_fill_->set_hidden(!end_info.team_a_played);
+	this->team_b_fill_->set_hidden(!end_info.team_b_played);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");

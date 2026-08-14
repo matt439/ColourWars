@@ -243,6 +243,8 @@ PaintTotal StructurePaintable::paint_total() const
 	auto total = PaintTotal();
 	for (auto& paint_tile : this->paint_tiles_)
 	{
+		total.total += paint_tile.area();
+
 		PlayerTeam team = paint_tile.team();
 		switch (team)
 		{
