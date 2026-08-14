@@ -5,9 +5,11 @@
 > answer, and each carries an **exhibit**: the workaround that is in this
 > repository now, written because the engine offered nothing better.
 >
-> **These are drafts, not filings.** Nothing here has been raised with the
-> engine. Every engine citation was checked against the pinned revision on the
-> day of writing.
+> **Two are closed and struck below; four are still drafts.** Every engine
+> citation was checked against the pinned revision on the day of writing — and
+> `8e43d72` is the *submodule pin*, not the engine's master. That is how report
+> 1 came to describe a bug the engine had fixed the day after the pin was
+> taken. Check master before filing any of the four that are left.
 >
 > They are drafted here rather than in the submodule on purpose. CLAUDE.md puts
 > engine *changes* in the Labrador repository; a report is a thing this client
@@ -26,20 +28,47 @@ file you can open" is worth something.
 So each report below leads with the workaround. Four of the six exhibits were
 written in the last three days and did not exist when the gap audit was run.
 
-| # | Report | Exhibit exists | Priority |
+| # | Report | Exhibit exists | Status |
 |---|---|---|---|
-| 1 | `StateContext` never empties its stack | n/a — unfixable client-side | **file first** |
-| 2 | No activation hook on `State` | yes, two of them | **file first** |
+| 1 | ~~`StateContext` never empties its stack~~ | n/a — unfixable client-side | **closed** — engine `881d3c7`, fixed before this was drafted |
+| 2 | ~~No activation hook on `State`~~ | yes, two of them | **closed** — engine `8c104a7`, filed and landed |
 | 3 | `FocusGroup` has no disabled entry | yes, two of them | file |
 | 4 | Every UI leaf is `final` | yes | file |
 | 5 | No font default character | yes | file |
 | 6 | No audio bus or master gain | **not yet** | hold |
 
+Both closures are waiting on a submodule pin bump; neither is visible to this
+client until then. What each one lets this repository delete is recorded under
+its own heading.
+
 ---
 
-## 1. `StateContext` never empties its stack, so a state's destructor runs against freed services
+## 1. ~~`StateContext` never empties its stack~~ — CLOSED, and it was closed before this was written
 
-**Severity: undefined behaviour on the most common exit path.**
+**Never file this. The engine fixed it in `881d3c7`, "Drain the state stack
+before the services it borrows", on 2026-08-10 — the day after the revision
+this report was checked against, and four days before the report was drafted.**
+
+`StateContext::clear()` destroys every live state, and `~Application` calls it
+as its first statement, while every service is still alive. The three things
+this report said a one-line ask hides are all in it, and all three are pinned
+by tests in `tests/core/state_context_tests.cpp`: it pops from the back rather
+than calling `frames_.clear()`, it drops `pending_` and clears `deferring_`
+before it starts, and it fires no result callback, for the reason given
+below — the engine's header cites this game's match frame reopening the menu
+as the worked example.
+
+So `~GameLevel` and `~Level` become safe at the next pin bump, with no change
+on this side. **What this repository does about it: nothing.**
+
+The lesson worth keeping is the one about aim rather than about the bug.
+`8e43d72` is what `external/labrador` is pinned at, not what the engine's
+master is, and a report checked against the pin describes a codebase the
+engine may have left. The four reports still open were drafted the same way
+and should be re-checked against master before anyone files them.
+
+The original analysis follows, unedited, because the reasoning is what the
+engine's fix agreed with.
 
 ### What happens
 
@@ -103,9 +132,47 @@ order the stack was built, while every service is still alive.
 
 ---
 
-## 2. No activation hook on `State`, and two clients needed one for opposite reasons
+## 2. ~~No activation hook on `State`~~ — CLOSED, filed and landed
 
-**Severity: a four-minute match plays itself out with nobody in it.**
+**Filed 2026-08-14 and implemented the same day: engine `8c104a7`, "Tell the
+states when the player looks away".**
+
+What shipped is the ask: `State::on_activated` / `on_deactivated`, empty
+defaults, fanned out by `StateContext::notify_activation(bool)` across every
+frame top-down, with all four of the shell's window handlers wired to it.
+
+Two things came back larger than the ask, both from the questions this report
+raised:
+
+- **The engine makes the edge rather than documenting its absence.** This
+  report asked only that the header say the callback is not edge-guarded. The
+  engine's answer was that every client would then write the same remembered
+  `bool` — the argument in this report's own point 2 — so `notify_activation`
+  drops the repeat and the callback is an edge for everyone.
+- **`StateContext::active()` came with it**, for the case an edge cannot
+  reach: the stack keeps updating in the background, so a state can be
+  constructed there and be younger than the message it needed. Its `init()`
+  asks instead. True until told otherwise, since a window given the foreground
+  on creation is never sent a message saying so.
+
+`WindowNotify::on_activated`, `on_deactivated` and `on_suspending` lost their
+`const` — they now carry news into a state stack where game code runs. Nothing
+outside the engine implements `WindowNotify`, so it costs this repository
+nothing.
+
+**What this repository deletes at the next pin bump**, and all three are the
+exhibits below:
+
+- `window_has_foreground()` in `game/game_data.h`, whose comment already said
+  it existed to be deleted.
+- `GameLevel::match_has_the_foreground()` and its `window_active_` member —
+  both of them, not just the poll. The member was a hand-written copy of the
+  edge the engine now makes, so `game_states.h`'s note that "this member is
+  what it sets" is superseded: it goes entirely.
+- `MainMenuTitle::update`'s poll, which becomes the same pair of callbacks on
+  the page itself.
+
+The original report follows.
 
 ### What happens
 
