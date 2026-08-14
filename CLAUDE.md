@@ -138,11 +138,20 @@ Four JSON files are read at startup, before anything else:
 | `manifest.json` | which fonts, sprite sheets, levels and sound banks exist |
 | `tuning.json` | every number a match is *balanced* on ([game/tuning.h](game/tuning.h)) |
 | `presentation.json` | every font, colour, offset and box size the shell is *laid out* from ([game/presentation.h](game/presentation.h)) |
-| `save/save_data.json` | resolution and fullscreen, read before the window exists |
+| `%LOCALAPPDATA%\ColourWars\save_data.json` | resolution and fullscreen, read before the window exists |
 
 Tuning and presentation are deliberately two files with two audiences (a balance
 pass and an art pass) and are deliberately *not* manifest entries — they are read
 before every asset and are what those assets are used *by*.
+
+The save is in that list because of *when* it is read, and is otherwise the odd
+one out: the first three are content, staged beside the exe by the build and only
+ever read; the save is written by the player and created by nothing but the game.
+It used to sit with them at `./save/save_data.json` inside the staged mirror,
+where a clean rebuild deleted it and two Windows accounts shared one file. That
+path is still read once, if nothing is at the real one, to carry an older save
+across — see [game/directory_consts.h](game/directory_consts.h). Nothing seeds a
+save; `Save` writes its own defaults on first run.
 
 The rule these follow: **C++ says *how*; data says *which* and *how much*.** A
 jump's shape is code, its three numbers are tuning. Anything whose value would

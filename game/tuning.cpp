@@ -222,10 +222,21 @@ namespace
 		PaintTuning paint;
 
 		// StructurePaintable divides a face by each of these and casts the
-		// result to int to size its tile grid, unguarded. A zero here is an
-		// integer division by zero at level build time - not a wrong-looking
-		// level, a crash - and a negative one is a grid with no tiles in it,
-		// so the whole stage would score zero for both teams.
+		// result to int to size its tile grid, unguarded.
+		//
+		// A zero divides a float by a float, so it is an infinity rather than
+		// a fault, and static_cast<int> of an infinity is undefined - it
+		// traps nowhere and produces whatever the instruction happens to give.
+		// What follows from it is the same on any answer: no paintable
+		// structure in the level gets a usable grid, so nothing can be painted
+		// and every match on that stage ends nil-all.
+		//
+		// A negative is a different problem and needs saying separately,
+		// because the obvious reading is wrong. std::fabs sits on both of
+		// those divisions, so a size of -4 builds exactly the grid that 4
+		// would: the value is not rejected and it is not honoured either, it
+		// is quietly read as something else. A number that does not mean what
+		// it says is worth refusing on its own account.
 		paint.size = Vector2F(
 			read_positive(json.object("size"), "x"),
 			read_positive(json.object("size"), "y"));
