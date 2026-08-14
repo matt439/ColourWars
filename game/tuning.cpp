@@ -86,13 +86,70 @@ namespace
 			"linear_size_and_col_rect.");
 	}
 
+	// to_string spends six decimal places on every float, which reads badly in
+	// a sentence about a number somebody typed by hand.
+	std::string number_text(float value)
+	{
+		std::string text = std::to_string(value);
+		const size_t last = text.find_last_not_of('0');
+		if (text.find('.') != std::string::npos && last != std::string::npos)
+		{
+			text.erase(text[last] == '.' ? last : last + 1);
+		}
+		return text;
+	}
+
+	// A number the game cannot run on is a content mistake exactly like a
+	// missing key, and deserves the same sentence pointing at it (T6).
+	//
+	// Every read in this file already fails loudly on type and on presence,
+	// through JsonValue. None of them checked range, and the whole argument
+	// for keeping 350 numbers in JSON is that a balance pass can change them
+	// without a rebuild - which only pays if a wrong one comes back as a
+	// sentence naming the key rather than as a division by zero or a silent
+	// correction. Only values with a failure mode anyone can name are bounded
+	// here; the rest are left alone deliberately.
+	//
+	// The comparison is written so that a NaN fails it.
+	float read_number_in(const JsonValue& parent, const char* key,
+		float low, float high)
+	{
+		const float value = parent.number(key);
+
+		if (!(value >= low && value <= high))
+		{
+			throw std::runtime_error(parent.where() + ": '" + key + "' is " +
+				number_text(value) + ", which is outside [" +
+				number_text(low) + ", " + number_text(high) + "].");
+		}
+		return value;
+	}
+
+	float read_positive(const JsonValue& parent, const char* key)
+	{
+		const float value = parent.number(key);
+
+		if (!(value > 0.0f))
+		{
+			throw std::runtime_error(parent.where() + ": '" + key + "' is " +
+				number_text(value) + ", and must be greater than zero.");
+		}
+		return value;
+	}
+
 	SoundTuning read_sound(const JsonValue& parent, const char* key)
 	{
 		const JsonValue sound = parent.object(key);
 
 		SoundTuning tuning;
 		tuning.name = sound.string("name");
-		tuning.volume = sound.number("volume");
+
+		// The one funnel every volume in the file passes through, which is why
+		// the check is here and not at eleven call sites. SoundBank clamps to
+		// [0, 1] on both play paths, so an authored 3.0 was not loud - it was
+		// 1.0, silently, with the intent lost between the file and the mixer
+		// and nothing anywhere reporting the difference.
+		tuning.volume = read_number_in(sound, "volume", 0.0f, 1.0f);
 		return tuning;
 	}
 
@@ -130,9 +187,18 @@ namespace
 		const JsonValue json = root.object("match");
 
 		MatchTuning match;
-		match.duration = json.number("duration");
+
+		// A zero-length match ends on the tick it starts. Level's zoom-out
+		// ratio divides by the second of these and guards it at runtime with a
+		// comment saying the proper home for the check is where the tuning is
+		// read - which is here.
+		match.duration = read_positive(json, "duration");
+		match.zoom_out = read_positive(json, "zoom_out");
+
+		// Not bounded, and deliberately: zero is a legitimate value for both -
+		// a match with no countdown and no overview - and neither has an upper
+		// limit anyone can name.
 		match.countdown = json.number("countdown");
-		match.zoom_out = json.number("zoom_out");
 		match.overview = json.number("overview");
 
 		const JsonValue text = json.object("countdown_text");
@@ -154,7 +220,16 @@ namespace
 		const JsonValue json = root.object("paint");
 
 		PaintTuning paint;
-		paint.size = read_vector(json, "size");
+
+		// StructurePaintable divides a face by each of these and casts the
+		// result to int to size its tile grid, unguarded. A zero here is an
+		// integer division by zero at level build time - not a wrong-looking
+		// level, a crash - and a negative one is a grid with no tiles in it,
+		// so the whole stage would score zero for both teams.
+		paint.size = Vector2F(
+			read_positive(json.object("size"), "x"),
+			read_positive(json.object("size"), "y"));
+
 		paint.thickness = json.number("thickness");
 		paint.sheet = json.string("sheet");
 		paint.frame = json.string("frame");
@@ -261,9 +336,14 @@ namespace
 		details.proj_type = read_projectile_type(json, "projectile");
 		details.sound_bank_name = json.string("sound_bank");
 
-		const JsonValue shoot_sound = json.object("shoot_sound");
-		details.shoot_sound_name = shoot_sound.string("name");
-		details.shoot_sound_volume = shoot_sound.number("volume");
+		// Through read_sound like every other sound in the file, rather than
+		// two reads of its own. WeaponDetails keeps the name and the volume as
+		// separate fields, which is why this was written out here - and it is
+		// how the one out-of-range volume in the whole of tuning.json came to
+		// be the one that did not pass the shared read.
+		const SoundTuning shoot_sound = read_sound(json, "shoot_sound");
+		details.shoot_sound_name = shoot_sound.name;
+		details.shoot_sound_volume = shoot_sound.volume;
 
 		if (json.has("add_player_velocity"))
 		{

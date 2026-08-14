@@ -120,7 +120,7 @@
             "frame": "roller",
             "projectile": "rolling",
             "sound_bank": "sound_bank_1",
-            "shoot_sound": { "name": "BowlingBallRoll", "volume": 3.0 },
+            "shoot_sound": { "name": "BowlingBallRoll", "volume": 1.0 },
             "loop_sounds": {
                 "team_a": [ "roller_a0", "roller_a1", "roller_a2", "roller_a3" ],
                 "team_b": [ "roller_b0", "roller_b1", "roller_b2", "roller_b3" ]
