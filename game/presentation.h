@@ -73,6 +73,10 @@ struct MenuStyle
 	// never given, and this is the colour it keeps for its whole life.
 	artattack::Colour disabled = artattack::Colour::dim_gray;
 
+	// A line the menu shows to say why it just refused something. Distinct
+	// from `disabled`, which describes a row rather than an answer.
+	artattack::Colour warning = artattack::Colour::orange;
+
 	// The heading colour three of the four menus use. It was written as
 	// colour_consts::TEAM_ORANGE in each of them - a menu heading is not a
 	// team, and it only ever shared the number.

@@ -200,12 +200,26 @@ private:
 	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
 
+	// Shown when the confirm that would have completed the roster would also
+	// have left one of the two teams empty.
+	std::unique_ptr<artattack::UiTextDropShadow> both_teams_needed_ = nullptr;
+
 	std::vector<std::unique_ptr<PlayerWidgets>> player_widgets_;
 	std::vector<TeamSelectState> select_states_;
 	void update_team_select_visuals();
 	void deselect_and_unconfirm_all_widgets();
 	bool all_players_confirmed() const;
 	bool all_players_unconfirmed() const;
+
+	// Whether `player` is the last one still to confirm, and so whether their
+	// press is the one that starts the match.
+	bool confirm_completes_roster(int player) const;
+
+	// Whether the teams as currently *chosen* - confirmed or not - have
+	// somebody on each side. The team is picked before it is confirmed, so
+	// this already includes the player who is pressing.
+	bool both_teams_chosen() const;
+
 	void set_level_settings() const;
 };
 

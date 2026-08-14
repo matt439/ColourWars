@@ -28,6 +28,7 @@
     "highlight": "WHITE",
     "unhighlight": "BLUE",
     "disabled": "DIM_GRAY",
+    "warning": "GOLD",
     "heading_colour": "FF7F00",
     "box_size": { "x": 900.0, "y": 600.0 },
     "sound_bank": "sound_bank_1",

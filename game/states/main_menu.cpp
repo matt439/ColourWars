@@ -896,7 +896,7 @@ void MainMenuPlayerCount::init()
 		this->menu_style().detail_font,
 		this->calculate_widget_position(0, 8),
 		this->render_resources(),
-		this->menu_style().disabled,
+		this->menu_style().warning,
 		this->menu_style().shadow_colour,
 		this->menu_style().detail_shadow_offset,
 		true);
@@ -1034,8 +1034,27 @@ void MainMenuTeamSelect::update(float /*dt*/)
 		else if (inputs[i].action == MenuInputAction::proceed &&
 			this->select_states_[i].team != PlayerTeam::none)
 		{
-			this->play_wave(this->confirm_sound_);
-			this->select_states_[i].state = ConfirmationState::confirmed;
+			// The only gate on a confirm used to be that a team had been
+			// chosen at all, and nothing anywhere asked which. Four players
+			// could all pick team A, all confirm, and start a match that ran
+			// 4v0 for four minutes against an opponent who did not exist -
+			// every stage lists four spawns per team, so nothing downstream
+			// tripped either.
+			//
+			// Refused on the press that would complete the roster, so a
+			// player choosing a side early is never argued with and the one
+			// who would have started the match is told why it did not.
+			if (this->confirm_completes_roster(i) &&
+				!this->both_teams_chosen())
+			{
+				this->play_wave(this->error_sound_);
+				this->both_teams_needed_->set_hidden(false);
+			}
+			else
+			{
+				this->play_wave(this->confirm_sound_);
+				this->select_states_[i].state = ConfirmationState::confirmed;
+			}
 		}
 		else if (this->select_states_[i].state ==
 			ConfirmationState::unconfirmed)
@@ -1066,6 +1085,17 @@ void MainMenuTeamSelect::update(float /*dt*/)
 			}
 		}
 	}
+	// Cleared as soon as somebody crosses to the other side, rather than on a
+	// timer or on the next press: the message is about a state, and the state
+	// is over.
+	if (this->both_teams_chosen())
+	{
+		this->both_teams_needed_->set_hidden(true);
+	}
+
+	// Reachable only through a confirm that passed the check above - a player
+	// cannot change team while confirmed, and unconfirming means confirming
+	// again - so this transition can no longer start a one-team match.
 	if (this->all_players_confirmed())
 	{
 		this->set_level_settings();
@@ -1075,6 +1105,38 @@ void MainMenuTeamSelect::update(float /*dt*/)
 		return;
 	}
 	this->update_team_select_visuals();
+}
+bool MainMenuTeamSelect::confirm_completes_roster(int player) const
+{
+	for (int i = 0; i < this->player_count(); i++)
+	{
+		if (i != player &&
+			this->select_states_[i].state != ConfirmationState::confirmed)
+		{
+			return false;
+		}
+	}
+	return true;
+}
+bool MainMenuTeamSelect::both_teams_chosen() const
+{
+	bool team_a = false;
+	bool team_b = false;
+	for (int i = 0; i < this->player_count(); i++)
+	{
+		switch (this->select_states_[i].team)
+		{
+		case PlayerTeam::a:
+			team_a = true;
+			break;
+		case PlayerTeam::b:
+			team_b = true;
+			break;
+		default:
+			break;
+		}
+	}
+	return team_a && team_b;
 }
 void MainMenuTeamSelect::set_level_settings() const
 {
@@ -1198,7 +1260,21 @@ void MainMenuTeamSelect::init()
 
 	this->text_container_->add_child(this->heading_.get());
 
-	
+	// Under the four player rows, which occupy rows 2 to 5.
+	this->both_teams_needed_ = std::make_unique<UiTextDropShadow>(
+		"both_teams_needed",
+		L"Both teams need a player",
+		this->menu_style().detail_font,
+		this->calculate_widget_position(0, 7),
+		this->render_resources(),
+		this->menu_style().warning,
+		this->menu_style().shadow_colour,
+		this->menu_style().detail_shadow_offset,
+		true);
+
+	this->text_container_->add_child(this->both_teams_needed_.get());
+
+
 	for (int i = 0; i < this->player_count(); i++)
 	{
 		auto state = TeamSelectState();

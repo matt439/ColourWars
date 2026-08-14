@@ -115,6 +115,7 @@ namespace
 		style.highlight = read_colour(json, "highlight");
 		style.unhighlight = read_colour(json, "unhighlight");
 		style.disabled = read_colour(json, "disabled");
+		style.warning = read_colour(json, "warning");
 		style.heading_colour = read_colour(json, "heading_colour");
 		style.box_size = read_vector(json, "box_size");
 
