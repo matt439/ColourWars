@@ -208,6 +208,13 @@ namespace
 		match.countdown_shadow_offset = read_vector(text, "shadow_offset");
 		match.countdown_scale = text.number("scale");
 
+		const JsonValue controls = json.object("controls_text");
+		match.controls_font = controls.string("font");
+		match.controls_colour = read_colour(controls, "colour");
+		match.controls_shadow_colour = read_colour(controls, "shadow_colour");
+		match.controls_shadow_offset = read_vector(controls, "shadow_offset");
+		match.controls_y = read_number_in(controls, "y", 0.0f, 1.0f);
+
 		const JsonValue sounds = json.object("sounds");
 		match.countdown_sound = read_sound(sounds, "countdown");
 		match.zoom_out_sound = read_sound(sounds, "zoom_out");

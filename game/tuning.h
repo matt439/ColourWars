@@ -57,6 +57,24 @@ struct MatchTuning
 	mattmath::Vector2F countdown_shadow_offset = { 0.0f, 0.0f };
 	float countdown_scale = 1.0f;
 
+	// The control legend shown under the countdown, for the three seconds
+	// before every match. What it says is in C++ beside the code that reads
+	// the pad, because a legend that disagrees with the bindings is worse than
+	// none; how it looks is here.
+	//
+	// Here rather than in presentation.json, which is where a line of shell
+	// text belongs, because the countdown it sits under is already here and
+	// splitting one moment across two files with two audiences would be worse
+	// than either home. Both of them want moving, together, one day.
+	std::string controls_font;
+	artattack::Colour controls_colour = artattack::Colour::white;
+	artattack::Colour controls_shadow_colour = artattack::Colour::black;
+	mattmath::Vector2F controls_shadow_offset = { 0.0f, 0.0f };
+
+	// Down the screen, as a fraction of its height, so the legend clears the
+	// countdown at any resolution.
+	float controls_y = 0.8f;
+
 	SoundTuning countdown_sound;
 	SoundTuning zoom_out_sound;
 };

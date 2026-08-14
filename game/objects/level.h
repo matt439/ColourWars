@@ -154,6 +154,12 @@ private:
 
 	std::unique_ptr<artattack::TextDropShadow> countdown_text_ = nullptr;
 
+	// The controls, shown under the countdown and gone when it is. Nothing
+	// else in this game has ever said which button shoots - not a screen, not
+	// a menu line, not the README - and the three seconds before a match is
+	// the one moment that reaches every player, every match, for free.
+	std::unique_ptr<artattack::TextDropShadow> controls_text_ = nullptr;
+
 	// A value, not a unique_ptr. CameraTools holds no state at all - one const
 	// method and one static - so the heap allocation it used to get was a
 	// separate cache line and a null to check, bought for nothing.
@@ -244,6 +250,7 @@ private:
 	// Sets the beat, then re-centres on what it actually measures.
 	void set_countdown_text(const std::wstring& text);
 	void centre_countdown_text();
+	void centre_controls_text();
 
 	float zoom_out_camera_ratio() const;
 

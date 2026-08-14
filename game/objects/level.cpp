@@ -106,6 +106,27 @@ void Level::build_opening_frame(RenderResources* render_resources)
 		match.countdown_scale);
 	this->centre_countdown_text();
 
+	// Written here, beside nothing, on purpose: it has to agree with
+	// PlayerInput::player_input, and the moment it lives in a content file is
+	// the moment a rebinding can move a button without moving the legend that
+	// names it. Two lines rather than one because six prompts in a row is a
+	// hundred characters of unbroken text under a countdown that is itself
+	// centred, and nobody reads that in three seconds.
+	//
+	// A or the left trigger jumps, the right trigger shoots, the right stick
+	// aims, and the left stick pushed down drops through a platform - which is
+	// the least guessable of the six and the reason the list is not shorter.
+	this->controls_text_ = std::make_unique<TextDropShadow>(
+		L"Left stick  Move      A or LT  Jump      RT  Shoot\n"
+		L"Right stick  Aim      Down  Drop through      Start  Pause",
+		match.controls_font,
+		Vector2F::ZERO,
+		render_resources,
+		match.controls_colour,
+		match.controls_shadow_colour,
+		match.controls_shadow_offset);
+	this->centre_controls_text();
+
 	this->refresh_views();
 }
 
@@ -127,6 +148,19 @@ void Level::centre_countdown_text()
 	const Vector2F size = this->countdown_text_->text_bounds().size();
 
 	this->countdown_text_->set_position((resolution - size) / 2.0f);
+}
+
+void Level::centre_controls_text()
+{
+	// Centred across, and placed down the screen by a tuned fraction so it
+	// clears the countdown's 144pt face at every resolution. Measured rather
+	// than guessed, for the reason the countdown above is.
+	const Vector2F resolution = this->resolution_manager_->resolution_vec();
+	const Vector2F size = this->controls_text_->text_bounds().size();
+
+	this->controls_text_->set_position(Vector2F(
+		(resolution.x - size.x) / 2.0f,
+		resolution.y * this->tuning_->match().controls_y));
 }
 
 void Level::suspend() const
@@ -588,5 +622,13 @@ void Level::draw_countdown_text(DrawList& draw_list) const
 	// goes back to point so the next range is not surprised by it.
 	draw_list.set_filter(TextureFilter::linear);
 	this->countdown_text_->draw(draw_list);
+
+	// With the countdown and only with it. It is deliberately not a thing a
+	// player can bring back: three seconds at the top of every match is
+	// already every match, and a legend that can be summoned is a controls
+	// screen wearing a disguise - which is the larger piece of work this is
+	// the cheap half of.
+	this->controls_text_->draw(draw_list);
+
 	draw_list.set_filter(TextureFilter::point);
 }
