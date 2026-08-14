@@ -5,14 +5,12 @@ using namespace mattmath;
 using namespace menu_consts;
 using namespace artattack;
 
+// The end menu makes no sound of its own: the three MenuPage resolves are the
+// three it plays, which is why this is empty rather than gone.
 EndMenuPage::EndMenuPage(MenuContext* context) :
-	MenuPage(context),
-	SoundBankObject(this->menu_style().sound_bank, this->audio_resources())
+	MenuPage(context)
 {
-	const MenuStyle& style = this->menu_style();
-	this->direction_sound_ = this->resolve_wave(style.direction_sound);
-	this->confirm_sound_ = this->resolve_wave(style.confirm_sound);
-	this->cancel_sound_ = this->resolve_wave(style.cancel_sound);
+
 }
 
 const EndMenuPresentation& EndMenuPage::look() const
@@ -156,14 +154,4 @@ void EndMenuInitial::init()
 		[choose] { choose(EndMenuAction::restart, true); });
 	this->focus_.add(this->exit_.get(),
 		[choose] { choose(EndMenuAction::exit, false); });
-}
-void EndMenuInitial::draw(Renderer& renderer) const
-{
-	std::vector<UiLayer> layers;
-
-	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
-
-	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
-
-	this->draw_ui_layers(renderer, layers);
 }

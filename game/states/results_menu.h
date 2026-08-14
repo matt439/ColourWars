@@ -3,10 +3,9 @@
 #include "game/objects/level_end_info.h"
 #include "engine/render/colour.h"
 #include "game/states/menu_page.h"
-#include "engine/audio/sound_bank_object.h"
 
 
-class ResultsMenuPage : public MenuPage, public artattack::SoundBankObject
+class ResultsMenuPage : public MenuPage
 {
 public:
 	// The scores are fixed the moment the match ends, so they arrive as a value
@@ -15,7 +14,6 @@ public:
 	~ResultsMenuPage() override = default;
 	void init() override = 0;
 	void update(float dt) override = 0;
-	void draw(artattack::Renderer& renderer) const override = 0;
 protected:
 	// This menu family's own presentation, beside MenuPage::menu_style()'s
 	// shared one. Named for what a reader is looking for rather than for the
@@ -24,10 +22,9 @@ protected:
 
 	LevelEndInfo level_end_info() const;
 
-	// Every sound this page family can make, resolved once when the page is
-	// built. The drum roll is an effect rather than a wave because it is
-	// looped and then stopped; the rest are fire-and-forget.
-	artattack::SoundBank::WaveHandle confirm_sound_;
+	// The two only this family makes, beside the three every page shares from
+	// MenuPage. The drum roll is an effect rather than a wave because it is
+	// looped and then stopped.
 	artattack::SoundBank::WaveHandle winner_sound_;
 	artattack::SoundBank::EffectHandle fill_sound_;
 private:
@@ -40,10 +37,7 @@ public:
 	ResultsMenuInitial(MenuContext* context, const LevelEndInfo& end_info);
 	void init() override;
 	void update(float dt) override;
-	void draw(artattack::Renderer& renderer) const override;
 private:
-	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
 	std::unique_ptr<artattack::UiTexture> box_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<artattack::UiTexture> fill_box_ = nullptr;

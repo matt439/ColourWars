@@ -8,16 +8,13 @@ using namespace menu_consts;
 using namespace artattack;
 
 MainMenuPage::MainMenuPage(MenuContext* context) :
-	MenuPage(context),
-	SoundBankObject(this->menu_style().sound_bank,
-		this->audio_resources())
+	MenuPage(context)
 {
-	const MenuStyle& style = this->menu_style();
+	// The bank and the three shared waves are MenuPage's now. What is left
+	// here is what only the main menu makes: a refusal, a ready chime and the
+	// track that plays across every page of it.
 	const MainMenuPresentation& look = this->look();
 
-	this->direction_sound_ = this->resolve_wave(style.direction_sound);
-	this->confirm_sound_ = this->resolve_wave(style.confirm_sound);
-	this->cancel_sound_ = this->resolve_wave(style.cancel_sound);
 	this->error_sound_ = this->resolve_wave(look.error_sound);
 	this->ready_sound_ = this->resolve_wave(look.ready_sound);
 	this->music_ = this->resolve_effect(look.music.name);
@@ -69,16 +66,6 @@ MainMenuTitle::MainMenuTitle(MenuContext* context) :
 
 }
 
-void MainMenuTitle::draw(Renderer& renderer) const
-{
-	std::vector<UiLayer> layers;
-
-	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
-
-	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
-
-	this->draw_ui_layers(renderer, layers);
-}
 void MainMenuTitle::update(float /*dt*/)
 {
 	// A pad can arrive at any moment, and asking for one is the whole purpose
@@ -180,16 +167,6 @@ MainMenuHome::MainMenuHome(MenuContext* context) :
 
 }
 
-void MainMenuHome::draw(Renderer& renderer) const
-{
-	std::vector<UiLayer> layers;
-
-	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
-
-	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
-
-	this->draw_ui_layers(renderer, layers);
-}
 void MainMenuHome::update(float /*dt*/)
 {
 	// The focus is read inside the loop rather than snapshotted above it. The
@@ -319,16 +296,6 @@ MainMenuOptions::MainMenuOptions(MenuContext* context) :
 
 }
 
-void MainMenuOptions::draw(Renderer& renderer) const
-{
-	std::vector<UiLayer> layers;
-
-	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
-
-	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
-
-	this->draw_ui_layers(renderer, layers);
-}
 void MainMenuOptions::update(float /*dt*/)
 {
 	for (const ProcessedMenuInput& input : this->menu_inputs())
@@ -619,16 +586,6 @@ MainMenuModeSelect::MainMenuModeSelect(MenuContext* context) :
 
 }
 
-void MainMenuModeSelect::draw(Renderer& renderer) const
-{
-	std::vector<UiLayer> layers;
-
-	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
-
-	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
-
-	this->draw_ui_layers(renderer, layers);
-}
 void MainMenuModeSelect::update(float /*dt*/)
 {
 	for (const ProcessedMenuInput& input : this->menu_inputs())
@@ -789,16 +746,6 @@ MainMenuPlayerCount::MainMenuPlayerCount(MenuContext* context) :
 	MainMenuPage(context)
 {
 
-}
-void MainMenuPlayerCount::draw(Renderer& renderer) const
-{
-	std::vector<UiLayer> layers;
-
-	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
-
-	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
-
-	this->draw_ui_layers(renderer, layers);
 }
 void MainMenuPlayerCount::update(float /*dt*/)
 {
@@ -1004,16 +951,6 @@ MainMenuTeamSelect::MainMenuTeamSelect(MenuContext* context) :
 
 }
 
-void MainMenuTeamSelect::draw(Renderer& renderer) const
-{
-	std::vector<UiLayer> layers;
-
-	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
-
-	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
-
-	this->draw_ui_layers(renderer, layers);
-}
 void MainMenuTeamSelect::update(float /*dt*/)
 {
 	// The connected pads only, in slot order, so entry i is player i's. Reading
@@ -1380,16 +1317,6 @@ MainMenuWeaponSelect::MainMenuWeaponSelect(MenuContext* context) :
 
 }
 
-void MainMenuWeaponSelect::draw(Renderer& renderer) const
-{
-	std::vector<UiLayer> layers;
-
-	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
-
-	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
-
-	this->draw_ui_layers(renderer, layers);
-}
 void MainMenuWeaponSelect::update(float /*dt*/)
 {
 	// The connected pads only, in slot order, so entry i is player i's - the
@@ -1710,16 +1637,6 @@ MainMenuStageSelect::MainMenuStageSelect(MenuContext* context) :
 
 }
 
-void MainMenuStageSelect::draw(Renderer& renderer) const
-{
-	std::vector<UiLayer> layers;
-
-	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
-
-	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
-
-	this->draw_ui_layers(renderer, layers);
-}
 void MainMenuStageSelect::update(float /*dt*/)
 {
 	// The connected pads only, in slot order, so entry i is player i's - the

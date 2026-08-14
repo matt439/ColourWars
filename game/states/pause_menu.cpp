@@ -27,14 +27,8 @@ bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot)
 
 PauseMenuPage::PauseMenuPage(MenuContext* context, int player_num) :
 	MenuPage(context),
-	SoundBankObject(this->menu_style().sound_bank,
-		this->audio_resources()),
 	pausing_player_(player_num)
 {
-	const MenuStyle& style = this->menu_style();
-	this->direction_sound_ = this->resolve_wave(style.direction_sound);
-	this->confirm_sound_ = this->resolve_wave(style.confirm_sound);
-	this->cancel_sound_ = this->resolve_wave(style.cancel_sound);
 	this->window_open_sound_ =
 		this->resolve_wave(this->look().window_open_sound);
 }
@@ -229,16 +223,6 @@ void PauseMenuInitial::init()
 
 	this->play_wave(this->window_open_sound_);
 }
-void PauseMenuInitial::draw(Renderer& renderer) const
-{
-	std::vector<UiLayer> layers;
-
-	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
-
-	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
-
-	this->draw_ui_layers(renderer, layers);
-}
 
 PauseMenuConfirmation::PauseMenuConfirmation(MenuContext* context,
 	int player_num, ConfirmationType type) :
@@ -367,16 +351,6 @@ void PauseMenuConfirmation::init()
 		});
 }
 
-void PauseMenuConfirmation::draw(Renderer& renderer) const
-{
-	std::vector<UiLayer> layers;
-
-	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
-
-	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
-
-	this->draw_ui_layers(renderer, layers);
-}
 
 std::wstring PauseMenuConfirmation::question_text(
 	ConfirmationType type)

@@ -9,12 +9,8 @@ using namespace artattack;
 ResultsMenuPage::ResultsMenuPage(MenuContext* context,
 	const LevelEndInfo& end_info) :
 	MenuPage(context),
-	SoundBankObject(this->menu_style().sound_bank,
-		this->audio_resources()),
 	level_end_info_(end_info)
 {
-	this->confirm_sound_ =
-		this->resolve_wave(this->menu_style().confirm_sound);
 	this->winner_sound_ = this->resolve_wave(this->look().winner_sound.name);
 	this->fill_sound_ = this->resolve_effect(this->look().fill_sound.name);
 }
@@ -263,16 +259,6 @@ void ResultsMenuInitial::init()
 	this->play_effect(this->fill_sound_, true, look.fill_sound.volume);
 }
 
-void ResultsMenuInitial::draw(Renderer& renderer) const
-{
-	std::vector<UiLayer> layers;
-
-	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
-
-	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
-
-	this->draw_ui_layers(renderer, layers);
-}
 
 void ResultsMenuInitial::update_fill_box() const
 {

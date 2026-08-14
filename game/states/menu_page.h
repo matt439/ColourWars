@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/audio/sound_bank_object.h"
 #include "engine/ui/focus.h"
 #include "engine/ui/widget.h"
 #include "game/states/menu_context.h"
@@ -21,14 +22,31 @@ namespace menu_consts
 	inline const mattmath::Vector2F DESIGN_RESOLUTION = { 1920.0f, 1080.0f };
 }
 
-class MenuPage : public artattack::State
+// A page of a menu, and the four things every one of the twelve in this game
+// turned out to be doing identically.
+//
+// THE SOUND BANK IS A BASE HERE. All four menu families declared
+// `: public MenuPage, public artattack::SoundBankObject` and this header named
+// it nowhere, so four constructors resolved the same bank from the same
+// menu_style().sound_bank and three of them resolved the same three waves out
+// of it. A menu page makes sounds; that is not a per-family fact.
+class MenuPage : public artattack::State, public artattack::SoundBankObject
 {
 public:
 	explicit MenuPage(MenuContext* context);
 	~MenuPage() override = default;
 	void update(float dt) override = 0;
-	void draw(artattack::Renderer& renderer) const override = 0;
 	void init() override = 0;
+
+	// Textures behind text, point behind linear, into every viewport.
+	//
+	// Concrete, and it was twelve byte-identical overrides. Each built the
+	// same two-element vector from the same two members and passed it to
+	// draw_ui_layers, which is why this is the shape it is rather than a
+	// virtual a page fills in: what varies between pages is what goes in the
+	// containers, and that is decided in init(). A page that one day needs a
+	// third layer overrides this and calls draw_ui_layers itself.
+	void draw(artattack::Renderer& renderer) const override;
 
 	// A menu is a box over whatever is behind it, and behind it is either
 	// nothing or a match that has to keep drawing (state.h). The main menu's
@@ -101,6 +119,25 @@ protected:
 	// colours, with its entire API protected so inheritance was the only way
 	// to use it at all. T11 names inheritance a tool of last resort.
 	artattack::FocusGroup focus_;
+
+	// What a page draws, in the two layers draw() puts them in. Both were
+	// declared on all twelve pages and neither was ever anything else: the
+	// textures go in one, the text in the other, and init() fills them.
+	//
+	// Owned here rather than by the page so that draw() can be concrete. A
+	// page still builds its own widgets and still owns those; these are only
+	// the two trees they hang from.
+	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
+	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
+
+	// The three the shared MenuStyle names, resolved once here. Every page
+	// family resolved these out of the same style block in its own
+	// constructor; the sounds that are actually a family's own - an error
+	// beep, a window-open chime, the drum roll - stay with that family.
+	artattack::SoundBank::WaveHandle direction_sound_;
+	artattack::SoundBank::WaveHandle confirm_sound_;
+	artattack::SoundBank::WaveHandle cancel_sound_;
+
 	mattmath::Vector2F float_resolution() const;
 
 	// Design space to this viewport's local space, in one place.

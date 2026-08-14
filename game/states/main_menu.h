@@ -6,7 +6,6 @@
 #include "game/states/confirmation_state.h"
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"
-#include "engine/audio/sound_bank_object.h"
 #include "engine/render/colour.h"
 
 
@@ -22,14 +21,13 @@ enum class MainMenuScreen
 	stage_select
 };
 
-class MainMenuPage : public MenuPage, public artattack::SoundBankObject
+class MainMenuPage : public MenuPage
 {
 public:
 	explicit MainMenuPage(MenuContext* context);
 	~MainMenuPage() override = default;
 	void init() override = 0;
 	void update(float dt) override = 0;
-	void draw(artattack::Renderer& renderer) const override = 0;
 protected:
 	// This menu family's own presentation, beside MenuPage::menu_style()'s
 	// shared one. Named for what a reader is looking for rather than for the
@@ -51,12 +49,9 @@ protected:
 	// menu_inputs() with the empty slots dropped, so entry i is player i's.
 	std::vector<ProcessedMenuInput> connected_inputs() const;
 
-	// Every sound this page family can make, resolved once when the page is
-	// built. The music is an effect rather than a wave because it loops and is
-	// stopped on the way into a match; the rest are fire-and-forget.
-	artattack::SoundBank::WaveHandle direction_sound_;
-	artattack::SoundBank::WaveHandle confirm_sound_;
-	artattack::SoundBank::WaveHandle cancel_sound_;
+	// The sounds only this family makes, beside the cursor, confirm and cancel
+	// every page shares from MenuPage. The music is an effect rather than a
+	// wave because it loops and is stopped on the way into a match.
 	artattack::SoundBank::WaveHandle error_sound_;
 	artattack::SoundBank::WaveHandle ready_sound_;
 	artattack::SoundBank::EffectHandle music_;
@@ -67,11 +62,8 @@ class MainMenuTitle final : public MainMenuPage
 public:
 	explicit MainMenuTitle(MenuContext* context);
 	void update(float dt) override;
-	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
-	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
 	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> title_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> start_ = nullptr;
@@ -87,11 +79,8 @@ class MainMenuHome final : public MainMenuPage
 public:
 	explicit MainMenuHome(MenuContext* context);
 	void update(float dt) override;
-	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
-	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
 	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> play_ = nullptr;
@@ -104,11 +93,8 @@ class MainMenuOptions final : public MainMenuPage
 public:
 	explicit MainMenuOptions(MenuContext* context);
 	void update(float dt) override;
-	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
-	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
 	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> resolution_element_ = nullptr;
@@ -134,11 +120,8 @@ class MainMenuModeSelect final : public MainMenuPage
 public:
 	explicit MainMenuModeSelect(MenuContext* context);
 	void update(float dt) override;
-	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
-	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
 	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> standard_ = nullptr;
@@ -153,11 +136,8 @@ class MainMenuPlayerCount final : public MainMenuPage
 public:
 	explicit MainMenuPlayerCount(MenuContext* context);
 	void update(float dt) override;
-	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
-	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
 	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> _1_player = nullptr;
@@ -180,7 +160,6 @@ class MainMenuTeamSelect final : public MainMenuPage
 public:
 	explicit MainMenuTeamSelect(MenuContext* context);
 	void update(float dt) override;
-	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
 	struct TeamSelectState
@@ -195,8 +174,6 @@ private:
 		std::unique_ptr<artattack::UiTexture> player_center = nullptr;
 		std::unique_ptr<artattack::UiTexture> player_b = nullptr;
 	};
-	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
 	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
 
@@ -232,7 +209,6 @@ class MainMenuWeaponSelect final : public MainMenuPage
 public:
 	explicit MainMenuWeaponSelect(MenuContext* context);
 	void update(float dt) override;
-	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
 	struct SelectState
@@ -247,8 +223,6 @@ private:
 		std::unique_ptr<artattack::UiTextDropShadow> weapon_name = nullptr;
 		std::unique_ptr<artattack::UiTextDropShadow> weapon_description = nullptr;
 	};
-	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
 	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
 	std::vector<std::unique_ptr<Widgets>> player_widgets_;
@@ -270,7 +244,6 @@ class MainMenuStageSelect final : public MainMenuPage
 public:
 	explicit MainMenuStageSelect(MenuContext* context);
 	void update(float dt) override;
-	void draw(artattack::Renderer& renderer) const override;
 	void init() override;
 private:
 	// The cursor runs over every stage the manifest named and then one slot
@@ -281,8 +254,6 @@ private:
 		int slot = 0;
 		ConfirmationState state = ConfirmationState::unconfirmed;
 	};
-	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
 	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<artattack::UiTexture> stage_icon_ = nullptr;

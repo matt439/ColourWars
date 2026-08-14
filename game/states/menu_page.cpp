@@ -5,9 +5,33 @@ using namespace DirectX;
 using namespace mattmath;
 using namespace artattack;
 
-MenuPage::MenuPage(MenuContext* context) : context_(context)
+// The bank name and the audio come from `context` rather than through this
+// page's own menu_style() and audio_resources(), which is how the four family
+// constructors this replaces reached them: a base is initialised before the
+// members of the class that owns it, so context_ is not set yet. The four
+// could get away with it because MenuPage was already a fully constructed base
+// by the time their SoundBankObject was initialised. Here it is the same
+// object, so the values are read from the argument.
+MenuPage::MenuPage(MenuContext* context) :
+	SoundBankObject(context->data()->presentation()->menu().sound_bank,
+		context->data()->audio_resources()),
+	context_(context)
 {
+	const MenuStyle& style = this->menu_style();
+	this->direction_sound_ = this->resolve_wave(style.direction_sound);
+	this->confirm_sound_ = this->resolve_wave(style.confirm_sound);
+	this->cancel_sound_ = this->resolve_wave(style.cancel_sound);
+}
 
+void MenuPage::draw(Renderer& renderer) const
+{
+	std::vector<UiLayer> layers;
+
+	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
+
+	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
+
+	this->draw_ui_layers(renderer, layers);
 }
 
 Vector2F MenuPage::widget_position() const
