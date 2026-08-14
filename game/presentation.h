@@ -194,6 +194,12 @@ struct ResultsMenuPresentation
 	artattack::Colour percentage_colour = artattack::Colour::white;
 	float team_b_percentage_x_offset = 0.0f;
 
+	// The A and B letters that sit outside each end of the fill box. There is
+	// no colour beside them: the glyphs are black in the sheet and a tint
+	// multiplies, so anything other than white can only darken black.
+	mattmath::Vector2F team_mark_size = { 0.0f, 0.0f };
+	float team_mark_gap = 0.0f;
+
 	mattmath::Vector2F proceed_position = { 0.0f, 0.0f };
 	mattmath::Vector2F heading_position = { 0.0f, 0.0f };
 	mattmath::Vector2F winner_position = { 0.0f, 0.0f };

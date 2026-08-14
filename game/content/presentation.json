@@ -124,6 +124,16 @@
     "show_results_delay": 1.0,
     "percentage_colour": "DARK_GRAY",
     "team_b_percentage_x_offset": 325.0,
+    "_team_mark_comment": [
+      "The A and B letters, outside each end of the fill box rather than on",
+      "it: the percentages already sit at the top-left of their own bars.",
+      "The gap is measured from the fill box edge outwards, and 900 - 700",
+      "leaves 100 of panel on each side to spend."
+    ],
+    "team_mark": {
+      "size": { "x": 56.0, "y": 56.0 },
+      "gap": 20.0
+    },
     "positions": {
       "proceed": { "x": 725.0, "y": 750.0 },
       "heading": { "x": 800.0, "y": 235.0 },

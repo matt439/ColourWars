@@ -86,13 +86,17 @@ float LevelEndInfo::team_b_percentage() const
 {
 	return 100.0f * this->team_b_ratio();
 }
+// Named, because a figure floating over one of two bars in one of two hues is
+// not a label. Which bar is A was a convention - A fills from the left - that
+// the screen stated nowhere and the only sentence on it, "Team A Wins!", does
+// not resolve either.
 std::wstring LevelEndInfo::team_a_percentage_string() const
 {
-	return percentage_string(this->team_a_percentage());
+	return L"A " + percentage_string(this->team_a_percentage());
 }
 std::wstring LevelEndInfo::team_b_percentage_string() const
 {
-	return percentage_string(this->team_b_percentage());
+	return L"B " + percentage_string(this->team_b_percentage());
 }
 std::wstring LevelEndInfo::winning_team_string() const
 {

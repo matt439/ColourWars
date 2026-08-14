@@ -239,6 +239,10 @@ namespace
 		menu.team_b_percentage_x_offset =
 			json.number("team_b_percentage_x_offset");
 
+		const JsonValue team_mark = json.object("team_mark");
+		menu.team_mark_size = read_vector(team_mark, "size");
+		menu.team_mark_gap = team_mark.number("gap");
+
 		const JsonValue positions = json.object("positions");
 		menu.proceed_position = read_vector(positions, "proceed");
 		menu.heading_position = read_vector(positions, "heading");

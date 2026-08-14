@@ -49,6 +49,11 @@ private:
 	std::unique_ptr<artattack::UiTexture> fill_box_ = nullptr;
 	std::unique_ptr<artattack::UiTexture> team_a_fill_ = nullptr;
 	std::unique_ptr<artattack::UiTexture> team_b_fill_ = nullptr;
+
+	// The one thing on this screen that says which bar is which without
+	// asking the player to tell two hues apart.
+	std::unique_ptr<artattack::UiTexture> team_a_mark_ = nullptr;
+	std::unique_ptr<artattack::UiTexture> team_b_mark_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> team_a_percentage_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> team_b_percentage_ = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> winner_ = nullptr;

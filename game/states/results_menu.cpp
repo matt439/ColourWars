@@ -201,12 +201,47 @@ void ResultsMenuInitial::init()
 		style.detail_shadow_offset,
 		true);
 
-	// The fills are not hidden by default the way the two figures are, so the
-	// team with nobody on it is hidden here. Its width is still driven every
-	// frame by update_team_b_fill, which is harmless and keeps the fill pass
-	// free of a special case.
+	// Outside each end of the fill box, vertically centred on it, and at a
+	// fixed position: the bars grow inwards from these two ends, so a mark
+	// here labels its bar from the first frame to the last without moving.
+	// The frames are the same two letters team select puts in front of every
+	// player before the match, so this is a mark they have already read once.
+	const RectangleF fill_box_rect = this->fill_box_->rectangle();
+	const float mark_y = fill_box_rect.position().y +
+		(fill_box_rect.height - look.team_mark_size.y) / 2.0f;
+
+	this->team_a_mark_ = std::make_unique<UiTexture>(
+		"team_a_mark",
+		"sprite_sheet_1",
+		"team_select_a",
+		RectangleF(Vector2F(
+			fill_box_rect.position().x - look.team_mark_gap -
+				look.team_mark_size.x,
+			mark_y),
+			look.team_mark_size),
+		this->render_resources(),
+		Colour::white);
+
+	this->team_b_mark_ = std::make_unique<UiTexture>(
+		"team_b_mark",
+		"sprite_sheet_1",
+		"team_select_b",
+		RectangleF(Vector2F(
+			fill_box_rect.position().x + fill_box_rect.width +
+				look.team_mark_gap,
+			mark_y),
+			look.team_mark_size),
+		this->render_resources(),
+		Colour::white);
+
+	// The fills and the marks are not hidden by default the way the two
+	// figures are, so the team with nobody on it is hidden here. The fill's
+	// width is still driven every frame by update_team_b_fill, which is
+	// harmless and keeps the fill pass free of a special case.
 	this->team_a_fill_->set_hidden(!end_info.team_a_played);
 	this->team_b_fill_->set_hidden(!end_info.team_b_played);
+	this->team_a_mark_->set_hidden(!end_info.team_a_played);
+	this->team_b_mark_->set_hidden(!end_info.team_b_played);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -214,6 +249,8 @@ void ResultsMenuInitial::init()
 	this->texture_container_->add_child(this->fill_box_.get());
 	this->texture_container_->add_child(this->team_a_fill_.get());
 	this->texture_container_->add_child(this->team_b_fill_.get());
+	this->texture_container_->add_child(this->team_a_mark_.get());
+	this->texture_container_->add_child(this->team_b_mark_.get());
 
 	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
