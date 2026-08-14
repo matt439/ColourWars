@@ -808,6 +808,7 @@ void MainMenuPlayerCount::update(float /*dt*/)
 		else if (this->focus_.move(0, input.direction))
 		{
 			this->play_wave(this->direction_sound_);
+			this->not_enough_pads_->set_hidden(true);
 		}
 	}
 }
@@ -889,6 +890,17 @@ void MainMenuPlayerCount::init()
 		"texture_container");
 	this->texture_container_->add_child(this->background_.get());
 
+	this->not_enough_pads_ = std::make_unique<UiTextDropShadow>(
+		"not_enough_pads",
+		L"Not enough controllers",
+		this->menu_style().detail_font,
+		this->calculate_widget_position(0, 8),
+		this->render_resources(),
+		this->menu_style().disabled,
+		this->menu_style().shadow_colour,
+		this->menu_style().detail_shadow_offset,
+		true);
+
 	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->heading_.get());
@@ -897,6 +909,7 @@ void MainMenuPlayerCount::init()
 	this->text_container_->add_child(this->_3_players.get());
 	this->text_container_->add_child(this->_4_players.get());
 	this->text_container_->add_child(this->back_.get());
+	this->text_container_->add_child(this->not_enough_pads_.get());
 
 	// One player skips team select: there is no other team to be on.
 	this->focus_.add(this->_1_player.get(), [this]
@@ -931,8 +944,35 @@ void MainMenuPlayerCount::init()
 	this->play_effect(this->music_, true, this->look().music.volume);
 }
 
+// Refused rather than started, when the count is more than the pads on the
+// table.
+//
+// Team select drives one row per *connected pad* - `i < num_inputs && i <
+// player_count` - while all_players_confirmed() asks about every player up to
+// player_count. Four players on two pads therefore reaches a page that cannot
+// be finished by any sequence of inputs: players 2 and 3 have no pad to confirm
+// with and the transition waits on them forever. The way out is to work out
+// that Back is gated on all_players_unconfirmed() and that both live pads must
+// therefore unconfirm first, which nothing on the screen says.
+//
+// Past that page it is no better: set_level_settings falls back to `slots[i] :
+// i`, welding two of the four characters to slots with no pad in them, and the
+// match starts with two players who cannot move.
+//
+// Refused here rather than gated inside team select's update(), which runs
+// every frame and would beep sixty times a second. The rows are not greyed the
+// way Mode Select's unbuilt ones are: a pad can be plugged in at any moment,
+// and the disabled treatment there works precisely because it is decided once
+// and never changes.
 void MainMenuPlayerCount::start_team_select(int players, ScreenLayout layout)
 {
+	if (players > static_cast<int>(this->connected_slots().size()))
+	{
+		this->play_wave(this->error_sound_);
+		this->not_enough_pads_->set_hidden(false);
+		return;
+	}
+
 	this->play_wave(this->confirm_sound_);
 	MenuLevelSettings* settings = this->level_settings();
 	settings->set_player_count(players);

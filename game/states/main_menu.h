@@ -166,6 +166,11 @@ private:
 	std::unique_ptr<artattack::UiTextDropShadow> _4_players = nullptr;
 	std::unique_ptr<artattack::UiTextDropShadow> back_ = nullptr;
 
+	// Shown when a row asks for more players than there are pads. Hidden
+	// again on the next cursor move, since the player is then asking a
+	// different question.
+	std::unique_ptr<artattack::UiTextDropShadow> not_enough_pads_ = nullptr;
+
 	// Two, three and four players differ only in the count and the layout.
 	void start_team_select(int players, artattack::ScreenLayout layout);
 };
