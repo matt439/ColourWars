@@ -18,7 +18,7 @@ API is awkward" loudly enough to be worth fixing.
 game/                 ~12.8k lines   the game: states, objects, content
 external/labrador/                   the engine, as a submodule
 external/rapidjson/                  vendored, for the save and level files
-cmake/                               the wave-bank recipe and the save seeder
+cmake/                               the wave-bank recipe
 ```
 
 ## Building

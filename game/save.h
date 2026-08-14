@@ -8,7 +8,17 @@
 
 struct SaveData
 {
-	artattack::ScreenResolution resolution = artattack::ScreenResolution::s_1280_720;
+	// 1080p, which is what the game has actually started at for as long as
+	// anyone has run it: a tracked save_data.json saying so was copied beside
+	// the exe by the build, so the 720p written here was the stated default
+	// and never the effective one. The seed is gone, so this is the only place
+	// that answers the question now, and it answers it the way the game has
+	// always behaved rather than quietly dropping every fresh build to 720p.
+	//
+	// It is also the resolution the menus are authored at - MenuPage scales
+	// every widget from a 1920x1080 design space - so it is the one value that
+	// needs no scaling at all.
+	artattack::ScreenResolution resolution = artattack::ScreenResolution::s_1920_1080;
 	bool fullscreen = false;
 };
 

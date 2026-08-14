@@ -174,10 +174,9 @@ foreach(content_dir textures levels fonts sounds)
 endforeach()
 add_dependencies(ArtAttackGame artattack_content)
 
-add_custom_command(TARGET ArtAttackGame POST_BUILD
-    COMMAND "${CMAKE_COMMAND}"
-        "-Dsrc=${CMAKE_CURRENT_SOURCE_DIR}/content/save"
-        "-Ddst_parent=$<TARGET_FILE_DIR:ArtAttackGame>"
-        -P "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/seed_save.cmake"
-    VERBATIM
-)
+# Nothing seeds a save. There used to be a POST_BUILD step copying a tracked
+# content/save/save_data.json beside the exe when none was there, and that file
+# was generated user state that had been committed: it said 1920x1080 while the
+# compiled default said 1280x720, so what a fresh build actually started at was
+# decided by a file nobody was maintaining. Save now writes its own defaults on
+# first run, which it always could.
