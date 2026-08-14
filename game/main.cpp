@@ -93,6 +93,14 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 				{
 					auto info = std::make_unique<LevelLoadedInfo>(
 						(directory + name + ".json").c_str());
+
+					// Before it joins the stage list, and for the same reason
+					// the disk is checked here rather than at the menu: every
+					// other key in the file is read for the first time inside
+					// GameLevel::init(), which is after four people have
+					// chosen a stage and pressed A.
+					info->validate();
+
 					stages.push_back(Stage{ name, info->display_name(),
 						info->icon_frame() });
 					level_infos.add(name, std::move(info));

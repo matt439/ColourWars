@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/assets/json.h"
+#include "engine/input/gamepads.h"
 #include "engine/math/matt_math.h"
 #include <string>
 #include <vector>
@@ -9,6 +10,30 @@ class LevelLoadedInfo
 {
 public:
 	explicit LevelLoadedInfo(const char* json_path);
+
+	// Reads every key this class exposes, and throws on the first one that is
+	// missing or the wrong type, naming the file and the key.
+	//
+	// WHY THIS EXISTS. Every accessor below is a fresh walk of the document
+	// performed on demand, and the manifest callback that loads a level calls
+	// exactly two of them - display_name and icon_frame, the two the stage
+	// menu needs to draw a row. The other eleven were first read by
+	// LevelBuilder inside GameLevel::init(), which is to say after a player
+	// picked a stage and pressed A. A level file missing a bounds rectangle
+	// therefore killed a session that four people were already sitting in,
+	// through a message box captioned "startup failure", at the one moment it
+	// could do the most damage. CLAUDE.md's own rule is that a stage the
+	// manifest names and the disk cannot supply "must fail at startup, not
+	// three screens later"; the disk half was enforced and the contents half
+	// was not.
+	//
+	// WHAT IT DOES NOT DO. It does not resolve sprite sheets or frame names
+	// against what the manifest loaded, and it does not decode a single object
+	// entry - what an entry means is LevelObjectBuilder's vocabulary, not this
+	// class's, and moving it here to check it would move it here for good. The
+	// two object lists are checked as far as this class understands them:
+	// that they are present and are arrays.
+	void validate() const;
 
 	// How the stage-select menu names and pictures this level. They live in
 	// the level file rather than in a table beside the menu, so that adding a
@@ -48,4 +73,10 @@ private:
 
 	static std::vector<mattmath::Vector2F>
 		decode_team_spawns(const artattack::JsonValue& json);
+
+	// Both teams' spawns are checked the same way and want the same sentence.
+	static void validate_spawn(const artattack::JsonValue& root,
+		const mattmath::Vector2F& spawn,
+		const mattmath::RectangleF& out_of_bounds,
+		const char* team);
 };
