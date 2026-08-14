@@ -4,6 +4,32 @@
 using namespace mattmath;
 using namespace artattack;
 
+namespace
+{
+	// A match is four minutes, and a bare second count spends the whole of it
+	// reading as a distance rather than a clock: "240", "239", "238". mm:ss is
+	// the only thing on the HUD that says how long is left in a unit anyone
+	// thinks in.
+	//
+	// Wide, because the narrow draw and measure overloads convert through a
+	// buffer the shared font owns, and every player's render worker is in here
+	// at once. Assembled by hand rather than through a stream for the same
+	// reason draw_timer avoids one: this runs per player per frame.
+	//
+	// std::ceil to match draw_respawn_timer, and clamped at zero because
+	// Level::update runs the tick that takes the clock past zero before the
+	// state change that stops drawing it, so the HUD sees a small negative once.
+	std::wstring format_clock(float seconds)
+	{
+		const int total = std::max(0, static_cast<int>(std::ceil(seconds)));
+		const int minutes = total / 60;
+		const int remainder = total % 60;
+
+		return std::to_wstring(minutes) + (remainder < 10 ? L":0" : L":") +
+			std::to_wstring(remainder);
+	}
+}
+
 InterfaceGameplay::InterfaceGameplay(RenderResources* render_resources,
 	const HudPresentation* look) :
 	render_resources_(render_resources),
@@ -153,10 +179,7 @@ void InterfaceGameplay::draw_timer(DrawList& draw_list,
 
 	float scale = resolution.x / look.timer_reference_width;
 
-	// Wide, because the narrow overload converts through a buffer owned by
-	// the shared font and every player's render worker is in here.
-	const std::wstring text =
-		std::to_wstring(static_cast<int>(std::ceil(timer)));
+	const std::wstring text = format_clock(timer);
 
 	draw_list.draw_text(this->timer_font_, text,
 		pos + (look.timer_shadow_offset * scale), look.timer_shadow_colour, scale,
