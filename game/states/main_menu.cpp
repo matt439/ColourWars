@@ -98,6 +98,9 @@ void MainMenuTitle::update(float /*dt*/)
 }
 void MainMenuTitle::init()
 {
+	this->set_prompts({
+		{ L"A", L"Start" } });
+
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
 		"sprite_sheet_1",
@@ -202,6 +205,10 @@ void MainMenuHome::update(float /*dt*/)
 }
 void MainMenuHome::init()
 {
+	this->set_prompts({
+		{ L"A", L"Select" },
+		{ L"B", L"Back" } });
+
 	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
 
 	this->background_ = std::make_unique<UiTexture>(
@@ -402,6 +409,11 @@ void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
 
 void MainMenuOptions::init()
 {
+	this->set_prompts({
+		{ L"Left/Right", L"Change" },
+		{ L"A", L"Select" },
+		{ L"B", L"Back" } });
+
 	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
 	Vector2F widget_size = this->widget_size();
 
@@ -612,6 +624,10 @@ void MainMenuModeSelect::update(float /*dt*/)
 }
 void MainMenuModeSelect::init()
 {
+	this->set_prompts({
+		{ L"A", L"Select" },
+		{ L"B", L"Back" } });
+
 	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
 
 	this->set_widget_spacing(this->look().mode_select_spacing);
@@ -774,6 +790,10 @@ void MainMenuPlayerCount::update(float /*dt*/)
 }
 void MainMenuPlayerCount::init()
 {
+	this->set_prompts({
+		{ L"A", L"Select" },
+		{ L"B", L"Back" } });
+
 	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
 
 	this->set_widget_spacing(this->look().player_count_spacing);
@@ -1199,6 +1219,11 @@ void MainMenuTeamSelect::deselect_and_unconfirm_all_widgets()
 }
 void MainMenuTeamSelect::init()
 {
+	this->set_prompts({
+		{ L"Left/Right", L"Pick a team" },
+		{ L"A", L"Confirm" },
+		{ L"B", L"Cancel" } });
+
 	this->set_widget_spacing(this->look().team_select.spacing);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
@@ -1522,6 +1547,11 @@ void MainMenuWeaponSelect::unconfirm_all_widgets()
 }
 void MainMenuWeaponSelect::init()
 {
+	this->set_prompts({
+		{ L"Left/Right", L"Change weapon" },
+		{ L"A", L"Confirm" },
+		{ L"B", L"Cancel" } });
+
 	this->set_widget_spacing(this->look().weapon_select.spacing);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
@@ -1802,6 +1832,14 @@ int MainMenuStageSelect::pick_random_stage() const
 }
 void MainMenuStageSelect::init()
 {
+	this->set_prompts({
+		// A twice: the first press confirms the stage, the second starts the
+		// match. One legend for both, because it is the same button and the
+		// bar is built once in init().
+		{ L"Left/Right", L"Change stage" },
+		{ L"A", L"Confirm, then start" },
+		{ L"B", L"Back" } });
+
 	this->select_state_.slot = this->slot_of(this->level_settings()->stage());
 
 	this->set_widget_spacing(this->look().stage_select.spacing);

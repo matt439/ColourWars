@@ -264,6 +264,19 @@ namespace
 		return menu;
 	}
 
+	PromptBarPresentation read_prompt_bar(const JsonValue& root)
+	{
+		const JsonValue json = root.object("prompt_bar");
+
+		PromptBarPresentation bar;
+		bar.font = json.string("font");
+		bar.position = read_vector(json, "position");
+		bar.colour = read_colour(json, "colour");
+		bar.shadow_colour = read_colour(json, "shadow_colour");
+		bar.shadow_offset = read_vector(json, "shadow_offset");
+		return bar;
+	}
+
 	HudPresentation read_hud(const JsonValue& root)
 	{
 		const JsonValue json = root.object("hud");
@@ -325,6 +338,7 @@ Presentation::Presentation(const char* path)
 	this->pause_menu_ = read_pause_menu(root);
 	this->end_menu_ = read_end_menu(root);
 	this->results_menu_ = read_results_menu(root);
+	this->prompt_bar_ = read_prompt_bar(root);
 	this->hud_ = read_hud(root);
 	this->debug_overlay_ = read_debug_overlay(root);
 }
@@ -352,6 +366,11 @@ const EndMenuPresentation& Presentation::end_menu() const
 const ResultsMenuPresentation& Presentation::results_menu() const
 {
 	return this->results_menu_;
+}
+
+const PromptBarPresentation& Presentation::prompt_bar() const
+{
+	return this->prompt_bar_;
 }
 
 const HudPresentation& Presentation::hud() const

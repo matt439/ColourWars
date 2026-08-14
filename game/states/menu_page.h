@@ -4,6 +4,7 @@
 #include "engine/ui/focus.h"
 #include "engine/ui/widget.h"
 #include "game/states/menu_context.h"
+#include "game/states/prompt_bar.h"
 #include "engine/core/state.h"
 #include "engine/math/matt_math.h"
 #include "engine/render/camera.h"
@@ -138,6 +139,15 @@ protected:
 	artattack::SoundBank::WaveHandle confirm_sound_;
 	artattack::SoundBank::WaveHandle cancel_sound_;
 
+	// Says what this page's buttons do. Call it from init() with whatever this
+	// page actually reads - and only with what it reads, because a legend that
+	// is wrong is worse than no legend at all.
+	//
+	// It is a separate layer in draw() rather than a child of text_container_,
+	// so it does not care whether it is called before or after the page builds
+	// its widgets. A page that says nothing simply never calls it.
+	void set_prompts(const std::vector<PromptBar::Prompt>& prompts);
+
 	mattmath::Vector2F float_resolution() const;
 
 	// Design space to this viewport's local space, in one place.
@@ -150,6 +160,7 @@ protected:
 	artattack::Camera ui_camera(const artattack::Viewport& viewport) const;
 private:
 	MenuContext* context_ = nullptr;
+	std::unique_ptr<PromptBar> prompt_bar_ = nullptr;
 	mattmath::Vector2F widget_position_ = { 150.0f, 150.0f };
 	mattmath::Vector2F widget_size_ = { 300.0f, 75.0f };
 	mattmath::Vector2F widget_spacing_ = { 250.0f, 150.0f };

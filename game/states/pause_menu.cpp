@@ -132,6 +132,13 @@ void PauseMenuInitial::update(float /*dt*/)
 }
 void PauseMenuInitial::init()
 {
+	// Both buttons really do resume - update() takes back and pause alike -
+	// and Start is worth naming here because it is the only thing that says
+	// pause is a toggle.
+	this->set_prompts({
+		{ L"A", L"Select" },
+		{ L"B/Start", L"Resume" } });
+
 	const MenuStyle& style = this->menu_style();
 	const PauseMenuPresentation& look = this->look();
 
@@ -255,6 +262,10 @@ void PauseMenuConfirmation::update(float /*dt*/)
 
 void PauseMenuConfirmation::init()
 {
+	this->set_prompts({
+		{ L"A", L"Select" },
+		{ L"B", L"Back" } });
+
 	const MenuStyle& style = this->menu_style();
 	const PauseMenuPresentation& look = this->look();
 

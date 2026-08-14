@@ -148,6 +148,20 @@
     }
   },
 
+  "_prompt_bar_comment": [
+    "The button legend along the bottom of every menu page. What each page",
+    "says is in C++ beside the buttons it reads; where it sits and what it",
+    "looks like is here, once, because it is the same on all of them.",
+    "y is 990 of the 1080 the menus are authored in."
+  ],
+  "prompt_bar": {
+    "font": "gill_sans_mt_bold_24",
+    "position": { "x": 150.0, "y": 990.0 },
+    "colour": "WHITE_SMOKE",
+    "shadow_colour": "BLACK",
+    "shadow_offset": { "x": 1.0, "y": 1.0 }
+  },
+
   "hud": {
     "_comment": [
       "The margins and the box are fractions of the viewport, not pixels,",

@@ -47,6 +47,9 @@ void EndMenuInitial::update(float /*dt*/)
 }
 void EndMenuInitial::init()
 {
+	this->set_prompts({
+		{ L"A", L"Select" } });
+
 	const MenuStyle& style = this->menu_style();
 	const EndMenuPresentation& look = this->look();
 

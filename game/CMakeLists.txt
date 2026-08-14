@@ -54,6 +54,7 @@ add_executable(ArtAttackGame WIN32
     states/menu_level_settings.cpp
     states/menu_page.cpp
     states/pause_menu.cpp
+    states/prompt_bar.cpp
     states/results_menu.cpp
 
     resource.rc

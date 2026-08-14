@@ -23,6 +23,15 @@ MenuPage::MenuPage(MenuContext* context) :
 	this->cancel_sound_ = this->resolve_wave(style.cancel_sound);
 }
 
+void MenuPage::set_prompts(const std::vector<PromptBar::Prompt>& prompts)
+{
+	this->prompt_bar_ = std::make_unique<PromptBar>(
+		"prompt_bar",
+		prompts,
+		this->presentation().prompt_bar(),
+		this->render_resources());
+}
+
 void MenuPage::draw(Renderer& renderer) const
 {
 	std::vector<UiLayer> layers;
@@ -30,6 +39,12 @@ void MenuPage::draw(Renderer& renderer) const
 	layers.push_back({ this->texture_container_.get(), TextureFilter::point });
 
 	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
+
+	// Last, so it is over everything, and only if the page set one.
+	if (this->prompt_bar_ != nullptr)
+	{
+		layers.push_back({ this->prompt_bar_.get(), TextureFilter::linear });
+	}
 
 	this->draw_ui_layers(renderer, layers);
 }

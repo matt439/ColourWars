@@ -227,6 +227,18 @@ struct ResultsMenuPresentation
 //
 // Most of these are fractions of the viewport rather than pixels, which is why
 // they survive a resolution change and the countdown did not.
+// The line of button prompts along the bottom of a menu page. What each page
+// puts in it is the page's business; where it sits and what it looks like is
+// the same everywhere, which is why it is one block and not twelve.
+struct PromptBarPresentation
+{
+	std::string font;
+	mattmath::Vector2F position = { 0.0f, 0.0f };
+	artattack::Colour colour = artattack::Colour::white;
+	artattack::Colour shadow_colour = artattack::Colour::black;
+	mattmath::Vector2F shadow_offset = { 0.0f, 0.0f };
+};
+
 struct HudPresentation
 {
 	float right_margin = 0.0f;
@@ -286,6 +298,7 @@ public:
 	const PauseMenuPresentation& pause_menu() const;
 	const EndMenuPresentation& end_menu() const;
 	const ResultsMenuPresentation& results_menu() const;
+	const PromptBarPresentation& prompt_bar() const;
 	const HudPresentation& hud() const;
 	const DebugOverlayPresentation& debug_overlay() const;
 
@@ -295,6 +308,7 @@ private:
 	PauseMenuPresentation pause_menu_;
 	EndMenuPresentation end_menu_;
 	ResultsMenuPresentation results_menu_;
+	PromptBarPresentation prompt_bar_;
 	HudPresentation hud_;
 	DebugOverlayPresentation debug_overlay_;
 };
