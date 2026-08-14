@@ -183,8 +183,50 @@ void GameLevel::build_and_enter_level()
 	this->data()->application()->reset_elapsed_time();
 }
 
+// Alt-tab, minimise, the Windows key, a notification stealing the foreground -
+// all the same question, asked once a frame.
+//
+// The shell suspends the pad reader on WM_ACTIVATEAPP and tells the state stack
+// nothing, and a suspended reader answers "disconnected" for every slot, which
+// PlayerInput turns into a neutral input for every player. So the match did not
+// stop when the window went away: it ran on with nobody in it, four characters
+// standing still soaking paint, the clock counting down and the music at full
+// volume over whatever the player had switched to. A four-minute round could be
+// lost entirely to answering a message.
+//
+// This is asked only while the match is the top of the stack. A pause menu over
+// it means update() is not called at all and on_suspend has already done the
+// same work - which is why there is no interaction to reason about between the
+// two, and why the pause path is left exactly as it was.
+bool GameLevel::match_has_the_foreground()
+{
+	const bool active =
+		GetForegroundWindow() == this->data()->application()->window();
+
+	if (active != this->window_active_)
+	{
+		this->window_active_ = active;
+
+		if (active)
+		{
+			this->level_->resume();
+		}
+		else
+		{
+			this->level_->suspend();
+		}
+	}
+
+	return active;
+}
+
 void GameLevel::update(float dt)
 {
+	if (!this->match_has_the_foreground())
+	{
+		return;
+	}
+
 	const std::vector<PlayerInputData> player_inputs =
 		this->player_input_->player_inputs();
 

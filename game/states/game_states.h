@@ -98,6 +98,24 @@ private:
 	// destructor.
 	artattack::ScreenLayout previous_layout_ = artattack::ScreenLayout::one_player;
 
+	// Whether the window had the foreground when update() last looked.
+	//
+	// Remembered rather than tested, because the match is suspended on the edge
+	// into false and resumed on the edge back, and those two are not idempotent
+	// in the way calling them every frame would need: pause_effect and
+	// resume_effect carry no depth, so "suspended twice" and "suspended" are
+	// the same state and one resume answers both.
+	//
+	// Polled rather than notified. The shell handles WM_ACTIVATEAPP privately
+	// and forwards nothing to the state stack, which is the report filed
+	// against the engine; when a State::on_deactivated exists this member is
+	// what it sets, and the poll in update() is the only part that goes.
+	bool window_active_ = true;
+
+	// Follows the window's foreground state, suspending or resuming the match
+	// on the edge. Returns whether the match should tick at all this frame.
+	bool match_has_the_foreground();
+
 	// Sets the screen layout from the settings, then builds the level. Used by
 	// init() and by every restart path, so they cannot drift apart.
 	void build_and_enter_level();
