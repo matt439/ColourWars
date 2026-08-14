@@ -870,11 +870,17 @@ void MainMenuPlayerCount::init()
 		"texture_container");
 	this->texture_container_->add_child(this->background_.get());
 
+	// Row 7, not 8. This page spaces its rows 100 apart from a base of 150, so
+	// row 8 is design y 950 - and the prompt bar sits at 990 in a face whose
+	// line box reaches back up past it. The two overlapped by a few pixels,
+	// descenders into capitals, at exactly the moment both are trying to tell
+	// a confused player something. Row 7 is 850 and is otherwise empty: this
+	// page's last focusable row, Back, is row 6.
 	this->not_enough_pads_ = std::make_unique<UiTextDropShadow>(
 		"not_enough_pads",
 		L"Not enough controllers",
 		this->menu_style().detail_font,
-		this->calculate_widget_position(0, 8),
+		this->calculate_widget_position(0, 7),
 		this->render_resources(),
 		this->menu_style().warning,
 		this->menu_style().shadow_colour,

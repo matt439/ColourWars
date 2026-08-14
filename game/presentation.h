@@ -223,10 +223,6 @@ struct ResultsMenuPresentation
 	PresentationSound fill_sound;
 };
 
-// The gameplay HUD: health, ammo, the match timer and the respawn count.
-//
-// Most of these are fractions of the viewport rather than pixels, which is why
-// they survive a resolution change and the countdown did not.
 // The line of button prompts along the bottom of a menu page. What each page
 // puts in it is the page's business; where it sits and what it looks like is
 // the same everywhere, which is why it is one block and not twelve.
@@ -239,6 +235,10 @@ struct PromptBarPresentation
 	mattmath::Vector2F shadow_offset = { 0.0f, 0.0f };
 };
 
+// The gameplay HUD: health, ammo, the match timer and the respawn count.
+//
+// Most of these are fractions of the viewport rather than pixels, which is why
+// they survive a resolution change and the countdown did not.
 struct HudPresentation
 {
 	float right_margin = 0.0f;

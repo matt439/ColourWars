@@ -116,9 +116,18 @@ void Level::build_opening_frame(RenderResources* render_resources)
 	// A or the left trigger jumps, the right trigger shoots, the right stick
 	// aims, and the left stick pushed down drops through a platform - which is
 	// the least guessable of the six and the reason the list is not shorter.
+	// Every entry names its device. "Down" alone was the first draft and it
+	// was the one prompt that could be misread, sitting after "Right stick
+	// Aim" among five entries that all name a stick or a button: the reading
+	// it invites is the d-pad, which PlayerInput does not read at all during a
+	// match, so a player following the legend would press a control that does
+	// nothing. The menus make that worse rather than better - MenuInput takes
+	// the d-pad and the stick alike, so "Left/Right" there honestly means
+	// either, and a player arrives at their first match having been taught
+	// that a bare direction means whichever they prefer.
 	this->controls_text_ = std::make_unique<TextDropShadow>(
-		L"Left stick  Move      A or LT  Jump      RT  Shoot\n"
-		L"Right stick  Aim      Down  Drop through      Start  Pause",
+		L"Left stick  Move      Left stick down  Drop through      A or LT  Jump\n"
+		L"RT  Shoot      Right stick  Aim      Start  Pause",
 		match.controls_font,
 		Vector2F::ZERO,
 		render_resources,
