@@ -37,7 +37,10 @@ private:
 	SaveData save_data_ = SaveData();
 	SaveData load_from_json(const char* json_path) const;
 	bool write_save_file(const SaveData& data) const;
-	static bool check_if_save_file_exists();
+
+	// Takes the path now, because load_save_file asks it about two of them:
+	// where the save lives and where it used to.
+	static bool file_exists(const std::string& path);
 
 	artattack::ScreenResolution convert_ivec_to_resolution(
 		const mattmath::Vector2I& vec) const;

@@ -48,10 +48,10 @@ SaveData Save::load_from_json(const char* json_path) const
 
     return data;
 }
-bool Save::check_if_save_file_exists()
+bool Save::file_exists(const std::string& path)
 {
     FILE* fp = nullptr;
-    if (fopen_s(&fp, SAVE_FILE_PATH.c_str(), "rb") != 0 || fp == nullptr)
+    if (fopen_s(&fp, path.c_str(), "rb") != 0 || fp == nullptr)
     {
 		return false;
 	}
@@ -60,16 +60,42 @@ bool Save::check_if_save_file_exists()
 }
 void Save::load_save_file()
 {
-    if (!check_if_save_file_exists())
+    const std::string path = save_file_path();
+
+    if (!file_exists(path))
     {
-        // First run, or the save directory was never created. Write the
-        // defaults out so the file exists from here on.
+        // Nothing at the real location. Before writing defaults over the
+        // question, look where the save used to be kept - beside the exe,
+        // under the build directory - and take those settings if they are
+        // there. Read only, and never removed: a build tree is not this
+        // game's to tidy up, the copy left behind is harmless, and one that
+        // was deleted after a failed write would be a setting lost to a
+        // migration nobody asked for.
+        //
+        // This is a one-way door by construction rather than by a flag. Once
+        // anything writes the new file, this arm is never taken again.
+        const std::string legacy = legacy_save_file_path();
+        if (file_exists(legacy))
+        {
+            try
+            {
+                this->save_data_ = this->load_from_json(legacy.c_str());
+            }
+            catch (const std::exception&)
+            {
+                this->save_data_ = SaveData();
+            }
+        }
+
+        // Either way the file now exists at the new path, with whatever was
+        // recovered or with the defaults.
         this->save_to_file();
+        return;
     }
 
     try
     {
-        this->save_data_ = this->load_from_json(SAVE_FILE_PATH.c_str());
+        this->save_data_ = this->load_from_json(path.c_str());
     }
     catch (const std::exception&)
     {
@@ -81,9 +107,13 @@ void Save::load_save_file()
 
 bool Save::write_save_file(const SaveData& data) const
 {
+    const std::string path = save_file_path();
+
     // fopen("wb") does not create directories, so a deployed build with no
-    // save/ folder would fail here on every attempt.
-    const std::filesystem::path save_path(SAVE_FILE_PATH);
+    // save/ folder would fail here on every attempt. Now that the save lives
+    // under %LOCALAPPDATA% this is not an edge case at all: the game's folder
+    // there does not exist until the first time it is written.
+    const std::filesystem::path save_path(path);
     if (save_path.has_parent_path())
     {
         std::error_code ec;
@@ -95,7 +125,7 @@ bool Save::write_save_file(const SaveData& data) const
     // so a write that then fails - a full disk, a read-only Program Files -
     // has destroyed the settings it was replacing as well as failing to store
     // the new ones. A rename either happens or does not.
-    const std::string temp_file_path = SAVE_FILE_PATH + ".tmp";
+    const std::string temp_file_path = path + ".tmp";
 
     FILE* fp = nullptr;
     if (fopen_s(&fp, temp_file_path.c_str(), "wb") != 0 || fp == nullptr)
@@ -166,7 +196,7 @@ void Save::save_to_file() const
     // a debugger and nothing else: this is a WIN32-subsystem exe with no
     // console, so a report that has to be seen goes the way main() sends its
     // startup failures, stderr paired with a message box (T6).
-    const std::string message = "Could not write " + SAVE_FILE_PATH +
+    const std::string message = "Could not write " + save_file_path() +
         ".\nYour settings will not be remembered.";
     fprintf(stderr, "save failure: %s\n", message.c_str());
     MessageBoxA(nullptr, message.c_str(), "ArtAttack - save failure",
