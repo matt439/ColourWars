@@ -5,11 +5,11 @@
 > answer, and each carries an **exhibit**: the workaround that is in this
 > repository now, written because the engine offered nothing better.
 >
-> **Four are closed and struck below; two are still drafts.** Every engine
+> **Five are closed and struck below; one is on hold.** Every engine
 > citation was checked against the pinned revision on the day of writing — and
 > `8e43d72` is the *submodule pin*, not the engine's master. That is how report
 > 1 came to describe a bug the engine had fixed the day after the pin was
-> taken. Check master before filing either of the two that are left.
+> taken. Check master before filing the one that is left.
 >
 > They are drafted here rather than in the submodule on purpose. CLAUDE.md puts
 > engine *changes* in the Labrador repository; a report is a thing this client
@@ -34,10 +34,10 @@ written in the last three days and did not exist when the gap audit was run.
 | 2 | ~~No activation hook on `State`~~ | yes, two of them | **closed** — engine `8c104a7`, filed and landed |
 | 3 | ~~`FocusGroup` has no disabled entry~~ | yes, two of them | **closed** — engine `9bc14b3`, filed and landed |
 | 4 | ~~Every UI leaf is `final`~~ | yes | **closed** — engine `93821c7`, filed and landed |
-| 5 | No font default character | yes | file |
+| 5 | ~~No font default character~~ | yes | **closed** — engine `77704d1`, filed and landed |
 | 6 | No audio bus or master gain | **not yet** | hold |
 
-All four closures are waiting on a submodule pin bump; none of them is visible
+All five closures are waiting on a submodule pin bump; none of them is visible
 to this client until then. What each one lets this repository delete is recorded under
 its own heading.
 
@@ -64,8 +64,8 @@ on this side. **What this repository does about it: nothing.**
 The lesson worth keeping is the one about aim rather than about the bug.
 `8e43d72` is what `external/labrador` is pinned at, not what the engine's
 master is, and a report checked against the pin describes a codebase the
-engine may have left. The two reports still open were drafted the same way
-and should be re-checked against master before anyone files them.
+engine may have left. Report 6 was drafted the same way and should be re-checked
+against master before anyone files it.
 
 The original analysis follows, unedited, because the reasoning is what the
 engine's fix agreed with.
@@ -384,9 +384,43 @@ than decided.
 
 ---
 
-## 5. No font default character, so a missing glyph is an exception rather than a blank
+## 5. ~~No font default character~~ — CLOSED, filed and landed
 
-**Severity: a content file kills the process several screens from where it was read.**
+**Filed 2026-08-14 and implemented: engine `77704d1`, "Give a font something to
+draw when it has not got the glyph".**
+
+Both parts of the ask, and the engine took the sharpest argument in this report
+— that `text_encoding.h` promises U+FFFD and U+FFFD is in no atlas — as the
+reason rather than as decoration. That header now says the promise leads to a
+question mark.
+
+- **The built-in `font` kind installs a stand-in character at load.** `?` if
+  the font has it, `' '` if not, nothing if it has neither — and both
+  candidates are deliberately inside the 95-character region, since a fallback
+  outside it would reintroduce the bug inside the fix. `ContainsCharacter` is
+  asked before `SetDefaultCharacter` rather than the throw being caught.
+- **`RenderResources::can_render(font, text)` and `first_unrenderable(font,
+  text)`**, per UTF-16 unit, `npos` when the whole string is drawable. They ask
+  of the atlas, not of what would happen, because after the substitution
+  nothing throws and the only question left is whether the player can read it.
+
+**What this repository does at the next pin bump.** `drawable_text.{h,cpp}`
+does not have to go, and probably should not: throwing at load naming the file
+and the key is still better for *this* game than shipping question marks into a
+weapon description, and that was always its argument. What changes is that it
+is now a choice rather than the only option, and the parts of it that guess can
+stop guessing:
+
+- The hand-written 95-character ceiling becomes `can_render` against the font
+  actually being used, so the check stops being a belief about the atlas and
+  starts being a reading of it.
+- `first_unrenderable` gives the report an index, so the message can name the
+  character and where it is rather than only the file and the key.
+- The transliteration table stays, because turning a curly apostrophe into a
+  straight one is better than either a throw or a question mark. That part was
+  never the engine's to do.
+
+The original report follows.
 
 ### What happens
 
