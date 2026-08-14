@@ -200,8 +200,7 @@ void GameLevel::build_and_enter_level()
 // two, and why the pause path is left exactly as it was.
 bool GameLevel::match_has_the_foreground()
 {
-	const bool active =
-		GetForegroundWindow() == this->data()->application()->window();
+	const bool active = this->data()->window_has_foreground();
 
 	if (active != this->window_active_)
 	{

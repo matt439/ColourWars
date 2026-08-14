@@ -99,3 +99,8 @@ const Partitioner* GameData::partitioner() const
 {
 	return this->application_->partitioner();
 }
+
+bool GameData::window_has_foreground() const
+{
+	return GetForegroundWindow() == this->application_->window();
+}

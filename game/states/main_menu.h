@@ -215,6 +215,10 @@ private:
 	// press is the one that starts the match.
 	bool confirm_completes_roster(int player) const;
 
+	// Whether this roster could be a match. Both the refusal and the message
+	// that explains it read this one predicate, so they cannot disagree.
+	bool roster_is_playable() const;
+
 	// Whether the teams as currently *chosen* - confirmed or not - have
 	// somebody on each side. The team is picked before it is confirmed, so
 	// this already includes the player who is pressing.

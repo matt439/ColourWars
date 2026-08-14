@@ -81,8 +81,20 @@ void MainMenuTitle::draw(Renderer& renderer) const
 void MainMenuTitle::update(float /*dt*/)
 {
 	// A pad can arrive at any moment, and asking for one is the whole purpose
-	// of the line, so the answer is refreshed rather than remembered.
-	this->no_pad_->set_hidden(!this->connected_slots().empty());
+	// of the line, so the answer is refreshed rather than remembered - but
+	// only while this window has the foreground.
+	//
+	// The shell suspends the pad reader whenever it does not, and a suspended
+	// reader answers "disconnected" for every slot. Refreshing from that would
+	// put "Connect a controller" under Start every time the player clicked on
+	// another window, which is the one thing this line must never say wrongly:
+	// its whole job is to distinguish a game waiting for a pad from a game
+	// that has hung. Unasked, the line keeps whatever it last showed, which is
+	// the right answer in both directions.
+	if (this->data()->window_has_foreground())
+	{
+		this->no_pad_->set_hidden(!this->connected_slots().empty());
+	}
 
 	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	for (int i = 0; i < inputs.size(); i++)
@@ -1045,7 +1057,7 @@ void MainMenuTeamSelect::update(float /*dt*/)
 			// player choosing a side early is never argued with and the one
 			// who would have started the match is told why it did not.
 			if (this->confirm_completes_roster(i) &&
-				!this->both_teams_chosen())
+				!this->roster_is_playable())
 			{
 				this->play_wave(this->error_sound_);
 				this->both_teams_needed_->set_hidden(false);
@@ -1087,8 +1099,9 @@ void MainMenuTeamSelect::update(float /*dt*/)
 	}
 	// Cleared as soon as somebody crosses to the other side, rather than on a
 	// timer or on the next press: the message is about a state, and the state
-	// is over.
-	if (this->both_teams_chosen())
+	// is over. The same predicate as the refusal, so the two cannot disagree
+	// about what is wrong.
+	if (this->roster_is_playable())
 	{
 		this->both_teams_needed_->set_hidden(true);
 	}
@@ -1117,6 +1130,24 @@ bool MainMenuTeamSelect::confirm_completes_roster(int player) const
 		}
 	}
 	return true;
+}
+bool MainMenuTeamSelect::roster_is_playable() const
+{
+	// One player has nobody to need. The one-player row skips this page
+	// entirely, but the end menu's "Change Teams" comes back to it with a
+	// count of one - and that is a route worth keeping, because it is the only
+	// way a solo player can play as team B. Requiring both teams there refused
+	// every press with no way forward, on the row the end menu highlights by
+	// default.
+	//
+	// A solo roster is exactly what LevelEndInfo::one_team_only was written
+	// for, so it is a match this game can now finish honestly.
+	if (this->player_count() < 2)
+	{
+		return true;
+	}
+
+	return this->both_teams_chosen();
 }
 bool MainMenuTeamSelect::both_teams_chosen() const
 {
@@ -1260,12 +1291,15 @@ void MainMenuTeamSelect::init()
 
 	this->text_container_->add_child(this->heading_.get());
 
-	// Under the four player rows, which occupy rows 2 to 5.
+	// Row 6, under the four player rows, which occupy rows 2 to 5. Row 7 is
+	// off the bottom: this page spaces its rows 125 apart from a base of 150,
+	// so row 7 is y 1025 in a design space 1080 tall and the descenders of
+	// "player" would have been cut off by the screen edge.
 	this->both_teams_needed_ = std::make_unique<UiTextDropShadow>(
 		"both_teams_needed",
 		L"Both teams need a player",
 		this->menu_style().detail_font,
-		this->calculate_widget_position(0, 7),
+		this->calculate_widget_position(0, 6),
 		this->render_resources(),
 		this->menu_style().warning,
 		this->menu_style().shadow_colour,
