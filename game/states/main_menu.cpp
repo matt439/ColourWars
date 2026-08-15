@@ -373,6 +373,16 @@ void MainMenuOptions::adjust_focused_value(labrador::Direction direction)
 		return;
 	}
 
+	// A disabled row does not answer left and right either. move() will not
+	// walk onto one, but it can be switched off under a cursor already sitting
+	// there - Apply turning fullscreen on does exactly that - and a greyed row
+	// that still cycled would be the one thing on the page saying two things
+	// at once.
+	if (!this->focus_.enabled(row))
+	{
+		return;
+	}
+
 	this->play_wave(this->direction_sound_);
 	row->adjust(direction);
 }
@@ -381,35 +391,69 @@ void MainMenuOptions::apply_settings()
 {
 	this->play_wave(this->confirm_sound_);
 
-	bool fs = this->full_screen_selection_;
+	const bool fs = this->full_screen_selection_;
 
-	// Fullscreen is a window restyle - WS_POPUP and SW_SHOWMAXIMIZED - and not
-	// a display-mode change, so the back buffer comes out desktop-sized however
-	// small a resolution this page picked. Applying both together left
-	// ViewportManager and ui_camera() sizing from a number the screen does not
-	// have and the game drawing into the top-left corner of it - saved, and
-	// re-applied on every launch after.
+	// THE COERCION THIS USED TO DO IS GONE, and the engine is why.
 	//
-	// Nothing on ResolutionManager or Application reports the desktop size, so
-	// the coercion is the other way round: while fullscreen is on the
-	// resolution is left alone, and the row goes back to saying what is
-	// actually in effect. Turning fullscreen off applies it as it always did,
-	// and first, because set_fullscreen(false) sizes the window from it.
-	if (fs)
-	{
-		this->resolution_selection_ = this->resolution_manager()->resolution();
-		this->update_resolution_selection_text();
-	}
-	else
-	{
-		this->resolution_manager()->set_resolution(this->resolution_selection_);
-		this->save()->set_resolution_and_save(this->resolution_selection_);
+	// Fullscreen here is a window restyle - WS_POPUP and SW_SHOWMAXIMIZED -
+	// and not a display-mode change, so the back buffer comes out
+	// desktop-sized however small a resolution this page picked. That used to
+	// leave ViewportManager and ui_camera() sizing from a number the screen
+	// did not have, with the game drawn into the top-left corner of its own
+	// window. This page worked around it by refusing to apply a resolution
+	// while fullscreen was on.
+	//
+	// The engine closed it in 0702776: every route into a resize arrives at
+	// on_window_size_changed, which re-points ResolutionManager at the real
+	// client size before the renderer resizes. So the layout follows the
+	// window now whatever this page does, and there is nothing left to protect
+	// it from.
+	//
+	// It also remembers the way back. Application::set_resolution records the
+	// preset as the size the game asked for, and set_fullscreen(false) returns
+	// to that rather than to the monitor - which is the other half this page
+	// used to hand-hold.
+	//
+	// THE PICK IS ALWAYS SAVED AND ONLY SOMETIMES APPLIED, which is two
+	// decisions and they are not the same one.
+	//
+	// Saving it always is what makes the choice survive: the row is disabled
+	// while fullscreen, so the only place a resolution can be picked is here,
+	// windowed, possibly in the same press that turns fullscreen on. That pick
+	// is the size the window comes back to, and it has to outlive a restart -
+	// main.cpp seeds ApplicationOptions from the save.
+	//
+	// Applying it only when the game will end up WINDOWED is about not
+	// resizing a window twice in one call. set_resolution resizes and
+	// set_fullscreen(true) resizes again immediately, and each of those is a
+	// synchronous WM_SIZE into the renderer's swap chain - from inside a
+	// window procedure, since this runs under the tick. That sequence killed
+	// the process once during testing with STATUS_FATAL_USER_CALLBACK_EXCEPTION
+	// (0xc000041d), an exception escaping the window proc, and it did not
+	// reproduce on the next run. Whatever the race is, this page has no reason
+	// to be in it: a window about to become fullscreen does not need to be
+	// resized to something else first.
+	//
+	// Nothing is lost by skipping it. Application::set_fullscreen(false) sizes
+	// the window from options_.resolution, and the way out of fullscreen goes
+	// through the branch below - which calls set_resolution first, and so sets
+	// that very field to the pick before it is read.
+	this->save()->set_resolution_and_save(this->resolution_selection_);
 
+	if (!fs)
+	{
+		// Not routed through the resolution manager first: Application does
+		// that itself, and the second call was this page saying the same thing
+		// twice.
 		this->data()->application()->set_resolution(this->resolution_selection_);
 	}
 
 	this->save()->set_full_screen_and_save(fs);
 	this->apply_fullscreen_setting(fs);
+
+	// After both, because it reads what is now in effect rather than what was
+	// asked for.
+	this->refresh_resolution_row();
 
 	// The widgets are not touched. This is the page that changes the
 	// resolution while its own widgets are on screen, so it is the page that
@@ -432,10 +476,29 @@ void MainMenuOptions::init()
 		{ L"A", L"Select" },
 		{ L"B", L"Back" } });
 
-	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
+	// Three, because the Resolution row switches off while fullscreen owns the
+	// size. OptionRow paints only its label with this, so a disabled row greys
+	// its name and leaves the value legible - which is the point, since the
+	// value is the thing the player is being shown.
+	this->focus_.set_style({ this->menu_style().highlight,
+		this->menu_style().unhighlight,
+		this->menu_style().disabled });
 	Vector2F widget_size = this->widget_size();
 
-	this->resolution_selection_ = this->resolution_manager()->resolution();
+	// FROM THE SAVE, NOT FROM THE RESOLUTION MANAGER, and the difference only
+	// shows up in fullscreen - where it is a bug that writes itself into the
+	// save file and stays.
+	//
+	// The manager's resolution() is the preset last asked for, and going
+	// fullscreen asks for the monitor. On a 2560x1440 screen that is exactly a
+	// preset, so the label really does become 2560x1440 - seeding from it made
+	// this row believe the player had chosen 1440p, and turning fullscreen off
+	// then applied it as the windowed size and saved it. A player who had
+	// picked 1080p got a 1440p window and a save file that agreed.
+	//
+	// The save is the windowed choice, which is the question this row is
+	// asking, and it is the same value Application keeps to return to.
+	this->resolution_selection_ = this->save()->resolution();
 	this->full_screen_selection_ = this->save()->fullscreen();
 
 	this->background_ = std::make_unique<UiTexture>(
@@ -533,6 +596,11 @@ void MainMenuOptions::init()
 				std::make_unique<MainMenuHome>(this->menu_context()));
 		});
 
+	// After registration, because it switches a registered row off. A page
+	// opened while the game is already fullscreen has to say so on its first
+	// frame rather than on its first Apply.
+	this->refresh_resolution_row();
+
 	this->play_effect(this->music_, true, this->look().music.volume);
 }
 
@@ -576,6 +644,61 @@ void MainMenuOptions::update_resolution_selection_text()
 	const std::string res_text = this->resolution_manager()->
 		convert_resolution_to_string(this->resolution_selection_);
 	this->resolution_row_->set_value(widen(res_text));
+}
+
+// What the Resolution row says, and whether it can be picked at all.
+//
+// TWO DIFFERENT QUESTIONS, AND THE ENGINE ANSWERS THEM WITH TWO DIFFERENT
+// CALLS. resolution() is a label - "the preset last asked for", in
+// resolution_manager.h's own words - and resolution_ivec() is the live window.
+// While fullscreen those two disagree, because the window is the monitor and
+// the monitor is usually not one of the four presets. This row used to show
+// the label and claim it was what was in effect: on a 2560x1440 monitor it sat
+// there reading 1920x1080 while the game ran at 1440p.
+//
+// So the live size is what it shows while fullscreen is on, formatted from the
+// vector rather than named, because a size that is not a preset has no name in
+// the enum and inventing one is the coercion the engine spent a commit
+// removing.
+//
+// AND THE ROW IS DISABLED WHILE IT SAYS THAT, which is the honest reading of a
+// value the player cannot change: fullscreen takes the monitor, and nothing
+// this row offers can alter that. It is not a fifth thing to remember either -
+// resolution_selection_ is left alone underneath, so it is still the preset
+// the window goes back to, and turning fullscreen off re-enables the row
+// showing it.
+void MainMenuOptions::refresh_resolution_row()
+{
+	const bool fullscreen = this->save()->fullscreen();
+
+	if (fullscreen)
+	{
+		const Vector2I size = this->resolution_manager()->resolution_ivec();
+		this->resolution_row_->set_value(
+			widen(std::to_string(size.x) + "x" + std::to_string(size.y)));
+	}
+	else
+	{
+		this->update_resolution_selection_text();
+	}
+
+	this->focus_.set_enabled(this->resolution_row_.get(), !fullscreen);
+
+	// AND THE CURSOR IS MOVED OFF IT, which the engine deliberately does not do
+	// for us: FocusGroup's header says disabling the focused row leaves the
+	// cursor where it is, because yanking a player's hand elsewhere mid-press
+	// is worse than sitting on a row that answers `refused`.
+	//
+	// That is the right default and the wrong one here, and the difference is
+	// who was holding the cursor. This page disables the row on the frame it
+	// opens - Resolution is registered first, so it starts focused - and a page
+	// whose first frame shows a greyed row and no highlight anywhere reads as
+	// broken rather than as unavailable. Nobody's hand is on it yet.
+	if (fullscreen &&
+		this->focus_.focused(0) == this->resolution_row_.get())
+	{
+		this->focus_.set_focused(0, this->full_screen_row_.get());
+	}
 }
 
 void MainMenuOptions::update_full_screen_selection_text() const

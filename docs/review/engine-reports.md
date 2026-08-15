@@ -52,10 +52,10 @@ The one report with no exhibit is the one that has never been filed.
 |---|---|---|---|
 | 6 | No audio bus, master gain, listener or voice cap | **not yet** | hold — the exhibit has to exist first |
 
-Nothing else is outstanding against the engine. What *is* outstanding is on
-this side: the fullscreen workaround under
-[What is deliberately not here](#what-is-deliberately-not-here), which needs a
-pad to check.
+Nothing else is outstanding, on either side. The fullscreen workaround the
+audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
+has since been driven and fixed — keyboard support made the Options page
+reachable on a machine with no pad.
 
 ---
 
@@ -298,15 +298,27 @@ Re-checked 2026-08-15 against `6b5c0bd`.
   `ResolutionManager` at the real client size before the renderer resizes, so
   every route into a resize holds the invariant.
 
-  **That means this repository has an unrevisited workaround.**
-  `MainMenuOptions::apply_settings` coerces the fullscreen path by hand, and
-  its comment gives as the reason "Nothing on ResolutionManager or Application
-  reports the desktop size" and describes ViewportManager "sizing from a number
-  the screen does not have". The second half of that is now fixed engine-side.
-  The workaround has not been re-examined, and **cannot be on this machine** —
-  reaching the Options page needs a pad. Someone with one should check whether
-  it is now redundant, and whether the resolution row says the right thing
-  after a fullscreen toggle.
+  **The workaround this left behind is gone**, and driving the page proved it
+  was hiding two bugs rather than one. The coercion in
+  `MainMenuOptions::apply_settings` is deleted: the layout follows the window
+  on its own now, and `Application` remembers the windowed size to return to.
+  What the page kept is a display rule — while fullscreen owns the size the
+  Resolution row shows `resolution_ivec()` and is disabled, because
+  `resolution()` is a label and on a 1440p monitor it sat there reading
+  1920x1080 while the game ran at 2560x1440.
+
+  **One thing seen once and not reproduced, worth knowing before someone
+  writes the same sequence again.** `Application::set_resolution` immediately
+  followed by `set_fullscreen(true)` resizes the window twice in one call, each
+  a synchronous WM_SIZE into the renderer's swap chain, from inside a window
+  procedure. That killed the process once with
+  STATUS_FATAL_USER_CALLBACK_EXCEPTION (`0xc000041d`) — an exception escaping
+  the window proc, so `wWinMain`'s handler never saw it and nothing was printed.
+  It did not recur in the next four runs, and the page no longer makes that
+  call pair at all, so there is no exhibit and no report. If it is ever seen
+  again with a reproduction, the ask writes itself: an engine that throws out
+  of its own window procedure dies silently, which is the one failure mode T6
+  is meant to rule out.
 
 - **The write side of `json.h`.** Still absent, still correct:
   `ARCHITECTURE.md` names the read-only asymmetry and settles it, and T12

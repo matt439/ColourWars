@@ -116,6 +116,11 @@ private:
 	void adjust_focused_value(labrador::Direction direction);
 	void apply_settings();
 	void update_resolution_selection_text();
+
+	// Points the Resolution row at whichever of the two questions currently
+	// applies - the preset being chosen, or the size fullscreen actually took -
+	// and switches the row off while it is answering the second.
+	void refresh_resolution_row();
 	void update_full_screen_selection_text() const;
 	void apply_fullscreen_setting(bool fullscreen);
 };
