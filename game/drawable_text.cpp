@@ -125,47 +125,30 @@ namespace drawable_text
 		const labrador::FontHandle font =
 			render_resources->resolve_sprite_font(font_name);
 
-		// THE LAYOUT CONTROLS HAVE TO BE STEPPED OVER, and finding that out is
-		// the only surprise in this function. first_unrenderable asks the
-		// ATLAS, which its header says plainly - and no atlas has a glyph for
-		// a line feed, because the glyph walk answers that character itself
-		// before it ever looks one up. Every shipped weapon description has a
-		// literal \n in it putting its second sentence on a second line, so
-		// asked without this the check condemns all four of them on their
-		// first newline.
-		//
-		// So the walk is per run between control characters, and
-		// is_layout_control stays the single definition of which those are -
-		// the same one widen_drawable uses, for the same reason it exists.
-		size_t offset = 0;
-		while (offset < text.size())
+		// One call over the whole string. This used to walk the runs between
+		// layout controls, because the query answered "no glyph" about the
+		// newline in every weapon description - it asked the atlas about
+		// characters the pen walk consumes without ever looking them up. That
+		// was report 8, and the engine's f94ac81 made the query skip what the
+		// walk skips, off one definition of the set. So the filter here is
+		// gone rather than kept in step with a private one.
+		const size_t index = render_resources->first_unrenderable(font, text);
+		if (index == std::wstring_view::npos)
 		{
-			const size_t found =
-				render_resources->first_unrenderable(font, text.substr(offset));
-			if (found == std::wstring_view::npos)
-			{
-				return;
-			}
-
-			const size_t index = offset + found;
-			if (is_layout_control(text[index]))
-			{
-				offset = index + 1;
-				continue;
-			}
-
-			// The index as well as the character, which is the half of this
-			// the load-time check cannot give: it walks a string it has just
-			// built and reports the first character it dislikes, while this
-			// one is reading an answer out of the atlas and is told where.
-			throw std::runtime_error(where + " contains " +
-				code_point_text(text[index]) + " at index " +
-				std::to_string(index) + ", which the font '" + font_name +
-				"' has no glyph for. The load-time check passed it, so that "
-				"font covers less than the ninety-five characters U+0020 to "
-				"U+007E this game's content is written against - which means "
-				"the font was regenerated with a narrower region, not that "
-				"the text is wrong.");
+			return;
 		}
+
+		// The index as well as the character, which is the half of this the
+		// load-time check cannot give: it walks a string it has just built and
+		// reports the first character it dislikes, while this one is reading
+		// an answer out of the atlas and is told where.
+		throw std::runtime_error(where + " contains " +
+			code_point_text(text[index]) + " at index " +
+			std::to_string(index) + ", which the font '" + font_name +
+			"' has no glyph for. The load-time check passed it, so that font "
+			"covers less than the ninety-five characters U+0020 to U+007E "
+			"this game's content is written against - which means the font "
+			"was regenerated with a narrower region, not that the text is "
+			"wrong.");
 	}
 }

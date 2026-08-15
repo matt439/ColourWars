@@ -1,6 +1,5 @@
 #include "game/pch.h"
 #include "game/objects/projectile_builder.h"
-#include "game/rotate.h"
 
 using namespace mattmath;
 using namespace DirectX;
@@ -101,7 +100,7 @@ std::vector<std::unique_ptr<labrador::CollisionObject>>
 		projectiles.push_back(
 			std::make_unique<ProjectileMist>(
 				rectangle,
-				game_math::rotate_vector(velocity, step * mattmath::PI / 12.0f),
+				Vector2F::rotate_vector(velocity, step * mattmath::PI / 12.0f),
 				team,
 				player_num,
 				team_colour,

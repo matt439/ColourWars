@@ -1,6 +1,5 @@
 #include "game/pch.h"
 #include "game/objects/weapon.h"
-#include "game/rotate.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -173,7 +172,7 @@ Vector2F Weapon::nozzle_pos() const
 {
 	Vector2F result = this->details().nozzle_offset;
 	result.x += this->details().size.x;
-	result = game_math::rotate_vector(result, this->rotation_);
+	result = Vector2F::rotate_vector(result, this->rotation_);
 	result += this->wep_rotation_origin_offset(
 		facing_left(this->rotation_));
 	result += this->player_center();

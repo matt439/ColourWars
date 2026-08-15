@@ -6,9 +6,9 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Three are live and unfiled. Five are closed** and kept below as one
-> paragraph each — what was asked, what shipped, and what this repository spent
-> the answer on.
+> **One is live and on hold. Seven are closed** and kept below as one paragraph
+> each — what was asked, what shipped, and what this repository spent the
+> answer on.
 >
 > They are drafted here rather than in the submodule on purpose. CLAUDE.md puts
 > engine *changes* in the Labrador repository; a report is a thing this client
@@ -16,6 +16,8 @@
 
 **Audited 2026-08-15 against `6b5c0bd`.** What that removed and what it turned
 up is at the bottom, under [What the audit changed](#what-the-audit-changed).
+Reports 7 and 8 were filed off the audited file and answered the same day, in
+`343433c` and `f94ac81`; the pin is at `343433c`.
 
 ## The rule that governs this file
 
@@ -36,8 +38,11 @@ nothing. A report saying "here is the code I wrote because it did not" is worth
 something.
 
 So each report leads with the workaround. The evidence for this being the right
-shape is the strike rate: of the five reports filed with exhibits, four were
-implemented the day they were filed.
+shape is the strike rate: **of the seven reports filed with exhibits, six were
+implemented the day they were filed.** The seventh needed no filing — the
+engine had already fixed it.
+
+The one report with no exhibit is the one that has never been filed.
 
 ---
 
@@ -46,8 +51,11 @@ implemented the day they were filed.
 | # | Report | Exhibit | Status |
 |---|---|---|---|
 | 6 | No audio bus, master gain, listener or voice cap | **not yet** | hold — the exhibit has to exist first |
-| 7 | Four math names deleted as uncalled, with callers here | yes, three | **to file** |
-| 8 | `first_unrenderable` cannot be used on text with a newline | yes | **to file** — small, bundle it |
+
+Nothing else is outstanding against the engine. What *is* outstanding is on
+this side: the fullscreen workaround under
+[What is deliberately not here](#what-is-deliberately-not-here), which needs a
+pad to check.
 
 ---
 
@@ -93,135 +101,12 @@ itself.
 
 ---
 
-## 7. Four math names were deleted as uncalled, and this client called all four
-
-The engine's math review deleted around twenty-five zero-caller names across
-two commits. **Four of them had callers here**, and the game stopped compiling
-at the pin bump:
-
-| Name | Deleted by | Callers here |
-|---|---|---|
-| `RectangleF::contains(const Point2F&)` | `42f1f47` | 1 |
-| `RectangleF::area` | `42f1f47` | 1 |
-| `RectangleF::inflate_to_size` | `42f1f47` | 2 |
-| `Vector2F::rotate_vector` | `42f1f47` | 2 |
-
-A fifth, `Vector2F::direction()` and the nine-value `mattmath::Direction` with
-it, is **not** part of this report. Its only use here tested three of the nine
-values, all of which mean the sign of `y`, and the engine's reasoning — that it
-was shadowed in practice by `engine/ui/navigation.h`'s `Direction` — is
-correct. That call site is now `velocity().y > 0.0f` and is better for it. A
-report that asks for all five can be dismissed on the weakest one.
-
-### This is not a new argument, and that is the point
-
-`bb5356d`, the commit before the deletions, makes this report's case in its own
-words:
-
-> `TriangleRightAxisAligned` was on this step's list with "one caller, a test"
-> against it. ColourWars uses it twice, and the second use constructs one into
-> a `unique_ptr` held by base pointer. It is live client API. **That is the
-> second item this step's list got wrong, and both were wrong the same way: a
-> symbol's callers cannot be counted from one of the two repositories.**
-
-The method was named as unsound, and the very next commit deleted twenty-odd
-symbols by it. Two were caught by hand because somebody thought to look; four
-were not. The ask leads with the *procedure* and the names come second.
-
-### The exhibits
-
-**One of the four needed no workaround at all**, and it is the most interesting
-of them. `out_of_bounds.contains(spawn)` in `level_loaded_info.cpp` is now
-`rectangle_point_intersect(out_of_bounds, spawn)` — the free predicate that
-survived. So this client is now the first caller of the predicate table that
-`bb5356d` measured as having **no caller outside its own file and the tests**,
-and recorded in `docs/file-length-audit.md` as a deletion candidate on that
-evidence. **Do not delete `intersects.{h,cpp}` on the strength of that
-measurement.** It is the same count, taken the same way, from the same one of
-the two repositories.
-
-The other three:
-
-- `game/objects/paint_tile.cpp` — `area()` is `width * height` written out.
-  Trivially replaceable, listed for completeness, the least of the four.
-- `game/objects/projectile.cpp` — `DiffusingProjectile::diffuse_to_size`, a
-  protected helper doing what `inflate_to_size` did, on a rectangle passed by
-  reference because mist and spray each own their own. **This one is arguably
-  better where it is now** and the engine may reasonably decline it: the base
-  already owns the size, and the two subclasses were writing the same line.
-- `game/rotate.h` — one free function, `rotate_vector`, byte-for-byte the body
-  that was deleted. **This is the one that should go back.** A 2D engine's
-  vector type that can answer `angle()`, `unit_vec_from_angle()` and `normal()`
-  and cannot rotate a vector by an angle has a hole in it, and the client's copy
-  is a second definition of engine arithmetic sitting outside the engine's tests.
-
-### The ask
-
-**First, the procedure.** A deletion justified by a caller count should say
-which repositories were counted. `git grep` in the engine tree answers a
-different question from the one the commit message claims to answer, and
-`bb5356d` says so about itself. The client is a submodule of nothing — it
-consumes the engine, not the reverse — so the engine cannot grep it as part of
-its own build, which makes this a discipline rather than a check, and worth
-writing into `CONVENTIONS.md` or the review process rather than remembering.
-
-**Second, `Vector2F::rotate_vector` back**, with the test it should have had.
-Twelve lines including the header declaration.
-
-**Third, a decision recorded about `intersects.{h,cpp}`** that does not rest on
-the caller count, now that the count is wrong. The library-shape question
-`bb5356d` raised — is this a table of predicates the collision system was
-supposed to adopt and never did — is real, and is not settled by this client
-having found a use for one of the twenty-five.
-
-`area` and `inflate_to_size` are listed for the record and are not asked for.
-
----
-
-## 8. `first_unrenderable` cannot be used on text with a newline
-
-Small, and it costs the engine either two lines of code or two lines of header.
-Bundle it with whatever goes next.
-
-### What happens
-
-`RenderResources::can_render` and `first_unrenderable` (`77704d1`) ask of the
-**atlas**, which `render_resources.h` says plainly. No atlas holds a glyph for
-U+000A, because the glyph walk answers a line feed itself before it ever looks
-a character up.
-
-So the two calls answer "this font has no glyph for that" about a character
-that draws perfectly well. **Every weapon description in this game has a
-literal `\n` in it**, putting its second sentence on a second line, and the
-first run of the client-side check condemned all four of them.
-
-### The exhibit
-
-`game/drawable_text.cpp`, `check_font_can_draw` — it walks the runs *between*
-layout controls and asks about each, rather than asking about the string.
-`drawable_text::is_layout_control` already existed and already named the two
-characters, because `widen_drawable` needed exactly the same exemption for
-exactly the same reason.
-
-That is the tell: two functions in this client, written months apart, both had
-to know that `\n` and `\r` are not glyph lookups. The engine's glyph walk knows
-it too. Only the query does not.
-
-### The ask
-
-Either the pair skips what the walk handles, or the header names the two
-characters a caller has to filter. The first is better — the question a client
-asks is "will this string draw", and a call that answers "no" about a newline
-is answering a question nobody has — but the second costs nothing and would
-have saved this client from finding out by condemning its own content.
-
----
-
 # Closed
 
-Five reports, all answered, all spent here. Kept as outcomes rather than as
+Seven reports, all answered, all spent here. Kept as outcomes rather than as
 reports: what was asked, what shipped, what this repository did with it. The
-original bodies are in git — see [What the audit changed](#what-the-audit-changed).
+original bodies are in git — see [What the audit changed](#what-the-audit-changed)
+for reports 1–5, and `f81e937` for 7 and 8.
 
 ## 1. ~~`StateContext` never empties its stack~~
 
@@ -330,7 +215,59 @@ constant is *verified* rather than replaced, which is the better outcome — the
 two disagree exactly when a font is regenerated with a narrower region, and no
 build step prevents that.
 
-This report also produced [report 8](#8-first_unrenderable-cannot-be-used-on-text-with-a-newline).
+This report also produced report 8, below.
+
+## 7. ~~Four math names deleted as uncalled, with callers here~~ — `343433c`
+
+Asked, in order: that a deletion justified by a caller count say which
+repositories were counted; that `Vector2F::rotate_vector` come back; and that
+the `intersects.{h,cpp}` question be **decided** rather than re-measured. Got
+all three, in that order, and the engine agreed the procedure was the ask that
+mattered — `PHILOSOPHY.md` carries it now, under the public face, as a
+discipline rather than a check, because the engine cannot reach a repository
+that consumes it and should not learn how.
+
+**Spent** in this commit. `game/rotate.h` is deleted after two weeks, and both
+call sites are back on `Vector2F::rotate_vector`. The engine's header records
+that it was deleted once and why it is back; it came with the two test cases it
+should have had, including that it agrees with `normal()` at `PI_OVER_2`.
+
+**The `intersects` decision is the part to read**, and it is not the one this
+report asked for the reason it gave. The table is kept — but explicitly *not*
+because the count changed, though it had. The engine's answer is that a 2D
+engine whose client has to ask whether a segment crosses a rotated rectangle
+and write the answer itself has pushed geometry across the boundary, so every
+predicate belongs there at whatever call count. **A reason that does not move
+when the count moves**, which is what makes it an answer and the count merely
+the thing that prompted it. Filed in `intersects.h` where a reader meets it.
+
+`area` and `inflate_to_size` were listed for the record and not asked for; they
+stay worked around here, `diffuse_to_size` happily so.
+
+## 8. ~~`first_unrenderable` cannot be used on text with a newline~~ — `f94ac81`
+
+Offered two options: the query skips what the pen walk skips, or the header
+names the two characters a caller has to filter. **Got the better one.** The
+engine's reasoning was the argument this report had made in passing — two
+functions in this one client had already written the same filter, months
+apart, so naming the characters in a header leaves every client writing it.
+
+`Font::is_layout_control` now names U+000A and U+000D once, and both
+`for_each_glyph` and `first_unrenderable` test it, so the walk and the query
+cannot disagree about what is looked up. It stays private, correctly: the
+observable contract is that the query skips them, not that clients can ask.
+
+**Spent** in this commit. `check_font_can_draw` is one call over the whole
+string again, and the run-walking is gone. Verified both ways with a probe
+reading `line one\nline é two`: the newline at index 8 is skipped and the bad
+character is still caught at index 14.
+
+`drawable_text::is_layout_control` **stays**, and not as a leftover.
+`widen_drawable` needs it, and cannot use the engine's: it runs while
+`presentation.json` is being read, before any font exists. Two definitions of
+the same two characters, in two repositories, for the reason report 5 records —
+and this one is exempting them from a region check rather than from a glyph
+lookup.
 
 ---
 
@@ -409,6 +346,10 @@ rule is to record that rather than quietly match itself to the outcome.
 which was a note under closed report 5 marked "worth raising with report 6".
 Report 6 is on indefinite hold, so that was a live item filed behind a blocked
 one. It is small and should not wait.
+
+That promotion is the audit paying for itself: reports 7 and 8 were both filed
+off the audited file and both answered the same day. Report 8 would still be a
+paragraph under a closed heading otherwise.
 
 **Re-verified every live claim** against `6b5c0bd`. Report 6 survived intact;
 only its citations had drifted (`sound_bank.h:67,73` → `66,72`). Two of the
