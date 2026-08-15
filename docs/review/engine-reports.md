@@ -36,6 +36,7 @@ written in the last three days and did not exist when the gap audit was run.
 | 4 | ~~Every UI leaf is `final`~~ | yes | **closed** — engine `93821c7`, filed and landed |
 | 5 | ~~No font default character~~ | yes | **closed** — engine `77704d1`, filed and landed |
 | 6 | No audio bus or master gain | **not yet** | hold |
+| 7 | Four math names deleted as uncalled, with callers here | yes, three | **to file** |
 
 **The pin has since moved** — forty-three commits, to `6b5c0bd` — so all five
 closures are live here now, and each heading below records what its arrival was
@@ -456,21 +457,47 @@ question mark.
   of the atlas, not of what would happen, because after the substitution
   nothing throws and the only question left is whether the player can read it.
 
-**What this repository does at the next pin bump.** `drawable_text.{h,cpp}`
-does not have to go, and probably should not: throwing at load naming the file
-and the key is still better for *this* game than shipping question marks into a
-weapon description, and that was always its argument. What changes is that it
-is now a choice rather than the only option, and the parts of it that guess can
-stop guessing:
+**Spent, and the shape it took is not the one predicted, for a reason worth
+keeping.** `drawable_text.{h,cpp}` stays, as expected, and the transliteration
+table with it. But the prediction was that the hand-written ceiling *becomes*
+`can_render`, and it cannot: **`widen_drawable` runs before any font exists.**
+`presentation.json` and every level file are read before `load_manifest`
+(`main.cpp`), which is the whole reason the ceiling was hand-written in the
+first place — a fact this report had, in the sentence about the throw arriving
+four screens later, and did not follow through.
 
-- The hand-written 95-character ceiling becomes `can_render` against the font
-  actually being used, so the check stops being a belief about the atlas and
-  starts being a reading of it.
-- `first_unrenderable` gives the report an index, so the message can name the
-  character and where it is rather than only the file and the key.
-- The transliteration table stays, because turning a curly apostrophe into a
-  straight one is better than either a throw or a question mark. That part was
-  never the engine's to do.
+So there are two checks now rather than one replaced:
+
+- **The region constant stays where the text is read**, because that is the
+  only place that can name the file and the key, and it has no atlas to ask.
+- **`check_font_can_draw` runs once after `load_manifest`**, over the two
+  authored strings — the weapon descriptions against
+  `weapon_description_font`, the stage names against `item_font` — and asks the
+  atlas the engine actually loaded. `first_unrenderable` gives it the index, so
+  the message names the character, where it is and which font lacks it.
+
+That makes the constant *verified* rather than *replaced*, which is arguably
+the better outcome: the two disagree exactly when a font is regenerated with a
+narrower region than the headers were decoded as having, and nothing in the
+build prevents that.
+
+### `first_unrenderable` and the layout controls — for the next report
+
+**A caller cannot use it on a string with a newline in it without filtering
+first, and every weapon description in this game has one.** The first run of
+this check condemned all four of them at their `\n`.
+
+It is not a defect: `render_resources.h` says the calls ask of the atlas rather
+than of what would happen, and no atlas holds a glyph for U+000A. But the
+question a client has is "will this string draw", and the gap between the two
+is exactly the set of characters the glyph walk answers itself before it looks
+anything up — `\n` and `\r`. `drawable_text::is_layout_control` already knew
+that list, and `check_font_can_draw` now walks the runs between them.
+
+Worth raising with report 6 rather than alone: either the engine's pair skips
+what the walk handles, or the header names the two characters a caller has to
+filter, rather than leaving each client to find them by condemning its own
+content.
 
 The original report follows.
 

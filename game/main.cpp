@@ -129,6 +129,41 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 				"there is no stage to play.");
 		}
 
+		// The content strings, now asked of the fonts that will draw them.
+		//
+		// This is the earliest it can be done: presentation.json and every
+		// level file were read above, before the manifest, so nothing had a
+		// font to ask at the time. Both of those checks were the region
+		// constant in drawable_text - a claim about all seven .spritefonts,
+		// made by decoding their headers by hand - and this is the same
+		// question put to the atlas the engine actually loaded.
+		//
+		// Only the two authored strings. Every other wide literal in this
+		// repository is typed into a source file that is plain ASCII by
+		// policy, and a font that could not draw those could not draw the
+		// word "Start".
+		{
+			const MenuStyle& menu = presentation.menu();
+			const MainMenuPresentation& main_menu = presentation.main_menu();
+
+			for (size_t i = 0; i < main_menu.weapon_descriptions.size(); i++)
+			{
+				drawable_text::check_font_can_draw(app.render_resources(),
+					main_menu.weapon_description_font,
+					main_menu.weapon_descriptions[i],
+					"the weapon description at index " + std::to_string(i));
+			}
+
+			for (const Stage& stage : stages)
+			{
+				drawable_text::check_font_can_draw(app.render_resources(),
+					menu.item_font,
+					drawable_text::widen_drawable(stage.display_name,
+						"the display_name of stage '" + stage.name + "'"),
+					"the display_name of stage '" + stage.name + "'");
+			}
+		}
+
 		data.set_application(&app);
 		data.set_save(&save);
 		data.set_level_infos(&level_infos);
