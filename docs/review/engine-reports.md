@@ -1,15 +1,17 @@
 # Reports to file against Labrador
 
-> Six reports, drafted 2026-08-14 against engine revision `8e43d72`. Each one is
-> a case where this client wanted something ordinary and the API forced a bad
-> answer, and each carries an **exhibit**: the workaround that is in this
-> repository now, written because the engine offered nothing better.
+> Seven reports. Six were drafted 2026-08-14 against engine revision
+> `8e43d72`; the seventh was written 2026-08-15 against `6b5c0bd`, the pin that
+> closed five of the first six. Each one is a case where this client wanted
+> something ordinary and the API forced a bad answer, and each carries an
+> **exhibit**: the workaround that is in this repository now, written because
+> the engine offered nothing better.
 >
-> **Five are closed and struck below; one is on hold.** Every engine
-> citation was checked against the pinned revision on the day of writing — and
-> `8e43d72` is the *submodule pin*, not the engine's master. That is how report
-> 1 came to describe a bug the engine had fixed the day after the pin was
-> taken. Check master before filing the one that is left.
+> **Five are closed and struck below; one is on hold; one is new and unfiled.**
+> Every engine citation was checked against the pinned revision on the day of
+> writing — and the pin is not the engine's master. That is how report 1 came
+> to describe a bug the engine had fixed the day after the pin was taken. Check
+> master before filing either of the two that are left.
 >
 > They are drafted here rather than in the submodule on purpose. CLAUDE.md puts
 > engine *changes* in the Labrador repository; a report is a thing this client
@@ -25,8 +27,10 @@ right call, and it means a report saying "an engine should have X" is worth
 nothing. A report saying "here is the code I wrote because it did not, in a
 file you can open" is worth something.
 
-So each report below leads with the workaround. Four of the six exhibits were
-written in the last three days and did not exist when the gap audit was run.
+So each report below leads with the workaround. Four of the original six
+exhibits were written in the three days before they were drafted and did not
+exist when the gap audit was run; report 7's three were written the day the pin
+moved, because the pin moving is what made them necessary.
 
 | # | Report | Exhibit exists | Status |
 |---|---|---|---|
@@ -584,6 +588,98 @@ and are the two only a split-screen client would ever report.
 
 ---
 
+## 7. Four math names were deleted as uncalled, and this client called all four
+
+**Written 2026-08-15 against `6b5c0bd`, the pin that closed reports 1–5. Check
+master before filing: the engine moves faster than this file.**
+
+The engine's math review deleted around twenty-five zero-caller names across
+two commits. **Four of them had callers here**, and the game stopped compiling
+at the pin bump:
+
+| Name | Deleted by | Callers here |
+|---|---|---|
+| `RectangleF::contains(const Point2F&)` | `42f1f47` | 1 |
+| `RectangleF::area` | `42f1f47` | 1 |
+| `RectangleF::inflate_to_size` | `42f1f47` | 2 |
+| `Vector2F::rotate_vector` | `42f1f47` | 2 |
+
+A fifth, `Vector2F::direction()` and the nine-value `mattmath::Direction` with
+it, is **not** part of this report. Its only use here tested three of the nine
+values, all of which mean the sign of `y`, and the engine's reasoning — that it
+was shadowed in practice by `engine/ui/navigation.h`'s `Direction` — is
+correct. That call site is now `velocity().y > 0.0f` and is better for it. A
+report that asks for all five is a report that can be dismissed on the weakest
+one.
+
+### This is not a new argument, and that is the point
+
+`bb5356d`, the commit before the deletions, makes this report's case in its own
+words:
+
+> `TriangleRightAxisAligned` was on this step's list with "one caller, a test"
+> against it. ColourWars uses it twice, and the second use constructs one into
+> a `unique_ptr` held by base pointer. It is live client API. **That is the
+> second item this step's list got wrong, and both were wrong the same way: a
+> symbol's callers cannot be counted from one of the two repositories.**
+
+The method was named as unsound, and the very next commit deleted twenty-odd
+symbols by it. Two were caught by hand because somebody thought to look; four
+were not. The ask below is therefore about the *procedure* first and the four
+names second.
+
+### The exhibits
+
+**One of the four needed no workaround at all**, and it is the most interesting
+of them. `out_of_bounds.contains(spawn)` in `level_loaded_info.cpp` is now
+`rectangle_point_intersect(out_of_bounds, spawn)` — the free predicate that
+survived. So this client is now the first caller of the predicate table that
+`bb5356d` measured as having **no caller outside its own file and the tests**,
+and recorded in `docs/file-length-audit.md` as a deletion candidate on that
+evidence. **Do not delete `intersects.{h,cpp}` on the strength of that
+measurement.** It is the same count, taken the same way, from the same one of
+the two repositories.
+
+The other three:
+
+- `game/objects/paint_tile.cpp` — `area()` is `width * height` written out.
+  Trivially replaceable, listed for completeness, and the least of the four.
+- `game/objects/projectile.cpp` — `DiffusingProjectile::diffuse_to_size`, a
+  protected helper doing what `inflate_to_size` did, on a rectangle passed by
+  reference because mist and spray each own their own. **This one is arguably
+  better where it is now** and the engine may reasonably decline it: the base
+  already owns the size, and the two subclasses were writing the same line.
+- `game/rotate.h` — one free function, `rotate_vector`, byte-for-byte the body
+  that was deleted. **This is the one that should go back.** A 2D engine's
+  vector type that can answer `angle()`, `unit_vec_from_angle()` and `normal()`
+  and cannot rotate a vector by an angle has a hole in it, and the client's
+  copy is a second definition of engine arithmetic sitting outside the engine's
+  tests.
+
+### The ask
+
+**First, the procedure.** A deletion justified by a caller count should say
+which repositories were counted. `git grep` in the engine tree answers a
+different question from the one the commit message claims to answer, and
+`bb5356d` says so about itself. The client is a submodule of nothing — it
+consumes the engine, not the reverse — so the engine cannot grep it as part of
+its own build, which makes this a discipline rather than a check, and worth
+writing into `CONVENTIONS.md` or the review process rather than remembering.
+
+**Second, `Vector2F::rotate_vector` back**, with the test it should have had.
+Twelve lines including the header declaration.
+
+**Third, a decision recorded about `intersects.{h,cpp}`** that does not rest on
+the caller count, now that the count is wrong. The library-shape question
+`bb5356d` raised — is this a table of predicates the collision system was
+supposed to adopt and never did — is a real one and is not settled by this
+client having found a use for one of the twenty-five.
+
+`area` and `inflate_to_size` are listed for the record and this client does not
+ask for either back.
+
+---
+
 ## What is deliberately not here
 
 - **`CameraTools` never sets a scale**, so field of view is whatever the pane's
@@ -601,7 +697,7 @@ and are the two only a split-screen client would ever report.
   survives is narrower — the ~50-line atomic-write protocol in `game/save.cpp`
   is entirely game-agnostic and no second client should re-derive it — and that
   is a small ask best made alongside something else.
-- **`Scene::contacts()` having no reader**, `artattack::Label` having no client,
+- **`Scene::contacts()` having no reader**, `labrador::Label` having no client,
   and the anti-tunnelling bound never being evaluated. These are not engine
   defects. They are things this client has not got round to exercising, which is
   a debt this repository owes the engine rather than the other way round.
