@@ -85,6 +85,16 @@ Gamepads* GameData::gamepads() const
 	return this->application_->gamepads();
 }
 
+Keyboard* GameData::keyboard() const
+{
+	return this->application_->keyboard();
+}
+
+Mouse* GameData::mouse() const
+{
+	return this->application_->mouse();
+}
+
 ViewportManager* GameData::viewport_manager() const
 {
 	return this->application_->viewport_manager();

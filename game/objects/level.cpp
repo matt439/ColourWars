@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
+#include "game/input_slots.h"
 
 using namespace mattmath;
 using namespace DirectX;
@@ -20,13 +21,17 @@ Level::Level(std::unique_ptr<Scene> scene,
 	const ResolutionManager* resolution_manager,
 	const ViewportManager* viewport_manager,
 	RenderResources* render_resources,
-	const AudioResources* audio_resources) :
+	const AudioResources* audio_resources,
+	// Qualified: DirectXTK has a Mouse too, and this file opens with
+	// using namespace DirectX.
+	const labrador::Mouse* mouse) :
 	scene_(std::move(scene)),
 	players_(std::move(players)),
 	viewport_dividers_(std::move(viewport_dividers)),
 	music_volume_(music_volume),
 	resolution_manager_(resolution_manager),
 	viewport_manager_(viewport_manager),
+	mouse_(mouse),
 	team_colours_(team_colours),
 	tuning_(tuning),
 	camera_bounds_(camera_bounds)
@@ -125,9 +130,38 @@ void Level::build_opening_frame(RenderResources* render_resources)
 	// the d-pad and the stick alike, so "Left/Right" there honestly means
 	// either, and a player arrives at their first match having been taught
 	// that a bare direction means whichever they prefer.
-	this->controls_text_ = std::make_unique<TextDropShadow>(
+	//
+	// A THIRD LINE, ONLY WHEN SOMEBODY IS ON THE KEYBOARD. The legend is one
+	// centred text shared by every pane rather than one per player, so it
+	// cannot show each player only their own device - but it can decline to
+	// teach a keyboard to four people holding pads. A match with no keyboard
+	// player reads exactly as it did.
+	//
+	// Both lines name the same six actions, which they can only because
+	// PlayerInputData carries drop_through as an action now. It used to be a
+	// stick position Player compared against a threshold itself, so it was the
+	// one thing in a match that no device without a stick could ask for.
+	bool anyone_on_keyboard = false;
+	for (const Player* player : this->players_)
+	{
+		if (input_slots::is_keyboard_and_mouse(player->player_num()))
+		{
+			anyone_on_keyboard = true;
+		}
+	}
+
+	std::wstring controls =
 		L"Left stick  Move      Left stick down  Drop through      A or LT  Jump\n"
-		L"RT  Shoot      Right stick  Aim      Start  Pause",
+		L"RT  Shoot      Right stick  Aim      Start  Pause";
+
+	if (anyone_on_keyboard)
+	{
+		controls += L"\nA/D  Move      S  Drop through      Space  Jump      "
+			L"Mouse  Aim      Left click  Shoot      Esc  Pause";
+	}
+
+	this->controls_text_ = std::make_unique<TextDropShadow>(
+		controls,
 		match.controls_font,
 		Vector2F::ZERO,
 		render_resources,
@@ -359,16 +393,67 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	}
 }
 
+void Level::resolve_mouse_aim(Player* player, size_t view_index,
+	PlayerInputData& input) const
+{
+	if (!this->mouse_->focused())
+	{
+		// No cursor to aim by. Left unrequested rather than held at its last
+		// value: the player has gone somewhere else, and a weapon that kept
+		// pointing where the mouse was when they left would be the match
+		// running on without them, which is the bug on_deactivated exists to
+		// stop one level up.
+		return;
+	}
+
+	const labrador::Viewport viewport =
+		this->viewport_manager_->player_viewport(static_cast<int>(view_index));
+
+	// The player's centre in this pane, in the same client pixels the cursor
+	// is reported in: through their own camera, then offset by where the pane
+	// sits in the window.
+	const Vector2F centre_in_view =
+		player->camera().calculate_view_position(player->center());
+	const Vector2F centre_on_screen = centre_in_view + viewport.position();
+
+	const Vector2F cursor(static_cast<float>(this->mouse_->state().position.x),
+		static_cast<float>(this->mouse_->state().position.y));
+
+	const Vector2F aim = cursor - centre_on_screen;
+
+	// The cursor exactly on the character asks for no direction at all, and
+	// normalising it would be a division by zero. Same answer a centred right
+	// stick gives, reached the same way.
+	if (aim == Vector2F::ZERO)
+	{
+		return;
+	}
+
+	input.shoot_direction_requested = true;
+	input.shoot_direction = aim.normalized();
+	input.shoot_angle = input.shoot_direction.angle();
+}
+
 void Level::apply_player_inputs(
 	const std::vector<PlayerInputData>& player_inputs)
 {
-	for (Player* player : this->players_)
+	for (size_t i = 0; i < this->players_.size(); ++i)
 	{
+		Player* player = this->players_[i];
 		const int slot = player->player_num();
 
 		if (slot >= 0 && static_cast<size_t>(slot) < player_inputs.size())
 		{
-			player->set_player_input(player_inputs[slot]);
+			PlayerInputData input = player_inputs[slot];
+
+			// A copy, because this is the one field the input mapping could
+			// not fill and this is where the answer lives.
+			if (input_slots::is_keyboard_and_mouse(slot))
+			{
+				this->resolve_mouse_aim(player, i, input);
+			}
+
+			player->set_player_input(input);
 		}
 		else
 		{

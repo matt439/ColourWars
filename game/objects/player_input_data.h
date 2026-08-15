@@ -11,6 +11,20 @@ struct PlayerInputData
 	mattmath::Vector2F shoot_direction = { 0.0f, 0.0f };
 	bool shoot_direction_requested = false;
 	bool primary_shoot = false;
+
+	// Asking to fall through a jump-through platform.
+	//
+	// A BOOL RATHER THAN THE STICK IT USED TO BE READ FROM. Player worked this
+	// out itself, comparing left_analog_stick.y against a tuned threshold - so
+	// the one logical action in this struct that was not here was the one a
+	// second input device could not answer. A keyboard has no stick to push,
+	// and had no way to say this at all.
+	//
+	// The threshold has not moved: it is still tuning, still compared against
+	// the stick, and now compared in PlayerInput where the rest of the pad
+	// mapping lives.
+	bool drop_through = false;
+
 	bool toggle_debug = false;
 	bool toggle_pause_menu = false;
 

@@ -23,11 +23,50 @@ MenuPage::MenuPage(MenuContext* context) :
 	this->cancel_sound_ = this->resolve_wave(style.cancel_sound);
 }
 
+// Every page's prompts pass through here, which is why the keyboard is named
+// here and not in each of the twelve.
+//
+// A page writes the pad button it means - "A", "B" - and this adds the key
+// that does the same thing, so the bar reads "A/Enter  Select". A page that
+// wanted to say something else would have to fight this, and none does: the
+// whole set of button labels in this game is A, B, B/Start and Left/Right.
+//
+// LEFT/RIGHT IS LEFT ALONE, and it is the one that needs no help. It already
+// means the stick or the d-pad, and on a keyboard it means the arrows or A/D -
+// four devices, one honest word each way.
+//
+// This exists because a keyboard player who is never told that Enter works has
+// keyboard support they cannot find. The bindings themselves are in code
+// (player_input.h, menu_input.h) for the reason those files give, so this is
+// the legend agreeing with them by hand - checked by reading, as the match's
+// own controls line is.
 void MenuPage::set_prompts(const std::vector<PromptBar::Prompt>& prompts)
 {
+	std::vector<PromptBar::Prompt> with_keys;
+	with_keys.reserve(prompts.size());
+
+	for (const PromptBar::Prompt& prompt : prompts)
+	{
+		std::wstring button = prompt.button;
+		if (button == L"A")
+		{
+			button = L"A/Enter";
+		}
+		else if (button == L"B")
+		{
+			button = L"B/Esc";
+		}
+		else if (button == L"B/Start")
+		{
+			button = L"B/Start/Esc";
+		}
+
+		with_keys.push_back({ button, prompt.action });
+	}
+
 	this->prompt_bar_ = std::make_unique<PromptBar>(
 		"prompt_bar",
-		prompts,
+		with_keys,
 		this->presentation().prompt_bar(),
 		this->render_resources());
 }

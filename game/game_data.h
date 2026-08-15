@@ -58,6 +58,13 @@ public:
     labrador::RenderResources* render_resources() const;
     labrador::AudioResources* audio_resources() const;
     labrador::Gamepads* gamepads() const;
+
+    // The other way to play. These two are one input between them - see
+    // game/input_slots.h - and they are forwards like every other service
+    // here, so a state asks the shell for them and GameData stays six
+    // borrowed pointers.
+    labrador::Keyboard* keyboard() const;
+    labrador::Mouse* mouse() const;
     labrador::ViewportManager* viewport_manager() const;
     labrador::ThreadPool* thread_pool() const;
     const labrador::Partitioner* partitioner() const;

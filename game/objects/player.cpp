@@ -409,8 +409,7 @@ void Player::update_movement(float dt)
     const PlayerInputData input = this->input_;
     const float x_input = input.x_movement;
     const PlayerMoveState move_state = this->move_state();
-    const bool analog_stick_down = this->input_.left_analog_stick.y >
-        this->player_tuning().drop_down_analog_threshold;
+    const bool drop_through = this->input_.drop_through;
     const bool jump_pressed = this->input_.jump_pressed;
 
     //If the player's velocity is zero and the user is requesting to move the player
@@ -488,7 +487,7 @@ void Player::update_movement(float dt)
 	}
 
     // check if dropping down from a platform
-    if (move_state == PlayerMoveState::on_drop_down_ground && analog_stick_down &&
+    if (move_state == PlayerMoveState::on_drop_down_ground && drop_through &&
         !jump_pressed)
     {
         MovingObject::alter_velocity_y(this->player_tuning().drop_down_velocity);

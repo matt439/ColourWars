@@ -6,6 +6,7 @@
 #include "game/objects/player_input.h"
 #include "game/objects/player.h"
 #include "engine/render/resolution_manager.h"
+#include "engine/input/mouse.h"
 #include "engine/render/viewport_manager.h"
 #include "game/objects/debug_text.h"
 #include "engine/render/camera_tools.h"
@@ -70,7 +71,8 @@ public:
 		const labrador::ResolutionManager* resolution_manager,
 		const labrador::ViewportManager* viewport_manager,
 		labrador::RenderResources* render_resources,
-		const labrador::AudioResources* audio_resources);
+		const labrador::AudioResources* audio_resources,
+		const labrador::Mouse* mouse);
 
 	// Silences everything this level started.
 	//
@@ -177,6 +179,10 @@ private:
 	const labrador::ResolutionManager* resolution_manager_ = nullptr;
 	const labrador::ViewportManager* viewport_manager_ = nullptr;
 
+	// Borrowed so that the mouse-aiming player can be told where the cursor is
+	// relative to their own character. See resolve_mouse_aim.
+	const labrador::Mouse* mouse_ = nullptr;
+
 	// All four are set from the match tuning in the constructor body.
 	float timer_ = 0.0f;
 	float start_timer_ = 0.0f;
@@ -223,6 +229,23 @@ private:
 	// agree while every pad stayed connected.
 	void apply_player_inputs(
 		const std::vector<PlayerInputData>& player_inputs);
+
+	// Fills in the aim for a player driving the keyboard-and-mouse slot, which
+	// PlayerInput cannot: it is the direction from that player's centre *as
+	// drawn* to the cursor, and only a match knows where a player is drawn.
+	//
+	// `view_index` is the position in players_, which is the index of that
+	// player's pane - not player_num(), which is the input slot. The two
+	// diverge, and using the wrong one aims from somebody else's screen.
+	//
+	// MEASURED ON SCREEN RATHER THAN IN THE WORLD, and the two agree. The
+	// camera transform is view = (world - translation) * scale with a scale
+	// that is uniform, so it turns a direction into the same direction times a
+	// positive number, and the normalise at the end divides that back out.
+	// Screen is where the cursor already is, so this is the conversion that
+	// does not have to be inverted.
+	void resolve_mouse_aim(Player* player, size_t view_index,
+		PlayerInputData& input) const;
 
 	// What a player's tick needs that "step and collide" does not cover: the
 	// camera that follows the body the scene has just moved, and the

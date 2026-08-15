@@ -13,7 +13,10 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	const Presentation* presentation,
 	ResolutionManager* resolution_manager,
 	ThreadPool* thread_pool,
-	const Partitioner* partitioner) :
+	const Partitioner* partitioner,
+	// Qualified: DirectXTK has a Mouse too, and this file opens with
+	// using namespace DirectX.
+	const labrador::Mouse* mouse) :
 	render_resources_(render_resources),
 	audio_resources_(audio_resources),
 	level_infos_(level_infos),
@@ -22,7 +25,8 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	viewport_manager_(viewport_manager),
 	resolution_manager_(resolution_manager),
 	thread_pool_(thread_pool),
-	partitioner_(partitioner)
+	partitioner_(partitioner),
+	mouse_(mouse)
 {
 	this->team_colour_ = std::make_unique<TeamColourTools>();
 	this->player_builder_ = std::make_unique<PlayerBuilder>(tuning);
@@ -92,5 +96,6 @@ std::unique_ptr<Level>
 		this->resolution_manager_,
 		this->viewport_manager_,
 		this->render_resources_,
-		this->audio_resources_);
+		this->audio_resources_,
+		this->mouse_);
 }

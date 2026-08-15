@@ -5,8 +5,8 @@ using namespace mattmath;
 using namespace menu_input_consts;
 using namespace labrador;
 
-MenuInput::MenuInput(const Gamepads* gamepads) :
-	gamepads_(gamepads)
+MenuInput::MenuInput(const Gamepads* gamepads, const Keyboard* keyboard) :
+	gamepads_(gamepads), keyboard_(keyboard)
 {
 }
 
@@ -131,15 +131,106 @@ ProcessedMenuInput MenuInput::menu_input(const Gamepads& gamepads, int slot)
 	return result;
 }
 
+ProcessedMenuInput MenuInput::keyboard_menu_input(const Keyboard& keyboard)
+{
+	// The same arming as the pads, and for the pad's reason exactly: hold
+	// Space to jump and press Escape with the other hand, and Escape's release
+	// opens the pause menu while Space's release, a frame later, activates
+	// whatever it opened onto. A release only answers if the press that began
+	// it was seen from here.
+	const auto down = [&keyboard](const ActionKey& entry)
+	{
+		return keyboard.held(entry.key) || keyboard.held(entry.alternate);
+	};
+	const auto went_down = [&keyboard](const ActionKey& entry)
+	{
+		return keyboard.pressed(entry.key) || keyboard.pressed(entry.alternate);
+	};
+
+	// Down on the PREVIOUS frame, which the device reports as two cases: still
+	// down now without having just arrived, or up now having just left.
+	const auto was_down = [&keyboard](const ActionKey& entry)
+	{
+		const auto key_was_down = [&keyboard](Key key)
+		{
+			return (keyboard.held(key) && !keyboard.pressed(key)) ||
+				keyboard.released(key);
+		};
+		return key_was_down(entry.key) || key_was_down(entry.alternate);
+	};
+
+	// Armed on the frame it goes down, still armed while it stays down, and
+	// cleared one frame after the release - so the release edge is still
+	// judged against the arming that began it, and so that running this twice
+	// in one frame lands on the same value both times. A page that reads the
+	// keyboard through more than one helper depends on that, and clearing the
+	// flag where the action fires would have broken it.
+	for (int i = 0; i < action_key_count; ++i)
+	{
+		this->key_armed_[i] = went_down(action_keys[i]) ||
+			(this->key_armed_[i] && was_down(action_keys[i]));
+	}
+
+	ProcessedMenuInput result;
+	result.connected = true;
+
+	bool anything_down = false;
+	int was_down_count = 0;
+	for (const ActionKey& entry : action_keys)
+	{
+		anything_down = anything_down || down(entry);
+		if (was_down(entry))
+		{
+			++was_down_count;
+		}
+	}
+
+	// Exactly one, for the pad's reason: releasing Enter and Escape together
+	// should not hand the page an answer to pick from.
+	if (!anything_down && was_down_count == 1)
+	{
+		for (int i = 0; i < action_key_count; ++i)
+		{
+			if (this->key_armed_[i] && was_down(action_keys[i]))
+			{
+				result.action = action_keys[i].action;
+				break;
+			}
+		}
+	}
+
+	// A PRESS EDGE, WHERE THE PAD USES A RELEASE, and the difference is the
+	// device rather than an inconsistency. The stick fires on the way back
+	// because it is analogue and a held stick would otherwise be a stream of
+	// steps - the two thresholds above this function are a hysteresis band. A
+	// key has no band to be inside: down-now-and-up-last-frame already means
+	// exactly one step per press, and waiting for the release would only make
+	// the cursor answer late.
+	for (const DirectionKey& entry : direction_keys)
+	{
+		if (keyboard.pressed(entry.key) || keyboard.pressed(entry.alternate))
+		{
+			result.direction = entry.direction;
+			break;
+		}
+	}
+
+	return result;
+}
+
 std::vector<ProcessedMenuInput> MenuInput::menu_inputs()
 {
-	std::vector<ProcessedMenuInput> result(Gamepads::max_count);
-	for (int slot = 0; slot < Gamepads::max_count; ++slot)
+	std::vector<ProcessedMenuInput> result(input_slots::count);
+	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
 		if (this->gamepads_->connected(slot))
 		{
 			result[slot] = this->menu_input(*this->gamepads_, slot);
 		}
 	}
+
+	result[input_slots::keyboard_and_mouse] =
+		this->keyboard_menu_input(*this->keyboard_);
+
 	return result;
 }

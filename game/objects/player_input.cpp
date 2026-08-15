@@ -1,16 +1,18 @@
 #include "game/pch.h"
 #include "game/objects/player_input.h"
+#include "game/input_slots.h"
 
 using namespace mattmath;
 using namespace player_input_consts;
 using namespace labrador;
 
-PlayerInput::PlayerInput(const Gamepads* gamepads) :
-	gamepads_(gamepads)
+PlayerInput::PlayerInput(const Gamepads* gamepads, const Keyboard* keyboard,
+	const Mouse* mouse, const GameTuning* tuning) :
+	gamepads_(gamepads), keyboard_(keyboard), mouse_(mouse), tuning_(tuning)
 {
 }
 
-PlayerInputData PlayerInput::player_input(const Gamepads& gamepads, int slot)
+PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
 {
 	const GamepadState& pad = gamepads.state(slot);
 
@@ -50,6 +52,12 @@ PlayerInputData PlayerInput::player_input(const Gamepads& gamepads, int slot)
 
 	result.x_movement = apply_deadzone(pad.left_stick.x, stick_deadzone);
 
+	// Pushed down past the tuned threshold. Player used to make this
+	// comparison itself off the raw stick, which left the action unreachable
+	// by anything without one.
+	result.drop_through = pad.left_stick.y >
+		this->tuning_->player().drop_down_analog_threshold;
+
 	// Aim is a direction, so the deadzone is radial and the magnitude is
 	// discarded by the normalise. Past the deadzone the vector is non-zero by
 	// construction, which is the test for "the player asked to aim".
@@ -67,15 +75,67 @@ PlayerInputData PlayerInput::player_input(const Gamepads& gamepads, int slot)
 	return result;
 }
 
+PlayerInputData PlayerInput::keyboard_and_mouse_input(const Keyboard& keyboard,
+	const Mouse& mouse)
+{
+	PlayerInputData result;
+	result.connected = true;
+
+	// Both keys at once is neither, which is what a stick held at centre says
+	// and what a player mashing to turn round expects. Summing rather than
+	// branching gets that for free.
+	const float left = keyboard.held(move_left_key) ? 1.0f : 0.0f;
+	const float right = keyboard.held(move_right_key) ? 1.0f : 0.0f;
+	result.x_movement = right - left;
+
+	// Full deflection or nothing. A key has no travel, so there is no deadzone
+	// to apply and nothing to rescale - the two operations the pad path needs
+	// are both answers to a question a keyboard does not ask.
+	result.jump_held = keyboard.held(jump_key);
+	result.jump_pressed = keyboard.pressed(jump_key);
+
+	result.primary_shoot = mouse.held(shoot_button);
+
+	// Held, not pressed: the pad's version is a stick position, which is a
+	// state, and Player asks about it on whichever frame the character is
+	// standing on something it can fall through.
+	result.drop_through = keyboard.held(drop_key) ||
+		keyboard.held(drop_key_alternate);
+
+	// Release edges, matching the pad's Start and Back for the reason the pad
+	// path gives: a menu that opens under a still-held key would take the
+	// release as its own input.
+	result.toggle_pause_menu = keyboard.released(pause_key);
+	result.toggle_debug = keyboard.released(debug_key);
+
+	// shoot_direction is deliberately left neutral. See player_input.h: the
+	// cursor means nothing until somebody knows where this player is drawn.
+
+	// left_analog_stick and right_analog_stick stay zero. They are the raw
+	// stick positions, read by the debug overlay to show what a pad is doing,
+	// and there is no honest number to put in them here - a keyboard has no
+	// stick position, and synthesising one would make the overlay lie about
+	// which device is driving.
+
+	return result;
+}
+
 std::vector<PlayerInputData> PlayerInput::player_inputs() const
 {
-	std::vector<PlayerInputData> result(Gamepads::max_count);
-	for (int slot = 0; slot < Gamepads::max_count; ++slot)
+	std::vector<PlayerInputData> result(input_slots::count);
+	for (int slot = 0; slot < input_slots::pad_count; ++slot)
 	{
 		if (this->gamepads_->connected(slot))
 		{
-			result[slot] = player_input(*this->gamepads_, slot);
+			result[slot] = this->pad_input(*this->gamepads_, slot);
 		}
 	}
+
+	// Always connected, with no test to pass. A keyboard is not plugged in and
+	// out, and a slot that appeared the first time somebody touched a key
+	// would be a rule nobody could see until it fired.
+	result[input_slots::keyboard_and_mouse] =
+		keyboard_and_mouse_input(*this->keyboard_, *this->mouse_);
+
 	return result;
 }

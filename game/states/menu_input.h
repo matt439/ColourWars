@@ -1,7 +1,9 @@
 #pragma once
 
 #include "engine/input/gamepads.h"
+#include "engine/input/keyboard.h"
 #include "engine/ui/navigation.h"
+#include "game/input_slots.h"
 #include "game/states/menu_input_action.h"
 #include <vector>
 
@@ -35,6 +37,51 @@ namespace menu_input_consts
 		{ labrador::GamepadButton::b, MenuInputAction::back },
 		{ labrador::GamepadButton::start, MenuInputAction::pause },
 	};
+
+	// The keyboard's menu bindings, the same table for the same reason: the
+	// arming below is indexed by position in it.
+	//
+	// Two keys per action, because a keyboard has an obvious answer and a
+	// conventional one and there is no cost to honouring both. There is no
+	// `pause` row: PauseMenuInitial treats back and pause identically, so
+	// Escape closing the pause menu is already `back`, and a second key
+	// meaning almost-back would be a distinction with nothing behind it.
+	struct ActionKey
+	{
+		labrador::Key key;
+		labrador::Key alternate;
+		MenuInputAction action;
+	};
+
+	constexpr int action_key_count = 2;
+
+	constexpr ActionKey action_keys[action_key_count] =
+	{
+		{ labrador::Key::enter, labrador::Key::space,
+			MenuInputAction::proceed },
+		{ labrador::Key::escape, labrador::Key::backspace,
+			MenuInputAction::back },
+	};
+
+	// One row per direction, arrows and WASD. W and S are here and A and D are
+	// the walking keys in a match, which is not a clash: nothing reads both
+	// tables in one frame, because a menu is either up or it is not.
+	struct DirectionKey
+	{
+		labrador::Key key;
+		labrador::Key alternate;
+		labrador::Direction direction;
+	};
+
+	constexpr int direction_key_count = 4;
+
+	constexpr DirectionKey direction_keys[direction_key_count] =
+	{
+		{ labrador::Key::up, labrador::Key::w, labrador::Direction::up },
+		{ labrador::Key::down, labrador::Key::s, labrador::Direction::down },
+		{ labrador::Key::left, labrador::Key::a, labrador::Direction::left },
+		{ labrador::Key::right, labrador::Key::d, labrador::Direction::right },
+	};
 }
 
 struct ProcessedMenuInput
@@ -58,13 +105,14 @@ struct ProcessedMenuInput
 class MenuInput
 {
 public:
-	explicit MenuInput(const labrador::Gamepads* gamepads);
+	MenuInput(const labrador::Gamepads* gamepads,
+		const labrador::Keyboard* keyboard);
 
-	// Returns exactly labrador::Gamepads::max_count entries, indexed by pad
-	// slot. Absent pads carry neutral input.
+	// Returns exactly input_slots::count entries, indexed by slot. Absent
+	// inputs carry neutral data.
 	//
 	// Every action here is a *release* edge: the button has to come back up,
-	// and it has to have gone down while a menu was reading the pads.
+	// and it has to have gone down while a menu was reading the device.
 	//
 	// Not const, because it advances armed_ - but calling it twice in one
 	// frame answers the same thing twice, which a page that reads the pads
@@ -76,8 +124,10 @@ public:
 private:
 	ProcessedMenuInput menu_input(const labrador::Gamepads& gamepads,
 		int slot);
+	ProcessedMenuInput keyboard_menu_input(const labrador::Keyboard& keyboard);
 
 	const labrador::Gamepads* gamepads_ = nullptr;
+	const labrador::Keyboard* keyboard_ = nullptr;
 
 	// Per pad slot, per menu_input_consts::action_buttons entry: did this
 	// MenuInput watch the button's current down-run start?
@@ -94,6 +144,12 @@ private:
 	// transition, which is what let it drift from PlayerInput's copy; nothing
 	// calls this at a transition, because nothing but a menu ever calls
 	// menu_inputs().
-	bool armed_[labrador::Gamepads::max_count]
+	bool armed_[input_slots::pad_count]
 		[menu_input_consts::action_button_count] = {};
+
+	// The same flag for the keyboard's two action keys, and it is a separate
+	// array rather than a fifth row because the two tables are different
+	// lengths and indexing one by the other's position is the bug this whole
+	// mechanism exists to avoid.
+	bool key_armed_[menu_input_consts::action_key_count] = {};
 };
