@@ -363,20 +363,39 @@ decided.
 that has no colour is nothing rather than an error. Nesting works by
 composition: a nested container forwards in turn.
 
-**What this repository does at the next pin bump.** Nothing is forced —
-`add_child` is unchanged and a group that never held a container behaves as it
-did — but two things become writable:
+**Spent, both halves, and both as predicted.**
 
 - **`PromptBar` derives instead of composing.** `class PromptBar final :
-  public artattack::UiTextDropShadow` with the one extra constructor, and the
-  four forwarding functions in `prompt_bar.cpp` go. Its header comment naming
-  this report goes with them.
-- **The options page can have rows and sliders.** A row that is a label and a
-  value is `class OptionRow : public artattack::UiContainer`, handed to
-  `FocusGroup::add`, painted whole. That removes the pointer-comparison walk
-  in `MainMenuOptions` that recovers label-to-value by testing the focused
-  widget against each label in turn — and it is what report 6's volume
-  setting needed somewhere to be drawn.
+  public labrador::UiTextDropShadow`, one constructor, and the four
+  forwarders are gone. So is a subtlety they carried: there used to be two
+  `hidden` flags, the bar's and the text object's, with a comment explaining
+  that a page hides the bar and never the string. One object, one flag,
+  nothing to explain.
+- **The options page has rows.** `class OptionRow final : public
+  labrador::UiContainer` in `game/states/option_row.{h,cpp}`, holding its
+  label, its value and what left and right do to it, handed whole to
+  `FocusGroup::add`. `MainMenuOptions::adjust_focused_value` is a
+  `dynamic_cast` and a call where it was one arm per row, so a third setting
+  now costs nothing there. Four loose widgets became two.
+
+  **It overrides `set_colour` to paint the label only**, which is the one
+  place the engine's default was not what this client wanted:
+  `UiContainer::set_colour` reaches every child, and inheriting it would put
+  the focus colour on the value and lose the colour that tells a value from a
+  label. A three-line override, and the reason the base is documented as
+  painting the whole row is that most callers do want that.
+
+  This is also what report 6's volume setting needed somewhere to be drawn,
+  and that place now exists.
+
+**Not verified interactively.** There is no pad on the machine this was done
+on, and this game's menus read pads only, so the Options page was reasoned
+about rather than driven: the navigation walk was re-derived by hand against
+`nearest_in_direction` to confirm that left and right still find nothing and
+fall through to the page. The reasoning is recorded in `MainMenuOptions::update`
+because it changed — the old comment said every row shared a centre x, and a
+row that spans its label and its value does not. The answer survives for a
+different reason, which is that the walk measures overlap.
 
 The original report follows.
 

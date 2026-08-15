@@ -334,15 +334,30 @@ void MainMenuOptions::update(float /*dt*/)
 			continue;
 		}
 
-		// Left and right on the two rows that carry a value. The focus group
+		// Left and right on the rows that carry a value. The focus group
 		// deliberately has no opinion here: which rows hold a value and what
 		// cycling one means is this game's, not the engine's. The walk found
-		// nothing to move to - every row shares a centre x - so the press
-		// falls through to the page.
+		// nothing to move to, so the press falls through to the page.
+		//
+		// It finds nothing because every entry on this page overlaps every
+		// other on the horizontal axis by more than the walk's tolerance -
+		// they all start at the same left edge. That used to be put as "every
+		// row shares a centre x", which stopped being true when the two value
+		// rows became containers spanning their label and their value; the
+		// answer did not change, because overlap is what the walk measures.
 		this->adjust_focused_value(input.direction);
 	}
 }
 
+// Asked of the focused row rather than worked out from it. This used to be one
+// arm per value row, comparing the focused pointer against each label in turn
+// and carrying that row's meaning in the arm - so a third setting meant a third
+// comparison here, and the label had to be the thing registered because the
+// value beside it was a separate widget nothing pointed at.
+//
+// A row is one focusable object that owns its value and what changing it means,
+// so this asks only whether the cursor is on such a thing at all. Apply and
+// Back are not, and answer null.
 void MainMenuOptions::adjust_focused_value(labrador::Direction direction)
 {
 	if (direction != labrador::Direction::left &&
@@ -351,18 +366,15 @@ void MainMenuOptions::adjust_focused_value(labrador::Direction direction)
 		return;
 	}
 
-	const UiWidget* focused = this->focus_.focused(0);
-	if (focused == this->resolution_element_.get())
+	const OptionRow* row =
+		dynamic_cast<const OptionRow*>(this->focus_.focused(0));
+	if (row == nullptr)
 	{
-		this->play_wave(this->direction_sound_);
-		this->cycle_resolution(direction);
+		return;
 	}
-	else if (focused == this->full_screen_.get())
-	{
-		this->play_wave(this->direction_sound_);
-		this->full_screen_selection_ = !this->full_screen_selection_;
-		this->update_full_screen_selection_text();
-	}
+
+	this->play_wave(this->direction_sound_);
+	row->adjust(direction);
 }
 
 void MainMenuOptions::apply_settings()
@@ -444,47 +456,32 @@ void MainMenuOptions::init()
 		this->menu_style().shadow_colour,
 		this->menu_style().heading_shadow_offset);
 
-	this->resolution_element_ = std::make_unique<UiTextDropShadow>(
-		"resolution_element",
+	this->resolution_row_ = std::make_unique<OptionRow>(
+		"resolution",
 		L"Resolution",
-		this->menu_style().item_font,
 		this->calculate_widget_position(0, 2),
-		this->render_resources(),
-		this->menu_style().highlight,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
-
-	this->resolution_value_ = std::make_unique<UiTextDropShadow>(
-		"resolution_value",
-		L"null",
-		this->menu_style().item_font,
 		this->calculate_widget_position(2, 2),
-		this->render_resources(),
+		this->menu_style(),
 		this->look().options_value_colour,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
+		this->render_resources(),
+		[this](Direction direction) { this->cycle_resolution(direction); });
 
 	this->update_resolution_selection_text();
 
-	this->full_screen_ = std::make_unique<UiTextDropShadow>(
+	this->full_screen_row_ = std::make_unique<OptionRow>(
 		"full_screen",
 		L"Fullscreen",
-		this->menu_style().item_font,
 		this->calculate_widget_position(0, 3),
-		this->render_resources(),
-		this->menu_style().unhighlight,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
-
-	this->full_screen_value_ = std::make_unique<UiTextDropShadow>(
-		"full_screen_value",
-		L"null",
-		this->menu_style().item_font,
 		this->calculate_widget_position(2, 3),
-		this->render_resources(),
+		this->menu_style(),
 		this->look().options_value_colour,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
+		this->render_resources(),
+		[this](Direction /*direction*/)
+		{
+			// Two states, so either direction is the same toggle.
+			this->full_screen_selection_ = !this->full_screen_selection_;
+			this->update_full_screen_selection_text();
+		});
 
 	this->update_full_screen_selection_text();
 
@@ -515,17 +512,19 @@ void MainMenuOptions::init()
 	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->heading_.get());
-	this->text_container_->add_child(this->resolution_element_.get());
-	this->text_container_->add_child(this->resolution_value_.get());
-	this->text_container_->add_child(this->full_screen_.get());
-	this->text_container_->add_child(this->full_screen_value_.get());
+	this->text_container_->add_child(this->resolution_row_.get());
+	this->text_container_->add_child(this->full_screen_row_.get());
 	this->text_container_->add_child(this->apply_.get());
 	this->text_container_->add_child(this->back_.get());
 
 	// The two value rows are focusable and do nothing on A; left and right are
 	// what they answer to. A button with no action is a normal thing to have.
-	this->focus_.add(this->resolution_element_.get());
-	this->focus_.add(this->full_screen_.get());
+	//
+	// A container in a container, which is the nesting engine/ui/widget.h says
+	// works by composition: text_container_ draws each row, each row draws its
+	// label and its value.
+	this->focus_.add(this->resolution_row_.get());
+	this->focus_.add(this->full_screen_row_.get());
 	this->focus_.add(this->apply_.get(), [this] { this->apply_settings(); });
 	this->focus_.add(this->back_.get(), [this]
 		{
@@ -576,7 +575,7 @@ void MainMenuOptions::update_resolution_selection_text()
 	// narrow at its source and comes across here.
 	const std::string res_text = this->resolution_manager()->
 		convert_resolution_to_string(this->resolution_selection_);
-	this->resolution_value_->set_text(widen(res_text));
+	this->resolution_row_->set_value(widen(res_text));
 }
 
 void MainMenuOptions::update_full_screen_selection_text() const
@@ -591,7 +590,7 @@ void MainMenuOptions::update_full_screen_selection_text() const
 	{
 		fs_text = L"Off";
 	}
-	this->full_screen_value_->set_text(fs_text);
+	this->full_screen_row_->set_value(fs_text);
 }
 
 #pragma endregion MainMenuOptions

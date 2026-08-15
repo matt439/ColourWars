@@ -5,6 +5,7 @@
 #include "game/objects/player_team.h"
 #include "game/states/confirmation_state.h"
 #include "game/states/menu_page.h"
+#include "game/states/option_row.h"
 #include "engine/core/state_context.h"
 #include "engine/render/colour.h"
 
@@ -97,17 +98,21 @@ public:
 private:
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> resolution_element_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> resolution_value_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> full_screen_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> full_screen_value_ = nullptr;
+
+	// A label and its value, as one focusable thing each. They were four
+	// loose widgets and a chain of pointer comparisons until the engine let a
+	// container be focused.
+	std::unique_ptr<OptionRow> resolution_row_ = nullptr;
+	std::unique_ptr<OptionRow> full_screen_row_ = nullptr;
+
 	std::unique_ptr<labrador::UiTextDropShadow> apply_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;
 	labrador::ScreenResolution resolution_selection_ = labrador::ScreenResolution::s_1920_1080;
 	bool full_screen_selection_ = true;
 	void cycle_resolution(labrador::Direction direction);
-	// Left and right on the two rows that carry a value. The focus group has
-	// no opinion about which rows those are: that is this game's content.
+	// Left and right on whichever row carries a value. The focus group has no
+	// opinion about which rows those are: that is this game's content, and it
+	// is now the row's own rather than a list kept here.
 	void adjust_focused_value(labrador::Direction direction);
 	void apply_settings();
 	void update_resolution_selection_text();

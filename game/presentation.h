@@ -68,10 +68,12 @@ struct MenuStyle
 	labrador::Colour highlight = labrador::Colour::white;
 	labrador::Colour unhighlight = labrador::Colour::blue;
 
-	// A row that is on the screen and cannot be chosen. It is not a third
-	// focus state: FocusGroup repaints every widget it holds from the focus of
-	// every slot on every mutation, so a disabled row is one the group was
-	// never given, and this is the colour it keeps for its whole life.
+	// A row that is on the screen and cannot be chosen. It IS a third focus
+	// state, as of the engine's 9bc14b3: FocusGroup carries a disabled colour
+	// beside the other two and derives all three from enablement, so this is
+	// handed to set_style rather than applied to a widget the group was never
+	// given. It used to be the latter, which worked only for rows that could
+	// never become available.
 	labrador::Colour disabled = labrador::Colour::dim_gray;
 
 	// A line the menu shows to say why it just refused something. Distinct

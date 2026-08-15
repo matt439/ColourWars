@@ -15,17 +15,18 @@
 // looking: team select, weapon select and stage select all respond to left and
 // right and say so nowhere.
 //
-// A UiWidget rather than a UiTextDropShadow, because that type and every other
-// leaf in engine/ui is final. So this composes one instead of deriving from it,
-// which is the shape the engine leaves a client that wants a compound widget -
-// and is worth a report against Labrador on its own account.
+// A UiTextDropShadow, which is what it always was. It used to compose one and
+// forward update, draw, bounds and set_colour to it, because every leaf in
+// engine/ui was final; that was the exhibit report 4 was filed with, and the
+// engine dropped final in 93821c7. So the four forwarders are gone and this is
+// a constructor.
 //
 // It takes the prompts apart rather than as one finished string, even though it
 // joins them immediately. There is no button-glyph art in the sheet and every
 // font in the tree is 95 ASCII characters, so today a prompt can only be the
 // button's name in text; the day there is art, this is the one place that
 // changes and the twelve pages that fill it do not.
-class PromptBar final : public labrador::UiWidget
+class PromptBar final : public labrador::UiTextDropShadow
 {
 public:
 	// One entry: a button, and what it does on this page.
@@ -39,12 +40,4 @@ public:
 		const std::vector<Prompt>& prompts,
 		const PromptBarPresentation& look,
 		labrador::RenderResources* render_resources);
-
-	void update(float dt) override;
-	void draw(labrador::DrawList& draw_list) const override;
-	mattmath::RectangleF bounds() const override;
-	void set_colour(const labrador::Colour& colour) override;
-
-private:
-	std::unique_ptr<labrador::UiTextDropShadow> text_ = nullptr;
 };

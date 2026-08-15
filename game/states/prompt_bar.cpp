@@ -32,46 +32,21 @@ namespace
 	}
 }
 
+// The whole class. There used to be two hidden flags here - the bar's and the
+// text object it owned - and a comment explaining that a page hides the bar
+// and never the string. One object, one flag, nothing to explain.
 PromptBar::PromptBar(const std::string& name,
 	const std::vector<Prompt>& prompts,
 	const PromptBarPresentation& look,
 	RenderResources* render_resources) :
-	UiWidget(name)
-{
-	this->text_ = std::make_unique<UiTextDropShadow>(
-		name + "_text",
+	UiTextDropShadow(name,
 		join(prompts),
 		look.font,
 		look.position,
 		render_resources,
 		look.colour,
 		look.shadow_colour,
-		look.shadow_offset);
-}
-
-void PromptBar::update(float dt)
+		look.shadow_offset)
 {
-	this->text_->update(dt);
-}
 
-void PromptBar::draw(DrawList& draw_list) const
-{
-	// The hidden check is this object's own; the text it owns has its own and
-	// they are not the same flag. A page hides the bar, never the string.
-	if (this->hidden())
-	{
-		return;
-	}
-
-	this->text_->draw(draw_list);
-}
-
-RectangleF PromptBar::bounds() const
-{
-	return this->text_->bounds();
-}
-
-void PromptBar::set_colour(const Colour& colour)
-{
-	this->text_->set_colour(colour);
 }
