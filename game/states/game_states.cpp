@@ -184,44 +184,33 @@ void GameLevel::build_and_enter_level()
 }
 
 // Alt-tab, minimise, the Windows key, a notification stealing the foreground -
-// all the same question, asked once a frame.
+// all the same question, and the engine now collapses all of them into one
+// edge and delivers it. This used to be a GetForegroundWindow poll against a
+// remembered bool, in a private helper update() called first thing.
 //
-// The shell suspends the pad reader on WM_ACTIVATEAPP and tells the state stack
-// nothing, and a suspended reader answers "disconnected" for every slot, which
-// PlayerInput turns into a neutral input for every player. So the match did not
-// stop when the window went away: it ran on with nobody in it, four characters
-// standing still soaking paint, the clock counting down and the music at full
-// volume over whatever the player had switched to. A four-minute round could be
-// lost entirely to answering a message.
-//
-// This is asked only while the match is the top of the stack. A pause menu over
-// it means update() is not called at all and on_suspend has already done the
-// same work - which is why there is no interaction to reason about between the
-// two, and why the pause path is left exactly as it was.
-bool GameLevel::match_has_the_foreground()
+// These reach the match wherever it is in the stack, not only at the top, and
+// that is the point: a match under a pause menu still owns live audio. It also
+// means they can arrive while on_suspend has already done the same work, and
+// there is still nothing to reason about between the two - pause_effect and
+// resume_effect carry no depth, so a second pause is the same state and one
+// resume answers both.
+void GameLevel::on_activated()
 {
-	const bool active = this->data()->window_has_foreground();
-
-	if (active != this->window_active_)
-	{
-		this->window_active_ = active;
-
-		if (active)
-		{
-			this->level_->resume();
-		}
-		else
-		{
-			this->level_->suspend();
-		}
-	}
-
-	return active;
+	this->level_->resume();
+}
+void GameLevel::on_deactivated()
+{
+	this->level_->suspend();
 }
 
 void GameLevel::update(float dt)
 {
-	if (!this->match_has_the_foreground())
+	// Asked rather than remembered. The suspend above is an edge, but whether
+	// to tick is a question about right now, and a GameLevel built while the
+	// player was already in another window never saw an edge to record: the
+	// stack keeps updating in the background, so a match can be constructed
+	// there.
+	if (!this->context()->active())
 	{
 		return;
 	}

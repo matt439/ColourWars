@@ -37,9 +37,10 @@ written in the last three days and did not exist when the gap audit was run.
 | 5 | ~~No font default character~~ | yes | **closed** — engine `77704d1`, filed and landed |
 | 6 | No audio bus or master gain | **not yet** | hold |
 
-All five closures are waiting on a submodule pin bump; none of them is visible
-to this client until then. What each one lets this repository delete is recorded under
-its own heading.
+**The pin has since moved** — forty-three commits, to `6b5c0bd` — so all five
+closures are live here now, and each heading below records what its arrival was
+worth and links the commit that spent it. Report 1 was worth nothing to spend,
+which was the prediction.
 
 ---
 
@@ -160,17 +161,26 @@ raised:
 outside the engine implements `WindowNotify`, so it costs this repository
 nothing.
 
-**What this repository deletes at the next pin bump**, and all three are the
-exhibits below:
+**Spent, and all three exhibits are gone.** Every deletion this predicted
+happened, and one of them differently than predicted:
 
-- `window_has_foreground()` in `game/game_data.h`, whose comment already said
-  it existed to be deleted.
-- `GameLevel::match_has_the_foreground()` and its `window_active_` member —
-  both of them, not just the poll. The member was a hand-written copy of the
-  edge the engine now makes, so `game_states.h`'s note that "this member is
-  what it sets" is superseded: it goes entirely.
-- `MainMenuTitle::update`'s poll, which becomes the same pair of callbacks on
-  the page itself.
+- `window_has_foreground()` in `game/game_data.h` — gone, as its own comment
+  asked. `GameData` is back to six borrowed pointers and their forwards, with
+  no question of its own to answer.
+- `GameLevel::match_has_the_foreground()` and `window_active_` — both gone.
+  `on_activated`/`on_deactivated` call `Level::resume`/`suspend` straight
+  through, because the engine makes the edge rather than leaving each client
+  to remember one.
+- `MainMenuTitle::update`'s poll — gone, but **as `context()->active()`, not
+  as the callback pair this predicted.** The prediction was wrong in a way
+  worth recording: that page gates a refresh it does every frame, so callbacks
+  could only have set a bool for `update()` to read, which is the same
+  hand-written edge just deleted from `GameLevel`. The engine shipped
+  `StateContext::active()` for exactly the case an edge cannot serve, and it
+  turns out this client had two of those, not one — `GameLevel::update`'s tick
+  gate is the other, for the reason the engine's header gives: a match can be
+  constructed while the window is already in the background, and never sees an
+  edge at all.
 
 The original report follows.
 

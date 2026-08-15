@@ -79,7 +79,13 @@ void MainMenuTitle::update(float /*dt*/)
 	// its whole job is to distinguish a game waiting for a pad from a game
 	// that has hung. Unasked, the line keeps whatever it last showed, which is
 	// the right answer in both directions.
-	if (this->data()->window_has_foreground())
+	//
+	// A query and not the on_activated/on_deactivated pair this page also has,
+	// because the gate is on a refresh that happens every frame rather than on
+	// anything that happens at the moment of the change. The callbacks could
+	// only set a bool for this to read, which is the hand-written copy of the
+	// engine's edge that the pin bump deleted from GameLevel.
+	if (this->context()->active())
 	{
 		this->no_pad_->set_hidden(!this->connected_slots().empty());
 	}

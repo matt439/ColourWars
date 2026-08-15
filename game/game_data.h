@@ -62,19 +62,6 @@ public:
     labrador::ThreadPool* thread_pool() const;
     const labrador::Partitioner* partitioner() const;
 
-    // Whether this game's window is the one the user is working in.
-    //
-    // Asked rather than told, and that is the whole of why it is here. The
-    // shell receives WM_ACTIVATEAPP, suspends the pad reader on it and
-    // forwards nothing to the state stack, so a state that needs to know has
-    // to go and look. Two do, for opposite reasons: a match must stop ticking
-    // when the answer is no, and the title card must stop believing the pad
-    // list, because a suspended reader answers "disconnected" for every slot.
-    //
-    // One implementation so that when State grows an activation hook - the
-    // report filed against the engine - there is one place to delete.
-    bool window_has_foreground() const;
-
 private:
     labrador::Application* application_ = nullptr;
     Save* save_ = nullptr;

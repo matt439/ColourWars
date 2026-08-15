@@ -81,6 +81,20 @@ public:
 	void on_suspend() override;
 	void on_resume() override;
 
+	// The same pair again for the window losing and regaining the foreground,
+	// which is a different question from being covered by a pause menu and
+	// wants the same answer. Alt-tabbing out of a match used to leave it
+	// running with nobody in it — four characters standing still soaking
+	// paint, the clock counting down, the music over whatever the player had
+	// switched to.
+	//
+	// Safe to call straight through to suspend/resume because the engine makes
+	// the edge: notify_activation drops the repeat, so these cannot arrive
+	// twice in a row. That matters, because pause_effect and resume_effect
+	// carry no depth — "suspended twice" and "suspended" are the same state.
+	void on_activated() override;
+	void on_deactivated() override;
+
 private:
 	GameData* game_data_ = nullptr;
 	MenuLevelSettings settings_ = MenuLevelSettings();
@@ -97,24 +111,6 @@ private:
 	// The layout that was in place before this match took it, restored by the
 	// destructor.
 	labrador::ScreenLayout previous_layout_ = labrador::ScreenLayout::one_player;
-
-	// Whether the window had the foreground when update() last looked.
-	//
-	// Remembered rather than tested, because the match is suspended on the edge
-	// into false and resumed on the edge back, and those two are not idempotent
-	// in the way calling them every frame would need: pause_effect and
-	// resume_effect carry no depth, so "suspended twice" and "suspended" are
-	// the same state and one resume answers both.
-	//
-	// Polled rather than notified. The shell handles WM_ACTIVATEAPP privately
-	// and forwards nothing to the state stack, which is the report filed
-	// against the engine; when a State::on_deactivated exists this member is
-	// what it sets, and the poll in update() is the only part that goes.
-	bool window_active_ = true;
-
-	// Follows the window's foreground state, suspending or resuming the match
-	// on the edge. Returns whether the match should tick at all this frame.
-	bool match_has_the_foreground();
 
 	// Sets the screen layout from the settings, then builds the level. Used by
 	// init() and by every restart path, so they cannot drift apart.
