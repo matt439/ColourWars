@@ -260,17 +260,40 @@ asked for. Five call sites in this repository are `if (this->focus_.activate(0))
 and become `== Activation::ran`; the two in `pause_menu.cpp` are statements and
 are unaffected.
 
-**What this repository does at the next pin bump:**
+**Spent, and half of it was predicted wrongly.**
 
-- **Mode Select gets its beep back.** The three unbuilt modes go back to being
-  registered — `MainMenuModeSelect::init` — with `set_enabled(row, false)`.
-  The cursor walks past them as it does now, but the player can be on one, so
-  the page can answer the press and say why.
-- **Player Count switches rows instead of refusing by hand.**
-  `start_team_select`'s warning line becomes the `refused` branch, and the row
-  is painted unavailable while it is, which the warning line could not do.
-- Nothing else changes: a group that never calls `set_enabled` behaves exactly
-  as it does today.
+- **Mode Select registers the three unbuilt modes and switches them off** —
+  `MainMenuModeSelect::init` — but **it does not get its beep back**, and that
+  prediction was wrong on evidence this report had already written down.
+  `move()` takes its candidates from the enabled entries, so the cursor still
+  cannot land on Deathmatch, so there is still no press to refuse. `refused`
+  is reachable only where a row switches off under a cursor already on it, and
+  these three are decided once at init and never change.
+
+  What it is worth is the paint. The colour used to be passed at construction
+  and survive only because nothing ever registered the widget — the page's own
+  comment said so, and said the moment anything did register it the next
+  `add()` or `move()` would repaint it as an ordinary row. It is derived from
+  enablement now, so it is the group's answer rather than this page's hope,
+  and the rows are what they always were: there, and unpickable, said once
+  rather than arranged for.
+- **Player Count switches rows instead of refusing by hand**, as predicted,
+  and it is the page that gets the half Mode Select does not.
+  `follow_the_pads_on_the_table` runs once a frame against the live pad count;
+  `start_team_select` no longer contains its own refusal and now runs only
+  when it will succeed; `update()` turns `Activation::refused` into the error
+  wave and the warning line. The row a player is sitting on when somebody
+  pulls a pad out is exactly the case the engine's setter was designed for,
+  and it is the case this client has.
+- Nothing else changed: the pages that never call `set_enabled` behave exactly
+  as they did.
+
+**The gap worth recording for whoever files the next one.** The report asked
+that activating a disabled entry be "reportable to the page so it can say
+why", and the engine delivered that — but `refused` can only ever be reached
+in the live case, because the walk skips disabled rows. A page whose rows are
+statically unavailable can grey them and nothing more. That is probably the
+right design and it is not what this report thought it was asking for.
 
 The original report follows.
 

@@ -634,7 +634,12 @@ void MainMenuModeSelect::init()
 		{ L"A", L"Select" },
 		{ L"B", L"Back" } });
 
-	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
+	// Three colours, because three of the six rows on this page are modes that
+	// are not built. The third is the group's to apply now, which is the whole
+	// of what changed here.
+	this->focus_.set_style({ this->menu_style().highlight,
+		this->menu_style().unhighlight,
+		this->menu_style().disabled });
 
 	this->set_widget_spacing(this->look().mode_select_spacing);
 
@@ -666,9 +671,9 @@ void MainMenuModeSelect::init()
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
-	// The three that are not built. They take menu_style().disabled at
-	// construction and keep it, because they are never handed to focus_ - see
-	// the note where the other three rows are registered.
+	// The three that are not built. The colour here is the one they open on;
+	// focus_ owns it from registration onward - see the note where they are
+	// registered.
 	this->tdm_ = std::make_unique<UiTextDropShadow>(
 		"tdm",
 		L"Team Deathmatch",
@@ -728,28 +733,35 @@ void MainMenuModeSelect::init()
 			this->context()->transition_to(
 				std::make_unique<MainMenuPlayerCount>(this->menu_context()));
 		});
-	// Three modes that are not built yet, and so are not added here at all.
+	// Three modes that are not built yet: registered, with no action, and
+	// switched off.
 	//
-	// They used to be registered with an action that beeped, which made them
-	// look exactly like every working row - the same unhighlight colour as
-	// Back, one screen after the title - and answer a stranger's second
-	// interaction with the game with a buzz and no explanation. They cannot
-	// instead be registered and recoloured: FocusGroup derives the paint,
-	// repainting every widget it holds from the focus of every slot on every
-	// add, move and set_style, so a disabled colour on a registered widget
-	// survives until the next cursor movement. Its header names the case and
-	// leaves the page to reapply the colour afterwards, which is a repaint
-	// fighting a repaint.
+	// They used to not be registered at all, which is what the page could do
+	// before FocusGroup had a third state. That worked and left the paint
+	// hanging on a promise - the colour passed at construction survived only
+	// because nothing ever registered them, and the moment anything did, the
+	// next add() or move() would repaint them as ordinary rows. The colour is
+	// derived from enablement now, so it is the group's answer rather than
+	// this page's hope.
 	//
-	// So the cursor is never on them. focus_.move walks by bounds() rather
-	// than by registration order, so Standard and Back remain neighbours with
-	// three greyed labels drawn between them, and text_container_ still draws
-	// all six.
+	// THE BEEP DOES NOT COME BACK, which is what the report that asked for
+	// this expected. move() takes its candidates from the enabled entries, so
+	// the cursor still cannot land on Deathmatch, so there is still no press
+	// to refuse. `refused` is reachable only where a row switches off under a
+	// cursor already on it, which on this page never happens - these three are
+	// decided once at init and never change. Player Count is the page that
+	// gets that half.
 	//
-	// The cost is the beep: pressing A while on Standard cannot report that
-	// Deathmatch is unavailable, because there is no way to be on Deathmatch.
-	// That is the better trade while the rows are unbuildable, and the whole
-	// question goes away when they are built.
+	// It is still the right shape: the rows are now what they always were, a
+	// thing that is there and cannot be picked, said once rather than
+	// arranged for.
+	this->focus_.add(this->tdm_.get());
+	this->focus_.add(this->dm_.get());
+	this->focus_.add(this->practice_.get());
+	this->focus_.set_enabled(this->tdm_.get(), false);
+	this->focus_.set_enabled(this->dm_.get(), false);
+	this->focus_.set_enabled(this->practice_.get(), false);
+
 	this->focus_.add(this->back_.get(), [this]
 		{
 			this->play_wave(this->cancel_sound_);
@@ -771,6 +783,8 @@ MainMenuPlayerCount::MainMenuPlayerCount(MenuContext* context) :
 }
 void MainMenuPlayerCount::update(float /*dt*/)
 {
+	this->follow_the_pads_on_the_table();
+
 	for (const ProcessedMenuInput& input : this->menu_inputs())
 	{
 		if (input.action == MenuInputAction::back)
@@ -782,9 +796,19 @@ void MainMenuPlayerCount::update(float /*dt*/)
 		}
 		if (input.action == MenuInputAction::proceed)
 		{
-			if (this->focus_.activate(0) == Activation::ran)
+			switch (this->focus_.activate(0))
 			{
+			case Activation::ran:
 				return;
+			case Activation::refused:
+				// A count the table cannot seat, and the cursor is on it
+				// because it was seatable when the player put it there. See
+				// start_team_select for what starting it anyway would cost.
+				this->play_wave(this->error_sound_);
+				this->not_enough_pads_->set_hidden(false);
+				break;
+			case Activation::none:
+				break;
 			}
 		}
 		else if (this->focus_.move(0, input.direction))
@@ -800,7 +824,11 @@ void MainMenuPlayerCount::init()
 		{ L"A", L"Select" },
 		{ L"B", L"Back" } });
 
-	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
+	// Three colours here too, but for rows that change their minds: a count
+	// the couch cannot seat is greyed until somebody plugs a pad in.
+	this->focus_.set_style({ this->menu_style().highlight,
+		this->menu_style().unhighlight,
+		this->menu_style().disabled });
 
 	this->set_widget_spacing(this->look().player_count_spacing);
 
@@ -933,6 +961,10 @@ void MainMenuPlayerCount::init()
 				std::make_unique<MainMenuModeSelect>(this->menu_context()));
 		});
 
+	// Before the first frame is drawn rather than on the first update, or the
+	// page opens with every row lit and greys three of them a frame later.
+	this->follow_the_pads_on_the_table();
+
 	this->play_effect(this->music_, true, this->look().music.volume);
 }
 
@@ -952,19 +984,27 @@ void MainMenuPlayerCount::init()
 // match starts with two players who cannot move.
 //
 // Refused here rather than gated inside team select's update(), which runs
-// every frame and would beep sixty times a second. The rows are not greyed the
-// way Mode Select's unbuilt ones are: a pad can be plugged in at any moment,
-// and the disabled treatment there works precisely because it is decided once
-// and never changes.
+// every frame and would beep sixty times a second.
+//
+// The refusal itself is no longer written here. The rows are greyed against
+// the pad count by follow_the_pads_on_the_table, so a count the table cannot
+// seat has no action to reach: FocusGroup answers the press with `refused`
+// before the callback, and update() is where that is turned into the sound and
+// the line. This function now runs only when it is going to succeed.
+void MainMenuPlayerCount::follow_the_pads_on_the_table()
+{
+	const int pads = static_cast<int>(this->connected_slots().size());
+
+	this->focus_.set_enabled(this->_2_players.get(), pads >= 2);
+	this->focus_.set_enabled(this->_3_players.get(), pads >= 3);
+	this->focus_.set_enabled(this->_4_players.get(), pads >= 4);
+
+	// One player is not conditional. It needs one pad, and a page reached by
+	// pressing A on a pad has one - so gating it would be gating on something
+	// that cannot be false while anybody is here to see it.
+}
 void MainMenuPlayerCount::start_team_select(int players, ScreenLayout layout)
 {
-	if (players > static_cast<int>(this->connected_slots().size()))
-	{
-		this->play_wave(this->error_sound_);
-		this->not_enough_pads_->set_hidden(false);
-		return;
-	}
-
 	this->play_wave(this->confirm_sound_);
 	MenuLevelSettings* settings = this->level_settings();
 	settings->set_player_count(players);

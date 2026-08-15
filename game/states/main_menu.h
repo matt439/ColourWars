@@ -151,6 +151,16 @@ private:
 	// different question.
 	std::unique_ptr<labrador::UiTextDropShadow> not_enough_pads_ = nullptr;
 
+	// Switches each row on or off against the number of pads connected right
+	// now, once a frame.
+	//
+	// Once a frame because a pad can be plugged in or pulled out between any
+	// two of them, which is the whole reason this page cannot do what Mode
+	// Select does and decide at init. The cost is four comparisons and, on the
+	// frames where an answer actually changes, one repaint of a handful of
+	// widgets.
+	void follow_the_pads_on_the_table();
+
 	// Two, three and four players differ only in the count and the layout.
 	void start_team_select(int players, labrador::ScreenLayout layout);
 };
