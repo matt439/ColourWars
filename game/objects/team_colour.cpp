@@ -1,9 +1,8 @@
 #include "game/pch.h"
 #include "game/objects/team_colour.h"
 
-using namespace mattmath;
 using namespace team_colour_consts;
-using namespace artattack;
+using namespace labrador;
 
 TeamColour::TeamColour(const Colour& team_a, const Colour& team_b)
 	: team_a(team_a), team_b(team_b)

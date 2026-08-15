@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/game_data.h"
-using namespace artattack;
+using namespace labrador;
 
 void GameData::set_application(Application* application)
 {

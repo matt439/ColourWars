@@ -1,6 +1,7 @@
 #pragma once
 
-#include "engine/math/matt_math.h"
+#include "engine/math/shape.h"
+#include "engine/math/vector2f.h"
 #include "engine/render/colour.h"
 #include "game/objects/weapon_type.h"
 
@@ -56,7 +57,7 @@ struct MenuStyle
 	std::string item_font;
 	std::string detail_font;
 
-	artattack::Colour shadow_colour = artattack::Colour::black;
+	labrador::Colour shadow_colour = labrador::Colour::black;
 	mattmath::Vector2F title_shadow_offset = { 0.0f, 0.0f };
 	mattmath::Vector2F heading_shadow_offset = { 0.0f, 0.0f };
 	mattmath::Vector2F item_shadow_offset = { 0.0f, 0.0f };
@@ -64,23 +65,23 @@ struct MenuStyle
 
 	// A focused widget and an unfocused one. Named for what they do rather
 	// than what colour they happen to be.
-	artattack::Colour highlight = artattack::Colour::white;
-	artattack::Colour unhighlight = artattack::Colour::blue;
+	labrador::Colour highlight = labrador::Colour::white;
+	labrador::Colour unhighlight = labrador::Colour::blue;
 
 	// A row that is on the screen and cannot be chosen. It is not a third
 	// focus state: FocusGroup repaints every widget it holds from the focus of
 	// every slot on every mutation, so a disabled row is one the group was
 	// never given, and this is the colour it keeps for its whole life.
-	artattack::Colour disabled = artattack::Colour::dim_gray;
+	labrador::Colour disabled = labrador::Colour::dim_gray;
 
 	// A line the menu shows to say why it just refused something. Distinct
 	// from `disabled`, which describes a row rather than an answer.
-	artattack::Colour warning = artattack::Colour::orange;
+	labrador::Colour warning = labrador::Colour::orange;
 
 	// The heading colour three of the four menus use. It was written as
 	// colour_consts::TEAM_ORANGE in each of them - a menu heading is not a
 	// team, and it only ever shared the number.
-	artattack::Colour heading_colour = artattack::Colour::white;
+	labrador::Colour heading_colour = labrador::Colour::white;
 
 	// The box a modal menu is drawn in. Pause, end and results all use it.
 	mattmath::Vector2F box_size = { 0.0f, 0.0f };
@@ -112,8 +113,8 @@ struct SelectPresentation
 {
 	mattmath::Vector2F spacing = { 0.0f, 0.0f };
 	mattmath::Vector2F size = { 0.0f, 0.0f };
-	artattack::Colour selected = artattack::Colour::white;
-	artattack::Colour unselected = artattack::Colour::white;
+	labrador::Colour selected = labrador::Colour::white;
+	labrador::Colour unselected = labrador::Colour::white;
 };
 
 struct MainMenuPresentation
@@ -122,26 +123,26 @@ struct MainMenuPresentation
 	std::string announcement_font;
 	std::string weapon_description_font;
 
-	artattack::Colour title_text_colour = artattack::Colour::white;
-	artattack::Colour title_start_text_colour = artattack::Colour::white;
+	labrador::Colour title_text_colour = labrador::Colour::white;
+	labrador::Colour title_start_text_colour = labrador::Colour::white;
 
 	// The line under Start that appears only when no pad is plugged in. The
 	// game is gamepad-only and the title screen is the one place that has to
 	// say so, because with no pad it is the only screen anyone can reach.
-	artattack::Colour title_no_pad_text_colour = artattack::Colour::white;
+	labrador::Colour title_no_pad_text_colour = labrador::Colour::white;
 
 	// Four screens, four keys, and they hold the same colour today. Unlike the
 	// fonts and shadows MenuStyle absorbed, these are not four copies of one
 	// idea - they are four screens somebody might theme apart, and collapsing
 	// them would take that away to save three lines of a data file.
-	artattack::Colour title_background_colour = artattack::Colour::black;
-	artattack::Colour home_background_colour = artattack::Colour::black;
-	artattack::Colour options_background_colour = artattack::Colour::black;
-	artattack::Colour play_background_colour = artattack::Colour::black;
+	labrador::Colour title_background_colour = labrador::Colour::black;
+	labrador::Colour home_background_colour = labrador::Colour::black;
+	labrador::Colour options_background_colour = labrador::Colour::black;
+	labrador::Colour play_background_colour = labrador::Colour::black;
 
-	artattack::Colour options_value_colour = artattack::Colour::white;
+	labrador::Colour options_value_colour = labrador::Colour::white;
 
-	artattack::Colour weapon_description_colour = artattack::Colour::white;
+	labrador::Colour weapon_description_colour = labrador::Colour::white;
 	mattmath::Vector2F weapon_description_shadow_offset = { 0.0f, 0.0f };
 	float weapon_description_x_offset = 0.0f;
 
@@ -174,24 +175,24 @@ struct MainMenuPresentation
 
 struct PauseMenuPresentation
 {
-	artattack::Colour box_colour = artattack::Colour::black;
+	labrador::Colour box_colour = labrador::Colour::black;
 	WidgetLayout layout;
 	std::string window_open_sound;
 };
 
 struct EndMenuPresentation
 {
-	artattack::Colour box_colour = artattack::Colour::black;
+	labrador::Colour box_colour = labrador::Colour::black;
 	WidgetLayout layout;
 };
 
 struct ResultsMenuPresentation
 {
-	artattack::Colour box_colour = artattack::Colour::black;
+	labrador::Colour box_colour = labrador::Colour::black;
 
 	// The heading that differs from MenuStyle's, and the reason MenuStyle has
 	// the field at all rather than every menu carrying its own.
-	artattack::Colour heading_colour = artattack::Colour::white;
+	labrador::Colour heading_colour = labrador::Colour::white;
 
 	mattmath::Vector2F fill_box_size = { 0.0f, 0.0f };
 	float fill_box_y_offset = 0.0f;
@@ -206,7 +207,7 @@ struct ResultsMenuPresentation
 	float team_fill_time = 0.0f;
 	float show_results_delay = 0.0f;
 
-	artattack::Colour percentage_colour = artattack::Colour::white;
+	labrador::Colour percentage_colour = labrador::Colour::white;
 	float team_b_percentage_x_offset = 0.0f;
 
 	// The A and B letters that sit outside each end of the fill box. There is
@@ -230,8 +231,8 @@ struct PromptBarPresentation
 {
 	std::string font;
 	mattmath::Vector2F position = { 0.0f, 0.0f };
-	artattack::Colour colour = artattack::Colour::white;
-	artattack::Colour shadow_colour = artattack::Colour::black;
+	labrador::Colour colour = labrador::Colour::white;
+	labrador::Colour shadow_colour = labrador::Colour::black;
 	mattmath::Vector2F shadow_offset = { 0.0f, 0.0f };
 };
 
@@ -246,7 +247,7 @@ struct HudPresentation
 	float health_top_margin = 0.0f;
 	mattmath::Vector2F box_size = { 0.0f, 0.0f };
 	float box_fill_border = 0.0f;
-	artattack::Colour health_colour = artattack::Colour::green;
+	labrador::Colour health_colour = labrador::Colour::green;
 
 	std::string sprite_sheet;
 	std::string empty_box_frame;
@@ -255,8 +256,8 @@ struct HudPresentation
 	std::string timer_font;
 	mattmath::Vector2F timer_offset = { 0.0f, 0.0f };
 	mattmath::Vector2F timer_shadow_offset = { 0.0f, 0.0f };
-	artattack::Colour timer_colour = artattack::Colour::gray;
-	artattack::Colour timer_shadow_colour = artattack::Colour::black;
+	labrador::Colour timer_colour = labrador::Colour::gray;
+	labrador::Colour timer_shadow_colour = labrador::Colour::black;
 
 	// The width the timer's point size was chosen against. The drawn scale is
 	// the real width over this, so the HUD reads the same on every resolution.
@@ -265,8 +266,8 @@ struct HudPresentation
 	std::string respawn_font;
 	mattmath::Vector2F respawn_offset = { 0.0f, 0.0f };
 	mattmath::Vector2F respawn_shadow_offset = { 0.0f, 0.0f };
-	artattack::Colour respawn_colour = artattack::Colour::white;
-	artattack::Colour respawn_shadow_colour = artattack::Colour::black;
+	labrador::Colour respawn_colour = labrador::Colour::white;
+	labrador::Colour respawn_shadow_colour = labrador::Colour::black;
 };
 
 struct DebugOverlayPresentation
@@ -275,8 +276,8 @@ struct DebugOverlayPresentation
 	float font_scale = 1.0f;
 	float line_spacing = 0.0f;
 	mattmath::Vector2F position = { 0.0f, 0.0f };
-	artattack::Colour colour = artattack::Colour::light_gray;
-	artattack::Colour shadow_colour = artattack::Colour::black;
+	labrador::Colour colour = labrador::Colour::light_gray;
+	labrador::Colour shadow_colour = labrador::Colour::black;
 	mattmath::Vector2F shadow_offset = { 0.0f, 0.0f };
 	float shadow_scale = 1.0f;
 };

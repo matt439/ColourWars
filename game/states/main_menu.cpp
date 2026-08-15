@@ -5,7 +5,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace menu_consts;
-using namespace artattack;
+using namespace labrador;
 
 MainMenuPage::MainMenuPage(MenuContext* context) :
 	MenuPage(context)
@@ -192,7 +192,7 @@ void MainMenuHome::update(float /*dt*/)
 			// One activation per frame. Every action on this page leaves the
 			// page, so a second pad's press against a page that is already
 			// going somewhere is not a second decision to honour.
-			if (this->focus_.activate(0))
+			if (this->focus_.activate(0) == Activation::ran)
 			{
 				return;
 			}
@@ -316,7 +316,7 @@ void MainMenuOptions::update(float /*dt*/)
 		}
 		if (input.action == MenuInputAction::proceed)
 		{
-			if (this->focus_.activate(0))
+			if (this->focus_.activate(0) == Activation::ran)
 			{
 				return;
 			}
@@ -337,10 +337,10 @@ void MainMenuOptions::update(float /*dt*/)
 	}
 }
 
-void MainMenuOptions::adjust_focused_value(artattack::Direction direction)
+void MainMenuOptions::adjust_focused_value(labrador::Direction direction)
 {
-	if (direction != artattack::Direction::left &&
-		direction != artattack::Direction::right)
+	if (direction != labrador::Direction::left &&
+		direction != labrador::Direction::right)
 	{
 		return;
 	}
@@ -532,12 +532,12 @@ void MainMenuOptions::init()
 }
 
 void MainMenuOptions::cycle_resolution(
-	artattack::Direction direction)
+	labrador::Direction direction)
 {
 	int enum_max = static_cast<int>(ScreenResolution::max);
 	int enum_pos =
 		static_cast<int>(this->resolution_selection_);
-	if (direction == artattack::Direction::left)
+	if (direction == labrador::Direction::left)
 	{
 		if (enum_pos == 0)
 		{
@@ -548,7 +548,7 @@ void MainMenuOptions::cycle_resolution(
 			enum_pos--;
 		}
 	}
-	else if (direction == artattack::Direction::right)
+	else if (direction == labrador::Direction::right)
 	{
 		if (enum_pos == enum_max)
 		{
@@ -611,7 +611,7 @@ void MainMenuModeSelect::update(float /*dt*/)
 		}
 		if (input.action == MenuInputAction::proceed)
 		{
-			if (this->focus_.activate(0))
+			if (this->focus_.activate(0) == Activation::ran)
 			{
 				return;
 			}
@@ -776,7 +776,7 @@ void MainMenuPlayerCount::update(float /*dt*/)
 		}
 		if (input.action == MenuInputAction::proceed)
 		{
-			if (this->focus_.activate(0))
+			if (this->focus_.activate(0) == Activation::ran)
 			{
 				return;
 			}
@@ -1035,7 +1035,7 @@ void MainMenuTeamSelect::update(float /*dt*/)
 		else if (this->select_states_[i].state ==
 			ConfirmationState::unconfirmed)
 		{
-			if (inputs[i].direction == artattack::Direction::left)
+			if (inputs[i].direction == labrador::Direction::left)
 			{
 				this->play_wave(this->direction_sound_);
 				if (this->select_states_[i].team == PlayerTeam::none)
@@ -1047,7 +1047,7 @@ void MainMenuTeamSelect::update(float /*dt*/)
 					this->select_states_[i].team = PlayerTeam::none;
 				}
 			}
-			else if (inputs[i].direction == artattack::Direction::right)
+			else if (inputs[i].direction == labrador::Direction::right)
 			{
 				this->play_wave(this->direction_sound_);
 				if (this->select_states_[i].team == PlayerTeam::none)
@@ -1396,15 +1396,15 @@ void MainMenuWeaponSelect::update(float /*dt*/)
 		else if (this->select_states_[i].state ==
 			ConfirmationState::unconfirmed)
 		{
-			if (inputs[i].direction == artattack::Direction::left)
+			if (inputs[i].direction == labrador::Direction::left)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_weapons(artattack::Direction::left, i);
+				this->cycle_weapons(labrador::Direction::left, i);
 			}
-			else if (inputs[i].direction == artattack::Direction::right)
+			else if (inputs[i].direction == labrador::Direction::right)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_weapons(artattack::Direction::right, i);
+				this->cycle_weapons(labrador::Direction::right, i);
 			}
 		}
 	}
@@ -1439,12 +1439,12 @@ WeaponType MainMenuWeaponSelect::random_weapon()
 	return static_cast<WeaponType>(random);
 }
 void MainMenuWeaponSelect::cycle_weapons(
-	artattack::Direction direction, int player_index)
+	labrador::Direction direction, int player_index)
 {
 	int enum_max = static_cast<int>(WeaponType::max_prim_wep);
 	int enum_pos =
 		static_cast<int>(this->select_states_[player_index].type);
-	if (direction == artattack::Direction::left)
+	if (direction == labrador::Direction::left)
 	{
 		if (enum_pos == 0)
 		{
@@ -1455,7 +1455,7 @@ void MainMenuWeaponSelect::cycle_weapons(
 			enum_pos--;
 		}
 	}
-	else if (direction == artattack::Direction::right)
+	else if (direction == labrador::Direction::right)
 	{
 		if (enum_pos == enum_max)
 		{
@@ -1739,15 +1739,15 @@ void MainMenuStageSelect::update(float /*dt*/)
 		}
 		else if (this->select_state_.state == ConfirmationState::unconfirmed)
 		{
-			if (inputs[i].direction == artattack::Direction::left)
+			if (inputs[i].direction == labrador::Direction::left)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_stages(artattack::Direction::left);
+				this->cycle_stages(labrador::Direction::left);
 			}
-			else if (inputs[i].direction == artattack::Direction::right)
+			else if (inputs[i].direction == labrador::Direction::right)
 			{
 				this->play_wave(this->direction_sound_);
-				this->cycle_stages(artattack::Direction::right);
+				this->cycle_stages(labrador::Direction::right);
 			}
 		}
 	}
@@ -1914,16 +1914,16 @@ void MainMenuStageSelect::init()
 
 	this->play_effect(this->music_, true, this->look().music.volume);
 }
-void MainMenuStageSelect::cycle_stages(artattack::Direction direction)
+void MainMenuStageSelect::cycle_stages(labrador::Direction direction)
 {
 	// Slots run 0..n-1 for the stages and n for Random, and the cursor wraps.
 	const int last = this->random_slot();
 	int slot = this->select_state_.slot;
-	if (direction == artattack::Direction::left)
+	if (direction == labrador::Direction::left)
 	{
 		slot = (slot == 0) ? last : slot - 1;
 	}
-	else if (direction == artattack::Direction::right)
+	else if (direction == labrador::Direction::right)
 	{
 		slot = (slot == last) ? 0 : slot + 1;
 	}

@@ -112,7 +112,7 @@ jobs:
             Write-Error "the runner has a wave bank; this check assumes a clone has none"
             exit 1
           }
-          $p = Start-Process -FilePath "$dir/ArtAttackGame.exe" `
+          $p = Start-Process -FilePath "$dir/ColourWars.exe" `
             -WorkingDirectory $dir -PassThru `
             -RedirectStandardError "$dir/startup.err" `
             -RedirectStandardOutput "$dir/startup.out"

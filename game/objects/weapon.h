@@ -11,7 +11,7 @@
 #include "engine/audio/sound_bank.h"
 #include "engine/audio/audio_resources.h"
 
-class Weapon : public artattack::TextureObject
+class Weapon : public labrador::TextureObject
 {
 public:
 	// `tuning` is borrowed and outlives every weapon: it is the GameTuning
@@ -21,15 +21,15 @@ public:
 	Weapon(const GameTuning* tuning,
 		PlayerTeam team,
 		int player_num,
-		const artattack::Colour& team_colour,
+		const labrador::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
-		artattack::RenderResources* render_resources,
-		const artattack::AudioResources* audio_resources,
-		const artattack::Colour& color = artattack::Colour::white,
+		labrador::RenderResources* render_resources,
+		const labrador::AudioResources* audio_resources,
+		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
+		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 	// const for the same reason GameObject::draw is, even though a Weapon is
@@ -38,10 +38,10 @@ public:
 	// The const does not come for free through Player - primary_ is a
 	// unique_ptr, and a const unique_ptr still hands out a non-const pointee -
 	// so it has to be declared here to be enforced at all.
-	virtual void draw(artattack::DrawList& draw_list,
+	virtual void draw(labrador::DrawList& draw_list,
 		bool debug = false) const;
 
-	virtual std::vector<std::unique_ptr<artattack::CollisionObject>>
+	virtual std::vector<std::unique_ptr<labrador::CollisionObject>>
 		update_and_get_projectiles(PlayerInputData input,
 			const mattmath::Vector2F& player_center,
 			const mattmath::Vector2F& player_velocity,
@@ -78,7 +78,7 @@ public:
 	mattmath::RectangleF draw_bounds() const;
 
 protected:
-	artattack::SoundBank* sound_bank_ = nullptr;
+	labrador::SoundBank* sound_bank_ = nullptr;
 
 	// Both borrowed, both never null: the second is the slot in the first this
 	// weapon's type resolved to, kept so the lookup happens once.
@@ -90,12 +90,12 @@ protected:
 	// what handle_shoot_sound and stop_sounds read as "nothing to do". The
 	// default Handle is inert precisely so an absent thing can be spelt this
 	// way instead of with a sentinel string.
-	artattack::SoundBank::EffectHandle loop_sound_;
+	labrador::SoundBank::EffectHandle loop_sound_;
 
 	// The one-shot fire wave, for the weapons that use one. Unconditionally
 	// resolved, unlike the loop above: every weapon definition names one, so a
 	// name the bank does not have is a content bug and should say so here.
-	artattack::SoundBank::WaveHandle shoot_sound_;
+	labrador::SoundBank::WaveHandle shoot_sound_;
 
 	bool shooting_this_update_ = false;
 
@@ -103,14 +103,14 @@ protected:
 
 	// Tint for this frame's draw. A hook rather than a member assignment so
 	// draw() stays a pure read - the render workers all enter it at once.
-	virtual artattack::Colour draw_colour() const;
+	virtual labrador::Colour draw_colour() const;
 
 	const mattmath::Vector2F& player_center() const;
 
 
 	PlayerTeam team() const;
 	int player_num() const;
-	const artattack::Colour& team_colour() const;
+	const labrador::Colour& team_colour() const;
 	WeaponType type() const;
 	mattmath::RectangleF nozzle_rectangle() const;
 
@@ -143,7 +143,7 @@ protected:
 	static mattmath::Vector2F nozzle_size();
 	static bool facing_left(float rotation);
 
-	virtual std::vector<std::unique_ptr<artattack::CollisionObject>> shoot(
+	virtual std::vector<std::unique_ptr<labrador::CollisionObject>> shoot(
 		const mattmath::Vector2F& shoot_direction) const;
 
 	virtual mattmath::Vector2F calculate_projectile_launch_velocity(
@@ -151,7 +151,7 @@ protected:
 		float starting_velocity) const;
 
 	static mattmath::Vector2F calculate_sprite_origin(
-		const mattmath::Vector2F& size, artattack::RotationOrigin origin);
+		const mattmath::Vector2F& size, labrador::RotationOrigin origin);
 
 	virtual bool check_if_shooting_and_ammo_update(PlayerInputData input,
 		const mattmath::Vector2F& player_center,
@@ -164,20 +164,20 @@ protected:
 		bool player_facing_right);
 
 	ProjectileBuilder* projectile_builder() const;
-	artattack::RenderResources* render_resources() const override;
+	labrador::RenderResources* render_resources() const override;
 
 private:
-	static artattack::SoundBank::EffectHandle resolve_loop_sound(
-		const artattack::SoundBank& sound_bank,
+	static labrador::SoundBank::EffectHandle resolve_loop_sound(
+		const labrador::SoundBank& sound_bank,
 		const WeaponLoopSounds& loop_sounds, PlayerTeam team, int player_num);
 
 	std::unique_ptr<ProjectileBuilder> proj_builder_ = nullptr;
-	artattack::RenderResources* render_resources_ = nullptr;
+	labrador::RenderResources* render_resources_ = nullptr;
 
 	// Resolved once at construction like every other element name, even though
 	// only the debug draw reads it - a name resolved on the draw path is a
 	// name resolved on the draw path, however rarely that path is taken.
-	artattack::SpriteSheet::frame_handle nozzle_frame_;
+	labrador::SpriteSheet::frame_handle nozzle_frame_;
 
 	// Set from the tuning file in the constructor body, not here: an
 	// initialiser cannot reach a member that is itself being initialised.
@@ -190,7 +190,7 @@ private:
 
 	PlayerTeam team_ = PlayerTeam::none;
 	int player_num_ = -1;
-	artattack::Colour team_colour_ = artattack::Colour::gray;
+	labrador::Colour team_colour_ = labrador::Colour::gray;
 	WeaponType type_ = WeaponType::none;
 	mattmath::Vector2F player_center_ = { 0.0f, 0.0f };
 
@@ -204,18 +204,18 @@ public:
 	RelativeVelocityWeapon(const GameTuning* tuning,
 		PlayerTeam team,
 		int player_num,
-		const artattack::Colour& team_colour,
+		const labrador::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
-		artattack::RenderResources* render_resources,
-		const artattack::AudioResources* audio_resources,
-		const artattack::Colour& color = artattack::Colour::white,
+		labrador::RenderResources* render_resources,
+		const labrador::AudioResources* audio_resources,
+		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
+		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
-	std::vector<std::unique_ptr<artattack::CollisionObject>>
+	std::vector<std::unique_ptr<labrador::CollisionObject>>
 		update_and_get_projectiles(PlayerInputData input,
 			const mattmath::Vector2F& player_center,
 			const mattmath::Vector2F& player_velocity,
@@ -230,7 +230,7 @@ protected:
 		AddPlayerVelocity add_player_vel,
 		float player_vel_amount) const;
 
-	virtual std::vector<std::unique_ptr<artattack::CollisionObject>> shoot(
+	virtual std::vector<std::unique_ptr<labrador::CollisionObject>> shoot(
 		const mattmath::Vector2F& shoot_direction,
 		const mattmath::Vector2F& player_velocity) const;
 

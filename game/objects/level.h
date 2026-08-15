@@ -36,7 +36,7 @@ enum class LevelState
 // What is no longer here is everything that was not about a paint match. The
 // object lists, the loops that stepped them, the collision sweep, the
 // out-of-bounds retirement, the swap-and-pop compaction and the per-view
-// render fan-out are an artattack::Scene now (engine/scene/scene.h) - eleven
+// render fan-out are an labrador::Scene now (engine/scene/scene.h) - eleven
 // members and nine methods, none of which mentioned paint. This class keeps
 // what only this game knows: how a camera follows a player, when a countdown
 // beats, what a HUD says, which track plays and when it stops.
@@ -55,9 +55,9 @@ public:
 	// went to the scene, two spawn lists were written and never read, and the
 	// thread pool and the partitioner are the scene's fan-out rather than
 	// anything a match knows about.
-	Level(std::unique_ptr<artattack::Scene> scene,
+	Level(std::unique_ptr<labrador::Scene> scene,
 		std::vector<Player*> players,
-		std::vector<std::unique_ptr<artattack::GameObject>> viewport_dividers,
+		std::vector<std::unique_ptr<labrador::GameObject>> viewport_dividers,
 		const TeamColour& team_colours,
 		const mattmath::RectangleF& camera_bounds,
 		const mattmath::RectangleF& zoom_out_start_bounds,
@@ -67,10 +67,10 @@ public:
 		const std::string& sound_bank_name,
 		const std::string& music_name,
 		float music_volume,
-		const artattack::ResolutionManager* resolution_manager,
-		const artattack::ViewportManager* viewport_manager,
-		artattack::RenderResources* render_resources,
-		const artattack::AudioResources* audio_resources);
+		const labrador::ResolutionManager* resolution_manager,
+		const labrador::ViewportManager* viewport_manager,
+		labrador::RenderResources* render_resources,
+		const labrador::AudioResources* audio_resources);
 
 	// Silences everything this level started.
 	//
@@ -99,7 +99,7 @@ public:
 	// three parameters this used to take - pre-size a vector, pre-fill it with
 	// null, and Release every non-null entry - and all three are the
 	// renderer's now.
-	void draw(artattack::Renderer& renderer) const;
+	void draw(labrador::Renderer& renderer) const;
 
 	LevelState state() const;
 
@@ -107,7 +107,7 @@ public:
 
 private:
 	// What is in the world, where it is seen from, and the tick that steps it.
-	std::unique_ptr<artattack::Scene> scene_ = nullptr;
+	std::unique_ptr<labrador::Scene> scene_ = nullptr;
 
 	// The players, borrowed from the scene that owns them.
 	//
@@ -126,16 +126,16 @@ private:
 	// Screen-space, per pane, drawn over the world rather than in it - so they
 	// are not scene objects: nothing culls them, nothing sweeps them, and they
 	// want the pane's camera rather than the player's. The overlay draws them.
-	std::vector<std::unique_ptr<artattack::GameObject>> viewport_dividers_;
+	std::vector<std::unique_ptr<labrador::GameObject>> viewport_dividers_;
 
-	artattack::SoundBank* sound_bank_ = nullptr;
+	labrador::SoundBank* sound_bank_ = nullptr;
 
 	// The level's own music comes from its definition file, so its name is not
 	// known until here - but it is known once, at construction, which is where
 	// it stops being a name. Same for the two fixed sounds the level plays.
-	artattack::SoundBank::EffectHandle music_;
-	artattack::SoundBank::EffectHandle zoom_out_sound_;
-	artattack::SoundBank::WaveHandle countdown_sound_;
+	labrador::SoundBank::EffectHandle music_;
+	labrador::SoundBank::EffectHandle zoom_out_sound_;
+	labrador::SoundBank::WaveHandle countdown_sound_;
 	float music_volume_ = 0.0f;
 
 	// This frame's dt, for the debug overlay's dt/fps readout - the only thing
@@ -152,18 +152,18 @@ private:
 	// times per frame for one line of text, on four threads at once.
 	int projectile_count_ = 0;
 
-	std::unique_ptr<artattack::TextDropShadow> countdown_text_ = nullptr;
+	std::unique_ptr<labrador::TextDropShadow> countdown_text_ = nullptr;
 
 	// The controls, shown under the countdown and gone when it is. Nothing
 	// else in this game has ever said which button shoots - not a screen, not
 	// a menu line, not the README - and the three seconds before a match is
 	// the one moment that reaches every player, every match, for free.
-	std::unique_ptr<artattack::TextDropShadow> controls_text_ = nullptr;
+	std::unique_ptr<labrador::TextDropShadow> controls_text_ = nullptr;
 
 	// A value, not a unique_ptr. CameraTools holds no state at all - one const
 	// method and one static - so the heap allocation it used to get was a
 	// separate cache line and a null to check, bought for nothing.
-	artattack::CameraTools camera_tools_;
+	labrador::CameraTools camera_tools_;
 
 	std::unique_ptr<InterfaceGameplay> interface_gameplay_ = nullptr;
 	std::unique_ptr<DebugText> debug_text_ = nullptr;
@@ -174,8 +174,8 @@ private:
 	// which pane a player is in. RenderResources was the fourth and is a
 	// constructor parameter now - the three things that resolve a handle
 	// against it are all built there.
-	const artattack::ResolutionManager* resolution_manager_ = nullptr;
-	const artattack::ViewportManager* viewport_manager_ = nullptr;
+	const labrador::ResolutionManager* resolution_manager_ = nullptr;
+	const labrador::ViewportManager* viewport_manager_ = nullptr;
 
 	// All four are set from the match tuning in the constructor body.
 	float timer_ = 0.0f;
@@ -183,7 +183,7 @@ private:
 	float zoom_out_timer_ = 0.0f;
 	float overview_timer_ = 0.0f;
 
-	artattack::Camera zoom_out_camera_ = artattack::Camera::DEFAULT_CAMERA;
+	labrador::Camera zoom_out_camera_ = labrador::Camera::DEFAULT_CAMERA;
 
 	TeamColour team_colours_ = TeamColour();
 
@@ -198,8 +198,8 @@ private:
 	// size that cannot change mid-zoom, so recomputing them every frame - two
 	// RectangleF constructions, two reads through the resolution manager and
 	// two divisions - produced the same two values 120 times over.
-	artattack::Camera zoom_out_start_camera_ = artattack::Camera::DEFAULT_CAMERA;
-	artattack::Camera zoom_out_finish_camera_ = artattack::Camera::DEFAULT_CAMERA;
+	labrador::Camera zoom_out_start_camera_ = labrador::Camera::DEFAULT_CAMERA;
+	labrador::Camera zoom_out_finish_camera_ = labrador::Camera::DEFAULT_CAMERA;
 
 	LevelState state_ = LevelState::start_countdown;
 
@@ -243,9 +243,9 @@ private:
 
 	// The HUD, the dividers, the debug text and the countdown, over one pane.
 	// Runs on the worker that owns that view.
-	void draw_player_overlay(int view_index, artattack::DrawList& list) const;
+	void draw_player_overlay(int view_index, labrador::DrawList& list) const;
 
-	void draw_countdown_text(artattack::DrawList& draw_list) const;
+	void draw_countdown_text(labrador::DrawList& draw_list) const;
 
 	// Sets the beat, then re-centres on what it actually measures.
 	void set_countdown_text(const std::wstring& text);
@@ -264,5 +264,5 @@ private:
 	// first frame is drawn through. Both used to happen on the first update(),
 	// which is why GameLevel had two states whose whole job was to not draw
 	// through a null pointer and a default camera.
-	void build_opening_frame(artattack::RenderResources* render_resources);
+	void build_opening_frame(labrador::RenderResources* render_resources);
 };

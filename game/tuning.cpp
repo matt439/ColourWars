@@ -6,7 +6,7 @@
 #include <optional>
 #include <stdexcept>
 
-using namespace artattack;
+using namespace labrador;
 using namespace mattmath;
 
 namespace

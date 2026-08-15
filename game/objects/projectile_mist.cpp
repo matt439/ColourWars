@@ -3,7 +3,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 ProjectileMist::ProjectileMist(const RectangleF& rectangle,
 	const Vector2F& velocity,
@@ -41,7 +41,7 @@ void ProjectileMist::update(float dt)
 	const Vector2F displacement = Projectile::update_movement(
 		details.gravity, details.wind_resistance, dt);
 
-	this->rectangle_.inflate_to_size(calculate_diffusion_size());
+	this->diffuse_to_size(this->rectangle_);
 
 	this->rectangle_.offset(displacement.x, displacement.y);
 

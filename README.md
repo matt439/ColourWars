@@ -59,7 +59,7 @@ cmake --build --preset x64-debug
 ```
 
 The game runs from its own output directory, which the build fills with
-`game/content/` — so `out/build/x64-debug/game/ArtAttackGame.exe` runs from
+`game/content/` — so `out/build/x64-debug/game/ColourWars.exe` runs from
 anywhere.
 
 There is no `ctest` step here and that is not an oversight: the tests live with
@@ -92,8 +92,13 @@ git commit -m "Move the engine pin to <rev>"
 ```
 
 Build before committing the move. The engine's `/W4 /WX` applies here too — the
-game links `artattack_settings`, which Labrador defines and this repository
+game links `labrador_settings`, which Labrador defines and this repository
 deliberately does not copy.
+
+Then read [docs/review/engine-reports.md](docs/review/engine-reports.md). It is
+the ledger of reports this client has filed against the engine, and a pin bump
+is the moment the answered ones become visible here — each closed report records
+what it lets this repository delete.
 
 ## Audio
 
@@ -127,7 +132,10 @@ in the game changes.
 
 The project began here on 2022-12-30 as ColourWars, became ChromaClash, then
 ArtAttack, and the game has now taken its first name back — in the same
-repository it started in.
+repository it started in. The identifiers followed the repository rather than
+leading it: the executable was `ArtAttackGame.exe` and the engine namespace
+`artattack::` for six days after the split, and both were swept afterwards, on
+each side of it.
 
 There are two disjoint histories in it, and that is deliberate:
 

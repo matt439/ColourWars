@@ -3,7 +3,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 PaintTile::PaintTile(const RectangleF& rectangle,
 	const PaintTuning* paint,
@@ -55,7 +55,7 @@ void PaintTile::draw(DrawList& draw_list) const
 }
 float PaintTile::area() const
 {
-	return this->rectangle_.area();
+	return this->rectangle_.width * this->rectangle_.height;
 }
 PlayerTeam PaintTile::team() const
 {

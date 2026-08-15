@@ -9,15 +9,15 @@ public:
 	WeaponRoller(const GameTuning* tuning,
 		PlayerTeam team,
 		int player_num,
-		const artattack::Colour& team_colour,
+		const labrador::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
-		artattack::RenderResources* render_resources,
-		const artattack::AudioResources* audio_resources,
-		const artattack::Colour& color = artattack::Colour::white,
+		labrador::RenderResources* render_resources,
+		const labrador::AudioResources* audio_resources,
+		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
+		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 private:
@@ -28,5 +28,5 @@ private:
 
 	// The roller's draw was a verbatim copy of Weapon::draw apart from this one
 	// colour choice, so it is expressed as a hook instead of a duplicate.
-	artattack::Colour draw_colour() const override;
+	labrador::Colour draw_colour() const override;
 };

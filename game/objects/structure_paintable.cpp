@@ -3,7 +3,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 StructurePaintable::StructurePaintable(
 	const std::string& sheet_name,

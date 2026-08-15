@@ -4,7 +4,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace menu_consts;
-using namespace artattack;
+using namespace labrador;
 
 bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot)
 {
@@ -95,7 +95,7 @@ ProcessedMenuInput PauseMenuPage::pausing_player_input(
 		const ProcessedMenuInput& input = inputs[slot];
 		if (input.connected &&
 			(input.action != MenuInputAction::none ||
-				input.direction != artattack::Direction::none) &&
+				input.direction != labrador::Direction::none) &&
 			match_owns_pad_slot(settings, static_cast<int>(slot)))
 		{
 			return input;

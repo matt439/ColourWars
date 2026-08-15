@@ -17,17 +17,17 @@ public:
 	// is looked up once per shot rather than once per projectile.
 	explicit ProjectileBuilder(const GameTuning* tuning);
 
-	std::vector<std::unique_ptr<artattack::CollisionObject>> build_projectiles(
+	std::vector<std::unique_ptr<labrador::CollisionObject>> build_projectiles(
 		const mattmath::Vector2F& position,
 		const mattmath::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
-		const artattack::Colour& team_colour,
+		const labrador::Colour& team_colour,
 		projectile_type type,
-		artattack::RenderResources* render_resources,
+		labrador::RenderResources* render_resources,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
+		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f) const;
 
 private:
@@ -36,17 +36,17 @@ private:
 	// The mister fires five at once, fanned by a fixed angle. Every one of
 	// them reads the same record, which is why this takes it rather than
 	// looking it up five times.
-	static std::vector<std::unique_ptr<artattack::CollisionObject>>
+	static std::vector<std::unique_ptr<labrador::CollisionObject>>
 		build_mist_projectiles(
 			const mattmath::Vector2F& position,
 			const mattmath::Vector2F& velocity,
 			PlayerTeam team,
 			int player_num,
-			const artattack::Colour& team_colour,
+			const labrador::Colour& team_colour,
 			const ProjectileTuning* mist,
-			artattack::RenderResources* render_resources,
+			labrador::RenderResources* render_resources,
 			float rotation = 0.0f,
 			const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-			artattack::SpriteFlip flip = artattack::SpriteFlip::none,
+			labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 			float layer_depth = 0.0f);
 };

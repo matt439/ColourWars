@@ -2,7 +2,7 @@
 #include "game/objects/interface_gameplay.h"
 
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 namespace
 {

@@ -1,8 +1,9 @@
 #include "game/pch.h"
 #include "game/objects/level_loaded_info.h"
+#include "engine/math/intersects.h"
 
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 LevelLoadedInfo::LevelLoadedInfo(const char* json_path) :
 	json_doc_(read_json_file(json_path))
@@ -42,13 +43,13 @@ void LevelLoadedInfo::validate() const
 	// built, which is again inside GameLevel::init().
 	const JsonValue root = this->json_doc_.root();
 
-	if (team_a.size() < artattack::Gamepads::max_count ||
-		team_b.size() < artattack::Gamepads::max_count)
+	if (team_a.size() < labrador::Gamepads::max_count ||
+		team_b.size() < labrador::Gamepads::max_count)
 	{
 		throw std::runtime_error(root.where() +
 			" lists " + std::to_string(team_a.size()) + " spawn(s) for team A "
 			"and " + std::to_string(team_b.size()) + " for team B. Every team "
-			"needs at least " + std::to_string(artattack::Gamepads::max_count) +
+			"needs at least " + std::to_string(labrador::Gamepads::max_count) +
 			", because a match can be that many players a side.");
 	}
 
@@ -70,7 +71,7 @@ void LevelLoadedInfo::validate_spawn(const JsonValue& root,
 	const RectangleF& out_of_bounds,
 	const char* team)
 {
-	if (out_of_bounds.contains(spawn))
+	if (rectangle_point_intersect(out_of_bounds, spawn))
 	{
 		return;
 	}

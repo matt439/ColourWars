@@ -33,12 +33,12 @@
 // It draws nothing and updates nothing: there is always a page above it. What
 // it is for is ownership and flow - the pages come and go, the settings they
 // are assembling do not.
-class GameMenu final : public artattack::State
+class GameMenu final : public labrador::State
 {
 public:
 	explicit GameMenu(GameData* game_data);
 	void update(float dt) override;
-	void draw(artattack::Renderer& renderer) const override;
+	void draw(labrador::Renderer& renderer) const override;
 	void init() override;
 
 private:
@@ -58,7 +58,7 @@ private:
 };
 
 // One match, from the countdown to the end menu.
-class GameLevel final : public artattack::State
+class GameLevel final : public labrador::State
 {
 public:
 	GameLevel(GameData* game_data, const MenuLevelSettings& settings);
@@ -71,7 +71,7 @@ public:
 	~GameLevel() override;
 
 	void update(float dt) override;
-	void draw(artattack::Renderer& renderer) const override;
+	void draw(labrador::Renderer& renderer) const override;
 	void init() override;
 
 	// A menu went up over the match. The simulation stopping is what not being
@@ -96,7 +96,7 @@ private:
 
 	// The layout that was in place before this match took it, restored by the
 	// destructor.
-	artattack::ScreenLayout previous_layout_ = artattack::ScreenLayout::one_player;
+	labrador::ScreenLayout previous_layout_ = labrador::ScreenLayout::one_player;
 
 	// Whether the window had the foreground when update() last looked.
 	//

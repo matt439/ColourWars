@@ -14,7 +14,7 @@
 using namespace rapidjson;
 using namespace directory_consts;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 SaveData Save::load_from_json(const char* json_path) const
 {
@@ -199,7 +199,7 @@ void Save::save_to_file() const
     const std::string message = "Could not write " + save_file_path() +
         ".\nYour settings will not be remembered.";
     fprintf(stderr, "save failure: %s\n", message.c_str());
-    MessageBoxA(nullptr, message.c_str(), "ArtAttack - save failure",
+    MessageBoxA(nullptr, message.c_str(), "ColourWars - save failure",
         MB_OK | MB_ICONWARNING);
 }
 

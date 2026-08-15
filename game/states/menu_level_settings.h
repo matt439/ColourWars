@@ -18,8 +18,8 @@ public:
 	// screen sets one.
 	void set_stage(const std::string& stage);
 	const std::string& stage() const;
-	artattack::ScreenLayout screen_layout() const;
-	void set_screen_layout(artattack::ScreenLayout screen_layout);
+	labrador::ScreenLayout screen_layout() const;
+	void set_screen_layout(labrador::ScreenLayout screen_layout);
 
 	void set_player_setting(int player_index, MenuPlayerSettings player_settings);
 	void set_player_team(int player_index, PlayerTeam team);
@@ -32,5 +32,5 @@ private:
 	std::vector<MenuPlayerSettings> player_settings_;
 	int player_count_ = 0;
 	std::string stage_;
-	artattack::ScreenLayout screen_layout_ = artattack::ScreenLayout::one_player;
+	labrador::ScreenLayout screen_layout_ = labrador::ScreenLayout::one_player;
 };

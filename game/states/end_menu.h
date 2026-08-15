@@ -34,11 +34,11 @@ public:
 	void init() override;
 	void update(float dt) override;
 private:
-	std::unique_ptr<artattack::UiTexture> box_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> change_teams_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> change_weapons_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> change_level_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> restart_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> exit_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> change_teams_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> change_weapons_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> change_level_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> restart_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> exit_ = nullptr;
 };

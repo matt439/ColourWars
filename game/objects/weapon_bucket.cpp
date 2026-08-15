@@ -3,7 +3,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 WeaponBucket::WeaponBucket(const GameTuning* tuning,
     PlayerTeam team,

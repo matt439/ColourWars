@@ -9,8 +9,8 @@
 #include "game/objects/collision_object_type.h"
 #include "engine/render/colour.h"
 
-class Projectile : public artattack::MovingObject,
-	public artattack::AnimationObject, public artattack::CollisionObject
+class Projectile : public labrador::MovingObject,
+	public labrador::AnimationObject, public labrador::CollisionObject
 {
 public:
 	// `tuning` is borrowed and must outlive this projectile. It points into
@@ -25,25 +25,25 @@ public:
 	Projectile(const mattmath::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
-		const artattack::Colour& team_colour,
+		const labrador::Colour& team_colour,
 		projectile_type type,
-		artattack::RenderResources* render_resources,
+		labrador::RenderResources* render_resources,
 		const ProjectileTuning* tuning,
-		const artattack::Colour& color = artattack::Colour::white,
+		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
+		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 	void update(float dt) override = 0;
-	void draw(artattack::DrawList& draw_list) const override = 0;
+	void draw(labrador::DrawList& draw_list) const override = 0;
 	mattmath::RectangleF bounds() const override = 0;
 
 	const mattmath::Shape* shape() const override = 0;
-	artattack::CollisionLayer layer() const override;
-	artattack::CollisionMask mask() const override;
-	artattack::CollisionTag tag() const override;
-	void on_contact(const artattack::CollisionObject& other,
+	labrador::CollisionLayer layer() const override;
+	labrador::CollisionMask mask() const override;
+	labrador::CollisionTag tag() const override;
+	void on_contact(const labrador::CollisionObject& other,
 		const mattmath::Vector2F& normal, float penetration) override;
 	bool for_deletion() const override;
 	void set_for_deletion(bool for_deletion) override;
@@ -64,7 +64,7 @@ protected:
 	CollisionObjectType collision_type() const;
 
 	int player_num() const;
-	const artattack::Colour& team_colour() const;
+	const labrador::Colour& team_colour() const;
 	projectile_type type() const;
 
 	float timer() const;
@@ -89,7 +89,7 @@ private:
 	bool first_update_done_ = false;
 
 	int player_num_ = -1;
-	artattack::Colour team_colour_ = artattack::Colour::gray;
+	labrador::Colour team_colour_ = labrador::Colour::gray;
 	projectile_type type_ = SPRAY;
 
 	PlayerTeam team_ = PlayerTeam::none;
@@ -103,25 +103,34 @@ public:
 	DiffusingProjectile(const mattmath::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
-		const artattack::Colour& team_colour,
+		const labrador::Colour& team_colour,
 		projectile_type type,
-		artattack::RenderResources* render_resources,
+		labrador::RenderResources* render_resources,
 		const ProjectileTuning* tuning,
-		const artattack::Colour& color = artattack::Colour::white,
+		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
+		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 	~DiffusingProjectile() override = default;
 
 
 	void update(float dt) override = 0;
-	void draw(artattack::DrawList& draw_list) const override = 0;
+	void draw(labrador::DrawList& draw_list) const override = 0;
 	mattmath::RectangleF bounds() const override = 0;
 
 	const mattmath::Shape* shape() const override = 0;
 protected:
 	mattmath::Vector2F calculate_diffusion_size() const;
+
+	// Resizes the rectangle to this tick's diffusion size about its own
+	// centre. The rectangle is the subclass's — mist and spray each hold
+	// their own — so it comes in by reference rather than being reached for.
+	//
+	// This was RectangleF::inflate_to_size, which the engine deleted as
+	// uncalled while these two files were calling it. The engine kept
+	// inflate(amount), which grows by an amount; diffusion sets a size.
+	void diffuse_to_size(mattmath::RectangleF& rectangle) const;
 private:
 	// Read off the same borrowed record the base class holds, rather than
 	// copied beside it.

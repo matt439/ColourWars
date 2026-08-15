@@ -26,16 +26,16 @@ class GameData
 public:
     GameData() = default;
 
-    void set_application(artattack::Application* application);
+    void set_application(labrador::Application* application);
     void set_save(Save* save);
-    void set_level_infos(artattack::Registry<LevelLoadedInfo>* level_infos);
+    void set_level_infos(labrador::Registry<LevelLoadedInfo>* level_infos);
     void set_stages(const StageList* stages);
     void set_tuning(const GameTuning* tuning);
     void set_presentation(const Presentation* presentation);
 
     // The game's own four.
     Save* save() const;
-    artattack::Registry<LevelLoadedInfo>* level_infos() const;
+    labrador::Registry<LevelLoadedInfo>* level_infos() const;
 
     // Every stage the manifest named, in manifest order. The stage-select
     // menu walks it; nothing else needs to know how many there are.
@@ -53,14 +53,14 @@ public:
 
     // The engine's, forwarded. Created once by the shell and never reseated,
     // so anything here may be held for an object's whole life.
-    artattack::Application* application() const;
-    artattack::ResolutionManager* resolution_manager() const;
-    artattack::RenderResources* render_resources() const;
-    artattack::AudioResources* audio_resources() const;
-    artattack::Gamepads* gamepads() const;
-    artattack::ViewportManager* viewport_manager() const;
-    artattack::ThreadPool* thread_pool() const;
-    const artattack::Partitioner* partitioner() const;
+    labrador::Application* application() const;
+    labrador::ResolutionManager* resolution_manager() const;
+    labrador::RenderResources* render_resources() const;
+    labrador::AudioResources* audio_resources() const;
+    labrador::Gamepads* gamepads() const;
+    labrador::ViewportManager* viewport_manager() const;
+    labrador::ThreadPool* thread_pool() const;
+    const labrador::Partitioner* partitioner() const;
 
     // Whether this game's window is the one the user is working in.
     //
@@ -76,12 +76,12 @@ public:
     bool window_has_foreground() const;
 
 private:
-    artattack::Application* application_ = nullptr;
+    labrador::Application* application_ = nullptr;
     Save* save_ = nullptr;
 
     // The game's own resource registry, beside the engine's: a level
     // definition means nothing to the engine, so the engine does not cache it.
-    artattack::Registry<LevelLoadedInfo>* level_infos_ = nullptr;
+    labrador::Registry<LevelLoadedInfo>* level_infos_ = nullptr;
     const StageList* stages_ = nullptr;
     const GameTuning* tuning_ = nullptr;
     const Presentation* presentation_ = nullptr;

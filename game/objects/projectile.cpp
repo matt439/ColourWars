@@ -3,7 +3,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 Projectile::Projectile(const Vector2F& velocity,
     PlayerTeam team,
@@ -93,7 +93,17 @@ Vector2F DiffusingProjectile::calculate_diffusion_size() const
     }
     return base_size * multiple;
 }
+void DiffusingProjectile::diffuse_to_size(RectangleF& rectangle) const
+{
+    const Vector2F size = this->calculate_diffusion_size();
 
+    // Half the growth off each side keeps the centre where it was, which is
+    // what a cloud spreading out does. Setting the size alone would pin the
+    // top-left and walk the cloud down and right as it grew.
+    rectangle.x -= (size.x - rectangle.width) / 2.0f;
+    rectangle.y -= (size.y - rectangle.height) / 2.0f;
+    rectangle.set_size(size);
+}
 
 
 void Projectile::on_contact(const CollisionObject& /*other*/,

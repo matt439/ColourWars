@@ -3,7 +3,7 @@
 
 using namespace mattmath;
 using namespace DirectX;
-using namespace artattack;
+using namespace labrador;
 
 ProjectileBall::ProjectileBall(const RectangleF& rectangle,
 	const Vector2F& velocity,

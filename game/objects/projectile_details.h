@@ -1,13 +1,13 @@
 #pragma once
 
 #include "engine/render/rotation_origin.h"
-#include "engine/math/matt_math.h"
+#include "engine/math/vector2f.h"
 
 struct ProjectileDetails
 {
     float gravity = 0.0f;
     float wind_resistance = 0.0f;
-    artattack::RotationOrigin rotat_origin = artattack::RotationOrigin::no_rotation;
+    labrador::RotationOrigin rotat_origin = labrador::RotationOrigin::no_rotation;
     float delete_timer = 0.0f;
 
     // Health taken off a player this hits, as a positive amount.

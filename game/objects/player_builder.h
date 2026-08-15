@@ -20,9 +20,9 @@ public:
 		const MenuLevelSettings& settings,
 		const LevelLoadedInfo* load_info,
 		TeamColour team_colours,
-		artattack::RenderResources* render_resources,
-		const artattack::AudioResources* audio_resources,
-		const artattack::ViewportManager* viewport_manager) const;
+		labrador::RenderResources* render_resources,
+		const labrador::AudioResources* audio_resources,
+		const labrador::ViewportManager* viewport_manager) const;
 private:
 	const GameTuning* tuning_ = nullptr;
 

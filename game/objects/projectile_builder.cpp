@@ -1,16 +1,17 @@
 #include "game/pch.h"
 #include "game/objects/projectile_builder.h"
+#include "game/rotate.h"
 
 using namespace mattmath;
 using namespace DirectX;
-using namespace artattack;
+using namespace labrador;
 
 ProjectileBuilder::ProjectileBuilder(const GameTuning* tuning) :
 	tuning_(tuning)
 {
 }
 
-std::vector<std::unique_ptr<artattack::CollisionObject>>
+std::vector<std::unique_ptr<labrador::CollisionObject>>
 	ProjectileBuilder::build_projectiles(
 		const Vector2F& position,
 		const Vector2F& velocity,
@@ -30,7 +31,7 @@ std::vector<std::unique_ptr<artattack::CollisionObject>>
 	const ProjectileTuning& tuning = this->tuning_->projectile(type);
 	const RectangleF rectangle(position, tuning.details.col_rect_size);
 
-	std::vector<std::unique_ptr<artattack::CollisionObject>> projectiles;
+	std::vector<std::unique_ptr<labrador::CollisionObject>> projectiles;
 
 	switch (type)
     {
@@ -72,7 +73,7 @@ std::vector<std::unique_ptr<artattack::CollisionObject>>
 		std::to_string(static_cast<int>(type)) + " has no builder.");
 }
 
-std::vector<std::unique_ptr<artattack::CollisionObject>>
+std::vector<std::unique_ptr<labrador::CollisionObject>>
 	ProjectileBuilder::build_mist_projectiles(
 	const Vector2F& position,
 	const Vector2F& velocity,
@@ -92,7 +93,7 @@ std::vector<std::unique_ptr<artattack::CollisionObject>>
 
 	const RectangleF rectangle(position, mist->details.col_rect_size);
 
-	std::vector<std::unique_ptr<artattack::CollisionObject>> projectiles;
+	std::vector<std::unique_ptr<labrador::CollisionObject>> projectiles;
 	projectiles.reserve(std::size(SPREAD));
 
 	for (const float step : SPREAD)
@@ -100,7 +101,7 @@ std::vector<std::unique_ptr<artattack::CollisionObject>>
 		projectiles.push_back(
 			std::make_unique<ProjectileMist>(
 				rectangle,
-				Vector2F::rotate_vector(velocity, step * mattmath::PI / 12.0f),
+				game_math::rotate_vector(velocity, step * mattmath::PI / 12.0f),
 				team,
 				player_num,
 				team_colour,

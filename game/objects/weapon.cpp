@@ -1,9 +1,10 @@
 #include "game/pch.h"
 #include "game/objects/weapon.h"
+#include "game/rotate.h"
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 namespace
 {
@@ -93,7 +94,7 @@ void Weapon::draw(DrawList& draw_list, bool debug) const
     }
 }
 
-artattack::Colour Weapon::draw_colour() const
+labrador::Colour Weapon::draw_colour() const
 {
     return this->colour();
 }
@@ -172,7 +173,7 @@ Vector2F Weapon::nozzle_pos() const
 {
 	Vector2F result = this->details().nozzle_offset;
 	result.x += this->details().size.x;
-	result = Vector2F::rotate_vector(result, this->rotation_);
+	result = game_math::rotate_vector(result, this->rotation_);
 	result += this->wep_rotation_origin_offset(
 		facing_left(this->rotation_));
 	result += this->player_center();
@@ -190,7 +191,7 @@ Vector2F Weapon::wep_rotation_origin_offset(bool facing_left) const
 	return Vector2F(this->details().offset.x, this->details().offset.y);
 }
 
-std::vector<std::unique_ptr<artattack::CollisionObject>>
+std::vector<std::unique_ptr<labrador::CollisionObject>>
     Weapon::update_and_get_projectiles(PlayerInputData input,
     const Vector2F& player_center,
     const Vector2F& player_velocity,
@@ -207,7 +208,7 @@ std::vector<std::unique_ptr<artattack::CollisionObject>>
 	}
 	else
 	{
-		return std::vector<std::unique_ptr<artattack::CollisionObject>>();
+		return std::vector<std::unique_ptr<labrador::CollisionObject>>();
     }
 }
 
@@ -366,7 +367,7 @@ void Weapon::update_movement_and_rotation(PlayerInputData input,
     }
 }
 
-std::vector<std::unique_ptr<artattack::CollisionObject>>
+std::vector<std::unique_ptr<labrador::CollisionObject>>
 Weapon::shoot(const Vector2F& shoot_direction) const
 {
     Vector2F launch_velocity = this->calculate_projectile_launch_velocity(
@@ -543,7 +544,7 @@ RelativeVelocityWeapon::RelativeVelocityWeapon(
     const Colour& color,
     float rotation,
     const Vector2F& origin,
-    artattack::SpriteFlip flip,
+    labrador::SpriteFlip flip,
     float layer_depth) :
     Weapon(tuning, team, player_num, team_colour, type,
         player_center, render_resources, audio_resources,
@@ -587,7 +588,7 @@ Vector2F RelativeVelocityWeapon::calculate_projectile_launch_velocity(
     return result;
 }
 
-std::vector<std::unique_ptr<artattack::CollisionObject>> RelativeVelocityWeapon::shoot(
+std::vector<std::unique_ptr<labrador::CollisionObject>> RelativeVelocityWeapon::shoot(
     const mattmath::Vector2F& shoot_direction,
     const mattmath::Vector2F& player_velocity) const
 {
@@ -610,7 +611,7 @@ std::vector<std::unique_ptr<artattack::CollisionObject>> RelativeVelocityWeapon:
         this->render_resources());
 }
 
-std::vector<std::unique_ptr<artattack::CollisionObject>>
+std::vector<std::unique_ptr<labrador::CollisionObject>>
     RelativeVelocityWeapon::update_and_get_projectiles(PlayerInputData input,
     const Vector2F& player_center,
     const Vector2F& player_velocity,
@@ -628,6 +629,6 @@ std::vector<std::unique_ptr<artattack::CollisionObject>>
 	}
     else
     {
-        return std::vector<std::unique_ptr<artattack::CollisionObject>>();
+        return std::vector<std::unique_ptr<labrador::CollisionObject>>();
     }
 }

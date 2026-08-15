@@ -33,21 +33,21 @@ public:
 		const std::string& frame_name,
 		const mattmath::RectangleF& sprite_rectangle,
 		std::unique_ptr<mattmath::Shape> collision_shape,
-		artattack::RenderResources* render_resources,
-		const artattack::AudioResources* audio_resources,
+		labrador::RenderResources* render_resources,
+		const labrador::AudioResources* audio_resources,
 		const PaintTuning* paint,
 		CollisionObjectType collision_type,
 		const TeamColour& team_colours,
 		const PaintableFaces& faces,
-		const artattack::Colour& color = artattack::Colour::white,
+		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
+		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 	void update(float dt) override;
-	void draw(artattack::DrawList& draw_list) const override;
-	void on_contact(const artattack::CollisionObject& other,
+	void draw(labrador::DrawList& draw_list) const override;
+	void on_contact(const labrador::CollisionObject& other,
 		const mattmath::Vector2F& normal, float penetration) override;
 
 	PaintTotal paint_total() const override;
@@ -89,11 +89,11 @@ private:
 	// Not const: it records each face's run in paint_strips_ as it lays the
 	// tiles down, which is the information on_collision indexes with.
 	std::vector<PaintTile> generate_paint_tiles();
-	artattack::SoundBank* sound_bank_ = nullptr;
+	labrador::SoundBank* sound_bank_ = nullptr;
 
 	// Resolved once at construction. This plays from update(), on any tile
 	// that was just painted, so it was a map descent per splash per frame.
-	artattack::SoundBank::WaveHandle paint_sound_;
+	labrador::SoundBank::WaveHandle paint_sound_;
 
 
 };

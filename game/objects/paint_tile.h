@@ -9,7 +9,7 @@
 #include "game/tuning.h"
 
 
-class PaintTileSplash final : public artattack::AnimationObject, public artattack::GameObject
+class PaintTileSplash final : public labrador::AnimationObject, public labrador::GameObject
 {
 public:
 	PaintTileSplash() = default;
@@ -17,23 +17,23 @@ public:
 		const mattmath::RectangleF& rectangle,
 		const std::string& sheet_name,
 		const std::string& animation_strip_name,
-		artattack::RenderResources* render_resources,
-		const artattack::Colour& color = artattack::Colour::white,
+		labrador::RenderResources* render_resources,
+		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
+		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
 	void set_rectangle_center(const mattmath::Vector2F& center);
 	void reset_and_play();
-	void set_colour(const artattack::Colour& colour) override;
+	void set_colour(const labrador::Colour& colour) override;
 
 	void update(float dt) override;
-	void draw(artattack::DrawList& draw_list) const override;
+	void draw(labrador::DrawList& draw_list) const override;
 
 	// Draws with the given tint without storing it. See TextureObject::draw_with.
-	void draw_with_colour(artattack::DrawList& draw_list,
-		const artattack::Colour& colour) const;
+	void draw_with_colour(labrador::DrawList& draw_list,
+		const labrador::Colour& colour) const;
 
 	mattmath::RectangleF bounds() const override;
 private:
@@ -50,7 +50,7 @@ private:
 // nothing called, and a copy of the AABB-then-narrow block that six other
 // classes also carried - all so a structure could ask a tile a question it
 // could answer with a rectangle.
-class PaintTile final : public artattack::TextureObject, public artattack::GameObject
+class PaintTile final : public labrador::TextureObject, public labrador::GameObject
 {
 public:
 	PaintTile() = default;
@@ -59,14 +59,14 @@ public:
 	// three paint_tile_consts entries this replaces were.
 	PaintTile(const mattmath::RectangleF& rectangle,
 		const PaintTuning* paint,
-		artattack::RenderResources* render_resources,
+		labrador::RenderResources* render_resources,
 		const TeamColour& team_colours,
-		const artattack::Colour& color = artattack::Colour::white,
+		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
+		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
-	void draw(artattack::DrawList& draw_list) const override;
+	void draw(labrador::DrawList& draw_list) const override;
 	void update(float dt) override;
 	float area() const;
 	PlayerTeam team() const;

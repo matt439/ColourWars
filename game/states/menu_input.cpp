@@ -3,7 +3,7 @@
 
 using namespace mattmath;
 using namespace menu_input_consts;
-using namespace artattack;
+using namespace labrador;
 
 MenuInput::MenuInput(const Gamepads* gamepads) :
 	gamepads_(gamepads)
@@ -113,19 +113,19 @@ ProcessedMenuInput MenuInput::menu_input(const Gamepads& gamepads, int slot)
 
 	if (analog_up || dpad_released(GamepadButton::dpad_up))
 	{
-		result.direction = artattack::Direction::up;
+		result.direction = labrador::Direction::up;
 	}
 	else if (analog_down || dpad_released(GamepadButton::dpad_down))
 	{
-		result.direction = artattack::Direction::down;
+		result.direction = labrador::Direction::down;
 	}
 	else if (analog_left || dpad_released(GamepadButton::dpad_left))
 	{
-		result.direction = artattack::Direction::left;
+		result.direction = labrador::Direction::left;
 	}
 	else if (analog_right || dpad_released(GamepadButton::dpad_right))
 	{
-		result.direction = artattack::Direction::right;
+		result.direction = labrador::Direction::right;
 	}
 
 	return result;

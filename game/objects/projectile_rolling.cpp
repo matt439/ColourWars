@@ -3,7 +3,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 ProjectileRolling::ProjectileRolling(const RectangleF& rectangle,
 	const Vector2F& velocity,

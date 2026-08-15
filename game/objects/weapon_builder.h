@@ -24,9 +24,9 @@ public:
 		const GameTuning* tuning,
 		PlayerTeam team,
 		int player_num,
-		const artattack::Colour& team_colour,
+		const labrador::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
-		artattack::RenderResources* render_resources,
-		const artattack::AudioResources* audio_resources);
+		labrador::RenderResources* render_resources,
+		const labrador::AudioResources* audio_resources);
 };

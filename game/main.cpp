@@ -14,7 +14,7 @@
 
 using namespace DirectX;
 using namespace directory_consts;
-using namespace artattack;
+using namespace labrador;
 
 // Indicates to hybrid graphics systems to prefer the discrete part by default.
 extern "C"
@@ -43,7 +43,7 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		// the fullscreen flag come out of this game's own save file, which is
 		// exactly why the engine does not read one.
 		ApplicationOptions options;
-		options.window_class_name = L"ArtAttackWindowClass";
+		options.window_class_name = L"ColourWarsWindowClass";
 		options.window_title = L"Colour Wars";
 		options.resolution = save.resolution();
 		options.fullscreen = save.fullscreen();
@@ -143,7 +143,7 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		// T6: a broken contract stops the game dead with the reason on screen,
 		// never a silent abort.
 		fprintf(stderr, "startup failure: %s\n", e.what());
-		MessageBoxA(nullptr, e.what(), "ArtAttack - startup failure",
+		MessageBoxA(nullptr, e.what(), "ColourWars - startup failure",
 			MB_OK | MB_ICONERROR);
 		return 1;
 	}

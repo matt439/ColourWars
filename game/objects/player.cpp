@@ -5,7 +5,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 namespace
 {
@@ -277,9 +277,10 @@ void Player::on_jump_through_contact(const CollisionObject& other)
 {
     // Only lands if the player is moving down and was above the platform on
     // the previous tick.
-    const Direction dir = this->velocity().direction();
-    const bool moving_down = dir == Direction::down ||
-        dir == Direction::down_left || dir == Direction::down_right;
+    // Screen space, so down is +y. This used to ask Vector2F::direction()
+    // for one of nine compass values and test the three with "down" in the
+    // name, which is the sign of y and nothing else.
+    const bool moving_down = this->velocity().y > 0.0f;
 
     const RectangleF other_rect = other.shape()->bounding_box();
     const bool was_above = this->prev_rectangle_.bottom() <= other_rect.top();

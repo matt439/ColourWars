@@ -3,7 +3,7 @@
 
 using namespace mattmath;
 using namespace DirectX;
-using namespace artattack;
+using namespace labrador;
 
 std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
     const GameTuning* tuning,

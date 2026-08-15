@@ -2,7 +2,8 @@
 
 #include "engine/assets/json.h"
 #include "engine/input/gamepads.h"
-#include "engine/math/matt_math.h"
+#include "engine/math/rectanglef.h"
+#include "engine/math/vector2f.h"
 #include <string>
 #include <vector>
 
@@ -52,8 +53,8 @@ public:
 
 	// The two object lists, handed on undecoded: what an entry in them means is
 	// LevelObjectBuilder's vocabulary, not this class's.
-	artattack::JsonValue collision_objects_json() const;
-	artattack::JsonValue non_collision_objects_json() const;
+	labrador::JsonValue collision_objects_json() const;
+	labrador::JsonValue non_collision_objects_json() const;
 
 	std::string sound_bank_name() const;
 	std::string music_name() const;
@@ -66,16 +67,16 @@ private:
 	// accessors, which NDEBUG turns from a stopped debug build into a null
 	// dereference in a shipped one. JsonValue is what closed that, and it
 	// closed it for the engine's own loaders in the same pass.
-	artattack::JsonDocument json_doc_;
+	labrador::JsonDocument json_doc_;
 
 	// The four bounds rectangles differ only in which key they sit under.
 	mattmath::RectangleF bounds_rectangle(const char* key) const;
 
 	static std::vector<mattmath::Vector2F>
-		decode_team_spawns(const artattack::JsonValue& json);
+		decode_team_spawns(const labrador::JsonValue& json);
 
 	// Both teams' spawns are checked the same way and want the same sentence.
-	static void validate_spawn(const artattack::JsonValue& root,
+	static void validate_spawn(const labrador::JsonValue& root,
 		const mattmath::Vector2F& spawn,
 		const mattmath::RectangleF& out_of_bounds,
 		const char* team);

@@ -68,7 +68,7 @@ protected:
 
 	// The one sound only this family makes, beside the three every page shares
 	// from MenuPage. A press plays an index, not a name (T7, T8).
-	artattack::SoundBank::WaveHandle window_open_sound_;
+	labrador::SoundBank::WaveHandle window_open_sound_;
 private:
 	int pausing_player_ = -1;
 };
@@ -81,11 +81,11 @@ public:
 	void init() override;
 	void update(float dt) override;
 private:
-	std::unique_ptr<artattack::UiTexture> box_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> player_num_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> resume_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> restart_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> quit_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> player_num_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> resume_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> restart_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> quit_ = nullptr;
 };
 
 class PauseMenuConfirmation final : public PauseMenuPage
@@ -96,11 +96,11 @@ public:
 	void init() override;
 	void update(float dt) override;
 private:
-	std::unique_ptr<artattack::UiTexture> box_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> player_num_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> question_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> yes_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> no_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> player_num_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> question_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> yes_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> no_ = nullptr;
 	ConfirmationType type_ = ConfirmationType::restart;
 	static std::wstring question_text(ConfirmationType type);
 };

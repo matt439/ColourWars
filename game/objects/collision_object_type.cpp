@@ -1,8 +1,8 @@
 #include "game/pch.h"
 #include "game/objects/collision_object_type.h"
 
-using artattack::CollisionLayer;
-using artattack::CollisionMask;
+using labrador::CollisionLayer;
+using labrador::CollisionMask;
 
 CollisionLayer collision_layer(CollisionObjectType type)
 {

@@ -9,15 +9,15 @@ public:
 	WeaponSniper(const GameTuning* tuning,
 		PlayerTeam team,
 		int player_num,
-		const artattack::Colour& team_colour,
+		const labrador::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
-		artattack::RenderResources* render_resources,
-		const artattack::AudioResources* audio_resources,
-		const artattack::Colour& color = artattack::Colour::white,
+		labrador::RenderResources* render_resources,
+		const labrador::AudioResources* audio_resources,
+		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-		artattack::SpriteFlip flip = artattack::SpriteFlip::none,
+		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 protected:
 	void handle_shoot_sound(bool shooting_this_update, bool holding_shoot) override;

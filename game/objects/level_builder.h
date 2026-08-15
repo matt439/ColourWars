@@ -16,29 +16,29 @@
 class LevelBuilder
 {
 public:
-	LevelBuilder(artattack::ViewportManager* viewport_manager,
-		artattack::RenderResources* render_resources,
-		const artattack::AudioResources* audio_resources,
-		const artattack::Registry<LevelLoadedInfo>* level_infos,
+	LevelBuilder(labrador::ViewportManager* viewport_manager,
+		labrador::RenderResources* render_resources,
+		const labrador::AudioResources* audio_resources,
+		const labrador::Registry<LevelLoadedInfo>* level_infos,
 		const GameTuning* tuning,
 		const Presentation* presentation,
-		artattack::ResolutionManager* resolution_manager,
-		artattack::ThreadPool* thread_pool,
-		const artattack::Partitioner* partitioner);
+		labrador::ResolutionManager* resolution_manager,
+		labrador::ThreadPool* thread_pool,
+		const labrador::Partitioner* partitioner);
 
 	std::unique_ptr<Level> build_level(const MenuLevelSettings& settings);
 
 private:
 	std::unique_ptr<TeamColourTools> team_colour_ = nullptr;
 	std::unique_ptr<PlayerBuilder> player_builder_ = nullptr;
-	artattack::RenderResources* render_resources_ = nullptr;
-	const artattack::AudioResources* audio_resources_ = nullptr;
-	const artattack::Registry<LevelLoadedInfo>* level_infos_ = nullptr;
+	labrador::RenderResources* render_resources_ = nullptr;
+	const labrador::AudioResources* audio_resources_ = nullptr;
+	const labrador::Registry<LevelLoadedInfo>* level_infos_ = nullptr;
 	const GameTuning* tuning_ = nullptr;
 	const Presentation* presentation_ = nullptr;
-	artattack::ViewportManager* viewport_manager_ = nullptr;
+	labrador::ViewportManager* viewport_manager_ = nullptr;
 	std::unique_ptr<LevelObjectBuilder> level_object_builder_ = nullptr;
-	artattack::ResolutionManager* resolution_manager_ = nullptr;
-	artattack::ThreadPool* thread_pool_ = nullptr;
-	const artattack::Partitioner* partitioner_ = nullptr;
+	labrador::ResolutionManager* resolution_manager_ = nullptr;
+	labrador::ThreadPool* thread_pool_ = nullptr;
+	const labrador::Partitioner* partitioner_ = nullptr;
 };

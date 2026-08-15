@@ -10,21 +10,21 @@ namespace team_colour_consts
 	// noun inside a library that is not allowed to know this game exists, and
 	// nothing in the engine ever read them. A paint match's team colours are
 	// as game-specific as a paint match, so they live in the game.
-	constexpr artattack::Colour TEAM_BLUE(6, 52, 204, 255);
-	constexpr artattack::Colour TEAM_YELLOW(255, 255, 0, 255);
-	constexpr artattack::Colour TEAM_ORANGE(255, 127, 0, 255);
-	constexpr artattack::Colour TEAM_PINK(255, 0, 127, 255);
-	constexpr artattack::Colour TEAM_GREEN(0, 255, 0, 255);
+	constexpr labrador::Colour TEAM_BLUE(6, 52, 204, 255);
+	constexpr labrador::Colour TEAM_YELLOW(255, 255, 0, 255);
+	constexpr labrador::Colour TEAM_ORANGE(255, 127, 0, 255);
+	constexpr labrador::Colour TEAM_PINK(255, 0, 127, 255);
+	constexpr labrador::Colour TEAM_GREEN(0, 255, 0, 255);
 }
 
 struct TeamColour
 {
-	artattack::Colour team_a = team_colour_consts::TEAM_BLUE;
-	artattack::Colour team_b = team_colour_consts::TEAM_YELLOW;
+	labrador::Colour team_a = team_colour_consts::TEAM_BLUE;
+	labrador::Colour team_b = team_colour_consts::TEAM_YELLOW;
 
 	TeamColour() = default;
-	TeamColour(const artattack::Colour& team_a, const artattack::Colour& team_b);
-	const artattack::Colour& team_colour(PlayerTeam team) const;
+	TeamColour(const labrador::Colour& team_a, const labrador::Colour& team_b);
+	const labrador::Colour& team_colour(PlayerTeam team) const;
 };
 
 enum class TeamColourPair

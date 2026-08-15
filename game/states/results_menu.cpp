@@ -4,7 +4,7 @@
 using namespace DirectX;
 using namespace mattmath;
 using namespace menu_consts;
-using namespace artattack;
+using namespace labrador;
 
 ResultsMenuPage::ResultsMenuPage(MenuContext* context,
 	const LevelEndInfo& end_info) :

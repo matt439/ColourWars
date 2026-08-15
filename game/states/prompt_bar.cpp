@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/states/prompt_bar.h"
 
-using namespace artattack;
+using namespace labrador;
 using namespace mattmath;
 
 namespace

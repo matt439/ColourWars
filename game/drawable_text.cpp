@@ -71,7 +71,7 @@ namespace drawable_text
 {
 	std::wstring widen_drawable(std::string_view utf8, const std::string& where)
 	{
-		std::wstring text = artattack::widen(utf8);
+		std::wstring text = labrador::widen(utf8);
 
 		for (size_t index = 0; index < text.size(); )
 		{

@@ -3,7 +3,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 DebugText::DebugText(RenderResources* render_resources,
     const ResolutionManager* resolution_manager,

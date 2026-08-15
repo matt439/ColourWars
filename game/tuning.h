@@ -4,7 +4,8 @@
 #include "game/objects/projectile_details.h"
 #include "game/objects/weapon_details.h"
 #include "game/objects/weapon_type.h"
-#include "engine/math/matt_math.h"
+#include "engine/math/shape.h"
+#include "engine/math/vector2f.h"
 #include "engine/render/colour.h"
 
 #include <array>
@@ -52,8 +53,8 @@ struct MatchTuning
 	float overview = 0.0f;
 
 	std::string countdown_font;
-	artattack::Colour countdown_colour = artattack::Colour::white;
-	artattack::Colour countdown_shadow_colour = artattack::Colour::black;
+	labrador::Colour countdown_colour = labrador::Colour::white;
+	labrador::Colour countdown_shadow_colour = labrador::Colour::black;
 	mattmath::Vector2F countdown_shadow_offset = { 0.0f, 0.0f };
 	float countdown_scale = 1.0f;
 
@@ -67,8 +68,8 @@ struct MatchTuning
 	// splitting one moment across two files with two audiences would be worse
 	// than either home. Both of them want moving, together, one day.
 	std::string controls_font;
-	artattack::Colour controls_colour = artattack::Colour::white;
-	artattack::Colour controls_shadow_colour = artattack::Colour::black;
+	labrador::Colour controls_colour = labrador::Colour::white;
+	labrador::Colour controls_shadow_colour = labrador::Colour::black;
 	mattmath::Vector2F controls_shadow_offset = { 0.0f, 0.0f };
 
 	// Down the screen, as a fraction of its height, so the legend clears the

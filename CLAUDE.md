@@ -11,10 +11,18 @@ ordinary C++ application that links the engine; the engine is the larger
 project. Windows-only, inherited from the engine's Direct3D 11 + XAudio2
 backends.
 
-The built executable is still named `ArtAttackGame.exe` and the engine namespace
-is still `artattack::` — the project was ColourWars, then ChromaClash, then
-ArtAttack, and has taken its first name back. Old names in identifiers are
-history, not a rename that was missed.
+The project was ColourWars, then ChromaClash, then ArtAttack, and has taken its
+first name back. The identifiers have now followed: the engine swept its own
+side in `6b5c0bd` (`artattack::` → `labrador::`, `artattack_settings` →
+`labrador_settings`), and this repository did the same in the matching commit,
+renaming the executable to `ColourWars.exe`, its Win32 class to
+`ColourWarsWindowClass` and the content target to `colourwars_content`. Nothing
+in either tree is named for the paint-shooter's middle name any more.
+
+Two things deliberately still spell it. `mattmath::` is the author's name, not
+the game's. And the historical documents — `docs/review/` here and in the
+engine — are the reviews as written, so rewriting them would make a record stop
+matching what was actually reviewed.
 
 ## Build and run
 
@@ -30,10 +38,10 @@ git clone --recurse-submodules https://github.com/matt439/ColourWars.git
 
 cmake --preset x64-debug            # or x64-release
 cmake --build --preset x64-debug
-out/build/x64-debug/game/ArtAttackGame.exe
+out/build/x64-debug/game/ColourWars.exe
 ```
 
-The build mirrors `game/content/` beside the exe (the `artattack_content`
+The build mirrors `game/content/` beside the exe (the `colourwars_content`
 target, which runs every build so asset-only edits are picked up), so the game
 runs from anywhere. It resolves content relative to its working directory —
 see [game/directory_consts.h](game/directory_consts.h).
@@ -80,10 +88,22 @@ revision; deliberately no SHA is written into docs, since it goes stale the firs
 time the pin moves. To move it, checkout the new revision inside the submodule,
 **build before committing**, then `git add external/labrador`.
 
-Engine changes belong in the Labrador repository, not here. `artattack_settings`
+Engine changes belong in the Labrador repository, not here. `labrador_settings`
 — the `/W4 /WX` interface target every real target compiles against — is defined
 by the engine and deliberately *not* copied here; two definitions across two
 repositories would drift.
+
+What this client owes the engine instead is a **report**, and there is a ledger
+of them at [docs/review/engine-reports.md](docs/review/engine-reports.md): each
+one a case where the API forced a bad answer, carrying as its exhibit the
+workaround that is in this repository because of it. They are drafted here
+rather than in the submodule because a report is a thing the client owes, and
+this is the client. Reports are struck as the engine answers them, and a pin
+bump is when the answers become visible — so **after moving the pin, read that
+file**: it records what each closure lets this repository delete.
+
+The engine's own review documents live at `external/labrador/docs/review/` and
+are historical, not current.
 
 ## Architecture
 
@@ -120,7 +140,7 @@ owned by whichever state owns the screen.
 [game/objects/level.h](game/objects/level.h) — `Level` is one paint match: the
 countdown, the clock, the HUDs, the cameras, the music. The generic parts —
 object lists, the tick, the collision sweep, out-of-bounds retirement, per-view
-render fan-out — are `artattack::Scene` in the engine. `Level` holds non-owning
+render fan-out — are `labrador::Scene` in the engine. `Level` holds non-owning
 `Player*` back into the scene that owns them; the index into `players_` is the
 index of that player's view, **not** the player's pad slot (`player_num()` is,
 and the two diverge when a pad is unplugged).

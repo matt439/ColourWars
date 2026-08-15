@@ -1,7 +1,6 @@
 #pragma once
 
 #include "engine/input/gamepads.h"
-#include "engine/math/matt_math.h"
 #include "engine/ui/navigation.h"
 #include "game/states/menu_input_action.h"
 #include <vector>
@@ -24,7 +23,7 @@ namespace menu_input_consts
 	// flag.
 	struct ActionButton
 	{
-		artattack::GamepadButton button;
+		labrador::GamepadButton button;
 		MenuInputAction action;
 	};
 
@@ -32,18 +31,18 @@ namespace menu_input_consts
 
 	constexpr ActionButton action_buttons[action_button_count] =
 	{
-		{ artattack::GamepadButton::a, MenuInputAction::proceed },
-		{ artattack::GamepadButton::b, MenuInputAction::back },
-		{ artattack::GamepadButton::start, MenuInputAction::pause },
+		{ labrador::GamepadButton::a, MenuInputAction::proceed },
+		{ labrador::GamepadButton::b, MenuInputAction::back },
+		{ labrador::GamepadButton::start, MenuInputAction::pause },
 	};
 }
 
 struct ProcessedMenuInput
 {
-	// artattack::Direction, not a game enum: which way the stick went is the
+	// labrador::Direction, not a game enum: which way the stick went is the
 	// input to engine/ui's navigation walk, and there is no version of it that
 	// belongs to this game.
-	artattack::Direction direction = artattack::Direction::none;
+	labrador::Direction direction = labrador::Direction::none;
 	MenuInputAction action = MenuInputAction::none;
 	bool connected = false;
 };
@@ -59,9 +58,9 @@ struct ProcessedMenuInput
 class MenuInput
 {
 public:
-	explicit MenuInput(const artattack::Gamepads* gamepads);
+	explicit MenuInput(const labrador::Gamepads* gamepads);
 
-	// Returns exactly artattack::Gamepads::max_count entries, indexed by pad
+	// Returns exactly labrador::Gamepads::max_count entries, indexed by pad
 	// slot. Absent pads carry neutral input.
 	//
 	// Every action here is a *release* edge: the button has to come back up,
@@ -75,10 +74,10 @@ public:
 	std::vector<ProcessedMenuInput> menu_inputs();
 
 private:
-	ProcessedMenuInput menu_input(const artattack::Gamepads& gamepads,
+	ProcessedMenuInput menu_input(const labrador::Gamepads& gamepads,
 		int slot);
 
-	const artattack::Gamepads* gamepads_ = nullptr;
+	const labrador::Gamepads* gamepads_ = nullptr;
 
 	// Per pad slot, per menu_input_consts::action_buttons entry: did this
 	// MenuInput watch the button's current down-run start?
@@ -95,6 +94,6 @@ private:
 	// transition, which is what let it drift from PlayerInput's copy; nothing
 	// calls this at a transition, because nothing but a menu ever calls
 	// menu_inputs().
-	bool armed_[artattack::Gamepads::max_count]
+	bool armed_[labrador::Gamepads::max_count]
 		[menu_input_consts::action_button_count] = {};
 };

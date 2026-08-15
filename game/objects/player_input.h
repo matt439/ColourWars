@@ -25,9 +25,9 @@ namespace player_input_consts
 class PlayerInput
 {
 public:
-	explicit PlayerInput(const artattack::Gamepads* gamepads);
+	explicit PlayerInput(const labrador::Gamepads* gamepads);
 
-	// Returns exactly artattack::Gamepads::max_count entries, indexed by pad
+	// Returns exactly labrador::Gamepads::max_count entries, indexed by pad
 	// slot. Absent pads carry neutral input rather than being omitted: the
 	// index is a slot and every caller reads it as a player number, so a
 	// vector that skipped empty slots would hand a player someone else's
@@ -37,8 +37,8 @@ public:
 	std::vector<PlayerInputData> player_inputs() const;
 
 private:
-	static PlayerInputData player_input(const artattack::Gamepads& gamepads,
+	static PlayerInputData player_input(const labrador::Gamepads& gamepads,
 		int slot);
 
-	const artattack::Gamepads* gamepads_ = nullptr;
+	const labrador::Gamepads* gamepads_ = nullptr;
 };

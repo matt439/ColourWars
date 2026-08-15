@@ -39,35 +39,35 @@ namespace collision_layers
 	// layer: a dead player is one whose mask is empty, which is the same fact
 	// stated where it changes rather than in a second pair of enumerators that
 	// nothing ever read.
-	constexpr artattack::CollisionLayer STRUCTURE = 1u << 0;
+	constexpr labrador::CollisionLayer STRUCTURE = 1u << 0;
 
 	// Slopes are their own group only because paint flies through them.
 	// That is how the game already behaves - a projectile's type list named
 	// the three flat structure kinds and omitted the two ramps - and it was a
 	// gap in a list rather than a decision anybody wrote down. Merge this bit
 	// into STRUCTURE to make ramps solid to paint.
-	constexpr artattack::CollisionLayer STRUCTURE_RAMP = 1u << 1;
+	constexpr labrador::CollisionLayer STRUCTURE_RAMP = 1u << 1;
 
-	constexpr artattack::CollisionLayer PLAYER_TEAM_A = 1u << 2;
-	constexpr artattack::CollisionLayer PLAYER_TEAM_B = 1u << 3;
-	constexpr artattack::CollisionLayer PROJECTILE_TEAM_A = 1u << 4;
-	constexpr artattack::CollisionLayer PROJECTILE_TEAM_B = 1u << 5;
+	constexpr labrador::CollisionLayer PLAYER_TEAM_A = 1u << 2;
+	constexpr labrador::CollisionLayer PLAYER_TEAM_B = 1u << 3;
+	constexpr labrador::CollisionLayer PROJECTILE_TEAM_A = 1u << 4;
+	constexpr labrador::CollisionLayer PROJECTILE_TEAM_B = 1u << 5;
 
-	constexpr artattack::CollisionMask ALL_STRUCTURES =
+	constexpr labrador::CollisionMask ALL_STRUCTURES =
 		STRUCTURE | STRUCTURE_RAMP;
-	constexpr artattack::CollisionMask ALL_PLAYERS =
+	constexpr labrador::CollisionMask ALL_PLAYERS =
 		PLAYER_TEAM_A | PLAYER_TEAM_B;
-	constexpr artattack::CollisionMask ALL_PROJECTILES =
+	constexpr labrador::CollisionMask ALL_PROJECTILES =
 		PROJECTILE_TEAM_A | PROJECTILE_TEAM_B;
 }
 
 // The tag is the enum, unchanged and uninterpreted in between.
-constexpr artattack::CollisionTag to_collision_tag(CollisionObjectType type)
+constexpr labrador::CollisionTag to_collision_tag(CollisionObjectType type)
 {
-	return static_cast<artattack::CollisionTag>(type);
+	return static_cast<labrador::CollisionTag>(type);
 }
 
-constexpr CollisionObjectType to_collision_type(artattack::CollisionTag tag)
+constexpr CollisionObjectType to_collision_type(labrador::CollisionTag tag)
 {
 	return static_cast<CollisionObjectType>(tag);
 }
@@ -80,8 +80,8 @@ constexpr CollisionObjectType to_collision_type(artattack::CollisionTag tag)
 // whether it was a structure or an enemy player, so the pair (player,
 // projectile) passed one test and failed the other. Both sides now consult
 // the same table, and find_contacts requires both to agree.
-artattack::CollisionLayer collision_layer(CollisionObjectType type);
-artattack::CollisionMask collision_mask(CollisionObjectType type);
+labrador::CollisionLayer collision_layer(CollisionObjectType type);
+labrador::CollisionMask collision_mask(CollisionObjectType type);
 
 inline bool is_projectile(CollisionObjectType type)
 {

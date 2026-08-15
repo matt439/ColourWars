@@ -25,7 +25,7 @@
 // font in the tree is 95 ASCII characters, so today a prompt can only be the
 // button's name in text; the day there is art, this is the one place that
 // changes and the twelve pages that fill it do not.
-class PromptBar final : public artattack::UiWidget
+class PromptBar final : public labrador::UiWidget
 {
 public:
 	// One entry: a button, and what it does on this page.
@@ -38,13 +38,13 @@ public:
 	PromptBar(const std::string& name,
 		const std::vector<Prompt>& prompts,
 		const PromptBarPresentation& look,
-		artattack::RenderResources* render_resources);
+		labrador::RenderResources* render_resources);
 
 	void update(float dt) override;
-	void draw(artattack::DrawList& draw_list) const override;
+	void draw(labrador::DrawList& draw_list) const override;
 	mattmath::RectangleF bounds() const override;
-	void set_colour(const artattack::Colour& colour) override;
+	void set_colour(const labrador::Colour& colour) override;
 
 private:
-	std::unique_ptr<artattack::UiTextDropShadow> text_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> text_ = nullptr;
 };

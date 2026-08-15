@@ -6,7 +6,8 @@
 #include "game/states/menu_context.h"
 #include "game/states/prompt_bar.h"
 #include "engine/core/state.h"
-#include "engine/math/matt_math.h"
+#include "engine/math/shape.h"
+#include "engine/math/vector2f.h"
 #include "engine/render/camera.h"
 #include "engine/render/viewport.h"
 
@@ -27,11 +28,11 @@ namespace menu_consts
 // turned out to be doing identically.
 //
 // THE SOUND BANK IS A BASE HERE. All four menu families declared
-// `: public MenuPage, public artattack::SoundBankObject` and this header named
+// `: public MenuPage, public labrador::SoundBankObject` and this header named
 // it nowhere, so four constructors resolved the same bank from the same
 // menu_style().sound_bank and three of them resolved the same three waves out
 // of it. A menu page makes sounds; that is not a per-family fact.
-class MenuPage : public artattack::State, public artattack::SoundBankObject
+class MenuPage : public labrador::State, public labrador::SoundBankObject
 {
 public:
 	explicit MenuPage(MenuContext* context);
@@ -47,7 +48,7 @@ public:
 	// virtual a page fills in: what varies between pages is what goes in the
 	// containers, and that is decided in init(). A page that one day needs a
 	// third layer overrides this and calls draw_ui_layers itself.
-	void draw(artattack::Renderer& renderer) const override;
+	void draw(labrador::Renderer& renderer) const override;
 
 	// A menu is a box over whatever is behind it, and behind it is either
 	// nothing or a match that has to keep drawing (state.h). The main menu's
@@ -85,16 +86,16 @@ protected:
 
 	MenuLevelSettings* level_settings() const;
 	MenuInput* input() const;
-	artattack::ResolutionManager* resolution_manager() const;
+	labrador::ResolutionManager* resolution_manager() const;
 	Save* save() const;
-	artattack::RenderResources* render_resources() const;
-	const artattack::AudioResources* audio_resources() const;
-	artattack::ViewportManager* viewport_manager() const;
+	labrador::RenderResources* render_resources() const;
+	const labrador::AudioResources* audio_resources() const;
+	labrador::ViewportManager* viewport_manager() const;
 
 	// What a page draws: its widget trees, each with the filtering it wants,
 	// in back-to-front order. Every menu in the game is a call to this and
 	// nothing else.
-	using UiLayer = std::pair<artattack::UiObject*, artattack::TextureFilter>;
+	using UiLayer = std::pair<labrador::UiObject*, labrador::TextureFilter>;
 
 	// Draws each layer into every viewport the layout covers.
 	//
@@ -105,7 +106,7 @@ protected:
 	// menu drawn from sixteen threads ran sixteen non-const helpers on the same
 	// page. The unit of work is a view (renderer.h), there are at most four of
 	// them, and a menu is a handful of quads: the loop below is the whole of it.
-	void draw_ui_layers(artattack::Renderer& renderer,
+	void draw_ui_layers(labrador::Renderer& renderer,
 		const std::vector<UiLayer>& layers) const;
 
 	std::vector<ProcessedMenuInput> menu_inputs() const;
@@ -119,7 +120,7 @@ protected:
 	// was inherited by six pages purely to reach a widget pointer and two
 	// colours, with its entire API protected so inheritance was the only way
 	// to use it at all. T11 names inheritance a tool of last resort.
-	artattack::FocusGroup focus_;
+	labrador::FocusGroup focus_;
 
 	// What a page draws, in the two layers draw() puts them in. Both were
 	// declared on all twelve pages and neither was ever anything else: the
@@ -128,16 +129,16 @@ protected:
 	// Owned here rather than by the page so that draw() can be concrete. A
 	// page still builds its own widgets and still owns those; these are only
 	// the two trees they hang from.
-	std::unique_ptr<artattack::UiContainer> texture_container_ = nullptr;
-	std::unique_ptr<artattack::UiContainer> text_container_ = nullptr;
+	std::unique_ptr<labrador::UiContainer> texture_container_ = nullptr;
+	std::unique_ptr<labrador::UiContainer> text_container_ = nullptr;
 
 	// The three the shared MenuStyle names, resolved once here. Every page
 	// family resolved these out of the same style block in its own
 	// constructor; the sounds that are actually a family's own - an error
 	// beep, a window-open chime, the drum roll - stay with that family.
-	artattack::SoundBank::WaveHandle direction_sound_;
-	artattack::SoundBank::WaveHandle confirm_sound_;
-	artattack::SoundBank::WaveHandle cancel_sound_;
+	labrador::SoundBank::WaveHandle direction_sound_;
+	labrador::SoundBank::WaveHandle confirm_sound_;
+	labrador::SoundBank::WaveHandle cancel_sound_;
 
 	// Says what this page's buttons do. Call it from init() with whatever this
 	// page actually reads - and only with what it reads, because a legend that
@@ -157,7 +158,7 @@ protected:
 	// correctly on a 1280x720 screen. Its predecessor was a destructive walk
 	// over the widget tree in engine/ui, called at 26 sites, which left no
 	// authoritative geometry behind for anything that wrote a position later.
-	artattack::Camera ui_camera(const artattack::Viewport& viewport) const;
+	labrador::Camera ui_camera(const labrador::Viewport& viewport) const;
 private:
 	MenuContext* context_ = nullptr;
 	std::unique_ptr<PromptBar> prompt_bar_ = nullptr;

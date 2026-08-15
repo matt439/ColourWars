@@ -5,7 +5,9 @@
 #include "game/objects/player_team.h"
 #include "game/objects/player_input_data.h"
 #include "game/objects/weapon.h"
-#include "engine/math/matt_math.h"
+#include "engine/math/rectanglef.h"
+#include "engine/math/shape.h"
+#include "engine/math/vector2f.h"
 #include "engine/render/animation_object.h"
 #include "engine/collision/collision_object.h"
 #include "game/objects/collision_object_type.h"
@@ -63,9 +65,9 @@ enum class PlayerAnimationState
 //    contains_other,
 //};
 
-class Player final : public artattack::MovingObject,
-                     public artattack::CollisionObject,
-                     public artattack::AnimationObject, public artattack::TextureObject
+class Player final : public labrador::MovingObject,
+                     public labrador::CollisionObject,
+                     public labrador::AnimationObject, public labrador::TextureObject
 {
 public:
     // `tuning` is borrowed and outlives every player: it is the GameTuning
@@ -78,34 +80,34 @@ public:
     // store. Dropping it is a change to that call site rather than to here.
     Player(const mattmath::RectangleF& rectangle,
         const GameTuning* tuning,
-        artattack::RenderResources* render_resources,
-        const artattack::AudioResources* audio_resources,
+        labrador::RenderResources* render_resources,
+        const labrador::AudioResources* audio_resources,
         int player_num,
         PlayerTeam team,
         WeaponType primary,
         std::unique_ptr<Weapon> primary_weapon,
         WeaponType secondary,
-        const artattack::Colour& team_colour,
-        const artattack::Viewport& view_port,
+        const labrador::Colour& team_colour,
+        const labrador::Viewport& view_port,
         const mattmath::Vector2F& respawn_position,
         const mattmath::Vector2F& velocity = mattmath::Vector2F::ZERO,
         float rotation = 0.0f,
         const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
-        artattack::SpriteFlip flip = artattack::SpriteFlip::none,
+        labrador::SpriteFlip flip = labrador::SpriteFlip::none,
         float layer_depth = 0.0f);
 
     void update(float dt) override;
-    std::vector<std::unique_ptr<artattack::CollisionObject>>
+    std::vector<std::unique_ptr<labrador::CollisionObject>>
         update_weapon_and_get_projectiles(float dt) const;
-    void draw(artattack::DrawList& draw_list) const override;
+    void draw(labrador::DrawList& draw_list) const override;
 
     mattmath::RectangleF bounds() const override;
 
     const mattmath::Shape* shape() const override;
-    artattack::CollisionLayer layer() const override;
-    artattack::CollisionMask mask() const override;
-    artattack::CollisionTag tag() const override;
-    void on_contact(const artattack::CollisionObject& other,
+    labrador::CollisionLayer layer() const override;
+    labrador::CollisionMask mask() const override;
+    labrador::CollisionTag tag() const override;
+    void on_contact(const labrador::CollisionObject& other,
         const mattmath::Vector2F& normal, float penetration) override;
     // Always false, and Level rests on it: a player is in the same scene
     // object list as the projectiles it fires, and Level holds bare Player*
@@ -124,7 +126,7 @@ public:
     void end_contacts();
 
 	void set_player_input(const PlayerInputData& input);
-    void set_camera(const artattack::Camera& camera);
+    void set_camera(const labrador::Camera& camera);
 
 	const mattmath::RectangleF& rectangle() const;
 	mattmath::Vector2F center() const;
@@ -132,8 +134,8 @@ public:
     // never overrode anything meaningfully, and MovingObject's accessors are
     // no longer virtual.
     const mattmath::Vector2F& velocity() const;
-	const artattack::Camera& camera() const;
-	const artattack::Viewport& viewport() const;
+	const labrador::Camera& camera() const;
+	const labrador::Viewport& viewport() const;
 	float input_x_movement() const;
 	const mattmath::Vector2F& input_shoot_direction() const;
 	bool input_primary_shoot() const;
@@ -147,7 +149,7 @@ public:
     float health() const;
 
     float weapon_ammo() const;
-    const artattack::Colour& team_colour() const;
+    const labrador::Colour& team_colour() const;
 
     const PlayerInputData& input() const;
 
@@ -169,7 +171,7 @@ public:
 	std::string player_move_state_string() const;
 
 private:
-    artattack::Camera camera_ = artattack::Camera::DEFAULT_CAMERA;
+    labrador::Camera camera_ = labrador::Camera::DEFAULT_CAMERA;
 
     // Borrowed, never null. Read by update_movement every frame, which is a
     // pointer hop rather than the 20 constants it replaces - and those were
@@ -206,22 +208,22 @@ private:
     int player_num_ = 0;
     PlayerTeam team_ = PlayerTeam::none;
     WeaponType primary_type_ = WeaponType::none;
-    artattack::Colour team_colour_ = artattack::Colour::gray;
-    artattack::Viewport viewport_ = artattack::Viewport();
+    labrador::Colour team_colour_ = labrador::Colour::gray;
+    labrador::Viewport viewport_ = labrador::Viewport();
 
     mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
     mattmath::RectangleF prev_rectangle_ = mattmath::RectangleF::ZERO;
 
     mattmath::Vector2F respawn_position_ = mattmath::Vector2F::ZERO;
 
-    artattack::SoundBank* sound_bank_ = nullptr;
+    labrador::SoundBank* sound_bank_ = nullptr;
 
     // Resolved once at construction. These fire from update(), so the map
     // descent they used to cost was on the frame loop (T7, T8).
-    artattack::SoundBank::WaveHandle damage_sound_;
-    artattack::SoundBank::WaveHandle death_sound_;
-    artattack::SoundBank::WaveHandle jump_sound_;
-    artattack::SoundBank::WaveHandle respawn_sound_;
+    labrador::SoundBank::WaveHandle damage_sound_;
+    labrador::SoundBank::WaveHandle death_sound_;
+    labrador::SoundBank::WaveHandle jump_sound_;
+    labrador::SoundBank::WaveHandle respawn_sound_;
 
 
     float health_regen_timer_ = 0.0f;
@@ -248,7 +250,7 @@ private:
 	void on_ramp_contact(CollisionObjectType other_type,
 		const mattmath::Vector2F& normal, float penetration);
 
-	void on_jump_through_contact(const artattack::CollisionObject& other);
+	void on_jump_through_contact(const labrador::CollisionObject& other);
 
 	void update_movement(float dt);
 	void do_jump(float dt);

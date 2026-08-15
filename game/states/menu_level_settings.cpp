@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/states/menu_level_settings.h"
-using namespace artattack;
+using namespace labrador;
 
 std::vector<MenuPlayerSettings> MenuLevelSettings::player_settings() const
 {

@@ -3,7 +3,7 @@
 
 using namespace mattmath;
 using namespace DirectX;
-using namespace artattack;
+using namespace labrador;
 
 Level::Level(std::unique_ptr<Scene> scene,
 	std::vector<Player*> players,

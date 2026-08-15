@@ -3,7 +3,7 @@
 
 using namespace mattmath;
 using namespace player_input_consts;
-using namespace artattack;
+using namespace labrador;
 
 PlayerInput::PlayerInput(const Gamepads* gamepads) :
 	gamepads_(gamepads)

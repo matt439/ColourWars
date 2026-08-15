@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/states/game_states.h"
-using namespace artattack;
+using namespace labrador;
 
 GameMenu::GameMenu(GameData* game_data) : game_data_(game_data)
 {

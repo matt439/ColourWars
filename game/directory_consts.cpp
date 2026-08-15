@@ -5,9 +5,11 @@
 
 namespace
 {
-	// The folder name under %LOCALAPPDATA%. The game's own name rather than
-	// the executable's: ArtAttackGame.exe is a grandfathered identifier and
-	// this is a directory a player will see in their profile.
+	// The folder name under %LOCALAPPDATA%, and a directory a player will see
+	// in their profile. It has read "ColourWars" since before the executable
+	// did — the save path was named for the game while the exe was still
+	// named ArtAttackGame — so nothing here moves now that the two agree, and
+	// no existing save is stranded.
 	constexpr char GAME_FOLDER_NAME[] = "ColourWars";
 
 	constexpr char SAVE_FILE_NAME[] = "save_data.json";

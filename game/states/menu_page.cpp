@@ -3,7 +3,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 // The bank name and the audio come from `context` rather than through this
 // page's own menu_style() and audio_resources(), which is how the four family

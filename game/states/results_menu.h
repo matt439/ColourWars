@@ -25,8 +25,8 @@ protected:
 	// The two only this family makes, beside the three every page shares from
 	// MenuPage. The drum roll is an effect rather than a wave because it is
 	// looped and then stopped.
-	artattack::SoundBank::WaveHandle winner_sound_;
-	artattack::SoundBank::EffectHandle fill_sound_;
+	labrador::SoundBank::WaveHandle winner_sound_;
+	labrador::SoundBank::EffectHandle fill_sound_;
 private:
 	LevelEndInfo level_end_info_ = LevelEndInfo();
 };
@@ -38,20 +38,20 @@ public:
 	void init() override;
 	void update(float dt) override;
 private:
-	std::unique_ptr<artattack::UiTexture> box_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<artattack::UiTexture> fill_box_ = nullptr;
-	std::unique_ptr<artattack::UiTexture> team_a_fill_ = nullptr;
-	std::unique_ptr<artattack::UiTexture> team_b_fill_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> fill_box_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> team_a_fill_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> team_b_fill_ = nullptr;
 
 	// The one thing on this screen that says which bar is which without
 	// asking the player to tell two hues apart.
-	std::unique_ptr<artattack::UiTexture> team_a_mark_ = nullptr;
-	std::unique_ptr<artattack::UiTexture> team_b_mark_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> team_a_percentage_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> team_b_percentage_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> winner_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> proceed_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> team_a_mark_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> team_b_mark_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> team_a_percentage_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> team_b_percentage_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> winner_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> proceed_ = nullptr;
 	bool winner_sound_played_ = false;
 	float delay_timer_ = 0.0f;
 	float fill_timer_ = 0.0f;

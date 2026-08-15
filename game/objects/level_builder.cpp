@@ -3,7 +3,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	RenderResources* render_resources,
@@ -55,7 +55,7 @@ std::unique_ptr<Level>
 		scene->add(std::move(object));
 	}
 
-	for (std::unique_ptr<artattack::CollisionObject>& object :
+	for (std::unique_ptr<labrador::CollisionObject>& object :
 		this->level_object_builder_->build_collision_objects(
 			load_info->collision_objects_json(), team_colours))
 	{

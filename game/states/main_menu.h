@@ -52,9 +52,9 @@ protected:
 	// The sounds only this family makes, beside the cursor, confirm and cancel
 	// every page shares from MenuPage. The music is an effect rather than a
 	// wave because it loops and is stopped on the way into a match.
-	artattack::SoundBank::WaveHandle error_sound_;
-	artattack::SoundBank::WaveHandle ready_sound_;
-	artattack::SoundBank::EffectHandle music_;
+	labrador::SoundBank::WaveHandle error_sound_;
+	labrador::SoundBank::WaveHandle ready_sound_;
+	labrador::SoundBank::EffectHandle music_;
 };
 
 class MainMenuTitle final : public MainMenuPage
@@ -64,14 +64,14 @@ public:
 	void update(float dt) override;
 	void init() override;
 private:
-	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> title_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> start_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> title_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> start_ = nullptr;
 
 	// Shown only while no pad is connected. Its visibility is refreshed every
 	// frame rather than set once, because plugging one in is exactly what this
 	// line is asking for and the page must notice when it happens.
-	std::unique_ptr<artattack::UiTextDropShadow> no_pad_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> no_pad_ = nullptr;
 };
 
 class MainMenuHome final : public MainMenuPage
@@ -81,11 +81,11 @@ public:
 	void update(float dt) override;
 	void init() override;
 private:
-	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> play_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> options_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> exit_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> play_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> options_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> exit_ = nullptr;
 };
 
 class MainMenuOptions final : public MainMenuPage
@@ -95,20 +95,20 @@ public:
 	void update(float dt) override;
 	void init() override;
 private:
-	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> resolution_element_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> resolution_value_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> full_screen_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> full_screen_value_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> apply_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> back_ = nullptr;
-	artattack::ScreenResolution resolution_selection_ = artattack::ScreenResolution::s_1920_1080;
+	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> resolution_element_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> resolution_value_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> full_screen_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> full_screen_value_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> apply_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;
+	labrador::ScreenResolution resolution_selection_ = labrador::ScreenResolution::s_1920_1080;
 	bool full_screen_selection_ = true;
-	void cycle_resolution(artattack::Direction direction);
+	void cycle_resolution(labrador::Direction direction);
 	// Left and right on the two rows that carry a value. The focus group has
 	// no opinion about which rows those are: that is this game's content.
-	void adjust_focused_value(artattack::Direction direction);
+	void adjust_focused_value(labrador::Direction direction);
 	void apply_settings();
 	void update_resolution_selection_text();
 	void update_full_screen_selection_text() const;
@@ -122,13 +122,13 @@ public:
 	void update(float dt) override;
 	void init() override;
 private:
-	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> standard_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> tdm_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> dm_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> practice_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> back_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> standard_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> tdm_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> dm_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> practice_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;
 };
 
 class MainMenuPlayerCount final : public MainMenuPage
@@ -138,21 +138,21 @@ public:
 	void update(float dt) override;
 	void init() override;
 private:
-	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> _1_player = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> _2_players = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> _3_players = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> _4_players = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> back_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> _1_player = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> _2_players = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> _3_players = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> _4_players = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;
 
 	// Shown when a row asks for more players than there are pads. Hidden
 	// again on the next cursor move, since the player is then asking a
 	// different question.
-	std::unique_ptr<artattack::UiTextDropShadow> not_enough_pads_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> not_enough_pads_ = nullptr;
 
 	// Two, three and four players differ only in the count and the layout.
-	void start_team_select(int players, artattack::ScreenLayout layout);
+	void start_team_select(int players, labrador::ScreenLayout layout);
 };
 
 class MainMenuTeamSelect final : public MainMenuPage
@@ -169,17 +169,17 @@ private:
 	};
 	struct PlayerWidgets
 	{
-		std::unique_ptr<artattack::UiTextDropShadow> player = nullptr;
-		std::unique_ptr<artattack::UiTexture> player_a = nullptr;
-		std::unique_ptr<artattack::UiTexture> player_center = nullptr;
-		std::unique_ptr<artattack::UiTexture> player_b = nullptr;
+		std::unique_ptr<labrador::UiTextDropShadow> player = nullptr;
+		std::unique_ptr<labrador::UiTexture> player_a = nullptr;
+		std::unique_ptr<labrador::UiTexture> player_center = nullptr;
+		std::unique_ptr<labrador::UiTexture> player_b = nullptr;
 	};
-	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 
 	// Shown when the confirm that would have completed the roster would also
 	// have left one of the two teams empty.
-	std::unique_ptr<artattack::UiTextDropShadow> both_teams_needed_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> both_teams_needed_ = nullptr;
 
 	std::vector<std::unique_ptr<PlayerWidgets>> player_widgets_;
 	std::vector<TeamSelectState> select_states_;
@@ -218,13 +218,13 @@ private:
 	};
 	struct Widgets
 	{
-		std::unique_ptr<artattack::UiTextDropShadow> player = nullptr;
-		std::unique_ptr<artattack::UiTexture> weapon_icon = nullptr;
-		std::unique_ptr<artattack::UiTextDropShadow> weapon_name = nullptr;
-		std::unique_ptr<artattack::UiTextDropShadow> weapon_description = nullptr;
+		std::unique_ptr<labrador::UiTextDropShadow> player = nullptr;
+		std::unique_ptr<labrador::UiTexture> weapon_icon = nullptr;
+		std::unique_ptr<labrador::UiTextDropShadow> weapon_name = nullptr;
+		std::unique_ptr<labrador::UiTextDropShadow> weapon_description = nullptr;
 	};
-	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 	std::vector<std::unique_ptr<Widgets>> player_widgets_;
 	std::vector<SelectState> select_states_;
 	void update_weapon_select_visuals();
@@ -233,7 +233,7 @@ private:
 	bool all_players_unconfirmed() const;
 	static WeaponType random_weapon();
 	void set_level_settings() const;
-	void cycle_weapons(artattack::Direction direction, int player_index);
+	void cycle_weapons(labrador::Direction direction, int player_index);
 	// Not static any more: the descriptions are content, so they come off
 	// this page's presentation rather than out of six constants in a header.
 	std::wstring weapon_description(WeaponType type) const;
@@ -254,11 +254,11 @@ private:
 		int slot = 0;
 		ConfirmationState state = ConfirmationState::unconfirmed;
 	};
-	std::unique_ptr<artattack::UiTexture> background_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<artattack::UiTexture> stage_icon_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> stage_name_ = nullptr;
-	std::unique_ptr<artattack::UiTextDropShadow> ready_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> stage_icon_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> stage_name_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> ready_ = nullptr;
 	SelectState select_state_ = SelectState();
 	void update_stage_select_visuals();
 	void unconfirm_all_widgets();
@@ -277,6 +277,6 @@ private:
 	std::wstring slot_display_name(int slot) const;
 	// A real stage's slot, chosen uniformly.
 	int pick_random_stage() const;
-	void cycle_stages(artattack::Direction direction);
+	void cycle_stages(labrador::Direction direction);
 	void set_level_settings() const;
 };

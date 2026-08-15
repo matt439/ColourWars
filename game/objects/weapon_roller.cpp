@@ -3,7 +3,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 
 WeaponRoller::WeaponRoller(const GameTuning* tuning,
@@ -53,10 +53,10 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData /*input*/,
     }
 }
 
-artattack::Colour WeaponRoller::draw_colour() const
+labrador::Colour WeaponRoller::draw_colour() const
 {
     // The roller tints to the team colour while it is laying paint.
     return this->shooting_this_update_
         ? this->team_colour()
-        : artattack::Colour::white;
+        : labrador::Colour::white;
 }

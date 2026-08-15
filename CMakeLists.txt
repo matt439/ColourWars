@@ -6,7 +6,7 @@ cmake_minimum_required(VERSION 3.26)
 project(ColourWars LANGUAGES CXX RC)
 
 # The engine first, and not only because game/ links it: it defines
-# artattack_settings, the /W4 /WX interface target that every real target in
+# labrador_settings, the /W4 /WX interface target that every real target in
 # both repositories compiles against. There is deliberately no copy of it
 # here. Two definitions across two repositories is exactly the second place
 # that target exists to prevent - one of them would drift, and the difference

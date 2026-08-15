@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level_end_info.h"
-using namespace artattack;
+using namespace labrador;
 
 namespace
 {

@@ -3,7 +3,7 @@
 
 using namespace DirectX;
 using namespace mattmath;
-using namespace artattack;
+using namespace labrador;
 
 Structure::Structure(const std::string& sheet_name,
 	const std::string& frame_name,

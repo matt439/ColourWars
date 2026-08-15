@@ -3,12 +3,12 @@
 find_package(xaudio2redist CONFIG REQUIRED)
 find_package(directxtk CONFIG REQUIRED)
 
-# --- ArtAttackGame — the paint-shooter, first client of the engine --------
+# --- ColourWars — the paint-shooter, first client of the engine --------
 #
 # An ordinary C++ application that links two static libraries. There is no
 # project file format and no code generation: this file is the whole of it
 # (ARCHITECTURE.md, A game project).
-add_executable(ArtAttackGame WIN32
+add_executable(ColourWars WIN32
     directory_consts.cpp
     drawable_text.cpp
     game_data.cpp
@@ -68,7 +68,7 @@ add_executable(ArtAttackGame WIN32
 # root held game/. After the split the engine publishes its own root, which
 # does not - which is the entire point of the split arriving, and it lands
 # here because this is the half that moved.
-target_include_directories(ArtAttackGame PRIVATE
+target_include_directories(ColourWars PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/.."
 )
 
@@ -79,27 +79,27 @@ target_include_directories(ArtAttackGame PRIVATE
 # so the level files need no copy of their own. game/save.cpp is the one file
 # here that includes it. SYSTEM, because a third party's headers are not
 # measured against /W4 /WX.
-target_include_directories(ArtAttackGame SYSTEM PRIVATE
+target_include_directories(ColourWars SYSTEM PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/../external/rapidjson/include"
 )
-target_link_libraries(ArtAttackGame PRIVATE
-    ArtAttackEngine
+target_link_libraries(ColourWars PRIVATE
+    LabradorEngine
     Microsoft::DirectXTK
-    artattack_settings
+    labrador_settings
 )
-target_precompile_headers(ArtAttackGame PRIVATE pch.h)
+target_precompile_headers(ColourWars PRIVATE pch.h)
 
 # The game resolves content relative to its working directory
 # (directory_consts.h), so mirror content/ beside the built exe and it runs
 # from anywhere. The manifest sits at the top of it and names the rest.
 #
-# Its own target, not a POST_BUILD step on ArtAttackGame: a POST_BUILD only
+# Its own target, not a POST_BUILD step on ColourWars: a POST_BUILD only
 # runs when the exe relinks, so editing or adding an asset without touching a
 # source file never reached the build directory - the build said "no work to
 # do" and ran against stale content. That includes the manifest itself, which
 # is edited to add an asset and never triggers a relink at all. This runs every
 # build; the if_different copies skip what has not changed.
-add_custom_target(artattack_content ALL)
+add_custom_target(colourwars_content ALL)
 
 # The wave bank, when its sources are there. cmake/build_wave_bank.cmake says
 # why the built bank is not committed and what a clone without it gets: the
@@ -109,7 +109,7 @@ add_custom_target(artattack_content ALL)
 # the very first time is staged by the next build instead: the copy list below
 # is enumerated before this command runs, so a file that did not exist yet is
 # not on it, and the glob puts it there next time round.
-add_custom_command(TARGET artattack_content PRE_BUILD
+add_custom_command(TARGET colourwars_content PRE_BUILD
     COMMAND "${CMAKE_COMMAND}"
         "-DBANK_DIR=${CMAKE_CURRENT_SOURCE_DIR}/content/sounds"
         -DBANK_NAME=sound_bank_1
@@ -117,10 +117,10 @@ add_custom_command(TARGET artattack_content PRE_BUILD
     VERBATIM
 )
 foreach(content_file manifest.json tuning.json presentation.json)
-    add_custom_command(TARGET artattack_content POST_BUILD
+    add_custom_command(TARGET colourwars_content POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E copy_if_different
             "${CMAKE_CURRENT_SOURCE_DIR}/content/${content_file}"
-            "$<TARGET_FILE_DIR:ArtAttackGame>/${content_file}"
+            "$<TARGET_FILE_DIR:ColourWars>/${content_file}"
         VERBATIM
     )
 endforeach()
@@ -149,9 +149,9 @@ endforeach()
 foreach(content_dir textures levels fonts sounds)
     file(GLOB content_entries CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/content/${content_dir}/*")
-    add_custom_command(TARGET artattack_content POST_BUILD
+    add_custom_command(TARGET colourwars_content POST_BUILD
         COMMAND "${CMAKE_COMMAND}" -E make_directory
-            "$<TARGET_FILE_DIR:ArtAttackGame>/${content_dir}"
+            "$<TARGET_FILE_DIR:ColourWars>/${content_dir}"
         VERBATIM
     )
     foreach(content_entry IN LISTS content_entries)
@@ -166,15 +166,15 @@ foreach(content_dir textures levels fonts sounds)
         else()
             set(copy_command copy_if_different)
         endif()
-        add_custom_command(TARGET artattack_content POST_BUILD
+        add_custom_command(TARGET colourwars_content POST_BUILD
             COMMAND "${CMAKE_COMMAND}" -E ${copy_command}
                 "${content_entry}"
-                "$<TARGET_FILE_DIR:ArtAttackGame>/${content_dir}/${entry_name}"
+                "$<TARGET_FILE_DIR:ColourWars>/${content_dir}/${entry_name}"
             VERBATIM
         )
     endforeach()
 endforeach()
-add_dependencies(ArtAttackGame artattack_content)
+add_dependencies(ColourWars colourwars_content)
 
 # Nothing seeds a save. There used to be a POST_BUILD step copying a tracked
 # content/save/save_data.json beside the exe when none was there, and that file
