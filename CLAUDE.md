@@ -8,8 +8,14 @@ ColourWars is a local split-screen paint-shooter (up to four players, two teams,
 score is painted surface) and the first client of the **Labrador** 2D game
 engine, consumed as a submodule at `external/labrador`. This repository is an
 ordinary C++ application that links the engine; the engine is the larger
-project. Windows-only, inherited from the engine's Direct3D 11 + XAudio2
-backends.
+project. Windows-only, inherited from the engine's XAudio2 backend.
+
+The engine now has **three render backends** — `d3d11`, `gl` and `null`,
+chosen at configure time by `LABRADOR_RENDER_BACKEND`. This repository does
+not set it and gets the `d3d11` default, which is the one it has always had.
+The other two are the engine's business: `gl` is the second implementation
+that proves the seam, `null` records draws for headless tests. There is
+nothing to do here unless this game grows a reason to run without a GPU.
 
 The project was ColourWars, then ChromaClash, then ArtAttack, and has taken its
 first name back. The identifiers have now followed: the engine swept its own
