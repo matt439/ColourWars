@@ -233,7 +233,7 @@ style on the engine's users"*; it governs "the engine's own code and everything
 it ships", while "game code meets the engine at small interfaces and chooses its
 own grammar behind them — full OOP or full performance."
 
-`ARCHITECTURE.md`, "The object model", is explicit that both ends are
+`PHILOSOPHY.md`, "The object model", is explicit that both ends are
 first-class: a game may be "written in full OOP — one registered object per
 entity, hierarchies as deep as its author likes — or for full performance",
 and interface granularity is "the user's performance dial". It names this game
