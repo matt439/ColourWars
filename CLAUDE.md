@@ -10,12 +10,15 @@ engine, consumed as a submodule at `external/labrador`. This repository is an
 ordinary C++ application that links the engine; the engine is the larger
 project. Windows-only, inherited from the engine's XAudio2 backend.
 
-The engine now has **three render backends** — `d3d11`, `gl` and `null`,
-chosen at configure time by `LABRADOR_RENDER_BACKEND`. This repository does
-not set it and gets the `d3d11` default, which is the one it has always had.
-The other two are the engine's business: `gl` is the second implementation
-that proves the seam, `null` records draws for headless tests. There is
-nothing to do here unless this game grows a reason to run without a GPU.
+The engine now has **five render backends** — `d3d11`, `d3d12`, `gl`, `vulkan`
+and `null`, chosen at configure time by `LABRADOR_RENDER_BACKEND`, and **two
+audio backends** — `xaudio2` and `null`, chosen by `LABRADOR_AUDIO_BACKEND`.
+This repository sets neither and gets the `d3d11` and `xaudio2` defaults, which
+are the two it has always had. The rest are the engine's business: `gl` and the
+two newer Direct3D and Vulkan paths are the implementations that prove the
+render seam, and each `null` records what it was asked to do so a headless test
+can read it back. There is nothing to do here unless this game grows a reason
+to run without a GPU or without a speaker.
 
 The project was ColourWars, then ChromaClash, then ArtAttack, and has taken its
 first name back. The identifiers have now followed: the engine swept its own

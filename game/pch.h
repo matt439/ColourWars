@@ -74,5 +74,3 @@
 #include "SpriteFont.h"
 #include "VertexTypes.h"
 #include "WICTextureLoader.h"
-
-#include "engine/core/throw_if_failed.h"

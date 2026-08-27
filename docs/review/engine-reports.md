@@ -17,7 +17,13 @@
 **Audited 2026-08-15 against `6b5c0bd`.** What that removed and what it turned
 up is at the bottom, under [What the audit changed](#what-the-audit-changed).
 Reports 7 and 8 were filed off the audited file and answered the same day, in
-`343433c` and `f94ac81`; the pin is at `343433c`.
+`343433c` and `f94ac81`.
+
+**Re-checked 2026-08-27 against `c8176ef`, which the pin now is.** Sixty-five
+commits, and they closed nothing here — see
+[What the 2026-08-27 bump changed](#what-the-2026-08-27-bump-changed) at the
+bottom. Report 6's citations moved again, because the audio seam landed
+underneath them, and are corrected below.
 
 ## The rule that governs this file
 
@@ -62,7 +68,7 @@ reachable on a machine with no pad.
 ## 6. No audio bus, master gain, listener or voice cap — **hold until the workaround exists**
 
 **Do not file this yet.** Everything below is true and re-verified against
-`6b5c0bd`, but filing it before the client-side mix is written throws away the
+`c8176ef`, but filing it before the client-side mix is written throws away the
 exhibit that would make it persuasive. The engine has been consistent about
 declining features no client has demonstrated wanting; a report with 74
 hand-written multiplications attached is a different document from a report
@@ -71,12 +77,23 @@ without them.
 ### What happens
 
 `SoundBank::play_wave` and `play_effect` take a volume **per call**
-(`sound_bank.h:66,72`) and the class carries no gain. `AudioResources` is a bank
-registry with no gain either. DirectXTK's `AudioEngine` — which has
-`SetMasterVolume` — is a private member of `Application` (`application.h:236`)
-with no accessor among its services. So a client can only multiply a gain into
-every emitter, cannot touch a fire-and-forget wave it holds no handle to, and
-cannot reach the one object that could do it globally.
+(`sound_bank.h:130,136`) and the class carries no gain. `AudioResources` is a
+bank registry with no gain either. The one object that could do it globally is
+a private member of `Application` (`application.h:244`) with no accessor among
+its services. So a client can only multiply a gain into every emitter, cannot
+touch a fire-and-forget wave it holds no handle to, and cannot reach the object
+that could do it globally.
+
+**And that object is the engine's own now, which changes what the ask is.**
+Until `94076f1` it was DirectXTK's `AudioEngine`, and `SetMasterVolume` was a
+method the engine happened to be sitting on — so the report could be read as
+"expose the library you already have". The audio seam replaced it with
+`labrador::AudioDevice` (`engine/audio/audio_device.h`), whose whole surface is
+`open_wave_bank`, `wave_index`, `create_voice`, `play_wave`, nine per-voice
+verbs and the shell's `update`/`suspend`/`resume`. No master gain among them,
+and nothing left to expose. A master gain is now something the engine would
+have to *decide*, on both backends, which is a stronger reason to bring an
+exhibit and not a weaker one.
 
 Two further halves only this client can raise:
 
@@ -374,3 +391,72 @@ audit as written and is not updated as gaps close, which is the same rule the
 engine's own `docs/review/` follows. This file is the opposite kind of document
 and always has been, which is why auditing it is maintenance rather than
 vandalism.
+
+---
+
+# What the 2026-08-27 bump changed
+
+Sixty-five commits, `343433c` → `c8176ef`. Read straight after the pin moved,
+because this file's whole point is that a pin bump is not consumed until
+somebody has asked it what it closed.
+
+**It closed nothing here.** Report 6 is the only live one and the audio work in
+this bump went past it rather than through it — see the report itself, where the
+seam has made the ask larger rather than smaller. There is nothing to delete
+from this repository on the strength of these sixty-five commits, which is worth
+writing down: the 2026-08-15 bump closed five reports and produced four commits
+of deletions, and "no deletions this time" is a finding rather than an omission.
+
+**One thing broke, and it was an include.** `game/pch.h` named
+`engine/core/throw_if_failed.h`, which `b01bc22` ("Take Windows out of core/")
+moved to `engine/render/`. Nothing in `game/` has ever called `ThrowIfFailed` or
+caught a `com_exception`, and the engine header now says in its own comment that
+its only includers are the two Direct3D backends — so the line went rather than
+followed the file. Both presets configure and build clean under `/W4 /WX` after
+that one deletion.
+
+**Four things that read like breaks and are not**, each checked rather than
+assumed:
+
+- **`Direction` moved** out of `engine/ui/navigation.h` into
+  `engine/input/direction.h`. `navigation.h` includes it, so every
+  `labrador::Direction` site in the menu states compiles untouched.
+- **`DirectX::SoundState` became `labrador::SoundState`**, and the enumerators
+  lost their shouting (`STOPPED` → `stopped`). Nothing in this repository names
+  the type or reads a state.
+- **`SoundBank::silent()` now refuses an unresolved handle** where it used to
+  accept one, so a build with no wave bank and a build with one no longer
+  disagree about whether a handle nobody resolved is a mistake. The only handle
+  here that can be unresolved is `Weapon::loop_sound_` — the sniper and the
+  bucket have no looping voice — and all five of its uses were already behind a
+  `.valid()` guard, so the stricter engine reaches none of them.
+- **`SoundBankObject`'s default constructor now throws** `std::logic_error`
+  instead of dereferencing null in somebody else's frame. `MenuPage` is the only
+  thing here that derives from it and always passes the `AudioResources`.
+
+**And one where the engine read this repository before deciding.** `169a3c0`
+refuses a sheet frame with `"rotated": true` by name and starts honouring
+`"origin"`, and its message says it went and looked at
+`game/content/textures/sprite_sheet_1.json` rather than guessing: 41 frames, 9
+strips, one frame mentioning either key, and both values the identity. Verified
+here — the refusal rejects nothing this game has, and the origin composition
+moves nothing it draws.
+
+## What was offered and not taken
+
+`engine/input/direction.h` ships `stick_direction`, `pad_direction` and
+`DirectionRepeat`, described in its own header as "the three things every client
+wiring a menu writes by hand", and this client wrote none of them. That is not
+an oversight to correct: `MenuInput::menu_input` fires a direction on the
+**release** edge, against a presence/absence hysteresis band, so a held stick is
+one step and never a stream — and the d-pad half is the same release rule rather
+than the engine's "d-pad wins a disagreement". Hold-to-repeat is a different
+model, not the model this client hand-rolled, so there is no workaround here for
+`DirectionRepeat` to replace.
+
+Worth recording because the direction of the finding runs the other way for
+once. The engine built for a menu client, named the menu client's three
+problems, and the menu client has a fourth answer it arrived at on purpose. If
+that is worth a report it is a report about the release edge, and it needs the
+same thing report 6 needs: an exhibit, which in this case would be a page that
+wants a repeat and cannot have one.
