@@ -606,6 +606,8 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 
 	this->interface_gameplay_->draw_gameplay_interface(list,
 		player_vp.size(),
+		view_index,
+		player->player_num(),
 		player->health() / this->tuning_->player().starting_health,
 		player->weapon_ammo() / this->tuning_->starting_ammo(),
 		this->timer_,

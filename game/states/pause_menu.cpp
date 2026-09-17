@@ -15,6 +15,19 @@ bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot)
 	return settings.player_index_for_slot(slot) != -1;
 }
 
+int disconnected_player_slot(const MenuLevelSettings& settings,
+	const Gamepads& gamepads)
+{
+	for (const MenuPlayerSettings& player : settings.player_settings())
+	{
+		if (input_slots::is_pad(player.num) && !gamepads.connected(player.num))
+		{
+			return player.num;
+		}
+	}
+	return -1;
+}
+
 PauseMenuPage::PauseMenuPage(MenuContext* context, int player_num) :
 	MenuPage(context),
 	pausing_player_(player_num)
@@ -71,15 +84,30 @@ ProcessedMenuInput PauseMenuPage::pausing_player_input(
 	// is heard. Only pads in the match: an idle controller that is on no
 	// player's lap did not earn a vote by being plugged in.
 	const MenuLevelSettings& settings = *this->level_settings();
+	bool participant_connected = false;
 	for (size_t slot = 0; slot < inputs.size(); slot++)
 	{
 		const ProcessedMenuInput& input = inputs[slot];
 		if (input.connected &&
-			(input.action != MenuInputAction::none ||
-				input.direction != labrador::Direction::none) &&
 			match_owns_pad_slot(settings, static_cast<int>(slot)))
 		{
-			return input;
+			participant_connected = true;
+			if (input.action != MenuInputAction::none ||
+				input.direction != labrador::Direction::none)
+			{
+				return input;
+			}
+		}
+	}
+	if (!participant_connected)
+	{
+		for (const ProcessedMenuInput& input : inputs)
+		{
+			if (input.connected && (input.action != MenuInputAction::none ||
+				input.direction != labrador::Direction::none))
+			{
+				return input;
+			}
 		}
 	}
 	return ProcessedMenuInput();
@@ -93,14 +121,22 @@ PauseMenuInitial::PauseMenuInitial(MenuContext* context, int player_num) :
 
 void PauseMenuInitial::update(float /*dt*/)
 {
+	if (!this->context()->active())
+	{
+		return;
+	}
+	this->refresh_connections();
 	const ProcessedMenuInput input =
 		this->pausing_player_input(this->menu_inputs());
 
 	if (input.action == MenuInputAction::back ||
 		input.action == MenuInputAction::pause)
 	{
-		this->play_wave(this->cancel_sound_);
-		this->finish(PauseMenuAction::resume);
+		if (!this->waiting_for_players_)
+		{
+			this->play_wave(this->cancel_sound_);
+			this->finish(PauseMenuAction::resume);
+		}
 	}
 	else if (input.action == MenuInputAction::proceed)
 	{
@@ -111,6 +147,49 @@ void PauseMenuInitial::update(float /*dt*/)
 		this->play_wave(this->direction_sound_);
 	}
 }
+
+void PauseMenuInitial::refresh_connections()
+{
+	std::wstring missing;
+	int count = 0;
+	const std::vector<MenuPlayerSettings> players = this->level_settings()->player_settings();
+	for (int player = 0; player < static_cast<int>(players.size()); ++player)
+	{
+		const int slot = players[player].num;
+		if (input_slots::is_pad(slot) && !this->data()->gamepads()->connected(slot))
+		{
+			if (count > 0)
+			{
+				missing += count % 2 == 0 ? L"\n" : L"   ";
+			}
+			missing += this->level_settings()->player_label(player);
+			++count;
+		}
+	}
+	const bool was_waiting = this->waiting_for_players_;
+	this->waiting_for_players_ = !missing.empty();
+	this->connection_status_->set_text(this->waiting_for_players_ ? missing :
+		L"All players connected.");
+	this->player_num_->set_text(this->waiting_for_players_ ?
+		L"Controller lost" : this->player_number_text());
+	this->focus_.set_enabled(this->resume_.get(), !this->waiting_for_players_);
+	this->focus_.set_enabled(this->restart_.get(), !this->waiting_for_players_);
+	if (was_waiting != this->waiting_for_players_)
+	{
+		// Reconnection never consumes a held button or resumes automatically.
+		this->input()->reset_actions();
+		if (this->waiting_for_players_)
+		{
+			this->set_prompts({ { L"", L"Reconnect pads to resume" },
+				{ L"A", L"Select" } });
+		}
+		else
+		{
+			this->set_prompts({ { L"A", L"Select" }, { L"B/Start", L"Resume" } });
+		}
+	}
+}
+
 void PauseMenuInitial::init()
 {
 	// Both buttons really do resume - update() takes back and pause alike -
@@ -123,7 +202,7 @@ void PauseMenuInitial::init()
 	const MenuStyle& style = this->menu_style();
 	const PauseMenuPresentation& look = this->look();
 
-	this->focus_.set_style({ style.highlight, style.unhighlight });
+	this->focus_.set_style({ style.highlight, style.unhighlight, style.disabled });
 
 	this->box_ = std::make_unique<UiTexture>(
 		"box",
@@ -158,6 +237,11 @@ void PauseMenuInitial::init()
 		style.shadow_colour,
 		style.item_shadow_offset);
 
+	this->connection_status_ = std::make_unique<UiTextDropShadow>(
+		"connection_status", L"", style.detail_font,
+		this->calculate_widget_position(0, 1), this->render_resources(),
+		style.warning, style.shadow_colour, style.detail_shadow_offset);
+
 	this->restart_ = std::make_unique<UiTextDropShadow>(
 		"restart",
 		L"Restart",
@@ -185,6 +269,7 @@ void PauseMenuInitial::init()
 	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->player_num_.get());
+	this->text_container_->add_child(this->connection_status_.get());
 	this->text_container_->add_child(this->resume_.get());
 	this->text_container_->add_child(this->restart_.get());
 	this->text_container_->add_child(this->quit_.get());
@@ -209,6 +294,7 @@ void PauseMenuInitial::init()
 				ConfirmationType::quit));
 		});
 
+	this->refresh_connections();
 	this->play_wave(this->window_open_sound_);
 }
 
@@ -221,6 +307,17 @@ PauseMenuConfirmation::PauseMenuConfirmation(MenuContext* context,
 
 void PauseMenuConfirmation::update(float /*dt*/)
 {
+	if (!this->context()->active())
+	{
+		return;
+	}
+	if (this->type_ == ConfirmationType::restart &&
+		disconnected_player_slot(*this->level_settings(), *this->data()->gamepads()) != -1)
+	{
+		this->context()->transition_to(std::make_unique<PauseMenuInitial>(
+			this->menu_context(), this->pausing_player()));
+		return;
+	}
 	const ProcessedMenuInput input =
 		this->pausing_player_input(this->menu_inputs());
 

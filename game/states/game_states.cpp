@@ -219,6 +219,16 @@ void GameLevel::update(float dt)
 	const std::vector<PlayerInputData> player_inputs =
 		this->player_input_->player_inputs();
 
+	// Check current presence, not just a disconnect edge: focus loss can hide
+	// the edge, and no participant may lose match time while reconnecting.
+	const int missing_slot = disconnected_player_slot(this->settings_,
+		*this->data()->gamepads());
+	if (missing_slot != -1 && this->level_->state() != LevelState::finished)
+	{
+		this->open_pause_menu(missing_slot);
+		return;
+	}
+
 	const int pause_menu_player = this->check_for_pause_input(player_inputs);
 	if (pause_menu_player != -1)
 	{

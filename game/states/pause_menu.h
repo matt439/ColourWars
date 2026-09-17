@@ -16,6 +16,8 @@
 // it has gone - so they ask it here instead of each assuming "any of the four
 // slots".
 bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot);
+int disconnected_player_slot(const MenuLevelSettings& settings,
+	const labrador::Gamepads& gamepads);
 
 
 class PauseMenuPage : public MenuPage
@@ -56,7 +58,8 @@ protected:
 	// and a match that can never be resumed, restarted or quit: nothing below
 	// this page is updated while it is up, so a pausing pad that is no longer
 	// connected leaves nobody able to answer at all. Then, and only then, any
-	// pad still in the match speaks for it.
+	// pad still in the match speaks for it. If none remain connected, any
+	// device may reach Quit; Resume and Restart stay disabled until reconnect.
 	ProcessedMenuInput pausing_player_input(
 		const std::vector<ProcessedMenuInput>& inputs) const;
 
@@ -81,6 +84,9 @@ public:
 	void init() override;
 	void update(float dt) override;
 private:
+	void refresh_connections();
+	bool waiting_for_players_ = false;
+	std::unique_ptr<labrador::UiTextDropShadow> connection_status_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> player_num_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> resume_ = nullptr;

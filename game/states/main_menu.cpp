@@ -940,8 +940,10 @@ MainMenuPlayerCount::MainMenuPlayerCount(MenuContext* context) :
 }
 void MainMenuPlayerCount::update(float /*dt*/)
 {
-	this->follow_the_pads_on_the_table();
-
+	if (!this->context()->active())
+	{
+		return;
+	}
 	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
 	for (int slot = 0; slot < static_cast<int>(inputs.size()); ++slot)
 	{
@@ -956,25 +958,14 @@ void MainMenuPlayerCount::update(float /*dt*/)
 		if (input.action == MenuInputAction::proceed)
 		{
 			this->activating_slot_ = slot;
-			switch (this->focus_.activate(0))
+			if (this->focus_.activate(0) == Activation::ran)
 			{
-			case Activation::ran:
 				return;
-			case Activation::refused:
-				// A count the table cannot seat, and the cursor is on it
-				// because it was seatable when the player put it there. See
-				// start_team_select for what starting it anyway would cost.
-				this->play_wave(this->error_sound_);
-				this->not_enough_pads_->set_hidden(false);
-				break;
-			case Activation::none:
-				break;
 			}
 		}
 		else if (this->focus_.move(0, input.direction))
 		{
 			this->play_wave(this->direction_sound_);
-			this->not_enough_pads_->set_hidden(true);
 		}
 	}
 }
@@ -984,8 +975,7 @@ void MainMenuPlayerCount::init()
 		{ L"A", L"Select" },
 		{ L"B", L"Back" } });
 
-	// Three colours here too, but for rows that change their minds: a count
-	// the couch cannot seat is greyed until somebody plugs a pad in.
+	// Devices can be connected and claimed on the next page.
 	this->focus_.set_style({ this->menu_style().highlight,
 		this->menu_style().unhighlight,
 		this->menu_style().disabled });
@@ -1064,23 +1054,6 @@ void MainMenuPlayerCount::init()
 		"texture_container");
 	this->texture_container_->add_child(this->background_.get());
 
-	// Row 7, not 8. This page spaces its rows 100 apart from a base of 150, so
-	// row 8 is design y 950 - and the prompt bar sits at 990 in a face whose
-	// line box reaches back up past it. The two overlapped by a few pixels,
-	// descenders into capitals, at exactly the moment both are trying to tell
-	// a confused player something. Row 7 is 850 and is otherwise empty: this
-	// page's last focusable row, Back, is row 6.
-	this->not_enough_pads_ = std::make_unique<UiTextDropShadow>(
-		"not_enough_pads",
-		L"Not enough controllers",
-		this->menu_style().detail_font,
-		this->calculate_widget_position(0, 7),
-		this->render_resources(),
-		this->menu_style().warning,
-		this->menu_style().shadow_colour,
-		this->menu_style().detail_shadow_offset,
-		true);
-
 	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->heading_.get());
@@ -1089,28 +1062,15 @@ void MainMenuPlayerCount::init()
 	this->text_container_->add_child(this->_3_players.get());
 	this->text_container_->add_child(this->_4_players.get());
 	this->text_container_->add_child(this->back_.get());
-	this->text_container_->add_child(this->not_enough_pads_.get());
 
-	// One player skips team select: there is no other team to be on.
-	this->focus_.add(this->_1_player.get(), [this]
-		{
-			this->play_wave(this->confirm_sound_);
-			MenuLevelSettings* settings =
-				this->level_settings();
-			settings->set_player_count(1);
-			settings->set_player_team(0, PlayerTeam::a);
-			settings->set_screen_layout(ScreenLayout::one_player);
-			settings->assign_input_slots(this->activating_slot_,
-				this->connected_slots());
-			this->context()->transition_to(
-				std::make_unique<MainMenuWeaponSelect>(this->menu_context()));
-		});
+	this->focus_.add(this->_1_player.get(),
+		[this] { this->start_join(1, ScreenLayout::one_player); });
 	this->focus_.add(this->_2_players.get(),
-		[this] { this->start_team_select(2, ScreenLayout::two_player); });
+		[this] { this->start_join(2, ScreenLayout::two_player); });
 	this->focus_.add(this->_3_players.get(),
-		[this] { this->start_team_select(3, ScreenLayout::three_player); });
+		[this] { this->start_join(3, ScreenLayout::three_player); });
 	this->focus_.add(this->_4_players.get(),
-		[this] { this->start_team_select(4, ScreenLayout::four_player); });
+		[this] { this->start_join(4, ScreenLayout::four_player); });
 	this->focus_.add(this->back_.get(), [this]
 		{
 			this->play_wave(this->cancel_sound_);
@@ -1118,38 +1078,149 @@ void MainMenuPlayerCount::init()
 				std::make_unique<MainMenuModeSelect>(this->menu_context()));
 		});
 
-	// Before the first frame is drawn rather than on the first update, or the
-	// page opens with every row lit and greys three of them a frame later.
-	this->follow_the_pads_on_the_table();
-
 	this->play_effect(this->music_, true, this->look().music.volume);
 }
 
-// The keyboard/mouse and each connected pad can fill one seat. Disable counts
-// with too few devices before a roster is chosen; later disconnects preserve
-// those chosen seats and offer a way back here through wait_for_players().
-void MainMenuPlayerCount::follow_the_pads_on_the_table()
-{
-	const int pads = static_cast<int>(this->connected_slots().size());
-
-	this->focus_.set_enabled(this->_2_players.get(), pads >= 2);
-	this->focus_.set_enabled(this->_3_players.get(), pads >= 3);
-	this->focus_.set_enabled(this->_4_players.get(), pads >= 4);
-
-	// The keyboard/mouse slot is always available, so one player is unconditional.
-}
-void MainMenuPlayerCount::start_team_select(int players, ScreenLayout layout)
+void MainMenuPlayerCount::start_join(int players, ScreenLayout layout)
 {
 	this->play_wave(this->confirm_sound_);
 	MenuLevelSettings* settings = this->level_settings();
 	settings->set_player_count(players);
 	settings->set_screen_layout(layout);
-	settings->assign_input_slots(this->activating_slot_, this->connected_slots());
+	settings->begin_input_claims(this->activating_slot_);
+	if (players == 1)
+	{
+		settings->set_player_team(0, PlayerTeam::a);
+	}
 	this->context()->transition_to(
-		std::make_unique<MainMenuTeamSelect>(this->menu_context()));
+		std::make_unique<MainMenuJoin>(this->menu_context()));
 }
 
 #pragma endregion MainMenuPlayerCount
+
+MainMenuJoin::MainMenuJoin(MenuContext* context) : MainMenuPage(context)
+{
+}
+
+void MainMenuJoin::init()
+{
+	this->set_prompts({ { L"A", L"Join / P1 continue" },
+		{ L"B", L"Leave / P1 back" } });
+	this->set_widget_spacing(this->look().player_count_spacing);
+	const MenuStyle& style = this->menu_style();
+	this->background_ = std::make_unique<UiTexture>("background",
+		"sprite_sheet_1", "pixel", RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		this->render_resources(), this->look().play_background_colour);
+	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
+	this->texture_container_->add_child(this->background_.get());
+	this->text_container_ = std::make_unique<UiContainer>("text_container");
+	this->heading_ = std::make_unique<UiTextDropShadow>("heading", L"Join Players",
+		style.heading_font, this->calculate_widget_position(0, 0),
+		this->render_resources(), style.heading_colour, style.shadow_colour,
+		style.heading_shadow_offset);
+	this->text_container_->add_child(this->heading_.get());
+	for (int player = 0; player < this->player_count(); ++player)
+	{
+		this->players_.push_back(std::make_unique<UiTextDropShadow>(
+			"player_" + std::to_string(player), L"", style.item_font,
+			this->calculate_widget_position(0, player + 2), this->render_resources(),
+			style.unhighlight, style.shadow_colour, style.item_shadow_offset));
+		this->text_container_->add_child(this->players_.back().get());
+	}
+	this->status_ = std::make_unique<UiTextDropShadow>("status", L"",
+		style.detail_font, this->calculate_widget_position(0, 7),
+		this->render_resources(), style.warning, style.shadow_colour,
+		style.detail_shadow_offset);
+	this->text_container_->add_child(this->status_.get());
+	this->refresh_players(this->input()->player_inputs(*this->level_settings()));
+	this->play_effect(this->music_, true, this->look().music.volume);
+}
+
+void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs)
+{
+	bool ready = this->level_settings()->input_roster_complete();
+	const std::vector<MenuPlayerSettings> players = this->level_settings()->player_settings();
+	for (int player = 0; player < this->player_count(); ++player)
+	{
+		const bool connected = inputs[player].connected;
+		ready = ready && connected;
+		std::wstring label = this->level_settings()->player_label(player);
+		if (!connected && players[player].num >= 0)
+		{
+			label += L" - Reconnect";
+		}
+		this->players_[player]->set_text(label);
+		this->players_[player]->set_colour(connected ?
+			this->menu_style().highlight : this->menu_style().disabled);
+	}
+	this->status_->set_text(ready ? L"Everyone joined. Player 1 can continue." :
+		L"Press A / Enter on each device to join. Reconnect reserved pads.");
+}
+
+void MainMenuJoin::update(float /*dt*/)
+{
+	if (!this->context()->active())
+	{
+		return;
+	}
+	MenuLevelSettings* settings = this->level_settings();
+	const std::vector<ProcessedMenuInput> players = this->input()->player_inputs(*settings);
+	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
+	// Evaluate readiness before accepting joins: the last join cannot also
+	// dismiss the page in the same frame as Player 1's confirmation.
+	const bool ready = settings->input_roster_complete() &&
+		std::all_of(players.begin(), players.end(),
+			[](const ProcessedMenuInput& input) { return input.connected; });
+	bool continue_requested = false;
+	bool roster_changed = false;
+	for (int slot = 0; slot < static_cast<int>(inputs.size()); ++slot)
+	{
+		const int player = settings->player_index_for_slot(slot);
+		if (inputs[slot].action == MenuInputAction::back)
+		{
+			if (player == 0 || !players[0].connected)
+			{
+				this->play_wave(this->cancel_sound_);
+				this->context()->transition_to(
+					std::make_unique<MainMenuPlayerCount>(this->menu_context()));
+				return;
+			}
+			if (settings->release_input_slot(slot))
+			{
+				roster_changed = true;
+				this->play_wave(this->cancel_sound_);
+			}
+		}
+		else if (inputs[slot].action == MenuInputAction::proceed)
+		{
+			if (player == 0 && ready)
+			{
+				continue_requested = true;
+			}
+			if (settings->claim_input_slot(slot))
+			{
+				roster_changed = true;
+				this->play_wave(this->ready_sound_);
+			}
+		}
+	}
+	if (continue_requested && !roster_changed)
+	{
+		this->play_wave(this->confirm_sound_);
+		if (this->player_count() == 1)
+		{
+			this->context()->transition_to(
+				std::make_unique<MainMenuWeaponSelect>(this->menu_context()));
+		}
+		else
+		{
+			this->context()->transition_to(
+				std::make_unique<MainMenuTeamSelect>(this->menu_context()));
+		}
+		return;
+	}
+	this->refresh_players(this->input()->player_inputs(*settings));
+}
 
 #pragma region MainMenuTeamSelect
 
@@ -1464,12 +1535,12 @@ void MainMenuTeamSelect::init()
 		auto widgets = std::make_unique<PlayerWidgets>();
 
 		std::string name = "player_" + std::to_string(i + 1);
-		std::wstring label_text = L"Player " + std::to_wstring(i + 1);
+		std::wstring label_text = this->level_settings()->player_label(i);
 
 		widgets->player = std::make_unique<UiTextDropShadow>(
 			name,
 			label_text,
-			this->menu_style().item_font,
+			this->menu_style().detail_font,
 			this->calculate_widget_position(0, i + 2),
 			this->render_resources(),
 			this->look().team_select.unselected,
@@ -1776,12 +1847,12 @@ void MainMenuWeaponSelect::init()
 		auto widgets = std::make_unique<Widgets>();
 
 		std::string name = "player_" + std::to_string(i + 1);
-		std::wstring label_text = L"Player " + std::to_wstring(i + 1);
+		std::wstring label_text = this->level_settings()->player_label(i);
 
 		widgets->player = std::make_unique<UiTextDropShadow>(
 			name,
 			label_text,
-			this->menu_style().item_font,
+			this->menu_style().detail_font,
 			this->calculate_widget_position(0, i + 2),
 			this->render_resources(),
 			this->look().weapon_select.unselected);

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/input/gamepads.h"
+#include <string>
 
 // Which input a slot number means.
 //
@@ -43,5 +44,14 @@ namespace input_slots
 	constexpr bool is_keyboard_and_mouse(int slot)
 	{
 		return slot == keyboard_and_mouse;
+	}
+
+	inline std::wstring device_name(int slot)
+	{
+		if (is_pad(slot))
+		{
+			return L"Pad " + std::to_wstring(slot + 1);
+		}
+		return is_keyboard_and_mouse(slot) ? L"Keyboard/mouse" : L"Waiting to join";
 	}
 }

@@ -28,11 +28,14 @@ public:
 	WeaponType player_weapon(int player_index) const;
 	void set_player_num(int player_index, int player_num);
 
-	// Bind the roster once, when the player count is chosen. The device that
-	// made that choice is player one; the other connected slots fill the rest.
-	void assign_input_slots(int initiating_slot,
-		const std::vector<int>& available_slots);
+	// Player one chooses the count; everyone else explicitly claims an empty
+	// seat. A disconnected device retains its seat until setup is cancelled.
+	void begin_input_claims(int initiating_slot);
+	bool claim_input_slot(int slot);
+	bool release_input_slot(int slot);
+	bool input_roster_complete() const;
 	int player_index_for_slot(int slot) const;
+	std::wstring player_label(int player_index) const;
 
 private:
 	std::vector<MenuPlayerSettings> player_settings_;

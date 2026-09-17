@@ -22,6 +22,8 @@ public:
     // constness on, so this has to say const itself to mean anything.
 	void draw_gameplay_interface(labrador::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
+        int player_index,
+        int input_slot,
         float health,
         float ammo,
         float timer,
@@ -56,7 +58,7 @@ private:
     const HudPresentation* look_ = nullptr;
 
     // The HUD always draws out of the same sheet, with the same two frames and
-    // the same two fonts. All five names are resolved in the constructor, so
+    // three fonts. All six names are resolved in the constructor, so
     // the four draw_* calls below - which run every frame, for every split
     // screen viewport - index rather than search. Declaration order matters:
     // the frames are resolved against sheet_.
@@ -65,4 +67,5 @@ private:
     labrador::SpriteSheet::frame_handle fill_frame_;
     labrador::FontHandle timer_font_;
     labrador::FontHandle respawn_timer_font_;
+    labrador::FontHandle player_identity_font_;
 };

@@ -301,6 +301,16 @@ namespace
 		hud.timer_shadow_colour = read_colour(timer, "shadow_colour");
 		hud.timer_reference_width = timer.number("reference_width");
 
+		const JsonValue identity = json.object("player_identity");
+		hud.player_identity_font = identity.string("font");
+		hud.player_identity_offset = read_vector(identity, "offset");
+		hud.player_identity_shadow_offset = read_vector(identity, "shadow_offset");
+		hud.player_identity_colour = read_colour(identity, "colour");
+		hud.player_identity_shadow_colour = read_colour(identity, "shadow_colour");
+		hud.player_identity_background_colour = read_colour(identity, "background_colour");
+		hud.player_identity_padding = read_vector(identity, "padding");
+		hud.player_identity_reference_width = identity.number("reference_width");
+
 		const JsonValue respawn = json.object("respawn_timer");
 		hud.respawn_font = respawn.string("font");
 		hud.respawn_offset = read_vector(respawn, "offset");

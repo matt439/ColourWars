@@ -5,11 +5,25 @@ arena, and a scoreboard that counts painted surface rather than kills.
 
 Play with XInput gamepads, or with one keyboard-and-mouse player alongside
 them. Up to four players can play at once. The device that selects the player
-count becomes Player 1; additional players use the remaining connected pads
-in slot order, followed by the keyboard and mouse if they are not Player 1.
+count becomes Player 1; additional players claim their devices on the Join
+Players screen with A (Enter for keyboard and mouse).
+Each device claims one seat, in join order. B/Escape releases your seat;
+Player 1 uses it to return to player count. Once everyone has joined,
+Player 1 presses A/Enter to continue. Player and device labels appear during
+setup and in each gameplay view.
+
 That roster stays fixed through team, weapon and stage selection and the match.
 If a controller disconnects during setup, reconnect it or press B/Escape to
-return to player count and choose a new roster.
+return to player count and choose a new roster. During play, a participating
+controller disconnect pauses the match and audio and identifies the missing
+players. Resume and Restart stay disabled until every participant reconnects;
+reconnecting alone never resumes play. Quit remains available, including from
+the keyboard if all participating controllers are gone.
+
+Controller identity follows the XInput slot shown as Pad 1-4. Reconnect to the
+same slot to keep playing; if Windows assigns a different slot, quit and claim
+devices again. Spare controllers do not pause a match or take over an occupied
+player's seat.
 
 | Action | Gamepad | Keyboard and mouse |
 |---|---|---|

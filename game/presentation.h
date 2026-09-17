@@ -265,6 +265,15 @@ struct HudPresentation
 	// the real width over this, so the HUD reads the same on every resolution.
 	float timer_reference_width = 1920.0f;
 
+	std::string player_identity_font;
+	mattmath::Vector2F player_identity_offset = { 0.0f, 0.0f };
+	mattmath::Vector2F player_identity_shadow_offset = { 0.0f, 0.0f };
+	labrador::Colour player_identity_colour = labrador::Colour::white;
+	labrador::Colour player_identity_shadow_colour = labrador::Colour::black;
+	labrador::Colour player_identity_background_colour = labrador::Colour::black;
+	mattmath::Vector2F player_identity_padding = { 0.0f, 0.0f };
+	float player_identity_reference_width = 1920.0f;
+
 	std::string respawn_font;
 	mattmath::Vector2F respawn_offset = { 0.0f, 0.0f };
 	mattmath::Vector2F respawn_shadow_offset = { 0.0f, 0.0f };

@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/menu_level_settings.h"
+#include "game/input_slots.h"
 using namespace labrador;
 
 std::vector<MenuPlayerSettings> MenuLevelSettings::player_settings() const
@@ -75,34 +76,62 @@ void MenuLevelSettings::set_player_num(int player_index, int player_num)
 	this->player_settings_[player_index].num = player_num;
 }
 
-void MenuLevelSettings::assign_input_slots(int initiating_slot,
-	const std::vector<int>& available_slots)
+void MenuLevelSettings::begin_input_claims(int initiating_slot)
 {
-	if (this->player_count_ < 1 ||
-		available_slots.size() < static_cast<size_t>(this->player_count_) ||
-		std::find(available_slots.begin(), available_slots.end(), initiating_slot) ==
-			available_slots.end())
+	if (this->player_count_ < 1 || this->player_count_ > input_slots::pad_count ||
+		initiating_slot < 0 || initiating_slot >= input_slots::count)
 	{
 		throw std::invalid_argument("Cannot bind the player roster to these inputs");
 	}
-
-	this->set_player_num(0, initiating_slot);
-	int player = 1;
-	for (const int slot : available_slots)
+	for (MenuPlayerSettings& player : this->player_settings_)
 	{
-		if (player == this->player_count_)
+		player.num = -1;
+	}
+	this->set_player_num(0, initiating_slot);
+}
+
+bool MenuLevelSettings::claim_input_slot(int slot)
+{
+	if (slot < 0 || slot >= input_slots::count ||
+		this->player_index_for_slot(slot) != -1)
+	{
+		return false;
+	}
+	for (MenuPlayerSettings& player : this->player_settings_)
+	{
+		if (player.num == -1)
 		{
-			break;
-		}
-		if (slot != initiating_slot)
-		{
-			this->set_player_num(player++, slot);
+			player.num = slot;
+			return true;
 		}
 	}
+	return false;
+}
+
+bool MenuLevelSettings::release_input_slot(int slot)
+{
+	const int player = this->player_index_for_slot(slot);
+	if (player <= 0)
+	{
+		return false;
+	}
+	this->set_player_num(player, -1);
+	return true;
+}
+
+bool MenuLevelSettings::input_roster_complete() const
+{
+	return this->player_count_ > 0 && std::all_of(
+		this->player_settings_.begin(), this->player_settings_.end(),
+		[](const MenuPlayerSettings& player) { return player.num >= 0; });
 }
 
 int MenuLevelSettings::player_index_for_slot(int slot) const
 {
+	if (slot < 0 || slot >= input_slots::count)
+	{
+		return -1;
+	}
 	for (int player = 0; player < this->player_count_; ++player)
 	{
 		if (this->player_settings_[player].num == slot)
@@ -111,4 +140,10 @@ int MenuLevelSettings::player_index_for_slot(int slot) const
 		}
 	}
 	return -1;
+}
+
+std::wstring MenuLevelSettings::player_label(int player_index) const
+{
+	return L"P" + std::to_wstring(player_index + 1) + L" - " +
+		input_slots::device_name(this->player_settings_[player_index].num);
 }

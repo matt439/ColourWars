@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/interface_gameplay.h"
+#include "game/input_slots.h"
 
 using namespace mattmath;
 using namespace labrador;
@@ -41,7 +42,8 @@ InterfaceGameplay::InterfaceGameplay(RenderResources* render_resources,
 		resolve_sprite_frame(look->fill_frame)),
 	timer_font_(render_resources->resolve_sprite_font(look->timer_font)),
 	respawn_timer_font_(
-		render_resources->resolve_sprite_font(look->respawn_font))
+		render_resources->resolve_sprite_font(look->respawn_font)),
+	player_identity_font_(render_resources->resolve_sprite_font(look->player_identity_font))
 {
 
 }
@@ -53,6 +55,8 @@ RenderResources* InterfaceGameplay::render_resources() const
 
 void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	const Vector2F& resolution,
+	int player_index,
+	int input_slot,
 	float health,
 	float ammo,
 	float timer,
@@ -69,6 +73,25 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	// produces the filtering belongs to the backend.
 	draw_list.set_filter(TextureFilter::linear);
 	this->draw_timer(draw_list, resolution, timer);
+
+	const std::wstring identity = L"P" + std::to_wstring(player_index + 1) +
+		L" - " + input_slots::device_name(input_slot);
+	const Vector2F identity_pos(resolution.x * look.player_identity_offset.x,
+		resolution.y * look.player_identity_offset.y);
+	const float identity_scale = resolution.x / look.player_identity_reference_width;
+	const Vector2F padding = look.player_identity_padding * identity_scale;
+	const Vector2F identity_size = this->render_resources()->measure_text(
+		this->player_identity_font_, identity) * identity_scale;
+	this->render_resources()->sprite_sheet(this->sheet_)->draw(draw_list,
+		this->fill_frame_, RectangleF(identity_pos - padding,
+			identity_size + padding * 2.0f), look.player_identity_background_colour);
+	draw_list.draw_text(this->player_identity_font_, identity,
+		identity_pos + look.player_identity_shadow_offset * identity_scale,
+		look.player_identity_shadow_colour, identity_scale,
+		0.0f, Vector2F::ZERO, 0.0f);
+	draw_list.draw_text(this->player_identity_font_, identity, identity_pos,
+		look.player_identity_colour, identity_scale,
+		0.0f, Vector2F::ZERO, 0.0f);
 
 	draw_list.set_filter(TextureFilter::point);
 

@@ -154,24 +154,23 @@ private:
 	std::unique_ptr<labrador::UiTextDropShadow> _4_players = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;
 
-	// Shown when a row asks for more players than there are pads. Hidden
-	// again on the next cursor move, since the player is then asking a
-	// different question.
-	std::unique_ptr<labrador::UiTextDropShadow> not_enough_pads_ = nullptr;
-
-	// Switches each row on or off against the number of pads connected right
-	// now, once a frame.
-	//
-	// Once a frame because a pad can be plugged in or pulled out between any
-	// two of them, which is the whole reason this page cannot do what Mode
-	// Select does and decide at init. The cost is four comparisons and, on the
-	// frames where an answer actually changes, one repaint of a handful of
-	// widgets.
-	void follow_the_pads_on_the_table();
 	int activating_slot_ = -1;
 
-	// Two, three and four players differ only in the count and the layout.
-	void start_team_select(int players, labrador::ScreenLayout layout);
+	void start_join(int players, labrador::ScreenLayout layout);
+};
+
+class MainMenuJoin final : public MainMenuPage
+{
+public:
+	explicit MainMenuJoin(MenuContext* context);
+	void update(float dt) override;
+	void init() override;
+private:
+	void refresh_players(const std::vector<ProcessedMenuInput>& inputs);
+	std::unique_ptr<labrador::UiTexture> background_;
+	std::unique_ptr<labrador::UiTextDropShadow> heading_;
+	std::unique_ptr<labrador::UiTextDropShadow> status_;
+	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> players_;
 };
 
 class MainMenuTeamSelect final : public MainMenuPage
