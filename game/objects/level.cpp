@@ -608,6 +608,7 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		player_vp.size(),
 		view_index,
 		player->player_num(),
+		player->team(),
 		player->health() / this->tuning_->player().starting_health,
 		player->weapon_ammo() / this->tuning_->starting_ammo(),
 		this->timer_,

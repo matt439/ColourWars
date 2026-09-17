@@ -5,6 +5,7 @@
 #include "game/directory_consts.h"
 #include "engine/math/vector2i.h"
 #include "engine/render/screen_resolution.h"
+#include "game/objects/team_colour.h"
 
 struct SaveData
 {
@@ -20,6 +21,7 @@ struct SaveData
 	// needs no scaling at all.
 	labrador::ScreenResolution resolution = labrador::ScreenResolution::s_1920_1080;
 	bool fullscreen = false;
+	TeamColourPair team_palette = TeamColourPair::random;
 };
 
 class Save
@@ -33,6 +35,8 @@ public:
 	labrador::ScreenResolution resolution() const;
 	bool fullscreen() const;
 	void set_full_screen_and_save(bool full_screen);
+	TeamColourPair team_palette() const;
+	void set_team_palette_and_save(TeamColourPair palette);
 private:
 	SaveData save_data_ = SaveData();
 	SaveData load_from_json(const char* json_path) const;

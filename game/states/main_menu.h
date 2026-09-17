@@ -102,12 +102,16 @@ private:
 	// container be focused.
 	std::unique_ptr<OptionRow> resolution_row_ = nullptr;
 	std::unique_ptr<OptionRow> full_screen_row_ = nullptr;
+	std::unique_ptr<OptionRow> team_palette_row_ = nullptr;
 
 	std::unique_ptr<labrador::UiTextDropShadow> apply_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;
 	labrador::ScreenResolution resolution_selection_ = labrador::ScreenResolution::s_1920_1080;
 	bool full_screen_selection_ = true;
+	TeamColourPair team_palette_selection_ = TeamColourPair::random;
 	void cycle_resolution(labrador::Direction direction);
+	void cycle_team_palette(labrador::Direction direction);
+	void update_team_palette_selection_text();
 	// Left and right on whichever row carries a value. The focus group has no
 	// opinion about which rows those are: that is this game's content, and it
 	// is now the row's own rather than a list kept here.

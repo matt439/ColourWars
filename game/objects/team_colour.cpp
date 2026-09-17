@@ -44,6 +44,8 @@ TeamColour TeamColourTools::team_colours(TeamColourPair team_colour)
 {
 	switch (team_colour)
 	{
+	case TeamColourPair::random:
+		return generate_random_team_colour();
 	case TeamColourPair::blue_orange:
 		return BLUE_ORANGE;
 	case TeamColourPair::pink_green:
@@ -51,6 +53,18 @@ TeamColour TeamColourTools::team_colours(TeamColourPair team_colour)
 	case TeamColourPair::blue_yellow:
 		return BLUE_YELLOW;
 	default:
-		return BLUE_ORANGE;
+		throw std::invalid_argument("Invalid team palette");
+	}
+}
+
+const char* TeamColourTools::palette_key(TeamColourPair palette)
+{
+	switch (palette)
+	{
+	case TeamColourPair::random: return "random";
+	case TeamColourPair::blue_orange: return "blue_orange";
+	case TeamColourPair::pink_green: return "pink_green";
+	case TeamColourPair::blue_yellow: return "blue_yellow";
+	default: throw std::invalid_argument("Invalid team palette");
 	}
 }

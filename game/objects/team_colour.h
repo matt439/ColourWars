@@ -29,6 +29,8 @@ struct TeamColour
 
 enum class TeamColourPair
 {
+	// Random is a preference, never one of the fixed pairs in the draw.
+	random = -1,
 	blue_orange,
 	pink_green,
 	blue_yellow,
@@ -56,4 +58,5 @@ public:
 	static TeamColour generate_random_team_colour();
 
 	static TeamColour team_colours(TeamColourPair team_colour);
+	static const char* palette_key(TeamColourPair palette);
 };

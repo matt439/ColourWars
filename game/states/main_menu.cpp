@@ -485,9 +485,10 @@ void MainMenuOptions::apply_settings()
 
 	this->save()->set_full_screen_and_save(fs);
 	this->apply_fullscreen_setting(fs);
+	this->save()->set_team_palette_and_save(this->team_palette_selection_);
 
-	// After both, because it reads what is now in effect rather than what was
-	// asked for.
+	// After applying the display settings: this reads what is now in effect,
+	// rather than what was asked for.
 	this->refresh_resolution_row();
 
 	// The widgets are not touched. This is the page that changes the
@@ -506,6 +507,7 @@ void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
 
 void MainMenuOptions::init()
 {
+	this->set_widget_spacing(this->look().options_spacing);
 	this->set_prompts({
 		{ L"Left/Right", L"Change" },
 		{ L"A", L"Select" },
@@ -535,6 +537,7 @@ void MainMenuOptions::init()
 	// asking, and it is the same value Application keeps to return to.
 	this->resolution_selection_ = this->save()->resolution();
 	this->full_screen_selection_ = this->save()->fullscreen();
+	this->team_palette_selection_ = this->save()->team_palette();
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
@@ -583,11 +586,22 @@ void MainMenuOptions::init()
 
 	this->update_full_screen_selection_text();
 
+	this->team_palette_row_ = std::make_unique<OptionRow>(
+		"team_palette",
+		L"Team palette",
+		this->calculate_widget_position(0, 4),
+		this->calculate_widget_position(2, 4),
+		this->menu_style(),
+		this->look().options_value_colour,
+		this->render_resources(),
+		[this](Direction direction) { this->cycle_team_palette(direction); });
+	this->update_team_palette_selection_text();
+
 	this->apply_ = std::make_unique<UiTextDropShadow>(
 		"apply",
 		L"Apply",
 		this->menu_style().item_font,
-		this->calculate_widget_position(0, 4),
+		this->calculate_widget_position(0, 5),
 		this->render_resources(),
 		this->menu_style().unhighlight,
 		this->menu_style().shadow_colour,
@@ -597,7 +611,7 @@ void MainMenuOptions::init()
 		"back",
 		L"Back",
 		this->menu_style().item_font,
-		this->calculate_widget_position(0, 5),
+		this->calculate_widget_position(0, 6),
 		this->render_resources(),
 		this->menu_style().unhighlight,
 		this->menu_style().shadow_colour,
@@ -612,10 +626,11 @@ void MainMenuOptions::init()
 	this->text_container_->add_child(this->heading_.get());
 	this->text_container_->add_child(this->resolution_row_.get());
 	this->text_container_->add_child(this->full_screen_row_.get());
+	this->text_container_->add_child(this->team_palette_row_.get());
 	this->text_container_->add_child(this->apply_.get());
 	this->text_container_->add_child(this->back_.get());
 
-	// The two value rows are focusable and do nothing on A; left and right are
+	// The value rows are focusable and do nothing on A; left and right are
 	// what they answer to. A button with no action is a normal thing to have.
 	//
 	// A container in a container, which is the nesting engine/ui/widget.h says
@@ -623,6 +638,7 @@ void MainMenuOptions::init()
 	// label and its value.
 	this->focus_.add(this->resolution_row_.get());
 	this->focus_.add(this->full_screen_row_.get());
+	this->focus_.add(this->team_palette_row_.get());
 	this->focus_.add(this->apply_.get(), [this] { this->apply_settings(); });
 	this->focus_.add(this->back_.get(), [this]
 		{
@@ -749,6 +765,39 @@ void MainMenuOptions::update_full_screen_selection_text() const
 		fs_text = L"Off";
 	}
 	this->full_screen_row_->set_value(fs_text);
+}
+
+void MainMenuOptions::cycle_team_palette(labrador::Direction direction)
+{
+	const int first = static_cast<int>(TeamColourPair::random);
+	const int end = static_cast<int>(TeamColourPair::count);
+	int value = static_cast<int>(this->team_palette_selection_) +
+		(direction == Direction::left ? -1 : 1);
+	if (value < first)
+	{
+		value = end - 1;
+	}
+	else if (value >= end)
+	{
+		value = first;
+	}
+	this->team_palette_selection_ = static_cast<TeamColourPair>(value);
+	this->update_team_palette_selection_text();
+}
+
+void MainMenuOptions::update_team_palette_selection_text()
+{
+	// State which colour belongs to which team before starting a match.
+	const wchar_t* label = L"Random";
+	switch (this->team_palette_selection_)
+	{
+	case TeamColourPair::blue_orange: label = L"A: Blue / B: Orange"; break;
+	case TeamColourPair::pink_green: label = L"A: Pink / B: Green"; break;
+	case TeamColourPair::blue_yellow: label = L"A: Blue / B: Yellow"; break;
+	case TeamColourPair::random: break;
+	default: throw std::invalid_argument("Invalid team palette");
+	}
+	this->team_palette_row_->set_value(label);
 }
 
 #pragma endregion MainMenuOptions

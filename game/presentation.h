@@ -143,6 +143,7 @@ struct MainMenuPresentation
 	labrador::Colour play_background_colour = labrador::Colour::black;
 
 	labrador::Colour options_value_colour = labrador::Colour::white;
+	mattmath::Vector2F options_spacing = { 0.0f, 0.0f };
 
 	labrador::Colour weapon_description_colour = labrador::Colour::white;
 	mattmath::Vector2F weapon_description_shadow_offset = { 0.0f, 0.0f };

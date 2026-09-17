@@ -57,6 +57,7 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	const Vector2F& resolution,
 	int player_index,
 	int input_slot,
+	PlayerTeam team,
 	float health,
 	float ammo,
 	float timer,
@@ -75,7 +76,8 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	this->draw_timer(draw_list, resolution, timer);
 
 	const std::wstring identity = L"P" + std::to_wstring(player_index + 1) +
-		L" - " + input_slots::device_name(input_slot);
+		L" - " + input_slots::device_name(input_slot) +
+		(team == PlayerTeam::a ? L"\nTeam A" : L"\nTeam B");
 	const Vector2F identity_pos(resolution.x * look.player_identity_offset.x,
 		resolution.y * look.player_identity_offset.y);
 	const float identity_scale = resolution.x / look.player_identity_reference_width;

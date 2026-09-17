@@ -55,6 +55,7 @@
       "play": "DODGER_BLUE"
     },
     "options_value_colour": "DARK_TURQUOISE",
+    "options_spacing": { "x": 250.0, "y": 110.0 },
     "weapon_description": {
       "colour": "WHITE_SMOKE",
       "shadow_offset": { "x": 1.0, "y": 1.0 },

@@ -4,6 +4,7 @@
 #include "engine/render/colour.h"
 #include "engine/math/vector2f.h"
 #include "game/presentation.h"
+#include "game/objects/player_team.h"
 
 
 class InterfaceGameplay
@@ -24,6 +25,7 @@ public:
         const mattmath::Vector2F& resolution,
         int player_index,
         int input_slot,
+        PlayerTeam team,
         float health,
         float ammo,
         float timer,

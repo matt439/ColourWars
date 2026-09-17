@@ -154,6 +154,7 @@ namespace
 		menu.play_background_colour = read_colour(backgrounds, "play");
 
 		menu.options_value_colour = read_colour(json, "options_value_colour");
+		menu.options_spacing = read_vector(json, "options_spacing");
 
 		const JsonValue description = json.object("weapon_description");
 		menu.weapon_description_colour = read_colour(description, "colour");

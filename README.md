@@ -25,6 +25,12 @@ same slot to keep playing; if Windows assigns a different slot, quit and claim
 devices again. Spare controllers do not pause a match or take over an occupied
 player's seat.
 
+Options > Team palette keeps Random as the default, or fixes Team A/B to
+blue/orange, pink/green or blue/yellow. Use Left/Right to choose, then Apply
+to save it between launches. Fixed palettes also stay fixed on a rematch.
+Each gameplay HUD names Team A or Team B on its dark identity panel; results
+label the teams with A/B letters beside the bars and percentages.
+
 | Action | Gamepad | Keyboard and mouse |
 |---|---|---|
 | Move | Left stick | A/D |

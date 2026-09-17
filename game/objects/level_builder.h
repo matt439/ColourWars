@@ -28,7 +28,8 @@ public:
 		const labrador::Partitioner* partitioner,
 		const labrador::Mouse* mouse);
 
-	std::unique_ptr<Level> build_level(const MenuLevelSettings& settings);
+	std::unique_ptr<Level> build_level(const MenuLevelSettings& settings,
+		TeamColourPair palette);
 
 private:
 	std::unique_ptr<TeamColourTools> team_colour_ = nullptr;

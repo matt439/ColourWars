@@ -174,7 +174,8 @@ void GameLevel::build_and_enter_level()
 	// hazard that comes with ~Level owning the music instead of seven
 	// hand-written stop_music() calls.
 	this->level_.reset();
-	this->level_ = this->level_builder_->build_level(this->settings_);
+	this->level_ = this->level_builder_->build_level(this->settings_,
+		this->data()->save()->team_palette());
 
 	// Whoever pressed A to start the match is probably still holding it, and
 	// it does not land as a jump on frame one: the engine polls the pads every

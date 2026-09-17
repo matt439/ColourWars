@@ -46,6 +46,24 @@ SaveData Save::load_from_json(const char* json_path) const
     {
     }
 
+    try
+    {
+        const std::string palette = root.string("team_palette");
+        for (int value = static_cast<int>(TeamColourPair::random);
+            value < static_cast<int>(TeamColourPair::count); ++value)
+        {
+            const TeamColourPair pair = static_cast<TeamColourPair>(value);
+            if (palette == TeamColourTools::palette_key(pair))
+            {
+                data.team_palette = pair;
+                break;
+            }
+        }
+    }
+    catch (const std::runtime_error&)
+    {
+    }
+
     return data;
 }
 bool Save::file_exists(const std::string& path)
@@ -144,6 +162,8 @@ bool Save::write_save_file(const SaveData& data) const
     resolution.AddMember("y", resolution_ivec.y, d.GetAllocator());
     d.AddMember("resolution", resolution, d.GetAllocator());
     d.AddMember("fullscreen", data.fullscreen, d.GetAllocator());
+    Value palette(TeamColourTools::palette_key(data.team_palette), d.GetAllocator());
+    d.AddMember("team_palette", palette, d.GetAllocator());
 
     // Accept() flushes the stream when the top-level value ends, so every byte
     // has reached fwrite by the time fclose is called below.
@@ -269,4 +289,17 @@ ScreenResolution Save::resolution() const
 bool Save::fullscreen() const
 {
 	return this->save_data_.fullscreen;
+}
+
+TeamColourPair Save::team_palette() const
+{
+    return this->save_data_.team_palette;
+}
+
+void Save::set_team_palette_and_save(TeamColourPair palette)
+{
+    // Validate before changing the in-memory settings or writing the file.
+    TeamColourTools::palette_key(palette);
+    this->save_data_.team_palette = palette;
+    this->save_to_file();
 }

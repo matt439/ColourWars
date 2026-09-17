@@ -37,12 +37,12 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 }
 
 std::unique_ptr<Level>
-	LevelBuilder::build_level(const MenuLevelSettings& settings)
+	LevelBuilder::build_level(const MenuLevelSettings& settings, TeamColourPair palette)
 {
 	const LevelLoadedInfo* load_info =
 		this->level_infos_->get(settings.stage());
 
-	const TeamColour team_colours = team_colour_->generate_random_team_colour();
+	const TeamColour team_colours = team_colour_->team_colours(palette);
 
 	// The scene is filled here rather than handed three vectors to unpack,
 	// which is what Level's first four constructor parameters used to be. Every
