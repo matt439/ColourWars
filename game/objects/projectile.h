@@ -8,6 +8,7 @@
 #include "engine/collision/collision_object.h"
 #include "game/objects/collision_object_type.h"
 #include "engine/render/colour.h"
+#include <span>
 
 class Projectile : public labrador::MovingObject,
 	public labrador::AnimationObject, public labrador::CollisionObject
@@ -49,7 +50,14 @@ public:
 	void set_for_deletion(bool for_deletion) override;
 
 	float delete_timer() const;
+
+	// A muzzle can extend through cover even when its owner cannot. Check
+	// the launch volume before Scene defers its first collision sweep.
+	void resolve_launch_obstruction(const mattmath::Vector2F& origin,
+		std::span<labrador::CollisionObject* const> objects);
 protected:
+	virtual void set_center(const mattmath::Vector2F& center) = 0;
+
 	// This projectile kind's whole record, borrowed. Never null.
 	const ProjectileTuning& tuning() const;
 

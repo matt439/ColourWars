@@ -235,7 +235,7 @@ ScreenResolution Save::convert_ivec_to_resolution(
     }
     else
     {
-        return ScreenResolution::s_1280_720;
+        return SaveData{}.resolution;
     }
 }
 Vector2I Save::convert_resolution_to_ivec(

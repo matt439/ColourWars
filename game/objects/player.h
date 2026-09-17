@@ -98,7 +98,8 @@ public:
 
     void update(float dt) override;
     std::vector<std::unique_ptr<labrador::CollisionObject>>
-        update_weapon_and_get_projectiles(float dt) const;
+        update_weapon_and_get_projectiles(float dt,
+        std::span<labrador::CollisionObject* const> objects) const;
     void draw(labrador::DrawList& draw_list) const override;
 
     mattmath::RectangleF bounds() const override;

@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/menu_input.h"
+#include "game/states/menu_level_settings.h"
 
 using namespace mattmath;
 using namespace menu_input_consts;
@@ -233,4 +234,33 @@ std::vector<ProcessedMenuInput> MenuInput::menu_inputs()
 		this->keyboard_menu_input(*this->keyboard_);
 
 	return result;
+}
+
+std::vector<ProcessedMenuInput> MenuInput::player_inputs(
+	const MenuLevelSettings& settings)
+{
+	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
+	std::vector<ProcessedMenuInput> result;
+	for (const MenuPlayerSettings& player : settings.player_settings())
+	{
+		result.push_back(player.num >= 0 &&
+			static_cast<size_t>(player.num) < inputs.size() ?
+			inputs[static_cast<size_t>(player.num)] : ProcessedMenuInput());
+	}
+	return result;
+}
+
+void MenuInput::reset_actions()
+{
+	for (auto& slot : this->armed_)
+	{
+		for (bool& armed : slot)
+		{
+			armed = false;
+		}
+	}
+	for (bool& armed : this->key_armed_)
+	{
+		armed = false;
+	}
 }

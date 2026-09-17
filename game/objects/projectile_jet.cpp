@@ -50,3 +50,8 @@ const Shape* ProjectileJet::shape() const
 {
 	return &this->rectangle_;
 }
+
+void ProjectileJet::set_center(const Vector2F& center)
+{
+	this->rectangle_.set_position_at_center(center);
+}

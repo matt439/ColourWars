@@ -38,6 +38,7 @@ void GameMenu::draw(Renderer& /*renderer*/) const
 
 void GameMenu::open_menu(MainMenuScreen screen)
 {
+	this->menu_input_->reset_actions();
 	// The page frame has one exit and it is the way out, so it closes rather
 	// than answering: the settings it assembled are in the MenuContext this
 	// state owns. That used to be a heap-allocated bool read every frame.
@@ -189,20 +190,14 @@ void GameLevel::build_and_enter_level()
 	this->data()->application()->reset_elapsed_time();
 }
 
-// Alt-tab, minimise, the Windows key, a notification stealing the foreground -
-// all the same question, and the engine now collapses all of them into one
-// edge and delivers it. This used to be a GetForegroundWindow poll against a
-// remembered bool, in a private helper update() called first thing.
-//
-// These reach the match wherever it is in the stack, not only at the top, and
-// that is the point: a match under a pause menu still owns live audio. It also
-// means they can arrive while on_suspend has already done the same work, and
-// there is still nothing to reason about between the two - pause_effect and
-// resume_effect carry no depth, so a second pause is the same state and one
-// resume answers both.
+// Activation reaches covered states too. Returning to a paused window must
+// leave the match's voices paused until the menu is also closed.
 void GameLevel::on_activated()
 {
-	this->level_->resume();
+	if (!this->covered_)
+	{
+		this->level_->resume();
+	}
 }
 void GameLevel::on_deactivated()
 {
@@ -245,6 +240,9 @@ void GameLevel::update(float dt)
 
 void GameLevel::draw(Renderer& renderer) const
 {
+	// A covered match does not update, but its window can still resize. Prepare
+	// its presentation on this thread before Scene::draw starts any workers.
+	this->level_->refresh_layout();
 	// Just the match. Whatever menu is over it draws itself, one frame above
 	// this one, because MenuPage does not cover the screen (state.h).
 	this->level_->draw(renderer);
@@ -252,6 +250,7 @@ void GameLevel::draw(Renderer& renderer) const
 
 void GameLevel::on_suspend()
 {
+	this->covered_ = true;
 	// What not-calling-update() could never do. Level::update is the only thing
 	// that ever stops a looping weapon voice, so pausing used to leave a player
 	// who paused mid-burst with a sustained tone running under the menu, over
@@ -261,11 +260,16 @@ void GameLevel::on_suspend()
 
 void GameLevel::on_resume()
 {
-	this->level_->resume();
+	this->covered_ = false;
+	if (this->context()->active())
+	{
+		this->level_->resume();
+	}
 }
 
 void GameLevel::open_pause_menu(int player_num)
 {
+	this->menu_input_->reset_actions();
 	this->context()->push<PauseMenuAction>(
 		std::make_unique<PauseMenuInitial>(this->menu_context_.get(),
 			player_num),
@@ -294,6 +298,7 @@ void GameLevel::on_pause_menu_closed(const PauseMenuAction& action)
 
 void GameLevel::open_results_menu()
 {
+	this->menu_input_->reset_actions();
 	this->context()->push(
 		std::make_unique<ResultsMenuInitial>(this->menu_context_.get(),
 			this->level_->level_end_info()),

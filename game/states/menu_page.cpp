@@ -217,21 +217,14 @@ Vector2F MenuPage::float_resolution() const
 	return this->resolution_manager()->resolution_vec();
 }
 
-// A Camera maps world to view as (world - translation) * scale. Here "world"
-// is design space, and the view a menu draws into is the viewport's own
-// space: DrawList::set_viewport has already offset and clipped rendering to
-// the viewport's screen rectangle, so a widget at design position p has to
-// land at p * s - viewport_origin, where s carries 1920 wide onto the screen.
-// Solving for the camera's translation gives viewport_origin / s.
-//
-// One scale rather than two: every supported resolution is 16:9, so the
-// horizontal and vertical ratios against a 16:9 design space are the same
-// number, and a Camera carries one. A non-16:9 resolution would need a
-// letterbox rule, which is a decision nobody has had to make yet - and
-// ResolutionManager snaps anything it does not recognise to 720p, so nobody
-// can reach it by accident.
+// Fit the whole design into the actual window, including arbitrary drag sizes
+// and monitors with a different aspect ratio. Each pane draws its portion of
+// that same centred layout, so its screen origin is removed in camera space.
 Camera MenuPage::ui_camera(const Viewport& viewport) const
 {
-	const float scale = this->float_resolution().x / menu_consts::DESIGN_RESOLUTION.x;
-	return Camera(viewport.position() / scale, scale);
+	Camera camera = Camera::frame(
+		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+		this->viewport_manager()->fullscreen_viewport());
+	camera.translation += viewport.position() / camera.scale;
+	return camera;
 }

@@ -19,6 +19,7 @@ namespace
 Weapon::Weapon(const GameTuning* tuning,
     PlayerTeam team,
     int player_num,
+    int sound_index,
     const Colour& team_colour,
     WeaponType type,
     const Vector2F& player_center,
@@ -47,7 +48,7 @@ Weapon::Weapon(const GameTuning* tuning,
     this->proj_builder_ = std::make_unique<ProjectileBuilder>(tuning);
     this->sound_bank_ = audio_resources->sound_bank(details.sound_bank_name);
     this->loop_sound_ = resolve_loop_sound(*this->sound_bank_,
-        this->weapon_tuning_->loop_sounds, team, player_num);
+        this->weapon_tuning_->loop_sounds, team, sound_index);
     this->shoot_sound_ = this->sound_bank_->resolve_wave(
         details.shoot_sound_name);
     this->nozzle_frame_ = this->sprite_sheet()->
@@ -302,7 +303,7 @@ void Weapon::resume_sounds() const
     this->sound_bank_->resume_effect(this->loop_sound_);
 }
 SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
-    const WeaponLoopSounds& loop_sounds, PlayerTeam team, int player_num)
+    const WeaponLoopSounds& loop_sounds, PlayerTeam team, int sound_index)
 {
     // Sniper and Bucket fire a one-shot wave (see their handle_shoot_sound
     // overrides) and have no looping instance at all. Their tuning records
@@ -319,7 +320,7 @@ SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
     {
         return {};
     }
-    if (player_num < 0 || player_num > 3)
+    if (sound_index < 0 || sound_index > 3)
     {
         return {};
     }
@@ -329,7 +330,7 @@ SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
         return {};
     }
 
-    return sound_bank.resolve_effect(loop_sounds.sound_name(team, player_num));
+    return sound_bank.resolve_effect(loop_sounds.sound_name(team, sound_index));
 }
 void Weapon::update_movement_and_rotation(PlayerInputData input,
     const Vector2F& player_center,
@@ -535,6 +536,7 @@ RelativeVelocityWeapon::RelativeVelocityWeapon(
     const GameTuning* tuning,
     PlayerTeam team,
     int player_num,
+    int sound_index,
     const Colour& team_colour,
     WeaponType type,
     const Vector2F& player_center,
@@ -545,7 +547,7 @@ RelativeVelocityWeapon::RelativeVelocityWeapon(
     const Vector2F& origin,
     labrador::SpriteFlip flip,
     float layer_depth) :
-    Weapon(tuning, team, player_num, team_colour, type,
+    Weapon(tuning, team, player_num, sound_index, team_colour, type,
         player_center, render_resources, audio_resources,
         color, rotation, origin, flip, layer_depth)
 {

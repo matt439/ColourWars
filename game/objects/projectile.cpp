@@ -1,9 +1,45 @@
 #include "game/pch.h"
 #include "game/objects/projectile.h"
+#include "engine/collision/narrow_phase.h"
 
 using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
+
+namespace
+{
+    // Intersect the centre's launch segment with a rectangle expanded by the
+    // projectile's half-size. The entry/exit interval is the swept AABB hit.
+    std::optional<std::pair<float, float>> launch_interval(
+        const Vector2F& origin, const Vector2F& travel,
+        const RectangleF& obstacle)
+    {
+        float entry = 0.0f;
+        float exit = 1.0f;
+        const auto clip_axis = [&](float start, float delta, float low, float high)
+        {
+            if (delta == 0.0f)
+            {
+                return start > low && start < high;
+            }
+            float first = (low - start) / delta;
+            float last = (high - start) / delta;
+            if (first > last)
+            {
+                std::swap(first, last);
+            }
+            entry = std::max(entry, first);
+            exit = std::min(exit, last);
+            return entry < exit;
+        };
+        if (!clip_axis(origin.x, travel.x, obstacle.left(), obstacle.right()) ||
+            !clip_axis(origin.y, travel.y, obstacle.top(), obstacle.bottom()))
+        {
+            return std::nullopt;
+        }
+        return std::pair{ entry, exit };
+    }
+}
 
 Projectile::Projectile(const Vector2F& velocity,
     PlayerTeam team,
@@ -106,11 +142,59 @@ void DiffusingProjectile::diffuse_to_size(RectangleF& rectangle) const
 }
 
 
+void Projectile::resolve_launch_obstruction(const Vector2F& origin,
+    std::span<CollisionObject* const> objects)
+{
+    const RectangleF volume = this->shape()->bounding_box();
+    const Vector2F travel = volume.center() - origin;
+    CollisionObject* obstruction = nullptr;
+    std::pair<float, float> closest{ 1.0f, 1.0f };
+    for (CollisionObject* object : objects)
+    {
+        // The game's projectile-blocking structures are rectangles. Ramps
+        // deliberately let paint pass and have a separate collision layer.
+        if (object->layer() != collision_layers::STRUCTURE ||
+            object->for_deletion() ||
+            !layers_collide(this->layer(), this->mask(),
+                object->layer(), object->mask()))
+        {
+            continue;
+        }
+        RectangleF expanded = object->shape()->bounding_box();
+        expanded.inflate(volume.size() / 2.0f);
+        const auto interval = launch_interval(origin, travel, expanded);
+        if (interval && interval->first < closest.first)
+        {
+            obstruction = object;
+            closest = *interval;
+        }
+    }
+    if (obstruction == nullptr)
+    {
+        return;
+    }
+
+    // Just inside the surface gives the ordinary contact/painting code an
+    // actual overlap. Never advance beyond this obstacle's exit interval.
+    const float length = travel.length();
+    const float inset = length > 0.0f ? 0.01f / length : 0.0f;
+    const float fraction = closest.first +
+        std::min(inset, (closest.second - closest.first) / 2.0f);
+    this->set_center(origin + travel * fraction);
+    const auto contact = narrow_phase(*obstruction->shape(), *this->shape());
+    if (contact)
+    {
+        obstruction->on_contact(*this, contact->normal, contact->penetration);
+        this->on_contact(*obstruction, -contact->normal, contact->penetration);
+    }
+}
+
 void Projectile::on_contact(const CollisionObject& /*other*/,
     const Vector2F& /*normal*/, float /*penetration*/)
 {
-    // Every contact a projectile can have is fatal to it, so there is nothing
-    // to ask. The mask admits flat level geometry and enemy players and
+    // Every contact a flying projectile can have is fatal to it. The roller
+    // overrides this because its one-step volume must process every contact.
+    // The mask admits flat level geometry and enemy players and
     // nothing else; the two type lists this replaces - one to decide whether
     // to test the pair, one to decide whether to die - were re-deriving that
     // filter twice, and had already disagreed about ramps.

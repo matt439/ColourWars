@@ -84,6 +84,7 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 				this->tuning_,
 				setting.team,
 				setting.num,
+				view_index,
 				team_colours.team_colour(setting.team),
 				setting.weapon,
 				rect.center(),

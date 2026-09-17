@@ -129,10 +129,10 @@ namespace
 	{
 		const float value = parent.number(key);
 
-		if (!(value > 0.0f))
+		if (!std::isfinite(value) || !(value > 0.0f))
 		{
 			throw std::runtime_error(parent.where() + ": '" + key + "' is " +
-				number_text(value) + ", and must be greater than zero.");
+				number_text(value) + ", and must be finite and greater than zero.");
 		}
 		return value;
 	}
@@ -279,7 +279,7 @@ namespace
 		player.drop_down_velocity = json.number("drop_down_velocity");
 		player.drop_down_analog_threshold =
 			json.number("drop_down_analog_threshold");
-		player.starting_health = json.number("starting_health");
+		player.starting_health = read_positive(json, "starting_health");
 		player.health_regen_delay = json.number("health_regen_delay");
 		player.health_regen_rate = json.number("health_regen_rate");
 		player.respawn_delay = json.number("respawn_delay");
@@ -418,7 +418,7 @@ GameTuning::GameTuning(const char* path)
 	const JsonValue weapons = root.object("weapons");
 	this->ammo_regen_delay_ = weapons.number("ammo_regen_delay");
 	this->ammo_regen_rate_ = weapons.number("ammo_regen_rate");
-	this->starting_ammo_ = weapons.number("starting_ammo");
+	this->starting_ammo_ = read_positive(weapons, "starting_ammo");
 
 	const auto add_weapon = [this, &weapons](WeaponType type, const char* key)
 	{

@@ -34,7 +34,9 @@ Level::Level(std::unique_ptr<Scene> scene,
 	mouse_(mouse),
 	team_colours_(team_colours),
 	tuning_(tuning),
-	camera_bounds_(camera_bounds)
+	camera_bounds_(camera_bounds),
+	zoom_out_start_bounds_(zoom_out_start_bounds),
+	zoom_out_finish_bounds_(zoom_out_finish_bounds)
 {
 	const MatchTuning& match = tuning->match();
 
@@ -42,15 +44,6 @@ Level::Level(std::unique_ptr<Scene> scene,
 	this->start_timer_ = match.countdown;
 	this->zoom_out_timer_ = match.zoom_out;
 	this->overview_timer_ = match.overview;
-
-	// The whole back buffer, which is what the overview is drawn into - the
-	// pull-back is the one shot with no split.
-	const Viewport screen(
-		RectangleF(Vector2F::ZERO, resolution_manager->resolution_vec()));
-
-	this->zoom_out_start_camera_ = Camera::frame(zoom_out_start_bounds, screen);
-	this->zoom_out_finish_camera_ =
-		Camera::frame(zoom_out_finish_bounds, screen);
 
 	this->debug_text_ = std::make_unique<DebugText>(
 		render_resources, resolution_manager,
@@ -82,18 +75,6 @@ void Level::build_opening_frame(RenderResources* render_resources)
 	// The frame drawn before the first update() is a real frame.
 	this->scene_->end_tick();
 	this->projectile_count_ = this->count_projectiles();
-
-	for (size_t i = 0; i < this->players_.size(); ++i)
-	{
-		Player* player = this->players_[i];
-		Camera camera = this->camera_tools_.calculate_camera(
-			player->center(),
-			this->viewport_manager_->player_viewport(
-				static_cast<int>(i)).size(),
-			player->camera(),
-			this->camera_bounds_);
-		player->set_camera(camera);
-	}
 
 	// The first beat, off the same number the timer starts at: the opening
 	// text used to be a separate constant, so a countdown retuned to five
@@ -170,7 +151,7 @@ void Level::build_opening_frame(RenderResources* render_resources)
 		match.controls_shadow_offset);
 	this->centre_controls_text();
 
-	this->refresh_views();
+	this->refresh_layout();
 }
 
 void Level::set_countdown_text(const std::wstring& text)
@@ -222,6 +203,7 @@ void Level::resume() const
 
 void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt)
 {
+	this->refresh_layout();
 	this->frame_dt_ = dt;
 	this->update_state(player_inputs, dt);
 
@@ -302,10 +284,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			this->sound_bank_->stop_effect(this->zoom_out_sound_, true);
 		}
 
-		// Both endpoints are fixed for the whole match - the bounds come out
-		// of the level file and the resolution does not change mid-zoom - so
-		// they are worked out when the level is built, not per frame. Only
-		// the ratio between them varies.
+		// refresh_layout refits the endpoints when the window changes size.
 		this->zoom_out_camera_ = Camera::calculate_intermediate_camera(
 			this->zoom_out_start_camera_, this->zoom_out_finish_camera_,
 			this->zoom_out_camera_ratio());
@@ -464,6 +443,20 @@ void Level::apply_player_inputs(
 
 void Level::update_players(float dt)
 {
+	this->refresh_player_cameras();
+	for (Player* player : this->players_)
+	{
+		for (std::unique_ptr<CollisionObject>& projectile :
+			player->update_weapon_and_get_projectiles(
+				dt, this->scene_->collision_objects()))
+		{
+			this->scene_->add(std::move(projectile));
+		}
+	}
+}
+
+void Level::refresh_player_cameras()
+{
 	for (size_t i = 0; i < this->players_.size(); ++i)
 	{
 		Player* player = this->players_[i];
@@ -474,13 +467,28 @@ void Level::update_players(float dt)
 			player->camera(),
 			this->camera_bounds_);
 		player->set_camera(camera);
-
-		for (std::unique_ptr<CollisionObject>& projectile :
-			player->update_weapon_and_get_projectiles(dt))
-		{
-			this->scene_->add(std::move(projectile));
-		}
 	}
+}
+
+void Level::refresh_layout()
+{
+	const Vector2F size = this->resolution_manager_->resolution_vec();
+	if (size == this->layout_size_)
+	{
+		return;
+	}
+
+	const Viewport screen(RectangleF(Vector2F::ZERO, size));
+	this->zoom_out_start_camera_ = Camera::frame(this->zoom_out_start_bounds_, screen);
+	this->zoom_out_finish_camera_ = Camera::frame(this->zoom_out_finish_bounds_, screen);
+	this->zoom_out_camera_ = Camera::calculate_intermediate_camera(
+		this->zoom_out_start_camera_, this->zoom_out_finish_camera_,
+		this->zoom_out_camera_ratio());
+	this->centre_countdown_text();
+	this->centre_controls_text();
+	this->refresh_player_cameras();
+	this->refresh_views();
+	this->layout_size_ = size;
 }
 
 void Level::update_players_after_resolve()
@@ -598,8 +606,8 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 
 	this->interface_gameplay_->draw_gameplay_interface(list,
 		player_vp.size(),
-		player->health(),
-		player->weapon_ammo(),
+		player->health() / this->tuning_->player().starting_health,
+		player->weapon_ammo() / this->tuning_->starting_ammo(),
 		this->timer_,
 		player->team_colour(),
 		player->respawn_timer(),

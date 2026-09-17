@@ -45,17 +45,52 @@ std::vector<int> MainMenuPage::connected_slots() const
 	return result;
 }
 
-std::vector<ProcessedMenuInput> MainMenuPage::connected_inputs() const
+void MainMenuPage::set_player_prompts(
+	const std::vector<PromptBar::Prompt>& prompts)
 {
-	std::vector<ProcessedMenuInput> result;
-	for (const ProcessedMenuInput& input : this->menu_inputs())
+	this->player_prompts_ = prompts;
+	this->set_prompts(prompts);
+}
+
+bool MainMenuPage::wait_for_players(
+	const std::vector<ProcessedMenuInput>& inputs)
+{
+	// Focus loss can temporarily hide every pad. It does not change the roster.
+	if (!this->context()->active())
 	{
-		if (input.connected)
+		return true;
+	}
+	const bool missing = std::any_of(inputs.begin(), inputs.end(),
+		[](const ProcessedMenuInput& input) { return !input.connected; });
+	if (missing != this->waiting_for_players_)
+	{
+		this->waiting_for_players_ = missing;
+		if (missing)
 		{
-			result.push_back(input);
+			this->set_prompts({
+				{ L"", L"Reconnect controller" },
+				{ L"B", L"Change players" } });
+		}
+		else
+		{
+			this->set_prompts(this->player_prompts_);
 		}
 	}
-	return result;
+	if (missing)
+	{
+		// Any available device may recover a setup whose owner disconnected.
+		for (const ProcessedMenuInput& input : this->menu_inputs())
+		{
+			if (input.action == MenuInputAction::back)
+			{
+				this->play_wave(this->cancel_sound_);
+				this->context()->transition_to(
+					std::make_unique<MainMenuPlayerCount>(this->menu_context()));
+				break;
+			}
+		}
+	}
+	return missing;
 }
 
 #pragma region MainMenuTitle
@@ -907,8 +942,10 @@ void MainMenuPlayerCount::update(float /*dt*/)
 {
 	this->follow_the_pads_on_the_table();
 
-	for (const ProcessedMenuInput& input : this->menu_inputs())
+	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
+	for (int slot = 0; slot < static_cast<int>(inputs.size()); ++slot)
 	{
+		const ProcessedMenuInput& input = inputs[slot];
 		if (input.action == MenuInputAction::back)
 		{
 			this->play_wave(this->cancel_sound_);
@@ -918,6 +955,7 @@ void MainMenuPlayerCount::update(float /*dt*/)
 		}
 		if (input.action == MenuInputAction::proceed)
 		{
+			this->activating_slot_ = slot;
 			switch (this->focus_.activate(0))
 			{
 			case Activation::ran:
@@ -1062,11 +1100,8 @@ void MainMenuPlayerCount::init()
 			settings->set_player_count(1);
 			settings->set_player_team(0, PlayerTeam::a);
 			settings->set_screen_layout(ScreenLayout::one_player);
-			// The pad that is actually there, which is not always slot 0. The
-			// match reads a player's input by pad slot, so writing 0 here left
-			// the one player on a lone pad in slot 1 unable to move.
-			const std::vector<int> slots = this->connected_slots();
-			settings->set_player_num(0, slots.empty() ? 0 : slots.front());
+			settings->assign_input_slots(this->activating_slot_,
+				this->connected_slots());
 			this->context()->transition_to(
 				std::make_unique<MainMenuWeaponSelect>(this->menu_context()));
 		});
@@ -1090,29 +1125,9 @@ void MainMenuPlayerCount::init()
 	this->play_effect(this->music_, true, this->look().music.volume);
 }
 
-// Refused rather than started, when the count is more than the pads on the
-// table.
-//
-// Team select drives one row per *connected pad* - `i < num_inputs && i <
-// player_count` - while all_players_confirmed() asks about every player up to
-// player_count. Four players on two pads therefore reaches a page that cannot
-// be finished by any sequence of inputs: players 2 and 3 have no pad to confirm
-// with and the transition waits on them forever. The way out is to work out
-// that Back is gated on all_players_unconfirmed() and that both live pads must
-// therefore unconfirm first, which nothing on the screen says.
-//
-// Past that page it is no better: set_level_settings falls back to `slots[i] :
-// i`, welding two of the four characters to slots with no pad in them, and the
-// match starts with two players who cannot move.
-//
-// Refused here rather than gated inside team select's update(), which runs
-// every frame and would beep sixty times a second.
-//
-// The refusal itself is no longer written here. The rows are greyed against
-// the pad count by follow_the_pads_on_the_table, so a count the table cannot
-// seat has no action to reach: FocusGroup answers the press with `refused`
-// before the callback, and update() is where that is turned into the sound and
-// the line. This function now runs only when it is going to succeed.
+// The keyboard/mouse and each connected pad can fill one seat. Disable counts
+// with too few devices before a roster is chosen; later disconnects preserve
+// those chosen seats and offer a way back here through wait_for_players().
 void MainMenuPlayerCount::follow_the_pads_on_the_table()
 {
 	const int pads = static_cast<int>(this->connected_slots().size());
@@ -1121,9 +1136,7 @@ void MainMenuPlayerCount::follow_the_pads_on_the_table()
 	this->focus_.set_enabled(this->_3_players.get(), pads >= 3);
 	this->focus_.set_enabled(this->_4_players.get(), pads >= 4);
 
-	// One player is not conditional. It needs one pad, and a page reached by
-	// pressing A on a pad has one - so gating it would be gating on something
-	// that cannot be false while anybody is here to see it.
+	// The keyboard/mouse slot is always available, so one player is unconditional.
 }
 void MainMenuPlayerCount::start_team_select(int players, ScreenLayout layout)
 {
@@ -1131,6 +1144,7 @@ void MainMenuPlayerCount::start_team_select(int players, ScreenLayout layout)
 	MenuLevelSettings* settings = this->level_settings();
 	settings->set_player_count(players);
 	settings->set_screen_layout(layout);
+	settings->assign_input_slots(this->activating_slot_, this->connected_slots());
 	this->context()->transition_to(
 		std::make_unique<MainMenuTeamSelect>(this->menu_context()));
 }
@@ -1147,11 +1161,12 @@ MainMenuTeamSelect::MainMenuTeamSelect(MenuContext* context) :
 
 void MainMenuTeamSelect::update(float /*dt*/)
 {
-	// The connected pads only, in slot order, so entry i is player i's. Reading
-	// menu_inputs() straight indexes by pad slot instead, and then a couch whose
-	// first pad is in slot 1 leaves player 0 on an empty slot - unable to pick a
-	// team and, since back is read in this same loop, unable to leave.
-	const std::vector<ProcessedMenuInput> inputs = this->connected_inputs();
+	const std::vector<ProcessedMenuInput> inputs =
+		this->input()->player_inputs(*this->level_settings());
+	if (this->wait_for_players(inputs))
+	{
+		return;
+	}
 	const int num_inputs = static_cast<int>(inputs.size());
 	const int player_count = this->player_count();
 
@@ -1303,18 +1318,10 @@ bool MainMenuTeamSelect::both_teams_chosen() const
 }
 void MainMenuTeamSelect::set_level_settings() const
 {
-	// Player i's pad slot, which is not i: this page is driven by the connected
-	// pads in slot order, and the match reads a player's input by pad slot, so
-	// the two have to be the same mapping or the match starts on dead pads.
-	const std::vector<int> slots = this->connected_slots();
 	for (int i = 0; i < this->player_count(); i++)
 	{
 		this->level_settings()->
 			set_player_team(i, this->select_states_[i].team);
-
-		this->level_settings()->
-			set_player_num(i,
-				i < static_cast<int>(slots.size()) ? slots[i] : i);
 	}
 }
 bool MainMenuTeamSelect::all_players_confirmed() const
@@ -1393,7 +1400,7 @@ void MainMenuTeamSelect::deselect_and_unconfirm_all_widgets()
 }
 void MainMenuTeamSelect::init()
 {
-	this->set_prompts({
+	this->set_player_prompts({
 		{ L"Left/Right", L"Pick a team" },
 		{ L"A", L"Confirm" },
 		{ L"B", L"Cancel" } });
@@ -1518,10 +1525,12 @@ MainMenuWeaponSelect::MainMenuWeaponSelect(MenuContext* context) :
 
 void MainMenuWeaponSelect::update(float /*dt*/)
 {
-	// The connected pads only, in slot order, so entry i is player i's - the
-	// same mapping team select wrote into the settings. Indexed by pad slot, a
-	// player whose pad is not in slot i can neither choose nor go back.
-	const std::vector<ProcessedMenuInput> inputs = this->connected_inputs();
+	const std::vector<ProcessedMenuInput> inputs =
+		this->input()->player_inputs(*this->level_settings());
+	if (this->wait_for_players(inputs))
+	{
+		return;
+	}
 	const int player_count = this->player_count();
 	const int num_inputs = static_cast<int>(inputs.size());
 
@@ -1721,7 +1730,7 @@ void MainMenuWeaponSelect::unconfirm_all_widgets()
 }
 void MainMenuWeaponSelect::init()
 {
-	this->set_prompts({
+	this->set_player_prompts({
 		{ L"Left/Right", L"Change weapon" },
 		{ L"A", L"Confirm" },
 		{ L"B", L"Cancel" } });
@@ -1843,10 +1852,12 @@ MainMenuStageSelect::MainMenuStageSelect(MenuContext* context) :
 
 void MainMenuStageSelect::update(float /*dt*/)
 {
-	// The connected pads only, in slot order, so entry i is player i's - the
-	// same mapping the two pages before this one used. Indexed by pad slot, a
-	// player whose pad is not in slot i can neither cycle the stage nor go back.
-	const std::vector<ProcessedMenuInput> inputs = this->connected_inputs();
+	const std::vector<ProcessedMenuInput> inputs =
+		this->input()->player_inputs(*this->level_settings());
+	if (this->wait_for_players(inputs))
+	{
+		return;
+	}
 	const int num_inputs = static_cast<int>(inputs.size());
 	const int player_count = this->player_count();
 
@@ -2006,7 +2017,7 @@ int MainMenuStageSelect::pick_random_stage() const
 }
 void MainMenuStageSelect::init()
 {
-	this->set_prompts({
+	this->set_player_prompts({
 		// A twice: the first press confirms the stage, the second starts the
 		// match. One legend for both, because it is the same button and the
 		// bar is built once in init().

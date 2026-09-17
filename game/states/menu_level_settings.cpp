@@ -74,3 +74,41 @@ void MenuLevelSettings::set_player_num(int player_index, int player_num)
 {
 	this->player_settings_[player_index].num = player_num;
 }
+
+void MenuLevelSettings::assign_input_slots(int initiating_slot,
+	const std::vector<int>& available_slots)
+{
+	if (this->player_count_ < 1 ||
+		available_slots.size() < static_cast<size_t>(this->player_count_) ||
+		std::find(available_slots.begin(), available_slots.end(), initiating_slot) ==
+			available_slots.end())
+	{
+		throw std::invalid_argument("Cannot bind the player roster to these inputs");
+	}
+
+	this->set_player_num(0, initiating_slot);
+	int player = 1;
+	for (const int slot : available_slots)
+	{
+		if (player == this->player_count_)
+		{
+			break;
+		}
+		if (slot != initiating_slot)
+		{
+			this->set_player_num(player++, slot);
+		}
+	}
+}
+
+int MenuLevelSettings::player_index_for_slot(int slot) const
+{
+	for (int player = 0; player < this->player_count_; ++player)
+	{
+		if (this->player_settings_[player].num == slot)
+		{
+			return player;
+		}
+	}
+	return -1;
+}

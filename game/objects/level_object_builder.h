@@ -33,6 +33,11 @@ public:
 	std::vector<std::unique_ptr<labrador::GameObject>>
 		build_viewport_dividers(const labrador::ViewportManager* viewport_manager) const;
 
+	// Run the actual construction path before a stage becomes playable. Each
+	// temporary object is discarded immediately; no scene or sounds are run.
+	void validate_objects(const labrador::JsonValue& collision_objects,
+		const labrador::JsonValue& non_collision_objects) const;
+
 private:
 	const PaintTuning* paint_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;

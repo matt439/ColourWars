@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/level_object_builder.h"
 #include "engine/math/triangle.h"
+#include <cmath>
 #include <initializer_list>
 
 using namespace mattmath;
@@ -15,6 +16,35 @@ namespace
 	const std::string DIVIDER_SHEET_NAME = "sprite_sheet_1";
 	const std::string DIVIDER_FRAME_NAME = "pixel";
 	const Colour DIVIDER_COLOUR = Colour::black;
+
+	class ViewportDivider final : public GameObject, public TextureObject
+	{
+	public:
+		ViewportDivider(const ViewportManager* viewport_manager, size_t index,
+			RenderResources* render_resources) :
+			TextureObject(DIVIDER_SHEET_NAME, DIVIDER_FRAME_NAME,
+				render_resources, DIVIDER_COLOUR),
+			viewport_manager_(viewport_manager), index_(index)
+		{
+		}
+
+		void update(float /*dt*/) override {}
+
+		void draw(DrawList& draw_list) const override
+		{
+			this->TextureObject::draw(draw_list, this->bounds());
+		}
+
+		RectangleF bounds() const override
+		{
+			// The layout stays fixed for a match; its pixel dimensions do not.
+			return this->viewport_manager_->viewport_dividers().at(this->index_);
+		}
+
+	private:
+		const ViewportManager* viewport_manager_;
+		size_t index_;
+	};
 
 	// colour_from_name now says so when a name is not one of the CSS colours,
 	// instead of quietly answering white. This file already throws on every
@@ -38,23 +68,36 @@ namespace
 	// any level file written against it. Neither is optional in the sense of
 	// having a default: an object with no rectangle at all is a level that
 	// cannot be built, so say which object and which spellings were looked for.
+	RectangleF checked_rectangle(const JsonValue& json,
+		const RectangleF& rectangle)
+	{
+		if (!std::isfinite(rectangle.x) || !std::isfinite(rectangle.y) ||
+			!std::isfinite(rectangle.width) || !std::isfinite(rectangle.height) ||
+			rectangle.width <= 0.0f || rectangle.height <= 0.0f)
+		{
+			throw std::runtime_error(json.where() +
+				" needs finite coordinates and positive width and height");
+		}
+		return rectangle;
+	}
+
 	RectangleF decode_rectangle(const JsonValue& json)
 	{
 		if (json.has("rectangle"))
 		{
 			const JsonValue rectangle = json.object("rectangle");
-			return RectangleF(
+			return checked_rectangle(rectangle, RectangleF(
 				rectangle.number("x"),
 				rectangle.number("y"),
 				rectangle.number("width"),
-				rectangle.number("height"));
+				rectangle.number("height")));
 		}
 		if (json.has("rectangle_tlbr"))
 		{
 			const JsonValue rectangle = json.object("rectangle_tlbr");
-			return RectangleF::from_top_left_bottom_right(
+			return checked_rectangle(rectangle, RectangleF::from_top_left_bottom_right(
 				Vector2F(rectangle.number("left"), rectangle.number("top")),
-				Vector2F(rectangle.number("right"), rectangle.number("bottom")));
+				Vector2F(rectangle.number("right"), rectangle.number("bottom"))));
 		}
 		throw std::runtime_error(json.where() +
 			" has neither a 'rectangle' nor a 'rectangle_tlbr'");
@@ -219,15 +262,10 @@ std::unique_ptr<GameObject>
 	const std::string type = json.string("type");
 	if (type == "Visual")
 	{
-		const JsonValue rectangle = json.object("rectangle");
-
 		return std::make_unique<Visual>(
 			json.string("sheet_name"),
 			json.string("frame_name"),
-			RectangleF(rectangle.number("x"),
-				rectangle.number("y"),
-				rectangle.number("width"),
-				rectangle.number("height")),
+			decode_rectangle(json),
 			this->render_resources_,
 			colour_of(json));
 	}
@@ -263,22 +301,48 @@ std::vector<std::unique_ptr<GameObject>>
 	return non_collision_objects;
 }
 
+void LevelObjectBuilder::validate_objects(const JsonValue& collision_objects,
+	const JsonValue& non_collision_objects) const
+{
+	const TeamColour colours;
+	for (size_t index = 0; index < collision_objects.size(); ++index)
+	{
+		const JsonValue object = collision_objects.at(index);
+		try
+		{
+			build_collision_object(object, colours);
+		}
+		catch (const std::exception& error)
+		{
+			throw std::runtime_error(object.where() + ": " + error.what());
+		}
+	}
+	for (size_t index = 0; index < non_collision_objects.size(); ++index)
+	{
+		const JsonValue object = non_collision_objects.at(index);
+		try
+		{
+			build_non_collision_object(object);
+		}
+		catch (const std::exception& error)
+		{
+			throw std::runtime_error(object.where() + ": " + error.what());
+		}
+	}
+}
+
 std::vector<std::unique_ptr<GameObject>>
 	LevelObjectBuilder::build_viewport_dividers(
 		const ViewportManager* viewport_manager) const
 {
 	std::vector<std::unique_ptr<GameObject>> viewport_dividers;
 
-	std::vector<RectangleF> viewport_rectangles =
+	const std::vector<RectangleF> viewport_rectangles =
 		viewport_manager->viewport_dividers();
-	for (auto& rectangle : viewport_rectangles)
+	for (size_t index = 0; index < viewport_rectangles.size(); ++index)
 	{
-		viewport_dividers.push_back(std::make_unique<Visual>(
-			DIVIDER_SHEET_NAME,
-			DIVIDER_FRAME_NAME,
-			rectangle,
-			this->render_resources_,
-			DIVIDER_COLOUR));
+		viewport_dividers.push_back(std::make_unique<ViewportDivider>(
+			viewport_manager, index, this->render_resources_));
 	}
 
 	return viewport_dividers;

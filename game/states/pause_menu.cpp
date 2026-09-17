@@ -12,17 +12,7 @@ bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot)
 	{
 		return false;
 	}
-	const std::vector<MenuPlayerSettings> players = settings.player_settings();
-	const int count = std::min(settings.player_count(),
-		static_cast<int>(players.size()));
-	for (int i = 0; i < count; i++)
-	{
-		if (players[static_cast<size_t>(i)].num == slot)
-		{
-			return true;
-		}
-	}
-	return false;
+	return settings.player_index_for_slot(slot) != -1;
 }
 
 PauseMenuPage::PauseMenuPage(MenuContext* context, int player_num) :
@@ -38,21 +28,12 @@ const PauseMenuPresentation& PauseMenuPage::look() const
 	return this->presentation().pause_menu();
 }
 
-std::wstring PauseMenuPage::player_number_text(int player_num)
+std::wstring PauseMenuPage::player_number_text() const
 {
-	switch (player_num)
-	{
-	case 0:
-		return L"Pause Menu P1";
-	case 1:
-		return L"Pause Menu P2";
-	case 2:
-		return L"Pause Menu P3";
-	case 3:
-		return L"Pause Menu P4";
-	default:
-		return L"Pause Menu P error";
-	};
+	const int player = this->level_settings()->player_index_for_slot(
+		this->pausing_player_);
+	return player >= 0 ? L"Pause Menu P" + std::to_wstring(player + 1) :
+		L"Pause Menu";
 }
 
 int PauseMenuPage::pausing_player() const
@@ -159,7 +140,7 @@ void PauseMenuInitial::init()
 
 	this->player_num_ = std::make_unique<UiTextDropShadow>(
 		"player_num",
-		this->player_number_text(this->pausing_player()),
+		this->player_number_text(),
 		style.heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -286,7 +267,7 @@ void PauseMenuConfirmation::init()
 
 	this->player_num_ = std::make_unique<UiTextDropShadow>(
 		"player_num",
-		this->player_number_text(this->pausing_player()),
+		this->player_number_text(),
 		style.heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),

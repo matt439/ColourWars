@@ -137,13 +137,15 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles()
 
 	const PaintTuning& paint = *this->paint_;
 
-	const int num_paint_tiles_x =
-		static_cast<int>(std::fabs(this->rectangle().width / paint.size.x));
+	// A face smaller than the requested granularity still needs one tile.
+	// Truncating to zero both lost that face and divided its size by zero.
+	const int num_paint_tiles_x = std::max(1,
+		static_cast<int>(std::fabs(this->rectangle().width / paint.size.x)));
 	const float paint_tile_width =
 		this->rectangle().width / num_paint_tiles_x;
 
-	const int num_paint_tiles_y =
-		static_cast<int>(std::fabs(this->rectangle().height / paint.size.y));
+	const int num_paint_tiles_y = std::max(1,
+		static_cast<int>(std::fabs(this->rectangle().height / paint.size.y)));
 	const float paint_tile_height =
 		this->rectangle().height / num_paint_tiles_y;
 

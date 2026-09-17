@@ -7,6 +7,13 @@
 #include <string>
 #include <vector>
 
+class LevelObjectBuilder;
+namespace labrador
+{
+	class RenderResources;
+	class AudioResources;
+}
+
 class LevelLoadedInfo
 {
 public:
@@ -28,13 +35,12 @@ public:
 	// three screens later"; the disk half was enforced and the contents half
 	// was not.
 	//
-	// WHAT IT DOES NOT DO. It does not resolve sprite sheets or frame names
-	// against what the manifest loaded, and it does not decode a single object
-	// entry - what an entry means is LevelObjectBuilder's vocabulary, not this
-	// class's, and moving it here to check it would move it here for good. The
-	// two object lists are checked as far as this class understands them:
-	// that they are present and are arrays.
+	// Resource names and object entries are checked by validate_content after
+	// the complete manifest has loaded, including its optional sound banks.
 	void validate() const;
+	void validate_content(const LevelObjectBuilder& builder,
+		const labrador::RenderResources& render_resources,
+		const labrador::AudioResources& audio_resources) const;
 
 	// How the stage-select menu names and pictures this level. They live in
 	// the level file rather than in a table beside the menu, so that adding a

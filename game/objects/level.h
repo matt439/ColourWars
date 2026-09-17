@@ -97,6 +97,10 @@ public:
 
 	void update(const std::vector<PlayerInputData>& player_inputs, float dt);
 
+	// Refresh size-dependent presentation before rendering, even when a menu
+	// covers the match. Called on the main thread, before render workers start.
+	void refresh_layout();
+
 	// A pure read, all the way down. Three caller obligations went with the
 	// three parameters this used to take - pre-size a vector, pre-fill it with
 	// null, and Release every non-null entry - and all three are the
@@ -199,11 +203,11 @@ private:
 
 	mattmath::RectangleF camera_bounds_ = mattmath::RectangleF::ZERO;
 
-	// The two ends of the end-of-match pull-back, worked out once when the
-	// level is built. Both come off rectangles in the level file and a screen
-	// size that cannot change mid-zoom, so recomputing them every frame - two
-	// RectangleF constructions, two reads through the resolution manager and
-	// two divisions - produced the same two values 120 times over.
+	// Authored world bounds survive a resize; the cameras are refitted whenever
+	// the actual screen size changes, including during the results overview.
+	mattmath::RectangleF zoom_out_start_bounds_;
+	mattmath::RectangleF zoom_out_finish_bounds_;
+	mattmath::Vector2F layout_size_ = mattmath::Vector2F::ZERO;
 	labrador::Camera zoom_out_start_camera_ = labrador::Camera::DEFAULT_CAMERA;
 	labrador::Camera zoom_out_finish_camera_ = labrador::Camera::DEFAULT_CAMERA;
 
@@ -251,6 +255,7 @@ private:
 	// camera that follows the body the scene has just moved, and the
 	// projectiles the weapon just fired, which go to the scene.
 	void update_players(float dt);
+	void refresh_player_cameras();
 
 	// The scene's phase 3, run here rather than named on GameObject - see
 	// engine/scene/scene.h for why a virtual with an empty body on five
@@ -260,8 +265,7 @@ private:
 
 	// Says where this frame is watched from: one pane per player while the
 	// match is running, one fullscreen view once it is over. Called at the end
-	// of every update() and once at construction, because draw() is a pure
-	// read and a camera that follows a player is chosen where the player moved.
+	// of every update() and on a resize before the rendering fan-out.
 	void refresh_views();
 
 	// The HUD, the dividers, the debug text and the countdown, over one pane.

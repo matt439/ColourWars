@@ -35,7 +35,7 @@ protected:
 	// type it returns: `this->look().box_colour` at the call site.
 	const PauseMenuPresentation& look() const;
 
-	static std::wstring player_number_text(int player_num);
+	std::wstring player_number_text() const;
 
 	// Not player_num_, which is the name both pages of this family already use
 	// for the heading widget that spells it out.

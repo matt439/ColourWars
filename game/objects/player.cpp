@@ -374,7 +374,8 @@ void Player::update(float dt)
     this->health_regen_timer_ += dt;
 }
 std::vector<std::unique_ptr<CollisionObject>>
-    Player::update_weapon_and_get_projectiles(float dt) const
+    Player::update_weapon_and_get_projectiles(float dt,
+    std::span<CollisionObject* const> objects) const
 {
     // A dead player fires nothing. The pad is still read into input_ while the
     // respawn timer runs, so forwarding it here had a corpse - invisible,
@@ -392,12 +393,22 @@ std::vector<std::unique_ptr<CollisionObject>>
         return {};
     }
 
-    return this->primary_->update_and_get_projectiles(
+    auto projectiles = this->primary_->update_and_get_projectiles(
         this->input(),
         this->center(),
         MovingObject::velocity(),
         this->facing_right(),
         dt);
+    for (const auto& projectile : projectiles)
+    {
+        // Weapons produce paint projectiles; reject a builder that breaks
+        // that contract before it can bypass the launch collision check.
+        auto& paint = dynamic_cast<Projectile&>(*projectile);
+        paint.resolve_launch_obstruction(this->center(), objects);
+    }
+    std::erase_if(projectiles, [](const auto& projectile)
+        { return projectile->for_deletion(); });
+    return projectiles;
 }
 void Player::update_prev_rectangle()
 {

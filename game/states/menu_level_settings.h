@@ -28,6 +28,12 @@ public:
 	WeaponType player_weapon(int player_index) const;
 	void set_player_num(int player_index, int player_num);
 
+	// Bind the roster once, when the player count is chosen. The device that
+	// made that choice is player one; the other connected slots fill the rest.
+	void assign_input_slots(int initiating_slot,
+		const std::vector<int>& available_slots);
+	int player_index_for_slot(int slot) const;
+
 private:
 	std::vector<MenuPlayerSettings> player_settings_;
 	int player_count_ = 0;

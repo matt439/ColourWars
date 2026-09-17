@@ -9,6 +9,7 @@ using namespace labrador;
 WeaponRoller::WeaponRoller(const GameTuning* tuning,
     PlayerTeam team,
     int player_num,
+    int sound_index,
     const Colour& team_colour,
     WeaponType type,
     const Vector2F& player_center,
@@ -20,7 +21,7 @@ WeaponRoller::WeaponRoller(const GameTuning* tuning,
     SpriteFlip flip,
     float layer_depth) :
     Weapon(tuning,
-        team, player_num, team_colour, type, player_center,
+        team, player_num, sound_index, team_colour, type, player_center,
         render_resources, audio_resources,        color, rotation, origin, flip, layer_depth)
 {
 

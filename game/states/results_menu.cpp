@@ -188,7 +188,7 @@ void ResultsMenuInitial::init()
 
 	this->proceed_ = std::make_unique<UiTextDropShadow>(
 		"proceed",
-		L"Press A to proceed",
+		L"Press A/Enter to proceed",
 		style.detail_font,
 		look.proceed_position,
 		this->render_resources(),

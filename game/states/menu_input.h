@@ -7,6 +7,8 @@
 #include "game/states/menu_input_action.h"
 #include <vector>
 
+class MenuLevelSettings;
+
 namespace menu_input_consts
 {
 	// The stick has to pass the first threshold and then fall back inside the
@@ -120,6 +122,13 @@ public:
 	// call and not a draw()-time one: draw() runs on every render worker at
 	// once.
 	std::vector<ProcessedMenuInput> menu_inputs();
+	// Same input, in the fixed roster's player order. A missing device leaves
+	// its own row neutral instead of handing the row to another controller.
+	std::vector<ProcessedMenuInput> player_inputs(const MenuLevelSettings& settings);
+
+	// A menu is taking input back from gameplay. Arming from the previous
+	// menu session must not validate a press made while gameplay owned it.
+	void reset_actions();
 
 private:
 	ProcessedMenuInput menu_input(const labrador::Gamepads& gamepads,
@@ -140,10 +149,9 @@ private:
 	// the menu opened onto. So a release only answers if the press that began
 	// it was seen from here, and a press made while a match was on top was not.
 	//
-	// It is not prime() coming back. prime() had to be called by hand at every
-	// transition, which is what let it drift from PlayerInput's copy; nothing
-	// calls this at a transition, because nothing but a menu ever calls
-	// menu_inputs().
+	// reset_actions() starts a new menu session after gameplay. Page-to-page
+	// transitions keep these flags, but gameplay cannot carry their ownership
+	// forward: the release that closed the last menu may have left one armed.
 	bool armed_[input_slots::pad_count]
 		[menu_input_consts::action_button_count] = {};
 

@@ -37,18 +37,13 @@ protected:
 
 	int player_count() const;
 
-	// The pad slots that actually have a pad in them, in slot order.
-	//
-	// MenuInput answers one entry per slot with the empty ones left neutral, so
-	// a page that is one row per player cannot use the loop index as both the
-	// player and the slot: a lone pad in slot 1 would drive nobody. These two
-	// are what turns "the Nth pad on the couch" into "player N", and the slot
-	// list is what the settings carry into the match, which reads a player's
-	// input by pad slot (game/objects/player_input_data.h).
+	// Available devices, used only when choosing a new roster.
 	std::vector<int> connected_slots() const;
 
-	// menu_inputs() with the empty slots dropped, so entry i is player i's.
-	std::vector<ProcessedMenuInput> connected_inputs() const;
+	// Return true while the roster is missing a controller. Keep each player's
+	// row and offer reconnect or return to the count screen to choose again.
+	bool wait_for_players(const std::vector<ProcessedMenuInput>& inputs);
+	void set_player_prompts(const std::vector<PromptBar::Prompt>& prompts);
 
 	// The sounds only this family makes, beside the cursor, confirm and cancel
 	// every page shares from MenuPage. The music is an effect rather than a
@@ -56,6 +51,9 @@ protected:
 	labrador::SoundBank::WaveHandle error_sound_;
 	labrador::SoundBank::WaveHandle ready_sound_;
 	labrador::SoundBank::EffectHandle music_;
+private:
+	std::vector<PromptBar::Prompt> player_prompts_;
+	bool waiting_for_players_ = false;
 };
 
 class MainMenuTitle final : public MainMenuPage
@@ -170,6 +168,7 @@ private:
 	// frames where an answer actually changes, one repaint of a handful of
 	// widgets.
 	void follow_the_pads_on_the_table();
+	int activating_slot_ = -1;
 
 	// Two, three and four players differ only in the count and the layout.
 	void start_team_select(int players, labrador::ScreenLayout layout);

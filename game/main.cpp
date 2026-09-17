@@ -6,6 +6,7 @@
 #include "game/drawable_text.h"
 #include "game/game_data.h"
 #include "game/objects/level_loaded_info.h"
+#include "game/objects/level_object_builder.h"
 #include "game/presentation.h"
 #include "game/tuning.h"
 #include "game/states/game_states.h"
@@ -144,6 +145,16 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 			throw std::runtime_error(
 				"no levels: the manifest names no assets of kind 'level', so "
 				"there is no stage to play.");
+		}
+
+		// All asset kinds are available now. Check every stage's actual object
+		// construction and resource references before opening the first menu.
+		const LevelObjectBuilder content_validator(app.render_resources(),
+			app.audio_resources(), &tuning.paint());
+		for (const Stage& stage : stages)
+		{
+			level_infos.get(stage.name)->validate_content(content_validator,
+				*app.render_resources(), *app.audio_resources());
 		}
 
 		// The content strings, now asked of the fonts that will draw them.

@@ -35,6 +35,13 @@ void ProjectileRolling::update(float dt)
 	std::ignore = Projectile::update_movement(details.gravity,
 		details.wind_resistance, dt);
 }
+void ProjectileRolling::on_contact(const CollisionObject& /*other*/,
+	const Vector2F& /*normal*/, float /*penetration*/)
+{
+	// A rolling volume paints and damages everything it touches in its one
+	// collision sweep. The floor must not consume it before a nearby player.
+	// Its short lifetime retires it on the following update.
+}
 void ProjectileRolling::draw(DrawList& /*draw_list*/) const
 {
 	// do nothing
@@ -49,4 +56,8 @@ RectangleF ProjectileRolling::bounds() const
 const Shape* ProjectileRolling::shape() const
 {
 	return &this->rectangle_;
+}
+void ProjectileRolling::set_center(const Vector2F& center)
+{
+	this->rectangle_.set_position_at_center(center);
 }

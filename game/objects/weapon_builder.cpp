@@ -9,6 +9,7 @@ std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
     const GameTuning* tuning,
     PlayerTeam team,
     int player_num,
+    int sound_index,
     const Colour& team_colour,
     WeaponType type,
     const Vector2F& player_center,
@@ -20,18 +21,18 @@ std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
     case WeaponType::sprayer:
     case WeaponType::mister:
         return std::make_unique<RelativeVelocityWeapon>(
-            tuning, team, player_num, team_colour, type, player_center,
+            tuning, team, player_num, sound_index, team_colour, type, player_center,
             render_resources, audio_resources);
     case WeaponType::sniper:
-        return std::make_unique<WeaponSniper>(tuning, team, player_num,
+        return std::make_unique<WeaponSniper>(tuning, team, player_num, sound_index,
             team_colour, type, player_center,
             render_resources, audio_resources);
     case WeaponType::roller:
-        return std::make_unique<WeaponRoller>(tuning, team, player_num,
+        return std::make_unique<WeaponRoller>(tuning, team, player_num, sound_index,
             team_colour, type, player_center,
             render_resources, audio_resources);
     case WeaponType::bucket:
-        return std::make_unique<WeaponBucket>(tuning, team, player_num,
+        return std::make_unique<WeaponBucket>(tuning, team, player_num, sound_index,
             team_colour, type, player_center,
             render_resources, audio_resources);
     default:

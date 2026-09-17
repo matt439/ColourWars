@@ -24,6 +24,7 @@ public:
 		const GameTuning* tuning,
 		PlayerTeam team,
 		int player_num,
+		int sound_index,
 		const labrador::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,

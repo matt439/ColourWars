@@ -3,10 +3,26 @@
 A local split-screen paint-shooter for up to four players. Two teams, one
 arena, and a scoreboard that counts painted surface rather than kills.
 
-**It is played on gamepads, and only on gamepads** — one per player, XInput.
-There is no keyboard or mouse path anywhere, including the menus, so a build
-launched with nothing plugged in stops at a title screen that answers no key.
-The title screen says so when that happens.
+Play with XInput gamepads, or with one keyboard-and-mouse player alongside
+them. Up to four players can play at once. The device that selects the player
+count becomes Player 1; additional players use the remaining connected pads
+in slot order, followed by the keyboard and mouse if they are not Player 1.
+That roster stays fixed through team, weapon and stage selection and the match.
+If a controller disconnects during setup, reconnect it or press B/Escape to
+return to player count and choose a new roster.
+
+| Action | Gamepad | Keyboard and mouse |
+|---|---|---|
+| Move | Left stick | A/D |
+| Jump | A or left trigger | Space |
+| Aim | Right stick | Mouse cursor |
+| Shoot | Right trigger | Left mouse button |
+| Drop through a platform | Left stick down | S or Down |
+| Pause/resume | Start | Escape |
+| Debug overlay | Back/View | F1 |
+| Menu navigation | Left stick or D-pad | Arrow keys or WASD |
+| Menu confirm | A | Enter or Space |
+| Menu back | B | Escape or Backspace |
 
 It is also the first client of [Labrador](https://github.com/matt439/Labrador),
 a 2D game engine, which this repository consumes as a submodule. The engine is

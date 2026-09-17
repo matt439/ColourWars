@@ -1,6 +1,8 @@
 #include "game/pch.h"
 #include "game/objects/level_loaded_info.h"
 #include "engine/math/intersects.h"
+#include "game/objects/level_object_builder.h"
+#include <cmath>
 
 using namespace mattmath;
 using namespace labrador;
@@ -76,13 +78,41 @@ void LevelLoadedInfo::validate_spawn(const JsonValue& root,
 		return;
 	}
 
-	// Whole numbers, because every coordinate in a level file is one and
-	// to_string on a float spends six decimal places saying so.
 	throw std::runtime_error(root.where() + " puts a " + team + " spawn at (" +
-		std::to_string(static_cast<int>(spawn.x)) + ", " +
-		std::to_string(static_cast<int>(spawn.y)) + "), outside its own "
+		std::to_string(spawn.x) + ", " +
+		std::to_string(spawn.y) + "), outside its own "
 		"out_of_bounds rectangle - a player built there is retired on the "
 		"first tick of the match.");
+}
+
+void LevelLoadedInfo::validate_content(const LevelObjectBuilder& builder,
+	const RenderResources& render_resources,
+	const AudioResources& audio_resources) const
+{
+	const JsonValue root = this->json_doc_.root();
+	try
+	{
+		// Stage icons use the same sheet as the stage-select page.
+		render_resources.sprite_sheet("sprite_sheet_1")->
+			resolve_sprite_frame(this->icon_frame());
+	}
+	catch (const std::exception& error)
+	{
+		throw std::runtime_error(root.where() + ": icon_frame: " + error.what());
+	}
+	try
+	{
+		audio_resources.sound_bank(this->sound_bank_name())->
+			resolve_effect(this->music_name());
+	}
+	catch (const std::exception& error)
+	{
+		throw std::runtime_error(root.object("sound").where() + ": " + error.what());
+	}
+	// Uses the builder itself, so the accepted vocabulary cannot drift from
+	// the path that starts a match. Objects resolve their assets on construction.
+	builder.validate_objects(this->collision_objects_json(),
+		this->non_collision_objects_json());
 }
 
 std::string LevelLoadedInfo::display_name() const
@@ -109,11 +139,19 @@ RectangleF LevelLoadedInfo::bounds_rectangle(const char* key) const
 	const JsonValue bounds =
 		this->json_doc_.root().object("level_bounds").object(key);
 
-	return RectangleF(
+	const RectangleF rectangle(
 		bounds.number("x"),
 		bounds.number("y"),
 		bounds.number("width"),
 		bounds.number("height"));
+	if (!std::isfinite(rectangle.x) || !std::isfinite(rectangle.y) ||
+		!std::isfinite(rectangle.width) || !std::isfinite(rectangle.height) ||
+		rectangle.width <= 0.0f || rectangle.height <= 0.0f)
+	{
+		throw std::runtime_error(bounds.where() +
+			" needs finite coordinates and positive width and height");
+	}
+	return rectangle;
 }
 
 RectangleF LevelLoadedInfo::out_of_bounds_rectangle() const

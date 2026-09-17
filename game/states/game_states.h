@@ -81,17 +81,8 @@ public:
 	void on_suspend() override;
 	void on_resume() override;
 
-	// The same pair again for the window losing and regaining the foreground,
-	// which is a different question from being covered by a pause menu and
-	// wants the same answer. Alt-tabbing out of a match used to leave it
-	// running with nobody in it — four characters standing still soaking
-	// paint, the clock counting down, the music over whatever the player had
-	// switched to.
-	//
-	// Safe to call straight through to suspend/resume because the engine makes
-	// the edge: notify_activation drops the repeat, so these cannot arrive
-	// twice in a row. That matters, because pause_effect and resume_effect
-	// carry no depth — "suspended twice" and "suspended" are the same state.
+	// Focus and stack coverage are independent reasons to suspend audio.
+	// Regaining either resumes only when the other also permits playback.
 	void on_activated() override;
 	void on_deactivated() override;
 
@@ -102,6 +93,7 @@ private:
 	std::unique_ptr<LevelBuilder> level_builder_ = nullptr;
 	std::unique_ptr<PlayerInput> player_input_ = nullptr;
 	std::unique_ptr<MenuInput> menu_input_ = nullptr;
+	bool covered_ = false;
 
 	// What the three menus this state puts over the match share. They are all
 	// built from the settings this match was built from, so it is the same

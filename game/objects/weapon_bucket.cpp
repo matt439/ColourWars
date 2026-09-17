@@ -8,6 +8,7 @@ using namespace labrador;
 WeaponBucket::WeaponBucket(const GameTuning* tuning,
     PlayerTeam team,
     int player_num,
+    int sound_index,
     const Colour& team_colour,
     WeaponType type,
     const Vector2F& player_center,
@@ -19,7 +20,7 @@ WeaponBucket::WeaponBucket(const GameTuning* tuning,
     SpriteFlip flip,
     float layer_depth) :
     RelativeVelocityWeapon(tuning,
-        team, player_num, team_colour, type, player_center,
+        team, player_num, sound_index, team_colour, type, player_center,
         render_resources, audio_resources,        color, rotation, origin, flip, layer_depth)
 {
 

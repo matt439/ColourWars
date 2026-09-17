@@ -18,9 +18,12 @@ public:
 	// main() owns. A weapon finds its own record in it by `type`, which is why
 	// the five subclasses no longer each name a constant - two of them had
 	// nothing else in them and are gone.
+	// The sound index is the player's 0..3 match position, independent of
+	// the input slot (0..4 with keyboard). Each player needs its own voice.
 	Weapon(const GameTuning* tuning,
 		PlayerTeam team,
 		int player_num,
+		int sound_index,
 		const labrador::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
@@ -169,7 +172,7 @@ protected:
 private:
 	static labrador::SoundBank::EffectHandle resolve_loop_sound(
 		const labrador::SoundBank& sound_bank,
-		const WeaponLoopSounds& loop_sounds, PlayerTeam team, int player_num);
+		const WeaponLoopSounds& loop_sounds, PlayerTeam team, int sound_index);
 
 	std::unique_ptr<ProjectileBuilder> proj_builder_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;
@@ -204,6 +207,7 @@ public:
 	RelativeVelocityWeapon(const GameTuning* tuning,
 		PlayerTeam team,
 		int player_num,
+		int sound_index,
 		const labrador::Colour& team_colour,
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
