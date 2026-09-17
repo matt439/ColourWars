@@ -19,11 +19,16 @@ up is at the bottom, under [What the audit changed](#what-the-audit-changed).
 Reports 7 and 8 were filed off the audited file and answered the same day, in
 `343433c` and `f94ac81`.
 
-**Re-checked 2026-08-27 against `c8176ef`, which the pin now is.** Sixty-five
-commits, and they closed nothing here — see
+**Re-checked 2026-08-27 against `c8176ef`.** Sixty-five commits, and they
+closed nothing here — see
 [What the 2026-08-27 bump changed](#what-the-2026-08-27-bump-changed) at the
 bottom. Report 6's citations moved again, because the audio seam landed
 underneath them, and are corrected below.
+
+**Re-checked 2026-09-17 against `984cf13`, which the pin now is.** Twenty-nine
+commits, and again nothing closed — but one of them reached this repository's
+loading order and had to be finished here. See
+[What the 2026-09-17 bump changed](#what-the-2026-09-17-bump-changed).
 
 ## The rule that governs this file
 
@@ -68,7 +73,7 @@ reachable on a machine with no pad.
 ## 6. No audio bus, master gain, listener or voice cap — **hold until the workaround exists**
 
 **Do not file this yet.** Everything below is true and re-verified against
-`c8176ef`, but filing it before the client-side mix is written throws away the
+`984cf13`, but filing it before the client-side mix is written throws away the
 exhibit that would make it persuasive. The engine has been consistent about
 declining features no client has demonstrated wanting; a report with 74
 hand-written multiplications attached is a different document from a report
@@ -77,9 +82,9 @@ without them.
 ### What happens
 
 `SoundBank::play_wave` and `play_effect` take a volume **per call**
-(`sound_bank.h:130,136`) and the class carries no gain. `AudioResources` is a
+(`sound_bank.h:129,135`) and the class carries no gain. `AudioResources` is a
 bank registry with no gain either. The one object that could do it globally is
-a private member of `Application` (`application.h:244`) with no accessor among
+a private member of `Application` (`application.h:252`) with no accessor among
 its services. So a client can only multiply a gain into every emitter, cannot
 touch a fire-and-forget wave it holds no handle to, and cannot reach the object
 that could do it globally.
@@ -290,7 +295,9 @@ lookup.
 
 # What is deliberately not here
 
-Re-checked 2026-08-15 against `6b5c0bd`.
+Re-checked 2026-08-15 against `6b5c0bd`; citations re-pointed 2026-09-17 at
+`984cf13`, where the comment sweeps moved every one of them by a few lines and
+changed none of the facts.
 
 - **`CameraTools` never sets a scale**, so field of view is whatever the pane's
   pixel size is and a 4K player sees nine times the world a 720p player does.
@@ -298,15 +305,15 @@ Re-checked 2026-08-15 against `6b5c0bd`.
   whether the engine's camera owns a resolution-independent world height.
 
   **What changed is that the engine has now written down the adjacent
-  contract.** `camera_tools.h:13-27` says `viewport_size` is in *world* units,
+  contract.** `camera_tools.h:13-28` says `viewport_size` is in *world* units,
   that `calculate_camera` never reads `prev_camera.scale` and must not, and
   that passing pixels "is correct only at scale 1, silently and everywhere".
   This game passes `player_viewport(i).size()` — pixels — at
-  `level.cpp:84,385`, which is correct *because* it never zooms, and would go
+  `level.cpp:91,472`, which is correct *because* it never zooms, and would go
   quietly wrong the day it does. Worth knowing before anyone adds a zoom.
 
 - **`Renderer::window_size_changed` returns a signal `Application` ignores**
-  (`application.cpp:384,411`, both `std::ignore =`), and **nothing reports the
+  (`application.cpp:389,416`, both `std::ignore =`), and **nothing reports the
   desktop size**. Both still true.
 
   **But the reason this was parked has expired.** It was filed under "one part
@@ -460,3 +467,110 @@ problems, and the menu client has a fourth answer it arrived at on purpose. If
 that is worth a report it is a report about the release edge, and it needs the
 same thing report 6 needs: an exhibit, which in this case would be a page that
 wants a repeat and cannot have one.
+
+---
+
+# What the 2026-09-17 bump changed
+
+Twenty-nine commits, `c8176ef` → `984cf13`: the engine's GPT-6 review series
+applied, on top of a comment sweep across the whole of `engine/`. Read straight
+after the pin moved, as this file asks.
+
+**It closed nothing here.** Report 6 is still the only live one. The seven
+audio files in this bump are the comment sweep and nothing else — across every
+engine header outside `render/` and `math/`, the only non-comment line that
+changed is `DirectionRepeat::start_held`, and
+[What was offered and not taken](#what-was-offered-and-not-taken) already
+records why this client has no `DirectionRepeat` for it to matter to.
+
+**Nothing broke.** Both presets built clean under `/W4 /WX` with no change on
+this side, where the 2026-08-27 bump cost an include. The first build step is
+new, though: `check_engine_includes` is now a dependency of `labrador_settings`
+(`3a70b82`), so it runs when a consumer builds only its game target and not
+just in the default build. CLAUDE.md's "the only thing enforcing that
+direction from this tree" is now enforced on every build here rather than on
+most of them.
+
+**One commit reached this repository's loading order and stopped short, and
+this bump was spent finishing it.** `92966b0` makes `Application::load_manifest`
+resolve a relative manifest path beside the executable and every relative
+directory inside the manifest beside the manifest, so a game runs from
+wherever it is started — the engine's samples had said they did and did not
+(its G6-09). This game reads `tuning.json` and `presentation.json` *before* the
+manifest, by design, so the rule did not reach them: the pin bump alone turned
+a game that failed on `./manifest.json` from the wrong start directory into one
+that failed on `./tuning.json` from the same place, with the manifest sitting
+beside it and now resolvable. Reproduced before fixing — launched from the
+repository root, `startup failure: read_json_file - cannot open
+'./tuning.json'`. `content_root.h` anticipated exactly this: its pieces are
+public "so that a game with its own loading order can apply them itself", and
+this is that game.
+
+**Spent in this commit.** `main.cpp` resolves both files under
+`executable_directory()` before reading them, with the manifest left to the
+engine. `legacy_save_file_path()` resolves the same way, and that is not a
+courtesy: the old game could only run with its content in the working
+directory, so beside the exe is where every save it ever wrote is, and the
+carry-over now finds it from any start directory. CLAUDE.md and the CMake
+comment said "relative to its working directory" and say the opposite now. And
+CI's start-up check launches from the workspace root instead of from beside
+the exe, because started from the exe's own folder the two roots coincide and
+the check proved nothing about which one was used. Verified from the
+repository root and from `C:\Windows\Temp`: the window comes up, stderr empty.
+
+Worth writing down what kind of finding this is, because it is not a report.
+This client had no workaround here; it had the bug, and README's "runs from
+anywhere" was untrue until today, unproven because CI launched from the one
+directory where it could not fail. The engine found it in its own sample, fixed
+it, and the fix arrived with one seam left for a client with a different
+loading order to close. That is the boundary working in the direction this
+file does not usually record.
+
+**Four fixes that read as though they reach here, and do not**, each checked
+rather than assumed:
+
+- **`Visual::bounds()` reports the drawn box now**, origin and rotation
+  included, so the cull agrees with the draw (`8dcab46`). Both `Visual`s this
+  game builds — the level objects of `"type": "Visual"` and the viewport
+  dividers, `level_object_builder.cpp` — pass no origin and no turn, and the
+  one sheet frame naming an origin is the identity (recorded in the 2026-08-27
+  section). The box is the destination rectangle it always was.
+- **The math constants are `constinit`** (`e03606f`). The review's cross-TU
+  bug needs a namespace-scope object in a client copying one of them before
+  the engine's own initialisers have run. Every `Vector2F::ZERO`,
+  `RectangleF::ZERO` and `Camera::DEFAULT_CAMERA` in `game/` is a member
+  default or a default argument, evaluated at construction. Two things sit at
+  namespace scope: `Colour::black` copied into a divider colour, and `Colour`
+  was already `constexpr`; and `menu_consts::DESIGN_RESOLUTION`
+  (`menu_page.h:24`), built from two literals through a constructor that was
+  out of line at `c8176ef` and is `constexpr` now — so it *was* dynamically
+  initialised, and is not any more, and it never mattered because its fifteen
+  readers are all inside functions. Nothing here was reading zeros.
+- **A segment through a polygon's two corners is a hit now** (`d373f71`). The
+  three routines it fixed are not on this game's path: its one `intersects.h`
+  call is `rectangle_point_intersect` (`level_loaded_info.cpp:74`), and the
+  narrow phase is a separating-axis test over polygon edges, which the fix
+  does not touch. Report 7's argument for keeping `intersects` — that a client
+  should not have to write segment-against-rectangle itself — is still an
+  argument about a call this client does not yet make.
+- **`Window` destroys the native window on every exit** (`fb542b1`), and
+  `~StateContext` drains its own stack (`eb7336f`). `wWinMain`'s catch prints
+  and opens a `MessageBoxA`; before this bump, a throw after
+  `app.initialize()` — a manifest that does not open — unwound `Application`
+  with the native window alive and its user data pointing at a destroyed
+  object, and the message box's modal loop was a way back into that window
+  procedure. Fixed on the engine's side, no change here: the catch was always
+  the shape the engine's samples have, and the engine made that shape safe
+  rather than asking clients to change it. The drain is report 1's fix
+  reaching a destructor this game never runs directly.
+
+**Citations moved, facts did not.** Report 6: `sound_bank.h:130,136` →
+`129,135`, `application.h:244` → `252`. Under "deliberately not here":
+`camera_tools.h:13-27` → `13-28`, `application.cpp:384,411` → `389,416`.
+`scene.h:198` and `label.h:28` did not move. Every engine-side one is a
+comment paragraph growing or shrinking above the line. And one citation had
+drifted on *this* side without a pin bump to blame — `level.cpp:84,385` for
+the pixel-sized `calculate_camera` calls is `91,472` now, and has been since
+this repository's own edits to that file. The line numbers here are checked
+against the engine at every bump and against the game only when someone
+notices, which is the honest description of the rule.

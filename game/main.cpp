@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "engine/app/application.h"
+#include "engine/app/content_root.h"
 #include "engine/core/registry.h"
 #include "game/directory_consts.h"
 #include "game/drawable_text.h"
@@ -61,18 +62,30 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		// this one is built by the loader that fills the registry above.
 		StageList stages;
 
+		// Where the content is: beside the executable, wherever the game was
+		// started from. That is the engine's rule (engine/app/content_root.h)
+		// and load_manifest applies it to the manifest's path itself - but
+		// the two files below are read before the manifest, so it is applied
+		// here by hand, with the same pieces. Without this they would resolve
+		// against the working directory while the manifest did not, and a
+		// game started from a shortcut would fail on tuning.json with the
+		// manifest sitting right there beside it.
+		const std::string content_root = executable_directory();
+
 		// Every number a paint match is balanced on. Declared here for the
 		// same reason as the registry above: a level's players, weapons and
 		// projectiles all borrow from it, so it has to outlive the
 		// Application. Read before the manifest because it names no asset -
 		// it is the file the manifest's assets are used *by*.
-		const GameTuning tuning(TUNING_PATH.c_str());
+		const GameTuning tuning(
+			resolved_under(content_root, TUNING_PATH).c_str());
 
 		// And what the shell looks like: every font, colour, offset and box
 		// size the menus, the HUD and the debug overlay are laid out from.
 		// Read here, beside the tuning, for the same reason - a menu page
 		// borrows it and every page outlives none of this.
-		const Presentation presentation(PRESENTATION_PATH.c_str());
+		const Presentation presentation(
+			resolved_under(content_root, PRESENTATION_PATH).c_str());
 
 		GameData data;
 
@@ -117,6 +130,10 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 				nullptr
 			});
 
+		// Resolved beside the executable by the engine, and every relative
+		// directory inside it beside the manifest - so the fonts, textures,
+		// levels and sounds it names come out of the same staged mirror the
+		// two files above were read from.
 		app.load_manifest(MANIFEST_PATH);
 
 		// A game with no levels has nothing to offer the stage-select menu,

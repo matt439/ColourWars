@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/directory_consts.h"
+#include "engine/app/content_root.h"
 
 #include <cstdlib>
 
@@ -48,6 +49,12 @@ namespace directory_consts
 
 	std::string legacy_save_file_path()
 	{
-		return std::string("./save/") + SAVE_FILE_NAME;
+		// Beside the executable, by the same rule as the content - and it
+		// used to be inside the content mirror, which is why. Resolved here
+		// rather than left relative so that the carry-over in save.cpp finds
+		// an old save from any start directory, and so that the fallback
+		// above writes somewhere that does not move with one.
+		return labrador::resolved_under(labrador::executable_directory(),
+			std::string("./save/") + SAVE_FILE_NAME);
 	}
 }

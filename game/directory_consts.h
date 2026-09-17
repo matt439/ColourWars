@@ -13,6 +13,13 @@
 // frames the manifest has to have loaded first. Putting them in the manifest
 // would mean an asset kind whose loader has to run before every other kind,
 // expressed as a line ordering rather than as a call.
+//
+// The three content paths are relative to the executable, not to the working
+// directory: the engine's rule (engine/app/content_root.h), which is where the
+// build stages content/ and where an installer would too. The engine applies
+// it to the manifest inside Application::load_manifest; main.cpp applies it to
+// the other two by hand, because they are read before the manifest is. These
+// are the names, and the resolution happens where the file is opened.
 namespace directory_consts
 {
 	const static std::string MANIFEST_PATH = "./manifest.json";
@@ -35,7 +42,10 @@ namespace directory_consts
 	std::string save_file_path();
 
 	// Where the save used to live, still read once if nothing is at the path
-	// above - see save.cpp. Returns the same "./save/save_data.json" it always
-	// was, relative to the working directory, which is what made it fragile.
+	// above - see save.cpp. "save/save_data.json" beside the executable: the
+	// old game wrote it relative to the working directory, but it could only
+	// run with its content there, which is the same place, so this is where
+	// every save the old game ever wrote is - wherever the new one is started
+	// from.
 	std::string legacy_save_file_path();
 }

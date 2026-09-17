@@ -90,9 +90,10 @@ target_link_libraries(ColourWars PRIVATE
 )
 target_precompile_headers(ColourWars PRIVATE pch.h)
 
-# The game resolves content relative to its working directory
-# (directory_consts.h), so mirror content/ beside the built exe and it runs
-# from anywhere. The manifest sits at the top of it and names the rest.
+# The game resolves content beside its executable (directory_consts.h, and
+# the engine's content_root.h for the rule), so mirror content/ beside the
+# built exe and it runs from anywhere. The manifest sits at the top of it and
+# names the rest.
 #
 # Its own target, not a POST_BUILD step on ColourWars: a POST_BUILD only
 # runs when the exe relinks, so editing or adding an asset without touching a

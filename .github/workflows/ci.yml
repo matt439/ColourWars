@@ -98,12 +98,20 @@ jobs:
       # silence rather than throwing on the file the manifest names. That is
       # the regression this exists to catch.
       #
+      # It is launched from the workspace root and not from beside the exe,
+      # on purpose: content resolves beside the executable (the engine's
+      # content_root.h; main.cpp for the two files read before the manifest),
+      # and the working directory is the one place it must not be resolved
+      # from. Started from the exe's own folder the two are the same and the
+      # check proves nothing about it; started from here, a file read against
+      # the working directory is a startup throw and is caught below.
+      #
       # NOT GATING, and the reason is honest: a Direct3D 11 device on a
       # headless runner is not the thing under test. If it fails because the
       # runner has no adapter, that is a fact about the runner. Read the log; a
       # startup *exception* names itself on stderr and is worth acting on, a
       # device failure is not.
-      - name: A clone with no audio still starts
+      - name: A clone with no audio still starts, from anywhere
         continue-on-error: true
         shell: pwsh
         run: |
@@ -113,7 +121,7 @@ jobs:
             exit 1
           }
           $p = Start-Process -FilePath "$dir/ColourWars.exe" `
-            -WorkingDirectory $dir -PassThru `
+            -WorkingDirectory "${{ github.workspace }}" -PassThru `
             -RedirectStandardError "$dir/startup.err" `
             -RedirectStandardOutput "$dir/startup.out"
           Start-Sleep -Seconds 15
@@ -144,4 +152,4 @@ jobs:
             Write-Error "the game is running but never opened a window"
             exit 1
           }
-          Write-Output "the game reached its window without a wave bank"
+          Write-Output "the game reached its window without a wave bank, from the workspace root"
