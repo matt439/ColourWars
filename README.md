@@ -31,6 +31,15 @@ to save it between launches. Fixed palettes also stay fixed on a rematch.
 Each gameplay HUD names Team A or Team B on its dark identity panel; results
 label the teams with A/B letters beside the bars and percentages.
 
+Options and Pause both offer **Controls / audio**, with a controls reference,
+five levels of controller stick sensitivity, and separate music and SFX volume.
+Higher sensitivity needs less aim-stick travel; level 3 preserves the original
+deadzone. Mouse aim follows the cursor and the roller keeps its fixed aim.
+Use Left/Right to adjust, then Apply to save for all players and future launches.
+Back discards unapplied changes. From Pause, Back returns to the pause menu;
+Resume uses the new settings in the current match. Volume is 0-100% of the
+authored mix, including menu sounds, and zero mutes that category.
+
 | Action | Gamepad | Keyboard and mouse |
 |---|---|---|
 | Move | Left stick | A/D |

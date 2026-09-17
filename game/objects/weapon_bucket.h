@@ -15,6 +15,7 @@ public:
 		const mattmath::Vector2F& player_center,
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
+		const PlaySettings* preferences,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,

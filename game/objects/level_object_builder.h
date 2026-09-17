@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game/play_settings.h"
+
 #include "engine/assets/json.h"
 #include "engine/collision/collision_object.h"
 #include <memory>
@@ -16,6 +18,7 @@ public:
 	// how finely is a balance number rather than a property of the level file.
 	LevelObjectBuilder(labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
+		const PlaySettings* preferences,
 		const PaintTuning* paint);
 
 	// By value. The outer unique_ptr on all three of these was a heap
@@ -42,6 +45,7 @@ private:
 	const PaintTuning* paint_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;
 	const labrador::AudioResources* audio_resources_ = nullptr;
+	const PlaySettings* preferences_ = nullptr;
 
 	std::unique_ptr<labrador::CollisionObject>
 		build_collision_object(const labrador::JsonValue& json,

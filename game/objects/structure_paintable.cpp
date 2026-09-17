@@ -12,6 +12,7 @@ StructurePaintable::StructurePaintable(
 	std::unique_ptr<Shape> collision_shape,
 	RenderResources* render_resources,
 	const AudioResources* audio_resources,
+	const PlaySettings* preferences,
 	const PaintTuning* paint,
 	CollisionObjectType collision_type,
 	const TeamColour& team_colours,
@@ -29,6 +30,7 @@ StructurePaintable::StructurePaintable(
 		faces_(faces),
 		paint_(paint)
 {
+	this->preferences_ = preferences;
 	this->paint_tiles_ = this->generate_paint_tiles();
 	this->sound_bank_ = audio_resources->sound_bank(paint->sound_bank);
 	this->paint_sound_ =
@@ -123,7 +125,7 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 			if (!tile_painted)
 			{
 				this->sound_bank_->play_wave(this->paint_sound_,
-					this->paint_->splash_sound.volume);
+					this->paint_->splash_sound.volume * this->preferences_->sfx_gain());
 			}
 			tile_painted = true;
 		}

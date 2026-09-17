@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game/play_settings.h"
+
 #include "game/objects/player_team.h"
 #include "game/objects/weapon_type.h"
 #include "game/objects/weapon_details.h"
@@ -29,6 +31,7 @@ public:
 		const mattmath::Vector2F& player_center,
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
+		const PlaySettings* preferences,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
@@ -82,6 +85,7 @@ public:
 
 protected:
 	labrador::SoundBank* sound_bank_ = nullptr;
+	const PlaySettings* preferences_ = nullptr;
 
 	// Both borrowed, both never null: the second is the slot in the first this
 	// weapon's type resolved to, kept so the lookup happens once.
@@ -213,6 +217,7 @@ public:
 		const mattmath::Vector2F& player_center,
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
+		const PlaySettings* preferences,
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,

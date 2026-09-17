@@ -207,6 +207,7 @@ namespace
 		const JsonValue json = root.object("pause_menu");
 
 		PauseMenuPresentation menu;
+		menu.box_size = read_vector(json, "box_size");
 		menu.box_colour = read_colour(json, "box_colour");
 		menu.layout = read_layout(json, "layout");
 		menu.window_open_sound = json.string("window_open_sound");
@@ -347,6 +348,11 @@ Presentation::Presentation(const char* path)
 
 	this->menu_ = read_menu_style(root);
 	this->main_menu_ = read_main_menu(root);
+	const JsonValue controls = root.object("controls_settings");
+	this->controls_settings_.layout = read_layout(controls, "layout");
+	this->controls_settings_.heading_position = read_vector(controls, "heading_position");
+	this->controls_settings_.controls_position = read_vector(controls, "controls_position");
+	this->controls_settings_.help_font = controls.string("help_font");
 	this->pause_menu_ = read_pause_menu(root);
 	this->end_menu_ = read_end_menu(root);
 	this->results_menu_ = read_results_menu(root);
@@ -363,6 +369,11 @@ const MenuStyle& Presentation::menu() const
 const MainMenuPresentation& Presentation::main_menu() const
 {
 	return this->main_menu_;
+}
+
+const ControlsSettingsPresentation& Presentation::controls_settings() const
+{
+	return this->controls_settings_;
 }
 
 const PauseMenuPresentation& Presentation::pause_menu() const

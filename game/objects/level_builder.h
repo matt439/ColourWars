@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game/play_settings.h"
+
 #include "game/objects/level.h"
 #include "game/states/menu_level_settings.h"
 #include "game/objects/team_colour.h"
@@ -20,6 +22,7 @@ public:
 	LevelBuilder(labrador::ViewportManager* viewport_manager,
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
+		const PlaySettings* preferences,
 		const labrador::Registry<LevelLoadedInfo>* level_infos,
 		const GameTuning* tuning,
 		const Presentation* presentation,
@@ -36,6 +39,7 @@ private:
 	std::unique_ptr<PlayerBuilder> player_builder_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;
 	const labrador::AudioResources* audio_resources_ = nullptr;
+	const PlaySettings* preferences_ = nullptr;
 	const labrador::Registry<LevelLoadedInfo>* level_infos_ = nullptr;
 	const GameTuning* tuning_ = nullptr;
 	const Presentation* presentation_ = nullptr;

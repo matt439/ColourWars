@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game/play_settings.h"
+
 #include "game/objects/paintable_object.h"
 #include "game/objects/structure.h"
 #include "game/objects/paint_tile.h"
@@ -35,6 +37,7 @@ public:
 		std::unique_ptr<mattmath::Shape> collision_shape,
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
+		const PlaySettings* preferences,
 		const PaintTuning* paint,
 		CollisionObjectType collision_type,
 		const TeamColour& team_colours,
@@ -90,6 +93,7 @@ private:
 	// tiles down, which is the information on_collision indexes with.
 	std::vector<PaintTile> generate_paint_tiles();
 	labrador::SoundBank* sound_bank_ = nullptr;
+	const PlaySettings* preferences_ = nullptr;
 
 	// Resolved once at construction. This plays from update(), on any tile
 	// that was just painted, so it was a map descent per splash per frame.

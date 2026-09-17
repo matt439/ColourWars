@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game/play_settings.h"
+
 #include "game/objects/player.h"
 #include "game/states/menu_level_settings.h"
 #include "game/objects/level_loaded_info.h"
@@ -22,6 +24,7 @@ public:
 		TeamColour team_colours,
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
+		const PlaySettings* preferences,
 		const labrador::ViewportManager* viewport_manager) const;
 private:
 	const GameTuning* tuning_ = nullptr;

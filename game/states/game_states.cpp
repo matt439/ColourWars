@@ -135,7 +135,7 @@ void GameLevel::init()
 		this->data()->gamepads(),
 		this->data()->keyboard(),
 		this->data()->mouse(),
-		this->data()->tuning());
+		this->data()->tuning(), &this->data()->save()->play_settings());
 
 	this->menu_input_ = std::make_unique<MenuInput>(
 		this->data()->gamepads(),
@@ -148,6 +148,7 @@ void GameLevel::init()
 		this->data()->viewport_manager(),
 		this->data()->render_resources(),
 		this->data()->audio_resources(),
+		&this->data()->save()->play_settings(),
 		this->data()->level_infos(),
 		this->data()->tuning(),
 		this->data()->presentation(),

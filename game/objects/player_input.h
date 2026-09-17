@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game/play_settings.h"
+
 #include "engine/input/gamepads.h"
 #include "engine/input/keyboard.h"
 #include "engine/input/mouse.h"
@@ -16,6 +18,8 @@ namespace player_input_consts
 	// used to be applied on top of a circular deadzone the pad API had already
 	// applied, without rescaling, so a stick had half its travel dead and the
 	// other half started at half speed.
+	// Movement retains this threshold. The aim stick reads the user's saved
+	// sensitivity separately and defaults to the same threshold.
 	constexpr float stick_deadzone = 0.5f;
 
 	// The keyboard half of the keyboard-and-mouse slot.
@@ -53,10 +57,12 @@ public:
 	// The tuning is here for one number: the threshold a stick has to pass to
 	// mean "drop through". That comparison used to live in Player, which is
 	// what made the action unreachable without a stick.
+	// Preferences are borrowed from Save and read on every frame, including
+	// the first frame after applying settings in the pause menu.
 	PlayerInput(const labrador::Gamepads* gamepads,
 		const labrador::Keyboard* keyboard,
 		const labrador::Mouse* mouse,
-		const GameTuning* tuning);
+		const GameTuning* tuning, const PlaySettings* preferences);
 
 	// Returns exactly input_slots::count entries, indexed by slot. Absent
 	// inputs carry neutral data rather than being omitted: the index is a slot
@@ -84,4 +90,5 @@ private:
 	const labrador::Keyboard* keyboard_ = nullptr;
 	const labrador::Mouse* mouse_ = nullptr;
 	const GameTuning* tuning_ = nullptr;
+	const PlaySettings* preferences_ = nullptr;
 };

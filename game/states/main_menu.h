@@ -104,6 +104,7 @@ private:
 	std::unique_ptr<OptionRow> resolution_row_ = nullptr;
 	std::unique_ptr<OptionRow> full_screen_row_ = nullptr;
 	std::unique_ptr<OptionRow> team_palette_row_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> controls_ = nullptr;
 
 	std::unique_ptr<labrador::UiTextDropShadow> apply_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;

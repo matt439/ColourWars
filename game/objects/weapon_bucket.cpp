@@ -14,6 +14,7 @@ WeaponBucket::WeaponBucket(const GameTuning* tuning,
     const Vector2F& player_center,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
+    const PlaySettings* preferences,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
@@ -21,7 +22,7 @@ WeaponBucket::WeaponBucket(const GameTuning* tuning,
     float layer_depth) :
     RelativeVelocityWeapon(tuning,
         team, player_num, sound_index, team_colour, type, player_center,
-        render_resources, audio_resources,        color, rotation, origin, flip, layer_depth)
+        render_resources, audio_resources, preferences, color, rotation, origin, flip, layer_depth)
 {
 
 }
@@ -30,6 +31,6 @@ void WeaponBucket::handle_shoot_sound(bool shooting_this_update, bool /*holding_
     if (shooting_this_update)
     {
         this->sound_bank_->play_wave(this->shoot_sound_,
-            this->details().shoot_sound_volume);
+            this->details().shoot_sound_volume * this->preferences_->sfx_gain());
     }
 }

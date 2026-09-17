@@ -39,6 +39,7 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 	TeamColour team_colours,
 	RenderResources* render_resources,
 	const AudioResources* audio_resources,
+	const PlaySettings* preferences,
 	const ViewportManager* viewport_manager) const
 {
 	std::vector<std::unique_ptr<Player>> players;
@@ -77,6 +78,7 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 			this->tuning_,
 			render_resources,
 			audio_resources,
+			preferences,
 			setting.num,
 			setting.team,
 			setting.weapon,
@@ -89,7 +91,7 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 				setting.weapon,
 				rect.center(),
 				render_resources,
-				audio_resources),
+				audio_resources, preferences),
 			WeaponType::grenade_std,
 			team_colours.team_colour(setting.team),
 			viewport_manager->

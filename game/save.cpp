@@ -64,6 +64,27 @@ SaveData Save::load_from_json(const char* json_path) const
     {
     }
 
+    // Independent fields: an older save or one bad preference must not reset
+    // the display settings or the other valid preferences.
+    const auto read_preference = [&root](const char* key, int minimum,
+        int maximum, int& destination)
+    {
+        try
+        {
+            const int value = root.integer(key);
+            if (value >= minimum && value <= maximum)
+            {
+                destination = value;
+            }
+        }
+        catch (const std::runtime_error&)
+        {
+        }
+    };
+    read_preference("aim_sensitivity", 1, 5, data.play.aim_sensitivity);
+    read_preference("music_volume", 0, 100, data.play.music_volume);
+    read_preference("sfx_volume", 0, 100, data.play.sfx_volume);
+
     return data;
 }
 bool Save::file_exists(const std::string& path)
@@ -164,6 +185,9 @@ bool Save::write_save_file(const SaveData& data) const
     d.AddMember("fullscreen", data.fullscreen, d.GetAllocator());
     Value palette(TeamColourTools::palette_key(data.team_palette), d.GetAllocator());
     d.AddMember("team_palette", palette, d.GetAllocator());
+    d.AddMember("aim_sensitivity", data.play.aim_sensitivity, d.GetAllocator());
+    d.AddMember("music_volume", data.play.music_volume, d.GetAllocator());
+    d.AddMember("sfx_volume", data.play.sfx_volume, d.GetAllocator());
 
     // Accept() flushes the stream when the top-level value ends, so every byte
     // has reached fwrite by the time fclose is called below.
@@ -301,5 +325,22 @@ void Save::set_team_palette_and_save(TeamColourPair palette)
     // Validate before changing the in-memory settings or writing the file.
     TeamColourTools::palette_key(palette);
     this->save_data_.team_palette = palette;
+    this->save_to_file();
+}
+
+const PlaySettings& Save::play_settings() const
+{
+    return this->save_data_.play;
+}
+
+void Save::set_play_settings_and_save(const PlaySettings& settings)
+{
+    if (settings.aim_sensitivity < 1 || settings.aim_sensitivity > 5 ||
+        settings.music_volume < 0 || settings.music_volume > 100 ||
+        settings.sfx_volume < 0 || settings.sfx_volume > 100)
+    {
+        throw std::invalid_argument("Play settings are outside their supported range");
+    }
+    this->save_data_.play = settings;
     this->save_to_file();
 }

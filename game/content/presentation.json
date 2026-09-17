@@ -56,7 +56,7 @@
       "play": "DODGER_BLUE"
     },
     "options_value_colour": "DARK_TURQUOISE",
-    "options_spacing": { "x": 250.0, "y": 110.0 },
+    "options_spacing": { "x": 250.0, "y": 100.0 },
     "weapon_description": {
       "colour": "WHITE_SMOKE",
       "shadow_offset": { "x": 1.0, "y": 1.0 },
@@ -97,12 +97,24 @@
     }
   },
 
+  "controls_settings": {
+    "heading_position": { "x": 150.0, "y": 100.0 },
+    "controls_position": { "x": 1050.0, "y": 220.0 },
+    "help_font": "gill_sans_mt_bold_24",
+    "layout": {
+      "position": { "x": 150.0, "y": 250.0 },
+      "size": { "x": 300.0, "y": 60.0 },
+      "spacing": { "x": 530.0, "y": 90.0 }
+    }
+  },
+
   "pause_menu": {
+    "box_size": { "x": 900.0, "y": 800.0 },
     "box_colour": "DODGER_BLUE",
     "layout": {
-      "position": { "x": 610.0, "y": 300.0 },
+      "position": { "x": 610.0, "y": 180.0 },
       "size": { "x": 100.0, "y": 50.0 },
-      "spacing": { "x": 200.0, "y": 100.0 }
+      "spacing": { "x": 200.0, "y": 130.0 }
     },
     "window_open_sound": "UI_Clicks01"
   },

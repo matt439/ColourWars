@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/states/controls_settings_menu.h"
 #include "game/states/main_menu.h"
 #include "game/drawable_text.h"
 #include "game/build_info.h"
@@ -207,7 +208,7 @@ void MainMenuTitle::init()
 		this->menu_style().detail_shadow_offset);
 	this->text_container_->add_child(this->build_id_.get());
 
-	this->play_effect(this->music_, true, this->look().music.volume);
+	this->play_music(this->music_, this->look().music.volume);
 }
 
 #pragma endregion MainMenuTitle
@@ -340,7 +341,7 @@ void MainMenuHome::init()
 			this->data()->application()->quit();
 		});
 
-	this->play_effect(this->music_, true, this->look().music.volume);
+	this->play_music(this->music_, this->look().music.volume);
 }
 
 #pragma endregion MainMenuHome
@@ -606,11 +607,16 @@ void MainMenuOptions::init()
 		[this](Direction direction) { this->cycle_team_palette(direction); });
 	this->update_team_palette_selection_text();
 
+	this->controls_ = std::make_unique<UiTextDropShadow>("controls", L"Controls / audio",
+		this->menu_style().item_font, this->calculate_widget_position(0, 5),
+		this->render_resources(), this->menu_style().unhighlight,
+		this->menu_style().shadow_colour, this->menu_style().item_shadow_offset);
+
 	this->apply_ = std::make_unique<UiTextDropShadow>(
 		"apply",
 		L"Apply",
 		this->menu_style().item_font,
-		this->calculate_widget_position(0, 5),
+		this->calculate_widget_position(0, 6),
 		this->render_resources(),
 		this->menu_style().unhighlight,
 		this->menu_style().shadow_colour,
@@ -620,7 +626,7 @@ void MainMenuOptions::init()
 		"back",
 		L"Back",
 		this->menu_style().item_font,
-		this->calculate_widget_position(0, 6),
+		this->calculate_widget_position(0, 7),
 		this->render_resources(),
 		this->menu_style().unhighlight,
 		this->menu_style().shadow_colour,
@@ -636,6 +642,7 @@ void MainMenuOptions::init()
 	this->text_container_->add_child(this->resolution_row_.get());
 	this->text_container_->add_child(this->full_screen_row_.get());
 	this->text_container_->add_child(this->team_palette_row_.get());
+	this->text_container_->add_child(this->controls_.get());
 	this->text_container_->add_child(this->apply_.get());
 	this->text_container_->add_child(this->back_.get());
 
@@ -648,6 +655,11 @@ void MainMenuOptions::init()
 	this->focus_.add(this->resolution_row_.get());
 	this->focus_.add(this->full_screen_row_.get());
 	this->focus_.add(this->team_palette_row_.get());
+	this->focus_.add(this->controls_.get(), [this]
+		{
+			this->play_wave(this->confirm_sound_);
+			this->context()->push(std::make_unique<ControlsSettingsMenu>(this->menu_context()));
+		});
 	this->focus_.add(this->apply_.get(), [this] { this->apply_settings(); });
 	this->focus_.add(this->back_.get(), [this]
 		{
@@ -661,7 +673,7 @@ void MainMenuOptions::init()
 	// frame rather than on its first Apply.
 	this->refresh_resolution_row();
 
-	this->play_effect(this->music_, true, this->look().music.volume);
+	this->play_music(this->music_, this->look().music.volume);
 }
 
 void MainMenuOptions::cycle_resolution(
@@ -984,7 +996,7 @@ void MainMenuModeSelect::init()
 				std::make_unique<MainMenuHome>(this->menu_context()));
 		});
 
-	this->play_effect(this->music_, true, this->look().music.volume);
+	this->play_music(this->music_, this->look().music.volume);
 }
 
 #pragma endregion MainMenuModeSelect
@@ -1136,7 +1148,7 @@ void MainMenuPlayerCount::init()
 				std::make_unique<MainMenuModeSelect>(this->menu_context()));
 		});
 
-	this->play_effect(this->music_, true, this->look().music.volume);
+	this->play_music(this->music_, this->look().music.volume);
 }
 
 void MainMenuPlayerCount::start_join(int players, ScreenLayout layout)
@@ -1191,7 +1203,7 @@ void MainMenuJoin::init()
 		style.detail_shadow_offset);
 	this->text_container_->add_child(this->status_.get());
 	this->refresh_players(this->input()->player_inputs(*this->level_settings()));
-	this->play_effect(this->music_, true, this->look().music.volume);
+	this->play_music(this->music_, this->look().music.volume);
 }
 
 void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs)
@@ -1639,7 +1651,7 @@ void MainMenuTeamSelect::init()
 		this->player_widgets_.push_back(std::move(widgets));
 	}
 
-	this->play_effect(this->music_, true, this->look().music.volume);
+	this->play_music(this->music_, this->look().music.volume);
 }
 
 #pragma endregion MainMenuTeamSelect
@@ -1952,7 +1964,7 @@ void MainMenuWeaponSelect::init()
 
 		this->player_widgets_.push_back(std::move(widgets));
 	}
-	this->play_effect(this->music_, true, this->look().music.volume);
+	this->play_music(this->music_, this->look().music.volume);
 }
 std::wstring MainMenuWeaponSelect::weapon_description(WeaponType type) const
 {
@@ -2220,7 +2232,7 @@ void MainMenuStageSelect::init()
 	this->text_container_->add_child(this->stage_name_.get());
 	this->text_container_->add_child(this->ready_.get());
 
-	this->play_effect(this->music_, true, this->look().music.volume);
+	this->play_music(this->music_, this->look().music.volume);
 }
 void MainMenuStageSelect::cycle_stages(labrador::Direction direction)
 {

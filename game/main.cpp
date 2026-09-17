@@ -150,7 +150,7 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		// All asset kinds are available now. Check every stage's actual object
 		// construction and resource references before opening the first menu.
 		const LevelObjectBuilder content_validator(app.render_resources(),
-			app.audio_resources(), &tuning.paint());
+			app.audio_resources(), &save.play_settings(), &tuning.paint());
 		for (const Stage& stage : stages)
 		{
 			level_infos.get(stage.name)->validate_content(content_validator,

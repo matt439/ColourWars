@@ -154,11 +154,13 @@ namespace
 
 LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
 	const AudioResources* audio_resources,
+	const PlaySettings* preferences,
 	const PaintTuning* paint) :
 	paint_(paint),
 	render_resources_(render_resources),
 	audio_resources_(audio_resources)
 {
+	this->preferences_ = preferences;
 
 }
 
@@ -208,6 +210,7 @@ std::unique_ptr<CollisionObject>
 			std::make_unique<RectangleF>(rectangle),
 			this->render_resources_,
 			this->audio_resources_,
+			this->preferences_,
 			this->paint_,
 			collision_type,
 			team_colours,

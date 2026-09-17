@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game/play_settings.h"
+
 #include "game/objects/weapon_sniper.h"
 #include "game/objects/weapon_bucket.h"
 #include "game/objects/weapon_roller.h"
@@ -29,5 +31,6 @@ public:
 		WeaponType type,
 		const mattmath::Vector2F& player_center,
 		labrador::RenderResources* render_resources,
-		const labrador::AudioResources* audio_resources);
+		const labrador::AudioResources* audio_resources,
+		const PlaySettings* preferences);
 };

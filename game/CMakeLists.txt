@@ -46,6 +46,7 @@ add_executable(ColourWars WIN32
     objects/weapon_roller.cpp
     objects/weapon_sniper.cpp
 
+    states/controls_settings_menu.cpp
     states/end_menu.cpp
     states/game_states.cpp
     states/main_menu.cpp

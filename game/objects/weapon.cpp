@@ -25,6 +25,7 @@ Weapon::Weapon(const GameTuning* tuning,
     const Vector2F& player_center,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
+    const PlaySettings* preferences,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
@@ -42,6 +43,7 @@ Weapon::Weapon(const GameTuning* tuning,
         type_(type),
         player_center_(player_center)
 {
+    this->preferences_ = preferences;
     const WeaponDetails& details = this->details();
 
     this->ammo_ = tuning->starting_ammo();
@@ -271,7 +273,7 @@ void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
         this->sound_bank_->play_effect(
             this->loop_sound_,
             true,
-            this->details().shoot_sound_volume);
+            this->details().shoot_sound_volume * this->preferences_->sfx_gain());
     }
     else
     {
@@ -300,6 +302,8 @@ void Weapon::resume_sounds() const
     {
         return;
     }
+    this->sound_bank_->set_effect_volume(this->loop_sound_,
+        this->details().shoot_sound_volume * this->preferences_->sfx_gain());
     this->sound_bank_->resume_effect(this->loop_sound_);
 }
 SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
@@ -542,13 +546,14 @@ RelativeVelocityWeapon::RelativeVelocityWeapon(
     const Vector2F& player_center,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
+    const PlaySettings* preferences,
     const Colour& color,
     float rotation,
     const Vector2F& origin,
     labrador::SpriteFlip flip,
     float layer_depth) :
     Weapon(tuning, team, player_num, sound_index, team_colour, type,
-        player_center, render_resources, audio_resources,
+        player_center, render_resources, audio_resources, preferences,
         color, rotation, origin, flip, layer_depth)
 {
 

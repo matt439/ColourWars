@@ -19,6 +19,7 @@ Player::Player(const RectangleF& rectangle,
     const GameTuning* tuning,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
+    const PlaySettings* preferences,
     int player_num,
     PlayerTeam team,
     WeaponType primary,
@@ -50,6 +51,7 @@ Player::Player(const RectangleF& rectangle,
     prev_rectangle_(rectangle),
     respawn_position_(respawn_position)
 {
+    this->preferences_ = preferences;
     const PlayerTuning& player = tuning->player();
 
     this->health_ = player.starting_health;
@@ -312,7 +314,7 @@ void Player::on_projectile_contact(CollisionObjectType other_type)
 
     if (this->damage_sound_timer_ >= this->player_tuning().damage_sound_delay)
 	{
-		this->sound_bank_->play_wave(this->damage_sound_, this->player_tuning().damage_sound.volume);
+		this->sound_bank_->play_wave(this->damage_sound_, this->player_tuning().damage_sound.volume * this->preferences_->sfx_gain());
 		this->damage_sound_timer_ = 0.0f;
 	}
 }
@@ -336,7 +338,7 @@ void Player::update(float dt)
         if (this->health_ <= 0.0f)
         {
 			this->state_ = PlayerState::dead;
-			this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume);
+			this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume * this->preferences_->sfx_gain());
         }
 
         this->damage_sound_timer_ += dt;
@@ -533,7 +535,7 @@ void Player::do_jump(float dt)
 		MovingObject::set_velocity_y(this->player_tuning().jump_launch_velocity);
 		this->set_air_time(0.0f);
 		this->set_move_state(PlayerMoveState::jumping);
-		this->sound_bank_->play_wave(this->jump_sound_, this->player_tuning().jump_sound.volume);
+		this->sound_bank_->play_wave(this->jump_sound_, this->player_tuning().jump_sound.volume * this->preferences_->sfx_gain());
 	}
 	else if (move_state == PlayerMoveState::on_ceiling)
 	{
@@ -675,7 +677,7 @@ void Player::respawn()
 	this->health_ = this->player_tuning().starting_health;
 	this->primary_->reset_ammo();
 	this->state_ = PlayerState::alive;
-    this->sound_bank_->play_wave(this->respawn_sound_, this->player_tuning().respawn_sound.volume);
+    this->sound_bank_->play_wave(this->respawn_sound_, this->player_tuning().respawn_sound.volume * this->preferences_->sfx_gain());
 }
 PlayerAnimationState Player::calculate_animation_state() const
 {

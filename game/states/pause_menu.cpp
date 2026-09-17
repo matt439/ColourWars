@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/states/controls_settings_menu.h"
 #include "game/states/pause_menu.h"
 
 using namespace DirectX;
@@ -208,7 +209,7 @@ void PauseMenuInitial::init()
 		"box",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, style.box_size),
+		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
 		look.box_colour);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
@@ -252,11 +253,15 @@ void PauseMenuInitial::init()
 		style.shadow_colour,
 		style.item_shadow_offset);
 
+	this->controls_ = std::make_unique<UiTextDropShadow>("controls", L"Controls / audio",
+		style.item_font, this->calculate_widget_position(1, 4), this->render_resources(),
+		style.unhighlight, style.shadow_colour, style.item_shadow_offset);
+
 	this->quit_ = std::make_unique<UiTextDropShadow>(
 		"quit",
 		L"Quit",
 		style.item_font,
-		this->calculate_widget_position(1, 4),
+		this->calculate_widget_position(1, 5),
 		this->render_resources(),
 		style.unhighlight,
 		style.shadow_colour,
@@ -272,6 +277,7 @@ void PauseMenuInitial::init()
 	this->text_container_->add_child(this->connection_status_.get());
 	this->text_container_->add_child(this->resume_.get());
 	this->text_container_->add_child(this->restart_.get());
+	this->text_container_->add_child(this->controls_.get());
 	this->text_container_->add_child(this->quit_.get());
 
 	this->focus_.add(this->resume_.get(), [this]
@@ -285,6 +291,12 @@ void PauseMenuInitial::init()
 			this->context()->transition_to(std::make_unique<PauseMenuConfirmation>(
 				this->menu_context(), this->pausing_player(),
 				ConfirmationType::restart));
+		});
+	this->focus_.add(this->controls_.get(), [this]
+		{
+			this->play_wave(this->confirm_sound_);
+			this->context()->push(std::make_unique<ControlsSettingsMenu>(
+				this->menu_context(), this->pausing_player()));
 		});
 	this->focus_.add(this->quit_.get(), [this]
 		{
@@ -353,7 +365,7 @@ void PauseMenuConfirmation::init()
 		"box",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, style.box_size),
+		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
 		look.box_colour);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);

@@ -22,6 +22,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	const ViewportManager* viewport_manager,
 	RenderResources* render_resources,
 	const AudioResources* audio_resources,
+	const PlaySettings* preferences,
 	// Qualified: DirectXTK has a Mouse too, and this file opens with
 	// using namespace DirectX.
 	const labrador::Mouse* mouse) :
@@ -38,6 +39,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	zoom_out_start_bounds_(zoom_out_start_bounds),
 	zoom_out_finish_bounds_(zoom_out_finish_bounds)
 {
+	this->preferences_ = preferences;
 	const MatchTuning& match = tuning->match();
 
 	this->timer_ = match.duration;
@@ -196,6 +198,10 @@ void Level::suspend() const
 
 void Level::resume() const
 {
+	this->sound_bank_->set_effect_volume(this->music_,
+		this->music_volume_ * this->preferences_->music_gain());
+	this->sound_bank_->set_effect_volume(this->zoom_out_sound_,
+		this->tuning_->match().zoom_out_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->music_);
 	this->sound_bank_->resume_effect(this->zoom_out_sound_);
 	this->resume_player_sounds();
@@ -224,9 +230,9 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		// made correct.
 		if (this->start_timer_ >= this->tuning_->match().countdown)
 		{
-			this->sound_bank_->play_effect(this->music_, true, this->music_volume_);
+			this->sound_bank_->play_effect(this->music_, true, this->music_volume_ * this->preferences_->music_gain());
 			this->sound_bank_->play_wave(this->countdown_sound_,
-				this->tuning_->match().countdown_sound.volume);
+				this->tuning_->match().countdown_sound.volume * this->preferences_->sfx_gain());
 		}
 		this->start_timer_ -= dt;
 		if (this->start_timer_ > 0.0f)
@@ -270,7 +276,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			this->sound_bank_->stop_effect(this->music_, true);
 			this->stop_player_sounds();
 			this->sound_bank_->play_effect(this->zoom_out_sound_, false,
-				this->tuning_->match().zoom_out_sound.volume);
+				this->tuning_->match().zoom_out_sound.volume * this->preferences_->sfx_gain());
 		}
 	}
 	else if (this->state_ == LevelState::zoom_out)

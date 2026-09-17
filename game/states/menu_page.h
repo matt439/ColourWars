@@ -140,6 +140,14 @@ protected:
 	labrador::SoundBank::WaveHandle confirm_sound_;
 	labrador::SoundBank::WaveHandle cancel_sound_;
 
+	// Menu and results sounds use the user's SFX gain. Music is separate so
+	// it keeps its own gain without changing the authored relative volumes.
+	void play_wave(labrador::SoundBank::WaveHandle wave, float volume = 1.0f,
+		float pitch = 0.0f, float pan = 0.0f) const;
+	void play_effect(labrador::SoundBank::EffectHandle effect, bool loop = false,
+		float volume = 1.0f, float pitch = 0.0f, float pan = 0.0f) const;
+	void play_music(labrador::SoundBank::EffectHandle effect, float volume) const;
+
 	// Says what this page's buttons do. Call it from init() with whatever this
 	// page actually reads - and only with what it reads, because a legend that
 	// is wrong is worse than no legend at all.

@@ -92,6 +92,7 @@ private:
 	std::unique_ptr<labrador::UiTextDropShadow> resume_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> restart_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> quit_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> controls_ = nullptr;
 };
 
 class PauseMenuConfirmation final : public PauseMenuPage

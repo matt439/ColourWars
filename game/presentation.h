@@ -119,6 +119,14 @@ struct SelectPresentation
 	labrador::Colour unselected = labrador::Colour::white;
 };
 
+struct ControlsSettingsPresentation
+{
+	WidgetLayout layout;
+	mattmath::Vector2F heading_position;
+	mattmath::Vector2F controls_position;
+	std::string help_font;
+};
+
 struct MainMenuPresentation
 {
 	std::string title_font;
@@ -179,6 +187,7 @@ struct MainMenuPresentation
 
 struct PauseMenuPresentation
 {
+	mattmath::Vector2F box_size;
 	labrador::Colour box_colour = labrador::Colour::black;
 	WidgetLayout layout;
 	std::string window_open_sound;
@@ -309,6 +318,7 @@ public:
 
 	const MenuStyle& menu() const;
 	const MainMenuPresentation& main_menu() const;
+	const ControlsSettingsPresentation& controls_settings() const;
 	const PauseMenuPresentation& pause_menu() const;
 	const EndMenuPresentation& end_menu() const;
 	const ResultsMenuPresentation& results_menu() const;
@@ -319,6 +329,7 @@ public:
 private:
 	MenuStyle menu_;
 	MainMenuPresentation main_menu_;
+	ControlsSettingsPresentation controls_settings_;
 	PauseMenuPresentation pause_menu_;
 	EndMenuPresentation end_menu_;
 	ResultsMenuPresentation results_menu_;

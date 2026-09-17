@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game/play_settings.h"
+
 #include "engine/collision/collision_object.h"
 #include "game/objects/collision_object_type.h"
 #include "game/objects/team_colour.h"
@@ -72,6 +74,7 @@ public:
 		const labrador::ViewportManager* viewport_manager,
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
+		const PlaySettings* preferences,
 		const labrador::Mouse* mouse);
 
 	// Silences everything this level started.
@@ -135,6 +138,7 @@ private:
 	std::vector<std::unique_ptr<labrador::GameObject>> viewport_dividers_;
 
 	labrador::SoundBank* sound_bank_ = nullptr;
+	const PlaySettings* preferences_ = nullptr;
 
 	// The level's own music comes from its definition file, so its name is not
 	// known until here - but it is known once, at construction, which is where

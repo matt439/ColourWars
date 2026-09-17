@@ -1,5 +1,7 @@
 #pragma once
 
+#include "game/play_settings.h"
+
 #include "game/tuning.h"
 #include "game/objects/weapon_type.h"
 #include "game/objects/player_team.h"
@@ -82,6 +84,7 @@ public:
         const GameTuning* tuning,
         labrador::RenderResources* render_resources,
         const labrador::AudioResources* audio_resources,
+        const PlaySettings* preferences,
         int player_num,
         PlayerTeam team,
         WeaponType primary,
@@ -218,6 +221,7 @@ private:
     mattmath::Vector2F respawn_position_ = mattmath::Vector2F::ZERO;
 
     labrador::SoundBank* sound_bank_ = nullptr;
+    const PlaySettings* preferences_ = nullptr;
 
     // Resolved once at construction. These fire from update(), so the map
     // descent they used to cost was on the frame loop (T7, T8).

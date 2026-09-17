@@ -228,3 +228,23 @@ Camera MenuPage::ui_camera(const Viewport& viewport) const
 	camera.translation += viewport.position() / camera.scale;
 	return camera;
 }
+
+void MenuPage::play_wave(SoundBank::WaveHandle wave, float volume,
+	float pitch, float pan) const
+{
+	SoundBankObject::play_wave(wave,
+		volume * this->save()->play_settings().sfx_gain(), pitch, pan);
+}
+
+void MenuPage::play_effect(SoundBank::EffectHandle effect, bool loop,
+	float volume, float pitch, float pan) const
+{
+	SoundBankObject::play_effect(effect, loop,
+		volume * this->save()->play_settings().sfx_gain(), pitch, pan);
+}
+
+void MenuPage::play_music(SoundBank::EffectHandle effect, float volume) const
+{
+	SoundBankObject::play_effect(effect, true,
+		volume * this->save()->play_settings().music_gain());
+}

@@ -8,6 +8,7 @@ using namespace labrador;
 LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	RenderResources* render_resources,
 	const AudioResources* audio_resources,
+	const PlaySettings* preferences,
 	const Registry<LevelLoadedInfo>* level_infos,
 	const GameTuning* tuning,
 	const Presentation* presentation,
@@ -28,11 +29,12 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	partitioner_(partitioner),
 	mouse_(mouse)
 {
+	this->preferences_ = preferences;
 	this->team_colour_ = std::make_unique<TeamColourTools>();
 	this->player_builder_ = std::make_unique<PlayerBuilder>(tuning);
 
 	this->level_object_builder_ = std::make_unique<LevelObjectBuilder>(
-		this->render_resources_, this->audio_resources_,
+		this->render_resources_, this->audio_resources_, this->preferences_,
 		&tuning->paint());
 }
 
@@ -73,7 +75,7 @@ std::unique_ptr<Level>
 	std::vector<Player*> players;
 	for (std::unique_ptr<Player>& player :
 		this->player_builder_->build_players(settings, load_info, team_colours,
-			this->render_resources_, this->audio_resources_,
+			this->render_resources_, this->audio_resources_, this->preferences_,
 			this->viewport_manager_))
 	{
 		players.push_back(scene->add(std::move(player)));
@@ -97,5 +99,6 @@ std::unique_ptr<Level>
 		this->viewport_manager_,
 		this->render_resources_,
 		this->audio_resources_,
+		this->preferences_,
 		this->mouse_);
 }

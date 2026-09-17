@@ -7,8 +7,8 @@ using namespace player_input_consts;
 using namespace labrador;
 
 PlayerInput::PlayerInput(const Gamepads* gamepads, const Keyboard* keyboard,
-	const Mouse* mouse, const GameTuning* tuning) :
-	gamepads_(gamepads), keyboard_(keyboard), mouse_(mouse), tuning_(tuning)
+	const Mouse* mouse, const GameTuning* tuning, const PlaySettings* preferences) :
+	gamepads_(gamepads), keyboard_(keyboard), mouse_(mouse), tuning_(tuning), preferences_(preferences)
 {
 }
 
@@ -61,7 +61,7 @@ PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
 	// Aim is a direction, so the deadzone is radial and the magnitude is
 	// discarded by the normalise. Past the deadzone the vector is non-zero by
 	// construction, which is the test for "the player asked to aim".
-	const Vector2F aim = apply_deadzone(pad.right_stick, stick_deadzone);
+	const Vector2F aim = apply_deadzone(pad.right_stick, this->preferences_->aim_deadzone());
 	result.shoot_direction_requested = aim != Vector2F::ZERO;
 	if (result.shoot_direction_requested)
 	{

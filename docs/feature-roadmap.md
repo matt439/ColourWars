@@ -74,11 +74,39 @@ identifier was visually checked. CI now builds and inspects the Release ZIP and
 uses it for the existing startup smoke check. A clean Windows machine still
 needs a separate deployment check. The engine pin and source are unchanged.
 
+## Fourth increment: pause controls/settings
+
+Implemented:
+
+- Options and Pause open the same Controls / audio page, with a persistent
+  controller and keyboard/mouse reference. Returning preserves the parent
+  page, including pending display/palette selections, and never resumes a match.
+- Stick sensitivity has five levels. Since aiming selects an absolute direction,
+  sensitivity changes the radial aim deadzone (70%, 60%, 50%, 35%, 20%), rather
+  than scaling a vector that is then normalized. Level 3 preserves the original
+  behavior. Movement, mouse cursor aim and fixed roller aim are unchanged.
+- Separate music and SFX volume scale the authored mix from 0-100%, including
+  menu clicks, results, paint, player and weapon sounds. Apply affects menu
+  music immediately; paused music and weapon loops pick up the new gain before
+  resuming, and subsequent sounds use the new gain when played.
+- Apply saves all three preferences for every player; Back discards unapplied
+  changes. Older or malformed fields fall back independently. A live match reads
+  the saved preferences, and new matches and restarts use them too. Settings
+  retain pause-menu input ownership and the disconnected-player fallback.
+
+Validation: normal Debug and Release builds and a Release startup with an
+isolated save; a temporary native probe using real game objects, assets and
+D3D11 rendering, with the engine's existing null audio backend for recorded
+volume assertions. Checked Apply/discard, parent-page preservation, limits,
+old/malformed saves, separate-process restoration, live stick input, music/SFX
+gains, all five weapons, and pause/settings/resume/restart with 1-4 players.
+Scripted menu input checked ownership, participant/spare fallback and reconnect
+guards. Captured the shared page in all four layouts and checked widget bounds
+and screenshots. Physical controller feel and audible balance still need a
+hardware check. The engine pin and source are unchanged.
+
 ## Next increments
 
-1. Pause controls/settings: persistent controls reference, aim sensitivity and
-   separate music/SFX volume, shared with main-menu settings and saved between
-   launches. Verify settings affect current play and survive a restart.
-2. Sessions: best-of rounds, cumulative wins and per-player paint contribution
+1. Sessions: best-of rounds, cumulative wins and per-player paint contribution
    on results. Define contribution ownership and repaint accounting before
    changing scoring; preserve a standalone match and solo practice.
