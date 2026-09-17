@@ -52,8 +52,11 @@ out/build/x64-debug/game/ColourWars.exe
 
 The build mirrors `game/content/` beside the exe (the `colourwars_content`
 target, which runs every build so asset-only edits are picked up), so the game
-runs from anywhere. It resolves content relative to its working directory —
-see [game/directory_consts.h](game/directory_consts.h).
+runs from anywhere. It resolves content beside the executable, not against the
+working directory — the engine's rule (`engine/app/content_root.h`), which
+`Application::load_manifest` applies to the manifest and
+[game/main.cpp](game/main.cpp) applies by hand to the two files it reads before
+the manifest. See [game/directory_consts.h](game/directory_consts.h).
 
 ## Tests
 
