@@ -90,6 +90,21 @@ target_link_libraries(ColourWars PRIVATE
 )
 target_precompile_headers(ColourWars PRIVATE pch.h)
 
+add_custom_target(colourwars_build_info
+    COMMAND "${CMAKE_COMMAND}"
+        "-DSOURCE_DIR=${PROJECT_SOURCE_DIR}"
+        "-DOUTPUT_DIR=${PROJECT_BINARY_DIR}/generated"
+        "-DCONFIG=$<CONFIG>"
+        "-DRENDER_BACKEND=${LABRADOR_RENDER_BACKEND}"
+        "-DAUDIO_BACKEND=${LABRADOR_AUDIO_BACKEND}"
+        -P "${PROJECT_SOURCE_DIR}/cmake/write_build_info.cmake"
+    BYPRODUCTS "${PROJECT_BINARY_DIR}/generated/game/build_info.h"
+        "${PROJECT_BINARY_DIR}/generated/build-info.txt"
+    VERBATIM
+)
+add_dependencies(ColourWars colourwars_build_info)
+target_include_directories(ColourWars PRIVATE "${PROJECT_BINARY_DIR}/generated")
+
 # The game resolves content beside its executable (directory_consts.h, and
 # the engine's content_root.h for the rule), so mirror content/ beside the
 # built exe and it runs from anywhere. The manifest sits at the top of it and

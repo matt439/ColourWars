@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
 #include "game/drawable_text.h"
+#include "game/build_info.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -197,6 +198,14 @@ void MainMenuTitle::init()
 	this->text_container_->add_child(this->title_.get());
 	this->text_container_->add_child(this->start_.get());
 	this->text_container_->add_child(this->no_pad_.get());
+
+	this->build_id_ = std::make_unique<UiTextDropShadow>(
+		"build_id", build_info::label, this->menu_style().detail_font,
+		this->look().build_id_position, this->render_resources(),
+		this->look().title_start_text_colour,
+		this->menu_style().shadow_colour,
+		this->menu_style().detail_shadow_offset);
+	this->text_container_->add_child(this->build_id_.get());
 
 	this->play_effect(this->music_, true, this->look().music.volume);
 }

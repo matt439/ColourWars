@@ -103,6 +103,43 @@ the engine. Labrador puts its tests, its benchmark and its sample behind
 `PROJECT_IS_TOP_LEVEL`, so consuming it as a submodule brings in the library
 and nothing else.
 
+### Release ZIP
+
+From an x64 Developer prompt with `VCPKG_ROOT` set:
+
+```
+cmake --preset x64-release
+cmake --build --preset x64-release --target package
+```
+
+The shareable build is
+`out/build/x64-release/packages/ColourWars-windows-x64.zip`. Extract the entire
+folder and run `ColourWars.exe` on Windows 10/11 x64 with a Direct3D 11-capable
+GPU. The ZIP includes DirectXTK, XAudio2Redist and the release MSVC runtime DLLs
+beside the executable; Visual Studio and vcpkg are not needed to play. Windows
+provides Direct3D, XInput and the Universal CRT.
+
+The title screen displays the game revision and build configuration.
+`build-info.txt` also records the full game and engine revisions and selected
+backends. The identifier refreshes on every build, with `-dirty` for local
+changes and `source-archive` when Git metadata is unavailable. Rebuild after
+committing to produce a package labelled with that commit.
+
+Only the assets listed in [cmake/release_assets.cmake](cmake/release_assets.cmake)
+are packaged; configure checks that the list matches the runtime manifest.
+The ZIP includes licence notices, the seven compiled fonts, the sprite sheet,
+all three levels, tuning, presentation and the optional sound-bank definition.
+It is always silent: local wave banks and source audio are excluded even on a
+developer's machine. Development art, content tools and saves are excluded too.
+Do not distribute the normal `game/` build directory in place of this ZIP.
+Debug packaging is rejected because its runtime is not redistributable.
+
+To check a release, extract the ZIP outside the checkout, launch from a different
+working directory, confirm the title's build label, and start a solo match.
+The expected stderr message says the optional wave bank is absent. Settings
+still live in `%LOCALAPPDATA%\ColourWars\save_data.json`, independently of where
+the ZIP was extracted.
+
 ## The engine submodule
 
 `external/labrador` pins an exact Labrador revision. A submodule pin is a fact

@@ -1,0 +1,6 @@
+#pragma once
+
+namespace build_info
+{
+    inline constexpr wchar_t label[] = L"@BUILD_LABEL@";
+}

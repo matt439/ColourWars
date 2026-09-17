@@ -17,3 +17,5 @@ project(ColourWars LANGUAGES CXX RC)
 add_subdirectory(external/labrador)
 
 add_subdirectory(game)
+
+include(cmake/release_package.cmake)

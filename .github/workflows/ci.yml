@@ -94,6 +94,31 @@ jobs:
           call "%VCVARS%"
           cmake --build --preset ${{ matrix.preset }}
 
+      - name: Package Release
+        if: matrix.preset == 'x64-release'
+        run: |
+          call "%VCVARS%"
+          cmake --build --preset x64-release --target package
+
+      - name: Extract and inspect Release package
+        if: matrix.preset == 'x64-release'
+        shell: pwsh
+        run: |
+          $destination = Join-Path $env:RUNNER_TEMP "ColourWars-release"
+          Expand-Archive -LiteralPath "out/build/x64-release/packages/ColourWars-windows-x64.zip" -DestinationPath $destination
+          $package = Join-Path $destination "ColourWars-windows-x64"
+          $files = Get-ChildItem -LiteralPath $package -File -Recurse
+          if ($files | Where-Object {
+            $_.Extension -in '.xwb', '.wav', '.mp3', '.pdb' -or
+            ($_.Extension -eq '.exe' -and $_.Name -ne 'ColourWars.exe')
+          }) { throw "Development files or audio leaked into the package" }
+          foreach ($required in 'ColourWars.exe', 'DirectXTK.dll', 'xaudio2_9redist.dll',
+            'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'build-info.txt') {
+            if (-not (Test-Path -LiteralPath (Join-Path $package $required))) {
+              throw "Package is missing $required"
+            }
+          }
+
       # A clone has no wave bank, so the game should reach its window in
       # silence rather than throwing on the file the manifest names. That is
       # the regression this exists to catch.
@@ -116,6 +141,11 @@ jobs:
         shell: pwsh
         run: |
           $dir = "out/build/${{ matrix.preset }}/game"
+          # Release exercises the extracted, redistributable package outside
+          # the checkout. Debug retains the ordinary build smoke check.
+          if ('${{ matrix.preset }}' -eq 'x64-release') {
+            $dir = Join-Path $env:RUNNER_TEMP "ColourWars-release/ColourWars-windows-x64"
+          }
           if (Test-Path "$dir/sounds/sound_bank_1.xwb") {
             Write-Error "the runner has a wave bank; this check assumes a clone has none"
             exit 1

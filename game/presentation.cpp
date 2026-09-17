@@ -140,6 +140,7 @@ namespace
 		menu.title_font = fonts.string("title");
 		menu.announcement_font = fonts.string("announcement");
 		menu.weapon_description_font = fonts.string("weapon_description");
+		menu.build_id_position = read_vector(json, "build_id_position");
 
 		menu.title_text_colour = read_colour(json, "title_text_colour");
 		menu.title_start_text_colour =

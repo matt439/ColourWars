@@ -124,6 +124,7 @@ struct MainMenuPresentation
 	std::string title_font;
 	std::string announcement_font;
 	std::string weapon_description_font;
+	mattmath::Vector2F build_id_position = { 0.0f, 0.0f };
 
 	labrador::Colour title_text_colour = labrador::Colour::white;
 	labrador::Colour title_start_text_colour = labrador::Colour::white;

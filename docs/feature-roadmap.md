@@ -51,6 +51,29 @@ player/result colours, solo result visibility and the rematch route, and
 captures gameplay, options and results for visual inspection. The engine pin
 and source are unchanged.
 
+## Third increment: release package
+
+Implemented:
+
+- The Release `package` target produces `ColourWars-windows-x64.zip` with an
+  explicit runtime asset list checked against the manifest. It includes the
+  required DirectXTK, XAudio2Redist and release MSVC DLLs, plus licence notices.
+- Packages exclude source art, tools, saves and all audio, including a local
+  commercial wave bank. They run silently through the existing optional-bank
+  fallback. Debug packaging is rejected.
+- The title screen shows the game revision and build configuration.
+  `build-info.txt` records full game/engine revisions and backends. Metadata
+  refreshes on each build, including local-change markers.
+
+Validation: Debug and Release builds; ZIP extraction into a temporary directory
+outside the checkout; all 16 packaged assets matched against their sources; no
+wave bank, source audio, content tools or debug symbols; launch with an isolated
+save and a minimal system-only PATH; and inspection confirming the process loads
+DirectXTK, XAudio2Redist and MSVC DLLs from the extracted package. The title-screen
+identifier was visually checked. CI now builds and inspects the Release ZIP and
+uses it for the existing startup smoke check. A clean Windows machine still
+needs a separate deployment check. The engine pin and source are unchanged.
+
 ## Next increments
 
 1. Pause controls/settings: persistent controls reference, aim sensitivity and
@@ -59,6 +82,3 @@ and source are unchanged.
 2. Sessions: best-of rounds, cumulative wins and per-player paint contribution
    on results. Define contribution ownership and repaint accounting before
    changing scoring; preserve a standalone match and solo practice.
-3. Release package: an explicit redistributable asset list, required runtime
-   DLLs and a visible build identifier. Validate an extracted package outside
-   the checkout, without the local commercial wave bank.

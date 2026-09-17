@@ -46,6 +46,7 @@
       "weapon_description": "gill_sans_mt_bold_24"
     },
     "title_text_colour": "GOLDENROD",
+    "build_id_position": { "x": 250.0, "y": 910.0 },
     "title_start_text_colour": "WHITE_SMOKE",
     "title_no_pad_text_colour": "GOLD",
     "backgrounds": {

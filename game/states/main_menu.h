@@ -66,6 +66,7 @@ private:
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> title_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> start_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> build_id_ = nullptr;
 
 	// Shown only while no pad is connected. Its visibility is refreshed every
 	// frame rather than set once, because plugging one in is exactly what this
