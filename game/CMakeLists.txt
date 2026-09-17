@@ -15,6 +15,7 @@ add_executable(ColourWars WIN32
     main.cpp
     presentation.cpp
     save.cpp
+    session.cpp
     tuning.cpp
 
     objects/collision_object_type.cpp

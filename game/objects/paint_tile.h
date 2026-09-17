@@ -71,14 +71,17 @@ public:
 	float area() const;
 	PlayerTeam team() const;
 
-	// Claims the tile for a team and plays the splash. The caller has already
-	// established that the projectile reached it.
-	void paint(PlayerTeam team);
+	// Claims the tile for a team and plays the splash. Credit belongs to the
+	// player who captured it from neutral/enemy paint; friendly repaint keeps
+	// that owner. The caller has established that the projectile reached it.
+	void paint(PlayerTeam team, int player_num);
+	int player_num() const;
 
 	mattmath::RectangleF bounds() const override;
 private:
 	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
 	PlayerTeam team_ = PlayerTeam::none;
+	int player_num_ = -1;
 	TeamColour team_colours_ = TeamColour();
 	PaintTileSplash splash_;
 };

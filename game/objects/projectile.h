@@ -50,6 +50,7 @@ public:
 	void set_for_deletion(bool for_deletion) override;
 
 	float delete_timer() const;
+	int player_num() const;
 
 	// A muzzle can extend through cover even when its owner cannot. Check
 	// the launch volume before Scene defers its first collision sweep.
@@ -71,7 +72,6 @@ protected:
 
 	CollisionObjectType collision_type() const;
 
-	int player_num() const;
 	const labrador::Colour& team_colour() const;
 	projectile_type type() const;
 

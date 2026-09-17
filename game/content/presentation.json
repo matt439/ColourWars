@@ -122,18 +122,24 @@
   "end_menu": {
     "box_colour": "DODGER_BLUE",
     "layout": {
-      "position": { "x": 700.0, "y": 230.0 },
+      "position": { "x": 700.0, "y": 250.0 },
       "size": { "x": 100.0, "y": 50.0 },
       "spacing": { "x": 100.0, "y": 85.0 }
     }
   },
 
   "results_menu": {
+    "box_size": { "x": 1300.0, "y": 860.0 },
+    "session_score_position": { "x": 550.0, "y": 340.0 },
+    "session_result_position": { "x": 650.0, "y": 405.0 },
+    "contribution_position": { "x": 480.0, "y": 635.0 },
+    "contribution_spacing": 45.0,
+    "contribution_font": "gill_sans_mt_bold_24",
     "box_colour": "LIGHT_SLATE_GRAY",
     "heading_colour": "GOLDENROD",
     "fill": {
-      "box_size": { "x": 700.0, "y": 200.0 },
-      "box_y_offset": 300.0,
+      "box_size": { "x": 700.0, "y": 120.0 },
+      "box_y_offset": 380.0,
       "border": { "x": 10.0, "y": 10.0 },
       "delay": 1.0,
       "time": 2.0
@@ -152,9 +158,9 @@
       "gap": 20.0
     },
     "positions": {
-      "proceed": { "x": 725.0, "y": 750.0 },
-      "heading": { "x": 800.0, "y": 235.0 },
-      "winner": { "x": 750.0, "y": 400.0 }
+      "proceed": { "x": 725.0, "y": 880.0 },
+      "heading": { "x": 750.0, "y": 125.0 },
+      "winner": { "x": 650.0, "y": 250.0 }
     },
     "sounds": {
       "winner": { "name": "party_horn", "volume": 1.0 },

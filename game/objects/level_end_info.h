@@ -1,5 +1,8 @@
 #pragma once
 
+#include "game/input_slots.h"
+#include <array>
+
 #include "game/objects/team_colour.h"
 #include "game/objects/player_team.h"
 
@@ -8,6 +11,9 @@ struct LevelEndInfo
 	TeamColour team_colours = TeamColour();
 	float team_a_area = 0.0f;
 	float team_b_area = 0.0f;
+	// Surface still held at the finish, indexed by device slot, not seat.
+	std::array<float, input_slots::count> player_areas{};
+	std::wstring player_percentage_string(int slot) const;
 
 	// Every paintable tile in the arena, painted or not. Only a match with one
 	// team in it reads this: with two teams the question is who painted more of

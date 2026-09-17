@@ -61,12 +61,21 @@ PlayerTeam PaintTile::team() const
 {
 	return this->team_;
 }
-void PaintTile::paint(PlayerTeam team)
+int PaintTile::player_num() const
+{
+	return this->player_num_;
+}
+void PaintTile::paint(PlayerTeam team, int player_num)
 {
 	// The team came off the projectile once, at the structure, instead of
 	// being re-derived from a ten-way enum comparison per tile - which ran
 	// for every tile of the structure that a projectile touched, and
 	// recovered the same answer every time.
+	// Friendly repaint cannot steal contribution. Enemy repaint transfers it.
+	if (this->team_ != team)
+	{
+		this->player_num_ = player_num;
+	}
 	this->team_ = team;
 	this->splash_.reset_and_play();
 }

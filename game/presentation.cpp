@@ -229,6 +229,12 @@ namespace
 		const JsonValue json = root.object("results_menu");
 
 		ResultsMenuPresentation menu;
+		menu.box_size = read_vector(json, "box_size");
+		menu.session_score_position = read_vector(json, "session_score_position");
+		menu.session_result_position = read_vector(json, "session_result_position");
+		menu.contribution_position = read_vector(json, "contribution_position");
+		menu.contribution_spacing = json.number("contribution_spacing");
+		menu.contribution_font = json.string("contribution_font");
 		menu.box_colour = read_colour(json, "box_colour");
 		menu.heading_colour = read_colour(json, "heading_colour");
 

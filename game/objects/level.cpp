@@ -718,6 +718,10 @@ LevelEndInfo Level::level_end_info() const
 			result.team_a_area += paint.team_a;
 			result.team_b_area += paint.team_b;
 			result.total_area += paint.total;
+			for (size_t slot = 0; slot < result.player_areas.size(); ++slot)
+			{
+				result.player_areas[slot] += paint.player_areas[slot];
+			}
 		}
 	}
 

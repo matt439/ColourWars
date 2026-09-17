@@ -201,6 +201,12 @@ struct EndMenuPresentation
 
 struct ResultsMenuPresentation
 {
+	mattmath::Vector2F box_size = { 0.0f, 0.0f };
+	mattmath::Vector2F session_score_position = { 0.0f, 0.0f };
+	mattmath::Vector2F session_result_position = { 0.0f, 0.0f };
+	mattmath::Vector2F contribution_position = { 0.0f, 0.0f };
+	float contribution_spacing = 0.0f;
+	std::string contribution_font;
 	labrador::Colour box_colour = labrador::Colour::black;
 
 	// The heading that differs from MenuStyle's, and the reason MenuStyle has

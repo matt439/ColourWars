@@ -1,6 +1,7 @@
 #pragma once
 
 #include "game/objects/level_end_info.h"
+#include "game/session.h"
 #include "engine/render/colour.h"
 #include "game/states/menu_page.h"
 
@@ -34,10 +35,13 @@ private:
 class ResultsMenuInitial final : public ResultsMenuPage
 {
 public:
-	ResultsMenuInitial(MenuContext* context, const LevelEndInfo& end_info);
+	ResultsMenuInitial(MenuContext* context, const LevelEndInfo& end_info,
+		const Session& session = Session());
 	void init() override;
 	void update(float dt) override;
 private:
+	Session session_;
+	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> details_;
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> fill_box_ = nullptr;

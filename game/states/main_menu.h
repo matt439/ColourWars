@@ -139,8 +139,8 @@ private:
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> standard_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> tdm_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> dm_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> best_of_three_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> best_of_five_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> practice_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;
 };

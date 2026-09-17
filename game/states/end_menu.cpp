@@ -23,7 +23,8 @@ void EndMenuPage::finish(EndMenuAction action) const
 	this->context()->pop(action);
 }
 
-EndMenuInitial::EndMenuInitial(MenuContext* context) : EndMenuPage(context)
+EndMenuInitial::EndMenuInitial(MenuContext* context, const Session& session) :
+	EndMenuPage(context), session_(session)
 {
 
 }
@@ -52,6 +53,7 @@ void EndMenuInitial::init()
 
 	const MenuStyle& style = this->menu_style();
 	const EndMenuPresentation& look = this->look();
+	const bool ongoing = this->session_.is_series() && !this->session_.complete();
 
 	this->focus_.set_style({ style.highlight, style.unhighlight });
 
@@ -70,13 +72,18 @@ void EndMenuInitial::init()
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
-		L"Level End",
+		this->session_.is_series() ? (this->session_.complete() ?
+			L"Series Complete" : L"Round Complete") : L"Level End",
 		style.heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
 		style.heading_colour,
 		style.shadow_colour,
 		style.heading_shadow_offset);
+
+	this->heading_->set_position(Vector2F(
+		this->calculate_center_position(this->heading_->bounds().width, DESIGN_RESOLUTION.x),
+		look.layout.position.y));
 
 	this->change_teams_ = std::make_unique<UiTextDropShadow>(
 		"change_teams",
@@ -110,9 +117,9 @@ void EndMenuInitial::init()
 
 	this->restart_ = std::make_unique<UiTextDropShadow>(
 		"restart",
-		L"Restart",
+		this->session_.continue_string(),
 		style.item_font,
-		this->calculate_widget_position(0, 5),
+		this->calculate_widget_position(0, ongoing ? 2 : 5),
 		this->render_resources(),
 		style.unhighlight,
 		style.shadow_colour,
@@ -122,7 +129,7 @@ void EndMenuInitial::init()
 		"exit",
 		L"Exit to Main Menu",
 		style.item_font,
-		this->calculate_widget_position(0, 6),
+		this->calculate_widget_position(0, ongoing ? 3 : 6),
 		this->render_resources(),
 		style.unhighlight,
 		style.shadow_colour,
@@ -147,12 +154,18 @@ void EndMenuInitial::init()
 			this->finish(action);
 		};
 
-	this->focus_.add(this->change_teams_.get(),
-		[choose] { choose(EndMenuAction::change_teams, true); });
-	this->focus_.add(this->change_weapons_.get(),
-		[choose] { choose(EndMenuAction::change_weapons, true); });
-	this->focus_.add(this->change_level_.get(),
-		[choose] { choose(EndMenuAction::change_level, true); });
+	this->change_teams_->set_hidden(ongoing);
+	this->change_weapons_->set_hidden(ongoing);
+	this->change_level_->set_hidden(ongoing);
+	if (!ongoing)
+	{
+		this->focus_.add(this->change_teams_.get(),
+			[choose] { choose(EndMenuAction::change_teams, true); });
+		this->focus_.add(this->change_weapons_.get(),
+			[choose] { choose(EndMenuAction::change_weapons, true); });
+		this->focus_.add(this->change_level_.get(),
+			[choose] { choose(EndMenuAction::change_level, true); });
+	}
 	this->focus_.add(this->restart_.get(),
 		[choose] { choose(EndMenuAction::restart, true); });
 	this->focus_.add(this->exit_.get(),

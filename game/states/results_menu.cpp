@@ -26,8 +26,8 @@ LevelEndInfo ResultsMenuPage::level_end_info() const
 }
 
 ResultsMenuInitial::ResultsMenuInitial(MenuContext* context,
-	const LevelEndInfo& end_info) :
-	ResultsMenuPage(context, end_info)
+	const LevelEndInfo& end_info, const Session& session) :
+	ResultsMenuPage(context, end_info), session_(session)
 {
 
 }
@@ -67,6 +67,10 @@ void ResultsMenuInitial::update(float dt)
 				this->team_b_percentage_->set_hidden(false);
 			}
 			this->winner_->set_hidden(false);
+			for (const std::unique_ptr<UiTextDropShadow>& detail : this->details_)
+			{
+				detail->set_hidden(false);
+			}
 			
 			if (this->show_results_timer_ >= look.show_results_delay)
 			{
@@ -101,14 +105,15 @@ void ResultsMenuInitial::init()
 		"box",
 		"sprite_sheet_1",
 		"pixel",
-		RectangleF(Vector2F::ZERO, style.box_size),
+		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
 		look.box_colour);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"title",
-		L"Results",
+		this->session_.is_series() ? L"Round " +
+			std::to_wstring(this->session_.round()) : L"Results",
 		style.heading_font,
 		look.heading_position,
 		this->render_resources(),
@@ -255,6 +260,36 @@ void ResultsMenuInitial::init()
 	this->text_container_->add_child(this->team_b_percentage_.get());
 	this->text_container_->add_child(this->winner_.get());
 	this->text_container_->add_child(this->proceed_.get());
+
+	const auto add_detail = [this, &style, &look](const std::wstring& text,
+		const Vector2F& position, const std::string& font)
+		{
+			this->details_.push_back(std::make_unique<UiTextDropShadow>(
+				"detail_" + std::to_string(this->details_.size()), text, font,
+				position, this->render_resources(), look.heading_colour,
+				style.shadow_colour, style.detail_shadow_offset, true));
+			this->text_container_->add_child(this->details_.back().get());
+		};
+	if (this->session_.is_series())
+	{
+		add_detail(this->session_.score_string(),
+			look.session_score_position, style.detail_font);
+		add_detail(this->session_.result_string(),
+			look.session_result_position, style.detail_font);
+	}
+	add_detail(L"Surface held (% of arena)",
+		look.contribution_position, look.contribution_font);
+	const std::vector<MenuPlayerSettings> players =
+		this->level_settings()->player_settings();
+	for (size_t i = 0; i < players.size(); ++i)
+	{
+		const MenuPlayerSettings& player = players[i];
+		add_detail(this->level_settings()->player_label(static_cast<int>(i)) +
+			(player.team == PlayerTeam::a ? L" | Team A | " : L" | Team B | ") +
+			end_info.player_percentage_string(player.num),
+			look.contribution_position + Vector2F(0.0f,
+				look.contribution_spacing * static_cast<float>(i + 1)), look.contribution_font);
+	}
 
 	this->play_effect(this->fill_sound_, true, look.fill_sound.volume);
 }

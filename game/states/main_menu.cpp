@@ -861,9 +861,7 @@ void MainMenuModeSelect::init()
 		{ L"A", L"Select" },
 		{ L"B", L"Back" } });
 
-	// Three colours, because three of the six rows on this page are modes that
-	// are not built. The third is the group's to apply now, which is the whole
-	// of what changed here.
+	// Every mode uses the same player setup and paint scoring.
 	this->focus_.set_style({ this->menu_style().highlight,
 		this->menu_style().unhighlight,
 		this->menu_style().disabled });
@@ -890,7 +888,7 @@ void MainMenuModeSelect::init()
 
 	this->standard_ = std::make_unique<UiTextDropShadow>(
 		"standard",
-		L"Standard",
+		L"Single Match",
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
@@ -898,36 +896,33 @@ void MainMenuModeSelect::init()
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
-	// The three that are not built. The colour here is the one they open on;
-	// focus_ owns it from registration onward - see the note where they are
-	// registered.
-	this->tdm_ = std::make_unique<UiTextDropShadow>(
-		"tdm",
-		L"Team Deathmatch",
+	this->best_of_three_ = std::make_unique<UiTextDropShadow>(
+		"best_of_three",
+		L"Best of 3",
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		this->menu_style().disabled,
+		this->menu_style().unhighlight,
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
-	this->dm_ = std::make_unique<UiTextDropShadow>(
-		"dm",
-		L"Deathmatch",
+	this->best_of_five_ = std::make_unique<UiTextDropShadow>(
+		"best_of_five",
+		L"Best of 5",
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		this->menu_style().disabled,
+		this->menu_style().unhighlight,
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
 	this->practice_ = std::make_unique<UiTextDropShadow>(
 		"practice",
-		L"Practice",
-		this->menu_style().item_font,
-		this->calculate_widget_position(0, 5),
+		L"Solo practice: choose Single Match",
+		this->menu_style().detail_font,
+		this->calculate_widget_position(0, 6),
 		this->render_resources(),
-		this->menu_style().disabled,
+		this->menu_style().heading_colour,
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
@@ -935,7 +930,7 @@ void MainMenuModeSelect::init()
 		"back",
 		L"Back",
 		this->menu_style().item_font,
-		this->calculate_widget_position(0, 6),
+		this->calculate_widget_position(0, 5),
 		this->render_resources(),
 		this->menu_style().unhighlight,
 		this->menu_style().shadow_colour,
@@ -949,45 +944,21 @@ void MainMenuModeSelect::init()
 		"text_container");
 	this->text_container_->add_child(this->heading_.get());
 	this->text_container_->add_child(this->standard_.get());
-	this->text_container_->add_child(this->tdm_.get());
-	this->text_container_->add_child(this->dm_.get());
+	this->text_container_->add_child(this->best_of_three_.get());
+	this->text_container_->add_child(this->best_of_five_.get());
 	this->text_container_->add_child(this->practice_.get());
 	this->text_container_->add_child(this->back_.get());
 
-	this->focus_.add(this->standard_.get(), [this]
+	const auto choose = [this](int best_of)
 		{
+			this->level_settings()->set_best_of(best_of);
 			this->play_wave(this->confirm_sound_);
 			this->context()->transition_to(
 				std::make_unique<MainMenuPlayerCount>(this->menu_context()));
-		});
-	// Three modes that are not built yet: registered, with no action, and
-	// switched off.
-	//
-	// They used to not be registered at all, which is what the page could do
-	// before FocusGroup had a third state. That worked and left the paint
-	// hanging on a promise - the colour passed at construction survived only
-	// because nothing ever registered them, and the moment anything did, the
-	// next add() or move() would repaint them as ordinary rows. The colour is
-	// derived from enablement now, so it is the group's answer rather than
-	// this page's hope.
-	//
-	// THE BEEP DOES NOT COME BACK, which is what the report that asked for
-	// this expected. move() takes its candidates from the enabled entries, so
-	// the cursor still cannot land on Deathmatch, so there is still no press
-	// to refuse. `refused` is reachable only where a row switches off under a
-	// cursor already on it, which on this page never happens - these three are
-	// decided once at init and never change. Player Count is the page that
-	// gets that half.
-	//
-	// It is still the right shape: the rows are now what they always were, a
-	// thing that is there and cannot be picked, said once rather than
-	// arranged for.
-	this->focus_.add(this->tdm_.get());
-	this->focus_.add(this->dm_.get());
-	this->focus_.add(this->practice_.get());
-	this->focus_.set_enabled(this->tdm_.get(), false);
-	this->focus_.set_enabled(this->dm_.get(), false);
-	this->focus_.set_enabled(this->practice_.get(), false);
+		};
+	this->focus_.add(this->standard_.get(), [choose] { choose(1); });
+	this->focus_.add(this->best_of_three_.get(), [choose] { choose(3); });
+	this->focus_.add(this->best_of_five_.get(), [choose] { choose(5); });
 
 	this->focus_.add(this->back_.get(), [this]
 		{
@@ -1072,7 +1043,7 @@ void MainMenuPlayerCount::init()
 
 	this->_1_player = std::make_unique<UiTextDropShadow>(
 		"1_player",
-		L"1 Player",
+		L"1 Player (practice)",
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
@@ -1141,6 +1112,13 @@ void MainMenuPlayerCount::init()
 		[this] { this->start_join(3, ScreenLayout::three_player); });
 	this->focus_.add(this->_4_players.get(),
 		[this] { this->start_join(4, ScreenLayout::four_player); });
+	// A series needs both teams; solo remains available through Single Match.
+	this->focus_.set_enabled(this->_1_player.get(),
+		this->level_settings()->best_of() == 1);
+	if (this->level_settings()->best_of() > 1)
+	{
+		this->focus_.set_focused(0, this->_2_players.get());
+	}
 	this->focus_.add(this->back_.get(), [this]
 		{
 			this->play_wave(this->cancel_sound_);

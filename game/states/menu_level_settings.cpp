@@ -147,3 +147,17 @@ std::wstring MenuLevelSettings::player_label(int player_index) const
 	return L"P" + std::to_wstring(player_index + 1) + L" - " +
 		input_slots::device_name(this->player_settings_[player_index].num);
 }
+
+int MenuLevelSettings::best_of() const
+{
+	return this->best_of_;
+}
+
+void MenuLevelSettings::set_best_of(int best_of)
+{
+	if (best_of != 1 && best_of != 3 && best_of != 5)
+	{
+		throw std::invalid_argument("Session length must be 1, 3 or 5");
+	}
+	this->best_of_ = best_of;
+}

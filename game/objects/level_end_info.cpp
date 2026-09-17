@@ -124,3 +124,9 @@ std::wstring LevelEndInfo::winning_team_string() const
 	}
 	throw std::exception("No winning team");
 }
+
+std::wstring LevelEndInfo::player_percentage_string(int slot) const
+{
+	return percentage_string(this->total_area > 0.0f ?
+		100.0f * this->player_areas.at(static_cast<size_t>(slot)) / this->total_area : 0.0f);
+}

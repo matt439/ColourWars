@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/core/state.h"
+#include "game/session.h"
 #include "game/states/menu_level_settings.h"
 #include "game/game_data.h"
 #include "game/objects/level_builder.h"
@@ -57,7 +58,7 @@ private:
 	GameData* data() const;
 };
 
-// One match, from the countdown to the end menu.
+// One single match or series, with a fresh Level for each round.
 class GameLevel final : public labrador::State
 {
 public:
@@ -89,6 +90,7 @@ public:
 private:
 	GameData* game_data_ = nullptr;
 	MenuLevelSettings settings_ = MenuLevelSettings();
+	Session session_;
 	std::unique_ptr<Level> level_ = nullptr;
 	std::unique_ptr<LevelBuilder> level_builder_ = nullptr;
 	std::unique_ptr<PlayerInput> player_input_ = nullptr;

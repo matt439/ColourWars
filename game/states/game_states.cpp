@@ -109,7 +109,8 @@ void GameMenu::on_match_ended(const EndMenuAction& action)
 }
 
 GameLevel::GameLevel(GameData* game_data, const MenuLevelSettings& settings) :
-	game_data_(game_data), settings_(settings)
+	game_data_(game_data), settings_(settings),
+	session_(settings.player_count() == 1 ? 1 : settings.best_of())
 {
 
 }
@@ -218,6 +219,12 @@ void GameLevel::update(float dt)
 		return;
 	}
 
+	if (this->level_->state() == LevelState::finished)
+	{
+		this->open_results_menu();
+		return;
+	}
+
 	const std::vector<PlayerInputData> player_inputs =
 		this->player_input_->player_inputs();
 
@@ -225,7 +232,7 @@ void GameLevel::update(float dt)
 	// the edge, and no participant may lose match time while reconnecting.
 	const int missing_slot = disconnected_player_slot(this->settings_,
 		*this->data()->gamepads());
-	if (missing_slot != -1 && this->level_->state() != LevelState::finished)
+	if (missing_slot != -1)
 	{
 		this->open_pause_menu(missing_slot);
 		return;
@@ -235,15 +242,6 @@ void GameLevel::update(float dt)
 	if (pause_menu_player != -1)
 	{
 		this->open_pause_menu(pause_menu_player);
-		return;
-	}
-
-	// Reachable exactly once: this runs only while nothing is above the match,
-	// and the results menu goes straight to the end menu, which either rebuilds
-	// the level or leaves. The state machine that used to say so is gone.
-	if (this->level_->state() == LevelState::finished)
-	{
-		this->open_results_menu();
 		return;
 	}
 
@@ -310,17 +308,19 @@ void GameLevel::on_pause_menu_closed(const PauseMenuAction& action)
 
 void GameLevel::open_results_menu()
 {
+	const LevelEndInfo result = this->level_->level_end_info();
+	this->session_.finish_round(result);
 	this->menu_input_->reset_actions();
 	this->context()->push(
 		std::make_unique<ResultsMenuInitial>(this->menu_context_.get(),
-			this->level_->level_end_info()),
+			result, this->session_),
 		[this]() { this->open_end_menu(); });
 }
 
 void GameLevel::open_end_menu()
 {
 	this->context()->push<EndMenuAction>(
-		std::make_unique<EndMenuInitial>(this->menu_context_.get()),
+		std::make_unique<EndMenuInitial>(this->menu_context_.get(), this->session_),
 		[this](const EndMenuAction& action)
 		{
 			this->on_end_menu_closed(action);
@@ -331,6 +331,15 @@ void GameLevel::on_end_menu_closed(const EndMenuAction& action)
 {
 	if (action == EndMenuAction::restart)
 	{
+		if (this->session_.complete())
+		{
+			this->session_ = Session(this->settings_.player_count() == 1 ?
+				1 : this->settings_.best_of());
+		}
+		else
+		{
+			this->session_.next_round();
+		}
 		this->build_and_enter_level();
 		return;
 	}

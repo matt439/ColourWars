@@ -10,6 +10,8 @@ class MenuLevelSettings
 {
 public:
 	MenuLevelSettings() = default;
+	int best_of() const;
+	void set_best_of(int best_of);
 	std::vector<MenuPlayerSettings> player_settings() const;
 	void set_player_count(int player_count);
 	int player_count() const;
@@ -40,6 +42,7 @@ public:
 private:
 	std::vector<MenuPlayerSettings> player_settings_;
 	int player_count_ = 0;
+	int best_of_ = 1;
 	std::string stage_;
 	labrador::ScreenLayout screen_layout_ = labrador::ScreenLayout::one_player;
 };

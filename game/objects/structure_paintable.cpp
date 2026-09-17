@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/structure_paintable.h"
+#include "game/objects/projectile.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -71,6 +72,7 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 	const PlayerTeam team = other_layer == collision_layers::PROJECTILE_TEAM_A ?
 		PlayerTeam::a : PlayerTeam::b;
 
+	const Projectile& projectile = dynamic_cast<const Projectile&>(other);
 	const RectangleF splash = other.shape()->bounding_box();
 
 	bool tile_painted = false;
@@ -120,7 +122,7 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 				continue;
 			}
 
-			paint_tile.paint(team);
+			paint_tile.paint(team, projectile.player_num());
 
 			if (!tile_painted)
 			{
@@ -248,6 +250,11 @@ PaintTotal StructurePaintable::paint_total() const
 	for (auto& paint_tile : this->paint_tiles_)
 	{
 		total.total += paint_tile.area();
+		const int owner = paint_tile.player_num();
+		if (owner >= 0 && owner < input_slots::count)
+		{
+			total.player_areas[owner] += paint_tile.area();
+		}
 
 		PlayerTeam team = paint_tile.team();
 		switch (team)

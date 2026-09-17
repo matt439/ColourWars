@@ -105,8 +105,38 @@ guards. Captured the shared page in all four layouts and checked widget bounds
 and screenshots. Physical controller feel and audible balance still need a
 hardware check. The engine pin and source are unchanged.
 
-## Next increments
+## Fifth increment: sessions and paint contribution
 
-1. Sessions: best-of rounds, cumulative wins and per-player paint contribution
-   on results. Define contribution ownership and repaint accounting before
-   changing scoring; preserve a standalone match and solo practice.
+Implemented:
+
+- Mode Select offers Single Match, Best of 3 and Best of 5. A series needs
+  2-4 players and ends when Team A or B reaches two or three wins. Single Match
+  keeps the one-player practice path and the existing team scoring.
+- Results show the round, cumulative A/B wins, the target and the series winner.
+  Draws award no win; Replay Draw starts another round with the same score.
+  Draws can extend a series beyond three or five rounds.
+- Next Round keeps the roster, teams, weapons and stage, with fresh paint and
+  timers. Pause > Restart replays only the current round and keeps earlier wins.
+  Team/weapon/stage changes return after the series ends. Play Series Again
+  resets the score; quitting discards the session. Sessions are not saved.
+- Every result lists each player's device, team and surface still held as a
+  percentage of the arena's total paintable area. Capturing a neutral or enemy
+  tile assigns its full area to the projectile's owner; enemy repaint transfers
+  that credit, and friendly repaint retains the previous owner's credit.
+  Repeated hits never accumulate extra area. Respawns and reconnects retain
+  ownership through the match's fixed device slots.
+- Contribution uses the same tiles and areas as team scoring. Individual
+  percentages use the whole arena, including unpainted surface; the competitive
+  team bars still show each team's share of painted surface. Displayed values
+  are truncated to one decimal place, so their sum may differ slightly.
+
+Validation: normal Debug and Release builds; a temporary native probe using
+real game objects, assets and D3D11 rendering with scripted controller states.
+Checked both series lengths, draws, duplicate result delivery, both winners,
+neutral/friendly/enemy paint and recapture, all five projectile kinds, sparse
+controller slots and keyboard ownership, mode selection, and 1-4 player result
+layouts. Exercised next round, pause/restart, disconnect/resume, clinch, rematch
+and quit. Checked visible text bounds/overlap and inspected rendered results
+and end menus. A normal Release startup used an isolated save. Physical
+multiplayer play still needs a hardware check. The engine pin and source are
+unchanged.

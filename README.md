@@ -3,6 +3,18 @@
 A local split-screen paint-shooter for up to four players. Two teams, one
 arena, and a scoreboard that counts painted surface rather than kills.
 
+Choose **Single Match**, **Best of 3** (first to two wins), or **Best of 5**
+(first to three). Series keep the same players, teams, weapons and stage;
+draws award no win and are replayed. Pause > Restart restarts only the current
+round. After the series, Play Series Again clears the wins. Quitting discards
+the session. For solo practice, choose Single Match and 1 Player.
+
+Results show cumulative series wins and each player's **surface held** as a
+percentage of the arena. Capturing neutral or enemy paint earns its area;
+enemy repaint transfers credit, while friendly repaint keeps the original
+owner. This measures paint remaining at the finish, rather than total shots
+or paint laid during the round. Team bars retain their share of painted area.
+
 Play with XInput gamepads, or with one keyboard-and-mouse player alongside
 them. Up to four players can play at once. The device that selects the player
 count becomes Player 1; additional players claim their devices on the Join
