@@ -233,10 +233,23 @@ void InterfaceGameplay::draw_respawn_timer(DrawList& draw_list,
 	const std::wstring text =
 		std::to_wstring(static_cast<int>(std::ceil(timer)));
 
+	// Keep the authored size when it fits, and shrink text and shadow together
+	// into the space remaining in this player's pane. Measure afresh so a larger
+	// window restores full size and a negative shadow offset also stays visible.
+	const Vector2F text_size = this->render_resources()->measure_text(
+		this->respawn_timer_font_, text);
+	const RectangleF bounds = RectangleF::union_of(
+		RectangleF(Vector2F::ZERO, text_size),
+		RectangleF(look.respawn_shadow_offset, text_size));
+	const Vector2F available = resolution - pos;
+	const float scale = std::min({ 1.0f,
+		available.x / bounds.width, available.y / bounds.height });
+	pos -= bounds.position() * scale;
+
 	draw_list.draw_text(this->respawn_timer_font_, text,
-		pos + look.respawn_shadow_offset, look.respawn_shadow_colour,
-		1.0f, 0.0f, Vector2F::ZERO, 0.0f);
+		pos + look.respawn_shadow_offset * scale, look.respawn_shadow_colour,
+		scale, 0.0f, Vector2F::ZERO, 0.0f);
 
 	draw_list.draw_text(this->respawn_timer_font_, text, pos,
-		look.respawn_colour, 1.0f, 0.0f, Vector2F::ZERO, 0.0f);
+		look.respawn_colour, scale, 0.0f, Vector2F::ZERO, 0.0f);
 }
