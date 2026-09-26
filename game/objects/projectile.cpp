@@ -212,10 +212,13 @@ void Projectile::resolve_sweep(const RectangleF& start,
     std::pair<float, float> closest{ 1.0f, 1.0f };
     for (CollisionObject* object : objects)
     {
-        // Launch checks cover between the owner and its muzzle. In flight,
-        // enemy players participate too. Masks retain ramp pass-through,
-        // friendly-fire exclusion and dead players' empty collision mask.
-        if ((launch && object->layer() != collision_layers::STRUCTURE) ||
+        // Flying paint can hit an enemy between its owner and muzzle just
+        // as it can hit cover there. A roller keeps its one-step volume:
+        // enemy contacts belong to its ordinary multi-contact sweep, not an
+        // extra launch hit. Masks retain ramp pass-through, friendly-fire
+        // exclusion and dead players' empty collision mask.
+        const bool structure = object->layer() == collision_layers::STRUCTURE;
+        if ((launch && this->type_ == ROLLING && !structure) ||
             object->for_deletion() ||
             !layers_collide(this->layer(), this->mask(),
                 object->layer(), object->mask()))
@@ -223,12 +226,18 @@ void Projectile::resolve_sweep(const RectangleF& start,
             continue;
         }
         const RectangleF obstacle = object->shape()->bounding_box();
-        if (launch && launch_leaves_overlap(start, finish, obstacle))
+        if (launch && structure &&
+            launch_leaves_overlap(start, finish, obstacle))
         {
             continue;
         }
         const auto interval = sweep_interval(start, finish, obstacle);
-        if (interval && interval->first < closest.first)
+        // Cover wins a tied entry time, including a launch already touching
+        // both participants, independently of their order in the scene.
+        if (interval && (interval->first < closest.first ||
+            (interval->first == closest.first && structure &&
+                obstruction != nullptr &&
+                obstruction->layer() != collision_layers::STRUCTURE)))
         {
             obstruction = object;
             closest = *interval;

@@ -178,9 +178,24 @@ void Level::set_countdown_text(const std::wstring& text)
 void Level::centre_countdown_text()
 {
 	const Vector2F resolution = this->resolution_manager_->resolution_vec();
-	const Vector2F size = this->countdown_text_->text_bounds().size();
+	const MatchTuning& match = this->tuning_->match();
+	// Start from authored scale for every beat and resize. The text changes
+	// width at "GO!", and a previously shrunken digit must recover its size
+	// when the window grows. Fit and centre the shadow with the text, including
+	// any part of their combined bounds that lies before the text's origin.
+	const RectangleF bounds = RectangleF::union_of(
+		this->countdown_text_->text_bounds_at(Vector2F::ZERO,
+			match.countdown_scale),
+		this->countdown_text_->text_bounds_at(match.countdown_shadow_offset,
+			match.countdown_scale));
+	const float fit = std::min({ 1.0f,
+		resolution.x / bounds.width, resolution.y / bounds.height });
 
-	this->countdown_text_->set_position((resolution - size) / 2.0f);
+	this->countdown_text_->set_scale(match.countdown_scale * fit);
+	this->countdown_text_->set_shadow_scale(match.countdown_scale * fit);
+	this->countdown_text_->set_shadow_offset(match.countdown_shadow_offset * fit);
+	this->countdown_text_->set_position(
+		(resolution - bounds.size() * fit) / 2.0f - bounds.position() * fit);
 }
 
 void Level::centre_controls_text()

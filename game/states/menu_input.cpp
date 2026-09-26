@@ -166,10 +166,15 @@ ProcessedMenuInput MenuInput::keyboard_menu_input(const Keyboard& keyboard)
 	// in one frame lands on the same value both times. A page that reads the
 	// keyboard through more than one helper depends on that, and clearing the
 	// flag where the action fires would have broken it.
+	// Pages may skip input while unfocused, leaving an earlier press armed.
+	// Clear that ownership on return: the keyboard suppresses press edges for
+	// keys already held then, so was_down() alone would preserve stale arming.
+	const bool just_focused = keyboard.just_focused();
 	for (int i = 0; i < action_key_count; ++i)
 	{
-		this->key_armed_[i] = went_down(action_keys[i]) ||
-			(this->key_armed_[i] && was_down(action_keys[i]));
+		this->key_armed_[i] = !just_focused &&
+			(went_down(action_keys[i]) ||
+				(this->key_armed_[i] && was_down(action_keys[i])));
 	}
 
 	ProcessedMenuInput result;
