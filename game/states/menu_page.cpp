@@ -184,26 +184,21 @@ ViewportManager* MenuPage::viewport_manager() const
 void MenuPage::draw_ui_layers(Renderer& renderer,
 	const std::vector<UiLayer>& layers) const
 {
-	const std::vector<Viewport> viewports =
-		this->viewport_manager()->all_viewports();
-
-	renderer.set_view_count(static_cast<int>(viewports.size()));
-
-	for (size_t i = 0; i < viewports.size(); i++)
+	// A menu covers the whole screen, after every world view and its overlays.
+	// Appending slices to earlier views lets a later fullscreen countdown draw
+	// over them. Reuse the final recording so nested menus keep stack order too.
+	if (renderer.view_count() == 0)
 	{
-		DrawList list = renderer.view(static_cast<int>(i));
+		renderer.set_view_count(1);
+	}
+	DrawList list = renderer.view(renderer.view_count() - 1);
+	list.set_viewport(this->viewport_manager()->fullscreen_viewport());
+	list.set_camera(this->ui_camera());
 
-		// Both, once, for the whole pane: the viewport clips it and the
-		// camera carries design space onto it. Every widget below draws in
-		// the units it was authored in and knows about neither.
-		list.set_viewport(viewports[i]);
-		list.set_camera(this->ui_camera(viewports[i]));
-
-		for (const UiLayer& layer : layers)
-		{
-			list.set_filter(layer.second);
-			layer.first->draw(list);
-		}
+	for (const UiLayer& layer : layers)
+	{
+		list.set_filter(layer.second);
+		layer.first->draw(list);
 	}
 }
 
@@ -218,15 +213,12 @@ Vector2F MenuPage::float_resolution() const
 }
 
 // Fit the whole design into the actual window, including arbitrary drag sizes
-// and monitors with a different aspect ratio. Each pane draws its portion of
-// that same centred layout, so its screen origin is removed in camera space.
-Camera MenuPage::ui_camera(const Viewport& viewport) const
+// and monitors with a different aspect ratio.
+Camera MenuPage::ui_camera() const
 {
-	Camera camera = Camera::frame(
+	return Camera::frame(
 		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
 		this->viewport_manager()->fullscreen_viewport());
-	camera.translation += viewport.position() / camera.scale;
-	return camera;
 }
 
 void MenuPage::play_wave(SoundBank::WaveHandle wave, float volume,

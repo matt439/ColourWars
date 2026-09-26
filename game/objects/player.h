@@ -237,8 +237,10 @@ private:
 
 	CollisionObjectType collision_type() const;
 
-	// Set by any level-geometry contact and cleared by end_contacts().
-	bool touched_structure_ = false;
+	// Set by the responses that resolve a vertical contact; cleared after
+	// every contact phase. Sideways and ignored platform contacts set neither.
+	bool supported_this_tick_ = false;
+	bool hit_ceiling_this_tick_ = false;
 
 	void on_projectile_contact(CollisionObjectType other_type);
 

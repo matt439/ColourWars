@@ -189,12 +189,6 @@ void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
             "Player contacted an object its mask should have excluded");
     }
 
-    // Any level geometry counts as ground contact for end_contacts(),
-    // including a drop-through platform the player is rising past. That is
-    // how it has always behaved: the level set its bool from the type, before
-    // any response decided whether to do anything about it.
-    this->touched_structure_ = true;
-
     if (other_type == CollisionObjectType::structure_jump_through)
     {
         this->on_jump_through_contact(other);
@@ -211,22 +205,19 @@ void Player::end_contacts()
 {
     const PlayerMoveState move_state = this->move_state();
 
-    // on_ceiling belongs on this list with the four ground states. Nothing else
-    // clears it, so a head bonk used to leave it set for the whole descent -
-    // harmless to the physics, since do_jump treats it exactly as in_air, but
-    // calculate_animation_state answers it with the idle clip instead of the
-    // falling one.
-    if (!this->touched_structure_ &&
-        (move_state == PlayerMoveState::on_ground ||
-        move_state == PlayerMoveState::on_drop_down_ground ||
-        move_state == PlayerMoveState::on_ramp_left ||
-        move_state == PlayerMoveState::on_ramp_right ||
-        move_state == PlayerMoveState::on_ceiling))
+    // Overlapping a wall or passing through a platform is not support. Only
+    // a response that actually landed the player keeps a grounded state.
+    // Ceiling contact has its own lifetime so a head bonk does not leave the
+    // idle animation active throughout the following descent.
+    if ((this->is_on_ground() && !this->supported_this_tick_) ||
+        (move_state == PlayerMoveState::on_ceiling &&
+            !this->hit_ceiling_this_tick_))
     {
         this->set_move_state(PlayerMoveState::in_air);
     }
 
-    this->touched_structure_ = false;
+    this->supported_this_tick_ = false;
+    this->hit_ceiling_this_tick_ = false;
 }
 void Player::on_structure_contact(const Vector2F& normal, float penetration)
 {
@@ -238,6 +229,14 @@ void Player::on_structure_contact(const Vector2F& normal, float penetration)
     if (std::abs(normal.y) >= std::abs(normal.x))
     {
         MovingObject::set_velocity_y(0.0f);
+        if (normal.y > 0.0f)
+        {
+            this->supported_this_tick_ = true;
+        }
+        else
+        {
+            this->hit_ceiling_this_tick_ = true;
+        }
         this->set_move_state(normal.y > 0.0f ?
             PlayerMoveState::on_ground : PlayerMoveState::on_ceiling);
     }
@@ -272,6 +271,7 @@ void Player::on_ramp_contact(CollisionObjectType other_type,
 
     this->set_move_state(other_type == CollisionObjectType::structure_ramp_left ?
         PlayerMoveState::on_ramp_left : PlayerMoveState::on_ramp_right);
+    this->supported_this_tick_ = true;
 
     MovingObject::set_velocity_y(0.0f);
 }
@@ -293,6 +293,7 @@ void Player::on_jump_through_contact(const CollisionObject& other)
         MovingObject::set_velocity_y(0.0f);
         this->rectangle_.set_position_y_from_bottom(other_rect.top());
         this->set_move_state(PlayerMoveState::on_drop_down_ground);
+        this->supported_this_tick_ = true;
     }
 }
 

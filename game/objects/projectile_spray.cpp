@@ -34,7 +34,7 @@ void ProjectileSpray::update(float dt)
 	const Vector2F displacement = Projectile::update_movement(
 		details.gravity, details.wind_resistance, dt);
 
-	this->diffuse_to_size(this->rectangle_);
+	this->diffuse_collision_rectangle(this->rectangle_);
 
 	this->rectangle_.offset(displacement.x, displacement.y);
 
@@ -42,11 +42,12 @@ void ProjectileSpray::update(float dt)
 }
 void ProjectileSpray::draw(DrawList& draw_list) const
 {
-	this->AnimationObject::draw(draw_list, this->rectangle_);
+	this->AnimationObject::draw(draw_list, this->sprite_rectangle(this->rectangle_));
 }
 RectangleF ProjectileSpray::bounds() const
 {
-	return this->rectangle_;
+	return RectangleF::union_of(this->rectangle_,
+		this->sprite_rectangle(this->rectangle_));
 }
 const Shape* ProjectileSpray::shape() const
 {

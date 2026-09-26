@@ -185,15 +185,24 @@ void Level::centre_countdown_text()
 
 void Level::centre_controls_text()
 {
-	// Centred across, and placed down the screen by a tuned fraction so it
-	// clears the countdown's 144pt face at every resolution. Measured rather
-	// than guessed, for the reason the countdown above is.
+	// Measure at authored scale on every resize, so shrinking and enlarging
+	// the window never accumulate a scale adjustment. Include the shadow in
+	// the fit and keep the tuned vertical position whenever the block fits.
 	const Vector2F resolution = this->resolution_manager_->resolution_vec();
-	const Vector2F size = this->controls_text_->text_bounds().size();
+	const MatchTuning& match = this->tuning_->match();
+	const RectangleF bounds = RectangleF::union_of(
+		this->controls_text_->text_bounds_at(Vector2F::ZERO, 1.0f),
+		this->controls_text_->text_bounds_at(match.controls_shadow_offset, 1.0f));
+	const float scale = std::min({ 1.0f,
+		resolution.x / bounds.width, resolution.y / bounds.height });
+	const Vector2F size = bounds.size() * scale;
+	const Vector2F position((resolution.x - size.x) / 2.0f,
+		std::min(resolution.y * match.controls_y, resolution.y - size.y));
 
-	this->controls_text_->set_position(Vector2F(
-		(resolution.x - size.x) / 2.0f,
-		resolution.y * this->tuning_->match().controls_y));
+	this->controls_text_->set_scale(scale);
+	this->controls_text_->set_shadow_scale(scale);
+	this->controls_text_->set_shadow_offset(match.controls_shadow_offset * scale);
+	this->controls_text_->set_position(position - bounds.position() * scale);
 }
 
 void Level::suspend() const
@@ -597,6 +606,17 @@ void Level::draw(Renderer& renderer) const
 			{
 				this->draw_player_overlay(view_index, list);
 			});
+
+		// Scene has joined its render workers. The last view executes after
+		// every player pane; menus above this state append to the same list.
+		if (this->state_ == LevelState::start_countdown ||
+			this->start_timer_ > -1.0f)
+		{
+			DrawList list = renderer.view(renderer.view_count() - 1);
+			list.set_viewport(this->viewport_manager_->fullscreen_viewport());
+			list.set_camera(Camera::DEFAULT_CAMERA);
+			this->draw_countdown_text(list);
+		}
 	}
 	else
 	{
@@ -649,29 +669,6 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	{
 		this->debug_text_->draw_debug_info(list, player,
 			this->projectile_count_, this->frame_dt_);
-	}
-
-	// The countdown is positioned in full-screen coordinates, and it used to be
-	// drawn once per pane through that pane's camera so that the panes
-	// reassembled one centred countdown between them. That only works while the
-	// panes tile the whole back buffer, and the three-player layout does not:
-	// it puts players 0, 1 and 2 in the top-left, bottom-right and bottom-left
-	// quadrants and leaves the top-right one belonging to nobody, so nothing
-	// ever rasterised it and the top-right corner of every "3", "2", "1" and
-	// "GO!" was missing.
-	//
-	// Once, over the whole screen, from the last view - whose command list is
-	// executed after every other pane's (renderer.h, submit), so it still lands
-	// over all of them, which is where it was before. The viewport goes back so
-	// this leaves the list as it found it.
-	if (view_index == this->scene_->view_count() - 1 &&
-		(this->state_ == LevelState::start_countdown ||
-			this->start_timer_ > -1.0f))
-	{
-		list.set_viewport(this->viewport_manager_->fullscreen_viewport());
-		list.set_camera(Camera::DEFAULT_CAMERA);
-		this->draw_countdown_text(list);
-		list.set_viewport(player_vp);
 	}
 }
 

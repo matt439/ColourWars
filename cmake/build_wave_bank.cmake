@@ -13,8 +13,8 @@
 # Run with:
 #   cmake -DBANK_DIR=<dir> -DBANK_NAME=<name> -P cmake/build_wave_bank.cmake
 #
-# It is idempotent and quiet: if the output is newer than every input, or the
-# sources are not there, it does nothing.
+# It is idempotent and quiet. Missing private sources can reuse a bank whose
+# recipe is still current; a stale bank must not accompany a newer recipe.
 
 if(NOT DEFINED BANK_DIR OR NOT DEFINED BANK_NAME)
     message(FATAL_ERROR "build_wave_bank.cmake needs BANK_DIR and BANK_NAME")
@@ -24,6 +24,24 @@ set(definition "${BANK_DIR}/${BANK_NAME}.json")
 set(sources "${BANK_DIR}/${BANK_NAME}")
 set(output "${BANK_DIR}/${BANK_NAME}.xwb")
 set(tool "${sources}/XWBTool.exe")
+
+# A developer may have a compiled private bank without its source WAVs. Keep
+# that bank when its recipe has not changed. If the recipe needs rebuilding
+# but an input or the tool is unavailable, remove only this generated output:
+# staging will remove its old copy too, giving the optional silent fallback.
+function(use_optional_bank reason)
+    if(EXISTS "${output}" AND NOT "${definition}" IS_NEWER_THAN "${output}")
+        message(STATUS "wave bank: ${reason} Using the existing ${BANK_NAME}.xwb.")
+        return()
+    endif()
+    if(EXISTS "${output}")
+        file(REMOVE "${output}")
+        if(EXISTS "${output}")
+            message(FATAL_ERROR "wave bank: could not remove stale '${output}'")
+        endif()
+    endif()
+    message(STATUS "wave bank: ${reason} The game will run without audio.")
+endfunction()
 
 if(NOT EXISTS "${definition}")
     return()
@@ -58,15 +76,12 @@ if(missing)
     # Not a warning. A clone without the audio is the expected case, not a
     # broken one, and a build that shouts about it every time teaches people to
     # ignore the output.
-    message(STATUS
-        "wave bank: skipping ${BANK_NAME} - ${missing_count} of ${wave_count} "
-        "source waves are not in ${sources}. The game will run without audio.")
+    use_optional_bank("skipping ${BANK_NAME} - ${missing_count} of ${wave_count} source waves are not in ${sources}.")
     return()
 endif()
 
 if(NOT EXISTS "${tool}")
-    message(STATUS
-        "wave bank: skipping ${BANK_NAME} - XWBTool.exe is not in ${sources}.")
+    use_optional_bank("skipping ${BANK_NAME} - XWBTool.exe is not in ${sources}.")
     return()
 endif()
 

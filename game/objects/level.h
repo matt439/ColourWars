@@ -277,7 +277,7 @@ private:
 	// of every update() and on a resize before the rendering fan-out.
 	void refresh_views();
 
-	// The HUD, the dividers, the debug text and the countdown, over one pane.
+	// The HUD, the dividers and the debug text, over one pane.
 	// Runs on the worker that owns that view.
 	void draw_player_overlay(int view_index, labrador::DrawList& list) const;
 

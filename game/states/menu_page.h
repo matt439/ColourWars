@@ -97,15 +97,9 @@ protected:
 	// nothing else.
 	using UiLayer = std::pair<labrador::UiObject*, labrador::TextureFilter>;
 
-	// Draws each layer into every viewport the layout covers.
-	//
-	// NO FAN-OUT HERE, and that is the change. This used to partition the
-	// *widget list* across the thread pool and index a deferred context and a
-	// sprite batch by widget ordinal - so a menu with more widgets than the
-	// shell happened to create contexts drew the extras into nothing, and a
-	// menu drawn from sixteen threads ran sixteen non-const helpers on the same
-	// page. The unit of work is a view (renderer.h), there are at most four of
-	// them, and a menu is a handful of quads: the loop below is the whole of it.
+	// Draws the fullscreen layers once, after all views already recorded by
+	// lower states. Uses the final view so world overlays and nested menus
+	// retain the state stack's back-to-front order without another view.
 	void draw_ui_layers(labrador::Renderer& renderer,
 		const std::vector<UiLayer>& layers) const;
 
@@ -159,14 +153,14 @@ protected:
 
 	mattmath::Vector2F float_resolution() const;
 
-	// Design space to this viewport's local space, in one place.
+	// Design space to the full window, in one place.
 	//
 	// Widgets hold the geometry they were authored with and never have it
 	// rewritten; this is the whole of what makes 1920x1080 layout show up
 	// correctly on a 1280x720 screen. Its predecessor was a destructive walk
 	// over the widget tree in engine/ui, called at 26 sites, which left no
 	// authoritative geometry behind for anything that wrote a position later.
-	labrador::Camera ui_camera(const labrador::Viewport& viewport) const;
+	labrador::Camera ui_camera() const;
 private:
 	MenuContext* context_ = nullptr;
 	std::unique_ptr<PromptBar> prompt_bar_ = nullptr;

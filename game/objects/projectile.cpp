@@ -124,18 +124,13 @@ const DiffusionDetails& DiffusingProjectile::diffusion_details() const
 {
     return this->tuning().diffusion;
 }
-const Vector2F& DiffusingProjectile::base_size() const
-{
-	return this->details().size;
-}
-
-Vector2F DiffusingProjectile::calculate_diffusion_size() const
+Vector2F DiffusingProjectile::calculate_diffusion_scale() const
 {
     const float time = this->timer();
     const DiffusionDetails& details = this->diffusion_details();
-    const Vector2F& base_size = this->base_size();
     Vector2F multiple;
-    if (time < details.start_time)
+    if (details.type == DiffusionType::no_diffusion ||
+        time < details.start_time)
     {
         multiple = Vector2F::ONE;
     }
@@ -155,17 +150,29 @@ Vector2F DiffusingProjectile::calculate_diffusion_size() const
         // Interpolating between ONE and end_scale, not between ONE and
         // ONE + end_scale: the ramp has to arrive at exactly the value the
         // branch above returns at end_time, or the size steps down in one
-        // frame as it crosses. That step is not only cosmetic - this size is
-        // inflated into the rectangle that is both the sprite and shape(), so
-        // the paint footprint jumps with it.
+        // frame as it crosses. The combined mode applies this scale to the
+        // collision rectangle too, so its paint footprint must be continuous.
         multiple = Vector2F::ONE +
             (details.end_scale - Vector2F::ONE) * ratio;
     }
-    return base_size * multiple;
+    return multiple;
 }
-void DiffusingProjectile::diffuse_to_size(RectangleF& rectangle) const
+RectangleF DiffusingProjectile::sprite_rectangle(
+    const RectangleF& collision_rectangle) const
 {
-    const Vector2F size = this->calculate_diffusion_size();
+    const Vector2F size = this->details().size *
+        this->calculate_diffusion_scale();
+    return RectangleF(collision_rectangle.center() - size / 2.0f, size);
+}
+void DiffusingProjectile::diffuse_collision_rectangle(RectangleF& rectangle) const
+{
+    if (this->diffusion_details().type != DiffusionType::linear_size_and_col_rect)
+    {
+        return;
+    }
+
+    const Vector2F size = this->details().col_rect_size *
+        this->calculate_diffusion_scale();
 
     // Half the growth off each side keeps the centre where it was, which is
     // what a cloud spreading out does. Setting the size alone would pin the

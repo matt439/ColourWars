@@ -139,19 +139,15 @@ public:
 
 	const mattmath::Shape* shape() const override = 0;
 protected:
-	mattmath::Vector2F calculate_diffusion_size() const;
-
-	// Resizes the rectangle to this tick's diffusion size about its own
-	// centre. The rectangle is the subclass's — mist and spray each hold
-	// their own — so it comes in by reference rather than being reached for.
-	//
-	// This was RectangleF::inflate_to_size, which the engine deleted as
-	// uncalled while these two files were calling it. The engine kept
-	// inflate(amount), which grows by an amount; diffusion sets a size.
-	void diffuse_to_size(mattmath::RectangleF& rectangle) const;
+	// The sprite follows the collision rectangle's centre, but has its own
+	// authored size. linear_size changes only the sprite; the combined mode
+	// also scales the collision rectangle around that same centre.
+	mattmath::RectangleF sprite_rectangle(
+		const mattmath::RectangleF& collision_rectangle) const;
+	void diffuse_collision_rectangle(mattmath::RectangleF& rectangle) const;
 private:
 	// Read off the same borrowed record the base class holds, rather than
 	// copied beside it.
 	const DiffusionDetails& diffusion_details() const;
-	const mattmath::Vector2F& base_size() const;
+	mattmath::Vector2F calculate_diffusion_scale() const;
 };
