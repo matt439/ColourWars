@@ -587,3 +587,35 @@ the pixel-sized `calculate_camera` calls is `91,472` now, and has been since
 this repository's own edits to that file. The line numbers here are checked
 against the engine at every bump and against the game only when someone
 notices, which is the honest description of the rule.
+
+---
+
+# What the 2026-09-26 bump changed
+
+Moved from `d356841` to upstream master at `4cefb68`, consuming the September
+26 review fixes and the intervening presentation work. The earlier UTF-8 path
+fix remains available in upstream's implementation, including the helpers
+used by this game's save handling.
+
+**No game source changes were required.** Report 6 remains open: there is
+still no shared music/SFX bus or master gain to replace the client's volume
+handling. The Scene composition changes support the existing fullscreen
+menu/countdown draws after the gameplay views. This client does not retain
+Scene contact snapshots, and its Visual builders use axis-aligned rectangles
+with identity origins, so those fixes require no migration here.
+
+**Validation:** both `x64-debug` and `x64-release` configured and built under
+`/W4 /WX`, including the engine architecture checks. Release packaging passed
+the CI checks for required DLLs and excluded development/commercial-audio files.
+Both executables rendered the title screen when launched from
+`C:\Windows\Temp`. The extracted Release also used Unicode installation and
+isolated save paths, produced its save successfully, and rendered correctly
+after maximizing and restoring the window. Debug stderr was empty; Release
+reported only the expected optional-wave-bank fallback. Local build and startup
+logs are under `out/validation/labrador-20260926/`.
+
+**Gameplay remains unverified by this check.** The UI automation's Enter/Space
+presses did not advance the title screen. The keyboard snapshots live state at
+each poll and the menu requires a press followed by a later release, so a short
+synthetic pair can be missed; this does not establish an input regression.
+No controller, match, or audio-playback validation is claimed.
