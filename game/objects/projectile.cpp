@@ -8,36 +8,70 @@ using namespace labrador;
 
 namespace
 {
-    // Intersect the centre's launch segment with a rectangle expanded by the
-    // projectile's half-size. The entry/exit interval is the swept AABB hit.
-    std::optional<std::pair<float, float>> launch_interval(
-        const Vector2F& origin, const Vector2F& travel,
+    // The projectile can grow as well as move. Clip the interval during which
+    // its four linearly moving edges overlap the obstacle, so diffusion does
+    // not turn the sweep into an inflated, prematurely colliding box.
+    std::optional<std::pair<float, float>> sweep_interval(
+        const RectangleF& start, const RectangleF& finish,
         const RectangleF& obstacle)
     {
         float entry = 0.0f;
         float exit = 1.0f;
-        const auto clip_axis = [&](float start, float delta, float low, float high)
+        const auto clip_positive = [&](float before, float after)
         {
-            if (delta == 0.0f)
+            const float change = after - before;
+            if (change == 0.0f)
             {
-                return start > low && start < high;
+                return before > 0.0f;
             }
-            float first = (low - start) / delta;
-            float last = (high - start) / delta;
-            if (first > last)
+            const float crossing = -before / change;
+            if (change > 0.0f)
             {
-                std::swap(first, last);
+                entry = std::max(entry, crossing);
             }
-            entry = std::max(entry, first);
-            exit = std::min(exit, last);
+            else
+            {
+                exit = std::min(exit, crossing);
+            }
             return entry < exit;
         };
-        if (!clip_axis(origin.x, travel.x, obstacle.left(), obstacle.right()) ||
-            !clip_axis(origin.y, travel.y, obstacle.top(), obstacle.bottom()))
+        if (!clip_positive(start.right() - obstacle.left(),
+                finish.right() - obstacle.left()) ||
+            !clip_positive(obstacle.right() - start.left(),
+                obstacle.right() - finish.left()) ||
+            !clip_positive(start.bottom() - obstacle.top(),
+                finish.bottom() - obstacle.top()) ||
+            !clip_positive(obstacle.bottom() - start.top(),
+                obstacle.bottom() - finish.top()))
         {
             return std::nullopt;
         }
         return std::pair{ entry, exit };
+    }
+
+    bool launch_leaves_overlap(const RectangleF& start,
+        const RectangleF& finish, const RectangleF& obstacle)
+    {
+        // A bucket's volume is wider than its owner. Starting that volume at
+        // the player's centre can overlap a wall behind the shot even though
+        // its muzzle is clear. Allow an exit on the same side as the origin;
+        // exiting on the opposite side still crossed cover and must collide.
+        const Vector2F origin = start.center();
+        return start.intersects(obstacle) &&
+            ((origin.x <= obstacle.left() && finish.right() <= obstacle.left()) ||
+             (origin.x >= obstacle.right() && finish.left() >= obstacle.right()) ||
+             (origin.y <= obstacle.top() && finish.bottom() <= obstacle.top()) ||
+             (origin.y >= obstacle.bottom() && finish.top() >= obstacle.bottom()));
+    }
+
+    RectangleF rectangle_between(const RectangleF& start,
+        const RectangleF& finish, float fraction)
+    {
+        return RectangleF(
+            start.x + (finish.x - start.x) * fraction,
+            start.y + (finish.y - start.y) * fraction,
+            start.width + (finish.width - start.width) * fraction,
+            start.height + (finish.height - start.height) * fraction);
     }
 }
 
@@ -145,24 +179,48 @@ void DiffusingProjectile::diffuse_to_size(RectangleF& rectangle) const
 void Projectile::resolve_launch_obstruction(const Vector2F& origin,
     std::span<CollisionObject* const> objects)
 {
-    const RectangleF volume = this->shape()->bounding_box();
-    const Vector2F travel = volume.center() - origin;
+    const RectangleF finish = this->shape()->bounding_box();
+    RectangleF start = finish;
+    start.set_position_at_center(origin);
+    this->resolve_sweep(start, finish, objects, true);
+}
+
+void Projectile::resolve_movement_contacts(
+    std::span<CollisionObject* const> objects)
+{
+    if (this->type_ == ROLLING || this->for_deletion_ ||
+        !this->first_update_done_)
+    {
+        return;
+    }
+    this->resolve_sweep(this->previous_rectangle_,
+        this->shape()->bounding_box(), objects, false);
+}
+
+void Projectile::resolve_sweep(const RectangleF& start,
+    const RectangleF& finish, std::span<CollisionObject* const> objects,
+    bool launch)
+{
     CollisionObject* obstruction = nullptr;
     std::pair<float, float> closest{ 1.0f, 1.0f };
     for (CollisionObject* object : objects)
     {
-        // The game's projectile-blocking structures are rectangles. Ramps
-        // deliberately let paint pass and have a separate collision layer.
-        if (object->layer() != collision_layers::STRUCTURE ||
+        // Launch checks cover between the owner and its muzzle. In flight,
+        // enemy players participate too. Masks retain ramp pass-through,
+        // friendly-fire exclusion and dead players' empty collision mask.
+        if ((launch && object->layer() != collision_layers::STRUCTURE) ||
             object->for_deletion() ||
             !layers_collide(this->layer(), this->mask(),
                 object->layer(), object->mask()))
         {
             continue;
         }
-        RectangleF expanded = object->shape()->bounding_box();
-        expanded.inflate(volume.size() / 2.0f);
-        const auto interval = launch_interval(origin, travel, expanded);
+        const RectangleF obstacle = object->shape()->bounding_box();
+        if (launch && launch_leaves_overlap(start, finish, obstacle))
+        {
+            continue;
+        }
+        const auto interval = sweep_interval(start, finish, obstacle);
         if (interval && interval->first < closest.first)
         {
             obstruction = object;
@@ -174,13 +232,18 @@ void Projectile::resolve_launch_obstruction(const Vector2F& origin,
         return;
     }
 
-    // Just inside the surface gives the ordinary contact/painting code an
-    // actual overlap. Never advance beyond this obstacle's exit interval.
-    const float length = travel.length();
-    const float inset = length > 0.0f ? 0.01f / length : 0.0f;
+    // Paint from the entered face, not the endpoint buried inside a wall.
+    // A tiny inset gives the ordinary response a real overlap, bounded by
+    // the exit time so even a thin obstacle cannot be stepped through here.
+    const float edge_travel = std::max({
+        std::abs(finish.left() - start.left()),
+        std::abs(finish.right() - start.right()),
+        std::abs(finish.top() - start.top()),
+        std::abs(finish.bottom() - start.bottom()) });
+    const float inset = edge_travel > 0.0f ? 0.01f / edge_travel : 0.0f;
     const float fraction = closest.first +
         std::min(inset, (closest.second - closest.first) / 2.0f);
-    this->set_center(origin + travel * fraction);
+    this->set_rectangle(rectangle_between(start, finish, fraction));
     const auto contact = narrow_phase(*obstruction->shape(), *this->shape());
     if (contact)
     {
@@ -287,6 +350,7 @@ void Projectile::alter_timer(float time)
 }
 Vector2F Projectile::update_movement(float gravity, float wind_resistance, float dt)
 {
+    this->previous_rectangle_ = this->shape()->bounding_box();
 
     const Vector2F& max_velocity = this->max_velocity();
 

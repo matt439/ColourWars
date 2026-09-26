@@ -8,6 +8,12 @@
 #include <array>
 #include <string>
 
+namespace labrador
+{
+	class AudioResources;
+	class RenderResources;
+}
+
 // What the shell looks like: every font, colour, offset and box size the menus,
 // the HUD and the debug overlay are laid out from.
 //
@@ -322,6 +328,9 @@ public:
 	// position in it and the key if anything is missing or of the wrong type.
 	explicit Presentation(const char* path);
 
+	void validate_resources(const labrador::RenderResources& render,
+		const labrador::AudioResources& audio) const;
+
 	const MenuStyle& menu() const;
 	const MainMenuPresentation& main_menu() const;
 	const ControlsSettingsPresentation& controls_settings() const;
@@ -333,6 +342,7 @@ public:
 	const DebugOverlayPresentation& debug_overlay() const;
 
 private:
+	std::string source_path_;
 	MenuStyle menu_;
 	MainMenuPresentation main_menu_;
 	ControlsSettingsPresentation controls_settings_;

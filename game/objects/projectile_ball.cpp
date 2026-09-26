@@ -50,7 +50,7 @@ const Shape* ProjectileBall::shape() const
 {
 	return &this->rectangle_;
 }
-void ProjectileBall::set_center(const Vector2F& center)
+void ProjectileBall::set_rectangle(const RectangleF& rectangle)
 {
-	this->rectangle_.set_position_at_center(center);
+	this->rectangle_ = rectangle;
 }

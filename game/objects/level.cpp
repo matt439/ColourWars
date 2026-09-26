@@ -76,6 +76,13 @@ void Level::build_opening_frame(RenderResources* render_resources)
 	// until a tick ends, so the scene has a tick to end before it has had one.
 	// The frame drawn before the first update() is a real frame.
 	this->scene_->end_tick();
+	for (CollisionObject* object : this->scene_->collision_objects())
+	{
+		if (!is_projectile(to_collision_type(object->tag())))
+		{
+			this->projectile_targets_.push_back(object);
+		}
+	}
 	this->projectile_count_ = this->count_projectiles();
 
 	// The first beat, off the same number the timer starts at: the opening
@@ -341,6 +348,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	this->apply_player_inputs(player_inputs);
 
 	this->scene_->update(dt);
+	this->resolve_projectile_movement();
 
 	this->update_players(dt);
 
@@ -454,9 +462,24 @@ void Level::update_players(float dt)
 	{
 		for (std::unique_ptr<CollisionObject>& projectile :
 			player->update_weapon_and_get_projectiles(
-				dt, this->scene_->collision_objects()))
+				dt, this->projectile_targets_))
 		{
 			this->scene_->add(std::move(projectile));
+		}
+	}
+}
+
+void Level::resolve_projectile_movement()
+{
+	// Scene contacts describe endpoint overlaps in object-list order. Paint
+	// needs its first hit along the travelled segment, before a backing wall
+	// can consume a shot or its endpoint can pass the thin paintable face.
+	for (CollisionObject* object : this->scene_->collision_objects())
+	{
+		if (is_projectile(to_collision_type(object->tag())))
+		{
+			dynamic_cast<Projectile&>(*object).resolve_movement_contacts(
+				this->projectile_targets_);
 		}
 	}
 }

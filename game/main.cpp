@@ -137,6 +137,13 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		// two files above were read from.
 		app.load_manifest(MANIFEST_PATH);
 
+		// Resolve every tuned/presentation reference now, including animations
+		// and weapons that might otherwise be looked up for the first time in
+		// the middle of a match. Optional silent banks retain their usual lookup
+		// semantics; validation never plays a sound.
+		tuning.validate_resources(*app.render_resources(), *app.audio_resources());
+		presentation.validate_resources(*app.render_resources(), *app.audio_resources());
+
 		// A game with no levels has nothing to offer the stage-select menu,
 		// and the menu would rather not discover that by dividing by zero
 		// three screens later (T6).
@@ -155,6 +162,8 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		{
 			level_infos.get(stage.name)->validate_content(content_validator,
 				*app.render_resources(), *app.audio_resources());
+			tuning.validate_match_sounds(*app.render_resources(), *app.audio_resources(),
+				level_infos.get(stage.name)->sound_bank_name());
 		}
 
 		// The content strings, now asked of the fonts that will draw them.

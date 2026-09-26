@@ -39,6 +39,7 @@ namespace directory_consts
 	//
 	// %LOCALAPPDATA%\ColourWars\save_data.json, which is where per-user
 	// settings belong on this platform and is writable without asking.
+	// Returned paths are UTF-8, matching the engine's file-loading APIs.
 	std::string save_file_path();
 
 	// Where the save used to live, still read once if nothing is at the path

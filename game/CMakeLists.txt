@@ -124,15 +124,18 @@ add_custom_target(colourwars_content ALL)
 # why the built bank is not committed and what a clone without it gets: the
 # manifest marks the bank optional, so the game runs in silence rather than
 # throwing on a file it was never going to have. Before the copy below, so a
-# bank *rebuilt* this run is the one that gets copied. A bank built here for
-# the very first time is staged by the next build instead: the copy list below
-# is enumerated before this command runs, so a file that did not exist yet is
-# not on it, and the glob puts it there next time round.
+# bank *rebuilt* this run is the one that gets copied. Stage this generated
+# file explicitly after the recipe, since a configure-time glob cannot see a
+# bank that is about to be built for the first time.
 add_custom_command(TARGET colourwars_content PRE_BUILD
     COMMAND "${CMAKE_COMMAND}"
         "-DBANK_DIR=${CMAKE_CURRENT_SOURCE_DIR}/content/sounds"
         -DBANK_NAME=sound_bank_1
         -P "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/build_wave_bank.cmake"
+    COMMAND "${CMAKE_COMMAND}"
+        "-DBANK_FILE=${CMAKE_CURRENT_SOURCE_DIR}/content/sounds/sound_bank_1.xwb"
+        "-DSTAGE_DIR=$<TARGET_FILE_DIR:ColourWars>/sounds"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/stage_wave_bank.cmake"
     VERBATIM
 )
 foreach(content_file manifest.json tuning.json presentation.json)
@@ -175,8 +178,9 @@ foreach(content_dir textures levels fonts sounds)
     )
     foreach(content_entry IN LISTS content_entries)
         get_filename_component(entry_name "${content_entry}" NAME)
-        # The folder named for the bank, not sound_bank_1.xwb or .json beside it.
+        # Source waves/tools stay behind; the generated bank is staged above.
         if("${entry_name}" STREQUAL "sound_bank_1"
+            OR "${entry_name}" STREQUAL "sound_bank_1.xwb"
             OR "${entry_name}" MATCHES "\\.exe$")
             continue()
         endif()

@@ -1288,12 +1288,15 @@ void MainMenuTeamSelect::update(float /*dt*/)
 	}
 	const int num_inputs = static_cast<int>(inputs.size());
 	const int player_count = this->player_count();
+	// Back leaves only if the frame began with nobody ready. Simultaneous
+	// cancellations must not unconfirm one player and then leave the page.
+	const bool can_leave = this->all_players_unconfirmed();
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
 	{
 		if (inputs[i].action == MenuInputAction::back)
 		{
-			if (this->all_players_unconfirmed())
+			if (can_leave)
 			{
 				this->play_wave(this->cancel_sound_);
 				this->context()->transition_to(
@@ -1652,12 +1655,15 @@ void MainMenuWeaponSelect::update(float /*dt*/)
 	}
 	const int player_count = this->player_count();
 	const int num_inputs = static_cast<int>(inputs.size());
+	// Each player may cancel independently, but leaving is a separate press
+	// after the page has shown that every player is unconfirmed.
+	const bool can_leave = this->all_players_unconfirmed();
 
 	for (int i = 0; i < num_inputs && i < player_count; i++)
 	{
 		if (inputs[i].action == MenuInputAction::back)
 		{
-			if (this->all_players_unconfirmed())
+			if (can_leave)
 			{
 				this->play_wave(this->cancel_sound_);
 				if (this->player_count() == 1)
@@ -1998,11 +2004,9 @@ void MainMenuStageSelect::update(float /*dt*/)
 				this->select_state_.state =
 					ConfirmationState::unconfirmed;
 			}
-			// No break here as I want simultaneous input from players to be
-			// possible. That is about this arm only - unconfirming is a change
-			// to the shared state that two players may make in the same frame.
-			// The proceed arm below can leave the screen, and where it does it
-			// returns instead.
+			// This selection is shared. Show its new state before another
+			// action can leave the page, even if two players pressed together.
+			break;
 		}
 		else if (inputs[i].action == MenuInputAction::proceed)
 		{
@@ -2034,6 +2038,8 @@ void MainMenuStageSelect::update(float /*dt*/)
 				this->play_wave(this->ready_sound_);
 				this->select_state_.state = ConfirmationState::confirmed;
 			}
+			// READY must be visible before a later press starts the match.
+			break;
 		}
 		else if (this->select_state_.state == ConfirmationState::unconfirmed)
 		{

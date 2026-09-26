@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/save.h"
 #include "engine/assets/json.h"
+#include "engine/core/file_path.h"
 #include <cstdio>
 #include <filesystem>
 #include <system_error>
@@ -90,7 +91,7 @@ SaveData Save::load_from_json(const char* json_path) const
 bool Save::file_exists(const std::string& path)
 {
     FILE* fp = nullptr;
-    if (fopen_s(&fp, path.c_str(), "rb") != 0 || fp == nullptr)
+    if (_wfopen_s(&fp, path_from_utf8(path).c_str(), L"rb") != 0 || fp == nullptr)
     {
 		return false;
 	}
@@ -152,7 +153,7 @@ bool Save::write_save_file(const SaveData& data) const
     // save/ folder would fail here on every attempt. Now that the save lives
     // under %LOCALAPPDATA% this is not an edge case at all: the game's folder
     // there does not exist until the first time it is written.
-    const std::filesystem::path save_path(path);
+    const std::filesystem::path save_path = path_from_utf8(path);
     if (save_path.has_parent_path())
     {
         std::error_code ec;
@@ -164,10 +165,11 @@ bool Save::write_save_file(const SaveData& data) const
     // so a write that then fails - a full disk, a read-only Program Files -
     // has destroyed the settings it was replacing as well as failing to store
     // the new ones. A rename either happens or does not.
-    const std::string temp_file_path = path + ".tmp";
+    std::filesystem::path temp_file_path = save_path;
+    temp_file_path += L".tmp";
 
     FILE* fp = nullptr;
-    if (fopen_s(&fp, temp_file_path.c_str(), "wb") != 0 || fp == nullptr)
+    if (_wfopen_s(&fp, temp_file_path.c_str(), L"wb") != 0 || fp == nullptr)
     {
         return false;
     }
@@ -243,7 +245,10 @@ void Save::save_to_file() const
     const std::string message = "Could not write " + save_file_path() +
         ".\nYour settings will not be remembered.";
     fprintf(stderr, "save failure: %s\n", message.c_str());
-    MessageBoxA(nullptr, message.c_str(), "ColourWars - save failure",
+    const std::wstring wide_message = L"Could not write " +
+        path_from_utf8(save_file_path()).wstring() +
+        L".\nYour settings will not be remembered.";
+    MessageBoxW(nullptr, wide_message.c_str(), L"ColourWars - save failure",
         MB_OK | MB_ICONWARNING);
 }
 

@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/tuning.h"
+#include "game/resource_validation.h"
 
 #include "engine/assets/json.h"
 
@@ -409,6 +410,7 @@ namespace
 GameTuning::GameTuning(const char* path)
 {
 	const JsonDocument document = read_json_file(path);
+	this->source_path_ = path;
 	const JsonValue root = document.root();
 
 	this->match_ = read_match(root);
@@ -450,6 +452,86 @@ GameTuning::GameTuning(const char* path)
 	add_projectile(ROLLING, "rolling");
 	add_projectile(MIST, "mist");
 	add_projectile(BALL, "ball");
+}
+
+void GameTuning::validate_resources(const RenderResources& render,
+	const AudioResources& audio) const
+{
+	const ResourceValidation check(this->source_path_, render, audio);
+	check.font("match.countdown_text.font", this->match_.countdown_font);
+	check.font("match.controls_text.font", this->match_.controls_font);
+	check.frame("paint.frame", this->paint_.sheet, this->paint_.frame);
+	check.animation("paint.splash.animation", this->paint_.splash_sheet,
+		this->paint_.splash_animation);
+	check.wave("paint.splash_sound.name", this->paint_.sound_bank,
+		this->paint_.splash_sound.name);
+
+	const auto animation = [&](const char* key, const PlayerAnimationTuning& clip)
+	{
+		const std::string prefix = std::string("player.animations.") + key;
+		check.animation(prefix + ".strip", clip.sheet, clip.strip);
+		check.frame("player.animations.uniform", clip.sheet, clip.uniform_texture);
+	};
+	animation("idle", this->player_.idle);
+	animation("walk", this->player_.walk);
+	animation("running", this->player_.running);
+	animation("jumping", this->player_.jumping);
+	animation("falling", this->player_.falling);
+	check.wave("player.sounds.damage.name", this->player_.sound_bank,
+		this->player_.damage_sound.name);
+	check.wave("player.sounds.death.name", this->player_.sound_bank,
+		this->player_.death_sound.name);
+	check.wave("player.sounds.jump.name", this->player_.sound_bank,
+		this->player_.jump_sound.name);
+	check.wave("player.sounds.respawn.name", this->player_.sound_bank,
+		this->player_.respawn_sound.name);
+
+	const auto weapon = [&](WeaponType type, const char* key)
+	{
+		const WeaponTuning& entry = this->weapon(type);
+		const WeaponDetails& details = entry.details;
+		const std::string prefix = std::string("weapons.") + key;
+		check.frame(prefix + ".frame", details.sheet_name, details.frame_name);
+		// Weapon's debug marker uses the weapon's own sheet as well.
+		check.frame(prefix + ".sheet (nozzle marker)", details.sheet_name, "nozzle");
+		check.wave(prefix + ".shoot_sound.name", details.sound_bank_name,
+			details.shoot_sound_name);
+		if (entry.loop_sounds.present)
+		{
+			for (size_t index = 0; index < entry.loop_sounds.team_a.size(); ++index)
+			{
+				check.effect(prefix + ".loop_sounds.team_a[" + std::to_string(index) + "]",
+					details.sound_bank_name, entry.loop_sounds.team_a[index]);
+				check.effect(prefix + ".loop_sounds.team_b[" + std::to_string(index) + "]",
+					details.sound_bank_name, entry.loop_sounds.team_b[index]);
+			}
+		}
+	};
+	weapon(WeaponType::sprayer, "sprayer");
+	weapon(WeaponType::sniper, "sniper");
+	weapon(WeaponType::roller, "roller");
+	weapon(WeaponType::mister, "mister");
+	weapon(WeaponType::bucket, "bucket");
+
+	const auto projectile = [&](projectile_type type, const char* key)
+	{
+		const ProjectileDetails& details = this->projectile(type).details;
+		check.animation(std::string("projectiles.") + key + ".animation",
+			details.sheet_name, details.animation_strip_name);
+	};
+	projectile(SPRAY, "spray");
+	projectile(JET, "jet");
+	projectile(ROLLING, "rolling");
+	projectile(MIST, "mist");
+	projectile(BALL, "ball");
+}
+
+void GameTuning::validate_match_sounds(const RenderResources& render,
+	const AudioResources& audio, const std::string& bank) const
+{
+	const ResourceValidation check(this->source_path_, render, audio);
+	check.wave("match.sounds.countdown.name", bank, this->match_.countdown_sound.name);
+	check.effect("match.sounds.zoom_out.name", bank, this->match_.zoom_out_sound.name);
 }
 
 const MatchTuning& GameTuning::match() const

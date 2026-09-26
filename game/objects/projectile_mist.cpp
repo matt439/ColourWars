@@ -59,7 +59,7 @@ const Shape* ProjectileMist::shape() const
 {
 	return &this->rectangle_;
 }
-void ProjectileMist::set_center(const Vector2F& center)
+void ProjectileMist::set_rectangle(const RectangleF& rectangle)
 {
-	this->rectangle_.set_position_at_center(center);
+	this->rectangle_ = rectangle;
 }

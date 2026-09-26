@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **One is live and on hold. Seven are closed** and kept below as one paragraph
+> **One is live as an unfiled draft with an exhibit. Seven are closed** and kept below as one paragraph
 > each — what was asked, what shipped, and what this repository spent the
 > answer on.
 >
@@ -25,10 +25,17 @@ closed nothing here — see
 bottom. Report 6's citations moved again, because the audio seam landed
 underneath them, and are corrected below.
 
-**Re-checked 2026-09-17 against `984cf13`, which the pin now is.** Twenty-nine
+**Re-checked 2026-09-17 against the then-current pin `984cf13`.** Twenty-nine
 commits, and again nothing closed — but one of them reached this repository's
 loading order and had to be finished here. See
 [What the 2026-09-17 bump changed](#what-the-2026-09-17-bump-changed).
+
+**Re-checked 2026-09-26 against `d356841`.** This pin adds only the UTF-8
+file-loading fix to the prior pin. Executable/content paths, JSON, binary
+assets and XAudio2 wave banks now preserve Unicode at filesystem boundaries;
+ColourWars applies the same convention to profile saves. No audio-bus report
+closed. Report 6 now records the existing client mixing exhibit instead of
+claiming it has not been written.
 
 ## The rule that governs this file
 
@@ -53,7 +60,7 @@ shape is the strike rate: **of the seven reports filed with exhibits, six were
 implemented the day they were filed.** The seventh needed no filing — the
 engine had already fixed it.
 
-The one report with no exhibit is the one that has never been filed.
+Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 
 ---
 
@@ -61,7 +68,7 @@ The one report with no exhibit is the one that has never been filed.
 
 | # | Report | Exhibit | Status |
 |---|---|---|---|
-| 6 | No audio bus, master gain, listener or voice cap | **not yet** | hold — the exhibit has to exist first |
+| 6 | No audio bus, master gain, listener or voice cap | `PlaySettings` gains applied at each emitter | draft — exhibit present; recheck upstream before filing |
 
 Nothing else is outstanding, on either side. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
@@ -70,14 +77,20 @@ reachable on a machine with no pad.
 
 ---
 
-## 6. No audio bus, master gain, listener or voice cap — **hold until the workaround exists**
+## 6. No audio bus, master gain, listener or voice cap — **draft with mixing exhibit**
 
-**Do not file this yet.** Everything below is true and re-verified against
-`984cf13`, but filing it before the client-side mix is written throws away the
-exhibit that would make it persuasive. The engine has been consistent about
-declining features no client has demonstrated wanting; a report with 74
-hand-written multiplications attached is a different document from a report
-without them.
+**Exhibit added by the controls/audio increment.** `game/play_settings.h`
+holds the saved music and SFX gains; `game/states/menu_page.cpp`,
+`game/objects/level.cpp`, `player.cpp`, `weapon.cpp`, `weapon_bucket.cpp`,
+`weapon_sniper.cpp`, and `structure_paintable.cpp` apply them at individual
+emitters. Resuming a match or weapon also reapplies the gain. The client now
+demonstrates the duplicated mixing work that was previously hypothetical.
+
+On 2026-09-26, the pinned audio API and local Labrador `master` at `03c3b96`
+still had no bus/master-gain interface. This is a local source check, not a
+fresh remote-master check. The report remains unfiled; recheck upstream before
+filing. The exhibit supports shared music/SFX gain. Listener and voice-budget
+requests below remain separate proposals, not implemented requirements.
 
 ### What happens
 
@@ -117,9 +130,9 @@ plus a listener concept and a per-bus voice cap. The bus half is already on the
 engine's own review list; the multi-listener and voice-budget halves are not,
 and are the two only a split-screen client would ever report.
 
-Report 4's closure means the volume row now has somewhere to be drawn —
-`OptionRow` exists — so the thing blocking this report is no longer blocked
-itself.
+The shared Controls / audio page now supplies the volume rows, and the
+per-emitter gain calls above supply the exhibit. No missing client UI or
+unwritten mix remains as a reason to hold this draft.
 
 ---
 

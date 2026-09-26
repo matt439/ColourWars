@@ -56,8 +56,13 @@ public:
 	// the launch volume before Scene defers its first collision sweep.
 	void resolve_launch_obstruction(const mattmath::Vector2F& origin,
 		std::span<labrador::CollisionObject* const> objects);
+	// Resolve a flying projectile at its first impact along this tick's travel,
+	// before the scene dispatches endpoint contacts in object-list order.
+	// Rollers keep their one-step, multiple-contact behaviour.
+	void resolve_movement_contacts(
+		std::span<labrador::CollisionObject* const> objects);
 protected:
-	virtual void set_center(const mattmath::Vector2F& center) = 0;
+	virtual void set_rectangle(const mattmath::RectangleF& rectangle) = 0;
 
 	// This projectile kind's whole record, borrowed. Never null.
 	const ProjectileTuning& tuning() const;
@@ -95,6 +100,11 @@ private:
 	// lifetime test cannot fire on the update that precedes this projectile's
 	// first collision sweep.
 	bool first_update_done_ = false;
+	mattmath::RectangleF previous_rectangle_ = mattmath::RectangleF::ZERO;
+
+	void resolve_sweep(const mattmath::RectangleF& start,
+		const mattmath::RectangleF& finish,
+		std::span<labrador::CollisionObject* const> objects, bool launch);
 
 	int player_num_ = -1;
 	labrador::Colour team_colour_ = labrador::Colour::gray;

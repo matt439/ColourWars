@@ -27,6 +27,6 @@ public:
 
 	const mattmath::Shape* shape() const override;
 private:
-	void set_center(const mattmath::Vector2F& center) override;
+	void set_rectangle(const mattmath::RectangleF& rectangle) override;
 	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
 };

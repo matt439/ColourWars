@@ -132,6 +132,10 @@ private:
 	// and the two stop agreeing the moment a pad is unplugged.
 	std::vector<Player*> players_;
 
+	// Scene-owned geometry and players, which live for the whole match. Flying
+	// paint sweeps this list so its cost does not grow with other projectiles.
+	std::vector<labrador::CollisionObject*> projectile_targets_;
+
 	// Screen-space, per pane, drawn over the world rather than in it - so they
 	// are not scene objects: nothing culls them, nothing sweeps them, and they
 	// want the pane's camera rather than the player's. The overlay draws them.
@@ -259,6 +263,7 @@ private:
 	// camera that follows the body the scene has just moved, and the
 	// projectiles the weapon just fired, which go to the scene.
 	void update_players(float dt);
+	void resolve_projectile_movement();
 	void refresh_player_cameras();
 
 	// The scene's phase 3, run here rather than named on GameObject - see

@@ -12,6 +12,12 @@
 #include <optional>
 #include <string>
 
+namespace labrador
+{
+	class AudioResources;
+	class RenderResources;
+}
+
 // How much, for every number a paint match is balanced on.
 //
 // This is T7 and PHILOSOPHY's "tuning changes rebuild nothing". These numbers
@@ -209,6 +215,13 @@ public:
 	// exist.
 	explicit GameTuning(const char* path);
 
+	// Call after the manifest loads, before any menu or match can use these.
+	void validate_resources(const labrador::RenderResources& render,
+		const labrador::AudioResources& audio) const;
+	// Match sounds are played through the bank chosen by each level.
+	void validate_match_sounds(const labrador::RenderResources& render,
+		const labrador::AudioResources& audio, const std::string& bank) const;
+
 	const MatchTuning& match() const;
 	const PaintTuning& paint() const;
 	const PlayerTuning& player() const;
@@ -225,6 +238,8 @@ public:
 	const ProjectileTuning& projectile(projectile_type type) const;
 
 private:
+	std::string source_path_;
+
 	// Sized by the last tuned enumerator rather than by the enum's full width:
 	// WeaponType carries six more names for weapons that do not exist yet, and
 	// a slot for each would be five empty records and a lookup that answered

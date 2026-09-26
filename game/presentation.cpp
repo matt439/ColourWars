@@ -4,7 +4,10 @@
 #include "engine/assets/json.h"
 #include "engine/render/text_encoding.h"
 #include "game/drawable_text.h"
+#include "game/resource_validation.h"
 
+#include <cmath>
+#include <initializer_list>
 #include <optional>
 #include <stdexcept>
 
@@ -22,6 +25,17 @@ namespace
 	{
 		const JsonValue vector = parent.object(key);
 		return Vector2F(vector.number("x"), vector.number("y"));
+	}
+
+	float read_positive(const JsonValue& parent, const char* key)
+	{
+		const float value = parent.number(key);
+		if (!std::isfinite(value) || value <= 0.0f)
+		{
+			throw std::runtime_error(parent.where() + ": '" + key +
+				"' must be finite and greater than zero.");
+		}
+		return value;
 	}
 
 	bool is_hex_colour(const std::string& text)
@@ -243,7 +257,9 @@ namespace
 		menu.fill_box_y_offset = fill.number("box_y_offset");
 		menu.team_fill_border = read_vector(fill, "border");
 		menu.team_fill_delay = fill.number("delay");
-		menu.team_fill_time = fill.number("time");
+		// Zero has no defined fill ratio. Reject it here instead of sending a
+		// first-frame NaN to the renderer.
+		menu.team_fill_time = read_positive(fill, "time");
 
 		// Derived rather than stated, which is what the header did too - and
 		// stating it as well would be a second number to keep in step with
@@ -308,7 +324,7 @@ namespace
 		hud.timer_shadow_offset = read_vector(timer, "shadow_offset");
 		hud.timer_colour = read_colour(timer, "colour");
 		hud.timer_shadow_colour = read_colour(timer, "shadow_colour");
-		hud.timer_reference_width = timer.number("reference_width");
+		hud.timer_reference_width = read_positive(timer, "reference_width");
 
 		const JsonValue identity = json.object("player_identity");
 		hud.player_identity_font = identity.string("font");
@@ -318,7 +334,7 @@ namespace
 		hud.player_identity_shadow_colour = read_colour(identity, "shadow_colour");
 		hud.player_identity_background_colour = read_colour(identity, "background_colour");
 		hud.player_identity_padding = read_vector(identity, "padding");
-		hud.player_identity_reference_width = identity.number("reference_width");
+		hud.player_identity_reference_width = read_positive(identity, "reference_width");
 
 		const JsonValue respawn = json.object("respawn_timer");
 		hud.respawn_font = respawn.string("font");
@@ -350,6 +366,7 @@ namespace
 Presentation::Presentation(const char* path)
 {
 	const JsonDocument document = read_json_file(path);
+	this->source_path_ = path;
 	const JsonValue root = document.root();
 
 	this->menu_ = read_menu_style(root);
@@ -365,6 +382,50 @@ Presentation::Presentation(const char* path)
 	this->prompt_bar_ = read_prompt_bar(root);
 	this->hud_ = read_hud(root);
 	this->debug_overlay_ = read_debug_overlay(root);
+}
+
+void Presentation::validate_resources(const RenderResources& render,
+	const AudioResources& audio) const
+{
+	const ResourceValidation check(this->source_path_, render, audio);
+	check.font("menu_style.fonts.heading", this->menu_.heading_font);
+	check.font("menu_style.fonts.item", this->menu_.item_font);
+	check.font("menu_style.fonts.detail", this->menu_.detail_font);
+	check.font("main_menu.fonts.title", this->main_menu_.title_font);
+	check.font("main_menu.fonts.announcement", this->main_menu_.announcement_font);
+	check.font("main_menu.fonts.weapon_description", this->main_menu_.weapon_description_font);
+	check.font("controls_settings.help_font", this->controls_settings_.help_font);
+	check.font("results_menu.contribution_font", this->results_menu_.contribution_font);
+	check.font("prompt_bar.font", this->prompt_bar_.font);
+	check.font("debug_overlay.font", this->debug_overlay_.font);
+	check.font("hud.timer.font", this->hud_.timer_font);
+	check.font("hud.player_identity.font", this->hud_.player_identity_font);
+	check.font("hud.respawn_timer.font", this->hud_.respawn_font);
+	check.frame("hud.empty_box_frame", this->hud_.sprite_sheet, this->hud_.empty_box_frame);
+	check.frame("hud.fill_frame", this->hud_.sprite_sheet, this->hud_.fill_frame);
+
+	const std::string& bank = this->menu_.sound_bank;
+	check.wave("menu_style.sounds.direction", bank, this->menu_.direction_sound);
+	check.wave("menu_style.sounds.confirm", bank, this->menu_.confirm_sound);
+	check.wave("menu_style.sounds.cancel", bank, this->menu_.cancel_sound);
+	check.wave("main_menu.sounds.error", bank, this->main_menu_.error_sound);
+	check.wave("main_menu.sounds.ready", bank, this->main_menu_.ready_sound);
+	check.effect("main_menu.music.name", bank, this->main_menu_.music.name);
+	check.wave("pause_menu.window_open_sound", bank, this->pause_menu_.window_open_sound);
+	check.wave("results_menu.sounds.winner.name", bank, this->results_menu_.winner_sound.name);
+	check.effect("results_menu.sounds.fill.name", bank, this->results_menu_.fill_sound.name);
+
+	// These menu pictures are chosen by the page code, so they have no JSON
+	// field to walk. Check them too before the player can reach those pages.
+	for (const char* frame : { "pixel", "square_white_4", "team_select_a",
+		"team_select_center", "team_select_b", "team_select_a_selected",
+		"team_select_center_selected", "team_select_b_selected", "sprayer", "sniper",
+		"roller", "mister", "bucket", "random", "error", "results_menu_fill_box",
+		"results_menu_team_a_fill", "results_menu_team_b_fill" })
+	{
+		check.frame(std::string("built-in menu frame '") + frame + "'",
+			"sprite_sheet_1", frame);
+	}
 }
 
 const MenuStyle& Presentation::menu() const

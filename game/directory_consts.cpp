@@ -1,8 +1,10 @@
 #include "game/pch.h"
 #include "game/directory_consts.h"
 #include "engine/app/content_root.h"
+#include "engine/core/file_path.h"
 
 #include <cstdlib>
+#include <memory>
 
 namespace
 {
@@ -26,15 +28,15 @@ namespace directory_consts
 		// environment variable is set for every interactive session on every
 		// supported Windows.
 		//
-		// getenv rather than the wide form: every path in this game is narrow,
-		// including the ones handed to fopen_s and std::filesystem in save.cpp,
-		// and widening this one alone would only move the problem. A profile
-		// path outside the system code page is a real limitation and is
-		// exactly as real as it was when the save lived in the content mirror.
+		// Windows supplies a native wide path. Keep every character while
+		// converting to the engine's UTF-8 path convention; Save converts back
+		// only at the filesystem boundary. Allocate for the actual environment
+		// value rather than imposing MAX_PATH on a user's profile location.
 		size_t length = 0;
-		char buffer[MAX_PATH] = {};
-		if (getenv_s(&length, buffer, sizeof(buffer), "LOCALAPPDATA") != 0 ||
-			length == 0)
+		wchar_t* raw_path = nullptr;
+		const errno_t result = _wdupenv_s(&raw_path, &length, L"LOCALAPPDATA");
+		const std::unique_ptr<wchar_t, decltype(&std::free)> buffer(raw_path, &std::free);
+		if (result != 0 || length <= 1 || buffer == nullptr)
 		{
 			// No LOCALAPPDATA at all, which means something unusual - a
 			// service account, a stripped environment. Falling back to where
@@ -43,8 +45,8 @@ namespace directory_consts
 			return legacy_save_file_path();
 		}
 
-		return std::string(buffer) + "\\" + GAME_FOLDER_NAME + "\\" +
-			SAVE_FILE_NAME;
+		return labrador::path_to_utf8(std::filesystem::path(buffer.get()) /
+			GAME_FOLDER_NAME / SAVE_FILE_NAME);
 	}
 
 	std::string legacy_save_file_path()
