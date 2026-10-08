@@ -154,6 +154,24 @@ failures fail CI. Local checks default to requiring startup. These automated
 checks do not establish controller feel, audible balance or multiplayer quality;
 the hardware acceptance checklist is in [the roadmap](docs/feature-roadmap.md).
 
+### Level editor
+
+The normal build also creates a separate desktop level editor:
+
+```powershell
+./out/build/x64-debug/editor/ColourWarsEditor.exe
+```
+
+Open a level from `game/content/levels/`, select and drag its geometry, edit
+properties, add platforms/ramps/visuals, and save. The editor includes grid
+snapping, zoom/pan, spawn and bounds editing, and undo/redo. Rebuild the game
+after saving to copy the source level into its runtime content directory.
+
+See [the editor guide](docs/level-editor.md) for controls, registering a new
+stage and acceptance checks. The canvas is a layout preview; play the level
+in the game to test collisions and balance. The editor is a development tool
+and is not included in the game's Release ZIP.
+
 ### Release ZIP
 
 From an x64 Developer prompt with `VCPKG_ROOT` set:

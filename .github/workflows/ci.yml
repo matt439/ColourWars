@@ -66,6 +66,12 @@ jobs:
           call "%VCVARS%"
           pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild
 
+      - name: Level editor acceptance
+        run: |
+          call "%VCVARS%"
+          cmake --build --preset ${{ matrix.preset }} --target colourwars_editor_acceptance
+          pwsh -NoProfile -File scripts/check-level-editor.ps1 -Preset ${{ matrix.preset }} -SkipBuild
+
       - name: Package Release
         if: matrix.preset == 'x64-release'
         run: |
