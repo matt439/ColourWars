@@ -1,0 +1,13 @@
+{
+    "animation_strips": [],
+    "sprite_frames":
+    [
+        {
+            "name": "backdrop",
+            "position": { "x": 0, "y": 0 },
+            "size": { "w": 1672, "h": 941 },
+            "origin": { "x": 0.0, "y": 0.0 },
+            "rotated": false
+        }
+    ]
+}

@@ -94,7 +94,7 @@
                 "height": 7000.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SADDLE_BROWN"
+            "colour": "SLATE_GREY"
         },
         {
             "name": "boundary_ceiling",
@@ -109,7 +109,7 @@
                 "height": 100.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SADDLE_BROWN"
+            "colour": "SLATE_GREY"
         },
         {
             "name": "boundary_wall_right",
@@ -124,7 +124,7 @@
                 "height": 7000.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SADDLE_BROWN"
+            "colour": "SLATE_GREY"
         },
 
 
@@ -144,7 +144,7 @@
                 "height": 50.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SADDLE_BROWN"
+            "colour": "SLATE_GREY"
         },
         {
             "name": "spawn_a_wall",
@@ -159,7 +159,7 @@
                 "height": 195.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SADDLE_BROWN"
+            "colour": "SLATE_GREY"
         },
         {
             "name": "spawn_a_ceiling",
@@ -174,7 +174,7 @@
                 "height": 10.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "TAN"
+            "colour": "LIGHT_STEEL_BLUE"
         },
         {
             "name": "spawn_b_floor",
@@ -189,7 +189,7 @@
                 "height": 50.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SADDLE_BROWN"
+            "colour": "SLATE_GREY"
         },
         {
             "name": "spawn_b_wall",
@@ -204,7 +204,7 @@
                 "height": 195.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SADDLE_BROWN"
+            "colour": "SLATE_GREY"
         },
         {
             "name": "spawn_a_ceiling",
@@ -219,7 +219,7 @@
                 "height": 10.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "TAN"
+            "colour": "LIGHT_STEEL_BLUE"
         },
 
 
@@ -237,7 +237,7 @@
                 "height": 1000.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SADDLE_BROWN"
+            "colour": "SLATE_GREY"
         },
 
 
@@ -263,7 +263,7 @@
                 "right": false,
                 "bottom": true
             },
-            "colour": "GREY"
+            "colour": "GAINSBORO"
         },
         {
             "name": "upper_paint",
@@ -285,7 +285,7 @@
                 "right": true,
                 "bottom": true
             },
-            "colour": "GREY"
+            "colour": "GAINSBORO"
         },
         {
             "name": "lower_left_platform",
@@ -300,7 +300,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "TAN"
+            "colour": "LIGHT_STEEL_BLUE"
         },
         {
             "name": "lower_right_platform",
@@ -315,7 +315,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "TAN"
+            "colour": "LIGHT_STEEL_BLUE"
         },
         {
             "name": "upper_left_platform",
@@ -330,7 +330,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "TAN"
+            "colour": "LIGHT_STEEL_BLUE"
         },
         {
             "name": "upper_right_platform",
@@ -345,7 +345,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "TAN"
+            "colour": "LIGHT_STEEL_BLUE"
         },
 
 
@@ -363,7 +363,7 @@
                 "height": 900.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "TAN"
+            "colour": "LIGHT_STEEL_BLUE"
         },
         {
             "name": "right_fence",
@@ -378,7 +378,7 @@
                 "height": 900.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "TAN"
+            "colour": "LIGHT_STEEL_BLUE"
         }
 
 
@@ -394,84 +394,221 @@
             "type": "Visual",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
-            "rectangle":
-            {
+            "rectangle": {
                 "x": 0.0,
                 "y": 0.0,
                 "width": 6000.0,
                 "height": 6000.0
             },
-            "colour": "LIGHT_SKY_BLUE"
+            "colour": "DARK_SLATE_GREY"
         },
         {
-            "name": "cloud_left_spawn",
+            "name": "arena_panel_joint_vertical_1",
             "type": "Visual",
             "sheet_name": "sprite_sheet_1",
-            "frame_name": "cloud_1",
-            "rectangle":
-            {
-                "x": 300.0,
-                "y": 4280.0,
-                "width": 600.0,
-                "height": 225.0
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 750.0,
+                "y": 0.0,
+                "width": 6.0,
+                "height": 6000.0
             },
-            "colour": "WHITE"
+            "colour": "BLACK"
         },
         {
-            "name": "cloud_right_spawn",
+            "name": "arena_panel_joint_vertical_2",
             "type": "Visual",
             "sheet_name": "sprite_sheet_1",
-            "frame_name": "cloud_1",
-            "rectangle":
-            {
-                "x": 4792.0,
-                "y": 4138.0,
-                "width": 600.0,
-                "height": 225.0
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1500.0,
+                "y": 0.0,
+                "width": 6.0,
+                "height": 6000.0
             },
-            "colour": "WHITE"
+            "colour": "BLACK"
         },
         {
-            "name": "cloud_right_mid",
+            "name": "arena_panel_joint_vertical_3",
             "type": "Visual",
             "sheet_name": "sprite_sheet_1",
-            "frame_name": "cloud_2",
-            "rectangle":
-            {
-                "x": 4120.0,
-                "y": 4632.0,
-                "width": 600.0,
-                "height": 225.0
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 2250.0,
+                "y": 0.0,
+                "width": 6.0,
+                "height": 6000.0
             },
-            "colour": "WHITE"
+            "colour": "BLACK"
         },
         {
-            "name": "cloud_left_mid",
+            "name": "arena_panel_joint_vertical_4",
             "type": "Visual",
             "sheet_name": "sprite_sheet_1",
-            "frame_name": "cloud_2",
-            "rectangle":
-            {
-                "x": 1388.0,
-                "y": 4396.0,
-                "width": 600.0,
-                "height": 225.0
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 3000.0,
+                "y": 0.0,
+                "width": 6.0,
+                "height": 6000.0
             },
-            "colour": "WHITE"
+            "colour": "BLACK"
         },
         {
-            "name": "cloud_upper_mid",
+            "name": "arena_panel_joint_vertical_5",
             "type": "Visual",
             "sheet_name": "sprite_sheet_1",
-            "frame_name": "cloud_1",
-            "rectangle":
-            {
-                "x": 2900.0,
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 3750.0,
+                "y": 0.0,
+                "width": 6.0,
+                "height": 6000.0
+            },
+            "colour": "BLACK"
+        },
+        {
+            "name": "arena_panel_joint_vertical_6",
+            "type": "Visual",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 4500.0,
+                "y": 0.0,
+                "width": 6.0,
+                "height": 6000.0
+            },
+            "colour": "BLACK"
+        },
+        {
+            "name": "arena_panel_joint_vertical_7",
+            "type": "Visual",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 5250.0,
+                "y": 0.0,
+                "width": 6.0,
+                "height": 6000.0
+            },
+            "colour": "BLACK"
+        },
+        {
+            "name": "arena_panel_joint_horizontal_1",
+            "type": "Visual",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 0.0,
                 "y": 4200.0,
-                "width": 600.0,
-                "height": 225.0
+                "width": 6000.0,
+                "height": 6.0
             },
-            "colour": "WHITE"
+            "colour": "BLACK"
+        },
+        {
+            "name": "arena_panel_joint_horizontal_2",
+            "type": "Visual",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 0.0,
+                "y": 4800.0,
+                "width": 6000.0,
+                "height": 6.0
+            },
+            "colour": "BLACK"
+        },
+        {
+            "name": "arena_panel_joint_horizontal_3",
+            "type": "Visual",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 0.0,
+                "y": 5400.0,
+                "width": 6000.0,
+                "height": 6.0
+            },
+            "colour": "BLACK"
+        },
+        {
+            "name": "spawn_left_backplate",
+            "type": "Visual",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 45.0,
+                "y": 4700.0,
+                "width": 190.0,
+                "height": 100.0
+            },
+            "colour": "BLACK"
+        },
+        {
+            "name": "spawn_left_backplate_stripe",
+            "type": "Visual",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 61.0,
+                "y": 4720.0,
+                "width": 158.0,
+                "height": 8.0
+            },
+            "colour": "SLATE_GREY"
+        },
+        {
+            "name": "spawn_left_backplate_mark",
+            "type": "Visual",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 61.0,
+                "y": 4748.0,
+                "width": 52.0,
+                "height": 28.0
+            },
+            "colour": "SLATE_GREY"
+        },
+        {
+            "name": "spawn_right_backplate",
+            "type": "Visual",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 5765.0,
+                "y": 4700.0,
+                "width": 190.0,
+                "height": 100.0
+            },
+            "colour": "BLACK"
+        },
+        {
+            "name": "spawn_right_backplate_stripe",
+            "type": "Visual",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 5781.0,
+                "y": 4720.0,
+                "width": 158.0,
+                "height": 8.0
+            },
+            "colour": "SLATE_GREY"
+        },
+        {
+            "name": "spawn_right_backplate_mark",
+            "type": "Visual",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 5781.0,
+                "y": 4748.0,
+                "width": 52.0,
+                "height": 28.0
+            },
+            "colour": "SLATE_GREY"
         }
     ]
 }

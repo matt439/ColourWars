@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/controls_settings_menu.h"
 #include "game/states/main_menu.h"
+#include "game/states/menu_panel.h"
 #include "game/drawable_text.h"
 #include "game/build_info.h"
 
@@ -126,17 +127,17 @@ void MainMenuTitle::init()
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		"sprite_sheet_1",
-		"square_white_4",
+		this->look().backdrop_sheet,
+		this->look().backdrop_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		this->look().title_background_colour);
 
 	this->title_ = std::make_unique<UiTextDropShadow>(
 		"title",
-		L"Colour Wars",
+		L"COLOUR\nWARS",
 		this->look().title_font,
-		Vector2F(200.0f, 300.0f),
+		this->look().title_position,
 		this->render_resources(),
 		this->look().title_text_colour,
 		this->menu_style().shadow_colour,
@@ -144,9 +145,9 @@ void MainMenuTitle::init()
 
 	this->start_ = std::make_unique<UiTextDropShadow>(
 		"start",
-		L"Start",
+		L"LET'S PLAY",
 		this->menu_style().item_font,
-		Vector2F(250.0f, 700.0f),
+		this->look().title_start_position,
 		this->render_resources(),
 		this->look().title_start_text_colour,
 		this->menu_style().shadow_colour,
@@ -172,9 +173,17 @@ void MainMenuTitle::init()
 	this->text_container_->add_child(this->title_.get());
 	this->text_container_->add_child(this->start_.get());
 	this->text_container_->add_child(this->no_pad_.get());
+	this->subtitle_ = std::make_unique<UiTextDropShadow>(
+		"subtitle", L"MAKE A MESS. MAKE IT YOURS.",
+		this->menu_style().detail_font, this->look().title_subtitle_position,
+		this->render_resources(), this->menu_style().unhighlight,
+		this->menu_style().shadow_colour, this->menu_style().detail_shadow_offset);
+	this->text_container_->add_child(this->subtitle_.get());
+	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
+	this->focus_.add(this->start_.get());
 
 	this->build_id_ = std::make_unique<UiTextDropShadow>(
-		"build_id", build_info::label, this->menu_style().detail_font,
+		"build_id", build_info::label, this->presentation().prompt_bar().font,
 		this->look().build_id_position, this->render_resources(),
 		this->look().title_start_text_colour,
 		this->menu_style().shadow_colour,
@@ -231,15 +240,15 @@ void MainMenuHome::init()
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		"sprite_sheet_1",
-		"pixel",
+		this->look().backdrop_sheet,
+		this->look().backdrop_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		this->look().home_background_colour);
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
-		L"Main Menu",
+		L"Make your mark.",
 		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -287,6 +296,12 @@ void MainMenuHome::init()
 	this->text_container_->add_child(this->play_.get());
 	this->text_container_->add_child(this->options_.get());
 	this->text_container_->add_child(this->exit_.get());
+	this->subtitle_ = std::make_unique<UiTextDropShadow>(
+		"subtitle", L"Paint the arena. Claim the win.",
+		this->menu_style().detail_font, this->look().home_subtitle_position,
+		this->render_resources(), this->menu_style().unhighlight,
+		this->menu_style().shadow_colour, this->menu_style().detail_shadow_offset);
+	this->text_container_->add_child(this->subtitle_.get());
 
 	// Navigation uses widget bounds in design space, not declaration order.
 	this->focus_.add(this->play_.get(), [this]
@@ -430,8 +445,8 @@ void MainMenuOptions::init()
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		"sprite_sheet_1",
-		"pixel",
+		this->look().backdrop_sheet,
+		this->look().backdrop_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		this->look().options_background_colour);
@@ -720,8 +735,8 @@ void MainMenuModeSelect::init()
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		"sprite_sheet_1",
-		"pixel",
+		this->look().backdrop_sheet,
+		this->look().backdrop_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		this->look().play_background_colour);
@@ -875,8 +890,8 @@ void MainMenuPlayerCount::init()
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		"sprite_sheet_1",
-		"pixel",
+		this->look().backdrop_sheet,
+		this->look().backdrop_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		this->look().play_background_colour);
@@ -1007,7 +1022,8 @@ void MainMenuJoin::init()
 	this->set_widget_spacing(this->look().player_count_spacing);
 	const MenuStyle& style = this->menu_style();
 	this->background_ = std::make_unique<UiTexture>("background",
-		"sprite_sheet_1", "pixel", RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		this->look().backdrop_sheet,
+		this->look().backdrop_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(), this->look().play_background_colour);
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
@@ -1365,8 +1381,8 @@ void MainMenuTeamSelect::init()
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		"sprite_sheet_1",
-		"pixel",
+		this->look().backdrop_sheet,
+		this->look().backdrop_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		this->look().play_background_colour);
@@ -1693,8 +1709,8 @@ void MainMenuWeaponSelect::init()
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		"sprite_sheet_1",
-		"pixel",
+		this->look().backdrop_sheet,
+		this->look().backdrop_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		this->look().play_background_colour);
@@ -1734,13 +1750,12 @@ void MainMenuWeaponSelect::init()
 			this->render_resources(),
 			this->look().weapon_select.unselected);
 
-		widgets->weapon_icon = std::make_unique<UiTexture>(
+		widgets->weapon_icon = std::make_unique<MenuIcon>(
 			name + "_wep_icon",
-			"sprite_sheet_1",
 			"sprayer",
 			RectangleF(this->calculate_widget_position(2, i + 2), this->look().weapon_select.size),
 			this->render_resources(),
-			this->look().play_background_colour);
+			this->look().weapon_select.unselected, &this->menu_style());
 
 		widgets->weapon_name = std::make_unique<UiTextDropShadow>(
 			name + "_wep_name",
@@ -1956,8 +1971,8 @@ void MainMenuStageSelect::init()
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		"sprite_sheet_1",
-		"pixel",
+		this->look().backdrop_sheet,
+		this->look().backdrop_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		this->look().play_background_colour);
@@ -1981,7 +1996,7 @@ void MainMenuStageSelect::init()
 		this->slot_icon_frame(this->select_state_.slot),
 		RectangleF(this->calculate_widget_position(0, 1), this->look().stage_select.size),
 		this->render_resources(),
-		this->look().play_background_colour);
+		this->look().stage_select.unselected);
 
 	this->stage_name_ = std::make_unique<UiTextDropShadow>(
 		"stage_name",

@@ -21,8 +21,8 @@ void ControlsSettingsMenu::init()
 	this->focus_.set_style({ style.highlight, style.unhighlight, style.disabled });
 	this->set_prompts({ { L"Left/Right", L"Change" }, { L"A", L"Select" },
 		{ L"B", L"Back (discard unapplied changes)" } });
-	this->background_ = std::make_unique<UiTexture>("background", "sprite_sheet_1",
-		"pixel", RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+	this->background_ = std::make_unique<UiTexture>("background", this->presentation().main_menu().backdrop_sheet,
+		this->presentation().main_menu().backdrop_frame, RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
 		this->render_resources(), this->presentation().main_menu().options_background_colour);
 	this->texture_container_ = std::make_unique<UiContainer>("textures");
 	this->texture_container_->add_child(this->background_.get());

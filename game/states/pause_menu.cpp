@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/states/menu_panel.h"
 #include "game/states/controls_settings_menu.h"
 #include "game/states/pause_menu.h"
 
@@ -196,13 +197,11 @@ void PauseMenuInitial::init()
 
 	this->focus_.set_style({ style.highlight, style.unhighlight, style.disabled });
 
-	this->box_ = std::make_unique<UiTexture>(
+	this->box_ = std::make_unique<MenuPanel>(
 		"box",
-		"sprite_sheet_1",
-		"pixel",
 		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
-		look.box_colour);
+		look.box_colour, &style);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(look.layout.position);
@@ -352,13 +351,11 @@ void PauseMenuConfirmation::init()
 
 	this->focus_.set_style({ style.highlight, style.unhighlight });
 
-	this->box_ = std::make_unique<UiTexture>(
+	this->box_ = std::make_unique<MenuPanel>(
 		"box",
-		"sprite_sheet_1",
-		"pixel",
 		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
-		look.box_colour);
+		look.box_colour, &style);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(look.layout.position);

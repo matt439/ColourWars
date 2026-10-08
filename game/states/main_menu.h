@@ -58,6 +58,7 @@ public:
 	void update(float dt) override;
 	void init() override;
 private:
+	std::unique_ptr<labrador::UiTextDropShadow> subtitle_;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> title_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> start_ = nullptr;
@@ -74,6 +75,7 @@ public:
 	void update(float dt) override;
 	void init() override;
 private:
+	std::unique_ptr<labrador::UiTextDropShadow> subtitle_;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> play_ = nullptr;

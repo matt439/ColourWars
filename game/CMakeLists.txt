@@ -50,6 +50,7 @@ add_executable(ColourWars WIN32
     states/menu_input.cpp
     states/menu_level_settings.cpp
     states/menu_page.cpp
+    states/menu_panel.cpp
     states/option_row.cpp
     states/pause_menu.cpp
     states/prompt_bar.cpp

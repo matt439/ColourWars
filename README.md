@@ -3,6 +3,13 @@
 A local split-screen paint-shooter for up to four players. Two teams, one
 arena, and a scoreboard that counts painted surface rather than kills.
 
+The presentation uses dark ink panels, cream lettering and bright paint
+accents, with original menu artwork and a compact split-screen HUD. Health
+and paint meters are labelled; menus mark the focused choice with both a
+colour and a panel. The three arenas use pale paintable surfaces against
+muted, panelled backgrounds. Colours and spacing are authored in
+`game/content/presentation.json`; arena decoration lives in the level JSONs.
+
 Choose **Single Match**, **Best of 3** (first to two wins), or **Best of 5**
 (first to three). Series keep the same players, teams, weapons and stage;
 draws award no win and are replayed. Pause > Restart restarts only the current
@@ -196,7 +203,7 @@ committing to produce a package labelled with that commit.
 
 Only the assets listed in [cmake/release_assets.cmake](cmake/release_assets.cmake)
 are packaged; configure checks that the list matches the runtime manifest.
-The ZIP includes licence notices, the seven compiled fonts, the sprite sheet,
+The ZIP includes licence notices, the seven compiled fonts, both sprite sheets,
 all three levels, tuning, presentation and the optional sound-bank definition.
 It is always silent: local wave banks and source audio are excluded even on a
 developer's machine. Development art, content tools and saves are excluded too.

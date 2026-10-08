@@ -43,8 +43,10 @@ private:
 	std::unique_ptr<labrador::UiTexture> team_b_fill_ = nullptr;
 
 	// A/B marks identify the bars without relying on colour.
-	std::unique_ptr<labrador::UiTexture> team_a_mark_ = nullptr;
-	std::unique_ptr<labrador::UiTexture> team_b_mark_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> team_a_mark_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> team_b_mark_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> team_a_percentage_panel_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> team_b_percentage_panel_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> team_a_percentage_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> team_b_percentage_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> winner_ = nullptr;

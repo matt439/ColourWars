@@ -25,11 +25,24 @@
       "item_offset": { "x": 1.5, "y": 1.5 },
       "detail_offset": { "x": 1.0, "y": 1.0 }
     },
-    "highlight": "WHITE",
-    "unhighlight": "BLUE",
-    "disabled": "DIM_GRAY",
-    "warning": "GOLD",
-    "heading_colour": "FF7F00",
+    "highlight": "75EDD7",
+    "unhighlight": "D4DEEC",
+    "disabled": "738198",
+    "warning": "FFB77A",
+    "heading_colour": "FFF5DF",
+    "chrome": {
+      "focus_panel_colour": "253B4D",
+      "focus_padding": { "x": 24.0, "y": 10.0 },
+      "accent_width": 5.0,
+      "panel_edge_colour": "445268",
+      "panel_shadow_offset": { "x": 12.0, "y": 16.0 },
+      "scrim_colour": "080F1AC9",
+      "brand_position": { "x": 150.0, "y": 48.0 },
+      "brand_font": "gill_sans_mt_bold_24",
+      "footer_y": 960.0,
+      "rule_height": 2.0,
+      "icon_padding": { "x": 6.0, "y": 6.0 }
+    },
     "box_size": { "x": 900.0, "y": 600.0 },
     "sound_bank": "sound_bank_1",
     "sounds": {
@@ -40,22 +53,27 @@
   },
 
   "main_menu": {
+    "backdrop": { "sheet": "menu_paint", "frame": "backdrop" },
+    "title_position": { "x": 150.0, "y": 190.0 },
+    "title_subtitle_position": { "x": 150.0, "y": 625.0 },
+    "title_start_position": { "x": 150.0, "y": 765.0 },
+    "home_subtitle_position": { "x": 150.0, "y": 300.0 },
     "fonts": {
       "title": "gill_sans_ultra_bold_144",
       "announcement": "gill_sans_mt_bold_144",
       "weapon_description": "gill_sans_mt_bold_24"
     },
-    "title_text_colour": "GOLDENROD",
-    "build_id_position": { "x": 250.0, "y": 910.0 },
-    "title_start_text_colour": "WHITE_SMOKE",
+    "title_text_colour": "FFF5DF",
+    "build_id_position": { "x": 150.0, "y": 910.0 },
+    "title_start_text_colour": "75EDD7",
     "title_no_pad_text_colour": "GOLD",
     "backgrounds": {
-      "title": "DARK_SLATE_BLUE",
-      "home": "DODGER_BLUE",
-      "options": "DODGER_BLUE",
-      "play": "DODGER_BLUE"
+      "title": "FFFFFF",
+      "home": "FFFFFF",
+      "options": "485467",
+      "play": "485467"
     },
-    "options_value_colour": "DARK_TURQUOISE",
+    "options_value_colour": "FFB77A",
     "options_spacing": { "x": 250.0, "y": 100.0 },
     "weapon_description": {
       "colour": "WHITE_SMOKE",
@@ -67,19 +85,19 @@
     "team_select": {
       "spacing": { "x": 250.0, "y": 125.0 },
       "size": { "x": 50.0, "y": 50.0 },
-      "selected": "LIGHT_CORAL",
+      "selected": "75EDD7",
       "unselected": "WHITE"
     },
     "weapon_select": {
       "spacing": { "x": 250.0, "y": 125.0 },
       "size": { "x": 50.0, "y": 50.0 },
-      "selected": "LIGHT_CORAL",
+      "selected": "75EDD7",
       "unselected": "WHITE"
     },
     "stage_select": {
-      "spacing": { "x": 0.0, "y": 150.0 },
-      "size": { "x": 800.0, "y": 600.0 },
-      "selected": "FIRE_BRICK",
+      "spacing": { "x": 0.0, "y": 140.0 },
+      "size": { "x": 760.0, "y": 540.0 },
+      "selected": "75EDD7",
       "unselected": "WHITE"
     },
     "music": { "name": "Top_Of_The_Morning", "volume": 0.03 },
@@ -110,7 +128,7 @@
 
   "pause_menu": {
     "box_size": { "x": 900.0, "y": 800.0 },
-    "box_colour": "DODGER_BLUE",
+    "box_colour": "182233",
     "layout": {
       "position": { "x": 610.0, "y": 180.0 },
       "size": { "x": 100.0, "y": 50.0 },
@@ -120,7 +138,7 @@
   },
 
   "end_menu": {
-    "box_colour": "DODGER_BLUE",
+    "box_colour": "182233",
     "layout": {
       "position": { "x": 700.0, "y": 250.0 },
       "size": { "x": 100.0, "y": 50.0 },
@@ -135,8 +153,8 @@
     "contribution_position": { "x": 480.0, "y": 635.0 },
     "contribution_spacing": 45.0,
     "contribution_font": "gill_sans_mt_bold_24",
-    "box_colour": "LIGHT_SLATE_GRAY",
-    "heading_colour": "GOLDENROD",
+    "box_colour": "182233",
+    "heading_colour": "FFF5DF",
     "fill": {
       "box_size": { "x": 700.0, "y": 120.0 },
       "box_y_offset": 380.0,
@@ -145,13 +163,12 @@
       "time": 2.0
     },
     "show_results_delay": 1.0,
-    "percentage_colour": "DARK_GRAY",
-    "team_b_percentage_x_offset": 325.0,
+    "percentage_colour": "FFF5DF",
     "_team_mark_comment": [
       "The A and B letters, outside each end of the fill box rather than on",
       "it: the percentages already sit at the top-left of their own bars.",
-      "The gap is measured from the fill box edge outwards, and 900 - 700",
-      "leaves 100 of panel on each side to spend."
+      "The gap is measured from the fill box edge outwards; the results",
+      "panel leaves room on each side for the labels."
     ],
     "team_mark": {
       "size": { "x": 56.0, "y": 56.0 },
@@ -177,41 +194,44 @@
   "prompt_bar": {
     "font": "gill_sans_mt_bold_24",
     "position": { "x": 150.0, "y": 990.0 },
-    "colour": "WHITE_SMOKE",
+    "colour": "D4DEEC",
     "shadow_colour": "BLACK",
     "shadow_offset": { "x": 1.0, "y": 1.0 }
   },
 
   "hud": {
+    "meter_label_font": "gill_sans_mt_bold_24",
+    "meter_track_colour": "303C52",
+    "meter_label_gap": 6.0,
+    "reference_height": 1080.0,
     "_comment": [
       "The margins and the box are fractions of the viewport, not pixels,",
       "which is why the HUD survives a resolution change."
     ],
-    "right_margin": 0.18,
-    "ammo_top_margin": 0.15,
-    "health_top_margin": 0.05,
-    "box_size": { "x": 0.15, "y": 0.07 },
-    "box_fill_border": 0.003,
-    "health_colour": "GREEN",
+    "right_margin": 0.19,
+    "ammo_top_margin": 0.17,
+    "health_top_margin": 0.09,
+    "box_size": { "x": 0.15, "y": 0.022 },
+    "box_fill_border": 0.002,
+    "health_colour": "76E8B5",
     "sprite_sheet": "sprite_sheet_1",
-    "empty_box_frame": "health_box",
     "fill_frame": "pixel",
     "timer": {
       "font": "gill_sans_mt_bold_48",
-      "offset": { "x": 0.01, "y": 0.05 },
+      "offset": { "x": 0.0, "y": 0.05 },
       "shadow_offset": { "x": 2.0, "y": 2.0 },
-      "colour": "GRAY",
+      "colour": "FFF5DF",
       "shadow_colour": "BLACK",
       "reference_width": 1920.0
     },
     "player_identity": {
-      "font": "gill_sans_mt_bold_48",
+      "font": "gill_sans_mt_bold_36",
       "offset": { "x": 0.03, "y": 0.05 },
       "shadow_offset": { "x": 2.0, "y": 2.0 },
-      "colour": "WHITE",
+      "colour": "FFF5DF",
       "shadow_colour": "BLACK",
-      "background_colour": "000000CC",
-      "padding": { "x": 12.0, "y": 6.0 },
+      "background_colour": "121827EE",
+      "padding": { "x": 16.0, "y": 10.0 },
       "reference_width": 1920.0
     },
     "respawn_timer": {

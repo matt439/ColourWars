@@ -49,6 +49,19 @@ struct MenuStyle
 
 	labrador::Colour heading_colour = labrador::Colour::white;
 
+	// Shared arcade chrome. Focus geometry follows the actual widget bounds.
+	labrador::Colour focus_panel_colour;
+	mattmath::Vector2F focus_padding;
+	float accent_width = 0.0f;
+	labrador::Colour panel_edge_colour;
+	mattmath::Vector2F panel_shadow_offset;
+	labrador::Colour scrim_colour;
+	mattmath::Vector2F brand_position;
+	std::string brand_font;
+	float footer_y = 0.0f;
+	float rule_height = 0.0f;
+	mattmath::Vector2F icon_padding;
+
 	// The box a modal menu is drawn in. Pause, end and results all use it.
 	mattmath::Vector2F box_size = { 0.0f, 0.0f };
 
@@ -85,6 +98,12 @@ struct ControlsSettingsPresentation
 
 struct MainMenuPresentation
 {
+	std::string backdrop_sheet;
+	std::string backdrop_frame;
+	mattmath::Vector2F title_position;
+	mattmath::Vector2F title_subtitle_position;
+	mattmath::Vector2F title_start_position;
+	mattmath::Vector2F home_subtitle_position;
 	std::string title_font;
 	std::string announcement_font;
 	std::string weapon_description_font;
@@ -166,9 +185,8 @@ struct ResultsMenuPresentation
 	float show_results_delay = 0.0f;
 
 	labrador::Colour percentage_colour = labrador::Colour::white;
-	float team_b_percentage_x_offset = 0.0f;
 
-	// Team marks use black glyphs from the sprite sheet, drawn without a tint.
+	// Placement boxes for native team-letter labels beside the results bar.
 	mattmath::Vector2F team_mark_size = { 0.0f, 0.0f };
 	float team_mark_gap = 0.0f;
 
@@ -195,6 +213,10 @@ struct PromptBarPresentation
 // offsets and identity padding use pixel distances scaled with the text.
 struct HudPresentation
 {
+	std::string meter_label_font;
+	labrador::Colour meter_track_colour;
+	float meter_label_gap = 0.0f;
+	float reference_height = 1080.0f;
 	float right_margin = 0.0f;
 	float ammo_top_margin = 0.0f;
 	float health_top_margin = 0.0f;
@@ -203,7 +225,6 @@ struct HudPresentation
 	labrador::Colour health_colour = labrador::Colour::green;
 
 	std::string sprite_sheet;
-	std::string empty_box_frame;
 	std::string fill_frame;
 
 	std::string timer_font;

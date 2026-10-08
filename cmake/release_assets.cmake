@@ -14,6 +14,8 @@ set(COLOURWARS_RELEASE_ASSETS
     fonts/gill_sans_ultra_bold_144.spritefont
     textures/sprite_sheet_1.dds
     textures/sprite_sheet_1.json
+    textures/menu_paint.dds
+    textures/menu_paint.json
     levels/king_of_the_hill.json
     levels/turbulence.json
     levels/close_quarters.json

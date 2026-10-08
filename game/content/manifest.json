@@ -17,7 +17,8 @@
             "kind": "sprite_sheet",
             "directory": "./textures/",
             "names": [
-                "sprite_sheet_1"
+                "sprite_sheet_1",
+                "menu_paint"
             ]
         },
         {

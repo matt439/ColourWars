@@ -10,6 +10,8 @@
 #include "engine/math/vector2f.h"
 #include "engine/render/camera.h"
 #include "engine/render/viewport.h"
+#include "engine/render/render_resources.h"
+#include "engine/render/sprite_frame.h"
 
 namespace menu_consts
 {
@@ -99,6 +101,10 @@ protected:
 	// Maps unchanged design-space geometry into the current window.
 	labrador::Camera ui_camera() const;
 private:
+	void draw_chrome(labrador::DrawList& list) const;
+	labrador::RenderResources::SpriteSheetHandle chrome_sheet_;
+	labrador::SpriteSheet::frame_handle chrome_pixel_;
+	labrador::FontHandle brand_font_;
 	MenuContext* context_ = nullptr;
 	std::unique_ptr<PromptBar> prompt_bar_ = nullptr;
 	mattmath::Vector2F widget_position_ = { 150.0f, 150.0f };

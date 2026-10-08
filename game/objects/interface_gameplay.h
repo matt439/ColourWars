@@ -29,18 +29,17 @@ public:
         bool show_respawn_timer) const;
 
 private:
-    void draw_ammo(labrador::DrawList& draw_list,
+    void draw_meter(labrador::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
-        float ammo,
-        const labrador::Colour& team_colour,
-        const mattmath::Vector2F& position) const;
-    void draw_health(labrador::DrawList& draw_list,
-        const mattmath::Vector2F& resolution,
-        float health,
-        const mattmath::Vector2F& position) const;
+        float amount,
+        const labrador::Colour& colour,
+        const mattmath::Vector2F& position,
+        const std::wstring& label,
+        float scale) const;
     void draw_timer(labrador::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
-        float timer) const;
+        float timer,
+        float scale) const;
 
     void draw_respawn_timer(labrador::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
@@ -55,8 +54,8 @@ private:
     // Resolve assets at construction. Declare sheet_ first because frame handles
     // are resolved against it.
     labrador::RenderResources::SpriteSheetHandle sheet_;
-    labrador::SpriteSheet::frame_handle empty_box_frame_;
     labrador::SpriteSheet::frame_handle fill_frame_;
+    labrador::FontHandle meter_label_font_;
     labrador::FontHandle timer_font_;
     labrador::FontHandle respawn_timer_font_;
     labrador::FontHandle player_identity_font_;

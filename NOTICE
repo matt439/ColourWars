@@ -62,3 +62,11 @@ fonts (Gill Sans MT, Courier New) with Microsoft's `MakeSpriteFont`. The
 compiled glyph atlases are redistributed here on the same footing as any other
 game asset built from a licensed system font; the fonts themselves are not
 included and are not ColourWars' to license.
+
+### Menu artwork
+
+`game/content/textures/menu_paint.png` is original artwork generated for
+ColourWars using OpenAI image generation. The matching `.dds` is a lossless
+RGBA conversion used at runtime; `menu_paint.json` defines its sprite frame.
+The release includes the DDS and frame definition, while the PNG is retained
+as the source artwork.

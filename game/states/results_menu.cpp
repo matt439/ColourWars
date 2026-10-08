@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/states/menu_panel.h"
 #include "game/states/results_menu.h"
 
 using namespace DirectX;
@@ -57,10 +58,12 @@ void ResultsMenuInitial::update(float dt)
 			// Reveal percentages only for teams that participated.
 			if (this->level_end_info().team_a_played)
 			{
+				this->team_a_percentage_panel_->set_hidden(false);
 				this->team_a_percentage_->set_hidden(false);
 			}
 			if (this->level_end_info().team_b_played)
 			{
+				this->team_b_percentage_panel_->set_hidden(false);
 				this->team_b_percentage_->set_hidden(false);
 			}
 			this->winner_->set_hidden(false);
@@ -94,13 +97,11 @@ void ResultsMenuInitial::init()
 
 	const LevelEndInfo end_info = this->level_end_info();
 
-	this->box_ = std::make_unique<UiTexture>(
+	this->box_ = std::make_unique<MenuPanel>(
 		"box",
-		"sprite_sheet_1",
-		"pixel",
 		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
-		look.box_colour);
+		look.box_colour, &style);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
@@ -120,7 +121,7 @@ void ResultsMenuInitial::init()
 		"results_menu_fill_box",
 		RectangleF(Vector2F::ZERO, look.fill_box_size),
 		this->render_resources(),
-		look.box_colour);
+		style.panel_edge_colour);
 	auto fill_box_position = Vector2F(
 		this->calculate_center_position(
 		this->fill_box_->rectangle().width, DESIGN_RESOLUTION.x),
@@ -169,9 +170,24 @@ void ResultsMenuInitial::init()
 		style.detail_shadow_offset,
 		true);
 	this->team_b_percentage_->set_position(Vector2F(
-		this->calculate_center_position(this->widget_size().x, DESIGN_RESOLUTION.x) +
-		look.team_b_percentage_x_offset,
+		this->calculate_team_b_fill_top_right_position().x -
+			this->team_b_percentage_->bounds().width,
 		this->calculate_team_b_fill_top_right_position().y));
+
+	// Keep the score readable over every team palette, including yellow.
+	// Reveal these plates with the numbers so the fill animation stays visible.
+	RectangleF team_a_percentage_panel = this->team_a_percentage_->bounds();
+	team_a_percentage_panel.inflate(look.team_fill_border);
+	this->team_a_percentage_panel_ = std::make_unique<UiTexture>(
+		"team_a_percentage_panel", "sprite_sheet_1", "pixel",
+		team_a_percentage_panel, this->render_resources(), look.box_colour);
+	this->team_a_percentage_panel_->set_hidden(true);
+	RectangleF team_b_percentage_panel = this->team_b_percentage_->bounds();
+	team_b_percentage_panel.inflate(look.team_fill_border);
+	this->team_b_percentage_panel_ = std::make_unique<UiTexture>(
+		"team_b_percentage_panel", "sprite_sheet_1", "pixel",
+		team_b_percentage_panel, this->render_resources(), look.box_colour);
+	this->team_b_percentage_panel_->set_hidden(true);
 
 	this->winner_ = std::make_unique<UiTextDropShadow>(
 		"winner",
@@ -200,29 +216,27 @@ void ResultsMenuInitial::init()
 	const float mark_y = fill_box_rect.position().y +
 		(fill_box_rect.height - look.team_mark_size.y) / 2.0f;
 
-	this->team_a_mark_ = std::make_unique<UiTexture>(
-		"team_a_mark",
-		"sprite_sheet_1",
-		"team_select_a",
-		RectangleF(Vector2F(
+	const RectangleF team_a_mark_box(Vector2F(
 			fill_box_rect.position().x - look.team_mark_gap -
 				look.team_mark_size.x,
-			mark_y),
-			look.team_mark_size),
-		this->render_resources(),
-		Colour::white);
+			mark_y), look.team_mark_size);
+	this->team_a_mark_ = std::make_unique<UiTextDropShadow>(
+		"team_a_mark", L"A", style.item_font, Vector2F::ZERO,
+		this->render_resources(), look.heading_colour,
+		style.shadow_colour, style.item_shadow_offset);
+	this->team_a_mark_->set_position(team_a_mark_box.center() -
+		this->team_a_mark_->bounds().center());
 
-	this->team_b_mark_ = std::make_unique<UiTexture>(
-		"team_b_mark",
-		"sprite_sheet_1",
-		"team_select_b",
-		RectangleF(Vector2F(
+	const RectangleF team_b_mark_box(Vector2F(
 			fill_box_rect.position().x + fill_box_rect.width +
 				look.team_mark_gap,
-			mark_y),
-			look.team_mark_size),
-		this->render_resources(),
-		Colour::white);
+			mark_y), look.team_mark_size);
+	this->team_b_mark_ = std::make_unique<UiTextDropShadow>(
+		"team_b_mark", L"B", style.item_font, Vector2F::ZERO,
+		this->render_resources(), look.heading_colour,
+		style.shadow_colour, style.item_shadow_offset);
+	this->team_b_mark_->set_position(team_b_mark_box.center() -
+		this->team_b_mark_->bounds().center());
 
 	// Hide bars and marks for absent teams, regardless of animated width.
 	this->team_a_fill_->set_hidden(!end_info.team_a_played);
@@ -236,12 +250,14 @@ void ResultsMenuInitial::init()
 	this->texture_container_->add_child(this->fill_box_.get());
 	this->texture_container_->add_child(this->team_a_fill_.get());
 	this->texture_container_->add_child(this->team_b_fill_.get());
-	this->texture_container_->add_child(this->team_a_mark_.get());
-	this->texture_container_->add_child(this->team_b_mark_.get());
+	this->texture_container_->add_child(this->team_a_percentage_panel_.get());
+	this->texture_container_->add_child(this->team_b_percentage_panel_.get());
 
 	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->heading_.get());
+	this->text_container_->add_child(this->team_a_mark_.get());
+	this->text_container_->add_child(this->team_b_mark_.get());
 	this->text_container_->add_child(this->team_a_percentage_.get());
 	this->text_container_->add_child(this->team_b_percentage_.get());
 	this->text_container_->add_child(this->winner_.get());

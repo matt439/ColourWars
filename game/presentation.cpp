@@ -123,6 +123,18 @@ namespace
 		style.disabled = read_colour(json, "disabled");
 		style.warning = read_colour(json, "warning");
 		style.heading_colour = read_colour(json, "heading_colour");
+		const JsonValue chrome = json.object("chrome");
+		style.focus_panel_colour = read_colour(chrome, "focus_panel_colour");
+		style.focus_padding = read_vector(chrome, "focus_padding");
+		style.accent_width = read_positive(chrome, "accent_width");
+		style.panel_edge_colour = read_colour(chrome, "panel_edge_colour");
+		style.panel_shadow_offset = read_vector(chrome, "panel_shadow_offset");
+		style.scrim_colour = read_colour(chrome, "scrim_colour");
+		style.brand_position = read_vector(chrome, "brand_position");
+		style.brand_font = chrome.string("brand_font");
+		style.footer_y = chrome.number("footer_y");
+		style.rule_height = read_positive(chrome, "rule_height");
+		style.icon_padding = read_vector(chrome, "icon_padding");
 		style.box_size = read_vector(json, "box_size");
 
 		style.sound_bank = json.string("sound_bank");
@@ -140,6 +152,13 @@ namespace
 		const JsonValue json = root.object("main_menu");
 
 		MainMenuPresentation menu;
+		const JsonValue backdrop = json.object("backdrop");
+		menu.backdrop_sheet = backdrop.string("sheet");
+		menu.backdrop_frame = backdrop.string("frame");
+		menu.title_position = read_vector(json, "title_position");
+		menu.title_subtitle_position = read_vector(json, "title_subtitle_position");
+		menu.title_start_position = read_vector(json, "title_start_position");
+		menu.home_subtitle_position = read_vector(json, "home_subtitle_position");
 
 		const JsonValue fonts = json.object("fonts");
 		menu.title_font = fonts.string("title");
@@ -254,8 +273,6 @@ namespace
 		menu.show_results_delay = json.number("show_results_delay");
 
 		menu.percentage_colour = read_colour(json, "percentage_colour");
-		menu.team_b_percentage_x_offset =
-			json.number("team_b_percentage_x_offset");
 
 		const JsonValue team_mark = json.object("team_mark");
 		menu.team_mark_size = read_vector(team_mark, "size");
@@ -291,6 +308,10 @@ namespace
 		const JsonValue json = root.object("hud");
 
 		HudPresentation hud;
+		hud.meter_label_font = json.string("meter_label_font");
+		hud.meter_track_colour = read_colour(json, "meter_track_colour");
+		hud.meter_label_gap = read_positive(json, "meter_label_gap");
+		hud.reference_height = read_positive(json, "reference_height");
 		hud.right_margin = json.number("right_margin");
 		hud.ammo_top_margin = json.number("ammo_top_margin");
 		hud.health_top_margin = json.number("health_top_margin");
@@ -299,7 +320,6 @@ namespace
 		hud.health_colour = read_colour(json, "health_colour");
 
 		hud.sprite_sheet = json.string("sprite_sheet");
-		hud.empty_box_frame = json.string("empty_box_frame");
 		hud.fill_frame = json.string("fill_frame");
 
 		const JsonValue timer = json.object("timer");
@@ -375,6 +395,9 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.font("menu_style.fonts.heading", this->menu_.heading_font);
 	check.font("menu_style.fonts.item", this->menu_.item_font);
 	check.font("menu_style.fonts.detail", this->menu_.detail_font);
+	check.font("menu_style.chrome.brand_font", this->menu_.brand_font);
+	check.frame("main_menu.backdrop.frame", this->main_menu_.backdrop_sheet,
+		this->main_menu_.backdrop_frame);
 	check.font("main_menu.fonts.title", this->main_menu_.title_font);
 	check.font("main_menu.fonts.announcement", this->main_menu_.announcement_font);
 	check.font("main_menu.fonts.weapon_description", this->main_menu_.weapon_description_font);
@@ -383,9 +406,9 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.font("prompt_bar.font", this->prompt_bar_.font);
 	check.font("debug_overlay.font", this->debug_overlay_.font);
 	check.font("hud.timer.font", this->hud_.timer_font);
+	check.font("hud.meter_label_font", this->hud_.meter_label_font);
 	check.font("hud.player_identity.font", this->hud_.player_identity_font);
 	check.font("hud.respawn_timer.font", this->hud_.respawn_font);
-	check.frame("hud.empty_box_frame", this->hud_.sprite_sheet, this->hud_.empty_box_frame);
 	check.frame("hud.fill_frame", this->hud_.sprite_sheet, this->hud_.fill_frame);
 
 	const std::string& bank = this->menu_.sound_bank;
