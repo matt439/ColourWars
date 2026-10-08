@@ -18,6 +18,10 @@ The user's direction is explicit:
 - Add substantial environmental and background detail, depth and identity.
 - Design better levels as well as improving their artwork.
 - Improve both visual presentation and game feel.
+- Replace every existing sound effect and music track. The user has identified
+  copyright concerns and considers the current audio unsuitable for the game.
+- Add small, expressive feedback effects to ordinary actions, especially jumping
+  and landing, so movement and interaction feel tactile as well as responsive.
 
 Aim for expressive characters, satisfying liquid paint and places that feel
 constructed and inhabited. Detail should communicate materials, function and
@@ -46,6 +50,11 @@ languages. The gameplay code also offers concrete polish opportunities:
 - All five projectile types use the same animation, despite different behaviour.
 - Surface splashes and the animated results reveal already exist, but need the
   same art and feedback treatment as the rest of the game.
+
+The current private audio bank is excluded from distribution, as recorded in
+[NOTICE](../NOTICE). This plan adds a complete replacement audio set that can be
+distributed with the game. The current silent fallback remains valid during the
+transition; auditioning or remixing the old bank does not complete the audio work.
 
 Relevant implementation references:
 [player](../game/objects/player.cpp), [camera and match flow](../game/objects/level.cpp),
@@ -95,6 +104,8 @@ Use a small movement course to compare the baseline with candidate changes:
 - A configurable jump buffer and a short ledge grace period.
 - Aim response, retained direction, muzzle placement and moving while firing.
 - Camera follow, restrained look-ahead and visibility of upcoming landings.
+- Prototype takeoff and landing effects on the actual movement events, so their
+  timing can be judged alongside input response before final artwork and audio.
 
 Measure the resulting jump envelope and travel speed. Use those measurements
 when placing platforms; the old movement note is not a level-design specification.
@@ -195,6 +206,35 @@ Use material details, purposeful wear and motion to give each tool personality.
 Retain the useful separation between neutral hardware and team-coloured paint.
 Check left/right facing, all supported aim angles and motion while firing.
 
+### Movement and interaction feedback
+
+Small effects are part of the movement design, including ordinary actions that
+do not involve combat. Coordinate the character pose, a brief pixel-art effect
+and a new sound cue around the same event.
+
+| Event | Visual and audio treatment |
+|---|---|
+| Jump takeoff | A small puff or burst at the feet, an immediate push-off pose and a short takeoff sound. Keep the input-to-jump response immediate. |
+| Ground landing | A brief contact puff or ring, a small compression/recovery pose and a landing sound. Scale intensity with impact speed, keeping small hops subtle. |
+| Running steps | Restrained footstep cues and occasional small contact particles, timed to gait and supported movement. Use surface character where it is readable and affordable. |
+| Abrupt stop or reversal | A short skid puff and lean/skid pose when the movement warrants it; avoid constant particles during small corrections. |
+| Painted-surface contact | A small paint-coloured fleck or wet contact variation when the contacted surface is actually painted. This decoration must not place paint or change ownership. |
+| Firing and paint impact | Weapon-specific motion, muzzle response, projectile shape and splash, with matching new sounds. |
+| Damage, elimination and respawn | A readable hurt flash/reaction, elimination burst and brief respawn arrival effect, each with its own restrained cue. |
+| Empty paint and recovery | A clear visual response and short sound when firing cannot proceed, plus a recovery cue. Rate-limit repeated empty-fire cues while the button is held. |
+| Menu focus and confirmation | Small focus/selection motion paired with distinct navigation, confirm and cancel sounds. |
+
+Trigger takeoff once on a successful jump, and landing once on a genuine transition
+from airborne motion to supported ground. Walking across platform seams, remaining
+grounded, respawning or drawing the same player in several views must not repeatedly
+emit landing effects or sounds. Use contact position and surface information for
+placement; suppress unsupported footstep effects while airborne.
+
+Keep squash/stretch, particles and weapon recoil visual unless a gameplay change
+is separately intended. Effects must not delay controls, change collision bounds,
+obscure footholds or suggest new scoring. Bound their lifetime, count and cue rate,
+and check the result with four players moving and firing at once.
+
 ### Paint and feedback
 
 Give each weapon a distinct projectile or stream profile and matching impact.
@@ -209,10 +249,74 @@ Any shake should be restrained and local to the relevant view; preserve the
 responsiveness of the shared multiplayer simulation.
 
 **Exit condition:** a complete match in the reference arena feels visually coherent
-and responsive. Players can recognise shots, hits, empty paint, elimination and
-respawn with sound muted. Art does not alter collisions, coverage or attribution.
+and responsive. Jumping, landing and movement have visible, correctly timed feedback.
+Players can recognise shots, hits, empty paint, elimination and respawn with sound
+muted. Art does not alter collisions, coverage or attribution, and repeated rendering
+or sustained ground contact does not duplicate effects.
 
-## 5. Finish the match presentation and extend the treatment
+## 5. Replace the entire audio set
+
+This is a full replacement of music and sound effects, with a coherent sound
+direction suited to ColourWars. No existing track, sample, loop or sound cue is
+accepted as final content. Address the user's copyright concerns and the poor fit
+of the current audio together; new audio must also improve the experience.
+
+Start the inventory and sound direction alongside the visual reference. Integrate
+replacement movement, sprayer, roller, UI and match audio into the first polished
+match, then complete the remaining weapons and arenas before final acceptance.
+
+### Inventory and production
+
+- Inventory every source wave, bank entry, loop instance and runtime reference,
+  including tuning, presentation, level music and any code-selected cues. Give
+  each old item an explicit replacement or retirement entry; cover unused legacy
+  entries too so they cannot accidentally return in the finished bank.
+- Cover title/menu music, each arena's music, countdowns and results; menu and
+  confirmation sounds; jump, land, footsteps, skid, hurt, elimination and respawn;
+  every weapon's firing/loop/stop sounds; paint impacts and paint supply feedback.
+- Develop a sound palette with tactile liquid paint, distinct tool mechanisms,
+  readable movement cues and music that supports the match's energy. Audition
+  candidate music and effects together. Pixel art does not by itself require
+  every sound to be a chiptune or synthetic beep.
+- Produce original recordings/compositions or obtain assets with documented
+  permission for the intended use and distribution. Record creator/source,
+  licence or permission, attribution requirements and modifications for each
+  asset. Include permission to redistribute source files if those are committed.
+- Retain editable production sources and reproducible export/bank steps. Set
+  practical file-size and format targets, trim silence, create clean loop points
+  and author consistent gains without flattening each weapon's character.
+
+### Integration, mix and distribution
+
+Update the bank definition, source build recipe, staging, runtime references and
+release asset list to use only the replacement set. Adjust audio ignore rules for
+the selected source-asset workflow. Update packaging/CI and startup checks that
+currently require an audio-free ZIP, and revise README, NOTICE and repository
+instruction files to describe the new assets and their attribution once they exist.
+This document does not change the current packaging rules or establish rights for
+assets not yet selected.
+
+The current builder can reuse an existing local bank when sources are missing and
+the bank is newer than its definition. Build the replacement from verified inputs
+into clean output, and check provenance during migration so timestamp-based reuse
+cannot silently bring the legacy bank into a runtime or package.
+
+Retain the optional-bank fallback for missing audio and keep gameplay understandable
+when muted. The finished release should include the new distributable audio;
+silence is a fallback rather than completion of this workstream.
+
+Mix and audition at one, two and four players. Limit overlapping repetitive
+impacts and footsteps, distinguish weapon voices, and keep music below useful
+action cues. Verify smooth loops/stops, music/SFX controls, muting, focus loss,
+pause/resume, reconnect and scene transitions without stuck loops or sudden peaks.
+
+**Exit condition:** every legacy audio item is replaced or retired, every required
+new cue has a documented distributable source, and the extracted release plays the
+new music and effects without depending on private files. The absent-bank fallback
+still works. Complete a listening pass on the reference match and full multiplayer
+mix; copyright provenance alone does not establish sound quality.
+
+## 6. Finish the match presentation and extend the treatment
 
 Carry the pixel-art language through menu artwork, player/weapon cards, stage
 preview, HUD, countdown, pause and results. Review typography at actual display
@@ -228,20 +332,22 @@ poses and feedback to every weapon and finish the other accepted arena blockouts
 Give each arena its own material palette, landmarks and background composition.
 Recheck gameplay after decoration, as visual emphasis can change route choices.
 
-On local builds with the private audio bank, review firing, impacts, movement,
-UI and results timing and mix by ear. Retain the optional silent-bank behaviour
-and intentionally silent distributable. Redistributable audio would be separate work.
+Carry the replacement audio through every arena, weapon and menu. Synchronise
+movement, firing, UI and results cues with their visual events and review the
+complete match's pacing and mix by ear using the new set.
 
 **Exit condition:** a new player can join, identify their character and team,
 understand the painting objective and controls, finish a match and rematch with
 minimal explanation. All three arenas and all five weapons meet the same standard.
 
-## 6. Acceptance and delivery
+## 7. Acceptance and delivery
 
 The reference milestone comprises Close Quarters' redesigned layout and detailed
 environment, one coherent animated character, sprayer and roller artwork, stable
 camera framing, movement polish and complete paint/damage/respawn feedback, taken
-from setup through results. Review it in motion before expanding asset production.
+from setup through results. Include jump/landing/contact effects and replacement
+audio for that complete experience. Review it in motion and by ear before expanding
+asset production.
 
 For each implementation increment, retain a short evidence record:
 
@@ -260,14 +366,18 @@ Qualify these cases across the finished content:
 |---|---|
 | Display | 720p, 1080p and QHD; one through four views; resize/fullscreen; stable framing, readable UI and pixel treatment. |
 | Controls and movement | Keyboard/mouse and physical controllers; aim sweeps, required jumps, drops, collisions and buffered-input edge cases. |
+| Action feedback | One takeoff effect per successful jump and one landing effect per actual landing; small hops, long falls, platform seams, slopes, pause and respawn; correct contact placement and no duplicate cues across views. |
 | Level play | Two- and four-player matches, side swaps, all three arenas and all five weapons; route, spawn, paint-distribution and pacing notes. Exercise three-player sessions too. |
 | Combat readability | Clean and heavily painted arenas, all palettes, crowded effects and muted audio. |
+| Audio replacement | Complete old-to-new/retired inventory, source/permission records, no legacy audio in the finished bank or ZIP, and playback from the extracted release without private files. Check missing-bank fallback separately. |
+| Audio quality | Listening passes for one, two and four players; movement/weapon identity, music balance, event timing, cue overlap, loops, volume settings, pause/focus/reconnect and transitions. |
 | Session flow | Join, disconnect/reconnect, focus change, pause/settings, restart, draw, series completion, rematch and return to menu. |
 | Correctness | Relevant retained consumer acceptance checks, Debug/Release builds and startup checks; release asset/package inspection for changed runtime content. |
 | Editor | For editor changes, run its document/GUI checks. For level changes, reopen saved files and verify them in the game; editor validation alone does not prove playability. |
 
 Add focused regression coverage where gameplay mechanisms change, such as jump
-buffering, camera mapping or paint ownership. Automated checks establish correctness;
+buffering, camera mapping, event emission or paint ownership. Automated checks
+establish correctness;
 physical playtests and visual review establish readability and feel. Keep the existing
 outstanding clean-Windows deployment check in the release acceptance work.
 

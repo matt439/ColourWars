@@ -1,10 +1,12 @@
 # Feature roadmap
 
-The next presentation, game-feel and arena-design work is defined in the
+The next presentation, game-feel, audio and arena-design work is defined in the
 [polish and level-design plan](polish-plan.md). Its direction is consistent,
 detailed pixel art, distinctive paint tools and redesigned playable layouts,
-starting with one complete reference match. That work is planned; the sections
-below record implemented increments and their remaining acceptance checks.
+with a full replacement of all music and sound effects and expressive feedback
+for actions such as jumping and landing. Start with one complete reference match.
+That work is planned; the sections below record implemented increments and their
+remaining acceptance checks.
 
 ## First increment: explicit joining and reconnect pause
 
@@ -180,7 +182,10 @@ The next acceptance work requires hardware and is still outstanding:
    checking ammo exhaustion/recovery, paint coverage, readable HUDs and controls.
 3. Exercise joining, disconnect/reconnect during setup and play, pause/settings,
    focus changes, fullscreen/resize, series draws, rematches and return to menu.
-4. On the local build with private audio, check music/SFX gains, muting,
-   suspension and resumed weapon loops by ear. The distributable ZIP stays silent.
+4. Complete the [replacement-audio acceptance](polish-plan.md#5-replace-the-entire-audio-set)
+   as that work lands: new music and effects, music/SFX gains, muting, suspension,
+   resumed weapon loops and the multiplayer mix. The current ZIP remains silent
+   until the replacement bank and packaging changes are implemented; qualify the
+   audible release and missing-bank fallback separately afterward.
 5. Relaunch and confirm saved settings; record device models, display layout,
    build revision and observed failures before choosing the next feature increment.
