@@ -192,6 +192,7 @@ bool GameLevel::audio_may_play() const
 void GameLevel::on_deactivated()
 {
 	this->level_->suspend();
+	this->data()->debug().match_suspended(*this);
 }
 
 void GameLevel::update(float dt)
@@ -225,8 +226,9 @@ void GameLevel::update(float dt)
 
 	// Check current presence, not just a disconnect edge: focus loss can hide
 	// the edge, and no participant may lose match time while reconnecting.
+	// A seat a Debug bot or replay drives never waits for its pad.
 	const int missing_slot = disconnected_player_slot(this->settings_,
-		*this->data()->gamepads());
+		*this->data()->gamepads(), this->data()->debug());
 	if (missing_slot != -1)
 	{
 		this->open_pause_menu(missing_slot);
@@ -258,6 +260,7 @@ void GameLevel::on_suspend()
 	this->covered_ = true;
 	// Pausing updates alone would leave weapon loops and music playing.
 	this->level_->suspend();
+	this->data()->debug().match_suspended(*this);
 }
 
 void GameLevel::on_resume()
@@ -387,9 +390,15 @@ void GameLevel::debug_leave()
 	this->leave_match(EndMenuAction::exit);
 }
 
-void GameLevel::debug_update_level(const std::vector<PlayerInputData>& inputs, float dt)
+void GameLevel::debug_update_level(const std::vector<PlayerInputData>& inputs, float dt,
+	SeatInputFilter* seats)
 {
-	this->level_->update(inputs, dt);
+	this->level_->update(inputs, dt, seats);
+}
+
+const Level* GameLevel::debug_level() const
+{
+	return this->level_.get();
 }
 
 bool GameLevel::debug_level_finished() const
@@ -403,9 +412,17 @@ void GameLevel::debug_sync_audio()
 	{
 		this->level_->resume();
 	}
-	else
+	else if (this->covered_ || !this->context()->active())
 	{
 		this->level_->suspend();
+		this->data()->debug().match_suspended(*this);
+	}
+	else
+	{
+		// Only the debug clock is paused: no menu or focus loss, so the players
+		// keep their jump state and a paused or stepped match (a replay among
+		// them) plays out as it would have run.
+		this->level_->pause_audio();
 	}
 }
 

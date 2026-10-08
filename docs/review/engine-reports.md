@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Four are live as unfiled drafts with exhibits (6, 9, 10, 11). Seven are closed** and kept below as one paragraph
+> **Five are live as unfiled drafts with exhibits (6, 9, 10, 11, 12). Seven are closed** and kept below as one paragraph
 > each — what was asked, what shipped, and what this repository spent the
 > answer on.
 >
@@ -244,6 +244,51 @@ An `ApplicationOptions` flag that swallows keyboard-initiated `SC_KEYMENU`
 (`WM_SYSCOMMAND` with `lParam` 0) while leaving Alt+F4 alone, so F10 and Alt
 reach the game as ordinary keys. Answering it would delete the hook, and with
 it F11 as the debug menu's fallback key.
+
+---
+
+## 12. JSON is read-only, path-only and opaque — **draft with live-tuning exhibit**
+
+**Exhibit added by the developer debug system (phase 3).** The Debug `tune`
+command edits any number or boolean in `tuning.json` and `presentation.json`
+while the game runs, and `tune.save` writes the edits back into the source
+files.
+
+### What happens
+
+`read_json_file(const char* path)` is the engine's only way in
+(`engine/assets/json.h`). There is no parse of text already in memory, a
+`JsonValue` cannot list an object's keys, and nothing says where in the file a
+value came from. Live tuning needs all three, so it does without:
+
+- **Every candidate edit goes through a temporary file.** To judge an edit by
+  the game's own rules (ranges, cross-field checks), `tune` splices the new
+  token into the text, writes it to `%TEMP%\ColourWars-tune-<pid>\<file>.json`
+  and constructs `GameTuning` or `Presentation` from that path
+  (`game/debug/tune_commands.cpp`, `tune_validate_and_apply`). The reader's
+  error names the temporary file, so the message is rewritten before the
+  console shows it, and the copied-over live object keeps the temporary path
+  as its source.
+- **The game carries its own scanner to find the values at all.**
+  `game/debug/json_spans.cpp` runs rapidjson's SAX reader with the engine's
+  flags, keeps the key path, and recovers each number's byte span by scanning
+  around the stream position, because the reader writes its position back
+  only after the number callback returns. That is what lets the console list
+  `tuning.player.gravity`, complete it, and replace exactly its bytes.
+- **A dead key cannot be told from a live one** except by experiment: the
+  acceptance case replaces every number and boolean, one at a time, with a
+  string and requires the reader to throw naming it
+  (`check_tune_consumed` in `scripts/acceptance/debug_console.cpp`; 395 values
+  today).
+
+### The ask, when it goes
+
+`parse_json(std::string_view text, std::string name)` returning a
+`JsonDocument`, `JsonValue::keys()`, and optionally `JsonValue::source_span()`
+(byte offsets into the text). Answering the first would delete the temporary
+file and the message rewrite; the second and third would delete
+`json_spans.cpp`, and with `keys()` the consumed-leaf check could become a
+reader-side "unknown key" error at startup instead of a test.
 
 ---
 

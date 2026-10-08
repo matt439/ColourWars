@@ -18,8 +18,9 @@ namespace labrador
 }
 
 // The developer debug service: console, debug menu, launch arguments, F-key
-// binds, the debug clock, overlays, cheats, screenshots and queued match
-// requests. The states call its hooks; it does nothing in Release.
+// binds, the debug clock, overlays, cheats, screenshots, queued match
+// requests, live tuning, bots, and seeded record and play. The states call
+// its hooks; it does nothing in Release.
 //
 // Its layout is the same in every configuration (one pointer). In Debug the
 // pointer owns a DebugDirectorImpl; in Release it is always null and the hooks
@@ -82,6 +83,16 @@ public:
 	// Whether the debug clock is paused, so the match's voices stay paused.
 	bool match_audio_paused() const;
 
+	// GameLevel, right after each Level::suspend (a state pushed over the
+	// match, focus lost, the paused clock's audio sync). Suspending clears
+	// every player's jump buffer outside the input stream, so a recording
+	// notes where it happened and a replay does it again there.
+	void match_suspended(DebugMatchTarget& match);
+
+	// Whether a bot or a replay drives the seat on this device slot, so a
+	// missing pad there is no reason to pause the match. False in Release.
+	bool drives_slot(int slot) const;
+
 	// The top of every MenuPage::update. Opens the console or the debug menu,
 	// takes a queued screenshot, starts a match queued by the console or by
 	// launch arguments, and dismisses pages over a match a request is waiting
@@ -111,9 +122,11 @@ inline bool DebugDirector::before_match_update(DebugMatchTarget&, float) { retur
 inline void DebugDirector::update_match(DebugMatchTarget& match,
 	const std::vector<PlayerInputData>& inputs, float dt)
 {
-	match.debug_update_level(inputs, dt);
+	match.debug_update_level(inputs, dt, nullptr);
 }
 inline bool DebugDirector::match_audio_paused() const { return false; }
+inline void DebugDirector::match_suspended(DebugMatchTarget&) {}
+inline bool DebugDirector::drives_slot(int) const { return false; }
 inline bool DebugDirector::before_page_update(DebugPageTarget&, float) { return false; }
 inline void DebugDirector::draw_status(labrador::Renderer&) const {}
 #endif

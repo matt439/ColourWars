@@ -7,11 +7,20 @@
 #include "engine/render/colour.h"
 
 
+class DebugDirector;
+
 // Whether an input slot belongs to the match, including keyboard/mouse.
 // MenuPlayerSettings::num is the device slot; its roster index is the view.
 bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot);
+
+// A pad the match waits for: a pad slot that is not connected and whose seat
+// the developer tools do not drive (a Debug bot or replay; never in Release).
+// The one rule behind the missing-pad pause, the pause page's "Controller
+// lost" and the restart confirmation's fallback.
+bool pad_seat_missing(int slot, const labrador::Gamepads& gamepads,
+	const DebugDirector& debug);
 int disconnected_player_slot(const MenuLevelSettings& settings,
-	const labrador::Gamepads& gamepads);
+	const labrador::Gamepads& gamepads, const DebugDirector& debug);
 
 
 class PauseMenuPage : public MenuPage

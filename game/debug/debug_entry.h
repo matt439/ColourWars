@@ -71,6 +71,13 @@ public:
 	// Completion for the word at index `argument` (0 = first argument).
 	virtual std::vector<std::string> suggestions(std::size_t argument) const = 0;
 
+	// What Tab offers for the word being typed, given the arguments before it
+	// and the partial word itself. The default is suggestions(previous.size());
+	// `tune` uses the partial word to offer one path segment at a time.
+	virtual std::vector<std::string> completions(const std::vector<std::string>& previous,
+		std::string_view partial) const;
+
+
 	const DebugMenuTraits& menu() const;
 	void set_menu(DebugMenuTraits traits);
 

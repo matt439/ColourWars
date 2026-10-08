@@ -2,8 +2,12 @@
 
 A Quake-style console, a pad- and keyboard-driven debug menu, launch arguments,
 F-key toggles, overlays, player cheats and screenshots for reviewing the game
-without walking the menus. It exists only in **Debug** builds (`x64-debug`);
-Release compiles out the console, menu, registry, commands and binds (see
+without walking the menus; [live tuning](#live-tuning) of `tuning.json` and
+`presentation.json` with a save back to the source files; scripted
+[bots](#bots) for the seats nobody is holding; and a [seed, record and
+play](#seed-record-and-play) loop that replays a match bit for bit. It exists
+only in **Debug** builds (`x64-debug`); Release compiles out the console, menu,
+registry, commands, binds, bots, recorder and tuner (see
 [Release](#release-behaviour)).
 
 ## Start a review from the command line
@@ -35,7 +39,16 @@ ColourWars.exe +stage movement_course +goto high_step +overlay collision +overla
 
 # Half speed, with a transcript of everything the console prints
 ColourWars.exe +logfile C:/temp/cw.log +stage movement_course +timescale 0.5
+
+# A four-player match on a machine with no pad: you on seat 1, paint bots on the rest
+ColourWars.exe +stage movement_course +players 4 +bot all paint
+
+# The same match every time (seeded bots and palette), ready to record
+ColourWars.exe +seed 7 +stage movement_course +players 4 +bot all paint
 ```
+
+`players` and `bot` need `stage` beside them: on their own they are stored for a
+`stage` that never comes, and a match started by walking the menus drops them.
 
 A bad statement prints an error and the others still run; a bad `+stage` is an
 error, not a crash, and the game then starts at the title as usual.
@@ -66,6 +79,7 @@ Anywhere (a match or any menu page):
 F1 (per-player debug overlay), Escape (pause menu) and the gameplay keys are
 unchanged. A small strip in the bottom-right corner names any non-default state
 (`x0.25`, `PAUSED`, `visual posed`, `feedback off`, `GOD`, `AMMO INF`,
+`BOTS 3x paint`, `REC drive 240`, `PLAY drive 240/600`, `TUNED 2`,
 `ovl collision camera paint`).
 
 **The chord and its buttons.** Back alone still toggles a player's F1 overlay
@@ -109,7 +123,7 @@ game. Use the F-keys above for live A/B toggling during play.
 | Command | Does |
 |---|---|
 | `stage <name\|next\|prev\|random>` | start that stage (from a menu) or rebuild the match on it |
-| `players <1-4>` | seats: connected pads in slot order, then keyboard/mouse, then idle dummies. With no pad, seat 1 is keyboard/mouse. In a menu it is stored for `stage`; a match started from the menus instead drops it (logged), as does a match ending with it still queued |
+| `players <1-4> [bot]` | seats: connected pads in slot order, then keyboard/mouse, then idle dummies. With no pad, seat 1 is keyboard/mouse. A second word is `bot all <bot>` as well (`players 4 paint`). In a menu it is stored for `stage`; a match started from the menus instead drops it (logged), as does a match ending with it still queued |
 | `weapon <seat\|all> <sprayer\|sniper\|roller\|mister\|bucket\|random>` | a seat's weapon (seats are 1-4) |
 | `visual <original\|rotating\|posed\|next\|prev>` | the Movement Course art comparison (variable; `continuous`/`authored` also accepted). Off the course it is remembered, not applied |
 | `feedback <on\|off\|toggle>` | movement feedback (variable; `1`/`0` too). Immediate |
@@ -126,6 +140,11 @@ game. Use the F-keys above for live A/B toggling during play.
 | `step [n]` | pause, then run n single updates (1-600), one per frame; closes the console so they run |
 | `reload` | re-read `tuning.json` and `presentation.json`, from the source tree `game/content/` when this Debug build was made from one, otherwise the staged copy; validated before anything changes |
 | `screenshot [name]` | save the window as a PNG (see [Screenshots](#screenshots)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number or boolean in `tuning.json` / `presentation.json` (see [Live tuning](#live-tuning)) |
+| `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
+| `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
+| `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
+| `record [name\|stop] [updates]`, `play <name\|stop> [force]`, `replays`, `checksum` | record every seat's input from a fresh build, replay it and compare, list recordings, print the running match's state hash |
 | `status` | stack depth, stage, seats (device, team, weapon, position, move state), clock, feedback, overlays, cheats, the stage's stations, anything queued |
 | `set <var> <value>`, `get <var>`, `list [prefix]`, `help [name]` | the registry; `feedback off` and `set feedback off` are the same |
 | `logfile <path\|off>` | mirror every console line to a UTF-8 file |
@@ -142,7 +161,7 @@ and `respawn` is refused with the reason.
 
 **Idle dummies** take neutral input, never open the disconnected-pad pause menu,
 and paint nothing; their HUD says "Waiting to join". They are for reviewing
-2-4 panes, not opponents. Choosing *change teams/weapons* on the end page after
+2-4 panes, not opponents - unless a [bot](#bots) drives them. Choosing *change teams/weapons* on the end page after
 a dummy match returns to setup pages that wait for those seats; back out to the
 player count.
 
@@ -185,9 +204,11 @@ registry as a menu page: the same entries as the console, grouped.
 | Category | Entries |
 |---|---|
 | match | menu, players, restart, stage, visual, weapon |
-| player | ammo, god, goto, respawn |
+| player | ammo, bot (picker: `bot all <behaviour>`), god, goto, respawn |
 | view | feedback, overlay, overlay.camera, overlay.collision, overlay.paint, overlay.player |
 | time | pause, step, timescale |
+| tuning | the `tuning` and `presentation` trees, then tune.diff, tune.reset, tune.save |
+| replay | checksum, play (picker over the recordings), record, replays |
 | content | reload, screenshot |
 | console | quit, status |
 
@@ -263,7 +284,197 @@ a log line, if the rebuild cannot be planned or the match ends first.
 - `ammo inf`: every tank is refilled before and after each shot, so the HUD
   stays full.
 
-Both cheats are kept by the director and re-applied to every build.
+Both cheats are kept by the director and re-applied to every build. While a
+recording or a replay runs, `goto`, `respawn`, `god`, `ammo`, `bot` and `tune`
+are refused (they would change the match outside the recorded input).
+
+## Live tuning
+
+Every number and boolean in `tuning.json` and `presentation.json` can be read
+and changed while the game runs, by the path its keys give it:
+`tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
+`presentation.movement_feedback.enabled`; an array element is `[i]`. The names
+are the files' own keys, scanned from the files, so they cannot drift from what
+the game reads (the acceptance case replaces every value with a string in turn
+and requires the game's reader to reject it by name). Tab completes a path one
+segment at a time (`tune tuning.pl` -> `tune tuning.player.`), and then the
+value (`next prev`, or `on off toggle`).
+
+```text
+tune tuning.player.gravity                 -> tuning.player.gravity = 2000.0  [live]
+tune tuning.player.gravity 2100            -> tune: tuning.player.gravity 2000.0 -> 2100.0 (live)
+tune tuning.player.gravity next            -> one step (2100 -> 2200; see below)
+tune tuning.player.gravity -=150           -> relative
+tune presentation.movement_feedback.enabled off
+tune tuning.paint.thickness 13 restart     -> a rebuild-scoped value, and the restart that shows it
+```
+
+**Validation is the game's own.** Each edit is spliced into the file's text and
+the real `GameTuning` or `Presentation` reader is run on it, so every range and
+cross-field rule startup has applies, with startup's message (`tune: rejected:
+... 'jump_buffer_time' is 2, which is outside [0, 1]`). A rejected edit changes
+nothing. In the running game every edit also runs the file's own startup checks
+against the loaded resources (`validate_resources`): for presentation, that
+each `workshop_player` size is its frame's native texels times `pixel_size`, and
+that `match.countdown_size` leaves room under the GET READY heading. Edits under
+`tuning.paint` also run the startup check that builds every stage's objects.
+Only then is the validated object copied over the live one: the
+records that weapons, projectiles, the HUD and movement feedback point at keep
+their addresses, and only the edited number changes.
+
+**When it shows.** Each path has a scope, printed after the edit and marked with
+`*` in the debug menu when it is not live:
+
+| Scope | Paths | Applies |
+|---|---|---|
+| live | `tuning.player.*` (not `size`), `tuning.match.sounds.*.volume`, `tuning.weapons.*`, `tuning.projectiles.*` (not sizes), `presentation.movement_feedback/debug_overlay/hud/camera.*` | at once |
+| new shots | `tuning.projectiles.*.size`, `*.collision_size` | the next projectile |
+| rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, `presentation.workshop_player.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
+| next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
+
+**Steps.** `next`/`prev` (and the debug menu's Left/Right) step a decimal value
+by one unit of the digit below its leading one (2000 by 100, 0.35 by 0.01, 900 by
+10, 0 by 0.1) and an integer-written value (`"pixel_size": 4`) by whole numbers.
+New values keep the token's style: `240.0` becomes `250.0`, never `250`.
+
+**`tune.diff`** lists each edit with the file's value and its scope, and notes
+when the F9 feedback toggle disagrees with the file (F9 is a switch, not an
+edit; a tune of another presentation value keeps it). **`tune.reset`** puts a
+path, a file or everything back to the file's value through the same validation.
+**`tune.find <word>`** lists matching paths with their values.
+
+**`tune.save [tuning|presentation|all] [force]`** writes the edits into the
+**source** files in `game/content/` (known to a Debug build made from a
+checkout; elsewhere it says it needs one). Only the edited tokens change: key
+order, indentation, comments-as-keys, number style and line endings - including a
+file that mixes CRLF and LF - stay byte for byte. Before writing, each edited
+token on disk must still be the value the game loaded; if someone changed it in
+the meantime, that is a conflict: nothing in that file is written and the paths
+are listed (`force` overwrites them). The file is replaced atomically, read back
+through the game's reader and every startup check that reads it (resources and
+every stage), so a save never leaves a file the next launch refuses; on failure
+the old bytes go back (and if even that rename fails, the log says so and keeps
+them in `<name>.json.bak`). The staged copy beside the executable is replaced
+the same way, so a relaunch without a rebuild sees the save. `tune.save` and
+`tune.reset` are refused while a recording or a replay runs and while a
+`reload` waits to be applied. After
+a save the file is the new baseline and `tune.diff` is empty. `reload` likewise
+makes the reloaded files the baseline and drops live edits (it is refused
+while a recording or a replay runs).
+
+In the debug menu, **tuning** opens on the two files, then their groups one level
+at a time (`DEBUG / tuning / player`); long groups are paged with a `more (1/2)`
+row. A value row shows its token; Left/Right run `tune <path> prev|next` (a
+boolean toggles), echoed `[menu] tune ...`, and B/Escape climbs one level.
+
+Not tunable: strings, colours, font and sheet names, and optional keys a file
+leaves out (`frame_time` on most clips, `diffusion` blocks) - `tune.save` never
+inserts keys.
+
+## Bots
+
+`bot <seat|all|off> <behaviour>` gives seats scripted input, in place of the
+device (or the neutral input of an idle dummy):
+
+| Behaviour | Does |
+|---|---|
+| `idle` | neutral input (for a device seat: hands it a still player) |
+| `walk` | walks one way, turns at a wall or now and then |
+| `jump` | walks, and jumps when blocked or every second or three, holding for a random time so the heights vary |
+| `chase` | walks at the nearest living opponent, jumps when it is above, aims and fires at it within range |
+| `paint` | roams like `jump`, sweeps its aim over the floor ahead and behind and fires until the tank is nearly empty, then lets it refill; an opponent close by is shot at instead |
+
+- `bot all <behaviour>` drives every **idle dummy** of the current and later
+  matches; `bot 2 chase` drives seat 2 whatever its device (the keyboard seat
+  too); `bot 2 off`, `bot all off`, `bot off` hand seats back. `bot` alone lists
+  the assignments. `players 4 paint` is `players 4` plus `bot all paint`. In a
+  match the change applies at once; assignments survive restarts and rebuilds.
+- A bot's input replaces the seat's after the device and the mouse aim are
+  resolved, through a seat filter `Level::update` takes as a parameter
+  (`game/objects/seat_input_filter.h`).
+- Bots draw on their own random numbers (splitmix64 from the seed and the seat),
+  never `rand()`: with `seed` set, the same match plays out the same way every
+  time.
+- A seat a bot drives never opens the disconnected-pad pause, the pause page's
+  "Controller lost" or the restart fallback - not even a pad seat whose pad is
+  unplugged.
+- A bot on an idle dummy keeps the dummy's "Waiting to join" HUD label.
+- `status` adds `bot <behaviour>` to each driven seat. The paint overlay's
+  per-seat column stays 0 for a bot on an idle dummy, because paint is credited
+  to a device slot and a dummy has none; team totals count everything.
+
+## Seed, record and play
+
+**`seed <n|off>`** fixes the random seed of every build until `seed off`:
+`rand()` (the random palette, the menus' random weapon and stage), the
+planner's `stage random` and `weapon all random` (re-seeded for each plan, so
+every one draws the same), and the bots. `+seed 7` before `+stage` makes
+the whole launch repeat. `seed` alone prints it.
+
+**`record [name] [updates]`** records every seat's input on every logic step,
+from a fresh build: in a match it restarts the match (and closes the console),
+in the menus it waits for the next match. It stops and saves after `updates`
+Level updates (the 3 s countdown is 180 of them), at the end of the round, when
+the match is rebuilt or left, or on `record stop` (a bare `record` while
+recording stops too). The file is `%LOCALAPPDATA%\ColourWars\replays\<name>.json`
+(default name `replay-YYYYMMDD-HHMMSS`): the stage, roster (device slots, teams,
+weapons), visual and best-of, the seed, the cheats, hashes of both content files
+and the live tune edits, the step size, one run-length list of inputs per seat
+(floats as bit patterns), where the match was suspended, a state hash every 60
+updates and the final state.
+
+**`play <name> [force]`** rebuilds the match with the recorded settings
+verbatim - from a match or from the menus - and feeds every seat its recorded
+input, ignoring every device. At each checkpoint and at the last recorded
+update it compares the state; then it pauses the clock to hold the last frame
+(the next `play` resumes it; a pause you set yourself with F6 or `pause` stays,
+so `pause on` then `play` steps a replay from its first update with F7) and
+logs one of:
+
+```text
+replay drive: MATCH (600 updates, 10 checkpoints, checksum 1b2bcf45e4694e88, paint A 11136 B 34896 of 194880)
+replay drive: DIVERGED at update 240 (checkpoint 4 of 10): state hash ..., recorded ...
+replay drive: final state differs: P2 x 1532.5 != 1530.25
+```
+
+`play stop` hands the seats back. `replays` lists recordings; `checksum` prints
+the running match's state hash and paint, which is what the comparison uses.
+`play` refuses a recording made with other tuning (`tune.reset` or `reload` to
+match it, or `force` to watch it diverge), refuses another step size, and warns
+about another build or presentation file.
+
+**What is deterministic, and what is not.** Verified by
+`scripts/acceptance/debug_console.cpp` on a real `Level` (four seats, paint bots,
+a scripted keyboard seat, 600 updates): the replay matches at timescale 1 and 4
+and at another window size, and an unrecorded re-run of the same seeded match
+ends on the same hash. The simulation is single-threaded (the thread pool only
+draws), collisions are processed in index order, nothing in a step calls
+`rand()`, and the keyboard seat is recorded after its mouse aim is resolved, so
+neither the mouse nor the camera is read on replay. The limits:
+
+- **Same build, same machine.** Floats are compared bit for bit.
+- **Same step size.** The executable steps 0.0166666 s (the engine's 10 MHz
+  timer rounds 1/60 down); the CPU acceptance case uses 1.0f/60. A recording
+  from one never replays in the other, and `play` says so.
+- **Suspends.** Covering the match (the console, the debug menu, the pause
+  menu) and losing window focus suspend the level, and suspending clears every
+  player's jump buffer outside the input stream. The recording notes the update
+  of every suspend and the replay suspends there too. A suspend during playback
+  that the recording did not have is reported, and a divergence after it is
+  expected - so do not open the console or switch windows while a replay you
+  care about is running. Pausing (F6) and stepping (F7) are not suspends: the
+  paused clock pauses the voices only, so a replay paused or stepped one update
+  at a time still matches.
+- **Side doors are shut.** While recording or replaying, `goto`, `respawn`,
+  `god`, `ammo`, `bot`, `tune`, `tune.reset`, `tune.save` and `reload` are
+  refused; a `play` queued and then left behind (`menu`, the match ending, a
+  plan that fails) is disarmed rather than taking over the next match; the
+  cheats in force when recording began are stored and re-applied by `play`.
+- **What is compared** is public state: each seat's position, velocity, health,
+  ammo, respawn timer, move state and life, the paint areas and the level state.
+  Hidden state (a jump buffer, projectiles in flight) shows up when it changes
+  one of those, a little later.
+- One round: a recording stops at the end of the round.
 
 ## Screenshots
 
@@ -299,8 +510,16 @@ ColourWars.exe +stage movement_course +visual posed
 - **Four panes, one keyboard.** `+players 4` gives P1 the keyboard and three
   idle dummies, so the split-screen framing and badges can be reviewed alone;
   **F3** shows each pane's camera border.
-- **Tuning pass.** Edit `game/content/tuning.json`, then `reload` in the
-  console: the match restarts with the new values, no rebuild needed.
+- **Tuning pass.** `tune tuning.player.jump_launch_velocity next` (or Left/Right
+  in the debug menu's tuning tree) while running the route; `tune.diff` to see
+  what changed; `tune.save tuning` to write exactly those values into
+  `game/content/tuning.json`. Or edit the file by hand and `reload`: the match
+  restarts with the new values, no rebuild needed.
+- **A four-player match alone.** `+players 4 +bot all paint` (or `chase`): the
+  bots move, jump, shoot and paint, and their seats never pause for a pad.
+- **Record and play.** `+seed 7 +stage movement_course +players 4 +bot all
+  paint`, then `record a 600`; wait for `record: saved` without touching the
+  window; `play a`, and wait for `MATCH`.
 - **Record what you saw.** `+logfile` (or `logfile <path>`) and `status` write
   positions and move states to a file; `screenshot` keeps the picture.
 
@@ -326,12 +545,21 @@ as the game. In Release:
   `Level`'s overlay member and its developer setters, `Player`'s two cheat flags
   and `place_at`/`force_respawn`, never called; `LevelLoadedInfo::stations()`
   and its validation, which are level data and correct in both;
-  `directory_consts::screenshot_directory()`; `DebugDirector` itself, one null
-  pointer with inline no-op hooks; and the one stderr line above.
+  `directory_consts::screenshot_directory()` and `replay_directory()`; the
+  header-only `SeatInputFilter` interface (nothing in Release derives from it,
+  so it has no vtable or type information there) and the `seats` parameter of
+  `Level::update`, always null; `DebugMatchTarget::debug_level`;
+  `pad_seat_missing`, whose "driven by a bot or replay" half is always false;
+  `DebugDirector` itself, one null pointer with inline no-op hooks
+  (`match_suspended`, `drives_slot` among them); and the one stderr line above.
 - `scripts/acceptance/debug_console.cpp` checks both ways: the Debug executable
   must contain the RTTI names `.?AVDebugConsoleState@@`, `.?AVDebugRegistry@@`,
-  `.?AVLambdaCommand@@`, `.?AVDebugMenuPage@@` and `.?AVNumberVariable@@`, and
-  the Release executable must contain none of them. CI also checks the packaged
+  `.?AVLambdaCommand@@`, `.?AVDebugMenuPage@@`, `.?AVNumberVariable@@`,
+  `.?AVBot@@`, `.?AVPaintBot@@`, `.?AVBotDriver@@`, `.?AVReplayRecorder@@`,
+  `.?AVReplayPlayer@@`, `.?AVTuneTarget@@`, `.?AVTuningTarget@@` and
+  `.?AVSeatInputFilter@@`, and the Release executable must contain none of them;
+  in Release it also checks that a match update gets no seat filter and that no
+  slot is driven. CI also checks the packaged
   `ColourWars.exe`.
 
 ## For developers
@@ -345,7 +573,16 @@ as the game. In Release:
   and the console state; the pad chord (`debug_chord.*`); the debug menu
   (`debug_menu_model.*`, CPU-testable, and `debug_menu_page.*`, a `MenuPage`);
   the pane overlays (`debug_overlay_draw.*`); the screenshot
-  (`debug_screenshot.*`).
+  (`debug_screenshot.*`). Phase 3: live tuning (`json_spans.*`, a span scanner
+  over rapidjson's SAX reader; `tune_document.*`, the baseline, current text and
+  edits of one file and the splice `tune.save` writes; `tune_target.*`, which
+  builds the real reader's object and copies it over the live one;
+  `tune_scope.*`, the scope table, steps and path tree; `tune_commands.cpp`);
+  bots (`bot.*`, the deliberately OOP `Bot -> WalkBot -> JumpBot -> ChaseBot /
+  PaintBot` hierarchy; `bot_driver.*`, the seat filter that runs them);
+  record and play (`replay.*`: the file, the input codec, `ReplayRecorder` and
+  `ReplayPlayer`; `match_fingerprint.*`; `replay_commands.cpp`, which also holds
+  the update hooks that count updates, inject recorded suspends and compare).
 - Menu metadata is declared where each entry is registered
   (`DebugMenuTraits`: category, form - hidden, run, pick or variable - the
   picked argument and its prefix, and whether it is staged).
@@ -363,24 +600,56 @@ as the game. In Release:
   - Every `MenuPage` runs `before_page_update(page, dt)` before its
     `update_page`; the page is a `DebugPageTarget`, which is how the director
     starts a match, dismisses a page or resets its input.
+  - `update_match` passes `Level::update` the seat filter in force (a replay,
+    else a recorder wrapping the bots, else the bots, else none) and counts
+    Level updates since the build.
+  - `GameLevel` calls `match_suspended` after each of its `Level::suspend`
+    calls (covered, deactivated, and an audio sync while covered or inactive);
+    an audio sync for the paused debug clock alone calls `Level::pause_audio`,
+    which pauses the voices without touching the players, and is not a
+    suspend. It asks `drives_slot` through `pad_seat_missing` before pausing
+    for a pad (the update's check, the pause page's "Controller lost" and the
+    restart confirmation's fallback).
 - Tests: `scripts/acceptance/debug_console.cpp` (tokenizer and launch grammar,
   registry and completion, clock, planner, text field, director, the match
   hooks against a fake `DebugMatchTarget`, the chord and input filter, menu
   traits, the debug menu model, unwinding against a fake `DebugPageTarget`,
   overlays and cheats, goto, the screenshot name and PNG writer, and the
-  course's stations against its geometry; CPU only). In Release it checks the
-  one stderr line for `+` arguments, silence without, and that the chord and
-  unwinding are inert. `scripts/check-debug-console.ps1` is an opt-in local
-  check that drives the real Debug executable with key events (F10 debug menu,
-  staging and Apply, overlay keys, goto, cheats, the screenshot command, pause
-  menu unwinding) and saves screenshots. The pad chord needs a pad and is
-  covered on the CPU side only.
-- The engine reports this forced are 9, 10 and 11 in
+  course's stations against its geometry; phase 3: the span scanner on both
+  content files and on CRLF, escapes, nested arrays, repeated keys and malformed
+  text, the scope table against the files' paths, the consumed-leaf check,
+  `tune`/`tune.diff`/`tune.reset`/`tune.save` on scratch copies (CRLF and LF,
+  conflicts, `force`, no source tree), tune completion and the menu tree, the
+  bots' determinism and the missing-pad rule, the seeded planner, the replay
+  codec and file, and record/play on a real `Level` built without a device;
+  CPU only, and the real content files are checked byte-for-byte unchanged). In
+  Release it checks the one stderr line for `+` arguments, silence without, and
+  that the chord, unwinding, seat filter and driven slots are inert.
+  `scripts/check-debug-console.ps1` is an opt-in local check that drives the
+  real Debug executable with key events (F10 debug menu, staging and Apply,
+  overlay keys, goto, cheats, the screenshot command, pause menu unwinding; and
+  in a second launch, `-Phase3Only` to run just that one, a four-seat paint-bot
+  match, a live `tune`, `tune.diff`/`tune.reset`, `record` and `play` to
+  `MATCH`, and the tuning tree) and saves screenshots. `-SaveToSource` adds a
+  `tune.save` on the real `game/content/tuning.json`: it refuses unless git
+  sees the file clean, checks with git that exactly one value changed, and
+  writes the saved original bytes back (a `git checkout` would not restore them:
+  it renormalises a working copy that mixes CRLF and LF). The pad chord needs a
+  pad and is covered on the CPU side only.
+- The engine reports this forced are 9, 10, 11 and 12 in
   [engine-reports.md](review/engine-reports.md).
 
-## Still to come (phase 3)
+## Not done
 
-- live `tune <path> <value>` and `tune.save`
-- bots for idle seats
-- `record` / `play` of input
-- a see-through console that tunes a running match (blocked on engine report 9)
+- **A see-through console** that types into a running match. It needs no engine
+  change (neutralise the keyboard seat in `filter_match_inputs`, read typing in
+  `before_match_update`, draw from `draw_status`), but it means extracting the
+  console's editing and drawing out of `DebugConsoleState`; it was left for a
+  later pass. Engine report 9 still describes the clean way.
+- **Strings, colours, fonts and absent keys in `tune`**, and inserting keys in
+  `tune.save`.
+- **Replays across builds or machines**, across step sizes, and across rounds
+  (a recording stops at the end of the round).
+- **Per-seat paint for bots on idle dummies** (credited to no device slot).
+- **A driven check of the pad chord and of a bot on an unplugged pad seat**:
+  this machine has no pad; both are covered on the CPU side.

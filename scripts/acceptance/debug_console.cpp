@@ -30,6 +30,36 @@
 #include "game/game_data.h"
 #include "game/input_slots.h"
 #include <algorithm>
+#include "engine/assets/sprite_sheet_loader.h"
+#include "engine/audio/audio_resources.h"
+#include "engine/audio/sound_bank.h"
+#include "engine/core/registry.h"
+#include "engine/input/gamepad_reader.h"
+#include "engine/input/gamepads.h"
+#include "engine/input/mouse.h"
+#include "engine/collision/partitioner.h"
+#include "engine/render/render_resources.h"
+#include "engine/render/resolution_manager.h"
+#include "engine/render/sprite_font_file.h"
+#include "engine/render/viewport_manager.h"
+#include "engine/render/text_encoding.h"
+#include "game/debug/bot.h"
+#include "game/debug/bot_driver.h"
+#include "game/debug/json_spans.h"
+#include "game/debug/match_fingerprint.h"
+#include "game/debug/replay.h"
+#include "game/debug/tune_document.h"
+#include "game/debug/tune_scope.h"
+#include "game/directory_consts.h"
+#include "game/objects/level.h"
+#include "game/objects/level_builder.h"
+#include "game/source_paths.h"
+#include "game/states/pause_menu.h"
+#include <bit>
+#include <cmath>
+#include <cstdlib>
+#include <map>
+#include <process.h>
 #else
 #include "game/input_slots.h"
 #include <io.h>
@@ -39,9 +69,12 @@
 // The developer debug system's CPU-side parts: parsing, the registry, the
 // debug clock, the match planner and the line editor; phase 2's chord, debug
 // menu model, unwinding, overlays, cheats, goto, screenshot file and level
-// stations; in Release, that the build is inert and the executable carries
-// none of it. Creates no window, device or save (the PNG check writes and
-// removes one temporary file).
+// stations; phase 3's JSON spans, live tuning on scratch copies of the content
+// files, bots, the seeded planner, the replay file, and record and play on a
+// real Level built without a device; in Release, that the build is inert and
+// the executable carries none of it. Creates no window, device or save (the
+// PNG check, the tuning and replay checks write and remove temporary files;
+// the real content files are only read, and checked unchanged).
 namespace
 {
 	void require(bool condition, const std::string& message)
@@ -61,6 +94,10 @@ namespace
 	const char* const rtti_names[] = {
 		".?AVDebugConsoleState@@", ".?AVDebugRegistry@@", ".?AVLambdaCommand@@",
 		".?AVDebugMenuPage@@", ".?AVNumberVariable@@",
+		// Phase 3: bots, record/play, live tuning, and the seat filter they share.
+		".?AVBot@@", ".?AVPaintBot@@", ".?AVBotDriver@@", ".?AVReplayRecorder@@",
+		".?AVReplayPlayer@@", ".?AVTuneTarget@@", ".?AVTuningTarget@@",
+		".?AVSeatInputFilter@@",
 	};
 
 	void check_executable(const std::filesystem::path& game_directory)
@@ -531,6 +568,10 @@ namespace
 		std::vector<std::pair<int, mattmath::Vector2F>> placed;
 		std::vector<int> respawned;
 
+		// Phase 3: the seat filter each update was given.
+		SeatInputFilter* last_filter = nullptr;
+		int filtered_updates = 0;
+
 		const MenuLevelSettings& debug_settings() const override { return this->settings; }
 		void debug_rebuild(const MenuLevelSettings& plan, bool reset_session) override
 		{
@@ -589,16 +630,20 @@ namespace
 			paint.seats.resize(static_cast<std::size_t>(this->settings.player_count()));
 			return paint;
 		}
-		void debug_update_level(const std::vector<PlayerInputData>& inputs, float) override
+		void debug_update_level(const std::vector<PlayerInputData>& inputs, float,
+			SeatInputFilter* seats) override
 		{
 			++this->updates;
 			this->jumps.push_back(
 				inputs[static_cast<std::size_t>(input_slots::keyboard_and_mouse)].jump_pressed);
+			this->last_filter = seats;
+			this->filtered_updates += seats != nullptr ? 1 : 0;
 		}
 		bool debug_level_finished() const override
 		{
 			return this->finish_after >= 0 && this->updates >= this->finish_after;
 		}
+		const Level* debug_level() const override { return nullptr; }
 		void debug_sync_audio() override { ++this->audio_syncs; }
 		std::vector<std::string> debug_status() const override { return {}; }
 
@@ -854,10 +899,12 @@ namespace
 		int resets = 0;
 		std::vector<int> reset_slots;
 		bool last_leaving = false;
+		MenuLevelSettings started;
 
-		bool debug_start_match(const MenuLevelSettings&) override
+		bool debug_start_match(const MenuLevelSettings& plan) override
 		{
 			++this->starts;
+			this->started = plan;
 			return this->start_result;
 		}
 		bool debug_dismiss(bool leaving_match) override
@@ -967,7 +1014,7 @@ namespace
 		TestDirector test(tuning, presentation);
 		const DebugRegistry& registry = test.impl.registry();
 		require(registry.categories() == std::vector<std::string>{
-			"match", "player", "view", "time", "content", "console" },
+			"match", "player", "view", "time", "tuning", "replay", "content", "console" },
 			"Categories come in the fixed order");
 		for (const char* name : { "stage", "players", "weapon", "visual" })
 		{
@@ -1029,7 +1076,7 @@ namespace
 
 		DebugMenuModel model(impl);
 		require(labels(model.rows()) == std::vector<std::string>{
-			"match", "player", "view", "time", "content", "console" },
+			"match", "player", "view", "time", "tuning", "replay", "content", "console" },
 			"With nothing queued the root lists the categories");
 
 		model.confirm(row_index(model.rows(), "match"));
@@ -1495,6 +1542,1170 @@ namespace
 		std::filesystem::remove(bad, ignored);
 	}
 #endif
+
+#if COLOURWARS_DEV_TOOLS
+	// ---------------------------------------------------------------- phase 3
+
+	std::string read_text(const std::filesystem::path& path)
+	{
+		std::ifstream stream(path, std::ios::binary);
+		require(stream.good(), "Could not read " + path.string());
+		return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
+	}
+
+	void write_text(const std::filesystem::path& path, const std::string& text)
+	{
+		std::ofstream stream(path, std::ios::binary | std::ios::trunc);
+		stream.write(text.data(), static_cast<std::streamsize>(text.size()));
+		stream.close();
+		require(!stream.fail(), "Could not write " + path.string());
+	}
+
+	std::string to_lf(std::string text)
+	{
+		std::string result;
+		for (std::size_t i = 0; i < text.size(); ++i)
+		{
+			if (text[i] == '\r' && i + 1 < text.size() && text[i + 1] == '\n')
+			{
+				continue;
+			}
+			result += text[i];
+		}
+		return result;
+	}
+
+	std::size_t count_of(const std::string& text, const std::string& what)
+	{
+		std::size_t count = 0;
+		for (std::size_t at = text.find(what); at != std::string::npos; at = text.find(what, at + 1))
+		{
+			++count;
+		}
+		return count;
+	}
+
+	// A scratch content tree: source/ and staged/ copies of both files, the
+	// tuning file CRLF and the presentation file LF, so tune.save is checked
+	// on both line endings. Removed on destruction; the real files are only
+	// ever read.
+	struct ScratchContent
+	{
+		std::filesystem::path root;
+		std::filesystem::path source;
+		std::filesystem::path staged;
+
+		explicit ScratchContent(const std::filesystem::path& game_directory, const wchar_t* tag)
+		{
+			this->root = std::filesystem::temp_directory_path() /
+				(std::wstring(L"colourwars_phase3_") + tag + L"_" + std::to_wstring(_getpid()));
+			std::error_code ignored;
+			std::filesystem::remove_all(this->root, ignored);
+			this->source = this->root / L"source";
+			this->staged = this->root / L"staged";
+			std::filesystem::create_directories(this->source);
+			std::filesystem::create_directories(this->staged);
+			std::string tuning = to_lf(read_text(game_directory / L"tuning.json"));
+			std::string crlf;
+			for (const char c : tuning)
+			{
+				crlf += c == '\n' ? std::string("\r\n") : std::string(1, c);
+			}
+			const std::string presentation = to_lf(read_text(game_directory / L"presentation.json"));
+			for (const std::filesystem::path& directory : { this->source, this->staged })
+			{
+				write_text(directory / L"tuning.json", crlf);
+				write_text(directory / L"presentation.json", presentation);
+			}
+		}
+
+		~ScratchContent()
+		{
+			std::error_code ignored;
+			std::filesystem::remove_all(this->root, ignored);
+		}
+
+		ScratchContent(const ScratchContent&) = delete;
+		ScratchContent& operator=(const ScratchContent&) = delete;
+	};
+
+	int count_of_lines(const DebugLog& log, const std::string& text)
+	{
+		int count = 0;
+		for (const DebugLogLine& line : log.lines())
+		{
+			count += line.text.find(text) != std::string::npos ? 1 : 0;
+		}
+		return count;
+	}
+
+	std::string last_key(const std::string& path)
+	{
+		std::string key = path.substr(path.find_last_of('.') + 1);
+		const std::size_t bracket = key.find('[');
+		return bracket == std::string::npos ? key : key.substr(0, bracket);
+	}
+
+	void check_json_spans(const std::filesystem::path& game_directory)
+	{
+		for (const wchar_t* file : { L"tuning.json", L"presentation.json" })
+		{
+			const std::string text = read_text(game_directory / file);
+			const JsonSpanDocument document(text, "content");
+			require(document.leaves().size() > 50 && document.string_count() > 10,
+				"A content file scans to its numbers, booleans and strings");
+			for (const JsonLeaf& leaf : document.leaves())
+			{
+				require(document.replaced(leaf, document.token(leaf)) == text,
+					"Re-splicing " + leaf.path + "'s own token reproduces the file byte for byte");
+			}
+			const JsonLeaf& first = document.leaves().front();
+			const std::string changed = document.replaced(first, "12345");
+			require(changed.compare(0, first.begin, text, 0, first.begin) == 0 &&
+				changed.substr(first.begin + 5) == text.substr(first.end) &&
+				changed.substr(first.begin, 5) == "12345", "A splice changes only that span");
+		}
+
+		const std::string synthetic = "{\r\n  \"a\": [1, [2, true]],\r\n  \"s\": \"q\\\"\xc3\xa9\",\r\n"
+			"  \"b\": -1.5e3,\r\n  \"a\": 9,\r\n  \"o\": { \"x\": false }\r\n}\r\n";
+		const JsonSpanDocument document(synthetic, "synthetic");
+		std::vector<std::string> paths;
+		std::string joined;
+		for (const JsonLeaf& leaf : document.leaves())
+		{
+			paths.push_back(leaf.path + "=" + std::string(document.token(leaf)));
+			joined += " " + paths.back();
+		}
+		require(paths == std::vector<std::string>{ "a[0]=1", "a[1][0]=2", "a[1][1]=true", "b=-1.5e3",
+			"o.x=false" }, "Nested arrays get [i] paths, exponents and signs are one token, and a "
+			"repeated key resolves to the first; got" + joined);
+
+		const std::string spliced = document.replaced(*document.find("b"), "2");
+		require(count_of(spliced, "\r\n") == count_of(synthetic, "\r\n") &&
+			spliced.find("q\\\"\xc3\xa9") != std::string::npos,
+			"CRLF and escapes survive a splice");
+		for (const char* bad : { "{\"a\": 1,}", "{ // c\n \"a\": 1 }", "{\"a\": \"x }", "{\"a\": 1}\n2" })
+		{
+			std::string message;
+			try
+			{
+				JsonSpanDocument(bad, "bad.json");
+			}
+			catch (const std::exception& error)
+			{
+				message = error.what();
+			}
+			require(message.find("bad.json: line ") != std::string::npos &&
+				message.find(", column ") != std::string::npos,
+				std::string("Malformed JSON fails with line and column: ") + bad + " gave '" + message + "'");
+		}
+	}
+
+	void check_tune_scope(const std::filesystem::path& game_directory)
+	{
+		const TuneDocument tuning("tuning", read_text(game_directory / L"tuning.json"));
+		const TuneDocument presentation("presentation", read_text(game_directory / L"presentation.json"));
+		std::vector<std::string> paths = tuning.prefixed_paths();
+		const std::vector<std::string> more = presentation.prefixed_paths();
+		paths.insert(paths.end(), more.begin(), more.end());
+		for (const std::string& pattern : tune_scope_patterns())
+		{
+			require(std::any_of(paths.begin(), paths.end(), [&pattern](const std::string& path)
+				{ return tune_pattern_matches(pattern, path); }),
+				"The scope row '" + pattern + "' matches a path the files have");
+		}
+		const std::pair<const char*, TuneScope> samples[] = {
+			{ "tuning.player.gravity", TuneScope::live },
+			{ "tuning.player.size.x", TuneScope::rebuild },
+			{ "tuning.player.animations.running.frame_time", TuneScope::live },
+			{ "tuning.match.duration", TuneScope::rebuild },
+			{ "tuning.match.sounds.countdown.volume", TuneScope::live },
+			{ "tuning.paint.thickness", TuneScope::rebuild },
+			{ "tuning.weapons.sprayer.offset.x", TuneScope::live },
+			{ "tuning.weapons.ammo_regen_rate", TuneScope::live },
+			{ "tuning.projectiles.spray.size.x", TuneScope::new_objects },
+			{ "tuning.projectiles.spray.gravity", TuneScope::live },
+			{ "presentation.movement_feedback.minimum_strength", TuneScope::live },
+			{ "presentation.camera.reference_height", TuneScope::live },
+			{ "presentation.match.countdown_center_y", TuneScope::rebuild },
+			{ "presentation.main_menu.title_position.x", TuneScope::next_screen },
+		};
+		for (const auto& [path, scope] : samples)
+		{
+			require(std::find(paths.begin(), paths.end(), path) != paths.end(),
+				std::string("The files have ") + path);
+			require(tune_scope_of(path) == scope, std::string("Scope of ") + path + " is " +
+				tune_scope_name(scope) + ", got " + tune_scope_name(tune_scope_of(path)));
+		}
+		require(tune_scope_of("tuning.never.seen") == TuneScope::rebuild, "Unmatched paths rebuild");
+
+		require(tune_step(1800.0, false) == 100.0 && std::fabs(tune_step(0.15, false) - 0.01) < 1e-12 &&
+			tune_step(0.0, false) == 0.1, "Decimal steps are one unit of the digit below the leading one");
+		require(tune_step(4.0, true) == 1.0 && tune_step(0.0, true) == 1.0 && tune_step(12.0, true) == 1.0 &&
+			tune_step(250.0, true) == 10.0, "Integer tokens step by whole numbers, at least 1");
+		require(tune_format(250.0, "240.0") == "250.0" && tune_format(5.0, "4") == "5" &&
+			tune_format(0.16, "0.15") == "0.16" && tune_format(4.5, "4") == "4.5" &&
+			tune_format(-650.0, "-600.0") == "-650.0", "Formatting keeps the token's style");
+
+		const std::vector<std::string> tree = { "a.b.c", "a.b.d", "a.e", "f[0].x", "f[1].x", "g[2]" };
+		require(tune_children(tree, "") == std::vector<std::string>{ "a.", "f[", "g[" } &&
+			tune_children(tree, "a.") == std::vector<std::string>{ "a.b.", "a.e" } &&
+			tune_children(tree, "f[") == std::vector<std::string>{ "f[0].", "f[1]." } &&
+			tune_children(tree, "g[") == std::vector<std::string>{ "g[2]" },
+			"tune_children walks the tree one segment at a time");
+	}
+
+	// Every number and boolean is read by the game: replacing one with a
+	// string must make the reader throw and name its key. Otherwise the file
+	// has a key nothing reads and `tune` on it would do nothing.
+	int check_tune_consumed(const std::filesystem::path& game_directory)
+	{
+		const std::filesystem::path directory = std::filesystem::temp_directory_path() /
+			(L"colourwars_consumed_" + std::to_wstring(_getpid()));
+		std::filesystem::create_directories(directory);
+		int checked = 0;
+		for (const char* name : { "tuning", "presentation" })
+		{
+			const std::string text = read_text(game_directory / (std::string(name) + ".json"));
+			const JsonSpanDocument document(text, name);
+			const std::filesystem::path candidate = directory / (std::string(name) + ".json");
+			for (const JsonLeaf& leaf : document.leaves())
+			{
+				bool comment = false;
+				for (std::size_t at = 0; at < leaf.path.size(); at = leaf.path.find('.', at) + 1)
+				{
+					comment = comment || leaf.path[at] == '_';
+					if (leaf.path.find('.', at) == std::string::npos) { break; }
+				}
+				if (comment)
+				{
+					continue;
+				}
+				write_text(candidate, document.replaced(leaf, "\"__unread__\""));
+				std::string message;
+				try
+				{
+					if (std::string(name) == "tuning")
+					{
+						GameTuning loaded(candidate.string().c_str());
+					}
+					else
+					{
+						Presentation loaded(candidate.string().c_str());
+					}
+				}
+				catch (const std::exception& error)
+				{
+					message = error.what();
+				}
+				require(!message.empty(), std::string(name) + "." + leaf.path +
+					" is in the file but the game never reads it");
+				require(message.find(last_key(leaf.path)) != std::string::npos,
+					std::string(name) + "." + leaf.path + ": the reader's message does not name '" +
+					last_key(leaf.path) + "': " + message);
+				++checked;
+			}
+		}
+		std::error_code ignored;
+		std::filesystem::remove_all(directory, ignored);
+		return checked;
+	}
+
+	void check_tune_commands(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"tune");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		TestDirector test(tuning, presentation);
+		DebugDirectorImpl& impl = test.impl;
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const DebugLog& log = impl.log();
+
+		// The D2 guard: string buffers the game points at stay put.
+		const char* const bank = tuning.player().sound_bank.data();
+		const char* const meter_font = presentation.hud().meter_label_font.data();
+		const WeaponTuning* const sprayer = &tuning.weapon(WeaponType::sprayer);
+
+		// Every value below is relative to the file's, so a balance pass on
+		// tuning.json never fails this check.
+		const std::string gravity = impl.tune_token("tuning.player.gravity");
+		require(!gravity.empty(), "The scratch file has a player gravity");
+		const double base = std::stod(gravity);
+		const auto token = [&gravity](double value) { return tune_format(value, gravity); };
+		const std::string up = token(base + 100.0);
+		require(impl.execute("tune tuning.player.gravity " + up).ok &&
+			tuning.player().gravity == static_cast<float>(base + 100.0), "tune sets a live number");
+		require(log_contains(log, "tune: tuning.player.gravity " + gravity + " -> " + up + " (live)",
+			DebugSeverity::info), "tune reports old, new and the scope");
+		require(impl.execute("tune tuning.player.gravity").ok &&
+			log_contains(log, "tuning.player.gravity = " + up + "  (file: " + gravity + ")  [live]",
+				DebugSeverity::info), "tune without a value prints the value, the file's and the scope");
+
+		require(!impl.execute("tune tuning.player.jump_buffer_time 2").ok &&
+			log_contains(log, "outside [0, 1]", DebugSeverity::error) &&
+			tuning.player().jump_buffer_time != 2.0f, "The reader's own range rule rejects a value");
+		require(!log_contains(log, "ColourWars-tune-", DebugSeverity::error),
+			"A rejection names the content file, not the temporary candidate");
+		require(!impl.execute("tune presentation.movement_feedback.minimum_strength 1.5").ok &&
+			log_contains(log, "strength must be at most one", DebugSeverity::error),
+			"A cross-field rule rejects a value");
+		require(!impl.execute("tune tuning.player.sound_bank x").ok &&
+			!impl.execute("tune tuning.nowhere 1").ok && !impl.execute("tune player.gravity 1").ok,
+			"Strings, unknown paths and unprefixed paths are refused");
+
+		const double stepped = base + 100.0 + tune_step(base + 100.0, tune_integer_token(up));
+		require(impl.execute("tune tuning.player.gravity next").ok &&
+			tuning.player().gravity == static_cast<float>(stepped) &&
+			impl.tune_token("tuning.player.gravity") == token(stepped), "next steps by tune_step");
+		require(impl.execute("tune tuning.player.gravity -=150").ok &&
+			tuning.player().gravity == static_cast<float>(stepped - 150.0), "-= subtracts");
+
+		// Booleans, and the F9 switch beside them.
+		require(impl.execute("tune presentation.movement_feedback.enabled off").ok &&
+			!presentation.movement_feedback().enabled, "A boolean tunes with on/off words");
+		require(impl.execute("feedback on").ok && presentation.movement_feedback().enabled,
+			"F9 still toggles the live switch");
+		require(impl.execute("tune presentation.movement_feedback.full_impact_speed next").ok &&
+			presentation.movement_feedback().enabled,
+			"Tuning another presentation value keeps the live F9 state");
+		impl.execute("tune.diff");
+		require(log_contains(log, "live toggle (F9) is on, not a file edit", DebugSeverity::info),
+			"tune.diff says when F9 disagrees with the file");
+		require(log_contains(log, "  tuning.player.gravity  " + gravity + " -> " + token(stepped - 150.0) +
+			"  [live]", DebugSeverity::info) &&
+			log_contains(log, "  presentation.movement_feedback.enabled  true -> false  [live]",
+				DebugSeverity::info) && log_contains(log, "tune.diff: 4 line(s)", DebugSeverity::info),
+			"tune.diff lists exactly the edits");
+		require(tuning.player().sound_bank.data() == bank &&
+			presentation.hud().meter_label_font.data() == meter_font &&
+			&tuning.weapon(WeaponType::sprayer) == sprayer,
+			"Copy-assigning a candidate keeps every string buffer and record address");
+
+		require(impl.execute("tune.reset presentation").ok && presentation.movement_feedback().enabled &&
+			impl.tune_document("presentation")->edits().empty(),
+			"tune.reset of a file reverts its edits, the toggle edit included");
+		require(impl.execute("tune.reset tuning.player.gravity").ok &&
+			tuning.player().gravity == static_cast<float>(base) &&
+			impl.tune_document("tuning")->edits().empty(), "tune.reset of a path reverts it");
+
+		// A rebuild-scoped value with restart, in a match.
+		FakeMatch match(test.director);
+		match.settings = planned(1);
+		test.director.attach_match(match);
+		const float thickness = tuning.paint().thickness;
+		const std::string thicker = tune_format(static_cast<double>(thickness) + 1.0,
+			impl.tune_token("tuning.paint.thickness"));
+		const DebugStatus restart = impl.execute("tune tuning.paint.thickness " + thicker + " restart");
+		require(restart.ok && restart.close_console && impl.request().restart &&
+			tuning.paint().thickness == thickness + 1.0f, "restart after a rebuild-scoped tune queues a rebuild");
+		require(test.director.before_match_update(match, 1.0f / 60.0f) && match.rebuilds == 1,
+			"and the match rebuilds");
+		test.director.detach_match(match);
+		require(impl.execute("tune.reset").ok && tuning.paint().thickness == thickness, "tune.reset all");
+
+		// tune.save, CRLF tuning: exactly that token changes.
+		const std::string tuning_before = read_text(scratch.source / L"tuning.json");
+		require(impl.execute("tune tuning.player.gravity " + up).ok, "tune before save");
+		require(impl.execute("tune.save tuning").ok, "tune.save writes the source file");
+		// The player's gravity is the file's first "gravity" key.
+		std::string expected = tuning_before;
+		const std::string old_key = "\"gravity\": " + gravity;
+		const std::size_t at = expected.find(old_key);
+		require(at != std::string::npos && at == expected.find("\"gravity\": "),
+			"The source's first gravity is the player's " + gravity);
+		expected.replace(at, old_key.size(), "\"gravity\": " + up);
+		const std::string tuning_after = read_text(scratch.source / L"tuning.json");
+		require(tuning_after == expected, "tune.save changes only the edited token (CRLF file)");
+		require(read_text(scratch.staged / L"tuning.json") == tuning_after,
+			"tune.save refreshes the staged copy");
+		require(!std::filesystem::exists(scratch.source / L"tuning.json.tmp") &&
+			!std::filesystem::exists(scratch.staged / L"tuning.json.tmp"),
+			"tune.save leaves no temporary beside either copy");
+		require(GameTuning((scratch.source / L"tuning.json").string().c_str()).player().gravity ==
+			static_cast<float>(base + 100.0), "The saved file loads with the new value");
+		require(impl.tune_document("tuning")->edits().empty() &&
+			impl.tune_document("tuning")->baseline().text() == tuning_after,
+			"After a save the baseline is the file and tune.diff is empty");
+
+		// LF presentation.
+		const std::string presentation_before = read_text(scratch.source / L"presentation.json");
+		const std::string strength_was = impl.tune_token("presentation.movement_feedback.minimum_strength");
+		require(impl.execute("tune presentation.movement_feedback.minimum_strength prev").ok &&
+			impl.execute("tune.save").ok, "tune.save all");
+		const std::string strength_now = impl.tune_token("presentation.movement_feedback.minimum_strength");
+		expected = presentation_before;
+		const std::size_t strength = expected.find("\"minimum_strength\": " + strength_was);
+		require(strength != std::string::npos && strength_now != strength_was,
+			"The source has minimum_strength " + strength_was);
+		expected.replace(strength, std::string("\"minimum_strength\": " + strength_was).size(),
+			"\"minimum_strength\": " + strength_now);
+		require(read_text(scratch.source / L"presentation.json") == expected &&
+			read_text(scratch.source / L"presentation.json").find('\r') == std::string::npos,
+			"tune.save changes only the edited token (LF file)");
+
+		// A token changed on disk since it was loaded is a conflict.
+		const std::string ours = token(base + 200.0);
+		const std::string theirs = token(base + 50.0);
+		require(impl.execute("tune tuning.player.gravity " + ours).ok, "tune before a conflict");
+		std::string external = tuning_after;
+		external.replace(external.find("\"gravity\": " + up), std::string("\"gravity\": " + up).size(),
+			"\"gravity\": " + theirs);
+		write_text(scratch.source / L"tuning.json", external);
+		require(!impl.execute("tune.save tuning").ok &&
+			log_contains(log, "conflict: tuning.player.gravity: changed on disk to " + theirs,
+				DebugSeverity::error) && read_text(scratch.source / L"tuning.json") == external,
+			"A conflict names the path and writes nothing");
+		require(impl.execute("tune.save tuning force").ok &&
+			read_text(scratch.source / L"tuning.json").find("\"gravity\": " + ours) != std::string::npos,
+			"force overwrites the value changed on disk");
+		require(impl.execute("tune.save").ok && log_contains(log, "tune.save: no edits to save",
+			DebugSeverity::info), "Nothing to save says so");
+
+		// No source tree: tune.save says what it needs.
+		impl.set_content_directories(scratch.root / L"missing", scratch.staged);
+		require(impl.execute("tune tuning.player.gravity " + token(base + 300.0)).ok &&
+			!impl.execute("tune.save").ok &&
+			log_contains(log, "tune.save needs a Debug build made from a checkout", DebugSeverity::error),
+			"Without a source tree tune.save fails and says why");
+		impl.execute("tune.reset");
+		require(!std::filesystem::exists(std::filesystem::temp_directory_path() /
+			(L"ColourWars-tune-" + std::to_wstring(_getpid()))),
+			"Validation leaves no candidate directory in %TEMP%");
+	}
+
+	void check_tune_completion_and_menu(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"menu");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		TestDirector test(tuning, presentation);
+		DebugDirectorImpl& impl = test.impl;
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const DebugRegistry& registry = impl.registry();
+
+		require(registry.complete("tune tuning.pl").line == "tune tuning.player.",
+			"A path completes one segment, with no space after it");
+		require(registry.complete("tune tuning.player.jump_b").line ==
+			"tune tuning.player.jump_buffer_time ", "A leaf completes with a space");
+		const std::vector<std::string> groups = registry.complete("tune presentation.").candidates;
+		require(std::find(groups.begin(), groups.end(), "presentation.hud.") != groups.end() &&
+			std::find(groups.begin(), groups.end(), "presentation.camera.") != groups.end(),
+			"presentation. lists its groups");
+		require(registry.complete("tune tuning.player.gravity ").candidates ==
+			std::vector<std::string>{ "next", "prev" } &&
+			registry.complete("tune presentation.movement_feedback.enabled ").candidates ==
+			std::vector<std::string>{ "off", "on", "toggle" }, "The value completes by kind");
+
+		DebugMenuModel model(impl);
+		const std::vector<std::string> roots = labels(model.rows());
+		require(std::find(roots.begin(), roots.end(), "tuning") != roots.end() &&
+			std::find(roots.begin(), roots.end(), "replay") != roots.end(),
+			"The root lists the tuning and replay categories");
+		model.confirm(row_index(model.rows(), "tuning"));
+		require(labels(model.rows()) == std::vector<std::string>{ "tuning", "presentation", "tune.diff",
+			"tune.reset", "tune.save" }, "Tuning opens on the two files and the save rows");
+		model.confirm(row_index(model.rows(), "tuning"));
+		require(model.title() == "DEBUG / tuning", "A file node's title");
+		model.confirm(row_index(model.rows(), "player"));
+		require(model.title() == "DEBUG / tuning / player", "The node's title is its path");
+		std::vector<DebugMenuRow> rows = model.rows();
+		require(rows.size() == DebugMenuModel::max_rows && rows.back().kind == DebugMenuRow::Kind::more &&
+			rows.back().label.rfind("more (1/", 0) == 0, "A long node is paged with a more row");
+		const std::size_t gravity = row_index(rows, "gravity");
+		const std::string gravity_token = impl.tune_token("tuning.player.gravity");
+		const float gravity_value = tuning.player().gravity;
+		require(rows[gravity].kind == DebugMenuRow::Kind::variable && rows[gravity].value == gravity_token,
+			"A leaf shows its token");
+		require(rows[row_index(rows, "size")].kind == DebugMenuRow::Kind::category,
+			"An inner node is a category row");
+		model.step(gravity, 1);
+		require(tuning.player().gravity == static_cast<float>(gravity_value +
+			tune_step(gravity_value, tune_integer_token(gravity_token))) &&
+			log_contains(impl.log(), "[menu] tune tuning.player.gravity next", DebugSeverity::echo),
+			"Right on a leaf runs tune <path> next, echoed");
+		model.step(gravity, -1);
+		require(tuning.player().gravity == gravity_value, "Left runs prev");
+		const std::string first_page = labels(model.rows()).front();
+		model.confirm(model.rows().size() - 1);
+		require(labels(model.rows()).front() != first_page &&
+			model.rows().back().label.rfind("more (2/", 0) == 0, "more advances the page");
+		model.back();
+		require(model.title() == "DEBUG / tuning" &&
+			model.rows()[model.focus_hint()].label == "player", "Back pops one segment onto the node it left");
+		model.confirm(row_index(model.rows(), "player"));
+		model.confirm(row_index(model.rows(), "size"));
+		require(model.title() == "DEBUG / player / size" &&
+			model.rows()[row_index(model.rows(), "y")].value.find("*rebuild") != std::string::npos,
+			"A value that is not live is marked with its scope");
+		model.back();
+		model.back();
+		model.back();
+		require(model.title() == "DEBUG / tuning", "Back reaches the category");
+		model.back();
+		require(model.title() == "DEBUG", "and then the root");
+
+		// The presentation boolean steps by toggle.
+		model.confirm(row_index(model.rows(), "tuning"));
+		model.confirm(row_index(model.rows(), "presentation"));
+		model.confirm(row_index(model.rows(), "movement_feedback"));
+		const bool enabled = presentation.movement_feedback().enabled;
+		model.step(row_index(model.rows(), "enabled"), -1);
+		require(presentation.movement_feedback().enabled != enabled,
+			"Left or Right on a boolean toggles it");
+		impl.execute("tune.reset");
+	}
+
+	// A view sequence that moves, lands, stalls and meets an opponent.
+	BotSeatView scripted_view(int step)
+	{
+		BotSeatView view;
+		view.step = step;
+		view.self.center = { 1000.0f + 3.0f * static_cast<float>(step % 200), 800.0f };
+		view.self.velocity = { step % 70 < 25 ? 0.0f : 300.0f, step % 40 < 20 ? 0.0f : -200.0f };
+		view.self.team = PlayerTeam::a;
+		view.self.on_ground = step % 40 < 20;
+		view.self.ammo = static_cast<float>(100 - step % 100) / 100.0f;
+		BotSeatView::Seat opponent;
+		opponent.center = { 1200.0f - static_cast<float>(step % 300), 600.0f + static_cast<float>(step % 50) };
+		opponent.team = PlayerTeam::b;
+		opponent.alive = step % 150 < 120;
+		view.others.push_back(opponent);
+		return view;
+	}
+
+	std::vector<std::string> run_bot(const std::string& behaviour, std::uint64_t seed, int steps)
+	{
+		std::unique_ptr<Bot> bot = Bot::make(behaviour, seed, 2);
+		require(bot != nullptr && bot->name() == behaviour, "Bot::make builds " + behaviour);
+		std::vector<std::string> outputs;
+		bool held = false;
+		for (int step = 0; step < steps; ++step)
+		{
+			const PlayerInputData input = bot->think(scripted_view(step));
+			require(input.connected && !input.toggle_pause_menu && !input.toggle_debug,
+				behaviour + ": a bot is connected and never opens a menu or the F1 overlay");
+			require(!input.jump_pressed || (input.jump_held && !held),
+				behaviour + ": jump_pressed only on the step a hold begins");
+			held = input.jump_held;
+			if (input.shoot_direction_requested)
+			{
+				require(std::fabs(input.shoot_direction.length() - 1.0f) < 1e-4f,
+					behaviour + ": the aim is a unit vector");
+			}
+			outputs.push_back(replay_codec::encode(input));
+		}
+		return outputs;
+	}
+
+	void check_bots(GameTuning& tuning, Presentation& presentation)
+	{
+		for (const std::string& behaviour : { "walk", "jump", "chase", "paint" })
+		{
+			const std::vector<std::string> first = run_bot(behaviour, 7, 600);
+			require(run_bot(behaviour, 7, 600) == first, behaviour + " is deterministic for a seed");
+			if (behaviour != "chase")
+			{
+				require(run_bot(behaviour, 8, 600) != first, behaviour + " differs with another seed");
+			}
+		}
+		require(Bot::make("idle", 1, 0) == nullptr && Bot::is_behaviour("idle") &&
+			!Bot::is_behaviour("dance"), "idle is a word for neutral input, not a class");
+		const std::vector<std::string> paint = run_bot("paint", 3, 600);
+		require(std::any_of(paint.begin(), paint.end(), [](const std::string& text)
+			{ PlayerInputData input; return replay_codec::decode(text, input) && input.primary_shoot; }) &&
+			std::any_of(paint.begin(), paint.end(), [](const std::string& text)
+			{ PlayerInputData input; return replay_codec::decode(text, input) && input.jump_pressed; }),
+			"A paint bot shoots and jumps");
+
+		TestDirector test(tuning, presentation);
+		DebugDirectorImpl& impl = test.impl;
+		DebugDirector& director = test.director;
+		require(impl.execute("bot all paint").ok && impl.execute("bot 1 chase").ok, "bot assigns");
+		FakeMatch match(director);
+		match.settings = planned(4);
+		director.attach_match(match);
+		director.after_level_build(match);
+		require(impl.status_strip().find("BOTS 4") != std::string::npos,
+			"bot all drives the dummies and bot 1 the keyboard seat: " + impl.status_strip());
+		require(director.drives_slot(input_slots::keyboard_and_mouse) && !director.drives_slot(0),
+			"A bot on the keyboard seat drives its slot");
+		std::vector<PlayerInputData> inputs(input_slots::count);
+		director.update_match(match, inputs, 1.0f / 60.0f);
+		require(match.last_filter != nullptr, "With bots, the update gets a seat filter");
+		require(impl.execute("bot 1 off").ok && impl.status_strip().find("BOTS 3x paint") != std::string::npos,
+			"bot all paint drives only the three idle dummies: " + impl.status_strip());
+		require(!director.drives_slot(input_slots::keyboard_and_mouse), "bot 1 off hands the seat back");
+		require(impl.execute("bot off").ok && impl.status_strip().find("BOTS") == std::string::npos,
+			"bot off clears every bot");
+		director.update_match(match, inputs, 1.0f / 60.0f);
+		require(match.last_filter == nullptr, "Without bots the update gets no seat filter");
+		require(!impl.execute("bot 1 dance").ok && !impl.execute("bot 9 walk").ok && !impl.execute("bot 2").ok,
+			"bot checks its seat and behaviour");
+
+		// players N <bot>: the dummies of the rebuilt match get that bot.
+		require(impl.execute("players 4 paint").ok && impl.request().players == 4,
+			"players 4 paint queues four players");
+		require(director.before_match_update(match, 1.0f / 60.0f) && match.rebuilds == 1 &&
+			impl.status_strip().find("BOTS 3x paint") != std::string::npos,
+			"and the rebuild puts paint bots on the three dummies");
+		impl.execute("status");
+		require(log_contains(impl.log(), " idle team b sprayer bot paint", DebugSeverity::info),
+			"status names each seat's bot");
+		director.detach_match(match);
+		impl.execute("bot off");
+
+		// A bot on a pad seat: that pad's absence never pauses the match.
+		MatchRequest roster;
+		roster.stage = "x";
+		roster.players = 2;
+		unsigned int seed = 1;
+		const MatchPlan plan = MatchPlanner(&test_stages()).resolve(nullptr, roster,
+			MatchPlanner::ConnectedPads{ true, false, false, false }, [&seed] { return seed++; });
+		require(plan.ok && plan.settings.player_settings()[0].num == 0, "Seat 1 is pad 1");
+		FakeMatch pad_match(director);
+		pad_match.settings = plan.settings;
+		director.attach_match(pad_match);
+		labrador::GamepadReader reader;
+		labrador::Gamepads pads(&reader);
+		require(disconnected_player_slot(pad_match.settings, pads, director) == 0,
+			"An unplugged pad seat pauses the match");
+		impl.execute("bot 1 walk");
+		require(director.drives_slot(0) && disconnected_player_slot(pad_match.settings, pads, director) == -1 &&
+			!pad_seat_missing(0, pads, director), "A bot on that seat keeps it from pausing");
+		impl.execute("bot off");
+		director.detach_match(pad_match);
+	}
+
+	void check_seeded_planner(GameTuning& tuning, Presentation& presentation)
+	{
+		const auto weapons_for = [&](const char* seed)
+			{
+				TestDirector test(tuning, presentation);
+				test.impl.execute(std::string("seed ") + seed);
+				test.impl.execute("stage x");
+				test.impl.execute("players 4");
+				test.impl.execute("weapon all random");
+				FakePage page;
+				page.start_result = true;
+				require(test.director.before_page_update(page, 1.0f / 60.0f) && page.starts == 1,
+					"A seeded stage starts from the menus");
+				std::string weapons;
+				for (const MenuPlayerSettings& seat : page.started.player_settings())
+				{
+					weapons += MatchPlanner::weapon_name(seat.weapon) + std::string(" ");
+				}
+				return weapons;
+			};
+		const std::string first = weapons_for("5");
+		require(weapons_for("5") == first, "The same seed gives the same random weapons");
+		bool differs = false;
+		for (const char* other : { "6", "7", "8", "9" })
+		{
+			differs = differs || weapons_for(other) != first;
+		}
+		require(differs, "Other seeds give other weapons");
+
+		// Not only the first plan after `seed`: every plan under it.
+		TestDirector test(tuning, presentation);
+		test.impl.execute("seed 5");
+		const auto start = [&]
+			{
+				test.impl.execute("stage x");
+				test.impl.execute("players 4");
+				test.impl.execute("weapon all random");
+				FakePage page;
+				page.start_result = true;
+				require(test.director.before_page_update(page, 1.0f / 60.0f) && page.starts == 1,
+					"A seeded stage starts from the menus");
+				std::string weapons;
+				for (const MenuPlayerSettings& seat : page.started.player_settings())
+				{
+					weapons += MatchPlanner::weapon_name(seat.weapon) + std::string(" ");
+				}
+				return weapons;
+			};
+		require(start() == first && start() == first && start() == first,
+			"Every plan under one seed draws the same random weapons");
+	}
+
+	bool same_inputs(const std::vector<std::vector<PlayerInputData>>& a,
+		const std::vector<std::vector<PlayerInputData>>& b)
+	{
+		if (a.size() != b.size()) { return false; }
+		for (std::size_t seat = 0; seat < a.size(); ++seat)
+		{
+			if (a[seat].size() != b[seat].size()) { return false; }
+			for (std::size_t i = 0; i < a[seat].size(); ++i)
+			{
+				if (!replay_codec::same(a[seat][i], b[seat][i])) { return false; }
+			}
+		}
+		return true;
+	}
+
+	void check_replay_codec()
+	{
+		PlayerInputData input;
+		input.x_movement = -0.0f;
+		input.shoot_direction = { 1e-40f, -1.0f };
+		input.shoot_angle = 3.14159265f;
+		input.left_analog_stick = { 0.25f, -0.75f };
+		input.right_analog_stick = { std::nextafter(0.5f, 1.0f), 0.0f };
+		input.jump_pressed = input.jump_held = input.primary_shoot = input.connected = true;
+		input.drop_through = true;
+		PlayerInputData decoded;
+		require(replay_codec::decode(replay_codec::encode(input), decoded) &&
+			std::bit_cast<std::uint32_t>(decoded.x_movement) == std::bit_cast<std::uint32_t>(-0.0f) &&
+			decoded.shoot_direction.x == 1e-40f && decoded.right_analog_stick.x == input.right_analog_stick.x &&
+			decoded.jump_pressed && decoded.drop_through && !decoded.toggle_debug &&
+			replay_codec::same(decoded, input), "An input encodes and decodes bit-exactly (-0.0, denormals)");
+		require(!replay_codec::decode("zz|0|0", decoded) && !replay_codec::decode("80|0|0|0|0|0|0|0|q", decoded),
+			"Malformed inputs do not decode");
+
+		std::vector<PlayerInputData> stream(5, input);
+		stream.push_back(PlayerInputData());
+		stream.insert(stream.end(), 3, input);
+		const std::vector<std::string> entries = replay_codec::run_length(stream);
+		require(entries.size() == 3 && entries[0].rfind("5*", 0) == 0 && entries[2].rfind("3*", 0) == 0,
+			"Runs compress");
+		const std::vector<PlayerInputData> expanded = replay_codec::expand(entries);
+		require(same_inputs({ expanded }, { stream }), "Runs expand back");
+		require(replay_name("my run!") == "my_run_" && replay_name("").rfind("replay-", 0) == 0,
+			"Replay names are safe file stems");
+
+		const std::filesystem::path directory = std::filesystem::temp_directory_path() /
+			(L"colourwars_replay_codec_" + std::to_wstring(_getpid()));
+		const std::filesystem::path path = directory / L"round.json";
+		ReplayFile file;
+		file.build = "test \"build\"";
+		file.dt_bits = std::bit_cast<std::uint32_t>(1.0f / 60.0f);
+		file.seed = 4000000000u;
+		file.tuning_hash = 0x0123456789abcdefull;
+		file.presentation_hash = 42;
+		file.tune_diff = { "tuning.player.gravity 2000.0 -> 2100.0" };
+		file.god = true;
+		file.settings = planned(3);
+		file.settings.set_workshop_visual_mode(PlayerVisualMode::authored);
+		file.settings.set_player_weapon(1, WeaponType::roller);
+		file.updates = 120;
+		file.suspends = { 0, 61 };
+		file.inputs = { stream, std::vector<PlayerInputData>(9), expanded };
+		file.checkpoints = { { 60, 0xfeedfacecafebeefull }, { 120, 7 } };
+		file.final_print.updates = 120;
+		file.final_print.hash = 99;
+		file.final_print.team_a = std::bit_cast<std::uint32_t>(12.5f);
+		file.final_print.seats.push_back({ 1, 2, 3, 4, 5, 6, 7, 2, 1 });
+		file.write(path);
+		const ReplayFile read = ReplayFile::read(path);
+		require(read.build == file.build && read.dt_bits == file.dt_bits && read.seed == file.seed &&
+			read.tuning_hash == file.tuning_hash && read.presentation_hash == 42 &&
+			read.tune_diff == file.tune_diff && read.god && !read.infinite_ammo &&
+			read.updates == 120 && read.suspends == file.suspends &&
+			same_inputs(read.inputs, file.inputs) && read.checkpoints.size() == 2 &&
+			read.checkpoints[0].hash == 0xfeedfacecafebeefull &&
+			MatchFingerprint::difference(file.final_print, read.final_print).empty() &&
+			read.final_print.hash == 99, "A replay file round-trips");
+		const std::vector<MenuPlayerSettings> seats = read.settings.player_settings();
+		require(seats.size() == 3 && seats[0].num == input_slots::keyboard_and_mouse && seats[1].num == -1 &&
+			seats[1].weapon == WeaponType::roller && seats[1].team == PlayerTeam::b &&
+			read.settings.stage() == "x" && read.settings.workshop_visual_mode() == PlayerVisualMode::authored &&
+			read.settings.screen_layout() == labrador::ScreenLayout::three_player,
+			"The recorded settings rebuild verbatim");
+
+		std::string text = read_text(path);
+		text.replace(text.find("\"version\": 1"), 12, "\"version\": 2");
+		write_text(path, text);
+		std::string message;
+		try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
+		require(message.find("format version 2; this build reads 1") != std::string::npos,
+			"Another format version is refused: " + message);
+		write_text(path, "{ \"version\": 1, ");
+		message.clear();
+		try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
+		require(message.find("not valid JSON") != std::string::npos, "A broken file is refused: " + message);
+		for (const char* layout : { "\"layout\": 7,", "\"layout\": 0," })
+		{
+			file.write(path);
+			text = read_text(path);
+			text.replace(text.find("\"layout\": 2,"), 12, layout);
+			write_text(path, text);
+			message.clear();
+			try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
+			require(message.find("is not the 3-player layout") != std::string::npos,
+				std::string("A replay with ") + layout + " for three seats is refused: " + message);
+		}
+		std::error_code ignored;
+		std::filesystem::remove_all(directory, ignored);
+	}
+
+	// ------------------------------------------- a real Level on the CPU
+
+	// What LevelBuilder needs, with no window or device: sprite sheets and
+	// fonts whose atlases are null handles, a silent bank, the levels, and
+	// the shell services by value.
+	struct CpuWorld
+	{
+		labrador::RenderResources render;
+		labrador::AudioResources audio;
+		PlaySettings preferences;
+		labrador::Registry<LevelLoadedInfo> levels{ "Level" };
+		StageList stages;
+		labrador::ResolutionManager resolution;
+		labrador::ViewportManager viewports{ &resolution };
+		labrador::Mouse mouse;
+		labrador::Partitioner partitioner;
+		std::unique_ptr<LevelBuilder> builder;
+
+		CpuWorld(const std::filesystem::path& content, const GameTuning& tuning,
+			const Presentation& presentation)
+		{
+			for (const char* sheet : { "sprite_sheet_1", "menu_paint", "weapon_paint", "workshop_kit" })
+			{
+				this->render.add_sprite_sheet(sheet, labrador::read_sprite_sheet(
+					(content / "textures" / (std::string(sheet) + ".json")).string().c_str(),
+					labrador::TextureHandle{}));
+			}
+			for (const char* font : { "gill_sans_ultra_bold_144", "gill_sans_mt_bold_24",
+				"gill_sans_mt_bold_36", "gill_sans_mt_bold_48", "gill_sans_mt_bold_72",
+				"gill_sans_mt_bold_144", "courier_new_bold_16" })
+			{
+				const labrador::SpriteFontFile file = labrador::read_sprite_font_file(
+					(content / "fonts" / (std::string(font) + ".spritefont")).string());
+				auto loaded = std::make_unique<labrador::Font>(labrador::TextureHandle{}, file.glyphs,
+					file.line_spacing);
+				if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
+				this->render.add_font(font, std::move(loaded));
+			}
+			this->audio.add_sound_bank("sound_bank_1", labrador::SoundBank::silent());
+			for (const char* level : { "movement_course", "close_quarters" })
+			{
+				auto info = std::make_unique<LevelLoadedInfo>(
+					(content / "levels" / (std::string(level) + ".json")).string().c_str());
+				info->validate();
+				this->levels.add(level, std::move(info));
+			}
+			this->stages = { { "movement_course", "Movement Course", "icon", false },
+				{ "close_quarters", "Close Quarters", "icon", true } };
+			this->builder = std::make_unique<LevelBuilder>(&this->viewports, &this->render, &this->audio,
+				&this->preferences, &this->levels, &tuning, &presentation, &this->resolution, nullptr,
+				&this->partitioner, &this->mouse);
+		}
+	};
+
+	// GameLevel's debug face over a real Level: one build path through
+	// before_level_build and after_level_build, as GameLevel has.
+	class CpuMatch final : public DebugMatchTarget
+	{
+	public:
+		CpuMatch(CpuWorld& world, DebugDirector& director) : world_(world), director_(director) {}
+
+		MenuLevelSettings settings;
+		std::unique_ptr<Level> level;
+		int builds = 0;
+
+		void build()
+		{
+			this->level.reset();
+			this->director_.before_level_build(*this);
+			this->world_.viewports.set_layout(this->settings.screen_layout());
+			this->level = this->world_.builder->build_level(this->settings, TeamColourPair::blue_orange);
+			++this->builds;
+			this->director_.after_level_build(*this);
+		}
+
+		// What GameLevel::on_suspend does when a state covers the match.
+		void suspend()
+		{
+			this->level->suspend();
+			this->director_.match_suspended(*this);
+		}
+
+		const MenuLevelSettings& debug_settings() const override { return this->settings; }
+		void debug_rebuild(const MenuLevelSettings& plan, bool) override
+		{
+			this->settings = plan;
+			this->build();
+		}
+		void debug_adopt(const MenuLevelSettings& plan, bool) override { this->settings = plan; }
+		void debug_leave() override {}
+		void debug_update_level(const std::vector<PlayerInputData>& inputs, float dt,
+			SeatInputFilter* seats) override
+		{
+			this->level->update(inputs, dt, seats);
+		}
+		bool debug_level_finished() const override { return this->level->state() == LevelState::finished; }
+		const Level* debug_level() const override { return this->level.get(); }
+		// GameLevel's, uncovered and in focus: only the debug clock pauses it,
+		// which pauses the voices and leaves the players alone.
+		void debug_sync_audio() override
+		{
+			if (this->director_.match_audio_paused())
+			{
+				this->level->pause_audio();
+			}
+			else
+			{
+				this->level->resume();
+			}
+		}
+		std::vector<std::string> debug_status() const override { return {}; }
+		void debug_set_overlays(const LevelOverlays& overlays) override { this->level->set_overlays(overlays); }
+		void debug_set_player_text(bool showing) override { this->level->set_players_showing_debug(showing); }
+		void debug_set_cheats(bool immune, bool infinite) override
+		{
+			this->god = immune;
+			this->level->set_player_cheats(immune, infinite);
+		}
+		bool god = false;
+		std::vector<LevelStation> debug_stations() const override
+		{
+			return this->world_.levels.get(this->settings.stage())->stations();
+		}
+		bool debug_place(int seat, const mattmath::Vector2F& top_left) override
+		{
+			return this->level->place_player(seat, top_left);
+		}
+		bool debug_respawn(int seat) override { return this->level->respawn_player(seat); }
+		MatchPaint debug_paint() const override
+		{
+			const LevelEndInfo info = this->level->level_end_info();
+			MatchPaint paint;
+			paint.team_a = info.team_a_area;
+			paint.team_b = info.team_b_area;
+			paint.total = info.total_area;
+			return paint;
+		}
+
+	private:
+		CpuWorld& world_;
+		DebugDirector& director_;
+	};
+
+	// The keyboard seat's own scripted input (the bots drive the rest).
+	std::vector<PlayerInputData> keyboard_step(int step)
+	{
+		std::vector<PlayerInputData> inputs(input_slots::count);
+		PlayerInputData& keys = inputs[static_cast<std::size_t>(input_slots::keyboard_and_mouse)];
+		keys.connected = true;
+		keys.x_movement = (step / 90) % 3 == 0 ? 1.0f : (step / 90) % 3 == 1 ? -1.0f : 0.0f;
+		keys.jump_held = step % 75 < 12;
+		keys.jump_pressed = step % 75 == 0;
+		keys.primary_shoot = step % 40 < 25;
+		return inputs;
+	}
+
+	// Steps the match until `done`, the way GameLevel does: the director's
+	// hooks, then its clock's updates. Returns the steps taken.
+	template <typename Done>
+	int drive(DebugDirector& director, CpuMatch& match, float dt, int limit, Done done,
+		int suspend_at = -1)
+	{
+		DebugDirectorImpl& impl = *director.impl();
+		int step = 0;
+		bool suspended = false;
+		for (; step < limit && !done(); ++step)
+		{
+			if (director.before_match_update(match, dt))
+			{
+				continue;
+			}
+			if (!suspended && suspend_at >= 0 && impl.level_updates() == suspend_at)
+			{
+				match.suspend();
+				suspended = true;
+			}
+			director.update_match(match, keyboard_step(impl.level_updates()), dt);
+		}
+		return step;
+	}
+
+	std::string check_replay_cpu_match(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"replay");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		CpuWorld world(game_directory, tuning, presentation);
+		GameData data;
+		data.set_stages(&world.stages);
+		data.set_level_infos(&world.levels);
+		DebugDirector director(&tuning, &presentation);
+		director.attach(nullptr, &data);
+		DebugDirectorImpl& impl = *director.impl();
+		impl.log().set_mirror_to_debugger(false);
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const DebugLog& log = impl.log();
+		const float dt = 1.0f / 60.0f;
+		const int length = 600;
+
+		// +seed 7 +stage movement_course +players 4 +bot all paint, built directly.
+		require(impl.execute("seed 7").ok && impl.execute("bot all paint").ok, "seed and bot in the menus");
+		MatchRequest roster;
+		roster.stage = "movement_course";
+		roster.players = 4;
+		roster.visual = PlayerVisualMode::authored;
+		const MatchPlan plan = MatchPlanner(&world.stages).resolve(nullptr, roster,
+			MatchPlanner::ConnectedPads{}, [] { return 0u; });
+		require(plan.ok, "The CPU roster resolves");
+		CpuMatch match(world, director);
+		match.settings = plan.settings;
+		director.attach_match(match);
+		match.build();
+		require(impl.status_strip().find("BOTS 3x paint") != std::string::npos, "Three paint bots");
+
+		// Record 600 updates, with a suspend (a console, say) at update 300.
+		require(impl.execute("record cpu 600").ok && impl.request().restart, "record queues a fresh build");
+		drive(director, match, dt, 2000, [&] { return impl.recording() || match.builds >= 2; });
+		require(impl.recording() && impl.level_updates() == 0, "Recording starts at a fresh build");
+		const int recorded_steps = drive(director, match, dt, 2000, [&] { return !impl.recording(); }, 300);
+		require(!impl.recording() && recorded_steps >= length && log_contains(log, "record: saved", DebugSeverity::info) &&
+			log_contains(log, "(600 updates, checksum", DebugSeverity::info), "record stops by itself after 600 updates");
+		const std::filesystem::path saved = std::filesystem::path(labrador::widen(
+			directory_consts::replay_directory())) / L"cpu.json";
+		const ReplayFile file = ReplayFile::read(saved);
+		require(file.updates == length && file.checkpoints.size() == 10 && file.suspends == std::vector<int>{ 300 } &&
+			file.inputs.size() == 4 && file.seed == 7u && file.dt_bits == std::bit_cast<std::uint32_t>(dt),
+			"The file holds 600 updates, 10 checkpoints, the suspend, four seats, the seed and dt");
+		require(file.final_print.team_a != 0 || file.final_print.team_b != 0, "The bots painted");
+		// Recorded seats are post-filter: the keyboard seat as scripted, the bots' own.
+		require(file.inputs[0].size() == file.inputs[1].size() && file.inputs[1].size() > 300 &&
+			std::any_of(file.inputs[2].begin(), file.inputs[2].end(), [](const PlayerInputData& input)
+				{ return input.primary_shoot; }), "Every seat's input is recorded, the bots' included");
+
+		// The same seeded bot match again, unrecorded, ends identically.
+		impl.execute("restart");
+		drive(director, match, dt, 2000, [&] { return impl.level_updates() >= length; }, 300);
+		const std::optional<MatchFingerprint> again = impl.fingerprint();
+		require(again && again->hash == file.final_print.hash,
+			"The same seed, bots and keys give the same match: " + MatchFingerprint::difference(file.final_print, *again));
+
+		// Replays.
+		const auto play = [&](const std::string& line)
+			{
+				require(impl.execute(line).ok, line + " is accepted");
+				require(director.before_match_update(match, dt) && impl.playing(),
+					line + " rebuilds the match into the replay");
+				require(!impl.clock().paused(), line + " resumes the clock the last replay held");
+				drive(director, match, dt, 4000, [&] { return !impl.playing() || impl.level_updates() >= length; });
+			};
+		// One after another, with no `pause off` between: each ends holding
+		// its last frame, and the next play resumes from a paused clock.
+		play("play cpu");
+		require(log_contains(log, "replay cpu: MATCH (600 updates, 10 checkpoints", DebugSeverity::info),
+			"The replay matches the recording");
+		require(impl.execute("god on").ok && impl.execute("god off").ok,
+			"Once the replay has ended, cheats are accepted again");
+
+		impl.execute("timescale 4");
+		play("play cpu");
+		impl.execute("timescale 1");
+		require(count_of_lines(log, "replay cpu: MATCH") == 2, "At timescale 4 the replay still matches");
+
+		world.resolution.set_resolution(mattmath::Vector2F(1280.0f, 720.0f));
+		play("play cpu");
+		require(count_of_lines(log, "replay cpu: MATCH") == 3,
+			"At another window size the replay still matches (the camera only feeds recorded aim)");
+		require(impl.clock().paused() && !log_contains(log, "which the recording was not", DebugSeverity::warning),
+			"A held last frame and a paused rebuild are not suspends");
+
+		// A pause the user chose stays, and stepping the replay one update at
+		// a time is neutral: the paused clock pauses voices, not players.
+		require(impl.execute("pause off").ok && impl.execute("pause on").ok && impl.execute("play cpu").ok &&
+			director.before_match_update(match, dt) && impl.playing() && impl.clock().paused(),
+			"play keeps a pause the user set");
+		const int matched = count_of_lines(log, "replay cpu: MATCH");
+		for (int step = 0; step < length + 10 && impl.playing() && !impl.replay_finished(); ++step)
+		{
+			// What `step 1` (F7) does, without a log line per update.
+			impl.clock().request_steps(1);
+			director.update_match(match, keyboard_step(step), dt);
+		}
+		require(count_of_lines(log, "replay cpu: MATCH") == matched + 1 &&
+			!log_contains(log, "which the recording was not", DebugSeverity::warning),
+			"A replay stepped one update at a time still matches");
+		impl.execute("pause off");
+
+		// During a replay the simulation's side doors are shut.
+		require(impl.execute("play cpu").ok && director.before_match_update(match, dt) && impl.playing(),
+			"play again");
+		drive(director, match, dt, 20, [] { return false; });
+		require(!impl.execute("god on").ok && !impl.execute("respawn 1").ok &&
+			!impl.execute("tune tuning.player.gravity next").ok && !impl.execute("bot all walk").ok &&
+			!impl.execute("tune.save").ok && !impl.execute("tune.reset").ok,
+			"god, respawn, tune, tune.save, tune.reset and bot are refused while a replay runs");
+		require(log_contains(log, "tune.save: replaying 'cpu' would diverge", DebugSeverity::error),
+			"tune.save says why");
+		require(director.drives_slot(input_slots::keyboard_and_mouse), "A replay drives every recorded slot");
+		match.suspend();
+		require(log_contains(log, "which the recording was not", DebugSeverity::warning),
+			"A suspend the recording lacks is reported as the cause of a divergence");
+		require(impl.execute("play stop").ok && !impl.playing(), "play stop");
+
+		// Other tuning: refused, then forced and diverged.
+		require(impl.execute("tune tuning.player.gravity " + tune_format(std::stod(
+			impl.tune_token("tuning.player.gravity")) + 500.0, impl.tune_token("tuning.player.gravity"))).ok,
+			"tune gravity");
+		require(!impl.execute("play cpu").ok && log_contains(log, "recorded with other tuning", DebugSeverity::error),
+			"A replay with other tuning is refused");
+		play("play cpu force");
+		require(log_contains(log, "replay cpu: DIVERGED at update", DebugSeverity::error),
+			"Forced with other gravity it diverges, at a checkpoint");
+		impl.execute("tune.reset");
+
+		// Another step size: refused at the first update. God is on before
+		// play (the recording had it off), so the refusal must put it back.
+		require(impl.execute("god on").ok && match.god, "god on before the wrong-dt play");
+		const bool wrong_dt_played = impl.execute("play cpu").ok;
+		const bool wrong_dt_built = director.before_match_update(match, dt);
+		require(wrong_dt_played && wrong_dt_built && impl.playing(),
+			"play with the wrong dt: " + log.lines().back().text);
+
+
+		director.update_match(match, keyboard_step(0), 0.0166666f);
+		require(!impl.playing() && log_contains(log, "refused: recorded at dt", DebugSeverity::error),
+			"A replay at another dt (the executable's StepTimer gives 0.0166666) is refused");
+		require(match.god && impl.status_strip().find("BOTS 3x paint") != std::string::npos,
+			"The refused replay hands back the cheats and the bots, as play stop does: god " +
+			std::to_string(match.god) + ", strip '" + impl.status_strip() + "'");
+		require(impl.execute("god off").ok && !match.god, "god off");
+		require(!impl.execute("play cpu").ok && log_contains(log, "a replay never matches across step sizes",
+			DebugSeverity::error), "and play itself refuses once the step is known");
+		director.update_match(match, keyboard_step(0), dt);
+
+		// A replay armed and then left behind does not take over the next match.
+		require(impl.execute("play cpu").ok && impl.execute("menu").ok &&
+			director.before_match_update(match, dt) && !impl.playing() &&
+			log_contains(log, "play cpu: disarmed (the match was left)", DebugSeverity::warning),
+			"Leaving the match disarms the replay it queued");
+		match.build();
+		require(!impl.playing() && impl.status_strip().find("BOTS 3x paint") != std::string::npos,
+			"The next match is a live one, with its bots");
+
+		// From the menus: play starts the match with the recorded settings.
+		director.detach_match(match);
+		require(impl.execute("play cpu").ok && impl.request().stage == std::optional<std::string>("movement_course"),
+			"play in the menus queues the recorded stage");
+		FakePage page;
+		page.start_result = true;
+		require(director.before_page_update(page, dt) && page.starts == 1 &&
+			page.started.player_count() == 4 && page.started.stage() == "movement_course" &&
+			page.started.workshop_visual_mode() == PlayerVisualMode::authored,
+			"and the main menu starts it with the recorded settings");
+		CpuMatch fresh(world, director);
+		fresh.settings = page.started;
+		director.attach_match(fresh);
+		fresh.build();
+		require(impl.playing(), "The match started from the menus is the replay");
+		const int matched_before = count_of_lines(log, "replay cpu: MATCH");
+		drive(director, fresh, dt, 4000, [&] { return !impl.playing() || impl.level_updates() >= length; });
+		require(count_of_lines(log, "replay cpu: MATCH") == matched_before + 1, "and it matches");
+		director.detach_match(fresh);
+		impl.execute("bot off");
+		impl.execute("seed off");
+		std::error_code ignored;
+		std::filesystem::remove(saved, ignored);
+		return "real Level";
+	}
+#endif
 }
 
 int main(int argc, char** argv)
@@ -1527,10 +2738,57 @@ int main(int argc, char** argv)
 		check_goto(tuning, presentation);
 		check_screenshot_file(tuning, presentation);
 		check_stations(game_directory, tuning);
+
+		// Phase 3. The real content files are only read; replays go to a
+		// temporary LOCALAPPDATA.
+		const std::filesystem::path source(labrador::widen(source_paths::content_directory));
+		const std::string source_tuning = read_text(source / L"tuning.json");
+		const std::string source_presentation = read_text(source / L"presentation.json");
+		const std::filesystem::path local = std::filesystem::temp_directory_path() /
+			(L"colourwars_localappdata_" + std::to_wstring(_getpid()));
+		std::filesystem::create_directories(local);
+		size_t saved_length = 0;
+		wchar_t* saved_raw = nullptr;
+		_wdupenv_s(&saved_raw, &saved_length, L"LOCALAPPDATA");
+		const std::wstring saved_local = saved_raw != nullptr ? saved_raw : L"";
+		std::free(saved_raw);
+		_wputenv_s(L"LOCALAPPDATA", local.c_str());
+		std::string replay_case;
+		try
+		{
+			check_json_spans(game_directory);
+			check_tune_scope(game_directory);
+			const int consumed = check_tune_consumed(game_directory);
+			std::cout << "NOTE consumed-leaf check: " << consumed << " numbers and booleans, each read "
+				"by the game\n";
+			check_tune_commands(game_directory);
+			check_tune_completion_and_menu(game_directory);
+			check_bots(tuning, presentation);
+			check_seeded_planner(tuning, presentation);
+			check_replay_codec();
+			replay_case = check_replay_cpu_match(game_directory);
+		}
+		catch (...)
+		{
+			_wputenv_s(L"LOCALAPPDATA", saved_local.c_str());
+			throw;
+		}
+		_wputenv_s(L"LOCALAPPDATA", saved_local.c_str());
+		std::error_code ignored;
+		std::filesystem::remove_all(local, ignored);
+		require(read_text(source / L"tuning.json") == source_tuning &&
+			read_text(source / L"presentation.json") == source_presentation,
+			"game/content/tuning.json and presentation.json are byte-for-byte unchanged");
+
 		std::cout << "PASS debug console (Debug): tokenizer, launch arguments, registry, "
 			"completion, clock, planner, text field, director, match hooks, chord, input "
 			"filter, menu traits, menu model, unwinding, overlays and cheats, goto, "
-			"screenshot file, stations; RTTI present.\n";
+			"screenshot file, stations; phase 3: JSON spans, tune scopes, consumed leaves, "
+			"tune/diff/reset/save (CRLF and LF, conflicts), tune completion and menu tree, "
+			"bots, seeded planner, replay codec and file, record/play on a " << replay_case <<
+			" (MATCH back to back, at timescale 1 and 4, another size and stepped one update "
+			"at a time; DIVERGED with other tuning; refused at another dt; disarmed by leaving; "
+			"started from the menus); RTTI present.\n";
 #else
 		DebugDirector director(&tuning, &presentation);
 		require(!director.enabled() && director.impl() == nullptr,
@@ -1568,9 +2826,18 @@ int main(int argc, char** argv)
 			match.rebuilds == 0 && match.adopts == 0 && match.placed.empty() &&
 			match.respawned.empty() && match.updates == 1,
 			"Release pushes no overlay, player text or cheat into a match and runs one update");
+		require(match.last_filter == nullptr && match.filtered_updates == 0,
+			"Release gives Level::update no seat filter: no bot, recording or replay");
+		director.match_suspended(match);
+		for (int slot = -1; slot <= input_slots::keyboard_and_mouse; ++slot)
+		{
+			require(!director.drives_slot(slot), "Release drives no seat, so a missing pad always pauses");
+		}
+
 		std::cout << "PASS debug console (Release): inert director; one stderr line for "
-			"'+' arguments; pad chord, overlays and unwinding inert; no console, registry, "
-			"menu or command classes in ColourWars.exe.\n";
+			"'+' arguments; pad chord, overlays and unwinding inert; no seat filter and no "
+			"driven slot; no console, registry, menu, command, bot, replay or tuning classes "
+			"in ColourWars.exe.\n";
 #endif
 		return 0;
 	}

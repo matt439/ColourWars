@@ -3,9 +3,12 @@
 #include "game/objects/level_overlays.h"
 #include "game/objects/level_station.h"
 #include "game/objects/player_input_data.h"
+#include "game/objects/seat_input_filter.h"
 #include "game/states/menu_level_settings.h"
 #include <string>
 #include <vector>
+
+class Level;
 
 // Paint coverage as the developer overlay shows it: areas in world units,
 // seats in view order (an idle dummy paints nothing).
@@ -40,9 +43,16 @@ public:
 	// Leaves the match for the main menu's home page.
 	virtual void debug_leave() = 0;
 
+	// One Level::update. `seats` (bots, record, play) sees and may replace
+	// each seat's input for that update's logic step; null when nothing drives
+	// a seat, and always null in Release.
 	virtual void debug_update_level(const std::vector<PlayerInputData>& inputs,
-		float dt) = 0;
+		float dt, SeatInputFilter* seats) = 0;
 	virtual bool debug_level_finished() const = 0;
+
+	// The running level, read-only, for bots and match fingerprints. Never
+	// null while the match is attached.
+	virtual const Level* debug_level() const = 0;
 
 	// Pauses the level's voices while the debug clock is paused, the match is
 	// covered or the window is inactive; resumes them otherwise.

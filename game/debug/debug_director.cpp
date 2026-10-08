@@ -6,17 +6,24 @@
 #include "engine/app/application.h"
 #include "engine/render/text_encoding.h"
 #include "game/build_info.h"
+#include "game/debug/bot_driver.h"
 #include "game/debug/debug_console_state.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/debug_menu_page.h"
 #include "game/debug/debug_screenshot.h"
+#include "game/debug/replay.h"
+#include "game/debug/tune_document.h"
+#include "game/debug/tune_target.h"
 #include "game/directory_consts.h"
 #include "game/game_data.h"
+#include "game/objects/level.h"
 #include "game/states/menu_context.h"
 #include "game/states/menu_input.h"
 #include "game/states/menu_level_settings.h"
+#include <bit>
 #include <chrono>
 #include <cstdio>
+#include <cstdlib>
 #include <filesystem>
 #include <random>
 #include <utility>
@@ -170,7 +177,7 @@ void DebugDirector::update_match(DebugMatchTarget& match,
 {
 	if (this->impl_ == nullptr)
 	{
-		match.debug_update_level(inputs, dt);
+		match.debug_update_level(inputs, dt, nullptr);
 		return;
 	}
 	this->impl_->update_match(match, inputs, dt);
@@ -179,6 +186,19 @@ void DebugDirector::update_match(DebugMatchTarget& match,
 bool DebugDirector::match_audio_paused() const
 {
 	return this->impl_ != nullptr && this->impl_->clock().paused();
+}
+
+void DebugDirector::match_suspended(DebugMatchTarget& match)
+{
+	if (this->impl_ != nullptr)
+	{
+		this->impl_->match_suspended(match);
+	}
+}
+
+bool DebugDirector::drives_slot(int slot) const
+{
+	return this->impl_ != nullptr && this->impl_->drives_slot(slot);
 }
 
 bool DebugDirector::before_page_update(DebugPageTarget& page, float dt)
@@ -211,7 +231,7 @@ void DebugDirector::draw_status(Renderer& renderer) const
 // ---------------------------------------------------------------------------
 
 DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentation) :
-	tuning_(tuning), presentation_(presentation)
+	tuning_(tuning), presentation_(presentation), planner_random_(std::random_device{}())
 {
 	std::string label;
 	for (const wchar_t* c = build_info::label; *c != 0; ++c)
@@ -225,6 +245,11 @@ DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentat
 	this->register_commands();
 	this->register_view_commands();
 	this->register_player_commands();
+	this->register_bot_commands();
+	this->register_replay_commands();
+	this->register_tune_commands();
+	this->tune_targets_[0] = std::make_unique<TuningTarget>(tuning, presentation);
+	this->tune_targets_[1] = std::make_unique<PresentationTarget>(presentation, tuning);
 }
 
 DebugDirectorImpl::~DebugDirectorImpl()
@@ -239,6 +264,11 @@ void DebugDirectorImpl::attach(Application* application, GameData* data)
 {
 	this->application_ = application;
 	this->data_ = data;
+	// The running game's baseline is the staged files main.cpp just loaded.
+	if (application != nullptr)
+	{
+		this->load_tune_documents();
+	}
 	if (application != nullptr && this->f10_hook_ == nullptr)
 	{
 		this->f10_hook_ = SetWindowsHookExW(WH_GETMESSAGE, f10_message_hook, nullptr,
@@ -409,6 +439,31 @@ void DebugDirectorImpl::apply_pending_content()
 	this->pending_tuning_.reset();
 	this->pending_presentation_.reset();
 	this->log_.info("reload: applied tuning.json and presentation.json");
+	// What reload read is the new tuning baseline: live edits are gone.
+	const std::array<std::string*, 2> texts = { &this->pending_tuning_text_,
+		&this->pending_presentation_text_ };
+	for (int file = 0; file < 2; ++file)
+	{
+		try
+		{
+			if (this->tune_docs_[static_cast<std::size_t>(file)] != nullptr)
+			{
+				this->tune_docs_[static_cast<std::size_t>(file)]->rebase(*texts[static_cast<std::size_t>(file)]);
+			}
+			else
+			{
+				this->tune_docs_[static_cast<std::size_t>(file)] = std::make_unique<TuneDocument>(
+					file == 0 ? "tuning" : "presentation", *texts[static_cast<std::size_t>(file)]);
+			}
+		}
+		catch (const std::exception& e)
+		{
+			this->log_.warning(std::string("tune: cannot follow the reload: ") + e.what());
+		}
+		texts[static_cast<std::size_t>(file)]->clear();
+	}
+	this->tune_load_tried_ = true;
+
 	if (this->presentation_->movement_feedback().enabled != feedback_before)
 	{
 		this->log_.warning(std::string("reload: feedback is now ") +
@@ -445,8 +500,14 @@ void DebugDirectorImpl::detach_match(const DebugMatchTarget& match)
 {
 	if (this->match_ == &match)
 	{
+		// The level is still alive: a recording ends with its final state.
+		this->stop_recording("the match ended");
+		this->stop_playing("the match ended");
+		this->bot_driver_.reset();
 		this->match_ = nullptr;
 	}
+	// A replay armed for this match's rebuild has no build left to start.
+	this->disarm_play("the match ended");
 	// A rebuild queued for this match means nothing once it has ended, nor
 	// does a goto waiting for that rebuild.
 	this->drop_request("the match ended");
@@ -469,6 +530,12 @@ void DebugDirectorImpl::log_match(const MatchPlan& plan, const std::string& how)
 
 void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 {
+	// A rebuild ends a recording or a replay of the level it replaces (the
+	// one `record` or `play` queued starts after this build).
+	this->stop_recording("the match was rebuilt");
+	this->stop_playing("the match was rebuilt");
+	this->bot_driver_.reset();
+
 	this->apply_pending_content();
 
 	// A debug rebuild cleared the request before building, so anything still
@@ -479,10 +546,8 @@ void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 	queued.restart = false;
 	if (!queued.empty())
 	{
-		std::mt19937 engine(std::random_device{}());
 		const MatchPlan plan = this->planner().resolve(&match.debug_settings(),
-			this->request_, this->connected_pads(),
-			[&engine] { return static_cast<unsigned int>(engine()); });
+			this->request_, this->connected_pads(), this->planner_random());
 		const std::string described = this->request_.describe();
 		this->request_ = MatchRequest();
 		this->waiting_notice_shown_ = false;
@@ -490,6 +555,7 @@ void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 		{
 			this->log_.error("cannot apply " + described + ": " + plan.error +
 				"; building with the current settings");
+			this->disarm_play("its match could not be planned");
 		}
 		else
 		{
@@ -500,6 +566,27 @@ void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 	}
 	// This build is the restart.
 	this->request_.restart = false;
+
+	// The palette and anything else the build draws from rand() repeat with
+	// the seed; a replay uses the seed it was recorded with, and the cheats.
+	if (this->play_armed_ != nullptr)
+	{
+		const ReplayFile& file = this->play_armed_->file();
+		if (file.seed)
+		{
+			std::srand(*file.seed);
+		}
+		if (!this->cheats_before_play_)
+		{
+			this->cheats_before_play_ = std::make_pair(this->god_, this->infinite_ammo_);
+		}
+		this->god_ = file.god;
+		this->infinite_ammo_ = file.infinite_ammo;
+	}
+	else if (this->seed_)
+	{
+		std::srand(*this->seed_);
+	}
 }
 
 void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
@@ -518,6 +605,35 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 		const DebugStatus status = this->apply_goto(match, pending.station, pending.seat);
 		this->log_.write(status.ok ? DebugSeverity::info : DebugSeverity::error, status.message);
 	}
+	// Bots, a replay or a recording start with the level's first update.
+	this->level_updates_ = 0;
+	this->last_print_.reset();
+	if (this->play_armed_ != nullptr)
+	{
+		this->player_ = std::move(this->play_armed_);
+		this->log_.info("replay " + this->player_->name() + ": playing " +
+			std::to_string(this->player_->file().updates) + " updates");
+		// The last replay's held frame is over; a pause the user chose stays.
+		if (this->replay_hold_ && this->clock_.paused())
+		{
+			this->clock_.set_paused(false);
+		}
+		this->replay_hold_ = false;
+	}
+	else
+	{
+		this->rebuild_bots(match);
+		if (this->record_armed_)
+		{
+			const RecordRequest armed = *this->record_armed_;
+			this->record_armed_.reset();
+			this->recorder_ = std::make_unique<ReplayRecorder>(armed.name,
+				this->replay_header(match), this->bot_driver_.get(), armed.limit);
+			this->log_.info("record " + armed.name + ": recording" + (armed.limit > 0 ?
+				" " + std::to_string(armed.limit) + " updates" : std::string(" until 'record stop'")));
+		}
+	}
+
 	// No partial step or old edge carries into the new level, and its
 	// voices start paused if the clock is.
 	this->clock_.reset_accumulator();
@@ -551,6 +667,19 @@ void DebugDirectorImpl::drop_request(const std::string& reason)
 	}
 	this->request_ = MatchRequest();
 	this->waiting_notice_shown_ = false;
+	if (dropped.exact)
+	{
+		this->disarm_play(reason);
+	}
+}
+
+void DebugDirectorImpl::disarm_play(const std::string& reason)
+{
+	if (this->play_armed_ != nullptr)
+	{
+		this->log_.warning("play " + this->play_armed_->name() + ": disarmed (" + reason + ")");
+		this->play_armed_.reset();
+	}
 }
 
 bool DebugDirectorImpl::screenshot_waits() const
@@ -658,6 +787,7 @@ bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt)
 	{
 		this->leave_requested_ = false;
 		this->request_ = MatchRequest();
+		this->disarm_play("the match was left");
 		match.debug_leave();
 		return true;
 	}
@@ -667,16 +797,15 @@ bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt)
 		return false;
 	}
 
-	std::mt19937 engine(std::random_device{}());
 	const MatchPlan plan = this->planner().resolve(&match.debug_settings(),
-		this->request_, this->connected_pads(),
-		[&engine] { return static_cast<unsigned int>(engine()); });
+		this->request_, this->connected_pads(), this->planner_random());
 	const std::string described = this->request_.describe();
 	this->request_ = MatchRequest();
 	this->waiting_notice_shown_ = false;
 	if (!plan.ok)
 	{
 		this->log_.error("cannot apply " + described + ": " + plan.error);
+		this->disarm_play("its match could not be planned");
 		// Content that validated still waits for the next rebuild; a goto
 		// meant for the stage that will not be built does not.
 		if (this->pending_goto_)
@@ -698,6 +827,7 @@ bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt)
 void DebugDirectorImpl::update_match(DebugMatchTarget& match,
 	const std::vector<PlayerInputData>& inputs, float dt)
 {
+	this->last_dt_bits_ = std::bit_cast<std::uint32_t>(dt);
 	const int runs = this->clock_.updates_this_step();
 	const std::vector<PlayerInputData> latched = this->clock_.latch(inputs, runs);
 	for (int run = 0; run < runs; ++run)
@@ -708,7 +838,18 @@ void DebugDirectorImpl::update_match(DebugMatchTarget& match,
 		{
 			break;
 		}
-		match.debug_update_level(run == 0 ? latched : DebugClock::without_edges(latched), dt);
+		const bool replay_was_running = this->player_ != nullptr && !this->player_->finished;
+		this->before_level_update(match, dt);
+		match.debug_update_level(run == 0 ? latched : DebugClock::without_edges(latched), dt,
+			this->seat_filter());
+		++this->level_updates_;
+		this->after_level_update(match);
+		// A replay that just reached its last update holds that frame, even
+		// mid fast-forward.
+		if (replay_was_running && this->player_ != nullptr && this->player_->finished)
+		{
+			break;
+		}
 	}
 	if (runs > 0 && this->clock_.paused())
 	{
@@ -788,13 +929,13 @@ bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt)
 	{
 		request.visual = this->remembered_visual_;
 	}
-	std::mt19937 engine(std::random_device{}());
 	const MatchPlan plan = this->planner().resolve(nullptr, request,
-		this->connected_pads(), [&engine] { return static_cast<unsigned int>(engine()); });
+		this->connected_pads(), this->planner_random());
 	if (!plan.ok)
 	{
 		this->log_.error("cannot start " + request.describe() + ": " + plan.error);
 		this->request_ = MatchRequest();
+		this->disarm_play("its match could not be planned");
 		return false;
 	}
 

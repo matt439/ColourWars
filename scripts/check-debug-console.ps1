@@ -7,7 +7,15 @@ param(
     [int]$StartupSeconds = 12,
     # The lone-Alt probe is informational (engine report 11) and leaves the
     # window in the system menu loop for a moment if Alt still opens it.
-    [switch]$SkipAltProbe
+    [switch]$SkipAltProbe,
+    # Run only the phase-3 launch (bots, tune, record/play, tuning menu).
+    [switch]$Phase3Only,
+    # Phase 3 also runs tune.save against the SOURCE game/content/tuning.json,
+    # checks with git that exactly one value changed, and writes the saved
+    # original bytes back (git checkout would not: it renormalises the line
+    # endings of a working copy that mixes CRLF and LF). Refused unless the
+    # file is clean in git first.
+    [switch]$SaveToSource
 )
 
 # Opt-in, local: drives the real Debug executable through the developer console
@@ -51,7 +59,7 @@ $commandShot = Join-Path $profileDirectory 'ColourWars/screens/drive.png'
 Remove-Item -LiteralPath $commandShot -ErrorAction SilentlyContinue
 
 Add-Type -AssemblyName System.Drawing
-if (-not ('ColourWars.ConsoleDriver2' -as [type])) {
+if (-not ('ColourWars.ConsoleDriver3' -as [type])) {
     Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @'
 using System;
 using System.Drawing;
@@ -62,7 +70,7 @@ using System.Threading;
 
 namespace ColourWars
 {
-    public static class ConsoleDriver2
+    public static class ConsoleDriver3
     {
         [StructLayout(LayoutKind.Sequential)]
         public struct Rect { public int Left, Top, Right, Bottom; }
@@ -141,6 +149,9 @@ namespace ColourWars
                 if (c >= '0' && c <= '9') { Tap((byte)c, false); continue; }
                 if (c == ';') { Tap(0xBA, false); continue; }
                 if (c == '_') { Shifted(0xBD); continue; }
+                if (c == '.') { Tap(0xBE, false); continue; }
+                if (c == '-') { Tap(0xBD, false); continue; }
+                if (c == '=') { Tap(0xBB, false); continue; }
                 throw new ArgumentException("Unsupported character: " + c);
             }
         }
@@ -173,7 +184,7 @@ namespace ColourWars
 $grave = 0xC0; $enter = 0x0D; $escape = 0x1B; $alt = 0x12
 $f1 = 0x70; $f2 = 0x71; $f3 = 0x72; $f4 = 0x73; $f8 = 0x77; $f9 = 0x78; $f10 = 0x79
 $down = 0x28; $right = 0x27
-$driver = [ColourWars.ConsoleDriver2]
+$driver = [ColourWars.ConsoleDriver3]
 
 function Get-Transcript {
     if (-not (Test-Path -LiteralPath $transcript)) { return '' }
@@ -202,8 +213,39 @@ function Save-Shot([string]$name) {
     $driver::Screenshot($window, (Join-Path $output $name))
 }
 
+function Wait-Transcript([string]$text, [int]$seconds) {
+    $deadline = (Get-Date).AddSeconds($seconds)
+    while ((Get-Date) -lt $deadline) {
+        if ((Get-Transcript).Contains($text)) { return $true }
+        Start-Sleep -Milliseconds 250
+    }
+    return $false
+}
+
+function Count-Transcript([string]$text) {
+    return ([regex]::Matches((Get-Transcript), [regex]::Escape($text))).Count
+}
+
+# One console line that must reach the console: the transcript echoes it as
+# "] <line>". A toggle lost to a focus change leaves the console open when
+# this expects it closed, so the first grave closes it and the line is lost;
+# then a second attempt opens it and runs the line. `keepsOpen` lines (those
+# that do not ask the console to close) are followed by a closing grave.
+function Invoke-Checked([string]$line, [bool]$keepsOpen = $true, [int]$settleMilliseconds = 500) {
+    $before = Count-Transcript "] $line"
+    for ($attempt = 0; $attempt -lt 2; ++$attempt) {
+        Invoke-ConsoleLine $line $settleMilliseconds
+        if ((Count-Transcript "] $line") -gt $before) {
+            if ($keepsOpen) { Close-Console }
+            return
+        }
+    }
+    throw "The console never ran: $line"
+}
+
 $originalLocalAppData = $env:LOCALAPPDATA
 $process = $null
+if (-not $Phase3Only) {
 try {
     $env:LOCALAPPDATA = $profileDirectory
     try {
@@ -224,8 +266,9 @@ try {
     $driver::Focus($window); Start-Sleep -Milliseconds 400
     Save-Shot '01-launch-overlays.png'
 
-    # 2-3: phase-1 console, F8 and F9.
-    Invoke-ConsoleLine 'status'
+    # 2-3: phase-1 console, F8 and F9. The first line is checked against the
+    # transcript: keys sent in the first moments after focusing can be lost.
+    Invoke-Checked 'status' $false
     Save-Shot '02-console-status.png'
     Close-Console
     $driver::Tap($f8, $false); Start-Sleep -Milliseconds 800
@@ -441,5 +484,216 @@ try {
     Write-Host "PASS debug console driven: launch, status, F8-F10, debug menu, staging, overlays, goto (direct and behind a restart), cheats, screenshot, unwinding, quit; narrow-window panels in narrow-panels.png. Screenshots: $output"
 }
 finally {
+    if ($process -ne $null -and -not $process.HasExited) { $process.Kill() }
+}
+}
+
+# ---------------------------------------------------------------- phase 3
+#   p1. launch +seed 7 +stage movement_course +players 4 +bot all paint:
+#       seat 1 keyboard/mouse, three idle dummies driven by paint bots
+#   p2. ` status                         (three seats say bot paint)
+#   p3. ` tune tuning.player.max_velocity.x (twice the file's), tune.diff,
+#       then tune.reset; two presentation edits startup's resource checks
+#       refuse (workshop_player.pixel_size, match.countdown_size.y)
+#   p4. (-SaveToSource) tune.save tuning on the source tree, git checks the
+#       diff is that one value; the bytes read before the save are written
+#       back (in a finally, so a failed run restores them too) and git diff
+#       --quiet confirms the file is clean
+#   p5. ` record drive 600, wait for record: saved with no key or focus
+#       change (a console or focus loss mid-recording is a suspend)
+#   p6. ` play drive, wait for replay drive: MATCH
+#   p7. F10 tuning > tuning > player, Right on x_acceleration
+#   p8. ` quit
+$process = $null
+$transcript = Join-Path $output 'phase3.log'
+Remove-Item -LiteralPath $transcript -ErrorAction SilentlyContinue
+$phase3Profile = Join-Path $output 'phase3-profile'
+Remove-Item -LiteralPath $phase3Profile -Recurse -Force -ErrorAction SilentlyContinue
+$null = New-Item -ItemType Directory -Path $phase3Profile -Force
+
+# The values the checks use come from the file the game loads, so a balance
+# pass on tuning.json never breaks this script.
+$stagedTuningText = [IO.File]::ReadAllText((Join-Path (Split-Path $executable) 'tuning.json'))
+function Get-PlayerToken([string]$pattern) {
+    $match = [regex]::Match($stagedTuningText, $pattern)
+    if (-not $match.Success) { throw "tuning.json has no match for $pattern" }
+    return $match.Groups[1].Value
+}
+# A value written the way tune_format writes it after `previous`.
+function Format-Token([double]$value, [string]$previous) {
+    $invariant = [Globalization.CultureInfo]::InvariantCulture
+    if ($value -eq [math]::Floor($value)) {
+        $whole = ([long]$value).ToString($invariant)
+        if ($previous -match '[.eE]') { return "$whole.0" } else { return $whole }
+    }
+    return $value.ToString('R', $invariant)
+}
+$invariantCulture = [Globalization.CultureInfo]::InvariantCulture
+$velocityLine = [regex]::Match($stagedTuningText, '"max_velocity": \{ "x": [0-9.]+, "y": [0-9.]+ \}').Value
+$velocityToken = Get-PlayerToken '"max_velocity": \{ "x": ([0-9.]+), "y": [0-9.]+ \}'
+$fastToken = Format-Token ([double]::Parse($velocityToken, $invariantCulture) * 2) $velocityToken
+$savedToken = Format-Token ([double]::Parse($velocityToken, $invariantCulture) + 100) $velocityToken
+$accelerationToken = Get-PlayerToken '"x_acceleration": ([0-9.]+)'
+
+
+try {
+    $env:LOCALAPPDATA = $phase3Profile
+    try {
+        $arguments = @('+logfile', ('"' + $transcript + '"'), '+seed', '7', '+stage', 'movement_course',
+            '+players', '4', '+bot', 'all', 'paint')
+        $process = Start-Process -FilePath $executable -ArgumentList $arguments -PassThru `
+            -WorkingDirectory $output
+        $null = $process.Handle
+    }
+    finally {
+        $env:LOCALAPPDATA = $originalLocalAppData
+    }
+    Start-Sleep -Seconds $StartupSeconds
+    $window = $driver::FindGame($process.Id)
+    if ($window -eq [IntPtr]::Zero) { throw 'The phase-3 game window did not appear.' }
+    $driver::Focus($window); Start-Sleep -Milliseconds 1000
+    Save-Shot 'p3-01-bots-4p.png'
+    Start-Sleep -Seconds 3
+    Save-Shot 'p3-02-bots-4p-later.png'
+
+    # p2: status with the console left open for the shot.
+    Invoke-Checked 'status' $false
+    Save-Shot 'p3-03-status.png'
+    Close-Console
+
+    # p3: a live value, seen at once (the bots run twice as fast).
+    Invoke-Checked "tune tuning.player.max_velocity.x $fastToken"
+    Start-Sleep -Seconds 2
+    Save-Shot 'p3-04-tuned-speed.png'
+    Invoke-Checked 'tune.diff' $false
+    Save-Shot 'p3-05-tune-diff.png'
+    Close-Console
+    Invoke-Checked 'tune.reset'
+    # Startup's checks against the loaded frames and fonts judge a presentation
+    # edit too: neither is accepted, so a tune.save could never write them.
+    Invoke-Checked 'tune presentation.workshop_player.pixel_size next'
+    Invoke-Checked 'tune presentation.match.countdown_size.y 61'
+
+    # p4
+    if ($SaveToSource) {
+        $sourceTuning = Join-Path $repo 'game/content/tuning.json'
+        $stagedTuning = Join-Path (Split-Path $executable) 'tuning.json'
+        & git -C $repo diff --quiet -- game/content/tuning.json
+        $worktreeClean = $LASTEXITCODE -eq 0
+        & git -C $repo diff --cached --quiet -- game/content/tuning.json
+        if (-not $worktreeClean -or $LASTEXITCODE -ne 0) {
+            throw 'game/content/tuning.json has local changes; -SaveToSource refuses to touch it.'
+        }
+        $before = [IO.File]::ReadAllBytes($sourceTuning)
+        $stagedBefore = [IO.File]::ReadAllBytes($stagedTuning)
+        try {
+            Invoke-Checked "tune tuning.player.max_velocity.x $savedToken"
+            Invoke-Checked 'tune.save tuning' $false
+            Save-Shot 'p3-06-tune-save.png'
+            Close-Console
+            if (-not (Wait-Transcript 'tune.save: 1 value(s) written to' 5)) { throw 'tune.save did not report a write.' }
+            $numstat = (& git -C $repo diff --numstat -- game/content/tuning.json) -join "`n"
+            $patch = (& git -C $repo diff -U0 -- game/content/tuning.json) -join "`n"
+            Set-Content -LiteralPath (Join-Path $output 'p3-tune-save.diff') -Value $patch -Encoding UTF8
+            $changed = @($patch -split "`n" | Where-Object { $_ -match '^[+-]\s' -or $_ -match '^[+-]\s*"' })
+            $savedLine = $velocityLine.Replace('"x": ' + $velocityToken + ',', '"x": ' + $savedToken + ',')
+            if ($numstat -notmatch '^1\s+1\s' -or $changed.Count -ne 2 -or
+                -not $changed[0].Contains($velocityLine) -or -not $changed[1].Contains($savedLine)) {
+                throw "tune.save changed more than the one value: $patch"
+            }
+        }
+        finally {
+            # Byte for byte: the bytes read before the save, not a git checkout,
+            # whether or not the checks above passed.
+            [IO.File]::WriteAllBytes($sourceTuning, $before)
+            [IO.File]::WriteAllBytes($stagedTuning, $stagedBefore)
+            # The rewrite changed the file's timestamp: refresh git's stat cache
+            # for it (the blob is the committed one, so nothing is staged).
+            & { $ErrorActionPreference = 'Continue'; & git -C $repo add -- game/content/tuning.json 2>&1 | Out-Null }
+        }
+        $after = [IO.File]::ReadAllBytes($sourceTuning)
+        if ([Convert]::ToBase64String($before) -ne [Convert]::ToBase64String($after)) {
+            throw 'tuning.json was not restored byte for byte.'
+        }
+        & git -C $repo diff --quiet -- game/content/tuning.json
+        if ($LASTEXITCODE -ne 0) { throw 'git still sees a change in tuning.json after the restore.' }
+        Invoke-Checked 'reload' $false 1500
+        if (-not (Wait-Transcript 'reload: applied tuning.json and presentation.json' 5)) {
+            throw 'reload did not apply the restored tuning.json.'
+        }
+    }
+
+    # p5: no key and no focus change until the recording is saved.
+    Invoke-Checked 'record drive 600' $false 300
+    if (-not (Wait-Transcript 'record: saved' 30)) { throw 'record drive 600 did not save.' }
+    Save-Shot 'p3-07-recorded.png'
+
+    # p6
+    Invoke-Checked 'play drive' $false 300
+    if (-not (Wait-Transcript 'replay drive: MATCH' 40)) {
+        Save-Shot 'p3-08-replay-end.png'
+        throw 'play drive did not report MATCH.'
+    }
+    Save-Shot 'p3-08-replay-end.png'
+    Invoke-Checked 'checksum' $false
+    Save-Shot 'p3-09-replay-checksum.png'
+    Close-Console
+    Invoke-Checked 'pause off'
+
+    # p7: root rows match, player, view, time, tuning, replay, content,
+    # console; tuning opens on tuning, presentation, tune.diff, tune.reset,
+    # tune.save; the tuning file on match, paint, player, weapons,
+    # projectiles; player on size, max_velocity, x_initial_velocity,
+    # x_acceleration, ...
+    $driver::Tap($f10, $false); Start-Sleep -Milliseconds 500
+    foreach ($i in 1..4) { $driver::Tap($down, $true) }
+    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
+    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
+    $driver::Tap($down, $true); $driver::Tap($down, $true)
+    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
+    foreach ($i in 1..3) { $driver::Tap($down, $true) }
+    $driver::Tap($right, $true); Start-Sleep -Milliseconds 500
+    Save-Shot 'p3-10-menu-tuning.png'
+    $driver::Tap($f10, $false); Start-Sleep -Milliseconds 400
+    Invoke-Checked 'tune.reset'
+
+    Invoke-ConsoleLine 'quit' 0
+    if (-not $process.WaitForExit(15000)) { throw 'The phase-3 game did not quit.' }
+    $process.WaitForExit()
+    if ($process.ExitCode -ne 0) { throw "The phase-3 game exited with $($process.ExitCode)." }
+
+    $log = Get-Transcript
+    $expected = @(
+        'launch: seed 7',
+        'bot all paint: applies to the next match',
+        'match: starting movement_course, 4 player(s)',
+        ' idle team b sprayer bot paint',
+        "tune: tuning.player.max_velocity.x $velocityToken -> $fastToken (live)",
+        "tuning.player.max_velocity.x  $velocityToken -> $fastToken  [live]",
+        'tune.reset: 1 value(s) back to the file''s',
+        'must use the authored native texel density',
+        'match.countdown_size must leave room below the GET READY heading',
+        'record drive: restarting the match to record from its first update',
+        'record drive: recording 600 updates',
+        '(600 updates, checksum',
+        'replay drive: playing 600 updates',
+        'replay drive: MATCH (600 updates, 10 checkpoints',
+        'checksum ',
+        '[menu] tune tuning.player.x_acceleration next',
+        "tune: tuning.player.x_acceleration $accelerationToken -> ",
+        '] quit')
+    foreach ($line in $expected) {
+        if (-not $log.Contains($line)) { throw "The phase-3 transcript lacks: $line" }
+    }
+    if ($log.Contains('DIVERGED')) { throw 'The driven replay diverged.' }
+    $bots = ([regex]::Matches($log, [regex]::Escape(' bot paint'))).Count
+    if ($bots -lt 3) { throw "status listed $bots paint bots; three expected." }
+    $replay = Join-Path $phase3Profile 'ColourWars/replays/drive.json'
+    if (-not (Test-Path -LiteralPath $replay -PathType Leaf)) { throw "No replay at $replay" }
+    Copy-Item -LiteralPath $replay -Destination (Join-Path $output 'p3-drive-replay.json') -Force
+    Write-Host "PASS debug console driven, phase 3: four-seat paint-bot match, status, live tune and tune.diff/reset$(if ($SaveToSource) { ', tune.save on the source file (one value, checked with git; restored byte for byte)' } else { '' }), record 600 and play MATCH, tuning menu Right; screenshots p3-*.png in $output"
+}
+finally {
+    $env:LOCALAPPDATA = $originalLocalAppData
     if ($process -ne $null -and -not $process.HasExited) { $process.Kill() }
 }

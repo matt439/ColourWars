@@ -15,6 +15,8 @@ namespace
 
 	constexpr char SCREENSHOT_FOLDER_NAME[] = "screens";
 
+	constexpr char REPLAY_FOLDER_NAME[] = "replays";
+
 	// %LOCALAPPDATA%, read wide and without MAX_PATH; empty when unset.
 	std::filesystem::path local_app_data()
 	{
@@ -55,6 +57,17 @@ namespace directory_consts
 				std::string("./save/") + SCREENSHOT_FOLDER_NAME);
 		}
 		return labrador::path_to_utf8(root / GAME_FOLDER_NAME / SCREENSHOT_FOLDER_NAME);
+	}
+
+	std::string replay_directory()
+	{
+		const std::filesystem::path root = local_app_data();
+		if (root.empty())
+		{
+			return labrador::resolved_under(labrador::executable_directory(),
+				std::string("./save/") + REPLAY_FOLDER_NAME);
+		}
+		return labrador::path_to_utf8(root / GAME_FOLDER_NAME / REPLAY_FOLDER_NAME);
 	}
 
 	std::string legacy_save_file_path()

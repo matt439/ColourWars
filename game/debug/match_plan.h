@@ -25,6 +25,13 @@ struct MatchRequest
 	std::optional<PlayerVisualMode> visual;
 	bool restart = false;
 
+	// Settings to build verbatim (`play`): the planner claims no device and
+	// draws nothing at random. `stage` is set beside it, so every gate that
+	// waits for a queued stage starts the match from the menus too.
+	std::optional<MenuLevelSettings> exact;
+	std::string exact_label;
+
+
 	bool empty() const;
 	std::string describe() const;
 };
@@ -60,6 +67,9 @@ public:
 	// reported as a disconnected pad. With no pad, seat 0 is keyboard/mouse.
 	static void assign_devices(MenuLevelSettings& settings, int players,
 		const ConnectedPads& pads);
+
+	// The split-screen layout a plan gives `players` (1-4) seats.
+	static labrador::ScreenLayout layout_for(int players);
 
 	// Weapon names accepted by "weapon": the five primaries and random.
 	static std::vector<std::string> weapon_names();

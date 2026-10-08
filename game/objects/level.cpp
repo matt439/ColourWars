@@ -287,6 +287,15 @@ float Level::opening_scale() const
 
 void Level::suspend() const
 {
+	for (Player* player : this->players_)
+	{
+		player->reset_jump_input();
+	}
+	this->pause_audio();
+}
+
+void Level::pause_audio() const
+{
 	this->sound_bank_->pause_effect(this->music_);
 	this->sound_bank_->pause_effect(this->zoom_out_sound_);
 	this->pause_player_sounds();
@@ -303,18 +312,19 @@ void Level::resume() const
 	this->resume_player_sounds();
 }
 
-void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt)
+void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt,
+	SeatInputFilter* seats)
 {
 	this->refresh_layout();
 	this->frame_dt_ = dt;
-	this->update_state(player_inputs, dt);
+	this->update_state(player_inputs, dt, seats);
 
 	// Refresh on every path so views and overlays reflect the completed tick.
 	this->refresh_views();
 }
 
 void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
-	float dt)
+	float dt, SeatInputFilter* seats)
 {
 	if (this->state_ == LevelState::start_countdown ||
 		this->start_timer_ > -1.0f)
@@ -347,7 +357,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 	}
 	if (this->state_ == LevelState::active)
 	{
-		this->update_level_logic(player_inputs, dt);
+		this->update_level_logic(player_inputs, dt, seats);
 
 		this->timer_ -= dt;
 		if (this->timer_ <= 0.0f)
@@ -407,10 +417,10 @@ float Level::zoom_out_camera_ratio() const
 }
 
 void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs,
-	float dt)
+	float dt, SeatInputFilter* seats)
 {
 	// Run the scene phases in order, with game-specific work between them.
-	this->apply_player_inputs(player_inputs);
+	this->apply_player_inputs(player_inputs, seats);
 
 	this->scene_->update(dt);
 	this->resolve_projectile_movement();
@@ -473,8 +483,10 @@ void Level::resolve_mouse_aim(Player* player, size_t view_index,
 }
 
 void Level::apply_player_inputs(
-	const std::vector<PlayerInputData>& player_inputs)
+	const std::vector<PlayerInputData>& player_inputs, SeatInputFilter* seats)
 {
+	// One input per view; an idle dummy (or an unknown slot) gets neutral input.
+	std::vector<PlayerInputData> by_view(this->players_.size());
 	for (size_t i = 0; i < this->players_.size(); ++i)
 	{
 		Player* player = this->players_[i];
@@ -482,20 +494,24 @@ void Level::apply_player_inputs(
 
 		if (slot >= 0 && static_cast<size_t>(slot) < player_inputs.size())
 		{
-			PlayerInputData input = player_inputs[slot];
+			by_view[i] = player_inputs[slot];
 
 			// Copy the slot input to fill in this player's camera-dependent mouse aim.
 			if (input_slots::is_keyboard_and_mouse(slot))
 			{
-				this->resolve_mouse_aim(player, i, input);
+				this->resolve_mouse_aim(player, i, by_view[i]);
 			}
+		}
+	}
 
-			player->set_player_input(input);
-		}
-		else
-		{
-			player->set_player_input(PlayerInputData());
-		}
+	if (seats != nullptr)
+	{
+		seats->filter_seats(by_view, *this);
+	}
+
+	for (size_t i = 0; i < this->players_.size(); ++i)
+	{
+		this->players_[i]->set_player_input(by_view[i]);
 	}
 }
 
@@ -611,9 +627,8 @@ void Level::stop_player_sounds() const
 
 void Level::pause_player_sounds() const
 {
-	for (Player* player : this->players_)
+	for (const Player* player : this->players_)
 	{
-		player->reset_jump_input();
 		player->pause_sounds();
 	}
 }

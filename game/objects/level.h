@@ -24,6 +24,7 @@
 #include "engine/render/camera.h"
 #include "game/objects/level_overlays.h"
 #include "game/tuning.h"
+#include "game/objects/seat_input_filter.h"
 
 enum class LevelState
 {
@@ -67,10 +68,18 @@ public:
 
 	// Pause and resume level audio when a menu covers the match. Weapon loops
 	// retain their playback position while gameplay updates are suspended.
+	// A suspend also resets every player's jump input, so a jump held across
+	// the menu is not taken as a new press.
 	void suspend() const;
 	void resume() const;
+	// Pauses the same voices without touching any player: for a frozen
+	// simulation that no menu covers (the Debug clock's pause).
+	void pause_audio() const;
 
-	void update(const std::vector<PlayerInputData>& player_inputs, float dt);
+	// `seats`, when given, sees and may replace every seat's input for each
+	// logic step (the Debug bots and replays); null in Release.
+	void update(const std::vector<PlayerInputData>& player_inputs, float dt,
+		SeatInputFilter* seats = nullptr);
 
 	// Refresh size-dependent presentation before rendering, even when a menu
 	// covers the match. Called on the main thread, before render workers start.
@@ -186,14 +195,15 @@ private:
 
 	// Advance the match state; update() refreshes views after every path returns.
 	void update_state(const std::vector<PlayerInputData>& player_inputs,
-		float dt);
+		float dt, SeatInputFilter* seats);
 
 	void update_level_logic(const std::vector<PlayerInputData>& player_inputs,
-		float dt);
+		float dt, SeatInputFilter* seats);
 
-	// Apply input by each player's device slot, not by their position in players_.
+	// Apply input by each player's device slot, not by their position in
+	// players_, then let `seats` (if any) see or replace it per view.
 	void apply_player_inputs(
-		const std::vector<PlayerInputData>& player_inputs);
+		const std::vector<PlayerInputData>& player_inputs, SeatInputFilter* seats);
 
 	// Fill keyboard/mouse aim using this player's camera and pane. view_index
 	// is the position in players_, not the device slot returned by player_num().

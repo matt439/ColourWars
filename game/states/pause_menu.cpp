@@ -2,6 +2,7 @@
 #include "game/states/menu_panel.h"
 #include "game/states/controls_settings_menu.h"
 #include "game/states/pause_menu.h"
+#include "game/debug/debug_director.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -17,12 +18,17 @@ bool match_owns_pad_slot(const MenuLevelSettings& settings, int slot)
 	return settings.player_index_for_slot(slot) != -1;
 }
 
+bool pad_seat_missing(int slot, const Gamepads& gamepads, const DebugDirector& debug)
+{
+	return input_slots::is_pad(slot) && !gamepads.connected(slot) && !debug.drives_slot(slot);
+}
+
 int disconnected_player_slot(const MenuLevelSettings& settings,
-	const Gamepads& gamepads)
+	const Gamepads& gamepads, const DebugDirector& debug)
 {
 	for (const MenuPlayerSettings& player : settings.player_settings())
 	{
-		if (input_slots::is_pad(player.num) && !gamepads.connected(player.num))
+		if (pad_seat_missing(player.num, gamepads, debug))
 		{
 			return player.num;
 		}
@@ -164,7 +170,7 @@ void PauseMenuInitial::refresh_connections()
 	for (int player = 0; player < static_cast<int>(players.size()); ++player)
 	{
 		const int slot = players[player].num;
-		if (input_slots::is_pad(slot) && !this->data()->gamepads()->connected(slot))
+		if (pad_seat_missing(slot, *this->data()->gamepads(), this->data()->debug()))
 		{
 			if (count > 0)
 			{
@@ -326,7 +332,8 @@ void PauseMenuConfirmation::update_page(float /*dt*/)
 		return;
 	}
 	if (this->type_ == ConfirmationType::restart &&
-		disconnected_player_slot(*this->level_settings(), *this->data()->gamepads()) != -1)
+		disconnected_player_slot(*this->level_settings(), *this->data()->gamepads(),
+			this->data()->debug()) != -1)
 	{
 		this->context()->transition_to(std::make_unique<PauseMenuInitial>(
 			this->menu_context(), this->pausing_player()));

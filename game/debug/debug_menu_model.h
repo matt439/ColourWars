@@ -20,6 +20,7 @@ struct DebugMenuRow
 		pick,     // open a picker over the command's choices
 		choice,   // one picker entry: runs `line`
 		note,     // text only
+		more,     // the next page of a long tuning node
 	};
 
 	Kind kind = Kind::note;
@@ -78,6 +79,13 @@ private:
 	DebugDirectorImpl& director_;
 	std::string category_;
 	std::string picker_;
+
+	// The tuning category walks the content files' paths: the node shown
+	// ("" for the two files, else a prefix ending in '.' or '['), and which
+	// page of it. Left/Right on a leaf runs `tune <path> next|prev|toggle`.
+	std::string tune_node_;
+	std::size_t tune_page_ = 0;
+	std::vector<DebugMenuRow> tuning_rows() const;
 	std::size_t focus_hint_ = 0;
 	int level_ = 0;
 
@@ -85,5 +93,6 @@ private:
 	const DebugEntry* entry(const std::string& name) const;
 	Result run(const std::string& line, bool staged);
 	void enter(std::string category, std::string picker);
+	void enter_tune_node(std::string node, const std::string& focus_line);
 	std::size_t row_of(const std::string& label) const;
 };

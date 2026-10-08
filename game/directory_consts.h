@@ -24,4 +24,10 @@ namespace directory_consts
 	// or the executable-relative save/screens without LOCALAPPDATA. UTF-8; not
 	// created here.
 	std::string screenshot_directory();
+
+	// Where the Debug `record` command writes and `play` reads:
+	// %LOCALAPPDATA%\ColourWars\replays, or the executable-relative
+	// save/replays without LOCALAPPDATA. UTF-8; not created here.
+	std::string replay_directory();
 }
+

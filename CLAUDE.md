@@ -67,7 +67,11 @@ closes), **F2**-**F4** collision, camera and paint overlays, **F5** restart,
 **F6** pause, **F7** step, **F8** cycle the Movement Course art, **F9** toggle
 movement feedback. Anywhere, **F10**/**F11** or holding pad **Back+Start** opens
 the debug menu (F10 is taken back from the system menu by a Debug-only message
-hook; see the doc). `help` lists the commands. The gate
+hook; see the doc). `help` lists the commands. The console also tunes
+`tuning.json`/`presentation.json` live (`tune`; `tune.save` writes only the
+edited tokens back to `game/content/`), puts scripted bots on idle seats
+(`+stage movement_course +players 4 +bot all paint`), and records and replays
+seeded matches bit for bit (`seed`, `record`, `play`). The gate
 `COLOURWARS_DEV_TOOLS` comes from `_DEBUG` in `game/debug/dev_tools.h` - never a
 `/D` flag, so the acceptance probes agree on class layouts - and no existing
 class has a member that depends on it. Code is in `game/debug/`; the CPU case is

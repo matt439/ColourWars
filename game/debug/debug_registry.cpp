@@ -92,7 +92,7 @@ std::vector<const DebugEntry*> DebugRegistry::entries() const
 const std::vector<std::string>& DebugRegistry::category_order()
 {
 	static const std::vector<std::string> order = {
-		"match", "player", "view", "time", "content", "console" };
+		"match", "player", "view", "time", "tuning", "replay", "content", "console" };
 	return order;
 }
 
@@ -177,7 +177,9 @@ DebugCompletion DebugRegistry::complete(std::string_view line) const
 			// completes nothing rather than reaching the console's update.
 			try
 			{
-				pool = entry->suggestions(argument);
+				const std::vector<std::string> previous(before.words.begin() + 1,
+					before.words.end());
+				pool = entry->completions(previous, word);
 			}
 			catch (const std::exception&)
 			{
@@ -203,7 +205,9 @@ DebugCompletion DebugRegistry::complete(std::string_view line) const
 	const std::string head = std::string(line.substr(0, word_start));
 	if (matches.size() == 1)
 	{
-		completion.line = head + matches.front() + " ";
+		// A path segment ("tuning.player.") continues the same word.
+		const char last = matches.front().empty() ? ' ' : matches.front().back();
+		completion.line = head + matches.front() + (last == '.' || last == '[' ? "" : " ");
 		return completion;
 	}
 	std::sort(matches.begin(), matches.end());

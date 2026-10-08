@@ -6,6 +6,7 @@
 #include "engine/app/content_root.h"
 #include "engine/render/text_encoding.h"
 #include "game/content_validation.h"
+#include "game/debug/bot.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/debug_screenshot.h"
 #include "game/directory_consts.h"
@@ -14,6 +15,10 @@
 #include "game/source_paths.h"
 #include <cstdio>
 #include <filesystem>
+#include <fstream>
+#include "game/debug/bot_driver.h"
+#include "game/debug/replay.h"
+#include "game/debug/tune_document.h"
 
 using namespace labrador;
 
@@ -131,14 +136,32 @@ void DebugDirectorImpl::register_commands()
 				(this->match_ != nullptr ? ": rebuilding the match" : ": starting a match"), true);
 		}, traits("match", Form::pick, true));
 
-	add("players", "seats 1-4: pads in slot order, then keyboard/mouse, then idle dummies",
-		{ { "1-4", false, [] { return std::vector<std::string>{ "1", "2", "3", "4" }; } } },
-		[this](Args args, DebugLog&)
+	add("players", "seats 1-4: pads in slot order, then keyboard/mouse, then idle dummies; "
+		"a second word puts that bot on every idle dummy (players 4 paint)",
+		{ { "1-4", false, [] { return std::vector<std::string>{ "1", "2", "3", "4" }; } },
+			{ "bot", true, [] { return Bot::behaviours(); } } },
+		[this](Args args, DebugLog& log)
 		{
 			int players = 0;
 			if (!DebugArgs::parse_int(args.text(0), players) || players < 1 || players > 4)
 			{
 				return DebugStatus::failure("players: expected 1-4, got '" + args.text(0) + "'");
+			}
+			if (args.has(1) && !Bot::is_behaviour(args.text(1)))
+			{
+				return DebugStatus::failure("players: unknown bot '" + args.text(1) +
+					"'; one of idle, walk, jump, chase, paint");
+			}
+			if (args.has(1))
+			{
+				if (const auto refused = this->refuse_while_replaying("players " + args.text(0) +
+					" " + args.text(1)))
+				{
+					return *refused;
+				}
+				// Stored first: the rebuild this queues builds the bots.
+				this->dummy_bot_ = args.text(1) == "idle" ? std::string() : args.text(1);
+				log.info("bots: every idle dummy " + args.text(1));
 			}
 			this->request_.players = players;
 			if (this->match_ != nullptr)
@@ -263,6 +286,8 @@ void DebugDirectorImpl::register_commands()
 				return DebugStatus::failure("pause: expected on, off or toggle");
 			}
 			this->clock_.set_paused(paused);
+			// The user's pause now, not a replay's held frame.
+			this->replay_hold_ = false;
 			if (this->match_ != nullptr)
 			{
 				this->match_->debug_sync_audio();
@@ -285,6 +310,7 @@ void DebugDirectorImpl::register_commands()
 				return DebugStatus::failure("step: no match");
 			}
 			this->clock_.request_steps(count);
+			this->replay_hold_ = false;
 			return DebugStatus::success("step " + std::to_string(count) +
 				" (paused; " + std::to_string(this->clock_.pending_steps()) + " pending)", true);
 		}, traits("time", Form::run));
@@ -378,6 +404,11 @@ DebugStatus DebugDirectorImpl::reload_content()
 	this->log_.info("reload: reading " + utf8(directory) +
 		(from_source ? " (source tree)" : " (staged copy)"));
 
+	if (const auto refused = this->refuse_while_replaying("reload"))
+	{
+		return *refused;
+	}
+
 	try
 	{
 		auto tuning = std::make_unique<GameTuning>(tuning_path.c_str());
@@ -385,8 +416,18 @@ DebugStatus DebugDirectorImpl::reload_content()
 		validate_game_content(*tuning, *presentation, this->data_->render_resources(),
 			this->data_->audio_resources(), *this->data_->level_infos(),
 			*this->data_->stages(), this->data_->save()->play_settings());
+		// What the reader just accepted becomes live tuning's baseline.
+		std::string texts[2];
+		for (int file = 0; file < 2; ++file)
+		{
+			std::ifstream stream(directory / (file == 0 ? L"tuning.json" : L"presentation.json"),
+				std::ios::binary);
+			texts[file].assign(std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>());
+		}
 		this->pending_tuning_ = std::move(tuning);
 		this->pending_presentation_ = std::move(presentation);
+		this->pending_tuning_text_ = std::move(texts[0]);
+		this->pending_presentation_text_ = std::move(texts[1]);
 	}
 	catch (const std::exception& e)
 	{
@@ -420,12 +461,24 @@ std::vector<std::string> DebugDirectorImpl::status_lines() const
 		const std::vector<std::string> views = this->match_->debug_status();
 		for (std::size_t i = 0; i < players.size(); ++i)
 		{
+			const std::string bot = this->player_ != nullptr ? std::string("replay") :
+				this->bot_driver_ != nullptr ? this->bot_for_seat(static_cast<int>(i), players[i].num) :
+				std::string();
 			lines.push_back("  P" + std::to_string(i + 1) + " " + device_label(players[i].num) +
 				" team " + (players[i].team == PlayerTeam::a ? "a" : "b") + " " +
 				MatchPlanner::weapon_name(players[i].weapon) +
+				(bot.empty() ? std::string() : " bot " + bot) +
 				(i < views.size() ? "  " + views[i] : std::string()));
 		}
+		lines.push_back("updates " + std::to_string(this->level_updates_) + " since the build" +
+			(this->recorder_ != nullptr ? ", recording " + this->recorder_->name() : std::string()) +
+			(this->player_ != nullptr ? ", replaying " + this->player_->name() : std::string()));
 	}
+	lines.push_back(std::string("seed ") + (this->seed_ ? std::to_string(*this->seed_) :
+		std::string("off (time)")) + "; bots: dummies " +
+		(this->dummy_bot_.empty() ? std::string("off") : this->dummy_bot_) +
+		(this->seat_bots_.empty() ? std::string() : ", " + std::to_string(this->seat_bots_.size()) +
+			" seat(s) named"));
 
 	lines.push_back("clock: timescale " + format_number(this->clock_.timescale()) +
 		(this->clock_.paused() ? ", paused (" + std::to_string(this->clock_.pending_steps()) +
@@ -508,6 +561,31 @@ std::string DebugDirectorImpl::status_strip() const
 	if (this->infinite_ammo_)
 	{
 		add("AMMO INF");
+	}
+	const std::string bots = this->player_ == nullptr ? this->bot_summary() : std::string();
+	if (!bots.empty())
+	{
+		add(bots);
+	}
+	if (this->recorder_ != nullptr)
+	{
+		add("REC " + this->recorder_->name() + " " + std::to_string(this->level_updates_));
+	}
+	if (this->player_ != nullptr)
+	{
+		add("PLAY " + this->player_->name() + " " + std::to_string(this->level_updates_) + "/" +
+			std::to_string(this->player_->file().updates));
+	}
+	{
+		int edits = 0;
+		for (const auto& document : this->tune_docs_)
+		{
+			edits += document != nullptr ? static_cast<int>(document->edits().size()) : 0;
+		}
+		if (edits > 0)
+		{
+			add("TUNED " + std::to_string(edits));
+		}
 	}
 	std::string overlays;
 	for (const auto& [name, on] : { std::pair<const char*, bool>{ "collision", this->overlay_collision_ },

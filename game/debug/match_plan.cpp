@@ -5,24 +5,21 @@
 #include "game/debug/match_plan.h"
 #include "game/input_slots.h"
 
-namespace
+labrador::ScreenLayout MatchPlanner::layout_for(int players)
 {
-	labrador::ScreenLayout layout_for(int players)
+	switch (players)
 	{
-		switch (players)
-		{
-		case 2: return labrador::ScreenLayout::two_player;
-		case 3: return labrador::ScreenLayout::three_player;
-		case 4: return labrador::ScreenLayout::four_player;
-		default: return labrador::ScreenLayout::one_player;
-		}
+	case 2: return labrador::ScreenLayout::two_player;
+	case 3: return labrador::ScreenLayout::three_player;
+	case 4: return labrador::ScreenLayout::four_player;
+	default: return labrador::ScreenLayout::one_player;
 	}
 }
 
 bool MatchRequest::empty() const
 {
 	return !this->stage && !this->players && this->weapons.empty() &&
-		!this->visual && !this->restart;
+		!this->visual && !this->restart && !this->exact;
 }
 
 std::string MatchRequest::describe() const
@@ -33,6 +30,11 @@ std::string MatchRequest::describe() const
 			text += text.empty() ? "" : ", ";
 			text += part;
 		};
+	if (this->exact)
+	{
+		add("replay " + this->exact_label);
+		return text;
+	}
 	if (this->stage) { add("stage " + *this->stage); }
 	if (this->players) { add("players " + std::to_string(*this->players)); }
 	for (const WeaponChoice& choice : this->weapons)
@@ -156,6 +158,20 @@ MatchPlan MatchPlanner::resolve(const MenuLevelSettings* current,
 		return plan;
 	}
 	const StageList& stages = *this->stages_;
+	if (request.exact)
+	{
+		const std::string& wanted = request.exact->stage();
+		if (std::find_if(stages.begin(), stages.end(),
+			[&wanted](const Stage& stage) { return stage.name == wanted; }) == stages.end())
+		{
+			plan.error = "unknown stage '" + wanted + "'";
+			return plan;
+		}
+		plan.settings = *request.exact;
+		plan.reset_session = true;
+		plan.ok = true;
+		return plan;
+	}
 	const bool fresh = current == nullptr || current->player_count() == 0;
 	MenuLevelSettings settings = current != nullptr ? *current : MenuLevelSettings();
 

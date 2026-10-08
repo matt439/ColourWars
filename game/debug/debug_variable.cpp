@@ -42,6 +42,12 @@ const DebugMenuTraits& DebugEntry::menu() const
 	return this->menu_;
 }
 
+std::vector<std::string> DebugEntry::completions(const std::vector<std::string>& previous,
+	std::string_view) const
+{
+	return this->suggestions(previous.size());
+}
+
 void DebugEntry::set_menu(DebugMenuTraits traits)
 {
 	this->menu_ = std::move(traits);

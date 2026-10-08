@@ -10,10 +10,23 @@
 #include "game/debug/debug_targets.h"
 #include "game/debug/debug_text_field.h"
 #include "game/debug/match_plan.h"
+#include "game/debug/match_fingerprint.h"
+#include <array>
+#include <cstdint>
+#include <filesystem>
+#include <map>
 #include <memory>
 #include <optional>
+#include <random>
 
+class BotDriver;
 class DebugMenuPage;
+class ReplayFile;
+class ReplayPlayer;
+class ReplayRecorder;
+class SeatInputFilter;
+class TuneDocument;
+class TuneTarget;
 class GameData;
 class GameTuning;
 class MenuContext;
@@ -107,6 +120,42 @@ public:
 		return this->pending_screenshot_;
 	}
 
+	// Phase 3 ---------------------------------------------------------------
+
+	// GameLevel's hooks (DebugDirector::match_suspended, drives_slot).
+	void match_suspended(DebugMatchTarget& match);
+	bool drives_slot(int slot) const;
+
+	// Live tuning reads the baseline from the staged copy and tune.save
+	// writes the source tree. Empty: the build's source tree
+	// (game/source_paths.h) and the executable's directory. The acceptance
+	// case points both at temporary copies.
+	void set_content_directories(std::filesystem::path source, std::filesystem::path staged);
+	std::filesystem::path source_content_directory() const;
+	std::filesystem::path staged_content_directory() const;
+
+	// "tuning" or "presentation"; null when the file could not be read.
+	TuneDocument* tune_document(std::string_view file);
+	// Every tunable path, both files, prefixed, in file order.
+	std::vector<std::string> tune_paths();
+	// The token a prefixed path holds now, or empty.
+	std::string tune_token(const std::string& path);
+
+	// Level updates since the running match was built.
+	int level_updates() const { return this->level_updates_; }
+	bool recording() const { return this->recorder_ != nullptr; }
+	bool playing() const { return this->player_ != nullptr; }
+	bool replay_finished() const;
+	const std::optional<unsigned int>& seed() const { return this->seed_; }
+
+	// The bot behaviour driving a seat (0-based) of the running or next
+	// match, or empty: an explicit `bot <seat>` first, then `bot all` for an
+	// idle dummy.
+	std::string bot_for_seat(int seat, int slot) const;
+
+	// The running match's fingerprint, or nullopt with no match.
+	std::optional<MatchFingerprint> fingerprint() const;
+
 private:
 	GameTuning* tuning_ = nullptr;
 	Presentation* presentation_ = nullptr;
@@ -198,4 +247,78 @@ private:
 
 	DebugStatus reload_content();
 	std::vector<std::string> status_lines() const;
+
+	// Phase 3 ---------------------------------------------------------------
+
+	void register_tune_commands();
+	void register_bot_commands();
+	void register_replay_commands();
+
+	// Seed: `seed n` makes rand() (menus, palettes) and the planner's random
+	// choices repeat; without one the planner draws from random_device.
+	std::optional<unsigned int> seed_;
+	std::mt19937 planner_random_;
+	MatchPlanner::Random planner_random();
+
+	// Bots: explicit seats (0-based) and the behaviour for every idle dummy.
+	std::map<int, std::string> seat_bots_;
+	std::string dummy_bot_;
+	std::unique_ptr<BotDriver> bot_driver_;
+	void rebuild_bots(const DebugMatchTarget& match);
+	std::string bot_summary() const;
+
+	// Record and play. Recording starts at a fresh build; so does playing.
+	int level_updates_ = 0;
+	std::uint32_t last_dt_bits_ = 0;
+	struct RecordRequest
+	{
+		std::string name;
+		int limit = 0;
+	};
+	std::optional<RecordRequest> record_armed_;
+	std::unique_ptr<ReplayRecorder> recorder_;
+	std::optional<MatchFingerprint> last_print_;
+	std::unique_ptr<ReplayPlayer> play_armed_;
+	std::unique_ptr<ReplayPlayer> player_;
+	bool injecting_suspend_ = false;
+	std::optional<std::pair<bool, bool>> cheats_before_play_;
+	SeatInputFilter* seat_filter() const;
+	void before_level_update(DebugMatchTarget& match, float dt);
+	void after_level_update(DebugMatchTarget& match);
+	void stop_recording(const std::string& reason);
+	void stop_playing(const std::string& reason);
+	void restore_cheats_after_play();
+	// Drops an armed replay whose build will not come: the exact request that
+	// carries it was dropped, failed to plan, or the match was left.
+	void disarm_play(const std::string& reason);
+	// The clock was paused by a replay holding its last frame (not by the
+	// user): the next replay to start resumes it.
+	bool replay_hold_ = false;
+	ReplayFile replay_header(const DebugMatchTarget& match);
+	// FNV-1a of a content file's text as live tuning holds it (0 unreadable).
+	std::uint64_t content_hash(std::string_view file);
+
+	// Refuses commands that change the simulation outside the input stream
+	// while a recording or a replay runs.
+	std::optional<DebugStatus> refuse_while_replaying(const std::string& what) const;
+
+	// Live tuning.
+	std::filesystem::path source_override_;
+	std::filesystem::path staged_override_;
+	std::array<std::unique_ptr<TuneDocument>, 2> tune_docs_;
+	std::array<std::unique_ptr<TuneTarget>, 2> tune_targets_;
+	bool tune_load_tried_ = false;
+	// The texts `reload` validated, which become the tuning baseline when
+	// they are applied.
+	std::string pending_tuning_text_;
+	std::string pending_presentation_text_;
+	void load_tune_documents();
+	int tune_file_index(std::string_view file) const;
+	DebugStatus tune_value(const std::string& path, const std::string& word, bool restart);
+	DebugStatus tune_validate_and_apply(int file, const std::string& candidate,
+		const std::string& edited_path);
+	DebugStatus tune_reset(const std::string& what);
+	DebugStatus tune_save(const std::string& which, bool force);
+	std::vector<std::string> tune_diff_lines(const std::string& which);
 };
+

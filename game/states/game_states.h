@@ -103,8 +103,9 @@ private:
 	void debug_adopt(const MenuLevelSettings& plan, bool reset_session) override;
 	void debug_leave() override;
 	void debug_update_level(const std::vector<PlayerInputData>& inputs,
-		float dt) override;
+		float dt, SeatInputFilter* seats) override;
 	bool debug_level_finished() const override;
+	const Level* debug_level() const override;
 	void debug_sync_audio() override;
 	std::vector<std::string> debug_status() const override;
 	void debug_set_overlays(const LevelOverlays& overlays) override;
