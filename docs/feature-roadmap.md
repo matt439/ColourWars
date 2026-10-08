@@ -1,5 +1,11 @@
 # Feature roadmap
 
+The next presentation, game-feel and arena-design work is defined in the
+[polish and level-design plan](polish-plan.md). Its direction is consistent,
+detailed pixel art, distinctive paint tools and redesigned playable layouts,
+starting with one complete reference match. That work is planned; the sections
+below record implemented increments and their remaining acceptance checks.
+
 ## First increment: explicit joining and reconnect pause
 
 Implemented:
