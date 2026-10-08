@@ -306,7 +306,10 @@ std::size_t DebugMenuModel::row_of(const std::string& label) const
 DebugMenuModel::Result DebugMenuModel::run(const std::string& line, bool staged)
 {
 	this->director_.log().write(DebugSeverity::echo, "[menu] " + line);
+	// A staged line's rebuild waits for the menu to close, and says so.
+	this->director_.set_staging(staged);
 	const DebugStatus status = this->director_.execute(line);
+	this->director_.set_staging(false);
 	return status.close_console && !staged ? Result::close : Result::stay;
 }
 

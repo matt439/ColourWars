@@ -28,6 +28,20 @@ public:
         float respawn_timer,
         bool show_respawn_timer) const;
 
+    // The same, with the identity box's second line given ("Bot: paint")
+    // instead of the device the input slot names.
+	void draw_gameplay_interface(labrador::DrawList& draw_list,
+        const mattmath::Vector2F& resolution,
+        int player_index,
+        const std::wstring& device_label,
+        PlayerTeam team,
+        float health,
+        float ammo,
+        float timer,
+        const labrador::Colour& team_colour,
+        float respawn_timer,
+        bool show_respawn_timer) const;
+
 private:
     void draw_meter(labrador::DrawList& draw_list,
         const mattmath::Vector2F& resolution,

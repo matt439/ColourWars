@@ -248,6 +248,8 @@ void GameLevel::update(float dt)
 
 void GameLevel::draw(Renderer& renderer) const
 {
+	// The perf overlay's frame starts here. Inert in Release.
+	this->data()->debug().begin_match_draw();
 	// A covered match does not update, but its window can still resize. Prepare
 	// its presentation on this thread before Scene::draw starts any workers.
 	this->level_->refresh_layout();
@@ -487,4 +489,23 @@ MatchPaint GameLevel::debug_paint() const
 			info.player_areas[static_cast<std::size_t>(player.num)] : 0.0f);
 	}
 	return paint;
+}
+
+bool GameLevel::debug_countdown_over() const
+{
+	return this->level_->state() != LevelState::start_countdown;
+}
+
+void GameLevel::debug_set_seat_labels(const std::vector<std::wstring>& labels)
+{
+	if (this->level_ != nullptr)
+	{
+		this->level_->set_seat_labels(labels);
+	}
+}
+
+std::vector<mattmath::RectangleF> GameLevel::debug_screen_obstacles() const
+{
+	return this->level_ != nullptr ? this->level_->opening_cards() :
+		std::vector<mattmath::RectangleF>();
 }

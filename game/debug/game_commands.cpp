@@ -133,7 +133,7 @@ void DebugDirectorImpl::register_commands()
 				this->request_.visual = this->remembered_visual_;
 			}
 			return DebugStatus::success("stage " + word +
-				(this->match_ != nullptr ? ": rebuilding the match" : ": starting a match"), true);
+				(this->match_ != nullptr ? this->rebuild_note() : ": starting a match"), true);
 		}, traits("match", Form::pick, true));
 
 	add("players", "seats 1-4: pads in slot order, then keyboard/mouse, then idle dummies; "
@@ -167,7 +167,7 @@ void DebugDirectorImpl::register_commands()
 			if (this->match_ != nullptr)
 			{
 				return DebugStatus::success("players " + std::to_string(players) +
-					": rebuilding the match", true);
+					this->rebuild_note(), true);
 			}
 			if (this->request_.stage)
 			{
@@ -201,7 +201,7 @@ void DebugDirectorImpl::register_commands()
 			this->request_.weapons.push_back(choice);
 			const bool applies = this->match_ != nullptr || this->request_.stage.has_value();
 			return DebugStatus::success("weapon " + args.text(0) + " " + args.text(1) +
-				(this->match_ != nullptr ? ": rebuilding the match" :
+				(this->match_ != nullptr ? this->rebuild_note() :
 					applies ? "" : ": stored for 'stage <name>'; a match started from the menus drops it"),
 				applies);
 		}, traits("match", Form::pick, true, 1, "all"));
@@ -234,7 +234,7 @@ void DebugDirectorImpl::register_commands()
 			}
 			this->queue_visual(mode);
 			return DebugStatus::success("visual = " + choice + (this->match_ != nullptr ?
-				": rebuilding the match" : " (for the queued match)"), true);
+				this->rebuild_note() : std::string(" (for the queued match)")), true);
 		}));
 	place(registry, "visual", "match", true);
 
@@ -523,6 +523,18 @@ std::vector<std::string> DebugDirectorImpl::status_lines() const
 	{
 		lines.push_back("logfile " + this->log_.transcript_path());
 	}
+	if (this->scripts_.running())
+	{
+		lines.push_back("script:");
+		for (const std::string& line : this->scripts_.stack_lines(this->wait_context()))
+		{
+			lines.push_back(line);
+		}
+	}
+	if (this->live_open_)
+	{
+		lines.push_back("console: live (the keyboard seat is idle)");
+	}
 	return lines;
 }
 
@@ -573,8 +585,10 @@ std::string DebugDirectorImpl::status_strip() const
 	}
 	if (this->player_ != nullptr)
 	{
-		add("PLAY " + this->player_->name() + " " + std::to_string(this->level_updates_) + "/" +
-			std::to_string(this->player_->file().updates));
+		add("PLAY " + this->player_->name() + (this->player_->finished ?
+			std::string(" done (") + (this->player_->matched ? "MATCH" : "DIVERGED") + ")" :
+			" " + std::to_string(this->level_updates_) + "/" +
+				std::to_string(this->player_->file().updates)));
 	}
 	{
 		int edits = 0;
@@ -596,6 +610,13 @@ std::string DebugDirectorImpl::status_strip() const
 	if (!overlays.empty())
 	{
 		add("ovl" + overlays);
+	}
+	// A script that is waiting says so wherever the strip shows, whatever
+	// stalled it (a paused clock, a lost focus, an open console).
+	const std::string script = this->scripts_.waiting(this->wait_context());
+	if (!script.empty() && !this->capturing_)
+	{
+		add("SCRIPT " + script);
 	}
 	return strip;
 }

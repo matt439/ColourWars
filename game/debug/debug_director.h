@@ -19,7 +19,8 @@ namespace labrador
 
 // The developer debug service: console, debug menu, launch arguments, F-key
 // binds, the debug clock, overlays, cheats, screenshots, queued match
-// requests, live tuning, bots, and seeded record and play. The states call
+// requests, live tuning, bots, seeded record and play, scripts, the live
+// console and the perf overlay. The states call
 // its hooks; it does nothing in Release.
 //
 // Its layout is the same in every configuration (one pointer). In Debug the
@@ -104,6 +105,10 @@ public:
 	// overlays, cheats) while the console is closed.
 	void draw_status(labrador::Renderer& renderer) const;
 
+	// GameLevel::draw, first: the perf overlay times the match draw from here
+	// to draw_status.
+	void begin_match_draw() const;
+
 	DebugDirectorImpl* impl() const { return this->impl_.get(); }
 
 private:
@@ -129,4 +134,5 @@ inline void DebugDirector::match_suspended(DebugMatchTarget&) {}
 inline bool DebugDirector::drives_slot(int) const { return false; }
 inline bool DebugDirector::before_page_update(DebugPageTarget&, float) { return false; }
 inline void DebugDirector::draw_status(labrador::Renderer&) const {}
+inline void DebugDirector::begin_match_draw() const {}
 #endif

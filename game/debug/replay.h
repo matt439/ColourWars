@@ -119,6 +119,8 @@ public:
 	bool finished = false;
 	// The update of the first failed checkpoint, or -1.
 	int diverged_at = -1;
+	// Finished with every checkpoint and the final state equal.
+	bool matched = false;
 
 	// The first live suspend the recording did not have, or -1.
 	int unrecorded_suspend = -1;

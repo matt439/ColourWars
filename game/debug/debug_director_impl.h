@@ -3,10 +3,13 @@
 // Debug-only internals of DebugDirector. Included by game/debug/*.cpp and by
 // the acceptance case, always under COLOURWARS_DEV_TOOLS.
 
+#include "game/debug/debug_binds.h"
 #include "game/debug/debug_chord.h"
 #include "game/debug/debug_clock.h"
 #include "game/debug/debug_log.h"
+#include "game/debug/debug_perf.h"
 #include "game/debug/debug_registry.h"
+#include "game/debug/debug_script_runner.h"
 #include "game/debug/debug_targets.h"
 #include "game/debug/debug_text_field.h"
 #include "game/debug/match_plan.h"
@@ -20,6 +23,7 @@
 #include <random>
 
 class BotDriver;
+class DebugConsoleView;
 class DebugMenuPage;
 class ReplayFile;
 class ReplayPlayer;
@@ -37,6 +41,7 @@ class Presentation;
 namespace labrador
 {
 	class Application;
+	class Renderer;
 }
 
 class DebugDirectorImpl
@@ -51,16 +56,22 @@ public:
 	void attach(labrador::Application* application, GameData* data);
 
 	DebugLog& log() { return this->log_; }
+	const DebugLog& log() const { return this->log_; }
 	DebugRegistry& registry() { return this->registry_; }
 	const DebugRegistry& registry() const { return this->registry_; }
 	DebugClock& clock() { return this->clock_; }
 	const DebugClock& clock() const { return this->clock_; }
 	DebugChord& chord() { return this->chord_; }
 	DebugTextField& field() { return this->field_; }
+	const DebugTextField& field() const { return this->field_; }
 	GameData* data() const { return this->data_; }
 
 	// Runs a console line and logs its result.
 	DebugStatus execute(std::string_view line);
+
+	// What Enter in either console does: echo "] line", run it, and keep the
+	// history file (Debug, with a user directory) up to date.
+	DebugStatus submit_console_line(const std::string& line);
 
 	// Hooks, as described on DebugDirector.
 	void run_launch_statements(const std::vector<std::string>& statements);
@@ -156,6 +167,49 @@ public:
 	// The running match's fingerprint, or nullopt with no match.
 	std::optional<MatchFingerprint> fingerprint() const;
 
+	// Phase 4 ---------------------------------------------------------------
+
+	// Where autoexec.cfg, binds.cfg, history.txt and the player's scripts
+	// live: the override, else %LOCALAPPDATA%\ColourWars\debug once attach()
+	// had an application, else nothing - then all three are memory-only and
+	// no script is read from a profile (the acceptance case without an
+	// override never touches the developer's own files).
+	void set_user_directory(std::filesystem::path directory);
+	std::optional<std::filesystem::path> user_directory() const;
+	// Where exec looks, in order: the override, else the source tree's
+	// scripts/debug (game/source_paths.h), then the user directory.
+	void set_script_directories(std::vector<std::filesystem::path> directories);
+	std::vector<std::filesystem::path> script_directories() const;
+
+	DebugScriptRunner& scripts() { return this->scripts_; }
+	DebugWaitContext wait_context() const;
+	long long total_updates() const { return this->total_updates_; }
+	const DebugBinds& binds() const { return this->binds_; }
+	const std::string& screenshot_dir() const { return this->screenshot_dir_; }
+
+	// The live console: open over a running match while the match keeps
+	// going, the keyboard seat blanked. The setter is the acceptance case's
+	// seam; it opens no view.
+	bool live_console_open() const { return this->live_open_; }
+	void set_live_console_open(bool open);
+
+	DebugPerf& perf() { return this->perf_; }
+
+	// The debug menu runs staged lines through this: a staged rebuild says it
+	// waits for the menu to close instead of "rebuilding the match".
+	void set_staging(bool staging) { this->staging_ = staging; }
+	// ": rebuilding the match", or ": queued; rebuilds when the debug menu
+	// closes" while it is open or a staged line runs.
+	std::string rebuild_note() const;
+
+	// What each seat's HUD says instead of its device: "Replay" while a
+	// replay drives the match, "Bot: <behaviour>" for a bot's seat, else "".
+	std::vector<std::wstring> seat_labels(const DebugMatchTarget& match) const;
+
+	// DebugDirector::begin_match_draw and draw_status.
+	void begin_match_draw();
+	void draw_status(labrador::Renderer& renderer);
+
 private:
 	GameTuning* tuning_ = nullptr;
 	Presentation* presentation_ = nullptr;
@@ -218,7 +272,7 @@ private:
 	void register_commands();
 	void register_view_commands();
 	void register_player_commands();
-	bool open_console_if_requested();
+	bool open_console_if_requested(bool match_hook);
 	bool poll_debug_menu_toggle(float dt);
 	void open_debug_menu();
 	void run_binds(DebugMatchTarget& match);
@@ -320,5 +374,66 @@ private:
 	DebugStatus tune_reset(const std::string& what);
 	DebugStatus tune_save(const std::string& which, bool force);
 	std::vector<std::string> tune_diff_lines(const std::string& which);
+	// Old %TEMP%\ColourWars-tune-<pid> folders (earlier builds left them
+	// empty) are removed once, on the first edit.
+	bool tune_swept_ = false;
+
+	// Phase 4 ---------------------------------------------------------------
+
+	void register_script_commands();
+
+	// Scripts. Ticked only from the two hooks (and once, synchronously, by
+	// the launch arguments); a script never runs inside an update.
+	DebugScriptRunner scripts_;
+	long long total_updates_ = 0;
+	// Every hook frame, and the hook frames on which a script could tick (what
+	// `wait frames` counts: not under the debug menu, nor on a frame the menu
+	// toggle or the console key takes).
+	long long hook_frames_ = 0;
+	long long script_frames_ = 0;
+	// While a hook ticks: a pending screenshot may be taken in place, so two
+	// shots in a row show the same simulation frame.
+	bool inline_capture_ = false;
+	void tick_scripts(bool from_hook);
+	DebugStatus exec_script(const std::string& name, const std::vector<std::string>& args);
+	DebugStatus wait_command(const DebugArgs& args);
+
+	// Persistence (binds.cfg, history.txt), loaded once.
+	std::filesystem::path user_override_;
+	std::vector<std::filesystem::path> script_override_;
+	bool persistence_loaded_ = false;
+	void load_persistent();
+	void load_binds(const std::filesystem::path& directory);
+	void save_binds();
+	void save_history();
+
+	// Binds: the F2-F9 defaults until `bind` changes them.
+	DebugBinds binds_;
+	bool binds_loading_ = false;
+	// A history.txt write failed; said once a session.
+	bool history_write_failed_ = false;
+
+	// Screenshots: a folder under screens/ for a review set, and whether the
+	// status strip shows in a capture.
+	std::string screenshot_dir_;
+	bool screenshot_strip_ = true;
+	bool capturing_ = false;
+
+	// The live console.
+	bool live_console_ = false;
+	std::unique_ptr<DebugConsoleView> live_view_;
+	bool live_open_ = false;
+	// The frame the live console closed on (the Escape release, which is the
+	// keyboard player's pause key) is blanked too; filter_match_inputs clears it.
+	mutable bool blank_keyboard_once_ = false;
+	void open_live_console();
+	void close_live_console(const std::string& reason);
+
+	// The perf overlay.
+	DebugPerf perf_;
+	bool overlay_perf_ = false;
+
+	bool staging_ = false;
+	void push_seat_labels(DebugMatchTarget& match);
 };
 

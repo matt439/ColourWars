@@ -56,6 +56,11 @@ public:
 
 	const std::vector<std::string>& history() const;
 
+	// Replaces the history (history.txt, read at startup): the last
+	// history_capacity entries that are not blank and fit max_length, with
+	// adjacent repeats collapsed; browsing starts again from the draft.
+	void set_history(const std::vector<std::string>& lines);
+
 private:
 	std::string text_;
 	std::size_t caret_ = 0;

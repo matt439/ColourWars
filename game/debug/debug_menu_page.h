@@ -33,6 +33,7 @@ public:
 
 protected:
 	void update_page(float dt) override;
+	bool shows_brand() const override { return false; }
 
 private:
 	DebugDirectorImpl* director_ = nullptr;
@@ -45,6 +46,11 @@ private:
 	std::unique_ptr<labrador::UiTextDropShadow> queued_;
 	std::array<std::unique_ptr<labrador::UiTextDropShadow>, 3> footer_;
 	bool closing_ = false;
+	// Laid out in init from the heading font's measured size.
+	float first_row_y_ = 0.0f;
+	float row_pitch_ = 0.0f;
+	float queued_room_ = 0.0f;
+	labrador::FontHandle small_font_;
 
 	// Labels change with the level and with what is staged; values change
 	// every frame. A label change rebuilds the rows (OptionRow keeps its

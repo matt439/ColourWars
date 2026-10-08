@@ -359,6 +359,7 @@ void DebugDirectorImpl::register_bot_commands()
 			if (this->match_ != nullptr)
 			{
 				this->rebuild_bots(*this->match_);
+				this->push_seat_labels(*this->match_);
 				return DebugStatus::success("bot " + target + (behaviour.empty() ? "" : " " + behaviour) +
 					": " + (this->bot_driver_ != nullptr ? this->bot_summary() :
 						std::string("no seat is driven")));

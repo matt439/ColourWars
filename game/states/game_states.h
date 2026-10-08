@@ -115,6 +115,9 @@ private:
 	bool debug_place(int seat, const mattmath::Vector2F& top_left) override;
 	bool debug_respawn(int seat) override;
 	MatchPaint debug_paint() const override;
+	bool debug_countdown_over() const override;
+	void debug_set_seat_labels(const std::vector<std::wstring>& labels) override;
+	std::vector<mattmath::RectangleF> debug_screen_obstacles() const override;
 
 	void open_pause_menu(int player_num);
 	void on_pause_menu_closed(const PauseMenuAction& action);

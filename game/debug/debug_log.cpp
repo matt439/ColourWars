@@ -85,6 +85,14 @@ bool DebugLog::set_transcript(const std::string& path)
 		return false;
 	}
 	this->transcript_path_ = path;
+	// What was logged before the file existed (the intro, autoexec.cfg, the
+	// launch statements before +logfile) heads it, so a transcript is whole.
+	for (const DebugLogLine& line : this->lines_)
+	{
+		this->transcript_ << (line.severity == DebugSeverity::error ? "error: " :
+			line.severity == DebugSeverity::warning ? "warning: " : "") << line.text << '\n';
+	}
+	this->transcript_.flush();
 	return true;
 }
 

@@ -47,8 +47,13 @@ public:
 
 	// Runs every ';'-separated statement. Exceptions thrown by a variable or
 	// command are caught and logged; none escapes. Returns the statuses OR-ed:
-	// ok only if every statement succeeded, close_console if any asked.
+	// ok only if every statement succeeded, close_console if any asked; the
+	// message is the first failure's (already logged), for a script's error.
 	DebugStatus execute(std::string_view line, DebugLog& log);
+
+	// Whether one statement names an entry and gives it a word count it
+	// accepts, without running it: the shipped scripts' lint.
+	DebugStatus check(std::string_view statement) const;
 
 private:
 	std::map<std::string, std::unique_ptr<DebugEntry>, std::less<>> entries_;

@@ -236,8 +236,11 @@ void MenuPage::draw_chrome(DrawList& list) const
 		style.footer_y, menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f,
 		style.rule_height), style.panel_edge_colour);
 	list.set_filter(TextureFilter::linear);
-	list.draw_text(this->brand_font_, L"C O L O U R W A R S   /   LOCAL PAINT BATTLES",
-		style.brand_position, style.unhighlight, 1.0f, 0.0f, Vector2F::ZERO, 0.0f);
+	if (this->shows_brand())
+	{
+		list.draw_text(this->brand_font_, L"C O L O U R W A R S   /   LOCAL PAINT BATTLES",
+			style.brand_position, style.unhighlight, 1.0f, 0.0f, Vector2F::ZERO, 0.0f);
+	}
 
 	// Use the focus group's result, so the backing follows keyboard, pad,
 	// disabled rows and compound option rows without duplicating navigation.

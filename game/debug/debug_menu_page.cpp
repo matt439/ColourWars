@@ -11,21 +11,24 @@ using namespace labrador;
 using namespace mattmath;
 
 // Developer-only layout in menu design units (1920x1080); presentation.json
-// ships, this page does not.
+// ships, this page does not. The panel starts below the band where every
+// pane's HUD names its player (P1's box ends near y 160 at 1080p).
 namespace debug_menu_consts
 {
 	constexpr float left = 150.0f;
 	constexpr float value_x = 700.0f;
-	constexpr float title_y = 132.0f;
-	constexpr float queued_y = 222.0f;
-	constexpr float first_row_y = 262.0f;
-	constexpr float row_pitch = 46.0f;
-	constexpr float footer_y = 830.0f;
+	constexpr float title_y = 188.0f;
+	// The queued line sits beside the measured DEBUG heading, this far to its
+	// right, so it can never touch it; the rows start this far under it.
+	constexpr float queued_gap = 40.0f;
+	constexpr float rows_gap = 14.0f;
+	constexpr float max_row_pitch = 46.0f;
+	constexpr float footer_y = 846.0f;
 	constexpr float footer_pitch = 30.0f;
 	constexpr std::size_t footer_columns = 90;
 
 	// A backing panel, so the rows stay readable over a busy match.
-	const mattmath::RectangleF panel(110.0f, 120.0f, 1060.0f, 820.0f);
+	const mattmath::RectangleF panel(110.0f, 176.0f, 1060.0f, 774.0f);
 	const labrador::Colour panel_colour(0.02f, 0.03f, 0.05f, 0.82f);
 }
 
@@ -54,8 +57,19 @@ void DebugMenuPage::init()
 	this->title_ = std::make_unique<UiTextDropShadow>("debug_title", L"DEBUG",
 		style.heading_font, Vector2F(left, title_y), this->render_resources(),
 		style.heading_colour, style.shadow_colour, style.heading_shadow_offset);
+	// Measured, so no heading font runs into the queued line or the rows.
+	RenderResources* resources = this->render_resources();
+	const Vector2F heading = resources->measure_text(
+		resources->resolve_sprite_font(style.heading_font), L"DEBUG");
+	this->small_font_ = resources->resolve_sprite_font(small_font);
+	const float small_height = resources->measure_text(this->small_font_, L"Queued").y;
+	const Vector2F queued_at(left + heading.x + queued_gap, title_y + heading.y - small_height);
+	this->queued_room_ = panel.right() - 30.0f - queued_at.x;
+	this->first_row_y_ = title_y + heading.y + rows_gap;
+	this->row_pitch_ = std::min(max_row_pitch, (footer_y - 10.0f - this->first_row_y_) /
+		static_cast<float>(DebugMenuModel::max_rows));
 	this->queued_ = std::make_unique<UiTextDropShadow>("debug_queued", L"",
-		small_font, Vector2F(left, queued_y), this->render_resources(),
+		small_font, queued_at, resources,
 		style.warning, style.shadow_colour, style.detail_shadow_offset);
 	for (std::size_t i = 0; i < this->footer_.size(); ++i)
 	{
@@ -120,7 +134,7 @@ void DebugMenuPage::rebuild(const std::vector<DebugMenuRow>& rows, std::size_t f
 	this->shown_labels_.clear();
 	for (std::size_t i = 0; i < rows.size(); ++i)
 	{
-		const float y = first_row_y + row_pitch * static_cast<float>(i);
+		const float y = this->first_row_y_ + this->row_pitch_ * static_cast<float>(i);
 		built.push_back(std::make_unique<OptionRow>("debug_row_" + std::to_string(i),
 			widen(rows[i].label), Vector2F(left, y), Vector2F(value_x, y), style,
 			this->presentation().main_menu().options_value_colour, this->render_resources(),
@@ -180,7 +194,14 @@ void DebugMenuPage::refresh()
 	}
 
 	this->title_->set_text(widen(this->model_.title()));
-	this->queued_->set_text(widen(this->model_.queued()));
+	// Beside the heading there is one line's room: a long queue is cut short.
+	std::wstring queued = widen(this->model_.queued());
+	while (queued.size() > 4 &&
+		this->render_resources()->measure_text(this->small_font_, queued).x > this->queued_room_)
+	{
+		queued = queued.substr(0, queued.size() - 4) + L"...";
+	}
+	this->queued_->set_text(queued);
 
 	// The last lines the console would show, so a refused goto or an
 	// unavailable restart says why without opening it.

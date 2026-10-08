@@ -264,22 +264,55 @@ std::string DebugDirectorImpl::tune_token(const std::string& path)
 	return leaf == nullptr ? std::string() : std::string(document->current().token(*leaf));
 }
 
+std::vector<std::filesystem::path> stale_tune_directories(const std::filesystem::path& temp)
+{
+	std::vector<std::filesystem::path> result;
+	std::error_code error;
+	for (std::filesystem::directory_iterator it(temp, error), end; !error && it != end;
+		it.increment(error))
+	{
+		const std::wstring name = it->path().filename().wstring();
+		const std::wstring prefix = L"ColourWars-tune-";
+		if (name.size() <= prefix.size() || name.compare(0, prefix.size(), prefix) != 0)
+		{
+			continue;
+		}
+		const bool digits = std::all_of(name.begin() + static_cast<std::ptrdiff_t>(prefix.size()),
+			name.end(), [](wchar_t c) { return c >= L'0' && c <= L'9'; });
+		std::error_code ignored;
+		// Only an empty folder: removing one cannot delete anybody's data.
+		if (digits && it->is_directory(ignored) && std::filesystem::is_empty(it->path(), ignored))
+		{
+			result.push_back(it->path());
+		}
+	}
+	return result;
+}
+
 DebugStatus DebugDirectorImpl::tune_validate_and_apply(int file, const std::string& candidate,
 	const std::string& edited_path)
 {
 	TuneDocument& document = *this->tune_docs_[static_cast<std::size_t>(file)];
 	const std::string name = file_names[file];
 
-	// The engine reads JSON only from a file (engine report 12).
-	const std::filesystem::path directory = std::filesystem::temp_directory_path() /
-		(L"ColourWars-tune-" + std::to_wstring(_getpid()));
+	// The engine reads JSON only from a file (engine report 12). A file, not
+	// a folder: earlier builds left empty ColourWars-tune-<pid> folders behind
+	// (the folder's removal raced the reader's handle), swept once here.
 	std::error_code ignored;
-	std::filesystem::create_directories(directory, ignored);
-	const std::filesystem::path path = directory / labrador::widen(name + ".json");
+	const std::filesystem::path temp = std::filesystem::temp_directory_path(ignored);
+	if (!this->tune_swept_)
+	{
+		this->tune_swept_ = true;
+		for (const std::filesystem::path& stale : stale_tune_directories(temp))
+		{
+			std::filesystem::remove(stale, ignored);
+		}
+	}
+	const std::filesystem::path path = temp /
+		(L"ColourWars-tune-" + std::to_wstring(_getpid()) + L"-" + labrador::widen(name) + L".json");
 	const auto remove_candidate = [&]
 		{
 			std::filesystem::remove(path, ignored);
-			std::filesystem::remove(directory, ignored);
 		};
 	if (!write_bytes(path, candidate))
 	{

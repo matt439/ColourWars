@@ -2,6 +2,7 @@
 
 #include "game/debug/json_spans.h"
 #include <cstdint>
+#include <filesystem>
 #include <map>
 #include <string>
 #include <vector>
@@ -73,3 +74,8 @@ private:
 // FNV-1a, 64-bit.
 std::uint64_t fnv1a(std::string_view bytes, std::uint64_t hash = 0xcbf29ce484222325ull);
 std::string hex64(std::uint64_t value);
+
+// Folders named ColourWars-tune-<digits> directly under %TEMP% that are empty:
+// what earlier builds' live tuning left behind. Removing an empty folder
+// cannot delete anyone's data; anything else there is left alone.
+std::vector<std::filesystem::path> stale_tune_directories(const std::filesystem::path& temp);

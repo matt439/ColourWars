@@ -234,10 +234,47 @@ DebugStatus DebugRegistry::execute(std::string_view line, DebugLog& log)
 		{
 			log.write(status.ok ? DebugSeverity::info : DebugSeverity::error, status.message);
 		}
+		if (!status.ok && combined.ok)
+		{
+			combined.message = status.message;
+		}
 		combined.ok = combined.ok && status.ok;
 		combined.close_console = combined.close_console || status.close_console;
 	}
 	return combined;
+}
+
+DebugStatus DebugRegistry::check(std::string_view statement) const
+{
+	const DebugTokens tokens = tokenize(statement);
+	if (!tokens.ok)
+	{
+		return DebugStatus::failure(tokens.error);
+	}
+	if (tokens.words.empty())
+	{
+		return {};
+	}
+	const DebugEntry* entry = this->find(tokens.words.front());
+	if (entry == nullptr)
+	{
+		return DebugStatus::failure("unknown command '" + tokens.words.front() + "'");
+	}
+	const std::size_t given = tokens.words.size() - 1;
+	if (entry->is_variable())
+	{
+		return given <= 1 ? DebugStatus::success() :
+			DebugStatus::failure("usage: " + entry->usage());
+	}
+	const DebugCommand* command = static_cast<const DebugCommand*>(entry);
+	const std::vector<DebugArgSpec>& specs = command->args();
+	const std::size_t required = static_cast<std::size_t>(std::count_if(
+		specs.begin(), specs.end(), [](const DebugArgSpec& spec) { return !spec.optional; }));
+	if (given < required || (!command->variadic() && given > specs.size()))
+	{
+		return DebugStatus::failure("usage: " + command->usage());
+	}
+	return DebugStatus::success();
 }
 
 DebugStatus DebugRegistry::execute_statement(const std::string& statement, DebugLog& log)
@@ -361,7 +398,7 @@ void DebugRegistry::add_builtins()
 			}
 			return DebugStatus::success("keys: ` console, F10/F11 or pad Back+Start debug menu, "
 				"F2 collision, F3 camera, F4 paint, F5 restart, F6 pause, F7 step, "
-				"F8 visual, F9 feedback");
+				"F8 visual, F9 feedback (default binds: 'binds' lists them, 'bind' changes them)");
 		}));
 }
 #endif

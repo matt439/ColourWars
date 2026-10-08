@@ -71,7 +71,11 @@ hook; see the doc). `help` lists the commands. The console also tunes
 `tuning.json`/`presentation.json` live (`tune`; `tune.save` writes only the
 edited tokens back to `game/content/`), puts scripted bots on idle seats
 (`+stage movement_course +players 4 +bot all paint`), and records and replays
-seeded matches bit for bit (`seed`, `record`, `play`). The gate
+seeded matches bit for bit (`seed`, `record`, `play`). The F-keys are default
+binds (`bind`/`binds`, kept in `%LOCALAPPDATA%\ColourWars\debug\binds.cfg`), and
+`console.live 1` keeps the match running under the console. A repeatable review
+is one command - `ColourWars.exe +exec review_feedback_ab +quit` - with the
+scripts in `scripts/debug/`. The gate
 `COLOURWARS_DEV_TOOLS` comes from `_DEBUG` in `game/debug/dev_tools.h` - never a
 `/D` flag, so the acceptance probes agree on class layouts - and no existing
 class has a member that depends on it. Code is in `game/debug/`; the CPU case is

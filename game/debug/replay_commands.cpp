@@ -227,9 +227,11 @@ void DebugDirectorImpl::before_level_update(DebugMatchTarget& match, float dt)
 			dt_text(file.dt_bits) + ", this game steps " +
 			dt_text(std::bit_cast<std::uint32_t>(dt)) + "; the seats get live input");
 		this->stop_playing("the step differs");
-		// As play stop: the restored cheats reach the level, bots their seats.
+		// As play stop: the restored cheats reach the level, bots their seats,
+		// and the HUDs stop saying Replay.
 		this->apply_cheats();
 		this->rebuild_bots(match);
+		this->push_seat_labels(match);
 		return;
 	}
 	// A suspend clears every jump buffer; do it where the recording had one.
@@ -308,6 +310,7 @@ void DebugDirectorImpl::after_level_update(DebugMatchTarget& match)
 				" during playback)" : std::string();
 			if (difference.empty() && player.diverged_at < 0)
 			{
+				player.matched = true;
 				this->log_.info("replay " + player.name() + ": MATCH (" +
 					std::to_string(this->level_updates_) + " updates, " +
 					std::to_string(file.checkpoints.size()) + " checkpoints, checksum " +
@@ -511,6 +514,7 @@ void DebugDirectorImpl::register_replay_commands()
 				{
 					// Bots take their seats back at once.
 					this->rebuild_bots(*this->match_);
+					this->push_seat_labels(*this->match_);
 				}
 				return DebugStatus::success("play stopped; the seats get live input" +
 					(this->bot_driver_ != nullptr ? " (" + this->bot_summary() + ")" : std::string()));
@@ -611,8 +615,19 @@ void DebugDirectorImpl::register_replay_commands()
 			{
 				return DebugStatus::failure("checksum: no match");
 			}
+			// Live movement-feedback bursts: cosmetic, outside the hash, but
+			// what an A/B screenshot of the feedback needs on screen.
+			int bursts = 0;
+			if (const Level* level = this->match_->debug_level())
+			{
+				for (int view = 0; view < level->player_count(); ++view)
+				{
+					bursts += static_cast<int>(level->player(view).movement_feedback().effects().size());
+				}
+			}
 			return DebugStatus::success("checksum " + hex64(print->hash) + " at update " +
-				std::to_string(print->updates) + ", paint " + print->paint_text());
+				std::to_string(print->updates) + ", paint " + print->paint_text() + ", bursts " +
+				std::to_string(bursts));
 		}, replay_traits(DebugMenuTraits::Form::run));
 }
 #endif

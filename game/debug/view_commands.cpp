@@ -47,12 +47,28 @@ void DebugDirectorImpl::register_view_commands()
 		registry.add(std::move(variable));
 	}
 
+	// The perf panel is not a world overlay: overlay all leaves it alone
+	// (and so every existing +overlay all picture), overlay none clears it.
+	auto perf = std::make_unique<BoolVariable>("overlay.perf",
+		"frame, update and draw time with a graph, and object counts, bottom left "
+		"(not in 'overlay all'; 'perf' prints them)", false,
+		[this] { return this->overlay_perf_; },
+		[this](bool on)
+		{
+			this->overlay_perf_ = on;
+			return DebugStatus::success(std::string("overlay.perf = ") + (on ? "on" : "off"));
+		});
+	DebugMenuTraits perf_menu = perf->menu();
+	perf_menu.category = "view";
+	perf->set_menu(std::move(perf_menu));
+	registry.add(std::move(perf));
+
 	auto command = std::make_unique<LambdaCommand>("overlay",
 		"toggle one overlay, or set all on or off; no argument lists them",
-		std::vector<DebugArgSpec>{ { "player|collision|camera|paint|all|none", true, []
+		std::vector<DebugArgSpec>{ { "player|collision|camera|paint|perf|all|none", true, []
 			{
 				return std::vector<std::string>{ "player", "collision", "camera", "paint",
-					"all", "none" };
+					"perf", "all", "none" };
 			} } },
 		[this](const DebugArgs& args, DebugLog& log)
 		{
@@ -63,14 +79,25 @@ void DebugDirectorImpl::register_view_commands()
 					log.info(std::string("  overlay.") + overlay.name + " = " +
 						(this->*overlay.flag ? "on" : "off"));
 				}
+				log.info(std::string("  overlay.perf = ") + (this->overlay_perf_ ? "on" : "off"));
 				return DebugStatus::success();
 			}
 			const std::string& word = args.text(0);
+			if (word == "perf")
+			{
+				this->overlay_perf_ = !this->overlay_perf_;
+				return DebugStatus::success(std::string("overlay.perf = ") +
+					(this->overlay_perf_ ? "on" : "off"));
+			}
 			if (word == "all" || word == "none")
 			{
 				for (const Overlay& overlay : overlays)
 				{
 					this->*overlay.flag = word == "all";
+				}
+				if (word == "none")
+				{
+					this->overlay_perf_ = false;
 				}
 				this->apply_overlays(true);
 				return DebugStatus::success("overlays " + std::string(word == "all" ? "on" : "off"));
@@ -86,7 +113,7 @@ void DebugDirectorImpl::register_view_commands()
 				}
 			}
 			return DebugStatus::failure("overlay: expected player, collision, camera, paint, "
-				"all or none, got '" + word + "'");
+				"perf, all or none, got '" + word + "'");
 		});
 	DebugMenuTraits menu;
 	menu.category = "view";

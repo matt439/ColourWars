@@ -36,7 +36,8 @@ public:
 	const std::deque<DebugLogLine>& lines() const;
 	void clear();
 
-	// Mirror every following line to a UTF-8 file; empty path stops mirroring.
+	// Mirror the kept lines, then every following line, to a UTF-8 file;
+	// empty path stops mirroring.
 	// Returns false (and keeps no file) when the path cannot be opened.
 	bool set_transcript(const std::string& path);
 	const std::string& transcript_path() const;

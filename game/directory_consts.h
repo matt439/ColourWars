@@ -29,5 +29,11 @@ namespace directory_consts
 	// %LOCALAPPDATA%\ColourWars\replays, or the executable-relative
 	// save/replays without LOCALAPPDATA. UTF-8; not created here.
 	std::string replay_directory();
+
+	// The Debug console's own files - autoexec.cfg, binds.cfg, history.txt and
+	// the player's own .cfg scripts: %LOCALAPPDATA%\ColourWars\debug, or the
+	// executable-relative save/debug without LOCALAPPDATA. UTF-8; not created
+	// here.
+	std::string debug_directory();
 }
 

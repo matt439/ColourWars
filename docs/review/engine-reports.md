@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Five are live as unfiled drafts with exhibits (6, 9, 10, 11, 12). Seven are closed** and kept below as one paragraph
+> **Seven are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14). Seven are closed** and kept below as one paragraph
 > each — what was asked, what shipped, and what this repository spent the
 > answer on.
 >
@@ -69,11 +69,14 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | # | Report | Exhibit | Status |
 |---|---|---|---|
 | 6 | No audio bus, master gain, listener or voice cap | `PlaySettings` gains applied at each emitter | draft — exhibit present; recheck upstream before filing |
-| 9 | No application-level per-frame hook or input capture | `MenuPage::update`/`update_page`, `DebugDirector::before_page_update`/`before_match_update`, the frozen-world console; phase 2: `filter_match_inputs` and `DebugPageTarget::debug_reset_input` for the pad chord | draft — exhibit present; recheck upstream before filing |
+| 9 | No application-level per-frame hook or input capture | `MenuPage::update`/`update_page`, `DebugDirector::before_page_update`/`before_match_update`, the frozen-world console; phase 2: `filter_match_inputs` and `DebugPageTarget::debug_reset_input` for the pad chord; phase 4: the live console's keyboard-seat and closing-frame blanks and its own draw path | draft — exhibit present; recheck upstream before filing |
 | 10 | No way to read back the frame that was presented | `capture_stack` in `game/debug/debug_screenshot.cpp` | draft — exhibit present; recheck upstream before filing |
 | 11 | F10 and a lone Alt belong to the system menu, with no opt-out | the `WH_GETMESSAGE` hook in `game/debug/debug_director.cpp`; `alt-probe.txt` from `scripts/check-debug-console.ps1` | draft — low priority; exhibit present |
+| 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
+| 13 | `Key` has no names | the key table in `game/debug/debug_keys.cpp` | draft — low priority; exhibit present |
+| 14 | No frame statistics or GPU timing | `DebugDirector::begin_match_draw` and the QPC timing in `update_match`; `debug_perf.*` | draft — exhibit present; recheck upstream before filing |
 
-Nothing else is outstanding, on either side, beyond reports 9-11 below. The fullscreen workaround the
+Nothing else is outstanding, on either side, beyond reports 9-14 below. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
@@ -159,8 +162,8 @@ the stack, and `Keyboard` has no notion of a consumed key. So the console:
 - is a pushed, non-covering state — the only way to keep `PlayerInput` and
   `MenuInput` off the keyboard while someone types. The cost is the real one:
   **the world must freeze while the console is open.** A see-through console
-  that tunes a live match while it runs cannot be built without gating every
-  game reader by hand;
+  that tunes a live match while it runs was built by gating by hand (phase 4,
+  below), and this is the bill;
 - implements its own repeat for Backspace, Delete and the arrows
   (`DebugKeyRepeat`), because only typed text repeats.
 
@@ -182,6 +185,37 @@ edges by hand in two places: `DebugDirector::filter_match_inputs` clears
 (`DebugPageTarget::debug_reset_input`) on every frame of the chord, which also
 costs any other player's A press held across those frames. A consume scope on
 `Gamepads`, as asked above for `Keyboard`, would delete both.
+
+**Exhibit added by phase 4 (the live console).** `console.live 1` opens the
+console over a match that keeps running. With no consume scope, the game gates
+the readers itself, and pays for it:
+
+- **The whole keyboard seat stands still while it is open**, not only the keys
+  being typed: `filter_match_inputs` replaces the keyboard/mouse slot's
+  `PlayerInputData` with a connected, idle one, because the game cannot tell a
+  typed `d` from a held move-right. A keyboard player cannot play and type.
+- **Mouse aim still follows the cursor**, because `Level::resolve_mouse_aim`
+  reads the `Mouse` directly; only the shot (a `PlayerInputData` field) is
+  blanked.
+- **Every in-match keyboard reader is gated by hand.** The director skips its
+  own binds while the live console is open; F1 and Escape are covered only
+  because they arrive through the blanked slot; F10 is not (it is read by the
+  director's hook before the console), so it still opens the debug menu, which
+  closes the live console.
+- **The closing frame needs its own blank.** The console closes on the Escape
+  release so the edge is over before anyone else reads it - but the match
+  is not frozen any more, and that same release is the keyboard player's
+  `toggle_pause_menu`. A one-shot flag blanks the seat on the frame it closes.
+- **It has its own draw path**: the director draws the extracted
+  `DebugConsoleView` from `draw_status`, the match's last draw, because there is
+  no overlay layer above the stack.
+- **It exists only over a match.** Over a menu page the console is still the
+  frozen pushed state.
+
+On the plus side it causes no `Level::suspend` (no state is pushed), so typing
+during a recording no longer desynchronises the replay. The ask is unchanged;
+answering it would also let this repository delete the keyboard-slot blank, the
+closing-frame blank and the live view's separate draw path.
 
 ---
 
@@ -263,8 +297,10 @@ value came from. Live tuning needs all three, so it does without:
 
 - **Every candidate edit goes through a temporary file.** To judge an edit by
   the game's own rules (ranges, cross-field checks), `tune` splices the new
-  token into the text, writes it to `%TEMP%\ColourWars-tune-<pid>\<file>.json`
-  and constructs `GameTuning` or `Presentation` from that path
+  token into the text, writes it to `%TEMP%\ColourWars-tune-<pid>-<file>.json`
+  (until phase 4 a folder, `ColourWars-tune-<pid>\`, whose removal raced the
+  reader's handle and left empty folders behind; the first edit now sweeps
+  those) and constructs `GameTuning` or `Presentation` from that path
   (`game/debug/tune_commands.cpp`, `tune_validate_and_apply`). The reader's
   error names the temporary file, so the message is rewritten before the
   console shows it, and the copied-over live object keeps the temporary path
@@ -289,6 +325,55 @@ value came from. Live tuning needs all three, so it does without:
 file and the message rewrite; the second and third would delete
 `json_spans.cpp`, and with `keys()` the consumed-leaf check could become a
 reader-side "unknown key" error at startup instead of a test.
+
+---
+
+## 13. `Key` has no names — **draft, low priority**
+
+**Exhibit added by the developer debug system (phase 4).** `bind <key> <line>`
+and `binds.cfg` name keys in text.
+
+### What happens
+
+`labrador::Key` is an enum and nothing more: no `key_name(Key)`, no
+`key_from_name`. So `game/debug/debug_keys.cpp` carries its own table of about
+eighty names (`a`-`z`, `0`-`9`, `f1`-`f12`, `numpad0`-`9`, `pageup`,
+`lbracket`, ...) built against the enum's order. Every console, bind file or
+rebinding screen a client writes needs the same table, and each will spell the
+keys its own way; a key added to the enum is silently unnamed in all of them.
+
+### The ask, when it goes
+
+`std::string_view key_name(Key)` and `std::optional<Key> key_from_name(std::string_view)`
+next to the enum, with one spelling per key. Answering it would delete the
+table in `debug_keys.cpp` (the `ctrl+`/`shift+` chord grammar stays the game's).
+
+---
+
+## 14. No frame statistics or GPU timing — **draft with perf exhibit**
+
+**Exhibit added by the developer debug system (phase 4).** The Debug perf
+overlay (`overlay perf`) shows frame, update and draw time.
+
+### What happens
+
+`Application` exposes no per-frame statistics (frame interval, time in update,
+render and present) and `Renderer` no timestamp queries. So the overlay times
+only what the game itself calls, with `QueryPerformanceCounter`: each
+`Level::update` inside the debug clock's run loop, and the match draw from a
+new hook at the top of `GameLevel::draw` to the director's `draw_status`; the
+frame interval is the time between two match draws. The render submit, present
+(and so vsync), the GPU and everything the engine does between states are
+invisible, and the panel has to say "CPU". A screenshot's out-of-band redraw
+(report 10) re-enters the same hooks, so the game suppresses its samples by
+hand.
+
+### The ask, when it goes
+
+`Application::frame_stats()` (the last frame's update, render-record, submit
+and present times) and, later, GPU timestamp queries on `Renderer`. Answering
+the first would delete the draw hook and the screenshot suppression, and let the
+overlay show the whole frame.
 
 ---
 

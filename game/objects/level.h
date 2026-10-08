@@ -107,6 +107,15 @@ public:
 	// paused. False: no such view.
 	bool place_player(int view, const mattmath::Vector2F& top_left);
 	bool respawn_player(int view);
+	// What each view's HUD names instead of its device ("Bot: paint");
+	// empty entries, or no list, keep the device name.
+	void set_seat_labels(std::vector<std::wstring> labels);
+	// The countdown's opening cards in window pixels while they are drawn,
+	// else none: what a developer panel must not cover.
+	std::vector<mattmath::RectangleF> opening_cards() const;
+	// Counts for the perf overlay, as of the last update.
+	int projectile_count() const;
+	int collision_object_count() const;
 
 private:
 	std::unique_ptr<labrador::Scene> scene_ = nullptr;
@@ -160,6 +169,10 @@ private:
 	std::unique_ptr<InterfaceGameplay> interface_gameplay_ = nullptr;
 	std::unique_ptr<DebugText> debug_text_ = nullptr;
 	LevelOverlays overlays_{};
+
+	// By view; see set_seat_labels. Present in every build, only ever set by
+	// the Debug director, so empty in Release.
+	std::vector<std::wstring> seat_labels_;
 
 	// Borrowed shell services; both outlive every level.
 	const labrador::ResolutionManager* resolution_manager_ = nullptr;

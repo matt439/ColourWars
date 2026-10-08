@@ -10,6 +10,8 @@ param(
     [switch]$SkipAltProbe,
     # Run only the phase-3 launch (bots, tune, record/play, tuning menu).
     [switch]$Phase3Only,
+    # Run only the phase-4 launches (scripts, binds, history, live console, perf).
+    [switch]$Phase4Only,
     # Phase 3 also runs tune.save against the SOURCE game/content/tuning.json,
     # checks with git that exactly one value changed, and writes the saved
     # original bytes back (git checkout would not: it renormalises the line
@@ -18,29 +20,37 @@ param(
     [switch]$SaveToSource
 )
 
-# Opt-in, local: drives the real Debug executable through the developer console
-# and the debug menu with real key events and takes screenshots for a person to
-# look at. Not in CI: hosted runners give no reliable foreground focus, and
-# Release has no console (scripts/acceptance/debug_console.cpp covers both
-# presets on the CPU side). The pad chord (Back+Start) needs a pad and is
-# covered there too.
+# Opt-in, local: drives the real Debug executable and takes screenshots for a
+# person to look at. Not in CI: hosted runners give no reliable foreground
+# focus, and Release has no console (scripts/acceptance/debug_console.cpp
+# covers both presets on the CPU side). The pad chord (Back+Start) needs a pad
+# and is covered there too.
 #
-#    1. launch +stage movement_course +players 2 +visual posed +overlay all
-#    2. ` status Enter                     (console over two panes, overlays on)
-#    3. ` F8 F9                            (visual A/B and feedback without the console)
-#    4. F10, view, overlay.collision Right (the debug menu steps a variable), Escape, F10
-#    5. F10, match, visual, rotating, Escape, Apply   (staged, then one rebuild)
-#    6. ` overlay none, F1, then F2 F3 F4  (overlay keys; P1's own F1 text survives them)
-#    7. ` goto high_step, ` status         (a station, at rest on its surface)
-#       ` restart; goto running_gap        (a goto waits for the queued rebuild)
-#    8. ` god 1; ammo inf; respawn all     (cheats on the strip)
-#    9. ` screenshot drive                 (a PNG of the window in the isolated profile)
-#   10. Escape (pause menu), ` stage close_quarters   (the pause menu unwinds)
-#   11. ` menu, ` stage movement_course    (menu-side start)
-#   12. Alt alone (informational), then ` quit Enter
-#   13. a second launch on a 1280x720 isolated save: four seats, every overlay,
-#       ammo inf, timescale 0.5 - the status strip must not share the paint
-#       panel's row (narrow-panels.png, for a person to look at)
+# Since phase 4 most steps are console scripts (`exec`, or `+exec` at launch)
+# written into each launch's isolated profile, and the transcript's `echo`
+# markers say when they are done. Key presses remain only where the keyboard
+# itself is what is checked: the console (grave, typing, Enter, Escape), F1-F10,
+# the debug menu, Shift+F5 on a bind, the live console, Alt.
+#
+# Phase 1-2 (one launch, +stage movement_course +players 2 +visual posed +overlay all)
+#    1. ` status Enter                     (console over two panes, overlays on)
+#    2. F8 F9                              (default binds: visual A/B, feedback)
+#    3. F10, view, overlay.collision Right (the debug menu steps a variable), Escape, F10
+#    4. F10, match, visual, rotating, Escape, Apply   (staged, then one rebuild)
+#    5. ` overlay none, F1, then F2 F3 F4  (overlay keys; P1's own F1 text survives them)
+#    6. ` exec check_drive                 (goto, status, restart+goto, cheats, screenshot)
+#    7. Escape (pause menu), ` stage close_quarters   (the pause menu unwinds)
+#    8. ` exec check_menus                 (menu, then a match started from the menus)
+#    9. Alt alone (informational), then ` quit Enter
+#   10. a second launch on a 1280x720 isolated save: four seats, every overlay,
+#       ammo inf, timescale 0.5, paused in the countdown - the status strip must
+#       clear the paint panel and the KEYBOARD + MOUSE card (narrow-panels.png),
+#       and the debug menu's header P1's HUD box (narrow-debug-menu.png)
+#
+# Phase 3 (one launch): bots, live tuning, record and play, the tuning menu.
+# Phase 4 (four launches): the shipped review scripts with +exec, autoexec,
+# binds and history across a restart, the live console, the perf overlay and
+# the %TEMP% sweep.
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -52,14 +62,10 @@ if (-not (Test-Path -LiteralPath $executable -PathType Leaf)) {
 }
 $output = [IO.Path]::GetFullPath($OutputDirectory)
 $profileDirectory = Join-Path $output 'profile'
-$null = New-Item -ItemType Directory -Path $output, $profileDirectory -Force
-$transcript = Join-Path $output 'console.log'
-Remove-Item -LiteralPath $transcript -ErrorAction SilentlyContinue
-$commandShot = Join-Path $profileDirectory 'ColourWars/screens/drive.png'
-Remove-Item -LiteralPath $commandShot -ErrorAction SilentlyContinue
+$null = New-Item -ItemType Directory -Path $output -Force
 
 Add-Type -AssemblyName System.Drawing
-if (-not ('ColourWars.ConsoleDriver3' -as [type])) {
+if (-not ('ColourWars.ConsoleDriver4' -as [type])) {
     Add-Type -ReferencedAssemblies System.Drawing -TypeDefinition @'
 using System;
 using System.Drawing;
@@ -70,7 +76,7 @@ using System.Threading;
 
 namespace ColourWars
 {
-    public static class ConsoleDriver3
+    public static class ConsoleDriver4
     {
         [StructLayout(LayoutKind.Sequential)]
         public struct Rect { public int Left, Top, Right, Bottom; }
@@ -106,6 +112,11 @@ namespace ColourWars
             return result;
         }
 
+        public static bool IsForeground(IntPtr window)
+        {
+            return GetForegroundWindow() == window;
+        }
+
         // SetForegroundWindow alone is refused for a background process.
         public static void Focus(IntPtr window)
         {
@@ -130,14 +141,15 @@ namespace ColourWars
             Thread.Sleep(60);
         }
 
-        private static void Shifted(byte vk)
+        // A key with a modifier held around it (0x10 Shift, 0x11 Ctrl).
+        public static void Chord(byte modifier, byte vk)
         {
-            byte shift = (byte)MapVirtualKey(0x10, 0);
-            keybd_event(0x10, shift, 0u, UIntPtr.Zero);
-            Thread.Sleep(30);
+            byte scan = (byte)MapVirtualKey(modifier, 0);
+            keybd_event(modifier, scan, 0u, UIntPtr.Zero);
+            Thread.Sleep(40);
             Tap(vk, false);
-            keybd_event(0x10, shift, 2u, UIntPtr.Zero);
-            Thread.Sleep(30);
+            keybd_event(modifier, scan, 2u, UIntPtr.Zero);
+            Thread.Sleep(40);
         }
 
         public static void Type(string text)
@@ -148,7 +160,8 @@ namespace ColourWars
                 if (c >= 'a' && c <= 'z') { Tap((byte)char.ToUpperInvariant(c), false); continue; }
                 if (c >= '0' && c <= '9') { Tap((byte)c, false); continue; }
                 if (c == ';') { Tap(0xBA, false); continue; }
-                if (c == '_') { Shifted(0xBD); continue; }
+                if (c == '_') { Chord(0x10, 0xBD); continue; }
+                if (c == '+') { Chord(0x10, 0xBB); continue; }
                 if (c == '.') { Tap(0xBE, false); continue; }
                 if (c == '-') { Tap(0xBD, false); continue; }
                 if (c == '=') { Tap(0xBB, false); continue; }
@@ -181,10 +194,12 @@ namespace ColourWars
 '@
 }
 
-$grave = 0xC0; $enter = 0x0D; $escape = 0x1B; $alt = 0x12
-$f1 = 0x70; $f2 = 0x71; $f3 = 0x72; $f4 = 0x73; $f8 = 0x77; $f9 = 0x78; $f10 = 0x79
-$down = 0x28; $right = 0x27
-$driver = [ColourWars.ConsoleDriver3]
+$grave = 0xC0; $enter = 0x0D; $escape = 0x1B; $alt = 0x12; $shift = 0x10
+$f1 = 0x70; $f2 = 0x71; $f3 = 0x72; $f4 = 0x73; $f5 = 0x74; $f8 = 0x77; $f9 = 0x78; $f10 = 0x79
+$down = 0x28; $right = 0x27; $up = 0x26
+$driver = [ColourWars.ConsoleDriver4]
+$transcript = Join-Path $output 'console.log'
+$window = [IntPtr]::Zero
 
 function Get-Transcript {
     if (-not (Test-Path -LiteralPath $transcript)) { return '' }
@@ -199,7 +214,16 @@ function Get-Transcript {
 
 # Runs one console line: open, type, Enter. Commands that close the console
 # (rebuilds, goto, respawn, screenshot) leave it closed; others leave it open.
+# Keys go to whichever window is in front: bring the game back first.
+function Confirm-Focus {
+    for ($attempt = 0; $attempt -lt 20 -and -not $driver::IsForeground($window); ++$attempt) {
+        $driver::Focus($window); Start-Sleep -Milliseconds 150
+    }
+    if (-not $driver::IsForeground($window)) { throw 'The game window cannot be brought to the front.' }
+}
+
 function Invoke-ConsoleLine([string]$line, [int]$settleMilliseconds = 500) {
+    Confirm-Focus
     $driver::Tap($grave, $false); Start-Sleep -Milliseconds 300
     $driver::Type($line); $driver::Tap($enter, $false)
     Start-Sleep -Milliseconds $settleMilliseconds
@@ -213,10 +237,16 @@ function Save-Shot([string]$name) {
     $driver::Screenshot($window, (Join-Path $output $name))
 }
 
+# Waits for a transcript marker; a script stops with the match whenever the
+# window loses focus (GameLevel updates only while active), so the window is
+# brought back to the front while waiting.
 function Wait-Transcript([string]$text, [int]$seconds) {
     $deadline = (Get-Date).AddSeconds($seconds)
     while ((Get-Date) -lt $deadline) {
         if ((Get-Transcript).Contains($text)) { return $true }
+        if ($window -ne [IntPtr]::Zero -and -not $driver::IsForeground($window)) {
+            $driver::Focus($window)
+        }
         Start-Sleep -Milliseconds 250
     }
     return $false
@@ -243,273 +273,58 @@ function Invoke-Checked([string]$line, [bool]$keepsOpen = $true, [int]$settleMil
     throw "The console never ran: $line"
 }
 
-$originalLocalAppData = $env:LOCALAPPDATA
-$process = $null
-if (-not $Phase3Only) {
-try {
-    $env:LOCALAPPDATA = $profileDirectory
+# A script written into a profile's debug folder, where `exec` finds it.
+function Write-Script([string]$profile, [string]$name, [string[]]$lines) {
+    $folder = Join-Path $profile 'ColourWars/debug'
+    $null = New-Item -ItemType Directory -Path $folder -Force
+    Set-Content -LiteralPath (Join-Path $folder "$name.cfg") -Value $lines -Encoding ASCII
+}
+
+# Starts the game on an isolated profile (and, when given, an isolated TEMP).
+function Start-Game([string]$profile, [string[]]$arguments, [string]$temp = '') {
+    $saved = @{ LOCALAPPDATA = $env:LOCALAPPDATA; TEMP = $env:TEMP; TMP = $env:TMP }
+    $env:LOCALAPPDATA = $profile
+    if ($temp) { $env:TEMP = $temp; $env:TMP = $temp }
     try {
-        $arguments = @('+logfile', ('"' + $transcript + '"'), '+stage', 'movement_course',
-            '+players', '2', '+visual', 'posed', '+overlay', 'all')
-        $process = Start-Process -FilePath $executable -ArgumentList $arguments -PassThru `
+        $started = Start-Process -FilePath $executable -ArgumentList $arguments -PassThru `
             -WorkingDirectory $output
-        $null = $process.Handle
+        $null = $started.Handle
     }
     finally {
-        $env:LOCALAPPDATA = $originalLocalAppData
+        $env:LOCALAPPDATA = $saved.LOCALAPPDATA; $env:TEMP = $saved.TEMP; $env:TMP = $saved.TMP
     }
+    return $started
+}
 
-    Start-Sleep -Seconds $StartupSeconds
-    $window = $driver::FindGame($process.Id)
-    if ($window -eq [IntPtr]::Zero) { throw 'The game window did not appear.' }
-
-    $driver::Focus($window); Start-Sleep -Milliseconds 400
-    Save-Shot '01-launch-overlays.png'
-
-    # 2-3: phase-1 console, F8 and F9. The first line is checked against the
-    # transcript: keys sent in the first moments after focusing can be lost.
-    Invoke-Checked 'status' $false
-    Save-Shot '02-console-status.png'
-    Close-Console
-    $driver::Tap($f8, $false); Start-Sleep -Milliseconds 800
-    $driver::Tap($f9, $false); Start-Sleep -Milliseconds 800
-    Save-Shot '03-after-f8-f9.png'
-
-    # 4: debug menu by F10. Root rows with nothing queued: match, player, view,
-    # time, content, console. View, by name: feedback, overlay, overlay.camera,
-    # overlay.collision, overlay.paint, overlay.player.
-    $driver::Tap($f10, $false); Start-Sleep -Milliseconds 500
-    Save-Shot '04-debug-menu.png'
-    $driver::Tap($down, $true); $driver::Tap($down, $true)
-    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
-    $driver::Tap($down, $true); $driver::Tap($down, $true); $driver::Tap($down, $true)
-    $driver::Tap($right, $true); Start-Sleep -Milliseconds 400
-    Save-Shot '05-debug-menu-view.png'
-    $driver::Tap($escape, $false); Start-Sleep -Milliseconds 300
-    $driver::Tap($f10, $false); Start-Sleep -Milliseconds 600
-    Save-Shot '06-collision-off.png'
-
-    # 5: staging. Match, by name: menu, players, restart, stage, visual,
-    # weapon. The visual picker opens on the current value (original after
-    # F8), so one Down is rotating.
-    $driver::Tap($f10, $false); Start-Sleep -Milliseconds 500
-    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
-    foreach ($i in 1..4) { $driver::Tap($down, $true) }
-    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
-    $driver::Tap($down, $true)
-    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 400
-    $driver::Tap($escape, $false); Start-Sleep -Milliseconds 400
-    Save-Shot '07-staged-apply.png'
-    $staged = Get-Transcript
-    if ($staged.Contains('match: movement_course, 2 player(s), visual rotating')) {
-        throw 'The staged visual rebuilt the match before Apply.'
+function Find-Window($process) {
+    $deadline = (Get-Date).AddSeconds($StartupSeconds + 10)
+    while ((Get-Date) -lt $deadline) {
+        $found = $driver::FindGame($process.Id)
+        if ($found -ne [IntPtr]::Zero) { return $found }
+        Start-Sleep -Milliseconds 250
     }
-    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 1500
+    throw 'The game window did not appear.'
+}
 
-    # 6: overlay keys.
-    # F1 turns on P1's own debug text first; F2-F4 must leave it showing.
-    # Players read F1 only once the rebuilt match's countdown is over.
-    Invoke-ConsoleLine 'overlay none'
-    Close-Console
-    Start-Sleep -Seconds 4
-    $driver::Tap($f1, $false); Start-Sleep -Milliseconds 300
-    $driver::Tap($f2, $false); $driver::Tap($f3, $false); $driver::Tap($f4, $false)
-    Start-Sleep -Milliseconds 600
-    Save-Shot '08-overlay-keys.png'
-
-    # 7: goto, then status once the player has settled.
-    Invoke-ConsoleLine 'goto high_step' 1500
-    Invoke-ConsoleLine 'status'
-    Save-Shot '09-goto-status.png'
-    Close-Console
-    Save-Shot '10-goto.png'
-
-    # A goto behind a queued rebuild waits for it instead of being undone.
-    Invoke-ConsoleLine 'restart; goto running_gap' 1500
-    Save-Shot '10b-goto-after-restart.png'
-
-    # 8: cheats.
-    Invoke-ConsoleLine 'god 1; ammo inf; respawn all' 800
-    Save-Shot '11-cheats.png'
-
-    # 9: the screenshot command.
-    Invoke-ConsoleLine 'screenshot drive' 1500
-    if (-not (Test-Path -LiteralPath $commandShot -PathType Leaf)) {
-        throw "screenshot did not write $commandShot"
-    }
-    Copy-Item -LiteralPath $commandShot -Destination (Join-Path $output '12-screenshot-command.png') -Force
-    $bytes = [IO.File]::ReadAllBytes($commandShot)
-    $signature = [byte[]](0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
-    for ($i = 0; $i -lt 8; ++$i) {
-        if ($bytes[$i] -ne $signature[$i]) { throw 'drive.png has no PNG signature.' }
-    }
-    $pngWidth = ([int]$bytes[16] -shl 24) -bor ([int]$bytes[17] -shl 16) -bor ([int]$bytes[18] -shl 8) -bor [int]$bytes[19]
-    $pngHeight = ([int]$bytes[20] -shl 24) -bor ([int]$bytes[21] -shl 16) -bor ([int]$bytes[22] -shl 8) -bor [int]$bytes[23]
-    $client = $driver::ClientSize($window)
-    if ($pngWidth -ne $client[0] -or $pngHeight -ne $client[1]) {
-        throw "drive.png is ${pngWidth}x${pngHeight}; the client area is $($client[0])x$($client[1])."
-    }
-    $image = [Drawing.Bitmap]::FromFile($commandShot)
-    try {
-        $a = $image.GetPixel([int]($pngWidth * 0.25), [int]($pngHeight * 0.5))
-        $b = $image.GetPixel([int]($pngWidth * 0.75), [int]($pngHeight * 0.15))
-        $c = $image.GetPixel([int]($pngWidth * 0.5), [int]($pngHeight * 0.9))
-        if ($a.ToArgb() -eq $b.ToArgb() -and $b.ToArgb() -eq $c.ToArgb()) {
-            throw 'drive.png is one flat colour.'
+function Wait-Exit($process, [int]$seconds, [string]$what) {
+    $deadline = (Get-Date).AddSeconds($seconds)
+    while (-not $process.HasExited -and (Get-Date) -lt $deadline) {
+        if ($window -ne [IntPtr]::Zero -and -not $driver::IsForeground($window)) {
+            try { $driver::Focus($window) } catch { }
         }
+        Start-Sleep -Milliseconds 250
     }
-    finally { $image.Dispose() }
-
-    # 10: the pause menu unwinds for a queued stage.
-    $driver::Tap($escape, $false); Start-Sleep -Milliseconds 700
-    Save-Shot '13-pause-menu.png'
-    Invoke-ConsoleLine 'stage close_quarters' 3000
-    Save-Shot '14-unwound-close-quarters.png'
-    Invoke-ConsoleLine 'status'
-    Save-Shot '15-status-after-unwind.png'
-    Close-Console
-
-    # 11: back to the menus, and a match started from them.
-    Invoke-ConsoleLine 'menu' 1500
-    Save-Shot '16-menus.png'
-    Invoke-ConsoleLine 'stage movement_course' 3000
-    Save-Shot '17-started-from-menus.png'
-
-    # 12: a lone Alt tap (evidence for engine report 11), then quit.
-    if (-not $SkipAltProbe) {
-        $before = ([regex]::Matches((Get-Transcript), [regex]::Escape('] status'))).Count
-        $driver::Tap($alt, $false); Start-Sleep -Milliseconds 500
-        Invoke-ConsoleLine 'status'
-        $after = ([regex]::Matches((Get-Transcript), [regex]::Escape('] status'))).Count
-        if ($after -gt $before) {
-            Set-Content -LiteralPath (Join-Path $output 'alt-probe.txt') -Value 'A lone Alt tap did not freeze the game.'
-            Close-Console
-        }
-        else {
-            Set-Content -LiteralPath (Join-Path $output 'alt-probe.txt') -Value 'A lone Alt tap entered the system menu loop: the keys after it were lost.'
-            $driver::Tap($escape, $false); Start-Sleep -Milliseconds 300
-            $driver::Tap($escape, $false); Start-Sleep -Milliseconds 300
-        }
-    }
-
-    Invoke-ConsoleLine 'quit' 0
-    if (-not $process.WaitForExit(15000)) { throw 'The game did not quit.' }
+    if (-not $process.HasExited) { throw "$what did not quit." }
     $process.WaitForExit()
-    if ($process.ExitCode -ne 0) { throw "The game exited with $($process.ExitCode)." }
+    if ($process.ExitCode -ne 0) { throw "$what exited with $($process.ExitCode)." }
+}
 
+function Assert-Transcript([string[]]$expected, [string]$what) {
     $log = Get-Transcript
-    $expected = @(
-        'match: starting movement_course, 2 player(s), visual posed',
-        'match: stage movement_course, 2 player(s), visual posed',
-        'overlays: player collision camera paint',
-        '[F8] visual next',
-        'match: movement_course, 2 player(s), visual original',
-        '[F9] feedback toggle',
-        'feedback = off',
-        'debug menu: open',
-        '[menu] overlay.collision toggle',
-        'overlay.collision = off',
-        'debug menu: closed',
-        '[menu] visual rotating',
-        'match: movement_course, 2 player(s), visual rotating',
-        '[F2] overlay collision',
-        '[F3] overlay camera',
-        '[F4] overlay paint',
-        'goto high_step: P1 at (4404, 535)',
-        'goto running_gap: applies after the queued restart',
-        'goto running_gap: P1 at (',
-        'god = on',
-        'ammo = inf',
-        'respawn: P1 P2',
-        'screenshot: ',
-        'drive.png (',
-        '] stage close_quarters',
-        'match: close_quarters',
-        'stack depth',
-        'menu: leaving the match',
-        'match: starting movement_course',
-        '] quit')
     foreach ($line in $expected) {
-        if (-not $log.Contains($line)) { throw "The transcript lacks: $line" }
+        if (-not $log.Contains($line)) { throw "The $what transcript lacks: $line" }
     }
-    # Staged, then applied once: the rebuild follows the menu closing.
-    $picked = $log.IndexOf('[menu] visual rotating')
-    $rebuilt = $log.IndexOf('match: movement_course, 2 player(s), visual rotating')
-    $closed = $log.IndexOf('debug menu: closed', $picked)
-    if (-not ($picked -lt $closed -and $closed -lt $rebuilt)) {
-        throw 'The staged visual did not wait for Apply.'
-    }
-    # The player settled on the high step: centre (4430, 600) on the ground.
-    if (-not ($log -match 'P1 kbm team a \w+\s+at \(4430, (59[5-9]|600)\) on_ground')) {
-        throw 'After goto high_step, P1 is not at rest on the high step.'
-    }
-    # The queued goto applied after the restart's rebuild, not before it.
-    $waited = $log.IndexOf('goto running_gap: applies after the queued restart')
-    $placed = $log.IndexOf('goto running_gap: P1 at (')
-    if (-not ($waited -lt $placed)) {
-        throw 'The goto queued behind a restart did not wait for the rebuild.'
-    }
-
-    # 13: a narrow window, four seats, both bottom panels as wide as they get.
-    $narrowProfile = Join-Path $output 'narrow-profile'
-    $narrowSaveDirectory = Join-Path $narrowProfile 'ColourWars'
-    $null = New-Item -ItemType Directory -Path $narrowSaveDirectory -Force
-    Set-Content -LiteralPath (Join-Path $narrowSaveDirectory 'save_data.json') -Encoding ASCII -Value `
-        '{"resolution":{"x":1280,"y":720},"fullscreen":false,"team_palette":"random","aim_sensitivity":3,"music_volume":100,"sfx_volume":100}'
-    $narrowShot = Join-Path $narrowSaveDirectory 'screens/narrow.png'
-    Remove-Item -LiteralPath $narrowShot -ErrorAction SilentlyContinue
-    $env:LOCALAPPDATA = $narrowProfile
-    try {
-        $process = Start-Process -FilePath $executable -PassThru -WorkingDirectory $output `
-            -ArgumentList @('+stage', 'movement_course', '+players', '4', '+overlay', 'all',
-                '+ammo', 'inf', '+timescale', '0.5', '+screenshot', 'narrow')
-        $null = $process.Handle
-    }
-    finally {
-        $env:LOCALAPPDATA = $originalLocalAppData
-    }
-    Start-Sleep -Seconds $StartupSeconds
-    $window = $driver::FindGame($process.Id)
-    if ($window -eq [IntPtr]::Zero) { throw 'The narrow game window did not appear.' }
-    $driver::Focus($window); Start-Sleep -Milliseconds 400
-    if (-not (Test-Path -LiteralPath $narrowShot -PathType Leaf)) {
-        throw "+screenshot narrow did not write $narrowShot"
-    }
-    Copy-Item -LiteralPath $narrowShot -Destination (Join-Path $output 'narrow-panels.png') -Force
-    Invoke-ConsoleLine 'quit' 0
-    if (-not $process.WaitForExit(15000)) { throw 'The narrow game did not quit.' }
-    $process.WaitForExit()
-    if ($process.ExitCode -ne 0) { throw "The narrow game exited with $($process.ExitCode)." }
-
-    Write-Host "PASS debug console driven: launch, status, F8-F10, debug menu, staging, overlays, goto (direct and behind a restart), cheats, screenshot, unwinding, quit; narrow-window panels in narrow-panels.png. Screenshots: $output"
 }
-finally {
-    if ($process -ne $null -and -not $process.HasExited) { $process.Kill() }
-}
-}
-
-# ---------------------------------------------------------------- phase 3
-#   p1. launch +seed 7 +stage movement_course +players 4 +bot all paint:
-#       seat 1 keyboard/mouse, three idle dummies driven by paint bots
-#   p2. ` status                         (three seats say bot paint)
-#   p3. ` tune tuning.player.max_velocity.x (twice the file's), tune.diff,
-#       then tune.reset; two presentation edits startup's resource checks
-#       refuse (workshop_player.pixel_size, match.countdown_size.y)
-#   p4. (-SaveToSource) tune.save tuning on the source tree, git checks the
-#       diff is that one value; the bytes read before the save are written
-#       back (in a finally, so a failed run restores them too) and git diff
-#       --quiet confirms the file is clean
-#   p5. ` record drive 600, wait for record: saved with no key or focus
-#       change (a console or focus loss mid-recording is a suspend)
-#   p6. ` play drive, wait for replay drive: MATCH
-#   p7. F10 tuning > tuning > player, Right on x_acceleration
-#   p8. ` quit
-$process = $null
-$transcript = Join-Path $output 'phase3.log'
-Remove-Item -LiteralPath $transcript -ErrorAction SilentlyContinue
-$phase3Profile = Join-Path $output 'phase3-profile'
-Remove-Item -LiteralPath $phase3Profile -Recurse -Force -ErrorAction SilentlyContinue
-$null = New-Item -ItemType Directory -Path $phase3Profile -Force
 
 # The values the checks use come from the file the game loads, so a balance
 # pass on tuning.json never breaks this script.
@@ -535,44 +350,312 @@ $fastToken = Format-Token ([double]::Parse($velocityToken, $invariantCulture) * 
 $savedToken = Format-Token ([double]::Parse($velocityToken, $invariantCulture) + 100) $velocityToken
 $accelerationToken = Get-PlayerToken '"x_acceleration": ([0-9.]+)'
 
+$process = $null
+if (-not $Phase3Only -and -not $Phase4Only) {
+try {
+    Remove-Item -LiteralPath $profileDirectory -Recurse -Force -ErrorAction SilentlyContinue
+    $null = New-Item -ItemType Directory -Path $profileDirectory -Force
+    Remove-Item -LiteralPath $transcript -ErrorAction SilentlyContinue
+    $commandShot = Join-Path $profileDirectory 'ColourWars/screens/drive.png'
+
+    # Step 6 and 8 as scripts: the console runs one `exec` line each.
+    Write-Script $profileDirectory 'check_drive' @(
+        '// The phase-1/2 driven steps that do not test keys: goto, status, restart, cheats, screenshot.',
+        'goto high_step',
+        '// Settle on the step before status reads the position.',
+        'wait 90',
+        'status',
+        '// A goto behind a queued rebuild waits for it instead of being undone.',
+        'restart; goto running_gap',
+        'wait match',
+        'wait 30',
+        'god 1; ammo inf; respawn all',
+        'wait 30',
+        'screenshot drive',
+        'echo check-drive-done')
+    Write-Script $profileDirectory 'check_menus' @(
+        '// Leave for the menus, then start a match from them.',
+        'menu',
+        'wait frames 30',
+        'stage movement_course',
+        'wait match',
+        'echo check-menus-done')
+
+    $arguments = @('+logfile', ('"' + $transcript + '"'), '+stage', 'movement_course',
+        '+players', '2', '+visual', 'posed', '+overlay', 'all')
+    $process = Start-Game $profileDirectory $arguments
+    Start-Sleep -Seconds $StartupSeconds
+    $window = Find-Window $process
+    Confirm-Focus; Start-Sleep -Milliseconds 400
+    Save-Shot '01-launch-overlays.png'
+
+    # 1-2: the console, F8 and F9. The first line is checked against the
+    # transcript: keys sent in the first moments after focusing can be lost.
+    Invoke-Checked 'status' $false
+    Save-Shot '02-console-status.png'
+    Close-Console
+    $driver::Tap($f8, $false); Start-Sleep -Milliseconds 800
+    $driver::Tap($f9, $false); Start-Sleep -Milliseconds 800
+    Save-Shot '03-after-f8-f9.png'
+
+    # 3: debug menu by F10. Root rows with nothing queued: match, player, view,
+    # time, content, console. View, by name: feedback, overlay, overlay.camera,
+    # overlay.collision, overlay.paint, overlay.perf, overlay.player.
+    $driver::Tap($f10, $false); Start-Sleep -Milliseconds 500
+    Save-Shot '04-debug-menu.png'
+    $driver::Tap($down, $true); $driver::Tap($down, $true)
+    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
+    $driver::Tap($down, $true); $driver::Tap($down, $true); $driver::Tap($down, $true)
+    $driver::Tap($right, $true); Start-Sleep -Milliseconds 400
+    Save-Shot '05-debug-menu-view.png'
+    $driver::Tap($escape, $false); Start-Sleep -Milliseconds 300
+    $driver::Tap($f10, $false); Start-Sleep -Milliseconds 600
+    Save-Shot '06-collision-off.png'
+
+    # 4: staging. Match, by name: menu, players, restart, stage, visual,
+    # weapon. The visual picker opens on the current value (original after
+    # F8), so one Down is rotating.
+    $driver::Tap($f10, $false); Start-Sleep -Milliseconds 500
+    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
+    foreach ($i in 1..4) { $driver::Tap($down, $true) }
+    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
+    $driver::Tap($down, $true)
+    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 400
+    $driver::Tap($escape, $false); Start-Sleep -Milliseconds 400
+    Save-Shot '07-staged-apply.png'
+    $staged = Get-Transcript
+    if ($staged.Contains('match: movement_course, 2 player(s), visual rotating')) {
+        throw 'The staged visual rebuilt the match before Apply.'
+    }
+    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 1500
+
+    # 5: overlay keys.
+    # F1 turns on P1's own debug text first; F2-F4 must leave it showing.
+    # Players read F1 only once the rebuilt match's countdown is over.
+    Invoke-ConsoleLine 'overlay none'
+    Close-Console
+    Start-Sleep -Seconds 4
+    $driver::Tap($f1, $false); Start-Sleep -Milliseconds 300
+    $driver::Tap($f2, $false); $driver::Tap($f3, $false); $driver::Tap($f4, $false)
+    Start-Sleep -Milliseconds 600
+    Save-Shot '08-overlay-keys.png'
+
+    # 6: goto, status, restart+goto, cheats and the screenshot command, as a script.
+    Invoke-Checked 'exec check_drive' $false 300
+    if (-not (Wait-Transcript 'check-drive-done' 40)) { throw 'check_drive.cfg did not finish.' }
+    Save-Shot '09-after-check-drive.png'
+    if (-not (Test-Path -LiteralPath $commandShot -PathType Leaf)) {
+        throw "screenshot did not write $commandShot"
+    }
+    Copy-Item -LiteralPath $commandShot -Destination (Join-Path $output '10-screenshot-command.png') -Force
+    $bytes = [IO.File]::ReadAllBytes($commandShot)
+    $signature = [byte[]](0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A)
+    for ($i = 0; $i -lt 8; ++$i) {
+        if ($bytes[$i] -ne $signature[$i]) { throw 'drive.png has no PNG signature.' }
+    }
+    $pngWidth = ([int]$bytes[16] -shl 24) -bor ([int]$bytes[17] -shl 16) -bor ([int]$bytes[18] -shl 8) -bor [int]$bytes[19]
+    $pngHeight = ([int]$bytes[20] -shl 24) -bor ([int]$bytes[21] -shl 16) -bor ([int]$bytes[22] -shl 8) -bor [int]$bytes[23]
+    $client = $driver::ClientSize($window)
+    if ($pngWidth -ne $client[0] -or $pngHeight -ne $client[1]) {
+        throw "drive.png is ${pngWidth}x${pngHeight}; the client area is $($client[0])x$($client[1])."
+    }
+    $image = [Drawing.Bitmap]::FromFile($commandShot)
+    try {
+        $a = $image.GetPixel([int]($pngWidth * 0.25), [int]($pngHeight * 0.5))
+        $b = $image.GetPixel([int]($pngWidth * 0.75), [int]($pngHeight * 0.15))
+        $c = $image.GetPixel([int]($pngWidth * 0.5), [int]($pngHeight * 0.9))
+        if ($a.ToArgb() -eq $b.ToArgb() -and $b.ToArgb() -eq $c.ToArgb()) {
+            throw 'drive.png is one flat colour.'
+        }
+    }
+    finally { $image.Dispose() }
+
+    # 7: the pause menu unwinds for a queued stage.
+    $driver::Tap($escape, $false); Start-Sleep -Milliseconds 700
+    Save-Shot '13-pause-menu.png'
+    Invoke-ConsoleLine 'stage close_quarters' 3000
+    Save-Shot '14-unwound-close-quarters.png'
+    Invoke-ConsoleLine 'status'
+    Save-Shot '15-status-after-unwind.png'
+    Close-Console
+
+    # 8: back to the menus, and a match started from them, as a script.
+    Invoke-Checked 'exec check_menus' $false 300
+    if (-not (Wait-Transcript 'check-menus-done' 40)) { throw 'check_menus.cfg did not finish.' }
+    Save-Shot '17-started-from-menus.png'
+
+    # 9: a lone Alt tap (evidence for engine report 11), then quit.
+    if (-not $SkipAltProbe) {
+        $before = Count-Transcript '] status'
+        $driver::Tap($alt, $false); Start-Sleep -Milliseconds 500
+        Invoke-ConsoleLine 'status'
+        if ((Count-Transcript '] status') -gt $before) {
+            Set-Content -LiteralPath (Join-Path $output 'alt-probe.txt') -Value 'A lone Alt tap did not freeze the game.'
+            Close-Console
+        }
+        else {
+            Set-Content -LiteralPath (Join-Path $output 'alt-probe.txt') -Value 'A lone Alt tap entered the system menu loop: the keys after it were lost.'
+            $driver::Tap($escape, $false); Start-Sleep -Milliseconds 300
+            $driver::Tap($escape, $false); Start-Sleep -Milliseconds 300
+        }
+    }
+
+    Invoke-ConsoleLine 'quit' 0
+    Wait-Exit $process 15 'The game'
+
+    $log = Get-Transcript
+    Assert-Transcript @(
+        'match: starting movement_course, 2 player(s), visual posed',
+        'match: stage movement_course, 2 player(s), visual posed',
+        'overlays: player collision camera paint',
+        '[F8] visual next',
+        'match: movement_course, 2 player(s), visual original',
+        '[F9] feedback toggle',
+        'feedback = off',
+        'debug menu: open',
+        '[menu] overlay.collision toggle',
+        'overlay.collision = off',
+        'debug menu: closed',
+        '[menu] visual rotating',
+        'visual = rotating: queued; rebuilds when the debug menu closes',
+        'match: movement_course, 2 player(s), visual rotating',
+        '[F2] overlay collision',
+        '[F3] overlay camera',
+        '[F4] overlay paint',
+        '] exec check_drive',
+        'check_drive.cfg:2] goto high_step',
+        'goto high_step: P1 at (4404, 535)',
+        'goto running_gap: applies after the queued restart',
+        'goto running_gap: P1 at (',
+        'god = on',
+        'ammo = inf',
+        'respawn: P1 P2',
+        'screenshot: ',
+        'drive.png (',
+        'script check_drive.cfg done',
+        '] stage close_quarters',
+        'match: close_quarters',
+        'stack depth',
+        'menu: leaving the match',
+        'match: starting movement_course',
+        'script check_menus.cfg done',
+        '] quit') 'phase-1/2'
+    # Staged, then applied once: the rebuild follows the menu closing.
+    $picked = $log.IndexOf('[menu] visual rotating')
+    $rebuilt = $log.IndexOf('match: movement_course, 2 player(s), visual rotating')
+    $closed = $log.IndexOf('debug menu: closed', $picked)
+    if (-not ($picked -lt $closed -and $closed -lt $rebuilt)) {
+        throw 'The staged visual did not wait for Apply.'
+    }
+    # The player settled on the high step: centre (4430, 600) on the ground.
+    if (-not ($log -match 'P1 kbm team a \w+\s+at \(4430, (59[5-9]|600)\) on_ground')) {
+        throw 'After goto high_step, P1 is not at rest on the high step.'
+    }
+    # The queued goto applied after the restart's rebuild, not before it.
+    $waited = $log.IndexOf('goto running_gap: applies after the queued restart')
+    $placed = $log.IndexOf('goto running_gap: P1 at (')
+    if (-not ($waited -lt $placed)) {
+        throw 'The goto queued behind a restart did not wait for the rebuild.'
+    }
+
+    # 10: a narrow window, four seats, both bottom panels as wide as they get,
+    # paused in the countdown with the opening cards up.
+    $narrowProfile = Join-Path $output 'narrow-profile'
+    Remove-Item -LiteralPath $narrowProfile -Recurse -Force -ErrorAction SilentlyContinue
+    $narrowSaveDirectory = Join-Path $narrowProfile 'ColourWars'
+    $null = New-Item -ItemType Directory -Path $narrowSaveDirectory -Force
+    Set-Content -LiteralPath (Join-Path $narrowSaveDirectory 'save_data.json') -Encoding ASCII -Value `
+        '{"resolution":{"x":1280,"y":720},"fullscreen":false,"team_palette":"random","aim_sensitivity":3,"music_volume":100,"sfx_volume":100}'
+    $narrowShot = Join-Path $narrowSaveDirectory 'screens/narrow.png'
+    $transcript = Join-Path $output 'narrow.log'
+    Remove-Item -LiteralPath $transcript -ErrorAction SilentlyContinue
+    $window = [IntPtr]::Zero
+    $process = Start-Game $narrowProfile @('+logfile', ('"' + $transcript + '"'), '+stage', 'movement_course',
+        '+players', '4', '+overlay', 'all', '+ammo', 'inf', '+timescale', '0.5', '+pause', 'on',
+        '+screenshot', 'narrow')
+    Start-Sleep -Seconds $StartupSeconds
+    $window = Find-Window $process
+    Confirm-Focus; Start-Sleep -Milliseconds 400
+    if (-not (Wait-Transcript 'narrow.png (' 10)) { throw "+screenshot narrow did not write $narrowShot" }
+    Copy-Item -LiteralPath $narrowShot -Destination (Join-Path $output 'narrow-panels.png') -Force
+    $driver::Tap($f10, $false); Start-Sleep -Milliseconds 600
+    Save-Shot 'narrow-debug-menu.png'
+    $driver::Tap($f10, $false); Start-Sleep -Milliseconds 400
+    Invoke-ConsoleLine 'quit' 0
+    Wait-Exit $process 15 'The narrow game'
+    $transcript = Join-Path $output 'console.log'
+
+    Write-Host "PASS debug console driven: launch, status, F8-F10, debug menu, staging, overlays, check_drive.cfg (goto direct and behind a restart, cheats, screenshot), unwinding, check_menus.cfg, quit; narrow-window panels in narrow-panels.png. Screenshots: $output"
+}
+finally {
+    if ($process -ne $null -and -not $process.HasExited) { $process.Kill() }
+}
+}
+
+# ---------------------------------------------------------------- phase 3
+#   p1. launch +seed 7 +stage movement_course +players 4 +bot all paint:
+#       seat 1 keyboard/mouse, three idle dummies driven by paint bots;
+#       then, still launch statements, the scripts below
+#   p2. check_p3_tune.cfg: status (three seats say bot paint), a live value
+#       (tune tuning.player.max_velocity.x, twice the file's) with an in-game
+#       screenshot, tune.diff, tune.reset
+#   p3. two presentation edits startup's resource checks refuse
+#       (workshop_player.pixel_size, match.countdown_size.y) - launch
+#       statements, because a refused line would stop a script
+#   p4. (-SaveToSource) tune.save tuning on the source tree, git checks the
+#       diff is that one value; the bytes read before the save are written
+#       back (in a finally, so a failed run restores them too) and git diff
+#       --quiet confirms the file is clean
+#   p5. check_p3_replay.cfg: record drive 600, wait record, play drive, wait
+#       replay, checksum - no key or focus change (a console or focus loss
+#       mid-recording is a suspend)
+#   p6. F10 tuning > tuning > player, Right on x_acceleration
+#   p7. ` quit
+if (-not $Phase4Only) {
+$process = $null
+$window = [IntPtr]::Zero
+$transcript = Join-Path $output 'phase3.log'
+Remove-Item -LiteralPath $transcript -ErrorAction SilentlyContinue
+$phase3Profile = Join-Path $output 'phase3-profile'
+Remove-Item -LiteralPath $phase3Profile -Recurse -Force -ErrorAction SilentlyContinue
+$null = New-Item -ItemType Directory -Path $phase3Profile -Force
+
+Write-Script $phase3Profile 'check_p3_tune' @(
+    '// Phase 3: status with the bots, then a live tuning edit, tune.diff and tune.reset.',
+    'wait match',
+    'wait 60',
+    'screenshot p3-01-bots-4p',
+    'status',
+    "tune tuning.player.max_velocity.x $fastToken",
+    '// The bots run twice as fast for two seconds.',
+    'wait 120',
+    'screenshot p3-04-tuned-speed',
+    'tune.diff',
+    'tune.reset',
+    'echo check-p3-tune-done')
+Write-Script $phase3Profile 'check_p3_replay' @(
+    '// Phase 3: record 600 updates, play them back, compare.',
+    'record drive 600',
+    'wait record',
+    'screenshot p3-07-recorded',
+    'play drive',
+    'wait replay',
+    'checksum',
+    'screenshot p3-08-replay-end',
+    'pause off',
+    'echo check-p3-replay-done')
 
 try {
-    $env:LOCALAPPDATA = $phase3Profile
-    try {
-        $arguments = @('+logfile', ('"' + $transcript + '"'), '+seed', '7', '+stage', 'movement_course',
-            '+players', '4', '+bot', 'all', 'paint')
-        $process = Start-Process -FilePath $executable -ArgumentList $arguments -PassThru `
-            -WorkingDirectory $output
-        $null = $process.Handle
-    }
-    finally {
-        $env:LOCALAPPDATA = $originalLocalAppData
-    }
+    $arguments = @('+logfile', ('"' + $transcript + '"'), '+seed', '7', '+stage', 'movement_course',
+        '+players', '4', '+bot', 'all', 'paint', '+exec', 'check_p3_tune',
+        '+tune', 'presentation.workshop_player.pixel_size', 'next',
+        '+tune', 'presentation.match.countdown_size.y', '61')
+    if (-not $SaveToSource) { $arguments += @('+exec', 'check_p3_replay') }
+    $process = Start-Game $phase3Profile $arguments
     Start-Sleep -Seconds $StartupSeconds
-    $window = $driver::FindGame($process.Id)
-    if ($window -eq [IntPtr]::Zero) { throw 'The phase-3 game window did not appear.' }
+    $window = Find-Window $process
     $driver::Focus($window); Start-Sleep -Milliseconds 1000
-    Save-Shot 'p3-01-bots-4p.png'
-    Start-Sleep -Seconds 3
-    Save-Shot 'p3-02-bots-4p-later.png'
-
-    # p2: status with the console left open for the shot.
-    Invoke-Checked 'status' $false
-    Save-Shot 'p3-03-status.png'
-    Close-Console
-
-    # p3: a live value, seen at once (the bots run twice as fast).
-    Invoke-Checked "tune tuning.player.max_velocity.x $fastToken"
-    Start-Sleep -Seconds 2
-    Save-Shot 'p3-04-tuned-speed.png'
-    Invoke-Checked 'tune.diff' $false
-    Save-Shot 'p3-05-tune-diff.png'
-    Close-Console
-    Invoke-Checked 'tune.reset'
-    # Startup's checks against the loaded frames and fonts judge a presentation
-    # edit too: neither is accepted, so a tune.save could never write them.
-    Invoke-Checked 'tune presentation.workshop_player.pixel_size next'
-    Invoke-Checked 'tune presentation.match.countdown_size.y 61'
+    if (-not (Wait-Transcript 'check-p3-tune-done' 60)) { throw 'check_p3_tune.cfg did not finish.' }
 
     # p4
     if ($SaveToSource) {
@@ -621,26 +704,17 @@ try {
         if (-not (Wait-Transcript 'reload: applied tuning.json and presentation.json' 5)) {
             throw 'reload did not apply the restored tuning.json.'
         }
+        Invoke-Checked 'exec check_p3_replay' $false 300
     }
 
-    # p5: no key and no focus change until the recording is saved.
-    Invoke-Checked 'record drive 600' $false 300
-    if (-not (Wait-Transcript 'record: saved' 30)) { throw 'record drive 600 did not save.' }
-    Save-Shot 'p3-07-recorded.png'
-
-    # p6
-    Invoke-Checked 'play drive' $false 300
-    if (-not (Wait-Transcript 'replay drive: MATCH' 40)) {
-        Save-Shot 'p3-08-replay-end.png'
-        throw 'play drive did not report MATCH.'
+    # p5: no key and no focus change until the replay has finished.
+    if (-not (Wait-Transcript 'check-p3-replay-done' 90)) {
+        Save-Shot 'p3-08-replay-timeout.png'
+        throw 'check_p3_replay.cfg did not finish.'
     }
-    Save-Shot 'p3-08-replay-end.png'
-    Invoke-Checked 'checksum' $false
-    Save-Shot 'p3-09-replay-checksum.png'
-    Close-Console
-    Invoke-Checked 'pause off'
+    Save-Shot 'p3-09-replay-done.png'
 
-    # p7: root rows match, player, view, time, tuning, replay, content,
+    # p6: root rows match, player, view, time, tuning, replay, content,
     # console; tuning opens on tuning, presentation, tune.diff, tune.reset,
     # tune.save; the tuning file on match, paint, player, weapons,
     # projectiles; player on size, max_velocity, x_initial_velocity,
@@ -658,12 +732,10 @@ try {
     Invoke-Checked 'tune.reset'
 
     Invoke-ConsoleLine 'quit' 0
-    if (-not $process.WaitForExit(15000)) { throw 'The phase-3 game did not quit.' }
-    $process.WaitForExit()
-    if ($process.ExitCode -ne 0) { throw "The phase-3 game exited with $($process.ExitCode)." }
+    Wait-Exit $process 15 'The phase-3 game'
 
     $log = Get-Transcript
-    $expected = @(
+    Assert-Transcript @(
         'launch: seed 7',
         'bot all paint: applies to the next match',
         'match: starting movement_course, 4 player(s)',
@@ -679,21 +751,216 @@ try {
         'replay drive: playing 600 updates',
         'replay drive: MATCH (600 updates, 10 checkpoints',
         'checksum ',
+        'script check_p3_replay.cfg done',
         '[menu] tune tuning.player.x_acceleration next',
         "tune: tuning.player.x_acceleration $accelerationToken -> ",
-        '] quit')
-    foreach ($line in $expected) {
-        if (-not $log.Contains($line)) { throw "The phase-3 transcript lacks: $line" }
-    }
+        '] quit') 'phase-3'
     if ($log.Contains('DIVERGED')) { throw 'The driven replay diverged.' }
     $bots = ([regex]::Matches($log, [regex]::Escape(' bot paint'))).Count
     if ($bots -lt 3) { throw "status listed $bots paint bots; three expected." }
     $replay = Join-Path $phase3Profile 'ColourWars/replays/drive.json'
     if (-not (Test-Path -LiteralPath $replay -PathType Leaf)) { throw "No replay at $replay" }
     Copy-Item -LiteralPath $replay -Destination (Join-Path $output 'p3-drive-replay.json') -Force
-    Write-Host "PASS debug console driven, phase 3: four-seat paint-bot match, status, live tune and tune.diff/reset$(if ($SaveToSource) { ', tune.save on the source file (one value, checked with git; restored byte for byte)' } else { '' }), record 600 and play MATCH, tuning menu Right; screenshots p3-*.png in $output"
+    foreach ($shot in Get-ChildItem -LiteralPath (Join-Path $phase3Profile 'ColourWars/screens') -Filter 'p3-*.png') {
+        Copy-Item -LiteralPath $shot.FullName -Destination (Join-Path $output $shot.Name) -Force
+    }
+    Write-Host "PASS debug console driven, phase 3: four-seat paint-bot match, status, live tune and tune.diff/reset$(if ($SaveToSource) { ', tune.save on the source file (one value, checked with git; restored byte for byte)' } else { '' }), record 600 and play MATCH (as scripts), tuning menu Right; screenshots p3-*.png in $output"
 }
 finally {
-    $env:LOCALAPPDATA = $originalLocalAppData
     if ($process -ne $null -and -not $process.HasExited) { $process.Kill() }
+}
+}
+
+# ---------------------------------------------------------------- phase 4
+#   q1. +exec review_feedback_ab +quit, with an autoexec.cfg in the profile:
+#       autoexec runs before the launch statements; 18 PNGs, each -on pair
+#       differs from its -off (the strip is off, so only the world can);
+#       nine checksums, each with bursts on screen; at each of the three
+#       frames the three visuals print the same update and the same hash (the
+#       art does not touch the simulation).
+#   q2. +exec station_tour +quit: ten PNGs.
+#   q3. +exec bots_4p +quit: one PNG.
+#   q4. one launch on an isolated profile and TEMP: bind shift+f5 at the
+#       console, Shift+F5, F5 still restarts; a tune edit sweeps the planted
+#       empty ColourWars-tune-999999 and keeps the non-empty one; console.live 1,
+#       typing in the live console leaves P1 where it was while the match
+#       runs, Escape closes it without a pause menu; overlay perf and perf.
+#   q5. a second launch on the same profile: binds.cfg is read back, and the
+#       history recalls the last line of the first session (quit).
+if (-not $Phase3Only) {
+$process = $null
+
+function Start-ScriptRun([string]$name, [string]$profile, [int]$seconds) {
+    $script:transcript = Join-Path $output "p4-$name.log"
+    Remove-Item -LiteralPath $script:transcript -ErrorAction SilentlyContinue
+    $script:window = [IntPtr]::Zero
+    $run = Start-Game $profile @('+logfile', ('"' + $script:transcript + '"'), '+exec', $name, '+quit')
+    $script:process = $run
+    $script:window = Find-Window $run
+    $driver::Focus($script:window)
+    Wait-Exit $run $seconds "exec $name"
+    $folder = @(Get-ChildItem -LiteralPath (Join-Path $profile 'ColourWars/screens') -Directory)
+    if ($folder.Count -ne 1) { throw "exec $name left $($folder.Count) screenshot folders." }
+    $evidence = Join-Path $output "p4-$name"
+    Remove-Item -LiteralPath $evidence -Recurse -Force -ErrorAction SilentlyContinue
+    Copy-Item -LiteralPath $folder[0].FullName -Destination $evidence -Recurse
+    return $folder[0].FullName
+}
+
+function Test-SameBytes([string]$a, [string]$b) {
+    return (Get-FileHash -LiteralPath $a).Hash -eq (Get-FileHash -LiteralPath $b).Hash
+}
+
+try {
+    # q1: one command, one review.
+    $reviewProfile = Join-Path $output 'p4-review-profile'
+    Remove-Item -LiteralPath $reviewProfile -Recurse -Force -ErrorAction SilentlyContinue
+    $null = New-Item -ItemType Directory -Path $reviewProfile -Force
+    Write-Script $reviewProfile 'autoexec' @('// Runs before the launch statements.', 'echo autoexec-ran')
+    $folder = Start-ScriptRun 'review_feedback_ab' $reviewProfile 180
+    $log = Get-Transcript
+    Assert-Transcript @('autoexec-ran', 'launch: exec review_feedback_ab',
+        'review_feedback_ab: done (3 visuals x 3 frames x on/off)', 'script review_feedback_ab.cfg done',
+        'launch: quit') 'review'
+    if ($log.IndexOf('autoexec-ran') -gt $log.IndexOf('launch: ')) { throw 'autoexec.cfg did not run first.' }
+    if ($log -match '(?m)^error: ') { throw 'The review logged an error.' }
+    $shots = @(Get-ChildItem -LiteralPath $folder -Filter '*.png')
+    if ($shots.Count -ne 18) { throw "review_feedback_ab wrote $($shots.Count) PNGs, not 18." }
+    $agree = @{}
+    foreach ($visual in 'original', 'rotating', 'posed') {
+        foreach ($frame in 't040', 't096', 't156') {
+            $on = Join-Path $folder "$visual-$frame-on.png"; $off = Join-Path $folder "$visual-$frame-off.png"
+            if (-not (Test-Path $on) -or -not (Test-Path $off)) { throw "Missing $visual-$frame pair." }
+            if (Test-SameBytes $on $off) { throw "${visual}-${frame}: feedback on and off drew the same picture." }
+        }
+    }
+    $checksums = @([regex]::Matches($log, 'checksum ([0-9a-f]{16}) at update (\d+), paint [^\r\n]*, bursts (\d+)'))
+    if ($checksums.Count -ne 9) { throw "The review logged $($checksums.Count) checksums, not 9." }
+    foreach ($sum in $checksums) {
+        if ([int]$sum.Groups[3].Value -lt 1) { throw "No burst on screen at update $($sum.Groups[2].Value)." }
+    }
+    $report = @()
+    $differ = @()
+    for ($frame = 0; $frame -lt 3; ++$frame) {
+        $passes = @($checksums[$frame], $checksums[3 + $frame], $checksums[6 + $frame])
+        $hashes = @($passes | ForEach-Object { $_.Groups[1].Value })
+        $updates = @($passes | ForEach-Object { $_.Groups[2].Value })
+        $same = (@($hashes | Select-Object -Unique).Count -eq 1) -and (@($updates | Select-Object -Unique).Count -eq 1)
+        $line = "update $($updates -join '/'): original $($hashes[0]) rotating $($hashes[1]) posed $($hashes[2]) -> $(if ($same) { 'agree' } else { 'DIFFER' })"
+        $report += $line
+        if (-not $same) { $differ += $line }
+    }
+    Set-Content -LiteralPath (Join-Path $output 'p4-review-checksums.txt') -Value $report
+    $report | ForEach-Object { Write-Host "review checksums: $_" }
+    if ($differ.Count -gt 0) { throw "The three visuals' checksums differ (the art touched the simulation): $($differ -join '; ')" }
+
+    # q2, q3
+    $tourProfile = Join-Path $output 'p4-tour-profile'
+    Remove-Item -LiteralPath $tourProfile -Recurse -Force -ErrorAction SilentlyContinue
+    $null = New-Item -ItemType Directory -Path $tourProfile -Force
+    $folder = Start-ScriptRun 'station_tour' $tourProfile 120
+    if (@(Get-ChildItem -LiteralPath $folder -Filter '*.png').Count -ne 10) { throw 'station_tour did not write 10 PNGs.' }
+    Assert-Transcript @('station_tour: done (10 stations)') 'station tour'
+    $botsProfile = Join-Path $output 'p4-bots-profile'
+    Remove-Item -LiteralPath $botsProfile -Recurse -Force -ErrorAction SilentlyContinue
+    $null = New-Item -ItemType Directory -Path $botsProfile -Force
+    $folder = Start-ScriptRun 'bots_4p' $botsProfile 120
+    if (@(Get-ChildItem -LiteralPath $folder -Filter '*.png').Count -ne 1) { throw 'bots_4p did not write its PNG.' }
+    Assert-Transcript @('bots_4p: done', 'checksum ') 'bots_4p'
+
+    # q4: binds, the TEMP sweep, the live console, perf.
+    $liveProfile = Join-Path $output 'p4-live-profile'
+    Remove-Item -LiteralPath $liveProfile -Recurse -Force -ErrorAction SilentlyContinue
+    $temp = Join-Path $liveProfile 'temp'
+    $null = New-Item -ItemType Directory -Path (Join-Path $temp 'ColourWars-tune-999999') -Force
+    $null = New-Item -ItemType Directory -Path (Join-Path $temp 'ColourWars-tune-999998') -Force
+    Set-Content -LiteralPath (Join-Path $temp 'ColourWars-tune-999998/keep.txt') -Value 'keep'
+    $transcript = Join-Path $output 'p4-live.log'
+    Remove-Item -LiteralPath $transcript -ErrorAction SilentlyContinue
+    $window = [IntPtr]::Zero
+    $process = Start-Game $liveProfile @('+logfile', ('"' + $transcript + '"'), '+stage', 'movement_course',
+        '+players', '1', '+timescale', '4') $temp
+    Start-Sleep -Seconds $StartupSeconds
+    $window = Find-Window $process
+    Confirm-Focus; Start-Sleep -Milliseconds 400
+
+    Invoke-Checked 'timescale 1'
+    Invoke-Checked 'bind shift+f5 echo bound-shift-f5'
+    Confirm-Focus
+    $driver::Chord($shift, $f5); Start-Sleep -Milliseconds 500
+    if (-not (Wait-Transcript '[SHIFT+F5] echo bound-shift-f5' 5)) { throw 'Shift+F5 did not run its bind.' }
+    if ((Get-Transcript).Contains('[F5] restart')) { throw 'Shift+F5 also ran plain F5.' }
+    $driver::Tap($f5, $false); Start-Sleep -Milliseconds 800
+    if (-not (Wait-Transcript '[F5] restart' 5)) { throw 'F5 no longer restarts.' }
+    Start-Sleep -Seconds 4
+
+    # The first tune edit sweeps old empty tune folders from (this run's) TEMP.
+    Invoke-Checked "tune tuning.player.max_velocity.x $fastToken"
+    Invoke-Checked 'tune.reset'
+    if (Test-Path -LiteralPath (Join-Path $temp 'ColourWars-tune-999999')) { throw 'The empty tune folder was not swept.' }
+    if (-not (Test-Path -LiteralPath (Join-Path $temp 'ColourWars-tune-999998/keep.txt'))) { throw 'A non-empty tune folder was touched.' }
+    if (@(Get-ChildItem -LiteralPath $temp -Filter 'ColourWars-tune-*.json').Count -ne 0) { throw 'A tune candidate file was left in TEMP.' }
+
+    # The live console: the match runs, the keyboard seat stands still.
+    Invoke-Checked 'console.live 1'
+    Confirm-Focus
+    $driver::Tap($grave, $false); Start-Sleep -Milliseconds 300
+    $driver::Type('status'); $driver::Tap($enter, $false); Start-Sleep -Milliseconds 400
+    $driver::Type('ddddddddaaaa '); Start-Sleep -Milliseconds 1000
+    Save-Shot 'p4-live-console.png'
+    $driver::Tap($enter, $false); Start-Sleep -Milliseconds 200
+    $driver::Type('status'); $driver::Tap($enter, $false); Start-Sleep -Milliseconds 400
+    $driver::Tap($escape, $false); Start-Sleep -Milliseconds 800
+    $driver::Tap($grave, $false); Start-Sleep -Milliseconds 300
+    $driver::Type('status'); $driver::Tap($enter, $false); Start-Sleep -Milliseconds 400
+    $driver::Type('overlay perf'); $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
+    $driver::Type('perf'); $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
+    $driver::Tap($grave, $false); Start-Sleep -Milliseconds 1500
+    Save-Shot 'p4-perf-overlay.png'
+    Invoke-ConsoleLine 'quit' 0
+    Wait-Exit $process 15 'The live-console game'
+
+    $log = Get-Transcript
+    Assert-Transcript @('console.live = on', 'console: live (the match keeps running',
+        'console: live closed', 'overlay.perf = on', 'CPU ms    min    avg    max') 'live'
+    $states = @([regex]::Matches($log, 'P1 kbm team a \w+\s+at \((-?\d+), (-?\d+)\)'))
+    $updates = @([regex]::Matches($log, 'updates (\d+) since the build'))
+    $depths = @([regex]::Matches($log, 'stack depth (\d+), in a match'))
+    if ($states.Count -lt 3 -or $updates.Count -lt 3) { throw 'The live console did not print three statuses.' }
+    $n = $states.Count
+    if ($states[$n - 3].Groups[1].Value -ne $states[$n - 2].Groups[1].Value) {
+        throw "P1 moved while the live console had the keyboard: x $($states[$n - 3].Groups[1].Value) -> $($states[$n - 2].Groups[1].Value)."
+    }
+    if ([int]$updates[$updates.Count - 2].Groups[1].Value -le [int]$updates[$updates.Count - 3].Groups[1].Value + 30) {
+        throw 'The match did not keep running under the live console.'
+    }
+    if ($depths[$depths.Count - 1].Groups[1].Value -ne '2') { throw 'Escape out of the live console opened a menu.' }
+    $frame = [regex]::Match($log, 'frame\s+([0-9.]+)\s+([0-9.]+)\s+([0-9.]+)')
+    if (-not $frame.Success -or [double]::Parse($frame.Groups[2].Value, $invariantCulture) -le 0) {
+        throw 'perf printed no frame time.'
+    }
+    Write-Host "NOTE live console: P1 x $($states[$n - 3].Groups[1].Value) before and after typing; updates $($updates[$updates.Count - 3].Groups[1].Value) -> $($updates[$updates.Count - 2].Groups[1].Value); perf $($frame.Value)"
+
+    # q5: the same profile again: binds.cfg and history.txt carry over.
+    $transcript = Join-Path $output 'p4-relaunch.log'
+    Remove-Item -LiteralPath $transcript -ErrorAction SilentlyContinue
+    $window = [IntPtr]::Zero
+    $process = Start-Game $liveProfile @('+logfile', ('"' + $transcript + '"'), '+binds') $temp
+    Start-Sleep -Seconds $StartupSeconds
+    $window = Find-Window $process
+    Confirm-Focus; Start-Sleep -Milliseconds 400
+    Assert-Transcript @('binds: 1 change(s) from', 'SHIFT+F5  echo bound-shift-f5  *') 'relaunch'
+    # Up recalls the last line typed in the first session, which was quit.
+    $driver::Tap($grave, $false); Start-Sleep -Milliseconds 300
+    $driver::Tap($up, $true); Start-Sleep -Milliseconds 200
+    Save-Shot 'p4-history-up.png'
+    $driver::Tap($enter, $false)
+    Wait-Exit $process 15 'The relaunched game (history Up, Enter: quit)'
+    Assert-Transcript @('] quit') 'relaunch'
+
+    Write-Host "PASS debug console driven, phase 4: +exec review_feedback_ab (18 PNGs, on/off differ, bursts on screen; autoexec first), station_tour (10), bots_4p (1); bind Shift+F5 and F5; TEMP sweep; live console (P1 still, match running, Escape without a pause menu); perf; binds.cfg and history.txt across a restart. Evidence: $output"
+}
+finally {
+    if ($process -ne $null -and -not $process.HasExited) { $process.Kill() }
+}
 }

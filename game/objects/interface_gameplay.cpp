@@ -52,6 +52,23 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	float respawn_timer,
 	bool show_respawn_timer) const
 {
+	this->draw_gameplay_interface(draw_list, resolution, player_index,
+		input_slots::device_name(input_slot), team, health, ammo, timer, team_colour,
+		respawn_timer, show_respawn_timer);
+}
+
+void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
+	const Vector2F& resolution,
+	int player_index,
+	const std::wstring& device_label,
+	PlayerTeam team,
+	float health,
+	float ammo,
+	float timer,
+	const Colour& team_colour,
+	float respawn_timer,
+	bool show_respawn_timer) const
+{
 	const HudPresentation& look = *this->look_;
 	const float scale = std::min(
 		resolution.x / look.player_identity_reference_width,
@@ -67,7 +84,7 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 
 	const std::wstring identity = L"P" + std::to_wstring(player_index + 1) +
 		(team == PlayerTeam::a ? L"  /  TEAM A\n" : L"  /  TEAM B\n") +
-		input_slots::device_name(input_slot);
+		device_label;
 	const Vector2F identity_pos(resolution.x * look.player_identity_offset.x,
 		resolution.y * look.player_identity_offset.y);
 	const Vector2F identity_size = this->render_resources()->measure_text(

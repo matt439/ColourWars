@@ -4,10 +4,14 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "engine/app/application.h"
+#include "engine/core/file_path.h"
 #include "engine/render/text_encoding.h"
 #include "game/build_info.h"
 #include "game/debug/bot_driver.h"
 #include "game/debug/debug_console_state.h"
+#include "game/debug/debug_console_view.h"
+#include "game/debug/debug_keys.h"
+#include "game/debug/debug_script.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/debug_menu_page.h"
 #include "game/debug/debug_screenshot.h"
@@ -21,10 +25,12 @@
 #include "game/states/menu_input.h"
 #include "game/states/menu_level_settings.h"
 #include <bit>
+#include <cctype>
 #include <chrono>
 #include <cstdio>
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
 #include <random>
 #include <utility>
 
@@ -71,26 +77,14 @@ namespace
 		return pressed;
 	}
 
-	struct Bind
+	std::string upper(std::string text)
 	{
-		Key key;
-		const char* label;
-		const char* line;
-		bool sync_audio;
-	};
-
-	// Matches only; every other F-key and the grave key are read nowhere else.
-	// F1 (per-player overlay) is the game's own.
-	constexpr Bind binds[] = {
-		{ Key::f2, "F2", "overlay collision", false },
-		{ Key::f3, "F3", "overlay camera", false },
-		{ Key::f4, "F4", "overlay paint", false },
-		{ Key::f5, "F5", "restart", false },
-		{ Key::f6, "F6", "pause toggle", true },
-		{ Key::f7, "F7", "step 1", true },
-		{ Key::f8, "F8", "visual next", false },
-		{ Key::f9, "F9", "feedback toggle", false },
-	};
+		for (char& c : text)
+		{
+			c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
+		}
+		return text;
+	}
 }
 
 DebugDirector::DebugDirector() = default;
@@ -208,23 +202,17 @@ bool DebugDirector::before_page_update(DebugPageTarget& page, float dt)
 
 void DebugDirector::draw_status(Renderer& renderer) const
 {
-	if (this->impl_ == nullptr || this->impl_->data() == nullptr)
+	if (this->impl_ != nullptr && this->impl_->data() != nullptr)
 	{
-		return;
+		this->impl_->draw_status(renderer);
 	}
-	const GameData& data = *this->impl_->data();
-	// Bottom left, outside the console's top panel, so it stays readable
-	// while the console is open.
-	const mattmath::RectangleF paint = DebugConsoleState::draw_panel(renderer, data,
-		this->impl_->paint_lines(), DebugConsoleState::Anchor::bottom_left);
-	if (!this->impl_->console_open())
+}
+
+void DebugDirector::begin_match_draw() const
+{
+	if (this->impl_ != nullptr)
 	{
-		// Bottom right, or above the paint panel when a narrow window cannot
-		// hold both on one row.
-		const std::string strip = this->impl_->status_strip();
-		DebugConsoleState::draw_panel(renderer, data,
-			strip.empty() ? std::vector<std::string>() : std::vector<std::string>{ strip },
-			DebugConsoleState::Anchor::bottom_right, paint);
+		this->impl_->begin_match_draw();
 	}
 }
 
@@ -241,13 +229,15 @@ DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentat
 	this->log_.info("ColourWars developer console - " + label);
 	this->log_.info("` toggles this console; type help. F10/F11 (or hold pad Back+Start) "
 		"opens the debug menu. F2-F4 overlays, F5 restart, F6 pause, F7 step, "
-		"F8 visual, F9 feedback.");
+		"F8 visual, F9 feedback; 'binds' lists the key table, 'exec.list' the scripts.");
+	this->binds_.reset();
 	this->register_commands();
 	this->register_view_commands();
 	this->register_player_commands();
 	this->register_bot_commands();
 	this->register_replay_commands();
 	this->register_tune_commands();
+	this->register_script_commands();
 	this->tune_targets_[0] = std::make_unique<TuningTarget>(tuning, presentation);
 	this->tune_targets_[1] = std::make_unique<PresentationTarget>(presentation, tuning);
 }
@@ -258,6 +248,14 @@ DebugDirectorImpl::~DebugDirectorImpl()
 	{
 		UnhookWindowsHookEx(static_cast<HHOOK>(this->f10_hook_));
 	}
+}
+
+DebugStatus DebugDirectorImpl::submit_console_line(const std::string& line)
+{
+	this->log_.write(DebugSeverity::echo, "] " + line);
+	const DebugStatus status = this->execute(line);
+	this->save_history();
+	return status;
 }
 
 void DebugDirectorImpl::attach(Application* application, GameData* data)
@@ -286,13 +284,98 @@ DebugStatus DebugDirectorImpl::execute(std::string_view line)
 	return this->registry_.execute(line, this->log_);
 }
 
+// The launch arguments are a script frame that keeps going after an error, as
+// launch statements always have; autoexec.cfg, when the profile has one, is a
+// file frame above it, so it runs first. One synchronous tick runs both up to
+// their first wait, so `+stage x +players 4` is all queued before the first
+// page update, as before.
 void DebugDirectorImpl::run_launch_statements(const std::vector<std::string>& statements)
 {
-	for (const std::string& statement : statements)
+	this->load_persistent();
+	if (!statements.empty())
 	{
-		this->log_.write(DebugSeverity::echo, "launch: " + statement);
-		this->execute(statement);
+		DebugScriptRunner::Frame launch;
+		launch.name = "launch";
+		launch.keep_going = true;
+		for (const std::string& statement : statements)
+		{
+			launch.statements.push_back({ "launch", 0, statement });
+		}
+		this->scripts_.push(std::move(launch), true);
 	}
+	if (const std::optional<std::filesystem::path> directory = this->user_directory())
+	{
+		const std::filesystem::path path = *directory / L"autoexec.cfg";
+		std::error_code ignored;
+		if (std::filesystem::is_regular_file(path, ignored))
+		{
+			std::ifstream stream(path, std::ios::binary);
+			const std::string text((std::istreambuf_iterator<char>(stream)),
+				std::istreambuf_iterator<char>());
+			const ParsedScript parsed = parse_script("autoexec.cfg", text, {});
+			if (!parsed.ok)
+			{
+				this->log_.error("autoexec: " + parsed.error + "; not run");
+			}
+			else
+			{
+				this->log_.info("autoexec: " + labrador::path_to_utf8(path));
+				DebugScriptRunner::Frame frame;
+				frame.name = "autoexec.cfg";
+				frame.statements = parsed.statements;
+				this->scripts_.push(std::move(frame), true);
+			}
+		}
+	}
+	this->tick_scripts(false);
+}
+
+void DebugDirectorImpl::tick_scripts(bool from_hook)
+{
+	if (!this->scripts_.running())
+	{
+		return;
+	}
+	this->inline_capture_ = from_hook;
+	this->scripts_.tick(
+		[this](const DebugScriptStatement& statement)
+		{
+			return this->registry_.execute(statement.text, this->log_);
+		},
+		[this] { return this->wait_context(); },
+		[this]
+		{
+			if (this->pending_screenshot_ && this->inline_capture_)
+			{
+				this->capture_screenshot_if_ready();
+			}
+			return this->pending_screenshot_.has_value();
+		},
+		this->log_);
+	this->inline_capture_ = false;
+}
+
+DebugWaitContext DebugDirectorImpl::wait_context() const
+{
+	DebugWaitContext context;
+	context.updates = this->total_updates_;
+	context.frames = this->script_frames_;
+	context.in_match = this->match_ != nullptr;
+	context.round_over = this->match_ != nullptr && this->match_->debug_level_finished();
+	context.build_pending = this->match_ != nullptr ?
+		this->rebuild_queued() && !this->leave_requested_ :
+		this->request_.stage.has_value() || this->starting_from_plan_;
+	context.match_ready = this->match_ != nullptr && !this->rebuild_queued() &&
+		!this->leave_requested_ && this->match_->debug_countdown_over();
+	context.replay_active = this->play_armed_ != nullptr ||
+		(this->player_ != nullptr && !this->player_->finished);
+	context.recording = this->recorder_ != nullptr || this->record_armed_.has_value();
+	context.record_armed = this->recorder_ == nullptr && this->record_armed_.has_value();
+	context.paused = this->clock_.paused();
+	// GameData forwards the keyboard to the application: ask only with one.
+	context.window_active = this->application_ == nullptr || this->data_ == nullptr ||
+		this->data_->keyboard() == nullptr || this->data_->keyboard()->focused();
+	return context;
 }
 
 void DebugDirectorImpl::set_console_open(bool open)
@@ -302,7 +385,40 @@ void DebugDirectorImpl::set_console_open(bool open)
 
 bool DebugDirectorImpl::console_open() const
 {
-	return this->console_open_;
+	return this->console_open_ || this->live_open_;
+}
+
+void DebugDirectorImpl::open_live_console()
+{
+	this->live_view_ = std::make_unique<DebugConsoleView>(true);
+	this->live_view_->init(*this->data_);
+	this->live_open_ = true;
+	this->log_.info("console: live (the match keeps running; the keyboard seat is idle while "
+		"it is open)");
+}
+
+void DebugDirectorImpl::close_live_console(const std::string& reason)
+{
+	if (!this->live_open_)
+	{
+		return;
+	}
+	// The view is kept until the next open: this may run inside its update.
+	this->live_open_ = false;
+	this->blank_keyboard_once_ = true;
+	this->log_.info("console: live closed" + (reason.empty() ? std::string() : " (" + reason + ")"));
+}
+
+void DebugDirectorImpl::set_live_console_open(bool open)
+{
+	if (open)
+	{
+		this->live_open_ = true;
+	}
+	else
+	{
+		this->close_live_console("");
+	}
 }
 
 void DebugDirectorImpl::set_debug_menu(DebugMenuPage* page)
@@ -345,11 +461,18 @@ MatchPlanner::ConnectedPads DebugDirectorImpl::connected_pads() const
 	return pads;
 }
 
-bool DebugDirectorImpl::open_console_if_requested()
+bool DebugDirectorImpl::open_console_if_requested(bool match_hook)
 {
-	if (this->console_open_ || this->data_ == nullptr || this->application_ == nullptr ||
-		!this->data_->keyboard()->pressed(Key::grave))
+	// An open live console reads grave itself (to close).
+	if (this->console_open_ || this->live_open_ || this->data_ == nullptr ||
+		this->application_ == nullptr || !this->data_->keyboard()->pressed(Key::grave))
 	{
+		return false;
+	}
+	if (match_hook && this->live_console_)
+	{
+		// Over a running match only; the update goes ahead this frame.
+		this->open_live_console();
 		return false;
 	}
 	// Deferred: issued from inside the top state's update.
@@ -405,6 +528,9 @@ void DebugDirectorImpl::open_debug_menu()
 	{
 		return;
 	}
+	// F10 typed into the live console is still the debug menu's key; the
+	// menu is a page over the match, so the live console closes.
+	this->close_live_console("the debug menu opened");
 	// Deferred, like the console: pushed from inside the top state's update,
 	// with no result, so it can sit over any state.
 	this->application_->push(std::make_unique<DebugMenuPage>(context, this));
@@ -476,6 +602,8 @@ void DebugDirectorImpl::attach_match(DebugMatchTarget& match)
 {
 	this->match_ = &match;
 	this->waiting_notice_shown_ = false;
+	// Perf times match frames: not the time spent in the menus before this.
+	this->perf_.break_interval();
 	if (match.debug_settings().stage() == "movement_course")
 	{
 		// A comparison chosen on the stage-select page carries into commands.
@@ -504,6 +632,7 @@ void DebugDirectorImpl::detach_match(const DebugMatchTarget& match)
 		this->stop_recording("the match ended");
 		this->stop_playing("the match ended");
 		this->bot_driver_.reset();
+		this->close_live_console("the match ended");
 		this->match_ = nullptr;
 	}
 	// A replay armed for this match's rebuild has no build left to start.
@@ -605,7 +734,9 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 		const DebugStatus status = this->apply_goto(match, pending.station, pending.seat);
 		this->log_.write(status.ok ? DebugSeverity::info : DebugSeverity::error, status.message);
 	}
-	// Bots, a replay or a recording start with the level's first update.
+	// Bots, a replay or a recording start with the level's first update, and
+	// perf's next interval with its first draw (not the build before it).
+	this->perf_.break_interval();
 	this->level_updates_ = 0;
 	this->last_print_.reset();
 	if (this->play_armed_ != nullptr)
@@ -634,6 +765,9 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 		}
 	}
 
+	// Every build gets the HUD labels of the seats a bot or replay drives.
+	this->push_seat_labels(match);
+
 	// No partial step or old edge carries into the new level, and its
 	// voices start paused if the clock is.
 	this->clock_.reset_accumulator();
@@ -641,6 +775,36 @@ void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 	{
 		match.debug_sync_audio();
 	}
+}
+
+std::vector<std::wstring> DebugDirectorImpl::seat_labels(const DebugMatchTarget& match) const
+{
+	const std::vector<MenuPlayerSettings> seats = match.debug_settings().player_settings();
+	std::vector<std::wstring> labels(seats.size());
+	bool any = false;
+	for (std::size_t i = 0; i < seats.size(); ++i)
+	{
+		if (this->player_ != nullptr)
+		{
+			labels[i] = L"Replay";
+		}
+		else if (this->bot_driver_ != nullptr)
+		{
+			const auto& assigned = this->bot_driver_->assignments();
+			const auto found = assigned.find(static_cast<int>(i));
+			if (found != assigned.end())
+			{
+				labels[i] = L"Bot: " + widen(found->second);
+			}
+		}
+		any = any || !labels[i].empty();
+	}
+	return any ? labels : std::vector<std::wstring>();
+}
+
+void DebugDirectorImpl::push_seat_labels(DebugMatchTarget& match)
+{
+	match.debug_set_seat_labels(this->seat_labels(match));
 }
 
 void DebugDirectorImpl::filter_match_inputs(std::vector<PlayerInputData>& inputs) const
@@ -655,6 +819,19 @@ void DebugDirectorImpl::filter_match_inputs(std::vector<PlayerInputData>& inputs
 			input.toggle_pause_menu = false;
 		}
 	}
+	// The live console has the keyboard: the keyboard seat stands still (no
+	// move, jump, drop, shot, F1 or pause) while it is open and on the frame
+	// it closed, whose Escape release is that seat's pause key. Mouse aim is
+	// read by the level directly and still follows the cursor (engine
+	// report 9).
+	const std::size_t keyboard = static_cast<std::size_t>(input_slots::keyboard_and_mouse);
+	if ((this->live_open_ || this->blank_keyboard_once_) && keyboard < inputs.size())
+	{
+		PlayerInputData idle;
+		idle.connected = inputs[keyboard].connected;
+		inputs[keyboard] = idle;
+	}
+	this->blank_keyboard_once_ = false;
 }
 
 void DebugDirectorImpl::drop_request(const std::string& reason)
@@ -723,16 +900,20 @@ void DebugDirectorImpl::run_binds(DebugMatchTarget& match)
 		return;
 	}
 	const Keyboard& keyboard = *this->data_->keyboard();
-	for (const Bind& bind : binds)
+	// A copy: a bind may rebind keys.
+	const auto fired = this->binds_.fired(
+		[&keyboard](Key key) { return keyboard.pressed(key); },
+		[&keyboard](Key key) { return keyboard.held(key); });
+	for (const auto& [chord, line] : fired)
 	{
-		if (keyboard.pressed(bind.key))
+		this->log_.write(DebugSeverity::echo, "[" + upper(debug_keys::chord_name(chord)) + "] " + line);
+		const bool paused = this->clock_.paused();
+		const int steps = this->clock_.pending_steps();
+		this->execute(line);
+		// Pause and step change what the match's voices may do.
+		if (this->clock_.paused() != paused || this->clock_.pending_steps() != steps)
 		{
-			this->log_.write(DebugSeverity::echo, std::string("[") + bind.label + "] " + bind.line);
-			this->execute(bind.line);
-			if (bind.sync_audio)
-			{
-				match.debug_sync_audio();
-			}
+			match.debug_sync_audio();
 		}
 	}
 }
@@ -753,10 +934,29 @@ void DebugDirectorImpl::capture_screenshot_if_ready()
 	{
 		const std::string name = screenshot_file_name(requested,
 			std::chrono::system_clock::now());
-		const std::filesystem::path directory(widen(directory_consts::screenshot_directory()));
+		std::filesystem::path directory(widen(directory_consts::screenshot_directory()));
+		if (!this->screenshot_dir_.empty())
+		{
+			directory /= widen(this->screenshot_dir_);
+		}
 		std::filesystem::create_directories(directory);
 		const std::filesystem::path path = directory / widen(name);
-		const ScreenCapture image = capture_stack(*this->application_);
+		// The capture redraws the stack: no perf sample (and the frame after
+		// it starts a new interval rather than timing the capture), and the
+		// strip only when screenshot.strip is on.
+		this->perf_.break_interval();
+		this->capturing_ = true;
+		ScreenCapture image;
+		try
+		{
+			image = capture_stack(*this->application_);
+		}
+		catch (...)
+		{
+			this->capturing_ = false;
+			throw;
+		}
+		this->capturing_ = false;
 		std::string error;
 		if (!write_png(path, image, error))
 		{
@@ -775,13 +975,30 @@ void DebugDirectorImpl::capture_screenshot_if_ready()
 
 bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt)
 {
-	if (this->poll_debug_menu_toggle(dt) || this->open_console_if_requested())
+	++this->hook_frames_;
+	if (this->poll_debug_menu_toggle(dt) || this->open_console_if_requested(true))
 	{
 		return true;
 	}
 
 	this->capture_screenshot_if_ready();
-	this->run_binds(match);
+	if (this->live_open_ && this->live_view_ != nullptr && this->data_ != nullptr)
+	{
+		// The live console has the keyboard: no binds while it is open.
+		if (this->live_view_->update(*this->data_->keyboard(), dt, *this) ==
+			DebugConsoleView::Outcome::close)
+		{
+			this->close_live_console("");
+		}
+	}
+	else
+	{
+		this->run_binds(match);
+	}
+	// A statement's queued rebuild applies below, in this same hook; a
+	// screenshot with nothing queued is taken before this step's update.
+	++this->script_frames_;
+	this->tick_scripts(true);
 
 	if (this->leave_requested_)
 	{
@@ -840,13 +1057,24 @@ void DebugDirectorImpl::update_match(DebugMatchTarget& match,
 		}
 		const bool replay_was_running = this->player_ != nullptr && !this->player_->finished;
 		this->before_level_update(match, dt);
+		// The perf overlay times the game's own Level::update, seat filter
+		// (bots, record, play) included.
+		const double start = perf_now_ms();
 		match.debug_update_level(run == 0 ? latched : DebugClock::without_edges(latched), dt,
 			this->seat_filter());
+		this->perf_.add_update(perf_now_ms() - start);
 		++this->level_updates_;
+		++this->total_updates_;
 		this->after_level_update(match);
 		// A replay that just reached its last update holds that frame, even
 		// mid fast-forward.
 		if (replay_was_running && this->player_ != nullptr && this->player_->finished)
+		{
+			break;
+		}
+		// A script waiting for this update (or the end of the countdown)
+		// runs before the next one, even at timescale 4.
+		if (this->scripts_.should_stop(this->wait_context()))
 		{
 			break;
 		}
@@ -860,6 +1088,11 @@ void DebugDirectorImpl::update_match(DebugMatchTarget& match,
 
 bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt)
 {
+	++this->hook_frames_;
+	// A page is on top: the live console exists only over a running match,
+	// and perf times only frames with the match on top (a page may cover it).
+	this->close_live_console("a menu opened");
+	this->perf_.break_interval();
 	if (this->poll_debug_menu_toggle(dt))
 	{
 		return true;
@@ -873,12 +1106,19 @@ bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt)
 			page.debug_reset_input(slot);
 		}
 	}
-	if (this->open_console_if_requested())
+	if (this->open_console_if_requested(false))
 	{
 		return true;
 	}
 
 	this->capture_screenshot_if_ready();
+	// Not under the debug menu: someone is browsing it, and a script's lines
+	// would race what it stages. The script waits for it to close.
+	if (this->debug_menu_ == nullptr)
+	{
+		++this->script_frames_;
+		this->tick_scripts(true);
+	}
 
 	// While the debug menu is open it is the page on top (only the console can
 	// sit above it, and the console is not a page): what it stages, or what

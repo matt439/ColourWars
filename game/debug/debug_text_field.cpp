@@ -146,4 +146,25 @@ const std::vector<std::string>& DebugTextField::history() const
 {
 	return this->history_;
 }
+
+void DebugTextField::set_history(const std::vector<std::string>& lines)
+{
+	this->history_.clear();
+	for (const std::string& line : lines)
+	{
+		if (line.find_first_not_of(' ') == std::string::npos || line.size() > max_length ||
+			(!this->history_.empty() && this->history_.back() == line))
+		{
+			continue;
+		}
+		this->history_.push_back(line);
+	}
+	if (this->history_.size() > history_capacity)
+	{
+		this->history_.erase(this->history_.begin(), this->history_.end() -
+			static_cast<std::ptrdiff_t>(history_capacity));
+	}
+	this->history_index_ = -1;
+	this->draft_.clear();
+}
 #endif

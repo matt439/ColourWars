@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine/math/rectanglef.h"
 #include "game/objects/level_overlays.h"
 #include "game/objects/level_station.h"
 #include "game/objects/player_input_data.h"
@@ -73,6 +74,17 @@ public:
 	virtual bool debug_place(int seat, const mattmath::Vector2F& top_left) = 0;
 	virtual bool debug_respawn(int seat) = 0;
 	virtual MatchPaint debug_paint() const = 0;
+
+	// Phase 4 ----------------------------------------------------------------
+
+	// The countdown is over and the players move (`wait match`).
+	virtual bool debug_countdown_over() const = 0;
+	// What each seat's HUD says instead of its device ("Bot: paint",
+	// "Replay"), by view; an empty string or a short list keeps the device.
+	virtual void debug_set_seat_labels(const std::vector<std::wstring>& labels) = 0;
+	// Window-pixel rectangles the debug panels must not cover: the opening
+	// cards during the countdown.
+	virtual std::vector<mattmath::RectangleF> debug_screen_obstacles() const = 0;
 
 protected:
 	DebugMatchTarget() = default;

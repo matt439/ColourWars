@@ -5,9 +5,17 @@ F-key toggles, overlays, player cheats and screenshots for reviewing the game
 without walking the menus; [live tuning](#live-tuning) of `tuning.json` and
 `presentation.json` with a save back to the source files; scripted
 [bots](#bots) for the seats nobody is holding; and a [seed, record and
-play](#seed-record-and-play) loop that replays a match bit for bit. It exists
-only in **Debug** builds (`x64-debug`); Release compiles out the console, menu,
-registry, commands, binds, bots, recorder and tuner (see
+play](#seed-record-and-play) loop that replays a match bit for bit; and
+[scripts](#scripts), rebindable [binds](#binds), a [live
+console](#live-console) and a [perf overlay](#perf), so that **a repeatable
+review is one command**:
+
+```powershell
+out/build/x64-debug/game/ColourWars.exe +exec review_feedback_ab +quit
+```
+
+It exists only in **Debug** builds (`x64-debug`); Release compiles out the
+console, menu, registry, commands, binds, scripts, bots, recorder and tuner (see
 [Release](#release-behaviour)).
 
 ## Start a review from the command line
@@ -20,7 +28,10 @@ Every argument that starts with `+` and a letter begins a statement; the words
 after it are its arguments, so `+timescale +0.5` keeps `+0.5` as a number.
 Statements run in order, before the first frame, through the same registry as
 the console. The match starts directly, without menu navigation, and you are
-returned to the real main menu on `menu` or when the match ends normally.
+returned to the real main menu on `menu` or when the match ends normally. The
+launch arguments are themselves a [script](#scripts): `+wait match`,
+`+exec <name>` and `+screenshot` hold the statements after them until they are
+done, so `+stage movement_course +wait match +screenshot start +quit` works.
 
 Useful combinations:
 
@@ -45,6 +56,9 @@ ColourWars.exe +stage movement_course +players 4 +bot all paint
 
 # The same match every time (seeded bots and palette), ready to record
 ColourWars.exe +seed 7 +stage movement_course +players 4 +bot all paint
+
+# A shipped review, start to finish, then exit (see Scripts)
+ColourWars.exe +exec station_tour +quit
 ```
 
 `players` and `bot` need `stage` beside them: on their own they are stored for a
@@ -55,7 +69,8 @@ error, not a crash, and the game then starts at the title as usual.
 
 ## Keys
 
-During a match, without opening the console:
+During a match, without opening the console - these are the default
+[binds](#binds), and `bind` changes them:
 
 | Key | Does |
 |---|---|
@@ -79,8 +94,10 @@ Anywhere (a match or any menu page):
 F1 (per-player debug overlay), Escape (pause menu) and the gameplay keys are
 unchanged. A small strip in the bottom-right corner names any non-default state
 (`x0.25`, `PAUSED`, `visual posed`, `feedback off`, `GOD`, `AMMO INF`,
-`BOTS 3x paint`, `REC drive 240`, `PLAY drive 240/600`, `TUNED 2`,
-`ovl collision camera paint`).
+`BOTS 3x paint`, `REC drive 240`, `PLAY drive 240/600`, `PLAY drive done
+(MATCH)`, `TUNED 2`, `ovl collision camera paint`, and `SCRIPT
+review.cfg:14 wait 30 updates (12 left)` while a script waits). It keeps clear
+of the paint and perf panels and, during the countdown, of the opening cards.
 
 **The chord and its buttons.** Back alone still toggles a player's F1 overlay
 and Start alone still pauses. Once a pad has both down, both buttons belong to
@@ -102,7 +119,7 @@ In the console:
 | **`** (the key left of 1, by scan code) | open / close; its character never enters the line, even when held |
 | **Escape** | close (on release, so the match does not also open its pause menu) |
 | **Enter** | run the line (several statements may be separated by `;`) |
-| **Up / Down** | browse this session's history (kept in memory only) |
+| **Up / Down** | browse the history: the last 64 lines, kept across sessions in `history.txt` (see [History](#history)) |
 | **Tab** | complete the command name, a variable, or a choice argument (including `goto` stations) |
 | **Left / Right / Home / End**, **Backspace / Delete** | edit; Backspace, Delete and arrows repeat when held |
 | **Ctrl+U** | clear the line |
@@ -114,9 +131,11 @@ dead key and combines it with the next key typed, so the first character after
 opening the console can come out as `^x` or be lost. Retype it.
 
 The console is a pushed state drawn semi-transparently over the top of the
-window, across every pane. **The match is frozen while it is open** - only the
-top of the state stack updates, which is also what keeps your typing out of the
-game. Use the F-keys above for live A/B toggling during play.
+window, across every pane. **By default the match is frozen while it is open** -
+only the top of the state stack updates, which is also what keeps your typing
+out of the game. Use the F-keys above for live A/B toggling during play, or
+`console.live 1` for a [live console](#live-console) that leaves the match
+running.
 
 ## Commands
 
@@ -127,8 +146,8 @@ game. Use the F-keys above for live A/B toggling during play.
 | `weapon <seat\|all> <sprayer\|sniper\|roller\|mister\|bucket\|random>` | a seat's weapon (seats are 1-4) |
 | `visual <original\|rotating\|posed\|next\|prev>` | the Movement Course art comparison (variable; `continuous`/`authored` also accepted). Off the course it is remembered, not applied |
 | `feedback <on\|off\|toggle>` | movement feedback (variable; `1`/`0` too). Immediate |
-| `overlay [player\|collision\|camera\|paint\|all\|none]` | toggle one [overlay](#overlays), or all on/off; alone, list them |
-| `overlay.player`, `overlay.collision`, `overlay.camera`, `overlay.paint` `<on\|off\|toggle>` | the overlays as variables |
+| `overlay [player\|collision\|camera\|paint\|perf\|all\|none]` | toggle one [overlay](#overlays), or all on/off (`all` leaves `perf` alone, `none` clears it); alone, list them |
+| `overlay.player`, `overlay.collision`, `overlay.camera`, `overlay.paint`, `overlay.perf` `<on\|off\|toggle>` | the overlays as variables |
 | `goto <station> [seat]` | put a seat (default 1) at a named [station](#stations-and-goto), at rest |
 | `respawn [seat\|all]` | respawn a seat or every seat now (default all) |
 | `god <0\|1>` | no player takes paint damage (variable) |
@@ -140,6 +159,12 @@ game. Use the F-keys above for live A/B toggling during play.
 | `step [n]` | pause, then run n single updates (1-600), one per frame; closes the console so they run |
 | `reload` | re-read `tuning.json` and `presentation.json`, from the source tree `game/content/` when this Debug build was made from one, otherwise the staged copy; validated before anything changes |
 | `screenshot [name]` | save the window as a PNG (see [Screenshots](#screenshots)) |
+| `screenshot.dir [folder\|off]`, `screenshot.strip <on\|off>` | a folder under `screens\` for the next shots (`{time}` is the local time), and whether the status strip is in them |
+| `exec <name> [args]`, `exec.stop`, `exec.list` | run a [script](#scripts), stop every running script, list the scripts |
+| `wait <n>\|<x>s\|match\|frames <n>\|replay\|record`, `echo <text>` | in a script: wait for updates, match seconds, the match, hook frames, a replay or a recording; print a line |
+| `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
+| `console.live <on\|off>` | the [live console](#live-console) (variable) |
+| `perf`, `perf.reset` | print or clear the [perf](#perf) numbers |
 | `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number or boolean in `tuning.json` / `presentation.json` (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
@@ -160,7 +185,8 @@ then waits and applies after that rebuild (checked against the stage it builds),
 and `respawn` is refused with the reason.
 
 **Idle dummies** take neutral input, never open the disconnected-pad pause menu,
-and paint nothing; their HUD says "Waiting to join". They are for reviewing
+and paint nothing; their HUD says "Waiting to join" ("Bot: paint" when a bot
+drives them, "Replay" under a replay). They are for reviewing
 2-4 panes, not opponents - unless a [bot](#bots) drives them. Choosing *change teams/weapons* on the end page after
 a dummy match returns to setup pages that wait for those seats; back out to the
 player count.
@@ -205,12 +231,12 @@ registry as a menu page: the same entries as the console, grouped.
 |---|---|
 | match | menu, players, restart, stage, visual, weapon |
 | player | ammo, bot (picker: `bot all <behaviour>`), god, goto, respawn |
-| view | feedback, overlay, overlay.camera, overlay.collision, overlay.paint, overlay.player |
+| view | feedback, overlay, overlay.camera, overlay.collision, overlay.paint, overlay.perf, overlay.player |
 | time | pause, step, timescale |
 | tuning | the `tuning` and `presentation` trees, then tune.diff, tune.reset, tune.save |
 | replay | checksum, play (picker over the recordings), record, replays |
 | content | reload, screenshot |
-| console | quit, status |
+| console | binds, binds.reset, console.live, exec.list, exec.stop, quit, status |
 
 - **Up/Down** move; **A/Enter** selects; **B/Escape** goes back a level
   (picker -> entries -> categories) and closes at the top; **Left/Right** step a
@@ -225,7 +251,8 @@ registry as a menu page: the same entries as the console, grouped.
   show at the bottom of the menu, so a refused `goto` says why.
 
 **Staging.** `stage`, `players`, `weapon` and `visual` only queue: the menu
-stays open, so several can be combined, and the queue shows under the title.
+stays open, so several can be combined, the queue shows beside the title, and
+each says `queued; rebuilds when the debug menu closes`.
 Backing out to the top lands on **Apply: ...**, which closes the menu; the
 queued request then applies through the normal path, once (in a match, one
 rebuild; in the menus, `Apply: start ...` starts the match, and `Apply: pick a
@@ -234,7 +261,10 @@ other command that would close the console (restart, step, goto, respawn,
 screenshot, menu, quit) closes the menu.
 
 The match is frozen while the menu is open, as under the console. The console
-can be opened over the menu; anything it queues waits until the menu closes.
+can be opened over the menu; anything it queues waits until the menu closes, and
+so does a running script. The menu draws below the band where each pane's HUD
+names its player, and without the menus' brand line, so it never covers P1's
+label.
 
 ## Overlays
 
@@ -244,6 +274,7 @@ can be opened over the menu; anything it queues waits until the menu closes.
 | `overlay.collision` | per pane: the collision shape of every object in view (structures white, paintables green, jump-throughs cyan, ramps orange with their slope, players in their team colour, projectiles yellow) and the out-of-bounds edge in red |
 | `overlay.camera` | per pane: the camera's scroll border (magenta; the player moves inside it before the camera follows), the camera bounds (blue) and a cross at the followed centre |
 | `overlay.paint` | bottom left: paint coverage per team and per seat, as a share of the paintable area, live. When a narrow window cannot hold it and the bottom-right status strip on one row, the strip moves above it |
+| `overlay.perf` | bottom left, above the paint panel: the [perf](#perf) graph and numbers. Not part of `overlay all` |
 
 They are set from the console, the debug menu, launch arguments (`+overlay all`)
 or F2-F4, survive restarts and rebuilds, and apply to the next match when set in
@@ -398,7 +429,10 @@ device (or the neutral input of an idle dummy):
 - A seat a bot drives never opens the disconnected-pad pause, the pause page's
   "Controller lost" or the restart fallback - not even a pad seat whose pad is
   unplugged.
-- A bot on an idle dummy keeps the dummy's "Waiting to join" HUD label.
+- A driven seat's HUD says `Bot: <behaviour>` instead of its device ("Waiting
+  to join" for a dummy), and every seat says `Replay` while a replay drives the
+  match. The label is a plain list of strings on `Level` that only the Debug
+  director sets; Release never fills it.
 - `status` adds `bot <behaviour>` to each driven seat. The paint overlay's
   per-seat column stays 0 for a bot on an idle dummy, because paint is credited
   to a device slot and a dummy has none; team totals count everything.
@@ -488,12 +522,240 @@ change the picture, so `+stage movement_course +screenshot start` captures the
 match, not the title. The status strip and overlays are included; the log says
 `screenshot: <path> (WxH)`.
 
+- `screenshot.dir <folder>` puts the next shots in `screens\<folder>\` (up to
+  three `/`-separated levels, each kept to `A-Z a-z 0-9 _ -`; `{time}` becomes
+  `YYYYMMDD-HHMMSS` once, when it is set), so a script collects a review set in
+  one place. `screenshot.dir off` goes back to `screens\`.
+- `screenshot.strip off` leaves the status strip out of the shots (the perf and
+  paint panels stay), so two pictures that differ only in a setting the strip
+  names (`feedback off`) differ only in the world.
+- In a script a screenshot is a barrier: the next line waits until the shot is
+  taken. With nothing queued it is taken at once, between the same two updates,
+  so `screenshot a; feedback off; screenshot b` is two pictures of one
+  simulation frame.
+
 It re-renders the stack into an unpresented frame and reads it back, because the
-engine offers no way to read the frame it presents (engine report 10).
+engine offers no way to read the frame it presents (engine report 10). That
+redraw adds no sample to the perf numbers, and the frame after it is not timed
+across the capture.
+
+## Scripts
+
+A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
+
+- **Where.** `exec` looks in the source tree's `scripts/debug/` (a Debug build
+  knows its checkout, as `reload` does), then in
+  `%LOCALAPPDATA%\ColourWars\debug\`. A name is `A-Z a-z 0-9 _ -`, with or
+  without `.cfg` - never a path. `exec.list` lists both folders with each
+  script's first `//` line; Tab completes the names.
+- **Grammar.** One console line per text line, `;` between statements as at the
+  prompt, `//` to the end of the line outside quotes, blank lines ignored, CRLF
+  and a UTF-8 BOM accepted, ASCII only, at most 64 KiB. `exec name a b` makes
+  `$1`/`$2` mean `a`/`b` in that file (`$$` is a `$`); an argument may not hold
+  `;`, `"`, `//` or a space, so it can never add a statement, and a `$n` with no
+  argument is an error at its line. There are no loops, conditions or variables,
+  deliberately: a script says *which* frames and stations, the code says how.
+- **Waits.** A script runs between updates, never inside one, and stops at a
+  `wait`:
+
+  | Wait | Until |
+  |---|---|
+  | `wait <n>` | `n` Level updates (1-1000000). It follows `timescale`, `pause` and `step` exactly: at x4 the step that reaches the count stops there, paused nothing counts, and `step 10` completes `wait 10` |
+  | `wait <x>s` | `x` match seconds: `round(x / dt)` updates at the engine's step (0 < x <= 3600) |
+  | `wait match` | the queued match is built, nothing is queued to rebuild it, and its countdown is over (exactly the update GO appears, even at x4) |
+  | `wait frames <n>` | `n` director hooks on which the script could run (a match update or a menu page's, not while the debug menu or the frozen console holds it); the only wait that counts in the menus |
+  | `wait replay` | the armed or running replay has finished. It then holds its last frame **paused**, so a `wait <n>` after it needs `pause off` first |
+  | `wait record` | the armed or running recording has been saved (a recording with no limit is saved when its round ends). Armed with no match queued to start it - `record` in the menus without `stage`, or its restart dropped - is an error |
+
+  `wait <n>`, `<x>s` and `match` with no match running or queued are errors
+  (`stage` first, or `wait frames`), and a wait whose match ends stops the
+  script. So does a `wait <n>` or `<x>s` that runs past the end of a round:
+  the results page does not advance by itself, so no update would come. `wait` outside a script is refused.
+- **Errors.** The first failing line stops the script, with
+  `script <file>:<line> stopped: <why>`; an `exec` that fails (no file, a parse
+  error) stops its caller at the `exec` line. `exec` nests up to eight files; a
+  file cannot `exec` itself. `exec.stop` stops everything.
+- **What holds a script.** A frozen console, the debug menu, and a window that
+  is not in front (the match only updates while the window is active) stop it
+  with the world: nothing it waits for can happen. The status strip shows
+  `SCRIPT <file>:<line> <wait>` and why (`the clock is paused`, `the window is
+  inactive - click it`), and `status` lists the frames. **Keep the window in
+  front during a review**: losing focus also suspends the level, which clears
+  every jump buffer and can change the checksums. Use `console.live 1` to type
+  while a script runs.
+- **Typed or bound.** A typed or bound `exec` closes the console and starts on
+  the next frame; a second one while a script runs is refused (`exec.stop`
+  first). A line typed while a script runs executes at once, beside it.
+- **Launch and autoexec.** The launch arguments are a script that keeps going
+  after an error, as they always have. `autoexec.cfg` in
+  `%LOCALAPPDATA%\ColourWars\debug\`, if there is one, runs before them (the
+  transcript `+logfile` opens starts with everything logged before it, so it
+  shows autoexec too). Only the game reads that folder: the acceptance case,
+  with no application, reads and writes nothing there.
+- **Record and play.** A script line is refused during a recording or a replay
+  exactly when the same line typed would be, and that stops the script; `exec`,
+  `wait`, `echo` and `exec.stop` touch no input and are always allowed.
+- **Not sandboxed.** A script changes the session like typing would. The
+  shipped ones put back the bots, the seed, the screenshot folder and strip and
+  the timescale as their last lines; each one's header says what it leaves
+  changed (`review_feedback_ab` leaves the overlays off and the posed visual on
+  four seats).
+
+**Shipped scripts** (`scripts/debug/`, each with how to run it at the top):
+
+| Script | Does |
+|---|---|
+| `review_feedback_ab` | the movement feedback A/B below |
+| `station_tour` | one player on the Movement Course, god and the collision overlay on, a screenshot at each of the ten stations, into `screens\station-tour-<time>\` |
+| `bots_4p` | four paint bots on Close Quarters, seed 7, 20 match seconds at x4, then a paused screenshot with the paint overlay and the checksum, into `screens\bots-4p-<time>\` |
+| `feedback_ab_pass`, `feedback_ab_shot` | helpers of `review_feedback_ab` |
+
+The acceptance case follows every shipped script from the top-level ones
+through each `exec` with the arguments it passes, and checks every statement's
+command and word count and every stage, visual, bot and station it names.
+
+### Worked example: `review_feedback_ab`
+
+```powershell
+out/build/x64-debug/game/ColourWars.exe +exec review_feedback_ab +quit
+```
+
+One command, about five seconds, and the window closes. What it does:
+
+1. `screenshot.dir review-feedback-ab-{time}`, `screenshot.strip off`, `seed
+   4242`, `overlay none`, `feedback on`: one folder for the set, pictures that
+   differ only in the world, and the same bots and palette on every build.
+2. `bot 1 jump` and `players 4 jump`: four panes, every seat a jump bot (the
+   keyboard seat too), so nobody has to hold a key.
+3. `exec feedback_ab_pass original`, then `rotating`, then `posed`. Each pass
+   is `stage movement_course`, `visual $1`, `timescale 4`, `wait match`, then
+   three frames counted in updates after GO - `t040`, `t096`, `t156`, chosen
+   where the seeded jump bots' take-off and landing bursts are on screen.
+4. Each frame is `exec feedback_ab_shot <visual> <frame>`: `pause on`,
+   `checksum`, `feedback on`, `screenshot <visual>-<frame>-on`, `feedback off`,
+   `screenshot <visual>-<frame>-off`, `feedback on`, `pause off`. The second
+   shot waits for the first, and both are taken between the same two updates.
+5. It puts back the strip, the folder, the bots and the seed, and echoes
+   `review_feedback_ab: done (3 visuals x 3 frames x on/off)`; `+quit` closes
+   the game.
+
+The result: 18 PNGs in
+`%LOCALAPPDATA%\ColourWars\screens\review-feedback-ab-<time>\`, named
+`<visual>-<frame>-on.png` / `-off.png`, and nine `checksum` lines in the log
+(add `+logfile <path>` before `+exec` to keep them):
+
+```text
+checksum 4f69583bfe85bb3e at update 221, paint A 0 B 0 of 194880, bursts 1
+```
+
+`bursts` is how many feedback bursts are alive at that frame: above 0, so each
+on/off pair differs. The three visuals print the same hash at each frame, so
+the art does not touch the simulation. `scripts/check-debug-console.ps1` runs it
+and checks all of this. Note that with the bots aiming level, `rotating` and
+`posed` draw the same sprayer pose; this review compares the feedback, not the
+tool art.
+
+## Binds
+
+The match's key table: a key (with `ctrl+` and/or `shift+`) to a console line.
+
+- `bind shift+f5 exec station_tour`, `bind shift+f2 "overlay perf"` (several words are
+  joined; a quoted line keeps its `;`s), `bind f5` shows one, `bind` or `binds`
+  lists the table (`*` marks a change from the defaults), `unbind f4`,
+  `unbind all` (the defaults too), `binds.reset`.
+- Keys: `a-z 0-9 f1-f12 numpad0-9 space tab enter backspace insert delete home end
+  pageup pagedown left right up down minus equals lbracket rbracket backslash
+  semicolon apostrophe comma period slash pause escape`, case-insensitive. No
+  `alt+`: Alt+F4, Alt+Space and Alt+Tab belong to the system whatever a bind
+  says. **`grave`, `f10` and `f11` are reserved** (console, debug menu). A key the
+  keyboard player uses (A, D, S, Space, Down, Escape, F1) binds with a warning:
+  it does both.
+- Modifiers match exactly: Shift+F5 does not run F5's bind. (Before phase 4,
+  Shift+F5 restarted like F5.)
+- Binds run only in a match, and not while the live console is open. The echo
+  is `[F5] restart`, `[SHIFT+F5] exec station_tour`.
+- The defaults are the F2-F9 table above. `bind` and `unbind` save
+  `%LOCALAPPDATA%\ColourWars\debug\binds.cfg` at once, holding only the
+  differences from the defaults as exec-able lines (so a later change to a
+  default reaches a profile that never touched that key), and it is read at
+  startup; `binds.reset` deletes it. A line it cannot use is a warning, never a
+  stop.
+
+There is no free F-key for the perf overlay: F12 is the Windows debugger hotkey
+(it breaks into an attached debugger). `bind shift+f2 "overlay perf"` gives it one.
+
+## History
+
+The console's history (Up / Down) is the last 64 non-blank lines, adjacent
+repeats collapsed, kept in `%LOCALAPPDATA%\ColourWars\debug\history.txt` and
+rewritten after every line, so it carries into the next session. The live and
+frozen consoles share it.
+
+## Live console
+
+`console.live 1` makes the console key open a **live** console over a running
+match: a shorter panel (the top 30%, opaque enough to read over the HUD cards;
+`live]` prompt) while the match keeps updating. `console.live 0` (the default) keeps the frozen console.
+
+- While it is open, the keyboard/mouse seat is connected and idle: no move,
+  jump, drop, shot, F1 or pause - the typing never reaches the player. Pads,
+  bots and replays play on. Mouse aim still follows the cursor (the level reads
+  the mouse directly), but nothing fires.
+- Escape (on release) or the console key closes it; the frame it closes on is
+  blanked too, because that Escape release is the keyboard player's pause key.
+- Lines run at once and the console stays open: a rebuild applies on the next
+  update without closing it. The F-key binds are off while it is open; F10
+  still opens the debug menu, which closes it.
+- It exists only over a running match. In the menus, or when a page (pause,
+  results, the debug menu) comes up over the match, the console is the frozen
+  one.
+- It causes no level suspend (no state is pushed), so typing into it during a
+  recording does not desynchronise the replay; the recording holds the blanked
+  seat.
+
+This is engine report 9's workaround, and its cost is recorded there.
+
+## Perf
+
+`overlay perf` (or `overlay.perf on`, or a bind) shows, bottom left above the
+paint panel, a graph of the last 120 frames' frame time (one bar a frame; green
+up to 60 Hz, amber up to 30 Hz, red beyond; the white line is 16.7 ms; the graph
+is two 60 Hz frames tall unless a frame was longer) over five lines:
+
+```text
+CPU ms    min    avg    max  (240 frames)
+frame   14.68  16.68  18.80
+update   0.06   0.11   0.17  x1.00 a frame
+draw     0.14   0.23   0.37
+objects 23  projectiles 0
+```
+
+Min, average and max over the last 240 rendered match frames, timed with
+`QueryPerformanceCounter`: **frame** is the time between two match draws,
+**update** the game's own `Level::update` calls in that frame (the seat filter -
+bots, record, play - included; `x` is updates per frame, so x4 shows 4.00),
+**draw** the match's draw from the top of `GameLevel::draw` to the debug panels
+(refreshing the layout and recording the draw lists, with the scene's workers
+joined). **objects** counts the scene's collision objects. `perf` prints the
+lines; `perf.reset` starts again. It is measured whenever a match runs, overlay
+or not, and only while the match is on top: a build, the menus, a page over the
+match (pause, results) or a screenshot's capture is a gap, not a frame - the
+first draw after one starts a new interval and records nothing (so does the
+very first). Time spent minimised is not detected as a gap.
+**Not measured**: present, the GPU and the render submit - `Application`
+exposes no frame statistics and `Renderer` no timestamp queries (engine report
+14). The panel says CPU for that reason.
 
 ## Movement Course review recipes
 
 ```powershell
+# The feedback A/B on every visual, as screenshots, in one command
+ColourWars.exe +exec review_feedback_ab +quit
+
+# Every station, one screenshot each
+ColourWars.exe +exec station_tour +quit
+
+# By hand
 ColourWars.exe +stage movement_course +visual posed
 ```
 
@@ -522,6 +784,9 @@ ColourWars.exe +stage movement_course +visual posed
   window; `play a`, and wait for `MATCH`.
 - **Record what you saw.** `+logfile` (or `logfile <path>`) and `status` write
   positions and move states to a file; `screenshot` keeps the picture.
+- **Your own review.** Write `%LOCALAPPDATA%\ColourWars\debug\my_review.cfg`
+  (copy a shipped one), then `ColourWars.exe +exec my_review +quit`; or bind it,
+  `bind ctrl+f5 exec my_review`, and press it in a match.
 
 ## Release behaviour
 
@@ -534,7 +799,8 @@ as the game. In Release:
 - `+` arguments are ignored; if any are present, one line goes to stderr:
   `developer arguments ignored: Release build`. Without them nothing is printed.
 - The grave key, F2-F9, F11 and the pad chord do nothing (pad Back still
-  toggles F1, Start still pauses); the clock always runs one update a frame.
+  toggles F1, Start still pauses); the clock always runs one update a frame. No
+  script, bind, history or autoexec file is read or written.
   F10, like a lone Alt, still enters the system menu loop until the next key,
   because the hook that claims it is Debug-only ([engine report
   11](review/engine-reports.md)).
@@ -545,7 +811,14 @@ as the game. In Release:
   `Level`'s overlay member and its developer setters, `Player`'s two cheat flags
   and `place_at`/`force_respawn`, never called; `LevelLoadedInfo::stations()`
   and its validation, which are level data and correct in both;
-  `directory_consts::screenshot_directory()` and `replay_directory()`; the
+  `directory_consts::screenshot_directory()`, `replay_directory()` and
+  `debug_directory()`; phase 4's `Level::seat_labels_` (always empty there),
+  `set_seat_labels`, `opening_cards`, `projectile_count` and
+  `collision_object_count`, `InterfaceGameplay`'s label overload (the slot
+  overload forwards to it), `MenuPage::shows_brand` (true for every Release
+  page), `DebugMatchTarget`'s `debug_countdown_over`, `debug_set_seat_labels`
+  and `debug_screen_obstacles` with their `GameLevel` adapters, and
+  `DebugDirector::begin_match_draw`, an inline no-op; the
   header-only `SeatInputFilter` interface (nothing in Release derives from it,
   so it has no vtable or type information there) and the `seats` parameter of
   `Level::update`, always null; `DebugMatchTarget::debug_level`;
@@ -556,8 +829,9 @@ as the game. In Release:
   must contain the RTTI names `.?AVDebugConsoleState@@`, `.?AVDebugRegistry@@`,
   `.?AVLambdaCommand@@`, `.?AVDebugMenuPage@@`, `.?AVNumberVariable@@`,
   `.?AVBot@@`, `.?AVPaintBot@@`, `.?AVBotDriver@@`, `.?AVReplayRecorder@@`,
-  `.?AVReplayPlayer@@`, `.?AVTuneTarget@@`, `.?AVTuningTarget@@` and
-  `.?AVSeatInputFilter@@`, and the Release executable must contain none of them;
+  `.?AVReplayPlayer@@`, `.?AVTuneTarget@@`, `.?AVTuningTarget@@`,
+  `.?AVSeatInputFilter@@`, `.?AVDebugWait@@`, `.?AVUpdatesWait@@` and
+  `.?AVMatchWait@@`, and the Release executable must contain none of them;
   in Release it also checks that a match update gets no seat filter and that no
   slot is driven. CI also checks the packaged
   `ColourWars.exe`.
@@ -583,13 +857,29 @@ as the game. In Release:
   record and play (`replay.*`: the file, the input codec, `ReplayRecorder` and
   `ReplayPlayer`; `match_fingerprint.*`; `replay_commands.cpp`, which also holds
   the update hooks that count updates, inject recorded suspends and compare).
+  Phase 4: scripts (`debug_script.*`, the pure parser; `debug_wait.*`, the
+  `DebugWait -> UpdatesWait / FramesWait / MatchWait / ReplayWait / RecordWait`
+  hierarchy; `debug_script_runner.*`, the frame stack the director ticks from
+  its hooks; `script_commands.cpp`, which also holds binds, history, the
+  `screenshot.dir` and perf commands and `draw_status`); the key names
+  (`debug_keys.*`, engine report 13) and the bind table (`debug_binds.*`); the
+  console's editing and drawing, shared by the frozen and live consoles and
+  the panels (`debug_console_view.*`; `debug_console_state.*` is now a thin
+  state around it); the perf ring (`debug_perf.*`). The shipped scripts are data
+  in `scripts/debug/`.
 - Menu metadata is declared where each entry is registered
   (`DebugMenuTraits`: category, form - hidden, run, pick or variable - the
   picked argument and its prefix, and whether it is staged).
 - Hooks:
   - `GameLevel::update` calls `before_match_update` (debug menu toggle,
-    console key, pending screenshot, F-key binds, queued requests), then
-    `filter_match_inputs` on the inputs it read, then `update_match`.
+    console key, pending screenshot, the live console or the binds, a script
+    tick, queued requests), then `filter_match_inputs` on the inputs it read
+    (the chord's pad edges; the keyboard seat while the live console is open
+    and on the frame it closes), then `update_match` (which stops a step's
+    fast-forward where a waiting script asked, and times each update).
+  - `GameLevel::draw` calls `begin_match_draw` first and `draw_status` last
+    (the paint, perf and strip panels, placed clear of
+    `debug_screen_obstacles()`, and the live console).
   - `GameLevel::build_and_enter_level`, the one build path (first build, pause-
     and end-menu restarts, debug rebuilds), calls `before_level_build(match)`
     with no level alive - it applies reloaded content, adopts a plan queued
@@ -599,7 +889,8 @@ as the game. In Release:
     partial step.
   - Every `MenuPage` runs `before_page_update(page, dt)` before its
     `update_page`; the page is a `DebugPageTarget`, which is how the director
-    starts a match, dismisses a page or resets its input.
+    starts a match, dismisses a page or resets its input. It also ticks
+    scripts there (not under the debug menu) and closes a live console.
   - `update_match` passes `Level::update` the seat filter in force (a replay,
     else a recorder wrapping the bots, else the bots, else none) and counts
     Level updates since the build.
@@ -622,30 +913,53 @@ as the game. In Release:
   conflicts, `force`, no source tree), tune completion and the menu tree, the
   bots' determinism and the missing-pad rule, the seeded planner, the replay
   codec and file, and record/play on a real `Level` built without a device;
-  CPU only, and the real content files are checked byte-for-byte unchanged). In
+  phase 4: the script parser, the runner through the real hooks (every wait,
+  exact at x4 and paused, errors with file:line, nesting, `exec.stop`,
+  autoexec first, the screenshot barrier, a script under a replay), the shipped
+  scripts followed and linted, key names and the bind table with `binds.cfg`,
+  `history.txt`, the live console's input blanking, the perf ring, panel
+  placement, the staged-rebuild note, seat labels and the stale tune folders,
+  all on scratch folders; CPU only, and the real content files are checked
+  byte-for-byte unchanged). In
   Release it checks the one stderr line for `+` arguments, silence without, and
   that the chord, unwinding, seat filter and driven slots are inert.
   `scripts/check-debug-console.ps1` is an opt-in local check that drives the
-  real Debug executable with key events (F10 debug menu, staging and Apply,
-  overlay keys, goto, cheats, the screenshot command, pause menu unwinding; and
-  in a second launch, `-Phase3Only` to run just that one, a four-seat paint-bot
-  match, a live `tune`, `tune.diff`/`tune.reset`, `record` and `play` to
-  `MATCH`, and the tuning tree) and saves screenshots. `-SaveToSource` adds a
+  real Debug executable, mostly through scripts it writes into each launch's
+  isolated profile (`exec`, `+exec`) and the transcript's `echo` markers, with
+  key events only where keys are the point: the console, F8/F9 and F1-F4, the
+  F10 debug menu, staging and Apply, Escape into the pause menu, Alt. In order:
+  phases 1-2 (`check_drive.cfg`: goto, status, restart+goto, cheats, the
+  screenshot command; `check_menus.cfg`; a 1280x720 launch paused in the
+  countdown for the panels and the debug menu); phase 3 (`-Phase3Only`: a
+  four-seat paint-bot match, live tune, record and play to `MATCH`, the tuning
+  tree); phase 4 (`-Phase4Only`: `+exec review_feedback_ab +quit` with an
+  autoexec, 18 PNGs and nine checksums; `station_tour`; `bots_4p`; Shift+F5 on
+  a bind; the `%TEMP%` sweep on a planted folder in an isolated TEMP; the live
+  console; perf; binds and history across a restart). It saves screenshots
+  throughout. `-SaveToSource` adds a
   `tune.save` on the real `game/content/tuning.json`: it refuses unless git
   sees the file clean, checks with git that exactly one value changed, and
   writes the saved original bytes back (a `git checkout` would not restore them:
   it renormalises a working copy that mixes CRLF and LF). The pad chord needs a
   pad and is covered on the CPU side only.
-- The engine reports this forced are 9, 10, 11 and 12 in
+- The engine reports this forced are 9, 10, 11, 12, and the drafts 13 (key
+  names) and 14 (frame statistics), in
   [engine-reports.md](review/engine-reports.md).
 
 ## Not done
 
-- **A see-through console** that types into a running match. It needs no engine
-  change (neutralise the keyboard seat in `filter_match_inputs`, read typing in
-  `before_match_update`, draw from `draw_status`), but it means extracting the
-  console's editing and drawing out of `DebugConsoleState`; it was left for a
-  later pass. Engine report 9 still describes the clean way.
+- **Loops, conditions and variables in scripts** - deliberately. A script is
+  data (which frames, which stations); anything that needs logic is a command.
+- **A live console over the menus**, and **binds in the menus**: menus have no
+  simulation to keep running, and F5 (`restart`) means nothing there.
+- **Scripts that keep running while the window is in the background**: the
+  match only updates while the window is active, and losing focus suspends the
+  level (which would change a review's checksums anyway). A Debug-only "run
+  while inactive" switch would not stop the suspend; not built.
+- **Typing in the live console while the keyboard player keeps playing**: the
+  whole keyboard seat is blanked, because the engine has no per-key consume
+  (engine report 9).
+- **GPU, present and submit time** in the perf overlay (engine report 14).
 - **Strings, colours, fonts and absent keys in `tune`**, and inserting keys in
   `tune.save`.
 - **Replays across builds or machines**, across step sizes, and across rounds

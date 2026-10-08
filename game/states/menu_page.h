@@ -50,6 +50,11 @@ public:
 protected:
 	virtual void update_page(float dt) = 0;
 
+	// Whether the chrome draws the brand line at the top. The Debug menu
+	// says no: it opens over a running match, where the line would sit on
+	// the first pane's HUD.
+	virtual bool shows_brand() const { return true; }
+
 	mattmath::Vector2F widget_position() const;
 	mattmath::Vector2F widget_size() const;
 	mattmath::Vector2F widget_spacing() const;

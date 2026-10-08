@@ -696,10 +696,14 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	// The HUD uses pane-local coordinates, so draw it with the identity camera.
 	list.set_camera(Camera::DEFAULT_CAMERA);
 
+	const std::size_t view = static_cast<std::size_t>(view_index);
+	const std::wstring device = view < this->seat_labels_.size() &&
+		!this->seat_labels_[view].empty() ?
+		this->seat_labels_[view] : input_slots::device_name(player->player_num());
 	this->interface_gameplay_->draw_gameplay_interface(list,
 		player_vp.size(),
 		view_index,
-		player->player_num(),
+		device,
 		player->team(),
 		player->health() / this->tuning_->player().starting_health,
 		player->weapon_ammo() / this->tuning_->starting_ammo(),
@@ -718,6 +722,36 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 void Level::set_overlays(const LevelOverlays& overlays)
 {
 	this->overlays_ = overlays;
+}
+
+void Level::set_seat_labels(std::vector<std::wstring> labels)
+{
+	this->seat_labels_ = std::move(labels);
+}
+
+std::vector<RectangleF> Level::opening_cards() const
+{
+	std::vector<RectangleF> cards;
+	if (this->state_ != LevelState::start_countdown)
+	{
+		return cards;
+	}
+	cards.push_back(this->countdown_card_);
+	for (const ControlsReminder& reminder : this->controls_reminders_)
+	{
+		cards.push_back(reminder.card);
+	}
+	return cards;
+}
+
+int Level::projectile_count() const
+{
+	return this->projectile_count_;
+}
+
+int Level::collision_object_count() const
+{
+	return static_cast<int>(this->scene_->collision_objects().size());
 }
 
 void Level::set_players_showing_debug(bool showing)
