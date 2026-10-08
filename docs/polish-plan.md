@@ -2,7 +2,8 @@
 
 Status: implementation started on 2026-10-08. Camera/movement foundations and a
 takeoff/landing feedback prototype are implemented. A workshop style candidate
-is retained; the art, movement-feel and arena acceptance gates remain open.
+is retained and an editable native-pixel kit now has a reproducible atlas and
+renderer/camera study; the art, movement-feel and arena acceptance gates remain open.
 Direction agreed on 2026-10-08. Source baseline: game revision `13e9960`.
 
 First increment: resolution-independent camera framing, configurable jump buffering
@@ -13,6 +14,10 @@ See [implementation and evidence](polish-foundation.md) and
 Second increment: [movement feedback and evidence](polish-feedback.md), plus
 [the workshop style candidate and grid/framing study](polish-style-reference.md).
 The generated reference is concept art, not a runtime atlas or accepted arena.
+
+Third increment: [editable workshop kit and framing evidence](polish-style-kit.md).
+The kit remains a separate art study; it is not installed as the game's character
+or stage artwork.
 
 ## Goal and direction
 
@@ -522,9 +527,11 @@ slice, record the client exhibit in [engine reports](review/engine-reports.md) a
 handle the engine change in Labrador. Balance numbers belong in tuning, presentation
 choices in presentation data, and arena layout and decoration in level data.
 
-The next implementation task is to turn the retained workshop candidate into a
-small editable, grid-exact character/tool/platform kit and a reproducible atlas,
-then review that composition under the real display framing. Compare the
+The next implementation task is to refine the retained native-pixel kit's aimed
+poses, hands and same-team identity, then make a playable comparison in the
+Movement Course with explicit visual dimensions and synchronized team masks.
+Use the [framing study's observations](polish-style-kit.md) to compare continuous
+rotation with authored visual poses without quantising simulation aim. Compare the
 takeoff/landing prototype in the Movement Course with keyboard/mouse and physical
 controllers, including camera motion and aim sweeps. Record the visual and movement
 decisions before building the first Close Quarters blockout against those rules.

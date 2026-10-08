@@ -4,6 +4,8 @@ The next art direction is recorded in the
 [workshop style candidate](../../docs/polish-style-reference.md). Its concept
 image and prompt live in `polish/`, outside runtime content; the existing atlases
 below remain in use until their pixel-art replacements are authored and reviewed.
+The [editable workshop kit](polish/kit/README.md) now provides a deterministic
+native-grid study with a separate renderer/camera probe. It is not runtime content.
 
 `weapon_paint_source.png` is the original transparent sprite sheet generated
 with the built-in imagegen tool. `weapon_paint_prompt.txt` records the prompt.

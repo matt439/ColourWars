@@ -1,0 +1,491 @@
+{
+    "schema_version":  1,
+    "source_sha256":  "c659849842f6fb6025de1063b7be1136b924abdd6bbcd236d77899337ae2fa94",
+    "world_units_per_texel":  4,
+    "atlas":  {
+                  "width":  256,
+                  "height":  256,
+                  "padding":  2
+              },
+    "palette":  [
+                    {
+                        "symbol":  ".",
+                        "rgba":  "00000000"
+                    },
+                    {
+                        "symbol":  "o",
+                        "rgba":  "18232EFF"
+                    },
+                    {
+                        "symbol":  "n",
+                        "rgba":  "2B3B48FF"
+                    },
+                    {
+                        "symbol":  "m",
+                        "rgba":  "546877FF"
+                    },
+                    {
+                        "symbol":  "s",
+                        "rgba":  "81969FFF"
+                    },
+                    {
+                        "symbol":  "h",
+                        "rgba":  "C6D0CCFF"
+                    },
+                    {
+                        "symbol":  "w",
+                        "rgba":  "F0E5C6FF"
+                    },
+                    {
+                        "symbol":  "b",
+                        "rgba":  "5E4036FF"
+                    },
+                    {
+                        "symbol":  "c",
+                        "rgba":  "9C6647FF"
+                    },
+                    {
+                        "symbol":  "k",
+                        "rgba":  "D89867FF"
+                    },
+                    {
+                        "symbol":  "f",
+                        "rgba":  "F3BD89FF"
+                    },
+                    {
+                        "symbol":  "t",
+                        "rgba":  "FFFFFFFF"
+                    },
+                    {
+                        "symbol":  "u",
+                        "rgba":  "B8B8B8FF"
+                    },
+                    {
+                        "symbol":  "v",
+                        "rgba":  "747474FF"
+                    },
+                    {
+                        "symbol":  "d",
+                        "rgba":  "263B47FF"
+                    },
+                    {
+                        "symbol":  "e",
+                        "rgba":  "304955FF"
+                    },
+                    {
+                        "symbol":  "g",
+                        "rgba":  "3B5661FF"
+                    },
+                    {
+                        "symbol":  "i",
+                        "rgba":  "49636CFF"
+                    },
+                    {
+                        "symbol":  "j",
+                        "rgba":  "63787AFF"
+                    },
+                    {
+                        "symbol":  "l",
+                        "rgba":  "A08558FF"
+                    },
+                    {
+                        "symbol":  "a",
+                        "rgba":  "756044FF"
+                    },
+                    {
+                        "symbol":  "r",
+                        "rgba":  "514C43FF"
+                    },
+                    {
+                        "symbol":  "q",
+                        "rgba":  "85877EFF"
+                    },
+                    {
+                        "symbol":  "z",
+                        "rgba":  "A6AA9AFF"
+                    }
+                ],
+    "sprites":  [
+                    {
+                        "name":  "painter",
+                        "native_size":  {
+                                            "w":  13,
+                                            "h":  30
+                                        },
+                        "world_size":  {
+                                           "w":  52,
+                                           "h":  120
+                                       },
+                        "pivot":  {
+                                      "x":  6.5,
+                                      "y":  15
+                                  },
+                        "world_pivot":  {
+                                            "x":  26.0,
+                                            "y":  60
+                                        },
+                        "anchors":  {
+                                        "feet":  {
+                                                     "x":  6.5,
+                                                     "y":  30
+                                                 },
+                                        "grip":  {
+                                                     "x":  6.5,
+                                                     "y":  15
+                                                 }
+                                    },
+                        "world_anchors":  {
+                                              "feet":  {
+                                                           "x":  26.0,
+                                                           "y":  120
+                                                       },
+                                              "grip":  {
+                                                           "x":  26.0,
+                                                           "y":  60
+                                                       }
+                                          },
+                        "frames":  {
+                                       "base":  {
+                                                    "name":  "painter",
+                                                    "x":  2,
+                                                    "y":  2,
+                                                    "w":  13,
+                                                    "h":  30
+                                                },
+                                       "team":  {
+                                                    "name":  "painter_team",
+                                                    "x":  19,
+                                                    "y":  2,
+                                                    "w":  13,
+                                                    "h":  30
+                                                }
+                                   }
+                    },
+                    {
+                        "name":  "sprayer",
+                        "native_size":  {
+                                            "w":  22,
+                                            "h":  12
+                                        },
+                        "world_size":  {
+                                           "w":  88,
+                                           "h":  48
+                                       },
+                        "pivot":  {
+                                      "x":  2,
+                                      "y":  6
+                                  },
+                        "world_pivot":  {
+                                            "x":  8,
+                                            "y":  24
+                                        },
+                        "anchors":  {
+                                        "muzzle":  {
+                                                       "x":  21.375,
+                                                       "y":  6
+                                                   },
+                                        "grip":  {
+                                                     "x":  2,
+                                                     "y":  6
+                                                 }
+                                    },
+                        "world_anchors":  {
+                                              "muzzle":  {
+                                                             "x":  85.500,
+                                                             "y":  24
+                                                         },
+                                              "grip":  {
+                                                           "x":  8,
+                                                           "y":  24
+                                                       }
+                                          },
+                        "frames":  {
+                                       "base":  {
+                                                    "name":  "sprayer",
+                                                    "x":  36,
+                                                    "y":  2,
+                                                    "w":  22,
+                                                    "h":  12
+                                                },
+                                       "team":  {
+                                                    "name":  "sprayer_team",
+                                                    "x":  62,
+                                                    "y":  2,
+                                                    "w":  22,
+                                                    "h":  12
+                                                }
+                                   }
+                    },
+                    {
+                        "name":  "roller",
+                        "native_size":  {
+                                            "w":  28,
+                                            "h":  22
+                                        },
+                        "world_size":  {
+                                           "w":  112,
+                                           "h":  88
+                                       },
+                        "pivot":  {
+                                      "x":  2,
+                                      "y":  7
+                                  },
+                        "world_pivot":  {
+                                            "x":  8,
+                                            "y":  28
+                                        },
+                        "anchors":  {
+                                        "contact":  {
+                                                        "x":  20.75,
+                                                        "y":  7
+                                                    },
+                                        "grip":  {
+                                                     "x":  2,
+                                                     "y":  7
+                                                 }
+                                    },
+                        "world_anchors":  {
+                                              "contact":  {
+                                                              "x":  83.00,
+                                                              "y":  28
+                                                          },
+                                              "grip":  {
+                                                           "x":  8,
+                                                           "y":  28
+                                                       }
+                                          },
+                        "frames":  {
+                                       "base":  {
+                                                    "name":  "roller",
+                                                    "x":  88,
+                                                    "y":  2,
+                                                    "w":  28,
+                                                    "h":  22
+                                                },
+                                       "team":  {
+                                                    "name":  "roller_team",
+                                                    "x":  120,
+                                                    "y":  2,
+                                                    "w":  28,
+                                                    "h":  22
+                                                }
+                                   }
+                    },
+                    {
+                        "name":  "platform",
+                        "native_size":  {
+                                            "w":  32,
+                                            "h":  12
+                                        },
+                        "world_size":  {
+                                           "w":  128,
+                                           "h":  48
+                                       },
+                        "pivot":  {
+                                      "x":  0,
+                                      "y":  0
+                                  },
+                        "world_pivot":  {
+                                            "x":  0,
+                                            "y":  0
+                                        },
+                        "anchors":  {
+                                        "top":  {
+                                                    "x":  0,
+                                                    "y":  0
+                                                }
+                                    },
+                        "world_anchors":  {
+                                              "top":  {
+                                                          "x":  0,
+                                                          "y":  0
+                                                      }
+                                          },
+                        "frames":  {
+                                       "base":  {
+                                                    "name":  "platform",
+                                                    "x":  152,
+                                                    "y":  2,
+                                                    "w":  32,
+                                                    "h":  12
+                                                },
+                                       "team":  null
+                                   }
+                    },
+                    {
+                        "name":  "wall",
+                        "native_size":  {
+                                            "w":  32,
+                                            "h":  32
+                                        },
+                        "world_size":  {
+                                           "w":  128,
+                                           "h":  128
+                                       },
+                        "pivot":  {
+                                      "x":  0,
+                                      "y":  0
+                                  },
+                        "world_pivot":  {
+                                            "x":  0,
+                                            "y":  0
+                                        },
+                        "anchors":  {
+
+                                    },
+                        "world_anchors":  {
+
+                                          },
+                        "frames":  {
+                                       "base":  {
+                                                    "name":  "wall",
+                                                    "x":  188,
+                                                    "y":  2,
+                                                    "w":  32,
+                                                    "h":  32
+                                                },
+                                       "team":  null
+                                   }
+                    },
+                    {
+                        "name":  "shelf",
+                        "native_size":  {
+                                            "w":  32,
+                                            "h":  32
+                                        },
+                        "world_size":  {
+                                           "w":  128,
+                                           "h":  128
+                                       },
+                        "pivot":  {
+                                      "x":  0,
+                                      "y":  0
+                                  },
+                        "world_pivot":  {
+                                            "x":  0,
+                                            "y":  0
+                                        },
+                        "anchors":  {
+
+                                    },
+                        "world_anchors":  {
+
+                                          },
+                        "frames":  {
+                                       "base":  {
+                                                    "name":  "shelf",
+                                                    "x":  2,
+                                                    "y":  38,
+                                                    "w":  32,
+                                                    "h":  32
+                                                },
+                                       "team":  null
+                                   }
+                    },
+                    {
+                        "name":  "tank",
+                        "native_size":  {
+                                            "w":  32,
+                                            "h":  48
+                                        },
+                        "world_size":  {
+                                           "w":  128,
+                                           "h":  192
+                                       },
+                        "pivot":  {
+                                      "x":  0,
+                                      "y":  0
+                                  },
+                        "world_pivot":  {
+                                            "x":  0,
+                                            "y":  0
+                                        },
+                        "anchors":  {
+
+                                    },
+                        "world_anchors":  {
+
+                                          },
+                        "frames":  {
+                                       "base":  {
+                                                    "name":  "tank",
+                                                    "x":  38,
+                                                    "y":  38,
+                                                    "w":  32,
+                                                    "h":  48
+                                                },
+                                       "team":  null
+                                   }
+                    },
+                    {
+                        "name":  "puff",
+                        "native_size":  {
+                                            "w":  8,
+                                            "h":  4
+                                        },
+                        "world_size":  {
+                                           "w":  32,
+                                           "h":  16
+                                       },
+                        "pivot":  {
+                                      "x":  4,
+                                      "y":  4
+                                  },
+                        "world_pivot":  {
+                                            "x":  16,
+                                            "y":  16
+                                        },
+                        "anchors":  {
+
+                                    },
+                        "world_anchors":  {
+
+                                          },
+                        "frames":  {
+                                       "base":  {
+                                                    "name":  "puff",
+                                                    "x":  74,
+                                                    "y":  38,
+                                                    "w":  8,
+                                                    "h":  4
+                                                },
+                                       "team":  null
+                                   }
+                    },
+                    {
+                        "name":  "pixel",
+                        "native_size":  {
+                                            "w":  1,
+                                            "h":  1
+                                        },
+                        "world_size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       },
+                        "pivot":  {
+                                      "x":  0,
+                                      "y":  0
+                                  },
+                        "world_pivot":  {
+                                            "x":  0,
+                                            "y":  0
+                                        },
+                        "anchors":  {
+
+                                    },
+                        "world_anchors":  {
+
+                                          },
+                        "frames":  {
+                                       "base":  {
+                                                    "name":  "pixel",
+                                                    "x":  86,
+                                                    "y":  38,
+                                                    "w":  1,
+                                                    "h":  1
+                                                },
+                                       "team":  null
+                                   }
+                    }
+                ]
+}

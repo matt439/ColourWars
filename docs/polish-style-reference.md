@@ -77,10 +77,12 @@ HUD layout, font licence, colour palette or player-identity system. The image's
 blue/orange colours are approximate and have not been checked against the three
 runtime palettes. Same-team differentiation still needs a marker study.
 
-Next, author a small editable, grid-exact character/sprayer/roller/platform kit
-and a reproducible atlas; place it in a gameplay composition under the real
-camera. Review one and four views at 720p, 1080p and QHD, all three palettes,
-left/right facing, aim sweeps, slow camera movement and heavily painted terrain.
-The reference is a starting point for that work, not evidence that those checks
-passed. Final sprite grid, typography, weapon rotation and art acceptance remain
-open, as do the Close Quarters route and physical-controller playtest gates.
+Follow-up: [the editable native-pixel kit](polish-style-kit.md) now supplies a
+character/sprayer/roller/platform study and reproducible atlas. It remains outside
+runtime content, with the actual renderer/camera used for its framing matrix.
+
+The study records one/four-view framing, fixed palettes, both facings and an
+aim/camera sequence with illustrative paint strips. Gameplay integration and
+heavily painted combat still need review. Final sprite grid, typography, weapon
+rotation and art acceptance remain open, as do the Close Quarters route and
+physical-controller playtest gates.

@@ -1,0 +1,139 @@
+{
+    "animation_strips":  [
+
+                         ],
+    "sprite_frames":  [
+                          {
+                              "name":  "painter",
+                              "position":  {
+                                               "x":  2,
+                                               "y":  2
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       }
+                          },
+                          {
+                              "name":  "painter_team",
+                              "position":  {
+                                               "x":  19,
+                                               "y":  2
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       }
+                          },
+                          {
+                              "name":  "sprayer",
+                              "position":  {
+                                               "x":  36,
+                                               "y":  2
+                                           },
+                              "size":  {
+                                           "w":  22,
+                                           "h":  12
+                                       }
+                          },
+                          {
+                              "name":  "sprayer_team",
+                              "position":  {
+                                               "x":  62,
+                                               "y":  2
+                                           },
+                              "size":  {
+                                           "w":  22,
+                                           "h":  12
+                                       }
+                          },
+                          {
+                              "name":  "roller",
+                              "position":  {
+                                               "x":  88,
+                                               "y":  2
+                                           },
+                              "size":  {
+                                           "w":  28,
+                                           "h":  22
+                                       }
+                          },
+                          {
+                              "name":  "roller_team",
+                              "position":  {
+                                               "x":  120,
+                                               "y":  2
+                                           },
+                              "size":  {
+                                           "w":  28,
+                                           "h":  22
+                                       }
+                          },
+                          {
+                              "name":  "platform",
+                              "position":  {
+                                               "x":  152,
+                                               "y":  2
+                                           },
+                              "size":  {
+                                           "w":  32,
+                                           "h":  12
+                                       }
+                          },
+                          {
+                              "name":  "wall",
+                              "position":  {
+                                               "x":  188,
+                                               "y":  2
+                                           },
+                              "size":  {
+                                           "w":  32,
+                                           "h":  32
+                                       }
+                          },
+                          {
+                              "name":  "shelf",
+                              "position":  {
+                                               "x":  2,
+                                               "y":  38
+                                           },
+                              "size":  {
+                                           "w":  32,
+                                           "h":  32
+                                       }
+                          },
+                          {
+                              "name":  "tank",
+                              "position":  {
+                                               "x":  38,
+                                               "y":  38
+                                           },
+                              "size":  {
+                                           "w":  32,
+                                           "h":  48
+                                       }
+                          },
+                          {
+                              "name":  "puff",
+                              "position":  {
+                                               "x":  74,
+                                               "y":  38
+                                           },
+                              "size":  {
+                                           "w":  8,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "pixel",
+                              "position":  {
+                                               "x":  86,
+                                               "y":  38
+                                           },
+                              "size":  {
+                                           "w":  1,
+                                           "h":  1
+                                       }
+                          }
+                      ]
+}
