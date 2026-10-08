@@ -157,6 +157,17 @@ public:
 
 	std::string player_move_state_string() const;
 
+    // Developer tools. Plain state in every build; only Debug builds set it
+    // (the console's overlay.player, god, ammo, goto and respawn).
+    void set_showing_debug(bool showing);
+    void set_damage_immune(bool immune);
+    void set_infinite_ammo(bool infinite);
+    // At rest at `top_left` (the character's top-left), placed exactly as a
+    // respawn places it, without the respawn's health, ammo, state or sound.
+    void place_at(const mattmath::Vector2F& top_left);
+    // Respawns now, at the spawn, as the respawn timer would.
+    void force_respawn();
+
 private:
     labrador::Camera camera_ = labrador::Camera::DEFAULT_CAMERA;
 
@@ -183,6 +194,9 @@ private:
     bool jump_waiting_for_release_ = false;
     bool facing_right_ = true;
     bool showing_debug_ = false;
+    // Developer cheats: no paint damage; the tank refilled around every shot.
+    bool damage_immune_ = false;
+    bool infinite_ammo_ = false;
     PlayerState state_ = PlayerState::alive;
     float respawn_timer_ = 0.0f;
     PlayerInputData input_ = PlayerInputData();

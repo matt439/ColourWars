@@ -34,6 +34,15 @@ public:
 	// Sorted by name.
 	std::vector<const DebugEntry*> entries() const;
 
+	// The debug menu's categories, in the order it lists them.
+	static const std::vector<std::string>& category_order();
+
+	// The category_order() entries that have a menu-visible entry.
+	std::vector<std::string> categories() const;
+
+	// Menu-visible entries of one category, sorted by name.
+	std::vector<const DebugEntry*> entries(std::string_view category) const;
+
 	DebugCompletion complete(std::string_view line) const;
 
 	// Runs every ';'-separated statement. Exceptions thrown by a variable or

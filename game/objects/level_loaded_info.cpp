@@ -51,29 +51,86 @@ void LevelLoadedInfo::validate() const
 	// Reject spawns outside the arena before a match can start.
 	for (const Vector2F& spawn : team_a)
 	{
-		validate_spawn(root, spawn, out_of_bounds, "team_a");
+		validate_position(root, spawn, out_of_bounds, "a team_a spawn");
 	}
 	for (const Vector2F& spawn : team_b)
 	{
-		validate_spawn(root, spawn, out_of_bounds, "team_b");
+		validate_position(root, spawn, out_of_bounds, "a team_b spawn");
 	}
+
+	this->validate_stations(out_of_bounds);
 }
 
-void LevelLoadedInfo::validate_spawn(const JsonValue& root,
-	const Vector2F& spawn,
+void LevelLoadedInfo::validate_position(const JsonValue& root,
+	const Vector2F& position,
 	const RectangleF& out_of_bounds,
-	const char* team)
+	const std::string& what)
 {
-	if (rectangle_point_intersect(out_of_bounds, spawn))
+	if (rectangle_point_intersect(out_of_bounds, position))
 	{
 		return;
 	}
 
-	throw std::runtime_error(root.where() + " puts a " + team + " spawn at (" +
-		std::to_string(spawn.x) + ", " +
-		std::to_string(spawn.y) + "), outside its own "
+	throw std::runtime_error(root.where() + " puts " + what + " at (" +
+		std::to_string(position.x) + ", " +
+		std::to_string(position.y) + "), outside its own "
 		"out_of_bounds rectangle - a player built there is retired on the "
 		"first tick of the match.");
+}
+
+void LevelLoadedInfo::validate_stations(const RectangleF& out_of_bounds) const
+{
+	const JsonValue root = this->json_doc_.root();
+	if (!root.has("stations"))
+	{
+		return;
+	}
+	const JsonValue stations = root.array("stations");
+	std::vector<std::string> seen;
+	for (size_t index = 0; index < stations.size(); ++index)
+	{
+		const JsonValue station = stations.at(index);
+		const std::string name = station.identifier("name");
+		const bool spelled = !name.empty() && std::all_of(name.begin(), name.end(),
+			[](char c) { return (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || c == '_'; });
+		if (!spelled)
+		{
+			throw std::runtime_error(station.where() + " names a station '" + name +
+				"'; station names are lower-case letters, digits and '_', so they can be typed.");
+		}
+		if (name == "spawn_a" || name == "spawn_b")
+		{
+			throw std::runtime_error(station.where() + " names a station '" + name +
+				"', which every level already has (its team's first spawn).");
+		}
+		if (std::find(seen.begin(), seen.end(), name) != seen.end())
+		{
+			throw std::runtime_error(station.where() + " repeats the station name '" +
+				name + "'.");
+		}
+		seen.push_back(name);
+		validate_position(root, Vector2F(station.number("x"), station.number("y")),
+			out_of_bounds, "a station '" + name + "'");
+	}
+}
+
+std::vector<LevelStation> LevelLoadedInfo::stations() const
+{
+	std::vector<LevelStation> result;
+	const JsonValue root = this->json_doc_.root();
+	if (root.has("stations"))
+	{
+		const JsonValue stations = root.array("stations");
+		for (size_t index = 0; index < stations.size(); ++index)
+		{
+			const JsonValue station = stations.at(index);
+			result.push_back({ station.identifier("name"),
+				Vector2F(station.number("x"), station.number("y")) });
+		}
+	}
+	result.push_back({ "spawn_a", this->team_a_spawns().at(0) });
+	result.push_back({ "spawn_b", this->team_b_spawns().at(0) });
+	return result;
 }
 
 void LevelLoadedInfo::validate_content(const LevelObjectBuilder& builder,

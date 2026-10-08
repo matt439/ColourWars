@@ -24,7 +24,7 @@ MenuPage::MenuPage(MenuContext* context) :
 
 void MenuPage::update(float dt)
 {
-	if (this->data()->debug().before_page_update(*this))
+	if (this->data()->debug().before_page_update(*this, dt))
 	{
 		return;
 	}
@@ -34,6 +34,16 @@ void MenuPage::update(float dt)
 bool MenuPage::debug_start_match(const MenuLevelSettings& /*plan*/)
 {
 	return false;
+}
+
+bool MenuPage::debug_dismiss(bool /*leaving_match*/)
+{
+	return false;
+}
+
+void MenuPage::debug_reset_input(int pad_slot)
+{
+	this->input()->reset_pad_actions(pad_slot);
 }
 
 // Add keyboard equivalents to the shared pad labels. Keep these mappings

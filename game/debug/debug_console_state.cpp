@@ -73,6 +73,7 @@ void DebugConsoleState::update(float dt)
 		return;
 	}
 	const Keyboard& keyboard = *this->data_->keyboard();
+	this->director_->forget_menu_key();
 
 	// The grave key toggles. Its own character is dropped by returning before
 	// typed() is read, and while it is held or released all text is dropped.
@@ -251,12 +252,12 @@ void DebugConsoleState::draw(Renderer& renderer) const
 	list.set_filter(TextureFilter::point);
 }
 
-void DebugConsoleState::draw_strip(Renderer& renderer, const GameData& data,
-	const std::string& strip)
+RectangleF DebugConsoleState::draw_panel(Renderer& renderer, const GameData& data,
+	const std::vector<std::string>& lines, Anchor anchor, const RectangleF& avoid)
 {
-	if (strip.empty())
+	if (lines.empty())
 	{
-		return;
+		return RectangleF();
 	}
 	if (renderer.view_count() == 0)
 	{
@@ -265,31 +266,52 @@ void DebugConsoleState::draw_strip(Renderer& renderer, const GameData& data,
 	RenderResources* resources = data.render_resources();
 	const DebugOverlayPresentation& look = data.presentation()->debug_overlay();
 	const FontHandle font = resources->resolve_sprite_font(look.font);
-	const std::wstring wide = widen(strip);
-	const Vector2F size = resources->measure_text(font, wide) * look.font_scale;
+	const float line_height = std::max(look.line_spacing, 1.0f);
+
+	std::vector<std::wstring> wide;
+	float width = 0.0f;
+	for (const std::string& line : lines)
+	{
+		wide.push_back(widen(line));
+		width = std::max(width, resources->measure_text(font, wide.back()).x * look.font_scale);
+	}
+	const float height = line_height * static_cast<float>(lines.size());
 
 	DrawList list = renderer.view(renderer.view_count() - 1);
 	const Viewport viewport = data.viewport_manager()->fullscreen_viewport();
 	list.set_viewport(viewport);
 	list.set_camera(Camera::frame(
 		RectangleF(0.0f, 0.0f, viewport.width, viewport.height), viewport));
-	// Bottom right: clear of every pane's HUD (top) and the opening cards
-	// (bottom centre), in any layout.
-	const Vector2F position(viewport.width - margin - size.x,
-		viewport.height - margin - size.y);
+	Vector2F position(anchor == Anchor::bottom_left ? margin :
+		viewport.width - margin - width, viewport.height - margin - height);
+	// The panel's background, padded around the text.
+	const auto backing = [&position, width, height]
+		{
+			return RectangleF(position.x - 6.0f, position.y - 3.0f, width + 12.0f, height + 6.0f);
+		};
+	if (avoid.width > 0.0f && avoid.height > 0.0f && backing().intersects(avoid))
+	{
+		// Too wide to share the bottom row (a narrow window, four seats and
+		// a long strip): stack this panel above the other.
+		position.y = avoid.top() - 3.0f - margin - height;
+	}
+	const RectangleF background = backing();
 
 	const RenderResources::SpriteSheetHandle sheet_handle =
 		resources->resolve_sprite_sheet("sprite_sheet_1");
 	const SpriteSheet* sheet = resources->sprite_sheet(sheet_handle);
 	list.set_filter(TextureFilter::point);
-	sheet->draw(list, sheet->resolve_sprite_frame("pixel"),
-		RectangleF(position.x - 6.0f, position.y - 3.0f, size.x + 12.0f, size.y + 6.0f),
-		panel_colour);
+	sheet->draw(list, sheet->resolve_sprite_frame("pixel"), background, panel_colour);
 	list.set_filter(TextureFilter::linear);
-	list.draw_text(font, wide, position + look.shadow_offset, look.shadow_colour,
-		look.shadow_scale, 0.0f, Vector2F::ZERO, 0.0f);
-	list.draw_text(font, wide, position, strip_colour, look.font_scale, 0.0f,
-		Vector2F::ZERO, 0.0f);
+	for (std::size_t i = 0; i < wide.size(); ++i)
+	{
+		const Vector2F at = position + Vector2F(0.0f, line_height * static_cast<float>(i));
+		list.draw_text(font, wide[i], at + look.shadow_offset, look.shadow_colour,
+			look.shadow_scale, 0.0f, Vector2F::ZERO, 0.0f);
+		list.draw_text(font, wide[i], at, strip_colour, look.font_scale, 0.0f,
+			Vector2F::ZERO, 0.0f);
+	}
 	list.set_filter(TextureFilter::point);
+	return background;
 }
 #endif

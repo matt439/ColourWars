@@ -22,6 +22,7 @@
 #include "engine/scene/scene.h"
 #include "engine/render/colour.h"
 #include "engine/render/camera.h"
+#include "game/objects/level_overlays.h"
 #include "game/tuning.h"
 
 enum class LevelState
@@ -87,6 +88,17 @@ public:
 
 	LevelEndInfo level_end_info() const;
 
+	// Developer tools. Present in every build; only Debug builds call them,
+	// between world updates. `view` indexes players_ (see below).
+	void set_overlays(const LevelOverlays& overlays);
+	void set_players_showing_debug(bool showing);
+	void set_player_cheats(bool damage_immune, bool infinite_ammo);
+	// At rest at `top_left`, respawning first if dead; the weapon and the
+	// cameras follow at once, so the move shows even while the clock is
+	// paused. False: no such view.
+	bool place_player(int view, const mattmath::Vector2F& top_left);
+	bool respawn_player(int view);
+
 private:
 	std::unique_ptr<labrador::Scene> scene_ = nullptr;
 
@@ -138,6 +150,7 @@ private:
 
 	std::unique_ptr<InterfaceGameplay> interface_gameplay_ = nullptr;
 	std::unique_ptr<DebugText> debug_text_ = nullptr;
+	LevelOverlays overlays_{};
 
 	// Borrowed shell services; both outlive every level.
 	const labrador::ResolutionManager* resolution_manager_ = nullptr;

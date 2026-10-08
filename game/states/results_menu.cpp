@@ -33,6 +33,14 @@ ResultsMenuInitial::ResultsMenuInitial(MenuContext* context,
 
 }
 
+bool ResultsMenuInitial::debug_dismiss(bool /*leaving_match*/)
+{
+	// The fill loop stops on its own only once the reveal completes.
+	this->stop_effect(this->fill_sound_, true);
+	this->context()->pop();
+	return true;
+}
+
 void ResultsMenuInitial::update_page(float dt)
 {
 	const ResultsMenuPresentation& look = this->look();

@@ -56,6 +56,8 @@ public:
 	PauseMenuInitial(MenuContext* context, int player_num);
 	void init() override;
 	void update_page(float dt) override;
+	// Resume (or quit, to leave the match) through the PauseMenuAction frame.
+	bool debug_dismiss(bool leaving_match) override;
 private:
 	void refresh_connections();
 	bool waiting_for_players_ = false;
@@ -75,6 +77,7 @@ public:
 		ConfirmationType type);
 	void init() override;
 	void update_page(float dt) override;
+	bool debug_dismiss(bool leaving_match) override;
 private:
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> player_num_ = nullptr;

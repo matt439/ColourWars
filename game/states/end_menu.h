@@ -14,6 +14,9 @@ public:
 	~EndMenuPage() override = default;
 	void init() override = 0;
 	void update_page(float dt) override = 0;
+	// Restart (the match's build adopts the queued plan and, like the
+	// page's own Restart, moves the series on) or exit to the main menu.
+	bool debug_dismiss(bool leaving_match) override;
 protected:
 	const EndMenuPresentation& look() const;
 

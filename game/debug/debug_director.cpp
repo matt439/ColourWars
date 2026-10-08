@@ -4,15 +4,87 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "engine/app/application.h"
+#include "engine/render/text_encoding.h"
 #include "game/build_info.h"
 #include "game/debug/debug_console_state.h"
 #include "game/debug/debug_director_impl.h"
+#include "game/debug/debug_menu_page.h"
+#include "game/debug/debug_screenshot.h"
+#include "game/directory_consts.h"
 #include "game/game_data.h"
-#include "game/states/menu_page.h"
+#include "game/states/menu_context.h"
+#include "game/states/menu_input.h"
+#include "game/states/menu_level_settings.h"
+#include <chrono>
+#include <cstdio>
+#include <filesystem>
 #include <random>
 #include <utility>
 
 using namespace labrador;
+
+namespace
+{
+	// F10 never reaches the engine as a key the game can bind: the window
+	// procedure hands WM_SYSKEYUP to DefWindowProc, which opens the system
+	// menu's modal loop and freezes the game until the next key. A thread
+	// message hook, installed only while a Debug director is attached, takes
+	// F10 out of the queue before the window sees it and counts the press.
+	// Engine report 11 asks for a way to do this without a hook.
+	int f10_presses = 0;
+
+	LRESULT CALLBACK f10_message_hook(int code, WPARAM remove, LPARAM message_pointer)
+	{
+		if (code == HC_ACTION && message_pointer != 0)
+		{
+			MSG* message = reinterpret_cast<MSG*>(message_pointer);
+			const bool key = message->message == WM_SYSKEYDOWN || message->message == WM_SYSKEYUP ||
+				message->message == WM_KEYDOWN || message->message == WM_KEYUP;
+			// Bit 29 is Alt: Alt+F10 stays the system's.
+			const bool alt = (message->lParam & (1 << 29)) != 0;
+			if (key && message->wParam == VK_F10 && !alt)
+			{
+				const bool down = message->message == WM_SYSKEYDOWN || message->message == WM_KEYDOWN;
+				// Bit 30: the key was already down (auto-repeat).
+				const bool repeat = (message->lParam & (1 << 30)) != 0;
+				if (remove == PM_REMOVE && down && !repeat)
+				{
+					++f10_presses;
+				}
+				message->message = WM_NULL;
+			}
+		}
+		return CallNextHookEx(nullptr, code, remove, message_pointer);
+	}
+
+	bool take_f10_press()
+	{
+		const bool pressed = f10_presses > 0;
+		f10_presses = 0;
+		return pressed;
+	}
+
+	struct Bind
+	{
+		Key key;
+		const char* label;
+		const char* line;
+		bool sync_audio;
+	};
+
+	// Matches only; every other F-key and the grave key are read nowhere else.
+	// F1 (per-player overlay) is the game's own.
+	constexpr Bind binds[] = {
+		{ Key::f2, "F2", "overlay collision", false },
+		{ Key::f3, "F3", "overlay camera", false },
+		{ Key::f4, "F4", "overlay paint", false },
+		{ Key::f5, "F5", "restart", false },
+		{ Key::f6, "F6", "pause toggle", true },
+		{ Key::f7, "F7", "step 1", true },
+		{ Key::f8, "F8", "visual next", false },
+		{ Key::f9, "F9", "feedback toggle", false },
+	};
+}
 
 DebugDirector::DebugDirector() = default;
 
@@ -64,17 +136,33 @@ void DebugDirector::detach_match(const DebugMatchTarget& match)
 	}
 }
 
-void DebugDirector::before_level_build()
+void DebugDirector::before_level_build(DebugMatchTarget& match)
 {
 	if (this->impl_ != nullptr)
 	{
-		this->impl_->before_level_build();
+		this->impl_->before_level_build(match);
 	}
 }
 
-bool DebugDirector::before_match_update(DebugMatchTarget& match)
+void DebugDirector::after_level_build(DebugMatchTarget& match)
 {
-	return this->impl_ != nullptr && this->impl_->before_match_update(match);
+	if (this->impl_ != nullptr)
+	{
+		this->impl_->after_level_build(match);
+	}
+}
+
+void DebugDirector::filter_match_inputs(std::vector<PlayerInputData>& inputs) const
+{
+	if (this->impl_ != nullptr)
+	{
+		this->impl_->filter_match_inputs(inputs);
+	}
+}
+
+bool DebugDirector::before_match_update(DebugMatchTarget& match, float dt)
+{
+	return this->impl_ != nullptr && this->impl_->before_match_update(match, dt);
 }
 
 void DebugDirector::update_match(DebugMatchTarget& match,
@@ -93,18 +181,30 @@ bool DebugDirector::match_audio_paused() const
 	return this->impl_ != nullptr && this->impl_->clock().paused();
 }
 
-bool DebugDirector::before_page_update(MenuPage& page)
+bool DebugDirector::before_page_update(DebugPageTarget& page, float dt)
 {
-	return this->impl_ != nullptr && this->impl_->before_page_update(page);
+	return this->impl_ != nullptr && this->impl_->before_page_update(page, dt);
 }
 
 void DebugDirector::draw_status(Renderer& renderer) const
 {
-	if (this->impl_ != nullptr && !this->impl_->console_open() &&
-		this->impl_->data() != nullptr)
+	if (this->impl_ == nullptr || this->impl_->data() == nullptr)
 	{
-		DebugConsoleState::draw_strip(renderer, *this->impl_->data(),
-			this->impl_->status_strip());
+		return;
+	}
+	const GameData& data = *this->impl_->data();
+	// Bottom left, outside the console's top panel, so it stays readable
+	// while the console is open.
+	const mattmath::RectangleF paint = DebugConsoleState::draw_panel(renderer, data,
+		this->impl_->paint_lines(), DebugConsoleState::Anchor::bottom_left);
+	if (!this->impl_->console_open())
+	{
+		// Bottom right, or above the paint panel when a narrow window cannot
+		// hold both on one row.
+		const std::string strip = this->impl_->status_strip();
+		DebugConsoleState::draw_panel(renderer, data,
+			strip.empty() ? std::vector<std::string>() : std::vector<std::string>{ strip },
+			DebugConsoleState::Anchor::bottom_right, paint);
 	}
 }
 
@@ -119,17 +219,36 @@ DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentat
 		label += *c < 0x80 ? static_cast<char>(*c) : '?';
 	}
 	this->log_.info("ColourWars developer console - " + label);
-	this->log_.info("` toggles this console; type help. F5 restart, F6 pause, "
-		"F7 step, F8 visual, F9 feedback.");
+	this->log_.info("` toggles this console; type help. F10/F11 (or hold pad Back+Start) "
+		"opens the debug menu. F2-F4 overlays, F5 restart, F6 pause, F7 step, "
+		"F8 visual, F9 feedback.");
 	this->register_commands();
+	this->register_view_commands();
+	this->register_player_commands();
 }
 
-DebugDirectorImpl::~DebugDirectorImpl() = default;
+DebugDirectorImpl::~DebugDirectorImpl()
+{
+	if (this->f10_hook_ != nullptr)
+	{
+		UnhookWindowsHookEx(static_cast<HHOOK>(this->f10_hook_));
+	}
+}
 
 void DebugDirectorImpl::attach(Application* application, GameData* data)
 {
 	this->application_ = application;
 	this->data_ = data;
+	if (application != nullptr && this->f10_hook_ == nullptr)
+	{
+		this->f10_hook_ = SetWindowsHookExW(WH_GETMESSAGE, f10_message_hook, nullptr,
+			GetCurrentThreadId());
+		if (this->f10_hook_ == nullptr)
+		{
+			this->log_.warning("F10 is the system's (the message hook failed); use F11 "
+				"for the debug menu");
+		}
+	}
 }
 
 DebugStatus DebugDirectorImpl::execute(std::string_view line)
@@ -154,6 +273,28 @@ void DebugDirectorImpl::set_console_open(bool open)
 bool DebugDirectorImpl::console_open() const
 {
 	return this->console_open_;
+}
+
+void DebugDirectorImpl::set_debug_menu(DebugMenuPage* page)
+{
+	this->debug_menu_ = page;
+	if (page == nullptr)
+	{
+		this->waiting_notice_shown_ = false;
+	}
+}
+
+MenuContext* DebugDirectorImpl::menu_context()
+{
+	if (this->menu_context_ == nullptr && this->data_ != nullptr)
+	{
+		this->menu_input_ = std::make_unique<MenuInput>(this->data_->gamepads(),
+			this->data_->keyboard());
+		this->menu_settings_ = std::make_unique<MenuLevelSettings>();
+		this->menu_context_ = std::make_unique<MenuContext>(this->data_,
+			this->menu_input_.get(), this->menu_settings_.get());
+	}
+	return this->menu_context_.get();
 }
 
 MatchPlanner DebugDirectorImpl::planner() const
@@ -186,9 +327,73 @@ bool DebugDirectorImpl::open_console_if_requested()
 	return true;
 }
 
+bool DebugDirectorImpl::poll_debug_menu_toggle(float dt)
+{
+	if (this->data_ == nullptr || this->application_ == nullptr)
+	{
+		return false;
+	}
+	DebugChord::Pads pads{};
+	const Gamepads& gamepads = *this->data_->gamepads();
+	for (int slot = 0; slot < static_cast<int>(pads.size()); ++slot)
+	{
+		DebugChord::Pad& pad = pads[static_cast<std::size_t>(slot)];
+		pad.connected = gamepads.connected(slot);
+		if (pad.connected)
+		{
+			pad.back = gamepads.state(slot).is_down(GamepadButton::back);
+			pad.start = gamepads.state(slot).is_down(GamepadButton::start);
+		}
+	}
+	const bool chord = this->chord_.update(pads, dt);
+	const bool f10 = take_f10_press();
+	const bool f11 = this->data_->keyboard()->pressed(Key::f11);
+	if (!chord && !f10 && !f11)
+	{
+		return false;
+	}
+	if (this->debug_menu_ != nullptr)
+	{
+		this->debug_menu_->request_close();
+	}
+	else
+	{
+		this->open_debug_menu();
+	}
+	return true;
+}
+
+void DebugDirectorImpl::forget_menu_key()
+{
+	take_f10_press();
+}
+
+void DebugDirectorImpl::open_debug_menu()
+{
+	MenuContext* context = this->menu_context();
+	if (context == nullptr || this->application_ == nullptr)
+	{
+		return;
+	}
+	// Deferred, like the console: pushed from inside the top state's update,
+	// with no result, so it can sit over any state.
+	this->application_->push(std::make_unique<DebugMenuPage>(context, this));
+}
+
 bool DebugDirectorImpl::has_pending_content() const
 {
 	return this->pending_tuning_ != nullptr && this->pending_presentation_ != nullptr;
+}
+
+bool DebugDirectorImpl::rebuild_queued() const
+{
+	return this->match_ != nullptr &&
+		(!this->request_.empty() || this->has_pending_content());
+}
+
+std::string DebugDirectorImpl::queued_rebuild_description() const
+{
+	return this->request_.empty() ? std::string("reload") : this->request_.describe();
 }
 
 // Only ever called with no Level alive, from before_level_build.
@@ -225,6 +430,15 @@ void DebugDirectorImpl::attach_match(DebugMatchTarget& match)
 	// consumed; anything still queued was stored in the menus without `stage`
 	// (or left by a match that ended) and does not belong to this one.
 	this->drop_request("this match was started from the menus");
+	// A goto typed in the menus belongs to the match `stage` starts, not to
+	// one started by walking the menus.
+	if (this->pending_goto_ && !this->starting_from_plan_)
+	{
+		this->log_.warning("dropped queued goto " + this->pending_goto_->station +
+			": this match was started from the menus");
+		this->pending_goto_.reset();
+	}
+	this->starting_from_plan_ = false;
 }
 
 void DebugDirectorImpl::detach_match(const DebugMatchTarget& match)
@@ -233,16 +447,98 @@ void DebugDirectorImpl::detach_match(const DebugMatchTarget& match)
 	{
 		this->match_ = nullptr;
 	}
-	// A rebuild queued for this match means nothing once it has ended.
+	// A rebuild queued for this match means nothing once it has ended, nor
+	// does a goto waiting for that rebuild.
 	this->drop_request("the match ended");
+	if (this->pending_goto_)
+	{
+		this->log_.warning("dropped queued goto " + this->pending_goto_->station +
+			": the match ended");
+		this->pending_goto_.reset();
+	}
 	this->leave_requested_ = false;
 }
 
-void DebugDirectorImpl::before_level_build()
+void DebugDirectorImpl::log_match(const MatchPlan& plan, const std::string& how)
+{
+	this->log_.info("match: " + plan.settings.stage() + ", " +
+		std::to_string(plan.settings.player_count()) + " player(s), visual " +
+		MatchPlanner::visual_name(plan.settings.workshop_visual_mode()) +
+		(plan.reset_session ? " (new session)" : "") + how);
+}
+
+void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 {
 	this->apply_pending_content();
+
+	// A debug rebuild cleared the request before building, so anything still
+	// queued here reached the match through a menu's own restart (pause menu
+	// Restart, or the end menu after unwinding): this build is the one that
+	// applies it.
+	MatchRequest queued = this->request_;
+	queued.restart = false;
+	if (!queued.empty())
+	{
+		std::mt19937 engine(std::random_device{}());
+		const MatchPlan plan = this->planner().resolve(&match.debug_settings(),
+			this->request_, this->connected_pads(),
+			[&engine] { return static_cast<unsigned int>(engine()); });
+		const std::string described = this->request_.describe();
+		this->request_ = MatchRequest();
+		this->waiting_notice_shown_ = false;
+		if (!plan.ok)
+		{
+			this->log_.error("cannot apply " + described + ": " + plan.error +
+				"; building with the current settings");
+		}
+		else
+		{
+			this->remembered_visual_ = plan.settings.workshop_visual_mode();
+			match.debug_adopt(plan.settings, plan.reset_session);
+			this->log_match(plan, " (adopted by the menu's build)");
+		}
+	}
 	// This build is the restart.
 	this->request_.restart = false;
+}
+
+void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
+{
+	match.debug_set_overlays({ this->overlay_collision_, this->overlay_camera_ });
+	// New players start with their text off; only overlay.player turns it on.
+	if (this->overlay_player_)
+	{
+		match.debug_set_player_text(true);
+	}
+	match.debug_set_cheats(this->god_, this->infinite_ammo_);
+	if (this->pending_goto_)
+	{
+		const PendingGoto pending = *this->pending_goto_;
+		this->pending_goto_.reset();
+		const DebugStatus status = this->apply_goto(match, pending.station, pending.seat);
+		this->log_.write(status.ok ? DebugSeverity::info : DebugSeverity::error, status.message);
+	}
+	// No partial step or old edge carries into the new level, and its
+	// voices start paused if the clock is.
+	this->clock_.reset_accumulator();
+	if (this->clock_.paused())
+	{
+		match.debug_sync_audio();
+	}
+}
+
+void DebugDirectorImpl::filter_match_inputs(std::vector<PlayerInputData>& inputs) const
+{
+	for (int slot = 0; slot < input_slots::pad_count &&
+		slot < static_cast<int>(inputs.size()); ++slot)
+	{
+		if (this->chord_.suppressing(slot))
+		{
+			PlayerInputData& input = inputs[static_cast<std::size_t>(slot)];
+			input.toggle_debug = false;
+			input.toggle_pause_menu = false;
+		}
+	}
 }
 
 void DebugDirectorImpl::drop_request(const std::string& reason)
@@ -255,6 +551,22 @@ void DebugDirectorImpl::drop_request(const std::string& reason)
 	}
 	this->request_ = MatchRequest();
 	this->waiting_notice_shown_ = false;
+}
+
+bool DebugDirectorImpl::screenshot_waits() const
+{
+	// Something that applies at this update would change the picture first:
+	// in a match a rebuild or leave, in the menus only a queued stage (players
+	// or weapon without one, or reloaded content, wait for a match that may
+	// never come).
+	return this->match_ != nullptr ? !this->request_.empty() || this->leave_requested_ :
+		this->request_.stage.has_value();
+}
+
+bool DebugDirectorImpl::can_apply() const
+{
+	return this->match_ != nullptr ? !this->request_.empty() || this->leave_requested_ :
+		this->request_.stage.has_value();
 }
 
 PlayerVisualMode DebugDirectorImpl::planned_visual() const
@@ -282,42 +594,64 @@ void DebugDirectorImpl::run_binds(DebugMatchTarget& match)
 		return;
 	}
 	const Keyboard& keyboard = *this->data_->keyboard();
-	if (keyboard.pressed(Key::f5))
+	for (const Bind& bind : binds)
 	{
-		this->log_.write(DebugSeverity::echo, "[F5] restart");
-		this->execute("restart");
-	}
-	if (keyboard.pressed(Key::f6))
-	{
-		this->log_.write(DebugSeverity::echo, "[F6] pause toggle");
-		this->execute("pause toggle");
-		match.debug_sync_audio();
-	}
-	if (keyboard.pressed(Key::f7))
-	{
-		this->log_.write(DebugSeverity::echo, "[F7] step");
-		this->execute("step 1");
-		match.debug_sync_audio();
-	}
-	if (keyboard.pressed(Key::f8))
-	{
-		this->log_.write(DebugSeverity::echo, "[F8] visual next");
-		this->execute("visual next");
-	}
-	if (keyboard.pressed(Key::f9))
-	{
-		this->log_.write(DebugSeverity::echo, "[F9] feedback toggle");
-		this->execute("feedback toggle");
+		if (keyboard.pressed(bind.key))
+		{
+			this->log_.write(DebugSeverity::echo, std::string("[") + bind.label + "] " + bind.line);
+			this->execute(bind.line);
+			if (bind.sync_audio)
+			{
+				match.debug_sync_audio();
+			}
+		}
 	}
 }
 
-bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match)
+void DebugDirectorImpl::capture_screenshot_if_ready()
 {
-	if (this->open_console_if_requested())
+	if (!this->pending_screenshot_ || this->application_ == nullptr)
+	{
+		return;
+	}
+	if (this->screenshot_waits())
+	{
+		return;
+	}
+	const std::string requested = *this->pending_screenshot_;
+	this->pending_screenshot_.reset();
+	try
+	{
+		const std::string name = screenshot_file_name(requested,
+			std::chrono::system_clock::now());
+		const std::filesystem::path directory(widen(directory_consts::screenshot_directory()));
+		std::filesystem::create_directories(directory);
+		const std::filesystem::path path = directory / widen(name);
+		const ScreenCapture image = capture_stack(*this->application_);
+		std::string error;
+		if (!write_png(path, image, error))
+		{
+			this->log_.error("screenshot failed: " + error);
+			return;
+		}
+		const std::u8string text = path.u8string();
+		this->log_.info("screenshot: " + std::string(text.begin(), text.end()) + " (" +
+			std::to_string(image.width) + "x" + std::to_string(image.height) + ")");
+	}
+	catch (const std::exception& e)
+	{
+		this->log_.error(std::string("screenshot failed: ") + e.what());
+	}
+}
+
+bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt)
+{
+	if (this->poll_debug_menu_toggle(dt) || this->open_console_if_requested())
 	{
 		return true;
 	}
 
+	this->capture_screenshot_if_ready();
 	this->run_binds(match);
 
 	if (this->leave_requested_)
@@ -339,25 +673,25 @@ bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match)
 		[&engine] { return static_cast<unsigned int>(engine()); });
 	const std::string described = this->request_.describe();
 	this->request_ = MatchRequest();
+	this->waiting_notice_shown_ = false;
 	if (!plan.ok)
 	{
 		this->log_.error("cannot apply " + described + ": " + plan.error);
-		// Content that validated still waits for the next rebuild.
+		// Content that validated still waits for the next rebuild; a goto
+		// meant for the stage that will not be built does not.
+		if (this->pending_goto_)
+		{
+			this->log_.warning("dropped queued goto " + this->pending_goto_->station +
+				": the rebuild it waited for failed");
+			this->pending_goto_.reset();
+		}
 		return false;
 	}
 
 	this->remembered_visual_ = plan.settings.workshop_visual_mode();
+	// The build runs before_level_build and after_level_build.
 	match.debug_rebuild(plan.settings, plan.reset_session);
-	this->clock_.reset_accumulator();
-	if (this->clock_.paused())
-	{
-		// The new level's voices start paused too.
-		match.debug_sync_audio();
-	}
-	this->log_.info("match: " + plan.settings.stage() + ", " +
-		std::to_string(plan.settings.player_count()) + " player(s), visual " +
-		MatchPlanner::visual_name(plan.settings.workshop_visual_mode()) +
-		(plan.reset_session ? " (new session)" : ""));
+	this->log_match(plan, "");
 	return true;
 }
 
@@ -383,26 +717,68 @@ void DebugDirectorImpl::update_match(DebugMatchTarget& match,
 	}
 }
 
-bool DebugDirectorImpl::before_page_update(MenuPage& page)
+bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt)
 {
+	if (this->poll_debug_menu_toggle(dt))
+	{
+		return true;
+	}
+	// Every frame of a chord, including the release frames: Start's release
+	// must never reach this page as `pause`.
+	for (int slot = 0; slot < input_slots::pad_count; ++slot)
+	{
+		if (this->chord_.suppressing(slot))
+		{
+			page.debug_reset_input(slot);
+		}
+	}
 	if (this->open_console_if_requested())
 	{
 		return true;
 	}
 
-	if (!this->request_.stage)
+	this->capture_screenshot_if_ready();
+
+	// While the debug menu is open it is the page on top (only the console can
+	// sit above it, and the console is not a page): what it stages, or what
+	// the console queued over it, waits for it to close.
+	if (this->debug_menu_ != nullptr)
 	{
+		const bool queued = this->match_ != nullptr ?
+			!this->request_.empty() || this->leave_requested_ : this->request_.stage.has_value();
+		if (queued && !this->waiting_notice_shown_)
+		{
+			this->log_.info("queued: " + this->request_.describe() +
+				" applies when the debug menu closes");
+			this->waiting_notice_shown_ = true;
+		}
 		return false;
 	}
 
 	if (this->match_ != nullptr)
 	{
+		if (this->request_.empty() && !this->leave_requested_)
+		{
+			return false;
+		}
+		// A pause, controls, results or end page is over the match: close it
+		// the way its own controls would, one page a frame, until the match
+		// is on top and applies the request (or a menu's restart adopts it).
+		if (page.debug_dismiss(this->leave_requested_))
+		{
+			return true;
+		}
 		if (!this->waiting_notice_shown_)
 		{
-			this->log_.info("queued: " + this->request_.describe() +
-				" applies when the match resumes");
+			this->log_.info("queued: " + (this->leave_requested_ ? std::string("menu") :
+				this->request_.describe()) + " applies when the match resumes");
 			this->waiting_notice_shown_ = true;
 		}
+		return false;
+	}
+
+	if (!this->request_.stage)
+	{
 		return false;
 	}
 
@@ -425,9 +801,17 @@ bool DebugDirectorImpl::before_page_update(MenuPage& page)
 	// Consumed before the page starts the match, so the match's attach_match
 	// finds nothing left over however soon it runs.
 	const MatchRequest consumed = std::exchange(this->request_, MatchRequest());
+	this->starting_from_plan_ = true;
 	if (!page.debug_start_match(plan.settings))
 	{
+		this->starting_from_plan_ = false;
 		this->request_ = consumed;
+		// A page with no way to start a match (controls over options) is
+		// closed, and the page beneath it starts the match next frame.
+		if (page.debug_dismiss(false))
+		{
+			return true;
+		}
 		if (!this->waiting_notice_shown_)
 		{
 			this->log_.info("queued: close this page to start " + request.describe());

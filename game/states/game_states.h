@@ -88,7 +88,9 @@ private:
 
 	// Sets the layout before building a level, including every restart. The
 	// one build path: between destroying the old level and building the new
-	// one it lets the debug director apply reloaded content (no-op in Release).
+	// one it lets the debug director apply reloaded content and adopt a queued
+	// plan, and once the level exists, re-apply its overlays and cheats
+	// (no-ops in Release).
 	void build_and_enter_level();
 
 	// Voices play only when nothing covers the match, the window is active
@@ -98,12 +100,20 @@ private:
 	// DebugMatchTarget, for the developer tools only.
 	const MenuLevelSettings& debug_settings() const override;
 	void debug_rebuild(const MenuLevelSettings& plan, bool reset_session) override;
+	void debug_adopt(const MenuLevelSettings& plan, bool reset_session) override;
 	void debug_leave() override;
 	void debug_update_level(const std::vector<PlayerInputData>& inputs,
 		float dt) override;
 	bool debug_level_finished() const override;
 	void debug_sync_audio() override;
 	std::vector<std::string> debug_status() const override;
+	void debug_set_overlays(const LevelOverlays& overlays) override;
+	void debug_set_player_text(bool showing) override;
+	void debug_set_cheats(bool damage_immune, bool infinite_ammo) override;
+	std::vector<LevelStation> debug_stations() const override;
+	bool debug_place(int seat, const mattmath::Vector2F& top_left) override;
+	bool debug_respawn(int seat) override;
+	MatchPaint debug_paint() const override;
 
 	void open_pause_menu(int player_num);
 	void on_pause_menu_closed(const PauseMenuAction& action);

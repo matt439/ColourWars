@@ -2,6 +2,7 @@
     "_comment": [
         "Experimental movement blockout; route and acceptance notes: docs/polish-movement-course.md.",
         "Spawn coordinates are character top-left, sized from tuning.player.size (52 by 120).",
+        "Stations are the Debug console's goto targets (docs/debug-console.md), also character top-left, feet 5 units above their surface.",
         "Music is muted while the replacement-audio work is pending; the schema still resolves its existing wave name."
     ],
     "display_name": "Movement Course",
@@ -50,6 +51,16 @@
             }
         ]
     },
+    "stations": [
+        { "name": "drop_through", "x": 559.0, "y": 715.0 },
+        { "name": "short_gap", "x": 708.0, "y": 875.0 },
+        { "name": "long_gap", "x": 1288.0, "y": 875.0 },
+        { "name": "running_gap", "x": 1800.0, "y": 875.0 },
+        { "name": "low_ceiling", "x": 3300.0, "y": 875.0 },
+        { "name": "steps", "x": 3900.0, "y": 875.0 },
+        { "name": "high_step", "x": 4404.0, "y": 535.0 },
+        { "name": "recovery_lane", "x": 1200.0, "y": 1275.0 }
+    ],
     "level_bounds": {
         "out_of_bounds": {
             "x": -100.0,

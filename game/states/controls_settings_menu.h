@@ -13,6 +13,9 @@ public:
 	void init() override;
 	void update_page(float dt) override;
 	bool covers_screen() const override { return true; }
+	// Closes like Back. Not PauseMenuPage's way out: this page is pushed with
+	// no result, and pop(PauseMenuAction) on its frame would throw.
+	bool debug_dismiss(bool leaving_match) final;
 private:
 	void refresh_values();
 	void apply_settings();

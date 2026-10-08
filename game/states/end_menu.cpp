@@ -22,6 +22,12 @@ void EndMenuPage::finish(EndMenuAction action) const
 	this->context()->pop(action);
 }
 
+bool EndMenuPage::debug_dismiss(bool leaving_match)
+{
+	this->finish(leaving_match ? EndMenuAction::exit : EndMenuAction::restart);
+	return true;
+}
+
 EndMenuInitial::EndMenuInitial(MenuContext* context, const Session& session) :
 	EndMenuPage(context), session_(session)
 {

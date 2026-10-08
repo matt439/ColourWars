@@ -52,9 +52,10 @@ out/build/x64-debug/game/ColourWars.exe
 
 ### Developer console (Debug only)
 
-Debug builds take launch arguments and have a console; Release compiles out the
-console, registry, commands and binds (an unreachable `DebugMatchTarget`
-interface and its `GameLevel` adapters remain, so no layout depends on `_DEBUG`). Full reference: [docs/debug-console.md](docs/debug-console.md).
+Debug builds take launch arguments and have a console and a debug menu; Release
+compiles out the console, menu, registry, commands and binds (the unreachable
+`DebugMatchTarget`/`DebugPageTarget` interfaces, their adapters and a few plain
+`Level`/`Player` members remain, so no layout depends on `_DEBUG`). Full reference: [docs/debug-console.md](docs/debug-console.md).
 
 ```
 out/build/x64-debug/game/ColourWars.exe +stage movement_course +players 4 +visual posed
@@ -62,8 +63,11 @@ out/build/x64-debug/game/ColourWars.exe +stage movement_course +players 4 +visua
 
 Each `+name` starts a statement; the match starts without menu navigation. In a
 match **`** opens the console (the match freezes while it is open; Escape
-closes), **F5** restart, **F6** pause, **F7** step, **F8** cycle the Movement
-Course art, **F9** toggle movement feedback. `help` lists the commands. The gate
+closes), **F2**-**F4** collision, camera and paint overlays, **F5** restart,
+**F6** pause, **F7** step, **F8** cycle the Movement Course art, **F9** toggle
+movement feedback. Anywhere, **F10**/**F11** or holding pad **Back+Start** opens
+the debug menu (F10 is taken back from the system menu by a Debug-only message
+hook; see the doc). `help` lists the commands. The gate
 `COLOURWARS_DEV_TOOLS` comes from `_DEBUG` in `game/debug/dev_tools.h` - never a
 `/D` flag, so the acceptance probes agree on class layouts - and no existing
 class has a member that depends on it. Code is in `game/debug/`; the CPU case is

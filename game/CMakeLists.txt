@@ -14,17 +14,24 @@ add_executable(ColourWars WIN32
     session.cpp
     tuning.cpp
 
+    debug/debug_chord.cpp
     debug/debug_clock.cpp
     debug/debug_command.cpp
     debug/debug_console_state.cpp
     debug/debug_director.cpp
     debug/debug_log.cpp
+    debug/debug_menu_model.cpp
+    debug/debug_menu_page.cpp
+    debug/debug_overlay_draw.cpp
     debug/debug_registry.cpp
+    debug/debug_screenshot.cpp
     debug/debug_text_field.cpp
     debug/debug_tokenizer.cpp
     debug/debug_variable.cpp
     debug/game_commands.cpp
     debug/match_plan.cpp
+    debug/player_commands.cpp
+    debug/view_commands.cpp
 
     objects/collision_object_type.cpp
     objects/debug_text.cpp

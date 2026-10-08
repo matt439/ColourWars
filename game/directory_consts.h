@@ -19,4 +19,9 @@ namespace directory_consts
 	// Executable-relative save/save_data.json, checked for migration when the
 	// per-user save cannot be opened. Also used as the fallback save location.
 	std::string legacy_save_file_path();
+
+	// Where the Debug `screenshot` command writes: %LOCALAPPDATA%\ColourWars\screens,
+	// or the executable-relative save/screens without LOCALAPPDATA. UTF-8; not
+	// created here.
+	std::string screenshot_directory();
 }

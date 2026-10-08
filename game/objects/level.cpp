@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
+#include "game/debug/debug_overlay_draw.h"
 #include "game/input_slots.h"
 
 using namespace mattmath;
@@ -669,6 +670,14 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		divider->draw(list);
 	}
 
+	// Developer overlays, in world space under the HUD. Never on in Release.
+	if (this->overlays_.any())
+	{
+		debug_overlay::draw_pane(list, this->overlays_, *this->scene_,
+			this->scene_->view(view_index), *player, this->camera_bounds_,
+			*this->render_resources_->sprite_sheet(this->overlay_sheet_), this->overlay_fill_);
+	}
+
 	// The HUD uses pane-local coordinates, so draw it with the identity camera.
 	list.set_camera(Camera::DEFAULT_CAMERA);
 
@@ -689,6 +698,60 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		this->debug_text_->draw_debug_info(list, player,
 			this->projectile_count_, this->frame_dt_);
 	}
+}
+
+void Level::set_overlays(const LevelOverlays& overlays)
+{
+	this->overlays_ = overlays;
+}
+
+void Level::set_players_showing_debug(bool showing)
+{
+	for (Player* player : this->players_)
+	{
+		player->set_showing_debug(showing);
+	}
+}
+
+void Level::set_player_cheats(bool damage_immune, bool infinite_ammo)
+{
+	for (Player* player : this->players_)
+	{
+		player->set_damage_immune(damage_immune);
+		player->set_infinite_ammo(infinite_ammo);
+	}
+}
+
+bool Level::place_player(int view, const Vector2F& top_left)
+{
+	if (view < 0 || view >= this->player_count())
+	{
+		return false;
+	}
+	Player* player = this->players_[static_cast<size_t>(view)];
+	if (player->state() == PlayerState::dead)
+	{
+		player->force_respawn();
+	}
+	player->place_at(top_left);
+	player->update_weapon_position();
+	this->refresh_player_cameras();
+	this->refresh_views();
+	return true;
+}
+
+bool Level::respawn_player(int view)
+{
+	if (view < 0 || view >= this->player_count())
+	{
+		return false;
+	}
+	Player* player = this->players_[static_cast<size_t>(view)];
+	player->force_respawn();
+	player->update_weapon_position();
+	this->refresh_player_cameras();
+	this->refresh_views();
+	return true;
 }
 
 int Level::player_count() const

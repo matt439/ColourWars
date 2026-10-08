@@ -7,6 +7,7 @@
 #include "engine/render/text_encoding.h"
 #include "game/content_validation.h"
 #include "game/debug/debug_director_impl.h"
+#include "game/debug/debug_screenshot.h"
 #include "game/directory_consts.h"
 #include "game/game_data.h"
 #include "game/input_slots.h"
@@ -64,6 +65,31 @@ namespace
 	}
 
 	constexpr const char* course_stage = "movement_course";
+
+	using Form = DebugMenuTraits::Form;
+
+	DebugMenuTraits traits(const char* category, Form form, bool staged = false,
+		std::size_t pick_argument = 0, const char* prefix = "")
+	{
+		DebugMenuTraits result;
+		result.category = category;
+		result.form = form;
+		result.staged = staged;
+		result.pick_argument = pick_argument;
+		result.prefix = prefix;
+		return result;
+	}
+
+	// A variable keeps its variable form; only its category and staging change.
+	void place(DebugRegistry& registry, const char* name, const char* category,
+		bool staged = false)
+	{
+		DebugEntry* entry = registry.find(name);
+		DebugMenuTraits menu = entry->menu();
+		menu.category = category;
+		menu.staged = staged;
+		entry->set_menu(std::move(menu));
+	}
 }
 
 void DebugDirectorImpl::register_commands()
@@ -71,10 +97,12 @@ void DebugDirectorImpl::register_commands()
 	using Args = const DebugArgs&;
 	DebugRegistry& registry = this->registry_;
 	const auto add = [&registry](std::string name, std::string help,
-		std::vector<DebugArgSpec> args, LambdaCommand::Body body, bool variadic = false)
+		std::vector<DebugArgSpec> args, LambdaCommand::Body body, DebugMenuTraits menu)
 		{
-			registry.add(std::make_unique<LambdaCommand>(std::move(name), std::move(help),
-				std::move(args), std::move(body), variadic));
+			auto command = std::make_unique<LambdaCommand>(std::move(name), std::move(help),
+				std::move(args), std::move(body));
+			command->set_menu(std::move(menu));
+			registry.add(std::move(command));
 		};
 
 	// Match plan ------------------------------------------------------------
@@ -101,7 +129,7 @@ void DebugDirectorImpl::register_commands()
 			}
 			return DebugStatus::success("stage " + word +
 				(this->match_ != nullptr ? ": rebuilding the match" : ": starting a match"), true);
-		});
+		}, traits("match", Form::pick, true));
 
 	add("players", "seats 1-4: pads in slot order, then keyboard/mouse, then idle dummies",
 		{ { "1-4", false, [] { return std::vector<std::string>{ "1", "2", "3", "4" }; } } },
@@ -124,7 +152,7 @@ void DebugDirectorImpl::register_commands()
 			}
 			return DebugStatus::success("players " + std::to_string(players) +
 				": stored for 'stage <name>'; a match started from the menus drops it");
-		});
+		}, traits("match", Form::pick, true));
 
 	add("weapon", "choose a seat's weapon (seat 1-4 or all)",
 		{ { "seat|all", false, [] { return std::vector<std::string>{ "all", "1", "2", "3", "4" }; } },
@@ -153,7 +181,7 @@ void DebugDirectorImpl::register_commands()
 				(this->match_ != nullptr ? ": rebuilding the match" :
 					applies ? "" : ": stored for 'stage <name>'; a match started from the menus drops it"),
 				applies);
-		});
+		}, traits("match", Form::pick, true, 1, "all"));
 
 	registry.add(std::make_unique<ChoiceVariable>("visual",
 		"Movement Course art: original, rotating (continuous tool) or posed (authored)",
@@ -185,6 +213,7 @@ void DebugDirectorImpl::register_commands()
 			return DebugStatus::success("visual = " + choice + (this->match_ != nullptr ?
 				": rebuilding the match" : " (for the queued match)"), true);
 		}));
+	place(registry, "visual", "match", true);
 
 	add("restart", "rebuild the match with its current settings (keeps the session)", {},
 		[this](Args, DebugLog&)
@@ -195,7 +224,7 @@ void DebugDirectorImpl::register_commands()
 			}
 			this->request_.restart = true;
 			return DebugStatus::success("restart", true);
-		});
+		}, traits("match", Form::run));
 
 	add("menu", "leave the match for the main menu", {},
 		[this](Args, DebugLog&)
@@ -206,27 +235,21 @@ void DebugDirectorImpl::register_commands()
 			}
 			this->leave_requested_ = true;
 			return DebugStatus::success("menu: leaving the match", true);
-		});
+		}, traits("match", Form::run));
 
 	// Time ------------------------------------------------------------------
 
-	add("timescale", "match speed, 0.25-4 (updates are stepped, never stretched; audio is not scaled)",
-		{ { "scale", true, [] { return std::vector<std::string>{ "0.25", "0.5", "1", "2", "4" }; } } },
-		[this](Args args, DebugLog&)
+	registry.add(std::make_unique<NumberVariable>("timescale",
+		"match speed, 0.25-4 (updates are stepped, never stretched; audio is not scaled)",
+		1.0f, DebugClock::min_timescale, DebugClock::max_timescale,
+		std::vector<float>{ 0.25f, 0.5f, 1.0f, 2.0f, 4.0f },
+		[this] { return this->clock_.timescale(); },
+		[this](float scale)
 		{
-			if (!args.has(0))
-			{
-				return DebugStatus::success("timescale = " + format_number(this->clock_.timescale()));
-			}
-			float scale = 0.0f;
-			if (!DebugArgs::parse_float(args.text(0), scale) ||
-				scale < DebugClock::min_timescale || scale > DebugClock::max_timescale)
-			{
-				return DebugStatus::failure("timescale: expected 0.25-4, got '" + args.text(0) + "'");
-			}
 			this->clock_.set_timescale(scale);
 			return DebugStatus::success("timescale = " + format_number(this->clock_.timescale()));
-		});
+		}));
+	place(registry, "timescale", "time");
 
 	add("pause", "pause or resume the match clock (F6)",
 		{ { "on|off|toggle", true, [] { return std::vector<std::string>{ "on", "off", "toggle" }; } } },
@@ -245,7 +268,7 @@ void DebugDirectorImpl::register_commands()
 				this->match_->debug_sync_audio();
 			}
 			return DebugStatus::success(paused ? "paused" : "running");
-		});
+		}, traits("time", Form::run));
 
 	add("step", "pause, then run n single updates (F7)",
 		{ { "n", true, {} } },
@@ -264,7 +287,7 @@ void DebugDirectorImpl::register_commands()
 			this->clock_.request_steps(count);
 			return DebugStatus::success("step " + std::to_string(count) +
 				" (paused; " + std::to_string(this->clock_.pending_steps()) + " pending)", true);
-		});
+		}, traits("time", Form::run));
 
 	// View ------------------------------------------------------------------
 
@@ -277,12 +300,26 @@ void DebugDirectorImpl::register_commands()
 			this->presentation_->set_movement_feedback_enabled(enabled);
 			return DebugStatus::success(std::string("feedback = ") + (enabled ? "on" : "off"));
 		}));
+	place(registry, "feedback", "view");
 
 	// Content ---------------------------------------------------------------
 
 	add("reload", "re-read tuning.json and presentation.json (source tree first); "
 		"in a match it restarts", {},
-		[this](Args, DebugLog&) { return this->reload_content(); });
+		[this](Args, DebugLog&) { return this->reload_content(); },
+		traits("content", Form::run));
+
+	add("screenshot", "save the window as a PNG in %LOCALAPPDATA%/ColourWars/screens "
+		"(timestamped name by default)",
+		{ { "name", true, {} } },
+		[this](Args args, DebugLog&)
+		{
+			const std::string requested = args.has(0) ? args.text(0) : std::string();
+			this->pending_screenshot_ = requested;
+			const std::string name = screenshot_file_name(requested,
+				std::chrono::system_clock::now());
+			return DebugStatus::success("screenshot " + name + " queued", true);
+		}, traits("content", Form::run));
 
 	// Console ---------------------------------------------------------------
 
@@ -294,7 +331,7 @@ void DebugDirectorImpl::register_commands()
 				log.info(line);
 			}
 			return DebugStatus::success();
-		});
+		}, traits("console", Form::run));
 
 	add("logfile", "mirror the console to a UTF-8 file, or off",
 		{ { "path|off", false, {} } },
@@ -306,14 +343,14 @@ void DebugDirectorImpl::register_commands()
 				return DebugStatus::failure("logfile: cannot open '" + path + "'");
 			}
 			return DebugStatus::success(path.empty() ? "logfile off" : "logfile " + path);
-		});
+		}, traits("console", Form::hidden));
 
 	add("clear", "clear the console output", {},
 		[](Args, DebugLog& log)
 		{
 			log.clear();
 			return DebugStatus::success();
-		});
+		}, traits("console", Form::hidden));
 
 	add("quit", "close the game", {},
 		[this](Args, DebugLog&)
@@ -324,7 +361,7 @@ void DebugDirectorImpl::register_commands()
 			}
 			this->application_->quit();
 			return DebugStatus::success("quit", true);
-		});
+		}, traits("console", Form::run));
 }
 
 DebugStatus DebugDirectorImpl::reload_content()
@@ -396,6 +433,31 @@ std::vector<std::string> DebugDirectorImpl::status_lines() const
 	lines.push_back(std::string("feedback ") +
 		(this->presentation_->movement_feedback().enabled ? "on" : "off") +
 		", visual " + MatchPlanner::visual_name(this->planned_visual()));
+	std::string overlays;
+	for (const auto& [name, on] : { std::pair<const char*, bool>{ "player", this->overlay_player_ },
+		{ "collision", this->overlay_collision_ }, { "camera", this->overlay_camera_ },
+		{ "paint", this->overlay_paint_ } })
+	{
+		overlays += on ? std::string(overlays.empty() ? "" : " ") + name : "";
+	}
+	lines.push_back("overlays: " + (overlays.empty() ? std::string("none") : overlays) +
+		"; cheats: god " + (this->god_ ? "on" : "off") + ", ammo " +
+		(this->infinite_ammo_ ? "inf" : "normal"));
+	const std::vector<std::string> stations = this->station_names();
+	if (!stations.empty())
+	{
+		std::string names;
+		for (const std::string& station : stations)
+		{
+			names += " " + station;
+		}
+		lines.push_back("stations:" + names);
+	}
+	if (this->pending_goto_)
+	{
+		lines.push_back("queued: goto " + this->pending_goto_->station + " " +
+			std::to_string(this->pending_goto_->seat));
+	}
 	if (!this->request_.empty())
 	{
 		lines.push_back("queued: " + this->request_.describe());
@@ -439,6 +501,55 @@ std::string DebugDirectorImpl::status_strip() const
 	{
 		add("feedback off");
 	}
+	if (this->god_)
+	{
+		add("GOD");
+	}
+	if (this->infinite_ammo_)
+	{
+		add("AMMO INF");
+	}
+	std::string overlays;
+	for (const auto& [name, on] : { std::pair<const char*, bool>{ "collision", this->overlay_collision_ },
+		{ "camera", this->overlay_camera_ }, { "paint", this->overlay_paint_ } })
+	{
+		overlays += on ? std::string(" ") + name : "";
+	}
+	if (!overlays.empty())
+	{
+		add("ovl" + overlays);
+	}
 	return strip;
+}
+
+std::vector<std::string> DebugDirectorImpl::paint_lines() const
+{
+	if (!this->overlay_paint_ || this->match_ == nullptr)
+	{
+		return {};
+	}
+	const MatchPaint paint = this->match_->debug_paint();
+	const auto percent = [&paint](float area)
+		{
+			char buffer[16] = {};
+			std::snprintf(buffer, sizeof(buffer), "%.1f%%", paint.total > 0.0f ?
+				static_cast<double>(area / paint.total * 100.0f) : 0.0);
+			return std::string(buffer);
+		};
+	std::vector<std::string> lines;
+	lines.push_back("paint  A " + percent(paint.team_a) + "  B " + percent(paint.team_b) +
+		"  free " + percent(std::max(0.0f, paint.total - paint.team_a - paint.team_b)));
+	const std::vector<MenuPlayerSettings> players = this->match_->debug_settings().player_settings();
+	std::string seats;
+	for (std::size_t i = 0; i < players.size() && i < paint.seats.size(); ++i)
+	{
+		seats += (seats.empty() ? "" : "   ") + std::string("P") + std::to_string(i + 1) + " " +
+			device_label(players[i].num) + " " + percent(paint.seats[i]);
+	}
+	if (!seats.empty())
+	{
+		lines.push_back(seats);
+	}
+	return lines;
 }
 #endif

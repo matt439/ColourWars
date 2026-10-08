@@ -108,6 +108,12 @@ void ControlsSettingsMenu::close()
 	this->context()->pop();
 }
 
+bool ControlsSettingsMenu::debug_dismiss(bool /*leaving_match*/)
+{
+	this->close();
+	return true;
+}
+
 void ControlsSettingsMenu::update_page(float /*dt*/)
 {
 	if (!this->context()->active())

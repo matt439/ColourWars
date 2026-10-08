@@ -23,6 +23,11 @@ public:
 	// The words this variable accepts, for completion and errors.
 	virtual std::vector<std::string> accepted_words() const = 0;
 
+	// One step of the debug menu's Left/Right: the word assign() is given,
+	// so the menu can run it as a console line ("feedback toggle").
+	virtual std::string step_word(int direction) const;
+	DebugStatus step(int direction);
+
 protected:
 	DebugVariable(std::string name, std::string help, std::string default_text);
 
@@ -44,6 +49,8 @@ public:
 
 	// The bool reading of a word, or false in `ok` when it is not one.
 	static bool parse(std::string_view text, bool current, bool& ok);
+
+	std::string step_word(int direction) const override;
 
 private:
 	std::function<bool()> get_;
@@ -77,4 +84,35 @@ private:
 	std::vector<std::pair<std::string, std::string>> aliases_;
 	std::function<std::string()> get_;
 	std::function<DebugStatus(const std::string&)> set_;
+};
+
+// A number in [minimum, maximum]. Any number in range is accepted; "next" and
+// "prev" walk the step list (the nearest step above or below the current
+// value, clamped, no wrap), which is also what completion offers.
+class NumberVariable final : public DebugVariable
+{
+public:
+	NumberVariable(std::string name, std::string help, float default_value,
+		float minimum, float maximum, std::vector<float> steps,
+		std::function<float()> get, std::function<DebugStatus(float)> set);
+
+	std::string_view type_name() const override { return "number"; }
+	std::string value_text() const override;
+	DebugStatus assign(std::string_view text) override;
+	std::vector<std::string> accepted_words() const override;
+	std::vector<std::string> suggestions(std::size_t argument) const override;
+
+	// "%g", shared with the messages that print the value.
+	static std::string format(float value);
+
+	// The number `text` means: a number, or next/prev from `current`. False
+	// when it is neither or out of range.
+	bool resolve(std::string_view text, float current, float& value) const;
+
+private:
+	float minimum_ = 0.0f;
+	float maximum_ = 0.0f;
+	std::vector<float> steps_;
+	std::function<float()> get_;
+	std::function<DebugStatus(float)> set_;
 };

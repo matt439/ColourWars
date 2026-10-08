@@ -156,18 +156,18 @@ void GameLevel::init()
 // LevelBuilder needs the match layout before it builds split-screen dividers.
 void GameLevel::build_and_enter_level()
 {
-	this->data()->viewport_manager()->
-		set_layout(this->settings_.screen_layout());
-
 	// Destroy the old level first: its destructor stops music in the shared bank
 	// and would otherwise stop the new level's track.
 	this->level_.reset();
 	// Every build - first, restart from a menu, or a debug rebuild - applies
-	// content `reload` validated and consumes a queued debug restart.
-	this->data()->debug().before_level_build();
+	// content `reload` validated and consumes a queued debug restart; a menu
+	// restart also adopts a queued debug plan, so settings_ may change here.
+	this->data()->debug().before_level_build(*this);
+	this->data()->viewport_manager()->
+		set_layout(this->settings_.screen_layout());
 	this->level_ = this->level_builder_->build_level(this->settings_,
 		this->data()->save()->team_palette());
-
+	this->data()->debug().after_level_build(*this);
 
 	// Discard loading time so fixed-step updates do not advance the new match
 	// to catch up with the time spent building it.
@@ -203,9 +203,10 @@ void GameLevel::update(float dt)
 		return;
 	}
 
-	// Console key, F-key binds and queued debug requests, applied while no
-	// Level::update is on the call stack. Inert in Release.
-	if (this->data()->debug().before_match_update(*this))
+	// Console and debug-menu keys, a pending screenshot, F-key binds and
+	// queued debug requests, applied while no Level::update is on the call
+	// stack. Inert in Release.
+	if (this->data()->debug().before_match_update(*this, dt))
 	{
 		return;
 	}
@@ -216,8 +217,11 @@ void GameLevel::update(float dt)
 		return;
 	}
 
-	const std::vector<PlayerInputData> player_inputs =
+	std::vector<PlayerInputData> player_inputs =
 		this->player_input_->player_inputs();
+	// A pad's Back and Start edges consumed by the debug-menu chord reach
+	// neither the pause check nor the players' F1 overlay. Inert in Release.
+	this->data()->debug().filter_match_inputs(player_inputs);
 
 	// Check current presence, not just a disconnect edge: focus loss can hide
 	// the edge, and no participant may lose match time while reconnecting.
@@ -369,6 +373,15 @@ void GameLevel::debug_rebuild(const MenuLevelSettings& plan, bool reset_session)
 	this->build_and_enter_level();
 }
 
+void GameLevel::debug_adopt(const MenuLevelSettings& plan, bool reset_session)
+{
+	this->settings_ = plan;
+	if (reset_session)
+	{
+		this->session_ = Session(plan.player_count() == 1 ? 1 : plan.best_of());
+	}
+}
+
 void GameLevel::debug_leave()
 {
 	this->leave_match(EndMenuAction::exit);
@@ -410,4 +423,51 @@ std::vector<std::string> GameLevel::debug_status() const
 			(player.state() == PlayerState::dead ? " dead" : ""));
 	}
 	return lines;
+}
+
+void GameLevel::debug_set_overlays(const LevelOverlays& overlays)
+{
+	this->level_->set_overlays(overlays);
+}
+
+void GameLevel::debug_set_player_text(bool showing)
+{
+	this->level_->set_players_showing_debug(showing);
+}
+
+void GameLevel::debug_set_cheats(bool damage_immune, bool infinite_ammo)
+{
+	this->level_->set_player_cheats(damage_immune, infinite_ammo);
+}
+
+std::vector<LevelStation> GameLevel::debug_stations() const
+{
+	return this->data()->level_infos()->get(this->settings_.stage())->stations();
+}
+
+bool GameLevel::debug_place(int seat, const mattmath::Vector2F& top_left)
+{
+	return this->level_->place_player(seat, top_left);
+}
+
+bool GameLevel::debug_respawn(int seat)
+{
+	return this->level_->respawn_player(seat);
+}
+
+MatchPaint GameLevel::debug_paint() const
+{
+	const LevelEndInfo info = this->level_->level_end_info();
+	MatchPaint paint;
+	paint.team_a = info.team_a_area;
+	paint.team_b = info.team_b_area;
+	paint.total = info.total_area;
+	// player_areas is indexed by device slot; an idle dummy has none.
+	for (const MenuPlayerSettings& player : this->settings_.player_settings())
+	{
+		paint.seats.push_back(player.num >= 0 &&
+			static_cast<std::size_t>(player.num) < info.player_areas.size() ?
+			info.player_areas[static_cast<std::size_t>(player.num)] : 0.0f);
+	}
+	return paint;
 }

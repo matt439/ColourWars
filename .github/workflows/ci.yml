@@ -100,7 +100,8 @@ jobs:
           # leave MSVC RTTI names in the binary if any of it were linked.
           $exe = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes(
             (Join-Path $package 'ColourWars.exe')))
-          foreach ($name in '.?AVDebugConsoleState@@', '.?AVDebugRegistry@@', '.?AVLambdaCommand@@') {
+          foreach ($name in '.?AVDebugConsoleState@@', '.?AVDebugRegistry@@', '.?AVLambdaCommand@@',
+              '.?AVDebugMenuPage@@', '.?AVNumberVariable@@') {
             if ($exe.Contains($name)) { throw "Developer console code leaked into the package: $name" }
           }
 

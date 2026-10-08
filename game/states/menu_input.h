@@ -95,6 +95,8 @@ public:
 
 	// Clear ownership when taking input back from gameplay or another context.
 	void reset_actions();
+	// The same for one pad slot only; the keyboard and other pads keep theirs.
+	void reset_pad_actions(int slot);
 
 private:
 	ProcessedMenuInput menu_input(const labrador::Gamepads& gamepads,

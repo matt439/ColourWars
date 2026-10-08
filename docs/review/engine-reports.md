@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Two are live as unfiled drafts with exhibits. Seven are closed** and kept below as one paragraph
+> **Four are live as unfiled drafts with exhibits (6, 9, 10, 11). Seven are closed** and kept below as one paragraph
 > each — what was asked, what shipped, and what this repository spent the
 > answer on.
 >
@@ -69,9 +69,11 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | # | Report | Exhibit | Status |
 |---|---|---|---|
 | 6 | No audio bus, master gain, listener or voice cap | `PlaySettings` gains applied at each emitter | draft — exhibit present; recheck upstream before filing |
-| 9 | No application-level per-frame hook or input capture | `MenuPage::update`/`update_page`, `DebugDirector::before_page_update`/`before_match_update`, the frozen-world console | draft — exhibit present; recheck upstream before filing |
+| 9 | No application-level per-frame hook or input capture | `MenuPage::update`/`update_page`, `DebugDirector::before_page_update`/`before_match_update`, the frozen-world console; phase 2: `filter_match_inputs` and `DebugPageTarget::debug_reset_input` for the pad chord | draft — exhibit present; recheck upstream before filing |
+| 10 | No way to read back the frame that was presented | `capture_stack` in `game/debug/debug_screenshot.cpp` | draft — exhibit present; recheck upstream before filing |
+| 11 | F10 and a lone Alt belong to the system menu, with no opt-out | the `WH_GETMESSAGE` hook in `game/debug/debug_director.cpp`; `alt-probe.txt` from `scripts/check-debug-console.ps1` | draft — low priority; exhibit present |
 
-Nothing else is outstanding, on either side, beyond report 9 below. The fullscreen workaround the
+Nothing else is outstanding, on either side, beyond reports 9-11 below. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
@@ -169,6 +171,79 @@ A pre-stack (or overlay-layer) update hook that runs every frame, and a
 the states under it keep updating. Answering it would let this repository
 delete the `update_page` template method, the two `before_*_update` hooks and
 the frozen-world limitation. Control-key repeat is a smaller, separate ask.
+
+**Exhibit added by phase 2 (the debug menu's pad chord).** Holding pad
+Back+Start opens the debug menu, and the two releases that follow must reach
+neither the per-player F1 overlay (Back) nor the pause menu (Start). `Gamepads`
+has no consume scope any more than `Keyboard` does, so the game removes the
+edges by hand in two places: `DebugDirector::filter_match_inputs` clears
+`toggle_debug` and `toggle_pause_menu` from the `PlayerInputData` that
+`GameLevel::update` just read, and every page's `MenuInput` arming is reset
+(`DebugPageTarget::debug_reset_input`) on every frame of the chord, which also
+costs any other player's A press held across those frames. A consume scope on
+`Gamepads`, as asked above for `Keyboard`, would delete both.
+
+---
+
+## 10. No way to read back the frame that was presented — **draft with screenshot exhibit**
+
+**Exhibit added by the developer debug system (phase 2).** The Debug
+`screenshot` command saves the window as a PNG.
+
+### What happens
+
+`Renderer::read_back_buffer` is legal only between `submit()` and
+`end_frame()` (`renderer.h`), and `Application::render` runs those two back to
+back with no client hook between them (`application.cpp`). So the game cannot
+read the frame it is about to present. `capture_stack` instead renders the
+whole stack a second time, out of band, from the top state's update:
+`begin_frame`, `Application::draw`, `submit`, `read_back_buffer`, and never
+`end_frame`, which is the sequence the render probes under `scripts/acceptance/`
+already rely on. The next `Application::render` begins a fresh frame.
+
+It works on the one backend this repository builds (`d3d11`, checked by
+`scripts/check-debug-console.ps1`), at the cost of a second full draw, and it
+depends on `begin_frame` being callable outside `render()` with a frame left
+unpresented, which the seam does say a frame may be ("contributes nothing")
+but which only the probes' backends exercise.
+
+### The ask, when it goes
+
+`Application::request_capture(callback)`: read back the next presented frame
+between its own `submit` and `end_frame` and hand the pixels to the callback.
+Answering it would delete `capture_stack` and its out-of-band frame.
+
+---
+
+## 11. F10 and a lone Alt belong to the system menu, with no opt-out — **draft, low priority**
+
+**Exhibit added by the developer debug system (phase 2).** The debug menu
+wanted F10.
+
+### What happens
+
+The window procedure forwards `WM_SYSKEYDOWN`/`WM_SYSKEYUP` to the keyboard
+and then, deliberately, to `DefWindowProc` ("Alt+F4 and F10 are the system's",
+`window.cpp`). On a `WS_OVERLAPPEDWINDOW`, `DefWindowProc` turns an F10 or a
+lone Alt release into `SC_KEYMENU` and enters the system menu's modal loop:
+`Application`'s pump stops ticking until another key or a click ends menu mode,
+and that key is eaten. `scripts/check-debug-console.ps1` records it for Alt
+(`alt-probe.txt`: "A lone Alt tap entered the system menu loop"). A game cannot
+bind F10, and a player who taps Alt freezes the game for a key press.
+
+The game's way round it is a thread message hook (`SetWindowsHookExW`,
+`WH_GETMESSAGE`), installed by the Debug director only, that rewrites F10
+key messages to `WM_NULL` before the window procedure sees them and counts the
+press itself. It works, and it is the kind of thing a client should not have
+to write: a hook over the engine's own message pump, to undo a policy the
+engine chose for it.
+
+### The ask, when it goes
+
+An `ApplicationOptions` flag that swallows keyboard-initiated `SC_KEYMENU`
+(`WM_SYSCOMMAND` with `lParam` 0) while leaving Alt+F4 alone, so F10 and Alt
+reach the game as ordinary keys. Answering it would delete the hook, and with
+it F11 as the debug menu's fallback key.
 
 ---
 

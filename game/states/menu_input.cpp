@@ -223,6 +223,18 @@ std::vector<ProcessedMenuInput> MenuInput::player_inputs(
 	return result;
 }
 
+void MenuInput::reset_pad_actions(int slot)
+{
+	if (slot < 0 || slot >= input_slots::pad_count)
+	{
+		return;
+	}
+	for (bool& armed : this->armed_[slot])
+	{
+		armed = false;
+	}
+}
+
 void MenuInput::reset_actions()
 {
 	for (auto& slot : this->armed_)

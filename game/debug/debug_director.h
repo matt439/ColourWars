@@ -8,7 +8,6 @@
 
 class GameData;
 class GameTuning;
-class MenuPage;
 class Presentation;
 class DebugDirectorImpl;
 
@@ -18,9 +17,9 @@ namespace labrador
 	class Renderer;
 }
 
-// The developer debug service: console, launch arguments, F-key binds, the
-// debug clock and queued match requests. The states call its hooks; it does
-// nothing in Release.
+// The developer debug service: console, debug menu, launch arguments, F-key
+// binds, the debug clock, overlays, cheats, screenshots and queued match
+// requests. The states call its hooks; it does nothing in Release.
 //
 // Its layout is the same in every configuration (one pointer). In Debug the
 // pointer owns a DebugDirectorImpl; in Release it is always null and the hooks
@@ -56,14 +55,24 @@ public:
 	void detach_match(const DebugMatchTarget& match);
 
 	// GameLevel's one build path calls this with no Level alive: it applies
-	// content `reload` validated and consumes a queued restart, so a restart
-	// from the pause or end menu does not build twice.
-	void before_level_build();
+	// content `reload` validated, and a restart from the pause or end menu
+	// adopts whatever plan is queued (match.debug_adopt) and consumes a queued
+	// restart, so the level is built once, with the queued settings.
+	void before_level_build(DebugMatchTarget& match);
 
-	// The top of GameLevel::update. Opens the console, runs the F-key binds
-	// and applies queued requests (rebuild, leave). True: the match has done
-	// its work for this step and should return.
-	bool before_match_update(DebugMatchTarget& match);
+	// The same build path, once the new Level exists: re-applies overlays and
+	// cheats, applies a goto stored before the match, and resets the clock's
+	// partial step. Every build - first, menu restart, debug rebuild - runs it.
+	void after_level_build(DebugMatchTarget& match);
+
+	// GameLevel::update, on the inputs it just read: clears the pad Back and
+	// Start release edges a debug-menu chord consumed (F1 overlay and pause).
+	void filter_match_inputs(std::vector<PlayerInputData>& inputs) const;
+
+	// The top of GameLevel::update. Opens the console or the debug menu, takes
+	// a queued screenshot, runs the F-key binds and applies queued requests
+	// (rebuild, leave). True: the match has done its work for this step.
+	bool before_match_update(DebugMatchTarget& match, float dt);
 
 	// Replaces GameLevel's single Level::update with the debug clock's
 	// 0..4 fixed-dt updates.
@@ -73,13 +82,15 @@ public:
 	// Whether the debug clock is paused, so the match's voices stay paused.
 	bool match_audio_paused() const;
 
-	// The top of every MenuPage::update. Opens the console and starts a match
-	// queued by the console or by launch arguments. True: the page should not
-	// run its own logic this frame.
-	bool before_page_update(MenuPage& page);
+	// The top of every MenuPage::update. Opens the console or the debug menu,
+	// takes a queued screenshot, starts a match queued by the console or by
+	// launch arguments, and dismisses pages over a match a request is waiting
+	// for. True: the page should not run its own logic this frame.
+	bool before_page_update(DebugPageTarget& page, float dt);
 
-	// GameLevel::draw, last: a small strip naming non-default debug state
-	// (timescale, pause, visual, feedback) while the console is closed.
+	// GameLevel::draw, last: the paint coverage overlay, and a small strip
+	// naming non-default debug state (timescale, pause, visual, feedback,
+	// overlays, cheats) while the console is closed.
 	void draw_status(labrador::Renderer& renderer) const;
 
 	DebugDirectorImpl* impl() const { return this->impl_.get(); }
@@ -93,14 +104,16 @@ private:
 inline void DebugDirector::attach(labrador::Application*, GameData*) {}
 inline void DebugDirector::attach_match(DebugMatchTarget&) {}
 inline void DebugDirector::detach_match(const DebugMatchTarget&) {}
-inline void DebugDirector::before_level_build() {}
-inline bool DebugDirector::before_match_update(DebugMatchTarget&) { return false; }
+inline void DebugDirector::before_level_build(DebugMatchTarget&) {}
+inline void DebugDirector::after_level_build(DebugMatchTarget&) {}
+inline void DebugDirector::filter_match_inputs(std::vector<PlayerInputData>&) const {}
+inline bool DebugDirector::before_match_update(DebugMatchTarget&, float) { return false; }
 inline void DebugDirector::update_match(DebugMatchTarget& match,
 	const std::vector<PlayerInputData>& inputs, float dt)
 {
 	match.debug_update_level(inputs, dt);
 }
 inline bool DebugDirector::match_audio_paused() const { return false; }
-inline bool DebugDirector::before_page_update(MenuPage&) { return false; }
+inline bool DebugDirector::before_page_update(DebugPageTarget&, float) { return false; }
 inline void DebugDirector::draw_status(labrador::Renderer&) const {}
 #endif

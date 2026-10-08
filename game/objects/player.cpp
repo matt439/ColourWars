@@ -377,6 +377,12 @@ void Player::update_weapon_position() const
 }
 void Player::on_projectile_contact(CollisionObjectType other_type)
 {
+    // The projectile side is unchanged: paint still lands.
+    if (this->damage_immune_)
+    {
+        return;
+    }
+
     // Damage belongs to the projectile's tuning record.
     this->health_ -= this->tuning_->projectile(
         to_projectile_type(other_type)).details.player_damage;
@@ -470,12 +476,21 @@ std::vector<std::unique_ptr<Projectile>>
         return {};
     }
 
+    // Before, so the shot is affordable; after, so the HUD shows a full tank.
+    if (this->infinite_ammo_)
+    {
+        this->primary_->reset_ammo();
+    }
     auto projectiles = this->primary_->update_and_get_projectiles(
         this->input(),
         this->center(),
         MovingObject::velocity(),
         this->facing_right(),
         dt);
+    if (this->infinite_ammo_)
+    {
+        this->primary_->reset_ammo();
+    }
     if (this->workshop_visual_ != nullptr)
     {
         this->workshop_visual_->update_pose(*this->primary_);
@@ -809,7 +824,7 @@ const PlayerAnimationTuning& Player::animation_info(
     throw std::runtime_error("Player animation state " +
         std::to_string(static_cast<int>(state)) + " has no clip.");
 }
-void Player::respawn()
+void Player::place_at(const Vector2F& top_left)
 {
     this->movement_feedback_.clear();
     if (this->workshop_visual_ != nullptr)
@@ -819,7 +834,7 @@ void Player::respawn()
     this->had_ground_support_ = false;
     this->landing_feedback_ready_ = false;
     this->support_impact_speed_ = 0.0f;
-    this->rectangle_.set_position(this->respawn_position_);
+    this->rectangle_.set_position(top_left);
     this->prev_rectangle_ = this->rectangle_;
     this->reset_jump_input();
     this->set_move_state(PlayerMoveState::in_air);
@@ -828,6 +843,32 @@ void Player::respawn()
     this->hit_ceiling_this_tick_ = false;
     MovingObject::set_rotation(0.0f);
     MovingObject::set_velocity(Vector2F::ZERO);
+}
+
+void Player::force_respawn()
+{
+    this->respawn();
+    this->respawn_timer_ = this->player_tuning().respawn_delay;
+}
+
+void Player::set_showing_debug(bool showing)
+{
+    this->showing_debug_ = showing;
+}
+
+void Player::set_damage_immune(bool immune)
+{
+    this->damage_immune_ = immune;
+}
+
+void Player::set_infinite_ammo(bool infinite)
+{
+    this->infinite_ammo_ = infinite;
+}
+
+void Player::respawn()
+{
+    this->place_at(this->respawn_position_);
 	this->health_ = this->player_tuning().starting_health;
 	this->primary_->reset_ammo();
 	this->state_ = PlayerState::alive;

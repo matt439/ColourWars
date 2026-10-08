@@ -3,6 +3,8 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/debug_variable.h"
+#include "game/debug/debug_command.h"
+#include <cstdio>
 
 DebugStatus DebugStatus::success(std::string message, bool close_console)
 {
@@ -35,9 +37,32 @@ const std::string& DebugEntry::help() const
 	return this->help_;
 }
 
+const DebugMenuTraits& DebugEntry::menu() const
+{
+	return this->menu_;
+}
+
+void DebugEntry::set_menu(DebugMenuTraits traits)
+{
+	this->menu_ = std::move(traits);
+}
+
 DebugVariable::DebugVariable(std::string name, std::string help, std::string default_text) :
 	DebugEntry(std::move(name), std::move(help)), default_text_(std::move(default_text))
 {
+	DebugMenuTraits traits;
+	traits.form = DebugMenuTraits::Form::variable;
+	this->set_menu(std::move(traits));
+}
+
+std::string DebugVariable::step_word(int direction) const
+{
+	return direction >= 0 ? "next" : "prev";
+}
+
+DebugStatus DebugVariable::step(int direction)
+{
+	return this->assign(this->step_word(direction));
 }
 
 const std::string& DebugVariable::default_text() const
@@ -109,6 +134,11 @@ std::vector<std::string> BoolVariable::accepted_words() const
 	return { "on", "off", "toggle" };
 }
 
+std::string BoolVariable::step_word(int /*direction*/) const
+{
+	return "toggle";
+}
+
 ChoiceVariable::ChoiceVariable(std::string name, std::string help,
 	std::string default_value, std::vector<std::string> choices,
 	std::vector<std::pair<std::string, std::string>> aliases,
@@ -175,6 +205,83 @@ std::vector<std::string> ChoiceVariable::accepted_words() const
 	std::vector<std::string> words = this->choices_;
 	words.push_back("next");
 	words.push_back("prev");
+	return words;
+}
+NumberVariable::NumberVariable(std::string name, std::string help, float default_value,
+	float minimum, float maximum, std::vector<float> steps,
+	std::function<float()> get, std::function<DebugStatus(float)> set) :
+	DebugVariable(std::move(name), std::move(help), format(default_value)),
+	minimum_(minimum), maximum_(maximum), steps_(std::move(steps)),
+	get_(std::move(get)), set_(std::move(set))
+{
+	std::sort(this->steps_.begin(), this->steps_.end());
+}
+
+std::string NumberVariable::format(float value)
+{
+	char buffer[32] = {};
+	std::snprintf(buffer, sizeof(buffer), "%g", static_cast<double>(value));
+	return buffer;
+}
+
+std::string NumberVariable::value_text() const
+{
+	return format(this->get_());
+}
+
+bool NumberVariable::resolve(std::string_view text, float current, float& value) const
+{
+	if (text == "next" || text == "prev")
+	{
+		value = current;
+		if (text == "next")
+		{
+			const auto above = std::upper_bound(this->steps_.begin(), this->steps_.end(), current);
+			value = above != this->steps_.end() ? *above : current;
+		}
+		else
+		{
+			const auto below = std::lower_bound(this->steps_.begin(), this->steps_.end(), current);
+			value = below != this->steps_.begin() ? *(below - 1) : current;
+		}
+		return true;
+	}
+	return DebugArgs::parse_float(text, value) && value >= this->minimum_ && value <= this->maximum_;
+}
+
+DebugStatus NumberVariable::assign(std::string_view text)
+{
+	float value = 0.0f;
+	if (!this->resolve(text, this->get_(), value))
+	{
+		return DebugStatus::failure(this->name() + ": expected " + format(this->minimum_) + "-" +
+			format(this->maximum_) + ", got '" + std::string(text) + "'");
+	}
+	return this->set_(value);
+}
+
+std::vector<std::string> NumberVariable::accepted_words() const
+{
+	std::vector<std::string> words;
+	for (const float step : this->steps_)
+	{
+		words.push_back(format(step));
+	}
+	words.push_back("next");
+	words.push_back("prev");
+	return words;
+}
+
+std::vector<std::string> NumberVariable::suggestions(std::size_t argument) const
+{
+	std::vector<std::string> words;
+	if (argument == 0)
+	{
+		for (const float step : this->steps_)
+		{
+			words.push_back(format(step));
+		}
+	}
 	return words;
 }
 #endif

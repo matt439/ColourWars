@@ -61,6 +61,18 @@ void PauseMenuPage::finish(PauseMenuAction action) const
 	this->context()->pop(action);
 }
 
+bool PauseMenuInitial::debug_dismiss(bool leaving_match)
+{
+	this->finish(leaving_match ? PauseMenuAction::quit : PauseMenuAction::resume);
+	return true;
+}
+
+bool PauseMenuConfirmation::debug_dismiss(bool leaving_match)
+{
+	this->finish(leaving_match ? PauseMenuAction::quit : PauseMenuAction::resume);
+	return true;
+}
+
 ProcessedMenuInput PauseMenuPage::pausing_player_input(
 	const std::vector<ProcessedMenuInput>& inputs) const
 {

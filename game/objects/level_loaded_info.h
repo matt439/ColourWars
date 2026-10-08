@@ -4,6 +4,7 @@
 #include "engine/input/gamepads.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"
+#include "game/objects/level_station.h"
 #include <string>
 #include <vector>
 
@@ -36,6 +37,12 @@ public:
 	std::vector<mattmath::Vector2F> team_a_spawns() const;
 	std::vector<mattmath::Vector2F> team_b_spawns() const;
 
+	// Named places a developer can `goto`: the optional "stations" array
+	// ({ "name", "x", "y" }, the character's top-left, like a spawn) in file
+	// order, then spawn_a and spawn_b (each team's first spawn), which every
+	// level has.
+	std::vector<LevelStation> stations() const;
+
 	mattmath::RectangleF out_of_bounds_rectangle() const;
 	mattmath::RectangleF camera_bounds_rectangle() const;
 
@@ -60,9 +67,12 @@ private:
 	static std::vector<mattmath::Vector2F>
 		decode_team_spawns(const labrador::JsonValue& json);
 
-	// Both teams' spawns are checked the same way and want the same sentence.
-	static void validate_spawn(const labrador::JsonValue& root,
-		const mattmath::Vector2F& spawn,
+	// Spawns and stations are checked the same way and want the same sentence;
+	// `what` is "a team_a spawn", "a station 'high_step'".
+	static void validate_position(const labrador::JsonValue& root,
+		const mattmath::Vector2F& position,
 		const mattmath::RectangleF& out_of_bounds,
-		const char* team);
+		const std::string& what);
+
+	void validate_stations(const mattmath::RectangleF& out_of_bounds) const;
 };

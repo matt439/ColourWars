@@ -12,6 +12,7 @@
 #include "engine/render/viewport.h"
 #include "engine/render/render_resources.h"
 #include "engine/render/sprite_frame.h"
+#include "game/debug/debug_targets.h"
 
 namespace menu_consts
 {
@@ -20,7 +21,10 @@ namespace menu_consts
 }
 
 // Shared menu layout, focus, prompts, and sound-bank access.
-class MenuPage : public labrador::State, public labrador::SoundBankObject
+// DebugPageTarget is how the developer tools reach the page on top; its
+// defaults say no, and the pages with a way out of a match say how.
+class MenuPage : public labrador::State, public labrador::SoundBankObject,
+	protected DebugPageTarget
 {
 public:
 	explicit MenuPage(MenuContext* context);
@@ -31,9 +35,12 @@ public:
 	void update(float dt) final;
 	void init() override = 0;
 
-	// Debug hook: may this page be dismissed so a queued match starts with
-	// `plan`? Only main-menu pages, whose frame starts a match on close, say yes.
-	virtual bool debug_start_match(const MenuLevelSettings& plan);
+	// Debug hooks (DebugPageTarget). Only main-menu pages, whose frame starts
+	// a match on close, start one; only the pause, controls, results and end
+	// pages dismiss themselves; every page forgets armed presses on request.
+	bool debug_start_match(const MenuLevelSettings& plan) override;
+	bool debug_dismiss(bool leaving_match) override;
+	void debug_reset_input(int pad_slot) override;
 
 	// Draw textures, text, and optional prompts once in fullscreen stack order.
 	void draw(labrador::Renderer& renderer) const override;

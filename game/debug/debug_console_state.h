@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/core/state.h"
+#include "engine/math/rectanglef.h"
 #include "engine/render/render_resources.h"
 #include "game/debug/debug_text_field.h"
 #include <array>
@@ -25,10 +26,21 @@ public:
 	void draw(labrador::Renderer& renderer) const override;
 	bool covers_screen() const override { return false; }
 
-	// The non-default clock/view strip (x0.25, PAUSED, visual, feedback off),
-	// drawn over the match while the console is closed.
-	static void draw_strip(labrador::Renderer& renderer, const GameData& data,
-		const std::string& strip);
+	enum class Anchor
+	{
+		bottom_left,
+		bottom_right,
+	};
+
+	// A small panel of overlay-font lines in a bottom corner of the window,
+	// clear of every pane's HUD (top) and the opening cards (bottom centre):
+	// the non-default strip (x0.25, PAUSED, GOD ...) and the paint coverage.
+	// Draws nothing for no lines. A panel that would overlap `avoid` (the
+	// rectangle an earlier call returned) is lifted to sit above it instead.
+	// Returns the panel's rectangle, empty when nothing was drawn.
+	static mattmath::RectangleF draw_panel(labrador::Renderer& renderer, const GameData& data,
+		const std::vector<std::string>& lines, Anchor anchor,
+		const mattmath::RectangleF& avoid = mattmath::RectangleF());
 
 private:
 	GameData* data_ = nullptr;

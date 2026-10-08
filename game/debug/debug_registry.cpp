@@ -89,6 +89,40 @@ std::vector<const DebugEntry*> DebugRegistry::entries() const
 	return result;
 }
 
+const std::vector<std::string>& DebugRegistry::category_order()
+{
+	static const std::vector<std::string> order = {
+		"match", "player", "view", "time", "content", "console" };
+	return order;
+}
+
+std::vector<std::string> DebugRegistry::categories() const
+{
+	std::vector<std::string> result;
+	for (const std::string& category : category_order())
+	{
+		if (!this->entries(category).empty())
+		{
+			result.push_back(category);
+		}
+	}
+	return result;
+}
+
+std::vector<const DebugEntry*> DebugRegistry::entries(std::string_view category) const
+{
+	std::vector<const DebugEntry*> result;
+	for (const auto& entry : this->entries_)
+	{
+		const DebugMenuTraits& traits = entry.second->menu();
+		if (traits.form != DebugMenuTraits::Form::hidden && traits.category == category)
+		{
+			result.push_back(entry.second.get());
+		}
+	}
+	return result;
+}
+
 DebugCompletion DebugRegistry::complete(std::string_view line) const
 {
 	DebugCompletion completion;
@@ -139,7 +173,16 @@ DebugCompletion DebugRegistry::complete(std::string_view line) const
 		}
 		else if (const DebugEntry* entry = this->find(head))
 		{
-			pool = entry->suggestions(argument);
+			// Choices are callables over live game state; one that throws
+			// completes nothing rather than reaching the console's update.
+			try
+			{
+				pool = entry->suggestions(argument);
+			}
+			catch (const std::exception&)
+			{
+				pool.clear();
+			}
 		}
 	}
 
@@ -312,7 +355,8 @@ void DebugRegistry::add_builtins()
 			{
 				log.info("  " + entry->usage() + "  - " + entry->help());
 			}
-			return DebugStatus::success("keys: ` console, F5 restart, F6 pause, F7 step, "
+			return DebugStatus::success("keys: ` console, F10/F11 or pad Back+Start debug menu, "
+				"F2 collision, F3 camera, F4 paint, F5 restart, F6 pause, F7 step, "
 				"F8 visual, F9 feedback");
 		}));
 }
