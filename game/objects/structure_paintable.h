@@ -44,7 +44,8 @@ public:
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
-		float layer_depth = 0.0f);
+		float layer_depth = 0.0f,
+		float tile_world_units_per_texel = 0.0f);
 
 	void update(float dt) override;
 	void draw(labrador::DrawList& draw_list) const override;

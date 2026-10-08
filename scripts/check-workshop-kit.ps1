@@ -10,6 +10,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 Add-Type -AssemblyName System.Drawing
+$checkRuntime = -not $SourcePath -and -not $ReferenceDirectory
 if (-not $SourcePath) { $SourcePath = Join-Path $PSScriptRoot '../game/art/polish/kit/source.json' }
 if (-not $OutputDirectory) { $OutputDirectory = Join-Path $PSScriptRoot '../out/validation/workshop-kit' }
 
@@ -79,7 +80,7 @@ function Test-Atlas {
     Assert-True ($layout.schema_version -eq 1 -and $layout.world_units_per_texel -eq 4) 'Wrong layout schema or world scale.'
     Assert-True ($layout.atlas.width -eq 256 -and $layout.atlas.height -eq 256 -and $layout.atlas.padding -ge 2) 'Wrong atlas size or insufficient padding.'
     Assert-True ($layout.sprites.Count -eq $inputData.sprites.Count) 'Layout dropped or added sprites.'
-    Assert-True ($definition.animation_strips.Count -eq 0) 'Static kit unexpectedly declares animations.'
+    Assert-True ($definition.animation_strips.Count -eq 0) 'Frame-selected kit unexpectedly declares engine animation strips.'
     $colours = [Collections.Generic.Dictionary[string, byte[]]]::new([StringComparer]::Ordinal)
     $paletteIndex = 0
     foreach ($entry in $inputData.palette.PSObject.Properties) {
@@ -104,6 +105,8 @@ function Test-Atlas {
         $height = $sprite.rows.Count
         Assert-True ($metadata.name -ceq $sprite.name -and $metadata.native_size.w -eq $width -and $metadata.native_size.h -eq $height -and $metadata.world_size.w -eq $width * 4 -and $metadata.world_size.h -eq $height * 4) 'Layout changed sprite identity or dimensions.'
         Assert-True ($metadata.pivot.x -eq $sprite.pivot[0] -and $metadata.pivot.y -eq $sprite.pivot[1] -and $metadata.world_pivot.x -eq $sprite.pivot[0] * 4 -and $metadata.world_pivot.y -eq $sprite.pivot[1] * 4) 'Layout changed a pivot.'
+        $enginePivot = $sprite.PSObject.Properties['engine_pivot'] -and $sprite.engine_pivot
+        Assert-True ($metadata.engine_pivot -eq $enginePivot) 'Layout changed the engine pivot policy.'
         $anchorCount = 0
         if ($sprite.PSObject.Properties['anchors']) {
             foreach ($anchor in $sprite.anchors.PSObject.Properties) {
@@ -132,6 +135,12 @@ function Test-Atlas {
             $rectangles.Add($frame)
             $engineFrame = $definition.sprite_frames[$frameIndex]
             Assert-True ($engineFrame.name -ceq $name -and $engineFrame.position.x -eq $frame.x -and $engineFrame.position.y -eq $frame.y -and $engineFrame.size.w -eq $width -and $engineFrame.size.h -eq $height) 'Engine sprite frame and authoring layout disagree.'
+            if ($enginePivot) {
+                Assert-True ($engineFrame.origin.x -eq $sprite.pivot[0] -and $engineFrame.origin.y -eq $sprite.pivot[1]) 'Runtime frame origin differs from its authored pivot.'
+            }
+            else {
+                Assert-True (-not $engineFrame.PSObject.Properties['origin']) 'Legacy study frame unexpectedly gained a runtime origin.'
+            }
             ++$frameIndex
             for ($y = 0; $y -lt $height; ++$y) {
                 for ($x = 0; $x -lt $width; ++$x) {
@@ -159,6 +168,70 @@ function Get-ArtifactHashes {
         $hashes[$name] = (Get-FileHash -LiteralPath (Join-Path $Directory $name) -Algorithm SHA256).Hash
     }
     return $hashes
+}
+
+function Test-PresentationAnchors {
+    param($Source, $Player)
+    # Read the independent authoring source, not a render diagnostic computed
+    # from the same presentation offsets it is meant to check.
+    $byName = [Collections.Generic.Dictionary[string, object]]::new([StringComparer]::Ordinal)
+    foreach ($sprite in $Source.sprites) { $byName.Add($sprite.name, $sprite) }
+    $scale = [double]$Source.world_units_per_texel
+    Assert-True ($Player.sprite_sheet -ceq 'workshop_kit' -and $Player.pixel_size -eq $scale) 'Presentation changed the workshop sheet or native scale.'
+    function Assert-Close {
+        param($Actual, [double] $Expected, [string] $Label)
+        Assert-True ($Actual -is [int] -or $Actual -is [long] -or $Actual -is [double] -or $Actual -is [decimal]) "Presentation $Label must be numeric."
+        $number = [double]$Actual
+        Assert-True (-not [double]::IsNaN($number) -and -not [double]::IsInfinity($number) -and
+            [Math]::Abs($number - $Expected) -le 0.00001) "Presentation $Label differs from the authored source."
+    }
+    function Read-PresentationSprite {
+        param([string] $Frame, $Size)
+        Assert-True ($byName.ContainsKey($Frame)) "Presentation frame '$Frame' is not an authored sprite."
+        $sprite = $byName[$Frame]
+        Assert-True ($sprite.PSObject.Properties['engine_pivot'] -and $sprite.engine_pivot) "Presentation frame '$Frame' needs its native engine pivot."
+        Assert-True ($Size.x -eq $sprite.rows[0].Length * $scale -and $Size.y -eq $sprite.rows.Count * $scale) "Presentation dimensions for '$Frame' differ from the authored source."
+        return $sprite
+    }
+    function Test-AnchorOffset {
+        param($Sprite, [string] $AnchorName, $Offset)
+        $anchor = $Sprite.anchors.PSObject.Properties[$AnchorName].Value
+        Assert-Close $Offset.x (($anchor[0] - $Sprite.pivot[0]) * $scale) "$($Sprite.name) $AnchorName x"
+        Assert-Close $Offset.y (($anchor[1] - $Sprite.pivot[1]) * $scale) "$($Sprite.name) $AnchorName y"
+    }
+    $bodyFrames = @($Player.idle_frames) + @($Player.run_frames) + @($Player.air_frame, $Player.landing_frame)
+    Assert-True ($Player.idle_frames.Count -eq 2 -and $Player.run_frames.Count -eq 4 -and $Player.badge_frames.Count -eq 4) 'Presentation must include the authored body cycle and four identity badges.'
+    foreach ($frame in $bodyFrames) {
+        $sprite = Read-PresentationSprite $frame $Player.body_size
+        Assert-True ($sprite.team_symbols.Count -gt 0) "Body '$frame' has no animated team mask."
+        Test-AnchorOffset $sprite 'shoulder' $Player.shoulder_offset
+        Test-AnchorOffset $sprite 'rear_shoulder' $Player.rear_shoulder_offset
+        Assert-True ($sprite.pivot[0] * 2 -eq $sprite.rows[0].Length -and $sprite.pivot[1] * 2 -eq $sprite.rows.Count) "Body '$frame' must draw around its centre."
+    }
+    $null = Read-PresentationSprite $Player.glove_frame $Player.glove_size
+    foreach ($frame in $Player.badge_frames) { $null = Read-PresentationSprite $frame $Player.badge_size }
+    Assert-True ($Player.sprayer.frame -ceq 'sprayer_pose_0') 'Continuous sprayer must use the authored zero-degree pose.'
+    Assert-True ($Player.sprayer_poses.Count -eq 5) 'Presentation must include all five authored sprayer directions.'
+    $poseNames = @('sprayer_pose_90up', 'sprayer_pose_45up', 'sprayer_pose_0', 'sprayer_pose_45down', 'sprayer_pose_90down')
+    for ($index = 0; $index -lt $poseNames.Count; ++$index) {
+        Assert-True ($Player.sprayer_poses[$index].frame -ceq $poseNames[$index]) 'Presentation sprayer direction is missing or has the wrong authored frame.'
+    }
+    $previousAngle = [double]::NegativeInfinity
+    foreach ($pose in $Player.sprayer_poses) {
+        Assert-True ($pose.aim_angle -gt $previousAngle) 'Authored sprayer directions must be ordered and unique.'
+        $previousAngle = $pose.aim_angle
+    }
+    foreach ($tool in @($Player.sprayer) + @($Player.sprayer_poses) + @($Player.roller)) {
+        $sprite = Read-PresentationSprite $tool.frame $tool.size
+        Assert-True ($tool.team_frame -ceq ($sprite.name + '_team') -and $sprite.team_symbols.Count -gt 0) "Presentation tool '$($sprite.name)' has a mismatched team mask."
+        $anchorName = if ($tool.frame -ceq $Player.roller.frame) { 'contact' } else { 'muzzle' }
+        Test-AnchorOffset $sprite $anchorName $tool.muzzle_offset
+        Test-AnchorOffset $sprite 'support_grip' $tool.support_grip_offset
+        $anchor = $sprite.anchors.PSObject.Properties[$anchorName].Value
+        $angle = [Math]::Atan2($anchor[1] - $sprite.pivot[1], $anchor[0] - $sprite.pivot[0])
+        Assert-True ($tool.aim_angle -ge -[Math]::PI / 2 -and $tool.aim_angle -le [Math]::PI / 2) "Presentation aim angle for '$($sprite.name)' leaves the authored right-facing half-plane."
+        Assert-Close $tool.aim_angle $angle "$($sprite.name) aim angle"
+    }
 }
 
 function Write-Source {
@@ -190,6 +263,42 @@ if ($ReferenceDirectory) {
         Assert-True ($hashes[$name] -eq $reference[$name]) "Retained atlas is stale: $name. Run build-workshop-kit.ps1."
     }
 }
+$runtimeVerified = ''
+$presentationVerified = $null
+if ($checkRuntime) {
+    $runtimeVerified = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../game/content/textures'))
+    foreach ($name in 'workshop_kit.dds', 'workshop_kit.json') {
+        $runtimePath = Join-Path $runtimeVerified $name
+        Assert-True (Test-Path -LiteralPath $runtimePath -PathType Leaf) "Missing runtime kit: $name. Run build-workshop-kit.ps1 -StageRuntime."
+        Assert-True ((Get-FileHash -LiteralPath $runtimePath -Algorithm SHA256).Hash -eq $hashes[$name]) "Runtime kit is stale: $name. Run build-workshop-kit.ps1 -StageRuntime."
+    }
+    $presentationPath = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../game/content/presentation.json'))
+    $authoredSource = Get-Content -LiteralPath $sourceFile -Raw | ConvertFrom-Json
+    $playerPresentation = (Get-Content -LiteralPath $presentationPath -Raw | ConvertFrom-Json).workshop_player
+    Test-PresentationAnchors $authoredSource $playerPresentation
+    $staleCases = [ordered]@{
+        'muzzle offset' = @{ mutate = { param($p) $p.sprayer_poses[1].muzzle_offset.x += 1 }; diagnostic = 'muzzle x' }
+        'support grip offset' = @{ mutate = { param($p) $p.roller.support_grip_offset.y += 1 }; diagnostic = 'support_grip y' }
+        'native dimensions' = @{ mutate = { param($p) $p.glove_size.x += 1 }; diagnostic = 'dimensions' }
+        'pose aim angle' = @{ mutate = { param($p) $p.sprayer_poses[1].aim_angle += 0.01 }; diagnostic = 'aim angle' }
+        'body shoulder' = @{ mutate = { param($p) $p.shoulder_offset.x += 1 }; diagnostic = 'shoulder x' }
+    }
+    foreach ($case in $staleCases.GetEnumerator()) {
+        $stale = ($playerPresentation | ConvertTo-Json -Depth 12) | ConvertFrom-Json
+        & $case.Value.mutate $stale
+        $failure = $null
+        try { Test-PresentationAnchors $authoredSource $stale }
+        catch { $failure = $_.Exception.Message }
+        Assert-True ($null -ne $failure -and $failure -match $case.Value.diagnostic) "Stale presentation '$($case.Key)' was accepted or failed for the wrong reason: $failure"
+    }
+    $presentationVerified = [ordered]@{
+        path = $presentationPath
+        sha256 = (Get-FileHash -LiteralPath $presentationPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        body_frames = 8
+        tool_records = 7
+        rejected_stale_cases = @($staleCases.Keys)
+    }
+}
 
 # Include fractional alpha independently of the current art, so an opaque-only
 # source cannot accidentally let a broken premultiplication pipeline pass.
@@ -198,7 +307,7 @@ $fixture = [ordered]@{
     world_units_per_texel = 4
     palette = [ordered]@{ '.' = '00000000'; 'o' = '#80402080'; 't' = '#C0C0C080'; 'w' = '#FFFFFF' }
     sprites = @(
-        [ordered]@{ name = 'probe'; rows = @('.otw', 'wto.'); pivot = @(0.5, 2); anchors = [ordered]@{ muzzle = @(4, 0.5) }; team_symbols = @('t') },
+        [ordered]@{ name = 'probe'; rows = @('.otw', 'wto.'); pivot = @(0.5, 2); engine_pivot = $true; anchors = [ordered]@{ muzzle = @(4, 0.5) }; team_symbols = @('t') },
         [ordered]@{ name = 'plain'; rows = @('wo', 'o.'); pivot = @(1, 1) }
     )
 }
@@ -232,6 +341,7 @@ Test-Rejection 'bad colour' { param($d) $d.palette.o = 'ultraviolet' } 'needs RR
 Test-Rejection 'coloured team mask' { param($d) $d.sprites[0].team_symbols = @('o') } 'visible grayscale'
 Test-Rejection 'duplicate team symbol' { param($d) $d.sprites[0].team_symbols = @('t', 't') } 'unique, defined'
 Test-Rejection 'out of bounds pivot' { param($d) $d.sprites[0].pivot = @(5, 1) } 'within the native'
+Test-Rejection 'invalid engine pivot flag' { param($d) $d.sprites[0].engine_pivot = 'yes' } 'engine_pivot must be a boolean'
 Test-Rejection 'nonnumeric anchor' { param($d) $d.sprites[0].anchors.muzzle = @('NaN', 1) } 'finite numbers'
 Test-Rejection 'wrong texel density' { param($d) $d.world_units_per_texel = 1 } 'exactly 4 world'
 Test-Rejection 'atlas overflow' {
@@ -246,8 +356,10 @@ $result = [ordered]@{
     artifact_sha256 = $hashes
     deterministic_builds = 2
     retained_output_verified = $ReferenceDirectory
+    runtime_output_verified = $runtimeVerified
+    presentation_source_contract = $presentationVerified
     checks = @('all native PNG texels', 'disjoint team layers', 'frame rectangles and transparent gutters',
-        'palette order', 'world dimensions and attachment coordinates', 'DDS RGBA single mip',
+        'palette order', 'world dimensions and attachment coordinates', 'opt-in native engine origins', 'DDS RGBA single mip',
         'premultiplied UNORM including fractional alpha', 'malformed input preserves prior output')
     rejected_cases = $rejected.ToArray()
 }

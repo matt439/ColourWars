@@ -4,6 +4,7 @@
 #include "engine/math/vector2f.h"
 #include "engine/render/colour.h"
 #include "game/objects/weapon_type.h"
+#include "game/objects/player_visual.h"
 
 #include <array>
 #include <string>
@@ -339,6 +340,7 @@ public:
 	const MatchPresentation& match() const;
 	const CameraPresentation& camera() const;
 	const MovementFeedbackPresentation& movement_feedback() const;
+	const WorkshopPlayerPresentation& workshop_player() const;
 	const DebugOverlayPresentation& debug_overlay() const;
 
 private:
@@ -354,5 +356,6 @@ private:
 	MatchPresentation match_;
 	CameraPresentation camera_;
 	MovementFeedbackPresentation movement_feedback_;
+	WorkshopPlayerPresentation workshop_player_;
 	DebugOverlayPresentation debug_overlay_;
 };

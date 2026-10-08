@@ -49,6 +49,43 @@ namespace
 			read_positive(json, "lift"), read_positive(json, "particle_size") };
 	}
 
+	Vector2F read_finite_vector(const JsonValue& parent, const char* key)
+	{
+		const Vector2F value = read_vector(parent, key);
+		if (!std::isfinite(value.x) || !std::isfinite(value.y))
+		{
+			throw std::runtime_error(parent.where() + ": '" + key + "' must be finite.");
+		}
+		return value;
+	}
+
+	template<size_t N>
+	void read_frames(const JsonValue& parent, const char* key, std::array<std::string, N>& frames)
+	{
+		const JsonValue array = parent.array(key);
+		if (array.size() != N)
+		{
+			throw std::runtime_error(array.where() + ": wrong number of authored frames.");
+		}
+		for (size_t index = 0; index < N; ++index) { frames[index] = array.at(index).as_identifier(); }
+	}
+
+	WorkshopToolPresentation read_workshop_tool(const JsonValue& json)
+	{
+		WorkshopToolPresentation result;
+		result.frame = json.identifier("frame");
+		result.team_frame = json.identifier("team_frame");
+		result.size = read_positive_vector(json, "size");
+		result.muzzle_offset = read_finite_vector(json, "muzzle_offset");
+		result.support_grip_offset = read_finite_vector(json, "support_grip_offset");
+		result.aim_angle = json.number("aim_angle");
+		if (!std::isfinite(result.aim_angle))
+		{
+			throw std::runtime_error(json.where() + ": aim_angle must be finite.");
+		}
+		return result;
+	}
+
 	bool is_hex_colour(const std::string& text)
 	{
 		if (text.length() != 6 && text.length() != 8)
@@ -409,6 +446,46 @@ Presentation::Presentation(const char* path)
 	this->prompt_bar_ = read_prompt_bar(root);
 	this->hud_ = read_hud(root);
 	this->camera_.reference_height = read_positive(root.object("camera"), "reference_height");
+	const JsonValue workshop = root.object("workshop_player");
+	WorkshopPlayerPresentation& art = this->workshop_player_;
+	art.sprite_sheet = workshop.identifier("sprite_sheet");
+	art.body_size = read_positive_vector(workshop, "body_size");
+	read_frames(workshop, "idle_frames", art.idle_frames);
+	read_frames(workshop, "run_frames", art.run_frames);
+	read_frames(workshop, "badge_frames", art.badge_frames);
+	art.air_frame = workshop.identifier("air_frame");
+	art.landing_frame = workshop.identifier("landing_frame");
+	art.idle_frame_time = read_positive(workshop, "idle_frame_time");
+	art.run_frame_time = read_positive(workshop, "run_frame_time");
+	art.landing_duration = read_positive(workshop, "landing_duration");
+	art.pixel_size = read_positive(workshop, "pixel_size");
+	art.pixel_frame = workshop.identifier("pixel_frame");
+	art.shoulder_offset = read_finite_vector(workshop, "shoulder_offset");
+	art.rear_shoulder_offset = read_finite_vector(workshop, "rear_shoulder_offset");
+	art.elbow_drop = read_positive(workshop, "elbow_drop");
+	art.sleeve_width = read_positive(workshop, "sleeve_width");
+	art.arm_outline_width = read_positive(workshop, "arm_outline_width");
+	art.sleeve_colour = read_colour(workshop, "sleeve_colour");
+	art.arm_outline_colour = read_colour(workshop, "arm_outline_colour");
+	art.glove_frame = workshop.identifier("glove_frame");
+	art.glove_size = read_positive_vector(workshop, "glove_size");
+	art.badge_size = read_positive_vector(workshop, "badge_size");
+	art.badge_offset = read_finite_vector(workshop, "badge_offset");
+	art.sprayer = read_workshop_tool(workshop.object("sprayer"));
+	art.roller = read_workshop_tool(workshop.object("roller"));
+	const JsonValue poses = workshop.array("sprayer_poses");
+	if (poses.size() != art.sprayer_poses.size())
+	{
+		throw std::runtime_error(poses.where() + ": exactly five aim poses are required.");
+	}
+	for (size_t index = 0; index < art.sprayer_poses.size(); ++index)
+	{
+		art.sprayer_poses[index] = read_workshop_tool(poses.at(index));
+	}
+	if (art.sleeve_width < art.pixel_size)
+	{
+		throw std::runtime_error(workshop.where() + ": sleeve width must cover a native pixel.");
+	}
 	const JsonValue movement = root.object("movement_feedback");
 	MovementFeedbackPresentation& feedback = this->movement_feedback_;
 	feedback.enabled = movement.boolean("enabled");
@@ -474,6 +551,11 @@ const MovementFeedbackPresentation& Presentation::movement_feedback() const
 	return this->movement_feedback_;
 }
 
+const WorkshopPlayerPresentation& Presentation::workshop_player() const
+{
+	return this->workshop_player_;
+}
+
 void Presentation::validate_resources(const RenderResources& render,
 	const AudioResources& audio) const
 {
@@ -498,6 +580,44 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.frame("hud.fill_frame", this->hud_.sprite_sheet, this->hud_.fill_frame);
 	check.frame("movement_feedback.fill_frame", this->movement_feedback_.sprite_sheet,
 		this->movement_feedback_.fill_frame);
+	const WorkshopPlayerPresentation& art = this->workshop_player_;
+	check.frame("workshop terrain", "workshop_kit", "platform");
+	const SpriteSheet* sheet = render.sprite_sheet(art.sprite_sheet);
+	const auto check_frame = [&](const std::string& name, const Vector2F& size)
+	{
+		check.frame("workshop_player", art.sprite_sheet, name);
+		const SpriteFrame& frame = sheet->sprite_frame(sheet->resolve_sprite_frame(name));
+		const Vector2F native_size(static_cast<float>(frame.source_rectangle().width),
+			static_cast<float>(frame.source_rectangle().height));
+		if ((native_size * art.pixel_size - size).length() > 0.001f)
+		{
+			throw std::runtime_error(this->source_path_ + ": workshop_player frame '" + name +
+				"' must use the authored native texel density.");
+		}
+	};
+	const auto check_pair = [&](const std::string& base, const std::string& team, const Vector2F& size)
+	{
+		check_frame(base, size);
+		check_frame(team, size);
+		if (sheet->sprite_frame(sheet->resolve_sprite_frame(base)).origin() !=
+			sheet->sprite_frame(sheet->resolve_sprite_frame(team)).origin())
+		{
+			throw std::runtime_error(this->source_path_ + ": workshop_player team mask pivot mismatch.");
+		}
+	};
+	for (const std::string& frame : art.idle_frames) { check_pair(frame, frame + "_team", art.body_size); }
+	for (const std::string& frame : art.run_frames) { check_pair(frame, frame + "_team", art.body_size); }
+	check_pair(art.air_frame, art.air_frame + "_team", art.body_size);
+	check_pair(art.landing_frame, art.landing_frame + "_team", art.body_size);
+	for (const std::string& frame : art.badge_frames) { check_frame(frame, art.badge_size); }
+	check_frame(art.glove_frame, art.glove_size);
+	check_frame(art.pixel_frame, Vector2F(art.pixel_size, art.pixel_size));
+	for (const WorkshopToolPresentation& pose : art.sprayer_poses)
+	{
+		check_pair(pose.frame, pose.team_frame, pose.size);
+	}
+	check_pair(art.sprayer.frame, art.sprayer.team_frame, art.sprayer.size);
+	check_pair(art.roller.frame, art.roller.team_frame, art.roller.size);
 	const Vector2F heading_size = render.measure_text(
 		render.resolve_sprite_font(this->menu_.detail_font), L"GET READY");
 	const float heading_scale = std::min(1.0f,

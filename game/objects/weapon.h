@@ -68,6 +68,15 @@ public:
 	// unions this with the body so scene culling includes the held weapon.
 	mattmath::RectangleF draw_bounds() const;
 
+	// Read-only attachment points for game-owned character artwork. These remain
+	// the same continuous simulation aim and muzzle used to launch projectiles.
+	WeaponType type() const;
+	float rotation() const;
+	mattmath::Vector2F draw_pos() const;
+	mattmath::Vector2F nozzle_pos() const;
+	bool shooting_this_update() const;
+	void draw_nozzle_debug(labrador::DrawList& draw_list) const;
+
 protected:
 	labrador::SoundBank* sound_bank_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
@@ -96,7 +105,6 @@ protected:
 	PlayerTeam team() const;
 	int player_num() const;
 	const labrador::Colour& team_colour() const;
-	WeaponType type() const;
 	mattmath::RectangleF nozzle_rectangle() const;
 
 
@@ -107,7 +115,6 @@ protected:
 	float starting_vel_length() const;
 	float ammo_usage() const;
 
-	float rotation() const;
 	void set_rotation(float rotation);
 	bool invert_y() const;
 	void set_invert_y(bool invert_y);
@@ -123,8 +130,6 @@ protected:
 	void alter_ammo_timer(float dt);
 
 
-	mattmath::Vector2F draw_pos() const;
-	mattmath::Vector2F nozzle_pos() const;
 	static mattmath::Vector2F nozzle_size();
 	static bool facing_left(float rotation);
 

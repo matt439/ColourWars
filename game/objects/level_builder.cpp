@@ -44,6 +44,12 @@ std::unique_ptr<Level>
 		this->level_infos_->get(settings.stage());
 
 	const TeamColour team_colours = team_colour_->team_colours(palette);
+	// The existing course geometry and scored faces stay authoritative. Only
+	// rectangular paintables use the material study; ramps and jump-through
+	// platforms keep their distinct diagnostic treatment during comparison.
+	const float workshop_terrain_density = settings.stage() == "movement_course" &&
+		settings.workshop_visual_mode() != PlayerVisualMode::original
+		? this->presentation_->workshop_player().pixel_size : 0.0f;
 
 	// Scene additions remain pending until Level builds its opening frame.
 	auto scene = std::make_unique<Scene>(this->thread_pool_,
@@ -60,7 +66,7 @@ std::unique_ptr<Level>
 
 	for (std::unique_ptr<labrador::CollisionObject>& object :
 		this->level_object_builder_->build_collision_objects(
-			load_info->collision_objects_json(), team_colours))
+			load_info->collision_objects_json(), team_colours, workshop_terrain_density))
 	{
 		scene->add(std::move(object));
 	}

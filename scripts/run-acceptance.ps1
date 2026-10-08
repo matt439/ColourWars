@@ -141,7 +141,8 @@ try {
     # The probes use CPU-side game data and do not create a window or device.
     # DLL imports still resolve from the same staged folder as the game.
     $env:PATH = "$gameDirectory;$previousPath"
-    foreach ($case in 'ammo', 'settings', 'paint', 'camera_framing', 'movement', 'stage_selection') {
+    foreach ($case in 'ammo', 'settings', 'paint', 'camera_framing', 'movement', 'stage_selection',
+        'workshop_player', 'workshop_terrain') {
         $source = Join-Path $PSScriptRoot "acceptance/$case.cpp"
         $executable = Join-Path $evidence "$case.exe"
         $responseFile = Join-Path $evidence "$case.rsp"

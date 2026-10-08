@@ -20,6 +20,9 @@ round. After the series, Play Series Again clears the wins. Quitting discards
 the session. For solo practice, choose Single Match and 1 Player. The experimental
 [Movement Course](docs/polish-movement-course.md) provides repeatable jump, landing
 and platform-drop trials; select it explicitly, as Random uses the three arenas.
+On that arena's selection page, Up/Down switches between original artwork and
+two [playable workshop art comparisons](docs/polish-playable-kit.md), with animated
+painters, player badges and tiled platforms. These remain polish candidates.
 
 Results show cumulative series wins and each player's **surface held** as a
 percentage of the arena. Capturing neutral or enemy paint earns its area;
@@ -149,8 +152,9 @@ These commands configure/build the game, then compile small native checks
 against its actual objects. They cover full-cost ammunition and held-fire
 recovery, exposed paint surfaces and ownership, settings persistence and
 write-failure recovery, camera framing and aiming, jump buffering and ledge grace,
-takeoff/landing feedback events and lifetime,
-and stage eligibility for Random. They use no graphics device or speaker and isolate
+takeoff/landing feedback events and lifetime, stage eligibility for Random,
+workshop visual/simulation parity and exact tiled-terrain paint coverage.
+They use no graphics device or speaker and isolate
 all save writes. Evidence stays under `out/acceptance/<preset>/`. CI runs the
 same checks; `-SkipBuild` is for an already-current build.
 

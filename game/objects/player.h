@@ -8,6 +8,7 @@
 #include "game/objects/player_input_data.h"
 #include "game/objects/weapon.h"
 #include "game/objects/movement_feedback.h"
+#include "game/objects/player_visual.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/shape.h"
 #include "engine/math/vector2f.h"
@@ -100,6 +101,13 @@ public:
     void end_contacts();
     const MovementFeedback& movement_feedback() const;
 
+    // A Movement Course presentation comparison. Construction and simulation
+    // remain identical; the builder enables this only for an explicit choice.
+    void enable_workshop_visual(const WorkshopPlayerPresentation* presentation,
+        labrador::RenderResources* render_resources, PlayerVisualMode mode,
+        int view_index);
+    const PlayerVisual* workshop_visual() const;
+
 	void set_player_input(const PlayerInputData& input);
     // Context changes discard queued jumps and require a release before a new
     // press. Level calls this when a pause/reconnect menu covers the match.
@@ -152,6 +160,7 @@ private:
     const GameTuning* tuning_ = nullptr;
 
     MovementFeedback movement_feedback_;
+    std::unique_ptr<PlayerVisual> workshop_visual_;
     bool had_ground_support_ = false;
     bool landing_feedback_ready_ = false;
     float support_impact_speed_ = 0.0f;

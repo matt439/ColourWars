@@ -154,7 +154,8 @@ LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
 std::unique_ptr<CollisionObject>
 	LevelObjectBuilder::build_collision_object(const JsonValue& json,
 		const TeamColour& team_colours,
-		std::span<const RectangleF> paint_obstacles) const
+		std::span<const RectangleF> paint_obstacles,
+		float workshop_world_units_per_texel) const
 {
 	const std::string type = json.string("type");
 	if (type == "Structure")
@@ -187,10 +188,11 @@ std::unique_ptr<CollisionObject>
 		faces.top = faces_json.boolean("top");
 		faces.right = faces_json.boolean("right");
 		faces.bottom = faces_json.boolean("bottom");
+		const bool workshop = workshop_world_units_per_texel > 0.0f;
 
 		return std::make_unique<StructurePaintable>(
-			json.string("sheet_name"),
-			json.string("frame_name"),
+			workshop ? "workshop_kit" : json.string("sheet_name"),
+			workshop ? "platform" : json.string("frame_name"),
 			rectangle,
 			std::make_unique<RectangleF>(rectangle),
 			this->render_resources_,
@@ -201,7 +203,9 @@ std::unique_ptr<CollisionObject>
 			team_colours,
 			faces,
 			paint_obstacles,
-			colour_of(json));
+			workshop ? Colour::white : colour_of(json),
+			0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f,
+			workshop_world_units_per_texel);
 	}
 	if (type == "StructureRamp")
 	{
@@ -261,8 +265,13 @@ std::unique_ptr<GameObject>
 
 std::vector<std::unique_ptr<CollisionObject>>
 	LevelObjectBuilder::build_collision_objects(const JsonValue& json,
-		const TeamColour& team_colours) const
+		const TeamColour& team_colours,
+		float workshop_world_units_per_texel) const
 {
+	if (!std::isfinite(workshop_world_units_per_texel) || workshop_world_units_per_texel < 0.0f)
+	{
+		throw std::invalid_argument("Workshop terrain density must be finite and nonnegative.");
+	}
 	// Only flat structures block paint. Ramps deliberately let projectiles pass
 	// through, and decorative art must not remove reachable scoring surface.
 	std::vector<RectangleF> paint_obstacles;
@@ -281,7 +290,8 @@ std::vector<std::unique_ptr<CollisionObject>>
 	for (size_t index = 0; index < json.size(); ++index)
 	{
 		collision_objects.push_back(
-			build_collision_object(json.at(index), team_colours, paint_obstacles));
+			build_collision_object(json.at(index), team_colours, paint_obstacles,
+				workshop_world_units_per_texel));
 	}
 	return collision_objects;
 }

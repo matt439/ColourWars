@@ -33,6 +33,21 @@ const std::string& MenuLevelSettings::stage() const
 	return this->stage_;
 }
 
+PlayerVisualMode MenuLevelSettings::workshop_visual_mode() const
+{
+	return this->workshop_visual_mode_;
+}
+
+void MenuLevelSettings::set_workshop_visual_mode(PlayerVisualMode mode)
+{
+	if (mode != PlayerVisualMode::original && mode != PlayerVisualMode::continuous &&
+		mode != PlayerVisualMode::authored)
+	{
+		throw std::invalid_argument("Invalid workshop visual comparison");
+	}
+	this->workshop_visual_mode_ = mode;
+}
+
 ScreenLayout MenuLevelSettings::screen_layout() const
 {
 	return this->screen_layout_;

@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [string] $SourcePath = '',
-    [string] $OutputDirectory = ''
+    [string] $OutputDirectory = '',
+    [switch] $StageRuntime
 )
 
 $ErrorActionPreference = 'Stop'
@@ -40,6 +41,9 @@ function Read-Point {
 # Validate the complete document and packing before creating any output files.
 $sourceFile = [IO.Path]::GetFullPath($SourcePath)
 $outputRoot = [IO.Path]::GetFullPath($OutputDirectory)
+if ($StageRuntime -and $sourceFile -ne [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '../game/art/polish/kit/source.json'))) {
+    throw 'Only the canonical workshop source may be staged into runtime content.'
+}
 $source = [IO.File]::ReadAllText($sourceFile) | ConvertFrom-Json
 Assert-Object $source 'Source'
 if ($source.schema_version -isnot [int] -or $source.schema_version -ne 1) {
@@ -106,6 +110,11 @@ foreach ($sprite in $source.sprites) {
         }
     }
     $pivot = Read-Point $sprite.pivot "$($sprite.name) pivot" $width $height
+    $enginePivot = $false
+    if ($sprite.PSObject.Properties['engine_pivot']) {
+        if ($sprite.engine_pivot -isnot [bool]) { throw "$($sprite.name): engine_pivot must be a boolean." }
+        $enginePivot = $sprite.engine_pivot
+    }
     $anchors = [ordered]@{}
     $worldAnchors = [ordered]@{}
     if ($sprite.PSObject.Properties['anchors']) {
@@ -145,11 +154,15 @@ foreach ($sprite in $source.sprites) {
         if ($cursorY + $height + $padding -gt $atlasSize) {
             throw 'The kit exceeds its 256x256 atlas; revise packing or the explicitly declared atlas size.'
         }
-        $frames.Add([ordered]@{
+        $engineFrame = [ordered]@{
             name = $frameName
             position = [ordered]@{ x = $cursorX; y = $cursorY }
             size = [ordered]@{ w = $width; h = $height }
-        })
+        }
+        # Earlier study frames pass their origin explicitly. New runtime frames
+        # opt into the authored native pivot, including their matching team mask.
+        if ($enginePivot) { $engineFrame['origin'] = $pivot }
+        $frames.Add($engineFrame)
         $layerFrames[$layer] = [ordered]@{ name = $frameName; x = $cursorX; y = $cursorY; w = $width; h = $height }
         $cursorX += $width + 2 * $padding
         $shelfHeight = [Math]::Max($shelfHeight, $height)
@@ -160,6 +173,7 @@ foreach ($sprite in $source.sprites) {
         world_size = [ordered]@{ w = $width * 4; h = $height * 4 }
         pivot = $pivot
         world_pivot = [ordered]@{ x = $pivot.x * 4; y = $pivot.y * 4 }
+        engine_pivot = $enginePivot
         anchors = $anchors
         world_anchors = $worldAnchors
         frames = $layerFrames
@@ -246,6 +260,12 @@ try {
     # A parse, packing or conversion failure leaves all previous artifacts intact.
     foreach ($name in 'workshop_kit.png', 'workshop_kit.dds', 'workshop_kit.json', 'workshop_kit.layout.json') {
         Copy-Item -LiteralPath (Join-Path $stage $name) -Destination (Join-Path $outputRoot $name) -Force
+    }
+    if ($StageRuntime) {
+        $runtimeRoot = Join-Path $repo 'game/content/textures'
+        foreach ($name in 'workshop_kit.dds', 'workshop_kit.json') {
+            Copy-Item -LiteralPath (Join-Path $stage $name) -Destination (Join-Path $runtimeRoot $name) -Force
+        }
     }
 }
 finally {

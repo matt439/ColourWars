@@ -5,6 +5,11 @@ Labrador pin. It turns the [workshop reference](polish-style-reference.md) into
 an editable native-grid composition for section 1 of [the plan](polish-plan.md).
 It does not approve the style, replace the gameplay artwork, or author an arena.
 
+Follow-up: [the fourth increment](polish-playable-kit.md) extends this source kit
+and makes it explicitly selectable in Movement Course. This document records the
+third increment's static study and its evidence; the follow-up owns current
+runtime integration and the remaining playing review.
+
 ## Source and reproduction
 
 The [kit source](../game/art/polish/kit/source.json) explicitly authors each

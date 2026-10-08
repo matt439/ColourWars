@@ -363,6 +363,918 @@
       ],
       "anchors": {},
       "team_symbols": []
+    },
+    {
+      "name": "painter_idle_0",
+      "rows": [
+        "...ooooooo...",
+        "..otttttuoo..",
+        "..ottuuwuuo..",
+        ".ottttttttto.",
+        ".oohhhhhhhho.",
+        "..obfffffo...",
+        "..obfffwofo..",
+        "..okfffffkko.",
+        "...okfffoo...",
+        "....okkoo....",
+        "...owwoowwo..",
+        "..owwtwwtwo..",
+        "..owotwwoto..",
+        "...ohttutho..",
+        "...ottttuto..",
+        "...otuuuuto..",
+        "...otuhhuto..",
+        "...otuoouto..",
+        "....ohhhho...",
+        "....otuuuo...",
+        "...ottutuuo..",
+        "...otuotuuo..",
+        "...otuotuuo..",
+        "...ouv.ouvo..",
+        "...ouv.ouvo..",
+        "...onm.onmo..",
+        "..obco.obco..",
+        "..obccoobcco.",
+        "..obccoobcco.",
+        "..oooo.ooooo."
+      ],
+      "pivot": [
+        6.5,
+        15
+      ],
+      "anchors": {
+        "feet": [
+          6.5,
+          30
+        ],
+        "grip": [
+          6.5,
+          15
+        ],
+        "shoulder": [
+          8.5,
+          11.5
+        ],
+        "rear_shoulder": [
+          4.5,
+          11.5
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
+    },
+    {
+      "name": "painter_idle_1",
+      "rows": [
+        "...ooooooo...",
+        "..otttttuoo..",
+        "..ottuuwuuo..",
+        ".ottttttttto.",
+        ".oohhhhhhhho.",
+        "..obfffffo...",
+        "..obfffwofo..",
+        "..okfffffkko.",
+        "...okfffoo...",
+        "....okkoo....",
+        "...owwoowwo..",
+        "..owwtwwtwo..",
+        "..owotwwoto..",
+        "...ohttutho..",
+        "...ottttuto..",
+        "...otuuuuto..",
+        "...ottwwuto..",
+        "...otuhhuto..",
+        "....ohhhho...",
+        "....otuuuo...",
+        "...ottutuuo..",
+        "...ottotuuo..",
+        "...otuotuuo..",
+        "...ouv.ouvo..",
+        "...ouv.ouvo..",
+        "...onm.onmo..",
+        "..obco.obco..",
+        "..obccoobcco.",
+        "..obccoobcco.",
+        "..oooo.ooooo."
+      ],
+      "pivot": [
+        6.5,
+        15
+      ],
+      "anchors": {
+        "feet": [
+          6.5,
+          30
+        ],
+        "grip": [
+          6.5,
+          15
+        ],
+        "shoulder": [
+          8.5,
+          11.5
+        ],
+        "rear_shoulder": [
+          4.5,
+          11.5
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
+    },
+    {
+      "name": "painter_run_0",
+      "rows": [
+        "...ooooooo...",
+        "..otttttuoo..",
+        "..ottuuwuuo..",
+        ".ottttttttto.",
+        ".oohhhhhhhho.",
+        "..obfffffo...",
+        "..obfffwofo..",
+        "..okfffffkko.",
+        "...okfffoo...",
+        "....okkoo....",
+        "...owwoowwo..",
+        "..owwtwwtwo..",
+        "..owotwwoto..",
+        "...ohttutho..",
+        "...ottttuto..",
+        "...otuuuuto..",
+        "...otuhhuto..",
+        "...otuoouto..",
+        "....ohhhho...",
+        "....otuuuo...",
+        "...ottutuuo..",
+        "..ottuotuuo..",
+        "..otuooouvo..",
+        ".ottuo.ouvo..",
+        ".ouuo..onmo..",
+        "..ovo...obco.",
+        "..onmo..obcco",
+        "..obco...oooo",
+        ".obcco.......",
+        ".ooooo......."
+      ],
+      "pivot": [
+        6.5,
+        15
+      ],
+      "anchors": {
+        "feet": [
+          6.5,
+          30
+        ],
+        "grip": [
+          6.5,
+          15
+        ],
+        "shoulder": [
+          8.5,
+          11.5
+        ],
+        "rear_shoulder": [
+          4.5,
+          11.5
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
+    },
+    {
+      "name": "painter_run_1",
+      "rows": [
+        "...ooooooo...",
+        "..otttttuoo..",
+        "..ottuuwuuo..",
+        ".ottttttttto.",
+        ".oohhhhhhhho.",
+        "..obfffffo...",
+        "..obfffwofo..",
+        "..okfffffkko.",
+        "...okfffoo...",
+        "....okkoo....",
+        "...owwoowwo..",
+        "..owwtwwtwo..",
+        "..owotwwoto..",
+        "...ohttutho..",
+        "...ottttuto..",
+        "...otuuuuto..",
+        "...otuhhuto..",
+        "...otuoouto..",
+        "....ohhhho...",
+        "....otuuuo...",
+        "...ottutuuo..",
+        "...otuotuuo..",
+        "...otuotuuo..",
+        "....ouuuvo...",
+        "....ouvuo....",
+        "....onmo.....",
+        "....obco.....",
+        "...obcco.....",
+        "...obcco.....",
+        "...ooooo....."
+      ],
+      "pivot": [
+        6.5,
+        15
+      ],
+      "anchors": {
+        "feet": [
+          6.5,
+          30
+        ],
+        "grip": [
+          6.5,
+          15
+        ],
+        "shoulder": [
+          8.5,
+          11.5
+        ],
+        "rear_shoulder": [
+          4.5,
+          11.5
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
+    },
+    {
+      "name": "painter_run_2",
+      "rows": [
+        "...ooooooo...",
+        "..otttttuoo..",
+        "..ottuuwuuo..",
+        ".ottttttttto.",
+        ".oohhhhhhhho.",
+        "..obfffffo...",
+        "..obfffwofo..",
+        "..okfffffkko.",
+        "...okfffoo...",
+        "....okkoo....",
+        "...owwoowwo..",
+        "..owwtwwtwo..",
+        "..owotwwoto..",
+        "...ohttutho..",
+        "...ottttuto..",
+        "...otuuuuto..",
+        "...otuhhuto..",
+        "...otuoouto..",
+        "....ohhhho...",
+        "....otuuuo...",
+        "...ottutuuo..",
+        "...otuotuuuo.",
+        "...ouvoottuo.",
+        "...ouvo.otuo.",
+        "...onmo..ouuo",
+        "..obco...ovo.",
+        ".obcco..onmo.",
+        ".oooo...obco.",
+        ".......obcco.",
+        ".......ooooo."
+      ],
+      "pivot": [
+        6.5,
+        15
+      ],
+      "anchors": {
+        "feet": [
+          6.5,
+          30
+        ],
+        "grip": [
+          6.5,
+          15
+        ],
+        "shoulder": [
+          8.5,
+          11.5
+        ],
+        "rear_shoulder": [
+          4.5,
+          11.5
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
+    },
+    {
+      "name": "painter_run_3",
+      "rows": [
+        "...ooooooo...",
+        "..otttttuoo..",
+        "..ottuuwuuo..",
+        ".ottttttttto.",
+        ".oohhhhhhhho.",
+        "..obfffffo...",
+        "..obfffwofo..",
+        "..okfffffkko.",
+        "...okfffoo...",
+        "....okkoo....",
+        "...owwoowwo..",
+        "..owwtwwtwo..",
+        "..owotwwoto..",
+        "...ohttutho..",
+        "...ottttuto..",
+        "...otuuuuto..",
+        "...otuhhuto..",
+        "...otuoouto..",
+        "....ohhhho...",
+        "....otuuuo...",
+        "...ottutuuo..",
+        "...otuotuuo..",
+        "...otuotuuo..",
+        "....ouvuuo...",
+        ".....ouvo....",
+        ".....onmo....",
+        ".....obco....",
+        "....obcco....",
+        "....obcco....",
+        "....ooooo...."
+      ],
+      "pivot": [
+        6.5,
+        15
+      ],
+      "anchors": {
+        "feet": [
+          6.5,
+          30
+        ],
+        "grip": [
+          6.5,
+          15
+        ],
+        "shoulder": [
+          8.5,
+          11.5
+        ],
+        "rear_shoulder": [
+          4.5,
+          11.5
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
+    },
+    {
+      "name": "painter_air",
+      "rows": [
+        "...ooooooo...",
+        "..otttttuoo..",
+        "..ottuuwuuo..",
+        ".ottttttttto.",
+        ".oohhhhhhhho.",
+        "..obfffffo...",
+        "..obfffwofo..",
+        "..okfffffkko.",
+        "...okfffoo...",
+        "....okkoo....",
+        "...owwoowwo..",
+        "..owwtwwtwo..",
+        "..owotwwoto..",
+        "...ohttutho..",
+        "...ottttuto..",
+        "...otuuuuto..",
+        "...otuhhuto..",
+        "...otuoouto..",
+        "....ohhhho...",
+        "....otuuuo...",
+        "...ottutuuo..",
+        "...otuootuuo.",
+        "...ouvo.ottuo",
+        "....ouvo.ouuo",
+        "....onmo.ouvo",
+        "...obcco.onmo",
+        "...oooo..obco",
+        "........obcco",
+        "........oooo.",
+        "............."
+      ],
+      "pivot": [
+        6.5,
+        15
+      ],
+      "anchors": {
+        "feet": [
+          6.5,
+          30
+        ],
+        "grip": [
+          6.5,
+          15
+        ],
+        "shoulder": [
+          8.5,
+          11.5
+        ],
+        "rear_shoulder": [
+          4.5,
+          11.5
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
+    },
+    {
+      "name": "painter_land",
+      "rows": [
+        "...ooooooo...",
+        "..otttttuoo..",
+        "..ottuuwuuo..",
+        ".ottttttttto.",
+        ".oohhhhhhhho.",
+        "..obfffffo...",
+        "..obfffwofo..",
+        "..okfffffkko.",
+        "...okfffoo...",
+        "....okkoo....",
+        "...owwoowwo..",
+        "..owwtwwtwo..",
+        "..owotwwoto..",
+        "...ohttutho..",
+        "...ottttuto..",
+        "...otuuuuto..",
+        "...otuhhuto..",
+        "...otuoouto..",
+        "....ohhhho...",
+        "....otuuuo...",
+        "...ottutuuo..",
+        "..ottuotuuuo.",
+        "..ouuo..ouuo.",
+        ".ouuo....ouuo",
+        ".onmo....onmo",
+        "..ovo....ovo.",
+        "..obco..obco.",
+        ".obcco..obcco",
+        ".obcco..obcco",
+        ".ooooo..ooooo"
+      ],
+      "pivot": [
+        6.5,
+        15
+      ],
+      "anchors": {
+        "feet": [
+          6.5,
+          30
+        ],
+        "grip": [
+          6.5,
+          15
+        ],
+        "shoulder": [
+          8.5,
+          11.5
+        ],
+        "rear_shoulder": [
+          4.5,
+          11.5
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
+    },
+    {
+      "name": "glove",
+      "rows": [
+        "owo",
+        "whw",
+        "ooo"
+      ],
+      "pivot": [
+        1.5,
+        1.5
+      ],
+      "anchors": {
+        "grip": [
+          1.5,
+          1.5
+        ]
+      },
+      "team_symbols": [],
+      "engine_pivot": true
+    },
+    {
+      "name": "badge_1",
+      "rows": [
+        ".wwwww.",
+        "woowoow",
+        "wowwoow",
+        "woowoow",
+        "woowoow",
+        "wowwwow",
+        "wooooow",
+        ".wwwww."
+      ],
+      "pivot": [
+        3.5,
+        4
+      ],
+      "anchors": {},
+      "team_symbols": [],
+      "engine_pivot": true
+    },
+    {
+      "name": "badge_2",
+      "rows": [
+        "wwwwwww",
+        "wowwwow",
+        "wooowow",
+        "wowwwow",
+        "wowooow",
+        "wowwwow",
+        "wooooow",
+        "wwwwwww"
+      ],
+      "pivot": [
+        3.5,
+        4
+      ],
+      "anchors": {},
+      "team_symbols": [],
+      "engine_pivot": true
+    },
+    {
+      "name": "badge_3",
+      "rows": [
+        "wwwwwww",
+        "wowwwow",
+        "wooowow",
+        "woowwow",
+        "wooowow",
+        "wowwwow",
+        ".wooow.",
+        "..www.."
+      ],
+      "pivot": [
+        3.5,
+        4
+      ],
+      "anchors": {},
+      "team_symbols": [],
+      "engine_pivot": true
+    },
+    {
+      "name": "badge_4",
+      "rows": [
+        ".wwwww.",
+        "wowowow",
+        "wowowow",
+        "wowwwow",
+        "wooowow",
+        "wooowow",
+        "wooooow",
+        "..www.."
+      ],
+      "pivot": [
+        3.5,
+        4
+      ],
+      "anchors": {},
+      "team_symbols": [],
+      "engine_pivot": true
+    },
+    {
+      "name": "sprayer_pose_0",
+      "rows": [
+        ".....ooooooo..........",
+        ".....ohhhhho..........",
+        "......ottto...........",
+        "......ottuo...........",
+        ".ooo..ottuo....ooo....",
+        "ommmootuuuo...omsho...",
+        "ohhhhommmmooooshwoooo.",
+        "ommmoohhhmmmmmmmmmmno.",
+        ".ooo..oooohhooooooooo.",
+        "..omo...ommo..........",
+        "..omo..ommmo..........",
+        "...ooooommo..........."
+      ],
+      "pivot": [
+        2,
+        6
+      ],
+      "anchors": {
+        "grip": [
+          2,
+          6
+        ],
+        "muzzle": [
+          21.375,
+          6
+        ],
+        "support_grip": [
+          10,
+          8
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
+    },
+    {
+      "name": "sprayer_pose_45up",
+      "rows": [
+        ".......................",
+        ".......................",
+        ".......................",
+        ".......................",
+        ".......................",
+        "...............ooo.....",
+        "..............ohno.....",
+        ".............ohmno.....",
+        "....ooooo...ohmno......",
+        "...ohhhho..ohmno.......",
+        "....ottuo.ohmno........",
+        "....ottuoohmno.........",
+        "....ottuooohmno........",
+        "....otuuohhmno.........",
+        "...oommmhmno...........",
+        "...ohhhmmno............",
+        "..ommhhno..............",
+        ".omhmmno...............",
+        ".omhmooo...............",
+        ".omhho.no..............",
+        ".ommo..no..............",
+        "..oo..ono..............",
+        "...ooooo...............",
+        "......................."
+      ],
+      "pivot": [
+        3,
+        20
+      ],
+      "anchors": {
+        "grip": [
+          3,
+          20
+        ],
+        "muzzle": [
+          16.700193885488,
+          6.299806114512
+        ],
+        "support_grip": [
+          10.071067811865,
+          15.757359312881
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
+    },
+    {
+      "name": "sprayer_pose_90up",
+      "rows": [
+        "............",
+        "....oooo....",
+        "....omho....",
+        "....omho....",
+        "....omho....",
+        "....omho....",
+        "....omho....",
+        "...oomho....",
+        "...ohmho....",
+        "...ohmho....",
+        "...ohmho....",
+        "..ooomho....",
+        "oooooomho...",
+        "ohttuumho...",
+        "ohttuummo...",
+        "ohttuuhho...",
+        "oooooomho...",
+        "...o.mmho...",
+        "..oo.mmho...",
+        ".omoommo....",
+        ".omohhho....",
+        "..oohhho....",
+        "...ooooo....",
+        "............"
+      ],
+      "pivot": [
+        6,
+        21
+      ],
+      "anchors": {
+        "grip": [
+          6,
+          21
+        ],
+        "muzzle": [
+          6,
+          1.625
+        ],
+        "support_grip": [
+          8,
+          13
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
+    },
+    {
+      "name": "sprayer_pose_45down",
+      "rows": [
+        ".......................",
+        "..ooo.....ooooo........",
+        ".ohmmo...ohhhho........",
+        ".ohhmmo...ottuo........",
+        "..ommhmmo.ottuo........",
+        "...ommhmmooottuo.......",
+        "...oommhmootuuuo.......",
+        "...omoommhhmmmo........",
+        "...omo.omhmmno.........",
+        "....oo..omhmmno........",
+        ".....ooooomhmmno.......",
+        ".........omhmmno.......",
+        "..........ohmno........",
+        "...........ohmno.......",
+        "............ohmno......",
+        ".............ohmno.....",
+        "..............ohno.....",
+        "...............ooo.....",
+        ".......................",
+        ".......................",
+        ".......................",
+        ".......................",
+        ".......................",
+        "......................."
+      ],
+      "pivot": [
+        3,
+        3
+      ],
+      "anchors": {
+        "grip": [
+          3,
+          3
+        ],
+        "muzzle": [
+          16.700193885488,
+          16.700193885488
+        ],
+        "support_grip": [
+          7.242640687119,
+          10.071067811865
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
+    },
+    {
+      "name": "sprayer_pose_90down",
+      "rows": [
+        "............",
+        "....oooo....",
+        "....ohhho...",
+        "...omhhho...",
+        "..omoohmo...",
+        ".omo.ommo...",
+        ".omo.ommho..",
+        "..ooooommho.",
+        "....ohmuutho",
+        "....ohmuutho",
+        "....ohmuutho",
+        "....ohmooooo",
+        "....ohmo....",
+        "....ohmo....",
+        "....ohmo....",
+        "....ohmo....",
+        "....ohmo....",
+        "....ohmo....",
+        "....ohmo....",
+        "....ohmo....",
+        "....ohmo....",
+        "....oooo....",
+        "............",
+        "............"
+      ],
+      "pivot": [
+        6,
+        2
+      ],
+      "anchors": {
+        "grip": [
+          6,
+          2
+        ],
+        "muzzle": [
+          6,
+          21.375
+        ],
+        "support_grip": [
+          4,
+          10
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
+    },
+    {
+      "name": "roller_grounded",
+      "rows": [
+        "................................",
+        "..ooo...........................",
+        ".ocwo...........................",
+        ".ocwco..........................",
+        "..ocwco.........................",
+        "...ocsco........................",
+        "....ossso.......................",
+        ".....ossso......................",
+        "......ossso.....................",
+        ".......ossso....................",
+        "........ossso...................",
+        ".........ossso..................",
+        "..........ossooooooooooooo......",
+        "........oohhhhhhhhhhhhhhoo......",
+        "........otttttttttttttttuo......",
+        "........ottwwtttttttttttuo......",
+        "........otttttttttttttttuo......",
+        "........ottttttttttttttuuo......",
+        "........otuuuuuuuuuuuuuuvo......",
+        "........ovvvvvvvvvvvvvvvvo......",
+        "........oooooooooooooooooo......",
+        "................................"
+      ],
+      "pivot": [
+        3.5,
+        3.5
+      ],
+      "anchors": {
+        "grip": [
+          3.5,
+          3.5
+        ],
+        "contact": [
+          16.758252147248,
+          16.758252147248
+        ],
+        "support_grip": [
+          6.5,
+          6.5
+        ],
+        "ground": [
+          16.758252147248,
+          21
+        ]
+      },
+      "team_symbols": [
+        "t",
+        "u",
+        "v"
+      ],
+      "engine_pivot": true
     }
   ]
 }

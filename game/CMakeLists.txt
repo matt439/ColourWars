@@ -27,6 +27,7 @@ add_executable(ColourWars WIN32
     objects/player_builder.cpp
     objects/player_camera.cpp
     objects/player_input.cpp
+    objects/player_visual.cpp
     objects/projectile.cpp
     objects/projectile_ball.cpp
     objects/projectile_builder.cpp

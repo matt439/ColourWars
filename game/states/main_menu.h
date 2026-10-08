@@ -276,6 +276,7 @@ private:
 	SelectState select_state_ = SelectState();
 	int displayed_slot_ = -1;
 	ConfirmationState displayed_state_ = ConfirmationState::unconfirmed;
+	PlayerVisualMode displayed_visual_mode_ = PlayerVisualMode::original;
 	void update_stage_select_visuals();
 	// Returns the stage's slot, or the first slot for an empty or unknown name.
 	int slot_of(const std::string& stage_name) const;

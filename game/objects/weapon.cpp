@@ -83,21 +83,28 @@ void Weapon::draw(DrawList& draw_list, bool debug) const
 
     if (debug)
     {
-        RectangleF draw_rectangle_noz = this->nozzle_rectangle();
-        const RectangleI& nozzle_source = this->sprite_sheet()->sprite_frame(
-            this->nozzle_frame_).source_rectangle();
-        const Vector2F origin_noz(static_cast<float>(nozzle_source.width) / 2.0f,
-            static_cast<float>(nozzle_source.height) / 2.0f);
-
-        TextureObject::draw_with(draw_list, draw_rectangle_noz,
-            this->nozzle_frame_, this->colour(),
-            origin_noz, SpriteFlip::none, 0.0f);
+        this->draw_nozzle_debug(draw_list);
     }
+}
+
+void Weapon::draw_nozzle_debug(DrawList& draw_list) const
+{
+    const RectangleI& source = this->sprite_sheet()->sprite_frame(
+        this->nozzle_frame_).source_rectangle();
+    const Vector2F origin(static_cast<float>(source.width) / 2.0f,
+        static_cast<float>(source.height) / 2.0f);
+    TextureObject::draw_with(draw_list, this->nozzle_rectangle(),
+        this->nozzle_frame_, this->colour(), origin, SpriteFlip::none, 0.0f);
 }
 
 labrador::Colour Weapon::paint_colour() const
 {
     return this->team_colour();
+}
+
+bool Weapon::shooting_this_update() const
+{
+    return this->shooting_this_update_;
 }
 Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, RotationOrigin origin)
 {

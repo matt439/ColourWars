@@ -23,11 +23,12 @@ StructurePaintable::StructurePaintable(
 	float rotation,
 	const Vector2F& origin,
 	SpriteFlip flip,
-	float layer_depth) :
+	float layer_depth,
+	float tile_world_units_per_texel) :
 	Structure(sheet_name, frame_name, sprite_rectangle,
 		std::move(collision_shape),
 		render_resources, collision_type, color, rotation, origin,
-		flip, layer_depth),
+		flip, layer_depth, tile_world_units_per_texel),
 		team_colours_(team_colours),
 		faces_(faces),
 		paint_(paint)

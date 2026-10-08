@@ -18,6 +18,8 @@ set(COLOURWARS_RELEASE_ASSETS
     textures/menu_paint.json
     textures/weapon_paint.dds
     textures/weapon_paint.json
+    textures/workshop_kit.dds
+    textures/workshop_kit.json
     levels/king_of_the_hill.json
     levels/turbulence.json
     levels/close_quarters.json

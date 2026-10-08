@@ -134,6 +134,501 @@
                                            "w":  1,
                                            "h":  1
                                        }
+                          },
+                          {
+                              "name":  "painter_idle_0",
+                              "position":  {
+                                               "x":  91,
+                                               "y":  38
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_idle_0_team",
+                              "position":  {
+                                               "x":  108,
+                                               "y":  38
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_idle_1",
+                              "position":  {
+                                               "x":  125,
+                                               "y":  38
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_idle_1_team",
+                              "position":  {
+                                               "x":  142,
+                                               "y":  38
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_run_0",
+                              "position":  {
+                                               "x":  159,
+                                               "y":  38
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_run_0_team",
+                              "position":  {
+                                               "x":  176,
+                                               "y":  38
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_run_1",
+                              "position":  {
+                                               "x":  193,
+                                               "y":  38
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_run_1_team",
+                              "position":  {
+                                               "x":  210,
+                                               "y":  38
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_run_2",
+                              "position":  {
+                                               "x":  227,
+                                               "y":  38
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_run_2_team",
+                              "position":  {
+                                               "x":  2,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_run_3",
+                              "position":  {
+                                               "x":  19,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_run_3_team",
+                              "position":  {
+                                               "x":  36,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_air",
+                              "position":  {
+                                               "x":  53,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_air_team",
+                              "position":  {
+                                               "x":  70,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_land",
+                              "position":  {
+                                               "x":  87,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "painter_land_team",
+                              "position":  {
+                                               "x":  104,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  13,
+                                           "h":  30
+                                       },
+                              "origin":  {
+                                             "x":  6.5,
+                                             "y":  15
+                                         }
+                          },
+                          {
+                              "name":  "glove",
+                              "position":  {
+                                               "x":  121,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  3,
+                                           "h":  3
+                                       },
+                              "origin":  {
+                                             "x":  1.5,
+                                             "y":  1.5
+                                         }
+                          },
+                          {
+                              "name":  "badge_1",
+                              "position":  {
+                                               "x":  128,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  7,
+                                           "h":  8
+                                       },
+                              "origin":  {
+                                             "x":  3.5,
+                                             "y":  4
+                                         }
+                          },
+                          {
+                              "name":  "badge_2",
+                              "position":  {
+                                               "x":  139,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  7,
+                                           "h":  8
+                                       },
+                              "origin":  {
+                                             "x":  3.5,
+                                             "y":  4
+                                         }
+                          },
+                          {
+                              "name":  "badge_3",
+                              "position":  {
+                                               "x":  150,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  7,
+                                           "h":  8
+                                       },
+                              "origin":  {
+                                             "x":  3.5,
+                                             "y":  4
+                                         }
+                          },
+                          {
+                              "name":  "badge_4",
+                              "position":  {
+                                               "x":  161,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  7,
+                                           "h":  8
+                                       },
+                              "origin":  {
+                                             "x":  3.5,
+                                             "y":  4
+                                         }
+                          },
+                          {
+                              "name":  "sprayer_pose_0",
+                              "position":  {
+                                               "x":  172,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  22,
+                                           "h":  12
+                                       },
+                              "origin":  {
+                                             "x":  2,
+                                             "y":  6
+                                         }
+                          },
+                          {
+                              "name":  "sprayer_pose_0_team",
+                              "position":  {
+                                               "x":  198,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  22,
+                                           "h":  12
+                                       },
+                              "origin":  {
+                                             "x":  2,
+                                             "y":  6
+                                         }
+                          },
+                          {
+                              "name":  "sprayer_pose_45up",
+                              "position":  {
+                                               "x":  224,
+                                               "y":  90
+                                           },
+                              "size":  {
+                                           "w":  23,
+                                           "h":  24
+                                       },
+                              "origin":  {
+                                             "x":  3,
+                                             "y":  20
+                                         }
+                          },
+                          {
+                              "name":  "sprayer_pose_45up_team",
+                              "position":  {
+                                               "x":  2,
+                                               "y":  124
+                                           },
+                              "size":  {
+                                           "w":  23,
+                                           "h":  24
+                                       },
+                              "origin":  {
+                                             "x":  3,
+                                             "y":  20
+                                         }
+                          },
+                          {
+                              "name":  "sprayer_pose_90up",
+                              "position":  {
+                                               "x":  29,
+                                               "y":  124
+                                           },
+                              "size":  {
+                                           "w":  12,
+                                           "h":  24
+                                       },
+                              "origin":  {
+                                             "x":  6,
+                                             "y":  21
+                                         }
+                          },
+                          {
+                              "name":  "sprayer_pose_90up_team",
+                              "position":  {
+                                               "x":  45,
+                                               "y":  124
+                                           },
+                              "size":  {
+                                           "w":  12,
+                                           "h":  24
+                                       },
+                              "origin":  {
+                                             "x":  6,
+                                             "y":  21
+                                         }
+                          },
+                          {
+                              "name":  "sprayer_pose_45down",
+                              "position":  {
+                                               "x":  61,
+                                               "y":  124
+                                           },
+                              "size":  {
+                                           "w":  23,
+                                           "h":  24
+                                       },
+                              "origin":  {
+                                             "x":  3,
+                                             "y":  3
+                                         }
+                          },
+                          {
+                              "name":  "sprayer_pose_45down_team",
+                              "position":  {
+                                               "x":  88,
+                                               "y":  124
+                                           },
+                              "size":  {
+                                           "w":  23,
+                                           "h":  24
+                                       },
+                              "origin":  {
+                                             "x":  3,
+                                             "y":  3
+                                         }
+                          },
+                          {
+                              "name":  "sprayer_pose_90down",
+                              "position":  {
+                                               "x":  115,
+                                               "y":  124
+                                           },
+                              "size":  {
+                                           "w":  12,
+                                           "h":  24
+                                       },
+                              "origin":  {
+                                             "x":  6,
+                                             "y":  2
+                                         }
+                          },
+                          {
+                              "name":  "sprayer_pose_90down_team",
+                              "position":  {
+                                               "x":  131,
+                                               "y":  124
+                                           },
+                              "size":  {
+                                           "w":  12,
+                                           "h":  24
+                                       },
+                              "origin":  {
+                                             "x":  6,
+                                             "y":  2
+                                         }
+                          },
+                          {
+                              "name":  "roller_grounded",
+                              "position":  {
+                                               "x":  147,
+                                               "y":  124
+                                           },
+                              "size":  {
+                                           "w":  32,
+                                           "h":  22
+                                       },
+                              "origin":  {
+                                             "x":  3.5,
+                                             "y":  3.5
+                                         }
+                          },
+                          {
+                              "name":  "roller_grounded_team",
+                              "position":  {
+                                               "x":  183,
+                                               "y":  124
+                                           },
+                              "size":  {
+                                           "w":  32,
+                                           "h":  22
+                                       },
+                              "origin":  {
+                                             "x":  3.5,
+                                             "y":  3.5
+                                         }
                           }
                       ]
 }

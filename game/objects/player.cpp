@@ -102,6 +102,14 @@ void Player::draw(DrawList& draw_list) const
         return;
     }
 
+    if (this->workshop_visual_ != nullptr)
+    {
+        this->workshop_visual_->draw(draw_list, this->rectangle_,
+            this->facing_right(), this->team_colour_, *this->primary_, this->showing_debug_);
+        this->movement_feedback_.draw(draw_list);
+        return;
+    }
+
     // Use the clip selected by update_animation_state; draw must not mutate shared state.
     const SpriteFlip flip = this->facing_right()
         ? SpriteFlip::none
@@ -216,6 +224,10 @@ void Player::end_contacts()
             {
                 this->movement_feedback_.land(this->support_position_,
                     this->support_impact_speed_);
+                if (this->workshop_visual_ != nullptr)
+                {
+                    this->workshop_visual_->land();
+                }
             }
             this->landing_feedback_ready_ = true;
         }
@@ -229,6 +241,12 @@ void Player::end_contacts()
             !this->hit_ceiling_this_tick_))
     {
         this->set_move_state(PlayerMoveState::in_air);
+        if (this->workshop_visual_ != nullptr)
+        {
+            // Contact resolution discovers a walked-off edge after update selected
+            // its pose. Show airborne on this tick without emitting a jump event.
+            this->workshop_visual_->takeoff();
+        }
     }
 
     if (this->state_ != PlayerState::alive || this->health_ <= 0.0f)
@@ -399,6 +417,12 @@ void Player::update(float dt)
         this->update_animation_state();
 
         AnimationObject::update(dt);
+
+        if (this->workshop_visual_ != nullptr)
+        {
+            this->workshop_visual_->update(dt, this->is_on_ground(),
+                this->velocity().x != 0.0f);
+        }
 
         this->damage_sound_timer_ += dt;
     }
@@ -632,6 +656,10 @@ void Player::start_jump()
     this->movement_feedback_.takeoff(this->had_ground_support_ ?
         this->support_position_ : Vector2F(this->rectangle_.center().x,
             this->rectangle_.bottom()));
+    if (this->workshop_visual_ != nullptr)
+    {
+        this->workshop_visual_->takeoff();
+    }
     this->had_ground_support_ = false;
     this->jump_buffer_remaining_ = 0.0f;
     this->ledge_grace_remaining_ = 0.0f;
@@ -644,6 +672,12 @@ void Player::start_jump()
 
 RectangleF Player::bounds() const
 {
+    if (this->workshop_visual_ != nullptr && this->primary_ != nullptr)
+    {
+        return this->movement_feedback_.bounds(
+            RectangleF::union_of(this->rectangle_,
+                this->workshop_visual_->bounds(this->rectangle_, *this->primary_)));
+    }
     // Include the held weapon in the visual bounds used for scene culling.
     if (this->primary_ == nullptr)
     {
@@ -657,6 +691,23 @@ RectangleF Player::bounds() const
 const MovementFeedback& Player::movement_feedback() const
 {
     return this->movement_feedback_;
+}
+
+void Player::enable_workshop_visual(const WorkshopPlayerPresentation* presentation,
+    RenderResources* render_resources, PlayerVisualMode mode, int view_index)
+{
+    if (mode == PlayerVisualMode::original)
+    {
+        this->workshop_visual_.reset();
+        return;
+    }
+    this->workshop_visual_ = std::make_unique<PlayerVisual>(presentation,
+        render_resources, mode, view_index);
+}
+
+const PlayerVisual* Player::workshop_visual() const
+{
+    return this->workshop_visual_.get();
 }
 void Player::set_player_input(const PlayerInputData& input)
 {
@@ -746,6 +797,10 @@ const PlayerAnimationTuning& Player::animation_info(
 void Player::respawn()
 {
     this->movement_feedback_.clear();
+    if (this->workshop_visual_ != nullptr)
+    {
+        this->workshop_visual_->reset();
+    }
     this->had_ground_support_ = false;
     this->landing_feedback_ready_ = false;
     this->support_impact_speed_ = 0.0f;

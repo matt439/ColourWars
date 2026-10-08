@@ -5,6 +5,7 @@
 
 # The editable kit and generated metadata use byte hashes for reproducibility.
 game/art/polish/kit/*.json text eol=lf
+game/content/textures/workshop_kit.json text eol=lf
 
 ###############################################################################
 # Set default behavior for command prompt diff.
