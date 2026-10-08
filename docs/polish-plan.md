@@ -1,7 +1,13 @@
 # ColourWars polish and level-design plan
 
-Status: planned; implementation has not started under this plan.
+Status: implementation started on 2026-10-08. The first camera/movement foundation
+is implemented; the art, movement-feel and arena acceptance gates remain open.
 Direction agreed on 2026-10-08. Source baseline: game revision `13e9960`.
+
+First increment: resolution-independent camera framing, configurable jump buffering
+and ledge grace, and an explicitly selectable Movement Course (excluded from Random).
+See [implementation and evidence](polish-foundation.md) and
+[course routes and remaining trials](polish-movement-course.md).
 
 ## Goal and direction
 
@@ -65,13 +71,13 @@ Useful work already exists: explicit joining, reconnect pause, palette options,
 labelled HUDs, controls cards, stage previews, saved settings, best-of sessions
 and per-player paint contribution. Build on those systems.
 
-The visible gap is consistency and depth: the textured menu, shaded weapon art,
+At the source baseline, the visible gap was consistency and depth: the textured menu, shaded weapon art,
 simple characters and largely flat arena geometry speak different visual
 languages. The gameplay code also offers concrete polish opportunities:
 
-- Camera framing currently follows pane pixels at scale 1, so changing
+- Camera framing followed pane pixels at scale 1, so changing
   resolution changes the amount of world visible.
-- Jumping requires a press while grounded; there is no jump buffer or short
+- Jumping required a press while grounded; there was no jump buffer or short
   grace period after walking off a ledge.
 - Damage reduces health and plays a sound, with little visual response. Death
   removes the character, and respawn restores it at its spawn.
@@ -511,8 +517,10 @@ slice, record the client exhibit in [engine reports](review/engine-reports.md) a
 handle the engine change in Labrador. Balance numbers belong in tuning, presentation
 choices in presentation data, and arena layout and decoration in level data.
 
-The next implementation task is to establish the pixel-art/display reference and
-movement baseline, then build the first Close Quarters blockout against those rules.
+The next implementation task is to build the pixel-art composition against the
+new display framing, prototype takeoff/landing feedback, and review the Movement
+Course with keyboard/mouse and physical controllers. Record the visual and movement
+decisions before building the first Close Quarters blockout against those rules.
 Progress is gated by the exit conditions above, with each completed increment small
 enough to review, validate and commit independently.
 

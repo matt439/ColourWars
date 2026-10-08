@@ -18,6 +18,7 @@ void LevelLoadedInfo::validate() const
 	// Validate all exposed keys at startup. JsonValue errors identify the file and key.
 	this->display_name();
 	this->icon_frame();
+	this->include_in_random();
 
 	const std::vector<Vector2F> team_a = this->team_a_spawns();
 	const std::vector<Vector2F> team_b = this->team_b_spawns();
@@ -112,6 +113,11 @@ std::string LevelLoadedInfo::display_name() const
 std::string LevelLoadedInfo::icon_frame() const
 {
 	return this->json_doc_.root().string("icon_frame");
+}
+bool LevelLoadedInfo::include_in_random() const
+{
+	const JsonValue root = this->json_doc_.root();
+	return !root.has("include_in_random") || root.boolean("include_in_random");
 }
 std::vector<Vector2F> LevelLoadedInfo::team_a_spawns() const
 {

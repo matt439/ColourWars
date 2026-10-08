@@ -235,6 +235,8 @@ namespace
 		player.jump_launch_velocity = json.number("jump_launch_velocity");
 		player.jump_acceleration = json.number("jump_acceleration");
 		player.jump_max_time = json.number("jump_max_time");
+		player.jump_buffer_time = read_number_in(json, "jump_buffer_time", 0.0f, 1.0f);
+		player.ledge_grace_time = read_number_in(json, "ledge_grace_time", 0.0f, 1.0f);
 		player.drop_down_velocity = json.number("drop_down_velocity");
 		player.drop_down_analog_threshold =
 			json.number("drop_down_analog_threshold");

@@ -104,6 +104,9 @@ struct PlayerTuning
 	float jump_launch_velocity = 0.0f;
 	float jump_acceleration = 0.0f;
 	float jump_max_time = 0.0f;
+	// Seconds; zero disables the corresponding input forgiveness window.
+	float jump_buffer_time = 0.0f;
+	float ledge_grace_time = 0.0f;
 
 	float drop_down_velocity = 0.0f;
 	float drop_down_analog_threshold = 0.0f;

@@ -57,6 +57,8 @@
         "jump_launch_velocity": -600.0,
         "jump_acceleration": -1300.0,
         "jump_max_time": 0.35,
+        "jump_buffer_time": 0.12,
+        "ledge_grace_time": 0.10,
         "drop_down_velocity": 100.0,
         "drop_down_analog_threshold": 0.8,
         "starting_health": 1.0,

@@ -119,6 +119,13 @@ struct MatchPresentation
 	float controls_gap = 0.0f;
 };
 
+// World framing uses the full display height; split panes inherit their fraction.
+// This is independent of menu and HUD coordinates and of the physical resolution.
+struct CameraPresentation
+{
+	float reference_height = 0.0f;
+};
+
 struct MainMenuPresentation
 {
 	std::string backdrop_sheet;
@@ -306,6 +313,7 @@ public:
 	const PromptBarPresentation& prompt_bar() const;
 	const HudPresentation& hud() const;
 	const MatchPresentation& match() const;
+	const CameraPresentation& camera() const;
 	const DebugOverlayPresentation& debug_overlay() const;
 
 private:
@@ -319,5 +327,6 @@ private:
 	PromptBarPresentation prompt_bar_;
 	HudPresentation hud_;
 	MatchPresentation match_;
+	CameraPresentation camera_;
 	DebugOverlayPresentation debug_overlay_;
 };

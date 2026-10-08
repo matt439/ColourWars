@@ -101,6 +101,11 @@ and frame names, CSS colour names and music names must also exist in the
 game's assets. The editor checks document structure and geometry; the game's
 startup validation resolves the actual resources.
 
+An optional top-level `include_in_random` boolean defaults to `true`. Set it to
+`false` in the JSON for an experimental course that should remain explicitly
+selectable without appearing in Random matches. The editor preserves this field
+on save; it is not currently exposed in the property inspector.
+
 Each team must retain at least four spawns inside `out_of_bounds`. The other
 bounds control camera limits and the match's zoom-out presentation. Resizing
 `out_of_bounds` must keep every spawn inside it. Objects outside those bounds

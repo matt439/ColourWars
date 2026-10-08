@@ -21,6 +21,7 @@ set(COLOURWARS_RELEASE_ASSETS
     levels/king_of_the_hill.json
     levels/turbulence.json
     levels/close_quarters.json
+    levels/movement_course.json
     sounds/sound_bank_1.json
 )
 

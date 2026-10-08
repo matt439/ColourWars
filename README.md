@@ -17,7 +17,9 @@ Choose **Single Match**, **Best of 3** (first to two wins), or **Best of 5**
 (first to three). Series keep the same players, teams, weapons and stage;
 draws award no win and are replayed. Pause > Restart restarts only the current
 round. After the series, Play Series Again clears the wins. Quitting discards
-the session. For solo practice, choose Single Match and 1 Player.
+the session. For solo practice, choose Single Match and 1 Player. The experimental
+[Movement Course](docs/polish-movement-course.md) provides repeatable jump, landing
+and platform-drop trials; select it explicitly, as Random uses the three arenas.
 
 Results show cumulative series wins and each player's **surface held** as a
 percentage of the arena. Capturing neutral or enemy paint earns its area;
@@ -145,8 +147,9 @@ From an x64 Visual Studio Developer shell with `VCPKG_ROOT` set:
 
 These commands configure/build the game, then compile small native checks
 against its actual objects. They cover full-cost ammunition and held-fire
-recovery, exposed paint surfaces and ownership, and settings persistence and
-write-failure recovery. They use no graphics device or speaker and isolate
+recovery, exposed paint surfaces and ownership, settings persistence and
+write-failure recovery, camera framing and aiming, jump buffering and ledge grace,
+and stage eligibility for Random. They use no graphics device or speaker and isolate
 all save writes. Evidence stays under `out/acceptance/<preset>/`. CI runs the
 same checks; `-SkipBuild` is for an already-current build.
 
@@ -206,8 +209,8 @@ committing to produce a package labelled with that commit.
 
 Only the assets listed in [cmake/release_assets.cmake](cmake/release_assets.cmake)
 are packaged; configure checks that the list matches the runtime manifest.
-The ZIP includes licence notices, the seven compiled fonts, both sprite sheets,
-all three levels, tuning, presentation and the optional sound-bank definition.
+The ZIP includes licence notices, the seven compiled fonts, three sprite sheets,
+the three arenas and Movement Course, tuning, presentation and the optional sound-bank definition.
 It is always silent: local wave banks and source audio are excluded even on a
 developer's machine. Development art, content tools and saves are excluded too.
 Do not distribute the normal `game/` build directory in place of this ZIP.

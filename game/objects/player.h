@@ -98,6 +98,9 @@ public:
     void end_contacts();
 
 	void set_player_input(const PlayerInputData& input);
+    // Context changes discard queued jumps and require a release before a new
+    // press. Level calls this when a pause/reconnect menu covers the match.
+    void reset_jump_input();
     void set_camera(const labrador::Camera& camera);
 
 	const mattmath::RectangleF& rectangle() const;
@@ -153,6 +156,9 @@ private:
     float health_ = 0.0f;
     float damage_sound_timer_ = 0.0f;
     float air_time_ = 0.0f;
+    float jump_buffer_remaining_ = 0.0f;
+    float ledge_grace_remaining_ = 0.0f;
+    bool jump_waiting_for_release_ = false;
     bool facing_right_ = true;
     bool showing_debug_ = false;
     PlayerState state_ = PlayerState::alive;
@@ -206,6 +212,7 @@ private:
 
 	void update_movement(float dt);
 	void do_jump(float dt);
+    void start_jump();
 
     PlayerAnimationState calculate_animation_state() const;
 

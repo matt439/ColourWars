@@ -24,6 +24,7 @@ add_executable(ColourWars WIN32
     objects/paint_tile.cpp
     objects/player.cpp
     objects/player_builder.cpp
+    objects/player_camera.cpp
     objects/player_input.cpp
     objects/projectile.cpp
     objects/projectile_ball.cpp
@@ -32,6 +33,7 @@ add_executable(ColourWars WIN32
     objects/projectile_mist.cpp
     objects/projectile_rolling.cpp
     objects/projectile_spray.cpp
+    objects/stage.cpp
     objects/structure.cpp
     objects/structure_paintable.cpp
     objects/team_colour.cpp

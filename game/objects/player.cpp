@@ -204,6 +204,36 @@ void Player::end_contacts()
         this->set_move_state(PlayerMoveState::in_air);
     }
 
+    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f)
+    {
+        this->reset_jump_input();
+    }
+    else if (this->hit_ceiling_this_tick_)
+    {
+        // A ceiling is not support for a grace jump. Wait for a later landing
+        // before consuming a buffer, including simultaneous floor/ceiling hits.
+        this->ledge_grace_remaining_ = 0.0f;
+    }
+    else if (this->supported_this_tick_)
+    {
+        this->ledge_grace_remaining_ = this->player_tuning().ledge_grace_time;
+        if (this->move_state() == PlayerMoveState::on_drop_down_ground &&
+            this->input_.drop_through && !this->input_.jump_pressed)
+        {
+            // A held drop will leave this platform on the next update. An old
+            // airborne buffer must not turn that intent into a bounce instead.
+            this->reset_jump_input();
+        }
+        else if (this->jump_buffer_remaining_ > 0.0f &&
+            !this->jump_waiting_for_release_)
+        {
+            // Contacts run after movement. Launch here so a buffered landing
+            // responds on the contact tick, after every separation is complete.
+            this->start_jump();
+            this->update_animation_state();
+        }
+    }
+
     this->supported_this_tick_ = false;
     this->hit_ceiling_this_tick_ = false;
 }
@@ -292,7 +322,17 @@ void Player::on_projectile_contact(CollisionObjectType other_type)
 
 void Player::update(float dt)
 {
-    if (this->state_ == PlayerState::alive)
+    if (this->state_ == PlayerState::alive && this->health_ <= 0.0f)
+    {
+        // Damage arrives during contacts, after update. Retire input before the
+        // next movement tick so a fatal hit cannot produce a final jump.
+        this->state_ = PlayerState::dead;
+        this->reset_jump_input();
+        this->set_move_state(PlayerMoveState::in_air);
+        this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume * this->preferences_->sfx_gain());
+    }
+
+    else if (this->state_ == PlayerState::alive)
     {
         this->update_movement(dt);
 
@@ -302,16 +342,11 @@ void Player::update(float dt)
 
         AnimationObject::update(dt);
 
-        if (this->health_ <= 0.0f)
-        {
-			this->state_ = PlayerState::dead;
-			this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume * this->preferences_->sfx_gain());
-        }
-
         this->damage_sound_timer_ += dt;
     }
     else if (this->state_ == PlayerState::dead)
     {
+        this->reset_jump_input();
         this->respawn_timer_ -= dt;
 
         if (this->respawn_timer_ <= 0.0f)
@@ -374,11 +409,26 @@ void Player::update_prev_rectangle()
 
 void Player::update_movement(float dt)
 {
+    this->jump_buffer_remaining_ = std::max(0.0f, this->jump_buffer_remaining_ - dt);
+    this->ledge_grace_remaining_ = std::max(0.0f, this->ledge_grace_remaining_ - dt);
+    if (this->jump_waiting_for_release_)
+    {
+        if (!this->input_.jump_held && !this->input_.jump_pressed)
+        {
+            this->jump_waiting_for_release_ = false;
+        }
+    }
+    else if (this->input_.jump_pressed)
+    {
+        this->jump_buffer_remaining_ = this->player_tuning().jump_buffer_time;
+    }
+
     const PlayerInputData input = this->input_;
     const float x_input = input.x_movement;
     const PlayerMoveState move_state = this->move_state();
     const bool drop_through = this->input_.drop_through;
-    const bool jump_pressed = this->input_.jump_pressed;
+    const bool jump_pressed = this->input_.jump_pressed &&
+        !this->jump_waiting_for_release_;
 
     if (are_equal(MovingObject::velocity_x(), 0.0f) && x_input != 0.0f)
     {
@@ -449,6 +499,7 @@ void Player::update_movement(float dt)
     if (move_state == PlayerMoveState::on_drop_down_ground && drop_through &&
         !jump_pressed)
     {
+        this->reset_jump_input();
         MovingObject::alter_velocity_y(this->player_tuning().drop_down_velocity);
         this->set_move_state(PlayerMoveState::dropping_down);
     }
@@ -473,15 +524,16 @@ void Player::update_movement(float dt)
 void Player::do_jump(float dt)
 {
     const PlayerMoveState move_state = this->move_state();
-    const bool jump_pressed = this->input_.jump_pressed;
+    const bool jump_requested = !this->jump_waiting_for_release_ &&
+        (this->input_.jump_pressed || this->jump_buffer_remaining_ > 0.0f);
+    // A context reset blocks new takeoffs, but pausing an existing jump must
+    // preserve its held-button extension when simulation resumes.
     const bool jump_held = this->input_.jump_held;
    
-    if (this->is_on_ground() && jump_pressed)
+    if ((this->is_on_ground() || this->ledge_grace_remaining_ > 0.0f) &&
+        jump_requested)
     {
-		MovingObject::set_velocity_y(this->player_tuning().jump_launch_velocity);
-		this->set_air_time(0.0f);
-		this->set_move_state(PlayerMoveState::jumping);
-		this->sound_bank_->play_wave(this->jump_sound_, this->player_tuning().jump_sound.volume * this->preferences_->sfx_gain());
+		this->start_jump();
 	}
 	else if (move_state == PlayerMoveState::on_ceiling)
 	{
@@ -515,6 +567,17 @@ void Player::do_jump(float dt)
     }
 }
 
+void Player::start_jump()
+{
+    this->jump_buffer_remaining_ = 0.0f;
+    this->ledge_grace_remaining_ = 0.0f;
+    MovingObject::set_velocity_y(std::max(this->player_tuning().jump_launch_velocity,
+        -this->player_tuning().max_velocity.y));
+    this->set_air_time(0.0f);
+    this->set_move_state(PlayerMoveState::jumping);
+    this->sound_bank_->play_wave(this->jump_sound_, this->player_tuning().jump_sound.volume * this->preferences_->sfx_gain());
+}
+
 RectangleF Player::bounds() const
 {
     // Include the held weapon in the visual bounds used for scene culling.
@@ -528,6 +591,13 @@ RectangleF Player::bounds() const
 void Player::set_player_input(const PlayerInputData& input)
 {
 	this->input_ = input;
+}
+
+void Player::reset_jump_input()
+{
+    this->jump_buffer_remaining_ = 0.0f;
+    this->ledge_grace_remaining_ = 0.0f;
+    this->jump_waiting_for_release_ = true;
 }
 
 const RectangleF& Player::rectangle() const
@@ -606,6 +676,12 @@ const PlayerAnimationTuning& Player::animation_info(
 void Player::respawn()
 {
     this->rectangle_.set_position(this->respawn_position_);
+    this->prev_rectangle_ = this->rectangle_;
+    this->reset_jump_input();
+    this->set_move_state(PlayerMoveState::in_air);
+    this->set_air_time(0.0f);
+    this->supported_this_tick_ = false;
+    this->hit_ceiling_this_tick_ = false;
     MovingObject::set_rotation(0.0f);
     MovingObject::set_velocity(Vector2F::ZERO);
 	this->health_ = this->player_tuning().starting_health;

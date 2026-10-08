@@ -1,0 +1,145 @@
+#include "game/pch.h"
+#include "game/objects/level_loaded_info.h"
+#include "game/objects/stage.h"
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <iterator>
+#include <stdexcept>
+
+namespace
+{
+	void require(bool condition, const char* message)
+	{
+		if (!condition) { throw std::runtime_error(message); }
+	}
+
+	void check_no_candidates(const StageList& stages)
+	{
+		bool rejected = false;
+		try
+		{
+			random_stage_index(stages, 0);
+		}
+		catch (const std::runtime_error& error)
+		{
+			rejected = std::string(error.what()).find("no eligible arenas") != std::string::npos;
+		}
+		require(rejected, "Random with no candidates must fail clearly rather than pick an excluded stage");
+	}
+
+	void check_mapping()
+	{
+		const StageList mixed{
+			{ "first_excluded", "First excluded", "", false },
+			{ "first_arena", "First arena", "" },
+			{ "middle_excluded", "Middle excluded", "", false },
+			{ "second_arena", "Second arena", "", true },
+			{ "last_excluded", "Last excluded", "", false }
+		};
+		require(random_stage_indices(mixed) == std::vector<size_t>{ 1, 3 },
+			"Random eligibility must preserve manifest indices and default to inclusion");
+		for (size_t draw = 0; draw < 12; ++draw)
+		{
+			require(random_stage_index(mixed, draw) == (draw % 2 == 0 ? 1u : 3u),
+				"Random selection returned an excluded index or skipped an eligible index");
+		}
+		check_no_candidates({});
+		check_no_candidates({ mixed.front(), mixed.back() });
+	}
+
+	void check_shipped_stages(const std::filesystem::path& content)
+	{
+		const std::string manifest_path = (content / "manifest.json").string();
+		const labrador::JsonDocument manifest = labrador::read_json_file(manifest_path.c_str());
+		const labrador::JsonValue assets = manifest.root().array("assets");
+		StageList stages;
+		bool course_found = false;
+		size_t defaulted_arenas = 0;
+		for (size_t group = 0; group < assets.size(); ++group)
+		{
+			const labrador::JsonValue asset = assets.at(group);
+			if (asset.string("kind") != "level") { continue; }
+			const labrador::JsonValue names = asset.array("names");
+			for (size_t index = 0; index < names.size(); ++index)
+			{
+				const std::string name = names.at(index).as_string();
+				const std::string path = (content / asset.string("directory") / (name + ".json")).string();
+				const LevelLoadedInfo info(path.c_str());
+				info.validate();
+				stages.push_back({ name, info.display_name(), info.icon_frame(), info.include_in_random() });
+				if (name == "movement_course")
+				{
+					course_found = true;
+					require(!info.include_in_random(), "Movement Course must require an explicit stage choice");
+				}
+				const labrador::JsonDocument source = labrador::read_json_file(path.c_str());
+				if (!source.root().has("include_in_random"))
+				{
+					++defaulted_arenas;
+					require(info.include_in_random(), "Existing stages without metadata must stay eligible");
+				}
+			}
+		}
+		require(course_found && defaulted_arenas >= 3,
+			"Acceptance needs the explicit course and the three unchanged existing arenas");
+		const std::vector<size_t> candidates = random_stage_indices(stages);
+		require(!candidates.empty(), "Shipped content needs eligible match arenas");
+		for (size_t draw = 0; draw < candidates.size(); ++draw)
+		{
+			const size_t index = random_stage_index(stages, draw);
+			require(index == candidates[draw] && stages[index].include_in_random &&
+				stages[index].name != "movement_course", "Shipped Random selection admitted the course");
+		}
+		std::cout << "Shipped stage selection: " << stages.size() << " explicit stages; "
+			<< candidates.size() << " Random candidates.\n";
+	}
+
+	void check_invalid_metadata(const std::filesystem::path& content,
+		const std::filesystem::path& scratch)
+	{
+		std::ifstream input(content / "levels/movement_course.json", std::ios::binary);
+		require(input.good(), "Could not read the course for metadata rejection acceptance");
+		std::string source{ std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>() };
+		const std::string field = "\"include_in_random\": false";
+		const size_t position = source.find(field);
+		require(position != std::string::npos, "Course metadata fixture needs its authored boolean field");
+		source.replace(position, field.size(), "\"include_in_random\": \"false\"");
+		const std::filesystem::path fixture = scratch / "stage-selection-invalid.json";
+		{
+			std::ofstream output(fixture, std::ios::binary);
+			output << source;
+			require(output.good(), "Could not write isolated invalid stage metadata");
+		}
+		bool rejected = false;
+		try
+		{
+			const LevelLoadedInfo invalid(fixture.string().c_str());
+			invalid.validate();
+		}
+		catch (const std::runtime_error& error)
+		{
+			rejected = std::string(error.what()).find("include_in_random") != std::string::npos;
+		}
+		require(rejected, "Startup validation must reject non-boolean stage eligibility by field name");
+	}
+}
+
+int main(int argc, char** argv)
+{
+	try
+	{
+		require(argc == 2, "Usage: stage_selection.exe <game/content directory>");
+		check_mapping();
+		check_shipped_stages(argv[1]);
+		check_invalid_metadata(argv[1], std::filesystem::absolute(argv[0]).parent_path());
+		std::cout << "PASS stage selection: explicit course, eligible Random mapping, defaults and rejection guards.\n";
+		return 0;
+	}
+	catch (const std::exception& error)
+	{
+		std::cerr << "FAIL stage selection: " << error.what() << '\n';
+		return 1;
+	}
+}

@@ -400,6 +400,7 @@ Presentation::Presentation(const char* path)
 	this->results_menu_ = read_results_menu(root);
 	this->prompt_bar_ = read_prompt_bar(root);
 	this->hud_ = read_hud(root);
+	this->camera_.reference_height = read_positive(root.object("camera"), "reference_height");
 	const JsonValue match = root.object("match");
 	this->match_.reference_size = read_positive_vector(match, "reference_size");
 	this->match_.countdown_size = read_positive_vector(match, "countdown_size");
@@ -431,6 +432,11 @@ Presentation::Presentation(const char* path)
 const MatchPresentation& Presentation::match() const
 {
 	return this->match_;
+}
+
+const CameraPresentation& Presentation::camera() const
+{
+	return this->camera_;
 }
 
 void Presentation::validate_resources(const RenderResources& render,

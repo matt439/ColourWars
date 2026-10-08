@@ -455,15 +455,10 @@ void Level::resolve_mouse_aim(Player* player, size_t view_index,
 	const labrador::Viewport viewport =
 		this->viewport_manager_->player_viewport(static_cast<int>(view_index));
 
-	// Convert the player centre to window client pixels: camera transform, then pane offset.
-	const Vector2F centre_in_view =
-		player->camera().calculate_view_position(player->center());
-	const Vector2F centre_on_screen = centre_in_view + viewport.position();
-
 	const Vector2F cursor(static_cast<float>(this->mouse_->state().position.x),
 		static_cast<float>(this->mouse_->state().position.y));
-
-	const Vector2F aim = cursor - centre_on_screen;
+	const Vector2F aim = PlayerCamera::mouse_direction(
+		player->center(), cursor, viewport, player->camera());
 
 	// A cursor exactly on the player requests no direction; do not normalize zero.
 	if (aim == Vector2F::ZERO)
@@ -472,7 +467,7 @@ void Level::resolve_mouse_aim(Player* player, size_t view_index,
 	}
 
 	input.shoot_direction_requested = true;
-	input.shoot_direction = aim.normalized();
+	input.shoot_direction = aim;
 	input.shoot_angle = input.shoot_direction.angle();
 }
 
@@ -538,10 +533,12 @@ void Level::refresh_player_cameras()
 	for (size_t i = 0; i < this->players_.size(); ++i)
 	{
 		Player* player = this->players_[i];
-		Camera camera = this->camera_tools_.calculate_camera(
+		const Camera camera = this->player_camera_.follow(
 			player->center(),
 			this->viewport_manager_->player_viewport(
-				static_cast<int>(i)).size(),
+				static_cast<int>(i)),
+			this->resolution_manager_->resolution_vec().y,
+			this->presentation_->camera(),
 			player->camera(),
 			this->camera_bounds_);
 		player->set_camera(camera);
@@ -590,8 +587,8 @@ void Level::refresh_views()
 		{
 			const Player* player = this->players_[i];
 			this->scene_->add_view(
-				this->viewport_manager_->player_viewport(
-					static_cast<int>(i)),
+				Viewport(this->viewport_manager_->player_viewport(
+					static_cast<int>(i)).pixel_rect()),
 				player->camera());
 		}
 	}
@@ -613,8 +610,9 @@ void Level::stop_player_sounds() const
 
 void Level::pause_player_sounds() const
 {
-	for (const Player* player : this->players_)
+	for (Player* player : this->players_)
 	{
+		player->reset_jump_input();
 		player->pause_sounds();
 	}
 }

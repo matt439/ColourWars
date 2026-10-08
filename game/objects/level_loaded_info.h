@@ -31,6 +31,7 @@ public:
 	// The stage menu renders live arena objects rather than the legacy icon.
 	std::string display_name() const;
 	std::string icon_frame() const;
+	bool include_in_random() const;
 
 	std::vector<mattmath::Vector2F> team_a_spawns() const;
 	std::vector<mattmath::Vector2F> team_b_spawns() const;

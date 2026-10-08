@@ -215,6 +215,9 @@ try {
         throw "Missing editor executable: $editor. Run without -SkipBuild first."
     }
     Test-EditorWindow -Executable $editor -Level (Join-Path $run 'king_of_the_hill.json') -RunDirectory $run
+    $courseRun = Join-Path $run 'movement-course'
+    [System.IO.Directory]::CreateDirectory($courseRun) | Out-Null
+    Test-EditorWindow -Executable $editor -Level (Join-Path $run 'movement_course.json') -RunDirectory $courseRun
     Write-Host "PASS level editor acceptance ($Preset). Evidence: $run"
 }
 finally {

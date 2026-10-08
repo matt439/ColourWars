@@ -1933,7 +1933,8 @@ void MainMenuStageSelect::update_stage_select_visuals()
 		this->menu_style().heading_colour);
 	this->selection_hint_->set_text(confirmed ?
 		L"Confirm again to start.\nBack to change your choice." : random ?
-		L"Any arena. Same paint battle.\nConfirm to lock your choice." :
+		L"Random: " + std::to_wstring(random_stage_indices(*this->data()->stages()).size()) +
+		L" available arenas.\nConfirm to lock your choice." :
 		L"Left/Right to browse.\nConfirm to lock your choice.");
 	this->set_player_prompts(confirmed ? std::vector<PromptBar::Prompt>{
 		{ L"A", L"Start match" }, { L"B", L"Unlock arena" } } :
@@ -1976,7 +1977,8 @@ std::wstring MainMenuStageSelect::slot_display_name(int slot) const
 }
 int MainMenuStageSelect::pick_random_stage() const
 {
-	return rand() % this->random_slot();
+	return static_cast<int>(random_stage_index(*this->data()->stages(),
+		static_cast<size_t>(rand())));
 }
 void MainMenuStageSelect::init()
 {
@@ -2081,7 +2083,8 @@ void MainMenuStageSelect::init()
 void MainMenuStageSelect::cycle_stages(labrador::Direction direction)
 {
 	// Slots run 0..n-1 for the stages and n for Random, and the cursor wraps.
-	const int last = this->random_slot();
+	const int last = random_stage_indices(*this->data()->stages()).empty() ?
+		this->random_slot() - 1 : this->random_slot();
 	int slot = this->select_state_.slot;
 	if (direction == labrador::Direction::left)
 	{

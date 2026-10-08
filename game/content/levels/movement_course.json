@@ -1,0 +1,476 @@
+{
+    "_comment": [
+        "Experimental movement blockout; route and acceptance notes: docs/polish-movement-course.md.",
+        "Spawn coordinates are character top-left, sized from tuning.player.size (52 by 120).",
+        "Music is muted while the replacement-audio work is pending; the schema still resolves its existing wave name."
+    ],
+    "display_name": "Movement Course",
+    "include_in_random": false,
+    "icon_frame": "stage_turbulence",
+    "sound": {
+        "sound_bank_name": "sound_bank_1",
+        "music_name": "holly_dolly",
+        "music_volume": 0.0
+    },
+    "spawn_locations": {
+        "team_a": [
+            {
+                "x": 100.0,
+                "y": 875.0
+            },
+            {
+                "x": 190.0,
+                "y": 875.0
+            },
+            {
+                "x": 280.0,
+                "y": 875.0
+            },
+            {
+                "x": 370.0,
+                "y": 875.0
+            }
+        ],
+        "team_b": [
+            {
+                "x": 5180.0,
+                "y": 875.0
+            },
+            {
+                "x": 5270.0,
+                "y": 875.0
+            },
+            {
+                "x": 5360.0,
+                "y": 875.0
+            },
+            {
+                "x": 5450.0,
+                "y": 875.0
+            }
+        ]
+    },
+    "level_bounds": {
+        "out_of_bounds": {
+            "x": -100.0,
+            "y": -100.0,
+            "width": 5880.0,
+            "height": 1700.0
+        },
+        "camera_bounds": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 5680.0,
+            "height": 1480.0
+        },
+        "zoom_out_start_bounds": {
+            "x": 0.0,
+            "y": 400.0,
+            "width": 1920.0,
+            "height": 1080.0
+        },
+        "zoom_out_finish_bounds": {
+            "x": 0.0,
+            "y": 0.0,
+            "width": 5680.0,
+            "height": 1480.0
+        }
+    },
+    "collision_objects": [
+        {
+            "name": "boundary_left",
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": -80.0,
+                "y": 0.0,
+                "width": 80.0,
+                "height": 1480.0
+            },
+            "collision_type": "STRUCTURE",
+            "colour": "SLATE_GREY"
+        },
+        {
+            "name": "boundary_right",
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 5680.0,
+                "y": 0.0,
+                "width": 80.0,
+                "height": 1480.0
+            },
+            "collision_type": "STRUCTURE",
+            "colour": "SLATE_GREY"
+        },
+        {
+            "name": "boundary_ceiling",
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": -80.0,
+                "y": -80.0,
+                "width": 5840.0,
+                "height": 80.0
+            },
+            "collision_type": "STRUCTURE",
+            "colour": "SLATE_GREY"
+        },
+        {
+            "name": "recovery_floor",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 0.0,
+                "y": 1400.0,
+                "width": 5680.0,
+                "height": 80.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "left": false,
+                "top": true,
+                "right": false,
+                "bottom": false
+            }
+        },
+        {
+            "name": "spawn_a_runway",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 0.0,
+                "y": 1000.0,
+                "width": 800.0,
+                "height": 40.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
+            }
+        },
+        {
+            "name": "short_landing_long_takeoff",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 980.0,
+                "y": 1000.0,
+                "width": 400.0,
+                "height": 40.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
+            }
+        },
+        {
+            "name": "long_landing_running_takeoff",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1780.0,
+                "y": 1000.0,
+                "width": 700.0,
+                "height": 40.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
+            }
+        },
+        {
+            "name": "running_landing",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 3040.0,
+                "y": 1000.0,
+                "width": 940.0,
+                "height": 40.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
+            }
+        },
+        {
+            "name": "spawn_b_runway",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 4880.0,
+                "y": 1000.0,
+                "width": 800.0,
+                "height": 40.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
+            }
+        },
+        {
+            "name": "short_step",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 3980.0,
+                "y": 940.0,
+                "width": 120.0,
+                "height": 40.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
+            }
+        },
+        {
+            "name": "held_step",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 4100.0,
+                "y": 820.0,
+                "width": 220.0,
+                "height": 40.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
+            }
+        },
+        {
+            "name": "high_step",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 4320.0,
+                "y": 660.0,
+                "width": 220.0,
+                "height": 40.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
+            }
+        },
+        {
+            "name": "high_step_return",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 4540.0,
+                "y": 820.0,
+                "width": 220.0,
+                "height": 40.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
+            }
+        },
+        {
+            "name": "short_step_return",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 4760.0,
+                "y": 940.0,
+                "width": 120.0,
+                "height": 40.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
+            }
+        },
+        {
+            "name": "low_ceiling",
+            "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 3460.0,
+                "y": 800.0,
+                "width": 340.0,
+                "height": 40.0
+            },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "colour": "GAINSBORO",
+            "paintable_faces": {
+                "left": true,
+                "top": true,
+                "right": true,
+                "bottom": true
+            }
+        },
+        {
+            "name": "drop_through_platform",
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 470.0,
+                "y": 840.0,
+                "width": 230.0,
+                "height": 16.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "LIGHT_STEEL_BLUE"
+        },
+        {
+            "name": "short_gap_recovery_low",
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 830.0,
+                "y": 1260.0,
+                "width": 120.0,
+                "height": 16.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "LIGHT_STEEL_BLUE"
+        },
+        {
+            "name": "short_gap_recovery_high",
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 830.0,
+                "y": 1120.0,
+                "width": 120.0,
+                "height": 16.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "LIGHT_STEEL_BLUE"
+        },
+        {
+            "name": "long_gap_recovery_low",
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1510.0,
+                "y": 1260.0,
+                "width": 140.0,
+                "height": 16.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "LIGHT_STEEL_BLUE"
+        },
+        {
+            "name": "long_gap_recovery_high",
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 1510.0,
+                "y": 1120.0,
+                "width": 140.0,
+                "height": 16.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "LIGHT_STEEL_BLUE"
+        },
+        {
+            "name": "running_gap_recovery_low",
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 2700.0,
+                "y": 1260.0,
+                "width": 160.0,
+                "height": 16.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "LIGHT_STEEL_BLUE"
+        },
+        {
+            "name": "running_gap_recovery_high",
+            "type": "Structure",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 2700.0,
+                "y": 1120.0,
+                "width": 160.0,
+                "height": 16.0
+            },
+            "collision_type": "STRUCTURE_JUMP_THROUGH",
+            "colour": "LIGHT_STEEL_BLUE"
+        }
+    ],
+    "non_collision_objects": [
+        {
+            "name": "course_background",
+            "type": "Visual",
+            "sheet_name": "sprite_sheet_1",
+            "frame_name": "square_white_4",
+            "rectangle": {
+                "x": 0.0,
+                "y": 0.0,
+                "width": 5680.0,
+                "height": 1480.0
+            },
+            "colour": "DARK_SLATE_GREY"
+        }
+    ]
+}

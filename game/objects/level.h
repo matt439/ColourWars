@@ -11,7 +11,7 @@
 #include "engine/input/mouse.h"
 #include "engine/render/viewport_manager.h"
 #include "game/objects/debug_text.h"
-#include "engine/render/camera_tools.h"
+#include "game/objects/player_camera.h"
 #include "game/objects/interface_gameplay.h"
 #include "game/objects/level_end_info.h"
 #include "engine/render/text_drop_shadow.h"
@@ -129,7 +129,7 @@ private:
 	labrador::RenderResources::SpriteSheetHandle overlay_sheet_;
 	labrador::SpriteSheet::frame_handle overlay_fill_;
 
-	labrador::CameraTools camera_tools_;
+	PlayerCamera player_camera_;
 
 	std::unique_ptr<InterfaceGameplay> interface_gameplay_ = nullptr;
 	std::unique_ptr<DebugText> debug_text_ = nullptr;

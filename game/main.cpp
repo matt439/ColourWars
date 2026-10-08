@@ -85,7 +85,7 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 						"the display_name in " + directory + name + ".json");
 
 					stages.push_back(Stage{ name, info->display_name(),
-						info->icon_frame() });
+						info->icon_frame(), info->include_in_random() });
 					level_infos.add(name, std::move(info));
 				},
 				nullptr

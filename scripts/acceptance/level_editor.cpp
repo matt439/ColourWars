@@ -83,7 +83,8 @@ namespace
 
     void check_shipped_levels(const fs::path& repo, const fs::path& scratch)
     {
-        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters" })
+        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters",
+            "movement_course" })
         {
             const fs::path source = repo / "game/content/levels" / (std::string(name) + ".json");
             const std::string original = contents(source);
