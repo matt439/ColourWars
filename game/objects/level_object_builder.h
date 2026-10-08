@@ -42,7 +42,8 @@ private:
 
 	std::unique_ptr<labrador::CollisionObject>
 		build_collision_object(const labrador::JsonValue& json,
-			const TeamColour& team_colours) const;
+			const TeamColour& team_colours,
+			std::span<const mattmath::RectangleF> paint_obstacles = {}) const;
 
 	std::unique_ptr<labrador::GameObject>
 		build_non_collision_object(const labrador::JsonValue& json) const;

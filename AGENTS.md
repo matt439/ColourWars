@@ -60,10 +60,17 @@ the manifest. See [game/directory_consts.h](game/directory_consts.h).
 
 ## Tests
 
-**There are no tests in this repository and no `ctest` step, by design.** The
-tests live with the engine, and Labrador puts its tests, benchmark and sample
+**There are no CTest targets in this repository, by design.** The engine test
+suite lives with the engine, and Labrador puts its tests, benchmark and sample
 behind `PROJECT_IS_TOP_LEVEL` — so consuming it as a submodule brings in the
 library and nothing else. A `ctest` run from here is empty, not broken.
+
+Consumer acceptance checks live under `scripts/acceptance/`. From an x64 VS
+Developer shell, `scripts/run-acceptance.ps1 -Preset x64-debug` (or
+`x64-release`) builds the game and checks its actual objects for ammunition,
+paint coverage and save regressions. They do not create a graphics/audio device
+or touch the player's save. `scripts/check-startup.ps1` separately checks a
+hidden game process, isolated save, diagnostics and graceful shutdown.
 
 To run engine tests, configure the submodule as its own top-level project:
 
@@ -74,10 +81,11 @@ ctest --test-dir out/labrador/x64-debug --output-on-failure
 ctest --test-dir out/labrador/x64-debug -R <name>    # a single test
 ```
 
-CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) configures and builds
-both presets and then checks the game reaches its window — the one thing only a
-consumer can prove is that the pinned engine revision and this game still build
-and link together.
+CI ([.github/workflows/ci.yml](.github/workflows/ci.yml)) builds both presets,
+runs consumer acceptance and checks startup. Debug startup is required; Release
+may skip only the exact missing-hardware-adapter diagnostic because its engine
+build has no software fallback. Content failures, crashes and other startup
+errors fail CI. Release also builds and inspects the redistributable ZIP.
 
 ## Audio: a fresh clone is silent, and that is correct
 

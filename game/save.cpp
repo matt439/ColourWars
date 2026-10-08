@@ -112,8 +112,15 @@ void Save::load_save_file()
             }
         }
 
-        // Attempt to persist recovered settings or defaults; save_to_file reports failure.
-        this->save_to_file();
+        // There is no settings screen yet to report a failed first save.
+        if (!this->save_to_file())
+        {
+            const std::wstring message = L"Could not write " +
+                path_from_utf8(path).wstring() +
+                L".\nYour settings will not be remembered.";
+            MessageBoxW(nullptr, message.c_str(), L"ColourWars - save failure",
+                MB_OK | MB_ICONWARNING);
+        }
         return;
     }
 
@@ -190,7 +197,7 @@ bool Save::write_save_file(const SaveData& data) const
     return false;
 }
 
-void Save::save_to_file() const
+bool Save::save_to_file() const
 {
     auto start = std::chrono::system_clock::now();
     auto legacy_start = std::chrono::system_clock::to_time_t(start);
@@ -204,32 +211,31 @@ void Save::save_to_file() const
     if (write_save_file(this->save_data_))
     {
 		std::cout << "Save was successful.\n";
-        return;
+        return true;
 	}
 
-    // Report write failures visibly: the WIN32 executable may have no console,
-    // and the in-memory settings remain active even if persistence fails.
+    // The caller owns visible feedback; settings remain active in memory.
     const std::string message = "Could not write " + save_file_path() +
         ".\nYour settings will not be remembered.";
     fprintf(stderr, "save failure: %s\n", message.c_str());
-    const std::wstring wide_message = L"Could not write " +
-        path_from_utf8(save_file_path()).wstring() +
-        L".\nYour settings will not be remembered.";
-    MessageBoxW(nullptr, wide_message.c_str(), L"ColourWars - save failure",
-        MB_OK | MB_ICONWARNING);
+    return false;
 }
 
-void Save::set_resolution_and_save(ScreenResolution resolution)
+bool Save::set_display_settings_and_save(ScreenResolution resolution,
+    bool fullscreen, TeamColourPair palette)
 {
+    // Validate the whole selection before changing any active preference.
+    if (this->convert_resolution_to_ivec(resolution).x <= 0)
+    {
+        throw std::invalid_argument("Invalid display resolution");
+    }
+    TeamColourTools::palette_key(palette);
     this->save_data_.resolution = resolution;
-    this->save_to_file();
+    this->save_data_.fullscreen = fullscreen;
+    this->save_data_.team_palette = palette;
+    return this->save_to_file();
 }
 
-void Save::set_full_screen_and_save(bool full_screen)
-{
-    this->save_data_.fullscreen = full_screen;
-	this->save_to_file();
-}
 ScreenResolution Save::convert_ivec_to_resolution(
     const Vector2I& vec) const
 {
@@ -292,20 +298,12 @@ TeamColourPair Save::team_palette() const
     return this->save_data_.team_palette;
 }
 
-void Save::set_team_palette_and_save(TeamColourPair palette)
-{
-    // Validate before changing the in-memory settings or writing the file.
-    TeamColourTools::palette_key(palette);
-    this->save_data_.team_palette = palette;
-    this->save_to_file();
-}
-
 const PlaySettings& Save::play_settings() const
 {
     return this->save_data_.play;
 }
 
-void Save::set_play_settings_and_save(const PlaySettings& settings)
+bool Save::set_play_settings_and_save(const PlaySettings& settings)
 {
     if (settings.aim_sensitivity < 1 || settings.aim_sensitivity > 5 ||
         settings.music_volume < 0 || settings.music_volume > 100 ||
@@ -314,5 +312,5 @@ void Save::set_play_settings_and_save(const PlaySettings& settings)
         throw std::invalid_argument("Play settings are outside their supported range");
     }
     this->save_data_.play = settings;
-    this->save_to_file();
+    return this->save_to_file();
 }

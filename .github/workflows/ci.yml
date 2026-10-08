@@ -61,6 +61,11 @@ jobs:
           call "%VCVARS%"
           cmake --build --preset ${{ matrix.preset }}
 
+      - name: Consumer acceptance checks
+        run: |
+          call "%VCVARS%"
+          pwsh -NoProfile -File scripts/run-acceptance.ps1 -Preset ${{ matrix.preset }} -SkipBuild
+
       - name: Package Release
         if: matrix.preset == 'x64-release'
         run: |
@@ -86,50 +91,30 @@ jobs:
             }
           }
 
-      # Launch from the workspace root to verify executable-relative content paths
-      # and the missing-audio fallback. This is advisory because headless runners
-      # may lack a D3D11 adapter; inspect stderr for application startup failures.
+      # Debug supports WARP and must start. The pinned engine's Release refuses
+      # software adapters: only its exact no-hardware diagnostic may be skipped.
+      # Content errors, crashes, missing windows and shutdown errors fail CI.
       - name: A clone with no audio still starts, from anywhere
-        continue-on-error: true
         shell: pwsh
         run: |
           $dir = "out/build/${{ matrix.preset }}/game"
-          # Release exercises the extracted, redistributable package outside
-          # the checkout. Debug retains the ordinary build smoke check.
+          $arguments = @{
+            Executable = Join-Path $dir 'ColourWars.exe'
+            OutputDirectory = 'out/validation/startup'
+            RequireNoAudio = $true
+          }
           if ('${{ matrix.preset }}' -eq 'x64-release') {
             $dir = Join-Path $env:RUNNER_TEMP "ColourWars-release/ColourWars-windows-x64"
+            $arguments.Executable = Join-Path $dir 'ColourWars.exe'
+            $arguments.AllowNoHardwareAdapter = $true
+            $arguments.SystemOnlyPath = $true
           }
-          if (Test-Path "$dir/sounds/sound_bank_1.xwb") {
-            Write-Error "the runner has a wave bank; this check assumes a clone has none"
-            exit 1
-          }
-          $p = Start-Process -FilePath "$dir/ColourWars.exe" `
-            -WorkingDirectory "${{ github.workspace }}" -PassThru `
-            -RedirectStandardError "$dir/startup.err" `
-            -RedirectStandardOutput "$dir/startup.out"
-          Start-Sleep -Seconds 15
-          $p.Refresh()
-          $exited = $p.HasExited
-          $window = 0
-          if (-not $exited) {
-            $window = $p.MainWindowHandle.ToInt64()
-            $p.Kill()
-          }
-          Write-Output "--- stderr ---"
-          $stderr = Get-Content "$dir/startup.err" -ErrorAction SilentlyContinue
-          $stderr
-          if ($exited) {
-            Write-Error "the game exited during startup (code $($p.ExitCode))"
-            exit 1
-          }
-          # A startup exception leaves a live modal MessageBox. Check stderr
-          # as well as the process and window to distinguish it from success.
-          if ($stderr -match "startup failure") {
-            Write-Error "the game threw during startup"
-            exit 1
-          }
-          if ($window -eq 0) {
-            Write-Error "the game is running but never opened a window"
-            exit 1
-          }
-          Write-Output "the game reached its window without a wave bank, from the workspace root"
+          & ./scripts/check-startup.ps1 @arguments
+
+      - name: Upload startup evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: startup-${{ matrix.preset }}
+          path: out/validation/startup
+          if-no-files-found: ignore

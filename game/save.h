@@ -22,16 +22,17 @@ class Save
 public:
 	Save() = default;
 	void load_save_file();
-	void save_to_file() const;
+	// A failed write leaves the active preferences intact and returns false.
+	// Interactive callers report that outcome in their own settings screen.
+	bool save_to_file() const;
 	SaveData save_data() const;
-	void set_resolution_and_save(labrador::ScreenResolution resolution);
+	bool set_display_settings_and_save(labrador::ScreenResolution resolution,
+		bool fullscreen, TeamColourPair palette);
 	labrador::ScreenResolution resolution() const;
 	bool fullscreen() const;
-	void set_full_screen_and_save(bool full_screen);
 	TeamColourPair team_palette() const;
-	void set_team_palette_and_save(TeamColourPair palette);
 	const PlaySettings& play_settings() const;
-	void set_play_settings_and_save(const PlaySettings& settings);
+	bool set_play_settings_and_save(const PlaySettings& settings);
 private:
 	SaveData save_data_ = SaveData();
 	SaveData load_from_json(const char* json_path) const;

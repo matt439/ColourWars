@@ -119,10 +119,40 @@ The game runs from its own output directory, which the build fills with
 `game/content/` — so `out/build/x64-debug/game/ColourWars.exe` runs from
 anywhere.
 
-There is no `ctest` step here and that is not an oversight: the tests live with
+There is no `ctest` step here: the engine's test suite lives with
 the engine. Labrador puts its tests, its benchmark and its sample behind
 `PROJECT_IS_TOP_LEVEL`, so consuming it as a submodule brings in the library
 and nothing else.
+
+### Consumer acceptance
+
+From an x64 Visual Studio Developer shell with `VCPKG_ROOT` set:
+
+```powershell
+./scripts/run-acceptance.ps1 -Preset x64-debug
+./scripts/run-acceptance.ps1 -Preset x64-release
+```
+
+These commands configure/build the game, then compile small native checks
+against its actual objects. They cover full-cost ammunition and held-fire
+recovery, exposed paint surfaces and ownership, and settings persistence and
+write-failure recovery. They use no graphics device or speaker and isolate
+all save writes. Evidence stays under `out/acceptance/<preset>/`. CI runs the
+same checks; `-SkipBuild` is for an already-current build.
+
+Check runtime startup separately, preferably against the extracted Release ZIP:
+
+```powershell
+./scripts/check-startup.ps1 -Executable C:/Games/ColourWars/ColourWars.exe -RequireNoAudio -SystemOnlyPath
+```
+
+It starts hidden from an unrelated directory with an isolated save, checks the
+game window and diagnostics, then closes gracefully. CI requires Debug startup
+(the engine supports software rendering there). Release startup may be explicitly
+skipped only for the engine's exact missing-hardware-adapter error; all application
+failures fail CI. Local checks default to requiring startup. These automated
+checks do not establish controller feel, audible balance or multiplayer quality;
+the hardware acceptance checklist is in [the roadmap](docs/feature-roadmap.md).
 
 ### Release ZIP
 

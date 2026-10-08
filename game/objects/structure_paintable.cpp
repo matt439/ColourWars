@@ -18,6 +18,7 @@ StructurePaintable::StructurePaintable(
 	CollisionObjectType collision_type,
 	const TeamColour& team_colours,
 	const PaintableFaces& faces,
+	std::span<const RectangleF> paint_obstacles,
 	const Colour& color,
 	float rotation,
 	const Vector2F& origin,
@@ -32,7 +33,7 @@ StructurePaintable::StructurePaintable(
 		paint_(paint)
 {
 	this->preferences_ = preferences;
-	this->paint_tiles_ = this->generate_paint_tiles();
+	this->paint_tiles_ = this->generate_paint_tiles(paint_obstacles);
 	this->sound_bank_ = audio_resources->sound_bank(paint->sound_bank);
 	this->paint_sound_ =
 		this->sound_bank_->resolve_wave(paint->splash_sound.name);
@@ -114,110 +115,87 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 	}
 }
 
-std::vector<PaintTile> StructurePaintable::generate_paint_tiles()
+std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
+    std::span<const RectangleF> paint_obstacles)
 {
-	auto paint_tiles = std::vector<PaintTile>();
-	this->paint_strips_.clear();
+    std::vector<PaintTile> paint_tiles;
+    this->paint_strips_.clear();
+    const RectangleF rectangle = this->rectangle();
+    const PaintTuning& paint = *this->paint_;
 
-	const PaintTuning& paint = *this->paint_;
+    const auto append_face = [&](bool enabled, bool along_x, bool leading)
+    {
+        if (!enabled)
+        {
+            return;
+        }
+        const float low = along_x ? rectangle.left() : rectangle.top();
+        const float high = along_x ? rectangle.right() : rectangle.bottom();
+        const float edge = along_x
+            ? (leading ? rectangle.top() : rectangle.bottom())
+            : (leading ? rectangle.left() : rectangle.right());
+        std::vector<std::pair<float, float>> covered;
+        for (const RectangleF& obstacle : paint_obstacles)
+        {
+            const float near_edge = along_x ? obstacle.top() : obstacle.left();
+            const float far_edge = along_x ? obstacle.bottom() : obstacle.right();
+            // A blocker must reach the face from its outward side. This also
+            // ensures the structure's own rectangle never covers its faces.
+            const bool covers = leading
+                ? near_edge < edge && far_edge >= edge
+                : near_edge <= edge && far_edge > edge;
+            const float begin = std::max(low,
+                along_x ? obstacle.left() : obstacle.top());
+            const float end = std::min(high,
+                along_x ? obstacle.right() : obstacle.bottom());
+            if (covers && begin < end)
+            {
+                covered.emplace_back(begin, end);
+            }
+        }
+        std::sort(covered.begin(), covered.end());
 
-	// Keep at least one tile on a face smaller than the requested granularity.
-	const int num_paint_tiles_x = std::max(1,
-		static_cast<int>(std::fabs(this->rectangle().width / paint.size.x)));
-	const float paint_tile_width =
-		this->rectangle().width / num_paint_tiles_x;
+        const auto append_strip = [&](float begin, float end)
+        {
+            if (begin >= end)
+            {
+                return;
+            }
+            const float length = end - begin;
+            const float authored_pitch = along_x ? paint.size.x : paint.size.y;
+            const int count = std::max(1, static_cast<int>(length / authored_pitch));
+            const float pitch = length / count;
+            this->paint_strips_.push_back(PaintStrip{
+                static_cast<int>(paint_tiles.size()), count, begin, pitch, along_x });
+            for (int i = 0; i < count; ++i)
+            {
+                // Fit even partial edge tiles to the exposed segment, so
+                // rendering, contact lookup and scored area agree exactly.
+                const float position = begin + pitch * i;
+                const RectangleF tile = along_x
+                    ? RectangleF(position, leading ? edge : edge - paint.thickness,
+                        pitch, paint.thickness)
+                    : RectangleF(leading ? edge : edge - paint.thickness, position,
+                        paint.thickness, pitch);
+                paint_tiles.emplace_back(tile, this->paint_,
+                    this->render_resources(), this->team_colours_);
+            }
+        };
 
-	const int num_paint_tiles_y = std::max(1,
-		static_cast<int>(std::fabs(this->rectangle().height / paint.size.y)));
-	const float paint_tile_height =
-		this->rectangle().height / num_paint_tiles_y;
+        float cursor = low;
+        for (const std::pair<float, float>& interval : covered)
+        {
+            append_strip(cursor, interval.first);
+            cursor = std::max(cursor, interval.second);
+        }
+        append_strip(cursor, high);
+    };
 
-	if (this->faces_.top)
-	{
-		this->paint_strips_.push_back(PaintStrip{
-			static_cast<int>(paint_tiles.size()), num_paint_tiles_x,
-			this->rectangle().left(), paint_tile_width, true });
-
-		for (int i = 0; i < num_paint_tiles_x; i++)
-		{
-			auto paint_tile_rectangle = RectangleF(
-				this->rectangle().left() + (paint_tile_width * i),
-				this->rectangle().top(),
-				paint_tile_width,
-				paint.thickness);
-			auto paint_tile = PaintTile(paint_tile_rectangle,
-			                            this->paint_,
-			                            this->render_resources(),
-			                            this->team_colours_);
-			paint_tiles.push_back(paint_tile);
-
-		}
-	}
-
-	if (this->faces_.bottom)
-	{
-		this->paint_strips_.push_back(PaintStrip{
-			static_cast<int>(paint_tiles.size()), num_paint_tiles_x,
-			this->rectangle().left(), paint_tile_width, true });
-
-		for (int i = 0; i < num_paint_tiles_x; i++)
-		{
-			auto paint_tile_rectangle = RectangleF(
-				this->rectangle().left() + (paint_tile_width * i),
-				this->rectangle().bottom() - paint.thickness,
-				paint_tile_width,
-				paint.thickness);
-			auto paint_tile = PaintTile(paint_tile_rectangle,
-			                            this->paint_,
-			                            this->render_resources(),
-			                            this->team_colours_);
-			paint_tiles.push_back(paint_tile);
-		}
-	}
-
-	if (this->faces_.left)
-	{
-		this->paint_strips_.push_back(PaintStrip{
-			static_cast<int>(paint_tiles.size()), num_paint_tiles_y,
-			this->rectangle().top(), paint_tile_height, false });
-
-		for (int i = 0; i < num_paint_tiles_y; i++)
-		{
-			auto paint_tile_rectangle = RectangleF(
-				this->rectangle().left(),
-				this->rectangle().top() + (paint_tile_height * i),
-				paint.thickness,
-				paint_tile_height);
-			auto paint_tile = PaintTile(paint_tile_rectangle,
-			                            this->paint_,
-			                            this->render_resources(),
-			                            this->team_colours_);
-			paint_tiles.push_back(paint_tile);
-		}
-	}
-
-	if (this->faces_.right)
-	{
-		this->paint_strips_.push_back(PaintStrip{
-			static_cast<int>(paint_tiles.size()), num_paint_tiles_y,
-			this->rectangle().top(), paint_tile_height, false });
-
-		for (int i = 0; i < num_paint_tiles_y; i++)
-		{
-			auto paint_tile_rectangle = RectangleF(
-				this->rectangle().right() - paint.thickness,
-				this->rectangle().top() + (paint_tile_height * i),
-				paint.thickness,
-				paint_tile_height);
-			auto paint_tile = PaintTile(paint_tile_rectangle,
-			                            this->paint_,
-			                            this->render_resources(),
-			                            this->team_colours_);
-			paint_tiles.push_back(paint_tile);
-		}
-	}
-
-	return paint_tiles;
+    append_face(this->faces_.top, true, true);
+    append_face(this->faces_.bottom, true, false);
+    append_face(this->faces_.left, false, true);
+    append_face(this->faces_.right, false, false);
+    return paint_tiles;
 }
 PaintTotal StructurePaintable::paint_total() const
 {

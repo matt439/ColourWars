@@ -140,3 +140,41 @@ and quit. Checked visible text bounds/overlap and inspected rendered results
 and end menus. A normal Release startup used an isolated save. Physical
 multiplayer play still needs a hardware check. The engine pin and source are
 unchanged.
+
+## Review follow-up: ammunition, coverage and release checks
+
+Implemented after the 2026-10-08 review:
+
+- Each shot requires its full authored ammunition cost, with a small tolerance
+  for floating-point rounding. Holding fire while empty waits for sufficient
+  regeneration; the last paid shot still gets its sound and visual feedback.
+- Level construction clips paintable faces against adjacent solid rectangles.
+  Buried surface contributes neither tiles nor scoring area, while partial
+  exposed edges remain paintable. Ramps retain their deliberate paint pass-through.
+- Display/palette Apply validates the whole selection and saves once. Both
+  settings screens distinguish saved preferences from changes active only for
+  the current run when writing fails; the old saved file remains intact.
+- Native consumer acceptance cases are retained under `scripts/acceptance/` and
+  run in both CI presets through `scripts/run-acceptance.ps1`. The standalone
+  startup script checks isolated saves, the actual game window, diagnostics and
+  graceful shutdown. Application errors fail CI; Release's exact missing-GPU
+  diagnostic is the only permitted infrastructure skip.
+
+Validation: Debug and Release configure/build and all retained acceptance cases
+passed under `/W4 /WX`. The rebuilt Release ZIP passed content/DLL inspection
+and startup with a system-only PATH, unrelated working directory and isolated
+save; Debug startup also passed. Both closed gracefully. Malformed content,
+crashes and misleading adapter-error messages were rejected by the startup
+script; its exact-adapter skip was checked separately. The engine is unchanged.
+
+The next acceptance work requires hardware and is still outstanding:
+
+1. Run the extracted Release ZIP on a clean Windows 10/11 x64 machine.
+2. Play two- and four-player sessions across all three stages and five weapons,
+   checking ammo exhaustion/recovery, paint coverage, readable HUDs and controls.
+3. Exercise joining, disconnect/reconnect during setup and play, pause/settings,
+   focus changes, fullscreen/resize, series draws, rematches and return to menu.
+4. On the local build with private audio, check music/SFX gains, muting,
+   suspension and resumed weapon loops by ear. The distributable ZIP stays silent.
+5. Relaunch and confirm saved settings; record device models, display layout,
+   build revision and observed failures before choosing the next feature increment.

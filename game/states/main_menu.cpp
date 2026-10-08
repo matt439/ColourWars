@@ -373,6 +373,8 @@ void MainMenuOptions::adjust_focused_value(labrador::Direction direction)
 
 	this->play_wave(this->direction_sound_);
 	row->adjust(direction);
+	this->status_->set_text(L"Apply to save changes.");
+	this->status_->set_colour(this->menu_style().highlight);
 }
 
 void MainMenuOptions::apply_settings()
@@ -384,20 +386,22 @@ void MainMenuOptions::apply_settings()
 	// Always save the windowed preset, including when entering fullscreen.
 	// Apply it only when returning to or staying windowed, before setting
 	// fullscreen, so entering fullscreen does not trigger an intermediate resize.
-	this->save()->set_resolution_and_save(this->resolution_selection_);
+	const bool saved = this->save()->set_display_settings_and_save(
+		this->resolution_selection_, fs, this->team_palette_selection_);
 
 	if (!fs)
 	{
 		this->data()->application()->set_resolution(this->resolution_selection_);
 	}
 
-	this->save()->set_full_screen_and_save(fs);
 	this->apply_fullscreen_setting(fs);
-	this->save()->set_team_palette_and_save(this->team_palette_selection_);
 
 	// Refresh from the applied display state.
 	this->refresh_resolution_row();
-
+	this->status_->set_text(saved ? L"Settings applied and saved." :
+		L"Settings active for this run. Could not save for next time.");
+	this->status_->set_colour(saved ? this->menu_style().highlight :
+		this->menu_style().warning);
 }
 
 void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
@@ -507,6 +511,12 @@ void MainMenuOptions::init()
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
+	this->status_ = std::make_unique<UiTextDropShadow>(
+		"status", L"", this->presentation().prompt_bar().font,
+		this->calculate_widget_position(2, 6), this->render_resources(),
+		this->menu_style().highlight, this->menu_style().shadow_colour,
+		this->menu_style().detail_shadow_offset);
+
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->background_.get());
@@ -520,6 +530,7 @@ void MainMenuOptions::init()
 	this->text_container_->add_child(this->controls_.get());
 	this->text_container_->add_child(this->apply_.get());
 	this->text_container_->add_child(this->back_.get());
+	this->text_container_->add_child(this->status_.get());
 
 	// Value rows respond to left/right; confirming them has no action.
 	this->focus_.add(this->resolution_row_.get());

@@ -51,6 +51,7 @@ void ControlsSettingsMenu::init()
 					minimum, maximum);
 				this->refresh_values();
 				this->status_->set_text(L"Apply to save changes for all players.");
+				this->status_->set_colour(this->menu_style().highlight);
 			});
 	};
 	this->aim_ = make_row("aim", L"Stick sensitivity", 0, this->selection_.aim_sensitivity, 1, 5, 1);
@@ -86,7 +87,7 @@ void ControlsSettingsMenu::refresh_values()
 
 void ControlsSettingsMenu::apply_settings()
 {
-	this->save()->set_play_settings_and_save(this->selection_);
+	const bool saved = this->save()->set_play_settings_and_save(this->selection_);
 	if (this->pausing_player() < 0)
 	{
 		const PresentationSound& music = this->presentation().main_menu().music;
@@ -94,7 +95,10 @@ void ControlsSettingsMenu::apply_settings()
 			music.volume * this->save()->play_settings().music_gain());
 	}
 	this->play_wave(this->confirm_sound_);
-	this->status_->set_text(L"Applied. Settings are shared by all players.");
+	this->status_->set_text(saved ? L"Applied and saved for all players." :
+		L"Active for this run. Could not save.");
+	this->status_->set_colour(saved ? this->menu_style().highlight :
+		this->menu_style().warning);
 }
 
 void ControlsSettingsMenu::close()

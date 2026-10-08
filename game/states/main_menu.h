@@ -98,6 +98,7 @@ private:
 
 	std::unique_ptr<labrador::UiTextDropShadow> apply_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> status_ = nullptr;
 	labrador::ScreenResolution resolution_selection_ = labrador::ScreenResolution::s_1920_1080;
 	bool full_screen_selection_ = true;
 	TeamColourPair team_palette_selection_ = TeamColourPair::random;

@@ -154,6 +154,9 @@ protected:
 	labrador::RenderResources* render_resources() const override;
 
 private:
+	// Permit only rounding at the full-shot boundary, relative to that shot's cost.
+	bool can_afford_shot() const;
+
 	static labrador::SoundBank::EffectHandle resolve_loop_sound(
 		const labrador::SoundBank& sound_bank,
 		const WeaponLoopSounds& loop_sounds, PlayerTeam team, int sound_index);

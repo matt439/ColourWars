@@ -153,7 +153,8 @@ LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
 
 std::unique_ptr<CollisionObject>
 	LevelObjectBuilder::build_collision_object(const JsonValue& json,
-		const TeamColour& team_colours) const
+		const TeamColour& team_colours,
+		std::span<const RectangleF> paint_obstacles) const
 {
 	const std::string type = json.string("type");
 	if (type == "Structure")
@@ -199,6 +200,7 @@ std::unique_ptr<CollisionObject>
 			collision_type,
 			team_colours,
 			faces,
+			paint_obstacles,
 			colour_of(json));
 	}
 	if (type == "StructureRamp")
@@ -261,12 +263,25 @@ std::vector<std::unique_ptr<CollisionObject>>
 	LevelObjectBuilder::build_collision_objects(const JsonValue& json,
 		const TeamColour& team_colours) const
 {
+	// Only flat structures block paint. Ramps deliberately let projectiles pass
+	// through, and decorative art must not remove reachable scoring surface.
+	std::vector<RectangleF> paint_obstacles;
+	for (size_t index = 0; index < json.size(); ++index)
+	{
+		const JsonValue object = json.at(index);
+		const std::string type = object.string("type");
+		if (type == "Structure" || type == "StructurePaintable")
+		{
+			paint_obstacles.push_back(decode_rectangle(object));
+		}
+	}
+
 	std::vector<std::unique_ptr<CollisionObject>> collision_objects;
 	collision_objects.reserve(json.size());
 	for (size_t index = 0; index < json.size(); ++index)
 	{
 		collision_objects.push_back(
-			build_collision_object(json.at(index), team_colours));
+			build_collision_object(json.at(index), team_colours, paint_obstacles));
 	}
 	return collision_objects;
 }

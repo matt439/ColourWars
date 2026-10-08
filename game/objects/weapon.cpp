@@ -1,6 +1,8 @@
 #include "game/pch.h"
 #include "game/objects/weapon.h"
 
+#include <limits>
+
 using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
@@ -202,13 +204,11 @@ bool Weapon::check_if_shooting_and_ammo_update(
     const Vector2F& /*player_velocity*/,
     float dt)
 {
-    bool ok_to_shoot = input.primary_shoot;
-
-
+    const bool ok_to_shoot = input.primary_shoot;
     bool result = false;
 
     if (this->shoot_timer() > this->shoot_interval() &&
-        this->ammo() > 0.0f &&
+        this->can_afford_shot() &&
         ok_to_shoot)
     {
         result = true;
@@ -235,12 +235,24 @@ bool Weapon::check_if_shooting_and_ammo_update(
     this->alter_ammo_timer(dt);
     this->alter_shoot_timer(dt);
 
-    this->shooting_this_update_ = ok_to_shoot && this->ammo() > 0.0f;
+    // Keep the final paid shot visible/audible for its tick, then stop the
+    // held-fire presentation while waiting for enough ammo for another shot.
+    this->shooting_this_update_ = result ||
+        (ok_to_shoot && this->can_afford_shot());
 
     this->handle_shoot_sound(result, this->shooting_this_update_);
 
     return result;
 
+}
+bool Weapon::can_afford_shot() const
+{
+    const float cost = this->ammo_usage();
+    // Bound the allowance to less than one millionth of a shot, even when
+    // authors choose a tiny cost. A tank-sized epsilon could buy those shots.
+    const float rounding = cost * (8.0f * std::numeric_limits<float>::epsilon());
+    return this->ammo() >= cost ||
+        (this->ammo() > 0.0f && cost - this->ammo() <= rounding);
 }
 void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
 {

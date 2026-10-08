@@ -10,6 +10,7 @@
 #include "engine/audio/sound_bank.h"
 #include "engine/render/colour.h"
 #include "game/tuning.h"
+#include <span>
 
 
 // Faces on which the structure generates paint tiles.
@@ -25,6 +26,8 @@ class StructurePaintable final : public Structure, public PaintableObject
 {
 public:
 	StructurePaintable() = delete;
+	// Clip authored faces against flat terrain while constructing the tiles.
+	// The obstacle span is consumed immediately and is not retained.
 	StructurePaintable(const std::string& sheet_name,
 		const std::string& frame_name,
 		const mattmath::RectangleF& sprite_rectangle,
@@ -36,6 +39,7 @@ public:
 		CollisionObjectType collision_type,
 		const TeamColour& team_colours,
 		const PaintableFaces& faces,
+		std::span<const mattmath::RectangleF> paint_obstacles = {},
 		const labrador::Colour& color = labrador::Colour::white,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
@@ -68,11 +72,12 @@ private:
 		bool along_x = true;
 	};
 
-	// At most four: one per painted face.
+	// A covered face can split into several exposed strips.
 	std::vector<PaintStrip> paint_strips_ = std::vector<PaintStrip>();
 
 	// Build tiles and record the strips used by on_contact for candidate lookup.
-	std::vector<PaintTile> generate_paint_tiles();
+	std::vector<PaintTile> generate_paint_tiles(
+		std::span<const mattmath::RectangleF> paint_obstacles);
 	labrador::SoundBank* sound_bank_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
 
