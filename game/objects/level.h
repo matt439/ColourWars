@@ -113,9 +113,21 @@ private:
 	int projectile_count_ = 0;
 
 	std::unique_ptr<labrador::TextDropShadow> countdown_text_ = nullptr;
+	std::unique_ptr<labrador::TextDropShadow> countdown_heading_ = nullptr;
+	mattmath::RectangleF countdown_card_;
 
-	// Shared controls reminder, visible during the opening countdown.
-	std::unique_ptr<labrador::TextDropShadow> controls_text_ = nullptr;
+	// One shared reminder per input device type present in the match.
+	struct ControlsReminder
+	{
+		std::unique_ptr<labrador::TextDropShadow> heading;
+		std::unique_ptr<labrador::TextDropShadow> text;
+		mattmath::RectangleF card;
+	};
+	std::vector<ControlsReminder> controls_reminders_;
+	const Presentation* presentation_ = nullptr;
+	labrador::RenderResources* render_resources_ = nullptr;
+	labrador::RenderResources::SpriteSheetHandle overlay_sheet_;
+	labrador::SpriteSheet::frame_handle overlay_fill_;
 
 	labrador::CameraTools camera_tools_;
 
@@ -189,6 +201,9 @@ private:
 	void draw_player_overlay(int view_index, labrador::DrawList& list) const;
 
 	void draw_countdown_text(labrador::DrawList& draw_list) const;
+	void draw_opening_card(labrador::DrawList& draw_list,
+		const mattmath::RectangleF& rectangle, float scale) const;
+	float opening_scale() const;
 
 	// Sets the beat, then re-centres on what it actually measures.
 	void set_countdown_text(const std::wstring& text);

@@ -6,6 +6,7 @@
 #include "game/states/confirmation_state.h"
 #include "game/states/menu_page.h"
 #include "game/states/option_row.h"
+#include "game/states/stage_preview.h"
 #include "engine/core/state_context.h"
 #include "engine/render/colour.h"
 
@@ -260,18 +261,26 @@ private:
 	};
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<labrador::UiTexture> stage_icon_ = nullptr;
+	std::unique_ptr<StagePreview> stage_preview_;
+	std::unique_ptr<labrador::UiTexture> preview_edge_;
+	std::unique_ptr<labrador::UiTexture> preview_background_;
+	std::unique_ptr<labrador::UiTexture> briefing_background_;
+	std::unique_ptr<labrador::UiTexture> briefing_accent_;
 	std::unique_ptr<labrador::UiTextDropShadow> stage_name_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> ready_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> navigation_;
+	std::unique_ptr<labrador::UiTextDropShadow> selection_status_;
+	std::unique_ptr<labrador::UiTextDropShadow> selection_hint_;
+	std::unique_ptr<labrador::UiTextDropShadow> random_mark_;
+	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> briefing_text_;
 	SelectState select_state_ = SelectState();
+	int displayed_slot_ = -1;
+	ConfirmationState displayed_state_ = ConfirmationState::unconfirmed;
 	void update_stage_select_visuals();
-	void unconfirm_all_widgets();
 	// Returns the stage's slot, or the first slot for an empty or unknown name.
 	int slot_of(const std::string& stage_name) const;
 	// One past the final stage.
 	int random_slot() const;
 	// Presentation for stage and Random slots, shared by init and updates.
-	std::string slot_icon_frame(int slot) const;
 	std::wstring slot_display_name(int slot) const;
 	// Chooses a random stage slot.
 	int pick_random_stage() const;

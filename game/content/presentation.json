@@ -95,8 +95,16 @@
       "unselected": "WHITE"
     },
     "stage_select": {
-      "spacing": { "x": 0.0, "y": 140.0 },
-      "size": { "x": 760.0, "y": 540.0 },
+      "preview_position": { "x": 150.0, "y": 330.0 },
+      "preview_size": { "x": 1010.0, "y": 500.0 },
+      "name_position": { "x": 150.0, "y": 245.0 },
+      "navigation_position": { "x": 150.0, "y": 865.0 },
+      "briefing": {
+        "position": { "x": 1230.0, "y": 245.0 },
+        "size": { "x": 540.0, "y": 665.0 },
+        "spacing": { "x": 0.0, "y": 75.0 }
+      },
+      "briefing_padding": { "x": 32.0, "y": 28.0 },
       "selected": "75EDD7",
       "unselected": "WHITE"
     },
@@ -241,6 +249,15 @@
       "colour": "WHITE",
       "shadow_colour": "BLACK"
     }
+  },
+
+  "match": {
+    "reference_size": { "x": 1920.0, "y": 1080.0 },
+    "countdown_size": { "x": 360.0, "y": 310.0 },
+    "countdown_center_y": 0.44,
+    "controls_margin": { "x": 72.0, "y": 48.0 },
+    "controls_padding": { "x": 28.0, "y": 20.0 },
+    "controls_gap": 32.0
   },
 
   "debug_overlay": {

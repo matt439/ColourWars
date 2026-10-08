@@ -9,6 +9,9 @@ and paint meters are labelled; menus mark the focused choice with both a
 colour and a panel. The three arenas use pale paintable surfaces against
 muted, panelled backgrounds. Colours and spacing are authored in
 `game/content/presentation.json`; arena decoration lives in the level JSONs.
+Stage selection previews the actual arena objects alongside the match setup,
+with a separate confirmation before starting. The opening countdown shows
+compact controls cards for the keyboard/mouse and gamepads present in the match.
 
 Choose **Single Match**, **Best of 3** (first to two wins), or **Best of 5**
 (first to three). Series keep the same players, teams, weapons and stage;

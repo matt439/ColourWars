@@ -6,7 +6,7 @@
         "overview": 2.0,
         "countdown_text": {
             "font": "gill_sans_mt_bold_144",
-            "colour": "DARK_GRAY",
+            "colour": "OLD_LACE",
             "shadow_colour": "BLACK",
             "shadow_offset": { "x": 5.0, "y": 5.0 },
             "scale": 2.0

@@ -1891,23 +1891,46 @@ void MainMenuStageSelect::set_level_settings() const
 }
 void MainMenuStageSelect::update_stage_select_visuals()
 {
-	this->unconfirm_all_widgets();
-
 	const int slot = this->select_state_.slot;
-	this->stage_icon_->set_sprite_frame(this->slot_icon_frame(slot));
-	this->stage_name_->set_text(this->slot_display_name(slot));
-	if (this->select_state_.state == ConfirmationState::confirmed)
+	const ConfirmationState state = this->select_state_.state;
+	if (slot == this->displayed_slot_ && state == this->displayed_state_)
 	{
-		this->ready_->set_hidden(false);
+		return;
 	}
-}
-void MainMenuStageSelect::unconfirm_all_widgets()
-{
-	this->stage_icon_->set_colour(
-		this->look().stage_select.unselected);
-	this->stage_name_->set_colour(
-		this->look().stage_select.unselected);
-	this->ready_->set_hidden(true);
+	const bool random = slot == this->random_slot();
+	const bool confirmed = state == ConfirmationState::confirmed;
+	const StageSelectPresentation& look = this->look().stage_select;
+	this->stage_preview_->set_stage(random ? std::string() :
+		this->data()->stages()->at(static_cast<size_t>(slot)).name);
+	this->stage_name_->set_text(this->slot_display_name(slot));
+	// User-authored stage names share the preview's width with the briefing.
+	const RectangleF name_bounds = RectangleF::union_of(
+		this->stage_name_->text_bounds_at(Vector2F::ZERO, 1.0f),
+		this->stage_name_->text_bounds_at(this->menu_style().item_shadow_offset, 1.0f));
+	const float name_scale = std::min(1.0f, look.preview_size.x / name_bounds.width);
+	this->stage_name_->set_scale(name_scale);
+	this->stage_name_->set_shadow_scale(name_scale);
+	this->stage_name_->set_shadow_offset(this->menu_style().item_shadow_offset * name_scale);
+	this->stage_name_->set_colour(confirmed ? look.selected : look.unselected);
+	this->random_mark_->set_hidden(!random);
+	this->navigation_->set_text(random ? L"<   SURPRISE ME   >" :
+		L"<   ARENA " + std::to_wstring(slot + 1) + L" / " +
+		std::to_wstring(this->random_slot()) + L"   >");
+	this->preview_edge_->set_colour(confirmed ? look.selected :
+		this->menu_style().panel_edge_colour);
+	this->selection_status_->set_text(confirmed ? L"ARENA LOCKED" : L"FIND YOUR ARENA");
+	this->selection_status_->set_colour(confirmed ? look.selected :
+		this->menu_style().heading_colour);
+	this->selection_hint_->set_text(confirmed ?
+		L"Confirm again to start.\nBack to change your choice." : random ?
+		L"Any arena. Same paint battle.\nConfirm to lock your choice." :
+		L"Left/Right to browse.\nConfirm to lock your choice.");
+	this->set_player_prompts(confirmed ? std::vector<PromptBar::Prompt>{
+		{ L"A", L"Start match" }, { L"B", L"Unlock arena" } } :
+		std::vector<PromptBar::Prompt>{ { L"Left/Right", L"Browse arenas" },
+			{ L"A", L"Lock arena" }, { L"B", L"Back" } });
+	this->displayed_slot_ = slot;
+	this->displayed_state_ = state;
 }
 int MainMenuStageSelect::slot_of(const std::string& stage_name) const
 {
@@ -1924,19 +1947,6 @@ int MainMenuStageSelect::slot_of(const std::string& stage_name) const
 int MainMenuStageSelect::random_slot() const
 {
 	return static_cast<int>(this->data()->stages()->size());
-}
-std::string MainMenuStageSelect::slot_icon_frame(int slot) const
-{
-	if (slot == this->random_slot())
-	{
-		return "random";
-	}
-	const StageList* stages = this->data()->stages();
-	if (slot >= 0 && slot < static_cast<int>(stages->size()))
-	{
-		return stages->at(static_cast<size_t>(slot)).icon_frame;
-	}
-	return "error";
 }
 std::wstring MainMenuStageSelect::slot_display_name(int slot) const
 {
@@ -1960,74 +1970,102 @@ int MainMenuStageSelect::pick_random_stage() const
 }
 void MainMenuStageSelect::init()
 {
-	this->set_player_prompts({
-		{ L"Left/Right", L"Change stage" },
-		{ L"A", L"Confirm, then start" },
-		{ L"B", L"Back" } });
-
 	this->select_state_.slot = this->slot_of(this->level_settings()->stage());
+	const MenuStyle& style = this->menu_style();
+	const StageSelectPresentation& look = this->look().stage_select;
+	RenderResources* resources = this->render_resources();
 
-	this->set_widget_spacing(this->look().stage_select.spacing);
-
-	this->background_ = std::make_unique<UiTexture>(
-		"background",
-		this->look().backdrop_sheet,
-		this->look().backdrop_frame,
-		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
-		this->render_resources(),
+	this->background_ = std::make_unique<UiTexture>("background",
+		this->look().backdrop_sheet, this->look().backdrop_frame,
+		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION), resources,
 		this->look().play_background_colour);
+	this->heading_ = std::make_unique<UiTextDropShadow>("heading",
+		L"Choose your arena", style.heading_font,
+		this->calculate_widget_position(0, 0), resources,
+		style.heading_colour, style.shadow_colour, style.heading_shadow_offset);
 
-	this->heading_ = std::make_unique<UiTextDropShadow>(
-		"heading",
-		L"Stage Select",
-		this->menu_style().heading_font,
-		this->calculate_widget_position(0, 0),
-		this->render_resources(),
-		this->menu_style().heading_colour,
-		this->menu_style().shadow_colour,
-		this->menu_style().heading_shadow_offset);
+	const RectangleF preview(look.preview_position, look.preview_size);
+	RectangleF edge = preview;
+	edge.inflate(style.rule_height);
+	this->preview_edge_ = std::make_unique<UiTexture>("preview_edge",
+		"sprite_sheet_1", "pixel", edge, resources, style.panel_edge_colour);
+	this->preview_background_ = std::make_unique<UiTexture>("preview_background",
+		"sprite_sheet_1", "pixel", preview, resources,
+		this->presentation().hud().player_identity_background_colour);
+	this->stage_preview_ = std::make_unique<StagePreview>("stage_preview",
+		preview, this->data());
+	this->stage_name_ = std::make_unique<UiTextDropShadow>("stage_name",
+		L"", style.item_font, look.name_position, resources,
+		look.unselected, style.shadow_colour, style.item_shadow_offset);
+	this->navigation_ = std::make_unique<UiTextDropShadow>("navigation",
+		L"", style.detail_font, look.navigation_position, resources,
+		style.highlight, style.shadow_colour, style.detail_shadow_offset);
+	this->random_mark_ = std::make_unique<UiTextDropShadow>("random_mark",
+		L"?", this->look().announcement_font, Vector2F::ZERO, resources,
+		style.highlight, style.shadow_colour, style.title_shadow_offset);
+	this->random_mark_->set_position(preview.center() -
+		this->random_mark_->bounds().center());
 
-
-	// Use the selected stage's frame immediately: UiTexture resolves it
-	// during construction.
-	this->stage_icon_ = std::make_unique<UiTexture>(
-		"stage_icon",
-		"sprite_sheet_1",
-		this->slot_icon_frame(this->select_state_.slot),
-		RectangleF(this->calculate_widget_position(0, 1), this->look().stage_select.size),
-		this->render_resources(),
-		this->look().stage_select.unselected);
-
-	this->stage_name_ = std::make_unique<UiTextDropShadow>(
-		"stage_name",
-		this->slot_display_name(this->select_state_.slot),
-		this->menu_style().item_font,
-		this->calculate_widget_position(0, 5),
-		this->render_resources(),
-		this->look().stage_select.unselected,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
-
-	this->ready_ = std::make_unique<UiTextDropShadow>(
-		"ready",
-		L"READY?",
-		this->look().announcement_font,
-		this->background_->rectangle().center() - Vector2F(400.0f, 100.0f),
-		this->render_resources(),
-		this->look().stage_select.selected,
-		this->menu_style().shadow_colour,
-		this->menu_style().heading_shadow_offset,
-		true);
+	const RectangleF briefing(look.briefing.position, look.briefing.size);
+	this->briefing_background_ = std::make_unique<UiTexture>("briefing_background",
+		"sprite_sheet_1", "pixel", briefing, resources,
+		this->presentation().hud().player_identity_background_colour);
+	this->briefing_accent_ = std::make_unique<UiTexture>("briefing_accent",
+		"sprite_sheet_1", "pixel", RectangleF(briefing.position(),
+			Vector2F(briefing.width, style.accent_width)), resources, style.highlight);
+	const Vector2F info = briefing.position() + look.briefing_padding;
+	const Vector2F row = look.briefing.spacing;
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
-	this->texture_container_->add_child(this->background_.get());
-	this->texture_container_->add_child(this->stage_icon_.get());
-
+	for (UiObject* widget : std::initializer_list<UiObject*>{ this->background_.get(),
+		this->preview_edge_.get(), this->preview_background_.get(),
+		this->stage_preview_.get(), this->briefing_background_.get(),
+		this->briefing_accent_.get() })
+	{
+		this->texture_container_->add_child(widget);
+	}
 	this->text_container_ = std::make_unique<UiContainer>("text_container");
-	this->text_container_->add_child(this->heading_.get());
-	this->text_container_->add_child(this->stage_name_.get());
-	this->text_container_->add_child(this->ready_.get());
+	for (UiObject* widget : std::initializer_list<UiObject*>{ this->heading_.get(),
+		this->stage_name_.get(), this->navigation_.get(), this->random_mark_.get() })
+	{
+		this->text_container_->add_child(widget);
+	}
 
+	const auto add_briefing = [this, resources, &style, &info, &row](
+		const std::string& name, const std::wstring& text,
+		const std::string& font, float line, const Colour& colour)
+	{
+		auto label = std::make_unique<UiTextDropShadow>(name, text, font,
+			info + row * line, resources, colour, style.shadow_colour,
+			style.detail_shadow_offset);
+		this->text_container_->add_child(label.get());
+		this->briefing_text_.push_back(std::move(label));
+	};
+	const bool solo = this->player_count() == 1;
+	const int best_of = this->level_settings()->best_of();
+	add_briefing("briefing_label", L"MATCH SETUP", style.brand_font, 0.0f,
+		style.highlight);
+	add_briefing("mode", solo ? L"SOLO PRACTICE" : best_of == 1 ?
+		L"SINGLE MATCH" : L"BEST OF " + std::to_wstring(best_of),
+		style.detail_font, 1.0f, style.heading_colour);
+	add_briefing("roster", std::to_wstring(this->player_count()) +
+		(solo ? L" PLAYER" : L" PLAYERS / 2 TEAMS"),
+		style.brand_font, 2.0f, style.unhighlight);
+	add_briefing("goal", L"PAINT TO WIN", style.brand_font, 3.0f, style.highlight);
+	add_briefing("objective", solo ?
+		L"Make the arena your canvas.\nTry weapons. Cover more ground." :
+		L"Cover the arena in your colour.\nMost painted surface wins.",
+		style.brand_font, 4.0f, style.unhighlight);
+
+	this->selection_status_ = std::make_unique<UiTextDropShadow>("selection_status",
+		L"", style.detail_font, info + row * 6.0f, resources,
+		style.heading_colour, style.shadow_colour, style.detail_shadow_offset);
+	this->selection_hint_ = std::make_unique<UiTextDropShadow>("selection_hint",
+		L"", style.brand_font, info + row * 7.0f, resources,
+		style.unhighlight, style.shadow_colour, style.detail_shadow_offset);
+	this->text_container_->add_child(this->selection_status_.get());
+	this->text_container_->add_child(this->selection_hint_.get());
+	this->update_stage_select_visuals();
 	this->play_music(this->music_, this->look().music.volume);
 }
 void MainMenuStageSelect::cycle_stages(labrador::Direction direction)

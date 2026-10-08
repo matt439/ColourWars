@@ -55,6 +55,7 @@ add_executable(ColourWars WIN32
     states/pause_menu.cpp
     states/prompt_bar.cpp
     states/results_menu.cpp
+    states/stage_preview.cpp
 
     resource.rc
     settings.manifest

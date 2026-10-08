@@ -27,7 +27,8 @@ public:
 		const labrador::RenderResources& render_resources,
 		const labrador::AudioResources& audio_resources) const;
 
-	// Stage-menu name and icon, authored in the level file.
+	// Display name and legacy icon metadata, authored in the level file.
+	// The stage menu renders live arena objects rather than the legacy icon.
 	std::string display_name() const;
 	std::string icon_frame() const;
 

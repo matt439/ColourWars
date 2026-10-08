@@ -35,6 +35,12 @@ namespace
 		return value;
 	}
 
+	Vector2F read_positive_vector(const JsonValue& parent, const char* key)
+	{
+		const JsonValue vector = parent.object(key);
+		return Vector2F(read_positive(vector, "x"), read_positive(vector, "y"));
+	}
+
 	bool is_hex_colour(const std::string& text)
 	{
 		if (text.length() != 6 && text.length() != 8)
@@ -192,7 +198,16 @@ namespace
 
 		menu.team_select = read_select(json, "team_select");
 		menu.weapon_select = read_select(json, "weapon_select");
-		menu.stage_select = read_select(json, "stage_select");
+		const JsonValue stage = json.object("stage_select");
+		menu.stage_select.preview_position = read_vector(stage, "preview_position");
+		menu.stage_select.preview_size = read_positive_vector(stage, "preview_size");
+		menu.stage_select.name_position = read_vector(stage, "name_position");
+		menu.stage_select.navigation_position = read_vector(stage, "navigation_position");
+		menu.stage_select.briefing = read_layout(stage, "briefing");
+		menu.stage_select.briefing.size = read_positive_vector(stage.object("briefing"), "size");
+		menu.stage_select.briefing_padding = read_positive_vector(stage, "briefing_padding");
+		menu.stage_select.selected = read_colour(stage, "selected");
+		menu.stage_select.unselected = read_colour(stage, "unselected");
 
 		menu.music = read_sound(json, "music");
 
@@ -385,7 +400,37 @@ Presentation::Presentation(const char* path)
 	this->results_menu_ = read_results_menu(root);
 	this->prompt_bar_ = read_prompt_bar(root);
 	this->hud_ = read_hud(root);
+	const JsonValue match = root.object("match");
+	this->match_.reference_size = read_positive_vector(match, "reference_size");
+	this->match_.countdown_size = read_positive_vector(match, "countdown_size");
+	this->match_.countdown_center_y = read_positive(match, "countdown_center_y");
+	if (this->match_.countdown_center_y >= 1.0f)
+	{
+		throw std::runtime_error(match.where() + ": countdown_center_y must be less than one.");
+	}
+	this->match_.controls_margin = read_positive_vector(match, "controls_margin");
+	this->match_.controls_padding = read_positive_vector(match, "controls_padding");
+	this->match_.controls_gap = read_positive(match, "controls_gap");
+	const MatchPresentation& intro = this->match_;
+	if (intro.countdown_size.x <= intro.controls_padding.x * 2.0f ||
+		intro.countdown_size.y <= intro.controls_padding.y * 3.0f ||
+		intro.countdown_size.x > intro.reference_size.x ||
+		intro.countdown_size.y / 2.0f > intro.reference_size.y *
+			std::min(intro.countdown_center_y, 1.0f - intro.countdown_center_y) ||
+		intro.controls_margin.x * 2.0f + intro.controls_gap +
+			intro.controls_padding.x * 4.0f >= intro.reference_size.x ||
+		intro.controls_margin.y * 2.0f + intro.controls_padding.y * 3.0f >=
+			intro.reference_size.y)
+	{
+		throw std::runtime_error(match.where() +
+			": countdown and controls cards must fit the reference size with room inside their padding.");
+	}
 	this->debug_overlay_ = read_debug_overlay(root);
+}
+
+const MatchPresentation& Presentation::match() const
+{
+	return this->match_;
 }
 
 void Presentation::validate_resources(const RenderResources& render,
@@ -410,6 +455,17 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.font("hud.player_identity.font", this->hud_.player_identity_font);
 	check.font("hud.respawn_timer.font", this->hud_.respawn_font);
 	check.frame("hud.fill_frame", this->hud_.sprite_sheet, this->hud_.fill_frame);
+	const Vector2F heading_size = render.measure_text(
+		render.resolve_sprite_font(this->menu_.detail_font), L"GET READY");
+	const float heading_scale = std::min(1.0f,
+		(this->match_.countdown_size.x - this->match_.controls_padding.x * 2.0f) /
+			(heading_size.x + std::abs(this->menu_.detail_shadow_offset.x)));
+	if ((heading_size.y + std::abs(this->menu_.detail_shadow_offset.y)) * heading_scale +
+		this->match_.controls_padding.y * 3.0f >= this->match_.countdown_size.y)
+	{
+		throw std::runtime_error(this->source_path_ +
+			": match.countdown_size must leave room below the GET READY heading.");
+	}
 
 	const std::string& bank = this->menu_.sound_bank;
 	check.wave("menu_style.sounds.direction", bank, this->menu_.direction_sound);

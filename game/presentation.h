@@ -96,6 +96,29 @@ struct ControlsSettingsPresentation
 	std::string help_font;
 };
 
+struct StageSelectPresentation
+{
+	mattmath::Vector2F preview_position;
+	mattmath::Vector2F preview_size;
+	mattmath::Vector2F name_position;
+	mattmath::Vector2F navigation_position;
+	WidgetLayout briefing;
+	mattmath::Vector2F briefing_padding;
+	labrador::Colour selected;
+	labrador::Colour unselected;
+};
+
+// Screen-space layout for the start signal and device-specific reminders.
+struct MatchPresentation
+{
+	mattmath::Vector2F reference_size;
+	mattmath::Vector2F countdown_size;
+	float countdown_center_y = 0.0f;
+	mattmath::Vector2F controls_margin;
+	mattmath::Vector2F controls_padding;
+	float controls_gap = 0.0f;
+};
+
 struct MainMenuPresentation
 {
 	std::string backdrop_sheet;
@@ -133,7 +156,7 @@ struct MainMenuPresentation
 
 	SelectPresentation team_select;
 	SelectPresentation weapon_select;
-	SelectPresentation stage_select;
+	StageSelectPresentation stage_select;
 
 	PresentationSound music;
 	std::string error_sound;
@@ -282,6 +305,7 @@ public:
 	const ResultsMenuPresentation& results_menu() const;
 	const PromptBarPresentation& prompt_bar() const;
 	const HudPresentation& hud() const;
+	const MatchPresentation& match() const;
 	const DebugOverlayPresentation& debug_overlay() const;
 
 private:
@@ -294,5 +318,6 @@ private:
 	ResultsMenuPresentation results_menu_;
 	PromptBarPresentation prompt_bar_;
 	HudPresentation hud_;
+	MatchPresentation match_;
 	DebugOverlayPresentation debug_overlay_;
 };
