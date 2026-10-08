@@ -30,6 +30,6 @@ private:
 		const mattmath::Vector2F& player_velocity,
 		bool player_facing_right) override;
 
-	// Tint the roller while it is laying paint.
-	labrador::Colour draw_colour() const override;
+	// The sleeve takes the team colour only while it is laying paint.
+	labrador::Colour paint_colour() const override;
 };

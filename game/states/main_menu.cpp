@@ -1641,23 +1641,23 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 		switch (this->select_states_[i].type)
 		{
 		case WeaponType::sprayer:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sprayer");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sprayer", "sprayer_paint");
 			this->player_widgets_[i]->weapon_name->set_text(L"Sprayer");
 			break;
 		case WeaponType::sniper:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sniper");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sniper", "sniper_paint");
 			this->player_widgets_[i]->weapon_name->set_text(L"Sniper");
 			break;
 		case WeaponType::roller:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("roller");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("roller", "roller_paint");
 			this->player_widgets_[i]->weapon_name->set_text(L"Roller");
 			break;
 		case WeaponType::mister:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("mister");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("mister", "mister_paint");
 			this->player_widgets_[i]->weapon_name->set_text(L"Mister");
 			break;
 		case WeaponType::bucket:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("bucket");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("bucket", "bucket_paint");
 			this->player_widgets_[i]->weapon_name->set_text(L"Bucket");
 			break;
 		case WeaponType::random_primary:
@@ -1700,6 +1700,12 @@ void MainMenuWeaponSelect::init()
 		{ L"B", L"Cancel" } });
 
 	this->set_widget_spacing(this->look().weapon_select.spacing);
+	// A random palette is not chosen until the level is built. Keep that
+	// preview neutral instead of consuming a different random draw here.
+	const TeamColourPair palette = this->save()->team_palette();
+	const TeamColour preview_colours = palette == TeamColourPair::random
+		? TeamColour(Colour::white, Colour::white)
+		: TeamColourTools::team_colours(palette);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -1755,14 +1761,17 @@ void MainMenuWeaponSelect::init()
 			"sprayer",
 			RectangleF(this->calculate_widget_position(2, i + 2), this->look().weapon_select.size),
 			this->render_resources(),
-			this->look().weapon_select.unselected, &this->menu_style());
+			this->look().weapon_select.unselected, &this->menu_style(), "weapon_paint");
+		widgets->weapon_icon->set_paint_colour(preview_colours.team_colour(
+			this->level_settings()->player_team(i)));
 
 		widgets->weapon_name = std::make_unique<UiTextDropShadow>(
 			name + "_wep_name",
 			L"Sprayer",
-			this->menu_style().detail_font,
+			this->look().weapon_description_font,
 			widgets->weapon_icon->rectangle().position() +
-				Vector2F(0.0f, this->look().weapon_select.size.y),
+				Vector2F(0.0f, this->look().weapon_select.size.y +
+					this->menu_style().icon_padding.y + this->menu_style().rule_height),
 			this->render_resources(),
 			this->look().weapon_select.unselected,
 			this->menu_style().shadow_colour,
@@ -1786,6 +1795,7 @@ void MainMenuWeaponSelect::init()
 
 		this->player_widgets_.push_back(std::move(widgets));
 	}
+	this->update_weapon_select_visuals();
 	this->play_music(this->music_, this->look().music.volume);
 }
 std::wstring MainMenuWeaponSelect::weapon_description(WeaponType type) const

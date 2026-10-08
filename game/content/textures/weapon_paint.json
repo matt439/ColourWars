@@ -1,0 +1,161 @@
+{
+    "animation_strips":  [
+
+                         ],
+    "sprite_frames":  [
+                          {
+                              "name":  "sprayer",
+                              "position":  {
+                                               "x":  8,
+                                               "y":  8
+                                           },
+                              "size":  {
+                                           "w":  280,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "sniper",
+                              "position":  {
+                                               "x":  304,
+                                               "y":  8
+                                           },
+                              "size":  {
+                                           "w":  400,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "roller",
+                              "position":  {
+                                               "x":  8,
+                                               "y":  144
+                                           },
+                              "size":  {
+                                           "w":  400,
+                                           "h":  200
+                                       }
+                          },
+                          {
+                              "name":  "mister",
+                              "position":  {
+                                               "x":  424,
+                                               "y":  144
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "bucket",
+                              "position":  {
+                                               "x":  720,
+                                               "y":  8
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  240
+                                       }
+                          },
+                          {
+                              "name":  "random",
+                              "position":  {
+                                               "x":  424,
+                                               "y":  288
+                                           },
+                              "size":  {
+                                           "w":  64,
+                                           "h":  64
+                                       }
+                          },
+                          {
+                              "name":  "error",
+                              "position":  {
+                                               "x":  504,
+                                               "y":  288
+                                           },
+                              "size":  {
+                                           "w":  32,
+                                           "h":  32
+                                       }
+                          },
+                          {
+                              "name":  "pixel",
+                              "position":  {
+                                               "x":  552,
+                                               "y":  288
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "nozzle",
+                              "position":  {
+                                               "x":  568,
+                                               "y":  288
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "sprayer_paint",
+                              "position":  {
+                                               "x":  8,
+                                               "y":  520
+                                           },
+                              "size":  {
+                                           "w":  280,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "sniper_paint",
+                              "position":  {
+                                               "x":  304,
+                                               "y":  520
+                                           },
+                              "size":  {
+                                           "w":  400,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "roller_paint",
+                              "position":  {
+                                               "x":  8,
+                                               "y":  656
+                                           },
+                              "size":  {
+                                           "w":  400,
+                                           "h":  200
+                                       }
+                          },
+                          {
+                              "name":  "mister_paint",
+                              "position":  {
+                                               "x":  424,
+                                               "y":  656
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "bucket_paint",
+                              "position":  {
+                                               "x":  720,
+                                               "y":  520
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  240
+                                       }
+                          }
+                      ]
+}

@@ -446,6 +446,19 @@ void GameTuning::validate_resources(const RenderResources& render,
 		const WeaponDetails& details = entry.details;
 		const std::string prefix = std::string("weapons.") + key;
 		check.frame(prefix + ".frame", details.sheet_name, details.frame_name);
+		const std::string paint_name = details.frame_name + "_paint";
+		check.frame(prefix + ".frame (paint overlay)", details.sheet_name, paint_name);
+		const SpriteSheet* sheet = render.sprite_sheet(details.sheet_name);
+		const SpriteFrame& body = sheet->sprite_frame(
+			sheet->resolve_sprite_frame(details.frame_name));
+		const SpriteFrame& paint = sheet->sprite_frame(
+			sheet->resolve_sprite_frame(paint_name));
+		if (body.source_rectangle().size() != paint.source_rectangle().size() ||
+			body.origin() != paint.origin())
+		{
+			throw std::runtime_error(this->source_path_ + ": " + prefix +
+				" paint overlay must match the base frame dimensions and origin.");
+		}
 		// Weapon's debug marker uses the weapon's own sheet as well.
 		check.frame(prefix + ".sheet (nozzle marker)", details.sheet_name, "nozzle");
 		check.wave(prefix + ".shoot_sound.name", details.sound_bank_name,

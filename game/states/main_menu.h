@@ -5,6 +5,7 @@
 #include "game/objects/player_team.h"
 #include "game/states/confirmation_state.h"
 #include "game/states/menu_page.h"
+#include "game/states/menu_panel.h"
 #include "game/states/option_row.h"
 #include "game/states/stage_preview.h"
 #include "engine/core/state_context.h"
@@ -228,7 +229,7 @@ private:
 	struct Widgets
 	{
 		std::unique_ptr<labrador::UiTextDropShadow> player = nullptr;
-		std::unique_ptr<labrador::UiTexture> weapon_icon = nullptr;
+		std::unique_ptr<MenuIcon> weapon_icon = nullptr;
 		std::unique_ptr<labrador::UiTextDropShadow> weapon_name = nullptr;
 		std::unique_ptr<labrador::UiTextDropShadow> weapon_description = nullptr;
 	};

@@ -51,6 +51,8 @@ Weapon::Weapon(const GameTuning* tuning,
         this->weapon_tuning_->loop_sounds, team, sound_index);
     this->shoot_sound_ = this->sound_bank_->resolve_wave(
         details.shoot_sound_name);
+    this->paint_frame_ = this->sprite_sheet()->
+        resolve_sprite_frame(details.frame_name + "_paint");
     this->nozzle_frame_ = this->sprite_sheet()->
         resolve_sprite_frame(nozzle_frame_name);
 }
@@ -60,8 +62,11 @@ void Weapon::draw(DrawList& draw_list, bool debug) const
     Vector2F draw_pos = this->draw_pos();
     auto draw_rectangle = RectangleF(draw_pos, this->details().size);
 
-    Vector2F origin = this->calculate_sprite_origin(
-        this->details().size, RotationOrigin::left_center);
+    // Sprite origins are source texels, independent of the gameplay size.
+    // Keep the grip centred when an art pass changes the texture resolution.
+    const RectangleI& source = this->sprite_sheet()->sprite_frame(
+        this->frame()).source_rectangle();
+    const Vector2F origin(0.0f, static_cast<float>(source.height) / 2.0f);
 
     // Left-facing weapons combine rotation past +/-PI/2 with a vertical flip.
     SpriteFlip flip = this->invert_y()
@@ -70,24 +75,29 @@ void Weapon::draw(DrawList& draw_list, bool debug) const
 
     // Keep draw state local because render workers share this weapon.
     TextureObject::draw_with(draw_list, draw_rectangle,
-        this->frame(), this->draw_colour(),
+        this->frame(), this->colour(),
+        origin, flip, this->rotation());
+    TextureObject::draw_with(draw_list, draw_rectangle,
+        this->paint_frame_, this->paint_colour(),
         origin, flip, this->rotation());
 
     if (debug)
     {
         RectangleF draw_rectangle_noz = this->nozzle_rectangle();
-        Vector2F origin_noz = this->calculate_sprite_origin(
-            this->nozzle_size(), RotationOrigin::center);
+        const RectangleI& nozzle_source = this->sprite_sheet()->sprite_frame(
+            this->nozzle_frame_).source_rectangle();
+        const Vector2F origin_noz(static_cast<float>(nozzle_source.width) / 2.0f,
+            static_cast<float>(nozzle_source.height) / 2.0f);
 
         TextureObject::draw_with(draw_list, draw_rectangle_noz,
-            this->nozzle_frame_, this->draw_colour(),
+            this->nozzle_frame_, this->colour(),
             origin_noz, SpriteFlip::none, 0.0f);
     }
 }
 
-labrador::Colour Weapon::draw_colour() const
+labrador::Colour Weapon::paint_colour() const
 {
-    return this->colour();
+    return this->team_colour();
 }
 Vector2F Weapon::calculate_sprite_origin(const Vector2F& size, RotationOrigin origin)
 {

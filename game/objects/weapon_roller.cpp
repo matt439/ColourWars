@@ -53,7 +53,7 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData /*input*/,
     }
 }
 
-labrador::Colour WeaponRoller::draw_colour() const
+labrador::Colour WeaponRoller::paint_colour() const
 {
     return this->shooting_this_update_
         ? this->team_colour()

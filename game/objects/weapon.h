@@ -87,8 +87,8 @@ protected:
 
 	virtual void handle_shoot_sound(bool shooting_this_update, bool holding_shoot);
 
-	// Compute tint without mutating shared state during draw.
-	virtual labrador::Colour draw_colour() const;
+	// Tint only the paint overlay without mutating shared state during draw.
+	virtual labrador::Colour paint_colour() const;
 
 	const mattmath::Vector2F& player_center() const;
 
@@ -164,7 +164,8 @@ private:
 	std::unique_ptr<ProjectileBuilder> proj_builder_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;
 
-	// Debug frame handle, resolved at construction.
+	// Paint overlay and debug frame handles, resolved at construction.
+	labrador::SpriteSheet::frame_handle paint_frame_;
 	labrador::SpriteSheet::frame_handle nozzle_frame_;
 
 	// Initialized from tuning in the constructor.

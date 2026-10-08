@@ -95,6 +95,10 @@ int main(int argc, char** argv)
         RenderResources render;
         render.add_sprite_sheet("sprite_sheet_1",
             read_sprite_sheet(sheet_path.c_str(), TextureHandle{}));
+        const auto weapon_sheet_path =
+            (content / "textures" / "weapon_paint.json").string();
+        render.add_sprite_sheet("weapon_paint",
+            read_sprite_sheet(weapon_sheet_path.c_str(), TextureHandle{}));
         AudioResources audio;
         audio.add_sound_bank("sound_bank_1", SoundBank::silent());
         const GameTuning tuning(tuning_path.c_str());

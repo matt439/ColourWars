@@ -482,12 +482,33 @@ void Presentation::validate_resources(const RenderResources& render,
 	// field to walk. Check them too before the player can reach those pages.
 	for (const char* frame : { "pixel", "square_white_4", "team_select_a",
 		"team_select_center", "team_select_b", "team_select_a_selected",
-		"team_select_center_selected", "team_select_b_selected", "sprayer", "sniper",
-		"roller", "mister", "bucket", "random", "error", "results_menu_fill_box",
+		"team_select_center_selected", "team_select_b_selected", "results_menu_fill_box",
 		"results_menu_team_a_fill", "results_menu_team_b_fill" })
 	{
 		check.frame(std::string("built-in menu frame '") + frame + "'",
 			"sprite_sheet_1", frame);
+	}
+	for (const char* frame : { "pixel", "sprayer", "sniper", "roller",
+		"mister", "bucket", "random", "error" })
+	{
+		check.frame(std::string("built-in weapon menu frame '") + frame + "'",
+			"weapon_paint", frame);
+	}
+	const SpriteSheet* weapon_sheet = render.sprite_sheet("weapon_paint");
+	for (const char* frame : { "sprayer", "sniper", "roller", "mister", "bucket" })
+	{
+		const std::string paint_name = std::string(frame) + "_paint";
+		check.frame("built-in weapon menu paint overlay", "weapon_paint", paint_name);
+		const SpriteFrame& body = weapon_sheet->sprite_frame(
+			weapon_sheet->resolve_sprite_frame(frame));
+		const SpriteFrame& paint = weapon_sheet->sprite_frame(
+			weapon_sheet->resolve_sprite_frame(paint_name));
+		if (body.source_rectangle().size() != paint.source_rectangle().size() ||
+			body.origin() != paint.origin())
+		{
+			throw std::runtime_error(this->source_path_ + ": built-in weapon menu frame '" +
+				frame + "' paint overlay must match its dimensions and origin.");
+		}
 	}
 }
 
