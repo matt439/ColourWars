@@ -21,31 +21,25 @@ struct RelativeWeaponDetails
 	float player_vel_amount = 0.0f;
 };
 
-// The looping fire sound, one voice per player per team.
-//
-// Eight named members and a two-level switch over them is what this was - the
-// same table wearing eight names, and a `default:` that threw on an index the
-// caller had already bounds-checked. It is two arrays of four now, which is
-// what the file always said it was.
+// Looping fire sounds indexed by team and match position.
 struct WeaponLoopSounds
 {
 	std::array<std::string, 4> team_a;
 	std::array<std::string, 4> team_b;
 
-	// True when the weapon holds a loop at all. A weapon that fires a one-shot
-	// wave leaves the block out of its tuning record and gets this false.
+	// False when the tuning record omits looping audio.
 	bool present = false;
 
-	// `index` is the player number, 0-3. Both it and `team` are checked by the
-	// one caller before it asks, so this asserts nothing and simply reads.
+	// index is the player's 0..3 match position, independent of input slot.
+	// The caller validates both index and team.
 	const std::string& sound_name(PlayerTeam team, int index) const;
 };
 
 struct WeaponDetails
 {
-	mattmath::Vector2F offset = { 0.0f, 0.0f }; //from player center to weapon sprite top-left
+	mattmath::Vector2F offset = { 0.0f, 0.0f }; // From player centre to weapon sprite top-left.
 	mattmath::Vector2F size = { 0.0f, 0.0f };
-	mattmath::Vector2F nozzle_offset = { 0.0f, 0.0f }; //from right center of weapon sprite to nozzle
+	mattmath::Vector2F nozzle_offset = { 0.0f, 0.0f }; // From weapon sprite right-centre to nozzle.
 	float shoot_interval = 0.0f;
 	float starting_vel_length = 1100.0f;
 	float ammo_usage = 0.0f;

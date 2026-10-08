@@ -7,11 +7,7 @@ using namespace labrador;
 
 namespace
 {
-    // The debug nozzle marker: a five-pixel square drawn where the barrel is,
-    // and the frame every weapon sheet carries for it. Not tuning - nothing a
-    // player sees depends on either, and they are read only by the debug draw
-    // - so they stay in code rather than going into the tuning file with the
-    // numbers that do matter.
+    // Debug nozzle marker size and sprite frame.
     const Vector2F nozzle_marker_size = { 5.0f, 5.0f };
     const std::string nozzle_frame_name = "nozzle";
 }
@@ -59,33 +55,24 @@ Weapon::Weapon(const GameTuning* tuning,
 
 void Weapon::draw(DrawList& draw_list, bool debug) const
 {
-    //draw weapon
     Vector2F draw_pos = this->draw_pos();
     auto draw_rectangle = RectangleF(draw_pos, this->details().size);
 
     Vector2F origin = this->calculate_sprite_origin(
         this->details().size, RotationOrigin::left_center);
 
-    // Only the y axis. A weapon facing left is a rotation past +/-PI/2 plus
-    // this flip - which is all update_movement_and_rotation ever sets - so the
-    // horizontal and both cases this used to select were unreachable, and the
-    // x half of the pair they were selected from is gone with them.
+    // Left-facing weapons combine rotation past +/-PI/2 with a vertical flip.
     SpriteFlip flip = this->invert_y()
         ? SpriteFlip::vertical
         : SpriteFlip::none;
 
-    // Pure read: every per-draw value is a local passed to draw_with, not a
-    // member assigned first. draw() is entered by every render worker on the
-    // same Weapon at once, and back when the element was a std::string,
-    // assigning it from several threads was heap corruption, not just a torn
-    // frame.
+    // Keep draw state local because render workers share this weapon.
     TextureObject::draw_with(draw_list, draw_rectangle,
         this->frame(), this->draw_colour(),
         origin, flip, this->rotation());
 
     if (debug)
     {
-        // draw nozzle
         RectangleF draw_rectangle_noz = this->nozzle_rectangle();
         Vector2F origin_noz = this->calculate_sprite_origin(
             this->nozzle_size(), RotationOrigin::center);
@@ -135,9 +122,7 @@ RectangleF Weapon::draw_bounds() const
 	const Vector2F size = this->details().size;
 	const Vector2F centre = this->draw_pos();
 
-	// One sprite diagonal in every direction. That covers the sprite for any
-	// rotation about any origin lying inside it, which is what makes this
-	// independent of where draw() happens to put the pivot.
+	// One sprite diagonal covers any rotation about an origin inside the sprite.
 	const float reach = size.length();
 
 	return RectangleF(centre - Vector2F(reach, reach),
@@ -151,7 +136,6 @@ Vector2F Weapon::draw_pos() const
 		result.x -= this->details().offset.x;
 		result.y += this->details().offset.y;
 	}
-	//gun facing right
 	else
 	{
 		result += this->details().offset;
@@ -161,13 +145,11 @@ Vector2F Weapon::draw_pos() const
 
 bool Weapon::facing_left(float rotation)
 {
-	//gun facing left
 	if (rotation > PI / 2.0f ||
 		rotation < PI / -2.0f)
 	{
 		return true;
 	}
-	//gun facing right
 	return false;
 }
 
@@ -189,7 +171,6 @@ Vector2F Weapon::wep_rotation_origin_offset(bool facing_left) const
 		return Vector2F(-this->details().offset.x,
 			this->details().offset.y);
 	}
-	// gun facing right
 	return Vector2F(this->details().offset.x, this->details().offset.y);
 }
 
@@ -240,8 +221,7 @@ bool Weapon::check_if_shooting_and_ammo_update(
         this->set_ammo_timer(0.0f);
     }
 
-    //ammo regen. The ceiling is the ammo a weapon starts with, which is what
-    //the two hardcoded 1.0f here and in reset_ammo() were assuming.
+    // Regenerate up to the configured starting ammo.
     if (this->ammo_timer() >= this->tuning_->ammo_regen_delay())
     {
         const float max_ammo = this->tuning_->starting_ammo();
@@ -309,17 +289,8 @@ void Weapon::resume_sounds() const
 SoundBank::EffectHandle Weapon::resolve_loop_sound(const SoundBank& sound_bank,
     const WeaponLoopSounds& loop_sounds, PlayerTeam team, int sound_index)
 {
-    // Sniper and Bucket fire a one-shot wave (see their handle_shoot_sound
-    // overrides) and have no looping instance at all. Their tuning records
-    // leave the "loop_sounds" block out, and they get an unresolved handle,
-    // which both handle_shoot_sound and stop_sounds read as "nothing to do".
-    // A three-way switch over WeaponType is what this used to be, so a sixth
-    // weapon with a loop meant editing this function as well as its record.
-    //
-    // Resolved once here rather than looked up per call so that stop_sounds -
-    // a teardown path with no catch anywhere above it - cannot throw. That
-    // mattered more when this searched a map by name; it is now also the
-    // difference between an index and a string compare per frame of firing.
+    // One-shot weapons have no loop_sounds record and use an invalid handle.
+    // Resolve loops at construction to avoid name lookups during firing or teardown.
     if (team != PlayerTeam::a && team != PlayerTeam::b)
     {
         return {};
@@ -359,12 +330,10 @@ void Weapon::update_movement_and_rotation(PlayerInputData input,
 
     this->set_player_center(player_center);
 
-    //gun facing left
     if (facing_left(this->rotation()))
     {
         this->set_invert_y(true);
     }
-    //gun facing right
     else
     {
         this->set_invert_y(false);
@@ -522,8 +491,7 @@ WeaponType Weapon::type() const
 
 void Weapon::reset_ammo()
 {
-	// The same ceiling the regen clamps to, and the same value the constructor
-	// started from: a respawn hands back a full tank, not a hardcoded 1.0f.
+	// Respawn restores the configured full tank.
 	this->ammo_ = this->tuning_->starting_ammo();
 }
 
@@ -573,10 +541,7 @@ Vector2F RelativeVelocityWeapon::calculate_projectile_launch_velocity(
 {
     Vector2F result = shoot_direction * starting_velocity;
 
-    // Every mode named, no default: the tuning file accepts "none" as well as
-    // the three axis modes, and an if/else chain whose last arm was y_only gave
-    // "none" y-only physics. A switch the compiler can check over the enum is
-    // what makes a fifth mode a build error here rather than a silent one.
+    // Handle every velocity mode explicitly, including none.
     switch (add_player_vel)
     {
     case AddPlayerVelocity::x_and_y:

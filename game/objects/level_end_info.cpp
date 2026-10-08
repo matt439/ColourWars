@@ -4,9 +4,7 @@ using namespace labrador;
 
 namespace
 {
-	// to_wstring on a float gives six decimal places, and the screen wants one.
-	// This was written out twice for the two teams; the one-team headline would
-	// have made it three.
+	// Format percentages with one decimal place.
 	std::wstring percentage_string(float percentage)
 	{
 		std::wstring result = std::to_wstring(percentage);
@@ -29,7 +27,6 @@ PlayerTeam LevelEndInfo::winning_team() const
 	{
 		return PlayerTeam::b;
 	}
-	// draw
 	return PlayerTeam::none;
 }
 
@@ -49,11 +46,8 @@ float LevelEndInfo::coverage_ratio() const
 
 float LevelEndInfo::team_a_ratio() const
 {
-	// The bar is a share of the paint on the ground, and with nobody on the
-	// other team that share is 1.0 whatever happened: a player who painted one
-	// tile in four minutes fills it exactly as far as one who painted the
-	// arena. So the one-team bar shows coverage instead, which is the thing
-	// that was actually being done, and the two-team bar is untouched.
+	// With one team, show arena coverage; a share of painted area alone
+	// would be 100% regardless of how little was painted.
 	if (this->one_team_only())
 	{
 		return this->team_a_played ? this->coverage_ratio() : 0.0f;
@@ -86,10 +80,7 @@ float LevelEndInfo::team_b_percentage() const
 {
 	return 100.0f * this->team_b_ratio();
 }
-// Named, because a figure floating over one of two bars in one of two hues is
-// not a label. Which bar is A was a convention - A fills from the left - that
-// the screen stated nowhere and the only sentence on it, "Team A Wins!", does
-// not resolve either.
+// Label each team explicitly rather than relying on bar position or colour.
 std::wstring LevelEndInfo::team_a_percentage_string() const
 {
 	return L"A " + percentage_string(this->team_a_percentage());
@@ -100,10 +91,7 @@ std::wstring LevelEndInfo::team_b_percentage_string() const
 }
 std::wstring LevelEndInfo::winning_team_string() const
 {
-	// Nobody to beat, so nothing to win. Announcing "Team A Wins!" over an
-	// empty arena is the game's least true sentence, and it is the one a
-	// player is most likely to see first: the one-player row is the only
-	// thing a stranger with one pad can reach.
+	// A single-team match reports coverage without declaring a winner.
 	if (this->one_team_only())
 	{
 		return percentage_string(100.0f * this->coverage_ratio()) + L" Painted";

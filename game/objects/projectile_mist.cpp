@@ -16,13 +16,6 @@ ProjectileMist::ProjectileMist(const RectangleF& rectangle,
 	const Vector2F& origin,
 	SpriteFlip flip,
 	float layer_depth) :
-	// MIST, not SPRAY. It passed SPRAY from the day it was written, so every
-	// mist particle reported itself as spray to collision_type() - the one
-	// reader of type() - and was tagged projectile_spray_team_*. Invisible
-	// while the two shared a layer, a mask and a damage number to four decimal
-	// places; not invisible now that the damage is a number in a file keyed by
-	// exactly this enum, and a mist tuned differently from spray would have
-	// been applied as spray.
 	DiffusingProjectile(velocity, team, player_num, team_colour,
 		MIST, render_resources,
 		tuning,

@@ -16,12 +16,9 @@
 class Weapon : public labrador::TextureObject
 {
 public:
-	// `tuning` is borrowed and outlives every weapon: it is the GameTuning
-	// main() owns. A weapon finds its own record in it by `type`, which is why
-	// the five subclasses no longer each name a constant - two of them had
-	// nothing else in them and are gone.
-	// The sound index is the player's 0..3 match position, independent of
-	// the input slot (0..4 with keyboard). Each player needs its own voice.
+	// Borrowed tuning must outlive the weapon; type selects its tuning record.
+	// sound_index is the player's 0..3 match position, independent of input slot.
+	// Each player needs a separate loop voice.
 	Weapon(const GameTuning* tuning,
 		PlayerTeam team,
 		int player_num,
@@ -38,12 +35,8 @@ public:
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
-	// const for the same reason GameObject::draw is, even though a Weapon is
-	// not one: Player::draw reaches its weapon, so it sits under the same
-	// per-view fan-out and every worker enters this on the same Weapon at once.
-	// The const does not come for free through Player - primary_ is a
-	// unique_ptr, and a const unique_ptr still hands out a non-const pointee -
-	// so it has to be declared here to be enforced at all.
+	// Called through Player::draw and potentially shared by render workers.
+	// Keep this const even though the owning unique_ptr permits mutable access.
 	virtual void draw(labrador::DrawList& draw_list,
 		bool debug = false) const;
 
@@ -61,55 +54,35 @@ public:
 	// Never throws: weapons with no looping fire sound stop nothing.
 	virtual void stop_sounds() const;
 
-	// Pause, not stop. A weapon held down across a pause menu comes back on the
-	// same voice rather than restarting its loop from the top - and, more to
-	// the point, comes back at all: the loop is ended by update(), and update()
-	// is precisely what a menu above the match stops.
+	// Pause loops while gameplay updates are suspended, preserving playback position.
 	virtual void pause_sounds() const;
 	virtual void resume_sounds() const;
 
-	// An axis-aligned box that contains the weapon however it is rotated.
-	//
-	// The sprite is drawn at details().size from draw_pos() and spun about an
-	// origin inside itself, so every point of it stays within one sprite
-	// diagonal of that position whatever the rotation and whichever corner the
-	// origin convention picks. Bounding the rotation rather than tracking it
-	// keeps this a pure read, and the slack it costs is the difference between
-	// the gun's diagonal and its longest side - tens of units, not hundreds.
-	//
-	// Public, unlike draw_pos() and the rest of the drawing arithmetic,
-	// because Player::bounds() unions it with the player's own rectangle: a
-	// player is drawn holding a weapon, so the extent the scene culls against
-	// has to contain one.
+	// Visual bounds for any rotation about an origin inside the weapon sprite.
+	// A sprite diagonal around draw_pos() covers every orientation. Player::bounds
+	// unions this with the body so scene culling includes the held weapon.
 	mattmath::RectangleF draw_bounds() const;
 
 protected:
 	labrador::SoundBank* sound_bank_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
 
-	// Both borrowed, both never null: the second is the slot in the first this
-	// weapon's type resolved to, kept so the lookup happens once.
+	// Borrowed, never null: the tuning table and this weapon's resolved record.
 	const GameTuning* tuning_ = nullptr;
 	const WeaponTuning* weapon_tuning_ = nullptr;
 
-	// This weapon's looping SoundEffectInstance, resolved once at construction.
-	// Left unresolved for weapons that fire a one-shot wave instead - which is
-	// what handle_shoot_sound and stop_sounds read as "nothing to do". The
-	// default Handle is inert precisely so an absent thing can be spelt this
-	// way instead of with a sentinel string.
+	// Loop handle resolved at construction; invalid for one-shot weapons.
 	labrador::SoundBank::EffectHandle loop_sound_;
 
-	// The one-shot fire wave, for the weapons that use one. Unconditionally
-	// resolved, unlike the loop above: every weapon definition names one, so a
-	// name the bank does not have is a content bug and should say so here.
+	// Every weapon definition names a fire wave; resolve it at construction
+	// so a missing name is reported as a content error.
 	labrador::SoundBank::WaveHandle shoot_sound_;
 
 	bool shooting_this_update_ = false;
 
 	virtual void handle_shoot_sound(bool shooting_this_update, bool holding_shoot);
 
-	// Tint for this frame's draw. A hook rather than a member assignment so
-	// draw() stays a pure read - the render workers all enter it at once.
+	// Compute tint without mutating shared state during draw.
 	virtual labrador::Colour draw_colour() const;
 
 	const mattmath::Vector2F& player_center() const;
@@ -181,13 +154,10 @@ private:
 	std::unique_ptr<ProjectileBuilder> proj_builder_ = nullptr;
 	labrador::RenderResources* render_resources_ = nullptr;
 
-	// Resolved once at construction like every other element name, even though
-	// only the debug draw reads it - a name resolved on the draw path is a
-	// name resolved on the draw path, however rarely that path is taken.
+	// Debug frame handle, resolved at construction.
 	labrador::SpriteSheet::frame_handle nozzle_frame_;
 
-	// Set from the tuning file in the constructor body, not here: an
-	// initialiser cannot reach a member that is itself being initialised.
+	// Initialized from tuning in the constructor.
 	float ammo_ = 0.0f;
 	float shoot_timer_ = 0.0f;
 	float rotation_ = 0.0f;
@@ -244,8 +214,6 @@ protected:
 		const mattmath::Vector2F& player_velocity) const;
 
 private:
-	// Read off the same borrowed record the base class holds. It used to be a
-	// second constructor parameter, so a weapon could be handed one weapon's
-	// details and another's velocity mode.
+	// Velocity settings from the same borrowed record as the base weapon.
 	const RelativeWeaponDetails& rel_details() const;
 };

@@ -9,9 +9,7 @@ using namespace labrador;
 
 namespace
 {
-    // The sprite tint the animated half of a player is drawn with; the uniform
-    // half is drawn in the team colour. Not tuning: it is one colour, read
-    // once, and no balance pass ever wants it.
+    // Tint for the animated body; the uniform uses the team colour.
     const Colour player_tint = Colour::burlywood;
 }
 
@@ -102,15 +100,13 @@ void Player::draw(DrawList& draw_list) const
         return;
     }
 
-    // Pure read: nothing below assigns a member. update_animation_state() has
-    // already chosen the clip, and the flip is passed as a parameter.
+    // Use the clip selected by update_animation_state; draw must not mutate shared state.
     const SpriteFlip flip = this->facing_right()
         ? SpriteFlip::none
         : SpriteFlip::horizontal;
 
-    // Every base call is explicitly qualified: Player inherits DrawObject
-    // twice, once through TextureObject and once through AnimationObject, and
-    // the two subobjects carry independent colour/origin/rotation.
+    // Qualify the two DrawObject bases: TextureObject and AnimationObject
+    // have independent colour, origin and rotation state.
     TextureObject::draw_with(draw_list, this->rectangle_,
         this->TextureObject::frame(),
         this->TextureObject::colour(),
@@ -140,12 +136,7 @@ CollisionLayer Player::layer() const
 }
 CollisionMask Player::mask() const
 {
-    // Dead players collide with nothing, and this is now the only place that
-    // says so. It used to be said twice and disagree: Player::is_colliding
-    // returned false when dead, and separately the type accessor returned a
-    // *_dead enumerator that every hand-written type list quietly omitted. The
-    // enumerators are gone; an empty mask is the same fact, in the one place
-    // that changes.
+    // An empty mask excludes dead players from every contact.
     if (this->state_ != PlayerState::alive)
     {
         return 0;
@@ -183,8 +174,7 @@ void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
 
     if (!is_structure(other_type))
     {
-        // Unreachable through the mask, and loud rather than silent if the
-        // mask and this ever come apart.
+        // The collision mask must exclude all other types.
         throw std::runtime_error(
             "Player contacted an object its mask should have excluded");
     }
@@ -205,10 +195,8 @@ void Player::end_contacts()
 {
     const PlayerMoveState move_state = this->move_state();
 
-    // Overlapping a wall or passing through a platform is not support. Only
-    // a response that actually landed the player keeps a grounded state.
-    // Ceiling contact has its own lifetime so a head bonk does not leave the
-    // idle animation active throughout the following descent.
+    // Only a resolving ground contact maintains support. Track ceiling contact
+    // separately so a head bonk does not leave the idle animation active during descent.
     if ((this->is_on_ground() && !this->supported_this_tick_) ||
         (move_state == PlayerMoveState::on_ceiling &&
             !this->hit_ceiling_this_tick_))
@@ -223,9 +211,7 @@ void Player::on_structure_contact(const Vector2F& normal, float penetration)
 {
     this->rectangle_.offset(separation(normal, penetration));
 
-    // Structures are axis-aligned, so the normal is exactly one of four. The
-    // comparison rather than an equality test is what keeps this honest if a
-    // rotated one ever arrives.
+    // Classify the contact by its dominant normal component.
     if (std::abs(normal.y) >= std::abs(normal.x))
     {
         MovingObject::set_velocity_y(0.0f);
@@ -248,24 +234,16 @@ void Player::on_structure_contact(const Vector2F& normal, float penetration)
 void Player::on_ramp_contact(CollisionObjectType other_type,
     const Vector2F& normal, float penetration)
 {
-    // A ramp's two right-angled faces are a wall and a flat underside, and
-    // both behave exactly like the flat structure they are part of. Only the
-    // hypotenuse is a ramp, and the normal is how it is recognised. The 130
-    // lines this replaces recognised it by snapping the centre-to-centre
-    // direction to one of eight compass points and then enumerating, per ramp
-    // handedness, which of the eight each face was allowed to produce - and
-    // threw on the ones nobody had listed.
+    // A ramp's vertical face and flat underside resolve as walls; only its
+    // hypotenuse needs slope handling.
     if (normal.y <= 0.0f)
     {
         this->on_structure_contact(normal, penetration);
         return;
     }
 
-    // Standing on the slope. Separate straight up rather than along the
-    // slope's own normal: resolving a ground contact along its normal slides
-    // the player back down the hill, so they could never walk up one. The
-    // axis is the vertical one and its sign does not matter - the distance
-    // comes out of the normal.
+    // Separate vertically on slopes; separation along the normal would slide
+    // the player downhill and prevent climbing.
     this->rectangle_.offset(
         separation_along(normal, penetration, Vector2F::DIRECTION_DOWN));
 
@@ -277,11 +255,7 @@ void Player::on_ramp_contact(CollisionObjectType other_type,
 }
 void Player::on_jump_through_contact(const CollisionObject& other)
 {
-    // Only lands if the player is moving down and was above the platform on
-    // the previous tick.
-    // Screen space, so down is +y. This used to ask Vector2F::direction()
-    // for one of nine compass values and test the three with "down" in the
-    // name, which is the sign of y and nothing else.
+    // Land only while moving down (+y) from above the platform on the previous tick.
     const bool moving_down = this->velocity().y > 0.0f;
 
     const RectangleF other_rect = other.shape()->bounding_box();
@@ -303,11 +277,7 @@ void Player::update_weapon_position() const
 }
 void Player::on_projectile_contact(CollisionObjectType other_type)
 {
-    // One lookup where a ten-branch if-chain used to be, ending in a throw for
-    // a case its own caller had already excluded. The five numbers it dispatched
-    // to lived in player_consts.h - a second, disagreeing copy of the
-    // player_damage already on ProjectileDetails, which nothing read. There is
-    // one copy now and it is in ./tuning.json, on the projectile.
+    // Damage belongs to the projectile's tuning record.
     this->health_ -= this->tuning_->projectile(
         to_projectile_type(other_type)).details.player_damage;
 
@@ -326,12 +296,8 @@ void Player::update(float dt)
     {
         this->update_movement(dt);
 
-        // Clip selection has to happen here, once per frame, not in draw().
-        // draw() runs once per viewport, concurrently on every render worker,
-        // so mutating the animation state there was both a data race on the
-        // std::string sheet/element names and wrong on its own terms: a player
-        // off-screen in every viewport never advanced its animation at all,
-        // because Level guards the draw call with is_visible_in_viewport.
+        // Select and advance animation during update: draw may be culled or run
+        // concurrently for several views.
         this->update_animation_state();
 
         AnimationObject::update(dt);
@@ -363,8 +329,7 @@ void Player::update(float dt)
         this->showing_debug_ = !this->showing_debug_;
     }
 
-    // Health regen. The ceiling is the health a player starts with, which is
-    // what the two hardcoded 1.0f here and in respawn() were assuming.
+    // Regenerate up to the configured starting health.
     const PlayerTuning& tuning = this->player_tuning();
     if (this->health_regen_timer_ >= tuning.health_regen_delay)
     {
@@ -380,16 +345,8 @@ std::vector<std::unique_ptr<CollisionObject>>
     Player::update_weapon_and_get_projectiles(float dt,
     std::span<CollisionObject* const> objects) const
 {
-    // A dead player fires nothing. The pad is still read into input_ while the
-    // respawn timer runs, so forwarding it here had a corpse - invisible,
-    // uncollidable and frozen at the death spot - painting in its team colour,
-    // and scoring for it, for the whole respawn delay.
-    //
-    // The loop has to be stopped rather than merely left alone: the weapon ends
-    // its own loop from inside the update being skipped here, so a player who
-    // died mid-fire would otherwise spray audibly until they respawned.
-    // Stopping it every dead frame is the same idempotent call the weapon makes
-    // every frame the trigger is not held.
+    // Dead players must not fire. Stop the loop explicitly because skipping
+    // weapon update also skips its normal release handling.
     if (this->state_ != PlayerState::alive)
     {
         this->stop_sounds();
@@ -426,12 +383,10 @@ void Player::update_movement(float dt)
     const bool drop_through = this->input_.drop_through;
     const bool jump_pressed = this->input_.jump_pressed;
 
-    //If the player's velocity is zero and the user is requesting to move the player
     if (are_equal(MovingObject::velocity_x(), 0.0f) && x_input != 0.0f)
     {
         MovingObject::set_velocity_x(this->player_tuning().x_initial_velocity * x_input);
     }
-    //If accelerating in the same direction as currently moving. right
     else if (MovingObject::velocity_x() > 0.0f && x_input > 0.0f)
     {
         MovingObject::alter_velocity_x(this->player_tuning().x_acceleration * dt * x_input);
@@ -440,7 +395,6 @@ void Player::update_movement(float dt)
             MovingObject::set_velocity_x(this->player_tuning().max_velocity.x);
         }
     }
-    //If accelerating in the same direction as currently moving. left
     else if (MovingObject::velocity_x() < 0.0f && x_input < 0.0f)
     {
         MovingObject::alter_velocity_x(this->player_tuning().x_acceleration * dt * x_input);
@@ -449,19 +403,16 @@ void Player::update_movement(float dt)
             MovingObject::set_velocity_x(-this->player_tuning().max_velocity.x);
         }
     }
-    //If accelerating in the opposite direction as currently moving. right
     else if (MovingObject::velocity_x() > 0.0f && x_input < 0.0f)
     {
         MovingObject::alter_velocity_x(this->player_tuning().x_deacceleration * dt * x_input);
         MovingObject::alter_velocity_x(this->player_tuning().x_acceleration * dt * x_input);
     }
-    //If accelerating in the opposite direction as currently moving. left
     else if (MovingObject::velocity_x() < 0.0f && x_input > 0.0f)
     {
         MovingObject::alter_velocity_x(this->player_tuning().x_deacceleration * dt * x_input);
         MovingObject::alter_velocity_x(this->player_tuning().x_acceleration * dt * x_input);
     }
-    //No key pressed deaccelaration right
     else if (MovingObject::velocity_x() > 0.0f && are_equal(x_input, 0.0f))
     {
         MovingObject::alter_velocity_x(-this->player_tuning().x_deacceleration * dt);
@@ -470,7 +421,6 @@ void Player::update_movement(float dt)
             MovingObject::set_velocity_x(0.0f);
         }
     }
-    //No key pressed deaccelaration left
     else if (MovingObject::velocity_x() < 0.0f && are_equal(x_input, 0.0f))
     {
         MovingObject::alter_velocity_x(this->player_tuning().x_deacceleration * dt);
@@ -479,7 +429,6 @@ void Player::update_movement(float dt)
             MovingObject::set_velocity_x(0.0f);
         }
     }
-    //gravity
     if (this->is_on_ramp())
     {
 		// increase gravity on ramp
@@ -494,13 +443,12 @@ void Player::update_movement(float dt)
         MovingObject::set_velocity_y(this->player_tuning().max_velocity.y);
     }
 
-    // DROPPING_DOWN state only lasts for one frame
+    // dropping_down lasts for one update.
     if (move_state == PlayerMoveState::dropping_down)
 	{
 		this->set_move_state(PlayerMoveState::in_air);
 	}
 
-    // check if dropping down from a platform
     if (move_state == PlayerMoveState::on_drop_down_ground && drop_through &&
         !jump_pressed)
     {
@@ -540,7 +488,6 @@ void Player::do_jump(float dt)
 	}
 	else if (move_state == PlayerMoveState::on_ceiling)
 	{
-		// do nothing
 	}
 	else if (move_state == PlayerMoveState::jumping)
 	{
@@ -555,7 +502,7 @@ void Player::do_jump(float dt)
 				this->set_move_state(PlayerMoveState::in_air);
 			}
 		}
-		else // !jump held
+		else
 		{
 			this->set_move_state(PlayerMoveState::in_air);
 		}
@@ -563,7 +510,6 @@ void Player::do_jump(float dt)
 	}
 	else if (move_state == PlayerMoveState::in_air)
 	{
-		// do nothing
 	}
 
     if (this->velocity_y() < -this->player_tuning().max_velocity.y)
@@ -574,17 +520,7 @@ void Player::do_jump(float dt)
 
 RectangleF Player::bounds() const
 {
-    // The union of what is actually drawn, rather than a margin large enough
-    // to be sure of covering it.
-    //
-    // The weapon is drawn from Player::draw and reaches outside the player's
-    // own rectangle, which is the real requirement here. Meeting it by
-    // inflating 200 units in every direction turned a 52 x 120 collider into
-    // 452 x 520 - thirty-eight times the area - on the object that is queried
-    // more than any other. bounds() is the coarse extent a broad phase
-    // indexes and the scene culls against (engine/core/game_object.h), so
-    // every unit of slack here is paid for on every query, and a bound this
-    // loose would hide any index that ever tried to use it.
+    // Include the held weapon in the visual bounds used for scene culling.
     if (this->primary_ == nullptr)
     {
         return this->rectangle_;

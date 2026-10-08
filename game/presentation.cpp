@@ -16,10 +16,7 @@ using namespace mattmath;
 
 namespace
 {
-	// Every read goes through JsonValue, so a missing key, a wrong type or a
-	// hand-edit that broke the file is a startup failure naming the file, the
-	// position in it and the key. The helpers here are for what JsonValue
-	// cannot check on its own.
+	// JsonValue provides source context for missing keys and wrong types.
 
 	Vector2F read_vector(const JsonValue& parent, const char* key)
 	{
@@ -48,14 +45,8 @@ namespace
 			std::string::npos;
 	}
 
-	// A colour by the name the engine knows it by, or as RRGGBB / RRGGBBAA.
-	//
-	// Both forms, because the menus needed both: most are named, and the
-	// heading three of the four share is (255, 127, 0), which is not a name in
-	// the palette. Colour's hex constructor answers opaque black for anything
-	// it cannot parse, so the validation is here rather than there - a
-	// mistyped colour should stop the game with the key in the message, not
-	// paint a menu black.
+	// Accept named colours or RRGGBB/RRGGBBAA. Validate hex strings before
+	// construction so a typo cannot silently become opaque black.
 	Colour read_colour(const JsonValue& parent, const char* key)
 	{
 		const std::string text = parent.string(key);
@@ -190,17 +181,12 @@ namespace
 		menu.error_sound = sounds.string("error");
 		menu.ready_sound = sounds.string("ready");
 
-		// Keyed by the weapon's name rather than written in enum order, for
-		// the same reason tuning.json's weapon records are: the file names
-		// what it means, and a misspelt weapon is a startup failure rather
-		// than a description silently attached to the wrong pick.
+		// Resolve descriptions by weapon name so file order is independent of enum order.
 		const JsonValue descriptions = json.object("weapon_descriptions");
 		const auto describe = [&descriptions, &menu](WeaponType type,
 			const char* key)
 		{
-			// The only authored prose in this file, and the only place a
-			// character the fonts cannot draw could reach a widget - which it
-			// would do at weapon select, four screens after this line read it.
+			// Normalize and validate authored display text while its source key is available.
 			menu.weapon_descriptions[static_cast<size_t>(type)] =
 				drawable_text::widen_drawable(descriptions.string(key),
 					descriptions.where() + ": " + key);
@@ -261,9 +247,7 @@ namespace
 		// first-frame NaN to the renderer.
 		menu.team_fill_time = read_positive(fill, "time");
 
-		// Derived rather than stated, which is what the header did too - and
-		// stating it as well would be a second number to keep in step with
-		// the first two.
+		// Derive the fill size from the authored box and border.
 		menu.team_fill_size =
 			menu.fill_box_size - menu.team_fill_border * 2.0f;
 

@@ -15,9 +15,7 @@ public:
 	std::vector<MenuPlayerSettings> player_settings() const;
 	void set_player_count(int player_count);
 	int player_count() const;
-	// The chosen stage, by name - which is the manifest's name for its level,
-	// and so the key its definition sits under. Empty until the stage-select
-	// screen sets one.
+	// Manifest key for the chosen level; empty until stage selection.
 	void set_stage(const std::string& stage);
 	const std::string& stage() const;
 	labrador::ScreenLayout screen_layout() const;

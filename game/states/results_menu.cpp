@@ -48,16 +48,13 @@ void ResultsMenuInitial::update(float dt)
 		this->update_fill_box();
 		if (this->fill_timer_ >= look.team_fill_time)
 		{
-			// only play winner sound once
 			if (!this->winner_sound_played_)
 			{
 				this->winner_sound_played_ = true;
 				this->stop_effect(this->fill_sound_, true);
 				this->play_wave(this->winner_sound_, look.winner_sound.volume);
 			}
-			// A team nobody played for reveals neither a bar nor a figure.
-			// Both start hidden and are shown here, so leaving one out is
-			// declining to show it rather than hiding it again.
+			// Reveal percentages only for teams that participated.
 			if (this->level_end_info().team_a_played)
 			{
 				this->team_a_percentage_->set_hidden(false);
@@ -81,10 +78,6 @@ void ResultsMenuInitial::update(float dt)
 				{
 					this->play_wave(this->confirm_sound_);
 
-					// This screen has exactly one exit, so it closes rather
-					// than answering. ResultsMenuAction was an enum with one
-					// value and a `none`, polled every frame to find out
-					// whether the one value had happened yet.
 					this->context()->pop();
 				}
 			}
@@ -202,11 +195,7 @@ void ResultsMenuInitial::init()
 		style.detail_shadow_offset,
 		true);
 
-	// Outside each end of the fill box, vertically centred on it, and at a
-	// fixed position: the bars grow inwards from these two ends, so a mark
-	// here labels its bar from the first frame to the last without moving.
-	// The frames are the same two letters team select puts in front of every
-	// player before the match, so this is a mark they have already read once.
+	// Fixed A/B marks label the bars throughout the fill animation.
 	const RectangleF fill_box_rect = this->fill_box_->rectangle();
 	const float mark_y = fill_box_rect.position().y +
 		(fill_box_rect.height - look.team_mark_size.y) / 2.0f;
@@ -235,10 +224,7 @@ void ResultsMenuInitial::init()
 		this->render_resources(),
 		Colour::white);
 
-	// The fills and the marks are not hidden by default the way the two
-	// figures are, so the team with nobody on it is hidden here. The fill's
-	// width is still driven every frame by update_team_b_fill, which is
-	// harmless and keeps the fill pass free of a special case.
+	// Hide bars and marks for absent teams, regardless of animated width.
 	this->team_a_fill_->set_hidden(!end_info.team_a_played);
 	this->team_b_fill_->set_hidden(!end_info.team_b_played);
 	this->team_a_mark_->set_hidden(!end_info.team_a_played);
@@ -312,7 +298,6 @@ void ResultsMenuInitial::update_team_a_fill() const
 {
 	const ResultsMenuPresentation& look = this->look();
 
-	//float score = this->team_percentage(PlayerTeam::a);
 	float score = this->level_end_info().team_a_ratio();
 	float max_width = look.team_fill_size.x * score;
 	float fill = this->fill_time_ratio();

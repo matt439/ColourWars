@@ -40,7 +40,6 @@ RectangleF Structure::bounds() const
 void Structure::on_contact(const CollisionObject& /*other*/,
 	const Vector2F& /*normal*/, float /*penetration*/)
 {
-	// Nothing. A wall does not move and does not care.
 }
 CollisionLayer Structure::layer() const
 {

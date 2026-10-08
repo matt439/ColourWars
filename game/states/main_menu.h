@@ -30,14 +30,11 @@ public:
 	void init() override = 0;
 	void update(float dt) override = 0;
 protected:
-	// This menu family's own presentation, beside MenuPage::menu_style()'s
-	// shared one. Named for what a reader is looking for rather than for the
-	// type it returns: `this->look().play_background_colour` at the call site.
 	const MainMenuPresentation& look() const;
 
 	int player_count() const;
 
-	// Available devices, used only when choosing a new roster.
+	// Available input slots, including keyboard/mouse.
 	std::vector<int> connected_slots() const;
 
 	// Return true while the roster is missing a controller. Keep each player's
@@ -45,9 +42,7 @@ protected:
 	bool wait_for_players(const std::vector<ProcessedMenuInput>& inputs);
 	void set_player_prompts(const std::vector<PromptBar::Prompt>& prompts);
 
-	// The sounds only this family makes, beside the cursor, confirm and cancel
-	// every page shares from MenuPage. The music is an effect rather than a
-	// wave because it loops and is stopped on the way into a match.
+	// Family-specific sounds; the looping music is stopped before entering a match.
 	labrador::SoundBank::WaveHandle error_sound_;
 	labrador::SoundBank::WaveHandle ready_sound_;
 	labrador::SoundBank::EffectHandle music_;
@@ -68,9 +63,7 @@ private:
 	std::unique_ptr<labrador::UiTextDropShadow> start_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> build_id_ = nullptr;
 
-	// Shown only while no pad is connected. Its visibility is refreshed every
-	// frame rather than set once, because plugging one in is exactly what this
-	// line is asking for and the page must notice when it happens.
+	// Connection hint; the keyboard slot currently keeps it hidden.
 	std::unique_ptr<labrador::UiTextDropShadow> no_pad_ = nullptr;
 };
 
@@ -98,9 +91,6 @@ private:
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 
-	// A label and its value, as one focusable thing each. They were four
-	// loose widgets and a chain of pointer comparisons until the engine let a
-	// container be focused.
 	std::unique_ptr<OptionRow> resolution_row_ = nullptr;
 	std::unique_ptr<OptionRow> full_screen_row_ = nullptr;
 	std::unique_ptr<OptionRow> team_palette_row_ = nullptr;
@@ -114,16 +104,12 @@ private:
 	void cycle_resolution(labrador::Direction direction);
 	void cycle_team_palette(labrador::Direction direction);
 	void update_team_palette_selection_text();
-	// Left and right on whichever row carries a value. The focus group has no
-	// opinion about which rows those are: that is this game's content, and it
-	// is now the row's own rather than a list kept here.
 	void adjust_focused_value(labrador::Direction direction);
 	void apply_settings();
 	void update_resolution_selection_text();
 
-	// Points the Resolution row at whichever of the two questions currently
-	// applies - the preset being chosen, or the size fullscreen actually took -
-	// and switches the row off while it is answering the second.
+	// Shows the selected preset when windowed, or the live size in a disabled row
+	// while fullscreen.
 	void refresh_resolution_row();
 	void update_full_screen_selection_text() const;
 	void apply_fullscreen_setting(bool fullscreen);
@@ -201,8 +187,7 @@ private:
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 
-	// Shown when the confirm that would have completed the roster would also
-	// have left one of the two teams empty.
+	// Shown when completing a multiplayer roster would leave a team empty.
 	std::unique_ptr<labrador::UiTextDropShadow> both_teams_needed_ = nullptr;
 
 	std::vector<std::unique_ptr<PlayerWidgets>> player_widgets_;
@@ -212,17 +197,13 @@ private:
 	bool all_players_confirmed() const;
 	bool all_players_unconfirmed() const;
 
-	// Whether `player` is the last one still to confirm, and so whether their
-	// press is the one that starts the match.
+	// Whether this player is the last unconfirmed member of the roster.
 	bool confirm_completes_roster(int player) const;
 
-	// Whether this roster could be a match. Both the refusal and the message
-	// that explains it read this one predicate, so they cannot disagree.
+	// Shared predicate for confirmation and its validation message.
 	bool roster_is_playable() const;
 
-	// Whether the teams as currently *chosen* - confirmed or not - have
-	// somebody on each side. The team is picked before it is confirmed, so
-	// this already includes the player who is pressing.
+	// Counts chosen teams regardless of confirmation state.
 	bool both_teams_chosen() const;
 
 	void set_level_settings() const;
@@ -258,8 +239,6 @@ private:
 	static WeaponType random_weapon();
 	void set_level_settings() const;
 	void cycle_weapons(labrador::Direction direction, int player_index);
-	// Not static any more: the descriptions are content, so they come off
-	// this page's presentation rather than out of six constants in a header.
 	std::wstring weapon_description(WeaponType type) const;
 };
 
@@ -270,9 +249,7 @@ public:
 	void update(float dt) override;
 	void init() override;
 private:
-	// The cursor runs over every stage the manifest named and then one slot
-	// past the end, which is Random - a menu affordance rather than a stage,
-	// which is why it is a position here and not an entry in the list.
+	// Stage slots are followed by Random, which is not a stage-list entry.
 	struct SelectState
 	{
 		int slot = 0;
@@ -286,20 +263,14 @@ private:
 	SelectState select_state_ = SelectState();
 	void update_stage_select_visuals();
 	void unconfirm_all_widgets();
-	// Where a stage name sits in the list. An empty or unrecognised name is
-	// the first stage, which is what makes "no choice yet" mean "the first
-	// one" without a default spelt anywhere.
+	// Returns the stage's slot, or the first slot for an empty or unknown name.
 	int slot_of(const std::string& stage_name) const;
-	// The slot the Random option sits in - one past the last stage.
+	// One past the final stage.
 	int random_slot() const;
-	// What a slot shows: the sprite frame and the label beneath it. They are
-	// helpers rather than a block inside update_stage_select_visuals because
-	// init() has to build the icon with a frame that is really in the sheet -
-	// the engine resolves a frame name eagerly, and one that is not there
-	// throws before the page has finished being constructed.
+	// Presentation for stage and Random slots, shared by init and updates.
 	std::string slot_icon_frame(int slot) const;
 	std::wstring slot_display_name(int slot) const;
-	// A real stage's slot, chosen uniformly.
+	// Chooses a random stage slot.
 	int pick_random_stage() const;
 	void cycle_stages(labrador::Direction direction);
 	void set_level_settings() const;

@@ -13,19 +13,12 @@
 class LevelObjectBuilder
 {
 public:
-	// The paint tuning is borrowed and outlives every level: main() owns it.
-	// A paintable structure divides itself into tiles at construction, and
-	// how finely is a balance number rather than a property of the level file.
+	// Borrowed paint tuning must outlive the built objects. It sets tile granularity.
 	LevelObjectBuilder(labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
 		const PaintTuning* paint);
 
-	// By value. The outer unique_ptr on all three of these was a heap
-	// allocation around a type that already owns its storage and already moves
-	// in constant time - and it bought a second null to check at every use
-	// site, which is what `unique_ptr<vector<unique_ptr<T>>>` costs and all it
-	// costs.
 	std::vector<std::unique_ptr<labrador::CollisionObject>>
 		build_collision_objects(const labrador::JsonValue& json,
 			const TeamColour& team_colours) const;

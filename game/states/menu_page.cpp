@@ -5,13 +5,8 @@ using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
-// The bank name and the audio come from `context` rather than through this
-// page's own menu_style() and audio_resources(), which is how the four family
-// constructors this replaces reached them: a base is initialised before the
-// members of the class that owns it, so context_ is not set yet. The four
-// could get away with it because MenuPage was already a fully constructed base
-// by the time their SoundBankObject was initialised. Here it is the same
-// object, so the values are read from the argument.
+// Read through the constructor argument: context_ is not initialized
+// until after the SoundBankObject base.
 MenuPage::MenuPage(MenuContext* context) :
 	SoundBankObject(context->data()->presentation()->menu().sound_bank,
 		context->data()->audio_resources()),
@@ -23,23 +18,8 @@ MenuPage::MenuPage(MenuContext* context) :
 	this->cancel_sound_ = this->resolve_wave(style.cancel_sound);
 }
 
-// Every page's prompts pass through here, which is why the keyboard is named
-// here and not in each of the twelve.
-//
-// A page writes the pad button it means - "A", "B" - and this adds the key
-// that does the same thing, so the bar reads "A/Enter  Select". A page that
-// wanted to say something else would have to fight this, and none does: the
-// whole set of button labels in this game is A, B, B/Start and Left/Right.
-//
-// LEFT/RIGHT IS LEFT ALONE, and it is the one that needs no help. It already
-// means the stick or the d-pad, and on a keyboard it means the arrows or A/D -
-// four devices, one honest word each way.
-//
-// This exists because a keyboard player who is never told that Enter works has
-// keyboard support they cannot find. The bindings themselves are in code
-// (player_input.h, menu_input.h) for the reason those files give, so this is
-// the legend agreeing with them by hand - checked by reading, as the match's
-// own controls line is.
+// Add keyboard equivalents to the shared pad labels. Keep these mappings
+// in sync with MenuInput; Left/Right already describes keyboard navigation.
 void MenuPage::set_prompts(const std::vector<PromptBar::Prompt>& prompts)
 {
 	std::vector<PromptBar::Prompt> with_keys;
@@ -79,7 +59,6 @@ void MenuPage::draw(Renderer& renderer) const
 
 	layers.push_back({ this->text_container_.get(), TextureFilter::linear });
 
-	// Last, so it is over everything, and only if the page set one.
 	if (this->prompt_bar_ != nullptr)
 	{
 		layers.push_back({ this->prompt_bar_.get(), TextureFilter::linear });
@@ -184,9 +163,8 @@ ViewportManager* MenuPage::viewport_manager() const
 void MenuPage::draw_ui_layers(Renderer& renderer,
 	const std::vector<UiLayer>& layers) const
 {
-	// A menu covers the whole screen, after every world view and its overlays.
-	// Appending slices to earlier views lets a later fullscreen countdown draw
-	// over them. Reuse the final recording so nested menus keep stack order too.
+	// Append to the final view with a fullscreen viewport so menus draw after
+	// world overlays and preserve stack order, including nested menus.
 	if (renderer.view_count() == 0)
 	{
 		renderer.set_view_count(1);

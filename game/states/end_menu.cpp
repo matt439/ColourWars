@@ -5,8 +5,6 @@ using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;
 
-// The end menu makes no sound of its own: the three MenuPage resolves are the
-// three it plays, which is why this is empty rather than gone.
 EndMenuPage::EndMenuPage(MenuContext* context) :
 	MenuPage(context)
 {

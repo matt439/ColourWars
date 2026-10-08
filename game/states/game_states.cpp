@@ -23,9 +23,7 @@ void GameMenu::init()
 	this->open_menu(MainMenuScreen::title);
 }
 
-// GameMenu never has a frame to itself: init() pushes a page, and every path
-// that closes one pushes the next thing in the same drain. These two are what
-// the base class demands, and the stack is what makes them empty.
+// GameMenu owns shared setup state; pages and matches above it handle each frame.
 void GameMenu::update(float /*dt*/)
 {
 
@@ -39,9 +37,7 @@ void GameMenu::draw(Renderer& /*renderer*/) const
 void GameMenu::open_menu(MainMenuScreen screen)
 {
 	this->menu_input_->reset_actions();
-	// The page frame has one exit and it is the way out, so it closes rather
-	// than answering: the settings it assembled are in the MenuContext this
-	// state owns. That used to be a heap-allocated bool read every frame.
+	// Closing the page starts a match with the settings in the shared context.
 	this->context()->push(this->build_page(screen),
 		[this]() { this->start_match(); });
 }
@@ -74,9 +70,7 @@ std::unique_ptr<MainMenuPage> GameMenu::build_page(MainMenuScreen screen) const
 
 void GameMenu::start_match()
 {
-	// Above the menu, not instead of it. The menu is still there when the match
-	// ends, which is why "change teams" is a screen to go back to rather than a
-	// whole main menu rebuilt from a saved screen enum.
+	// Keep the menu context and its settings alive beneath the match.
 	this->context()->push<EndMenuAction>(
 		std::make_unique<GameLevel>(this->data(), *this->menu_level_settings_),
 		[this](const EndMenuAction& action) { this->on_match_ended(action); });
@@ -99,10 +93,7 @@ void GameMenu::on_match_ended(const EndMenuAction& action)
 		this->open_menu(MainMenuScreen::home);
 		break;
 	case EndMenuAction::restart:
-		// A restart rebuilds the level in place and never leaves the match, so
-		// this arm is unreachable through the end menu. It is here because the
-		// enum has five values and a silent fifth case is how the missing
-		// `break` in the switch this replaced went unnoticed.
+		// GameLevel normally handles restart without leaving the match.
 		this->start_match();
 		break;
 	}
@@ -127,9 +118,7 @@ GameData* GameLevel::data() const
 
 void GameLevel::init()
 {
-	// Taken here and given back by the destructor. Whatever was in place is
-	// what goes back, so a match started from a menu that was itself drawn
-	// under some other layout leaves that layout alone.
+	// Restore this layout on every exit through the destructor.
 	this->previous_layout_ = this->data()->viewport_manager()->layout();
 
 	this->player_input_ = std::make_unique<PlayerInput>(
@@ -161,35 +150,21 @@ void GameLevel::init()
 	this->build_and_enter_level();
 }
 
-// The single way into a level. LevelBuilder reads the current screen layout to
-// build the split-screen dividers, so the layout must be set first - every
-// restart path used to skip that and rebuild the level under whatever layout
-// happened to be in place.
+// LevelBuilder needs the match layout before it builds split-screen dividers.
 void GameLevel::build_and_enter_level()
 {
 	this->data()->viewport_manager()->
 		set_layout(this->settings_.screen_layout());
 
-	// Destroyed before its replacement is built, not after. Both resolve the
-	// same music out of the shared sound bank, so a level dying *after* its
-	// successor was constructed would stop the successor's track - which is the
-	// hazard that comes with ~Level owning the music instead of seven
-	// hand-written stop_music() calls.
+	// Destroy the old level first: its destructor stops music in the shared bank
+	// and would otherwise stop the new level's track.
 	this->level_.reset();
 	this->level_ = this->level_builder_->build_level(this->settings_,
 		this->data()->save()->team_palette());
 
-	// Whoever pressed A to start the match is probably still holding it, and
-	// it does not land as a jump on frame one: the engine polls the pads every
-	// frame whatever is running, so A was down last frame too and there is no
-	// press edge. That used to be four hand-written prime() calls, one at each
-	// transition, and each of them was a fix for a bug that had shipped.
 
-	// Building a level is a blocking call worth many frames, and the step is
-	// fixed: the next tick would otherwise pay the backlog off by running the
-	// opening seconds of the match at full speed. Two GameLevelState values
-	// existed to swallow the first frame and hope, which cost a frame and fixed
-	// nothing past it.
+	// Discard loading time so fixed-step updates do not advance the new match
+	// to catch up with the time spent building it.
 	this->data()->application()->reset_elapsed_time();
 }
 
@@ -209,11 +184,8 @@ void GameLevel::on_deactivated()
 
 void GameLevel::update(float dt)
 {
-	// Asked rather than remembered. The suspend above is an edge, but whether
-	// to tick is a question about right now, and a GameLevel built while the
-	// player was already in another window never saw an edge to record: the
-	// stack keeps updating in the background, so a match can be constructed
-	// there.
+	// Check current focus because a state created in the background has not
+	// received a deactivation callback.
 	if (!this->context()->active())
 	{
 		return;
@@ -253,18 +225,13 @@ void GameLevel::draw(Renderer& renderer) const
 	// A covered match does not update, but its window can still resize. Prepare
 	// its presentation on this thread before Scene::draw starts any workers.
 	this->level_->refresh_layout();
-	// Just the match. Whatever menu is over it draws itself, one frame above
-	// this one, because MenuPage does not cover the screen (state.h).
 	this->level_->draw(renderer);
 }
 
 void GameLevel::on_suspend()
 {
 	this->covered_ = true;
-	// What not-calling-update() could never do. Level::update is the only thing
-	// that ever stops a looping weapon voice, so pausing used to leave a player
-	// who paused mid-burst with a sustained tone running under the menu, over
-	// music still playing at full volume.
+	// Pausing updates alone would leave weapon loops and music playing.
 	this->level_->suspend();
 }
 
@@ -294,8 +261,7 @@ void GameLevel::on_pause_menu_closed(const PauseMenuAction& action)
 	switch (action)
 	{
 	case PauseMenuAction::resume:
-		// Nothing: on_resume() has already let the mix back up, which is
-		// exactly what resuming means.
+		// on_resume() handles audio when the menu closes.
 		break;
 	case PauseMenuAction::restart:
 		this->build_and_enter_level();
@@ -344,8 +310,7 @@ void GameLevel::on_end_menu_closed(const EndMenuAction& action)
 		return;
 	}
 
-	// Everything else is a screen of the main menu, and the main menu is the
-	// frame underneath: it knows which screen each of these means.
+	// The persistent GameMenu opens the requested setup page.
 	this->leave_match(action);
 }
 

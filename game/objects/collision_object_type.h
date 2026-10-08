@@ -3,14 +3,8 @@
 #include "engine/collision/collision_layer.h"
 #include "game/objects/projectile_type.h"
 
-// The game's collision vocabulary, in one file: what a thing is, which group
-// the engine files it under, and which groups it answers to.
-//
-// The enum used to be the whole of it, and it reached the engine by sitting in
-// the collision interface's own signature - finding #13. It is the opaque tag
-// now: engine/collision carries it through as an integer it never looks
-// inside, and it is read back only here and in the responses. What the engine
-// filters on is the layer and the mask.
+// Game-specific collision tags. The engine carries these opaquely and filters
+// contacts using layers and masks.
 enum class CollisionObjectType
 {
 	structure,
@@ -35,17 +29,10 @@ enum class CollisionObjectType
 
 namespace collision_layers
 {
-	// The six groups worth telling the engine apart. There is no dead-player
-	// layer: a dead player is one whose mask is empty, which is the same fact
-	// stated where it changes rather than in a second pair of enumerators that
-	// nothing ever read.
+	// Dead players keep their layer but use an empty mask.
 	constexpr labrador::CollisionLayer STRUCTURE = 1u << 0;
 
-	// Slopes are their own group only because paint flies through them.
-	// That is how the game already behaves - a projectile's type list named
-	// the three flat structure kinds and omitted the two ramps - and it was a
-	// gap in a list rather than a decision anybody wrote down. Merge this bit
-	// into STRUCTURE to make ramps solid to paint.
+	// Ramps have a separate layer because paint passes through them.
 	constexpr labrador::CollisionLayer STRUCTURE_RAMP = 1u << 1;
 
 	constexpr labrador::CollisionLayer PLAYER_TEAM_A = 1u << 2;
@@ -72,14 +59,7 @@ constexpr CollisionObjectType to_collision_type(labrador::CollisionTag tag)
 	return static_cast<CollisionObjectType>(tag);
 }
 
-// Which group this type belongs to, and which groups it responds to.
-//
-// These two replace six hand-written type lists spread over Player,
-// Projectile and StructurePaintable, which had already drifted: a player
-// asked only whether the other thing was a structure, and a projectile asked
-// whether it was a structure or an enemy player, so the pair (player,
-// projectile) passed one test and failed the other. Both sides now consult
-// the same table, and find_contacts requires both to agree.
+// Layer and mask for each type. Both objects must accept a pair for contact testing.
 labrador::CollisionLayer collision_layer(CollisionObjectType type);
 labrador::CollisionMask collision_mask(CollisionObjectType type);
 
@@ -97,15 +77,8 @@ inline bool is_projectile(CollisionObjectType type)
 		type == CollisionObjectType::projectile_mist_team_b;
 }
 
-// Which of the five kinds of paint this is, with the firing team dropped.
-//
-// The pair of enumerators per kind exists so the engine can filter a team's
-// paint from the other team's by layer. What a hit *does* is the same either
-// way, so the responder wants the kind and not the pair - and reading the
-// number off the projectile's tuning record needs exactly this.
-//
-// Throws for anything is_projectile() rejects, which is the same contract the
-// if-chain in Player::on_projectile_contact had at its end.
+// Projectile kind without its firing team, used to look up damage tuning.
+// Throws if the tag is not a projectile.
 projectile_type to_projectile_type(CollisionObjectType type);
 
 inline bool is_structure(CollisionObjectType type)

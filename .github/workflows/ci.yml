@@ -1,14 +1,5 @@
-# Configure and build on a clean checkout, then check the game still starts.
-#
-# The engine's own CI (matt439/Labrador) runs the tests and the benchmark.
-# There is nothing to run here: Labrador puts its test targets behind
-# PROJECT_IS_TOP_LEVEL, so a consumer's ctest is empty by design. What this
-# job proves is the thing only a consumer can prove — that the pinned engine
-# revision and this game still build and link together.
-#
-# It runs on a runner with no wave bank, which is the point rather than a
-# limitation: the audio sources are not in this repository (see NOTICE), so
-# every run is a real clone of what a new contributor gets.
+# Build the game against its pinned engine and check startup without private audio.
+# Engine tests and benchmarks run in Labrador's CI; this consumer has no ctest targets.
 
 name: build
 
@@ -18,8 +9,6 @@ on:
   pull_request:
   workflow_dispatch:
 
-# A second push to the same branch cancels the first. A queue of stale runs on
-# a repository with one maintainer is a queue nobody reads.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -33,42 +22,23 @@ jobs:
       matrix:
         preset: [x64-debug, x64-release]
 
-    # The presets use the Ninja generator, so every cmake step needs the MSVC
-    # environment. vcvars64 is found through vswhere rather than a hardcoded
-    # path, because the runner image's Visual Studio edition is not this
-    # repository's business - and through vswhere rather than a third-party
-    # action, because a build that can be done with the tools already on the
-    # machine should not add a supply chain to do it.
+    # Ninja builds need the MSVC environment supplied by vcvars64.bat.
     defaults:
       run:
         shell: cmd
 
     steps:
-      # submodules: recursive, because external/labrador is the engine and
-      # without it the first configure fails on a missing add_subdirectory.
-      #
-      # No token is needed for it: Labrador is public. This is worth knowing
-      # because it briefly was not, and the failure was loud and unobvious -
-      # the default GITHUB_TOKEN is scoped to *this* repository, so a private
-      # engine gives "remote: Repository not found" at checkout, before any
-      # build step runs. If Labrador is ever made private again, this needs a
-      # PAT with read access to it:
-      #
-      #     token: ${{ secrets.ENGINE_SUBMODULE_TOKEN }}
+      # Include Labrador and its nested dependencies.
       - uses: actions/checkout@v4
         with:
           submodules: recursive
 
-      # CMakePresets.json reads $env{VCPKG_ROOT} for the toolchain file and
-      # configuring fails without it. This is the same one-time step the README
-      # asks a person to do.
+      # CMakePresets.json requires VCPKG_ROOT to locate the toolchain.
       - name: Point at the runner's vcpkg
         shell: pwsh
         run: echo "VCPKG_ROOT=$env:VCPKG_INSTALLATION_ROOT" >> $env:GITHUB_ENV
 
-      # The manifest's dependencies are built at configure time, which is most
-      # of this job's wall clock. Keyed on vcpkg.json, so a run that changes no
-      # dependency reuses the last one's binaries.
+      # Reuse dependency binaries across configure steps.
       - name: Cache vcpkg binaries
         uses: actions/cache@v4
         with:
@@ -85,10 +55,7 @@ jobs:
           call "%VCVARS%"
           cmake --preset ${{ matrix.preset }}
 
-      # This includes the engine's check_engine_includes target, which still
-      # runs when Labrador is built as a subdirectory - and here it is the only
-      # thing enforcing the rule, because from this tree an engine file
-      # reaching for "game/..." would resolve.
+      # Building also runs Labrador's include-boundary check.
       - name: Build
         run: |
           call "%VCVARS%"
@@ -119,23 +86,9 @@ jobs:
             }
           }
 
-      # A clone has no wave bank, so the game should reach its window in
-      # silence rather than throwing on the file the manifest names. That is
-      # the regression this exists to catch.
-      #
-      # It is launched from the workspace root and not from beside the exe,
-      # on purpose: content resolves beside the executable (the engine's
-      # content_root.h; main.cpp for the two files read before the manifest),
-      # and the working directory is the one place it must not be resolved
-      # from. Started from the exe's own folder the two are the same and the
-      # check proves nothing about it; started from here, a file read against
-      # the working directory is a startup throw and is caught below.
-      #
-      # NOT GATING, and the reason is honest: a Direct3D 11 device on a
-      # headless runner is not the thing under test. If it fails because the
-      # runner has no adapter, that is a fact about the runner. Read the log; a
-      # startup *exception* names itself on stderr and is worth acting on, a
-      # device failure is not.
+      # Launch from the workspace root to verify executable-relative content paths
+      # and the missing-audio fallback. This is advisory because headless runners
+      # may lack a D3D11 adapter; inspect stderr for application startup failures.
       - name: A clone with no audio still starts, from anywhere
         continue-on-error: true
         shell: pwsh
@@ -169,11 +122,8 @@ jobs:
             Write-Error "the game exited during startup (code $($p.ExitCode))"
             exit 1
           }
-          # "Still running" on its own is not the thing this step claims. A
-          # startup throw is caught in wWinMain, which prints the reason and
-          # then opens a modal MessageBox - a call that never returns on a
-          # runner with nobody to click it. So a failure is alive at 15 s and
-          # has a window too, and only the stderr line tells the two apart.
+          # A startup exception leaves a live modal MessageBox. Check stderr
+          # as well as the process and window to distinguish it from success.
           if ($stderr -match "startup failure") {
             Write-Error "the game threw during startup"
             exit 1

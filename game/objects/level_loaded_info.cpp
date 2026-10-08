@@ -15,9 +15,7 @@ LevelLoadedInfo::LevelLoadedInfo(const char* json_path) :
 
 void LevelLoadedInfo::validate() const
 {
-	// Every accessor, so every key is touched. JsonValue throws with the file
-	// and the key on the first one that is absent or the wrong type, so this
-	// needs no messages of its own for any of them.
+	// Validate all exposed keys at startup. JsonValue errors identify the file and key.
 	this->display_name();
 	this->icon_frame();
 
@@ -36,13 +34,7 @@ void LevelLoadedInfo::validate() const
 	this->music_name();
 	this->music_volume();
 
-	// Then the two things no single key is wrong about, and which therefore
-	// have to be said here.
-	//
-	// A roster is up to Gamepads::max_count per team and PlayerBuilder
-	// subscripts the spawn array by position in it. A stage with three spawns
-	// is a perfectly valid document that throws when the fourth player is
-	// built, which is again inside GameLevel::init().
+	// Require enough spawn points for a full roster on either team.
 	const JsonValue root = this->json_doc_.root();
 
 	if (team_a.size() < labrador::Gamepads::max_count ||
@@ -55,9 +47,7 @@ void LevelLoadedInfo::validate() const
 			", because a match can be that many players a side.");
 	}
 
-	// A spawn outside the arena is not a content mistake the loader can see:
-	// the player is built there, falls out of the level on the first tick, and
-	// Level::update_level_logic throws "Player out of bounds" mid-match.
+	// Reject spawns outside the arena before a match can start.
 	for (const Vector2F& spawn : team_a)
 	{
 		validate_spawn(root, spawn, out_of_bounds, "team_a");

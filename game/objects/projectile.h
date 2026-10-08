@@ -14,15 +14,8 @@ class Projectile : public labrador::MovingObject,
 	public labrador::AnimationObject, public labrador::CollisionObject
 {
 public:
-	// `tuning` is borrowed and must outlive this projectile. It points into
-	// the GameTuning main() owns, which outlives the Application and therefore
-	// every level, so this holds for every projectile that can exist.
-	//
-	// Borrowed rather than copied because a sprayer spawns one of these per
-	// frame per firing player, and ProjectileDetails carries two std::strings:
-	// copying the record was two heap allocations on the spawn path for a
-	// value that is identical for every projectile of the type and never
-	// changes after startup (T8).
+	// Borrowed tuning must outlive the projectile. main() owns the immutable
+	// GameTuning, avoiding a copy of the asset names on each spawn.
 	Projectile(const mattmath::Vector2F& velocity,
 		PlayerTeam team,
 		int player_num,
@@ -69,8 +62,7 @@ protected:
 
 	const ProjectileDetails& details() const;
 
-	// The clamp every projectile's integrator applies. One number for all five
-	// kinds, which is why it is not in `details`.
+	// Integrator velocity limit shared by all projectile kinds.
 	const mattmath::Vector2F& max_velocity() const;
 
 	PlayerTeam team() const;
@@ -83,22 +75,16 @@ protected:
 	float timer() const;
 	void alter_timer(float time);
 
-	// Returns this step's displacement rather than leaving it on a member for
-	// the caller to read back. Only the four subclasses immediately below the
-	// call ever wanted it, and a member that is written and read inside one
-	// call chain is a return value that has been talked out of being one.
+	// Return this step's displacement for the subclass to apply.
 	virtual mattmath::Vector2F update_movement(float gravity,
 		float wind_resistance, float dt);
 private:
-	// Never null: every constructor takes one and the builder reads it out of
-	// GameTuning, which throws rather than answering with a missing record.
+	// Borrowed, never null; the builder requires a valid tuning record.
 	const ProjectileTuning* tuning_ = nullptr;
 
 	float timer_ = 0.0f;
 
-	// False until update_movement has run once. See the comment there: the
-	// lifetime test cannot fire on the update that precedes this projectile's
-	// first collision sweep.
+	// Allow one update before lifetime retirement so every spawn receives a collision sweep.
 	bool first_update_done_ = false;
 	mattmath::RectangleF previous_rectangle_ = mattmath::RectangleF::ZERO;
 
@@ -146,8 +132,7 @@ protected:
 		const mattmath::RectangleF& collision_rectangle) const;
 	void diffuse_collision_rectangle(mattmath::RectangleF& rectangle) const;
 private:
-	// Read off the same borrowed record the base class holds, rather than
-	// copied beside it.
+	// Read diffusion settings from the borrowed projectile tuning record.
 	const DiffusionDetails& diffusion_details() const;
 	mattmath::Vector2F calculate_diffusion_scale() const;
 };

@@ -13,15 +13,8 @@ class WeaponBuilder
 public:
 	WeaponBuilder() = default;
 
-	// Three subclasses and two plain RelativeVelocityWeapons.
-	//
-	// WeaponSprayer and WeaponMister used to be classes too, and each was a
-	// constructor forwarding its arguments to the base with one tuning
-	// constant bound in. The constant is a record in ./tuning.json now, and
-	// what was left of the two classes was nothing at all - so they are gone
-	// and the two picks build the base directly. The three that remain each
-	// override behaviour: the sniper and the bucket fire a one-shot wave, and
-	// the roller has its own aim and its own draw colour.
+	// Sprayer and mister use RelativeVelocityWeapon directly. Sniper and bucket
+	// override firing sound; roller overrides aim and tint.
 	static std::unique_ptr<Weapon> build_weapon(
 		const GameTuning* tuning,
 		PlayerTeam team,

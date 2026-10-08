@@ -4,7 +4,7 @@ enum class WeaponType
 {
     sprayer,
     sniper,
-    roller,  //no aiming, always touches ground. alternate fire when jumping (splash short forward)
+    roller,  // Fixed downward aim; fires a short-lived contact volume.
     mister,
     bucket,
     random_primary,

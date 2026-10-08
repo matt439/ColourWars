@@ -9,23 +9,17 @@
 class ResultsMenuPage : public MenuPage
 {
 public:
-	// The scores are fixed the moment the match ends, so they arrive as a value
-	// rather than through a data class that also had to carry the result out.
+	// Copies the final scores so the results stay fixed.
 	ResultsMenuPage(MenuContext* context, const LevelEndInfo& end_info);
 	~ResultsMenuPage() override = default;
 	void init() override = 0;
 	void update(float dt) override = 0;
 protected:
-	// This menu family's own presentation, beside MenuPage::menu_style()'s
-	// shared one. Named for what a reader is looking for rather than for the
-	// type it returns: `this->look().box_colour` at the call site.
 	const ResultsMenuPresentation& look() const;
 
 	LevelEndInfo level_end_info() const;
 
-	// The two only this family makes, beside the three every page shares from
-	// MenuPage. The drum roll is an effect rather than a wave because it is
-	// looped and then stopped.
+	// The fill sound loops until the score reveal completes.
 	labrador::SoundBank::WaveHandle winner_sound_;
 	labrador::SoundBank::EffectHandle fill_sound_;
 private:
@@ -48,8 +42,7 @@ private:
 	std::unique_ptr<labrador::UiTexture> team_a_fill_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> team_b_fill_ = nullptr;
 
-	// The one thing on this screen that says which bar is which without
-	// asking the player to tell two hues apart.
+	// A/B marks identify the bars without relying on colour.
 	std::unique_ptr<labrador::UiTexture> team_a_mark_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> team_b_mark_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> team_a_percentage_ = nullptr;

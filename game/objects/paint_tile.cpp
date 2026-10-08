@@ -19,15 +19,13 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	rectangle_(rectangle),
 	team_colours_(team_colours)
 {
-	// The splash covers the tile's own depth in both directions, which is what
-	// the SPLASH_RECTANGLE constant said in terms of THICKNESS.
+	// Extend the splash by the tile's depth on both sides.
 	const RectangleF splash_rectangle(0.0f, 0.0f,
 		paint->thickness * 2.0f, paint->thickness * 2.0f);
 	this->splash_ = PaintTileSplash(splash_rectangle, paint->splash_sheet,
 		paint->splash_animation, render_resources);
 
-	// The splash is always centred on the tile and the tile never moves, so
-	// this is set once here rather than re-assigned on every draw call.
+	// The tile is stationary, so the splash centre is fixed at construction.
 	this->splash_.set_rectangle_center(rectangle.center());
 }
 
@@ -37,10 +35,7 @@ void PaintTile::update(float dt)
 }
 void PaintTile::draw(DrawList& draw_list) const
 {
-	// Pure read. StructurePaintable::draw walks every tile it owns, and is
-	// itself entered by every render worker at once, so assigning the tile's
-	// and the splash's colour here was an unsynchronised write to state shared
-	// by all of them.
+	// Pass tint as a draw parameter: render workers share this tile.
 	if (this->team_ == PlayerTeam::none)
 	{
 		return;
@@ -67,11 +62,7 @@ int PaintTile::player_num() const
 }
 void PaintTile::paint(PlayerTeam team, int player_num)
 {
-	// The team came off the projectile once, at the structure, instead of
-	// being re-derived from a ten-way enum comparison per tile - which ran
-	// for every tile of the structure that a projectile touched, and
-	// recovered the same answer every time.
-	// Friendly repaint cannot steal contribution. Enemy repaint transfers it.
+	// Friendly repaint retains the capturing player's credit; enemy repaint transfers it.
 	if (this->team_ != team)
 	{
 		this->player_num_ = player_num;

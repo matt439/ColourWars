@@ -15,17 +15,11 @@ public:
 	void init() override = 0;
 	void update(float dt) override = 0;
 protected:
-	// This menu family's own presentation, beside MenuPage::menu_style()'s
-	// shared one. Named for what a reader is looking for rather than for the
-	// type it returns: `this->look().box_colour` at the call site.
 	const EndMenuPresentation& look() const;
 
-	// Closes the end menu with what the player chose. EndMenuData held nothing
-	// but the out-parameter this replaces, so it is gone entirely.
+	// Closes this menu and returns the selected action to the match.
 	void finish(EndMenuAction action) const;
 
-	// No sounds of its own. The three MenuPage resolves - a cursor move, a
-	// confirm, a cancel - are the three this family plays.
 };
 
 class EndMenuInitial final : public EndMenuPage

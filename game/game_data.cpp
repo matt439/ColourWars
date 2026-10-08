@@ -62,8 +62,6 @@ Registry<LevelLoadedInfo>* GameData::level_infos() const
 	return this->level_infos_;
 }
 
-// Everything below forwards. There is deliberately no cached copy of any of
-// them: a copy would be a second place for a service pointer to be wrong.
 
 ResolutionManager* GameData::resolution_manager() const
 {

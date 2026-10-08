@@ -2,9 +2,9 @@
 
 #include "game/objects/level_end_info.h"
 
-// One roster, stage and set of weapons until the series ends. Draws award no
-// win, so best-of counts decisive rounds. Restarting an unfinished round does
-// not touch this ledger; finishing it twice cannot award a second win.
+// Win ledger for a fixed-roster series. Draws award no win, so best-of counts
+// decisive rounds. Restarting an unfinished round leaves the ledger unchanged;
+// finish_round is idempotent until next_round.
 class Session
 {
 public:

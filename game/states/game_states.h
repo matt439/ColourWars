@@ -11,29 +11,18 @@
 #include "game/states/end_menu.h"
 #include "game/objects/player_input.h"
 
-// The two states this game is made of, and the flow between them is now the
-// engine's stack rather than four nested StateContexts and an enum.
+// Stack shapes during a session:
 //
-// The stack, in full, at every point in a session:
+//     [GameMenu, MainMenu*Page]
+//     [GameMenu, MainMenuOptions, ControlsSettingsMenu]
+//     [GameMenu, GameLevel]
+//     [GameMenu, GameLevel, PauseMenu*Page | ResultsMenuInitial | EndMenuInitial]
+//     [GameMenu, GameLevel, PauseMenuInitial, ControlsSettingsMenu]
 //
-//     [GameMenu]                                     - never on its own for a
-//     [GameMenu, MainMenu*Page]                        whole frame; it pushes
-//     [GameMenu, GameLevel]                            a page in init()
-//     [GameMenu, GameLevel, PauseMenu*Page]
-//     [GameMenu, GameLevel, ResultsMenuInitial]
-//     [GameMenu, GameLevel, EndMenuInitial]
-//
-// GameMenu is at the bottom for the whole session and owns what every main
-// menu page shares. The match is pushed *above* it rather than in place of it,
-// which is what makes "change teams" a return to a screen that still exists
-// rather than a reconstruction of the whole menu from a saved screen enum -
-// MainMenuMidwayLoadSettings is what that used to cost.
+// GameMenu is alone only during transitions. Its context and settings survive
+// matches; menu pages are rebuilt when returning from a match.
 
-// The main menu, and the owner of everything its pages share.
-//
-// It draws nothing and updates nothing: there is always a page above it. What
-// it is for is ownership and flow - the pages come and go, the settings they
-// are assembling do not.
+// Owns shared menu state and routes between setup pages and matches.
 class GameMenu final : public labrador::State
 {
 public:
@@ -48,8 +37,6 @@ private:
 	std::unique_ptr<MenuLevelSettings> menu_level_settings_ = nullptr;
 	std::unique_ptr<MenuContext> menu_context_ = nullptr;
 
-	// Opens the main menu at a screen. Called once from init() and once per
-	// match that ends, with whatever screen the end menu asked to go back to.
 	void open_menu(MainMenuScreen screen);
 	std::unique_ptr<MainMenuPage> build_page(MainMenuScreen screen) const;
 
@@ -58,27 +45,21 @@ private:
 	GameData* data() const;
 };
 
-// One single match or series, with a fresh Level for each round.
+// A match or series, with a fresh Level for each round.
 class GameLevel final : public labrador::State
 {
 public:
 	GameLevel(GameData* game_data, const MenuLevelSettings& settings);
 
-	// Puts back the screen layout it took. This is the fix for the main menu
-	// being drawn four times into quarter-screen viewports after a four-player
-	// match: the layout was set on the way in by one line and put back by none,
-	// because five separate exits each had to remember. A thing that is taken
-	// and given back wants an owner, and the owner is the state that took it.
+	// Restores the screen layout that was active before the match.
 	~GameLevel() override;
 
 	void update(float dt) override;
 	void draw(labrador::Renderer& renderer) const override;
 	void init() override;
 
-	// A menu went up over the match. The simulation stopping is what not being
-	// the top of the stack already does; these two are for everything that
-	// does not live in update() - which, as the shipped game demonstrated, is
-	// the entire audio mix.
+	// Stack coverage stops simulation updates; these callbacks suspend and
+	// resume the audio that continues independently.
 	void on_suspend() override;
 	void on_resume() override;
 
@@ -97,17 +78,13 @@ private:
 	std::unique_ptr<MenuInput> menu_input_ = nullptr;
 	bool covered_ = false;
 
-	// What the three menus this state puts over the match share. They are all
-	// built from the settings this match was built from, so it is the same
-	// composed context the main menu uses.
+	// Shared context for menus above the match; settings_ outlives those pages.
 	std::unique_ptr<MenuContext> menu_context_ = nullptr;
 
-	// The layout that was in place before this match took it, restored by the
-	// destructor.
+	// Restored by the destructor.
 	labrador::ScreenLayout previous_layout_ = labrador::ScreenLayout::one_player;
 
-	// Sets the screen layout from the settings, then builds the level. Used by
-	// init() and by every restart path, so they cannot drift apart.
+	// Sets the layout before building a level, including every restart.
 	void build_and_enter_level();
 
 	void open_pause_menu(int player_num);
@@ -116,17 +93,10 @@ private:
 	void open_end_menu();
 	void on_end_menu_closed(const EndMenuAction& action);
 
-	// Hands the match back to the menu underneath, with what the player chose.
 	void leave_match(EndMenuAction action) const;
 
-	// Returns the XInput pad slot of the player who pressed pause, or -1.
-	//
-	// Only slots this match is being played on are asked, which is why it needs
-	// the settings and cannot be static: player_inputs carries an entry for
-	// every connected pad whether or not a player is on it, and a spare
-	// controller down the back of the sofa is not one of the people playing.
-	// Letting one pause was letting it own the menu (pause_menu.h) and walk
-	// Quit -> Yes on everybody else's behalf.
+	// Returns the input slot of a participant requesting pause, or -1.
+	// Unclaimed devices cannot open the pause menu.
 	int check_for_pause_input(
 		const std::vector<PlayerInputData>& player_inputs) const;
 	GameData* data() const;

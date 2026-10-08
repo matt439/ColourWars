@@ -111,10 +111,7 @@ void DebugText::draw_debug_info(DrawList& draw_list,
 
     Vector2F text_pos = look.position;
 
-    // The caller has already put the list in the pane's own coordinates; this
-    // is a fixed corner of the viewport and follows no camera. Note that it
-    // does read one - it is the only draw in the level that prints a Camera
-    // rather than transforming by it.
+    // Draw in pane-local coordinates; the camera is displayed as data, not applied as a transform.
     draw_list.set_filter(TextureFilter::linear);
 
     for (size_t i = 0; i < lines.size(); i++)

@@ -1,5 +1,4 @@
-# Run on every build so a commit, content edit or submodule change cannot leave
-# yesterday's identifier in an otherwise up-to-date executable.
+# Refresh revision and dirty-state metadata on every build.
 find_package(Git QUIET)
 function(read_revision directory prefix)
     set(revision "source-archive")

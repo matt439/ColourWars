@@ -41,22 +41,13 @@ private:
 };
 
 
-// Not a CollisionObject, and never was one usefully.
-//
-// A paint tile has never appeared in the level's object list: a paintable
-// structure owns its own tiles and tests them itself, four thousand at a time,
-// only for the projectile that just hit the structure. Implementing the
-// collision interface bought it a type tag nothing read, a for_deletion()
-// nothing called, and a copy of the AABB-then-narrow block that six other
-// classes also carried - all so a structure could ask a tile a question it
-// could answer with a rectangle.
+// Owned by StructurePaintable, which tests nearby tiles on projectile contact.
+// Tiles are not registered separately with Scene.
 class PaintTile final : public labrador::TextureObject, public labrador::GameObject
 {
 public:
 	PaintTile() = default;
-	// The tuning is borrowed and outlives every level: main() owns it. A tile
-	// reads its splash's sheet, animation and size off it, which is what the
-	// three paint_tile_consts entries this replaces were.
+	// Borrowed tuning must outlive the tile; it supplies the splash assets and size.
 	PaintTile(const mattmath::RectangleF& rectangle,
 		const PaintTuning* paint,
 		labrador::RenderResources* render_resources,

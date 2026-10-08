@@ -37,18 +37,16 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData /*input*/,
     {
         this->set_rotation(PI / 4.0f);
     }
-    else //player facing left
+    else
     {
         this->set_rotation(3.0f * PI / 4.0f);
     }
     this->set_player_center(player_center);
 
-    //gun facing left
     if (facing_left(this->rotation()))
     {
         this->set_invert_y(true);
     }
-    //gun facing right
     else
     {
         this->set_invert_y(false);
@@ -57,7 +55,6 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData /*input*/,
 
 labrador::Colour WeaponRoller::draw_colour() const
 {
-    // The roller tints to the team colour while it is laying paint.
     return this->shooting_this_update_
         ? this->team_colour()
         : labrador::Colour::white;

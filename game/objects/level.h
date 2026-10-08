@@ -33,31 +33,12 @@ enum class LevelState
 	finished,
 };
 
-// One paint match: a countdown, a clock, a track, four HUDs and the two
-// cameras a match is watched through.
-//
-// What is no longer here is everything that was not about a paint match. The
-// object lists, the loops that stepped them, the collision sweep, the
-// out-of-bounds retirement, the swap-and-pop compaction and the per-view
-// render fan-out are an labrador::Scene now (engine/scene/scene.h) - eleven
-// members and nine methods, none of which mentioned paint. This class keeps
-// what only this game knows: how a camera follows a player, when a countdown
-// beats, what a HUD says, which track plays and when it stops.
-//
-// It talks to the scene through pointers to the players it kept and the view
-// list it fills. The scene owns the objects, including the players; `players_`
-// below is a typed, non-owning way back to the ones this class has questions
-// for.
+// One paint match: countdown, clock, cameras, HUDs and music.
+// Scene owns and steps the objects; Level keeps borrowed player pointers
+// and supplies the views and game-specific overlays.
 class Level
 {
 public:
-	// No default constructor. One never had a sound bank or a scene, and the
-	// destructor below speaks to both.
-	//
-	// The 21 positional parameters this used to take are twelve: eleven members
-	// went to the scene, two spawn lists were written and never read, and the
-	// thread pool and the partitioner are the scene's fan-out rather than
-	// anything a match knows about.
 	Level(std::unique_ptr<labrador::Scene> scene,
 		std::vector<Player*> players,
 		std::vector<std::unique_ptr<labrador::GameObject>> viewport_dividers,
@@ -77,24 +58,14 @@ public:
 		const PlaySettings* preferences,
 		const labrador::Mouse* mouse);
 
-	// Silences everything this level started.
-	//
-	// It replaces stop_music(), which was public and called by hand at seven
-	// GameLevel exits - so the level's music was as long-lived as whoever
-	// remembered, and a restart path that forgot left two tracks over each
-	// other. The track belongs to the match; this is where a match ends.
+	// Stop the level's music, transition sound and player weapon loops.
 	~Level();
 
 	Level(const Level&) = delete;
 	Level& operator=(const Level&) = delete;
 
-	// A menu went up over the match, or came back down.
-	//
-	// Not the same as stopping: a paused weapon loop resumes mid-voice where a
-	// stopped one has to be restarted from the top. Both walk the players
-	// because a looping fire sound belongs to a weapon, and Level::update is
-	// the only thing that ever ends one - which is why "pause" that only
-	// skipped update() left a sustained tone playing under the menu.
+	// Pause and resume level audio when a menu covers the match. Weapon loops
+	// retain their playback position while gameplay updates are suspended.
 	void suspend() const;
 	void resume() const;
 
@@ -104,10 +75,7 @@ public:
 	// covers the match. Called on the main thread, before render workers start.
 	void refresh_layout();
 
-	// A pure read, all the way down. Three caller obligations went with the
-	// three parameters this used to take - pre-size a vector, pre-fill it with
-	// null, and Release every non-null entry - and all three are the
-	// renderer's now.
+	// Read-only rendering; scene objects and overlays may be drawn concurrently.
 	void draw(labrador::Renderer& renderer) const;
 
 	LevelState state() const;
@@ -115,87 +83,53 @@ public:
 	LevelEndInfo level_end_info() const;
 
 private:
-	// What is in the world, where it is seen from, and the tick that steps it.
 	std::unique_ptr<labrador::Scene> scene_ = nullptr;
 
-	// The players, borrowed from the scene that owns them.
-	//
-	// They outlive every tick of the match, and the match ends with the scene,
-	// because a Player is never retired: for_deletion() returns false and
-	// set_for_deletion() is not implemented, so neither the bounds sweep nor a
-	// contact response can take one out from under this vector. That is what
-	// these pointers rest on, and it is stated at Player::for_deletion too.
-	//
-	// The index into this vector is the index of that player's view in the
-	// scene's view list, which is what lets an overlay find the player whose
-	// pane it is drawing. It is *not* the player's pad slot: player_num() is,
-	// and the two stop agreeing the moment a pad is unplugged.
+	// Borrowed from scene_. Players are never retired: death leads to respawn,
+	// so these pointers remain valid for the match.
+	// The vector index is the player's view index, not their input slot (player_num()).
 	std::vector<Player*> players_;
 
 	// Scene-owned geometry and players, which live for the whole match. Flying
 	// paint sweeps this list so its cost does not grow with other projectiles.
 	std::vector<labrador::CollisionObject*> projectile_targets_;
 
-	// Screen-space, per pane, drawn over the world rather than in it - so they
-	// are not scene objects: nothing culls them, nothing sweeps them, and they
-	// want the pane's camera rather than the player's. The overlay draws them.
+	// Screen-space dividers owned outside Scene and drawn by each pane's overlay.
 	std::vector<std::unique_ptr<labrador::GameObject>> viewport_dividers_;
 
 	labrador::SoundBank* sound_bank_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
 
-	// The level's own music comes from its definition file, so its name is not
-	// known until here - but it is known once, at construction, which is where
-	// it stops being a name. Same for the two fixed sounds the level plays.
+	// Resolve the level's music and fixed match sounds once at construction.
 	labrador::SoundBank::EffectHandle music_;
 	labrador::SoundBank::EffectHandle zoom_out_sound_;
 	labrador::SoundBank::WaveHandle countdown_sound_;
 	float music_volume_ = 0.0f;
 
-	// This frame's dt, for the debug overlay's dt/fps readout - the only thing
-	// on the draw path that wants frame timing. Written once in update() and
-	// read by the render workers, which is the same shape as every other
-	// member they read: written on the single-threaded tick, never during the
-	// draw. It replaces a const float* handed in at construction, so what used
-	// to be a pointer that device loss could invalidate is now a value.
+	// Written during the main-thread update and read by render workers for dt/fps.
 	float frame_dt_ = 0.0f;
 
-	// Also for the debug overlay, and also written once per tick. It used to be
-	// count_projectiles(), called from inside the per-view draw - so a
-	// four-player match rescanned every collision object in the level four
-	// times per frame for one line of text, on four threads at once.
+	// Cached once per tick for all debug overlays.
 	int projectile_count_ = 0;
 
 	std::unique_ptr<labrador::TextDropShadow> countdown_text_ = nullptr;
 
-	// The controls, shown under the countdown and gone when it is. Nothing
-	// else in this game has ever said which button shoots - not a screen, not
-	// a menu line, not the README - and the three seconds before a match is
-	// the one moment that reaches every player, every match, for free.
+	// Shared controls reminder, visible during the opening countdown.
 	std::unique_ptr<labrador::TextDropShadow> controls_text_ = nullptr;
 
-	// A value, not a unique_ptr. CameraTools holds no state at all - one const
-	// method and one static - so the heap allocation it used to get was a
-	// separate cache line and a null to check, bought for nothing.
 	labrador::CameraTools camera_tools_;
 
 	std::unique_ptr<InterfaceGameplay> interface_gameplay_ = nullptr;
 	std::unique_ptr<DebugText> debug_text_ = nullptr;
 
-	// The three borrowed pointers left of the seven this class held. Both are
-	// owned by the shell and outlive every level: the resolution for the
-	// countdown's placement and the zoom-out camera's aspect, the layout for
-	// which pane a player is in. RenderResources was the fourth and is a
-	// constructor parameter now - the three things that resolve a handle
-	// against it are all built there.
+	// Borrowed shell services; both outlive every level.
 	const labrador::ResolutionManager* resolution_manager_ = nullptr;
 	const labrador::ViewportManager* viewport_manager_ = nullptr;
 
-	// Borrowed so that the mouse-aiming player can be told where the cursor is
-	// relative to their own character. See resolve_mouse_aim.
+	// Borrowed mouse state for camera-dependent aiming; see resolve_mouse_aim.
 	const labrador::Mouse* mouse_ = nullptr;
 
-	// All four are set from the match tuning in the constructor body.
+	// Initialized from match tuning in the constructor.
 	float timer_ = 0.0f;
 	float start_timer_ = 0.0f;
 	float zoom_out_timer_ = 0.0f;
@@ -205,8 +139,7 @@ private:
 
 	TeamColour team_colours_ = TeamColour();
 
-	// Borrowed, never null: the durations, the countdown's look and the two
-	// match sounds.
+	// Borrowed, never null: match durations, countdown presentation and sounds.
 	const GameTuning* tuning_ = nullptr;
 
 	mattmath::RectangleF camera_bounds_ = mattmath::RectangleF::ZERO;
@@ -221,60 +154,34 @@ private:
 
 	LevelState state_ = LevelState::start_countdown;
 
-	// The match's own state machine: the countdown, the clock, the zoom-out and
-	// the overview. Separate from update() only so that refresh_views() runs on
-	// every path through it, including the two that return early.
+	// Advance the match state; update() refreshes views after every path returns.
 	void update_state(const std::vector<PlayerInputData>& player_inputs,
 		float dt);
 
-	// Not const, and it never should have been: it moves every object in the
-	// level. The declaration used to survive only because the members it
-	// wrote through were pointers, and a const method may write through a
-	// pointer it owns.
 	void update_level_logic(const std::vector<PlayerInputData>& player_inputs,
 		float dt);
 
-	// Each player reads the pad in its own slot, before anything steps.
-	//
-	// Indexed by the player's own pad slot, not by position in the loop.
-	// player_inputs is one entry per slot; a running counter only happened to
-	// agree while every pad stayed connected.
+	// Apply input by each player's device slot, not by their position in players_.
 	void apply_player_inputs(
 		const std::vector<PlayerInputData>& player_inputs);
 
-	// Fills in the aim for a player driving the keyboard-and-mouse slot, which
-	// PlayerInput cannot: it is the direction from that player's centre *as
-	// drawn* to the cursor, and only a match knows where a player is drawn.
-	//
-	// `view_index` is the position in players_, which is the index of that
-	// player's pane - not player_num(), which is the input slot. The two
-	// diverge, and using the wrong one aims from somebody else's screen.
-	//
-	// MEASURED ON SCREEN RATHER THAN IN THE WORLD, and the two agree. The
-	// camera transform is view = (world - translation) * scale with a scale
-	// that is uniform, so it turns a direction into the same direction times a
-	// positive number, and the normalise at the end divides that back out.
-	// Screen is where the cursor already is, so this is the conversion that
-	// does not have to be inverted.
+	// Fill keyboard/mouse aim using this player's camera and pane. view_index
+	// is the position in players_, not the device slot returned by player_num().
+	// The camera uses positive uniform scale, so normalizing the screen-space
+	// direction gives the same aim direction as normalizing in world space.
 	void resolve_mouse_aim(Player* player, size_t view_index,
 		PlayerInputData& input) const;
 
-	// What a player's tick needs that "step and collide" does not cover: the
-	// camera that follows the body the scene has just moved, and the
-	// projectiles the weapon just fired, which go to the scene.
+	// Update player cameras and submit projectiles produced by their weapons.
 	void update_players(float dt);
 	void resolve_projectile_movement();
 	void refresh_player_cameras();
 
-	// The scene's phase 3, run here rather than named on GameObject - see
-	// engine/scene/scene.h for why a virtual with an empty body on five
-	// thousand paint tiles is not the answer. Not const: it moves the weapon
-	// the body a contact just pushed is holding.
+	// After collision resolution, align each weapon with its corrected player position.
 	void update_players_after_resolve();
 
-	// Says where this frame is watched from: one pane per player while the
-	// match is running, one fullscreen view once it is over. Called at the end
-	// of every update() and on a resize before the rendering fan-out.
+	// One pane per player during the match, one fullscreen view afterward.
+	// Refresh after updates and after resize, before render workers start.
 	void refresh_views();
 
 	// The HUD, the dividers and the debug text, over one pane.
@@ -296,9 +203,6 @@ private:
 
 	int count_projectiles() const;
 
-	// Positions the countdown text and gives every player the camera their
-	// first frame is drawn through. Both used to happen on the first update(),
-	// which is why GameLevel had two states whose whole job was to not draw
-	// through a null pointer and a default camera.
+	// Build countdown text and cameras before the first frame is drawn.
 	void build_opening_frame(labrador::RenderResources* render_resources);
 };

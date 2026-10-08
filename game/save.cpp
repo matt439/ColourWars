@@ -5,9 +5,7 @@
 #include <cstdio>
 #include <filesystem>
 #include <system_error>
-// The save file is the one JSON this project writes rather than reads, and the
-// engine's assets module only reads. So rapidjson is here on the game's own
-// account - which is what game/CMakeLists.txt asks for it for.
+// The engine reads JSON; the game uses RapidJSON to write player settings.
 #include "rapidjson/document.h"
 #include "rapidjson/filewritestream.h"
 #include "rapidjson/writer.h"
@@ -24,11 +22,8 @@ SaveData Save::load_from_json(const char* json_path) const
 
     auto data = SaveData();
 
-    // This is the one file in the project where a bad value is not an error, so
-    // it is the one place that turns the loaders' loud failure (T6) back into a
-    // shrug. A save written by an older build, or one a user has hand-edited,
-    // degrades to the default - and per field, so a garbled resolution does not
-    // also cost the fullscreen setting.
+    // Recover invalid or missing settings independently so one bad field does
+    // not reset the other preferences.
     try
     {
         const JsonValue resolution = root.object("resolution");
@@ -65,8 +60,6 @@ SaveData Save::load_from_json(const char* json_path) const
     {
     }
 
-    // Independent fields: an older save or one bad preference must not reset
-    // the display settings or the other valid preferences.
     const auto read_preference = [&root](const char* key, int minimum,
         int maximum, int& destination)
     {
@@ -104,16 +97,8 @@ void Save::load_save_file()
 
     if (!file_exists(path))
     {
-        // Nothing at the real location. Before writing defaults over the
-        // question, look where the save used to be kept - beside the exe,
-        // under the build directory - and take those settings if they are
-        // there. Read only, and never removed: a build tree is not this
-        // game's to tidy up, the copy left behind is harmless, and one that
-        // was deleted after a failed write would be a setting lost to a
-        // migration nobody asked for.
-        //
-        // This is a one-way door by construction rather than by a flag. Once
-        // anything writes the new file, this arm is never taken again.
+        // If the per-user save cannot be opened, try the executable-relative legacy
+        // save before writing defaults. The legacy file is left intact.
         const std::string legacy = legacy_save_file_path();
         if (file_exists(legacy))
         {
@@ -127,8 +112,7 @@ void Save::load_save_file()
             }
         }
 
-        // Either way the file now exists at the new path, with whatever was
-        // recovered or with the defaults.
+        // Attempt to persist recovered settings or defaults; save_to_file reports failure.
         this->save_to_file();
         return;
     }
@@ -139,8 +123,7 @@ void Save::load_save_file()
     }
     catch (const std::exception&)
     {
-        // A missing, unreadable or corrupt save is not fatal - the defaults are
-        // perfectly playable, and the next settings change overwrites the file.
+        // Unreadable or corrupt saves use defaults; a later settings change retries saving.
         this->save_data_ = SaveData();
     }
 }
@@ -149,10 +132,7 @@ bool Save::write_save_file(const SaveData& data) const
 {
     const std::string path = save_file_path();
 
-    // fopen("wb") does not create directories, so a deployed build with no
-    // save/ folder would fail here on every attempt. Now that the save lives
-    // under %LOCALAPPDATA% this is not an edge case at all: the game's folder
-    // there does not exist until the first time it is written.
+    // Create the per-user directory on first save.
     const std::filesystem::path save_path = path_from_utf8(path);
     if (save_path.has_parent_path())
     {
@@ -160,11 +140,8 @@ bool Save::write_save_file(const SaveData& data) const
         std::filesystem::create_directories(save_path.parent_path(), ec);
     }
 
-    // Written beside the save and renamed over it, never straight into it.
-    // Opening the real file "wb" truncates it before the replacement exists,
-    // so a write that then fails - a full disk, a read-only Program Files -
-    // has destroyed the settings it was replacing as well as failing to store
-    // the new ones. A rename either happens or does not.
+    // Write a sibling temporary file before replacing the save, so a failed
+    // write does not truncate the existing settings.
     std::filesystem::path temp_file_path = save_path;
     temp_file_path += L".tmp";
 
@@ -173,7 +150,6 @@ bool Save::write_save_file(const SaveData& data) const
     {
         return false;
     }
-    // Allocate buffer on the heap
     auto write_buffer = std::make_unique<char[]>(65536);
     FileWriteStream os(fp, write_buffer.get(), 65536);
 
@@ -191,15 +167,12 @@ bool Save::write_save_file(const SaveData& data) const
     d.AddMember("music_volume", data.play.music_volume, d.GetAllocator());
     d.AddMember("sfx_volume", data.play.sfx_volume, d.GetAllocator());
 
-    // Accept() flushes the stream when the top-level value ends, so every byte
-    // has reached fwrite by the time fclose is called below.
+    // Writer flushes when the root object ends, before fclose below.
     Writer<FileWriteStream> writer(os);
     d.Accept(writer);
 
-    // fclose is the only call in this function that can report a failed write
-    // for a document this small: FileWriteStream::Flush discards the result of
-    // its fwrite by design, so everything above can "succeed" on a full disk.
-    // Its result is the save's result, which is why it is not discarded.
+    // Check fclose before replacing the save. RapidJSON's FileWriteStream does
+    // not report fwrite failures, so serialization alone cannot establish success.
     const bool closed = (fclose(fp) == 0);
 
     std::error_code rename_ec;
@@ -221,9 +194,7 @@ void Save::save_to_file() const
 {
     auto start = std::chrono::system_clock::now();
     auto legacy_start = std::chrono::system_clock::to_time_t(start);
-    // ctime_s writes the time into `buffer` and returns an errno_t; streaming
-    // that return value printed "0 Saving..." and never read the time at all.
-    // What it writes ends in a newline of its own.
+    // ctime_s includes a trailing newline.
     char buffer[30] = {};
     if (ctime_s(buffer, sizeof(buffer), &legacy_start) != 0)
     {
@@ -236,12 +207,8 @@ void Save::save_to_file() const
         return;
 	}
 
-    // A settings change that never reached the disk looks applied - the window
-    // resizes - and then comes back at the default on the next launch, which is
-    // exactly the failure a user cannot diagnose. std::cout above is a trace in
-    // a debugger and nothing else: this is a WIN32-subsystem exe with no
-    // console, so a report that has to be seen goes the way main() sends its
-    // startup failures, stderr paired with a message box (T6).
+    // Report write failures visibly: the WIN32 executable may have no console,
+    // and the in-memory settings remain active even if persistence fails.
     const std::string message = "Could not write " + save_file_path() +
         ".\nYour settings will not be remembered.";
     fprintf(stderr, "save failure: %s\n", message.c_str());

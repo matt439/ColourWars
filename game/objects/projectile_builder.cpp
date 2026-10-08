@@ -24,9 +24,7 @@ std::vector<std::unique_ptr<labrador::CollisionObject>>
 		SpriteFlip flip,
 		float layer_depth) const
 {
-	// One lookup for every branch below, and it is the line that rejects a
-	// projectile kind the tuning file does not describe - which is what the
-	// `default:` that threw std::exception used to be for.
+	// Require a tuning record before constructing any projectile of this kind.
 	const ProjectileTuning& tuning = this->tuning_->projectile(type);
 	const RectangleF rectangle(position, tuning.details.col_rect_size);
 
@@ -86,8 +84,7 @@ std::vector<std::unique_ptr<labrador::CollisionObject>>
 	SpriteFlip flip,
 	float layer_depth)
 {
-	// The spread, as five multiples of a twelfth of pi. Five near-identical
-	// twelve-line blocks is what this was, differing only in this number.
+	// Fan five mist projectiles at multiples of pi/12 around the firing direction.
 	constexpr float SPREAD[] = { 0.0f, 1.0f, -1.0f, 2.0f, -2.0f };
 
 	const RectangleF rectangle(position, mist->details.col_rect_size);

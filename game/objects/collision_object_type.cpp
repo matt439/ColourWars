@@ -46,11 +46,7 @@ CollisionMask collision_mask(CollisionObjectType type)
 {
 	switch (type)
 	{
-	// Level geometry answers to everything that moves. It never initiates -
-	// Structure::is_colliding returned false unconditionally - but under a
-	// symmetric filter "I never initiate" is not a thing an object can say,
-	// and it never should have been: whether a pair is tested is a property
-	// of the pair.
+	// Geometry accepts players and projectiles; collision filtering requires both masks to agree.
 	case CollisionObjectType::structure:
 	case CollisionObjectType::structure_paintable:
 	case CollisionObjectType::structure_jump_through:
@@ -58,9 +54,7 @@ CollisionMask collision_mask(CollisionObjectType type)
 	case CollisionObjectType::structure_ramp_right:
 		return collision_layers::ALL_PLAYERS | collision_layers::ALL_PROJECTILES;
 
-	// Players walk into level geometry, ramps included, and are shot by the
-	// other team. Two players never collide with each other, and neither does
-	// a player with their own paint.
+	// Players collide with geometry and enemy paint, but not other players or friendly paint.
 	case CollisionObjectType::player_team_a:
 		return collision_layers::ALL_STRUCTURES |
 			collision_layers::PROJECTILE_TEAM_B;
@@ -68,8 +62,7 @@ CollisionMask collision_mask(CollisionObjectType type)
 		return collision_layers::ALL_STRUCTURES |
 			collision_layers::PROJECTILE_TEAM_A;
 
-	// STRUCTURE and not ALL_STRUCTURES: paint flies through ramps. See
-	// collision_layers::STRUCTURE_RAMP.
+	// Paint passes through ramps, so only flat structures are included.
 	case CollisionObjectType::projectile_spray_team_a:
 	case CollisionObjectType::projectile_jet_team_a:
 	case CollisionObjectType::projectile_rolling_team_a:

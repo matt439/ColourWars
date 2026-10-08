@@ -58,8 +58,7 @@ void StructurePaintable::draw(DrawList& draw_list) const
 void StructurePaintable::on_contact(const CollisionObject& other,
 	const Vector2F& /*normal*/, float /*penetration*/)
 {
-	// Only paint paints. The mask lets players through as well, and a player
-	// walking along a wall leaves nothing behind.
+	// The mask also accepts players, but only projectiles paint the surface.
 	const CollisionLayer other_layer = other.layer();
 	if (other_layer != collision_layers::PROJECTILE_TEAM_A &&
 		other_layer != collision_layers::PROJECTILE_TEAM_B)
@@ -67,8 +66,6 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 		return;
 	}
 
-	// Once, here, rather than a ten-way enum comparison inside the tile loop
-	// recovering the same answer for every tile of the structure.
 	const PlayerTeam team = other_layer == collision_layers::PROJECTILE_TEAM_A ?
 		PlayerTeam::a : PlayerTeam::b;
 
@@ -77,29 +74,15 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 
 	bool tile_painted = false;
 
-	// The tiles a projectile can possibly touch, found by division rather than
-	// by asking every tile in the level whether it was hit.
-	//
-	// Each face was laid down as a run of equally sized tiles along one axis,
-	// so the ones overlapping a box are a contiguous index range, and the
-	// range is two divisions away. A projectile 20 units across on a wall of
-	// 20-unit tiles reaches two or three of them; the loop this replaces
-	// tested all fifteen hundred, every frame, for every projectile in the
-	// match. Nothing about that scan was wrong - it was answering a question
-	// arithmetic had already answered at load.
+	// Each face is a strip of equal-size tiles. Use its origin and pitch to
+	// select nearby candidates instead of scanning the entire structure.
 	for (const PaintStrip& strip : this->paint_strips_)
 	{
 		const float low = strip.along_x ? splash.left() : splash.top();
 		const float high = strip.along_x ? splash.right() : splash.bottom();
 
-		// Deliberately one wide at each end. The exact range is available -
-		// floor for the first index, ceil minus one for the last - but it sits
-		// on a boundary case at every tile seam, and the cost of being wrong
-		// there is a projectile that visibly fails to paint. Two extra
-		// candidates out of fifteen hundred is not a cost worth defending, and
-		// the rectangle test below is still what decides. Clamped, so a
-		// projectile hanging off the end of a wall paints the tiles it does
-		// reach.
+		// Pad the candidate range at tile seams, then clamp it to the face.
+		// The rectangle test below decides which candidates are actually touched.
 		int first = static_cast<int>(
 			std::floor((low - strip.origin) / strip.pitch)) - 1;
 		int last = static_cast<int>(
@@ -113,10 +96,7 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 			PaintTile& paint_tile = this->paint_tiles_[
 				static_cast<size_t>(strip.begin + i)];
 
-			// Still asked, not assumed. The index range says which tiles are
-			// near enough to be worth testing; this says whether the
-			// projectile actually reaches. A tile and a projectile are both
-			// axis-aligned rectangles, so it is the exact test.
+			// The strip range is conservative; require an actual rectangle overlap.
 			if (!paint_tile.bounds().intersects(splash))
 			{
 				continue;
@@ -141,8 +121,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles()
 
 	const PaintTuning& paint = *this->paint_;
 
-	// A face smaller than the requested granularity still needs one tile.
-	// Truncating to zero both lost that face and divided its size by zero.
+	// Keep at least one tile on a face smaller than the requested granularity.
 	const int num_paint_tiles_x = std::max(1,
 		static_cast<int>(std::fabs(this->rectangle().width / paint.size.x)));
 	const float paint_tile_width =
@@ -153,7 +132,6 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles()
 	const float paint_tile_height =
 		this->rectangle().height / num_paint_tiles_y;
 
-	// top edge
 	if (this->faces_.top)
 	{
 		this->paint_strips_.push_back(PaintStrip{
@@ -176,7 +154,6 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles()
 		}
 	}
 
-	// bottom edge
 	if (this->faces_.bottom)
 	{
 		this->paint_strips_.push_back(PaintStrip{
@@ -198,7 +175,6 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles()
 		}
 	}
 
-	// left edge
 	if (this->faces_.left)
 	{
 		this->paint_strips_.push_back(PaintStrip{
@@ -220,7 +196,6 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles()
 		}
 	}
 
-	// right edge
 	if (this->faces_.right)
 	{
 		this->paint_strips_.push_back(PaintStrip{

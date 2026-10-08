@@ -5,11 +5,7 @@
 
 namespace team_colour_consts
 {
-	// The five team colours. They were colour_consts::TEAM_* in the engine's
-	// palette, sitting among the CSS names in engine/math/colour.h - a game
-	// noun inside a library that is not allowed to know this game exists, and
-	// nothing in the engine ever read them. A paint match's team colours are
-	// as game-specific as a paint match, so they live in the game.
+	// The game's team-colour palette.
 	constexpr labrador::Colour TEAM_BLUE(6, 52, 204, 255);
 	constexpr labrador::Colour TEAM_YELLOW(255, 255, 0, 255);
 	constexpr labrador::Colour TEAM_ORANGE(255, 127, 0, 255);
@@ -34,12 +30,7 @@ enum class TeamColourPair
 	blue_orange,
 	pink_green,
 	blue_yellow,
-	// One past the last pair, so it is a count and never a valid value - which
-	// is what a random roll needs (rand() % count). This was `max = blue_yellow`,
-	// an alias for a real pair, which made the roll `rand() % 2` and left
-	// blue_yellow - the pair TeamColour also defaults to - impossible to draw.
-	// A new pair goes above this line, exactly as one goes above
-	// weapon_type.h's max_prim_wep.
+	// Count of fixed pairs; keep new pairs before this sentinel.
 	count
 };
 

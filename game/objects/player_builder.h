@@ -15,9 +15,7 @@ public:
 	// `tuning` is borrowed and outlives every player this makes.
 	explicit PlayerBuilder(const GameTuning* tuning);
 
-	// In the order the player settings name them, which is the order the level
-	// fills its view list in - so index 0 of this vector is the player whose
-	// pane is view 0.
+	// Return players in settings order, which also determines their view indices.
 	std::vector<std::unique_ptr<Player>> build_players(
 		const MenuLevelSettings& settings,
 		const LevelLoadedInfo* load_info,

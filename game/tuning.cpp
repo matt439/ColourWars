@@ -12,12 +12,7 @@ using namespace mattmath;
 
 namespace
 {
-	// Every read below goes through JsonValue, so a missing key, a wrong type
-	// or a hand-edit that broke the file is a startup failure naming the file,
-	// the position in it and the key. The four helpers here are for the
-	// vocabulary JsonValue cannot check on its own: a name that has to be one
-	// of a fixed set. Each rejects with where() so an unknown name reads the
-	// same as a missing one (T6).
+	// Enum parsers use JsonValue's source context for unknown names.
 
 	Vector2F read_vector(const JsonValue& parent, const char* key)
 	{
@@ -87,8 +82,7 @@ namespace
 			"linear_size_and_col_rect.");
 	}
 
-	// to_string spends six decimal places on every float, which reads badly in
-	// a sentence about a number somebody typed by hand.
+	// Avoid trailing decimal zeroes in authored-value diagnostics.
 	std::string number_text(float value)
 	{
 		std::string text = std::to_string(value);
@@ -100,18 +94,7 @@ namespace
 		return text;
 	}
 
-	// A number the game cannot run on is a content mistake exactly like a
-	// missing key, and deserves the same sentence pointing at it (T6).
-	//
-	// Every read in this file already fails loudly on type and on presence,
-	// through JsonValue. None of them checked range, and the whole argument
-	// for keeping 350 numbers in JSON is that a balance pass can change them
-	// without a rebuild - which only pays if a wrong one comes back as a
-	// sentence naming the key rather than as a division by zero or a silent
-	// correction. Only values with a failure mode anyone can name are bounded
-	// here; the rest are left alone deliberately.
-	//
-	// The comparison is written so that a NaN fails it.
+	// Reject only ranges required by gameplay. Write comparisons so NaN fails.
 	float read_number_in(const JsonValue& parent, const char* key,
 		float low, float high)
 	{
@@ -145,17 +128,12 @@ namespace
 		SoundTuning tuning;
 		tuning.name = sound.string("name");
 
-		// The one funnel every volume in the file passes through, which is why
-		// the check is here and not at eleven call sites. SoundBank clamps to
-		// [0, 1] on both play paths, so an authored 3.0 was not loud - it was
-		// 1.0, silently, with the intent lost between the file and the mixer
-		// and nothing anywhere reporting the difference.
+		// Reject authored volumes outside [0, 1] before SoundBank clamps them.
 		tuning.volume = read_number_in(sound, "volume", 0.0f, 1.0f);
 		return tuning;
 	}
 
-	// The sheet and the uniform texture are the same for every clip, so they
-	// are written once above the clips rather than five times inside them.
+	// Clips share the sheet and uniform texture declared on their parent.
 	PlayerAnimationTuning read_animation(const JsonValue& parent,
 		const char* key, const std::string& sheet, const std::string& uniform)
 	{
@@ -189,16 +167,11 @@ namespace
 
 		MatchTuning match;
 
-		// A zero-length match ends on the tick it starts. Level's zoom-out
-		// ratio divides by the second of these and guards it at runtime with a
-		// comment saying the proper home for the check is where the tuning is
-		// read - which is here.
+		// Require a playable duration and a positive divisor for the zoom-out ratio.
 		match.duration = read_positive(json, "duration");
 		match.zoom_out = read_positive(json, "zoom_out");
 
-		// Not bounded, and deliberately: zero is a legitimate value for both -
-		// a match with no countdown and no overview - and neither has an upper
-		// limit anyone can name.
+		// Zero skips the countdown or overview; these durations have no range check.
 		match.countdown = json.number("countdown");
 		match.overview = json.number("overview");
 
@@ -229,22 +202,7 @@ namespace
 
 		PaintTuning paint;
 
-		// StructurePaintable divides a face by each of these and casts the
-		// result to int to size its tile grid, unguarded.
-		//
-		// A zero divides a float by a float, so it is an infinity rather than
-		// a fault, and static_cast<int> of an infinity is undefined - it
-		// traps nowhere and produces whatever the instruction happens to give.
-		// What follows from it is the same on any answer: no paintable
-		// structure in the level gets a usable grid, so nothing can be painted
-		// and every match on that stage ends nil-all.
-		//
-		// A negative is a different problem and needs saying separately,
-		// because the obvious reading is wrong. std::fabs sits on both of
-		// those divisions, so a size of -4 builds exactly the grid that 4
-		// would: the value is not rejected and it is not honoured either, it
-		// is quietly read as something else. A number that does not mean what
-		// it says is worth refusing on its own account.
+		// Positive tile lengths are required to derive finite strip counts.
 		paint.size = Vector2F(
 			read_positive(json.object("size"), "x"),
 			read_positive(json.object("size"), "y"));
@@ -355,11 +313,7 @@ namespace
 		details.proj_type = read_projectile_type(json, "projectile");
 		details.sound_bank_name = json.string("sound_bank");
 
-		// Through read_sound like every other sound in the file, rather than
-		// two reads of its own. WeaponDetails keeps the name and the volume as
-		// separate fields, which is why this was written out here - and it is
-		// how the one out-of-range volume in the whole of tuning.json came to
-		// be the one that did not pass the shared read.
+		// Use the shared volume validation even though WeaponDetails stores separate fields.
 		const SoundTuning shoot_sound = read_sound(json, "shoot_sound");
 		details.shoot_sound_name = shoot_sound.name;
 		details.shoot_sound_volume = shoot_sound.volume;

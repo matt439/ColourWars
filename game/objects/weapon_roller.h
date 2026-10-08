@@ -30,7 +30,6 @@ private:
 		const mattmath::Vector2F& player_velocity,
 		bool player_facing_right) override;
 
-	// The roller's draw was a verbatim copy of Weapon::draw apart from this one
-	// colour choice, so it is expressed as a hook instead of a duplicate.
+	// Tint the roller while it is laying paint.
 	labrador::Colour draw_colour() const override;
 };

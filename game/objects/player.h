@@ -47,39 +47,15 @@ enum class PlayerAnimationState
     running,
 };
 
-//enum class player_collision_type
-//{
-//    top_edge,
-//    bottom_edge,
-//    left_edge,
-//    right_edge,
-//    top_and_bottom_edges,
-//    left_and_right_edges,
-//    top_and_left_edges,
-//    top_and_right_edges,
-//    bottom_and_left_edges,
-//    bottom_and_right_edges,
-//    top_and_bottom_and_left_edges,
-//    top_and_bottom_and_right_edges,
-//    left_and_right_and_top_edges,
-//    left_and_right_and_bottom_edges,
-//    contained_inside_other,
-//    contains_other,
-//};
 
 class Player final : public labrador::MovingObject,
                      public labrador::CollisionObject,
                      public labrador::AnimationObject, public labrador::TextureObject
 {
 public:
-    // `tuning` is borrowed and outlives every player: it is the GameTuning
-    // main() owns. The starting rectangle is the builder's, because a spawn
-    // point is the level's business, but its size and every number the
-    // movement uses come off this.
-    //
-    // `secondary` is accepted and ignored: there is no second weapon, the
-    // builder passes a fixed type, and nothing ever read the one this used to
-    // store. Dropping it is a change to that call site rather than to here.
+    // Borrowed tuning must outlive the player. The builder supplies the spawn
+    // rectangle; tuning supplies movement and health parameters.
+    // secondary is currently accepted but ignored; players carry one weapon.
     Player(const mattmath::RectangleF& rectangle,
         const GameTuning* tuning,
         labrador::RenderResources* render_resources,
@@ -113,20 +89,12 @@ public:
     labrador::CollisionTag tag() const override;
     void on_contact(const labrador::CollisionObject& other,
         const mattmath::Vector2F& normal, float penetration) override;
-    // Always false, and Level rests on it: a player is in the same scene
-    // object list as the projectiles it fires, and Level holds bare Player*
-    // for the input, the cameras and the HUD. Returning true here would have
-    // the scene retire the object those pointers name. A dead player respawns;
-    // it does not leave the world.
+    // Always false: Level holds borrowed Player pointers for the entire match.
+    // A dead player respawns rather than being retired by Scene.
     bool for_deletion() const override;
 
-    // Closes the frame's contact phase for this player.
-    //
-    // "I touched no ground this tick" is not something a contact can say, so
-    // it is the absence of one - and the absence is only known once they have
-    // all been dispatched. The level used to work this out itself with a bool
-    // hoisted above the inner loop, which is a property of the player kept by
-    // whoever happened to be iterating.
+    // Finish the contact phase and detect loss of ground support after all
+    // contacts have been dispatched.
     void end_contacts();
 
 	void set_player_input(const PlayerInputData& input);
@@ -134,9 +102,7 @@ public:
 
 	const mattmath::RectangleF& rectangle() const;
 	mattmath::Vector2F center() const;
-    // Republishes MovingObject's protected accessor. Not an override - it
-    // never overrode anything meaningfully, and MovingObject's accessors are
-    // no longer virtual.
+    // Expose MovingObject's protected accessor.
     const mattmath::Vector2F& velocity() const;
 	const labrador::Camera& camera() const;
 	const labrador::Viewport& viewport() const;
@@ -167,8 +133,7 @@ public:
     void update_prev_rectangle();
     void stop_sounds() const;
 
-    // Everything this player is making a noise with, quieted while a menu is
-    // over the match and brought back when it goes.
+    // Pause/resume the player's audio while a menu covers the match.
     void pause_sounds() const;
     void resume_sounds() const;
 
@@ -177,22 +142,14 @@ public:
 private:
     labrador::Camera camera_ = labrador::Camera::DEFAULT_CAMERA;
 
-    // Borrowed, never null. Read by update_movement every frame, which is a
-    // pointer hop rather than the 20 constants it replaces - and those were
-    // burned into the object code of every translation unit that included the
-    // header, which is exactly why a balance change was a rebuild.
-    //
-    // The whole table rather than just the player's half, because a hit reads
-    // the damage off the projectile's record: that number belongs to what was
-    // fired, not to who was standing there.
+    // Borrowed, never null. Includes player movement/health and projectile damage tuning.
     const GameTuning* tuning_ = nullptr;
 
     const PlayerTuning& player_tuning() const;
 
     std::unique_ptr<Weapon> primary_ = nullptr;
 
-    // Both set from `tuning` in the constructor body: a member initialiser
-    // cannot reach a member being initialised beside it.
+    // Health and respawn delay are initialized from tuning in the constructor.
     float health_ = 0.0f;
     float damage_sound_timer_ = 0.0f;
     float air_time_ = 0.0f;
@@ -204,11 +161,6 @@ private:
     PlayerMoveState move_state_ = PlayerMoveState::in_air;
     PlayerAnimationState animation_state_ = PlayerAnimationState::idle;
 
-    // Overwritten by the constructor, every one of them. They are here so the
-    // class has no indeterminate members, not because any of them is a
-    // meaningful default - which is why they are literals rather than the
-    // DEFAULT_* constants they used to be. A default player number, team,
-    // weapon pick and colour are not tuning: nothing reads them.
     int player_num_ = 0;
     PlayerTeam team_ = PlayerTeam::none;
     WeaponType primary_type_ = WeaponType::none;
@@ -223,8 +175,7 @@ private:
     labrador::SoundBank* sound_bank_ = nullptr;
     const PlaySettings* preferences_ = nullptr;
 
-    // Resolved once at construction. These fire from update(), so the map
-    // descent they used to cost was on the frame loop (T7, T8).
+    // Sound handles resolved once at construction.
     labrador::SoundBank::WaveHandle damage_sound_;
     labrador::SoundBank::WaveHandle death_sound_;
     labrador::SoundBank::WaveHandle jump_sound_;
@@ -244,13 +195,7 @@ private:
 
 	void on_projectile_contact(CollisionObjectType other_type);
 
-	// One response for all four faces of a flat structure.
-	//
-	// The eight-way classification this replaces - top, bottom, left, right
-	// and four corners, the corners re-measuring the depth along two axes to
-	// pick between two of the others - was approximating the axis of least
-	// penetration, having chosen its candidate axes by a different and worse
-	// rule. The normal is that axis, exactly, and it arrives measured.
+	// Resolve flat surfaces using the contact normal and penetration depth.
 	void on_structure_contact(const mattmath::Vector2F& normal,
 		float penetration);
 
@@ -264,8 +209,7 @@ private:
 
     PlayerAnimationState calculate_animation_state() const;
 
-    // Selects the animation clip for this frame. Called from update(), never
-    // from draw() - draw runs concurrently on every render worker.
+    // Select the clip during update; rendering may run concurrently for several views.
     void update_animation_state();
 
     const PlayerAnimationTuning& animation_info(PlayerAnimationState state) const;

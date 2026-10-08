@@ -14,13 +14,8 @@ public:
     InterfaceGameplay(labrador::RenderResources* render_resources,
         const HudPresentation* look);
 
-    // const for the same reason GameObject::draw is. There is one
-    // InterfaceGameplay for the whole level, and every render worker calls this
-    // on it at once with its own view's health, ammo and timer - so the HUD is
-    // the most tempting place in the level to stash per-view state on a shared
-    // object, and the only reason it is safe is that all of it arrives as
-    // parameters. Level holds this by unique_ptr, which does not pass its
-    // constness on, so this has to say const itself to mean anything.
+    // Shared by render workers. Keep per-view state in parameters and locals;
+    // const on the owning unique_ptr does not make its pointee const.
 	void draw_gameplay_interface(labrador::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
         int player_index,
@@ -53,17 +48,12 @@ private:
 
     labrador::RenderResources* render_resources() const;
 
-    // Borrowed, not owned: the services outlive every object that snapshots
-    // them. Held here rather than inherited from a base class whose only
-    // other members were three helpers nothing called.
+    // Borrowed services and presentation; both outlive the HUD.
     labrador::RenderResources* render_resources_ = nullptr;
     const HudPresentation* look_ = nullptr;
 
-    // The HUD always draws out of the same sheet, with the same two frames and
-    // three fonts. All six names are resolved in the constructor, so
-    // the four draw_* calls below - which run every frame, for every split
-    // screen viewport - index rather than search. Declaration order matters:
-    // the frames are resolved against sheet_.
+    // Resolve assets at construction. Declare sheet_ first because frame handles
+    // are resolved against it.
     labrador::RenderResources::SpriteSheetHandle sheet_;
     labrador::SpriteSheet::frame_handle empty_box_frame_;
     labrador::SpriteSheet::frame_handle fill_frame_;

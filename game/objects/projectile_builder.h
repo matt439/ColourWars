@@ -12,9 +12,7 @@
 class ProjectileBuilder
 {
 public:
-	// `tuning` is borrowed and outlives every projectile this makes - it is
-	// the GameTuning main() owns. A weapon holds one of these, so the record
-	// is looked up once per shot rather than once per projectile.
+	// Borrowed tuning must outlive the projectiles. Resolve the type record once per shot.
 	explicit ProjectileBuilder(const GameTuning* tuning);
 
 	std::vector<std::unique_ptr<labrador::CollisionObject>> build_projectiles(
@@ -33,9 +31,7 @@ public:
 private:
 	const GameTuning* tuning_ = nullptr;
 
-	// The mister fires five at once, fanned by a fixed angle. Every one of
-	// them reads the same record, which is why this takes it rather than
-	// looking it up five times.
+	// Fan five mist projectiles using the same tuning record.
 	static std::vector<std::unique_ptr<labrador::CollisionObject>>
 		build_mist_projectiles(
 			const mattmath::Vector2F& position,

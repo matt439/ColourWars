@@ -8,19 +8,9 @@
 #include "game/presentation.h"
 #include "game/tuning.h"
 
-// The service bag every state, object and drawable in this game is handed at
-// construction.
-//
-// Six things go in it, and only six: the engine's application shell, this
-// game's save file, this game's level registry, the stage list built beside it,
-// the numbers a match is balanced on and what the shell looks like. Everything
-// below that
-// looks like a service is a forward to the shell, so the accessors the whole
-// game already calls keep working while the ownership sits where it belongs -
-// a game that owned a ThreadPool would be a game doing the engine's job (T1).
-//
-// All six are borrowed and all six outlive it: main() declares them above
-// the Application whose states hold this.
+// Borrowed application and game services shared with states and objects.
+// wWinMain owns the game data before Application, so it remains valid during
+// state teardown. Engine services are forwarded through Application.
 class GameData
 {
 public:
@@ -33,36 +23,27 @@ public:
     void set_tuning(const GameTuning* tuning);
     void set_presentation(const Presentation* presentation);
 
-    // The game's own four.
+    // Game-owned services.
     Save* save() const;
     labrador::Registry<LevelLoadedInfo>* level_infos() const;
 
-    // Every stage the manifest named, in manifest order. The stage-select
-    // menu walks it; nothing else needs to know how many there are.
+    // Stages in manifest order, for stage selection.
     const StageList* stages() const;
 
-    // Every number a paint match is balanced on, read from ./tuning.json at
-    // startup. Borrowed by every player, weapon and projectile in a level, so
-    // it outlives all of them by construction - main() owns it.
+    // Gameplay tuning loaded at startup and shared by live matches.
     const GameTuning* tuning() const;
 
-    // Every font, colour, offset and box size the menus, the HUD and the debug
-    // overlay are laid out from, read from ./presentation.json at startup.
-    // Borrowed for the same reason the tuning is, and by the same owner.
+    // Presentation settings loaded at startup and shared by menus and HUDs.
     const Presentation* presentation() const;
 
-    // The engine's, forwarded. Created once by the shell and never reseated,
-    // so anything here may be held for an object's whole life.
+    // Application and its services remain valid while its states use them.
     labrador::Application* application() const;
     labrador::ResolutionManager* resolution_manager() const;
     labrador::RenderResources* render_resources() const;
     labrador::AudioResources* audio_resources() const;
     labrador::Gamepads* gamepads() const;
 
-    // The other way to play. These two are one input between them - see
-    // game/input_slots.h - and they are forwards like every other service
-    // here, so a state asks the shell for them and GameData stays six
-    // borrowed pointers.
+    // Keyboard and mouse share one input slot; see game/input_slots.h.
     labrador::Keyboard* keyboard() const;
     labrador::Mouse* mouse() const;
     labrador::ViewportManager* viewport_manager() const;
@@ -73,8 +54,6 @@ private:
     labrador::Application* application_ = nullptr;
     Save* save_ = nullptr;
 
-    // The game's own resource registry, beside the engine's: a level
-    // definition means nothing to the engine, so the engine does not cache it.
     labrador::Registry<LevelLoadedInfo>* level_infos_ = nullptr;
     const StageList* stages_ = nullptr;
     const GameTuning* tuning_ = nullptr;

@@ -1,20 +1,9 @@
 # Build a sound bank's .xwb from its .wav sources, when they are there.
-#
-# WHY THIS EXISTS RATHER THAN A COMMITTED .xwb. The paint-shooter's bank is
-# 154 MB built and 148 MB in sources, which is past what GitHub accepts for a
-# single file - and, more decisively, four of its waves are commercial music
-# tracks that cannot be redistributed under this repository's licence. So the
-# repository ships the recipe: the bank's definition, the tool, and this.
-#
-# WHAT A FRESH CLONE GETS. Nothing, and that is handled rather than broken:
-# the manifest marks the bank optional, so the loader substitutes a silent one
-# and says so on stderr (engine/assets/resource_loader.cpp). The game runs.
+# The private audio is not redistributed (see NOTICE). The manifest marks the
+# bank optional, so a fresh clone uses the engine's silent fallback.
 #
 # Run with:
 #   cmake -DBANK_DIR=<dir> -DBANK_NAME=<name> -P cmake/build_wave_bank.cmake
-#
-# It is idempotent and quiet. Missing private sources can reuse a bank whose
-# recipe is still current; a stale bank must not accompany a newer recipe.
 
 if(NOT DEFINED BANK_DIR OR NOT DEFINED BANK_NAME)
     message(FATAL_ERROR "build_wave_bank.cmake needs BANK_DIR and BANK_NAME")
@@ -25,10 +14,8 @@ set(sources "${BANK_DIR}/${BANK_NAME}")
 set(output "${BANK_DIR}/${BANK_NAME}.xwb")
 set(tool "${sources}/XWBTool.exe")
 
-# A developer may have a compiled private bank without its source WAVs. Keep
-# that bank when its recipe has not changed. If the recipe needs rebuilding
-# but an input or the tool is unavailable, remove only this generated output:
-# staging will remove its old copy too, giving the optional silent fallback.
+# With missing inputs, reuse a bank only if its definition is older.
+# Otherwise remove the generated bank; staging removes its old copy too.
 function(use_optional_bank reason)
     if(EXISTS "${output}" AND NOT "${definition}" IS_NEWER_THAN "${output}")
         message(STATUS "wave bank: ${reason} Using the existing ${BANK_NAME}.xwb.")
@@ -47,10 +34,7 @@ if(NOT EXISTS "${definition}")
     return()
 endif()
 
-# The definition is the authority on which waves the bank holds, because it is
-# the file the engine reads afterwards to resolve names. Taking the list from
-# anywhere else would let the two drift, and a bank built from a different list
-# than the one the game resolves against fails at the first play.
+# Use the runtime definition's wave list so the bank passes startup validation.
 file(READ "${definition}" definition_text)
 string(JSON wave_count ERROR_VARIABLE json_error LENGTH "${definition_text}" waves)
 if(json_error)
@@ -73,9 +57,7 @@ endforeach()
 
 if(missing)
     list(LENGTH missing missing_count)
-    # Not a warning. A clone without the audio is the expected case, not a
-    # broken one, and a build that shouts about it every time teaches people to
-    # ignore the output.
+    # Missing private audio is expected, so report status rather than a warning.
     use_optional_bank("skipping ${BANK_NAME} - ${missing_count} of ${wave_count} source waves are not in ${sources}.")
     return()
 endif()
@@ -85,7 +67,7 @@ if(NOT EXISTS "${tool}")
     return()
 endif()
 
-# Staleness, by hand, because this is a script and not a build graph.
+# This build-time script tracks input timestamps itself.
 set(rebuild TRUE)
 if(EXISTS "${output}")
     set(rebuild FALSE)

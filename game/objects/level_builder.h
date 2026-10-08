@@ -49,7 +49,6 @@ private:
 	labrador::ThreadPool* thread_pool_ = nullptr;
 	const labrador::Partitioner* partitioner_ = nullptr;
 
-	// Passed straight through to the Level, which is the only thing that can
-	// turn a cursor into an aim. See Level::resolve_mouse_aim.
+	// Borrowed mouse state passed to Level for camera-dependent aiming.
 	const labrador::Mouse* mouse_ = nullptr;
 };

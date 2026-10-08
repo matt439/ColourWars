@@ -147,11 +147,8 @@ Vector2F DiffusingProjectile::calculate_diffusion_scale() const
 
         float ratio = diff_time / diff_length;
 
-        // Interpolating between ONE and end_scale, not between ONE and
-        // ONE + end_scale: the ramp has to arrive at exactly the value the
-        // branch above returns at end_time, or the size steps down in one
-        // frame as it crosses. The combined mode applies this scale to the
-        // collision rectangle too, so its paint footprint must be continuous.
+        // Interpolate to end_scale exactly so the sprite and any scaled collider
+        // remain continuous at end_time.
         multiple = Vector2F::ONE +
             (details.end_scale - Vector2F::ONE) * ratio;
     }
@@ -174,9 +171,7 @@ void DiffusingProjectile::diffuse_collision_rectangle(RectangleF& rectangle) con
     const Vector2F size = this->details().col_rect_size *
         this->calculate_diffusion_scale();
 
-    // Half the growth off each side keeps the centre where it was, which is
-    // what a cloud spreading out does. Setting the size alone would pin the
-    // top-left and walk the cloud down and right as it grew.
+    // Split growth between both sides to preserve the cloud's centre.
     rectangle.x -= (size.x - rectangle.width) / 2.0f;
     rectangle.y -= (size.y - rectangle.height) / 2.0f;
     rectangle.set_size(size);
@@ -271,12 +266,8 @@ void Projectile::resolve_sweep(const RectangleF& start,
 void Projectile::on_contact(const CollisionObject& /*other*/,
     const Vector2F& /*normal*/, float /*penetration*/)
 {
-    // Every contact a flying projectile can have is fatal to it. The roller
-    // overrides this because its one-step volume must process every contact.
-    // The mask admits flat level geometry and enemy players and
-    // nothing else; the two type lists this replaces - one to decide whether
-    // to test the pair, one to decide whether to die - were re-deriving that
-    // filter twice, and had already disagreed about ramps.
+    // Flying projectiles die on contact with flat geometry or enemy players.
+    // Rollers override this to process every contact in their one-step volume.
     this->set_for_deletion(true);
 }
 CollisionLayer Projectile::layer() const
@@ -370,7 +361,6 @@ Vector2F Projectile::update_movement(float gravity, float wind_resistance, float
 
     const Vector2F& max_velocity = this->max_velocity();
 
-    //gravity
     MovingObject::alter_velocity_y(gravity * dt);
     if (MovingObject::velocity_y() > max_velocity.y)
 	{
@@ -381,15 +371,12 @@ Vector2F Projectile::update_movement(float gravity, float wind_resistance, float
         MovingObject::set_velocity_y(-max_velocity.y);
 	}
 
-    //wind resistance
     if (std::fabs(MovingObject::velocity_x()) > wind_resistance * 4.0f)
     {
-        //right
         if (MovingObject::velocity_x() > 0.0f)
         {
             MovingObject::alter_velocity_x(-wind_resistance * dt);
         }
-        //left
         else
         {
             MovingObject::alter_velocity_x(wind_resistance * dt);
@@ -410,21 +397,13 @@ Vector2F Projectile::update_movement(float gravity, float wind_resistance, float
 
     const Vector2F displacement = MovingObject::velocity() * dt;
 
-    // Age first, then test: testing before the increment let a projectile
-    // survive one frame past its deadline.
+    // Advance age before testing the lifetime.
     this->alter_timer(dt);
 
-    // Never on the first update, though, or a projectile whose tuned lifetime
-    // is shorter than one step dies without ever being tested against
-    // anything. Scene::add is deferred: an object created during tick N only
-    // joins the scene's collidables at that tick's end_tick(), so the first
-    // update it ever gets is tick N+1's - and Scene::update runs before
-    // Scene::resolve, whose find_contacts and dispatch_contacts both skip
-    // objects already flagged for deletion. Flagging here would retire it at
-    // the end of N+1 having touched nothing. The roller is exactly that case:
-    // its delete_timer is a millionth of a second because it wants to be a
-    // one-step melee volume, and it was painting nothing at all. Surviving one
-    // collision sweep is the minimum a projectile is worth spawning for.
+    // Allow the first collision sweep even when lifetime is shorter than one step.
+    // Scene admits a newly spawned projectile at end_tick; its first update runs
+    // before its first resolve, which skips objects marked for deletion.
+    // The roller relies on this to act as a one-step contact volume.
     if (!this->first_update_done_)
     {
         this->first_update_done_ = true;

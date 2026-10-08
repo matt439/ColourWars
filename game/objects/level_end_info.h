@@ -15,14 +15,10 @@ struct LevelEndInfo
 	std::array<float, input_slots::count> player_areas{};
 	std::wstring player_percentage_string(int slot) const;
 
-	// Every paintable tile in the arena, painted or not. Only a match with one
-	// team in it reads this: with two teams the question is who painted more of
-	// what was painted, and the ground nobody reached is not part of it.
+	// Total paintable area, including unpainted tiles, for the coverage score.
 	float total_area = 0.0f;
 
-	// Whether anybody was playing for each team. Both true is the normal match;
-	// one false is the one-player path, which forces team A and skips team
-	// select entirely.
+	// Whether each team has a player in the match.
 	bool team_a_played = true;
 	bool team_b_played = true;
 
@@ -35,13 +31,10 @@ struct LevelEndInfo
 	std::wstring team_b_percentage_string() const;
 	std::wstring winning_team_string() const;
 
-	// True when one team was in the match and the other was not, which makes
-	// every share-of-the-paint number below arithmetically 100% and
-	// meaningless. The results screen asks this to know which half of itself
-	// to leave out.
+	// Whether only one team participated; results then show coverage instead
+	// of a competitive paint share.
 	bool one_team_only() const;
 
-	// How much of the arena was painted at all, by anyone. What a match with
-	// nobody to beat is actually a score of.
+	// Fraction of the arena painted by either team.
 	float coverage_ratio() const;
 };

@@ -14,34 +14,9 @@ namespace labrador
 	class RenderResources;
 }
 
-// What the shell looks like: every font, colour, offset and box size the menus,
-// the HUD and the debug overlay are laid out from.
-//
-// This is the other half of the defect GameTuning closed, in different files.
-// E2 moved the numbers a match is *balanced* on out of C++ headers and left a
-// note saying the remaining ~200 SCREAMING constants were "the same defect,
-// different files, and no dependency on anything". They were 152 live ones
-// across seven headers, and they are ./presentation.json now.
-//
-// WHY IT IS A SECOND FILE AND NOT A SECTION OF tuning.json. GameTuning's own
-// comment says what it is: "How much, for every number a paint match is
-// balanced on." A menu's font is not that. The two files have different
-// audiences - a balance pass and an art pass - and nothing in one is read by
-// the other. Splitting them also keeps each readable: tuning.json is 225 lines
-// already.
-//
-// WHAT IS NOT HERE. The same line GameTuning draws: C++ says *how* and data
-// says *which* and *how much*. So which widget a menu builds, and in what
-// order, is code; the font it is drawn in and where it sits are here. Paint
-// tile geometry stayed in tuning.json, because how much surface a splash
-// covers is a balance number that happens to be measured in pixels.
-//
-// THE REAL FIND WAS THE DUPLICATION. Four menu headers declared the same
-// fifteen values - three font names, a shadow colour, four shadow offsets, a
-// highlight pair, a sound bank and three UI sounds - and they agreed, which is
-// the only reason nobody noticed. They are MenuStyle below, once. Nine of the
-// 161 constants were dead, five of them copies in a namespace whose own .cpp
-// never read them.
+// Fonts, colours and layout loaded from presentation.json for menus and HUDs.
+// Keep visual choices separate from gameplay balance in tuning.json. Widget
+// structure and behavior remain in C++.
 
 // A named sound in the shared bank, and how loud.
 struct PresentationSound
@@ -50,13 +25,7 @@ struct PresentationSound
 	float volume = 1.0f;
 };
 
-// The style every menu family shares.
-//
-// It is one struct rather than a repeated block in each menu's section
-// because the four copies it replaces were identical. A menu that wants to
-// differ says so in its own section - results_menu's heading is goldenrod
-// where the other three are orange, and that override is one key rather than
-// a fourth copy of the whole style.
+// Shared menu style, with screen-specific overrides in the records below.
 struct MenuStyle
 {
 	std::string heading_font;
@@ -69,26 +38,15 @@ struct MenuStyle
 	mattmath::Vector2F item_shadow_offset = { 0.0f, 0.0f };
 	mattmath::Vector2F detail_shadow_offset = { 0.0f, 0.0f };
 
-	// A focused widget and an unfocused one. Named for what they do rather
-	// than what colour they happen to be.
 	labrador::Colour highlight = labrador::Colour::white;
 	labrador::Colour unhighlight = labrador::Colour::blue;
 
-	// A row that is on the screen and cannot be chosen. It IS a third focus
-	// state, as of the engine's 9bc14b3: FocusGroup carries a disabled colour
-	// beside the other two and derives all three from enablement, so this is
-	// handed to set_style rather than applied to a widget the group was never
-	// given. It used to be the latter, which worked only for rows that could
-	// never become available.
+	// FocusGroup uses this colour for disabled rows.
 	labrador::Colour disabled = labrador::Colour::dim_gray;
 
-	// A line the menu shows to say why it just refused something. Distinct
-	// from `disabled`, which describes a row rather than an answer.
+	// Feedback for a refused action, independent of disabled-row styling.
 	labrador::Colour warning = labrador::Colour::orange;
 
-	// The heading colour three of the four menus use. It was written as
-	// colour_consts::TEAM_ORANGE in each of them - a menu heading is not a
-	// team, and it only ever shared the number.
 	labrador::Colour heading_colour = labrador::Colour::white;
 
 	// The box a modal menu is drawn in. Pause, end and results all use it.
@@ -100,11 +58,7 @@ struct MenuStyle
 	std::string cancel_sound;
 };
 
-// One row of pickable widgets: where the first sits, how big it is, and how
-// far apart the rest are.
-//
-// Three menus wrote these as an INITIAL_WIDGET_SIZE / _POSITION / _SPACING
-// triple and two more wrote only the spacing. It is one shape.
+// Widget position, size and spacing in menu design coordinates.
 struct WidgetLayout
 {
 	mattmath::Vector2F position = { 0.0f, 0.0f };
@@ -112,11 +66,7 @@ struct WidgetLayout
 	mattmath::Vector2F spacing = { 0.0f, 0.0f };
 };
 
-// A select screen where each player moves a cursor over a row of choices.
-//
-// No position: a select screen's widgets are placed by walking the spacing
-// from a row and column index, so the spacing and the widget size are the
-// whole of the layout. That is why this is not a WidgetLayout.
+// Per-player choice layout, positioned by row and column indices.
 struct SelectPresentation
 {
 	mattmath::Vector2F spacing = { 0.0f, 0.0f };
@@ -143,15 +93,10 @@ struct MainMenuPresentation
 	labrador::Colour title_text_colour = labrador::Colour::white;
 	labrador::Colour title_start_text_colour = labrador::Colour::white;
 
-	// The line under Start that appears only when no pad is plugged in. The
-	// game is gamepad-only and the title screen is the one place that has to
-	// say so, because with no pad it is the only screen anyone can reach.
+	// Colour for the title's no-controller hint.
 	labrador::Colour title_no_pad_text_colour = labrador::Colour::white;
 
-	// Four screens, four keys, and they hold the same colour today. Unlike the
-	// fonts and shadows MenuStyle absorbed, these are not four copies of one
-	// idea - they are four screens somebody might theme apart, and collapsing
-	// them would take that away to save three lines of a data file.
+	// Separate colours allow each main-menu screen to be themed independently.
 	labrador::Colour title_background_colour = labrador::Colour::black;
 	labrador::Colour home_background_colour = labrador::Colour::black;
 	labrador::Colour options_background_colour = labrador::Colour::black;
@@ -175,17 +120,8 @@ struct MainMenuPresentation
 	std::string error_sound;
 	std::string ready_sound;
 
-	// What the weapon-select screen says about each weapon.
-	//
-	// Wide, because the render module holds text as std::wstring and the
-	// conversion belongs off the draw path. The file is UTF-8 and these come
-	// across through widen() while it is being read, which is once.
-	//
-	// Indexed by WeaponType, and sized by the last weapon a player can pick:
-	// the enum carries four more names for weapons that do not exist, and a
-	// slot each would be four empty strings. A weapon with no description
-	// reads as empty rather than as the literal "ERROR" the switch it
-	// replaces returned - which was a string a player could actually see.
+	// Weapon descriptions converted from UTF-8 to normalized wide text at load.
+	// Indexed by WeaponType, including the random-primary choice.
 	static constexpr size_t DESCRIBED_WEAPONS =
 		static_cast<size_t>(WeaponType::random_primary) + 1;
 	std::array<std::wstring, DESCRIBED_WEAPONS> weapon_descriptions;
@@ -215,16 +151,13 @@ struct ResultsMenuPresentation
 	std::string contribution_font;
 	labrador::Colour box_colour = labrador::Colour::black;
 
-	// The heading that differs from MenuStyle's, and the reason MenuStyle has
-	// the field at all rather than every menu carrying its own.
+	// Overrides the shared menu heading colour.
 	labrador::Colour heading_colour = labrador::Colour::white;
 
 	mattmath::Vector2F fill_box_size = { 0.0f, 0.0f };
 	float fill_box_y_offset = 0.0f;
 
-	// The border is the input and the fill size is derived from it, which is
-	// what the header did too - except it did it with a namespace-qualified
-	// reference to a constant three lines above, at namespace scope.
+	// Fill size is derived from the box size and border.
 	mattmath::Vector2F team_fill_border = { 0.0f, 0.0f };
 	mattmath::Vector2F team_fill_size = { 0.0f, 0.0f };
 
@@ -235,9 +168,7 @@ struct ResultsMenuPresentation
 	labrador::Colour percentage_colour = labrador::Colour::white;
 	float team_b_percentage_x_offset = 0.0f;
 
-	// The A and B letters that sit outside each end of the fill box. There is
-	// no colour beside them: the glyphs are black in the sheet and a tint
-	// multiplies, so anything other than white can only darken black.
+	// Team marks use black glyphs from the sprite sheet, drawn without a tint.
 	mattmath::Vector2F team_mark_size = { 0.0f, 0.0f };
 	float team_mark_gap = 0.0f;
 
@@ -249,9 +180,7 @@ struct ResultsMenuPresentation
 	PresentationSound fill_sound;
 };
 
-// The line of button prompts along the bottom of a menu page. What each page
-// puts in it is the page's business; where it sits and what it looks like is
-// the same everywhere, which is why it is one block and not twelve.
+// Shared layout and style for page-specific button prompts.
 struct PromptBarPresentation
 {
 	std::string font;
@@ -261,10 +190,9 @@ struct PromptBarPresentation
 	mattmath::Vector2F shadow_offset = { 0.0f, 0.0f };
 };
 
-// The gameplay HUD: health, ammo, the match timer and the respawn count.
-//
-// Most of these are fractions of the viewport rather than pixels, which is why
-// they survive a resolution change and the countdown did not.
+// Gameplay HUD: health, ammo, match timer, player identity and respawn count.
+// Margins, bar dimensions and text positions use viewport fractions. Shadow
+// offsets and identity padding use pixel distances scaled with the text.
 struct HudPresentation
 {
 	float right_margin = 0.0f;
@@ -284,8 +212,7 @@ struct HudPresentation
 	labrador::Colour timer_colour = labrador::Colour::gray;
 	labrador::Colour timer_shadow_colour = labrador::Colour::black;
 
-	// The width the timer's point size was chosen against. The drawn scale is
-	// the real width over this, so the HUD reads the same on every resolution.
+	// Reference viewport width for scaling the timer font.
 	float timer_reference_width = 1920.0f;
 
 	std::string player_identity_font;
@@ -316,16 +243,11 @@ struct DebugOverlayPresentation
 	float shadow_scale = 1.0f;
 };
 
-// Everything ./presentation.json says, parsed once at startup.
-//
-// Read eagerly and whole, exactly like GameTuning: a missing key or a colour
-// this engine does not know by name is a startup failure naming the file and
-// the position in it, not a menu that draws wrong three screens in (T6).
+// Presentation settings parsed once at startup.
 class Presentation
 {
 public:
-	// Reads `path` in full. Throws std::runtime_error naming the file, the
-	// position in it and the key if anything is missing or of the wrong type.
+	// Loads and validates the file, reporting invalid content with source context.
 	explicit Presentation(const char* path);
 
 	void validate_resources(const labrador::RenderResources& render,

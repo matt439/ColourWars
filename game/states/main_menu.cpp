@@ -12,9 +12,6 @@ using namespace labrador;
 MainMenuPage::MainMenuPage(MenuContext* context) :
 	MenuPage(context)
 {
-	// The bank and the three shared waves are MenuPage's now. What is left
-	// here is what only the main menu makes: a refusal, a ready chime and the
-	// track that plays across every page of it.
 	const MainMenuPresentation& look = this->look();
 
 	this->error_sound_ = this->resolve_wave(look.error_sound);
@@ -105,23 +102,6 @@ MainMenuTitle::MainMenuTitle(MenuContext* context) :
 
 void MainMenuTitle::update(float /*dt*/)
 {
-	// A pad can arrive at any moment, and asking for one is the whole purpose
-	// of the line, so the answer is refreshed rather than remembered - but
-	// only while this window has the foreground.
-	//
-	// The shell suspends the pad reader whenever it does not, and a suspended
-	// reader answers "disconnected" for every slot. Refreshing from that would
-	// put "Connect a controller" under Start every time the player clicked on
-	// another window, which is the one thing this line must never say wrongly:
-	// its whole job is to distinguish a game waiting for a pad from a game
-	// that has hung. Unasked, the line keeps whatever it last showed, which is
-	// the right answer in both directions.
-	//
-	// A query and not the on_activated/on_deactivated pair this page also has,
-	// because the gate is on a refresh that happens every frame rather than on
-	// anything that happens at the moment of the change. The callbacks could
-	// only set a bool for this to read, which is the hand-written copy of the
-	// engine's edge that the pin bump deleted from GameLevel.
 	if (this->context()->active())
 	{
 		this->no_pad_->set_hidden(!this->connected_slots().empty());
@@ -172,13 +152,6 @@ void MainMenuTitle::init()
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
-	// Every input this game has is a gamepad button. With nothing plugged in
-	// the title screen answers no key and there is no other screen to get to,
-	// so a correct build with no pad on the desk looks exactly like a hung one
-	// - which is the first thing a reader of this repository sees.
-	//
-	// Hidden here and revealed by update() rather than the other way round, so
-	// the ordinary case never flashes it.
 	this->no_pad_ = std::make_unique<UiTextDropShadow>(
 		"no_pad",
 		L"Connect a controller",
@@ -223,12 +196,8 @@ MainMenuHome::MainMenuHome(MenuContext* context) :
 
 void MainMenuHome::update(float /*dt*/)
 {
-	// The focus is read inside the loop rather than snapshotted above it. The
-	// old form took the highlighted widget's *name* once and compared all four
-	// pad slots against that string, so pad 0 moving the cursor and pad 1
-	// pressing A in the same frame activated whatever pad 0 had just left -
-	// and two pads pressing down together advanced one step while playing the
-	// click twice. Two pads on a couch-multiplayer menu is the design centre.
+	// Read focus for each device so later inputs see earlier navigation
+	// from the same frame.
 	for (const ProcessedMenuInput& input : this->menu_inputs())
 	{
 		if (input.action == MenuInputAction::back)
@@ -240,9 +209,7 @@ void MainMenuHome::update(float /*dt*/)
 		}
 		if (input.action == MenuInputAction::proceed)
 		{
-			// One activation per frame. Every action on this page leaves the
-			// page, so a second pad's press against a page that is already
-			// going somewhere is not a second decision to honour.
+			// Stop after one activation: every action here leaves the page.
 			if (this->focus_.activate(0) == Activation::ran)
 			{
 				return;
@@ -321,9 +288,7 @@ void MainMenuHome::init()
 	this->text_container_->add_child(this->options_.get());
 	this->text_container_->add_child(this->exit_.get());
 
-	// Navigation walks bounds(), in the design space the widgets were built
-	// in. Declaration order does not decide adjacency - position does - so the
-	// four-way if-chains this replaces are not written anywhere any more.
+	// Navigation uses widget bounds in design space, not declaration order.
 	this->focus_.add(this->play_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
@@ -379,30 +344,12 @@ void MainMenuOptions::update(float /*dt*/)
 			continue;
 		}
 
-		// Left and right on the rows that carry a value. The focus group
-		// deliberately has no opinion here: which rows hold a value and what
-		// cycling one means is this game's, not the engine's. The walk found
-		// nothing to move to, so the press falls through to the page.
-		//
-		// It finds nothing because every entry on this page overlaps every
-		// other on the horizontal axis by more than the walk's tolerance -
-		// they all start at the same left edge. That used to be put as "every
-		// row shares a centre x", which stopped being true when the two value
-		// rows became containers spanning their label and their value; the
-		// answer did not change, because overlap is what the walk measures.
+		// Rows overlap horizontally, so left/right does not move focus.
+		// Let the focused value row handle that input instead.
 		this->adjust_focused_value(input.direction);
 	}
 }
 
-// Asked of the focused row rather than worked out from it. This used to be one
-// arm per value row, comparing the focused pointer against each label in turn
-// and carrying that row's meaning in the arm - so a third setting meant a third
-// comparison here, and the label had to be the thing registered because the
-// value beside it was a separate widget nothing pointed at.
-//
-// A row is one focusable object that owns its value and what changing it means,
-// so this asks only whether the cursor is on such a thing at all. Apply and
-// Back are not, and answer null.
 void MainMenuOptions::adjust_focused_value(labrador::Direction direction)
 {
 	if (direction != labrador::Direction::left &&
@@ -418,11 +365,7 @@ void MainMenuOptions::adjust_focused_value(labrador::Direction direction)
 		return;
 	}
 
-	// A disabled row does not answer left and right either. move() will not
-	// walk onto one, but it can be switched off under a cursor already sitting
-	// there - Apply turning fullscreen on does exactly that - and a greyed row
-	// that still cycled would be the one thing on the page saying two things
-	// at once.
+	// A row disabled while focused must refuse adjustments as well as activation.
 	if (!this->focus_.enabled(row))
 	{
 		return;
@@ -438,58 +381,13 @@ void MainMenuOptions::apply_settings()
 
 	const bool fs = this->full_screen_selection_;
 
-	// THE COERCION THIS USED TO DO IS GONE, and the engine is why.
-	//
-	// Fullscreen here is a window restyle - WS_POPUP and SW_SHOWMAXIMIZED -
-	// and not a display-mode change, so the back buffer comes out
-	// desktop-sized however small a resolution this page picked. That used to
-	// leave ViewportManager and ui_camera() sizing from a number the screen
-	// did not have, with the game drawn into the top-left corner of its own
-	// window. This page worked around it by refusing to apply a resolution
-	// while fullscreen was on.
-	//
-	// The engine closed it in 0702776: every route into a resize arrives at
-	// on_window_size_changed, which re-points ResolutionManager at the real
-	// client size before the renderer resizes. So the layout follows the
-	// window now whatever this page does, and there is nothing left to protect
-	// it from.
-	//
-	// It also remembers the way back. Application::set_resolution records the
-	// preset as the size the game asked for, and set_fullscreen(false) returns
-	// to that rather than to the monitor - which is the other half this page
-	// used to hand-hold.
-	//
-	// THE PICK IS ALWAYS SAVED AND ONLY SOMETIMES APPLIED, which is two
-	// decisions and they are not the same one.
-	//
-	// Saving it always is what makes the choice survive: the row is disabled
-	// while fullscreen, so the only place a resolution can be picked is here,
-	// windowed, possibly in the same press that turns fullscreen on. That pick
-	// is the size the window comes back to, and it has to outlive a restart -
-	// main.cpp seeds ApplicationOptions from the save.
-	//
-	// Applying it only when the game will end up WINDOWED is about not
-	// resizing a window twice in one call. set_resolution resizes and
-	// set_fullscreen(true) resizes again immediately, and each of those is a
-	// synchronous WM_SIZE into the renderer's swap chain - from inside a
-	// window procedure, since this runs under the tick. That sequence killed
-	// the process once during testing with STATUS_FATAL_USER_CALLBACK_EXCEPTION
-	// (0xc000041d), an exception escaping the window proc, and it did not
-	// reproduce on the next run. Whatever the race is, this page has no reason
-	// to be in it: a window about to become fullscreen does not need to be
-	// resized to something else first.
-	//
-	// Nothing is lost by skipping it. Application::set_fullscreen(false) sizes
-	// the window from options_.resolution, and the way out of fullscreen goes
-	// through the branch below - which calls set_resolution first, and so sets
-	// that very field to the pick before it is read.
+	// Always save the windowed preset, including when entering fullscreen.
+	// Apply it only when returning to or staying windowed, before setting
+	// fullscreen, so entering fullscreen does not trigger an intermediate resize.
 	this->save()->set_resolution_and_save(this->resolution_selection_);
 
 	if (!fs)
 	{
-		// Not routed through the resolution manager first: Application does
-		// that itself, and the second call was this page saying the same thing
-		// twice.
 		this->data()->application()->set_resolution(this->resolution_selection_);
 	}
 
@@ -497,17 +395,9 @@ void MainMenuOptions::apply_settings()
 	this->apply_fullscreen_setting(fs);
 	this->save()->set_team_palette_and_save(this->team_palette_selection_);
 
-	// After applying the display settings: this reads what is now in effect,
-	// rather than what was asked for.
+	// Refresh from the applied display state.
 	this->refresh_resolution_row();
 
-	// The widgets are not touched. This is the page that changes the
-	// resolution while its own widgets are on screen, so it is the page that
-	// used to have to rescale them from the old size to the new one by hand -
-	// the only site of the twenty-six that was not a one-off at construction.
-	// ui_camera() reads the resolution every frame, so the next draw is
-	// already at the new size, and navigation reads bounds() at the moment of
-	// the press, in design space, where nothing moved at all.
 }
 
 void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
@@ -523,28 +413,13 @@ void MainMenuOptions::init()
 		{ L"A", L"Select" },
 		{ L"B", L"Back" } });
 
-	// Three, because the Resolution row switches off while fullscreen owns the
-	// size. OptionRow paints only its label with this, so a disabled row greys
-	// its name and leaves the value legible - which is the point, since the
-	// value is the thing the player is being shown.
+	// Disabling a row greys its label; the displayed value keeps its own colour.
 	this->focus_.set_style({ this->menu_style().highlight,
 		this->menu_style().unhighlight,
 		this->menu_style().disabled });
 	Vector2F widget_size = this->widget_size();
 
-	// FROM THE SAVE, NOT FROM THE RESOLUTION MANAGER, and the difference only
-	// shows up in fullscreen - where it is a bug that writes itself into the
-	// save file and stays.
-	//
-	// The manager's resolution() is the preset last asked for, and going
-	// fullscreen asks for the monitor. On a 2560x1440 screen that is exactly a
-	// preset, so the label really does become 2560x1440 - seeding from it made
-	// this row believe the player had chosen 1440p, and turning fullscreen off
-	// then applied it as the windowed size and saved it. A player who had
-	// picked 1080p got a 1440p window and a save file that agreed.
-	//
-	// The save is the windowed choice, which is the question this row is
-	// asking, and it is the same value Application keeps to return to.
+	// Load the saved windowed preset, not the current fullscreen dimensions.
 	this->resolution_selection_ = this->save()->resolution();
 	this->full_screen_selection_ = this->save()->fullscreen();
 	this->team_palette_selection_ = this->save()->team_palette();
@@ -646,12 +521,7 @@ void MainMenuOptions::init()
 	this->text_container_->add_child(this->apply_.get());
 	this->text_container_->add_child(this->back_.get());
 
-	// The value rows are focusable and do nothing on A; left and right are
-	// what they answer to. A button with no action is a normal thing to have.
-	//
-	// A container in a container, which is the nesting engine/ui/widget.h says
-	// works by composition: text_container_ draws each row, each row draws its
-	// label and its value.
+	// Value rows respond to left/right; confirming them has no action.
 	this->focus_.add(this->resolution_row_.get());
 	this->focus_.add(this->full_screen_row_.get());
 	this->focus_.add(this->team_palette_row_.get());
@@ -668,9 +538,7 @@ void MainMenuOptions::init()
 				std::make_unique<MainMenuHome>(this->menu_context()));
 		});
 
-	// After registration, because it switches a registered row off. A page
-	// opened while the game is already fullscreen has to say so on its first
-	// frame rather than on its first Apply.
+	// Refresh after registration so fullscreen disables the row before first draw.
 	this->refresh_resolution_row();
 
 	this->play_music(this->music_, this->look().music.volume);
@@ -711,34 +579,13 @@ void MainMenuOptions::cycle_resolution(
 
 void MainMenuOptions::update_resolution_selection_text()
 {
-	// The resolution string round-trips through the save file, so it stays
-	// narrow at its source and comes across here.
 	const std::string res_text = this->resolution_manager()->
 		convert_resolution_to_string(this->resolution_selection_);
 	this->resolution_row_->set_value(widen(res_text));
 }
 
-// What the Resolution row says, and whether it can be picked at all.
-//
-// TWO DIFFERENT QUESTIONS, AND THE ENGINE ANSWERS THEM WITH TWO DIFFERENT
-// CALLS. resolution() is a label - "the preset last asked for", in
-// resolution_manager.h's own words - and resolution_ivec() is the live window.
-// While fullscreen those two disagree, because the window is the monitor and
-// the monitor is usually not one of the four presets. This row used to show
-// the label and claim it was what was in effect: on a 2560x1440 monitor it sat
-// there reading 1920x1080 while the game ran at 1440p.
-//
-// So the live size is what it shows while fullscreen is on, formatted from the
-// vector rather than named, because a size that is not a preset has no name in
-// the enum and inventing one is the coercion the engine spent a commit
-// removing.
-//
-// AND THE ROW IS DISABLED WHILE IT SAYS THAT, which is the honest reading of a
-// value the player cannot change: fullscreen takes the monitor, and nothing
-// this row offers can alter that. It is not a fifth thing to remember either -
-// resolution_selection_ is left alone underneath, so it is still the preset
-// the window goes back to, and turning fullscreen off re-enables the row
-// showing it.
+// While fullscreen, show the live client dimensions and disable the row.
+// Keep resolution_selection_ as the windowed preset to restore on exit.
 void MainMenuOptions::refresh_resolution_row()
 {
 	const bool fullscreen = this->save()->fullscreen();
@@ -756,16 +603,8 @@ void MainMenuOptions::refresh_resolution_row()
 
 	this->focus_.set_enabled(this->resolution_row_.get(), !fullscreen);
 
-	// AND THE CURSOR IS MOVED OFF IT, which the engine deliberately does not do
-	// for us: FocusGroup's header says disabling the focused row leaves the
-	// cursor where it is, because yanking a player's hand elsewhere mid-press
-	// is worse than sitting on a row that answers `refused`.
-	//
-	// That is the right default and the wrong one here, and the difference is
-	// who was holding the cursor. This page disables the row on the frame it
-	// opens - Resolution is registered first, so it starts focused - and a page
-	// whose first frame shows a greyed row and no highlight anywhere reads as
-	// broken rather than as unavailable. Nobody's hand is on it yet.
+	// FocusGroup retains disabled focus. Move it to Fullscreen so opening
+	// Options in fullscreen starts on an available row.
 	if (fullscreen &&
 		this->focus_.focused(0) == this->resolution_row_.get())
 	{
@@ -775,7 +614,7 @@ void MainMenuOptions::refresh_resolution_row()
 
 void MainMenuOptions::update_full_screen_selection_text() const
 {
-	bool fs = this->full_screen_selection_; //this->context()->data()->save()->full_screen();
+	bool fs = this->full_screen_selection_;
 	std::wstring fs_text = L"";
 	if (fs)
 	{
@@ -1310,21 +1149,13 @@ void MainMenuTeamSelect::update(float /*dt*/)
 				this->select_states_[i].state =
 					ConfirmationState::unconfirmed;
 			}
-			//no break here as I want simultaneous input from players to be possible
+			// Continue so other players can act in the same frame.
 		}
 		else if (inputs[i].action == MenuInputAction::proceed &&
 			this->select_states_[i].team != PlayerTeam::none)
 		{
-			// The only gate on a confirm used to be that a team had been
-			// chosen at all, and nothing anywhere asked which. Four players
-			// could all pick team A, all confirm, and start a match that ran
-			// 4v0 for four minutes against an opponent who did not exist -
-			// every stage lists four spawns per team, so nothing downstream
-			// tripped either.
-			//
-			// Refused on the press that would complete the roster, so a
-			// player choosing a side early is never argued with and the one
-			// who would have started the match is told why it did not.
+			// Require both teams only on the confirmation that completes a multiplayer
+			// roster, allowing earlier players to choose either side.
 			if (this->confirm_completes_roster(i) &&
 				!this->roster_is_playable())
 			{
@@ -1366,18 +1197,12 @@ void MainMenuTeamSelect::update(float /*dt*/)
 			}
 		}
 	}
-	// Cleared as soon as somebody crosses to the other side, rather than on a
-	// timer or on the next press: the message is about a state, and the state
-	// is over. The same predicate as the refusal, so the two cannot disagree
-	// about what is wrong.
+	// Clear the warning as soon as the roster becomes playable.
 	if (this->roster_is_playable())
 	{
 		this->both_teams_needed_->set_hidden(true);
 	}
 
-	// Reachable only through a confirm that passed the check above - a player
-	// cannot change team while confirmed, and unconfirming means confirming
-	// again - so this transition can no longer start a one-team match.
 	if (this->all_players_confirmed())
 	{
 		this->set_level_settings();
@@ -1402,15 +1227,7 @@ bool MainMenuTeamSelect::confirm_completes_roster(int player) const
 }
 bool MainMenuTeamSelect::roster_is_playable() const
 {
-	// One player has nobody to need. The one-player row skips this page
-	// entirely, but the end menu's "Change Teams" comes back to it with a
-	// count of one - and that is a route worth keeping, because it is the only
-	// way a solo player can play as team B. Requiring both teams there refused
-	// every press with no way forward, on the row the end menu highlights by
-	// default.
-	//
-	// A solo roster is exactly what LevelEndInfo::one_team_only was written
-	// for, so it is a match this game can now finish honestly.
+	// Solo matches allow either team; multiplayer requires both.
 	if (this->player_count() < 2)
 	{
 		return true;
@@ -1557,10 +1374,7 @@ void MainMenuTeamSelect::init()
 
 	this->text_container_->add_child(this->heading_.get());
 
-	// Row 6, under the four player rows, which occupy rows 2 to 5. Row 7 is
-	// off the bottom: this page spaces its rows 125 apart from a base of 150,
-	// so row 7 is y 1025 in a design space 1080 tall and the descenders of
-	// "player" would have been cut off by the screen edge.
+	// Keep the warning below the four player rows and inside the design bounds.
 	this->both_teams_needed_ = std::make_unique<UiTextDropShadow>(
 		"both_teams_needed",
 		L"Both teams need a player",
@@ -1687,8 +1501,7 @@ void MainMenuWeaponSelect::update(float /*dt*/)
 				this->select_states_[i].state =
 					ConfirmationState::unconfirmed;
 			}
-			//no break here as I want simultaneous input
-			// from players to be possible
+			// Continue so other players can act in the same frame.
 		}
 		else if (inputs[i].action == MenuInputAction::proceed)
 		{
@@ -1712,7 +1525,6 @@ void MainMenuWeaponSelect::update(float /*dt*/)
 	}
 	if (this->all_players_confirmed())
 	{
-		//check if any players have selected random then pick a random weapon.
 		for (int i = 0; i < this->player_count(); i++)
 		{
 			if (this->select_states_[i].type == WeaponType::random_primary)
@@ -1952,10 +1764,6 @@ void MainMenuWeaponSelect::init()
 }
 std::wstring MainMenuWeaponSelect::weapon_description(WeaponType type) const
 {
-	// A lookup, where this was a six-branch switch ending in a default that
-	// returned the literal L"ERROR" - a string a player could see on the
-	// weapon-select screen if the enum ever grew a seventh pickable weapon.
-	// An untuned weapon reads as empty instead.
 	const size_t index = static_cast<size_t>(type);
 	const auto& descriptions = this->look().weapon_descriptions;
 	if (index >= descriptions.size())
@@ -2020,16 +1828,8 @@ void MainMenuStageSelect::update(float /*dt*/)
 				}
 				this->set_level_settings();
 
-				// The end of the main menu, and the whole of what it reports:
-				// the settings it assembled are already in the MenuContext
-				// GameMenu owns, so closing is the message. It used to write
-				// true through a heap-allocated bool that GameMenu read on
-				// every frame of every menu page to find out.
-				//
-				// One pop, whatever the other pads did this frame. Both pops
-				// would queue and both would drain (state_context.h), so a
-				// second A on the same tick took GameMenu off the stack too -
-				// out from under this page, taking its result callback with it.
+				// Settings are already in GameMenu's context. Pop once and return so
+				// simultaneous inputs cannot also pop the state underneath.
 				this->context()->pop();
 				return;
 			}
@@ -2067,11 +1867,6 @@ void MainMenuStageSelect::update_stage_select_visuals()
 {
 	this->unconfirm_all_widgets();
 
-	// Every stage names and pictures itself, from its own level file, so this
-	// reads the list rather than a switch that has to grow a case per stage.
-	// init() builds the icon from the same two helpers, so the first frame
-	// painted is the selected stage's and no name that is not in the sheet is
-	// ever handed to the eager resolve.
 	const int slot = this->select_state_.slot;
 	this->stage_icon_->set_sprite_frame(this->slot_icon_frame(slot));
 	this->stage_name_->set_text(this->slot_display_name(slot));
@@ -2126,10 +1921,7 @@ std::wstring MainMenuStageSelect::slot_display_name(int slot) const
 	const StageList* stages = this->data()->stages();
 	if (slot >= 0 && slot < static_cast<int>(stages->size()))
 	{
-		// The same conversion the stage was checked with at load, so the two
-		// cannot disagree about which characters are acceptable. It cannot
-		// throw here: main.cpp ran it over this exact string before the stage
-		// joined the list.
+		// Startup validates stage names with this same text conversion.
 		return drawable_text::widen_drawable(
 			stages->at(static_cast<size_t>(slot)).display_name,
 			"the stage list");
@@ -2143,9 +1935,6 @@ int MainMenuStageSelect::pick_random_stage() const
 void MainMenuStageSelect::init()
 {
 	this->set_player_prompts({
-		// A twice: the first press confirms the stage, the second starts the
-		// match. One legend for both, because it is the same button and the
-		// bar is built once in init().
 		{ L"Left/Right", L"Change stage" },
 		{ L"A", L"Confirm, then start" },
 		{ L"B", L"Back" } });
@@ -2173,11 +1962,8 @@ void MainMenuStageSelect::init()
 		this->menu_style().heading_shadow_offset);
 
 
-	// Both are built from the slot the cursor starts on, not from a literal.
-	// The frame is resolved eagerly, inside UiTexture's construction, so a
-	// name that is not in the sheet throws out of here rather than showing
-	// wrong - which is what "stage_test_1" did, a frame the sheet has not
-	// carried for three stages.
+	// Use the selected stage's frame immediately: UiTexture resolves it
+	// during construction.
 	this->stage_icon_ = std::make_unique<UiTexture>(
 		"stage_icon",
 		"sprite_sheet_1",

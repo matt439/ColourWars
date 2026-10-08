@@ -9,11 +9,7 @@ class Structure : public labrador::TextureObject, public labrador::CollisionObje
 {
 public:
 	Structure() = default;
-	// Takes the collision shape, rather than borrowing and secretly copying
-	// it. The old signature was a `const Shape*` that the constructor cloned,
-	// which is why mattmath::Shape carried a polymorphic clone() for this one
-	// call site - and why every caller passed the address of a stack local
-	// whose lifetime looked, at the call, like it had to outlive the object.
+	// Take ownership of the collision shape.
 	Structure(const std::string& sheet_name,
 		const std::string& frame_name,
 		const mattmath::RectangleF& sprite_rectangle,
@@ -35,8 +31,7 @@ public:
 	labrador::CollisionMask mask() const override;
 	labrador::CollisionTag tag() const override;
 
-	// Level geometry does not respond to being hit; it is what everything
-	// else responds to. StructurePaintable overrides this to take paint.
+	// Geometry remains fixed on contact; StructurePaintable overrides this to accept paint.
 	void on_contact(const labrador::CollisionObject& other,
 		const mattmath::Vector2F& normal, float penetration) override;
 

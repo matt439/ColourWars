@@ -11,20 +11,12 @@ class MenuLevelSettings;
 
 namespace menu_input_consts
 {
-	// The stick has to pass the first threshold and then fall back inside the
-	// second for a direction to count, so a held stick is one step and not a
-	// stream of them. They are equal today; they are two names because the pair
-	// is a hysteresis band and collapsing them would make a stick resting on
-	// the line stutter.
+	// Return-crossing thresholds for consecutive raw stick samples.
+	// Equal values provide no hysteresis.
 	constexpr float digital_presence_threshold = 0.8f;
 	constexpr float digital_absence_threshold = 0.8f;
 
-	// The buttons a menu action can come from, and what each one means.
-	//
-	// A table rather than a chain because MenuInput's arming is indexed by
-	// position in it: a second list of the same three buttons would be free to
-	// drift from this one, and the arming would then be reading someone else's
-	// flag.
+	// Menu button mappings; arming flags use these table indices.
 	struct ActionButton
 	{
 		labrador::GamepadButton button;
@@ -40,14 +32,8 @@ namespace menu_input_consts
 		{ labrador::GamepadButton::start, MenuInputAction::pause },
 	};
 
-	// The keyboard's menu bindings, the same table for the same reason: the
-	// arming below is indexed by position in it.
-	//
-	// Two keys per action, because a keyboard has an obvious answer and a
-	// conventional one and there is no cost to honouring both. There is no
-	// `pause` row: PauseMenuInitial treats back and pause identically, so
-	// Escape closing the pause menu is already `back`, and a second key
-	// meaning almost-back would be a distinction with nothing behind it.
+	// Each action has primary and alternate keys and one shared arming flag.
+	// Escape maps to back, which also resumes the pause menu.
 	struct ActionKey
 	{
 		labrador::Key key;
@@ -65,9 +51,7 @@ namespace menu_input_consts
 			MenuInputAction::back },
 	};
 
-	// One row per direction, arrows and WASD. W and S are here and A and D are
-	// the walking keys in a match, which is not a clash: nothing reads both
-	// tables in one frame, because a menu is either up or it is not.
+	// Menu navigation accepts arrows and WASD.
 	struct DirectionKey
 	{
 		labrador::Key key;
@@ -88,46 +72,28 @@ namespace menu_input_consts
 
 struct ProcessedMenuInput
 {
-	// labrador::Direction, not a game enum: which way the stick went is the
-	// input to engine/ui's navigation walk, and there is no version of it that
-	// belongs to this game.
 	labrador::Direction direction = labrador::Direction::none;
 	MenuInputAction action = MenuInputAction::none;
 	bool connected = false;
 };
 
-// What the pads mean to a menu, one entry per slot.
-//
-// A mapping and almost nothing else, for the same reason PlayerInput is: the
-// pads and the edges between frames belong to the engine
-// (engine/input/gamepads.h). The polling, the previous-frame store and the
-// prime() that used to live here were the second of two copies, and they had
-// already drifted from the first. What is left is armed_, and it is not prime()
-// coming back - see the comment on it.
+// Maps engine device state to menu navigation and armed action releases.
 class MenuInput
 {
 public:
 	MenuInput(const labrador::Gamepads* gamepads,
 		const labrador::Keyboard* keyboard);
 
-	// Returns exactly input_slots::count entries, indexed by slot. Absent
-	// inputs carry neutral data.
-	//
-	// Every action here is a *release* edge: the button has to come back up,
-	// and it has to have gone down while a menu was reading the device.
-	//
-	// Not const, because it advances armed_ - but calling it twice in one
-	// frame answers the same thing twice, which a page that reads the pads
-	// through more than one helper depends on. It is still an update()-time
-	// call and not a draw()-time one: draw() runs on every render worker at
-	// once.
+	// Returns input_slots::count entries indexed by device slot; absent devices
+	// are neutral. Actions fire on release only if their press was observed here.
+	// Call during update: this advances arming, but repeated reads of the same
+	// frame return the same result.
 	std::vector<ProcessedMenuInput> menu_inputs();
 	// Same input, in the fixed roster's player order. A missing device leaves
 	// its own row neutral instead of handing the row to another controller.
 	std::vector<ProcessedMenuInput> player_inputs(const MenuLevelSettings& settings);
 
-	// A menu is taking input back from gameplay. Arming from the previous
-	// menu session must not validate a press made while gameplay owned it.
+	// Clear ownership when taking input back from gameplay or another context.
 	void reset_actions();
 
 private:
@@ -138,26 +104,12 @@ private:
 	const labrador::Gamepads* gamepads_ = nullptr;
 	const labrador::Keyboard* keyboard_ = nullptr;
 
-	// Per pad slot, per menu_input_consts::action_buttons entry: did this
-	// MenuInput watch the button's current down-run start?
-	//
-	// WHY A MENU NEEDS THIS. Gamepads is polled once a frame whatever is on top
-	// of the stack, which is what makes an edge honest - and is also what hands
-	// a page pushed under a held button that button's release as if it were its
-	// own. Hold A to jump and press Start with the same hand: Start's release
-	// opens the pause menu, and A's release, a frame later, activates whatever
-	// the menu opened onto. So a release only answers if the press that began
-	// it was seen from here, and a press made while a match was on top was not.
-	//
-	// reset_actions() starts a new menu session after gameplay. Page-to-page
-	// transitions keep these flags, but gameplay cannot carry their ownership
-	// forward: the release that closed the last menu may have left one armed.
+	// Per slot and action: whether this menu observed the current press.
+	// This prevents releasing a gameplay-held button from activating a new menu.
+	// reset_actions() clears ownership when input changes context.
 	bool armed_[input_slots::pad_count]
 		[menu_input_consts::action_button_count] = {};
 
-	// The same flag for the keyboard's two action keys, and it is a separate
-	// array rather than a fifth row because the two tables are different
-	// lengths and indexing one by the other's position is the bug this whole
-	// mechanism exists to avoid.
+	// Keyboard arming is indexed by action_keys, not the pad button table.
 	bool key_armed_[menu_input_consts::action_key_count] = {};
 };

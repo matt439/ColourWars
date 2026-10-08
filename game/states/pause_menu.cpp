@@ -76,14 +76,8 @@ ProcessedMenuInput PauseMenuPage::pausing_player_input(
 		return pausing;
 	}
 
-	// The pad that opened this menu has been unplugged. One pad owning the
-	// menu is the design and stays the design - whoever called the pause is
-	// who answers for it - but a slot with nothing in it can never answer, and
-	// the frame below is not being updated, so the match would have no exit
-	// left but the window's close button. Ownership therefore falls back to
-	// the match as a whole, and the first pad still in it that says anything
-	// is heard. Only pads in the match: an idle controller that is on no
-	// player's lap did not earn a vote by being plugged in.
+	// The opening device is disconnected. Other participants may navigate;
+	// if none are connected, any device may reach Quit.
 	const MenuLevelSettings& settings = *this->level_settings();
 	bool participant_connected = false;
 	for (size_t slot = 0; slot < inputs.size(); slot++)
@@ -193,9 +187,6 @@ void PauseMenuInitial::refresh_connections()
 
 void PauseMenuInitial::init()
 {
-	// Both buttons really do resume - update() takes back and pause alike -
-	// and Start is worth naming here because it is the only thing that says
-	// pause is a toggle.
 	this->set_prompts({
 		{ L"A", L"Select" },
 		{ L"B/Start", L"Resume" } });
@@ -426,10 +417,7 @@ void PauseMenuConfirmation::init()
 	this->text_container_->add_child(this->yes_.get());
 	this->text_container_->add_child(this->no_.get());
 
-	// "No" first, because the first widget added takes the focus and a
-	// confirmation dialogue defaults to the safe answer. Adding it first also
-	// says so, where set_highlighted_widget(no_) at the bottom of a
-	// hundred-line init did not.
+	// Register No first so confirmation defaults to the safe answer.
 	this->focus_.add(this->no_.get(), [this]
 		{
 			this->play_wave(this->cancel_sound_);

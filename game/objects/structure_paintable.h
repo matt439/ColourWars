@@ -12,13 +12,7 @@
 #include "game/tuning.h"
 
 
-// Which faces of a paintable structure generate paint tiles.
-//
-// These used to be encoded as a std::vector<Segment> of the matching edges and
-// decoded back by matching positional indices against RectangleF::edges().
-// That ordering is {top, bottom, left, right} but the decoder assumed
-// {top, right, bottom, left}, so three of the four faces painted on the wrong
-// side. Passing the booleans through directly removes the round trip.
+// Faces on which the structure generates paint tiles.
 struct PaintableFaces
 {
 	bool left = false;
@@ -58,25 +52,13 @@ public:
 private:
 	std::vector<PaintTile> paint_tiles_ = std::vector<PaintTile>();
 	TeamColour team_colours_ = TeamColour();
-	// By value. This was a reference bound to a vector local to
-	// LevelObjectBuilder::build_collision_object, so it dangled for the whole
-	// life of every paintable structure in the level.
 	PaintableFaces faces_ = PaintableFaces();
 	// Borrowed, and outlives the level: main() owns it.
 	const PaintTuning* paint_ = nullptr;
 
-	// One face's run of tiles, as an arithmetic rather than a list.
-	//
-	// generate_paint_tiles lays each face down as a contiguous run of equally
-	// sized tiles along one axis, then throws away the fact that it did. That
-	// is what made on_collision a scan: the information needed to jump
-	// straight to the two or three tiles a projectile can possibly touch was
-	// computed and discarded, so the only way left to find them was to ask all
-	// fifteen hundred.
-	//
-	// `origin` is the leading edge of tile `begin`, `pitch` is the tile size
-	// along the strip, and `along_x` says which coordinate advances - x for
-	// the top and bottom faces, y for the left and right.
+	// One contiguous strip of equal-size tiles. origin is the leading edge of
+	// tile begin; pitch is tile length along the strip. along_x selects x for
+	// top/bottom faces or y for left/right faces.
 	struct PaintStrip
 	{
 		int begin = 0;
@@ -89,14 +71,12 @@ private:
 	// At most four: one per painted face.
 	std::vector<PaintStrip> paint_strips_ = std::vector<PaintStrip>();
 
-	// Not const: it records each face's run in paint_strips_ as it lays the
-	// tiles down, which is the information on_collision indexes with.
+	// Build tiles and record the strips used by on_contact for candidate lookup.
 	std::vector<PaintTile> generate_paint_tiles();
 	labrador::SoundBank* sound_bank_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
 
-	// Resolved once at construction. This plays from update(), on any tile
-	// that was just painted, so it was a map descent per splash per frame.
+	// Resolved at construction; played once per contact that paints any tile.
 	labrador::SoundBank::WaveHandle paint_sound_;
 
 

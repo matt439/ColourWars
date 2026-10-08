@@ -11,8 +11,8 @@ struct PlaySettings
 	float music_gain() const { return static_cast<float>(music_volume) / 100.0f; }
 	float sfx_gain() const { return static_cast<float>(sfx_volume) / 100.0f; }
 
-	// Absolute stick aiming has no turn speed. Sensitivity controls how far
-	// the stick must travel to request a direction; 3 preserves the old 50%.
+	// Absolute stick aiming has no turn speed. Sensitivity controls the radial
+	// deadzone; the default setting uses half the stick's travel.
 	float aim_deadzone() const
 	{
 		constexpr float deadzones[] = { 0.70f, 0.60f, 0.50f, 0.35f, 0.20f };

@@ -15,8 +15,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 	ResolutionManager* resolution_manager,
 	ThreadPool* thread_pool,
 	const Partitioner* partitioner,
-	// Qualified: DirectXTK has a Mouse too, and this file opens with
-	// using namespace DirectX.
+	// Disambiguate from DirectX::Mouse.
 	const labrador::Mouse* mouse) :
 	render_resources_(render_resources),
 	audio_resources_(audio_resources),
@@ -46,9 +45,7 @@ std::unique_ptr<Level>
 
 	const TeamColour team_colours = team_colour_->team_colours(palette);
 
-	// The scene is filled here rather than handed three vectors to unpack,
-	// which is what Level's first four constructor parameters used to be. Every
-	// add is pending until Level ends the scene's first tick.
+	// Scene additions remain pending until Level builds its opening frame.
 	auto scene = std::make_unique<Scene>(this->thread_pool_,
 		this->partitioner_);
 
@@ -68,10 +65,8 @@ std::unique_ptr<Level>
 		scene->add(std::move(object));
 	}
 
-	// The players go in the same list as everything else - that is the point of
-	// having one - so Level gets pointers back rather than ownership. Added
-	// last, and in build order, because the view list is filled in this order
-	// and an overlay looks the player up by view index.
+	// Scene owns the players. Return borrowed pointers in build order so Level
+	// can associate each view with its player.
 	std::vector<Player*> players;
 	for (std::unique_ptr<Player>& player :
 		this->player_builder_->build_players(settings, load_info, team_colours,

@@ -5,21 +5,8 @@
 
 namespace
 {
-	// The characters a text editor produces without being asked for them: a
-	// smart quote for a straight one, a dash for two hyphens, a non-breaking
-	// space for a space. Word does it, Visual Studio does it, and pasting from
-	// anywhere at all does it.
-	//
-	// The test for being on this list is that the substitution does not change
-	// what the text says. An accented letter is not on it: folding an accent
-	// away changes a word rather than its typography, and what a stage called
-	// Cafe should be named is a decision for whoever names it, not for this.
-	//
-	// Spelt as escapes rather than as the characters themselves, deliberately.
-	// This would otherwise be the one source file in the repository that is
-	// not plain ASCII, its meaning would depend on the compiler agreeing with
-	// the editor about its encoding - which is the whole subject here - and
-	// three of the entries are invisible spaces no reader could tell apart.
+	// Normalize typographic punctuation, but preserve authored letters and accents.
+	// Escapes distinguish visually similar punctuation and invisible spaces.
 	std::wstring_view transliterate(wchar_t character)
 	{
 		switch (character)
@@ -95,17 +82,8 @@ namespace drawable_text
 				continue;
 			}
 
-			// Named where it can still be fixed, rather than thrown by
-			// DirectXTK from inside a widget constructor several screens later
-			// with nothing in the message about which file it came from.
-			//
-			// U+FFFD reaches here by a route worth knowing about: widen()
-			// promises invalid UTF-8 becomes a replacement character so that
-			// "text should show mojibake, not vanish", and no font in the tree
-			// can draw one - so a content file saved in the wrong encoding
-			// takes the engine's documented graceful path straight into the
-			// throw it was written to avoid. It gets the same sentence as
-			// anything else.
+			// Report the authored location. Invalid UTF-8 also fails here because
+			// widen() replaces it with U+FFFD, outside the accepted content range.
 			throw std::runtime_error(where + " contains " +
 				code_point_text(character) + ", which none of this game's "
 				"fonts has a glyph for. They carry the ninety-five characters "
@@ -125,23 +103,13 @@ namespace drawable_text
 		const labrador::FontHandle font =
 			render_resources->resolve_sprite_font(font_name);
 
-		// One call over the whole string. This used to walk the runs between
-		// layout controls, because the query answered "no glyph" about the
-		// newline in every weapon description - it asked the atlas about
-		// characters the pen walk consumes without ever looking them up. That
-		// was report 8, and the engine's f94ac81 made the query skip what the
-		// walk skips, off one definition of the set. So the filter here is
-		// gone rather than kept in step with a private one.
+		// The engine's query handles layout controls consistently with text drawing.
 		const size_t index = render_resources->first_unrenderable(font, text);
 		if (index == std::wstring_view::npos)
 		{
 			return;
 		}
 
-		// The index as well as the character, which is the half of this the
-		// load-time check cannot give: it walks a string it has just built and
-		// reports the first character it dislikes, while this one is reading
-		// an answer out of the atlas and is told where.
 		throw std::runtime_error(where + " contains " +
 			code_point_text(text[index]) + " at index " +
 			std::to_string(index) + ", which the font '" + font_name +

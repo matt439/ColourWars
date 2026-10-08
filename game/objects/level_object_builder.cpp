@@ -9,10 +9,7 @@ using namespace labrador;
 
 namespace
 {
-	// What a split-screen divider is drawn with. These were constants on the
-	// engine's ViewportManager, which named this game's sprite sheet and this
-	// game's frame; the engine hands out divider rectangles and this file is
-	// the only thing that has ever filled them.
+	// Game assets used to draw the viewport manager's divider rectangles.
 	const std::string DIVIDER_SHEET_NAME = "sprite_sheet_1";
 	const std::string DIVIDER_FRAME_NAME = "pixel";
 	const Colour DIVIDER_COLOUR = Colour::black;
@@ -46,10 +43,7 @@ namespace
 		size_t index_;
 	};
 
-	// colour_from_name now says so when a name is not one of the CSS colours,
-	// instead of quietly answering white. This file already throws on every
-	// other unreadable field, so it throws on this one too - and JsonValue
-	// says which file and which object, which "invalid colour" would not.
+	// Add the source file and object context to an invalid CSS colour error.
 	Colour colour_of(const JsonValue& json)
 	{
 		const std::string name = json.string("colour");
@@ -62,12 +56,8 @@ namespace
 		return *colour;
 	}
 
-	// A level file may give a rectangle either way round. The shipped levels
-	// use only "rectangle"; "rectangle_tlbr" is kept because it is part of the
-	// format this loader accepts, and dropping an accepted spelling would break
-	// any level file written against it. Neither is optional in the sense of
-	// having a default: an object with no rectangle at all is a level that
-	// cannot be built, so say which object and which spellings were looked for.
+	// Accept both rectangle encodings; report the object and expected keys
+	// if neither is supplied.
 	RectangleF checked_rectangle(const JsonValue& json,
 		const RectangleF& rectangle)
 	{
@@ -130,10 +120,7 @@ namespace
 			": '" + name + "' is not a collision type");
 	}
 
-	// Which collision types a given object type is allowed to claim. The check
-	// used to be a per-branch if-chain repeating the spellings, and its throw
-	// said "Invalid collision type" without saying which file, which object or
-	// which type.
+	// Allowed collision tags for each object type.
 	CollisionObjectType collision_type_of(const JsonValue& json,
 		const std::string& object_type,
 		std::initializer_list<CollisionObjectType> allowed)
@@ -193,9 +180,6 @@ std::unique_ptr<CollisionObject>
 
 		const RectangleF rectangle = decode_rectangle(json);
 
-		// Pass the booleans straight through. Encoding them as Segments and
-		// recovering them by positional index against edges() put three of
-		// the four faces on the wrong side of the structure.
 		const JsonValue faces_json = json.object("paintable_faces");
 		PaintableFaces faces;
 		faces.left = faces_json.boolean("left");
@@ -232,11 +216,7 @@ std::unique_ptr<CollisionObject>
 			triangle_json.number("x3"),
 			triangle_json.number("y3"));
 
-		// The sheet carries one ramp frame and it is right-handed, so a
-		// left-handed ramp is that frame mirrored. The handedness is already
-		// in the collision type, so it is read from there rather than from a
-		// "flip" field a level author would have to remember to keep in step
-		// with it.
+		// The sheet's ramp frame is right-handed; mirror it for left-handed collision geometry.
 		const SpriteFlip flip =
 			collision_type == CollisionObjectType::structure_ramp_left
 			? SpriteFlip::horizontal

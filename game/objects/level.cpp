@@ -23,8 +23,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	RenderResources* render_resources,
 	const AudioResources* audio_resources,
 	const PlaySettings* preferences,
-	// Qualified: DirectXTK has a Mouse too, and this file opens with
-	// using namespace DirectX.
+	// Disambiguate from DirectX::Mouse.
 	const labrador::Mouse* mouse) :
 	scene_(std::move(scene)),
 	players_(std::move(players)),
@@ -72,9 +71,7 @@ Level::~Level()
 
 void Level::build_opening_frame(RenderResources* render_resources)
 {
-	// The builder added every object to the scene and every add is pending
-	// until a tick ends, so the scene has a tick to end before it has had one.
-	// The frame drawn before the first update() is a real frame.
+	// Admit the builder's pending objects before the first frame is drawn.
 	this->scene_->end_tick();
 	for (CollisionObject* object : this->scene_->collision_objects())
 	{
@@ -85,9 +82,7 @@ void Level::build_opening_frame(RenderResources* render_resources)
 	}
 	this->projectile_count_ = this->count_projectiles();
 
-	// The first beat, off the same number the timer starts at: the opening
-	// text used to be a separate constant, so a countdown retuned to five
-	// seconds would have opened on a "3".
+	// Use the configured countdown for the opening beat.
 	const MatchTuning& match = this->tuning_->match();
 	this->countdown_text_ = std::make_unique<TextDropShadow>(
 		std::to_wstring(static_cast<int>(match.countdown)),
@@ -101,36 +96,8 @@ void Level::build_opening_frame(RenderResources* render_resources)
 		match.countdown_scale);
 	this->centre_countdown_text();
 
-	// Written here, beside nothing, on purpose: it has to agree with
-	// PlayerInput::player_input, and the moment it lives in a content file is
-	// the moment a rebinding can move a button without moving the legend that
-	// names it. Two lines rather than one because six prompts in a row is a
-	// hundred characters of unbroken text under a countdown that is itself
-	// centred, and nobody reads that in three seconds.
-	//
-	// A or the left trigger jumps, the right trigger shoots, the right stick
-	// aims, and the left stick pushed down drops through a platform - which is
-	// the least guessable of the six and the reason the list is not shorter.
-	// Every entry names its device. "Down" alone was the first draft and it
-	// was the one prompt that could be misread, sitting after "Right stick
-	// Aim" among five entries that all name a stick or a button: the reading
-	// it invites is the d-pad, which PlayerInput does not read at all during a
-	// match, so a player following the legend would press a control that does
-	// nothing. The menus make that worse rather than better - MenuInput takes
-	// the d-pad and the stick alike, so "Left/Right" there honestly means
-	// either, and a player arrives at their first match having been taught
-	// that a bare direction means whichever they prefer.
-	//
-	// A THIRD LINE, ONLY WHEN SOMEBODY IS ON THE KEYBOARD. The legend is one
-	// centred text shared by every pane rather than one per player, so it
-	// cannot show each player only their own device - but it can decline to
-	// teach a keyboard to four people holding pads. A match with no keyboard
-	// player reads exactly as it did.
-	//
-	// Both lines name the same six actions, which they can only because
-	// PlayerInputData carries drop_through as an action now. It used to be a
-	// stick position Player compared against a threshold itself, so it was the
-	// one thing in a match that no device without a stick could ask for.
+	// Keep the legend synchronized with PlayerInput bindings. Include the keyboard
+	// line only when a keyboard player is present; the legend is shared by all panes.
 	bool anyone_on_keyboard = false;
 	for (const Player* player : this->players_)
 	{
@@ -167,11 +134,7 @@ void Level::set_countdown_text(const std::wstring& text)
 {
 	this->countdown_text_->set_text(text);
 
-	// Every beat is a different width, so the centring is redone with the
-	// text. "3" and "GO!" are 212 and 752 pixels wide in this font at this
-	// scale, and both used to be placed by subtracting half of a 400x600 box
-	// nothing had measured: the digits sat 94px left of centre and the last
-	// beat jumped 270px right, every match, at every resolution.
+	// Re-centre after each beat because the text width changes.
 	this->centre_countdown_text();
 }
 
@@ -179,10 +142,8 @@ void Level::centre_countdown_text()
 {
 	const Vector2F resolution = this->resolution_manager_->resolution_vec();
 	const MatchTuning& match = this->tuning_->match();
-	// Start from authored scale for every beat and resize. The text changes
-	// width at "GO!", and a previously shrunken digit must recover its size
-	// when the window grows. Fit and centre the shadow with the text, including
-	// any part of their combined bounds that lies before the text's origin.
+	// Fit text and shadow together, including negative offsets. Start from authored
+	// scale each time so a larger window or narrower beat restores the intended size.
 	const RectangleF bounds = RectangleF::union_of(
 		this->countdown_text_->text_bounds_at(Vector2F::ZERO,
 			match.countdown_scale),
@@ -200,9 +161,8 @@ void Level::centre_countdown_text()
 
 void Level::centre_controls_text()
 {
-	// Measure at authored scale on every resize, so shrinking and enlarging
-	// the window never accumulate a scale adjustment. Include the shadow in
-	// the fit and keep the tuned vertical position whenever the block fits.
+	// Fit text and shadow from authored scale on every resize. Keep the tuned
+	// vertical position when the block fits.
 	const Vector2F resolution = this->resolution_manager_->resolution_vec();
 	const MatchTuning& match = this->tuning_->match();
 	const RectangleF bounds = RectangleF::union_of(
@@ -244,8 +204,7 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt)
 	this->frame_dt_ = dt;
 	this->update_state(player_inputs, dt);
 
-	// Last, and on every path: the views describe the state the tick left
-	// behind, and draw() picks its overlay off the same state_ this saw.
+	// Refresh on every path so views and overlays reflect the completed tick.
 	this->refresh_views();
 }
 
@@ -255,10 +214,6 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 	if (this->state_ == LevelState::start_countdown ||
 		this->start_timer_ > -1.0f)
 	{
-		// The first update, and now the only thing left in it: the cameras and
-		// the countdown text are built with the level, because the frame drawn
-		// before this one is a real frame and used to be skipped rather than
-		// made correct.
 		if (this->start_timer_ >= this->tuning_->match().countdown)
 		{
 			this->sound_bank_->play_effect(this->music_, true, this->music_volume_ * this->preferences_->music_gain());
@@ -294,14 +249,8 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		{
 			this->state_ = LevelState::zoom_out;
 
-			// The pull-back starts on this tick, and the arm below that works
-			// the camera out is an `else if` - so it does not run on the tick
-			// the state is entered, while refresh_views() at the end of
-			// update() does. Seeding it here is what stops the first zoom-out
-			// frame being drawn through DEFAULT_CAMERA, which is world (0,0)
-			// at 1:1 and empty background on every stage. It is exactly what
-			// that arm would produce: the ratio is zero until the timer has
-			// been decremented once.
+			// Seed the camera now: the zoom_out arm runs next tick, but refresh_views
+			// already renders the newly entered state this frame.
 			this->zoom_out_camera_ = this->zoom_out_start_camera_;
 
 			this->sound_bank_->stop_effect(this->music_, true);
@@ -334,24 +283,15 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			this->state_ = LevelState::finished;
 		}
 	}
-	// No arm for LevelState::finished. state_ only becomes it in the arm
-	// directly above, in the same chain, so it could never be read on the tick
-	// it was written - and GameLevel::update sees finished and goes to the
-	// results menu instead of calling update() again. The teardown it used to
-	// hold (stopping the music) has already happened on the way into zoom_out,
-	// and ~Level does it again.
+	// GameLevel opens results when it sees finished, so this state needs no update arm.
+	// Music stops on entry to zoom_out; destruction also stops level sounds.
 
 }
 
 float Level::zoom_out_camera_ratio() const
 {
-	// A pull-back tuned to zero is 0/0: the arm above zeroes zoom_out_timer_
-	// on the last step before asking for the ratio, and the NaN that comes
-	// back is lerped into zoom_out_camera_, installed as the only view for the
-	// rest of the match and never recomputed. A zoom with no duration is a
-	// zoom that is already over, so it answers 1 and lands on the finish
-	// camera. Camera::frame guards its own division the same way. The proper
-	// home for this is a range check where the tuning is read.
+	// Defensively treat a non-positive duration as a completed zoom, avoiding 0/0.
+	// The tuning loader requires a positive duration.
 	const float duration = this->tuning_->match().zoom_out;
 	if (duration <= 0.0f)
 	{
@@ -364,11 +304,7 @@ float Level::zoom_out_camera_ratio() const
 void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs,
 	float dt)
 {
-	// The whole of a tick, in the order the scene names its phases. What this
-	// replaces was a hundred lines of loops over three object lists - two
-	// update sweeps, a collidables rebuild, the collision dispatch, an
-	// out-of-bounds pass and a swap-and-pop compaction - none of which was
-	// about paint.
+	// Run the scene phases in order, with game-specific work between them.
 	this->apply_player_inputs(player_inputs);
 
 	this->scene_->update(dt);
@@ -378,8 +314,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 
 	this->scene_->resolve();
 
-	// "I touched no ground this tick" is the absence of a contact, so it is
-	// only knowable once they have all been dispatched.
+	// Loss of ground support is known only after all contacts have been dispatched.
 	for (Player* player : this->players_)
 	{
 		player->end_contacts();
@@ -387,20 +322,14 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 
 	this->update_players_after_resolve();
 
-	// Retires what left the arena or died, and admits the projectiles fired
-	// above - which is why a projectile's first sweep is the next tick's and
-	// not this one's. It has to be: the players and their projectiles are one
-	// list now, so a push from inside the loop walking it would invalidate the
-	// walk.
+	// Retire deleted/out-of-bounds objects and admit this tick's projectiles.
+	// Deferred admission keeps the scene stable during iteration.
 	this->scene_->end_tick();
 
-	// Once per tick, for the debug overlay. It used to be once per view, from
-	// inside the draw.
+	// Count once per tick for all debug overlays.
 	this->projectile_count_ = this->count_projectiles();
 
-	// A player leaving the level is a genuine simulation failure, not a
-	// gameplay event, so it still reports loudly rather than being retired with
-	// the projectiles that missed.
+	// Players must remain in the arena; unlike projectiles, they cannot be retired.
 	for (const Player* player : this->players_)
 	{
 		if (!this->scene_->in_bounds(*player))
@@ -415,20 +344,14 @@ void Level::resolve_mouse_aim(Player* player, size_t view_index,
 {
 	if (!this->mouse_->focused())
 	{
-		// No cursor to aim by. Left unrequested rather than held at its last
-		// value: the player has gone somewhere else, and a weapon that kept
-		// pointing where the mouse was when they left would be the match
-		// running on without them, which is the bug on_deactivated exists to
-		// stop one level up.
+		// Without a valid cursor, leave aim unrequested rather than reuse a stale direction.
 		return;
 	}
 
 	const labrador::Viewport viewport =
 		this->viewport_manager_->player_viewport(static_cast<int>(view_index));
 
-	// The player's centre in this pane, in the same client pixels the cursor
-	// is reported in: through their own camera, then offset by where the pane
-	// sits in the window.
+	// Convert the player centre to window client pixels: camera transform, then pane offset.
 	const Vector2F centre_in_view =
 		player->camera().calculate_view_position(player->center());
 	const Vector2F centre_on_screen = centre_in_view + viewport.position();
@@ -438,9 +361,7 @@ void Level::resolve_mouse_aim(Player* player, size_t view_index,
 
 	const Vector2F aim = cursor - centre_on_screen;
 
-	// The cursor exactly on the character asks for no direction at all, and
-	// normalising it would be a division by zero. Same answer a centred right
-	// stick gives, reached the same way.
+	// A cursor exactly on the player requests no direction; do not normalize zero.
 	if (aim == Vector2F::ZERO)
 	{
 		return;
@@ -463,8 +384,7 @@ void Level::apply_player_inputs(
 		{
 			PlayerInputData input = player_inputs[slot];
 
-			// A copy, because this is the one field the input mapping could
-			// not fill and this is where the answer lives.
+			// Copy the slot input to fill in this player's camera-dependent mouse aim.
 			if (input_slots::is_keyboard_and_mouse(slot))
 			{
 				this->resolve_mouse_aim(player, i, input);
@@ -495,9 +415,8 @@ void Level::update_players(float dt)
 
 void Level::resolve_projectile_movement()
 {
-	// Scene contacts describe endpoint overlaps in object-list order. Paint
-	// needs its first hit along the travelled segment, before a backing wall
-	// can consume a shot or its endpoint can pass the thin paintable face.
+	// Resolve the first hit along each projectile's travel before endpoint contacts
+	// can consume it in scene order or miss a thin paintable face.
 	for (CollisionObject* object : this->scene_->collision_objects())
 	{
 		if (is_projectile(to_collision_type(object->tag())))
@@ -560,10 +479,7 @@ void Level::refresh_views()
 	if (this->state_ == LevelState::start_countdown ||
 		this->state_ == LevelState::active)
 	{
-		// One pane per player, in player order - which is the order the
-		// overlay reads players_ back in. The pane index is that position,
-		// never player_num(): the pad slot is a different number the moment
-		// the pads driving a match are not 0..n-1.
+		// Pane order follows players_, not input slots, which may be sparse.
 		for (size_t i = 0; i < this->players_.size(); ++i)
 		{
 			const Player* player = this->players_[i];
@@ -575,13 +491,7 @@ void Level::refresh_views()
 	}
 	else
 	{
-		// One fullscreen view, and it is the whole of what "fullscreen" now
-		// costs. Getting here used to mean calling
-		// ViewportManager::set_layout(one_player) from inside a draw -
-		// permanently clobbering shared presentation state, never restoring it,
-		// so restarting a 2-4 player match rendered every camera into one pane
-		// with no split-screen dividers. Saying it on the view list says it for
-		// this frame and no further.
+		// Use one fullscreen view without changing the shared split-screen layout.
 		this->scene_->add_view(this->viewport_manager_->fullscreen_viewport(),
 			this->zoom_out_camera_);
 	}
@@ -635,8 +545,7 @@ void Level::draw(Renderer& renderer) const
 	}
 	else
 	{
-		// The overview has no HUD, no dividers and no countdown: one fullscreen
-		// view of the world, and nothing over it.
+		// The overview draws only the world, with no gameplay overlays.
 		this->scene_->draw(renderer);
 	}
 }
@@ -645,16 +554,10 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 {
 	const Player* player = this->players_[static_cast<size_t>(view_index)];
 
-	// The pane the scene has just drawn the world into, rather than a second
-	// question to the layout for the rectangle it was handed one of.
 	const Viewport& player_vp = this->scene_->view(view_index).viewport;
 
-	// Everything from here down goes over the world, and this is the case
-	// renderer.h describes for the camera being per draw-range rather than per
-	// view: same viewport, same frame, three different mappings.
-	//
-	// The dividers are authored in screen coordinates, so they are drawn
-	// through a camera that subtracts this pane's screen origin.
+	// Dividers use window coordinates; subtract the pane's screen origin
+	// to draw them into this viewport.
 	list.set_camera(Camera(player_vp));
 
 	for (const std::unique_ptr<GameObject>& divider : this->viewport_dividers_)
@@ -662,10 +565,7 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		divider->draw(list);
 	}
 
-	// The HUD is already in pane-local coordinates - it is laid out from the
-	// viewport's own size - so it wants the identity. Both of these used to be
-	// a bare SpriteBatch::Begin() with no camera anywhere near them, which is
-	// what the identity means.
+	// The HUD uses pane-local coordinates, so draw it with the identity camera.
 	list.set_camera(Camera::DEFAULT_CAMERA);
 
 	this->interface_gameplay_->draw_gameplay_interface(list,
@@ -697,8 +597,6 @@ int Level::count_projectiles() const
 	int count = 0;
 	for (const CollisionObject* object : this->scene_->collision_objects())
 	{
-		// The ten-way comparison written out here is is_projectile(), which
-		// already existed two files away.
 		if (is_projectile(to_collision_type(object->tag())))
 		{
 			count++;
@@ -712,9 +610,7 @@ LevelEndInfo Level::level_end_info() const
 	auto result = LevelEndInfo();
 	result.team_colours = this->team_colours_;
 
-	// Which teams were in the match, asked of the players rather than of the
-	// settings, because this is the object that holds them and a team with no
-	// player in it is exactly what the results screen must not report on.
+	// Derive team participation from the players actually in the match.
 	result.team_a_played = false;
 	result.team_b_played = false;
 	for (const Player* player : this->players_)
@@ -737,9 +633,7 @@ LevelEndInfo Level::level_end_info() const
 		if (to_collision_type(object->tag()) ==
 			CollisionObjectType::structure_paintable)
 		{
-			// dynamic_cast on a POINTER returns nullptr on failure; only the
-			// reference form throws bad_cast. The catch here could never fire,
-			// and the null was dereferenced unchecked one line above it.
+			// A failed pointer cast returns nullptr.
 			auto paintable_object = dynamic_cast<PaintableObject*>(object);
 
 			if (paintable_object == nullptr)
@@ -765,19 +659,11 @@ LevelEndInfo Level::level_end_info() const
 
 void Level::draw_countdown_text(DrawList& draw_list) const
 {
-	// Linear, because this is the one thing on screen that is not pixel art:
-	// a 144pt face scaled by two. It was a bare SpriteBatch::Begin() before,
-	// which is DirectXTK's LinearClamp by default - the only place in the
-	// level that took it, and now the only place that asks for it. The list
-	// goes back to point so the next range is not surprised by it.
+	// Use linear filtering for countdown text, then restore point filtering.
 	draw_list.set_filter(TextureFilter::linear);
 	this->countdown_text_->draw(draw_list);
 
-	// With the countdown and only with it. It is deliberately not a thing a
-	// player can bring back: three seconds at the top of every match is
-	// already every match, and a legend that can be summoned is a controls
-	// screen wearing a disguise - which is the larger piece of work this is
-	// the cheap half of.
+	// Show the shared controls reminder only during the countdown.
 	this->controls_text_->draw(draw_list);
 
 	draw_list.set_filter(TextureFilter::point);

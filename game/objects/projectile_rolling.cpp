@@ -30,8 +30,7 @@ void ProjectileRolling::update(float dt)
 {
 	const ProjectileDetails& details = this->details();
 
-	// The displacement is discarded: a rolling projectile is positioned by
-	// whatever it is rolling along, not by its own velocity.
+	// Advance lifetime without moving this one-step volume from its spawn position.
 	std::ignore = Projectile::update_movement(details.gravity,
 		details.wind_resistance, dt);
 }
@@ -44,13 +43,9 @@ void ProjectileRolling::on_contact(const CollisionObject& /*other*/,
 }
 void ProjectileRolling::draw(DrawList& /*draw_list*/) const
 {
-	// do nothing
 }
 RectangleF ProjectileRolling::bounds() const
 {
-	// This used to report itself never visible. bounds() cannot say that, and
-	// should not: the projectile is somewhere, it collides there, it just does
-	// not draw. draw() is the no-op that says so.
 	return this->rectangle_;
 }
 const Shape* ProjectileRolling::shape() const

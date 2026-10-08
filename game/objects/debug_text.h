@@ -22,12 +22,11 @@ public:
 private:
 	labrador::RenderResources* render_resources() const;
 
-	// Borrowed, not owned - see InterfaceGameplay.
+	// Borrowed services; they outlive this overlay.
 	labrador::RenderResources* render_resources_ = nullptr;
 	const labrador::ResolutionManager* resolution_manager_ = nullptr;
 	const DebugOverlayPresentation* look_ = nullptr;
 
-	// Resolved once, like every other font name. The debug overlay is drawn
-	// per player per frame when it is on at all.
+	// Resolved at construction to avoid font-name lookup in each view.
 	labrador::FontHandle font_;
 };

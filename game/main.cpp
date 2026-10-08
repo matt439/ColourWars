@@ -30,20 +30,12 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 {
 	try
 	{
-		// Every random choice the game makes - the random stage, the random
-		// primary weapon, the team colours a match is dealt - goes through
-		// rand(), and an unseeded CRT behaves exactly as srand(1): the same
-		// stage, the same weapon and the same colours on every launch. This is
-		// the one place that runs before any of them, so it is the one place
-		// that seeds.
+		// Seed before stage, weapon, or palette selection uses rand().
 		std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
 		Save save;
 		save.load_save_file();
 
-		// Everything the shell cannot decide for itself. The resolution and
-		// the fullscreen flag come out of this game's own save file, which is
-		// exactly why the engine does not read one.
 		ApplicationOptions options;
 		options.window_class_name = L"ColourWarsWindowClass";
 		options.window_title = L"Colour Wars";
@@ -52,39 +44,20 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		options.target_fps = 60;
 		options.max_threads = 16;
 
-		// The game's own resource registry, beside the engine's: a level
-		// definition means nothing to the engine, so the engine does not cache
-		// one. Declared before the Application so that it outlives every state
-		// that borrows from it.
+		// Declare borrowed game resources before Application so they outlive its states.
 		Registry<LevelLoadedInfo> level_infos("Level");
 
-		// And the pickable stages, which are those same levels in the order
-		// the manifest names them. There is no second list to keep in step:
-		// this one is built by the loader that fills the registry above.
+		// Populated alongside the registry in manifest order.
 		StageList stages;
 
-		// Where the content is: beside the executable, wherever the game was
-		// started from. That is the engine's rule (engine/app/content_root.h)
-		// and load_manifest applies it to the manifest's path itself - but
-		// the two files below are read before the manifest, so it is applied
-		// here by hand, with the same pieces. Without this they would resolve
-		// against the working directory while the manifest did not, and a
-		// game started from a shortcut would fail on tuning.json with the
-		// manifest sitting right there beside it.
+		// Resolve early content reads beside the executable, as load_manifest does.
 		const std::string content_root = executable_directory();
 
-		// Every number a paint match is balanced on. Declared here for the
-		// same reason as the registry above: a level's players, weapons and
-		// projectiles all borrow from it, so it has to outlive the
-		// Application. Read before the manifest because it names no asset -
-		// it is the file the manifest's assets are used *by*.
+		// Parse tuning and presentation before creating states. Their asset names
+		// are validated after the manifest loads; both objects outlive Application.
 		const GameTuning tuning(
 			resolved_under(content_root, TUNING_PATH).c_str());
 
-		// And what the shell looks like: every font, colour, offset and box
-		// size the menus, the HUD and the debug overlay are laid out from.
-		// Read here, beside the tuning, for the same reason - a menu page
-		// borrows it and every page outlives none of this.
 		const Presentation presentation(
 			resolved_under(content_root, PRESENTATION_PATH).c_str());
 
@@ -93,34 +66,21 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		Application app(std::move(options));
 		app.initialize(instance, show_command);
 
-		// The engine cannot build a level and does not pretend to: the
-		// manifest may say "level" because the game teaches the loader what
-		// one is. Levels are not device resources, so there is no reload half
-		// - a restore must leave them where they are, with every
-		// LevelLoadedInfo* the game holds still pointing at them.
+		// Register the game's level resource kind. Level definitions survive device
+		// restoration, so this kind has no reload callback.
 		app.resource_loader()->register_kind("level",
 			{
-				// A level is never optional: a stage the manifest names and
-				// the disk does not have is a content bug, and the stage-select
-				// menu would find out three screens later.
+				// Declared levels are required even if marked optional in the manifest.
 				[&level_infos, &stages](const std::string& directory,
 					const std::string& name, bool /*optional*/)
 				{
 					auto info = std::make_unique<LevelLoadedInfo>(
 						(directory + name + ".json").c_str());
 
-					// Before it joins the stage list, and for the same reason
-					// the disk is checked here rather than at the menu: every
-					// other key in the file is read for the first time inside
-					// GameLevel::init(), which is after four people have
-					// chosen a stage and pressed A.
+					// Validate the definition before exposing it in stage selection.
 					info->validate();
 
-					// The stage name is the one level value that is drawn as
-					// text rather than used as a key, so it is the one that
-					// can carry a character no font here has a glyph for. The
-					// result is discarded: the menu widens it again at the
-					// point it draws it, and this is the check.
+					// Validate authored display text now; the menu converts it again for display.
 					drawable_text::widen_drawable(info->display_name(),
 						"the display_name in " + directory + name + ".json");
 
@@ -131,22 +91,15 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 				nullptr
 			});
 
-		// Resolved beside the executable by the engine, and every relative
-		// directory inside it beside the manifest - so the fonts, textures,
-		// levels and sounds it names come out of the same staged mirror the
-		// two files above were read from.
+		// Asset directories resolve relative to the manifest.
 		app.load_manifest(MANIFEST_PATH);
 
-		// Resolve every tuned/presentation reference now, including animations
-		// and weapons that might otherwise be looked up for the first time in
-		// the middle of a match. Optional silent banks retain their usual lookup
-		// semantics; validation never plays a sound.
+		// Validate resource names before a menu or match can use them.
+		// Optional silent banks remain valid; these checks do not play audio.
 		tuning.validate_resources(*app.render_resources(), *app.audio_resources());
 		presentation.validate_resources(*app.render_resources(), *app.audio_resources());
 
-		// A game with no levels has nothing to offer the stage-select menu,
-		// and the menu would rather not discover that by dividing by zero
-		// three screens later (T6).
+		// Stage selection requires at least one level.
 		if (stages.empty())
 		{
 			throw std::runtime_error(
@@ -166,19 +119,8 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 				level_infos.get(stage.name)->sound_bank_name());
 		}
 
-		// The content strings, now asked of the fonts that will draw them.
-		//
-		// This is the earliest it can be done: presentation.json and every
-		// level file were read above, before the manifest, so nothing had a
-		// font to ask at the time. Both of those checks were the region
-		// constant in drawable_text - a claim about all seven .spritefonts,
-		// made by decoding their headers by hand - and this is the same
-		// question put to the atlas the engine actually loaded.
-		//
-		// Only the two authored strings. Every other wide literal in this
-		// repository is typed into a source file that is plain ASCII by
-		// policy, and a font that could not draw those could not draw the
-		// word "Start".
+		// Check authored weapon descriptions and stage names against their loaded
+		// fonts, in addition to the character-region checks performed during parsing.
 		{
 			const MenuStyle& menu = presentation.menu();
 			const MainMenuPresentation& main_menu = presentation.main_menu();
@@ -212,8 +154,7 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 	}
 	catch (const std::exception& e)
 	{
-		// T6: a broken contract stops the game dead with the reason on screen,
-		// never a silent abort.
+		// Report failures visibly even when the process has no console.
 		fprintf(stderr, "startup failure: %s\n", e.what());
 		MessageBoxA(nullptr, e.what(), "ColourWars - startup failure",
 			MB_OK | MB_ICONERROR);
