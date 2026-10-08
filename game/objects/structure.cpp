@@ -22,7 +22,10 @@ Structure::Structure(const std::string& sheet_name,
 	sprite_rectangle_(sprite_rectangle),
 	collision_shape_(std::move(collision_shape))
 {
-
+	if (this->collision_shape_ == nullptr)
+	{
+		throw std::invalid_argument("A structure requires a collision shape.");
+	}
 }
 
 void Structure::update(float /*dt*/)

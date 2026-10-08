@@ -24,7 +24,7 @@ struct PaintableFaces
 class StructurePaintable final : public Structure, public PaintableObject
 {
 public:
-	StructurePaintable() = default;
+	StructurePaintable() = delete;
 	StructurePaintable(const std::string& sheet_name,
 		const std::string& frame_name,
 		const mattmath::RectangleF& sprite_rectangle,

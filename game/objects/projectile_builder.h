@@ -15,7 +15,9 @@ public:
 	// Borrowed tuning must outlive the projectiles. Resolve the type record once per shot.
 	explicit ProjectileBuilder(const GameTuning* tuning);
 
-	std::vector<std::unique_ptr<labrador::CollisionObject>> build_projectiles(
+	// Transfers non-null projectiles to the weapon, then Player checks launch
+	// obstruction before Level transfers ownership to Scene.
+	std::vector<std::unique_ptr<Projectile>> build_projectiles(
 		const mattmath::Vector2F& position,
 		const mattmath::Vector2F& velocity,
 		PlayerTeam team,
@@ -32,7 +34,7 @@ private:
 	const GameTuning* tuning_ = nullptr;
 
 	// Fan five mist projectiles using the same tuning record.
-	static std::vector<std::unique_ptr<labrador::CollisionObject>>
+	static std::vector<std::unique_ptr<Projectile>>
 		build_mist_projectiles(
 			const mattmath::Vector2F& position,
 			const mattmath::Vector2F& velocity,

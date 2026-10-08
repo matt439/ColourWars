@@ -10,25 +10,17 @@ std::vector<MenuPlayerSettings> MenuLevelSettings::player_settings() const
 
 void MenuLevelSettings::set_player_count(int player_count)
 {
-	this->player_count_ = player_count;
-	int vector_size = static_cast<int>(this->player_settings_.size());
-	if (vector_size < player_count)
+	if (player_count < 1 || player_count > input_slots::pad_count)
 	{
-		this->player_settings_.resize(player_count);
-		for (int i = vector_size; i < player_count; i++)
-		{
-			this->player_settings_[i] = MenuPlayerSettings();
-		}
+		throw std::invalid_argument("Player count must be between 1 and 4");
 	}
-	else if (vector_size > player_count)
-	{
-		this->player_settings_.resize(player_count);
-	}
+	// The vector is the count's single source of truth, including if growth throws.
+	this->player_settings_.resize(static_cast<size_t>(player_count));
 }
 
 int MenuLevelSettings::player_count() const
 {
-	return this->player_count_;
+	return static_cast<int>(this->player_settings_.size());
 }
 
 void MenuLevelSettings::set_stage(const std::string& stage)
@@ -51,34 +43,26 @@ void MenuLevelSettings::set_screen_layout(ScreenLayout screen_layout)
 	this->screen_layout_ = screen_layout;
 }
 
-void MenuLevelSettings::set_player_setting(int player_index, MenuPlayerSettings player_settings)
-{
-	this->player_settings_[player_index] = player_settings;
-}
 void MenuLevelSettings::set_player_team(int player_index, PlayerTeam team)
 {
-	this->player_settings_[player_index].team = team;
+	this->player_settings_.at(static_cast<size_t>(player_index)).team = team;
 }
 PlayerTeam MenuLevelSettings::player_team(int player_index) const
 {
-	return this->player_settings_[player_index].team;
+	return this->player_settings_.at(static_cast<size_t>(player_index)).team;
 }
 void MenuLevelSettings::set_player_weapon(int player_index, WeaponType weapon)
 {
-	this->player_settings_[player_index].weapon = weapon;
+	this->player_settings_.at(static_cast<size_t>(player_index)).weapon = weapon;
 }
 WeaponType MenuLevelSettings::player_weapon(int player_index) const
 {
-	return this->player_settings_[player_index].weapon;
-}
-void MenuLevelSettings::set_player_num(int player_index, int player_num)
-{
-	this->player_settings_[player_index].num = player_num;
+	return this->player_settings_.at(static_cast<size_t>(player_index)).weapon;
 }
 
 void MenuLevelSettings::begin_input_claims(int initiating_slot)
 {
-	if (this->player_count_ < 1 || this->player_count_ > input_slots::pad_count ||
+	if (this->player_settings_.empty() ||
 		initiating_slot < 0 || initiating_slot >= input_slots::count)
 	{
 		throw std::invalid_argument("Cannot bind the player roster to these inputs");
@@ -87,7 +71,7 @@ void MenuLevelSettings::begin_input_claims(int initiating_slot)
 	{
 		player.num = -1;
 	}
-	this->set_player_num(0, initiating_slot);
+	this->player_settings_.front().num = initiating_slot;
 }
 
 bool MenuLevelSettings::claim_input_slot(int slot)
@@ -115,13 +99,13 @@ bool MenuLevelSettings::release_input_slot(int slot)
 	{
 		return false;
 	}
-	this->set_player_num(player, -1);
+	this->player_settings_[static_cast<size_t>(player)].num = -1;
 	return true;
 }
 
 bool MenuLevelSettings::input_roster_complete() const
 {
-	return this->player_count_ > 0 && std::all_of(
+	return !this->player_settings_.empty() && std::all_of(
 		this->player_settings_.begin(), this->player_settings_.end(),
 		[](const MenuPlayerSettings& player) { return player.num >= 0; });
 }
@@ -132,7 +116,7 @@ int MenuLevelSettings::player_index_for_slot(int slot) const
 	{
 		return -1;
 	}
-	for (int player = 0; player < this->player_count_; ++player)
+	for (int player = 0; player < this->player_count(); ++player)
 	{
 		if (this->player_settings_[player].num == slot)
 		{
@@ -144,8 +128,10 @@ int MenuLevelSettings::player_index_for_slot(int slot) const
 
 std::wstring MenuLevelSettings::player_label(int player_index) const
 {
+	const MenuPlayerSettings& player =
+		this->player_settings_.at(static_cast<size_t>(player_index));
 	return L"P" + std::to_wstring(player_index + 1) + L" - " +
-		input_slots::device_name(this->player_settings_[player_index].num);
+		input_slots::device_name(player.num);
 }
 
 int MenuLevelSettings::best_of() const

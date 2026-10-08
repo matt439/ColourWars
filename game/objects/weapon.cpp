@@ -174,7 +174,7 @@ Vector2F Weapon::wep_rotation_origin_offset(bool facing_left) const
 	return Vector2F(this->details().offset.x, this->details().offset.y);
 }
 
-std::vector<std::unique_ptr<labrador::CollisionObject>>
+std::vector<std::unique_ptr<Projectile>>
     Weapon::update_and_get_projectiles(PlayerInputData input,
     const Vector2F& player_center,
     const Vector2F& player_velocity,
@@ -187,11 +187,12 @@ std::vector<std::unique_ptr<labrador::CollisionObject>>
     if (this->check_if_shooting_and_ammo_update(input, player_center,
         player_velocity, dt))
     {
-        return this->shoot(Vector2F::unit_vec_from_angle(this->rotation()));
+        return this->shoot(Vector2F::unit_vec_from_angle(this->rotation()),
+            player_velocity);
 	}
 	else
 	{
-		return std::vector<std::unique_ptr<labrador::CollisionObject>>();
+		return {};
     }
 }
 
@@ -340,11 +341,12 @@ void Weapon::update_movement_and_rotation(PlayerInputData input,
     }
 }
 
-std::vector<std::unique_ptr<labrador::CollisionObject>>
-Weapon::shoot(const Vector2F& shoot_direction) const
+std::vector<std::unique_ptr<Projectile>>
+Weapon::shoot(const Vector2F& shoot_direction,
+    const Vector2F& player_velocity) const
 {
     Vector2F launch_velocity = this->calculate_projectile_launch_velocity(
-        shoot_direction, this->starting_vel_length());
+        shoot_direction, this->starting_vel_length(), player_velocity);
 
     return this->proj_builder_->build_projectiles(
         this->nozzle_pos(),
@@ -353,12 +355,13 @@ Weapon::shoot(const Vector2F& shoot_direction) const
         this->player_num(),
         this->team_colour(),
         this->details().proj_type,
-        this->render_resources_);
+        this->render_resources());
 }
 
 Vector2F Weapon::calculate_projectile_launch_velocity(
     const Vector2F& shoot_direction,
-    float starting_velocity) const
+    float starting_velocity,
+    const Vector2F& /*player_velocity*/) const
 {
     Vector2F result = shoot_direction * starting_velocity;
     return result;
@@ -535,71 +538,25 @@ const RelativeWeaponDetails& RelativeVelocityWeapon::rel_details() const
 Vector2F RelativeVelocityWeapon::calculate_projectile_launch_velocity(
     const Vector2F& shoot_direction,
     float starting_velocity,
-    const Vector2F& player_velocity,
-    AddPlayerVelocity add_player_vel,
-    float player_vel_amount) const
+    const Vector2F& player_velocity) const
 {
+    const RelativeWeaponDetails& relative = this->rel_details();
     Vector2F result = shoot_direction * starting_velocity;
 
     // Handle every velocity mode explicitly, including none.
-    switch (add_player_vel)
+    switch (relative.add_vel)
     {
     case AddPlayerVelocity::x_and_y:
-        result += player_velocity * player_vel_amount;
+        result += player_velocity * relative.player_vel_amount;
         break;
     case AddPlayerVelocity::x_only:
-        result.x += player_velocity.x * player_vel_amount;
+        result.x += player_velocity.x * relative.player_vel_amount;
         break;
     case AddPlayerVelocity::y_only:
-        result.y += player_velocity.y * player_vel_amount;
+        result.y += player_velocity.y * relative.player_vel_amount;
         break;
     case AddPlayerVelocity::none:
         break;
     }
     return result;
-}
-
-std::vector<std::unique_ptr<labrador::CollisionObject>> RelativeVelocityWeapon::shoot(
-    const mattmath::Vector2F& shoot_direction,
-    const mattmath::Vector2F& player_velocity) const
-{
-    const RelativeWeaponDetails& rel_details = this->rel_details();
-
-    AddPlayerVelocity add_player_vel = rel_details.add_vel;
-
-    Vector2F launch_velocity = this->calculate_projectile_launch_velocity(
-        shoot_direction, this->starting_vel_length(),
-        player_velocity, add_player_vel,
-        rel_details.player_vel_amount);
-    
-    return this->projectile_builder()->build_projectiles(
-        this->nozzle_pos(),
-        launch_velocity,
-        this->team(),
-        this->player_num(),
-        this->team_colour(),
-        this->details().proj_type,
-        this->render_resources());
-}
-
-std::vector<std::unique_ptr<labrador::CollisionObject>>
-    RelativeVelocityWeapon::update_and_get_projectiles(PlayerInputData input,
-    const Vector2F& player_center,
-    const Vector2F& player_velocity,
-    bool player_facing_right,
-    float dt)
-{
-    Weapon::update_movement_and_rotation(input, player_center,
-        player_velocity, player_facing_right);
-
-    if (Weapon::check_if_shooting_and_ammo_update(input, player_center,
-		player_velocity, dt))
-    {
-        return this->shoot(
-            Vector2F::unit_vec_from_angle(this->rotation()), player_velocity);
-	}
-    else
-    {
-        return std::vector<std::unique_ptr<labrador::CollisionObject>>();
-    }
 }

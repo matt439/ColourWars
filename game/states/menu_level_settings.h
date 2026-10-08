@@ -6,6 +6,9 @@
 #include "game/states/menu_player_settings.h"
 #include "engine/render/screen_layout.h"
 
+// The roster is empty until a player count is chosen, then contains 1-4 seats.
+// Each seat is unclaimed (-1) or holds a unique valid device slot. Only the
+// claim operations mutate device assignments; snapshots cannot alter the roster.
 class MenuLevelSettings
 {
 public:
@@ -13,6 +16,8 @@ public:
 	int best_of() const;
 	void set_best_of(int best_of);
 	std::vector<MenuPlayerSettings> player_settings() const;
+	// Preserves retained seats and defaults newly added seats to unclaimed.
+	// Rejects counts outside 1-4 without changing the roster or its count.
 	void set_player_count(int player_count);
 	int player_count() const;
 	// Manifest key for the chosen level; empty until stage selection.
@@ -21,12 +26,11 @@ public:
 	labrador::ScreenLayout screen_layout() const;
 	void set_screen_layout(labrador::ScreenLayout screen_layout);
 
-	void set_player_setting(int player_index, MenuPlayerSettings player_settings);
+	// Indexed access rejects seats outside the selected roster.
 	void set_player_team(int player_index, PlayerTeam team);
 	PlayerTeam player_team(int player_index) const;
 	void set_player_weapon(int player_index, WeaponType weapon);
 	WeaponType player_weapon(int player_index) const;
-	void set_player_num(int player_index, int player_num);
 
 	// Player one chooses the count; everyone else explicitly claims an empty
 	// seat. A disconnected device retains its seat until setup is cancelled.
@@ -39,7 +43,6 @@ public:
 
 private:
 	std::vector<MenuPlayerSettings> player_settings_;
-	int player_count_ = 0;
 	int best_of_ = 1;
 	std::string stage_;
 	labrador::ScreenLayout screen_layout_ = labrador::ScreenLayout::one_player;

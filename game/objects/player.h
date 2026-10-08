@@ -76,7 +76,7 @@ public:
         float layer_depth = 0.0f);
 
     void update(float dt) override;
-    std::vector<std::unique_ptr<labrador::CollisionObject>>
+    std::vector<std::unique_ptr<Projectile>>
         update_weapon_and_get_projectiles(float dt,
         std::span<labrador::CollisionObject* const> objects) const;
     void draw(labrador::DrawList& draw_list) const override;

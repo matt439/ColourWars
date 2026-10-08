@@ -10,7 +10,7 @@ ProjectileBuilder::ProjectileBuilder(const GameTuning* tuning) :
 {
 }
 
-std::vector<std::unique_ptr<labrador::CollisionObject>>
+std::vector<std::unique_ptr<Projectile>>
 	ProjectileBuilder::build_projectiles(
 		const Vector2F& position,
 		const Vector2F& velocity,
@@ -28,7 +28,7 @@ std::vector<std::unique_ptr<labrador::CollisionObject>>
 	const ProjectileTuning& tuning = this->tuning_->projectile(type);
 	const RectangleF rectangle(position, tuning.details.col_rect_size);
 
-	std::vector<std::unique_ptr<labrador::CollisionObject>> projectiles;
+	std::vector<std::unique_ptr<Projectile>> projectiles;
 
 	switch (type)
     {
@@ -70,7 +70,7 @@ std::vector<std::unique_ptr<labrador::CollisionObject>>
 		std::to_string(static_cast<int>(type)) + " has no builder.");
 }
 
-std::vector<std::unique_ptr<labrador::CollisionObject>>
+std::vector<std::unique_ptr<Projectile>>
 	ProjectileBuilder::build_mist_projectiles(
 	const Vector2F& position,
 	const Vector2F& velocity,
@@ -89,7 +89,7 @@ std::vector<std::unique_ptr<labrador::CollisionObject>>
 
 	const RectangleF rectangle(position, mist->details.col_rect_size);
 
-	std::vector<std::unique_ptr<labrador::CollisionObject>> projectiles;
+	std::vector<std::unique_ptr<Projectile>> projectiles;
 	projectiles.reserve(std::size(SPREAD));
 
 	for (const float step : SPREAD)

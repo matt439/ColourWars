@@ -341,7 +341,7 @@ void Player::update(float dt)
     }
     this->health_regen_timer_ += dt;
 }
-std::vector<std::unique_ptr<CollisionObject>>
+std::vector<std::unique_ptr<Projectile>>
     Player::update_weapon_and_get_projectiles(float dt,
     std::span<CollisionObject* const> objects) const
 {
@@ -361,10 +361,7 @@ std::vector<std::unique_ptr<CollisionObject>>
         dt);
     for (const auto& projectile : projectiles)
     {
-        // Weapons produce paint projectiles; reject a builder that breaks
-        // that contract before it can bypass the launch collision check.
-        auto& paint = dynamic_cast<Projectile&>(*projectile);
-        paint.resolve_launch_obstruction(this->center(), objects);
+        projectile->resolve_launch_obstruction(this->center(), objects);
     }
     std::erase_if(projectiles, [](const auto& projectile)
         { return projectile->for_deletion(); });

@@ -224,6 +224,13 @@ in the game changes.
 
 ## About the code
 
+ColourWars is a working example of object-oriented game code: abstract
+interfaces, deep and multiple inheritance, virtual behavior, composition and
+explicit ownership. The [OOP reading guide](docs/oop-guide.md) maps those
+concepts to the implementation, follows a shot from input to score, and explains
+how to extend the game. It is Labrador's real client; the engine's `samples/`
+provide its starter template.
+
 The project began here on 2022-12-30 as ColourWars, became ChromaClash, then
 ArtAttack, and the game has now taken its first name back — in the same
 repository it started in. The identifiers followed the repository rather than

@@ -404,10 +404,12 @@ void Level::update_players(float dt)
 	this->refresh_player_cameras();
 	for (Player* player : this->players_)
 	{
-		for (std::unique_ptr<CollisionObject>& projectile :
+		for (std::unique_ptr<Projectile>& projectile :
 			player->update_weapon_and_get_projectiles(
 				dt, this->projectile_targets_))
 		{
+			// The game keeps the projectile interface until Scene takes ownership
+			// through its engine collision interface.
 			this->scene_->add(std::move(projectile));
 		}
 	}

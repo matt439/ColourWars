@@ -8,8 +8,8 @@
 class Structure : public labrador::TextureObject, public labrador::CollisionObject
 {
 public:
-	Structure() = default;
-	// Take ownership of the collision shape.
+	Structure() = delete;
+	// Take ownership of the collision shape; it must not be null.
 	Structure(const std::string& sheet_name,
 		const std::string& frame_name,
 		const mattmath::RectangleF& sprite_rectangle,

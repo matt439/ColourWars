@@ -17,14 +17,12 @@ PaintTile::PaintTile(const RectangleF& rectangle,
 	TextureObject(paint->sheet, paint->frame, render_resources,
 		color, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle),
-	team_colours_(team_colours)
-{
+	team_colours_(team_colours),
 	// Extend the splash by the tile's depth on both sides.
-	const RectangleF splash_rectangle(0.0f, 0.0f,
-		paint->thickness * 2.0f, paint->thickness * 2.0f);
-	this->splash_ = PaintTileSplash(splash_rectangle, paint->splash_sheet,
-		paint->splash_animation, render_resources);
-
+	splash_(RectangleF(0.0f, 0.0f,
+		paint->thickness * 2.0f, paint->thickness * 2.0f),
+		paint->splash_sheet, paint->splash_animation, render_resources)
+{
 	// The tile is stationary, so the splash centre is fixed at construction.
 	this->splash_.set_rectangle_center(rectangle.center());
 }

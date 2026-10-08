@@ -13,6 +13,8 @@
 #include "engine/audio/sound_bank.h"
 #include "engine/audio/audio_resources.h"
 
+// A concrete weapon with a shared firing workflow and overridable behaviour.
+// Player owns it through this interface; tuning selects assets and balance.
 class Weapon : public labrador::TextureObject
 {
 public:
@@ -40,7 +42,10 @@ public:
 	virtual void draw(labrador::DrawList& draw_list,
 		bool debug = false) const;
 
-	virtual std::vector<std::unique_ptr<labrador::CollisionObject>>
+	// Aim, update ammunition/sound, then shoot if allowed. Every step dispatches
+	// through the hooks below, including for subclasses of RelativeVelocityWeapon.
+	// Transfers ownership of live, non-null projectiles to the caller.
+	virtual std::vector<std::unique_ptr<Projectile>>
 		update_and_get_projectiles(PlayerInputData input,
 			const mattmath::Vector2F& player_center,
 			const mattmath::Vector2F& player_velocity,
@@ -123,12 +128,14 @@ protected:
 	static mattmath::Vector2F nozzle_size();
 	static bool facing_left(float rotation);
 
-	virtual std::vector<std::unique_ptr<labrador::CollisionObject>> shoot(
-		const mattmath::Vector2F& shoot_direction) const;
+	virtual std::vector<std::unique_ptr<Projectile>> shoot(
+		const mattmath::Vector2F& shoot_direction,
+		const mattmath::Vector2F& player_velocity) const;
 
 	virtual mattmath::Vector2F calculate_projectile_launch_velocity(
 		const mattmath::Vector2F& shoot_direction,
-		float starting_velocity) const;
+		float starting_velocity,
+		const mattmath::Vector2F& player_velocity) const;
 
 	static mattmath::Vector2F calculate_sprite_origin(
 		const mattmath::Vector2F& size, labrador::RotationOrigin origin);
@@ -175,6 +182,8 @@ private:
 		bool facing_left) const;
 };
 
+// Reuses the firing workflow, adding the player's velocity to each launch
+// according to tuning. Further subclasses retain every Weapon hook.
 class RelativeVelocityWeapon : public Weapon
 {
 public:
@@ -194,24 +203,11 @@ public:
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
-	std::vector<std::unique_ptr<labrador::CollisionObject>>
-		update_and_get_projectiles(PlayerInputData input,
-			const mattmath::Vector2F& player_center,
-			const mattmath::Vector2F& player_velocity,
-			bool player_facing_right,
-			float dt) override;
-
 protected:
-	virtual mattmath::Vector2F calculate_projectile_launch_velocity(
+	mattmath::Vector2F calculate_projectile_launch_velocity(
 		const mattmath::Vector2F& shoot_direction,
 		float starting_velocity,
-		const mattmath::Vector2F& player_velocity,
-		AddPlayerVelocity add_player_vel,
-		float player_vel_amount) const;
-
-	virtual std::vector<std::unique_ptr<labrador::CollisionObject>> shoot(
-		const mattmath::Vector2F& shoot_direction,
-		const mattmath::Vector2F& player_velocity) const;
+		const mattmath::Vector2F& player_velocity) const override;
 
 private:
 	// Velocity settings from the same borrowed record as the base weapon.

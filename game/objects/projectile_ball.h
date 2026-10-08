@@ -6,7 +6,7 @@
 class ProjectileBall final : public Projectile
 {
 public:
-	ProjectileBall() = default;
+	ProjectileBall() = delete;
 	ProjectileBall(const mattmath::RectangleF& rectangle,
 		const mattmath::Vector2F& velocity,
 		PlayerTeam team,

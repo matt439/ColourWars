@@ -12,7 +12,7 @@
 class PaintTileSplash final : public labrador::AnimationObject, public labrador::GameObject
 {
 public:
-	PaintTileSplash() = default;
+	PaintTileSplash() = delete;
 	PaintTileSplash(
 		const mattmath::RectangleF& rectangle,
 		const std::string& sheet_name,
@@ -46,7 +46,7 @@ private:
 class PaintTile final : public labrador::TextureObject, public labrador::GameObject
 {
 public:
-	PaintTile() = default;
+	PaintTile() = delete;
 	// Borrowed tuning must outlive the tile; it supplies the splash assets and size.
 	PaintTile(const mattmath::RectangleF& rectangle,
 		const PaintTuning* paint,

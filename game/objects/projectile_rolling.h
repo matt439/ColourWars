@@ -6,7 +6,7 @@
 class ProjectileRolling final : public Projectile
 {
 public:
-	ProjectileRolling() = default;
+	ProjectileRolling() = delete;
 	ProjectileRolling(const mattmath::RectangleF& rectangle,
 		const mattmath::Vector2F& velocity,
 		PlayerTeam team,

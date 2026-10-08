@@ -10,6 +10,8 @@
 #include "engine/render/colour.h"
 #include <span>
 
+// Abstract paint projectile: shared lifetime, team filtering and swept contacts;
+// concrete subclasses supply their shape, movement update and drawing.
 class Projectile : public labrador::MovingObject,
 	public labrador::AnimationObject, public labrador::CollisionObject
 {
@@ -101,6 +103,8 @@ private:
 
 };
 
+// Abstract specialization that adds diffusion while retaining Projectile's
+// collision and lifetime contract. Spray and mist provide the concrete shapes.
 class DiffusingProjectile : public Projectile
 {
 public:
