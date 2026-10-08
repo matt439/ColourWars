@@ -516,6 +516,156 @@ movement baseline, then build the first Close Quarters blockout against those ru
 Progress is gated by the exit conditions above, with each completed increment small
 enough to review, validate and commit independently.
 
+## 8. Further improvements to prototype
+
+The following candidates extend the plan after another source review on
+2026-10-08. They are design hypotheses, not implemented features or additional
+requirements for every milestone. Fold the small experiments into the relevant
+passes above; promote them to production work when observation supports them.
+Keep the first polished match as the next deliverable.
+
+### Help players read the tool and the fight
+
+The current [weapon update](../game/objects/weapon.cpp) distinguishes ammunition
+cost from shot interval, while the HUD shows remaining paint. Make those states
+legible together: a precision tool can have paint remaining but still be recovering
+between shots. Prototype a small ready/not-ready accent near the tool or aim marker,
+and distinguish recovery from insufficient paint by shape or motion as well as
+colour. Drive readiness from the equipped tool's cooldown and ammunition eligibility
+while the player can act, independently of whether fire is held. A decorative gauge
+must not promise a shot the weapon cannot yet produce. Avoid repeating a warning
+every update.
+
+Try a modest, optional aim-direction marker for the aimed tools, especially at
+four-player size. Start with direction and readiness rather than a predicted hit
+point: the bucket arcs and inherits movement, mist expands, and a roller has fixed
+aim. The marker must describe the equipped tool honestly. Separately, make a shot
+stopped by nearby cover produce a readable contact at the actual obstruction;
+[launch obstruction handling](../game/objects/projectile.cpp) already prevents
+shooting through that cover. Compare against the unmarked version and retain only
+cues that help players understand an action without hiding its target.
+
+Extend the planned player markers into a consistent identity system: the same
+player number or small badge on the selection card, character, pane and results.
+Briefly emphasise the local character on match start, respawn and resume, then
+settle to a quiet marker. Test two teammates crossing and overlapping while using
+the same weapon. Optional team symbols or sparse surface markings could supplement
+the palettes; inspect them on heavily painted terrain before committing to a
+pattern that might clutter the pixel art. Neither identity nor shot readiness
+should depend on colour alone.
+
+**Try first:** one precision-tool readiness cue and one local-player marker in
+the reference match. Ask players to explain a failed shot and find their character
+after a crowded encounter, with sound muted and at actual four-player size.
+
+### Give the arena decisions that use the existing rules
+
+Make the reference blockout test three specific situations:
+
+- **A short recovery pocket:** place cover near the main contest with a second
+  exit, so a player can stop firing, recover paint and re-enter from another angle.
+  Current [tuning](../game/content/tuning.json) starts paint regeneration after
+  0.5 seconds and health regeneration after five seconds. Use that existing
+  difference to compare a brief pause with a full retreat. Reject a pocket that
+  becomes a safe position from which to paint every useful approach.
+- **A visible painting choice:** put a broad exposed scoring face in competition
+  with a smaller face reachable while repositioning. Some cover can be unpaintable,
+  giving safety a surface-area tradeoff. Observe whether players choose between
+  fresh territory, enemy repaint and an encounter; do not add live score values to
+  direct them. A route should have a reason to be used even when nobody is there
+  to shoot.
+- **A place teammates can name:** give each useful region one clear landmark,
+  such as the mixing tank, drying racks or loading door. Carry those silhouettes
+  into the stage preview and final overview. Test whether two people can call a
+  location to one another without needing an added navigation overlay. Keep the
+  landmark recognisable when nearby scoring surfaces are covered in paint.
+
+Compare a compact Close Quarters copy in 1v1 if the main blockout produces long
+searches or returns from spawn. Move approaches and scoring regions deliberately;
+uniformly shrinking a map also changes jump and weapon relationships. Record time
+to encounters and useful painting choices. Keep a separate duel variant only if
+one layout cannot satisfactorily serve both 1v1 and 2v2.
+
+Extend the editor's existing spawn rectangles to follow player tuning, and add a
+guide based on the measured movement envelope. Extend its paintable-edge view to
+show exposed scoring faces and area by selected region. Match collision classes
+and runtime buried-face rules rather than treating every overlapping rectangle as
+a solid obstruction or every authored edge as score. A diagnostic export is enough
+initially. These aids explain a blockout; they do not replace playing it.
+
+### Let players learn by making a mess
+
+The game already has weapon descriptions, controls cards and timed solo practice
+in [the main menu](../game/states/main_menu.cpp). Build on that with an optional
+small workshop using the movement course and reference arena's material kit.
+Provide immediate tool changes and a paint reset, with no competitive timer.
+Include a low obstacle, a jump-through platform, a paintable wall and ceiling, and
+cover around which the different shot shapes can be tried.
+
+Teach through short, optional tasks: vary jump height, drop through the platform,
+paint a high face, empty a tool and recover, then try reaching the same face with
+a different tool. Use the real movement, ammunition and painting rules. Explain
+that painted surface determines the winner; eliminations make space to paint.
+Players should be able to leave immediately or stay and experiment, and repeat
+only the help they need. Begin with solo use; a shared waiting-room version is a
+later possibility if group playtests show a reason for it.
+
+**Keep it if:** a fresh player can join an ordinary match knowing how to move,
+recover paint and choose a useful tool without another person explaining the game.
+
+### Make couch play comfortable between actions and rounds
+
+Prototype a short shared count-in after pause or reconnect. Currently
+[closing pause](../game/states/game_states.cpp) resumes the match immediately.
+During the proposed count-in, show each character clearly and freeze physics and
+all gameplay timers, including match time, ammunition and health regeneration,
+shot cooldowns and respawn. Allow re-pausing and handle disconnect/focus loss
+normally. Test whether it prevents surprise starts without making frequent short
+pauses tiresome. Consume the menu action and suppress stale jump/pause edges across
+the transition. Define and test how held fire resumes while preserving deliberate
+movement and aim input.
+
+Compare a prominent **Rematch** action with the current single-match **Restart**
+wording and first focus on **Change Teams** in the
+[end menu](../game/states/end_menu.cpp). Keep the existing direct routes to change
+teams, tools and stage. A visible per-player ready check before the next round is
+worth testing if one person's confirmation repeatedly starts play before the
+others are ready; it also adds friction, so it should not become mandatory by
+assumption. Give disconnected groups a clear way back to the menu.
+
+The [aim preference](../game/play_settings.h) currently sets one radial deadzone
+for everyone, although players may bring different controllers. Try individual
+stick deadzones with a small live response preview, labelled for what they change.
+Test two controllers together and retain settings by the documented player/device
+association. Full remapping is a separate usability candidate. Preserve the
+existing A-or-left-trigger jump choice, and introduce no new requirement to take
+the aiming thumb off the stick.
+
+### Make the finished paint job worth looking at
+
+The [final arena overview](../game/objects/level.cpp) already exists and advances
+on a timer. After the winner reveal, try an optional **View arena** action that
+temporarily clears the results panel and lets the group inspect the frozen paint
+job before returning to the next-match choices. Use the actual final surface
+ownership; an optional unpainted-face highlight could explain an overlooked wall
+or ceiling. Keep this after the reveal and easy to skip on repeated matches.
+
+Frame the result as the team's finished work: a workshop job card or pinboard
+treatment could carry the arena, final colours, player badges and series standing
+without inventing a new reward economy. Label personal contribution as surface
+still held at the finish, which is what the game measures. It is not total effort,
+shots fired or a judgement of the teammate who made space for others to paint.
+
+### Order the experiments by what they can teach
+
+First try readiness/identity cues with movement polish, and recovery pockets and
+painting choices in the Close Quarters blockout. Next try resume/rematch handling
+and final-arena inspection during the complete-match pass. Build the optional
+workshop and individual input settings once fresh-player observations identify
+the most useful lessons and comfort changes. Use before/after sessions to decide
+what earns its place; these candidates do not displace the agreed art, audio,
+movement or level-design work.
+
 ## Design references
 
 These developer accounts inform the approach; the specific ColourWars details
@@ -531,3 +681,11 @@ local multiplayer rules rather than copying another game's assets or mechanics.
   establish weapon weight and identity. Apply that coordinated iteration to the
   paint tools. Their single-player time-stop techniques are not a requirement for
   ColourWars' shared multiplayer simulation.
+- [Game Accessibility Guidelines](https://gameaccessibilityguidelines.com/full-list/)
+  recommends interactive learning, practice without failure and additional cues
+  beyond colour. The workshop and identity experiments above apply those principles
+  to this game's existing rules; their specific form still needs playtesting.
+- Microsoft's [Xbox Accessibility Guideline 107: Input](https://learn.microsoft.com/en-us/xbox/accessibility/xbox-accessibility-guidelines/107)
+  discusses configurable input and alternatives to demanding control combinations.
+  Use it to inform controller-comfort and remapping work while keeping prompts
+  accurate and ordinary movement/aiming comfortable.
