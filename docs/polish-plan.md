@@ -10,6 +10,11 @@ with detailed, distinctive pixel art and levels designed around movement,
 painting and encounters. The first deliverable is one complete, polished match
 that establishes the standard for the rest of the game.
 
+The quality target is a good, deliberately crafted indie game: cohesive art,
+responsive controls, distinctive tools, thoughtful levels and convincing detail
+throughout an ordinary play session. Functional completeness is one part of that
+standard; finish also requires iteration on timing, transitions and personality.
+
 The user's direction is explicit:
 
 - Use a consistent pixel-art style throughout the game.
@@ -22,10 +27,33 @@ The user's direction is explicit:
   copyright concerns and considers the current audio unsuitable for the game.
 - Add small, expressive feedback effects to ordinary actions, especially jumping
   and landing, so movement and interaction feel tactile as well as responsive.
+- Give quiet moments life too: for example, a paint droplet should occasionally
+  form at the muzzle and fall while the player stands still. Treat these small
+  details as part of the intended quality level throughout the game.
 
 Aim for expressive characters, satisfying liquid paint and places that feel
 constructed and inhabited. Detail should communicate materials, function and
 history while keeping players, projectiles and painted surfaces easy to read.
+
+### What the indie-game standard means in practice
+
+- Moving, jumping and painting in an otherwise empty room should be enjoyable.
+  Review control response, poses, contact, sound and recovery together.
+- Tools should communicate their materials and working mechanism. Liquid sloshes,
+  paint beads, a hose follows movement and a roller turns against the ground.
+- Ordinary actions need a complete visual phrase: an immediate response, a clear
+  action/contact and a small recovery or settling motion. Let new input interrupt
+  decorative poses so animation never makes the controls wait.
+- Quiet scenes should feel inhabited through occasional, purposeful motion.
+  Reserve the strongest contrast and movement for information needed during play.
+- The finish must hold through transitions: start and stop firing, land and move
+  again, empty and refill, die and respawn, pause and resume, finish and rematch.
+- Visual and audio style, timing and level readability need human review at playing
+  size. A checklist of implemented effects does not establish the quality target.
+
+Small details should reinforce ColourWars' identity as a messy contest with physical
+paint tools. Choose them for material, weight, state or personality, and evaluate
+how they work together in the reference match.
 
 ## Starting point
 
@@ -206,6 +234,47 @@ Use material details, purposeful wear and motion to give each tool personality.
 Retain the useful separation between neutral hardware and team-coloured paint.
 Check left/right facing, all supported aim angles and motion while firing.
 
+### Tool personality and quiet detail
+
+Build secondary motion into the character and tool rather than relying entirely
+on emitted particles. Use a few readable pixel poses and modest changes in shape;
+inspect them at the actual split-screen scale.
+
+The idle muzzle drip is a required signature detail for the reference sprayer:
+
+1. Once an alive player has settled into a stationary, non-firing pose, occasionally
+   form a small bead of the player's team paint at the underside of the nozzle.
+   Vary the quiet interval so several players do not drip in synchrony.
+2. Let the bead grow and stretch briefly, then detach and fall with gravity.
+   Attach it to the actual rendered muzzle through aiming and left/right facing;
+   after detachment, its fall is independent of the weapon's aim direction.
+3. End the droplet on a valid surface contact or its lifetime limit. Use at most
+   a tiny, brief contact effect. Keep idle dripping quiet by default.
+4. Cancel an attached idle bead when movement, firing or elimination interrupts it;
+   already falling droplets may finish their short life. Pause freezes them and
+   scene teardown clears them. Author the timing and size after observing the
+   effect in play; the intended impression is occasional residual liquid.
+5. Keep it cosmetic: no ammunition use, damage, scored paint or ownership change.
+   Its brief contact cue must not resemble a newly captured surface. Use cosmetic
+   randomness separate from gameplay choices and update once per world event,
+   regardless of how many player views can see the tool.
+
+Give each tool appropriate related details as its production pass arrives:
+
+| Tool | Small details to develop |
+|---|---|
+| Sprayer | A slight pressure kick during firing, a hose that follows motion, occasional idle muzzle drip and a short reservoir/valve settle when firing stops. |
+| Sniper | A crisp pressure-release motion, deliberate recovery, a gauge that settles and a restrained residual bead. The recovery animation must agree with the existing shot cadence. |
+| Roller | Drum rotation tied to supported travel, a small contact compression, flecks while painting and a visible lift/settle when leaving or meeting the ground. |
+| Mister | Valve movement, a visibly fine spray and a brief dissipating mist tail on release. The tail is decoration after firing stops. |
+| Bucket | A handle that swings and settles, paint that sloshes as movement changes, a wet rim and occasional rim drip, plus follow-through around the existing throw timing. |
+
+Character detail should support these objects: subtle breathing and occasional
+blinking/weight shifts at rest, a grip adjustment after settling, modest body lean
+on acceleration and turns, and carried parts that catch up after a stop. Keep hands
+connected to grips and feet grounded. Preserve aim accuracy and muzzle behaviour.
+Avoid making every character perform the same idle loop at the same phase.
+
 ### Movement and interaction feedback
 
 Small effects are part of the movement design, including ordinary actions that
@@ -252,7 +321,38 @@ responsiveness of the shared multiplayer simulation.
 and responsive. Jumping, landing and movement have visible, correctly timed feedback.
 Players can recognise shots, hits, empty paint, elimination and respawn with sound
 muted. Art does not alter collisions, coverage or attribution, and repeated rendering
-or sustained ground contact does not duplicate effects.
+or sustained ground contact does not duplicate effects. The idle sprayer drip and
+roller contact/settling motion are present, and quiet play has deliberate character.
+
+### Detail across the world, interface and match
+
+Develop a coordinated set of small details beyond the character. These are concrete
+directions for the relevant passes; choose variants by testing them in the reference
+arena, then carry successful treatments through the rest of the game.
+
+| Moment or object | Treatment and purpose |
+|---|---|
+| Fresh paint | Give a new splash a brief wet highlight and settling edge before it becomes quieter. Tiny decorative drips can follow gravity along the already-owned face; keep team coverage boundaries exact. |
+| Repainting | Let the impact clearly replace the previous team tint within the actual changed area. Friendly impacts can still splash without falsely suggesting a new capture or additional score. |
+| Empty and recovering tool | Coordinate a brief tool response with the paint meter. Any visible tank level or gauge must agree with actual ammunition; avoid showing an apparently full tool that cannot fire. |
+| Rooms at rest | Select a few details appropriate to the workshop: a slowly turning background fan, a gently swaying sign or cable, an occasional pipe droplet, or distant machinery. Give each room a purpose and some still space. |
+| Nearby contact | Consider small local secondary motion, such as a hanging prop rocking near a landing. It must read as decoration and preserve the clear collision silhouette. |
+| Repeated sounds | Use a small authored set of footstep/splash variants and restrained variation so repetition stays natural. Retain recognisable event identity and control overlapping cues. |
+| Menu focus | Give focus a small, prompt movement or emphasis with a clear pressed state. Transitions should preserve selection context and remain responsive to deliberate navigation. |
+| Player ready | A brief character acknowledgement and a clear ready marker make joining and confirmation satisfying. The animation must not hide who is still choosing. |
+| Match opening | Let players settle into a ready pose and make the countdown's final beat visually and audibly decisive. Release controls at the established gameplay start. |
+| Results | Coordinate the existing fill reveal with restrained motion, replacement sound and a brief winner pose/celebration. Keep contributions and the route to rematch clear, with ties treated deliberately. |
+
+First complete movement/contact and firing/start-stop details, then the signature
+idle behaviour, room life and interface/match accents. Each detail needs a named
+trigger, purpose, duration, interruption behaviour and visual/audio intensity.
+Prototype inexpensive versions in the game before committing to all final frames.
+
+Separate critical feedback, physical secondary motion and ambient life when setting
+their intensity. Combat and movement should remain easy to read while decorative
+activity can stay quiet. Provide a way to reduce optional shake, flashes and ambient
+effects while retaining useful cues. Test the combined experience for repeated
+matches, as a charming detail can become tiring when repeated constantly.
 
 ## 5. Replace the entire audio set
 
@@ -274,6 +374,8 @@ match, then complete the remaining weapons and arenas before final acceptance.
 - Cover title/menu music, each arena's music, countdowns and results; menu and
   confirmation sounds; jump, land, footsteps, skid, hurt, elimination and respawn;
   every weapon's firing/loop/stop sounds; paint impacts and paint supply feedback.
+  Assess quiet tool/room details individually; a visual idle accent need not make
+  a sound, and frequent decorative cues must not compete with useful feedback.
 - Develop a sound palette with tactile liquid paint, distinct tool mechanisms,
   readable movement cues and music that supports the match's energy. Audition
   candidate music and effects together. Pixel art does not by itself require
@@ -346,8 +448,28 @@ The reference milestone comprises Close Quarters' redesigned layout and detailed
 environment, one coherent animated character, sprayer and roller artwork, stable
 camera framing, movement polish and complete paint/damage/respawn feedback, taken
 from setup through results. Include jump/landing/contact effects and replacement
-audio for that complete experience. Review it in motion and by ear before expanding
-asset production.
+audio for that complete experience, the idle muzzle drip, tool settling, character
+idle motion and a few purposeful signs of life in the room. Review it in motion and
+by ear before expanding asset production.
+
+Use a repeatable finish review for each major pass:
+
+1. Watch an idle scene long enough to see occasional details, then move, aim,
+   jump, land, fire, stop, exhaust paint and recover. Review the transitions too.
+2. Repeat the same sequence with individual details disabled. Retain and refine
+   details that contribute clear material, weight, state or personality; adjust
+   those that draw attention without helping the experience.
+3. Review at normal speed and actual display size, with audio on and muted. Use
+   slow motion only to diagnose contact, attachment and timing problems.
+4. Repeat in four-player combat and through pause, death, respawn and rematch.
+   Quiet details must not multiply with view count, pile up or obscure action.
+5. Get fresh-player observations about responsiveness, readability, tool identity
+   and what still feels unfinished. Record concrete changes and repeat the review.
+
+The finish gate combines technical acceptance with this play-and-observe review.
+The reference match must look coherent, feel satisfying in repeated ordinary play,
+and remain readable under pressure before its treatment becomes the production
+standard. Count of assets, particles or completed tasks is not a quality metric.
 
 For each implementation increment, retain a short evidence record:
 
@@ -367,6 +489,8 @@ Qualify these cases across the finished content:
 | Display | 720p, 1080p and QHD; one through four views; resize/fullscreen; stable framing, readable UI and pixel treatment. |
 | Controls and movement | Keyboard/mouse and physical controllers; aim sweeps, required jumps, drops, collisions and buffered-input edge cases. |
 | Action feedback | One takeoff effect per successful jump and one landing effect per actual landing; small hops, long falls, platform seams, slopes, pause and respawn; correct contact placement and no duplicate cues across views. |
+| Quiet detail | Occasional muzzle drip, grounded idle motion and room life; correct attachments at aim angles/facing, no synchronised crowd of identical loops, pause/teardown behaviour and no effect on ammunition, damage or paint scoring. |
+| Finish and restraint | Repeated action sequences and matches, comparisons with details disabled, actual four-player size, and reduced-effects settings that preserve information. Record human feedback and remaining rough transitions. |
 | Level play | Two- and four-player matches, side swaps, all three arenas and all five weapons; route, spawn, paint-distribution and pacing notes. Exercise three-player sessions too. |
 | Combat readability | Clean and heavily painted arenas, all palettes, crowded effects and muted audio. |
 | Audio replacement | Complete old-to-new/retired inventory, source/permission records, no legacy audio in the finished bank or ZIP, and playback from the extracted release without private files. Check missing-bank fallback separately. |
@@ -377,8 +501,8 @@ Qualify these cases across the finished content:
 
 Add focused regression coverage where gameplay mechanisms change, such as jump
 buffering, camera mapping, event emission or paint ownership. Automated checks
-establish correctness;
-physical playtests and visual review establish readability and feel. Keep the existing
+establish correctness; physical playtests and visual review establish readability
+and feel. Keep the existing
 outstanding clean-Windows deployment check in the release acceptance work.
 
 Work stays in the game and its content, preserving its OOP design. Use the pinned
@@ -391,3 +515,19 @@ The next implementation task is to establish the pixel-art/display reference and
 movement baseline, then build the first Close Quarters blockout against those rules.
 Progress is gated by the exit conditions above, with each completed increment small
 enough to review, validate and commit independently.
+
+## Design references
+
+These developer accounts inform the approach; the specific ColourWars details
+above are proposals for this game. Borrow principles and evaluate them against its
+local multiplayer rules rather than copying another game's assets or mechanics.
+
+- Maddy Thorson's [Celeste & Forgiveness](https://maddymakesgames.com/articles/celeste_and_forgiveness/index.html)
+  describes small allowances such as jump buffering and ledge grace that help
+  intended input succeed. The lesson here is to combine invisible control polish
+  with visible feedback; an effect cannot substitute for a responsive action.
+- Motion Twin's developers, in [Designing each of the 50 weapons in Dead Cells to feel distinctive](https://www.gamedeveloper.com/design/designing-each-of-the-50-weapons-in-i-dead-cells-i-to-feel-distinctive),
+  describe iterating animation timing and combining motion, effects and sound to
+  establish weapon weight and identity. Apply that coordinated iteration to the
+  paint tools. Their single-player time-stop techniques are not a requirement for
+  ColourWars' shared multiplayer simulation.

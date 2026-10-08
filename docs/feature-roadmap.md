@@ -4,9 +4,11 @@ The next presentation, game-feel, audio and arena-design work is defined in the
 [polish and level-design plan](polish-plan.md). Its direction is consistent,
 detailed pixel art, distinctive paint tools and redesigned playable layouts,
 with a full replacement of all music and sound effects and expressive feedback
-for actions such as jumping and landing. Start with one complete reference match.
-That work is planned; the sections below record implemented increments and their
-remaining acceptance checks.
+for actions such as jumping and landing. The target is a good indie game's finish,
+including quiet details such as an occasional idle muzzle drip, tool settling and
+environmental life. Start with one complete reference match and review its feel in
+motion. That work is planned; the sections below record implemented increments and
+their remaining acceptance checks.
 
 ## First increment: explicit joining and reconnect pause
 
