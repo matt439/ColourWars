@@ -142,7 +142,7 @@ try {
     # DLL imports still resolve from the same staged folder as the game.
     $env:PATH = "$gameDirectory;$previousPath"
     foreach ($case in 'ammo', 'settings', 'paint', 'camera_framing', 'movement', 'stage_selection',
-        'workshop_player', 'workshop_terrain') {
+        'workshop_player', 'workshop_terrain', 'movement_course') {
         $source = Join-Path $PSScriptRoot "acceptance/$case.cpp"
         $executable = Join-Path $evidence "$case.exe"
         $responseFile = Join-Path $evidence "$case.rsp"

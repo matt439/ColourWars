@@ -3,8 +3,9 @@
 Status: implementation started on 2026-10-08. Camera/movement foundations and a
 takeoff/landing feedback prototype are implemented. A workshop style candidate
 is retained and an editable native-pixel kit now has a reproducible atlas,
-renderer/camera study and selectable playable Movement Course comparison. The
-art, movement-feel and arena acceptance gates remain open.
+renderer/camera study and selectable playable Movement Course comparison, now
+refined, with retained route trials on the authored course. The art,
+movement-feel and arena acceptance gates remain open.
 Direction agreed on 2026-10-08. Source baseline: game revision `13e9960`.
 
 First increment: resolution-independent camera framing, configurable jump buffering
@@ -23,6 +24,14 @@ Fourth increment: [playable workshop comparison and evidence](polish-playable-ki
 Movement Course now offers original, rotating-tool and authored-tool presentation,
 with animated team masks, connected hands, player badges and native tiled terrain.
 Other arenas keep their existing artwork. Human input/motion review remains open.
+
+Fifth increment: [workshop refinement and course trials](polish-refine.md).
+It changes the arms to fixed-length bones, adds hysteresis to posed-tool
+direction changes, and moves larger light badges behind the head. It lifts
+dark-team masks to a luminance floor. It shows that standing contact is
+pixel-flush, retains the Movement Course route trials as CI acceptance, and
+captures feedback on and off while the camera moves. These are candidates
+awaiting human review.
 
 ## Goal and direction
 
@@ -532,13 +541,21 @@ slice, record the client exhibit in [engine reports](review/engine-reports.md) a
 handle the engine change in Labrador. Balance numbers belong in tuning, presentation
 choices in presentation data, and arena layout and decoration in level data.
 
-The next task is to review the [playable comparison](polish-playable-kit.md) with
-keyboard/mouse and physical controllers, then refine arm reach and pose changes,
-badges, blue-team contrast and fractional-scale ground contact from those results.
-Both continuous rotation and authored visual poses preserve continuous simulation
-aim. Compare takeoff/landing feedback enabled/disabled during camera motion and
-aim sweeps, and complete the remaining Movement Course route trials. Record the
-visual and movement decisions before building the first Close Quarters blockout.
+The next task is human play of the [refined comparison](polish-refine.md). Use
+keyboard/mouse and physical controllers, with movement feedback enabled and
+disabled, and compare the original, rotating-tool and posed-tool presentations
+during camera motion and aim sweeps. From that review:
+
+- Accept or revise the bent arms, the pose hysteresis, the light badges and the
+  lifted dark-team masks.
+- Choose the remaining visual policies: posed-tool residual rotation or more
+  authored directions, camera pixel snapping or integer texel scale, and the
+  background value band.
+- Decide whether the takeoff/landing feedback needs strengthening at four-player
+  size, and answer the movement questions the
+  [route trials](polish-movement-course.md#qualification-still-required) raised.
+
+Record those decisions before building the first Close Quarters blockout.
 Progress is gated by the exit conditions above, with each completed increment small
 enough to review, validate and commit independently.
 

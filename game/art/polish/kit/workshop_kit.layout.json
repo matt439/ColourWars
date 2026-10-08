@@ -1,6 +1,6 @@
 {
     "schema_version":  1,
-    "source_sha256":  "2add062f78cc3ad256c083358fed8b6a6f2b994be0d8270cd161c5b363885b7e",
+    "source_sha256":  "53d60a0a4a1f0e9fc074cf254c3bf506c0504077647ed5ed56b4b76f8b5fc97d",
     "world_units_per_texel":  4,
     "atlas":  {
                   "width":  256,
@@ -62,7 +62,7 @@
                     },
                     {
                         "symbol":  "v",
-                        "rgba":  "747474FF"
+                        "rgba":  "808080FF"
                     },
                     {
                         "symbol":  "d",
@@ -1117,20 +1117,20 @@
                     {
                         "name":  "badge_1",
                         "native_size":  {
-                                            "w":  7,
-                                            "h":  8
+                                            "w":  9,
+                                            "h":  10
                                         },
                         "world_size":  {
-                                           "w":  28,
-                                           "h":  32
+                                           "w":  36,
+                                           "h":  40
                                        },
                         "pivot":  {
-                                      "x":  3.5,
-                                      "y":  4
+                                      "x":  4.5,
+                                      "y":  5
                                   },
                         "world_pivot":  {
-                                            "x":  14.0,
-                                            "y":  16
+                                            "x":  18.0,
+                                            "y":  20
                                         },
                         "engine_pivot":  true,
                         "anchors":  {
@@ -1144,8 +1144,8 @@
                                                     "name":  "badge_1",
                                                     "x":  128,
                                                     "y":  90,
-                                                    "w":  7,
-                                                    "h":  8
+                                                    "w":  9,
+                                                    "h":  10
                                                 },
                                        "team":  null
                                    }
@@ -1153,20 +1153,20 @@
                     {
                         "name":  "badge_2",
                         "native_size":  {
-                                            "w":  7,
-                                            "h":  8
+                                            "w":  9,
+                                            "h":  10
                                         },
                         "world_size":  {
-                                           "w":  28,
-                                           "h":  32
+                                           "w":  36,
+                                           "h":  40
                                        },
                         "pivot":  {
-                                      "x":  3.5,
-                                      "y":  4
+                                      "x":  4.5,
+                                      "y":  5
                                   },
                         "world_pivot":  {
-                                            "x":  14.0,
-                                            "y":  16
+                                            "x":  18.0,
+                                            "y":  20
                                         },
                         "engine_pivot":  true,
                         "anchors":  {
@@ -1178,10 +1178,10 @@
                         "frames":  {
                                        "base":  {
                                                     "name":  "badge_2",
-                                                    "x":  139,
+                                                    "x":  141,
                                                     "y":  90,
-                                                    "w":  7,
-                                                    "h":  8
+                                                    "w":  9,
+                                                    "h":  10
                                                 },
                                        "team":  null
                                    }
@@ -1189,20 +1189,20 @@
                     {
                         "name":  "badge_3",
                         "native_size":  {
-                                            "w":  7,
-                                            "h":  8
+                                            "w":  9,
+                                            "h":  10
                                         },
                         "world_size":  {
-                                           "w":  28,
-                                           "h":  32
+                                           "w":  36,
+                                           "h":  40
                                        },
                         "pivot":  {
-                                      "x":  3.5,
-                                      "y":  4
+                                      "x":  4.5,
+                                      "y":  5
                                   },
                         "world_pivot":  {
-                                            "x":  14.0,
-                                            "y":  16
+                                            "x":  18.0,
+                                            "y":  20
                                         },
                         "engine_pivot":  true,
                         "anchors":  {
@@ -1214,10 +1214,10 @@
                         "frames":  {
                                        "base":  {
                                                     "name":  "badge_3",
-                                                    "x":  150,
+                                                    "x":  154,
                                                     "y":  90,
-                                                    "w":  7,
-                                                    "h":  8
+                                                    "w":  9,
+                                                    "h":  10
                                                 },
                                        "team":  null
                                    }
@@ -1225,20 +1225,20 @@
                     {
                         "name":  "badge_4",
                         "native_size":  {
-                                            "w":  7,
-                                            "h":  8
+                                            "w":  9,
+                                            "h":  10
                                         },
                         "world_size":  {
-                                           "w":  28,
-                                           "h":  32
+                                           "w":  36,
+                                           "h":  40
                                        },
                         "pivot":  {
-                                      "x":  3.5,
-                                      "y":  4
+                                      "x":  4.5,
+                                      "y":  5
                                   },
                         "world_pivot":  {
-                                            "x":  14.0,
-                                            "y":  16
+                                            "x":  18.0,
+                                            "y":  20
                                         },
                         "engine_pivot":  true,
                         "anchors":  {
@@ -1250,10 +1250,10 @@
                         "frames":  {
                                        "base":  {
                                                     "name":  "badge_4",
-                                                    "x":  161,
+                                                    "x":  167,
                                                     "y":  90,
-                                                    "w":  7,
-                                                    "h":  8
+                                                    "w":  9,
+                                                    "h":  10
                                                 },
                                        "team":  null
                                    }
@@ -1308,14 +1308,14 @@
                         "frames":  {
                                        "base":  {
                                                     "name":  "sprayer_pose_0",
-                                                    "x":  172,
+                                                    "x":  180,
                                                     "y":  90,
                                                     "w":  22,
                                                     "h":  12
                                                 },
                                        "team":  {
                                                     "name":  "sprayer_pose_0_team",
-                                                    "x":  198,
+                                                    "x":  206,
                                                     "y":  90,
                                                     "w":  22,
                                                     "h":  12
@@ -1372,14 +1372,14 @@
                         "frames":  {
                                        "base":  {
                                                     "name":  "sprayer_pose_45up",
-                                                    "x":  224,
-                                                    "y":  90,
+                                                    "x":  2,
+                                                    "y":  124,
                                                     "w":  23,
                                                     "h":  24
                                                 },
                                        "team":  {
                                                     "name":  "sprayer_pose_45up_team",
-                                                    "x":  2,
+                                                    "x":  29,
                                                     "y":  124,
                                                     "w":  23,
                                                     "h":  24
@@ -1436,14 +1436,14 @@
                         "frames":  {
                                        "base":  {
                                                     "name":  "sprayer_pose_90up",
-                                                    "x":  29,
+                                                    "x":  56,
                                                     "y":  124,
                                                     "w":  12,
                                                     "h":  24
                                                 },
                                        "team":  {
                                                     "name":  "sprayer_pose_90up_team",
-                                                    "x":  45,
+                                                    "x":  72,
                                                     "y":  124,
                                                     "w":  12,
                                                     "h":  24
@@ -1500,14 +1500,14 @@
                         "frames":  {
                                        "base":  {
                                                     "name":  "sprayer_pose_45down",
-                                                    "x":  61,
+                                                    "x":  88,
                                                     "y":  124,
                                                     "w":  23,
                                                     "h":  24
                                                 },
                                        "team":  {
                                                     "name":  "sprayer_pose_45down_team",
-                                                    "x":  88,
+                                                    "x":  115,
                                                     "y":  124,
                                                     "w":  23,
                                                     "h":  24
@@ -1564,14 +1564,14 @@
                         "frames":  {
                                        "base":  {
                                                     "name":  "sprayer_pose_90down",
-                                                    "x":  115,
+                                                    "x":  142,
                                                     "y":  124,
                                                     "w":  12,
                                                     "h":  24
                                                 },
                                        "team":  {
                                                     "name":  "sprayer_pose_90down_team",
-                                                    "x":  131,
+                                                    "x":  158,
                                                     "y":  124,
                                                     "w":  12,
                                                     "h":  24
@@ -1636,14 +1636,14 @@
                         "frames":  {
                                        "base":  {
                                                     "name":  "roller_grounded",
-                                                    "x":  147,
+                                                    "x":  174,
                                                     "y":  124,
                                                     "w":  32,
                                                     "h":  22
                                                 },
                                        "team":  {
                                                     "name":  "roller_grounded_team",
-                                                    "x":  183,
+                                                    "x":  210,
                                                     "y":  124,
                                                     "w":  32,
                                                     "h":  22

@@ -64,7 +64,9 @@ acceleration from rest and player input variation. The course's 180, 400 and
 560-unit gaps were traversed in both directions through the actual level scene
 with running held jumps and horizontal braking beyond the destination lip.
 Continuous full-speed input can overshoot a short landing and enter the next gap.
-Recovery steps, staircase approaches and physical controller feel remain trials.
+That traversal ran in a scratch probe. Retained route trials, including recovery
+steps and staircases, have since replaced it; see
+[the course document](polish-movement-course.md#retained-route-trials).
 
 ## Playable course
 

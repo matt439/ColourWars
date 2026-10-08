@@ -141,9 +141,12 @@ namespace
             player.move_state() == PlayerMoveState::on_ramp_right;
     }
 
+    // With `required_views`, only the listed views must show feedback; the
+    // others still keep any difference inside the culling bounds and 1% cap.
     void capture_phase(Application& app, Level& level, Presentation& presentation,
         const std::filesystem::path& output, int count, const std::string& phase,
-        int tick, std::ofstream& records, bool expect_difference = true)
+        int tick, std::ofstream& records, bool expect_difference = true,
+        const std::vector<bool>& required_views = {})
     {
         auto& feedback = const_cast<MovementFeedbackPresentation&>(
             presentation.movement_feedback());
@@ -174,8 +177,15 @@ namespace
             {
                 const size_t changed = differences(enabled, disabled,
                     app.viewport_manager()->player_viewport(view), level, view);
-                require(expect_difference ? changed > 0 : changed == 0,
-                    "movement feedback visibility did not match the expected phase");
+                if (required_views.empty())
+                {
+                    require(expect_difference ? changed > 0 : changed == 0,
+                        "movement feedback visibility did not match the expected phase");
+                }
+                else if (required_views.at(static_cast<size_t>(view)))
+                {
+                    require(changed > 0, "a route takeoff or landing showed no feedback in its own view");
+                }
                 const auto pane = app.viewport_manager()->player_viewport(view).pixel_rect();
                 require(changed * 100 < static_cast<size_t>(pane.width) * static_cast<size_t>(pane.height),
                     "movement feedback changed more than one percent of a pane");
@@ -206,22 +216,297 @@ namespace
         level.resume();
         std::cout << "PASS " << count << "p landing frozen across 12 suspended draws\n";
     }
+
+    const char* mode_name(PlayerVisualMode mode)
+    {
+        switch (mode)
+        {
+        case PlayerVisualMode::original: return "original";
+        case PlayerVisualMode::continuous: return "continuous";
+        default: return "authored";
+        }
+    }
+
+    // Route targets are named authored objects, so a moved or renamed platform
+    // fails here instead of silently walking the route off the course.
+    RectangleF surface(const LevelLoadedInfo& info, const std::string& name)
+    {
+        const JsonValue objects = info.collision_objects_json();
+        for (size_t index = 0; index < objects.size(); ++index)
+        {
+            const JsonValue object = objects.at(index);
+            if (object.string("name") != name) { continue; }
+            const JsonValue shape = object.object("rectangle");
+            return RectangleF(shape.number("x"), shape.number("y"),
+                shape.number("width"), shape.number("height"));
+        }
+        throw std::runtime_error("Movement Course object '" + name + "' is missing");
+    }
+
+    std::unique_ptr<Level> build_course(Application& app, LevelBuilder& builder,
+        int count, PlayerVisualMode mode)
+    {
+        MenuLevelSettings settings;
+        settings.set_player_count(count);
+        settings.set_stage("movement_course");
+        settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
+        settings.set_workshop_visual_mode(mode);
+        settings.begin_input_claims(0);
+        for (int player = 1; player < count; ++player)
+        {
+            require(settings.claim_input_slot(player), "input claim failed");
+        }
+        for (int player = 0; player < count; ++player)
+        {
+            settings.set_player_team(player, player % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);
+            settings.set_player_weapon(player, player % 2 == 0 ? WeaponType::sprayer : WeaponType::roller);
+        }
+        app.viewport_manager()->set_layout(settings.screen_layout());
+        return builder.build_level(settings, TeamColourPair::blue_orange);
+    }
+
+    // One player on the moving route. Team A runs from rest and holds a full
+    // jump over the 800-980 short gap, which carries the one-player camera past
+    // its 1152 scroll border; Team B starts later, runs left along its runway
+    // and jumps short of the return step, so all four panes pan.
+    struct RouteRunner
+    {
+        float direction = 0;
+        RectangleF landing;
+        int jump_tick = -1;
+        int takeoff_tick = -1;
+        int landing_tick = -1;
+        Vector2F camera_min;
+        Vector2F camera_max;
+    };
+
+    constexpr int route_hold_ticks = 30;
+    constexpr int route_team_b_delay = 30;
+    constexpr int route_sequence_start = 45;
+    constexpr int route_tick_limit = 400;
+    constexpr float route_takeoff_margin = 15.0f;
+    // Team A releases steering 170 past the far lip, still airborne; braking
+    // stops it short of the long gap and past the one-player scroll border.
+    constexpr float route_release_past_lip = 170.0f;
+    // Team B presses this far in from its runway's left end, releasing at once.
+    constexpr float route_team_b_jump_inset = 170.0f;
+    constexpr float route_minimum_pan = 16.0f;
+
+    void route_phase(Application& app, LevelBuilder& builder, Presentation& presentation,
+        const LevelLoadedInfo& course, const std::filesystem::path& output, int count,
+        PlayerVisualMode mode, int sequence_frames, bool save_sequence,
+        std::ofstream& records, std::ofstream& route_records)
+    {
+        auto& feedback = const_cast<MovementFeedbackPresentation&>(
+            presentation.movement_feedback());
+        const RectangleF runway_a = surface(course, "spawn_a_runway");
+        const RectangleF short_landing = surface(course, "short_landing_long_takeoff");
+        const RectangleF runway_b = surface(course, "spawn_b_runway");
+
+        auto level = build_course(app, builder, count, mode);
+        std::vector<PlayerInputData> inputs(input_slots::count);
+        for (auto& input : inputs)
+        {
+            input.connected = true;
+            input.shoot_direction = Vector2F(1, 0);
+            input.shoot_direction_requested = true;
+        }
+        for (int tick = 0; tick < 600 && level->state() != LevelState::active; ++tick)
+        {
+            level->update(inputs, dt);
+        }
+        require(level->state() == LevelState::active, "route countdown did not reach active play");
+        for (int tick = 0; tick < 60; ++tick) { level->update(inputs, dt); }
+        resize(app, *level, { 1280, 720 });
+
+        std::vector<RouteRunner> runners;
+        for (const Player* player : level->players_)
+        {
+            require(player->state() == PlayerState::alive && grounded(*player),
+                "route spawn did not settle alive on support");
+            RouteRunner runner;
+            runner.direction = player->team() == PlayerTeam::a ? 1.0f : -1.0f;
+            runner.landing = runner.direction > 0 ? short_landing : runway_b;
+            runner.camera_min = runner.camera_max = player->camera().translation;
+            runners.push_back(runner);
+        }
+
+        const std::string prefix = std::to_string(count) + "p-" + mode_name(mode) + "-route";
+        const std::filesystem::path on_directory = output / (prefix + "-60fps-on");
+        const std::filesystem::path off_directory = output / (prefix + "-60fps-off");
+        if (save_sequence && sequence_frames > 0)
+        {
+            std::filesystem::create_directories(on_directory);
+            std::filesystem::create_directories(off_directory);
+        }
+        const int landing_expiry = static_cast<int>(std::ceil(
+            presentation.movement_feedback().landing.duration / dt)) + 1;
+        bool captured_takeoff = false;
+        bool captured_landing = false;
+        int last_landing = -1;
+        int tick = 0;
+        for (; tick < route_tick_limit; ++tick)
+        {
+            for (size_t index = 0; index < runners.size(); ++index)
+            {
+                RouteRunner& runner = runners[index];
+                const Player& player = *level->players_[index];
+                PlayerInputData& input = inputs.at(static_cast<size_t>(player.player_num()));
+                // The same 2pi-per-90-tick sweep as the workshop playable probe.
+                input.shoot_angle = static_cast<float>(tick) * 2.0f * PI / 90.0f;
+                if (index % 2 != 0) { input.shoot_angle = PI - input.shoot_angle; }
+                input.shoot_angle = std::atan2(std::sin(input.shoot_angle), std::cos(input.shoot_angle));
+                input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
+                input.jump_pressed = false;
+                input.jump_held = runner.jump_tick >= 0 && tick - runner.jump_tick < route_hold_ticks;
+                input.x_movement = 0;
+                if (runner.landing_tick >= 0) { continue; }
+                if (runner.jump_tick < 0)
+                {
+                    if (runner.direction < 0 && tick < route_team_b_delay) { continue; }
+                    input.x_movement = runner.direction;
+                    const bool at_takeoff = runner.direction > 0 ?
+                        player.rectangle().right() >= runway_a.right() - route_takeoff_margin :
+                        player.center().x <= runway_b.left() + route_team_b_jump_inset;
+                    if (at_takeoff && grounded(player))
+                    {
+                        runner.jump_tick = tick;
+                        input.jump_pressed = true;
+                        input.jump_held = true;
+                    }
+                }
+                else if (runner.direction > 0 &&
+                    player.center().x < short_landing.left() + route_release_past_lip)
+                {
+                    input.x_movement = runner.direction;
+                }
+            }
+            level->update(inputs, dt);
+
+            std::vector<bool> took_off(runners.size(), false);
+            std::vector<bool> landed(runners.size(), false);
+            for (size_t index = 0; index < runners.size(); ++index)
+            {
+                RouteRunner& runner = runners[index];
+                const Player& player = *level->players_[index];
+                require(player.state() == PlayerState::alive, "the route killed a player");
+                if (runner.jump_tick >= 0 && runner.takeoff_tick < 0)
+                {
+                    require(!grounded(player) && player.velocity().y < 0,
+                        "a route jump did not take off on its press");
+                    runner.takeoff_tick = tick;
+                    took_off[index] = true;
+                }
+                else if (runner.takeoff_tick >= 0 && runner.landing_tick < 0 && grounded(player))
+                {
+                    runner.landing_tick = tick;
+                    last_landing = tick;
+                    landed[index] = true;
+                }
+                if (runner.landing_tick >= 0)
+                {
+                    const RectangleF& body = player.rectangle();
+                    require(grounded(player) &&
+                        std::abs(body.bottom() - runner.landing.top()) <= 0.05f &&
+                        body.left() >= runner.landing.left() && body.right() <= runner.landing.right(),
+                        "a route landing is not supported on its authored platform");
+                }
+                const Vector2F translation = player.camera().translation;
+                runner.camera_min = Vector2F(std::min(runner.camera_min.x, translation.x),
+                    std::min(runner.camera_min.y, translation.y));
+                runner.camera_max = Vector2F(std::max(runner.camera_max.x, translation.x),
+                    std::max(runner.camera_max.y, translation.y));
+            }
+
+            // One update, two draws of the same state: only the switch differs.
+            const auto before = simulation_state(*level);
+            feedback.enabled = true;
+            const Frame enabled = render(*level, *app.renderer());
+            feedback.enabled = false;
+            const Frame disabled = render(*level, *app.renderer());
+            feedback.enabled = true;
+            require(before == simulation_state(*level),
+                "route on/off redraws advanced movement, effects or the match clock");
+            for (int view = 0; view < count; ++view)
+            {
+                const size_t changed = differences(enabled, disabled,
+                    app.viewport_manager()->player_viewport(view), *level, view);
+                const auto pane = app.viewport_manager()->player_viewport(view).pixel_rect();
+                require(changed * 100 < static_cast<size_t>(pane.width) * static_cast<size_t>(pane.height),
+                    "route feedback changed more than one percent of a pane");
+                const Player& player = *level->players_[static_cast<size_t>(view)];
+                route_records << count << ',' << mode_name(mode) << ',' << tick << ',' << view + 1
+                    << ',' << player.center().x << ',' << player.rectangle().bottom()
+                    << ',' << player.camera().translation.x << ',' << player.camera().translation.y
+                    << ',' << (grounded(player) ? 1 : 0) << ',' << changed << '\n';
+            }
+            const int frame = tick - route_sequence_start;
+            if (save_sequence && frame >= 0 && frame < sequence_frames)
+            {
+                std::ostringstream filename;
+                filename << "frame-" << std::setw(3) << std::setfill('0') << frame << ".ppm";
+                save(enabled, on_directory / filename.str());
+                save(disabled, off_directory / filename.str());
+            }
+
+            const std::string phase = std::string(mode_name(mode)) + "-route-";
+            if (!captured_takeoff && std::find(took_off.begin(), took_off.end(), true) != took_off.end())
+            {
+                captured_takeoff = true;
+                capture_phase(app, *level, presentation, output, count, phase + "takeoff",
+                    tick, records, true, took_off);
+            }
+            if (!captured_landing && std::find(landed.begin(), landed.end(), true) != landed.end())
+            {
+                captured_landing = true;
+                capture_phase(app, *level, presentation, output, count, phase + "landing",
+                    tick, records, true, landed);
+            }
+            const bool all_landed = std::all_of(runners.begin(), runners.end(),
+                [](const RouteRunner& runner) { return runner.landing_tick >= 0; });
+            if (all_landed && tick >= last_landing + landing_expiry &&
+                (!save_sequence || frame + 1 >= sequence_frames))
+            {
+                break;
+            }
+        }
+        for (size_t index = 0; index < runners.size(); ++index)
+        {
+            const RouteRunner& runner = runners[index];
+            require(runner.takeoff_tick >= 0, "a route player never took off");
+            require(runner.landing_tick >= 0, "a route player never landed");
+            const Vector2F pan = runner.camera_max - runner.camera_min;
+            require(pan.x > route_minimum_pan, "a route view's camera did not pan horizontally");
+            std::cout << "ROUTE " << prefix << " view=" << index + 1
+                << " takeoff=" << runner.takeoff_tick << " landing=" << runner.landing_tick
+                << " pan_x=" << pan.x << " pan_y=" << pan.y << '\n';
+        }
+        require(captured_takeoff && captured_landing, "route phases were not captured");
+        std::cout << "PASS " << prefix << " moving aim-swept route; per-tick feedback on/off; "
+            << tick + 1 << " ticks\n";
+    }
 }
 
 int wmain(int argc, wchar_t** argv)
 {
     try
     {
-        require(argc == 4,
-            "usage: movement_feedback_visual <staged-content> <output> <sequence-frames>");
+        require(argc == 4 || argc == 5,
+            "usage: movement_feedback_visual <staged-content> <output> <sequence-frames> "
+            "[one-player-route-sequences 0|1]");
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
         const int sequence_frames = std::stoi(argv[3]);
         require(sequence_frames >= 0 && sequence_frames <= 180,
             "sequence frame count must be between 0 and 180");
+        // Paired route sequences are four-player only unless asked: each one is
+        // two 720p frames per tick for each of the three visual modes.
+        const bool one_player_route_sequences = argc == 5 && std::wstring(argv[4]) == L"1";
         std::filesystem::create_directories(output);
         std::ofstream records(output / "phases.csv");
         records << "players,phase,tick,seconds,width,height,view,changed_pixels\n";
+        std::ofstream route_records(output / "route.csv");
+        route_records << "players,mode,tick,view,centre_x,feet_y,camera_x,camera_y,grounded,changed_pixels\n";
 
         Registry<LevelLoadedInfo> levels("Level");
         GameTuning tuning((content / "tuning.json").string().c_str());
@@ -364,9 +649,21 @@ int wmain(int argc, wchar_t** argv)
             require(landed, "scripted jump did not land within 180 ticks");
             require(expired, "movement feedback did not expire within 180 ticks");
         }
-        require(records.good(), "phase record write failed");
+        const LevelLoadedInfo& course = *levels.get("movement_course");
+        for (int count : { 1, 4 })
+        {
+            for (PlayerVisualMode mode : { PlayerVisualMode::original,
+                PlayerVisualMode::continuous, PlayerVisualMode::authored })
+            {
+                route_phase(app, builder, presentation, course, output, count, mode,
+                    sequence_frames, count == 4 || one_player_route_sequences,
+                    records, route_records);
+            }
+        }
+        require(records.good() && route_records.good(), "phase record write failed");
         std::cout << "PASS real LevelBuilder/Scene takeoff and landing; 1/4 views; "
-            "720p/1080p/QHD; feedback on/off; paused redraw; scripted inputs, no physical-device claim\n";
+            "720p/1080p/QHD; feedback on/off; paused redraw; moving aim-swept route in "
+            "original/continuous/authored with camera pan; scripted inputs, no physical-device claim\n";
         return 0;
     }
     catch (const std::exception& error)

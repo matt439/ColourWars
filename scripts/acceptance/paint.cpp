@@ -105,13 +105,14 @@ int main(int argc, char** argv)
         // exposed 200-unit top segments and two 50-unit sides, independent of
         // the 1,800-unit band buried beneath the next mountain block.
         const LevelObjectBuilder builder(&render, &audio, &preferences, &tuning.paint());
-        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters" })
+        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course" })
         {
             const JsonDocument level = read_json_file(
                 (content / "levels" / (std::string(name) + ".json")).string().c_str());
             const auto objects = builder.build_collision_objects(
                 level.root().array("collision_objects"), colours);
             float total = 0;
+            float perimeter = 0;
             bool checked_ledge = false;
             bool checked_ramps = false;
             for (const auto& object : objects)
@@ -122,6 +123,7 @@ int main(int argc, char** argv)
                     continue;
                 }
                 total += surface->paint_total().total;
+                perimeter += 2.0f * (surface->bounds().width + surface->bounds().height) * thickness;
                 if (std::string(name) == "king_of_the_hill" &&
                     surface->bounds().x == 0 && surface->bounds().y == 6000)
                 {
@@ -148,7 +150,14 @@ int main(int argc, char** argv)
                 require(checked_ramps, "Authored ramp regression fixture disappeared");
                 require(total < 318720, "Buried surface still contributes to stage coverage");
             }
-            std::cout << name << " exposed paint area=" << total << '\n';
+            if (std::string(name) == "movement_course")
+            {
+                // Recorded from the authored course; an intended course edit
+                // updates it. Its blocks touch, so the full perimeter is more.
+                area_is(total, 194880);
+                require(total < perimeter, "Buried course surface still contributes to coverage");
+            }
+            std::cout << name << " exposed paint area=" << total << " of perimeter " << perimeter << '\n';
         }
         std::cout << "PASS exposed surfaces, partial tiles, ownership and stage coverage\n";
         return 0;

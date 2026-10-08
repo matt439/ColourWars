@@ -209,7 +209,34 @@ function Test-PresentationAnchors {
         Assert-True ($sprite.pivot[0] * 2 -eq $sprite.rows[0].Length -and $sprite.pivot[1] * 2 -eq $sprite.rows.Count) "Body '$frame' must draw around its centre."
     }
     $null = Read-PresentationSprite $Player.glove_frame $Player.glove_size
-    foreach ($frame in $Player.badge_frames) { $null = Read-PresentationSprite $frame $Player.badge_size }
+    function Test-Number {
+        param($Value, [string] $Label)
+        Assert-True ($Value -is [int] -or $Value -is [long] -or $Value -is [double] -or $Value -is [decimal]) "Presentation $Label must be numeric."
+        $number = [double]$Value
+        Assert-True (-not [double]::IsNaN($number) -and -not [double]::IsInfinity($number)) "Presentation $Label must be finite."
+        return $number
+    }
+    # Two equal bones on the native grid, each a whole number of texels and
+    # at least one texel long: the total is an even, non-zero texel count.
+    $armLength = Test-Number $Player.arm_length 'arm_length'
+    $armTexels = $armLength / $scale
+    Assert-True ($armTexels -ge 2 -and [Math]::Abs($armTexels / 2 - [Math]::Round($armTexels / 2)) -le 0.00001) 'Presentation arm_length must be an even number of texels: two equal whole-texel bones.'
+    # One plate silhouette: only the numeral may distinguish the four badges.
+    $badgeShape = $null
+    foreach ($frame in $Player.badge_frames) {
+        $sprite = Read-PresentationSprite $frame $Player.badge_size
+        $shape = ($sprite.rows | ForEach-Object { $_ -creplace '[^.]', '#' }) -join '/'
+        if ($null -eq $badgeShape) { $badgeShape = $shape }
+        Assert-True ($shape -ceq $badgeShape) "Badge '$frame' changes the shared plate silhouette."
+    }
+    # Authored for a right-facing body: behind the head, clear of the centre
+    # line a vertical muzzle travels along, and on the body's texel grid.
+    $badgeX = Test-Number $Player.badge_offset.x 'badge_offset x'
+    $badgeY = Test-Number $Player.badge_offset.y 'badge_offset y'
+    $gridX = ($badgeX - $Player.badge_size.x / 2 + $Player.body_size.x / 2) / $scale
+    $gridY = ($badgeY - $Player.badge_size.y / 2) / $scale
+    Assert-True ($badgeX + $Player.badge_size.x / 2 -le -$scale) 'Presentation badge_offset must keep the badge behind the head and clear of an upward muzzle.'
+    Assert-True ([Math]::Abs($gridX - [Math]::Round($gridX)) -le 0.00001 -and [Math]::Abs($gridY - [Math]::Round($gridY)) -le 0.00001) 'Presentation badge_offset must land the badge on the body texel grid.'
     Assert-True ($Player.sprayer.frame -ceq 'sprayer_pose_0') 'Continuous sprayer must use the authored zero-degree pose.'
     Assert-True ($Player.sprayer_poses.Count -eq 5) 'Presentation must include all five authored sprayer directions.'
     $poseNames = @('sprayer_pose_90up', 'sprayer_pose_45up', 'sprayer_pose_0', 'sprayer_pose_45down', 'sprayer_pose_90down')
@@ -217,10 +244,16 @@ function Test-PresentationAnchors {
         Assert-True ($Player.sprayer_poses[$index].frame -ceq $poseNames[$index]) 'Presentation sprayer direction is missing or has the wrong authored frame.'
     }
     $previousAngle = [double]::NegativeInfinity
+    $narrowestGap = [double]::PositiveInfinity
     foreach ($pose in $Player.sprayer_poses) {
         Assert-True ($pose.aim_angle -gt $previousAngle) 'Authored sprayer directions must be ordered and unique.'
+        $narrowestGap = [Math]::Min($narrowestGap, [double]$pose.aim_angle - [double]$previousAngle)
         $previousAngle = $pose.aim_angle
     }
+    $hysteresis = Test-Number $Player.pose_hysteresis_degrees 'pose_hysteresis_degrees'
+    Assert-True ($hysteresis -ge 0 -and 2 * $hysteresis * [Math]::PI / 180 -lt $narrowestGap) 'Presentation pose_hysteresis_degrees must be under half the narrowest pose gap.'
+    $floor = Test-Number $Player.team_mask_minimum_luminance 'team_mask_minimum_luminance'
+    Assert-True ($floor -ge 0 -and $floor -le 1) 'Presentation team_mask_minimum_luminance must be a relative luminance from 0 to 1.'
     foreach ($tool in @($Player.sprayer) + @($Player.sprayer_poses) + @($Player.roller)) {
         $sprite = Read-PresentationSprite $tool.frame $tool.size
         Assert-True ($tool.team_frame -ceq ($sprite.name + '_team') -and $sprite.team_symbols.Count -gt 0) "Presentation tool '$($sprite.name)' has a mismatched team mask."
@@ -282,6 +315,16 @@ if ($checkRuntime) {
         'native dimensions' = @{ mutate = { param($p) $p.glove_size.x += 1 }; diagnostic = 'dimensions' }
         'pose aim angle' = @{ mutate = { param($p) $p.sprayer_poses[1].aim_angle += 0.01 }; diagnostic = 'aim angle' }
         'body shoulder' = @{ mutate = { param($p) $p.shoulder_offset.x += 1 }; diagnostic = 'shoulder x' }
+        'arm length' = @{ mutate = { param($p) $p.arm_length = $p.pixel_size }; diagnostic = 'arm_length' }
+        'off-grid arm length' = @{ mutate = { param($p) $p.arm_length += 1 }; diagnostic = 'arm_length' }
+        'odd-texel arm length' = @{ mutate = { param($p) $p.arm_length = $p.pixel_size * 13 }; diagnostic = 'arm_length' }
+        'pose hysteresis' = @{ mutate = { param($p) $p.pose_hysteresis_degrees = 30 }; diagnostic = 'pose_hysteresis_degrees' }
+        'negative hysteresis' = @{ mutate = { param($p) $p.pose_hysteresis_degrees = -1 }; diagnostic = 'pose_hysteresis_degrees' }
+        'badge size' = @{ mutate = { param($p) $p.badge_size.x -= 8 }; diagnostic = 'badge_1' }
+        'badge over muzzle' = @{ mutate = { param($p) $p.badge_offset.x = 0 }; diagnostic = 'upward muzzle' }
+        'off-grid badge' = @{ mutate = { param($p) $p.badge_offset.y += 2 }; diagnostic = 'texel grid' }
+        'luminance floor' = @{ mutate = { param($p) $p.team_mask_minimum_luminance = 1.5 }; diagnostic = 'team_mask_minimum_luminance' }
+        'negative luminance floor' = @{ mutate = { param($p) $p.team_mask_minimum_luminance = -0.1 }; diagnostic = 'team_mask_minimum_luminance' }
     }
     foreach ($case in $staleCases.GetEnumerator()) {
         $stale = ($playerPresentation | ConvertTo-Json -Depth 12) | ConvertFrom-Json
@@ -291,12 +334,20 @@ if ($checkRuntime) {
         catch { $failure = $_.Exception.Message }
         Assert-True ($null -ne $failure -and $failure -match $case.Value.diagnostic) "Stale presentation '$($case.Key)' was accepted or failed for the wrong reason: $failure"
     }
+    # The shared plate is a source contract, so one stale case edits the source.
+    $staleSource = ($authoredSource | ConvertTo-Json -Depth 12) | ConvertFrom-Json
+    $badge = @($staleSource.sprites | Where-Object { $_.name -ceq 'badge_3' })[0]
+    $badge.rows[0] = 'o' + $badge.rows[0].Substring(1)
+    $failure = $null
+    try { Test-PresentationAnchors $staleSource $playerPresentation }
+    catch { $failure = $_.Exception.Message }
+    Assert-True ($null -ne $failure -and $failure -match 'shared plate silhouette') "Stale badge silhouette was accepted or failed for the wrong reason: $failure"
     $presentationVerified = [ordered]@{
         path = $presentationPath
         sha256 = (Get-FileHash -LiteralPath $presentationPath -Algorithm SHA256).Hash.ToLowerInvariant()
         body_frames = 8
         tool_records = 7
-        rejected_stale_cases = @($staleCases.Keys)
+        rejected_stale_cases = @($staleCases.Keys) + @('badge silhouette')
     }
 }
 

@@ -86,37 +86,117 @@ measurements on 2026-10-08. These are same-height jumps at a fixed timestep of
 | Held jump | 207.472 | 1.01666 s | 813.33 |
 
 These measured trajectories exclude acceleration from rest and input variation.
-They are not guaranteed gap distances. The actual course Scene passed running
-held jumps across the 180-, 400- and 560-unit gaps in both directions, with
-horizontal braking beyond the destination lip. Continuous full-speed input can
-overshoot a short landing and enter the next gap.
+They are not guaranteed gap distances; the route trials below measure those.
 
 Course captures cover one through four player views at 720p, 1080p and QHD.
-Spawn settling passed in the exercised one-to-four-player layouts. The retained
-captures, simulation checks and their limits are recorded in
-[the foundation evidence](polish-foundation.md#evidence-and-limits). They establish
-a working baseline; they do not approve camera-motion readability, controller
-feel or the visual treatment.
+The retained captures, simulation checks and their limits are recorded in
+[the foundation evidence](polish-foundation.md#evidence-and-limits) and
+[the refinement increment](polish-refine.md). They establish a working baseline;
+they do not approve camera-motion readability, controller feel or the visual
+treatment.
+
+## Retained route trials
+
+The `movement_course` consumer acceptance case runs these trials on the authored
+geometry. It runs the real Player through Level's update order in a fresh scene for
+each trial, and Debug and Release produce identical logs. It asserts the intended
+outcomes and records everything else as `MEASURE` lines, since the tuning is still
+a candidate. Two passes were loosened to match the authored geometry: a held
+leftward jump over the short gap may land on the drop-through platform, and a held
+jump at a 60-unit rise may land one step higher.
+
+### Gaps
+
+Outcomes by jump hold, in ticks: F is the far platform, G the lower floor,
+H a high recovery step and D the drop-through platform. No trial took off twice,
+returned to its takeoff platform or died.
+
+| Gap | Start | 1 | 6 | 12 | 21 | 30 | Held |
+|---|---|---|---|---|---|---|---|
+| Short 180, rightward | Any start | F | F | F | F | F | F |
+| Short 180, leftward | Any start | F | F | F | D | D | D |
+| Long 400 | From rest at the lip | G | G | G | F | F | F |
+| Long 400 | 800, 120 before the lip | G | F | F | F | F | F |
+| Long 400 | 800, 70 or 18 before, or a grace press | F | F | F | F | F | F |
+| Running 560, rightward | From rest at the lip | H | H | G | G | G | G |
+| Running 560, leftward | From rest at the lip | H | G | G | G | G | G |
+| Running 560 | 800, 120 before the lip | G | G | G | F | F | F |
+| Running 560 | 800, 70 or 18 before the lip | G | G | F | F | F | F |
+| Running 560 | Grace press, 1 tick after leaving | G | F | F | F | F | F |
+
+A held full-speed jump rises 207.5 and is airborne for 60 ticks. Released 20 units
+past the far lip, the player stops 171–177 units beyond it.
+
+### Running, stick input and braking
+
+- **From rest:** full speed (800) after 48 ticks and 361.9 units, leaving 286 units
+  of the left runway and 208 of the right. Release stops the player in 20 ticks
+  over 121 units.
+- **Stick magnitude:** raw values of 0.55, 0.65, 0.75, 0.9 and 1.0 move at 0.1, 0.3,
+  0.5, 0.8 and 1.0 after the deadzone. They reach full speed after 528, 173, 102,
+  62 and 48 ticks; 0.45 does not move. Speed rises with magnitude at every tick.
+  The trial copies `PlayerInput`'s private pad mapping, because the engine's
+  gamepad reader cannot be fed raw values.
+- **Reversal:** a partial opposite stick brakes far more slowly than release.
+  From 800, −0.1 takes 142 ticks over 934 units and −1.0 takes 15 ticks over 87.
+  Reversal passes through zero without stopping.
+- **Analog drop:** a raw value of 0.79 stays on the platform and 0.81 drops.
+
+### Recovery, staircases, ceiling and drop
+
+- **Recovery pairs:** all three climb low step, high step, main platform, from
+  both approaches to both exits. The rescue lane is the Y=1400 floor with these
+  steps, and it reaches the running-gap pair without a jump from under the
+  staircase and from the right runway. Holding direction through the whole exit
+  jump from the short pair slides off the 400-unit short landing.
+- **Staircases:** a held jump clears every rise in both directions, from rest
+  and at speed. A tap clears only the 60-unit rises. A held jump at a 60-unit
+  rise lands one step higher. Walking off a 120-wide step from its edge skips it
+  and drops 180 to the runway.
+- **Low ceiling:** a middle jump rises exactly the 40-unit clearance, bonks on
+  tick 4 and lands on tick 16, with one takeoff and one landing cue. A press
+  during the bonk launches on the landing only within the buffer. Running under
+  it, a press within 60 units of either end clears the block; earlier presses
+  bonk. The ceiling grants no ledge grace.
+- **Drop-through:** the drop takes 20 ticks. A held jump or a fresh press
+  produces no extra jump; a press three ticks before landing buffers one launch.
+  A normal jump works afterwards.
+
+### Timing after transitions, spawns, aim and paint
+
+- **Ledge and buffer:** on the real 2480 lip, a press 1–5 ticks after leaving
+  jumps and 6 or more does not. A press 0–7 ticks before the next landing launches
+  on it. The windows are identical with no transition, after a pause and after
+  death and respawn.
+- **Spawns:** all eight authored spawns settle with feet at Y=1000 after three
+  deaths each, with no carried input.
+- **Aim:** keyboard/mouse aim holds through moving, reversing and firing, because
+  the cursor direction is sent every tick. Released or deadzoned pad aim snaps to
+  the facing direction; this is recorded, not asserted.
+- **Paint:** every aimed tool paints the low ceiling's underside and a staircase
+  wall face, each from range by flying projectiles. The roller paints the wall by
+  contact and cannot reach the ceiling with its fixed aim. Bucket paint on the
+  ceiling from range is small (48 units). The course's exposed paint area is
+  fixed at 194,880.
 
 ## Qualification still required
 
 The launch, gravity and acceleration settings remain candidates until playtests.
-The 60/120/160-unit staircase rises fit within the measured vertical envelope,
-but their approaches and landings still need traversal trials. The old movement
-note is not used as a specification.
+The old movement note is not used as a specification.
 
-- Measure from-rest travel and test varied takeoff positions and input durations.
-  Repeat gaps using taps and partial controller input as well as held jumps.
-- Traverse every recovery pair and staircase in both directions, from rest and
-  at speed. Exercise course ceiling contact, platform drops, buffered landings
-  and late ledge presses, including after pause, death and respawn.
 - Compare keyboard/mouse with physical controllers, including partial stick
-  input, stopping, reversal, aim retention and moving while firing.
+  input, stopping, reversal, aim retention and moving while firing. There is no
+  physical controller on the development machine yet.
 - Review landing visibility and readability during actual camera movement and
-  aim sweeps at the captured resolutions and player counts.
-- Test repeated spawns, all five tools, exposed wall/ceiling painting and the
-  rescue lane. This course is not a balanced competitive arena; paint area,
-  combat pacing and spawn fairness have not been accepted.
-
-Editor load/save and startup checks establish supported data and resource use.
-They do not establish controller feel, route reliability or visual polish.
+  aim sweeps at the captured resolutions and player counts. The feedback on/off
+  captures in [the refinement increment](polish-refine.md) are prepared for that
+  review.
+- Decide the design questions the trials surfaced:
+  - Should a partial opposite stick brake more slowly than release, and pass
+    through zero?
+  - Should released pad aim snap to facing?
+  - Are the short-landing slide-off, the 120-wide step walk-off and the one-step
+    overshoot at the 60-unit rises acceptable?
+  - Should the leftward short-gap jump land on the drop-through platform?
+- This course is not a balanced competitive arena. Paint area, combat pacing and
+  spawn fairness have not been accepted.

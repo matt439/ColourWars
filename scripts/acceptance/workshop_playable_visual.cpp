@@ -6,6 +6,7 @@
 #include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <map>
 #include <sstream>
 
 // Inspect the real Scene-owned roster without adding test-only game APIs.
@@ -168,6 +169,119 @@ namespace
         }
     }
 
+    struct Rgb
+    {
+        int r;
+        int g;
+        int b;
+    };
+
+    // The course background is data, so the colour that means "nothing drawn
+    // here" is read from the same object the level draws.
+    Rgb background_colour(const LevelLoadedInfo& info)
+    {
+        const JsonValue objects = info.non_collision_objects_json();
+        for (size_t index = 0; index < objects.size(); ++index)
+        {
+            const JsonValue object = objects.at(index);
+            if (object.string("name") != "course_background") { continue; }
+            const std::optional<Colour> colour = colour_from_name(object.string("colour"));
+            require(colour.has_value(), "course background colour is not a palette name");
+            return { static_cast<int>(std::lround(colour->r * 255.0f)),
+                static_cast<int>(std::lround(colour->g * 255.0f)),
+                static_cast<int>(std::lround(colour->b * 255.0f)) };
+        }
+        throw std::runtime_error("Movement Course has no course_background object");
+    }
+
+    struct ContactSummary
+    {
+        int checked = 0;
+        int skipped = 0;
+        // Settled palette frames by frame width; these may never be skipped.
+        std::map<int, int> settled_checked;
+        int settled_skipped = 0;
+    };
+
+    // Grounded contact has no background gap: the collision bottom, projected
+    // through the player's own view, is a drawn row, and so is every row up to
+    // the first one above it. "Drawn" means some pixel across the projected
+    // collision width is not course background. The check does not attribute
+    // that pixel to the character's boots, so another drawn thing in the row
+    // (a tool, paint, a stacked player) would also satisfy it. Grounded is
+    // world state, never a tick number, and the support must be an authored
+    // surface.
+    void check_contact(const Frame& frame, const Level& level, Application& app,
+        const LevelLoadedInfo& course, const Rgb& background, const std::string& label,
+        std::ofstream& records, ContactSummary& summary, bool settled = false)
+    {
+        const auto is_background = [&](int x, int y) {
+            const size_t offset = (static_cast<size_t>(y) * static_cast<size_t>(frame.width) +
+                static_cast<size_t>(x)) * 4;
+            return std::abs(frame.pixels[offset] - background.r) <= 2 &&
+                std::abs(frame.pixels[offset + 1] - background.g) <= 2 &&
+                std::abs(frame.pixels[offset + 2] - background.b) <= 2;
+        };
+        const JsonValue surfaces = course.collision_objects_json();
+        for (size_t view = 0; view < level.players_.size(); ++view)
+        {
+            const Player& player = *level.players_[view];
+            if (player.state() != PlayerState::alive ||
+                (player.move_state() != PlayerMoveState::on_ground &&
+                 player.move_state() != PlayerMoveState::on_drop_down_ground))
+            {
+                continue;
+            }
+            const RectangleF& body = player.rectangle();
+            bool supported = false;
+            for (size_t index = 0; index < surfaces.size() && !supported; ++index)
+            {
+                const JsonValue shape = surfaces.at(index).object("rectangle");
+                const float x = shape.number("x");
+                supported = std::abs(shape.number("y") - body.bottom()) <= 0.05f &&
+                    x < body.right() && x + shape.number("width") > body.left();
+            }
+            require(supported, "a grounded player stands on no authored surface top");
+
+            const RectangleI pane = app.viewport_manager()->player_viewport(
+                static_cast<int>(view)).pixel_rect();
+            const RectangleF projected = player.camera().calculate_view_rectangle(body);
+            const int ground = pane.y + static_cast<int>(std::trunc(projected.bottom()));
+            const int reach = static_cast<int>(std::ceil(projected.height / 4.0f));
+            const int left = pane.x + std::max(0, static_cast<int>(std::ceil(projected.x)) + 1);
+            const int right = pane.x + std::min(pane.width,
+                static_cast<int>(std::floor(projected.right())) - 1);
+            if (ground - reach < pane.y || ground + 2 > pane.bottom() || right - left < 4)
+            {
+                ++summary.skipped;
+                summary.settled_skipped += settled ? 1 : 0;
+                continue;
+            }
+            const auto empty_row = [&](int y) {
+                for (int x = left; x < right; ++x)
+                {
+                    if (!is_background(x, y)) { return false; }
+                }
+                return true;
+            };
+            int gap = 0;
+            while (gap < reach && empty_row(ground - 1 - gap)) { ++gap; }
+            records << label << ',' << view + 1 << ',' << body.bottom() << ',' << ground << ','
+                << left << ',' << right << ',' << gap << '\n';
+            require(!empty_row(ground) && !empty_row(ground + 1),
+                "the platform rows under a grounded player are background");
+            if (gap != 0)
+            {
+                throw std::runtime_error(label + " view " + std::to_string(view + 1) + ": " +
+                    std::to_string(gap) + " background row(s) between the player and platform row " +
+                    std::to_string(ground) + " in columns " + std::to_string(left) + "-" +
+                    std::to_string(right - 1));
+            }
+            ++summary.checked;
+            summary.settled_checked[frame.width] += settled ? 1 : 0;
+        }
+    }
+
     void paused_draw(Level& level, Renderer& renderer)
     {
         level.suspend();
@@ -227,6 +341,11 @@ int wmain(int argc, wchar_t** argv)
             PlayerVisualMode::continuous, PlayerVisualMode::authored };
         std::ofstream records(output / "checks.csv");
         records << "players,mode,palette,width,height,phase\n";
+        const LevelLoadedInfo& course = *levels.get("movement_course");
+        const Rgb background = background_colour(course);
+        std::ofstream contact(output / "contact.csv");
+        contact << "frame,view,feet_y,platform_row,first_column,end_column,gap_rows\n";
+        ContactSummary contacts;
         for (int count : { 1, 2, 3, 4 })
         {
             app.viewport_manager()->set_layout(layout(count));
@@ -250,10 +369,14 @@ int wmain(int argc, wchar_t** argv)
                     if (mode == PlayerVisualMode::original) { baseline.push_back(state); }
                     else { require(state == baseline.at(static_cast<size_t>(tick)),
                         "workshop visual mode changed movement, health, ammo or paint"); }
+                    // Every tick is drawn for the contact check; stills and the
+                    // sequence save that same frame.
+                    const Frame frame = render(*level, *app.renderer());
+                    check_contact(frame, *level, app, course, background,
+                        prefix + "-blue_orange-1280-tick" + std::to_string(tick), contact, contacts);
                     if (tick == 0 || tick == 16 || tick == 42 || tick == 77 || tick == 100)
                     {
-                        save(render(*level, *app.renderer()), output /
-                            (prefix + "-tick" + std::to_string(tick) + ".ppm"));
+                        save(frame, output / (prefix + "-tick" + std::to_string(tick) + ".ppm"));
                         paused_draw(*level, *app.renderer());
                         records << count << ',' << mode_name(mode) << ",blue_orange,1280,720,tick" << tick << '\n';
                     }
@@ -261,7 +384,7 @@ int wmain(int argc, wchar_t** argv)
                     {
                         std::ostringstream filename;
                         filename << "frame-" << std::setw(3) << std::setfill('0') << tick << ".ppm";
-                        save(render(*level, *app.renderer()), sequence / filename.str());
+                        save(frame, sequence / filename.str());
                     }
                 }
                 // Actual firing after the deterministic movement comparison. This is
@@ -282,7 +405,10 @@ int wmain(int argc, wchar_t** argv)
                     "firing fixture did not paint a surface");
                 std::cout << prefix << " fired: paint=" << painted.team_a_area + painted.team_b_area
                     << '/' << painted.total_area << '\n';
-                save(render(*level, *app.renderer()), output / (prefix + "-painted.ppm"));
+                const Frame painted_frame = render(*level, *app.renderer());
+                check_contact(painted_frame, *level, app, course, background,
+                    prefix + "-blue_orange-1280-painted", contact, contacts);
+                save(painted_frame, output / (prefix + "-painted.ppm"));
             }
             for (TeamColourPair palette : { TeamColourPair::blue_orange,
                 TeamColourPair::pink_green, TeamColourPair::blue_yellow })
@@ -296,7 +422,10 @@ int wmain(int argc, wchar_t** argv)
                         resize(app, *level, size);
                         const std::string stem = std::to_string(count) + "p-" + mode_name(mode) +
                             "-palette" + std::to_string(static_cast<int>(palette)) + "-" + std::to_string(size.x);
-                        save(render(*level, *app.renderer()), output / (stem + ".ppm"));
+                        const Frame frame = render(*level, *app.renderer());
+                        check_contact(frame, *level, app, course, background, stem, contact, contacts,
+                            true);
+                        save(frame, output / (stem + ".ppm"));
                         paused_draw(*level, *app.renderer());
                         records << count << ',' << mode_name(mode) << ',' << static_cast<int>(palette)
                             << ',' << size.x << ',' << size.y << ",settled\n";
@@ -312,9 +441,20 @@ int wmain(int argc, wchar_t** argv)
         settle(*authored, 1);
         require(render(*original, *app.renderer()).pixels == render(*authored, *app.renderer()).pixels,
             "course comparison leaked into Close Quarters");
-        require(records.good(), "could not write check record");
+        require(records.good() && contact.good(), "could not write check record");
+        // Settled palette frames are 3 modes x 3 palettes x 10 views at each
+        // size, every one grounded and checked, none skipped at a pane edge.
+        require(contacts.settled_skipped == 0, "a settled contact was skipped at a pane edge");
+        for (const int width : { 1280, 1920, 2560 })
+        {
+            require(contacts.settled_checked[width] == 90,
+                "a resolution did not check every settled grounded contact");
+        }
+        std::cout << "PASS grounded contact, no background row: " << contacts.checked
+            << " player-view checks (90 settled at each of 720p/1080p/QHD); " << contacts.skipped
+            << " movement-frame checks skipped at a pane edge\n";
         std::cout << "PASS real Scene comparison; exact movement/resource/paint parity at 60Hz; "
-            "1-4 views; 3 palettes; 720p/1080p/QHD; paused redraw; course-only selection\n";
+            "1-4 views; 3 palettes; 720p/1080p/QHD; paused redraw; grounded contact; course-only selection\n";
         return 0;
     }
     catch (const std::exception& error)

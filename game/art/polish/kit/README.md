@@ -33,8 +33,11 @@ All candidate body frames keep the 13 by 30 canvas and pivot (6.5, 15).
 Shoulder anchors are (8.5, 11.5) and (4.5, 11.5), mirrored with body facing.
 The body contains the shoulder caps but leaves forearms to the runtime's
 two-segment arm bridges. `glove` is a neutral 3 by 3 grip overlay. Neutral
-7 by 8 `badge_1` through `badge_4` use cream outlines and numbers so identity
-does not depend on team hue. Runtime uses player/view identity for the number.
+9 by 10 `badge_1` through `badge_4` share one plate silhouette: a cream plate,
+a one-texel dark rim and a dark 5 by 6 numeral, so identity does not depend on
+team hue and only the numeral differs. Runtime uses player/view identity for the
+number. The darkest team-mask tone `v` is #808080 (was #747474) so a dark team's
+shadow no longer matches the outline.
 
 All coordinates in `source.json` are measured from the sprite's top-left texel
 edge. Pivots and semantic anchors may be fractional even though the artwork is
@@ -90,8 +93,11 @@ contract. Its default canonical-source check also compares the staged runtime
 DDS/JSON byte-for-byte with a fresh build. Custom-source checks do not inspect
 runtime content. The canonical check also compares presentation body/glove/badge
 sizes, shoulders, tool muzzle/support offsets and aim angles against the source
-texels and anchors, independently of runtime attachment calculations. It rejects
-five deliberately stale presentation variants. The fractional-alpha fixture exercises both origin policies;
+texels and anchors, independently of runtime attachment calculations. It also
+checks arm length (an even texel count, so two equal whole-texel bones), pose
+hysteresis, the badge offset (behind the head, clear of an upward muzzle, on the
+texel grid), the luminance floor and the shared badge plate, and rejects fifteen
+deliberately stale presentation variants and one stale badge silhouette. The fractional-alpha fixture exercises both origin policies;
 malformed source must fail without replacing previous artifacts.
 From an x64 VS Developer shell, `scripts/check-workshop-style.ps1` renders the
 kit through the real camera and renderer. See the evidence and remaining

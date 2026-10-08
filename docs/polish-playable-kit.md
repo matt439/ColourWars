@@ -34,12 +34,27 @@ gameplay randomness.
 The body is explicitly 52 by 120 world units at four units per native texel.
 Visual dimensions are presentation data, independent of collision and weapon
 tuning. Numbered neutral badges identify roster positions 1–4, matching the HUD;
-they do not use controller slot numbers (the keyboard is slot 4).
+they do not use controller slot numbers (the keyboard is slot 4). The badge sits
+above and behind the head, mirrored with body facing, and is drawn before the
+tool. Body and tool team masks are tinted toward white just enough to reach
+`team_mask_minimum_luminance` (0.20; 0 disables). Paint, HUD and the original
+visual keep the true team colour.
 
 Two pixel-stepped arm chains join authored shoulders to the tool's main and
-support grips. Glove frames cover those grips. The continuous sprayer uses the
-horizontal authored frame; the posed variant chooses the nearest authored visual
-direction. Its frame is translated to keep the semantic muzzle at the actual
+support grips. Each arm is two equal bones of `arm_length / 2` (the whole arm is
+`arm_length`, an even texel count). The elbow sags off the span by what the bones
+leave over, capped at `elbow_drop`. Arms are never clamped: a span at least
+`arm_length` long draws straight and stretches, so `arm_length` sets the sag, not
+the reach. The elbow bends downward and slightly toward the back. Within one pose
+the short front span can turn through any direction, so the side must change
+somewhere; the sag fades to nothing near that change, and the arm straightens
+through it instead of jumping across. The elbow is snapped once so both segments
+share the joint texel. Glove frames cover
+the grips. The continuous sprayer uses the horizontal authored frame; the posed
+variant holds an authored visual direction, chosen once the weapon has its tick's
+aim, and changes it only when the aim passes `pose_hysteresis_degrees` beyond the
+midpoint to a neighbour. Before the first aimed tick, and after respawn, it shows
+the nearest direction. Its frame is translated to keep the semantic muzzle at the actual
 simulation muzzle between bins. The hands follow that translation. Projectile
 direction, origin, obstruction handling, ammunition and collision shape are
 unchanged. The roller retains its real fixed aim and white/non-firing paint state.
@@ -79,8 +94,12 @@ into exported native pivots; original study frames keep their earlier origin
 contract. The canonical check compares deterministic rebuilds, every native
 pixel, team masks, gutters, premultiplied alpha, origins and staged hashes. It
 independently compares presentation dimensions, shoulder and tool anchors against
-the source kit, rejecting stale presentation data. Twelve malformed source cases
-and five stale presentation variants are checked.
+the source kit, rejecting stale presentation data. It also checks the arm length
+(an even texel count), pose hysteresis, the badge offset (behind the head, clear of
+an upward muzzle, on the texel grid), the team-mask luminance floor and the shared
+badge plate. Twelve malformed source cases, fifteen stale presentation variants and
+one stale badge silhouette are checked. The runtime loader also rejects sprayer
+poses whose aim angles do not strictly increase.
 
 Debug and Release built under `/W4 /WX` and passed all eight consumer acceptance
 cases. The player case exercises 7,200 exact baseline/comparison ticks and shot
@@ -124,31 +143,36 @@ Silent 60-fps review copies: [original](images/polish-playable/original-four-pla
 [posed sprayer](images/polish-playable/authored-four-player-aim.mp4).
 PNGs are lossless readback conversions; MP4s are H.264 review copies.
 
-Inspected stills and sampled motion frames support keeping both treatments
-available for playing comparison. The caps, faces, gloves and different tool
-silhouettes are visible at four-player 720p. Badges distinguish same-team players,
-although 3/4 are cramped at that size. Blue overalls remain darker against the
+Those captures predate the refinement below: they show the earlier 7 by 8 centred
+badges, unlifted mask tones and fixed-drop elbows. Inspected stills and sampled
+motion frames support keeping both treatments available for playing comparison.
+The caps, faces, gloves and different tool silhouettes are visible at four-player
+720p. The earlier badges distinguished same-team players, although 3/4 were cramped
+at that size. Blue overalls remain darker against the
 course background than orange; the neutral trim helps but does not settle that
 readability question. Arms are attached across vertical aim, but their angular
 elbows and pose-boundary shifts still need refinement in motion.
 
 The fixed roller avoids rotating its diagonal pixels during normal play. Its
-semantic ground edge matches the standing player's feet, while apparent contact
-gaps in sampled 720p views still need a raster/camera review. Four-unit texels
-project to fractional screen sizes at 720p and QHD, and the renderer truncates
-destination edges. No final snapping, integer scaling or letterboxing policy is
-accepted by this increment. Do not move collision geometry to hide a raster gap.
+semantic ground edge matches the standing player's feet. Sampled 720p views seemed
+to show contact gaps. [The refinement increment](polish-refine.md#ground-contact-is-pixel-flush)
+showed that standing contact is pixel-flush, and now checks it in the render probe.
+Four-unit texels still project to fractional screen sizes at 720p and QHD. No
+final snapping, integer scaling or letterboxing policy is accepted. Do not move
+collision geometry to hide a raster gap.
+
+The refinement's stills, moving on/off captures and evidence are recorded in
+[its own document](polish-refine.md).
 
 Only stills and sampled frames were inspected here. Human real-time playback,
 keyboard/mouse and physical controller comparisons, busy combat and listening
 remain open. Full firing/recovery poses, hurt/elimination/respawn art, idle muzzle
 drips, roller secondary motion and all replacement audio remain future work.
 
-Next, play the two workshop treatments against the original with movement feedback
-enabled/disabled. Record arm reach, pose transitions, badge readability, dark-team
-contrast and actual feet/roller contact under slow camera movement. Fix the visual
-policy and movement issues that review exposes, and finish the outstanding course
-route trials before laying out the Close Quarters reference blockout.
+The refinement increment has since addressed arm reach, pose transitions, badges
+and dark-team contrast as candidates, and the course route trials are now retained.
+Human play of the three presentations with movement feedback enabled and disabled
+remains next; see [the refinement increment](polish-refine.md#open-after-this-increment).
 
 Local evidence is under `out/validation/polish-playable-20261008/`; consumer logs
 are also retained under `out/acceptance/<preset>/`. `result.json` files record

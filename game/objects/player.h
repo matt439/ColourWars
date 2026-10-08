@@ -81,7 +81,7 @@ public:
     void update(float dt) override;
     std::vector<std::unique_ptr<Projectile>>
         update_weapon_and_get_projectiles(float dt,
-        std::span<labrador::CollisionObject* const> objects) const;
+        std::span<labrador::CollisionObject* const> objects);
     void draw(labrador::DrawList& draw_list) const override;
 
     mattmath::RectangleF bounds() const override;
@@ -107,6 +107,10 @@ public:
         labrador::RenderResources* render_resources, PlayerVisualMode mode,
         int view_index);
     const PlayerVisual* workshop_visual() const;
+    // The workshop attachment's geometry input, for consumer acceptance.
+    const Weapon& primary_weapon() const;
+    // Movement facing, which mirrors the body, shoulders and badge.
+    bool facing_right() const;
 
 	void set_player_input(const PlayerInputData& input);
     // Context changes discard queued jumps and require a release before a new
@@ -243,7 +247,6 @@ private:
 
     void respawn();
 
-    bool facing_right() const;
     void set_facing_right(bool facing_right);
 
     float air_time() const;

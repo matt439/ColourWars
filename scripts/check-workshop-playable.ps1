@@ -71,6 +71,7 @@ $result = [ordered]@{
     inputs = 'Scripted pad-slot inputs at the real 60 Hz simulation step; no physical-device claim.'
     audio = 'Muted; this check establishes no listening acceptance.'
     sequence_frames = $SequenceFrames
+    contact = 'Grounded players (world state) are projected through their own view. Across the projected collision width, the platform row and the row above it must each hold some pixel that is not course background, so no background row separates them. Those pixels are not attributed to the boots, so another drawn object in the row would also pass. Every settled frame is checked at 720p, 1080p and QHD with 1-4 views, and none may be skipped. Rows are in captures/contact.csv.'
     profile = $profile
     diagnostic = ''
 }
@@ -182,7 +183,7 @@ try {
         throw 'The visual probe unexpectedly created a save.'
     }
     $result.outcome = 'passed'
-    $result.diagnostic = 'Actual Scene movement/resource/paint parity, all palettes and layouts, resolution matrix, course isolation and suspended redraw passed. Human play review remains separate.'
+    $result.diagnostic = 'Actual Scene movement/resource/paint parity, all palettes and layouts, resolution matrix, grounded contact without a background row, course isolation and suspended redraw passed. Human play review remains separate.'
 }
 catch {
     $failure = $_

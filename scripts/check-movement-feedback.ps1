@@ -7,6 +7,9 @@ param(
     # current full jump and landing; the hard limit bounds storage and runtime.
     [ValidateRange(0, 180)]
     [int] $SequenceFrames = 0,
+    # Paired on/off route sequences are four-player only by default; this adds
+    # the one-player route (three more modes of two 720p frames per tick).
+    [switch] $OnePlayerRouteSequences,
     [string] $OutputDirectory = (Join-Path $PSScriptRoot '../out/validation/movement-feedback')
 )
 
@@ -70,6 +73,14 @@ $result = [ordered]@{
     inputs = 'Scripted pad-slot inputs at the real 60 Hz simulation step; no physical-device claim.'
     audio = 'Muted; this check establishes no listening acceptance.'
     sequence_frames = $SequenceFrames
+    route = [ordered]@{
+        modes = @('original', 'continuous', 'authored')
+        player_counts = @(1, 4)
+        movement = 'Team A runs from rest and holds a full jump over the 800-980 short gap; Team B runs left on its runway and jumps short of the return step. Aim sweeps 2pi per 90 ticks.'
+        checks = 'Per tick: one update, feedback on/off redraw of the same state, simulation unchanged, differences inside culling bounds and under 1% of a pane. Takeoff on press, landing on the authored platform, horizontal camera pan in every view; takeoff/landing captured at 720p/1080p/QHD.'
+        sequence_start_tick = 45
+        sequence_players = if ($OnePlayerRouteSequences) { @(1, 4) } else { @(4) }
+    }
     profile = $profile
     diagnostic = ''
 }
@@ -146,7 +157,7 @@ try {
         -LogPath (Join-Path $run 'compile.log')
 
     $result.staged_content_hashes = @(
-        'manifest.json', 'tuning.json', 'presentation.json', 'levels/movement_course.json' |
+        'manifest.json', 'tuning.json', 'presentation.json', 'levels/movement_course.json', 'textures/workshop_kit.json', 'textures/workshop_kit.dds' |
         ForEach-Object {
             [ordered]@{ path = $_; sha256 = (Get-FileHash -LiteralPath (Join-Path $gameDirectory $_)).Hash }
         }
@@ -155,7 +166,8 @@ try {
     $env:LOCALAPPDATA = $profile
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList @((Quote-Path $gameDirectory),
-            (Quote-Path $captures), $SequenceFrames.ToString()) `
+            (Quote-Path $captures), $SequenceFrames.ToString(),
+            $(if ($OnePlayerRouteSequences) { '1' } else { '0' })) `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
         -RedirectStandardError (Join-Path $run 'run.err')
     $null = $process.Handle
@@ -163,7 +175,7 @@ try {
     $env:LOCALAPPDATA = $previousLocalAppData
     $timer = [Diagnostics.Stopwatch]::StartNew()
     while (-not $process.WaitForExit(1000)) {
-        if ($timer.Elapsed.TotalSeconds -gt 180) { throw 'Visual probe exceeded its 180-second runtime limit.' }
+        if ($timer.Elapsed.TotalSeconds -gt 600) { throw 'Visual probe exceeded its 600-second runtime limit.' }
     }
     $process.WaitForExit()
     Get-Content -LiteralPath (Join-Path $run 'run.log') | ForEach-Object { Write-Host $_ }
@@ -181,7 +193,7 @@ try {
         throw 'The visual probe unexpectedly created a save.'
     }
     $result.outcome = 'passed'
-    $result.diagnostic = 'Matched feedback frames, resolution matrix and suspended redraw passed. Visual review remains separate.'
+    $result.diagnostic = 'Matched feedback frames, resolution matrix, suspended redraw and the moving aim-swept route in three visual modes passed. Visual review remains separate.'
 }
 catch {
     $failure = $_

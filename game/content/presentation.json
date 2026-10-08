@@ -321,6 +321,7 @@
             "y": -14
         },
         "elbow_drop": 12,
+        "arm_length": 48,
         "sleeve_width": 8,
         "arm_outline_width": 4,
         "sleeve_colour": "C6D0CC",
@@ -337,12 +338,12 @@
             "badge_4"
         ],
         "badge_size": {
-            "x": 28,
-            "y": 32
+            "x": 36,
+            "y": 40
         },
         "badge_offset": {
-            "x": 0,
-            "y": -24
+            "x": -24,
+            "y": -20
         },
         "sprayer": {
             "frame": "sprayer_pose_0",
@@ -448,6 +449,8 @@
                 "aim_angle": 1.5707963267948966
             }
         ],
+        "pose_hysteresis_degrees": 6,
+        "team_mask_minimum_luminance": 0.2,
         "roller": {
             "frame": "roller_grounded",
             "team_frame": "roller_grounded_team",

@@ -15,7 +15,7 @@
     "f": "#F3BD89",
     "t": "#FFFFFF",
     "u": "#B8B8B8",
-    "v": "#747474",
+    "v": "#808080",
     "d": "#263B47",
     "e": "#304955",
     "g": "#3B5661",
@@ -891,18 +891,20 @@
     {
       "name": "badge_1",
       "rows": [
-        ".wwwww.",
-        "woowoow",
-        "wowwoow",
-        "woowoow",
-        "woowoow",
-        "wowwwow",
-        "wooooow",
-        ".wwwww."
+        ".ooooooo.",
+        "owwwwwwwo",
+        "owwwowwwo",
+        "owwoowwwo",
+        "owwwowwwo",
+        "owwwowwwo",
+        "owwwowwwo",
+        "owwooowwo",
+        "owwwwwwwo",
+        ".ooooooo."
       ],
       "pivot": [
-        3.5,
-        4
+        4.5,
+        5
       ],
       "anchors": {},
       "team_symbols": [],
@@ -911,18 +913,20 @@
     {
       "name": "badge_2",
       "rows": [
-        "wwwwwww",
-        "wowwwow",
-        "wooowow",
-        "wowwwow",
-        "wowooow",
-        "wowwwow",
-        "wooooow",
-        "wwwwwww"
+        ".ooooooo.",
+        "owwwwwwwo",
+        "owwooowwo",
+        "owowwwowo",
+        "owwwwwowo",
+        "owwwoowwo",
+        "owwowwwwo",
+        "owooooowo",
+        "owwwwwwwo",
+        ".ooooooo."
       ],
       "pivot": [
-        3.5,
-        4
+        4.5,
+        5
       ],
       "anchors": {},
       "team_symbols": [],
@@ -931,18 +935,20 @@
     {
       "name": "badge_3",
       "rows": [
-        "wwwwwww",
-        "wowwwow",
-        "wooowow",
-        "woowwow",
-        "wooowow",
-        "wowwwow",
-        ".wooow.",
-        "..www.."
+        ".ooooooo.",
+        "owwwwwwwo",
+        "owoooowwo",
+        "owwwwwowo",
+        "owwooowwo",
+        "owwwwwowo",
+        "owwwwwowo",
+        "owoooowwo",
+        "owwwwwwwo",
+        ".ooooooo."
       ],
       "pivot": [
-        3.5,
-        4
+        4.5,
+        5
       ],
       "anchors": {},
       "team_symbols": [],
@@ -951,18 +957,20 @@
     {
       "name": "badge_4",
       "rows": [
-        ".wwwww.",
-        "wowowow",
-        "wowowow",
-        "wowwwow",
-        "wooowow",
-        "wooowow",
-        "wooooow",
-        "..www.."
+        ".ooooooo.",
+        "owwwwwwwo",
+        "owowwowwo",
+        "owowwowwo",
+        "owowwowwo",
+        "owooooowo",
+        "owwwwowwo",
+        "owwwwowwo",
+        "owwwwwwwo",
+        ".ooooooo."
       ],
       "pivot": [
-        3.5,
-        4
+        4.5,
+        5
       ],
       "anchors": {},
       "team_symbols": [],

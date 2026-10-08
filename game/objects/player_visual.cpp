@@ -3,7 +3,7 @@
 
 #include "game/objects/weapon.h"
 
-#include <limits>
+#include <cmath>
 
 using namespace labrador;
 using namespace mattmath;
@@ -107,8 +107,18 @@ void PlayerVisual::takeoff()
     this->animation_time_ = 0.0f;
 }
 
+void PlayerVisual::update_pose(const Weapon& weapon)
+{
+    if (this->mode_ != PlayerVisualMode::authored || weapon.type() != WeaponType::sprayer)
+    {
+        return;
+    }
+    this->sprayer_pose_ = this->choose_sprayer_pose(weapon.rotation(), this->sprayer_pose_);
+}
+
 void PlayerVisual::reset()
 {
+    this->sprayer_pose_.reset();
     this->body_frame_index_ = 6;
     this->animation_time_ = 0.0f;
     this->landing_remaining_ = 0.0f;
@@ -119,6 +129,36 @@ void PlayerVisual::reset()
 size_t PlayerVisual::body_frame_index() const { return this->body_frame_index_; }
 float PlayerVisual::animation_time() const { return this->animation_time_; }
 PlayerVisualMode PlayerVisual::mode() const { return this->mode_; }
+
+size_t PlayerVisual::sprayer_pose_index(const Weapon& weapon) const
+{
+    return this->sprayer_pose_.has_value() ? *this->sprayer_pose_ :
+        this->choose_sprayer_pose(weapon.rotation(), std::nullopt);
+}
+
+size_t PlayerVisual::choose_sprayer_pose(float aim, std::optional<size_t> held) const
+{
+    // Select artwork only. The actual weapon angle and projectile trajectory
+    // remain continuous between the five authored poses.
+    const float right_half_aim = std::atan2(std::sin(aim), std::abs(std::cos(aim)));
+    const auto distance = [this, right_half_aim](size_t pose)
+    {
+        return std::abs(right_half_aim - this->presentation_->sprayer_poses[pose].aim_angle);
+    };
+    size_t nearest = 0;
+    for (size_t pose = 1; pose < this->sprayer_poses_.size(); ++pose)
+    {
+        if (distance(pose) < distance(nearest)) { nearest = pose; }
+    }
+    // Between neighbours the distance difference is twice the overshoot past
+    // their midpoint, so keep the held pose until the aim is a band beyond it.
+    if (held.has_value() && *held != nearest &&
+        distance(*held) - distance(nearest) <= this->presentation_->pose_hysteresis * 2.0f)
+    {
+        return *held;
+    }
+    return nearest;
+}
 
 PlayerVisual::Attachment PlayerVisual::attachment(const Weapon& weapon) const
 {
@@ -138,19 +178,7 @@ PlayerVisual::Attachment PlayerVisual::attachment(const Weapon& weapon) const
         }
         else
         {
-            // Select artwork only. The actual weapon angle and projectile
-            // trajectory remain continuous between the five authored poses.
-            const float right_half_aim = std::atan2(std::sin(aim), std::abs(std::cos(aim)));
-            float nearest = std::numeric_limits<float>::max();
-            for (const Tool& pose : this->sprayer_poses_)
-            {
-                const float distance = std::abs(right_half_aim - pose.presentation->aim_angle);
-                if (distance < nearest)
-                {
-                    nearest = distance;
-                    result.tool = &pose;
-                }
-            }
+            result.tool = &this->sprayer_poses_[this->sprayer_pose_index(weapon)];
             result.flip = left ? SpriteFlip::horizontal : SpriteFlip::none;
         }
     }
@@ -189,9 +217,11 @@ RectangleF PlayerVisual::body_rectangle(const RectangleF& collision_rectangle) c
         collision_rectangle.bottom() - size.y, size.x, size.y);
 }
 
-RectangleF PlayerVisual::badge_rectangle(const RectangleF& body) const
+RectangleF PlayerVisual::badge_rectangle(const RectangleF& body, bool facing_right) const
 {
-    const Vector2F center(body.center().x + this->presentation_->badge_offset.x,
+    // Authored for a right-facing body; mirroring keeps it toward the back.
+    const float facing = facing_right ? 1.0f : -1.0f;
+    const Vector2F center(body.center().x + this->presentation_->badge_offset.x * facing,
         body.top() + this->presentation_->badge_offset.y);
     return RectangleF(center - this->presentation_->badge_size / 2.0f,
         this->presentation_->badge_size);
@@ -229,7 +259,7 @@ void PlayerVisual::draw_pair(DrawList& draw_list, const FramePair& frames,
 
 void PlayerVisual::draw_segment(DrawList& draw_list, const Vector2F& start,
     const Vector2F& finish, const Vector2F& grid_origin, float width,
-    const Colour& colour) const
+    const Colour& colour, bool include_start) const
 {
     const float pixel = this->presentation_->pixel_size;
     const Vector2F delta = finish - start;
@@ -243,7 +273,7 @@ void PlayerVisual::draw_segment(DrawList& draw_list, const Vector2F& start,
     }
     const int steps = std::max(1, static_cast<int>(std::min(step_count,
         static_cast<float>(maximum_segment_steps))));
-    for (int step = 0; step <= steps; ++step)
+    for (int step = include_start ? 0 : 1; step <= steps; ++step)
     {
         const Vector2F point = start + delta * (static_cast<float>(step) /
             static_cast<float>(steps));
@@ -256,20 +286,114 @@ void PlayerVisual::draw_segment(DrawList& draw_list, const Vector2F& start,
     }
 }
 
-void PlayerVisual::draw_arm(DrawList& draw_list, const Vector2F& shoulder,
-    const Vector2F& grip, const Vector2F& grid_origin) const
+Vector2F PlayerVisual::elbow(const Vector2F& shoulder, const Vector2F& grip,
+    float facing, const Vector2F& grid_origin) const
 {
-    const Vector2F elbow = (shoulder + grip) / 2.0f +
-        Vector2F(0.0f, this->presentation_->elbow_drop);
+    // Two equal bones: the elbow sags off the span's midpoint by what the bone
+    // length leaves over, capped by elbow_drop, so a long reach straightens.
+    const Vector2F span = grip - shoulder;
+    const float length = span.length();
+    const float half_bone = this->presentation_->arm_length / 2.0f;
+    float sag = std::min(this->presentation_->elbow_drop, std::sqrt(
+        std::max(0.0f, half_bone * half_bone - length * length / 4.0f)));
+    Vector2F normal(0.0f, 1.0f);
+    if (length > 0.001f)
+    {
+        normal = Vector2F(-span.y / length, span.x / length);
+        // Bend downward and slightly toward the back. Within a pose the short
+        // front span can sweep through any direction, so whichever rule picks
+        // the side must flip somewhere; fade the sag to nothing as the choice
+        // nears its tie so the arm straightens through the flip, not jumps.
+        constexpr float back_bias = 0.25f;
+        constexpr float fade_band = 0.3f;
+        const float preference = normal.y - back_bias * facing * normal.x;
+        if (preference < 0.0f) { normal = -normal; }
+        sag *= std::min(1.0f, std::abs(preference) / fade_band);
+    }
+    const Vector2F joint = (shoulder + grip) / 2.0f + normal * sag;
+    // Snap once so both segments meet on one shared joint texel.
+    const float pixel = this->presentation_->pixel_size;
+    return Vector2F(
+        grid_origin.x + std::round((joint.x - grid_origin.x) / pixel) * pixel,
+        grid_origin.y + std::round((joint.y - grid_origin.y) / pixel) * pixel);
+}
+
+std::array<PlayerVisual::ArmPose, 2> PlayerVisual::arms(const RectangleF& body,
+    bool facing_right, const Attachment& held) const
+{
+    const float facing = facing_right ? 1.0f : -1.0f;
+    const auto arm = [&](Vector2F shoulder_offset, const Vector2F& grip)
+    {
+        shoulder_offset.x *= facing;
+        const Vector2F shoulder = body.center() + shoulder_offset;
+        return ArmPose{ shoulder,
+            this->elbow(shoulder, grip, facing, body.position()), grip };
+    };
+    return { arm(this->presentation_->rear_shoulder_offset, held.support_grip),
+        arm(this->presentation_->shoulder_offset, held.grip) };
+}
+
+std::array<PlayerVisual::ArmPose, 2> PlayerVisual::arms(
+    const RectangleF& collision_rectangle, bool facing_right, const Weapon& weapon) const
+{
+    return this->arms(this->body_rectangle(collision_rectangle), facing_right,
+        this->attachment(weapon));
+}
+
+RectangleF PlayerVisual::badge_bounds(const RectangleF& collision_rectangle,
+    bool facing_right) const
+{
+    return this->badge_rectangle(this->body_rectangle(collision_rectangle), facing_right);
+}
+
+void PlayerVisual::draw_arm(DrawList& draw_list, const ArmPose& arm,
+    const Vector2F& grid_origin) const
+{
     for (const bool outline : { true, false })
     {
         const float width = this->presentation_->sleeve_width +
             (outline ? this->presentation_->arm_outline_width * 2.0f : 0.0f);
         const Colour& colour = outline ? this->presentation_->arm_outline_colour :
             this->presentation_->sleeve_colour;
-        this->draw_segment(draw_list, shoulder, elbow, grid_origin, width, colour);
-        this->draw_segment(draw_list, elbow, grip, grid_origin, width, colour);
+        this->draw_segment(draw_list, arm.shoulder, arm.elbow, grid_origin, width, colour, true);
+        this->draw_segment(draw_list, arm.elbow, arm.grip, grid_origin, width, colour, false);
     }
+}
+
+float PlayerVisual::relative_luminance(const Colour& colour)
+{
+    // WCAG 2 relative luminance of the encoded (sRGB) channels.
+    const auto linear = [](float channel)
+    {
+        return channel <= 0.04045f ? channel / 12.92f :
+            std::pow((channel + 0.055f) / 1.055f, 2.4f);
+    };
+    return 0.2126f * linear(colour.r) + 0.7152f * linear(colour.g) +
+        0.0722f * linear(colour.b);
+}
+
+Colour PlayerVisual::mask_tint(const Colour& team_colour, float minimum_luminance)
+{
+    if (minimum_luminance <= 0.0f || relative_luminance(team_colour) >= minimum_luminance)
+    {
+        return team_colour;
+    }
+    const auto mix = [&team_colour](float amount)
+    {
+        return Colour(team_colour.r + (1.0f - team_colour.r) * amount,
+            team_colour.g + (1.0f - team_colour.g) * amount,
+            team_colour.b + (1.0f - team_colour.b) * amount, team_colour.a);
+    };
+    // Luminance rises monotonically toward white; bisect for the least mix.
+    float low = 0.0f;
+    float high = 1.0f;
+    for (int iteration = 0; iteration < 24; ++iteration)
+    {
+        const float middle = (low + high) / 2.0f;
+        if (relative_luminance(mix(middle)) >= minimum_luminance) { high = middle; }
+        else { low = middle; }
+    }
+    return mix(high);
 }
 
 void PlayerVisual::draw(DrawList& draw_list, const RectangleF& collision_rectangle,
@@ -277,23 +401,24 @@ void PlayerVisual::draw(DrawList& draw_list, const RectangleF& collision_rectang
 {
     const RectangleF body = this->body_rectangle(collision_rectangle);
     const Attachment held = this->attachment(weapon);
-    const float facing = facing_right ? 1.0f : -1.0f;
-    const auto shoulder = [&body, facing](Vector2F offset)
-    {
-        offset.x *= facing;
-        return body.center() + offset;
-    };
-    this->draw_arm(draw_list, shoulder(this->presentation_->rear_shoulder_offset),
-        held.support_grip, body.position());
+    const std::array<ArmPose, 2> arms = this->arms(body, facing_right, held);
+    // Only the workshop masks are lifted; paint, HUD and the original visual
+    // keep the true team colour.
+    const Colour mask = mask_tint(team_colour,
+        this->presentation_->team_mask_minimum_luminance);
+    this->draw_arm(draw_list, arms[0], body.position());
     this->draw_pair(draw_list, this->body_frames_[this->body_frame_index_],
-        body.center(), body.size(), team_colour,
+        body.center(), body.size(), mask,
         facing_right ? SpriteFlip::none : SpriteFlip::horizontal, 0.0f);
-    this->draw_arm(draw_list, shoulder(this->presentation_->shoulder_offset),
-        held.grip, body.position());
+    this->draw_arm(draw_list, arms[1], body.position());
+    // Before the tool, so an upward muzzle is never hidden behind the badge.
+    const RectangleF badge = this->badge_rectangle(body, facing_right);
+    this->draw_frame(draw_list, this->badge_frame_, badge.center(), badge.size(),
+        Colour::white, SpriteFlip::none, 0.0f);
     if (held.tool != nullptr)
     {
         const Colour paint = weapon.type() == WeaponType::roller &&
-            !weapon.shooting_this_update() ? Colour::white : team_colour;
+            !weapon.shooting_this_update() ? Colour::white : mask;
         this->draw_pair(draw_list, held.tool->frames, held.grip,
             held.tool->presentation->size, paint, held.flip, held.rotation);
     }
@@ -306,17 +431,14 @@ void PlayerVisual::draw(DrawList& draw_list, const RectangleF& collision_rectang
         this->presentation_->glove_size, Colour::white, SpriteFlip::none, 0.0f);
     this->draw_frame(draw_list, this->glove_frame_, held.grip,
         this->presentation_->glove_size, Colour::white, SpriteFlip::none, 0.0f);
-    const RectangleF badge = this->badge_rectangle(body);
-    this->draw_frame(draw_list, this->badge_frame_, badge.center(), badge.size(),
-        Colour::white, SpriteFlip::none, 0.0f);
     if (debug) { weapon.draw_nozzle_debug(draw_list); }
 }
 
 RectangleF PlayerVisual::bounds(const RectangleF& collision_rectangle,
-    const Weapon& weapon) const
+    bool facing_right, const Weapon& weapon) const
 {
     const RectangleF body = this->body_rectangle(collision_rectangle);
-    RectangleF result = RectangleF::union_of(body, this->badge_rectangle(body));
+    RectangleF result = RectangleF::union_of(body, this->badge_rectangle(body, facing_right));
     const Attachment held = this->attachment(weapon);
     if (held.tool != nullptr)
     {
@@ -330,9 +452,16 @@ RectangleF PlayerVisual::bounds(const RectangleF& collision_rectangle,
     {
         result = RectangleF::union_of(result, weapon.draw_bounds());
     }
-    // Include the elbow and the pixel stroke/glove past either endpoint.
-    const float margin = this->presentation_->elbow_drop +
-        this->presentation_->sleeve_width + this->presentation_->arm_outline_width +
+    for (const ArmPose& arm : this->arms(body, facing_right, held))
+    {
+        for (const Vector2F& joint : { arm.shoulder, arm.elbow, arm.grip })
+        {
+            result = RectangleF::union_of(result, RectangleF(joint, Vector2F::ZERO));
+        }
+    }
+    // Include the pixel stroke and glove past every joint.
+    const float margin = this->presentation_->sleeve_width +
+        this->presentation_->arm_outline_width +
         this->presentation_->glove_size.length() + this->presentation_->pixel_size;
     return RectangleF(result.position() - Vector2F(margin),
         result.size() + Vector2F(margin * 2.0f));

@@ -8,6 +8,7 @@
 
 #include <cmath>
 #include <initializer_list>
+#include <limits>
 #include <optional>
 #include <stdexcept>
 
@@ -463,6 +464,7 @@ Presentation::Presentation(const char* path)
 	art.shoulder_offset = read_finite_vector(workshop, "shoulder_offset");
 	art.rear_shoulder_offset = read_finite_vector(workshop, "rear_shoulder_offset");
 	art.elbow_drop = read_positive(workshop, "elbow_drop");
+	art.arm_length = read_positive(workshop, "arm_length");
 	art.sleeve_width = read_positive(workshop, "sleeve_width");
 	art.arm_outline_width = read_positive(workshop, "arm_outline_width");
 	art.sleeve_colour = read_colour(workshop, "sleeve_colour");
@@ -485,6 +487,41 @@ Presentation::Presentation(const char* path)
 	if (art.sleeve_width < art.pixel_size)
 	{
 		throw std::runtime_error(workshop.where() + ": sleeve width must cover a native pixel.");
+	}
+	if (art.arm_length < art.pixel_size * 2.0f)
+	{
+		throw std::runtime_error(workshop.where() +
+			": arm_length must cover two native pixels, one per bone.");
+	}
+	const float hysteresis_degrees = workshop.number("pose_hysteresis_degrees");
+	// Array neighbours are aim neighbours only while the angles ascend; that
+	// is also what makes the narrowest array gap the narrowest real one.
+	float narrowest_gap = std::numeric_limits<float>::max();
+	for (size_t index = 1; index < art.sprayer_poses.size(); ++index)
+	{
+		const float gap = art.sprayer_poses[index].aim_angle -
+			art.sprayer_poses[index - 1].aim_angle;
+		if (!(gap > 0.0f))
+		{
+			throw std::runtime_error(poses.where() +
+				": sprayer pose aim_angle values must be strictly increasing.");
+		}
+		narrowest_gap = std::min(narrowest_gap, gap);
+	}
+	art.pose_hysteresis = hysteresis_degrees * PI / 180.0f;
+	// At half a gap or more the aim could never leave a pose for its neighbour.
+	if (!std::isfinite(hysteresis_degrees) || hysteresis_degrees < 0.0f ||
+		art.pose_hysteresis * 2.0f >= narrowest_gap)
+	{
+		throw std::runtime_error(workshop.where() + ": 'pose_hysteresis_degrees' must be "
+			"finite, not negative and under half the narrowest gap between sprayer poses.");
+	}
+	art.team_mask_minimum_luminance = workshop.number("team_mask_minimum_luminance");
+	if (!std::isfinite(art.team_mask_minimum_luminance) ||
+		art.team_mask_minimum_luminance < 0.0f || art.team_mask_minimum_luminance > 1.0f)
+	{
+		throw std::runtime_error(workshop.where() +
+			": 'team_mask_minimum_luminance' must be a relative luminance from 0 to 1.");
 	}
 	const JsonValue movement = root.object("movement_feedback");
 	MovementFeedbackPresentation& feedback = this->movement_feedback_;

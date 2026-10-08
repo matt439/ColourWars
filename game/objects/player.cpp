@@ -460,7 +460,7 @@ void Player::update(float dt)
 }
 std::vector<std::unique_ptr<Projectile>>
     Player::update_weapon_and_get_projectiles(float dt,
-    std::span<CollisionObject* const> objects) const
+    std::span<CollisionObject* const> objects)
 {
     // Dead players must not fire. Stop the loop explicitly because skipping
     // weapon update also skips its normal release handling.
@@ -476,6 +476,10 @@ std::vector<std::unique_ptr<Projectile>>
         MovingObject::velocity(),
         this->facing_right(),
         dt);
+    if (this->workshop_visual_ != nullptr)
+    {
+        this->workshop_visual_->update_pose(*this->primary_);
+    }
     for (const auto& projectile : projectiles)
     {
         projectile->resolve_launch_obstruction(this->center(), objects);
@@ -676,7 +680,8 @@ RectangleF Player::bounds() const
     {
         return this->movement_feedback_.bounds(
             RectangleF::union_of(this->rectangle_,
-                this->workshop_visual_->bounds(this->rectangle_, *this->primary_)));
+                this->workshop_visual_->bounds(this->rectangle_, this->facing_right(),
+                    *this->primary_)));
     }
     // Include the held weapon in the visual bounds used for scene culling.
     if (this->primary_ == nullptr)
@@ -709,6 +714,16 @@ const PlayerVisual* Player::workshop_visual() const
 {
     return this->workshop_visual_.get();
 }
+
+const Weapon& Player::primary_weapon() const
+{
+    if (this->primary_ == nullptr)
+    {
+        throw std::runtime_error("Player has no primary weapon");
+    }
+    return *this->primary_;
+}
+
 void Player::set_player_input(const PlayerInputData& input)
 {
 	this->input_ = input;
