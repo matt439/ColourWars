@@ -33,7 +33,7 @@ ResultsMenuInitial::ResultsMenuInitial(MenuContext* context,
 
 }
 
-void ResultsMenuInitial::update(float dt)
+void ResultsMenuInitial::update_page(float dt)
 {
 	const ResultsMenuPresentation& look = this->look();
 

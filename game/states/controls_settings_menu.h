@@ -11,7 +11,7 @@ class ControlsSettingsMenu final : public PauseMenuPage
 public:
 	explicit ControlsSettingsMenu(MenuContext* context, int player = -1);
 	void init() override;
-	void update(float dt) override;
+	void update_page(float dt) override;
 	bool covers_screen() const override { return true; }
 private:
 	void refresh_values();

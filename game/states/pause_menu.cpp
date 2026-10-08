@@ -115,7 +115,7 @@ PauseMenuInitial::PauseMenuInitial(MenuContext* context, int player_num) :
 
 }
 
-void PauseMenuInitial::update(float /*dt*/)
+void PauseMenuInitial::update_page(float /*dt*/)
 {
 	if (!this->context()->active())
 	{
@@ -307,7 +307,7 @@ PauseMenuConfirmation::PauseMenuConfirmation(MenuContext* context,
 
 }
 
-void PauseMenuConfirmation::update(float /*dt*/)
+void PauseMenuConfirmation::update_page(float /*dt*/)
 {
 	if (!this->context()->active())
 	{

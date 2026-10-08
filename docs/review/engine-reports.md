@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **One is live as an unfiled draft with an exhibit. Seven are closed** and kept below as one paragraph
+> **Two are live as unfiled drafts with exhibits. Seven are closed** and kept below as one paragraph
 > each — what was asked, what shipped, and what this repository spent the
 > answer on.
 >
@@ -69,8 +69,9 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | # | Report | Exhibit | Status |
 |---|---|---|---|
 | 6 | No audio bus, master gain, listener or voice cap | `PlaySettings` gains applied at each emitter | draft — exhibit present; recheck upstream before filing |
+| 9 | No application-level per-frame hook or input capture | `MenuPage::update`/`update_page`, `DebugDirector::before_page_update`/`before_match_update`, the frozen-world console | draft — exhibit present; recheck upstream before filing |
 
-Nothing else is outstanding, on either side. The fullscreen workaround the
+Nothing else is outstanding, on either side, beyond report 9 below. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
@@ -133,6 +134,41 @@ and are the two only a split-screen client would ever report.
 The shared Controls / audio page now supplies the volume rows, and the
 per-emitter gain calls above supply the exhibit. No missing client UI or
 unwritten mix remains as a reason to hold this draft.
+
+---
+
+## 9. No application-level per-frame hook or input capture — **draft with console exhibit**
+
+**Exhibit added by the developer debug system (phase 1).** A client-wide
+developer console (Debug only; `game/debug/`, `docs/debug-console.md`) needs
+two things the engine does not offer: somewhere to look at the keyboard every
+frame whatever state is on top, and a way to say "this key press is mine".
+
+### What happens
+
+`Application::update` polls the devices and then updates the top state only
+(`application.cpp`, `StateContext::update`). There is no hook before or after
+the stack, and `Keyboard` has no notion of a consumed key. So the console:
+
+- turned `MenuPage::update` into a non-virtual template method (`update` calls
+  `DebugDirector::before_page_update`, then the page's `update_page`, across 14
+  overrides) and added a hook at the top of `GameLevel::update`, purely so the
+  toggle key is seen on every screen;
+- is a pushed, non-covering state — the only way to keep `PlayerInput` and
+  `MenuInput` off the keyboard while someone types. The cost is the real one:
+  **the world must freeze while the console is open.** A see-through console
+  that tunes a live match while it runs cannot be built without gating every
+  game reader by hand;
+- implements its own repeat for Backspace, Delete and the arrows
+  (`DebugKeyRepeat`), because only typed text repeats.
+
+### The ask, when it goes
+
+A pre-stack (or overlay-layer) update hook that runs every frame, and a
+`Keyboard` capture or consume scope, so an overlay can own the keyboard while
+the states under it keep updating. Answering it would let this repository
+delete the `update_page` template method, the two `before_*_update` hooks and
+the frozen-world limitation. Control-key repeat is a smaller, separate ask.
 
 ---
 

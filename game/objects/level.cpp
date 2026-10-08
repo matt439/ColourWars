@@ -691,6 +691,16 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	}
 }
 
+int Level::player_count() const
+{
+	return static_cast<int>(this->players_.size());
+}
+
+const Player& Level::player(int view) const
+{
+	return *this->players_.at(static_cast<size_t>(view));
+}
+
 LevelState Level::state() const
 {
 	return this->state_;

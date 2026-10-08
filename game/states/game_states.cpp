@@ -108,6 +108,7 @@ GameLevel::GameLevel(GameData* game_data, const MenuLevelSettings& settings) :
 
 GameLevel::~GameLevel()
 {
+	this->data()->debug().detach_match(*this);
 	this->data()->viewport_manager()->set_layout(this->previous_layout_);
 }
 
@@ -147,6 +148,8 @@ void GameLevel::init()
 		this->data()->partitioner(),
 		this->data()->mouse());
 
+	// Content reloaded from the menus is swapped in by the first build.
+	this->data()->debug().attach_match(*this);
 	this->build_and_enter_level();
 }
 
@@ -159,6 +162,9 @@ void GameLevel::build_and_enter_level()
 	// Destroy the old level first: its destructor stops music in the shared bank
 	// and would otherwise stop the new level's track.
 	this->level_.reset();
+	// Every build - first, restart from a menu, or a debug rebuild - applies
+	// content `reload` validated and consumes a queued debug restart.
+	this->data()->debug().before_level_build();
 	this->level_ = this->level_builder_->build_level(this->settings_,
 		this->data()->save()->team_palette());
 
@@ -172,10 +178,16 @@ void GameLevel::build_and_enter_level()
 // leave the match's voices paused until the menu is also closed.
 void GameLevel::on_activated()
 {
-	if (!this->covered_)
+	if (this->audio_may_play())
 	{
 		this->level_->resume();
 	}
+}
+
+bool GameLevel::audio_may_play() const
+{
+	return !this->covered_ && this->context()->active() &&
+		!this->data()->debug().match_audio_paused();
 }
 void GameLevel::on_deactivated()
 {
@@ -187,6 +199,13 @@ void GameLevel::update(float dt)
 	// Check current focus because a state created in the background has not
 	// received a deactivation callback.
 	if (!this->context()->active())
+	{
+		return;
+	}
+
+	// Console key, F-key binds and queued debug requests, applied while no
+	// Level::update is on the call stack. Inert in Release.
+	if (this->data()->debug().before_match_update(*this))
 	{
 		return;
 	}
@@ -217,7 +236,8 @@ void GameLevel::update(float dt)
 		return;
 	}
 
-	this->level_->update(player_inputs, dt);
+	// One Level::update, or the debug clock's 0..4 fixed-dt updates.
+	this->data()->debug().update_match(*this, player_inputs, dt);
 }
 
 void GameLevel::draw(Renderer& renderer) const
@@ -226,6 +246,7 @@ void GameLevel::draw(Renderer& renderer) const
 	// its presentation on this thread before Scene::draw starts any workers.
 	this->level_->refresh_layout();
 	this->level_->draw(renderer);
+	this->data()->debug().draw_status(renderer);
 }
 
 void GameLevel::on_suspend()
@@ -238,7 +259,7 @@ void GameLevel::on_suspend()
 void GameLevel::on_resume()
 {
 	this->covered_ = false;
-	if (this->context()->active())
+	if (this->audio_may_play())
 	{
 		this->level_->resume();
 	}
@@ -331,4 +352,62 @@ int GameLevel::check_for_pause_input(
 		}
 	}
 	return -1;
+}
+
+const MenuLevelSettings& GameLevel::debug_settings() const
+{
+	return this->settings_;
+}
+
+void GameLevel::debug_rebuild(const MenuLevelSettings& plan, bool reset_session)
+{
+	this->settings_ = plan;
+	if (reset_session)
+	{
+		this->session_ = Session(plan.player_count() == 1 ? 1 : plan.best_of());
+	}
+	this->build_and_enter_level();
+}
+
+void GameLevel::debug_leave()
+{
+	this->leave_match(EndMenuAction::exit);
+}
+
+void GameLevel::debug_update_level(const std::vector<PlayerInputData>& inputs, float dt)
+{
+	this->level_->update(inputs, dt);
+}
+
+bool GameLevel::debug_level_finished() const
+{
+	return this->level_->state() == LevelState::finished;
+}
+
+void GameLevel::debug_sync_audio()
+{
+	if (this->audio_may_play())
+	{
+		this->level_->resume();
+	}
+	else
+	{
+		this->level_->suspend();
+	}
+}
+
+std::vector<std::string> GameLevel::debug_status() const
+{
+	std::vector<std::string> lines;
+	for (int view = 0; view < this->level_->player_count(); ++view)
+	{
+		const Player& player = this->level_->player(view);
+		const mattmath::Vector2F centre = player.center();
+		char position[64] = {};
+		std::snprintf(position, sizeof(position), "at (%.0f, %.0f) ",
+			static_cast<double>(centre.x), static_cast<double>(centre.y));
+		lines.push_back(position + player.player_move_state_string() +
+			(player.state() == PlayerState::dead ? " dead" : ""));
+	}
+	return lines;
 }

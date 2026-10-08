@@ -13,7 +13,7 @@ public:
 	ResultsMenuPage(MenuContext* context, const LevelEndInfo& end_info);
 	~ResultsMenuPage() override = default;
 	void init() override = 0;
-	void update(float dt) override = 0;
+	void update_page(float dt) override = 0;
 protected:
 	const ResultsMenuPresentation& look() const;
 
@@ -32,7 +32,7 @@ public:
 	ResultsMenuInitial(MenuContext* context, const LevelEndInfo& end_info,
 		const Session& session = Session());
 	void init() override;
-	void update(float dt) override;
+	void update_page(float dt) override;
 private:
 	Session session_;
 	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> details_;

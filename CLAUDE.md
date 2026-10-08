@@ -50,6 +50,26 @@ cmake --build --preset x64-debug
 out/build/x64-debug/game/ColourWars.exe
 ```
 
+### Developer console (Debug only)
+
+Debug builds take launch arguments and have a console; Release compiles out the
+console, registry, commands and binds (an unreachable `DebugMatchTarget`
+interface and its `GameLevel` adapters remain, so no layout depends on `_DEBUG`). Full reference: [docs/debug-console.md](docs/debug-console.md).
+
+```
+out/build/x64-debug/game/ColourWars.exe +stage movement_course +players 4 +visual posed
+```
+
+Each `+name` starts a statement; the match starts without menu navigation. In a
+match **`** opens the console (the match freezes while it is open; Escape
+closes), **F5** restart, **F6** pause, **F7** step, **F8** cycle the Movement
+Course art, **F9** toggle movement feedback. `help` lists the commands. The gate
+`COLOURWARS_DEV_TOOLS` comes from `_DEBUG` in `game/debug/dev_tools.h` - never a
+`/D` flag, so the acceptance probes agree on class layouts - and no existing
+class has a member that depends on it. Code is in `game/debug/`; the CPU case is
+`scripts/acceptance/debug_console.cpp`, which also checks that the Release
+executable carries none of the console's RTTI names.
+
 The build mirrors `game/content/` beside the exe (the `colourwars_content`
 target, which runs every build so asset-only edits are picked up), so the game
 runs from anywhere. It resolves content beside the executable, not against the
@@ -130,11 +150,12 @@ are historical, not current.
 ### Service bag, not globals
 
 [game/game_data.h](game/game_data.h) — `GameData` is handed to every state,
-object and drawable at construction. It holds exactly six borrowed pointers: the
+object and drawable at construction. It holds exactly seven borrowed pointers: the
 engine `Application`, this game's `Save`, the level registry, the stage list, the
-tuning and the presentation. Everything else that looks like a service
+tuning, the presentation and the developer `DebugDirector` (inert in Release, and
+`DebugDirector::inert()` when unset). Everything else that looks like a service
 (`ThreadPool`, `Gamepads`, `RenderResources`, …) is a forward to the shell. All
-six are owned by `wWinMain` in [game/main.cpp](game/main.cpp) and declared above
+seven are owned by `wWinMain` in [game/main.cpp](game/main.cpp) and declared above
 the `Application`, so they outlive every state that borrows them.
 
 ### State stack

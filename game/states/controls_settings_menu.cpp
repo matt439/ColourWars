@@ -108,7 +108,7 @@ void ControlsSettingsMenu::close()
 	this->context()->pop();
 }
 
-void ControlsSettingsMenu::update(float /*dt*/)
+void ControlsSettingsMenu::update_page(float /*dt*/)
 {
 	if (!this->context()->active())
 	{

@@ -32,6 +32,16 @@ void GameData::set_presentation(const Presentation* presentation)
 	this->presentation_ = presentation;
 }
 
+void GameData::set_debug(DebugDirector* debug)
+{
+	this->debug_ = debug;
+}
+
+DebugDirector& GameData::debug() const
+{
+	return this->debug_ != nullptr ? *this->debug_ : DebugDirector::inert();
+}
+
 Application* GameData::application() const
 {
 	return this->application_;

@@ -22,6 +22,20 @@ MenuPage::MenuPage(MenuContext* context) :
 	this->brand_font_ = this->render_resources()->resolve_sprite_font(style.brand_font);
 }
 
+void MenuPage::update(float dt)
+{
+	if (this->data()->debug().before_page_update(*this))
+	{
+		return;
+	}
+	this->update_page(dt);
+}
+
+bool MenuPage::debug_start_match(const MenuLevelSettings& /*plan*/)
+{
+	return false;
+}
+
 // Add keyboard equivalents to the shared pad labels. Keep these mappings
 // in sync with MenuInput; Left/Right already describes keyboard navigation.
 void MenuPage::set_prompts(const std::vector<PromptBar::Prompt>& prompts)

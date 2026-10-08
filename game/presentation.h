@@ -343,6 +343,11 @@ public:
 	const WorkshopPlayerPresentation& workshop_player() const;
 	const DebugOverlayPresentation& debug_overlay() const;
 
+	// The developer console's live feedback toggle. The only mutator: only
+	// the Debug director holds a non-const Presentation. MovementFeedback reads
+	// the flag every frame, so the change applies immediately.
+	void set_movement_feedback_enabled(bool enabled);
+
 private:
 	std::string source_path_;
 	MenuStyle menu_;

@@ -20,6 +20,14 @@ MainMenuPage::MainMenuPage(MenuContext* context) :
 	this->music_ = this->resolve_effect(look.music.name);
 }
 
+bool MainMenuPage::debug_start_match(const MenuLevelSettings& plan)
+{
+	this->stop_effect(this->music_, true);
+	*this->level_settings() = plan;
+	this->context()->pop();
+	return true;
+}
+
 const MainMenuPresentation& MainMenuPage::look() const
 {
 	return this->presentation().main_menu();
@@ -101,7 +109,7 @@ MainMenuTitle::MainMenuTitle(MenuContext* context) :
 
 }
 
-void MainMenuTitle::update(float /*dt*/)
+void MainMenuTitle::update_page(float /*dt*/)
 {
 	if (this->context()->active())
 	{
@@ -203,7 +211,7 @@ MainMenuHome::MainMenuHome(MenuContext* context) :
 
 }
 
-void MainMenuHome::update(float /*dt*/)
+void MainMenuHome::update_page(float /*dt*/)
 {
 	// Read focus for each device so later inputs see earlier navigation
 	// from the same frame.
@@ -334,7 +342,7 @@ MainMenuOptions::MainMenuOptions(MenuContext* context) :
 
 }
 
-void MainMenuOptions::update(float /*dt*/)
+void MainMenuOptions::update_page(float /*dt*/)
 {
 	for (const ProcessedMenuInput& input : this->menu_inputs())
 	{
@@ -696,7 +704,7 @@ MainMenuModeSelect::MainMenuModeSelect(MenuContext* context) :
 
 }
 
-void MainMenuModeSelect::update(float /*dt*/)
+void MainMenuModeSelect::update_page(float /*dt*/)
 {
 	for (const ProcessedMenuInput& input : this->menu_inputs())
 	{
@@ -844,7 +852,7 @@ MainMenuPlayerCount::MainMenuPlayerCount(MenuContext* context) :
 {
 
 }
-void MainMenuPlayerCount::update(float /*dt*/)
+void MainMenuPlayerCount::update_page(float /*dt*/)
 {
 	if (!this->context()->active())
 	{
@@ -1071,7 +1079,7 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 		L"Press A / Enter on each device to join. Reconnect reserved pads.");
 }
 
-void MainMenuJoin::update(float /*dt*/)
+void MainMenuJoin::update_page(float /*dt*/)
 {
 	if (!this->context()->active())
 	{
@@ -1144,7 +1152,7 @@ MainMenuTeamSelect::MainMenuTeamSelect(MenuContext* context) :
 
 }
 
-void MainMenuTeamSelect::update(float /*dt*/)
+void MainMenuTeamSelect::update_page(float /*dt*/)
 {
 	const std::vector<ProcessedMenuInput> inputs =
 		this->input()->player_inputs(*this->level_settings());
@@ -1486,7 +1494,7 @@ MainMenuWeaponSelect::MainMenuWeaponSelect(MenuContext* context) :
 
 }
 
-void MainMenuWeaponSelect::update(float /*dt*/)
+void MainMenuWeaponSelect::update_page(float /*dt*/)
 {
 	const std::vector<ProcessedMenuInput> inputs =
 		this->input()->player_inputs(*this->level_settings());
@@ -1819,7 +1827,7 @@ MainMenuStageSelect::MainMenuStageSelect(MenuContext* context) :
 
 }
 
-void MainMenuStageSelect::update(float /*dt*/)
+void MainMenuStageSelect::update_page(float /*dt*/)
 {
 	const std::vector<ProcessedMenuInput> inputs =
 		this->input()->player_inputs(*this->level_settings());

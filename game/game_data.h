@@ -7,6 +7,7 @@
 #include "game/save.h"
 #include "game/presentation.h"
 #include "game/tuning.h"
+#include "game/debug/debug_director.h"
 
 // Borrowed application and game services shared with states and objects.
 // wWinMain owns the game data before Application, so it remains valid during
@@ -22,6 +23,7 @@ public:
     void set_stages(const StageList* stages);
     void set_tuning(const GameTuning* tuning);
     void set_presentation(const Presentation* presentation);
+    void set_debug(DebugDirector* debug);
 
     // Game-owned services.
     Save* save() const;
@@ -35,6 +37,10 @@ public:
 
     // Presentation settings loaded at startup and shared by menus and HUDs.
     const Presentation* presentation() const;
+
+    // Developer tools (console, launch arguments, debug clock). Inert in
+    // Release, and inert when no director was set.
+    DebugDirector& debug() const;
 
     // Application and its services remain valid while its states use them.
     labrador::Application* application() const;
@@ -58,4 +64,5 @@ private:
     const StageList* stages_ = nullptr;
     const GameTuning* tuning_ = nullptr;
     const Presentation* presentation_ = nullptr;
+    DebugDirector* debug_ = nullptr;
 };

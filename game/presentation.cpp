@@ -756,3 +756,8 @@ const DebugOverlayPresentation& Presentation::debug_overlay() const
 {
 	return this->debug_overlay_;
 }
+
+void Presentation::set_movement_feedback_enabled(bool enabled)
+{
+	this->movement_feedback_.enabled = enabled;
+}

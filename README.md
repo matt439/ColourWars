@@ -134,6 +134,18 @@ The game runs from its own output directory, which the build fills with
 `game/content/` — so `out/build/x64-debug/game/ColourWars.exe` runs from
 anywhere.
 
+Debug builds also take developer launch arguments and have a console, for
+reviewing without walking the menus:
+
+```
+out/build/x64-debug/game/ColourWars.exe +stage movement_course +players 4 +visual posed
+```
+
+In a match, **`** opens the console, **F5** restarts, **F6** pauses, **F7**
+steps, **F8** cycles the Movement Course art and **F9** toggles movement
+feedback. Release ignores `+` arguments and contains none of it. See
+[the developer console](docs/debug-console.md).
+
 There is no `ctest` step here: the engine's test suite lives with
 the engine. Labrador puts its tests, its benchmark and its sample behind
 `PROJECT_IS_TOP_LEVEL`, so consuming it as a submodule brings in the library

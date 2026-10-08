@@ -10,6 +10,7 @@
 #include "game/states/main_menu.h"
 #include "game/states/end_menu.h"
 #include "game/objects/player_input.h"
+#include "game/debug/debug_targets.h"
 
 // Stack shapes during a session:
 //
@@ -45,8 +46,9 @@ private:
 	GameData* data() const;
 };
 
-// A match or series, with a fresh Level for each round.
-class GameLevel final : public labrador::State
+// A match or series, with a fresh Level for each round. The developer tools
+// reach it only through DebugMatchTarget, from hooks at the top of update().
+class GameLevel final : public labrador::State, private DebugMatchTarget
 {
 public:
 	GameLevel(GameData* game_data, const MenuLevelSettings& settings);
@@ -84,8 +86,24 @@ private:
 	// Restored by the destructor.
 	labrador::ScreenLayout previous_layout_ = labrador::ScreenLayout::one_player;
 
-	// Sets the layout before building a level, including every restart.
+	// Sets the layout before building a level, including every restart. The
+	// one build path: between destroying the old level and building the new
+	// one it lets the debug director apply reloaded content (no-op in Release).
 	void build_and_enter_level();
+
+	// Voices play only when nothing covers the match, the window is active
+	// and the debug clock is not paused.
+	bool audio_may_play() const;
+
+	// DebugMatchTarget, for the developer tools only.
+	const MenuLevelSettings& debug_settings() const override;
+	void debug_rebuild(const MenuLevelSettings& plan, bool reset_session) override;
+	void debug_leave() override;
+	void debug_update_level(const std::vector<PlayerInputData>& inputs,
+		float dt) override;
+	bool debug_level_finished() const override;
+	void debug_sync_audio() override;
+	std::vector<std::string> debug_status() const override;
 
 	void open_pause_menu(int player_num);
 	void on_pause_menu_closed(const PauseMenuAction& action);

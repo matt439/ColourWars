@@ -9,6 +9,17 @@ captures movement feedback on and off while the camera moves. The candidates
 remain selectable comparisons. No human keyboard/mouse or controller review has
 taken place, so the plan's visual and movement decisions are still open.
 
+## Try it
+
+From a Debug build:
+
+```powershell
+out/build/x64-debug/game/ColourWars.exe +stage movement_course +players 4 +visual posed
+```
+
+**F8** cycles original -> rotating -> posed, **F9** toggles movement feedback,
+**F6**/**F7** pause and step. See [the developer console](debug-console.md).
+
 ## Visual refinements
 
 All three Movement Course presentations remain: **Original art**,

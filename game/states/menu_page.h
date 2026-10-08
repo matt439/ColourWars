@@ -25,8 +25,15 @@ class MenuPage : public labrador::State, public labrador::SoundBankObject
 public:
 	explicit MenuPage(MenuContext* context);
 	~MenuPage() override = default;
-	void update(float dt) override = 0;
+
+	// Gives the developer tools first look (the console key, a match queued by
+	// the console or launch arguments), then runs the page's own update_page.
+	void update(float dt) final;
 	void init() override = 0;
+
+	// Debug hook: may this page be dismissed so a queued match starts with
+	// `plan`? Only main-menu pages, whose frame starts a match on close, say yes.
+	virtual bool debug_start_match(const MenuLevelSettings& plan);
 
 	// Draw textures, text, and optional prompts once in fullscreen stack order.
 	void draw(labrador::Renderer& renderer) const override;
@@ -34,6 +41,8 @@ public:
 	// Let the state stack draw the match and menus beneath this page.
 	bool covers_screen() const override { return false; }
 protected:
+	virtual void update_page(float dt) = 0;
+
 	mattmath::Vector2F widget_position() const;
 	mattmath::Vector2F widget_size() const;
 	mattmath::Vector2F widget_spacing() const;

@@ -80,6 +80,11 @@ public:
 
 	LevelState state() const;
 
+	// Read-only views for developer status; the index is the view, not the
+	// player's input slot (see players_).
+	int player_count() const;
+	const Player& player(int view) const;
+
 	LevelEndInfo level_end_info() const;
 
 private:

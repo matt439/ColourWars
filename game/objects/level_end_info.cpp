@@ -115,6 +115,11 @@ std::wstring LevelEndInfo::winning_team_string() const
 
 std::wstring LevelEndInfo::player_percentage_string(int slot) const
 {
+	// An idle seat (slot -1, from the debug `players` command) owns no paint.
+	if (slot < 0 || static_cast<size_t>(slot) >= this->player_areas.size())
+	{
+		return percentage_string(0.0f);
+	}
 	return percentage_string(this->total_area > 0.0f ?
 		100.0f * this->player_areas.at(static_cast<size_t>(slot)) / this->total_area : 0.0f);
 }

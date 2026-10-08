@@ -30,8 +30,12 @@ public:
 	explicit MainMenuPage(MenuContext* context);
 	~MainMenuPage() override = default;
 	void init() override = 0;
-	void update(float dt) override = 0;
+
+	// Every main-menu page is inside GameMenu's frame, which starts a match
+	// with the shared settings when it pops: write the plan there and pop.
+	bool debug_start_match(const MenuLevelSettings& plan) override;
 protected:
+	void update_page(float dt) override = 0;
 	const MainMenuPresentation& look() const;
 
 	int player_count() const;
@@ -57,7 +61,7 @@ class MainMenuTitle final : public MainMenuPage
 {
 public:
 	explicit MainMenuTitle(MenuContext* context);
-	void update(float dt) override;
+	void update_page(float dt) override;
 	void init() override;
 private:
 	std::unique_ptr<labrador::UiTextDropShadow> subtitle_;
@@ -74,7 +78,7 @@ class MainMenuHome final : public MainMenuPage
 {
 public:
 	explicit MainMenuHome(MenuContext* context);
-	void update(float dt) override;
+	void update_page(float dt) override;
 	void init() override;
 private:
 	std::unique_ptr<labrador::UiTextDropShadow> subtitle_;
@@ -89,7 +93,7 @@ class MainMenuOptions final : public MainMenuPage
 {
 public:
 	explicit MainMenuOptions(MenuContext* context);
-	void update(float dt) override;
+	void update_page(float dt) override;
 	void init() override;
 private:
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
@@ -124,7 +128,7 @@ class MainMenuModeSelect final : public MainMenuPage
 {
 public:
 	explicit MainMenuModeSelect(MenuContext* context);
-	void update(float dt) override;
+	void update_page(float dt) override;
 	void init() override;
 private:
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
@@ -140,7 +144,7 @@ class MainMenuPlayerCount final : public MainMenuPage
 {
 public:
 	explicit MainMenuPlayerCount(MenuContext* context);
-	void update(float dt) override;
+	void update_page(float dt) override;
 	void init() override;
 private:
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
@@ -160,7 +164,7 @@ class MainMenuJoin final : public MainMenuPage
 {
 public:
 	explicit MainMenuJoin(MenuContext* context);
-	void update(float dt) override;
+	void update_page(float dt) override;
 	void init() override;
 private:
 	void refresh_players(const std::vector<ProcessedMenuInput>& inputs);
@@ -174,7 +178,7 @@ class MainMenuTeamSelect final : public MainMenuPage
 {
 public:
 	explicit MainMenuTeamSelect(MenuContext* context);
-	void update(float dt) override;
+	void update_page(float dt) override;
 	void init() override;
 private:
 	struct TeamSelectState
@@ -218,7 +222,7 @@ class MainMenuWeaponSelect final : public MainMenuPage
 {
 public:
 	explicit MainMenuWeaponSelect(MenuContext* context);
-	void update(float dt) override;
+	void update_page(float dt) override;
 	void init() override;
 private:
 	struct SelectState
@@ -251,7 +255,7 @@ class MainMenuStageSelect final : public MainMenuPage
 {
 public:
 	explicit MainMenuStageSelect(MenuContext* context);
-	void update(float dt) override;
+	void update_page(float dt) override;
 	void init() override;
 private:
 	// Stage slots are followed by Random, which is not a stage-list entry.

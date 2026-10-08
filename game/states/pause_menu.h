@@ -21,7 +21,7 @@ public:
 	PauseMenuPage(MenuContext* context, int player_num);
 	~PauseMenuPage() override = default;
 	void init() override = 0;
-	void update(float dt) override = 0;
+	void update_page(float dt) override = 0;
 protected:
 	const PauseMenuPresentation& look() const;
 
@@ -55,7 +55,7 @@ class PauseMenuInitial final : public PauseMenuPage
 public:
 	PauseMenuInitial(MenuContext* context, int player_num);
 	void init() override;
-	void update(float dt) override;
+	void update_page(float dt) override;
 private:
 	void refresh_connections();
 	bool waiting_for_players_ = false;
@@ -74,7 +74,7 @@ public:
 	PauseMenuConfirmation(MenuContext* context, int player_num,
 		ConfirmationType type);
 	void init() override;
-	void update(float dt) override;
+	void update_page(float dt) override;
 private:
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> player_num_ = nullptr;

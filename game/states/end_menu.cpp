@@ -28,7 +28,7 @@ EndMenuInitial::EndMenuInitial(MenuContext* context, const Session& session) :
 
 }
 
-void EndMenuInitial::update(float /*dt*/)
+void EndMenuInitial::update_page(float /*dt*/)
 {
 	for (const ProcessedMenuInput& input : this->menu_inputs())
 	{

@@ -8,19 +8,29 @@ controller-feel acceptance or an accepted arena.
 
 ## Try it
 
-Build and start the game normally. Choose **Movement Course** on the arena page.
-Before locking the arena, use **Up/Down** on keyboard or controller to cycle:
+From a Debug build, start the comparison directly:
+
+```powershell
+out/build/x64-debug/game/ColourWars.exe +stage movement_course +visual posed
+```
+
+In the match, **F8** cycles the three presentations (rebuilding the round) and
+**F9** toggles movement feedback; add `+players 4` for four panes on one
+keyboard. See [the developer console](debug-console.md). In any build the same
+choice is on the arena page: choose **Movement Course** and use **Up/Down**
+before locking it.
 
 - **Original art**: the existing player, weapon and terrain presentation.
-- **Workshop / rotating tool**: the new painter and continuously rotated sprayer.
-- **Workshop / posed tool**: the same painter with five authored sprayer directions,
-  mirrored for the opposite side.
+- **Workshop / rotating tool** (`visual rotating`): the new painter and
+  continuously rotated sprayer.
+- **Workshop / posed tool** (`visual posed`): the same painter with five authored
+  sprayer directions, mirrored for the opposite side.
 
 Both workshop choices use the directly authored roller pose. Other weapons remain
 available with their existing tool artwork. The choice persists through restart
 and rematch for that setup, but is not a saved global preference. Other stages
-ignore it, and Random still excludes the course. Return to arena selection to
-change the comparison; simulation aim remains continuous in all three choices.
+ignore it, and Random still excludes the course. Simulation aim remains
+continuous in all three choices.
 
 ## Artwork and attachment
 

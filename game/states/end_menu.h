@@ -13,7 +13,7 @@ public:
 	explicit EndMenuPage(MenuContext* context);
 	~EndMenuPage() override = default;
 	void init() override = 0;
-	void update(float dt) override = 0;
+	void update_page(float dt) override = 0;
 protected:
 	const EndMenuPresentation& look() const;
 
@@ -27,7 +27,7 @@ class EndMenuInitial final : public EndMenuPage
 public:
 	explicit EndMenuInitial(MenuContext* context, const Session& session = Session());
 	void init() override;
-	void update(float dt) override;
+	void update_page(float dt) override;
 private:
 	Session session_;
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;

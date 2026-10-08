@@ -18,6 +18,8 @@ mono_crash.*
 
 # Build results
 [Dd]ebug/
+# ...but game/debug/ is the developer console's source, not a build result.
+!game/debug/
 [Dd]ebugPublic/
 [Rr]elease/
 [Rr]eleases/
