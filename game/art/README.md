@@ -1,5 +1,10 @@
 # Weapon artwork
 
+The next art direction is recorded in the
+[workshop style candidate](../../docs/polish-style-reference.md). Its concept
+image and prompt live in `polish/`, outside runtime content; the existing atlases
+below remain in use until their pixel-art replacements are authored and reviewed.
+
 `weapon_paint_source.png` is the original transparent sprite sheet generated
 with the built-in imagegen tool. `weapon_paint_prompt.txt` records the prompt.
 Keep this authoring source outside runtime content.

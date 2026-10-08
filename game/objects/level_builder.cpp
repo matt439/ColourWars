@@ -30,7 +30,7 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 {
 	this->preferences_ = preferences;
 	this->team_colour_ = std::make_unique<TeamColourTools>();
-	this->player_builder_ = std::make_unique<PlayerBuilder>(tuning);
+	this->player_builder_ = std::make_unique<PlayerBuilder>(tuning, presentation);
 
 	this->level_object_builder_ = std::make_unique<LevelObjectBuilder>(
 		this->render_resources_, this->audio_resources_, this->preferences_,

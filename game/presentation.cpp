@@ -41,6 +41,14 @@ namespace
 		return Vector2F(read_positive(vector, "x"), read_positive(vector, "y"));
 	}
 
+	MovementBurstPresentation read_movement_burst(const JsonValue& parent,
+		const char* key)
+	{
+		const JsonValue json = parent.object(key);
+		return { read_positive(json, "duration"), read_positive(json, "spread"),
+			read_positive(json, "lift"), read_positive(json, "particle_size") };
+	}
+
 	bool is_hex_colour(const std::string& text)
 	{
 		if (text.length() != 6 && text.length() != 8)
@@ -401,6 +409,28 @@ Presentation::Presentation(const char* path)
 	this->prompt_bar_ = read_prompt_bar(root);
 	this->hud_ = read_hud(root);
 	this->camera_.reference_height = read_positive(root.object("camera"), "reference_height");
+	const JsonValue movement = root.object("movement_feedback");
+	MovementFeedbackPresentation& feedback = this->movement_feedback_;
+	feedback.enabled = movement.boolean("enabled");
+	feedback.sprite_sheet = movement.string("sprite_sheet");
+	feedback.fill_frame = movement.string("fill_frame");
+	feedback.colour = read_colour(movement, "colour");
+	feedback.highlight = read_colour(movement, "highlight");
+	feedback.pixel_size = read_positive(movement, "pixel_size");
+	feedback.landing_min_speed = read_positive(movement, "landing_min_speed");
+	feedback.full_impact_speed = read_positive(movement, "full_impact_speed");
+	feedback.minimum_strength = read_positive(movement, "minimum_strength");
+	feedback.takeoff = read_movement_burst(movement, "takeoff");
+	feedback.landing = read_movement_burst(movement, "landing");
+	if (feedback.minimum_strength > 1.0f ||
+		feedback.full_impact_speed < feedback.landing_min_speed ||
+		feedback.takeoff.particle_size < feedback.pixel_size ||
+		feedback.landing.particle_size < feedback.pixel_size)
+	{
+		throw std::runtime_error(movement.where() +
+			": strength must be at most one, full impact speed must cover minimum speed, "
+			"and particles must be at least one presentation pixel.");
+	}
 	const JsonValue match = root.object("match");
 	this->match_.reference_size = read_positive_vector(match, "reference_size");
 	this->match_.countdown_size = read_positive_vector(match, "countdown_size");
@@ -439,6 +469,11 @@ const CameraPresentation& Presentation::camera() const
 	return this->camera_;
 }
 
+const MovementFeedbackPresentation& Presentation::movement_feedback() const
+{
+	return this->movement_feedback_;
+}
+
 void Presentation::validate_resources(const RenderResources& render,
 	const AudioResources& audio) const
 {
@@ -461,6 +496,8 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.font("hud.player_identity.font", this->hud_.player_identity_font);
 	check.font("hud.respawn_timer.font", this->hud_.respawn_font);
 	check.frame("hud.fill_frame", this->hud_.sprite_sheet, this->hud_.fill_frame);
+	check.frame("movement_feedback.fill_frame", this->movement_feedback_.sprite_sheet,
+		this->movement_feedback_.fill_frame);
 	const Vector2F heading_size = render.measure_text(
 		render.resolve_sprite_font(this->menu_.detail_font), L"GET READY");
 	const float heading_scale = std::min(1.0f,

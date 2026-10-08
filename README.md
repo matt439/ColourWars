@@ -149,9 +149,15 @@ These commands configure/build the game, then compile small native checks
 against its actual objects. They cover full-cost ammunition and held-fire
 recovery, exposed paint surfaces and ownership, settings persistence and
 write-failure recovery, camera framing and aiming, jump buffering and ledge grace,
+takeoff/landing feedback events and lifetime,
 and stage eligibility for Random. They use no graphics device or speaker and isolate
 all save writes. Evidence stays under `out/acceptance/<preset>/`. CI runs the
 same checks; `-SkipBuild` is for an already-current build.
+
+For paired GPU captures of the takeoff/landing prototype, run
+`./scripts/check-movement-feedback.ps1 -Preset x64-debug -SkipBuild`.
+It uses a hidden D3D11 hardware window, scripted jumps and isolated profile;
+see [feedback evidence and limitations](docs/polish-feedback.md).
 
 Check runtime startup separately, preferably against the extracted Release ZIP:
 

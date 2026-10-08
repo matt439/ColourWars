@@ -21,6 +21,7 @@ add_executable(ColourWars WIN32
     objects/level_end_info.cpp
     objects/level_loaded_info.cpp
     objects/level_object_builder.cpp
+    objects/movement_feedback.cpp
     objects/paint_tile.cpp
     objects/player.cpp
     objects/player_builder.cpp

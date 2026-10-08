@@ -23,8 +23,8 @@ namespace
 	}
 }
 
-PlayerBuilder::PlayerBuilder(const GameTuning* tuning) :
-	tuning_(tuning)
+PlayerBuilder::PlayerBuilder(const GameTuning* tuning, const Presentation* presentation) :
+	tuning_(tuning), presentation_(presentation)
 {
     this->weapon_builder_ = std::make_unique<WeaponBuilder>();
 }
@@ -67,6 +67,7 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 		auto player = std::make_unique<Player>(
 			rect,
 			this->tuning_,
+			&this->presentation_->movement_feedback(),
 			render_resources,
 			audio_resources,
 			preferences,

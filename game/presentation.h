@@ -294,6 +294,30 @@ struct DebugOverlayPresentation
 	float shadow_scale = 1.0f;
 };
 
+struct MovementBurstPresentation
+{
+	float duration = 0.0f;
+	float spread = 0.0f;
+	float lift = 0.0f;
+	float particle_size = 0.0f;
+};
+
+// Cosmetic world-space movement cues; none of these values affect physics.
+struct MovementFeedbackPresentation
+{
+	bool enabled = true;
+	std::string sprite_sheet;
+	std::string fill_frame;
+	labrador::Colour colour;
+	labrador::Colour highlight;
+	float pixel_size = 0.0f;
+	float landing_min_speed = 0.0f;
+	float full_impact_speed = 0.0f;
+	float minimum_strength = 0.0f;
+	MovementBurstPresentation takeoff;
+	MovementBurstPresentation landing;
+};
+
 // Presentation settings parsed once at startup.
 class Presentation
 {
@@ -314,6 +338,7 @@ public:
 	const HudPresentation& hud() const;
 	const MatchPresentation& match() const;
 	const CameraPresentation& camera() const;
+	const MovementFeedbackPresentation& movement_feedback() const;
 	const DebugOverlayPresentation& debug_overlay() const;
 
 private:
@@ -328,5 +353,6 @@ private:
 	HudPresentation hud_;
 	MatchPresentation match_;
 	CameraPresentation camera_;
+	MovementFeedbackPresentation movement_feedback_;
 	DebugOverlayPresentation debug_overlay_;
 };

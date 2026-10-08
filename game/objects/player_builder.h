@@ -13,7 +13,7 @@ class PlayerBuilder
 {
 public:
 	// `tuning` is borrowed and outlives every player this makes.
-	explicit PlayerBuilder(const GameTuning* tuning);
+	PlayerBuilder(const GameTuning* tuning, const Presentation* presentation);
 
 	// Return players in settings order, which also determines their view indices.
 	std::vector<std::unique_ptr<Player>> build_players(
@@ -26,6 +26,7 @@ public:
 		const labrador::ViewportManager* viewport_manager) const;
 private:
 	const GameTuning* tuning_ = nullptr;
+	const Presentation* presentation_ = nullptr;
 
 	std::unique_ptr<WeaponBuilder> weapon_builder_ = nullptr;
 };

@@ -7,6 +7,7 @@
 #include "game/objects/player_team.h"
 #include "game/objects/player_input_data.h"
 #include "game/objects/weapon.h"
+#include "game/objects/movement_feedback.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/shape.h"
 #include "engine/math/vector2f.h"
@@ -53,11 +54,12 @@ class Player final : public labrador::MovingObject,
                      public labrador::AnimationObject, public labrador::TextureObject
 {
 public:
-    // Borrowed tuning must outlive the player. The builder supplies the spawn
+    // Borrowed tuning and movement presentation must outlive the player. The builder supplies the spawn
     // rectangle; tuning supplies movement and health parameters.
     // secondary is currently accepted but ignored; players carry one weapon.
     Player(const mattmath::RectangleF& rectangle,
         const GameTuning* tuning,
+        const MovementFeedbackPresentation* movement_feedback,
         labrador::RenderResources* render_resources,
         const labrador::AudioResources* audio_resources,
         const PlaySettings* preferences,
@@ -96,6 +98,7 @@ public:
     // Finish the contact phase and detect loss of ground support after all
     // contacts have been dispatched.
     void end_contacts();
+    const MovementFeedback& movement_feedback() const;
 
 	void set_player_input(const PlayerInputData& input);
     // Context changes discard queued jumps and require a release before a new
@@ -147,6 +150,12 @@ private:
 
     // Borrowed, never null. Includes player movement/health and projectile damage tuning.
     const GameTuning* tuning_ = nullptr;
+
+    MovementFeedback movement_feedback_;
+    bool had_ground_support_ = false;
+    bool landing_feedback_ready_ = false;
+    float support_impact_speed_ = 0.0f;
+    mattmath::Vector2F support_position_;
 
     const PlayerTuning& player_tuning() const;
 
@@ -202,10 +211,12 @@ private:
 	void on_projectile_contact(CollisionObjectType other_type);
 
 	// Resolve flat surfaces using the contact normal and penetration depth.
-	void on_structure_contact(const mattmath::Vector2F& normal,
+	void on_structure_contact(const labrador::CollisionObject& other,
+		const mattmath::Vector2F& normal,
 		float penetration);
 
 	void on_ramp_contact(CollisionObjectType other_type,
+		const labrador::CollisionObject& other,
 		const mattmath::Vector2F& normal, float penetration);
 
 	void on_jump_through_contact(const labrador::CollisionObject& other);

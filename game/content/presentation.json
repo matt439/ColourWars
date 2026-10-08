@@ -255,6 +255,21 @@
     "reference_height": 1080.0
   },
 
+  "movement_feedback": {
+    "_comment": "Prototype neutral motion puffs, in world units. Disable for comparisons. No scored paint or audio.",
+    "enabled": true,
+    "sprite_sheet": "sprite_sheet_1",
+    "fill_frame": "pixel",
+    "colour": "B3BDC6",
+    "highlight": "E5E9E8",
+    "pixel_size": 2.0,
+    "landing_min_speed": 60.0,
+    "full_impact_speed": 1000.0,
+    "minimum_strength": 0.45,
+    "takeoff": { "duration": 0.22, "spread": 24.0, "lift": 14.0, "particle_size": 8.0 },
+    "landing": { "duration": 0.30, "spread": 38.0, "lift": 10.0, "particle_size": 10.0 }
+  },
+
   "match": {
     "reference_size": { "x": 1920.0, "y": 1080.0 },
     "countdown_size": { "x": 360.0, "y": 310.0 },

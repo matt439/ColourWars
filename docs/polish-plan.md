@@ -1,13 +1,18 @@
 # ColourWars polish and level-design plan
 
-Status: implementation started on 2026-10-08. The first camera/movement foundation
-is implemented; the art, movement-feel and arena acceptance gates remain open.
+Status: implementation started on 2026-10-08. Camera/movement foundations and a
+takeoff/landing feedback prototype are implemented. A workshop style candidate
+is retained; the art, movement-feel and arena acceptance gates remain open.
 Direction agreed on 2026-10-08. Source baseline: game revision `13e9960`.
 
 First increment: resolution-independent camera framing, configurable jump buffering
 and ledge grace, and an explicitly selectable Movement Course (excluded from Random).
 See [implementation and evidence](polish-foundation.md) and
 [course routes and remaining trials](polish-movement-course.md).
+
+Second increment: [movement feedback and evidence](polish-feedback.md), plus
+[the workshop style candidate and grid/framing study](polish-style-reference.md).
+The generated reference is concept art, not a runtime atlas or accepted arena.
 
 ## Goal and direction
 
@@ -517,9 +522,11 @@ slice, record the client exhibit in [engine reports](review/engine-reports.md) a
 handle the engine change in Labrador. Balance numbers belong in tuning, presentation
 choices in presentation data, and arena layout and decoration in level data.
 
-The next implementation task is to build the pixel-art composition against the
-new display framing, prototype takeoff/landing feedback, and review the Movement
-Course with keyboard/mouse and physical controllers. Record the visual and movement
+The next implementation task is to turn the retained workshop candidate into a
+small editable, grid-exact character/tool/platform kit and a reproducible atlas,
+then review that composition under the real display framing. Compare the
+takeoff/landing prototype in the Movement Course with keyboard/mouse and physical
+controllers, including camera motion and aim sweeps. Record the visual and movement
 decisions before building the first Close Quarters blockout against those rules.
 Progress is gated by the exit conditions above, with each completed increment small
 enough to review, validate and commit independently.

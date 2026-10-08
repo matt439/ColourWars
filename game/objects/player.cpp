@@ -15,6 +15,7 @@ namespace
 
 Player::Player(const RectangleF& rectangle,
     const GameTuning* tuning,
+    const MovementFeedbackPresentation* movement_feedback,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
     const PlaySettings* preferences,
@@ -39,6 +40,7 @@ Player::Player(const RectangleF& rectangle,
                   tuning->player().idle.uniform_texture,
                   render_resources, team_colour, rotation, origin, flip, layer_depth),
     tuning_(tuning),
+    movement_feedback_(movement_feedback, render_resources),
     primary_(std::move(primary_weapon)),
     player_num_(player_num),
     team_(team),
@@ -117,6 +119,7 @@ void Player::draw(DrawList& draw_list) const
         this->AnimationObject::colour(), flip);
 
     this->primary_->draw(draw_list, this->showing_debug_);
+    this->movement_feedback_.draw(draw_list);
 }
 CollisionObjectType Player::collision_type() const
 {
@@ -186,14 +189,38 @@ void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
     }
     if (is_structure_ramp(other_type))
     {
-        this->on_ramp_contact(other_type, normal, penetration);
+        this->on_ramp_contact(other_type, other, normal, penetration);
         return;
     }
-    this->on_structure_contact(normal, penetration);
+    this->on_structure_contact(other, normal, penetration);
 }
 void Player::end_contacts()
 {
     const PlayerMoveState move_state = this->move_state();
+
+    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f)
+    {
+        // Contact order must not leave a landing puff from a fatal impact.
+        this->movement_feedback_.clear();
+        this->had_ground_support_ = false;
+        this->landing_feedback_ready_ = false;
+    }
+    else
+    {
+        if (this->supported_this_tick_)
+        {
+            // Suppress the first settling contact after spawn. Thereafter only
+            // a real unsupported-to-supported transition can land, including a
+            // drop or a walked-off ledge. Ground/ramp seams remain quiet.
+            if (!this->had_ground_support_ && this->landing_feedback_ready_)
+            {
+                this->movement_feedback_.land(this->support_position_,
+                    this->support_impact_speed_);
+            }
+            this->landing_feedback_ready_ = true;
+        }
+        this->had_ground_support_ = this->supported_this_tick_;
+    }
 
     // Only a resolving ground contact maintains support. Track ceiling contact
     // separately so a head bonk does not leave the idle animation active during descent.
@@ -236,14 +263,25 @@ void Player::end_contacts()
 
     this->supported_this_tick_ = false;
     this->hit_ceiling_this_tick_ = false;
+    this->support_impact_speed_ = 0.0f;
 }
-void Player::on_structure_contact(const Vector2F& normal, float penetration)
+void Player::on_structure_contact(const CollisionObject& other,
+    const Vector2F& normal, float penetration)
 {
     this->rectangle_.offset(separation(normal, penetration));
 
     // Classify the contact by its dominant normal component.
     if (std::abs(normal.y) >= std::abs(normal.x))
     {
+        if (normal.y > 0.0f)
+        {
+            this->support_impact_speed_ = std::max(this->support_impact_speed_,
+                this->velocity().y);
+            const RectangleF surface = other.shape()->bounding_box();
+            this->support_position_ = { (std::max(this->rectangle_.left(), surface.left()) +
+                std::min(this->rectangle_.right(), surface.right())) / 2.0f,
+                this->rectangle_.bottom() };
+        }
         MovingObject::set_velocity_y(0.0f);
         if (normal.y > 0.0f)
         {
@@ -262,13 +300,13 @@ void Player::on_structure_contact(const Vector2F& normal, float penetration)
     }
 }
 void Player::on_ramp_contact(CollisionObjectType other_type,
-    const Vector2F& normal, float penetration)
+    const CollisionObject& other, const Vector2F& normal, float penetration)
 {
     // A ramp's vertical face and flat underside resolve as walls; only its
     // hypotenuse needs slope handling.
     if (normal.y <= 0.0f)
     {
-        this->on_structure_contact(normal, penetration);
+        this->on_structure_contact(other, normal, penetration);
         return;
     }
 
@@ -280,6 +318,16 @@ void Player::on_ramp_contact(CollisionObjectType other_type,
     this->set_move_state(other_type == CollisionObjectType::structure_ramp_left ?
         PlayerMoveState::on_ramp_left : PlayerMoveState::on_ramp_right);
     this->supported_this_tick_ = true;
+
+    this->support_impact_speed_ = std::max(this->support_impact_speed_,
+        this->velocity().y);
+    // On a slope the lower supporting corner touches the surface; the centre
+    // of the player's bottom edge floats above it.
+    const RectangleF surface = other.shape()->bounding_box();
+    const float support_x = other_type == CollisionObjectType::structure_ramp_right ?
+        this->rectangle_.right() : this->rectangle_.left();
+    this->support_position_ = { std::clamp(support_x, surface.left(), surface.right()),
+        this->rectangle_.bottom() };
 
     MovingObject::set_velocity_y(0.0f);
 }
@@ -294,8 +342,12 @@ void Player::on_jump_through_contact(const CollisionObject& other)
     if (moving_down && was_above &&
         this->move_state() != PlayerMoveState::dropping_down)
     {
+        this->support_impact_speed_ = std::max(this->support_impact_speed_,
+            this->velocity().y);
         MovingObject::set_velocity_y(0.0f);
         this->rectangle_.set_position_y_from_bottom(other_rect.top());
+        this->support_position_ = { (std::max(this->rectangle_.left(), other_rect.left()) +
+            std::min(this->rectangle_.right(), other_rect.right())) / 2.0f, other_rect.top() };
         this->set_move_state(PlayerMoveState::on_drop_down_ground);
         this->supported_this_tick_ = true;
     }
@@ -322,11 +374,17 @@ void Player::on_projectile_contact(CollisionObjectType other_type)
 
 void Player::update(float dt)
 {
+    // Age old cues before movement can emit new ones; every new event is drawn
+    // on its actual tick at age zero, irrespective of the number of views.
+    this->movement_feedback_.update(dt);
     if (this->state_ == PlayerState::alive && this->health_ <= 0.0f)
     {
         // Damage arrives during contacts, after update. Retire input before the
         // next movement tick so a fatal hit cannot produce a final jump.
         this->state_ = PlayerState::dead;
+        this->movement_feedback_.clear();
+        this->had_ground_support_ = false;
+        this->landing_feedback_ready_ = false;
         this->reset_jump_input();
         this->set_move_state(PlayerMoveState::in_air);
         this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume * this->preferences_->sfx_gain());
@@ -569,6 +627,12 @@ void Player::do_jump(float dt)
 
 void Player::start_jump()
 {
+    // A grace jump occurs at the current airborne feet; it does not invent a
+    // ground contact at the ledge. Buffered jumps use the resolved support.
+    this->movement_feedback_.takeoff(this->had_ground_support_ ?
+        this->support_position_ : Vector2F(this->rectangle_.center().x,
+            this->rectangle_.bottom()));
+    this->had_ground_support_ = false;
     this->jump_buffer_remaining_ = 0.0f;
     this->ledge_grace_remaining_ = 0.0f;
     MovingObject::set_velocity_y(std::max(this->player_tuning().jump_launch_velocity,
@@ -583,10 +647,16 @@ RectangleF Player::bounds() const
     // Include the held weapon in the visual bounds used for scene culling.
     if (this->primary_ == nullptr)
     {
-        return this->rectangle_;
+        return this->movement_feedback_.bounds(this->rectangle_);
     }
 
-    return RectangleF::union_of(this->rectangle_, this->primary_->draw_bounds());
+    return this->movement_feedback_.bounds(
+        RectangleF::union_of(this->rectangle_, this->primary_->draw_bounds()));
+}
+
+const MovementFeedback& Player::movement_feedback() const
+{
+    return this->movement_feedback_;
 }
 void Player::set_player_input(const PlayerInputData& input)
 {
@@ -675,6 +745,10 @@ const PlayerAnimationTuning& Player::animation_info(
 }
 void Player::respawn()
 {
+    this->movement_feedback_.clear();
+    this->had_ground_support_ = false;
+    this->landing_feedback_ready_ = false;
+    this->support_impact_speed_ = 0.0f;
     this->rectangle_.set_position(this->respawn_position_);
     this->prev_rectangle_ = this->rectangle_;
     this->reset_jump_input();

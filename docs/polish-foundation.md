@@ -115,6 +115,7 @@ Matched resolution captures establish framing; they do not replace before/after
 clips, aim-sweep review, fresh-player observations or a listening pass. No final
 art, takeoff/landing effects or replacement audio was authored here.
 
-Next: review one pixel-art composition at these actual sizes, prototype takeoff
-and landing feedback, and run the movement course on keyboard/mouse and physical
-controllers. Resolve those observations before the Close Quarters blockout pass.
+Follow-up: [the next increment](polish-feedback.md) adds takeoff/landing feedback
+and a [workshop style candidate](polish-style-reference.md). A grid-exact runtime
+composition and keyboard/mouse/physical-controller course review remain ahead.
+Resolve those observations before the Close Quarters blockout pass.
