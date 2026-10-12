@@ -78,7 +78,7 @@ void Weapon::draw(DrawList& draw_list, bool debug) const
         this->frame(), this->colour(),
         origin, flip, this->rotation());
     TextureObject::draw_with(draw_list, draw_rectangle,
-        this->paint_frame_, this->paint_colour(),
+        this->paint_frame_, this->paint_override_.value_or(this->paint_colour()),
         origin, flip, this->rotation());
 
     if (debug)
@@ -95,6 +95,11 @@ void Weapon::draw_nozzle_debug(DrawList& draw_list) const
         static_cast<float>(source.height) / 2.0f);
     TextureObject::draw_with(draw_list, this->nozzle_rectangle(),
         this->nozzle_frame_, this->colour(), origin, SpriteFlip::none, 0.0f);
+}
+
+void Weapon::set_paint_override(std::optional<Colour> colour)
+{
+    this->paint_override_ = colour;
 }
 
 labrador::Colour Weapon::paint_colour() const

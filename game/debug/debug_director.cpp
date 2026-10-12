@@ -115,6 +115,11 @@ bool DebugDirector::drives_slot(int slot) const
 	return this->impl_ != nullptr && this->impl_->drives_slot(slot);
 }
 
+OpeningMode DebugDirector::opening_mode(OpeningMode chosen) const
+{
+	return this->impl_ != nullptr ? this->impl_->opening_mode(chosen) : chosen;
+}
+
 bool DebugDirector::before_page_update(DebugPageTarget& page, float dt)
 {
 	return this->impl_ != nullptr && this->impl_->before_page_update(page, dt);

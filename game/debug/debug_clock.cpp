@@ -71,6 +71,7 @@ std::vector<PlayerInputData> DebugClock::latch(
 		{
 			this->held_edges_[i].jump_pressed |= inputs[i].jump_pressed;
 			this->held_edges_[i].toggle_debug |= inputs[i].toggle_debug;
+			this->held_edges_[i].skip_intro |= inputs[i].skip_intro;
 		}
 		return inputs;
 	}
@@ -80,6 +81,7 @@ std::vector<PlayerInputData> DebugClock::latch(
 	{
 		result[i].jump_pressed |= this->held_edges_[i].jump_pressed;
 		result[i].toggle_debug |= this->held_edges_[i].toggle_debug;
+		result[i].skip_intro |= this->held_edges_[i].skip_intro;
 		this->held_edges_[i] = PlayerInputData();
 	}
 	return result;
@@ -91,6 +93,7 @@ std::vector<PlayerInputData> DebugClock::without_edges(std::vector<PlayerInputDa
 	{
 		input.jump_pressed = false;
 		input.toggle_debug = false;
+		input.skip_intro = false;
 	}
 	return inputs;
 }

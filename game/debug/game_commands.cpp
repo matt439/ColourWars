@@ -192,6 +192,19 @@ void DebugDirectorImpl::register_commands()
 				applies);
 		}, traits("match", Form::pick, true, 1, "all"));
 
+	registry.add(std::make_unique<ChoiceVariable>("intro",
+		"how the next match begins: auto (the game's choice), full, quick (from the "
+		"preview) or off (straight to the split countdown); record and play use off",
+		"auto", std::vector<std::string>{ "auto", "full", "quick", "off" },
+		std::vector<std::pair<std::string, std::string>>{},
+		[this] { return this->intro_.empty() ? std::string("auto") : this->intro_; },
+		[this](const std::string& choice)
+		{
+			this->intro_ = choice == "auto" ? std::string() : choice;
+			return DebugStatus::success("intro = " + choice + " (from the next build)");
+		}));
+	place(registry, "intro", "match");
+
 	registry.add(std::make_unique<ChoiceVariable>("visual",
 		"Movement Course art: original, rotating (continuous tool) or posed (authored)",
 		"original", std::vector<std::string>{ "original", "rotating", "posed" },

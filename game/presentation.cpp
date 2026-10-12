@@ -97,11 +97,32 @@ namespace
 			std::string::npos;
 	}
 
+	Colour colour_from_text(const JsonValue& where, const std::string& text);
+
 	// Accept named colours or RRGGBB/RRGGBBAA. Validate hex strings before
 	// construction so a typo cannot silently become opaque black.
 	Colour read_colour(const JsonValue& parent, const char* key)
 	{
-		const std::string text = parent.string(key);
+		return colour_from_text(parent, parent.string(key));
+	}
+
+	std::vector<Colour> read_colours(const JsonValue& parent, const char* key)
+	{
+		const JsonValue array = parent.array(key);
+		if (array.size() == 0)
+		{
+			throw std::runtime_error(array.where() + ": '" + key + "' needs a colour.");
+		}
+		std::vector<Colour> colours;
+		for (size_t index = 0; index < array.size(); ++index)
+		{
+			colours.push_back(colour_from_text(array.at(index), array.at(index).as_string()));
+		}
+		return colours;
+	}
+
+	Colour colour_from_text(const JsonValue& parent, const std::string& text)
+	{
 
 		const std::optional<Colour> named = colour_from_name(text);
 		if (named.has_value())
@@ -473,6 +494,67 @@ namespace
 		return redraw;
 	}
 
+	float read_fraction(const JsonValue& parent, const char* key)
+	{
+		const float value = parent.number(key);
+		if (!(value >= 0.0f && value <= 1.0f))
+		{
+			throw std::runtime_error(parent.where() + ": '" + key +
+				"' must be a fraction from 0 to 1.");
+		}
+		return value;
+	}
+
+	OpeningPresentation read_opening(const JsonValue& root)
+	{
+		const JsonValue json = root.object("opening");
+
+		OpeningPresentation opening;
+		opening.sprite_sheet = json.identifier("sprite_sheet");
+		opening.fill_frame = json.identifier("fill_frame");
+		opening.bezel_shades = read_colours(json, "bezel_shades");
+		opening.bezel_shadow = read_colour(json, "bezel_shadow");
+		const JsonValue glass = json.object("glass");
+		opening.glass = RectangleF(read_fraction(glass, "x"), read_fraction(glass, "y"),
+			read_fraction(glass, "width"), read_fraction(glass, "height"));
+		if (opening.glass.width <= 0.0f || opening.glass.height <= 0.0f ||
+			opening.glass.right() > 1.0f || opening.glass.bottom() > 1.0f)
+		{
+			throw std::runtime_error(glass.where() + ": the glass must be on the screen.");
+		}
+		opening.glass_colour = read_colour(json, "glass_colour");
+		opening.program_colour = read_colour(json, "program_colour");
+		opening.palette_height = read_fraction(json, "palette_height");
+		opening.palette_greys = read_colours(json, "palette_greys");
+		for (const Colour& grey : opening.palette_greys)
+		{
+			if (grey.r != grey.g || grey.g != grey.b)
+			{
+				throw std::runtime_error(json.where() +
+					": every colour in 'palette_greys' must be a grey.");
+			}
+		}
+		opening.slot_outline = read_colour(json, "slot_outline");
+		opening.sticky_notes = read_colours(json, "sticky_notes");
+		opening.stickers = read_colours(json, "stickers");
+		opening.scribble = read_colour(json, "scribble");
+		opening.coffee = read_colour(json, "coffee");
+		opening.crack = read_colour(json, "crack");
+		opening.silhouette = read_colour(json, "silhouette");
+		opening.adult_height = read_fraction(json, "adult_height");
+		opening.child_height = read_fraction(json, "child_height");
+		opening.cursor_size = read_fraction(json, "cursor_size");
+		opening.preview_strength = read_fraction(json, "preview_strength");
+		opening.figure_grey = read_colour(json, "figure_grey");
+		if (opening.adult_height <= 0.0f || opening.child_height <= 0.0f ||
+			opening.cursor_size <= 0.0f || opening.palette_height <= 0.0f)
+		{
+			throw std::runtime_error(json.where() + ": 'adult_height', 'child_height', "
+				"'cursor_size' and 'palette_height' must be more than zero.");
+		}
+		return opening;
+	}
+
 	DebugOverlayPresentation read_debug_overlay(const JsonValue& root)
 	{
 		const JsonValue json = root.object("debug_overlay");
@@ -608,6 +690,7 @@ Presentation::Presentation(const char* path)
 			"and particles must be at least one presentation pixel.");
 	}
 	this->respawn_redraw_ = read_respawn_redraw(root);
+	this->opening_ = read_opening(root);
 	const JsonValue match = root.object("match");
 	this->match_.reference_size = read_positive_vector(match, "reference_size");
 	this->match_.countdown_size = read_positive_vector(match, "countdown_size");
@@ -656,6 +739,11 @@ const RespawnRedrawPresentation& Presentation::respawn_redraw() const
 	return this->respawn_redraw_;
 }
 
+const OpeningPresentation& Presentation::opening() const
+{
+	return this->opening_;
+}
+
 const WorkshopPlayerPresentation& Presentation::workshop_player() const
 {
 	return this->workshop_player_;
@@ -686,6 +774,8 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->movement_feedback_.fill_frame);
 	check.frame("respawn_redraw.pen_frame", this->respawn_redraw_.sprite_sheet,
 		this->respawn_redraw_.pen_frame);
+	check.frame("opening.fill_frame", this->opening_.sprite_sheet,
+		this->opening_.fill_frame);
 	const WorkshopPlayerPresentation& art = this->workshop_player_;
 	check.frame("workshop terrain", "workshop_kit", "platform");
 	const SpriteSheet* sheet = render.sprite_sheet(art.sprite_sheet);

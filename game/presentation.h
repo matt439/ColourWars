@@ -346,6 +346,41 @@ struct RespawnRedrawPresentation
 	std::vector<RespawnStroke> strokes;
 };
 
+// The monitor the picture is on, the person at it and the cursor they use:
+// the opening's look (docs/backstory.md, "Opening"). Rectangles are fractions
+// of the screen, sizes fractions of its height, colours are drawn as is.
+struct OpeningPresentation
+{
+	std::string sprite_sheet;
+	std::string fill_frame;
+	// Each match picks one; each is a different person's computer.
+	std::vector<labrador::Colour> bezel_shades;
+	labrador::Colour bezel_shadow;
+	mattmath::RectangleF glass;
+	labrador::Colour glass_colour;
+	// Behind the picture, where it does not fill the glass.
+	labrador::Colour program_colour;
+	// The palette along the bottom of the glass: full of greys, but for one
+	// empty slot. Its height is a fraction of the glass's.
+	float palette_height = 0.0f;
+	std::vector<labrador::Colour> palette_greys;
+	labrador::Colour slot_outline;
+	std::vector<labrador::Colour> sticky_notes;
+	std::vector<labrador::Colour> stickers;
+	labrador::Colour scribble;
+	labrador::Colour coffee;
+	labrador::Colour crack;
+	labrador::Colour silhouette;
+	// From the bottom of the screen to the top of the head, seated.
+	float adult_height = 0.0f;
+	float child_height = 0.0f;
+	float cursor_size = 0.0f;
+	// How strongly a preview shows its colour over the picture, 0..1.
+	float preview_strength = 0.0f;
+	// The figures before they are coloured.
+	labrador::Colour figure_grey;
+};
+
 // Presentation settings parsed once at startup.
 class Presentation
 {
@@ -368,6 +403,7 @@ public:
 	const CameraPresentation& camera() const;
 	const MovementFeedbackPresentation& movement_feedback() const;
 	const RespawnRedrawPresentation& respawn_redraw() const;
+	const OpeningPresentation& opening() const;
 	const WorkshopPlayerPresentation& workshop_player() const;
 	const DebugOverlayPresentation& debug_overlay() const;
 
@@ -390,6 +426,7 @@ private:
 	CameraPresentation camera_;
 	MovementFeedbackPresentation movement_feedback_;
 	RespawnRedrawPresentation respawn_redraw_;
+	OpeningPresentation opening_;
 	WorkshopPlayerPresentation workshop_player_;
 	DebugOverlayPresentation debug_overlay_;
 };

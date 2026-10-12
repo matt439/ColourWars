@@ -32,7 +32,7 @@ public:
 		const labrador::Mouse* mouse);
 
 	std::unique_ptr<Level> build_level(const MenuLevelSettings& settings,
-		TeamColourPair palette);
+		TeamColourPair palette, OpeningMode opening);
 
 private:
 	std::unique_ptr<TeamColourTools> team_colour_ = nullptr;

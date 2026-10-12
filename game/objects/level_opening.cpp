@@ -18,6 +18,23 @@ void Level::build_opening_frame(RenderResources* render_resources)
 	}
 	this->projectile_count_ = this->count_projectiles();
 
+	// The picture is the stage's authored overview and everyone in it, inside
+	// what the cameras may show; its halves meet mid-stage.
+	RectangleF picture = this->zoom_out_finish_bounds_;
+	for (const Player* player : this->players_)
+	{
+		picture = RectangleF::union_of(picture, player->rectangle());
+	}
+	const float left = std::max(picture.x, this->camera_bounds_.x);
+	const float top = std::max(picture.y, this->camera_bounds_.y);
+	const float right = std::min(picture.right(), this->camera_bounds_.right());
+	const float bottom = std::min(picture.bottom(), this->camera_bounds_.bottom());
+	this->picture_bounds_ = right > left && bottom > top ?
+		RectangleF(left, top, right - left, bottom - top) : this->camera_bounds_;
+	const std::optional<RectangleF>& stage = this->scene_->bounds();
+	this->picture_middle_ = stage ? stage->x + stage->width / 2.0f :
+		this->picture_bounds_.x + this->picture_bounds_.width / 2.0f;
+
 	// Use the configured countdown for the opening beat.
 	const MatchTuning& match = this->tuning_->match();
 	this->countdown_text_ = std::make_unique<TextDropShadow>(

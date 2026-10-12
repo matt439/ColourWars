@@ -25,6 +25,10 @@
 #include "game/objects/level_overlays.h"
 #include "game/tuning.h"
 #include "game/objects/seat_input_filter.h"
+#include "game/objects/monitor.h"
+#include "game/objects/opening_mode.h"
+#include "game/objects/silhouette.h"
+#include "game/objects/screen_cursor.h"
 
 enum class LevelState
 {
@@ -33,7 +37,10 @@ enum class LevelState
 	zoom_out,
 	overview,
 	finished,
+	// Before the countdown. Last, so the values above keep their numbers.
+	opening,
 };
+
 
 // One paint match: countdown, clock, cameras, HUDs and music.
 // Scene owns and steps the objects; Level keeps borrowed player pointers
@@ -58,7 +65,8 @@ public:
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
-		const labrador::Mouse* mouse);
+		const labrador::Mouse* mouse,
+		OpeningMode opening);
 
 	// Stop the level's music, transition sound and player weapon loops.
 	~Level();
@@ -89,6 +97,10 @@ public:
 	void draw(labrador::Renderer& renderer) const;
 
 	LevelState state() const;
+	// The countdown is over and the players move.
+	bool match_started() const;
+	// The intro is on screen: A, B or Start skips it rather than pausing.
+	bool intro_playing() const;
 
 	// Read-only views for developer status; the index is the view, not the
 	// player's input slot (see players_).
@@ -207,6 +219,40 @@ private:
 	labrador::Camera zoom_out_finish_camera_ = labrador::Camera::DEFAULT_CAMERA;
 
 	LevelState state_ = LevelState::start_countdown;
+
+	// The opening (level_intro.cpp). The monitor, the person and the cursor
+	// exist only when the match has an intro.
+	struct OpeningBeat
+	{
+		bool previewing_a = false;
+		bool previewing_b = false;
+		bool picker = false;
+		float cursor_at_a = 0.0f;
+		float cursor_at_b = 0.0f;
+		float cursor_back = 0.0f;
+		SilhouettePose pose;
+	};
+	float opening_time_ = 0.0f;
+	// The countdown plays in the picture and ends by pushing through the glass.
+	bool intro_countdown_ = false;
+	std::unique_ptr<Monitor> monitor_;
+	std::unique_ptr<Silhouette> silhouette_;
+	std::unique_ptr<ScreenCursor> cursor_;
+	// What of the world the picture shows, and where its two halves meet.
+	mattmath::RectangleF picture_bounds_;
+	float picture_middle_ = 0.0f;
+
+	OpeningBeat opening_beat() const;
+	float opening_length() const;
+	bool intro_showing() const;
+	float push_ratio() const;
+	mattmath::RectangleF intro_screen() const;
+	bool skip_requested(const std::vector<PlayerInputData>& player_inputs) const;
+	void colour_players(bool team_a, bool team_b);
+	void skip_intro();
+	void update_opening(const std::vector<PlayerInputData>& player_inputs, float dt);
+	void add_intro_views();
+	void draw_intro(labrador::Renderer& renderer) const;
 
 	// Advance the match state; update() refreshes views after every path returns.
 	void update_state(const std::vector<PlayerInputData>& player_inputs,

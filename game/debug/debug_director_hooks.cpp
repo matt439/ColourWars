@@ -219,6 +219,20 @@ void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 	}
 }
 
+OpeningMode DebugDirectorImpl::opening_mode(OpeningMode chosen) const
+{
+	// A recording starts at the first update of play, and a replay must
+	// meet the same frames, so neither has an intro to skip or not.
+	if (this->play_armed_ != nullptr || this->record_armed_)
+	{
+		return OpeningMode::off;
+	}
+	if (this->intro_ == "full") { return OpeningMode::full; }
+	if (this->intro_ == "quick") { return OpeningMode::quick; }
+	if (this->intro_ == "off") { return OpeningMode::off; }
+	return chosen;
+}
+
 void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 {
 	match.debug_set_overlays({ this->overlay_collision_, this->overlay_camera_ });
@@ -318,6 +332,7 @@ void DebugDirectorImpl::filter_match_inputs(std::vector<PlayerInputData>& inputs
 			PlayerInputData& input = inputs[static_cast<std::size_t>(slot)];
 			input.toggle_debug = false;
 			input.toggle_pause_menu = false;
+			input.skip_intro = false;
 		}
 	}
 	// The live console has the keyboard: the keyboard seat stands still (no

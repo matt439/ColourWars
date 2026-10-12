@@ -72,7 +72,7 @@ namespace debug_console_acceptance
 		write_text(scripts / L"seconds.cfg", "wait 0.5s\necho w-half\n");
 		write_text(scripts / L"matchwait.cfg", "stage x\nwait match\necho w-matched\n");
 		write_text(scripts / L"frames.cfg", "wait frames 3\necho w-frames\n");
-		write_text(scripts / L"err.cfg", "echo e1\necho e2\necho e3\nbogus_command\necho e5\n");
+		write_text(scripts / L"err.cfg", "echo e1\necho e2\necho e3\nbogus_command\necho never-reached\n");
 		write_text(scripts / L"rec.cfg", "exec rec\n");
 		for (int i = 1; i <= 9; ++i)
 		{
@@ -112,7 +112,8 @@ namespace debug_console_acceptance
 
 		// An error stops the script at its line; the launch statements go on.
 		director.run_launch_arguments({ L"+exec", L"err", L"+echo", L"after-err" });
-		require(any_line(log, "e3") && !any_line(log, "e5") &&
+		// Not "e5": the console's banner prints the build's commit hash.
+		require(any_line(log, "e3") && !any_line(log, "never-reached") &&
 			any_line(log, "script err.cfg:4 stopped: unknown command 'bogus_command'") &&
 			any_line(log, "after-err"), "An error stops the script with file:line; launch continues");
 

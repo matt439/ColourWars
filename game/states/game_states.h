@@ -71,6 +71,8 @@ public:
 	void on_deactivated() override;
 
 private:
+	// Levels this screen has built: the first has the whole intro.
+	int builds_ = 0;
 	GameData* game_data_ = nullptr;
 	MenuLevelSettings settings_ = MenuLevelSettings();
 	Session session_;

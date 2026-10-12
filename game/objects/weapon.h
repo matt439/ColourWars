@@ -41,6 +41,9 @@ public:
 	// Keep this const even though the owning unique_ptr permits mutable access.
 	virtual void draw(labrador::DrawList& draw_list,
 		bool debug = false) const;
+	// Draws the paint overlay in this colour instead, while it is set: the
+	// opening's grey figures.
+	void set_paint_override(std::optional<labrador::Colour> colour);
 
 	// Aim, update ammunition/sound, then shoot if allowed. Every step dispatches
 	// through the hooks below, including for subclasses of RelativeVelocityWeapon.
@@ -189,6 +192,8 @@ private:
 
 	mattmath::Vector2F wep_rotation_origin_offset(
 		bool facing_left) const;
+	// Set while the opening draws the figures grey.
+	std::optional<labrador::Colour> paint_override_;
 };
 
 // Reuses the firing workflow, adding the player's velocity to each launch

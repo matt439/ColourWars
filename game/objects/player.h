@@ -181,6 +181,10 @@ public:
     // Health to zero, ignoring god: the next update dies as a fatal hit does.
     void kill();
 
+    // In the opening the figures are grey until they see their colour
+    // (docs/backstory.md): uniform and tool in `grey` until coloured.
+    void set_coloured(bool coloured, const labrador::Colour& grey);
+
 private:
     labrador::Camera camera_ = labrador::Camera::DEFAULT_CAMERA;
 
@@ -189,6 +193,7 @@ private:
 
     MovementFeedback movement_feedback_;
     RespawnRedraw respawn_redraw_;
+    std::optional<labrador::Colour> grey_;
     std::unique_ptr<PlayerVisual> workshop_visual_;
     bool had_ground_support_ = false;
     bool landing_feedback_ready_ = false;

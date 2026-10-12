@@ -146,7 +146,12 @@ Decided with the author on 2026-10-12, while the first slice was built:
 |---|---|
 | Respawn: the redraw at the spawn | Built. `RespawnRedraw`; strokes and timings in `presentation.json` `respawn_redraw` |
 | Respawn: the pop | Still the old death yell; waits for a pop sound in the bank |
-| Opening, reveal, rematch bezel | Not started |
+| Grey scenery, each team on its own half | Built. Enforced by the game and the level editor |
+| Opening: monitor, person, preview, undo, leaving, countdown in the picture, push through the glass | Built. `level_intro.cpp`; `Monitor`, `Silhouette`, `ScreenCursor`; timings in `tuning.json` `match.opening`, look in `presentation.json` `opening` |
+| Opening: skip, quick rematch | Built. A, B or Start skips; a rematch starts at the preview |
+| Rematch: a new random monitor | Built. Rolled per match from `opening.bezel_shades` and the decorations |
+| Opening: figures looking at their hands; sigh and chair sounds | Not started |
+| Reveal | Not started |
 
 ## Rejected on the way, and why
 

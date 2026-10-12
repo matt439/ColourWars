@@ -37,6 +37,9 @@ PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
 	// MenuInput arming also handles other buttons held during the transition.
 	result.toggle_pause_menu = gamepads.released(slot, GamepadButton::start);
 	result.toggle_debug = gamepads.released(slot, GamepadButton::back);
+	result.skip_intro = gamepads.released(slot, GamepadButton::a) ||
+		gamepads.released(slot, GamepadButton::b) ||
+		gamepads.released(slot, GamepadButton::start);
 
 	result.x_movement = apply_deadzone(pad.left_stick.x, stick_deadzone);
 
@@ -82,6 +85,8 @@ PlayerInputData PlayerInput::keyboard_and_mouse_input(const Keyboard& keyboard,
 	// Match the pad's release edges so the opening key is no longer held.
 	result.toggle_pause_menu = keyboard.released(pause_key);
 	result.toggle_debug = keyboard.released(debug_key);
+	result.skip_intro = keyboard.released(jump_key) || keyboard.released(pause_key) ||
+		keyboard.released(confirm_key);
 
 	// Level fills mouse aim after converting the player centre to screen coordinates.
 

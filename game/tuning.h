@@ -30,6 +30,23 @@ struct SoundTuning
 };
 
 // Match phase durations and countdown presentation.
+// The opening's beats before the countdown (docs/backstory.md, "Opening"), in
+// seconds. They move the match's state machine, so they are tuning.
+struct OpeningTuning
+{
+	// The monitor and the person, still. A quick rematch starts after it.
+	float settle = 0.0f;
+	// Each of the two previews: the cursor reaches a swatch, then half the
+	// picture shows in that colour.
+	float preview = 0.0f;
+	float undo = 0.0f;
+	// The person sighs, stands and walks out.
+	float leave = 0.0f;
+	// The last part of the countdown, in which the view pushes through the
+	// glass into split screen.
+	float push = 0.0f;
+};
+
 struct MatchTuning
 {
 	float duration = 0.0f;
@@ -56,6 +73,8 @@ struct MatchTuning
 
 	SoundTuning countdown_sound;
 	SoundTuning zoom_out_sound;
+
+	OpeningTuning opening;
 };
 
 // Animation clip selection and optional timing override.

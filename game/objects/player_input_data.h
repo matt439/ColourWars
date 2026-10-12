@@ -17,6 +17,8 @@ struct PlayerInputData
 
 	bool toggle_debug = false;
 	bool toggle_pause_menu = false;
+	// A, B or Start released (Space, Escape or Enter): skips the intro.
+	bool skip_intro = false;
 
 	// False for a disconnected slot, whose actions are neutral. Players remain
 	// bound to device slots for the match; a reconnected pad in a different slot

@@ -3,6 +3,7 @@
 // Debug-only internals of DebugDirector. Included by game/debug/*.cpp and by
 // the acceptance case, always under COLOURWARS_DEV_TOOLS.
 
+#include "game/objects/opening_mode.h"
 #include "game/debug/debug_binds.h"
 #include "game/debug/debug_chord.h"
 #include "game/debug/debug_clock.h"
@@ -136,6 +137,7 @@ public:
 	// GameLevel's hooks (DebugDirector::match_suspended, drives_slot).
 	void match_suspended(DebugMatchTarget& match);
 	bool drives_slot(int slot) const;
+	OpeningMode opening_mode(OpeningMode chosen) const;
 
 	// Live tuning reads the baseline from the staged copy and tune.save
 	// writes the source tree. Empty: the build's source tree
@@ -240,6 +242,8 @@ private:
 	// The visual a fresh match uses when the request names none: the last one
 	// a debug plan applied.
 	PlayerVisualMode remembered_visual_ = PlayerVisualMode::original;
+	// `intro`: empty for the game's own choice, else full, quick or off.
+	std::string intro_;
 
 	// Content validated by `reload`, assigned before the next level is built.
 	std::unique_ptr<GameTuning> pending_tuning_;

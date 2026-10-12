@@ -110,7 +110,8 @@ void Player::draw(DrawList& draw_list) const
     if (this->workshop_visual_ != nullptr)
     {
         this->workshop_visual_->draw(draw_list, this->rectangle_,
-            this->facing_right(), this->team_colour_, *this->primary_, this->showing_debug_);
+            this->facing_right(), this->grey_.value_or(this->team_colour_), *this->primary_,
+            this->showing_debug_);
         this->movement_feedback_.draw(draw_list);
         return;
     }
@@ -131,7 +132,7 @@ void Player::draw_figure(DrawList& draw_list, const RectangleF& rectangle) const
     // have independent colour, origin and rotation state.
     TextureObject::draw_with(draw_list, rectangle,
         this->TextureObject::frame(),
-        this->TextureObject::colour(),
+        this->grey_.value_or(this->TextureObject::colour()),
         this->TextureObject::origin(), flip,
         this->TextureObject::draw_rotation());
 
@@ -893,6 +894,12 @@ void Player::force_respawn()
 void Player::kill()
 {
     this->health_ = 0.0f;
+}
+
+void Player::set_coloured(bool coloured, const Colour& grey)
+{
+    this->grey_ = coloured ? std::nullopt : std::optional<Colour>(grey);
+    this->primary_->set_paint_override(this->grey_);
 }
 
 void Player::set_showing_debug(bool showing)

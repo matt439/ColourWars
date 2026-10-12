@@ -343,6 +343,7 @@ namespace debug_console_acceptance
 	// replay_checks.cpp
 	void check_replay_codec();
 	std::string check_replay_cpu_match(const std::filesystem::path& game_directory);
+	void check_opening(const std::filesystem::path& game_directory);
 
 	// script_checks.cpp
 	void check_script_parse();

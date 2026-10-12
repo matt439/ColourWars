@@ -26,6 +26,19 @@
         "sounds": {
             "countdown": { "name": "smash_countdown", "volume": 1.0 },
             "zoom_out": { "name": "slide_whistle_up", "volume": 0.5 }
+        },
+        "opening": {
+            "_comment": [
+                "Seconds of the opening before the countdown: the monitor and",
+                "the person (a quick rematch starts after settle), each colour's",
+                "preview, the undo, the person leaving. push is the end of the",
+                "countdown, through the glass into split screen."
+            ],
+            "settle": 0.8,
+            "preview": 1.1,
+            "undo": 0.5,
+            "leave": 1.4,
+            "push": 0.8
         }
     },
 

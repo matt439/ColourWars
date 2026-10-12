@@ -282,6 +282,10 @@ function Write-Script([string]$profile, [string]$name, [string[]]$lines) {
 
 # Starts the game on an isolated profile (and, when given, an isolated TEMP).
 function Start-Game([string]$profile, [string[]]$arguments, [string]$temp = '') {
+    # These launches test the console, not the intro a match opens with:
+    # every match starts at the split-screen countdown, after +logfile.
+    $arguments = @($arguments[0], $arguments[1], '+intro', 'off') +
+        @($arguments | Select-Object -Skip 2)
     $saved = @{ LOCALAPPDATA = $env:LOCALAPPDATA; TEMP = $env:TEMP; TMP = $env:TMP }
     $env:LOCALAPPDATA = $profile
     if ($temp) { $env:TEMP = $temp; $env:TMP = $temp }
@@ -412,12 +416,12 @@ try {
     $driver::Tap($f10, $false); Start-Sleep -Milliseconds 600
     Save-Shot '06-collision-off.png'
 
-    # 4: staging. Match, by name: menu, players, restart, stage, visual,
-    # weapon. The visual picker opens on the current value (original after
-    # F8), so one Down is rotating.
+    # 4: staging. Match, by name: intro, menu, players, restart, stage,
+    # visual, weapon. The visual picker opens on the current value (original
+    # after F8), so one Down is rotating.
     $driver::Tap($f10, $false); Start-Sleep -Milliseconds 500
     $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
-    foreach ($i in 1..4) { $driver::Tap($down, $true) }
+    foreach ($i in 1..5) { $driver::Tap($down, $true) }
     $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
     $driver::Tap($down, $true)
     $driver::Tap($enter, $false); Start-Sleep -Milliseconds 400

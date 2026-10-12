@@ -28,6 +28,7 @@ namespace player_input_consts
 	constexpr labrador::Key drop_key_alternate = labrador::Key::down;
 	constexpr labrador::Key pause_key = labrador::Key::escape;
 	constexpr labrador::Key debug_key = labrador::Key::f1;
+	constexpr labrador::Key confirm_key = labrador::Key::enter;
 
 	constexpr labrador::MouseButton shoot_button = labrador::MouseButton::left;
 }

@@ -24,6 +24,8 @@ namespace
 		{ "tuning.player.**", TuneScope::live },
 		// Level reads the volume each time it plays them.
 		{ "tuning.match.sounds.*.volume", TuneScope::live },
+		// The opening's beats are read every update (level_intro.cpp).
+		{ "tuning.match.opening.**", TuneScope::live },
 		// Timers and texts are copied by the Level constructor.
 		{ "tuning.match.**", TuneScope::rebuild },
 		// Tiles and their thickness are built with the level.
@@ -40,6 +42,8 @@ namespace
 		// refresh_player_cameras reads the camera block every update.
 		{ "presentation.movement_feedback.**", TuneScope::live },
 		{ "presentation.respawn_redraw.**", TuneScope::live },
+		// Monitor, Silhouette and ScreenCursor keep a pointer; Level reads figure_grey.
+		{ "presentation.opening.**", TuneScope::live },
 		{ "presentation.debug_overlay.**", TuneScope::live },
 		{ "presentation.hud.**", TuneScope::live },
 		{ "presentation.camera.**", TuneScope::live },

@@ -165,8 +165,13 @@ void GameLevel::build_and_enter_level()
 	this->data()->debug().before_level_build(*this);
 	this->data()->viewport_manager()->
 		set_layout(this->settings_.screen_layout());
+	// The first match of this screen has the whole intro; a rematch starts
+	// with the colours being tried. The developer tools may choose otherwise.
+	const OpeningMode opening = this->data()->debug().opening_mode(
+		this->builds_ == 0 ? OpeningMode::full : OpeningMode::quick);
+	++this->builds_;
 	this->level_ = this->level_builder_->build_level(this->settings_,
-		this->data()->save()->team_palette());
+		this->data()->save()->team_palette(), opening);
 	this->data()->debug().after_level_build(*this);
 
 	// Discard loading time so fixed-step updates do not advance the new match
@@ -235,7 +240,9 @@ void GameLevel::update(float dt)
 		return;
 	}
 
-	const int pause_menu_player = this->check_for_pause_input(player_inputs);
+	// Over the intro, Start skips it instead (Level::update).
+	const int pause_menu_player = this->level_->intro_playing() ? -1 :
+		this->check_for_pause_input(player_inputs);
 	if (pause_menu_player != -1)
 	{
 		this->open_pause_menu(pause_menu_player);
@@ -498,7 +505,7 @@ MatchPaint GameLevel::debug_paint() const
 
 bool GameLevel::debug_countdown_over() const
 {
-	return this->level_->state() != LevelState::start_countdown;
+	return this->level_->match_started();
 }
 
 void GameLevel::debug_set_seat_labels(const std::vector<std::wstring>& labels)

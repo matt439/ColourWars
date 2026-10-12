@@ -144,6 +144,7 @@ running.
 | `stage <name\|next\|prev\|random>` | start that stage (from a menu) or rebuild the match on it |
 | `players <1-4> [bot]` | seats: connected pads in slot order, then keyboard/mouse, then idle dummies. With no pad, seat 1 is keyboard/mouse. A second word is `bot all <bot>` as well (`players 4 paint`). In a menu it is stored for `stage`; a match started from the menus instead drops it (logged), as does a match ending with it still queued |
 | `weapon <seat\|all> <sprayer\|sniper\|roller\|mister\|bucket\|random>` | a seat's weapon (seats are 1-4) |
+| `intro <auto\|full\|quick\|off>` | how the next match begins: `auto` is the game's choice (the whole intro on a match's first build, the quick one from the colour preview on a rematch), `off` starts at the split-screen countdown. `record` and `play` always build without one (variable) |
 | `visual <original\|rotating\|posed\|next\|prev>` | the Movement Course art comparison (variable; `continuous`/`authored` also accepted). Off the course it is remembered, not applied |
 | `feedback <on\|off\|toggle>` | movement feedback (variable; `1`/`0` too). Immediate |
 | `overlay [player\|collision\|camera\|paint\|perf\|all\|none]` | toggle one [overlay](#overlays), or all on/off (`all` leaves `perf` alone, `none` clears it); alone, list them |
@@ -230,7 +231,7 @@ registry as a menu page: the same entries as the console, grouped.
 
 | Category | Entries |
 |---|---|
-| match | menu, players, restart, stage, visual, weapon |
+| match | intro, menu, players, restart, stage, visual, weapon |
 | player | ammo, bot (picker: `bot all <behaviour>`), god, goto, kill, respawn |
 | view | feedback, overlay, overlay.camera, overlay.collision, overlay.paint, overlay.perf, overlay.player |
 | time | pause, step, timescale |
@@ -363,7 +364,7 @@ their addresses, and only the edited number changes.
 
 | Scope | Paths | Applies |
 |---|---|---|
-| live | `tuning.player.*` (not `size`), `tuning.match.sounds.*.volume`, `tuning.weapons.*`, `tuning.projectiles.*` (not sizes), `presentation.movement_feedback/debug_overlay/hud/camera.*` | at once |
+| live | `tuning.player.*` (not `size`), `tuning.match.sounds.*.volume`, `tuning.weapons.*`, `tuning.projectiles.*` (not sizes), `tuning.match.opening.*`, `presentation.movement_feedback/respawn_redraw/opening/debug_overlay/hud/camera.*` | at once |
 | new shots | `tuning.projectiles.*.size`, `*.collision_size` | the next projectile |
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, `presentation.workshop_player.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |

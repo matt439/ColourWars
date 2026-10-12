@@ -57,6 +57,7 @@ add_executable(ColourWars WIN32
     debug/view_commands.cpp
 
     objects/collision_object_type.cpp
+    objects/crude_drawing.cpp
     objects/debug_text.cpp
     objects/interface_gameplay.cpp
     objects/level.cpp
@@ -64,7 +65,9 @@ add_executable(ColourWars WIN32
     objects/level_end_info.cpp
     objects/level_loaded_info.cpp
     objects/level_object_builder.cpp
+    objects/level_intro.cpp
     objects/level_opening.cpp
+    objects/monitor.cpp
     objects/movement_feedback.cpp
     objects/paint_tile.cpp
     objects/player.cpp
@@ -80,6 +83,8 @@ add_executable(ColourWars WIN32
     objects/projectile_rolling.cpp
     objects/projectile_spray.cpp
     objects/respawn_redraw.cpp
+    objects/screen_cursor.cpp
+    objects/silhouette.cpp
     objects/stage.cpp
     objects/structure.cpp
     objects/structure_paintable.cpp

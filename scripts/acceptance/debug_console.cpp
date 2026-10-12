@@ -187,6 +187,7 @@ int main(int argc, char** argv)
 			check_seeded_planner(tuning, presentation);
 			check_replay_codec();
 			replay_case = check_replay_cpu_match(game_directory);
+			check_opening(game_directory);
 		}
 		catch (...)
 		{

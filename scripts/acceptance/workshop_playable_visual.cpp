@@ -149,7 +149,7 @@ namespace
             settings.set_player_team(index, index < 2 ? PlayerTeam::a : PlayerTeam::b);
             settings.set_player_weapon(index, index % 2 == 0 ? WeaponType::sprayer : WeaponType::roller);
         }
-        return builder.build_level(settings, palette);
+        return builder.build_level(settings, palette, OpeningMode::off);
     }
 
     void settle(Level& level, int count)
@@ -185,8 +185,11 @@ namespace
         {
             const JsonValue object = objects.at(index);
             if (object.string("name") != "course_background") { continue; }
-            const std::optional<Colour> colour = colour_from_name(object.string("colour"));
-            require(colour.has_value(), "course background colour is not a palette name");
+            // A CSS name or RRGGBB, as the stage loader reads it.
+            const std::string name = object.string("colour");
+            std::optional<Colour> colour = colour_from_name(name);
+            if (!colour && name.size() == 6) { colour = Colour(name); }
+            require(colour.has_value(), "course background colour is not a colour");
             return { static_cast<int>(std::lround(colour->r * 255.0f)),
                 static_cast<int>(std::lround(colour->g * 255.0f)),
                 static_cast<int>(std::lround(colour->b * 255.0f)) };

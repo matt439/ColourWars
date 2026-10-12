@@ -220,13 +220,16 @@ namespace debug_console_acceptance
 		MenuLevelSettings settings;
 		std::unique_ptr<Level> level;
 		int builds = 0;
+		// What GameLevel would choose; the director may override it.
+		OpeningMode opening = OpeningMode::off;
 
 		void build()
 		{
 			this->level.reset();
 			this->director_.before_level_build(*this);
 			this->world_.viewports.set_layout(this->settings.screen_layout());
-			this->level = this->world_.builder->build_level(this->settings, TeamColourPair::blue_orange);
+			this->level = this->world_.builder->build_level(this->settings, TeamColourPair::blue_orange,
+				this->director_.opening_mode(this->opening));
 			++this->builds;
 			this->director_.after_level_build(*this);
 		}
@@ -296,7 +299,7 @@ namespace debug_console_acceptance
 		}
 		bool debug_countdown_over() const override
 		{
-			return this->level->state() != LevelState::start_countdown;
+			return this->level->match_started();
 		}
 		void debug_set_seat_labels(const std::vector<std::wstring>& labels) override
 		{
@@ -569,6 +572,111 @@ namespace debug_console_acceptance
 		std::error_code ignored;
 		std::filesystem::remove(saved, ignored);
 		return "real Level";
+	}
+
+	// The opening on a real Level: it runs before the countdown, nobody moves
+	// until GO, a skip lands on the split countdown, a quick rematch is
+	// shorter by the settle, and `intro` and recordings override the game.
+	void check_opening(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"opening");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		CpuWorld world(game_directory, tuning, presentation);
+		GameData data;
+		data.set_stages(&world.stages);
+		data.set_level_infos(&world.levels);
+		DebugDirector director(&tuning, &presentation);
+		director.attach(nullptr, &data);
+		DebugDirectorImpl& impl = *director.impl();
+		impl.log().set_mirror_to_debugger(false);
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const float dt = 1.0f / 60.0f;
+
+		MatchRequest roster;
+		roster.stage = "close_quarters";
+		roster.players = 2;
+		const MatchPlan plan = MatchPlanner(&world.stages).resolve(nullptr, roster,
+			MatchPlanner::ConnectedPads{}, [] { return 0u; });
+		require(plan.ok, "The opening's roster resolves");
+		CpuMatch match(world, director);
+		match.settings = plan.settings;
+		director.attach_match(match);
+
+		const std::vector<PlayerInputData> idle(input_slots::count);
+		const auto ticks_while = [&](auto still)
+			{
+				int ticks = 0;
+				for (; ticks < 2000 && still(); ++ticks)
+				{
+					match.level->update(idle, dt);
+				}
+				return ticks;
+			};
+		const OpeningTuning& timing = tuning.match().opening;
+		const float whole = timing.settle + timing.preview * 2.0f + timing.undo + timing.leave;
+		const auto about = [&](int ticks, float seconds)
+			{
+				return std::abs(static_cast<float>(ticks) * dt - seconds) <= dt * 2.0f;
+			};
+
+		match.opening = OpeningMode::full;
+		match.build();
+		Level& level = *match.level;
+		require(level.state() == LevelState::opening && level.intro_playing() &&
+			!level.match_started(), "A full opening starts before the countdown");
+		const mattmath::Vector2F start = level.player(0).rectangle().position();
+		const int opening_ticks = ticks_while([&] { return match.level->state() == LevelState::opening; });
+		require(about(opening_ticks, whole) && level.state() == LevelState::start_countdown &&
+			level.intro_playing(), "The opening runs its length, then counts down in the picture");
+		require(level.player(0).rectangle().position() == start,
+			"Nobody moves in the opening, however long it is");
+		const int countdown_ticks = ticks_while([&] { return !match.level->match_started(); });
+		require(about(countdown_ticks, tuning.match().countdown) && !level.intro_playing() &&
+			level.state() == LevelState::active, "The countdown ends at GO and the intro with it");
+
+		// A, B or Start from anyone in the match: straight to the split countdown.
+		match.build();
+		std::vector<PlayerInputData> skip(input_slots::count);
+		skip[static_cast<size_t>(match.level->player(0).player_num())].skip_intro = true;
+		match.level->update(skip, dt);
+		require(match.level->state() == LevelState::start_countdown &&
+			!match.level->intro_playing(), "A skip leaves the opening for the split countdown");
+		require(about(ticks_while([&] { return !match.level->match_started(); }),
+			tuning.match().countdown), "A skipped opening still counts down in full");
+		match.build();
+		skip.assign(input_slots::count, PlayerInputData());
+		for (int slot = 0; slot < input_slots::count; ++slot)
+		{
+			bool held = false;
+			for (int view = 0; view < match.level->player_count(); ++view)
+			{
+				held = held || match.level->player(view).player_num() == slot;
+			}
+			skip[static_cast<size_t>(slot)].skip_intro = !held;
+		}
+		match.level->update(skip, dt);
+		require(match.level->state() == LevelState::opening,
+			"A device nobody in the match holds does not skip");
+
+		// A rematch starts with the colours being tried.
+		match.opening = OpeningMode::quick;
+		match.build();
+		require(about(ticks_while([&] { return match.level->state() == LevelState::opening; }),
+			whole - timing.settle), "A quick opening leaves out the settle");
+
+		// The developer tools choose over the game.
+		require(impl.execute("intro off").ok, "intro off");
+		match.opening = OpeningMode::full;
+		match.build();
+		require(match.level->state() == LevelState::start_countdown && !match.level->intro_playing(),
+			"intro off starts at the split countdown");
+		require(impl.execute("intro auto").ok, "intro auto");
+		match.build();
+		require(match.level->state() == LevelState::opening, "intro auto is the game's choice again");
+		director.detach_match(match);
+		std::cout << "PASS opening: full, quick, skipped by a seat in the match only, frozen until GO, "
+			"intro overrides\n";
 	}
 }
 #endif

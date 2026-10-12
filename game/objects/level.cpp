@@ -25,7 +25,8 @@ Level::Level(std::unique_ptr<Scene> scene,
 	const AudioResources* audio_resources,
 	const PlaySettings* preferences,
 	// Disambiguate from DirectX::Mouse.
-	const labrador::Mouse* mouse) :
+	const labrador::Mouse* mouse,
+	OpeningMode opening) :
 	scene_(std::move(scene)),
 	players_(std::move(players)),
 	viewport_dividers_(std::move(viewport_dividers)),
@@ -65,6 +66,19 @@ Level::Level(std::unique_ptr<Scene> scene,
 		this->sound_bank_->resolve_effect(match.zoom_out_sound.name);
 	this->countdown_sound_ =
 		this->sound_bank_->resolve_wave(match.countdown_sound.name);
+
+	if (opening != OpeningMode::off)
+	{
+		const OpeningPresentation& look = presentation->opening();
+		this->monitor_ = std::make_unique<Monitor>(&look, render_resources,
+			MonitorPersona::roll(look));
+		this->silhouette_ = std::make_unique<Silhouette>(&look, render_resources);
+		this->cursor_ = std::make_unique<ScreenCursor>(&look, render_resources);
+		this->state_ = LevelState::opening;
+		// A quick rematch starts with the colours being tried.
+		this->opening_time_ = opening == OpeningMode::quick ? match.opening.settle : 0.0f;
+		this->colour_players(false, false);
+	}
 
 	this->build_opening_frame(render_resources);
 }
@@ -117,6 +131,15 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt,
 void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 	float dt, SeatInputFilter* seats)
 {
+	if (this->state_ == LevelState::opening)
+	{
+		this->update_opening(player_inputs, dt);
+		return;
+	}
+	if (this->intro_countdown_ && this->skip_requested(player_inputs))
+	{
+		this->skip_intro();
+	}
 	if (this->state_ == LevelState::start_countdown ||
 		this->start_timer_ > -1.0f)
 	{
@@ -140,6 +163,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		if (this->start_timer_ <= 0.0f)
 		{
 			this->state_ = LevelState::active;
+			this->intro_countdown_ = false;
 		}
 		else
 		{
@@ -387,6 +411,12 @@ void Level::refresh_views()
 {
 	this->scene_->clear_views();
 
+	if (this->intro_showing())
+	{
+		this->add_intro_views();
+		return;
+	}
+
 	if (this->state_ == LevelState::start_countdown ||
 		this->state_ == LevelState::active)
 	{
@@ -434,6 +464,11 @@ void Level::resume_player_sounds() const
 
 void Level::draw(Renderer& renderer) const
 {
+	if (this->intro_showing())
+	{
+		this->draw_intro(renderer);
+		return;
+	}
 	if (this->state_ == LevelState::start_countdown ||
 		this->state_ == LevelState::active)
 	{
@@ -600,6 +635,12 @@ const Player& Level::player(int view) const
 LevelState Level::state() const
 {
 	return this->state_;
+}
+
+bool Level::match_started() const
+{
+	return this->state_ == LevelState::active || this->state_ == LevelState::zoom_out ||
+		this->state_ == LevelState::overview || this->state_ == LevelState::finished;
 }
 
 int Level::count_projectiles() const

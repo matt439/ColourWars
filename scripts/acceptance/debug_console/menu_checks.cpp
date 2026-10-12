@@ -171,7 +171,7 @@ namespace debug_console_acceptance
 		model.confirm(row_index(model.rows(), "match"));
 		require(model.title() == "DEBUG / match", "The title names the category");
 		require(labels(model.rows()) == std::vector<std::string>{
-			"menu", "players", "restart", "stage", "visual", "weapon" },
+			"intro", "menu", "players", "restart", "stage", "visual", "weapon" },
 			"A category lists its entries by name");
 		model.confirm(row_index(model.rows(), "stage"));
 		require(labels(model.rows()) == std::vector<std::string>{

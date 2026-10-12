@@ -38,7 +38,8 @@ LevelBuilder::LevelBuilder(ViewportManager* viewport_manager,
 }
 
 std::unique_ptr<Level>
-	LevelBuilder::build_level(const MenuLevelSettings& settings, TeamColourPair palette)
+	LevelBuilder::build_level(const MenuLevelSettings& settings, TeamColourPair palette,
+		OpeningMode opening)
 {
 	const LevelLoadedInfo* load_info =
 		this->level_infos_->get(settings.stage());
@@ -101,5 +102,6 @@ std::unique_ptr<Level>
 		this->render_resources_,
 		this->audio_resources_,
 		this->preferences_,
-		this->mouse_);
+		this->mouse_,
+		opening);
 }

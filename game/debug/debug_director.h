@@ -2,6 +2,7 @@
 
 #include "game/debug/dev_tools.h"
 #include "game/debug/debug_targets.h"
+#include "game/objects/opening_mode.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -94,6 +95,11 @@ public:
 	// missing pad there is no reason to pause the match. False in Release.
 	bool drives_slot(int slot) const;
 
+	// GameLevel's build, between the two build hooks: how the match it is
+	// about to build begins. `chosen` is the game's own answer; `intro`
+	// overrides it, and a recording or a replay always starts without one.
+	OpeningMode opening_mode(OpeningMode chosen) const;
+
 	// The top of every MenuPage::update. Opens the console or the debug menu,
 	// takes a queued screenshot, starts a match queued by the console or by
 	// launch arguments, and dismisses pages over a match a request is waiting
@@ -132,6 +138,7 @@ inline void DebugDirector::update_match(DebugMatchTarget& match,
 inline bool DebugDirector::match_audio_paused() const { return false; }
 inline void DebugDirector::match_suspended(DebugMatchTarget&) {}
 inline bool DebugDirector::drives_slot(int) const { return false; }
+inline OpeningMode DebugDirector::opening_mode(OpeningMode chosen) const { return chosen; }
 inline bool DebugDirector::before_page_update(DebugPageTarget&, float) { return false; }
 inline void DebugDirector::draw_status(labrador::Renderer&) const {}
 inline void DebugDirector::begin_match_draw() const {}

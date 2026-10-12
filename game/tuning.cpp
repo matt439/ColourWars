@@ -161,6 +161,17 @@ namespace
 		return *colour;
 	}
 
+	float json_non_negative(const JsonValue& parent, const char* key)
+	{
+		const float value = parent.number(key);
+		if (!std::isfinite(value) || value < 0.0f)
+		{
+			throw std::runtime_error(parent.where() + ": '" + key +
+				"' must be finite and not negative.");
+		}
+		return value;
+	}
+
 	MatchTuning read_match(const JsonValue& root)
 	{
 		const JsonValue json = root.object("match");
@@ -192,6 +203,18 @@ namespace
 		const JsonValue sounds = json.object("sounds");
 		match.countdown_sound = read_sound(sounds, "countdown");
 		match.zoom_out_sound = read_sound(sounds, "zoom_out");
+
+		const JsonValue opening = json.object("opening");
+		match.opening.settle = json_non_negative(opening, "settle");
+		match.opening.preview = read_positive(opening, "preview");
+		match.opening.undo = json_non_negative(opening, "undo");
+		match.opening.leave = read_positive(opening, "leave");
+		match.opening.push = read_positive(opening, "push");
+		if (match.opening.push > match.countdown)
+		{
+			throw std::runtime_error(opening.where() +
+				": 'push' happens inside the countdown, so it cannot be longer.");
+		}
 
 		return match;
 	}
