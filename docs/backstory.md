@@ -13,10 +13,11 @@ answers a question a player might ask about a mechanic.
 A picture is open in a paint program. Everything in it is grey, and the palette
 has one empty slot.
 
-While choosing a colour for that slot, the person at the computer hovered over
-two swatches. For a moment the program previewed each one on the picture. The
-figures on one side flickered blue and the figures on the other side flickered
-orange. Then the preview was gone, and the person walked away.
+While choosing a colour for that slot, the person at the computer tried two
+colours, like tester patches on a wall: one previewed over the left half of the
+picture, the other over the right half. The figures on one side flickered blue
+and the figures on the other side flickered orange. Then the person undid both
+and walked away.
 
 Each side has now seen itself in colour, once, and can't forget it. Nobody is
 wrong, because each side saw something different. They all know only one colour
@@ -29,7 +30,7 @@ persuade the person to save it.
 |---|---|
 | The grey world, with no team hues in the scenery | Nothing has been coloured yet; the slot is still empty |
 | The random colour pairs | The two swatches this person happened to hover over |
-| Two teams | The sides of the picture that saw the same colour in the preview |
+| Two teams | The two halves of the picture, each previewed in one colour |
 | Covering ground | Persuading the person: more coverage, a stronger case |
 | The hidden score | Nobody inside the picture can see all of it |
 | The reveal | The person comes back and chooses |
@@ -44,9 +45,25 @@ at random each match from many variations: different shades, cracks, sticky
 notes, stickers and coffee rings. Each one is a different place and a different
 person, which is why every match starts with a fresh grey picture.
 
-Inside the screen, the preview flickers across the picture: one colour on one
-side, the other on the other side. Then it's gone, and the figures look at their
-hands. The camera pushes through the glass, and split screen begins.
+The intro plays the premise live, not as a memory. Every match is a different
+person, so the person who previews and then leaves is this match's person,
+happening now. The intro and the reveal mirror each other, with the same
+silhouette at both ends.
+
+1. **The bezel, full screen.** The person's silhouette sits in front. The
+   figures are frozen.
+2. **The person tries both colours.** The cursor previews one colour over the
+   left half of the picture, then the other over the right half. This is also
+   how players learn which colour is theirs, so the beat does a real job as well
+   as telling the story. Each half lines up with that team's spawn.
+3. **They undo it and leave.** The picture goes back to grey. The silhouette
+   sighs, stands and walks out, and a chair creaks.
+4. **The figures come alive.** They unfreeze, look at their hands, then at the
+   other side. The existing 3-2-1 countdown runs over this.
+5. **The camera pushes through the glass,** and split screen begins.
+
+Keep it to about 6-8 seconds, because matches restart fast. It can shorten on
+quick rematches by starting from the preview, and a button can skip it.
 
 The bezel can hint at who the person is, so it should match the silhouette in
 the reveal. A child's sticky notes go with a small silhouette; a coffee ring goes
@@ -74,7 +91,9 @@ presses Ctrl+Z, because the person is away; the pop is a sound, not a keypress.
 3. The figures freeze, as toys do when a person is watching, but they cheat:
    darting eyes, sweat drops, shaking knees.
 4. The cursor hovers over each swatch in suspense. Each hover tints the whole
-   picture in that colour again, a callback to the opening preview.
+   picture in that colour, a callback to the opening preview. The intro tinted
+   one half each because the person was trying; the reveal tints the whole
+   picture because the person is deciding.
 5. The cursor suddenly clicks the winner, and the coverage percentages appear.
 6. The silhouette leans back and leaves. Only then do the winners celebrate and
    the losers slump.
