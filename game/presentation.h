@@ -360,6 +360,8 @@ struct OpeningPresentation
 	labrador::Colour glass_colour;
 	// Behind the picture, where it does not fill the glass.
 	labrador::Colour program_colour;
+	// What the glass shows once the program is closed without saving.
+	labrador::Colour desktop_colour;
 	// The palette along the bottom of the glass: full of greys, but for one
 	// empty slot. Its height is a fraction of the glass's.
 	float palette_height = 0.0f;

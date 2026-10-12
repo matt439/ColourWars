@@ -303,7 +303,8 @@
       "figures' and cursor's heights fractions of its height, palette_height a",
       "fraction of the glass's. A beige is picked per match; the palette is",
       "greys and one empty slot. preview_strength is how far a preview",
-      "colours the picture."
+      "colours the picture. desktop_colour is the glass once the program is",
+      "closed, which is how a match nobody painted ends."
     ],
     "sprite_sheet": "sprite_sheet_1",
     "fill_frame": "pixel",
@@ -312,6 +313,7 @@
     "glass": { "x": 0.1, "y": 0.07, "width": 0.8, "height": 0.76 },
     "glass_colour": "161616",
     "program_colour": "2C2C2C",
+    "desktop_colour": "008080",
     "palette_height": 0.09,
     "palette_greys": [ "000000", "1C1C1C", "383838", "555555", "717171", "8E8E8E",
       "AAAAAA", "C6C6C6", "E3E3E3", "FFFFFF", "4A4A4A", "999999", "666666",

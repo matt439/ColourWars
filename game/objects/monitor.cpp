@@ -154,6 +154,14 @@ RectangleF Monitor::swatch(const RectangleF& screen, int which) const
         slot.y - size - gap * 2.0f, size, size);
 }
 
+RectangleF Monitor::close_button(const RectangleF& screen) const
+{
+    const RectangleF program = this->program(screen);
+    const float size = this->palette(screen).height * 0.5f;
+    const float gap = size * 0.25f;
+    return RectangleF(program.right() - size - gap, program.y + gap, size, size);
+}
+
 void Monitor::draw(DrawList& draw_list, const RectangleF& screen) const
 {
     const OpeningPresentation& look = *this->look_;
@@ -245,6 +253,25 @@ void Monitor::draw_saved(DrawList& draw_list, const RectangleF& screen,
     this->fill(draw_list, slot, colour);
     this->frame_rectangle(draw_list, slot, std::max(1.0f, slot.height * 0.08f),
         this->look_->slot_outline);
+}
+
+void Monitor::draw_close_button(DrawList& draw_list, const RectangleF& screen) const
+{
+    const OpeningPresentation& look = *this->look_;
+    const RectangleF button = this->close_button(screen);
+    const float pen = std::max(1.0f, button.width * 0.1f);
+    this->fill(draw_list, button, look.glass_colour);
+    this->frame_rectangle(draw_list, button, pen, look.slot_outline);
+    const float in = button.width * 0.28f;
+    this->line(draw_list, Vector2F(button.x + in, button.y + in),
+        Vector2F(button.right() - in, button.bottom() - in), pen, look.slot_outline);
+    this->line(draw_list, Vector2F(button.right() - in, button.y + in),
+        Vector2F(button.x + in, button.bottom() - in), pen, look.slot_outline);
+}
+
+void Monitor::draw_closed(DrawList& draw_list, const RectangleF& screen) const
+{
+    this->fill(draw_list, this->program(screen), this->look_->desktop_colour);
 }
 
 void Monitor::draw_preview(DrawList& draw_list, const RectangleF& area,

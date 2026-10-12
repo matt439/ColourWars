@@ -57,6 +57,8 @@ public:
     // The two colours being tried, in a little picker over the empty slot.
     mattmath::RectangleF swatch(const mattmath::RectangleF& screen, int which) const;
     mattmath::RectangleF empty_slot(const mattmath::RectangleF& screen) const;
+    // The program's close button, in the top corner of the glass.
+    mattmath::RectangleF close_button(const mattmath::RectangleF& screen) const;
 
     // The bezel, the glass, the program and its palette, and what is stuck on.
     void draw(labrador::DrawList& draw_list, const mattmath::RectangleF& screen) const;
@@ -65,6 +67,9 @@ public:
     // The empty slot, filled: the colour has been saved.
     void draw_saved(labrador::DrawList& draw_list, const mattmath::RectangleF& screen,
         const labrador::Colour& colour) const;
+    void draw_close_button(labrador::DrawList& draw_list, const mattmath::RectangleF& screen) const;
+    // The program closed without saving: the glass shows the desktop.
+    void draw_closed(labrador::DrawList& draw_list, const mattmath::RectangleF& screen) const;
     // Shows `colour` over part of the picture, in whatever space the list is in.
     void draw_preview(labrador::DrawList& draw_list, const mattmath::RectangleF& area,
         const labrador::Colour& colour) const;

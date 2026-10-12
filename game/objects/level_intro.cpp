@@ -245,6 +245,7 @@ void Level::draw_intro(Renderer& renderer) const
 	front.set_viewport(fullscreen);
 	front.set_camera(Camera::DEFAULT_CAMERA);
 	front.set_filter(TextureFilter::point);
+	this->monitor_->draw_close_button(front, screen);
 	if (beat.picker)
 	{
 		this->monitor_->draw_picker(front, screen,
@@ -269,7 +270,9 @@ void Level::draw_intro(Renderer& renderer) const
 // The reveal (docs/backstory.md, "The reveal"): the views pull back out of the
 // panes into the same monitor, the same person comes back and sits down,
 // hovers each colour over the whole picture, wavers, and clicks the winner;
-// the slot fills and the coverage shows; the person leaves.
+// the slot fills and the coverage shows; the person leaves. With no winner
+// (in practice, nothing painted) there is nothing to choose: the person
+// looks, then closes the program without saving.
 
 bool Level::revealed() const
 {
@@ -285,8 +288,10 @@ bool Level::reveal_showing() const
 float Level::reveal_length() const
 {
 	const RevealTuning& timing = this->tuning_->match().reveal;
+	// Once the program is closed nobody is left to celebrate.
+	const float react = this->winner_ == PlayerTeam::none ? 0.0f : timing.react;
 	return timing.walk_in + timing.hover * 2.0f + timing.decide + timing.show + timing.leave +
-		timing.react;
+		react;
 }
 
 void Level::start_reveal()
@@ -357,8 +362,7 @@ void Level::update_reveal(float dt)
 	{
 		this->sound_bank_->play_wave(this->hover_sound_, match.hover_sound.volume * gain);
 	}
-	// A draw has nothing to click: the person cannot decide.
-	if (after.clicked && !before.clicked && this->winner_ != PlayerTeam::none)
+	if (after.clicked && !before.clicked)
 	{
 		this->sound_bank_->play_wave(this->click_sound_, match.click_sound.volume * gain);
 	}
@@ -381,7 +385,8 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 	const Colour colour_b = this->team_colours_.team_colour(PlayerTeam::b);
 	const RectangleF picture = this->monitor_->picture(screen);
 
-	if (beat.showing_a || beat.showing_b)
+	const bool closing = this->winner_ == PlayerTeam::none;
+	if (!closing && (beat.showing_a || beat.showing_b))
 	{
 		// The whole picture this time: the person is deciding, not trying.
 		const Viewport view(picture);
@@ -394,16 +399,36 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 	front.set_viewport(fullscreen);
 	front.set_camera(Camera::DEFAULT_CAMERA);
 	front.set_filter(TextureFilter::point);
+	const Vector2F rest = picture.position() + Vector2F(picture.width * 0.62f, picture.height * 0.4f);
+	if (closing)
+	{
+		// Stares at the empty picture, moves to the close button, hesitates.
+		const Vector2F close = this->monitor_->close_button(screen).center();
+		const Vector2F cursor = beat.clicked ? close :
+			lerp(rest, close, beat.cursor_at_b);
+		if (beat.clicked)
+		{
+			this->monitor_->draw_closed(front, screen);
+		}
+		else
+		{
+			this->monitor_->draw_close_button(front, screen);
+		}
+		this->cursor_->draw(front, cursor, window.height);
+		this->silhouette_->draw(front, window, this->monitor_->persona(), beat.pose);
+		return;
+	}
+
+	this->monitor_->draw_close_button(front, screen);
 	if (beat.picker)
 	{
 		this->monitor_->draw_picker(front, screen, colour_a, colour_b);
 	}
-	if (beat.clicked && this->winner_ != PlayerTeam::none)
+	if (beat.clicked)
 	{
 		this->monitor_->draw_saved(front, screen, this->team_colours_.team_colour(this->winner_));
 	}
 
-	const Vector2F rest = picture.position() + Vector2F(picture.width * 0.62f, picture.height * 0.4f);
 	const Vector2F a = this->monitor_->swatch(screen, 0).center();
 	const Vector2F b = this->monitor_->swatch(screen, 1).center();
 	Vector2F cursor = lerp(rest, a, beat.cursor_at_a);
@@ -411,8 +436,7 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 	cursor = lerp(cursor, a, beat.waver);
 	if (beat.clicked)
 	{
-		cursor = this->winner_ == PlayerTeam::a ? a :
-			this->winner_ == PlayerTeam::b ? b : rest;
+		cursor = this->winner_ == PlayerTeam::a ? a : b;
 	}
 
 	if (beat.clicked)

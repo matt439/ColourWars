@@ -524,6 +524,7 @@ namespace
 		}
 		opening.glass_colour = read_colour(json, "glass_colour");
 		opening.program_colour = read_colour(json, "program_colour");
+		opening.desktop_colour = read_colour(json, "desktop_colour");
 		opening.palette_height = read_fraction(json, "palette_height");
 		opening.palette_greys = read_colours(json, "palette_greys");
 		for (const Colour& grey : opening.palette_greys)

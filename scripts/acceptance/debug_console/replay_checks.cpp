@@ -641,9 +641,13 @@ namespace debug_console_acceptance
 		require(about(played, tuning.match().duration) && level.state() == LevelState::zoom_out &&
 			level.revealed(), "The clock ends into the reveal");
 		const RevealTuning& reveal = tuning.match().reveal;
+		// Nobody painted here, so the person closes the program and nobody
+		// is left to celebrate.
+		require(level.level_end_info().winning_team() == PlayerTeam::none,
+			"A match nobody painted has no winner to click");
 		const int revealing = ticks_while([&] { return match.level->state() != LevelState::finished; });
 		require(about(revealing, tuning.match().zoom_out + reveal.walk_in + reveal.hover * 2.0f +
-			reveal.decide + reveal.show + reveal.leave + reveal.react), "The pull back and the reveal run their length");
+			reveal.decide + reveal.show + reveal.leave), "The pull back and the reveal run their length");
 
 		// A, B or Start from anyone in the match: straight to the split countdown.
 		match.build();

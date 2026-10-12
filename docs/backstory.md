@@ -138,8 +138,9 @@ Decided with the author on 2026-10-12, while the first slice was built:
   monitor, at both ends of the match.
 - **The reveal has no tie or one-team branch of its own.** The edge cases are
   only handled so they stay honest: a solo match saves the one colour that
-  played, and a dead heat (in practice, nobody painting) clicks nothing,
-  celebrates nothing and says "Draw!" on the results page.
+  played. A dead heat (in practice, nobody painting) gives the person nothing
+  to choose: they come back, stare at the empty picture, and close the program
+  without saving. Nobody celebrates, and the results page says "Draw!".
 - **After the reveal, the results screen keeps only the percentages.**
 - **A, B or Start skips the intro** (Space, Escape or Enter on the keyboard).
 - **A rematch may repeat the last colour pair.** The draw stays random.
@@ -155,6 +156,7 @@ Decided with the author on 2026-10-12, while the first slice was built:
 | Opening: figures looking at their hands, then across at the other side | Built. `FigureActing` repaints the eyes the respawn strokes locate |
 | Opening: sigh and chair creak | Not started: the bank has no such waves |
 | Reveal: pull back into the monitor, the person sits, hovers each colour over the whole picture, wavers, clicks the winner, the slot fills, the coverage shows, the person leaves | Built. `level_intro.cpp`; timings in `tuning.json` `match.reveal`, sounds `match.sounds.hover/click`; the results page then keeps only the percentages |
+| Reveal, nobody painted: the person stares, then closes the program instead of choosing | Built. The glass goes to `opening.desktop_colour` |
 | Reveal: figures freezing but cheating (darting eyes, sweat, shaking knees), then celebrating or slumping once the person has gone | Built. `tuning.json` `match.reveal.react`, `presentation.json` `opening.acting` |
 
 ## Rejected on the way, and why
