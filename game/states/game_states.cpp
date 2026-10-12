@@ -167,7 +167,9 @@ void GameLevel::build_and_enter_level()
 		set_layout(this->settings_.screen_layout());
 	// The first match of this screen has the whole intro; a rematch starts
 	// with the colours being tried. The developer tools may choose otherwise.
-	const OpeningMode opening = this->data()->debug().opening_mode(
+	// Solo practice has no person at either end: it is not a real match.
+	const bool solo = this->settings_.player_count() == 1;
+	const OpeningMode opening = solo ? OpeningMode::off : this->data()->debug().opening_mode(
 		this->builds_ == 0 ? OpeningMode::full : OpeningMode::quick);
 	++this->builds_;
 	this->level_ = this->level_builder_->build_level(this->settings_,

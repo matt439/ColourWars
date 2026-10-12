@@ -136,9 +136,10 @@ Decided with the author on 2026-10-12, while the first slice was built:
   shape; nothing is cropped.
 - **The silhouette is large, in the centre of the screen,** in front of the
   monitor, at both ends of the match.
-- **The reveal has no tie or one-team branch of its own.** The edge cases are
-  only handled so they stay honest: a solo match saves the one colour that
-  played. A dead heat (in practice, nobody painting) gives the person nothing
+- **Solo practice skips all of it.** No monitor, no person, no preview and no
+  reveal: a practice match goes straight to the split-screen countdown and
+  ends on the plain overview and the full results page.
+- **The reveal has no tie branch of its own.** A dead heat (in practice, nobody painting) gives the person nothing
   to choose: they come back, stare at the empty picture, and close the program
   without saving. Nobody celebrates, and the results page says "Draw!".
 - **After the reveal, the results screen keeps only the percentages.**

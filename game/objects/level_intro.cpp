@@ -304,13 +304,6 @@ void Level::start_reveal()
 	// results agree on.
 	this->end_info_ = this->level_end_info();
 	this->winner_ = this->end_info_.winning_team();
-	if (this->end_info_.one_team_only())
-	{
-		// Alone, the one colour that tried is saved, if it painted anything.
-		const bool painted = this->end_info_.team_a_area + this->end_info_.team_b_area > 0.0f;
-		this->winner_ = !painted ? PlayerTeam::none :
-			this->end_info_.team_a_played ? PlayerTeam::a : PlayerTeam::b;
-	}
 	this->reveal_time_ = 0.0f;
 }
 
@@ -447,13 +440,8 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 		const std::wstring texts[2] = { this->end_info_.team_a_percentage_string(),
 			this->end_info_.team_b_percentage_string() };
 		const Colour colours[2] = { colour_a, colour_b };
-		const bool played[2] = { this->end_info_.team_a_played, this->end_info_.team_b_played };
 		for (int side = 0; side < 2; ++side)
 		{
-			if (!played[side])
-			{
-				continue;
-			}
 			const Vector2F size = this->render_resources_->measure_text(this->percent_font_, texts[side]);
 			if (size.y <= 0.0f)
 			{
