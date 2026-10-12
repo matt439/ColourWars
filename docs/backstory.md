@@ -150,9 +150,10 @@ Decided with the author on 2026-10-12, while the first slice was built:
 | Opening: monitor, person, preview, undo, leaving, countdown in the picture, push through the glass | Built. `level_intro.cpp`; `Monitor`, `Silhouette`, `ScreenCursor`; timings in `tuning.json` `match.opening`, look in `presentation.json` `opening` |
 | Opening: skip, quick rematch | Built. A, B or Start skips; a rematch starts at the preview |
 | Rematch: a new random monitor | Built. Rolled per match from `opening.bezel_shades` and the decorations |
-| Opening: figures looking at their hands; sigh and chair sounds | Not started |
+| Opening: figures looking at their hands, then across at the other side | Built. `FigureActing` repaints the eyes the respawn strokes locate |
+| Opening: sigh and chair creak | Not started: the bank has no such waves |
 | Reveal: pull back into the monitor, the person sits, hovers each colour over the whole picture, wavers, clicks the winner, the slot fills, the coverage shows, the person leaves | Built. `level_intro.cpp`; timings in `tuning.json` `match.reveal`, sounds `match.sounds.hover/click`; the results page then keeps only the percentages |
-| Reveal: figures freezing and cheating, then celebrating or slumping | Not started |
+| Reveal: figures freezing but cheating (darting eyes, sweat, shaking knees), then celebrating or slumping once the person has gone | Built. `tuning.json` `match.reveal.react`, `presentation.json` `opening.acting` |
 
 ## Rejected on the way, and why
 

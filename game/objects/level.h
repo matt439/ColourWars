@@ -29,6 +29,7 @@
 #include "game/objects/opening_mode.h"
 #include "game/objects/silhouette.h"
 #include "game/objects/screen_cursor.h"
+#include "game/objects/figure_acting.h"
 
 enum class LevelState
 {
@@ -241,6 +242,10 @@ private:
 	std::unique_ptr<Monitor> monitor_;
 	std::unique_ptr<Silhouette> silhouette_;
 	std::unique_ptr<ScreenCursor> cursor_;
+	std::unique_ptr<FigureActing> acting_;
+	// By view: what each figure is doing, and for how long.
+	std::vector<FigureAct> acts_;
+	float act_time_ = 0.0f;
 	// What of the world the picture shows, and where its two halves meet.
 	mattmath::RectangleF picture_bounds_;
 	float picture_middle_ = 0.0f;
@@ -272,6 +277,9 @@ private:
 	void start_reveal();
 	void update_reveal(float dt);
 	void draw_reveal(labrador::DrawList& front, const mattmath::RectangleF& screen) const;
+	// Chooses each figure's act for this moment and poses it.
+	void update_acting(float dt);
+	void draw_acting(labrador::DrawList& list, int view) const;
 
 	OpeningBeat opening_beat() const;
 	float opening_length() const;

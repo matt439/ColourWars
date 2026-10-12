@@ -116,9 +116,25 @@ void Player::draw(DrawList& draw_list) const
         return;
     }
 
-    this->draw_figure(draw_list, this->rectangle_);
-    this->primary_->draw(draw_list, this->showing_debug_);
+    this->draw_figure(draw_list, this->posed_rectangle());
+    if (this->pose_.tool)
+    {
+        this->primary_->draw(draw_list, this->showing_debug_);
+    }
     this->movement_feedback_.draw(draw_list);
+}
+
+RectangleF Player::posed_rectangle() const
+{
+    const float squash = this->rectangle_.height * this->pose_.squash;
+    return RectangleF(this->rectangle_.x + this->pose_.offset.x,
+        this->rectangle_.y + this->pose_.offset.y + squash,
+        this->rectangle_.width, this->rectangle_.height - squash);
+}
+
+void Player::set_pose(const FigurePose& pose)
+{
+    this->pose_ = pose;
 }
 
 void Player::draw_figure(DrawList& draw_list, const RectangleF& rectangle) const

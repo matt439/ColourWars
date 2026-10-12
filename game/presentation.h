@@ -383,6 +383,14 @@ struct OpeningPresentation
 	std::string percent_font;
 	float percent_height = 0.0f;
 	labrador::Colour percent_shadow;
+	// The figures' acting: what an eye is painted out with, the sweat, and how
+	// far a winner hops, a cheat shakes and a loser slumps, as fractions of a
+	// figure's height (the shake of its width).
+	labrador::Colour face;
+	labrador::Colour sweat;
+	float hop = 0.0f;
+	float shake = 0.0f;
+	float slump = 0.0f;
 };
 
 // Presentation settings parsed once at startup.

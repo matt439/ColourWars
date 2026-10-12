@@ -59,6 +59,7 @@ add_executable(ColourWars WIN32
     objects/collision_object_type.cpp
     objects/crude_drawing.cpp
     objects/debug_text.cpp
+    objects/figure_acting.cpp
     objects/interface_gameplay.cpp
     objects/level.cpp
     objects/level_builder.cpp

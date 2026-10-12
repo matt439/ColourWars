@@ -206,7 +206,8 @@ void Level::draw_intro(Renderer& renderer) const
 	behind.set_filter(TextureFilter::point);
 	this->monitor_->draw(behind, screen);
 
-	this->scene_->draw(renderer);
+	// Each view's figures act in that view's own camera.
+	this->scene_->draw(renderer, [this](int view, DrawList& list) { this->draw_acting(list, view); });
 
 	// In front: the last view executes after every other.
 	DrawList front = renderer.view(renderer.view_count() - 1);
@@ -284,7 +285,8 @@ bool Level::reveal_showing() const
 float Level::reveal_length() const
 {
 	const RevealTuning& timing = this->tuning_->match().reveal;
-	return timing.walk_in + timing.hover * 2.0f + timing.decide + timing.show + timing.leave;
+	return timing.walk_in + timing.hover * 2.0f + timing.decide + timing.show + timing.leave +
+		timing.react;
 }
 
 void Level::start_reveal()
@@ -434,4 +436,115 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 
 	this->cursor_->draw(front, cursor, window.height);
 	this->silhouette_->draw(front, window, this->monitor_->persona(), beat.pose);
+}
+
+// ---------------------------------------------------------------------------
+// The figures' acting: as they come alive they look at their hands, then
+// across at the other side; while the person is back they freeze, but cheat;
+// alone again, the winners celebrate and the losers slump.
+
+void Level::update_acting(float dt)
+{
+	if (this->acting_ == nullptr)
+	{
+		return;
+	}
+	FigureAct act = FigureAct::none;
+	if (this->state_ == LevelState::start_countdown && this->intro_countdown_)
+	{
+		const float countdown = this->tuning_->match().countdown;
+		const float alive = countdown > 0.0f ? 1.0f - this->start_timer_ / countdown : 1.0f;
+		act = alive < 0.35f ? FigureAct::look_at_hands :
+			alive < 0.7f ? FigureAct::look_across : FigureAct::none;
+	}
+	else if (this->state_ == LevelState::overview || this->state_ == LevelState::finished)
+	{
+		const RevealTuning& timing = this->tuning_->match().reveal;
+		const bool alone = this->reveal_time_ >= this->reveal_length() - timing.react;
+		act = alone ? FigureAct::celebrate : FigureAct::cheat;
+	}
+	if (this->state_ != LevelState::finished)
+	{
+		this->act_time_ += dt;
+	}
+
+	const OpeningPresentation& look = this->presentation_->opening();
+	this->acts_.assign(this->players_.size(), FigureAct::none);
+	for (size_t view = 0; view < this->players_.size(); ++view)
+	{
+		Player* player = this->players_[view];
+		FigureAct mine = act;
+		if (mine == FigureAct::celebrate && this->winner_ != PlayerTeam::none &&
+			player->team() != this->winner_)
+		{
+			mine = FigureAct::slump;
+		}
+		this->acts_[view] = mine;
+
+		// Each figure out of step with the others.
+		const float time = this->act_time_ + static_cast<float>(view) * 0.37f;
+		const float height = player->rectangle().height;
+		FigurePose pose;
+		switch (mine)
+		{
+		case FigureAct::cheat:
+			// Knees shaking: a jitter of the whole figure, a few times a second.
+			pose.offset.x = (static_cast<int>(time * 18.0f) % 2 == 0 ? 1.0f : -1.0f) *
+				look.shake * player->rectangle().width;
+			break;
+		case FigureAct::celebrate:
+			pose.offset.y = -std::abs(std::sin(time * 3.14159265f * 2.2f)) * look.hop * height;
+			pose.tool = false;
+			break;
+		case FigureAct::slump:
+			pose.squash = look.slump;
+			break;
+		default:
+			break;
+		}
+		player->set_pose(pose);
+	}
+}
+
+void Level::draw_acting(DrawList& list, int /*view*/) const
+{
+	if (this->acting_ == nullptr || this->acts_.size() != this->players_.size())
+	{
+		return;
+	}
+	for (size_t index = 0; index < this->players_.size(); ++index)
+	{
+		const Player* player = this->players_[index];
+		const FigureAct act = this->acts_[index];
+		// The eyes are the original art's; the workshop figures have their own.
+		if (act == FigureAct::none || player->state() == PlayerState::dead ||
+			player->workshop_visual() != nullptr)
+		{
+			continue;
+		}
+		const RectangleF figure = player->posed_rectangle();
+		const bool right = player->facing_right();
+		const float time = this->act_time_ + static_cast<float>(index) * 0.37f;
+		const float across = player->team() == PlayerTeam::a ? 1.0f : -1.0f;
+		switch (act)
+		{
+		case FigureAct::look_at_hands:
+			this->acting_->draw_eyes(list, figure, right, Vector2F(right ? 0.6f : -0.6f, 1.0f));
+			break;
+		case FigureAct::look_across:
+			this->acting_->draw_eyes(list, figure, right, Vector2F(across, 0.0f));
+			break;
+		case FigureAct::cheat:
+			// Darting: one side, then the other, never at the person.
+			this->acting_->draw_eyes(list, figure, right,
+				Vector2F(std::sin(time * 4.3f) > 0.0f ? 1.0f : -1.0f, -0.2f));
+			this->acting_->draw_sweat(list, figure, right, time);
+			break;
+		case FigureAct::slump:
+			this->acting_->draw_eyes(list, figure, right, Vector2F(0.0f, 1.0f));
+			break;
+		default:
+			break;
+		}
+	}
 }

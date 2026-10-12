@@ -549,6 +549,12 @@ namespace
 		opening.percent_font = json.identifier("percent_font");
 		opening.percent_height = read_fraction(json, "percent_height");
 		opening.percent_shadow = read_colour(json, "percent_shadow");
+		const JsonValue acting = json.object("acting");
+		opening.face = read_colour(acting, "face");
+		opening.sweat = read_colour(acting, "sweat");
+		opening.hop = read_fraction(acting, "hop");
+		opening.shake = read_fraction(acting, "shake");
+		opening.slump = read_fraction(acting, "slump");
 		if (opening.adult_height <= 0.0f || opening.child_height <= 0.0f ||
 			opening.cursor_size <= 0.0f || opening.palette_height <= 0.0f ||
 			opening.percent_height <= 0.0f)

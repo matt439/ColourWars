@@ -47,13 +47,14 @@
                 "Seconds of the reveal after the pull back (zoom_out), in place",
                 "of overview when the match had an intro: the person sits down,",
                 "hovers each colour, wavers and clicks, the coverage shows, the",
-                "person leaves."
+                "person leaves, then the winners celebrate and the losers slump."
             ],
             "walk_in": 1.2,
             "hover": 1.0,
             "decide": 1.1,
             "show": 1.6,
-            "leave": 1.2
+            "leave": 1.2,
+            "react": 1.6
         }
     },
 

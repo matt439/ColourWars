@@ -62,6 +62,8 @@ struct RevealTuning
 	float show = 0.0f;
 	// The person leans back and leaves.
 	float leave = 0.0f;
+	// Alone again: the winners celebrate and the losers slump.
+	float react = 0.0f;
 };
 
 struct MatchTuning

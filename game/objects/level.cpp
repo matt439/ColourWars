@@ -74,6 +74,8 @@ Level::Level(std::unique_ptr<Scene> scene,
 			MonitorPersona::roll(look));
 		this->silhouette_ = std::make_unique<Silhouette>(&look, render_resources);
 		this->cursor_ = std::make_unique<ScreenCursor>(&look, render_resources);
+		this->acting_ = std::make_unique<FigureActing>(&look, &presentation->respawn_redraw(),
+			render_resources);
 		this->percent_font_ = render_resources->resolve_sprite_font(look.percent_font);
 		this->hover_sound_ = this->sound_bank_->resolve_wave(match.hover_sound.name);
 		this->click_sound_ = this->sound_bank_->resolve_wave(match.click_sound.name);
@@ -126,6 +128,7 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt,
 	this->refresh_layout();
 	this->frame_dt_ = dt;
 	this->update_state(player_inputs, dt, seats);
+	this->update_acting(dt);
 
 	// Refresh on every path so views and overlays reflect the completed tick.
 	this->refresh_views();

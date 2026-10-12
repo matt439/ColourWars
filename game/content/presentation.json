@@ -330,7 +330,15 @@
     "figure_grey": "B4B4B4",
     "percent_font": "gill_sans_ultra_bold_144",
     "percent_height": 0.11,
-    "percent_shadow": "000000"
+    "percent_shadow": "000000",
+    "acting": {
+      "_comment": "The figures acting for the person: face paints an eye out (the body's tint), hop/slump are fractions of a figure's height, shake of its width.",
+      "face": "BURLYWOOD",
+      "sweat": "8FD3FF",
+      "hop": 0.22,
+      "shake": 0.03,
+      "slump": 0.12
+    }
   },
 
   "match": {

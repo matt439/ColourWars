@@ -51,6 +51,15 @@ enum class PlayerAnimationState
 };
 
 
+// How the opening and the reveal move a figure without touching the
+// simulation: drawn shifted, squashed from the feet up, without its tool.
+struct FigurePose
+{
+    mattmath::Vector2F offset = mattmath::Vector2F::ZERO;
+    float squash = 0.0f;
+    bool tool = true;
+};
+
 class Player final : public labrador::MovingObject,
                      public labrador::CollisionObject,
                      public labrador::AnimationObject, public labrador::TextureObject
@@ -184,6 +193,10 @@ public:
     // In the opening the figures are grey until they see their colour
     // (docs/backstory.md): uniform and tool in `grey` until coloured.
     void set_coloured(bool coloured, const labrador::Colour& grey);
+    // Set by Level between updates; drawing only.
+    void set_pose(const FigurePose& pose);
+    // Where the figure is drawn, with its pose.
+    mattmath::RectangleF posed_rectangle() const;
 
 private:
     labrador::Camera camera_ = labrador::Camera::DEFAULT_CAMERA;
@@ -194,6 +207,7 @@ private:
     MovementFeedback movement_feedback_;
     RespawnRedraw respawn_redraw_;
     std::optional<labrador::Colour> grey_;
+    FigurePose pose_;
     std::unique_ptr<PlayerVisual> workshop_visual_;
     bool had_ground_support_ = false;
     bool landing_feedback_ready_ = false;

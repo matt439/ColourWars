@@ -643,7 +643,7 @@ namespace debug_console_acceptance
 		const RevealTuning& reveal = tuning.match().reveal;
 		const int revealing = ticks_while([&] { return match.level->state() != LevelState::finished; });
 		require(about(revealing, tuning.match().zoom_out + reveal.walk_in + reveal.hover * 2.0f +
-			reveal.decide + reveal.show + reveal.leave), "The pull back and the reveal run their length");
+			reveal.decide + reveal.show + reveal.leave + reveal.react), "The pull back and the reveal run their length");
 
 		// A, B or Start from anyone in the match: straight to the split countdown.
 		match.build();

@@ -218,6 +218,7 @@ namespace
 		match.reveal.decide = read_positive(reveal, "decide");
 		match.reveal.show = read_positive(reveal, "show");
 		match.reveal.leave = read_positive(reveal, "leave");
+		match.reveal.react = read_positive(reveal, "react");
 		if (match.opening.push > match.countdown)
 		{
 			throw std::runtime_error(opening.where() +
