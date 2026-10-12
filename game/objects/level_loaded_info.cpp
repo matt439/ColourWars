@@ -58,6 +58,26 @@ void LevelLoadedInfo::validate() const
 		validate_position(root, spawn, out_of_bounds, "a team_b spawn");
 	}
 
+	// The opening previews team A's colour over the left half of the picture
+	// and team B's over the right, so each team must start on its own half.
+	const float middle = out_of_bounds.x + out_of_bounds.width / 2.0f;
+	for (const Vector2F& spawn : team_a)
+	{
+		if (spawn.x >= middle)
+		{
+			throw std::runtime_error(root.where() + ": a team_a spawn is on the right "
+				"half of the stage; team A starts on the left, team B on the right.");
+		}
+	}
+	for (const Vector2F& spawn : team_b)
+	{
+		if (spawn.x < middle)
+		{
+			throw std::runtime_error(root.where() + ": a team_b spawn is on the left "
+				"half of the stage; team A starts on the left, team B on the right.");
+		}
+	}
+
 	this->validate_stations(out_of_bounds);
 }
 

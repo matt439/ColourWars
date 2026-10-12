@@ -637,7 +637,9 @@ int main(int argc, char** argv)
         {
             if (scenery.at(index).string("name") == "course_background")
             {
-                background = colour_from_name(scenery.at(index).string("colour"));
+                const std::string name = scenery.at(index).string("colour");
+                background = colour_from_name(name);
+                if (!background && name.size() == 6) { background = Colour(name); }
             }
         }
         require(background.has_value(), "Movement Course background colour was not found");

@@ -100,7 +100,7 @@
                 "height": 1480.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "boundary_right",
@@ -114,7 +114,7 @@
                 "height": 1480.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "boundary_ceiling",
@@ -128,7 +128,7 @@
                 "height": 80.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "recovery_floor",
@@ -382,7 +382,7 @@
                 "height": 16.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "short_gap_recovery_low",
@@ -396,7 +396,7 @@
                 "height": 16.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "short_gap_recovery_high",
@@ -410,7 +410,7 @@
                 "height": 16.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "long_gap_recovery_low",
@@ -424,7 +424,7 @@
                 "height": 16.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "long_gap_recovery_high",
@@ -438,7 +438,7 @@
                 "height": 16.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "running_gap_recovery_low",
@@ -452,7 +452,7 @@
                 "height": 16.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "running_gap_recovery_high",
@@ -466,7 +466,7 @@
                 "height": 16.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         }
     ],
     "non_collision_objects": [
@@ -481,7 +481,7 @@
                 "width": 5680.0,
                 "height": 1480.0
             },
-            "colour": "DARK_SLATE_GREY"
+            "colour": "404040"
         }
     ]
 }

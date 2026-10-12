@@ -188,7 +188,9 @@ namespace
         for (const char* type : { "Structure", "StructureJumpThrough", "StructurePaintable",
             "StructureRampRight", "StructureRampLeft", "Visual", "SpawnA", "SpawnB" })
         {
-            const Entry added = document.add_object(type, { 100, 200, 300, 150 });
+            // Team B spawns on the right half of the template's stage.
+            const double left = std::string(type) == "SpawnB" ? 2600 : 100;
+            const Entry added = document.add_object(type, { left, 200, 300, 150 });
             require(document.validate().empty(), "A palette item creates an invalid document");
             if (std::string(type) == "StructureJumpThrough")
             {

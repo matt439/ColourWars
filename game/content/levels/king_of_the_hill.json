@@ -94,7 +94,7 @@
                 "height": 7000.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "boundary_ceiling",
@@ -109,7 +109,7 @@
                 "height": 100.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "boundary_wall_right",
@@ -124,7 +124,7 @@
                 "height": 7000.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
 
 
@@ -144,7 +144,7 @@
                 "height": 50.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_a_wall",
@@ -159,7 +159,7 @@
                 "height": 195.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_a_ceiling",
@@ -174,7 +174,7 @@
                 "height": 10.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "spawn_b_floor",
@@ -189,7 +189,7 @@
                 "height": 50.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_b_wall",
@@ -204,7 +204,7 @@
                 "height": 195.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_a_ceiling",
@@ -219,7 +219,7 @@
                 "height": 10.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
 
 
@@ -270,7 +270,7 @@
                 "y3": 5550.0
             },
             "collision_type": "STRUCTURE_RAMP_RIGHT",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "mountain_level_1_centre",
@@ -285,7 +285,7 @@
                 "height": 450.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "mountain_level_1_ramp_west",
@@ -302,7 +302,7 @@
                 "y3": 5550.0
             },
             "collision_type": "STRUCTURE_RAMP_LEFT",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
 
         {
@@ -526,7 +526,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "castle_facade_floor_left",
@@ -541,7 +541,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "castle_facade_wall_left",
@@ -556,7 +556,7 @@
                 "height": 800.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "castle_facade_floor_right",
@@ -571,7 +571,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "castle_facade_wall_right",
@@ -586,7 +586,7 @@
                 "height": 800.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "castle_facade_ceiling",
@@ -601,7 +601,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "castle_floor_left",
@@ -792,7 +792,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "castle_platform_right",
@@ -807,7 +807,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "castle_room_entrance",
@@ -822,7 +822,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "castle_room_floor_left",
@@ -885,7 +885,7 @@
                 "width": 6000.0,
                 "height": 6000.0
             },
-            "colour": "DARK_SLATE_GREY"
+            "colour": "404040"
         },
         {
             "name": "arena_panel_joint_vertical_1",
@@ -1054,7 +1054,7 @@
                 "width": 158.0,
                 "height": 8.0
             },
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_left_backplate_mark",
@@ -1067,7 +1067,7 @@
                 "width": 52.0,
                 "height": 28.0
             },
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_right_backplate",
@@ -1093,7 +1093,7 @@
                 "width": 158.0,
                 "height": 8.0
             },
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_right_backplate_mark",
@@ -1106,7 +1106,7 @@
                 "width": 52.0,
                 "height": 28.0
             },
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         }
     ]
 }

@@ -219,12 +219,12 @@ namespace colourwars_editor
                 "zoom_out_start_bounds":{"x":540,"y":320,"width":1920,"height":1080},
                 "zoom_out_finish_bounds":{"x":0,"y":0,"width":3000,"height":1400}},
             "collision_objects":[{"name":"floor","type":"StructurePaintable",
-                "sheet_name":"sprite_sheet_1","frame_name":"square_white_4","colour":"GREY",
+                "sheet_name":"sprite_sheet_1","frame_name":"square_white_4","colour":"GAINSBORO",
                 "rectangle":{"x":0,"y":1200,"width":3000,"height":100},
                 "collision_type":"STRUCTURE_PAINTABLE",
                 "paintable_faces":{"left":false,"top":true,"right":false,"bottom":false}}],
             "non_collision_objects":[{"name":"background","type":"Visual",
-                "sheet_name":"sprite_sheet_1","frame_name":"square_white_4","colour":"LIGHT_SKY_BLUE",
+                "sheet_name":"sprite_sheet_1","frame_name":"square_white_4","colour":"404040",
                 "rectangle":{"x":-200,"y":-200,"width":3400,"height":1800}}]
         })");
         validate_document(document);
@@ -470,8 +470,8 @@ namespace colourwars_editor
                 value.AddMember("sheet_name", "sprite_sheet_1", allocator);
                 value.AddMember("frame_name", Json(ramp_left || ramp_right ? "ramp_right_200_100" :
                     "square_white_4", allocator), allocator);
-                value.AddMember("colour", Json(visual ? "WHITE" : (paintable ? "GREY" :
-                    (jump ? "TAN" : "SADDLE_BROWN")), allocator), allocator);
+                value.AddMember("colour", Json(visual ? "WHITE" : (paintable ? "GAINSBORO" :
+                    (jump ? "A0A0A0" : "808080")), allocator), allocator);
                 if (ramp_left || ramp_right)
                 {
                     Json triangle(rapidjson::kObjectType);

@@ -127,26 +127,16 @@ namespace colourwars_editor
         bool known_colour(const std::string& colour)
         {
             // These are the CSS names the game's content loader accepts, including
-            // its uppercase/underscore spelling. No hexadecimal colour extension.
+            // its uppercase/underscore spelling, and only the grey ones: the game
+            // refuses a hue in the scenery. RRGGBB greys are accepted below.
             constexpr std::string_view names =
-                " ALICE_BLUE ANTIQUE_WHITE AQUA AQUAMARINE AZURE BEIGE BISQUE BLACK BLANCHED_ALMOND"
-                " BLUE BLUE_VIOLET BROWN BURLYWOOD CADET_BLUE CHARTREUSE CHOCOLATE CORAL CORNFLOWER_BLUE"
-                " CORNSILK CRIMSON CYAN DARK_BLUE DARK_CYAN DARK_GOLDENROD DARK_GRAY DARK_GREEN DARK_GREY"
-                " DARK_KHAKI DARK_MAGENTA DARK_OLIVE_GREEN DARK_ORANGE DARK_ORCHID DARK_RED DARK_SALMON"
-                " DARK_SEA_GREEN DARK_SLATE_BLUE DARK_SLATE_GRAY DARK_SLATE_GREY DARK_TURQUOISE DARK_VIOLET"
-                " DEEP_PINK DEEP_SKY_BLUE DIM_GRAY DIM_GREY DODGER_BLUE FIRE_BRICK FLORAL_WHITE FOREST_GREEN"
-                " FUCHSIA GAINSBORO GHOST_WHITE GOLD GOLDENROD GRAY GREEN GREEN_YELLOW GREY HONEYDEW HOT_PINK"
-                " INDIAN_RED INDIGO IVORY KHAKI LAVENDER LAVENDER_BLUSH LAWN_GREEN LEMON_CHIFFON LIGHT_BLUE"
-                " LIGHT_CORAL LIGHT_CYAN LIGHT_GOLDENROD_YELLOW LIGHT_GRAY LIGHT_GREEN LIGHT_GREY LIGHT_PINK"
-                " LIGHT_SALMON LIGHT_SEA_GREEN LIGHT_SKY_BLUE LIGHT_SLATE_GRAY LIGHT_SLATE_GREY LIGHT_STEEL_BLUE"
-                " LIGHT_YELLOW LIME LIME_GREEN LINEN MAGENTA MAROON MEDIUM_AQUAMARINE MEDIUM_BLUE MEDIUM_ORCHID"
-                " MEDIUM_PURPLE MEDIUM_SEA_GREEN MEDIUM_SLATE_BLUE MEDIUM_SPRING_GREEN MEDIUM_TURQUOISE"
-                " MEDIUM_VIOLET_RED MIDNIGHT_BLUE MINT_CREAM MISTY_ROSE MOCCASIN NAVAJO_WHITE NAVY OLD_LACE"
-                " OLIVE OLIVE_DRAB ORANGE ORANGE_RED ORCHID PALE_GOLDENROD PALE_GREEN PALE_TURQUOISE"
-                " PALE_VIOLET_RED PAPAYA_WHIP PEACH_PUFF PERU PINK PLUM POWDER_BLUE PURPLE REBECCA_PURPLE"
-                " RED ROSY_BROWN ROYAL_BLUE SADDLE_BROWN SALMON SANDY_BROWN SEASHELL SEA_GREEN SIENNA SILVER"
-                " SKY_BLUE SLATE_BLUE SLATE_GRAY SLATE_GREY SNOW SPRING_GREEN STEEL_BLUE TAN TEAL THISTLE"
-                " TOMATO TURQUOISE VIOLET WHEAT WHITE WHITE_SMOKE YELLOW YELLOW_GREEN ";
+                " BLACK DARK_GRAY DARK_GREY DIM_GRAY DIM_GREY GAINSBORO GRAY GREY LIGHT_GRAY LIGHT_GREY SILVER WHITE WHITE_SMOKE ";
+            if (colour.length() == 6 &&
+                colour.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos)
+            {
+                const auto pair = [&](size_t at) { return std::stoi(colour.substr(at, 2), nullptr, 16); };
+                return pair(0) == pair(2) && pair(2) == pair(4);
+            }
             return !colour.empty() && colour.find(' ') == std::string::npos &&
                 names.find(" " + colour + " ") != std::string_view::npos;
         }
@@ -188,7 +178,7 @@ namespace colourwars_editor
             }
             if (!known_colour(string(object, "colour")))
             {
-                fail("Unknown colour name; use an uppercase game colour such as SADDLE_BROWN.");
+                fail("Scenery is grey: use a grey colour name such as GAINSBORO, or RRGGBB with three equal pairs.");
             }
             if (!collision)
             {
@@ -282,6 +272,12 @@ namespace colourwars_editor
                         y < arena.y || y > arena.y + arena.height)
                     {
                         fail(std::string(team) + " has a spawn outside the out-of-bounds rectangle.");
+                    }
+                    // The opening previews each team's colour over its own half.
+                    const double middle = arena.x + arena.width / 2.0;
+                    if ((std::string(team) == "team_a") != (x < middle))
+                    {
+                        fail("Team A spawns on the left half of the stage and team B on the right.");
                     }
                 }
             }

@@ -43,17 +43,30 @@ namespace
 		size_t index_;
 	};
 
-	// Add the source file and object context to an invalid CSS colour error.
+	bool is_hex_rgb(const std::string& text)
+	{
+		return text.length() == 6 &&
+			text.find_first_not_of("0123456789abcdefABCDEF") == std::string::npos;
+	}
+
+	// A CSS name or RRGGBB, and grey: nothing in the picture has been coloured
+	// yet, so team hues never appear in the scenery (docs/backstory.md).
 	Colour colour_of(const JsonValue& json)
 	{
 		const std::string name = json.string("colour");
-		const std::optional<Colour> colour = colour_from_name(name);
-		if (!colour)
+		const std::optional<Colour> named = colour_from_name(name);
+		if (!named && !is_hex_rgb(name))
 		{
 			throw std::runtime_error(json.where() +
-				": '" + name + "' is not a colour name");
+				": '" + name + "' is not a colour name or RRGGBB");
 		}
-		return *colour;
+		const Colour colour = named ? *named : Colour(name);
+		if (colour.r != colour.g || colour.g != colour.b)
+		{
+			throw std::runtime_error(json.where() + ": '" + name +
+				"' is not a grey; the picture is grey until a colour is saved");
+		}
+		return colour;
 	}
 
 	// Accept both rectangle encodings; report the object and expected keys

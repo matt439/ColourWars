@@ -132,6 +132,15 @@ Decided with the author on 2026-10-12, while the first slice was built:
 - **Two-player split screen stays top/bottom.** The stages are wide bands, so
   left/right panes would be slivers. The preview shows each team its side
   before the split.
+- **The picture is scaled down to fit the monitor's glass,** whatever its
+  shape; nothing is cropped.
+- **The silhouette is large, in the centre of the screen,** in front of the
+  monitor, at both ends of the match.
+- **The reveal has no tie or one-team branch.** A match always has two teams,
+  and the coverage is never exactly equal.
+- **After the reveal, the results screen keeps only the percentages.**
+- **A, B or Start skips the intro** (Space, Escape or Enter on the keyboard).
+- **A rematch may repeat the last colour pair.** The draw stays random.
 
 | Beat | State |
 |---|---|

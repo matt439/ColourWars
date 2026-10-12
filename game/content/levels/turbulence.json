@@ -94,7 +94,7 @@
                 "height": 7000.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "boundary_ceiling",
@@ -109,7 +109,7 @@
                 "height": 100.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "boundary_wall_right",
@@ -124,7 +124,7 @@
                 "height": 7000.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
 
 
@@ -144,7 +144,7 @@
                 "height": 50.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_a_wall",
@@ -159,7 +159,7 @@
                 "height": 195.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_a_ceiling",
@@ -174,7 +174,7 @@
                 "height": 10.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "spawn_b_floor",
@@ -189,7 +189,7 @@
                 "height": 50.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_b_wall",
@@ -204,7 +204,7 @@
                 "height": 195.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_a_ceiling",
@@ -219,7 +219,7 @@
                 "height": 10.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
 
 
@@ -262,7 +262,7 @@
                 "height": 975.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "central_divider_ledge_left",
@@ -277,7 +277,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "central_divider_ledge_right",
@@ -292,7 +292,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE",
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "central_divider_ledge_paint",
@@ -377,7 +377,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "upper_jump_left",
@@ -392,7 +392,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "upper_jump_right",
@@ -407,7 +407,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "upper_top_paint",
@@ -451,7 +451,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "left_bottom_right_jump",
@@ -466,7 +466,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "left_lower_paint",
@@ -504,7 +504,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "left_mid_right_jump",
@@ -519,7 +519,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "left_mid_paint",
@@ -556,7 +556,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
 
 
@@ -577,7 +577,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "right_bottom_right_jump",
@@ -592,7 +592,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "right_lower_paint",
@@ -630,7 +630,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "right_mid_right_jump",
@@ -645,7 +645,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         },
         {
             "name": "right_mid_paint",
@@ -682,7 +682,7 @@
                 "height": 25.0
             },
             "collision_type": "STRUCTURE_JUMP_THROUGH",
-            "colour": "LIGHT_STEEL_BLUE"
+            "colour": "A0A0A0"
         }
 
 
@@ -704,7 +704,7 @@
                 "width": 6000.0,
                 "height": 6000.0
             },
-            "colour": "DARK_SLATE_GREY"
+            "colour": "404040"
         },
         {
             "name": "arena_panel_joint_vertical_1",
@@ -860,7 +860,7 @@
                 "width": 158.0,
                 "height": 8.0
             },
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_left_backplate_mark",
@@ -873,7 +873,7 @@
                 "width": 52.0,
                 "height": 28.0
             },
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_right_backplate",
@@ -899,7 +899,7 @@
                 "width": 158.0,
                 "height": 8.0
             },
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         },
         {
             "name": "spawn_right_backplate_mark",
@@ -912,7 +912,7 @@
                 "width": 52.0,
                 "height": 28.0
             },
-            "colour": "SLATE_GREY"
+            "colour": "808080"
         }
     ]
 }
