@@ -299,6 +299,13 @@ void Level::start_reveal()
 	// results agree on.
 	this->end_info_ = this->level_end_info();
 	this->winner_ = this->end_info_.winning_team();
+	if (this->end_info_.one_team_only())
+	{
+		// Alone, the one colour that tried is saved, if it painted anything.
+		const bool painted = this->end_info_.team_a_area + this->end_info_.team_b_area > 0.0f;
+		this->winner_ = !painted ? PlayerTeam::none :
+			this->end_info_.team_a_played ? PlayerTeam::a : PlayerTeam::b;
+	}
 	this->reveal_time_ = 0.0f;
 }
 
@@ -350,7 +357,8 @@ void Level::update_reveal(float dt)
 	{
 		this->sound_bank_->play_wave(this->hover_sound_, match.hover_sound.volume * gain);
 	}
-	if (after.clicked && !before.clicked)
+	// A draw has nothing to click: the person cannot decide.
+	if (after.clicked && !before.clicked && this->winner_ != PlayerTeam::none)
 	{
 		this->sound_bank_->play_wave(this->click_sound_, match.click_sound.volume * gain);
 	}
@@ -401,9 +409,10 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 	Vector2F cursor = lerp(rest, a, beat.cursor_at_a);
 	cursor = lerp(cursor, b, beat.cursor_at_b);
 	cursor = lerp(cursor, a, beat.waver);
-	if (beat.clicked && this->winner_ != PlayerTeam::none)
+	if (beat.clicked)
 	{
-		cursor = this->winner_ == PlayerTeam::a ? a : b;
+		cursor = this->winner_ == PlayerTeam::a ? a :
+			this->winner_ == PlayerTeam::b ? b : rest;
 	}
 
 	if (beat.clicked)
@@ -414,8 +423,13 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 		const std::wstring texts[2] = { this->end_info_.team_a_percentage_string(),
 			this->end_info_.team_b_percentage_string() };
 		const Colour colours[2] = { colour_a, colour_b };
+		const bool played[2] = { this->end_info_.team_a_played, this->end_info_.team_b_played };
 		for (int side = 0; side < 2; ++side)
 		{
+			if (!played[side])
+			{
+				continue;
+			}
 			const Vector2F size = this->render_resources_->measure_text(this->percent_font_, texts[side]);
 			if (size.y <= 0.0f)
 			{
@@ -461,7 +475,9 @@ void Level::update_acting(float dt)
 	{
 		const RevealTuning& timing = this->tuning_->match().reveal;
 		const bool alone = this->reveal_time_ >= this->reveal_length() - timing.react;
-		act = alone ? FigureAct::celebrate : FigureAct::cheat;
+		// A draw is nobody's to celebrate.
+		act = !alone ? FigureAct::cheat :
+			this->winner_ != PlayerTeam::none ? FigureAct::celebrate : FigureAct::none;
 	}
 	if (this->state_ != LevelState::finished)
 	{
@@ -485,6 +501,7 @@ void Level::update_acting(float dt)
 		const float time = this->act_time_ + static_cast<float>(view) * 0.37f;
 		const float height = player->rectangle().height;
 		FigurePose pose;
+		pose.whole = this->reveal_showing();
 		switch (mine)
 		{
 		case FigureAct::cheat:
@@ -493,7 +510,9 @@ void Level::update_acting(float dt)
 				look.shake * player->rectangle().width;
 			break;
 		case FigureAct::celebrate:
-			pose.offset.y = -std::abs(std::sin(time * 3.14159265f * 2.2f)) * look.hop * height;
+			// Landed once the results are up.
+			pose.offset.y = this->state_ == LevelState::finished ? 0.0f :
+				-std::abs(std::sin(time * 3.14159265f * 2.2f)) * look.hop * height;
 			pose.tool = false;
 			break;
 		case FigureAct::slump:
@@ -517,7 +536,8 @@ void Level::draw_acting(DrawList& list, int /*view*/) const
 		const Player* player = this->players_[index];
 		const FigureAct act = this->acts_[index];
 		// The eyes are the original art's; the workshop figures have their own.
-		if (act == FigureAct::none || player->state() == PlayerState::dead ||
+		if (act == FigureAct::none ||
+			(player->state() == PlayerState::dead && !player->drawn_whole()) ||
 			player->workshop_visual() != nullptr)
 		{
 			continue;

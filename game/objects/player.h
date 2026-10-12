@@ -58,6 +58,9 @@ struct FigurePose
     mattmath::Vector2F offset = mattmath::Vector2F::ZERO;
     float squash = 0.0f;
     bool tool = true;
+    // A dead figure drawn finished at its spawn: in the reveal everyone is
+    // in the picture, however far its redraw had got when the clock ran out.
+    bool whole = false;
 };
 
 class Player final : public labrador::MovingObject,
@@ -195,8 +198,11 @@ public:
     void set_coloured(bool coloured, const labrador::Colour& grey);
     // Set by Level between updates; drawing only.
     void set_pose(const FigurePose& pose);
-    // Where the figure is drawn, with its pose.
+    // Where the figure is drawn, with its pose: at its spawn if it is dead
+    // and drawn whole.
     mattmath::RectangleF posed_rectangle() const;
+    // Dead, but in the picture because the reveal draws everyone.
+    bool drawn_whole() const;
 
 private:
     labrador::Camera camera_ = labrador::Camera::DEFAULT_CAMERA;

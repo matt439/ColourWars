@@ -101,7 +101,7 @@ void Player::set_animation_state(PlayerAnimationState new_animation_state)
 
 void Player::draw(DrawList& draw_list) const
 {
-    if (this->state_ == PlayerState::dead)
+    if (this->state_ == PlayerState::dead && !this->drawn_whole())
     {
         this->draw_respawn(draw_list);
         return;
@@ -109,7 +109,7 @@ void Player::draw(DrawList& draw_list) const
 
     if (this->workshop_visual_ != nullptr)
     {
-        this->workshop_visual_->draw(draw_list, this->rectangle_,
+        this->workshop_visual_->draw(draw_list, this->posed_rectangle(),
             this->facing_right(), this->grey_.value_or(this->team_colour_), *this->primary_,
             this->showing_debug_);
         this->movement_feedback_.draw(draw_list);
@@ -117,7 +117,8 @@ void Player::draw(DrawList& draw_list) const
     }
 
     this->draw_figure(draw_list, this->posed_rectangle());
-    if (this->pose_.tool)
+    // A figure drawn whole after dying has its tool where it fell.
+    if (this->pose_.tool && !this->drawn_whole())
     {
         this->primary_->draw(draw_list, this->showing_debug_);
     }
@@ -126,10 +127,15 @@ void Player::draw(DrawList& draw_list) const
 
 RectangleF Player::posed_rectangle() const
 {
-    const float squash = this->rectangle_.height * this->pose_.squash;
-    return RectangleF(this->rectangle_.x + this->pose_.offset.x,
-        this->rectangle_.y + this->pose_.offset.y + squash,
-        this->rectangle_.width, this->rectangle_.height - squash);
+    const RectangleF base = this->drawn_whole() ? this->spawn_rectangle() : this->rectangle_;
+    const float squash = base.height * this->pose_.squash;
+    return RectangleF(base.x + this->pose_.offset.x, base.y + this->pose_.offset.y + squash,
+        base.width, base.height - squash);
+}
+
+bool Player::drawn_whole() const
+{
+    return this->state_ == PlayerState::dead && this->pose_.whole;
 }
 
 void Player::set_pose(const FigurePose& pose)
@@ -759,7 +765,8 @@ RectangleF Player::cull_bounds(float /*units_per_pixel*/) const
 {
     if (this->state_ == PlayerState::dead)
     {
-        return RectangleF::union_of(this->bounds(), this->spawn_rectangle());
+        return RectangleF::union_of(this->bounds(),
+            RectangleF::union_of(this->spawn_rectangle(), this->posed_rectangle()));
     }
     return this->bounds();
 }

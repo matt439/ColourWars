@@ -74,7 +74,10 @@ void ResultsMenuInitial::update_page(float dt)
 				this->team_b_percentage_panel_->set_hidden(false);
 				this->team_b_percentage_->set_hidden(false);
 			}
-			this->winner_->set_hidden(this->revealed_);
+			// The reveal clicked the winner; a draw or a solo match still
+			// needs its line ("Draw!", "x% Painted").
+			this->winner_->set_hidden(this->revealed_ && !this->level_end_info().one_team_only() &&
+				this->level_end_info().winning_team() != PlayerTeam::none);
 			for (const std::unique_ptr<UiTextDropShadow>& detail : this->details_)
 			{
 				detail->set_hidden(false);

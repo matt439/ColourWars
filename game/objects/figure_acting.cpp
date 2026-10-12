@@ -70,11 +70,12 @@ void FigureActing::draw_eyes(DrawList& draw_list, const RectangleF& figure,
             eye.width * scale.x, eye.height * scale.y);
         // Paint the eye out, then put a narrower one where it is looking.
         this->fill(draw_list, world, this->look_->face);
-        const float pupil = world.width * 0.55f;
-        const float x = world.x + (world.width - pupil) *
+        const Vector2F pupil(world.width * 0.55f, world.height * 0.6f);
+        const float x = world.x + (world.width - pupil.x) *
             (0.5f + 0.5f * std::clamp(glance.x, -1.0f, 1.0f));
-        const float y = world.y + world.height * 0.45f * std::clamp(glance.y, -1.0f, 1.0f);
-        this->fill(draw_list, RectangleF(x, y, pupil, world.height), Colour::black);
+        const float y = world.y + (world.height - pupil.y) *
+            (0.5f + 0.5f * std::clamp(glance.y, -1.0f, 1.0f));
+        this->fill(draw_list, RectangleF(Vector2F(x, y), pupil), Colour::black);
     }
 }
 
