@@ -1,0 +1,124 @@
+#include "game/pch.h"
+#include "scripts/acceptance/debug_console/fixtures.h"
+
+#include <stdexcept>
+
+#if COLOURWARS_DEV_TOOLS
+#include <deque>
+#include <fstream>
+#include <iterator>
+#endif
+
+namespace debug_console_acceptance
+{
+	void require(bool condition, const std::string& message)
+	{
+		if (!condition) { throw std::runtime_error(message); }
+	}
+
+#if COLOURWARS_DEV_TOOLS
+	bool log_contains(const DebugLog& log, const std::string& text, DebugSeverity severity)
+	{
+		for (const DebugLogLine& line : log.lines())
+		{
+			if (line.severity == severity && line.text.find(text) != std::string::npos)
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
+	const StageList& test_stages()
+	{
+		static const StageList stages = {
+			{ "movement_course", "Movement Course", "icon", false },
+			{ "x", "X", "icon", true },
+		};
+		return stages;
+	}
+
+	// A match's settings with `players` seats on stage x (seat 0 keyboard/mouse).
+	MenuLevelSettings planned(int players)
+	{
+		MatchRequest roster;
+		roster.stage = "x";
+		roster.players = players;
+		unsigned int seed = 11;
+		const MatchPlan plan = MatchPlanner(&test_stages()).resolve(nullptr, roster,
+			MatchPlanner::ConnectedPads{}, [&seed] { return seed++; });
+		require(plan.ok, "The test roster resolves: " + plan.error);
+		return plan.settings;
+	}
+
+	std::size_t row_index(const std::vector<DebugMenuRow>& rows, const std::string& label)
+	{
+		for (std::size_t i = 0; i < rows.size(); ++i)
+		{
+			if (rows[i].label == label) { return i; }
+		}
+		throw std::runtime_error("The debug menu has no row '" + label + "'");
+	}
+
+	std::vector<std::string> labels(const std::vector<DebugMenuRow>& rows)
+	{
+		std::vector<std::string> result;
+		for (const DebugMenuRow& row : rows) { result.push_back(row.label); }
+		return result;
+	}
+
+	std::string read_text(const std::filesystem::path& path)
+	{
+		std::ifstream stream(path, std::ios::binary);
+		require(stream.good(), "Could not read " + path.string());
+		return { std::istreambuf_iterator<char>(stream), std::istreambuf_iterator<char>() };
+	}
+
+	void write_text(const std::filesystem::path& path, const std::string& text)
+	{
+		std::ofstream stream(path, std::ios::binary | std::ios::trunc);
+		stream.write(text.data(), static_cast<std::streamsize>(text.size()));
+		stream.close();
+		require(!stream.fail(), "Could not write " + path.string());
+	}
+
+	std::string to_lf(std::string text)
+	{
+		std::string result;
+		for (std::size_t i = 0; i < text.size(); ++i)
+		{
+			if (text[i] == '\r' && i + 1 < text.size() && text[i + 1] == '\n')
+			{
+				continue;
+			}
+			result += text[i];
+		}
+		return result;
+	}
+
+	std::size_t count_of(const std::string& text, const std::string& what)
+	{
+		std::size_t count = 0;
+		for (std::size_t at = text.find(what); at != std::string::npos; at = text.find(what, at + 1))
+		{
+			++count;
+		}
+		return count;
+	}
+
+	std::size_t log_index(const DebugLog& log, const std::string& text)
+	{
+		const std::deque<DebugLogLine>& lines = log.lines();
+		for (std::size_t i = 0; i < lines.size(); ++i)
+		{
+			if (lines[i].text.find(text) != std::string::npos) { return i; }
+		}
+		return std::string::npos;
+	}
+
+	bool any_line(const DebugLog& log, const std::string& text)
+	{
+		return log_index(log, text) != std::string::npos;
+	}
+#endif
+}

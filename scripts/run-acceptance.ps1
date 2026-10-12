@@ -140,16 +140,27 @@ try {
 
     # The probes use CPU-side game data and do not create a window or device.
     # DLL imports still resolve from the same staged folder as the game.
+    # A case may own a same-named folder of extra .cpp sources.
     $env:PATH = "$gameDirectory;$previousPath"
     foreach ($case in 'ammo', 'settings', 'paint', 'camera_framing', 'movement', 'stage_selection',
         'workshop_player', 'workshop_terrain', 'movement_course', 'debug_console') {
-        $source = Join-Path $PSScriptRoot "acceptance/$case.cpp"
+        $sources = @(Join-Path $PSScriptRoot "acceptance/$case.cpp")
+        $parts = Join-Path $PSScriptRoot "acceptance/$case"
+        if (Test-Path -LiteralPath $parts -PathType Container) {
+            $sources += @(Get-ChildItem -LiteralPath $parts -Filter '*.cpp' -File |
+                Sort-Object Name | ForEach-Object { $_.FullName })
+        }
         $executable = Join-Path $evidence "$case.exe"
         $responseFile = Join-Path $evidence "$case.rsp"
-        $arguments = $common + @(
-            (Quote-ResponsePath $source),
+        $objectFolder = Join-Path $evidence "$case-obj"
+        [System.IO.Directory]::CreateDirectory($objectFolder) | Out-Null
+        $null = Quote-ResponsePath $objectFolder  # its quote and newline guard only
+        $arguments = $common + @($sources | ForEach-Object { Quote-ResponsePath $_ }) + @(
             ('/Fe:' + (Quote-ResponsePath $executable)),
-            ('/Fo:' + (Quote-ResponsePath (Join-Path $evidence "$case.obj")))
+            # /Fo names a folder only with a trailing separator; '/' because a
+            # '\' before the closing quote would escape it.
+            ('/Fo:"' + [System.IO.Path]::GetFullPath($objectFolder) + '/"'),
+            '/MP'
         )
         $arguments += @($objects | ForEach-Object { Quote-ResponsePath $_.FullName })
         $arguments += @($libraries | ForEach-Object { Quote-ResponsePath $_ })

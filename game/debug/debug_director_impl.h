@@ -381,6 +381,7 @@ private:
 	// Phase 4 ---------------------------------------------------------------
 
 	void register_script_commands();
+	void register_bind_commands();
 
 	// Scripts. Ticked only from the two hooks (and once, synchronously, by
 	// the launch arguments); a script never runs inside an update.

@@ -6,9 +6,8 @@
 #include "engine/render/text_encoding.h"
 #include "game/debug/debug_console_view.h"
 #include "game/debug/debug_director_impl.h"
-#include "game/debug/debug_keys.h"
+#include "game/debug/debug_files.h"
 #include "game/debug/debug_script.h"
-#include "game/debug/debug_tokenizer.h"
 #include "game/debug/replay.h"
 #include "game/directory_consts.h"
 #include "game/game_data.h"
@@ -19,8 +18,8 @@
 #include <ctime>
 #include <fstream>
 
-// Phase 4: scripts (exec, wait, echo), binds, history, the live console,
-// screenshot folders and the perf overlay.
+// Phase 4: scripts (exec, wait, echo), history, the live console, screenshot
+// folders and the perf overlay. Binds are in bind_commands.cpp.
 
 namespace
 {
@@ -32,58 +31,6 @@ namespace
 		result.category = category;
 		result.form = form;
 		return result;
-	}
-
-	std::string read_file(const std::filesystem::path& path, std::size_t limit, bool& too_big)
-	{
-		too_big = false;
-		std::error_code error;
-		const std::uintmax_t size = std::filesystem::file_size(path, error);
-		if (!error && size > limit)
-		{
-			too_big = true;
-			return {};
-		}
-		std::ifstream stream(path, std::ios::binary);
-		return std::string((std::istreambuf_iterator<char>(stream)), std::istreambuf_iterator<char>());
-	}
-
-	// Atomically: a temporary file beside the target, then a replacing move.
-	bool write_file(const std::filesystem::path& path, const std::string& text)
-	{
-		std::error_code ignored;
-		std::filesystem::create_directories(path.parent_path(), ignored);
-		// Per process: two Debug instances on one profile never share a
-		// half-written temporary (the last whole file wins).
-		std::filesystem::path temporary = path;
-		temporary += L"." + std::to_wstring(GetCurrentProcessId()) + L".tmp";
-		{
-			std::ofstream stream(temporary, std::ios::binary | std::ios::trunc);
-			if (!stream)
-			{
-				return false;
-			}
-			stream << text;
-			if (!stream.flush())
-			{
-				return false;
-			}
-		}
-		if (!MoveFileExW(temporary.c_str(), path.c_str(), MOVEFILE_REPLACE_EXISTING))
-		{
-			std::filesystem::remove(temporary, ignored);
-			return false;
-		}
-		return true;
-	}
-
-	std::string upper(std::string text)
-	{
-		for (char& c : text)
-		{
-			c = static_cast<char>(std::toupper(static_cast<unsigned char>(c)));
-		}
-		return text;
 	}
 
 	std::string local_time_stamp()
@@ -236,7 +183,7 @@ void DebugDirectorImpl::load_persistent()
 	std::error_code ignored;
 	if (std::filesystem::is_regular_file(history, ignored))
 	{
-		const std::string text = read_file(history, 1024 * 1024, too_big);
+		const std::string text = debug_files::read_file(history, 1024 * 1024, too_big);
 		std::vector<std::string> lines;
 		std::size_t start = 0;
 		while (start < text.size())
@@ -262,87 +209,6 @@ void DebugDirectorImpl::load_persistent()
 	}
 }
 
-void DebugDirectorImpl::load_binds(const std::filesystem::path& directory)
-{
-	const std::filesystem::path path = directory / L"binds.cfg";
-	std::error_code ignored;
-	if (!std::filesystem::is_regular_file(path, ignored))
-	{
-		return;
-	}
-	bool too_big = false;
-	const std::string text = read_file(path, debug_script::max_bytes, too_big);
-	const ParsedScript parsed = parse_script("binds.cfg", text, {});
-	if (too_big || !parsed.ok)
-	{
-		// The next bind would overwrite it: keep the unreadable file aside.
-		const std::filesystem::path aside = directory / L"binds.cfg.bad";
-		std::error_code moved;
-		std::filesystem::rename(path, aside, moved);
-		this->log_.warning("binds: " + (too_big ? std::string("binds.cfg is too large") :
-			parsed.error) + "; keeping the default keys" + (moved ? std::string() :
-			" (the file is kept as " + labrador::path_to_utf8(aside) + ")"));
-		return;
-	}
-	// Each line runs through the registry, quietly: only a failure is news.
-	DebugLog quiet;
-	quiet.set_mirror_to_debugger(false);
-	this->binds_loading_ = true;
-	int applied = 0;
-	for (const DebugScriptStatement& statement : parsed.statements)
-	{
-		const DebugTokens tokens = tokenize(statement.text);
-		const std::string head = tokens.words.empty() ? std::string() : tokens.words.front();
-		if (head != "bind" && head != "unbind" && head != "binds.reset")
-		{
-			this->log_.warning("binds: " + statement.where() + ": only bind and unbind lines "
-				"are read");
-			continue;
-		}
-		const DebugStatus status = this->registry_.execute(statement.text, quiet);
-		if (!status.ok)
-		{
-			this->log_.warning("binds: " + statement.where() + ": " +
-				(quiet.lines().empty() ? std::string("failed") : quiet.lines().back().text));
-		}
-		else
-		{
-			++applied;
-		}
-	}
-	this->binds_loading_ = false;
-	this->log_.info("binds: " + std::to_string(applied) + " change(s) from " +
-		labrador::path_to_utf8(path));
-}
-
-void DebugDirectorImpl::save_binds()
-{
-	if (this->binds_loading_)
-	{
-		return;
-	}
-	const std::optional<std::filesystem::path> directory = this->user_directory();
-	if (!directory)
-	{
-		return;
-	}
-	const std::filesystem::path path = *directory / L"binds.cfg";
-	const std::string text = this->binds_.save_text();
-	std::error_code ignored;
-	if (this->binds_ == DebugBinds::defaults())
-	{
-		// Nothing differs: no file, so a later change to a default reaches
-		// this profile too.
-		std::filesystem::remove(path, ignored);
-		return;
-	}
-	if (!write_file(path, text))
-	{
-		this->log_.warning("binds: cannot write " + labrador::path_to_utf8(path) +
-			"; the change holds for this session");
-	}
-}
-
 void DebugDirectorImpl::save_history()
 {
 	const std::optional<std::filesystem::path> directory = this->user_directory();
@@ -356,7 +222,7 @@ void DebugDirectorImpl::save_history()
 		text += line + "\n";
 	}
 	const std::filesystem::path path = *directory / L"history.txt";
-	if (!write_file(path, text) && !this->history_write_failed_)
+	if (!debug_files::write_file(path, text) && !this->history_write_failed_)
 	{
 		this->history_write_failed_ = true;
 		this->log_.warning("history: cannot write " + labrador::path_to_utf8(path) +
@@ -393,7 +259,7 @@ DebugStatus DebugDirectorImpl::exec_script(const std::string& name,
 		return DebugStatus::failure("exec: no " + file + " in " + searched + " (try exec.list)");
 	}
 	bool too_big = false;
-	const std::string text = read_file(found, debug_script::max_bytes, too_big);
+	const std::string text = debug_files::read_file(found, debug_script::max_bytes, too_big);
 	if (too_big)
 	{
 		return DebugStatus::failure("exec: " + file + " is larger than " +
@@ -676,130 +542,8 @@ void DebugDirectorImpl::register_script_commands()
 			return DebugStatus::success();
 		}, traits("console", Form::hidden), true);
 
-	// Binds -----------------------------------------------------------------
-
-	const auto list_binds = [this](DebugLog& log)
-		{
-			for (const auto& [chord, line] : this->binds_.entries())
-			{
-				const std::string* original = DebugBinds::defaults().find(chord);
-				const std::string name = upper(debug_keys::chord_name(chord));
-				log.info("  " + name + std::string(name.size() < 10 ? 10 - name.size() : 1, ' ') +
-					line + (original != nullptr && *original == line ? "" : "  *"));
-			}
-			for (const auto& [chord, line] : DebugBinds::defaults().entries())
-			{
-				if (this->binds_.find(chord) == nullptr)
-				{
-					log.info("  " + upper(debug_keys::chord_name(chord)) + "  (unbound; default " +
-						line + ")");
-				}
-			}
-			return DebugStatus::success(std::to_string(this->binds_.entries().size()) +
-				" bind(s), matches only; * differs from the default. grave, F10 and F11 are reserved.");
-		};
-	const auto key_words = []
-		{
-			std::vector<std::string> words;
-			for (const auto& [key, name] : debug_keys::names())
-			{
-				words.push_back(name);
-			}
-			return words;
-		};
-
-	add("bind", "bind <key> <line>: run a console line on a key in a match (ctrl+, shift+); "
-		"bind <key> shows one; bind alone lists",
-		{ { "key", true, key_words }, { "line", true, {} } },
-		[this, list_binds](Args args, DebugLog& log)
-		{
-			if (!args.has(0))
-			{
-				return list_binds(log);
-			}
-			const std::optional<KeyChord> chord = debug_keys::parse(args.text(0));
-			if (!chord)
-			{
-				return DebugStatus::failure("bind: unknown key '" + args.text(0) + "' (a-z, 0-9, "
-					"f1-f12, numpad0-9, space, tab, ..., with ctrl+ or shift+)");
-			}
-			const std::string name = debug_keys::chord_name(*chord);
-			if (!args.has(1))
-			{
-				const std::string* line = this->binds_.find(*chord);
-				return DebugStatus::success(line != nullptr ? name + " = " + *line : name + " is not bound");
-			}
-			if (debug_keys::reserved(*chord))
-			{
-				return DebugStatus::failure("bind: " + name + " is reserved (" +
-					(chord->key == labrador::Key::grave ? "the console" : "the debug menu") + ")");
-			}
-			std::string line;
-			if (args.size() == 2)
-			{
-				line = args.text(1);
-			}
-			else
-			{
-				for (std::size_t i = 1; i < args.size(); ++i)
-				{
-					line += (i == 1 ? "" : " ") + quote_word(args.text(i));
-				}
-			}
-			for (const std::string& statement : split_statements(line))
-			{
-				const DebugTokens tokens = tokenize(statement);
-				if (!tokens.ok)
-				{
-					return DebugStatus::failure("bind: " + tokens.error);
-				}
-			}
-			if (debug_keys::player_key(*chord) && !this->binds_loading_)
-			{
-				log.warning("bind: " + name + " also moves the keyboard player in a match");
-			}
-			this->binds_.bind(*chord, line);
-			this->save_binds();
-			return DebugStatus::success("bind " + name + " " + quote_word(line));
-		}, traits("console", Form::hidden), true);
-
-	add("unbind", "unbind <key|all>: all clears every key, the F2-F9 defaults too",
-		{ { "key|all", false, key_words } },
-		[this](Args args, DebugLog&)
-		{
-			if (args.text(0) == "all")
-			{
-				this->binds_.clear();
-				this->save_binds();
-				return DebugStatus::success("unbind all: no key is bound ('binds.reset' for the "
-					"defaults)");
-			}
-			const std::optional<KeyChord> chord = debug_keys::parse(args.text(0));
-			if (!chord)
-			{
-				return DebugStatus::failure("unbind: unknown key '" + args.text(0) + "'");
-			}
-			if (!this->binds_.unbind(*chord))
-			{
-				return DebugStatus::failure("unbind: " + debug_keys::chord_name(*chord) + " is not bound");
-			}
-			this->save_binds();
-			return DebugStatus::success("unbind " + debug_keys::chord_name(*chord));
-		}, traits("console", Form::hidden));
-
-	add("binds", "list the key table (F2-F9 by default)", {},
-		[list_binds](Args, DebugLog& log) { return list_binds(log); },
-		traits("console", Form::run));
-
-	add("binds.reset", "the default F2-F9 keys again; deletes binds.cfg", {},
-		[this](Args, DebugLog&)
-		{
-			this->binds_.reset();
-			// The defaults delete binds.cfg; never while binds.cfg is being read
-			// (a file that starts with binds.reset must not delete itself).
-			this->save_binds();
-			return DebugStatus::success("binds.reset: F2-F9 are the defaults again");
-		}, traits("console", Form::run));
+	// Binds (bind_commands.cpp), in the place they always had.
+	this->register_bind_commands();
 
 	// The live console ------------------------------------------------------
 

@@ -14,6 +14,7 @@ add_executable(ColourWars WIN32
     session.cpp
     tuning.cpp
 
+    debug/bind_commands.cpp
     debug/bot.cpp
     debug/bot_driver.cpp
     debug/debug_chord.cpp
@@ -23,6 +24,9 @@ add_executable(ColourWars WIN32
     debug/debug_console_state.cpp
     debug/debug_console_view.cpp
     debug/debug_director.cpp
+    debug/debug_director_hooks.cpp
+    debug/debug_director_impl.cpp
+    debug/debug_files.cpp
     debug/debug_keys.cpp
     debug/debug_log.cpp
     debug/debug_perf.cpp
@@ -33,6 +37,7 @@ add_executable(ColourWars WIN32
     debug/debug_screenshot.cpp
     debug/debug_script.cpp
     debug/debug_script_runner.cpp
+    debug/debug_status_text.cpp
     debug/debug_text_field.cpp
     debug/debug_tokenizer.cpp
     debug/debug_variable.cpp
@@ -59,6 +64,7 @@ add_executable(ColourWars WIN32
     objects/level_end_info.cpp
     objects/level_loaded_info.cpp
     objects/level_object_builder.cpp
+    objects/level_opening.cpp
     objects/movement_feedback.cpp
     objects/paint_tile.cpp
     objects/player.cpp
@@ -88,6 +94,11 @@ add_executable(ColourWars WIN32
     states/end_menu.cpp
     states/game_states.cpp
     states/main_menu.cpp
+    states/main_menu_options.cpp
+    states/main_menu_players.cpp
+    states/main_menu_stage_select.cpp
+    states/main_menu_team_select.cpp
+    states/main_menu_weapon_select.cpp
     states/menu_context.cpp
     states/menu_input.cpp
     states/menu_level_settings.cpp

@@ -1,0 +1,356 @@
+#include "editor/editor.h"
+#include "editor/win32_text.h"
+
+#include <windows.h>
+#include <windowsx.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <map>
+#include <optional>
+#include <sstream>
+#include <string>
+
+namespace colourwars_editor
+{
+    namespace
+    {
+    bool is_spawn(const Entry& entry)
+    {
+        return entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b;
+    }
+
+    void fill(HDC dc, const RECT& rectangle, COLORREF colour)
+    {
+        HBRUSH brush = CreateSolidBrush(colour);
+        FillRect(dc, &rectangle, brush);
+        DeleteObject(brush);
+    }
+
+    void line(HDC dc, int x1, int y1, int x2, int y2, COLORREF colour,
+        int width = 1, int style = PS_SOLID)
+    {
+        HPEN pen = CreatePen(style, width, colour);
+        HGDIOBJ previous = SelectObject(dc, pen);
+        MoveToEx(dc, x1, y1, nullptr);
+        LineTo(dc, x2, y2);
+        SelectObject(dc, previous);
+        DeleteObject(pen);
+    }
+
+    void outline(HDC dc, const RECT& rectangle, COLORREF colour, int width = 1,
+        int style = PS_SOLID)
+    {
+        line(dc, rectangle.left, rectangle.top, rectangle.right, rectangle.top, colour, width, style);
+        line(dc, rectangle.right, rectangle.top, rectangle.right, rectangle.bottom, colour, width, style);
+        line(dc, rectangle.right, rectangle.bottom, rectangle.left, rectangle.bottom, colour, width, style);
+        line(dc, rectangle.left, rectangle.bottom, rectangle.left, rectangle.top, colour, width, style);
+    }
+    }
+
+    void Editor::fit(const Rect& rectangle)
+    {
+        RECT client{}; GetClientRect(canvas_, &client);
+        zoom_ = std::clamp(std::min((client.right - 80.0) / std::max(rectangle.width, 100.0),
+            (client.bottom - 80.0) / std::max(rectangle.height, 100.0)), 0.005, 10.0);
+        view_x_ = rectangle.x + rectangle.width / 2.0 - client.right / (2.0 * zoom_);
+        view_y_ = rectangle.y + rectangle.height / 2.0 - client.bottom / (2.0 * zoom_);
+        InvalidateRect(canvas_, nullptr, FALSE);
+    }
+
+    POINT Editor::screen_point(double x, double y) const
+    {
+        // Clip far-off geometry before converting to GDI's integer coordinates.
+        return {static_cast<LONG>(std::clamp((x - view_x_) * zoom_, -1000000.0, 1000000.0)),
+            static_cast<LONG>(std::clamp((y - view_y_) * zoom_, -1000000.0, 1000000.0))};
+    }
+
+    RECT Editor::screen_rect(const Rect& rectangle) const
+    {
+        const POINT top = screen_point(rectangle.x, rectangle.y);
+        const POINT bottom = screen_point(rectangle.x + rectangle.width, rectangle.y + rectangle.height);
+        return {top.x, top.y, bottom.x, bottom.y};
+    }
+
+    void Editor::draw_item(HDC dc, const DrawItem& item)
+    {
+        const bool selected = selection_ && same_entry(*selection_, item.entry);
+        const Rect rectangle = selected && dragging_ ? drag_preview_ : item.rectangle;
+        RECT screen = screen_rect(rectangle);
+        const auto value = [&item](const std::string& key) -> std::string {
+            const std::map<std::string, std::string>::const_iterator found = item.values.find(key);
+            return found == item.values.end() ? "" : found->second;
+        };
+        if (item.entry.kind == EntryKind::bounds)
+        {
+            if (!show_bounds_ && !selected) return;
+            const COLORREF colours[] = {RGB(239, 108, 113), RGB(131, 190, 236), RGB(204, 151, 246), RGB(240, 197, 95)};
+            outline(dc, screen, colours[item.entry.index % 4], 1, PS_DASH);
+            SetTextColor(dc, colours[item.entry.index % 4]);
+            const std::wstring label = wide(item.entry.label);
+            TextOutW(dc, screen.left + 5, screen.top + 4, label.c_str(), static_cast<int>(label.size()));
+        }
+        else if (is_spawn(item.entry))
+        {
+            screen = screen_rect(Rect{rectangle.x, rectangle.y, 52.0, 120.0});
+            screen.right = std::max(screen.right, screen.left + 18);
+            screen.bottom = std::max(screen.bottom, screen.top + 24);
+            const COLORREF colour = item.entry.kind == EntryKind::spawn_a ? RGB(70, 163, 250) : RGB(255, 158, 75);
+            outline(dc, screen, colour, 2);
+            line(dc, screen.left - 5, screen.top, screen.left + 5, screen.top, colour, 2);
+            line(dc, screen.left, screen.top - 5, screen.left, screen.top + 5, colour, 2);
+            const std::wstring label = (item.entry.kind == EntryKind::spawn_a ? L"A" : L"B") + std::to_wstring(item.entry.index + 1);
+            SetTextColor(dc, colour); TextOutW(dc, screen.left + 3, screen.top - 21, label.c_str(), static_cast<int>(label.size()));
+        }
+        else
+        {
+            const bool paintable = value("type") == "StructurePaintable";
+            const bool ramp = value("type") == "StructureRamp";
+            COLORREF colour = paintable ? RGB(114, 133, 149) : RGB(156, 110, 77);
+            if (value("collision_type") == "STRUCTURE_JUMP_THROUGH") colour = RGB(187, 155, 106);
+            if (item.entry.kind == EntryKind::decoration)
+            {
+                outline(dc, screen, RGB(91, 109, 127), 1, PS_DOT);
+            }
+            else if (ramp)
+            {
+                const bool left = value("collision_type") == "STRUCTURE_RAMP_LEFT";
+                POINT points[] = {{screen.left, screen.bottom}, {screen.right, screen.bottom},
+                    {left ? screen.left : screen.right, screen.top}};
+                HBRUSH brush = CreateSolidBrush(colour);
+                HGDIOBJ old_brush = SelectObject(dc, brush), old_pen = SelectObject(dc, GetStockObject(NULL_PEN));
+                Polygon(dc, points, 3);
+                SelectObject(dc, old_brush); SelectObject(dc, old_pen); DeleteObject(brush);
+            }
+            else
+            {
+                fill(dc, screen, colour);
+                outline(dc, screen, RGB(40, 49, 60));
+                if (paintable)
+                {
+                    const COLORREF edge = RGB(87, 230, 204);
+                    if (value("paintable_faces/left") == "true") line(dc, screen.left, screen.top, screen.left, screen.bottom, edge, 2);
+                    if (value("paintable_faces/top") == "true") line(dc, screen.left, screen.top, screen.right, screen.top, edge, 2);
+                    if (value("paintable_faces/right") == "true") line(dc, screen.right, screen.top, screen.right, screen.bottom, edge, 2);
+                    if (value("paintable_faces/bottom") == "true") line(dc, screen.left, screen.bottom, screen.right, screen.bottom, edge, 2);
+                }
+            }
+        }
+        if (selected)
+        {
+            outline(dc, screen, RGB(255, 255, 255), 2);
+            if (!is_spawn(item.entry))
+                fill(dc, RECT{screen.right - 5, screen.bottom - 5, screen.right + 6, screen.bottom + 6}, RGB(255, 255, 255));
+        }
+    }
+
+    void Editor::paint(HDC dc, const RECT& client)
+    {
+        fill(dc, client, RGB(28, 36, 46));
+        SetBkMode(dc, TRANSPARENT);
+        HGDIOBJ old_font = SelectObject(dc, font_);
+        double spacing = static_cast<double>(snap_);
+        while (spacing * zoom_ < 28.0) spacing *= 2.0;
+        const double pixel_spacing = spacing * zoom_;
+        const double first_x = -std::fmod(view_x_, spacing) * zoom_;
+        const double first_y = -std::fmod(view_y_, spacing) * zoom_;
+        const int columns = static_cast<int>(client.right / pixel_spacing) + 3;
+        const int rows = static_cast<int>(client.bottom / pixel_spacing) + 3;
+        for (int index = 0; index < columns; ++index)
+        {
+            const int x = static_cast<int>(first_x + index * pixel_spacing);
+            line(dc, x, 0, x, client.bottom, RGB(40, 50, 62));
+        }
+        for (int index = 0; index < rows; ++index)
+        {
+            const int y = static_cast<int>(first_y + index * pixel_spacing);
+            line(dc, 0, y, client.right, y, RGB(40, 50, 62));
+        }
+        const POINT origin = screen_point(0, 0);
+        line(dc, origin.x, 0, origin.x, client.bottom, RGB(64, 77, 94));
+        line(dc, 0, origin.y, client.right, origin.y, RGB(64, 77, 94));
+        for (EntryKind kind : {EntryKind::decoration, EntryKind::collision, EntryKind::bounds, EntryKind::spawn_a, EntryKind::spawn_b})
+            for (const DrawItem& item : draw_items_) if (item.entry.kind == kind) draw_item(dc, item);
+        if (selection_)
+            for (const DrawItem& item : draw_items_) if (same_entry(item.entry, *selection_)) draw_item(dc, item);
+        const std::wstring legend = L"GEOMETRY VIEW    " + std::to_wstring(static_cast<int>(std::round(zoom_ * 100.0)))
+            + L"%    |    Grid " + std::to_wstring(static_cast<int>(spacing));
+        fill(dc, RECT{8, 8, 370, 35}, RGB(28, 36, 46));
+        SetTextColor(dc, RGB(181, 197, 213)); TextOutW(dc, 16, 13, legend.c_str(), static_cast<int>(legend.size()));
+        SelectObject(dc, old_font);
+    }
+
+    std::optional<Entry> Editor::hit(POINT point) const
+    {
+        for (EntryKind kind : {EntryKind::spawn_b, EntryKind::spawn_a, EntryKind::collision, EntryKind::decoration})
+        {
+            for (std::vector<DrawItem>::const_reverse_iterator item = draw_items_.rbegin(); item != draw_items_.rend(); ++item)
+            {
+                if (item->entry.kind != kind) continue;
+                RECT rectangle = screen_rect(item->rectangle);
+                if (is_spawn(item->entry))
+                {
+                    rectangle = screen_rect(Rect{item->rectangle.x, item->rectangle.y, 52.0, 120.0});
+                    rectangle.right = std::max(rectangle.right, rectangle.left + 18);
+                    rectangle.bottom = std::max(rectangle.bottom, rectangle.top + 24);
+                }
+                InflateRect(&rectangle, 3, 3);
+                if (PtInRect(&rectangle, point)) return item->entry;
+            }
+        }
+        return std::nullopt;
+    }
+
+    double Editor::snapped(double value) const
+    {
+        return (GetKeyState(VK_SHIFT) & 0x8000) ? value : std::round(value / snap_) * snap_;
+    }
+
+    void Editor::cancel_drag()
+    {
+        dragging_ = false; panning_ = false; resizing_ = false;
+        if (GetCapture() == canvas_) ReleaseCapture();
+        InvalidateRect(canvas_, nullptr, FALSE);
+    }
+
+    void Editor::nudge(int x, int y)
+    {
+        if (!selection_ || selection_->kind == EntryKind::level || !apply_pending()) return;
+        Rect rectangle = document_.rectangle(*selection_);
+        const double step = (GetKeyState(VK_SHIFT) & 0x8000) ? 1.0 : static_cast<double>(snap_);
+        rectangle.x += x * step; rectangle.y += y * step;
+        document_.set_rectangle(*selection_, rectangle); refresh(true);
+    }
+
+    LRESULT Editor::canvas_message(UINT message_id, WPARAM wparam, LPARAM lparam)
+    {
+        const POINT point{GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
+        switch (message_id)
+        {
+        case WM_ERASEBKGND: return 1;
+        case WM_PAINT:
+        {
+            PAINTSTRUCT info{}; HDC target = BeginPaint(canvas_, &info);
+            RECT client{}; GetClientRect(canvas_, &client);
+            HDC buffer = CreateCompatibleDC(target);
+            HBITMAP bitmap = CreateCompatibleBitmap(target, std::max(1L, client.right), std::max(1L, client.bottom));
+            HGDIOBJ old = SelectObject(buffer, bitmap);
+            paint(buffer, client);
+            BitBlt(target, 0, 0, client.right, client.bottom, buffer, 0, 0, SRCCOPY);
+            SelectObject(buffer, old); DeleteObject(bitmap); DeleteDC(buffer); EndPaint(canvas_, &info); return 0;
+        }
+        case WM_LBUTTONDOWN:
+        {
+            if (!apply_pending()) return 0;
+            SetFocus(canvas_);
+            resizing_ = false;
+            if (selection_ && selection_->kind != EntryKind::level && !is_spawn(*selection_))
+            {
+                const RECT rectangle = screen_rect(document_.rectangle(*selection_));
+                resizing_ = std::abs(point.x - rectangle.right) <= 9 && std::abs(point.y - rectangle.bottom) <= 9;
+            }
+            if (!resizing_)
+            {
+                // Selected bounds can be moved by their outline without intercepting geometry.
+                bool on_bound = false;
+                if (selection_ && selection_->kind == EntryKind::bounds)
+                {
+                    RECT rectangle = screen_rect(document_.rectangle(*selection_));
+                    RECT inner = rectangle; InflateRect(&rectangle, 5, 5); InflateRect(&inner, -5, -5);
+                    on_bound = PtInRect(&rectangle, point) && !PtInRect(&inner, point);
+                }
+                if (!on_bound)
+                {
+                    const std::optional<Entry> found = hit(point);
+                    if (!found) return 0;
+                    select(*found);
+                }
+            }
+            if (!selection_ || selection_->kind == EntryKind::level) return 0;
+            drag_original_ = document_.rectangle(*selection_); drag_preview_ = drag_original_;
+            mouse_start_ = point; dragging_ = true; SetCapture(canvas_); return 0;
+        }
+        case WM_MBUTTONDOWN:
+            if (!apply_pending()) return 0;
+            SetFocus(canvas_); cancel_drag(); panning_ = true; mouse_start_ = point; SetCapture(canvas_); return 0;
+        case WM_MOUSEMOVE:
+            if (dragging_)
+            {
+                const double dx = snapped((point.x - mouse_start_.x) / zoom_);
+                const double dy = snapped((point.y - mouse_start_.y) / zoom_);
+                drag_preview_ = drag_original_;
+                if (resizing_)
+                {
+                    drag_preview_.width = std::max(1.0, drag_original_.width + dx);
+                    drag_preview_.height = std::max(1.0, drag_original_.height + dy);
+                }
+                else { drag_preview_.x += dx; drag_preview_.y += dy; }
+                InvalidateRect(canvas_, nullptr, FALSE);
+            }
+            else if (panning_)
+            {
+                view_x_ -= (point.x - mouse_start_.x) / zoom_; view_y_ -= (point.y - mouse_start_.y) / zoom_;
+                mouse_start_ = point; InvalidateRect(canvas_, nullptr, FALSE);
+            }
+            else
+            {
+                std::wostringstream coordinates;
+                coordinates.precision(8);
+                coordinates << L"X " << view_x_ + point.x / zoom_ << L"   Y " << view_y_ + point.y / zoom_
+                    << L"   |   Wheel zoom  /  Middle drag pan  /  Shift bypass snap";
+                set_status(coordinates.str());
+            }
+            return 0;
+        case WM_LBUTTONUP:
+            if (dragging_ && selection_)
+            {
+                const Rect result = drag_preview_; cancel_drag();
+                if (result.x != drag_original_.x || result.y != drag_original_.y ||
+                    result.width != drag_original_.width || result.height != drag_original_.height)
+                { document_.set_rectangle(*selection_, result); refresh(true); }
+            }
+            return 0;
+        case WM_MBUTTONUP: cancel_drag(); return 0;
+        case WM_CAPTURECHANGED: dragging_ = false; panning_ = false; InvalidateRect(canvas_, nullptr, FALSE); return 0;
+        case WM_MOUSEWHEEL:
+        {
+            if (dragging_ || panning_) return 0;
+            POINT local = point; ScreenToClient(canvas_, &local);
+            const double x = view_x_ + local.x / zoom_, y = view_y_ + local.y / zoom_;
+            zoom_ = std::clamp(zoom_ * std::pow(1.2, GET_WHEEL_DELTA_WPARAM(wparam) / 120.0), 0.005, 10.0);
+            view_x_ = x - local.x / zoom_; view_y_ = y - local.y / zoom_;
+            InvalidateRect(canvas_, nullptr, FALSE); return 0;
+        }
+        case WM_KEYDOWN:
+            switch (wparam)
+            {
+            case VK_ESCAPE: cancel_drag(); break;
+            case VK_DELETE: command(edit_delete); break;
+            case VK_HOME: command(view_fit); break;
+            case 'F': command(view_selection); break;
+            case VK_LEFT: nudge(-1, 0); break;
+            case VK_RIGHT: nudge(1, 0); break;
+            case VK_UP: nudge(0, -1); break;
+            case VK_DOWN: nudge(0, 1); break;
+            default: break;
+            }
+            return 0;
+        default: break;
+        }
+        return DefWindowProcW(canvas_, message_id, wparam, lparam);
+    }
+
+    LRESULT CALLBACK Editor::canvas_proc(HWND window, UINT message_id, WPARAM wparam, LPARAM lparam)
+    {
+        Editor* editor = reinterpret_cast<Editor*>(GetWindowLongPtrW(window, GWLP_USERDATA));
+        if (message_id == WM_NCCREATE)
+        {
+            editor = static_cast<Editor*>(reinterpret_cast<CREATESTRUCTW*>(lparam)->lpCreateParams);
+            editor->canvas_ = window; SetWindowLongPtrW(window, GWLP_USERDATA, reinterpret_cast<LONG_PTR>(editor));
+        }
+        if (!editor) return DefWindowProcW(window, message_id, wparam, lparam);
+        try { return editor->canvas_message(message_id, wparam, lparam); }
+        catch (const std::exception& exception) { editor->cancel_drag(); editor->error(exception); return 0; }
+    }
+}

@@ -478,7 +478,7 @@ match it, or `force` to watch it diverge), refuses another step size, and warns
 about another build or presentation file.
 
 **What is deterministic, and what is not.** Verified by
-`scripts/acceptance/debug_console.cpp` on a real `Level` (four seats, paint bots,
+`scripts/acceptance/debug_console/replay_checks.cpp` on a real `Level` (four seats, paint bots,
 a scripted keyboard seat, 600 updates): the replay matches at timescale 1 and 4
 and at another window size, and an unrecorded re-run of the same seeded match
 ends on the same hash. The simulation is single-threaded (the thread pool only
@@ -839,10 +839,13 @@ as the game. In Release:
 ## For developers
 
 - Code: `game/debug/`. The director and its Debug-only implementation
-  (`debug_director.*`, `debug_director_impl.h`); the registry, variables and
+  (`debug_director.*`, the facade; `debug_director_impl.*`, its core;
+  `debug_director_hooks.cpp`, the match and page hooks and the queued
+  requests); the registry, variables and
   commands (`debug_registry.*`, `debug_variable.*`, `debug_command.*`); the
   commands themselves (`game_commands.cpp` for match, time, content and
-  console, `view_commands.cpp` for the overlays, `player_commands.cpp` for
+  console, `debug_status_text.cpp` for the `status` lines, the status strip
+  and the paint readout, `view_commands.cpp` for the overlays, `player_commands.cpp` for
   goto, respawn, god and ammo); the clock, the match planner, the text field
   and the console state; the pad chord (`debug_chord.*`); the debug menu
   (`debug_menu_model.*`, CPU-testable, and `debug_menu_page.*`, a `MenuPage`);
@@ -860,8 +863,10 @@ as the game. In Release:
   Phase 4: scripts (`debug_script.*`, the pure parser; `debug_wait.*`, the
   `DebugWait -> UpdatesWait / FramesWait / MatchWait / ReplayWait / RecordWait`
   hierarchy; `debug_script_runner.*`, the frame stack the director ticks from
-  its hooks; `script_commands.cpp`, which also holds binds, history, the
-  `screenshot.dir` and perf commands and `draw_status`); the key names
+  its hooks; `script_commands.cpp`, which also holds history, the live
+  console, the `screenshot.dir` and perf commands and `draw_status`;
+  `bind_commands.cpp`, the bind commands and `binds.cfg`; `debug_files.*`, the
+  console's atomic file reads and writes); the key names
   (`debug_keys.*`, engine report 13) and the bind table (`debug_binds.*`); the
   console's editing and drawing, shared by the frozen and live consoles and
   the panels (`debug_console_view.*`; `debug_console_state.*` is now a thin
@@ -901,7 +906,8 @@ as the game. In Release:
     suspend. It asks `drives_slot` through `pad_seat_missing` before pausing
     for a pad (the update's check, the pause page's "Controller lost" and the
     restart confirmation's fallback).
-- Tests: `scripts/acceptance/debug_console.cpp` (tokenizer and launch grammar,
+- Tests: `scripts/acceptance/debug_console.cpp` and its checks in
+  `scripts/acceptance/debug_console/`, one file per group (tokenizer and launch grammar,
   registry and completion, clock, planner, text field, director, the match
   hooks against a fake `DebugMatchTarget`, the chord and input filter, menu
   traits, the debug menu model, unwinding against a fake `DebugPageTarget`,

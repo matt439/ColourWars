@@ -175,7 +175,7 @@ For a new selectable primary weapon, keep these registrations together:
    [game/CMakeLists.txt](../game/CMakeLists.txt). Return Projectile objects from
    firing hooks, and preserve the base's ammunition, sound and lifetime rules.
 4. Add its menu icon and displayed name in
-   [MainMenuWeaponSelect::update_weapon_select_visuals](../game/states/main_menu.cpp).
+   [MainMenuWeaponSelect::update_weapon_select_visuals](../game/states/main_menu_weapon_select.cpp).
    Add the description to `main_menu.weapon_descriptions` in
    [presentation.json](../game/content/presentation.json) and the corresponding
    `describe` registration in [presentation.cpp](../game/presentation.cpp).

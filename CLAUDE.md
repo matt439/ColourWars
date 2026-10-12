@@ -79,8 +79,9 @@ scripts in `scripts/debug/`. The gate
 `COLOURWARS_DEV_TOOLS` comes from `_DEBUG` in `game/debug/dev_tools.h` - never a
 `/D` flag, so the acceptance probes agree on class layouts - and no existing
 class has a member that depends on it. Code is in `game/debug/`; the CPU case is
-`scripts/acceptance/debug_console.cpp`, which also checks that the Release
-executable carries none of the console's RTTI names.
+`scripts/acceptance/debug_console.cpp` (its checks are in the same-named
+folder; `run-acceptance.ps1` compiles a case's folder with it), which also
+checks that the Release executable carries none of the console's RTTI names.
 
 The build mirrors `game/content/` beside the exe (the `colourwars_content`
 target, which runs every build so asset-only edits are picked up), so the game
