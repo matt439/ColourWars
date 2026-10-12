@@ -79,6 +79,7 @@ add_executable(ColourWars WIN32
     objects/projectile_mist.cpp
     objects/projectile_rolling.cpp
     objects/projectile_spray.cpp
+    objects/respawn_redraw.cpp
     objects/stage.cpp
     objects/structure.cpp
     objects/structure_paintable.cpp

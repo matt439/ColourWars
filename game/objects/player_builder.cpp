@@ -68,6 +68,7 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 			rect,
 			this->tuning_,
 			&this->presentation_->movement_feedback(),
+			&this->presentation_->respawn_redraw(),
 			render_resources,
 			audio_resources,
 			preferences,

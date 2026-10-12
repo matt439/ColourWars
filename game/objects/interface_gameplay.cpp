@@ -28,8 +28,6 @@ InterfaceGameplay::InterfaceGameplay(RenderResources* render_resources,
 		resolve_sprite_frame(look->fill_frame)),
 	meter_label_font_(render_resources->resolve_sprite_font(look->meter_label_font)),
 	timer_font_(render_resources->resolve_sprite_font(look->timer_font)),
-	respawn_timer_font_(
-		render_resources->resolve_sprite_font(look->respawn_font)),
 	player_identity_font_(render_resources->resolve_sprite_font(look->player_identity_font))
 {
 
@@ -48,13 +46,10 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	float health,
 	float ammo,
 	float timer,
-	const Colour& team_colour,
-	float respawn_timer,
-	bool show_respawn_timer) const
+	const Colour& team_colour) const
 {
 	this->draw_gameplay_interface(draw_list, resolution, player_index,
-		input_slots::device_name(input_slot), team, health, ammo, timer, team_colour,
-		respawn_timer, show_respawn_timer);
+		input_slots::device_name(input_slot), team, health, ammo, timer, team_colour);
 }
 
 void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
@@ -65,9 +60,7 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	float health,
 	float ammo,
 	float timer,
-	const Colour& team_colour,
-	float respawn_timer,
-	bool show_respawn_timer) const
+	const Colour& team_colour) const
 {
 	const HudPresentation& look = *this->look_;
 	const float scale = std::min(
@@ -130,11 +123,6 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	this->draw_meter(draw_list, resolution, ammo, team_colour,
 		ammo_pos, L"PAINT", scale);
 
-	if (show_respawn_timer)
-	{
-		draw_list.set_filter(TextureFilter::linear);
-		this->draw_respawn_timer(draw_list, resolution, respawn_timer);
-	}
 	draw_list.set_filter(TextureFilter::point);
 }
 
@@ -197,38 +185,4 @@ void InterfaceGameplay::draw_timer(DrawList& draw_list,
 
 	draw_list.draw_text(this->timer_font_, text, pos, look.timer_colour, timer_scale,
 		0.0f, Vector2F::ZERO, 0.0f);
-}
-
-void InterfaceGameplay::draw_respawn_timer(DrawList& draw_list,
-	const Vector2F& resolution,
-	float timer) const
-{
-	const HudPresentation& look = *this->look_;
-
-	Vector2F pos = Vector2F(
-		resolution.x / 2.0f - (resolution.x * look.respawn_offset.x),
-		resolution.y * look.respawn_offset.y);
-
-	// Round up without adding a second when the respawn delay is already an integer.
-	const std::wstring text =
-		std::to_wstring(static_cast<int>(std::ceil(timer)));
-
-	// Fit text and shadow within the pane. Start from authored scale each time
-	// so enlarging the window restores full size; include negative shadow offsets.
-	const Vector2F text_size = this->render_resources()->measure_text(
-		this->respawn_timer_font_, text);
-	const RectangleF bounds = RectangleF::union_of(
-		RectangleF(Vector2F::ZERO, text_size),
-		RectangleF(look.respawn_shadow_offset, text_size));
-	const Vector2F available = resolution - pos;
-	const float scale = std::min({ 1.0f,
-		available.x / bounds.width, available.y / bounds.height });
-	pos -= bounds.position() * scale;
-
-	draw_list.draw_text(this->respawn_timer_font_, text,
-		pos + look.respawn_shadow_offset * scale, look.respawn_shadow_colour,
-		scale, 0.0f, Vector2F::ZERO, 0.0f);
-
-	draw_list.draw_text(this->respawn_timer_font_, text, pos,
-		look.respawn_colour, scale, 0.0f, Vector2F::ZERO, 0.0f);
 }

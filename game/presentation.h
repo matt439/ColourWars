@@ -8,6 +8,7 @@
 
 #include <array>
 #include <string>
+#include <vector>
 
 namespace labrador
 {
@@ -239,7 +240,8 @@ struct PromptBarPresentation
 	mattmath::Vector2F shadow_offset = { 0.0f, 0.0f };
 };
 
-// Gameplay HUD: health, ammo, match timer, player identity and respawn count.
+// Gameplay HUD: health, ammo, match timer and player identity. The respawn
+// wait has no number: the figure being redrawn at its spawn is the timer.
 // Margins, bar dimensions and text positions use viewport fractions. Shadow
 // offsets and identity padding use pixel distances scaled with the text.
 struct HudPresentation
@@ -275,12 +277,6 @@ struct HudPresentation
 	labrador::Colour player_identity_background_colour = labrador::Colour::black;
 	mattmath::Vector2F player_identity_padding = { 0.0f, 0.0f };
 	float player_identity_reference_width = 1920.0f;
-
-	std::string respawn_font;
-	mattmath::Vector2F respawn_offset = { 0.0f, 0.0f };
-	mattmath::Vector2F respawn_shadow_offset = { 0.0f, 0.0f };
-	labrador::Colour respawn_colour = labrador::Colour::white;
-	labrador::Colour respawn_shadow_colour = labrador::Colour::black;
 };
 
 struct DebugOverlayPresentation
@@ -319,6 +315,37 @@ struct MovementFeedbackPresentation
 	MovementBurstPresentation landing;
 };
 
+// One stroke of a figure as the person drew it: the path of the pen's
+// top-left corner, in texels of the right-facing idle frame. The pen draws
+// only horizontal and vertical lines, as the original art does.
+struct RespawnStroke
+{
+	std::string part;
+	std::vector<mattmath::Vector2F> points;
+};
+
+// The undo history redrawing a splatted figure at its spawn, fast-forward,
+// over the respawn wait (docs/backstory.md, "Respawn"). The wait itself is
+// tuning.player.respawn_delay; these only divide it up, and nothing here
+// affects the simulation.
+struct RespawnRedrawPresentation
+{
+	std::string sprite_sheet;
+	std::string pen_frame;
+	labrador::Colour pen_colour;
+	// The texels of the frame the strokes trace, stretched over the player.
+	mattmath::Vector2F canvas_size;
+	float pen_width = 0.0f;
+	// Fractions of the wait: empty after the pop until draw_from, the outline
+	// drawn by draw_from..fill_at, then the filled figure until it respawns.
+	float draw_from = 0.0f;
+	float fill_at = 1.0f;
+	// Seconds the dead player's camera stays where they fell before it cuts
+	// to the spawn to watch the redraw.
+	float camera_hold = 0.0f;
+	std::vector<RespawnStroke> strokes;
+};
+
 // Presentation settings parsed once at startup.
 class Presentation
 {
@@ -340,6 +367,7 @@ public:
 	const MatchPresentation& match() const;
 	const CameraPresentation& camera() const;
 	const MovementFeedbackPresentation& movement_feedback() const;
+	const RespawnRedrawPresentation& respawn_redraw() const;
 	const WorkshopPlayerPresentation& workshop_player() const;
 	const DebugOverlayPresentation& debug_overlay() const;
 
@@ -361,6 +389,7 @@ private:
 	MatchPresentation match_;
 	CameraPresentation camera_;
 	MovementFeedbackPresentation movement_feedback_;
+	RespawnRedrawPresentation respawn_redraw_;
 	WorkshopPlayerPresentation workshop_player_;
 	DebugOverlayPresentation debug_overlay_;
 };

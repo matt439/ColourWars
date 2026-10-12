@@ -8,6 +8,7 @@
 #include "game/objects/player_input_data.h"
 #include "game/objects/weapon.h"
 #include "game/objects/movement_feedback.h"
+#include "game/objects/respawn_redraw.h"
 #include "game/objects/player_visual.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/shape.h"
@@ -55,12 +56,13 @@ class Player final : public labrador::MovingObject,
                      public labrador::AnimationObject, public labrador::TextureObject
 {
 public:
-    // Borrowed tuning and movement presentation must outlive the player. The builder supplies the spawn
+    // Borrowed tuning and presentation must outlive the player. The builder supplies the spawn
     // rectangle; tuning supplies movement and health parameters.
     // secondary is currently accepted but ignored; players carry one weapon.
     Player(const mattmath::RectangleF& rectangle,
         const GameTuning* tuning,
         const MovementFeedbackPresentation* movement_feedback,
+        const RespawnRedrawPresentation* respawn_redraw,
         labrador::RenderResources* render_resources,
         const labrador::AudioResources* audio_resources,
         const PlaySettings* preferences,
@@ -85,6 +87,8 @@ public:
     void draw(labrador::DrawList& draw_list) const override;
 
     mattmath::RectangleF bounds() const override;
+    // While dead, the spawn too: the redraw is there, wherever the player fell.
+    mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
 
     const mattmath::Shape* shape() const override;
     labrador::CollisionLayer layer() const override;
@@ -146,6 +150,13 @@ public:
     PlayerTeam team() const;
 
     float respawn_timer() const;
+    // How far the redraw at the spawn has come: 0 at death, 1 at respawn.
+    float respawn_progress() const;
+    // Where the player is drawn while dead, and appears again.
+    mattmath::RectangleF spawn_rectangle() const;
+    // What the camera follows: the player, or, a moment after death, the
+    // spawn where the figure is being redrawn.
+    mattmath::Vector2F camera_focus() const;
 
     void update_weapon_position() const;
     void update_prev_rectangle();
@@ -167,6 +178,8 @@ public:
     void place_at(const mattmath::Vector2F& top_left);
     // Respawns now, at the spawn, as the respawn timer would.
     void force_respawn();
+    // Health to zero, ignoring god: the next update dies as a fatal hit does.
+    void kill();
 
 private:
     labrador::Camera camera_ = labrador::Camera::DEFAULT_CAMERA;
@@ -175,6 +188,7 @@ private:
     const GameTuning* tuning_ = nullptr;
 
     MovementFeedback movement_feedback_;
+    RespawnRedraw respawn_redraw_;
     std::unique_ptr<PlayerVisual> workshop_visual_;
     bool had_ground_support_ = false;
     bool landing_feedback_ready_ = false;
@@ -256,6 +270,10 @@ private:
 
     // Select the clip during update; rendering may run concurrently for several views.
     void update_animation_state();
+    void set_animation_state(PlayerAnimationState state);
+    void draw_figure(labrador::DrawList& draw_list,
+        const mattmath::RectangleF& rectangle) const;
+    void draw_respawn(labrador::DrawList& draw_list) const;
 
     const PlayerAnimationTuning& animation_info(PlayerAnimationState state) const;
 

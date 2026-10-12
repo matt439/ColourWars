@@ -59,6 +59,7 @@ namespace debug_console_acceptance
 		int adopts = 0;
 		std::vector<std::pair<int, mattmath::Vector2F>> placed;
 		std::vector<int> respawned;
+		std::vector<int> killed;
 
 		// Phase 3: the seat filter each update was given.
 		SeatInputFilter* last_filter = nullptr;
@@ -110,6 +111,12 @@ namespace debug_console_acceptance
 		{
 			if (seat < 0 || seat >= this->settings.player_count()) { return false; }
 			this->respawned.push_back(seat);
+			return true;
+		}
+		bool debug_kill(int seat) override
+		{
+			if (seat < 0 || seat >= this->settings.player_count()) { return false; }
+			this->killed.push_back(seat);
 			return true;
 		}
 		MatchPaint debug_paint() const override

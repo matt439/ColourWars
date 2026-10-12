@@ -56,7 +56,7 @@ namespace
         int tick_count = 0;
 
         Course(const GameTuning& tuning, const MovementFeedbackPresentation& feedback,
-            RenderResources& resources,
+            const RespawnRedrawPresentation& redraw, RenderResources& resources,
             const AudioResources& audio, const PlaySettings& preferences,
             float bottom = 0.0f, const Vector2F& velocity = Vector2F::ZERO,
             const Vector2F& spawn = { 0.0f, -120.0f }) : render(&resources)
@@ -67,7 +67,7 @@ namespace
                 0, 0, Colour::white, WeaponType::sprayer, rectangle.center(),
                 &resources, &audio, &preferences);
             this->player = this->scene.add(std::make_unique<Player>(rectangle,
-                &tuning, &feedback, &resources, &audio, &preferences, 0, PlayerTeam::a,
+                &tuning, &feedback, &redraw, &resources, &audio, &preferences, 0, PlayerTeam::a,
                 WeaponType::sprayer, std::move(weapon), WeaponType::none,
                 Colour::white, Viewport{}, spawn, velocity));
             this->scene.end_tick();
@@ -229,7 +229,8 @@ int main(int argc, char** argv)
         const auto course = [&](float bottom = 0.0f,
             const Vector2F& velocity = Vector2F::ZERO)
         {
-            return std::make_unique<Course>(tuning, feedback, render, audio, preferences,
+            return std::make_unique<Course>(tuning, feedback, presentation.respawn_redraw(),
+                render, audio, preferences,
                 bottom, velocity);
         };
 
@@ -382,10 +383,34 @@ int main(int argc, char** argv)
         require(killed->player->state() == PlayerState::dead &&
             killed->player->rectangle().position() == death_position,
             "fatal damage allowed one final movement/jump tick");
+        // The redraw at the spawn: drawn there, culled with it, and watched.
+        const RespawnRedrawPresentation& redraw = presentation.respawn_redraw();
+        const RectangleF spawn = killed->player->spawn_rectangle();
+        require(spawn.position() == Vector2F(0.0f, -120.0f) &&
+            spawn.size() == killed->player->rectangle().size(),
+            "the redraw is not at the player's spawn");
+        require(killed->player->cull_bounds(1.0f).contains(spawn) &&
+            killed->player->cull_bounds(1.0f).contains(killed->player->rectangle()),
+            "a dead player's cull bounds miss the spawn where it is redrawn");
+        require(killed->player->camera_focus() == killed->player->center(),
+            "the camera left the fall before camera_hold");
+        float previous_progress = killed->player->respawn_progress();
+        bool watched_spawn = false;
         for (int tick = 0; tick < 300 && killed->player->state() == PlayerState::dead; ++tick)
         {
+            const float waited = tuning.player().respawn_delay - killed->player->respawn_timer();
+            require((killed->player->camera_focus() == spawn.center()) ==
+                (waited >= redraw.camera_hold),
+                "the camera did not cut to the spawn at camera_hold");
+            watched_spawn = watched_spawn || killed->player->camera_focus() == spawn.center();
             killed->tick(input(true, true));
+            const float progress = killed->player->respawn_progress();
+            require(killed->player->state() == PlayerState::alive ||
+                (progress >= previous_progress && progress <= 1.0f),
+                "the redraw went backwards or past the end");
+            previous_progress = progress;
         }
+        require(watched_spawn, "the camera never watched the redraw");
         require(killed->player->state() == PlayerState::alive,
             "eliminated player did not respawn");
         for (int tick = 0; tick < 30; ++tick) { killed->tick(input(false, true)); }
@@ -417,7 +442,8 @@ int main(int argc, char** argv)
 
         ContentVariant variant(content / "tuning.json");
         const GameTuning disabled = variant.tuning("0.0", "0.0");
-        Course unbuffered(disabled, feedback, render, audio, preferences, -4, { 0, 100 });
+        Course unbuffered(disabled, feedback, presentation.respawn_redraw(), render, audio,
+            preferences, -4, { 0, 100 });
         unbuffered.floor();
         unbuffered.tick(input(true, true));
         unbuffered.tick(input(false, true));
@@ -426,7 +452,8 @@ int main(int argc, char** argv)
         unbuffered.tick(input(true, true));
         require(unbuffered.player->velocity().y < 0,
             "zero buffer disabled ordinary grounded jumps");
-        Course ungraced(disabled, feedback, render, audio, preferences, 0,
+        Course ungraced(disabled, feedback, presentation.respawn_redraw(), render, audio,
+            preferences, 0,
             { tuning.player().max_velocity.x, 0 });
         ungraced.leave_ledge();
         ungraced.tick(input(true, true, 1));
@@ -639,8 +666,10 @@ int main(int argc, char** argv)
             require(rejected, "invalid movement presentation was accepted");
         }
         const Presentation without_feedback = presentation_variant.presentation("enabled", "false");
-        Course decorated(tuning, feedback, render, audio, preferences);
-        Course undecorated(tuning, without_feedback.movement_feedback(), render, audio, preferences);
+        Course decorated(tuning, feedback, presentation.respawn_redraw(), render, audio,
+            preferences);
+        Course undecorated(tuning, without_feedback.movement_feedback(),
+            without_feedback.respawn_redraw(), render, audio, preferences);
         decorated.floor();
         undecorated.floor();
         for (int tick = 0; tick < 240; ++tick)

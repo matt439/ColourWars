@@ -36,9 +36,10 @@ namespace
 		{ "tuning.projectiles.*.collision_size.*", TuneScope::new_objects },
 		// A projectile keeps a pointer to its ProjectileTuning record.
 		{ "tuning.projectiles.**", TuneScope::live },
-		// MovementFeedback, DebugText and InterfaceGameplay keep pointers;
+		// MovementFeedback, RespawnRedraw, DebugText and InterfaceGameplay keep pointers;
 		// refresh_player_cameras reads the camera block every update.
 		{ "presentation.movement_feedback.**", TuneScope::live },
+		{ "presentation.respawn_redraw.**", TuneScope::live },
 		{ "presentation.debug_overlay.**", TuneScope::live },
 		{ "presentation.hud.**", TuneScope::live },
 		{ "presentation.camera.**", TuneScope::live },

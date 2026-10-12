@@ -107,6 +107,8 @@ public:
 	// paused. False: no such view.
 	bool place_player(int view, const mattmath::Vector2F& top_left);
 	bool respawn_player(int view);
+	// Dies on the next world update, at the spawn's redraw. False: no such view.
+	bool kill_player(int view);
 	// What each view's HUD names instead of its device ("Bot: paint");
 	// empty entries, or no list, keep the device name.
 	void set_seat_labels(std::vector<std::wstring> labels);

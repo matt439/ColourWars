@@ -73,6 +73,7 @@ public:
 	// False: no such seat.
 	virtual bool debug_place(int seat, const mattmath::Vector2F& top_left) = 0;
 	virtual bool debug_respawn(int seat) = 0;
+	virtual bool debug_kill(int seat) = 0;
 	virtual MatchPaint debug_paint() const = 0;
 
 	// Phase 4 ----------------------------------------------------------------

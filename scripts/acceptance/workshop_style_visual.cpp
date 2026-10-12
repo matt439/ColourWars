@@ -304,7 +304,7 @@ namespace
                 list.set_camera(Camera::DEFAULT_CAMERA);
                 const Mannequin& owner = people_[static_cast<size_t>(view)];
                 hud_.draw_gameplay_interface(list, viewport.size(), view, view, owner.team,
-                    0.75f, 0.625f, 150.0f, colours_.team_colour(owner.team), 0.0f, false);
+                    0.75f, 0.625f, 150.0f, colours_.team_colour(owner.team));
                 list.draw_text(label_font_, L"ART STUDY - STATIC MANNEQUINS", { 12.0f, viewport.height - 24.0f },
                     Colour::white, 1.0f, 0.0f, Vector2F::ZERO, 0.0f);
                 // Match the game's pane divider placement, without another view.

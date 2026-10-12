@@ -401,14 +401,76 @@ namespace
 		hud.player_identity_padding = read_vector(identity, "padding");
 		hud.player_identity_reference_width = read_positive(identity, "reference_width");
 
-		const JsonValue respawn = json.object("respawn_timer");
-		hud.respawn_font = respawn.string("font");
-		hud.respawn_offset = read_vector(respawn, "offset");
-		hud.respawn_shadow_offset = read_vector(respawn, "shadow_offset");
-		hud.respawn_colour = read_colour(respawn, "colour");
-		hud.respawn_shadow_colour = read_colour(respawn, "shadow_colour");
 
 		return hud;
+	}
+
+	RespawnRedrawPresentation read_respawn_redraw(const JsonValue& root)
+	{
+		const JsonValue json = root.object("respawn_redraw");
+
+		RespawnRedrawPresentation redraw;
+		redraw.sprite_sheet = json.identifier("sprite_sheet");
+		redraw.pen_frame = json.identifier("pen_frame");
+		redraw.pen_colour = read_colour(json, "pen_colour");
+		redraw.canvas_size = read_positive_vector(json, "canvas_size");
+		redraw.pen_width = read_positive(json, "pen_width");
+		redraw.draw_from = json.number("draw_from");
+		redraw.fill_at = json.number("fill_at");
+		if (!(redraw.draw_from >= 0.0f && redraw.draw_from < redraw.fill_at &&
+			redraw.fill_at <= 1.0f))
+		{
+			throw std::runtime_error(json.where() + ": 'draw_from' and 'fill_at' must be "
+				"fractions of the respawn wait with 0 <= draw_from < fill_at <= 1.");
+		}
+		redraw.camera_hold = json.number("camera_hold");
+		if (!std::isfinite(redraw.camera_hold) || redraw.camera_hold < 0.0f)
+		{
+			throw std::runtime_error(json.where() + ": 'camera_hold' must be finite and "
+				"not negative.");
+		}
+
+		const JsonValue strokes = json.array("strokes");
+		if (strokes.size() == 0)
+		{
+			throw std::runtime_error(strokes.where() + ": a figure needs at least one stroke.");
+		}
+		const Vector2F last_nib = redraw.canvas_size - Vector2F(redraw.pen_width);
+		for (size_t index = 0; index < strokes.size(); ++index)
+		{
+			const JsonValue stroke_json = strokes.at(index);
+			RespawnStroke stroke;
+			stroke.part = stroke_json.string("part");
+			const JsonValue points = stroke_json.array("points");
+			if (points.size() < 2)
+			{
+				throw std::runtime_error(points.where() + ": a stroke needs at least two points.");
+			}
+			for (size_t at = 0; at < points.size(); ++at)
+			{
+				const JsonValue point_json = points.at(at);
+				const Vector2F point(point_json.number("x"), point_json.number("y"));
+				// The pen's whole nib stays on the canvas.
+				if (!(point.x >= 0.0f && point.y >= 0.0f &&
+					point.x <= last_nib.x && point.y <= last_nib.y))
+				{
+					throw std::runtime_error(point_json.where() +
+						": the pen leaves the canvas at this point.");
+				}
+				if (!stroke.points.empty())
+				{
+					const Vector2F step = point - stroke.points.back();
+					if ((step.x == 0.0f) == (step.y == 0.0f))
+					{
+						throw std::runtime_error(point_json.where() + ": the pen draws only "
+							"horizontal and vertical lines, and never stands still.");
+					}
+				}
+				stroke.points.push_back(point);
+			}
+			redraw.strokes.push_back(std::move(stroke));
+		}
+		return redraw;
 	}
 
 	DebugOverlayPresentation read_debug_overlay(const JsonValue& root)
@@ -545,6 +607,7 @@ Presentation::Presentation(const char* path)
 			": strength must be at most one, full impact speed must cover minimum speed, "
 			"and particles must be at least one presentation pixel.");
 	}
+	this->respawn_redraw_ = read_respawn_redraw(root);
 	const JsonValue match = root.object("match");
 	this->match_.reference_size = read_positive_vector(match, "reference_size");
 	this->match_.countdown_size = read_positive_vector(match, "countdown_size");
@@ -588,6 +651,11 @@ const MovementFeedbackPresentation& Presentation::movement_feedback() const
 	return this->movement_feedback_;
 }
 
+const RespawnRedrawPresentation& Presentation::respawn_redraw() const
+{
+	return this->respawn_redraw_;
+}
+
 const WorkshopPlayerPresentation& Presentation::workshop_player() const
 {
 	return this->workshop_player_;
@@ -613,10 +681,11 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.font("hud.timer.font", this->hud_.timer_font);
 	check.font("hud.meter_label_font", this->hud_.meter_label_font);
 	check.font("hud.player_identity.font", this->hud_.player_identity_font);
-	check.font("hud.respawn_timer.font", this->hud_.respawn_font);
 	check.frame("hud.fill_frame", this->hud_.sprite_sheet, this->hud_.fill_frame);
 	check.frame("movement_feedback.fill_frame", this->movement_feedback_.sprite_sheet,
 		this->movement_feedback_.fill_frame);
+	check.frame("respawn_redraw.pen_frame", this->respawn_redraw_.sprite_sheet,
+		this->respawn_redraw_.pen_frame);
 	const WorkshopPlayerPresentation& art = this->workshop_player_;
 	check.frame("workshop terrain", "workshop_kit", "platform");
 	const SpriteSheet* sheet = render.sprite_sheet(art.sprite_sheet);

@@ -342,7 +342,7 @@ void Level::refresh_player_cameras()
 	{
 		Player* player = this->players_[i];
 		const Camera camera = this->player_camera_.follow(
-			player->center(),
+			player->camera_focus(),
 			this->viewport_manager_->player_viewport(
 				static_cast<int>(i)),
 			this->resolution_manager_->resolution_vec().y,
@@ -499,9 +499,7 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		player->health() / this->tuning_->player().starting_health,
 		player->weapon_ammo() / this->tuning_->starting_ammo(),
 		this->timer_,
-		player->team_colour(),
-		player->respawn_timer(),
-		player->state() == PlayerState::dead);
+		player->team_colour());
 
 	if (player->showing_debug())
 	{
@@ -576,6 +574,16 @@ bool Level::respawn_player(int view)
 	player->update_weapon_position();
 	this->refresh_player_cameras();
 	this->refresh_views();
+	return true;
+}
+
+bool Level::kill_player(int view)
+{
+	if (view < 0 || view >= this->player_count())
+	{
+		return false;
+	}
+	this->players_[static_cast<size_t>(view)]->kill();
 	return true;
 }
 

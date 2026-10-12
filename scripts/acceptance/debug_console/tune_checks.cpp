@@ -104,6 +104,7 @@ namespace debug_console_acceptance
 			{ "tuning.projectiles.spray.size.x", TuneScope::new_objects },
 			{ "tuning.projectiles.spray.gravity", TuneScope::live },
 			{ "presentation.movement_feedback.minimum_strength", TuneScope::live },
+			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.camera.reference_height", TuneScope::live },
 			{ "presentation.match.countdown_center_y", TuneScope::rebuild },
 			{ "presentation.main_menu.title_position.x", TuneScope::next_screen },

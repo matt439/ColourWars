@@ -15,7 +15,7 @@ namespace
 	}
 }
 
-// goto, respawn, god and ammo: edits of the live players, made from the
+// goto, respawn, kill, god and ammo: edits of the live players, made from the
 // console or the debug menu while no world update is running.
 void DebugDirectorImpl::register_player_commands()
 {
@@ -109,6 +109,52 @@ void DebugDirectorImpl::register_player_commands()
 		});
 	respawn->set_menu(menu(DebugMenuTraits::Form::run));
 	registry.add(std::move(respawn));
+
+	auto kill = std::make_unique<LambdaCommand>("kill",
+		"splat a seat (1-4) or every seat, god or not, to watch the respawn redraw",
+		std::vector<DebugArgSpec>{ { "seat|all", true, []
+			{ return std::vector<std::string>{ "all", "1", "2", "3", "4" }; } } },
+		[this](const DebugArgs& args, DebugLog&)
+		{
+			if (this->match_ == nullptr)
+			{
+				return DebugStatus::failure("kill: no match");
+			}
+			if (const auto refused = this->refuse_while_replaying("kill"))
+			{
+				return *refused;
+			}
+			if (this->rebuild_queued())
+			{
+				return DebugStatus::failure("kill: the queued " +
+					this->queued_rebuild_description() + " rebuilds every seat");
+			}
+			const int players = this->match_->debug_settings().player_count();
+			int first = 1;
+			int last = players;
+			if (args.has(0) && args.text(0) != "all")
+			{
+				if (!parse_seat(args.text(0), first))
+				{
+					return DebugStatus::failure("kill: seat must be 1-4 or all");
+				}
+				last = first;
+			}
+			std::string done;
+			for (int seat = first; seat <= last; ++seat)
+			{
+				if (!this->match_->debug_kill(seat - 1))
+				{
+					return DebugStatus::failure("kill: seat " + std::to_string(seat) +
+						" is not in this match (" + std::to_string(players) + " players)");
+				}
+				done += " P" + std::to_string(seat);
+			}
+			// Death is noticed by the player's own update, so a countdown holds it.
+			return DebugStatus::success("kill:" + done + " (on the next world update)", true);
+		});
+	kill->set_menu(menu(DebugMenuTraits::Form::run));
+	registry.add(std::move(kill));
 
 	auto god = std::make_unique<BoolVariable>("god",
 		"no player takes paint damage (paint still lands)", false,

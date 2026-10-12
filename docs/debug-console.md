@@ -150,6 +150,7 @@ running.
 | `overlay.player`, `overlay.collision`, `overlay.camera`, `overlay.paint`, `overlay.perf` `<on\|off\|toggle>` | the overlays as variables |
 | `goto <station> [seat]` | put a seat (default 1) at a named [station](#stations-and-goto), at rest |
 | `respawn [seat\|all]` | respawn a seat or every seat now (default all) |
+| `kill [seat\|all]` | splat a seat or every seat (default all), god or not, to watch the respawn redraw |
 | `god <0\|1>` | no player takes paint damage (variable) |
 | `ammo <normal\|inf>` | `inf` keeps every tank full (variable; `infinite` too) |
 | `restart` | rebuild the current match, same session |
@@ -230,7 +231,7 @@ registry as a menu page: the same entries as the console, grouped.
 | Category | Entries |
 |---|---|
 | match | menu, players, restart, stage, visual, weapon |
-| player | ammo, bot (picker: `bot all <behaviour>`), god, goto, respawn |
+| player | ammo, bot (picker: `bot all <behaviour>`), god, goto, kill, respawn |
 | view | feedback, overlay, overlay.camera, overlay.collision, overlay.paint, overlay.perf, overlay.player |
 | time | pause, step, timescale |
 | tuning | the `tuning` and `presentation` trees, then tune.diff, tune.reset, tune.save |
@@ -306,17 +307,21 @@ it, with a log line. Typed in a match with a rebuild queued, it stays queued
 (the debug menu stays open) and applies after that rebuild; it is dropped, with
 a log line, if the rebuild cannot be planned or the match ends first.
 
-## Player cheats (respawn, god, ammo)
+## Player cheats (respawn, kill, god, ammo)
 
 - `respawn [seat|all]` respawns now, at the spawn, health and ammo full, as the
   respawn timer would.
+- `kill [seat|all]` sets health to zero, through `god` too, so the next world
+  update dies as a fatal hit does: the death sound, then the figure redrawn at
+  its spawn over the respawn wait. In the countdown it waits for the match to
+  start, because players do not update until then.
 - `god 1`: players take no paint damage. The projectile side is unchanged, so
   paint still lands where it hits.
 - `ammo inf`: every tank is refilled before and after each shot, so the HUD
   stays full.
 
 Both cheats are kept by the director and re-applied to every build. While a
-recording or a replay runs, `goto`, `respawn`, `god`, `ammo`, `bot` and `tune`
+recording or a replay runs, `goto`, `respawn`, `kill`, `god`, `ammo`, `bot` and `tune`
 are refused (they would change the match outside the recorded input).
 
 ## Live tuning
@@ -500,7 +505,7 @@ neither the mouse nor the camera is read on replay. The limits:
   paused clock pauses the voices only, so a replay paused or stepped one update
   at a time still matches.
 - **Side doors are shut.** While recording or replaying, `goto`, `respawn`,
-  `god`, `ammo`, `bot`, `tune`, `tune.reset`, `tune.save` and `reload` are
+  `kill`, `god`, `ammo`, `bot`, `tune`, `tune.reset`, `tune.save` and `reload` are
   refused; a `play` queued and then left behind (`menu`, the match ending, a
   plan that fails) is disarmed rather than taking over the next match; the
   cheats in force when recording began are stored and re-applied by `play`.

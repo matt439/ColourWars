@@ -474,6 +474,11 @@ bool GameLevel::debug_respawn(int seat)
 	return this->level_->respawn_player(seat);
 }
 
+bool GameLevel::debug_kill(int seat)
+{
+	return this->level_->kill_player(seat);
+}
+
 MatchPaint GameLevel::debug_paint() const
 {
 	const LevelEndInfo info = this->level_->level_end_info();

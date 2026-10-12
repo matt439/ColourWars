@@ -119,6 +119,26 @@ not a hole to explain.
 - The person is never seen clearly, only as a bezel, a cursor and a silhouette.
 - Invent the program. Never name or trace a real one, or a real operating system.
 
+## Building it
+
+Decided with the author on 2026-10-12, while the first slice was built:
+
+- **Figures are grey until they come alive.** They are grey in the opening,
+  flash their colour during their half's preview, go grey again at the undo,
+  and fill with the team colour when they come alive. They keep that colour
+  for the rest of the match, because players tell the teams apart by it.
+- **The redraw is the respawn timer.** No number is drawn while a player
+  waits; the figure being redrawn shows how long is left.
+- **Two-player split screen stays top/bottom.** The stages are wide bands, so
+  left/right panes would be slivers. The preview shows each team its side
+  before the split.
+
+| Beat | State |
+|---|---|
+| Respawn: the redraw at the spawn | Built. `RespawnRedraw`; strokes and timings in `presentation.json` `respawn_redraw` |
+| Respawn: the pop | Still the old death yell; waits for a pop sound in the bank |
+| Opening, reveal, rematch bezel | Not started |
+
 ## Rejected on the way, and why
 
 | Idea | Why it was dropped |

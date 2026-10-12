@@ -16,6 +16,7 @@ namespace
 Player::Player(const RectangleF& rectangle,
     const GameTuning* tuning,
     const MovementFeedbackPresentation* movement_feedback,
+    const RespawnRedrawPresentation* respawn_redraw,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
     const PlaySettings* preferences,
@@ -41,6 +42,7 @@ Player::Player(const RectangleF& rectangle,
                   render_resources, team_colour, rotation, origin, flip, layer_depth),
     tuning_(tuning),
     movement_feedback_(movement_feedback, render_resources),
+    respawn_redraw_(respawn_redraw, render_resources),
     primary_(std::move(primary_weapon)),
     player_num_(player_num),
     team_(team),
@@ -71,9 +73,11 @@ Player::Player(const RectangleF& rectangle,
 
 void Player::update_animation_state()
 {
-    const PlayerAnimationState new_animation_state =
-        this->calculate_animation_state();
+    this->set_animation_state(this->calculate_animation_state());
+}
 
+void Player::set_animation_state(PlayerAnimationState new_animation_state)
+{
     if (this->animation_state_ == new_animation_state)
     {
         return;
@@ -99,6 +103,7 @@ void Player::draw(DrawList& draw_list) const
 {
     if (this->state_ == PlayerState::dead)
     {
+        this->draw_respawn(draw_list);
         return;
     }
 
@@ -110,6 +115,13 @@ void Player::draw(DrawList& draw_list) const
         return;
     }
 
+    this->draw_figure(draw_list, this->rectangle_);
+    this->primary_->draw(draw_list, this->showing_debug_);
+    this->movement_feedback_.draw(draw_list);
+}
+
+void Player::draw_figure(DrawList& draw_list, const RectangleF& rectangle) const
+{
     // Use the clip selected by update_animation_state; draw must not mutate shared state.
     const SpriteFlip flip = this->facing_right()
         ? SpriteFlip::none
@@ -117,17 +129,33 @@ void Player::draw(DrawList& draw_list) const
 
     // Qualify the two DrawObject bases: TextureObject and AnimationObject
     // have independent colour, origin and rotation state.
-    TextureObject::draw_with(draw_list, this->rectangle_,
+    TextureObject::draw_with(draw_list, rectangle,
         this->TextureObject::frame(),
         this->TextureObject::colour(),
         this->TextureObject::origin(), flip,
         this->TextureObject::draw_rotation());
 
-    AnimationObject::draw_with(draw_list, this->rectangle_,
+    AnimationObject::draw_with(draw_list, rectangle,
         this->AnimationObject::colour(), flip);
+}
 
-    this->primary_->draw(draw_list, this->showing_debug_);
-    this->movement_feedback_.draw(draw_list);
+void Player::draw_respawn(DrawList& draw_list) const
+{
+    // The strokes trace the original art; the workshop figure has none to replay.
+    if (this->workshop_visual_ != nullptr)
+    {
+        return;
+    }
+    const float progress = this->respawn_progress();
+    if (this->respawn_redraw_.filled(progress))
+    {
+        // Death switched the clip to idle, the frame the strokes trace, so the
+        // fill lands exactly on the outline.
+        this->draw_figure(draw_list, this->spawn_rectangle());
+        return;
+    }
+    this->respawn_redraw_.draw(draw_list, this->spawn_rectangle(),
+        this->facing_right(), progress);
 }
 CollisionObjectType Player::collision_type() const
 {
@@ -411,6 +439,8 @@ void Player::update(float dt)
         this->landing_feedback_ready_ = false;
         this->reset_jump_input();
         this->set_move_state(PlayerMoveState::in_air);
+        // The redraw fills in to the idle frame, so hold it until respawn.
+        this->set_animation_state(PlayerAnimationState::idle);
         this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume * this->preferences_->sfx_gain());
     }
 
@@ -708,6 +738,15 @@ RectangleF Player::bounds() const
         RectangleF::union_of(this->rectangle_, this->primary_->draw_bounds()));
 }
 
+RectangleF Player::cull_bounds(float /*units_per_pixel*/) const
+{
+    if (this->state_ == PlayerState::dead)
+    {
+        return RectangleF::union_of(this->bounds(), this->spawn_rectangle());
+    }
+    return this->bounds();
+}
+
 const MovementFeedback& Player::movement_feedback() const
 {
     return this->movement_feedback_;
@@ -849,6 +888,11 @@ void Player::force_respawn()
 {
     this->respawn();
     this->respawn_timer_ = this->player_tuning().respawn_delay;
+}
+
+void Player::kill()
+{
+    this->health_ = 0.0f;
 }
 
 void Player::set_showing_debug(bool showing)
@@ -993,6 +1037,30 @@ PlayerTeam Player::team() const
 float Player::respawn_timer() const
 {
 	return this->respawn_timer_;
+}
+
+float Player::respawn_progress() const
+{
+    // The delay is live tuning: a change mid-wait must not leave 0..1.
+    const float delay = this->player_tuning().respawn_delay;
+    return delay > 0.0f ?
+        std::clamp(1.0f - this->respawn_timer_ / delay, 0.0f, 1.0f) : 1.0f;
+}
+
+RectangleF Player::spawn_rectangle() const
+{
+    return RectangleF(this->respawn_position_, this->rectangle_.size());
+}
+
+Vector2F Player::camera_focus() const
+{
+    if (this->state_ == PlayerState::dead &&
+        this->player_tuning().respawn_delay - this->respawn_timer_ >=
+            this->respawn_redraw_.camera_hold())
+    {
+        return this->spawn_rectangle().center();
+    }
+    return this->center();
 }
 
 float Player::air_time() const

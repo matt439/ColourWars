@@ -48,7 +48,7 @@ namespace
             auto weapon = WeaponBuilder::build_weapon(&tuning, PlayerTeam::a,
                 4, 0, Colour::blue, type, body.center(), &render, &audio, &preferences);
             auto actor = std::make_unique<Player>(body, &tuning,
-                &presentation.movement_feedback(), &render, &audio, &preferences,
+                &presentation.movement_feedback(), &presentation.respawn_redraw(), &render, &audio, &preferences,
                 4, PlayerTeam::a, type, std::move(weapon), WeaponType::none,
                 Colour::blue, Viewport{}, body.position());
             if (mode != PlayerVisualMode::original)

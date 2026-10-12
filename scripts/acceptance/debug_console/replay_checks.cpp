@@ -284,6 +284,7 @@ namespace debug_console_acceptance
 			return this->level->place_player(seat, top_left);
 		}
 		bool debug_respawn(int seat) override { return this->level->respawn_player(seat); }
+		bool debug_kill(int seat) override { return this->level->kill_player(seat); }
 		MatchPaint debug_paint() const override
 		{
 			const LevelEndInfo info = this->level->level_end_info();

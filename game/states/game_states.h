@@ -114,6 +114,7 @@ private:
 	std::vector<LevelStation> debug_stations() const override;
 	bool debug_place(int seat, const mattmath::Vector2F& top_left) override;
 	bool debug_respawn(int seat) override;
+	bool debug_kill(int seat) override;
 	MatchPaint debug_paint() const override;
 	bool debug_countdown_over() const override;
 	void debug_set_seat_labels(const std::vector<std::wstring>& labels) override;

@@ -24,9 +24,7 @@ public:
         float health,
         float ammo,
         float timer,
-        const labrador::Colour& team_colour,
-        float respawn_timer,
-        bool show_respawn_timer) const;
+        const labrador::Colour& team_colour) const;
 
     // The same, with the identity box's second line given ("Bot: paint")
     // instead of the device the input slot names.
@@ -38,9 +36,7 @@ public:
         float health,
         float ammo,
         float timer,
-        const labrador::Colour& team_colour,
-        float respawn_timer,
-        bool show_respawn_timer) const;
+        const labrador::Colour& team_colour) const;
 
 private:
     void draw_meter(labrador::DrawList& draw_list,
@@ -55,10 +51,6 @@ private:
         float timer,
         float scale) const;
 
-    void draw_respawn_timer(labrador::DrawList& draw_list,
-        const mattmath::Vector2F& resolution,
-        float timer) const;
-
     labrador::RenderResources* render_resources() const;
 
     // Borrowed services and presentation; both outlive the HUD.
@@ -71,6 +63,5 @@ private:
     labrador::SpriteSheet::frame_handle fill_frame_;
     labrador::FontHandle meter_label_font_;
     labrador::FontHandle timer_font_;
-    labrador::FontHandle respawn_timer_font_;
     labrador::FontHandle player_identity_font_;
 };

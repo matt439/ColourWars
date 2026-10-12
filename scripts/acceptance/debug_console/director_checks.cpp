@@ -376,6 +376,10 @@ namespace debug_console_acceptance
 
 		require(impl.execute("respawn all").ok && match.respawned == std::vector<int>{ 0 },
 			"respawn all respawns every seat");
+		require(impl.execute("kill 1").ok && match.killed == std::vector<int>{ 0 } &&
+			!impl.execute("kill 2").ok && log_contains(impl.log(),
+				"kill: seat 2 is not in this match", DebugSeverity::error),
+			"kill splats a seat in the match and names one that is not");
 
 		// With a rebuild queued, goto waits for it (which would otherwise put
 		// the player back at a spawn) and respawn says why it does nothing.
