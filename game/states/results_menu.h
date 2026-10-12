@@ -29,14 +29,17 @@ private:
 class ResultsMenuInitial final : public ResultsMenuPage
 {
 public:
+	// `revealed`: the match already showed the winner and the coverage on
+	// the person's monitor, so this page keeps only the percentages.
 	ResultsMenuInitial(MenuContext* context, const LevelEndInfo& end_info,
-		const Session& session = Session());
+		const Session& session = Session(), bool revealed = false);
 	void init() override;
 	void update_page(float dt) override;
 	// Proceeds as a confirm would; the match then opens the end menu.
 	bool debug_dismiss(bool leaving_match) override;
 private:
 	Session session_;
+	bool revealed_ = false;
 	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> details_;
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;

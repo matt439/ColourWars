@@ -327,7 +327,10 @@
     "child_height": 0.44,
     "cursor_size": 0.045,
     "preview_strength": 0.6,
-    "figure_grey": "B4B4B4"
+    "figure_grey": "B4B4B4",
+    "percent_font": "gill_sans_ultra_bold_144",
+    "percent_height": 0.11,
+    "percent_shadow": "000000"
   },
 
   "match": {

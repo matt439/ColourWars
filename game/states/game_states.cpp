@@ -316,7 +316,7 @@ void GameLevel::open_results_menu()
 	this->menu_input_->reset_actions();
 	this->context()->push(
 		std::make_unique<ResultsMenuInitial>(this->menu_context_.get(),
-			result, this->session_),
+			result, this->session_, this->level_->revealed()),
 		[this]() { this->open_end_menu(); });
 }
 

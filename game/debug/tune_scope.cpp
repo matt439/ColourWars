@@ -24,8 +24,9 @@ namespace
 		{ "tuning.player.**", TuneScope::live },
 		// Level reads the volume each time it plays them.
 		{ "tuning.match.sounds.*.volume", TuneScope::live },
-		// The opening's beats are read every update (level_intro.cpp).
+		// The opening's and the reveal's beats are read every update (level_intro.cpp).
 		{ "tuning.match.opening.**", TuneScope::live },
+		{ "tuning.match.reveal.**", TuneScope::live },
 		// Timers and texts are copied by the Level constructor.
 		{ "tuning.match.**", TuneScope::rebuild },
 		// Tiles and their thickness are built with the level.

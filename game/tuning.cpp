@@ -203,6 +203,8 @@ namespace
 		const JsonValue sounds = json.object("sounds");
 		match.countdown_sound = read_sound(sounds, "countdown");
 		match.zoom_out_sound = read_sound(sounds, "zoom_out");
+		match.hover_sound = read_sound(sounds, "hover");
+		match.click_sound = read_sound(sounds, "click");
 
 		const JsonValue opening = json.object("opening");
 		match.opening.settle = json_non_negative(opening, "settle");
@@ -210,6 +212,12 @@ namespace
 		match.opening.undo = json_non_negative(opening, "undo");
 		match.opening.leave = read_positive(opening, "leave");
 		match.opening.push = read_positive(opening, "push");
+		const JsonValue reveal = json.object("reveal");
+		match.reveal.walk_in = read_positive(reveal, "walk_in");
+		match.reveal.hover = read_positive(reveal, "hover");
+		match.reveal.decide = read_positive(reveal, "decide");
+		match.reveal.show = read_positive(reveal, "show");
+		match.reveal.leave = read_positive(reveal, "leave");
 		if (match.opening.push > match.countdown)
 		{
 			throw std::runtime_error(opening.where() +
@@ -524,6 +532,8 @@ void GameTuning::validate_match_sounds(const RenderResources& render,
 	const ResourceValidation check(this->source_path_, render, audio);
 	check.wave("match.sounds.countdown.name", bank, this->match_.countdown_sound.name);
 	check.effect("match.sounds.zoom_out.name", bank, this->match_.zoom_out_sound.name);
+	check.wave("match.sounds.hover.name", bank, this->match_.hover_sound.name);
+	check.wave("match.sounds.click.name", bank, this->match_.click_sound.name);
 }
 
 const MatchTuning& GameTuning::match() const

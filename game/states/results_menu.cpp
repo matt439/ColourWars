@@ -27,8 +27,8 @@ LevelEndInfo ResultsMenuPage::level_end_info() const
 }
 
 ResultsMenuInitial::ResultsMenuInitial(MenuContext* context,
-	const LevelEndInfo& end_info, const Session& session) :
-	ResultsMenuPage(context, end_info), session_(session)
+	const LevelEndInfo& end_info, const Session& session, bool revealed) :
+	ResultsMenuPage(context, end_info), session_(session), revealed_(revealed)
 {
 
 }
@@ -74,7 +74,7 @@ void ResultsMenuInitial::update_page(float dt)
 				this->team_b_percentage_panel_->set_hidden(false);
 				this->team_b_percentage_->set_hidden(false);
 			}
-			this->winner_->set_hidden(false);
+			this->winner_->set_hidden(this->revealed_);
 			for (const std::unique_ptr<UiTextDropShadow>& detail : this->details_)
 			{
 				detail->set_hidden(false);
@@ -301,6 +301,19 @@ void ResultsMenuInitial::init()
 				look.contribution_spacing * static_cast<float>(i + 1)), look.contribution_font);
 	}
 
+	if (this->revealed_)
+	{
+		// The reveal was the fill and the fanfare: the numbers, at once.
+		this->delay_timer_ = look.team_fill_delay;
+		this->fill_timer_ = look.team_fill_time;
+		this->winner_sound_played_ = true;
+		this->fill_box_->set_hidden(true);
+		this->team_a_fill_->set_hidden(true);
+		this->team_b_fill_->set_hidden(true);
+		this->team_a_mark_->set_hidden(true);
+		this->team_b_mark_->set_hidden(true);
+		return;
+	}
 	this->play_effect(this->fill_sound_, true, look.fill_sound.volume);
 }
 

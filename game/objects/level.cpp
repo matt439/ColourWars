@@ -74,6 +74,9 @@ Level::Level(std::unique_ptr<Scene> scene,
 			MonitorPersona::roll(look));
 		this->silhouette_ = std::make_unique<Silhouette>(&look, render_resources);
 		this->cursor_ = std::make_unique<ScreenCursor>(&look, render_resources);
+		this->percent_font_ = render_resources->resolve_sprite_font(look.percent_font);
+		this->hover_sound_ = this->sound_bank_->resolve_wave(match.hover_sound.name);
+		this->click_sound_ = this->sound_bank_->resolve_wave(match.click_sound.name);
 		this->state_ = LevelState::opening;
 		// A quick rematch starts with the colours being tried.
 		this->opening_time_ = opening == OpeningMode::quick ? match.opening.settle : 0.0f;
@@ -187,6 +190,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			this->stop_player_sounds();
 			this->sound_bank_->play_effect(this->zoom_out_sound_, false,
 				this->tuning_->match().zoom_out_sound.volume * this->preferences_->sfx_gain());
+			this->start_reveal();
 		}
 	}
 	else if (this->state_ == LevelState::zoom_out)
@@ -204,6 +208,10 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		this->zoom_out_camera_ = Camera::calculate_intermediate_camera(
 			this->zoom_out_start_camera_, this->zoom_out_finish_camera_,
 			this->zoom_out_camera_ratio());
+	}
+	else if (this->state_ == LevelState::overview && this->monitor_ != nullptr)
+	{
+		this->update_reveal(dt);
 	}
 	else if (this->state_ == LevelState::overview)
 	{
@@ -411,7 +419,7 @@ void Level::refresh_views()
 {
 	this->scene_->clear_views();
 
-	if (this->intro_showing())
+	if (this->intro_showing() || this->reveal_showing())
 	{
 		this->add_intro_views();
 		return;
@@ -464,7 +472,7 @@ void Level::resume_player_sounds() const
 
 void Level::draw(Renderer& renderer) const
 {
-	if (this->intro_showing())
+	if (this->intro_showing() || this->reveal_showing())
 	{
 		this->draw_intro(renderer);
 		return;

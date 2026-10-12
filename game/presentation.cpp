@@ -546,11 +546,15 @@ namespace
 		opening.cursor_size = read_fraction(json, "cursor_size");
 		opening.preview_strength = read_fraction(json, "preview_strength");
 		opening.figure_grey = read_colour(json, "figure_grey");
+		opening.percent_font = json.identifier("percent_font");
+		opening.percent_height = read_fraction(json, "percent_height");
+		opening.percent_shadow = read_colour(json, "percent_shadow");
 		if (opening.adult_height <= 0.0f || opening.child_height <= 0.0f ||
-			opening.cursor_size <= 0.0f || opening.palette_height <= 0.0f)
+			opening.cursor_size <= 0.0f || opening.palette_height <= 0.0f ||
+			opening.percent_height <= 0.0f)
 		{
 			throw std::runtime_error(json.where() + ": 'adult_height', 'child_height', "
-				"'cursor_size' and 'palette_height' must be more than zero.");
+				"'cursor_size', 'palette_height' and 'percent_height' must be more than zero.");
 		}
 		return opening;
 	}
@@ -776,6 +780,7 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->respawn_redraw_.pen_frame);
 	check.frame("opening.fill_frame", this->opening_.sprite_sheet,
 		this->opening_.fill_frame);
+	check.font("opening.percent_font", this->opening_.percent_font);
 	const WorkshopPlayerPresentation& art = this->workshop_player_;
 	check.frame("workshop terrain", "workshop_kit", "platform");
 	const SpriteSheet* sheet = render.sprite_sheet(art.sprite_sheet);

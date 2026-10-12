@@ -151,7 +151,8 @@ Decided with the author on 2026-10-12, while the first slice was built:
 | Opening: skip, quick rematch | Built. A, B or Start skips; a rematch starts at the preview |
 | Rematch: a new random monitor | Built. Rolled per match from `opening.bezel_shades` and the decorations |
 | Opening: figures looking at their hands; sigh and chair sounds | Not started |
-| Reveal | Not started |
+| Reveal: pull back into the monitor, the person sits, hovers each colour over the whole picture, wavers, clicks the winner, the slot fills, the coverage shows, the person leaves | Built. `level_intro.cpp`; timings in `tuning.json` `match.reveal`, sounds `match.sounds.hover/click`; the results page then keeps only the percentages |
+| Reveal: figures freezing and cheating, then celebrating or slumping | Not started |
 
 ## Rejected on the way, and why
 

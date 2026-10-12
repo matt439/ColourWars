@@ -379,6 +379,10 @@ struct OpeningPresentation
 	float preview_strength = 0.0f;
 	// The figures before they are coloured.
 	labrador::Colour figure_grey;
+	// The coverage the reveal shows, each half's number in its colour.
+	std::string percent_font;
+	float percent_height = 0.0f;
+	labrador::Colour percent_shadow;
 };
 
 // Presentation settings parsed once at startup.

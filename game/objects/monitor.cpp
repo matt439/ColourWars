@@ -238,6 +238,15 @@ void Monitor::draw_picker(DrawList& draw_list, const RectangleF& screen,
     this->fill(draw_list, b, second);
 }
 
+void Monitor::draw_saved(DrawList& draw_list, const RectangleF& screen,
+    const Colour& colour) const
+{
+    const RectangleF slot = this->empty_slot(screen);
+    this->fill(draw_list, slot, colour);
+    this->frame_rectangle(draw_list, slot, std::max(1.0f, slot.height * 0.08f),
+        this->look_->slot_outline);
+}
+
 void Monitor::draw_preview(DrawList& draw_list, const RectangleF& area,
     const Colour& colour) const
 {

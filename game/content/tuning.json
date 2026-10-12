@@ -25,7 +25,9 @@
         },
         "sounds": {
             "countdown": { "name": "smash_countdown", "volume": 1.0 },
-            "zoom_out": { "name": "slide_whistle_up", "volume": 0.5 }
+            "zoom_out": { "name": "slide_whistle_up", "volume": 0.5 },
+            "hover": { "name": "UI_Clicks14", "volume": 0.6 },
+            "click": { "name": "UI_Clicks01", "volume": 1.0 }
         },
         "opening": {
             "_comment": [
@@ -39,6 +41,19 @@
             "undo": 0.5,
             "leave": 1.4,
             "push": 0.8
+        },
+        "reveal": {
+            "_comment": [
+                "Seconds of the reveal after the pull back (zoom_out), in place",
+                "of overview when the match had an intro: the person sits down,",
+                "hovers each colour, wavers and clicks, the coverage shows, the",
+                "person leaves."
+            ],
+            "walk_in": 1.2,
+            "hover": 1.0,
+            "decide": 1.1,
+            "show": 1.6,
+            "leave": 1.2
         }
     },
 

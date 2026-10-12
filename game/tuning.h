@@ -47,6 +47,23 @@ struct OpeningTuning
 	float push = 0.0f;
 };
 
+// The reveal after the clock (docs/backstory.md, "The reveal"), in seconds.
+// The pull back into the monitor is match.zoom_out; these follow it, and
+// replace match.overview when the match had an intro.
+struct RevealTuning
+{
+	// The person comes back and sits down.
+	float walk_in = 0.0f;
+	// Each colour hovered: the whole picture shows in it.
+	float hover = 0.0f;
+	// The cursor wavers between the two, then clicks the winner at once.
+	float decide = 0.0f;
+	// The slot is filled and the coverage shows.
+	float show = 0.0f;
+	// The person leans back and leaves.
+	float leave = 0.0f;
+};
+
 struct MatchTuning
 {
 	float duration = 0.0f;
@@ -75,6 +92,9 @@ struct MatchTuning
 	SoundTuning zoom_out_sound;
 
 	OpeningTuning opening;
+	RevealTuning reveal;
+	SoundTuning hover_sound;
+	SoundTuning click_sound;
 };
 
 // Animation clip selection and optional timing override.

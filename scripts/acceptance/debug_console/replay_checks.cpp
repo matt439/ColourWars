@@ -607,7 +607,7 @@ namespace debug_console_acceptance
 		const auto ticks_while = [&](auto still)
 			{
 				int ticks = 0;
-				for (; ticks < 2000 && still(); ++ticks)
+				for (; ticks < 20000 && still(); ++ticks)
 				{
 					match.level->update(idle, dt);
 				}
@@ -617,7 +617,8 @@ namespace debug_console_acceptance
 		const float whole = timing.settle + timing.preview * 2.0f + timing.undo + timing.leave;
 		const auto about = [&](int ticks, float seconds)
 			{
-				return std::abs(static_cast<float>(ticks) * dt - seconds) <= dt * 2.0f;
+				return std::abs(static_cast<float>(ticks) * dt - seconds) <=
+					std::max(dt * 2.0f, seconds * 0.001f);
 			};
 
 		match.opening = OpeningMode::full;
@@ -634,6 +635,15 @@ namespace debug_console_acceptance
 		const int countdown_ticks = ticks_while([&] { return !match.level->match_started(); });
 		require(about(countdown_ticks, tuning.match().countdown) && !level.intro_playing() &&
 			level.state() == LevelState::active, "The countdown ends at GO and the intro with it");
+
+		// The end: back into the same monitor, and the reveal in place of the overview.
+		const int played = ticks_while([&] { return match.level->state() == LevelState::active; });
+		require(about(played, tuning.match().duration) && level.state() == LevelState::zoom_out &&
+			level.revealed(), "The clock ends into the reveal");
+		const RevealTuning& reveal = tuning.match().reveal;
+		const int revealing = ticks_while([&] { return match.level->state() != LevelState::finished; });
+		require(about(revealing, tuning.match().zoom_out + reveal.walk_in + reveal.hover * 2.0f +
+			reveal.decide + reveal.show + reveal.leave), "The pull back and the reveal run their length");
 
 		// A, B or Start from anyone in the match: straight to the split countdown.
 		match.build();
@@ -669,14 +679,14 @@ namespace debug_console_acceptance
 		require(impl.execute("intro off").ok, "intro off");
 		match.opening = OpeningMode::full;
 		match.build();
-		require(match.level->state() == LevelState::start_countdown && !match.level->intro_playing(),
-			"intro off starts at the split countdown");
+		require(match.level->state() == LevelState::start_countdown && !match.level->intro_playing() &&
+			!match.level->revealed(), "intro off starts at the split countdown and ends without a reveal");
 		require(impl.execute("intro auto").ok, "intro auto");
 		match.build();
 		require(match.level->state() == LevelState::opening, "intro auto is the game's choice again");
 		director.detach_match(match);
-		std::cout << "PASS opening: full, quick, skipped by a seat in the match only, frozen until GO, "
-			"intro overrides\n";
+		std::cout << "PASS opening and reveal: full, quick, skipped by a seat in the match only, frozen "
+			"until GO, the reveal's length, intro overrides\n";
 	}
 }
 #endif

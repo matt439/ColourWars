@@ -101,6 +101,9 @@ public:
 	bool match_started() const;
 	// The intro is on screen: A, B or Start skips it rather than pausing.
 	bool intro_playing() const;
+	// The match ends on the person's monitor, which shows the winner and the
+	// coverage; the results page then keeps only the percentages.
+	bool revealed() const;
 
 	// Read-only views for developer status; the index is the view, not the
 	// player's input slot (see players_).
@@ -241,6 +244,34 @@ private:
 	// What of the world the picture shows, and where its two halves meet.
 	mattmath::RectangleF picture_bounds_;
 	float picture_middle_ = 0.0f;
+
+	// The reveal (level_intro.cpp): the same monitor and person at the end.
+	struct RevealBeat
+	{
+		float cursor_at_a = 0.0f;
+		float cursor_at_b = 0.0f;
+		bool showing_a = false;
+		bool showing_b = false;
+		bool picker = false;
+		float waver = 0.0f;
+		bool clicked = false;
+		SilhouettePose pose;
+	};
+	float reveal_time_ = 0.0f;
+	LevelEndInfo end_info_;
+	PlayerTeam winner_ = PlayerTeam::none;
+	labrador::SoundBank::WaveHandle hover_sound_;
+	labrador::SoundBank::WaveHandle click_sound_;
+	labrador::FontHandle percent_font_;
+
+	RevealBeat reveal_beat() const;
+	float reveal_length() const;
+	bool reveal_showing() const;
+	// How far the view is through the glass: 0 at the monitor, 1 in the panes.
+	float glass_push() const;
+	void start_reveal();
+	void update_reveal(float dt);
+	void draw_reveal(labrador::DrawList& front, const mattmath::RectangleF& screen) const;
 
 	OpeningBeat opening_beat() const;
 	float opening_length() const;

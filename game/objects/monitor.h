@@ -62,6 +62,9 @@ public:
     void draw(labrador::DrawList& draw_list, const mattmath::RectangleF& screen) const;
     void draw_picker(labrador::DrawList& draw_list, const mattmath::RectangleF& screen,
         const labrador::Colour& first, const labrador::Colour& second) const;
+    // The empty slot, filled: the colour has been saved.
+    void draw_saved(labrador::DrawList& draw_list, const mattmath::RectangleF& screen,
+        const labrador::Colour& colour) const;
     // Shows `colour` over part of the picture, in whatever space the list is in.
     void draw_preview(labrador::DrawList& draw_list, const mattmath::RectangleF& area,
         const labrador::Colour& colour) const;
