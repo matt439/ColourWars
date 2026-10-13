@@ -33,6 +33,13 @@ the game's. And the historical documents — `docs/review/` here and in the
 engine — are the reviews as written, so rewriting them would make a record stop
 matching what was actually reviewed.
 
+## Open work
+
+[TODO.md](TODO.md) is the index of open work: **NOW** gives the order, and each
+row points to the doc that owns its detail. A fresh thread starts there. Its
+editing rules are at its end; the main one is that a row leaves in the same
+commit that finishes it.
+
 ## Build and run
 
 Requires **VCPKG_ROOT** set (`CMakePresets.json` reads it for the toolchain
