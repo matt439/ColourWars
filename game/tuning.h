@@ -11,6 +11,7 @@
 #include <array>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace labrador
 {
@@ -69,6 +70,7 @@ struct RevealTuning
 struct MatchTuning
 {
 	float duration = 0.0f;
+	std::vector<float> duration_choices;
 	float countdown = 0.0f;
 	float zoom_out = 0.0f;
 	float overview = 0.0f;

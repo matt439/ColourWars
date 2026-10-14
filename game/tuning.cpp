@@ -180,6 +180,15 @@ namespace
 
 		// Require a playable duration and a positive divisor for the zoom-out ratio.
 		match.duration = read_positive(json, "duration");
+		const JsonValue choices = json.array("duration_choices");
+		for (size_t index = 0; index < choices.size(); ++index)
+		{
+			match.duration_choices.push_back(read_positive(choices.at(index), "seconds"));
+		}
+		if (match.duration_choices.empty())
+		{
+			throw std::runtime_error(choices.where() + ": must contain a match duration.");
+		}
 		match.zoom_out = read_positive(json, "zoom_out");
 
 		// Zero skips the countdown or overview; these durations have no range check.

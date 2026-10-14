@@ -24,7 +24,7 @@
 class ReplayFile
 {
 public:
-	static constexpr int format_version = 1;
+	static constexpr int format_version = 2;
 	static constexpr int checkpoint_interval = 60;
 
 	struct Checkpoint

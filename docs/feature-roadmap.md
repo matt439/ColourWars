@@ -153,6 +153,19 @@ hardware check. The engine pin and source are unchanged.
 
 Implemented:
 
+- Mode Select's Match length row chooses Default or 1, 2, 4, 6 or 8 minutes
+  with Left/Right (confirm also cycles). Default follows `match.duration`;
+  the other choices come from `match.duration_choices` in `tuning.json`.
+  This is the active paint clock only: opening, countdown and reveal keep
+  their own timings. The choice survives setup navigation, restarts, rematches
+  and every round of a series, for solo practice as well as multiplayer.
+  Debug recordings retain the exact override (replay format 2); recordings
+  from older builds remain unsupported. This closes gap-audit 1.4's remaining
+  duration work on 2026-10-15. Debug and Release consumer acceptance passed;
+  the Debug real-Level check runs a 1.25-second override through countdown
+  and into the reveal, and the replay codec preserves a fractional override
+  exactly. Debug startup passed with an isolated save and graceful shutdown.
+  A physical-controller menu session remains part of ROAD#2.
 - Mode Select offers Single Match, Best of 3 and Best of 5. A series needs
   2-4 players and ends when Team A or B reaches two or three wins. Single Match
   keeps the one-player practice path and the existing team scoring.

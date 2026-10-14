@@ -3,6 +3,20 @@
 #include "game/input_slots.h"
 using namespace labrador;
 
+std::optional<float> MenuLevelSettings::duration() const
+{
+	return this->duration_;
+}
+
+void MenuLevelSettings::set_duration(std::optional<float> seconds)
+{
+	if (seconds && (!std::isfinite(*seconds) || *seconds <= 0.0f))
+	{
+		throw std::invalid_argument("Match duration must be finite and positive");
+	}
+	this->duration_ = seconds;
+}
+
 std::vector<MenuPlayerSettings> MenuLevelSettings::player_settings() const
 {
 	return this->player_settings_;

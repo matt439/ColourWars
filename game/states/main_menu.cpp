@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
 #include "game/build_info.h"
+#include <sstream>
 
 using namespace DirectX;
 using namespace mattmath;
@@ -339,6 +340,31 @@ MainMenuModeSelect::MainMenuModeSelect(MenuContext* context) :
 
 }
 
+void MainMenuModeSelect::refresh_duration()
+{
+	const std::optional<float> seconds = this->level_settings()->duration();
+	std::wostringstream label;
+	label << seconds.value_or(this->data()->tuning()->match().duration) / 60.0f << L" min";
+	const std::wstring time = label.str();
+	this->duration_row_->set_value(seconds ? time : L"Default (" + time + L")");
+}
+
+void MainMenuModeSelect::cycle_duration(Direction direction)
+{
+	const std::vector<float>& choices = this->data()->tuning()->match().duration_choices;
+	const std::optional<float> current = this->level_settings()->duration();
+	size_t slot = 0;
+	for (size_t index = 0; index < choices.size(); ++index)
+	{
+		if (current && *current == choices[index]) { slot = index + 1; break; }
+	}
+	const size_t count = choices.size() + 1;
+	slot = direction == Direction::left ? (slot + count - 1) % count : (slot + 1) % count;
+	this->level_settings()->set_duration(slot == 0 ? std::nullopt :
+		std::optional<float>(choices[slot - 1]));
+	this->refresh_duration();
+}
+
 void MainMenuModeSelect::update_page(float /*dt*/)
 {
 	for (const ProcessedMenuInput& input : this->menu_inputs())
@@ -361,12 +387,19 @@ void MainMenuModeSelect::update_page(float /*dt*/)
 		{
 			this->play_wave(this->direction_sound_);
 		}
+		else if (this->focus_.focused(0) == this->duration_row_.get() &&
+			(input.direction == Direction::left || input.direction == Direction::right))
+		{
+			this->play_wave(this->direction_sound_);
+			this->duration_row_->adjust(input.direction);
+		}
 	}
 }
 void MainMenuModeSelect::init()
 {
 	this->set_prompts({
 		{ L"A", L"Select" },
+		{ L"Left/Right", L"Match length" },
 		{ L"B", L"Back" } });
 
 	// Every mode uses the same player setup and paint scoring.
@@ -428,7 +461,7 @@ void MainMenuModeSelect::init()
 		"practice",
 		L"Solo practice: choose Single Match",
 		this->menu_style().detail_font,
-		this->calculate_widget_position(0, 6),
+		this->calculate_widget_position(0, 7),
 		this->render_resources(),
 		this->menu_style().heading_colour,
 		this->menu_style().shadow_colour,
@@ -438,11 +471,17 @@ void MainMenuModeSelect::init()
 		"back",
 		L"Back",
 		this->menu_style().item_font,
-		this->calculate_widget_position(0, 5),
+		this->calculate_widget_position(0, 6),
 		this->render_resources(),
 		this->menu_style().unhighlight,
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
+
+	this->duration_row_ = std::make_unique<OptionRow>("duration", L"Match length",
+		this->calculate_widget_position(0, 5), this->calculate_widget_position(2, 5),
+		this->menu_style(), this->look().options_value_colour, this->render_resources(),
+		[this](Direction direction) { this->cycle_duration(direction); });
+	this->refresh_duration();
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -454,6 +493,7 @@ void MainMenuModeSelect::init()
 	this->text_container_->add_child(this->standard_.get());
 	this->text_container_->add_child(this->best_of_three_.get());
 	this->text_container_->add_child(this->best_of_five_.get());
+	this->text_container_->add_child(this->duration_row_.get());
 	this->text_container_->add_child(this->practice_.get());
 	this->text_container_->add_child(this->back_.get());
 
@@ -467,6 +507,11 @@ void MainMenuModeSelect::init()
 	this->focus_.add(this->standard_.get(), [choose] { choose(1); });
 	this->focus_.add(this->best_of_three_.get(), [choose] { choose(3); });
 	this->focus_.add(this->best_of_five_.get(), [choose] { choose(5); });
+	this->focus_.add(this->duration_row_.get(), [this]
+		{
+			this->play_wave(this->direction_sound_);
+			this->cycle_duration(Direction::right);
+		});
 
 	this->focus_.add(this->back_.get(), [this]
 		{

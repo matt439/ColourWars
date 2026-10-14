@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <optional>
 #include <vector>
 #include "game/objects/weapon_type.h"
 #include "game/states/menu_player_settings.h"
@@ -16,6 +17,9 @@ public:
 	MenuLevelSettings() = default;
 	int best_of() const;
 	void set_best_of(int best_of);
+	std::optional<float> duration() const;
+	// No override uses match.duration from tuning, including live Debug tuning.
+	void set_duration(std::optional<float> seconds);
 	std::vector<MenuPlayerSettings> player_settings() const;
 	// Preserves retained seats and defaults newly added seats to unclaimed.
 	// Rejects counts outside 1-4 without changing the roster or its count.
@@ -48,6 +52,7 @@ public:
 private:
 	std::vector<MenuPlayerSettings> player_settings_;
 	int best_of_ = 1;
+	std::optional<float> duration_;
 	std::string stage_;
 	PlayerVisualMode workshop_visual_mode_ = PlayerVisualMode::original;
 	labrador::ScreenLayout screen_layout_ = labrador::ScreenLayout::one_player;

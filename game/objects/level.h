@@ -67,7 +67,7 @@ public:
 		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
 		const labrador::Mouse* mouse,
-		OpeningMode opening);
+		OpeningMode opening, std::optional<float> duration = std::nullopt);
 
 	// Stop the level's music, countdown, transition sound and player weapon loops.
 	~Level();

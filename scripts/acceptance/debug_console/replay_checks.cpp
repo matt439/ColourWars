@@ -94,6 +94,15 @@ namespace debug_console_acceptance
 			(L"colourwars_replay_codec_" + std::to_wstring(_getpid()));
 		const std::filesystem::path path = directory / L"round.json";
 		ReplayFile file;
+		require(!file.settings.duration(), "New setup follows the tuning duration");
+		for (const float invalid : { 0.0f, -1.0f,
+			std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN() })
+		{
+			bool rejected = false;
+			try { file.settings.set_duration(invalid); }
+			catch (const std::invalid_argument&) { rejected = true; }
+			require(rejected && !file.settings.duration(), "Invalid durations cannot change setup");
+		}
 		file.build = "test \"build\"";
 		file.dt_bits = std::bit_cast<std::uint32_t>(1.0f / 60.0f);
 		file.seed = 4000000000u;
@@ -102,6 +111,7 @@ namespace debug_console_acceptance
 		file.tune_diff = { "tuning.player.gravity 2000.0 -> 2100.0" };
 		file.god = true;
 		file.settings = planned(3);
+		file.settings.set_duration(120.12345f);
 		file.settings.set_workshop_visual_mode(PlayerVisualMode::authored);
 		file.settings.set_player_weapon(1, WeaponType::roller);
 		file.updates = 120;
@@ -126,17 +136,18 @@ namespace debug_console_acceptance
 		require(seats.size() == 3 && seats[0].num == input_slots::keyboard_and_mouse && seats[1].num == -1 &&
 			seats[1].weapon == WeaponType::roller && seats[1].team == PlayerTeam::b &&
 			read.settings.stage() == "x" && read.settings.workshop_visual_mode() == PlayerVisualMode::authored &&
-			read.settings.screen_layout() == labrador::ScreenLayout::three_player,
+			read.settings.screen_layout() == labrador::ScreenLayout::three_player &&
+			read.settings.duration() == file.settings.duration(),
 			"The recorded settings rebuild verbatim");
 
 		std::string text = read_text(path);
-		text.replace(text.find("\"version\": 1"), 12, "\"version\": 2");
+		text.replace(text.find("\"version\": 2"), 12, "\"version\": 3");
 		write_text(path, text);
 		std::string message;
 		try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
-		require(message.find("format version 2; this build reads 1") != std::string::npos,
+		require(message.find("format version 3; this build reads 2") != std::string::npos,
 			"Another format version is refused: " + message);
-		write_text(path, "{ \"version\": 1, ");
+		write_text(path, "{ \"version\": 2, ");
 		message.clear();
 		try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
 		require(message.find("not valid JSON") != std::string::npos, "A broken file is refused: " + message);
@@ -602,6 +613,7 @@ namespace debug_console_acceptance
 		require(plan.ok, "The opening's roster resolves");
 		CpuMatch match(world, director);
 		match.settings = plan.settings;
+		match.settings.set_duration(1.25f);
 		director.attach_match(match);
 
 		const std::vector<PlayerInputData> idle(input_slots::count);
@@ -639,7 +651,7 @@ namespace debug_console_acceptance
 
 		// The end: back into the same monitor, and the reveal in place of the overview.
 		const int played = ticks_while([&] { return match.level->state() == LevelState::active; });
-		require(about(played, tuning.match().duration) && level.state() == LevelState::zoom_out &&
+		require(about(played, *match.settings.duration()) && level.state() == LevelState::zoom_out &&
 			level.revealed(), "The clock ends into the reveal");
 		const RevealTuning& reveal = tuning.match().reveal;
 		// Nobody painted here, so the person closes the program and nobody

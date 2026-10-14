@@ -131,6 +131,9 @@ public:
 	void update_page(float dt) override;
 	void init() override;
 private:
+	void cycle_duration(labrador::Direction direction);
+	void refresh_duration();
+	std::unique_ptr<OptionRow> duration_row_;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> standard_ = nullptr;

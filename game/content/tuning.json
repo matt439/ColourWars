@@ -1,6 +1,13 @@
 {
     "match": {
         "duration": 240.0,
+        "duration_choices": [
+            { "seconds": 60.0 },
+            { "seconds": 120.0 },
+            { "seconds": 240.0 },
+            { "seconds": 360.0 },
+            { "seconds": 480.0 }
+        ],
         "countdown": 3.0,
         "zoom_out": 2.0,
         "overview": 2.0,

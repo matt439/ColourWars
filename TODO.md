@@ -125,7 +125,6 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed.
 | `GAP#1.3` | DECISION | MED | L | Solo has no opponent in Release: bots exist only in the Debug console. Ship a bot controller, or keep solo as practice. |
 | `GAP#1.2` | DECISION | LOW | L | Only paint-timed rules exist, with no MatchRules seam; decide whether any further mode is wanted. |
 | `GAP#1.5` | DECISION | LOW | S | No Random-teams row, no per-player handicap; the one-sided-roster refusal is done. |
-| `GAP#1.4` | OPEN | LOW | M | Match length is the global 240 s in `tuning.json`; add a duration to `MenuLevelSettings` and a match-options row. |
 | `GAP#3.2` | OPEN | LOW | M | Options: no restore-defaults, no revert after a resolution change, display and palette unreachable from pause, Back lands at the top, Exit quits unconfirmed. |
 | `GAP#3.3` | OPEN | LOW | S | No Credits page acknowledging NOTICE's third-party work. |
 | `GAP#4.2` | OPEN | MED | L | No action map or rebinding: bindings are constexprs in `player_input.h`/`menu_input.h`. The engine's `gamepad.h` waits on this client (Class 2 D6); `GAP#F2` waits on it. |

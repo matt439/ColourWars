@@ -26,7 +26,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	const PlaySettings* preferences,
 	// Disambiguate from DirectX::Mouse.
 	const labrador::Mouse* mouse,
-	OpeningMode opening) :
+	OpeningMode opening, std::optional<float> duration) :
 	scene_(std::move(scene)),
 	players_(std::move(players)),
 	viewport_dividers_(std::move(viewport_dividers)),
@@ -49,7 +49,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 		->resolve_sprite_frame(presentation->hud().fill_frame);
 	const MatchTuning& match = tuning->match();
 
-	this->timer_ = match.duration;
+	this->timer_ = duration.value_or(match.duration);
 	this->start_timer_ = match.countdown;
 	this->zoom_out_timer_ = match.zoom_out;
 	this->overview_timer_ = match.overview;

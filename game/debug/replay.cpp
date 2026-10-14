@@ -12,6 +12,7 @@
 #include <cstdio>
 #include <ctime>
 #include <fstream>
+#include <iomanip>
 #include <sstream>
 
 namespace
@@ -274,6 +275,11 @@ void ReplayFile::write(const std::filesystem::path& path) const
 	out << "    \"stage\": " << quoted(roster.stage()) << ",\n";
 	out << "    \"visual\": " << quoted(visual_word(roster.workshop_visual_mode())) << ",\n";
 	out << "    \"best_of\": " << roster.best_of() << ",\n";
+	if (roster.duration())
+	{
+		out << "    \"duration\": " << std::setprecision(std::numeric_limits<float>::max_digits10)
+			<< *roster.duration() << ",\n";
+	}
 	out << "    \"layout\": " << static_cast<int>(roster.screen_layout()) << ",\n";
 	out << "    \"seats\": [\n";
 	const std::vector<MenuPlayerSettings> seats = roster.player_settings();
@@ -446,6 +452,7 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 	}
 	rebuilt.set_workshop_visual_mode(visual);
 	rebuilt.set_best_of(setup.integer("best_of"));
+	if (setup.has("duration")) { rebuilt.set_duration(setup.number("duration")); }
 	// The layout a plan derives from the seat count, and no other: a build
 	// throws on an unknown layout, and a wrong one overlaps the views.
 	const int layout = setup.integer("layout");
