@@ -420,6 +420,10 @@ match, then complete the remaining weapons and arenas before final acceptance.
 
 ### Inventory and production
 
+The inventory, the new cue list and a proposed sound direction are in
+[audio-inventory.md](audio-inventory.md) (2026-10-14); the direction awaits the
+author.
+
 - Inventory every source wave, bank entry, loop instance and runtime reference,
   including tuning, presentation, level music and any code-selected cues. Give
   each old item an explicit replacement or retirement entry; cover unused legacy

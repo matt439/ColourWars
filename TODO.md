@@ -20,7 +20,9 @@ The ordered actions are done (`STORY#3`, `ENG#PIN` with `ENG#LEDGER`, `DOC#1`–
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Art:** confirm the Paint.exe round-2 picks (`POL#1`); this gates `POL#7`–`POL#9` and `POL#16`.
   Then decide whether to retire the workshop kit (`POL#2`).
-- **Sounds:** the pop, sigh and chair-creak `.wav` files (`STORY#1`, `STORY#2`).
+- **Sounds:** the pop, sigh and chair-creak `.wav` files (`STORY#1`, `STORY#2`), and the
+  [proposed sound direction](docs/audio-inventory.md#5-sound-direction-a-proposal) with its five
+  questions (`POL#22`).
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 - **Calls:** `POL#4`, `POL#5`, `POL#15`, `GAP#1.2`, `GAP#1.3`, `GAP#1.5`, `GAP#8.6`,
@@ -62,7 +64,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#3` | OPEN | HIGH | M | Movement-feel playtest (§2 exit): keyboard/mouse now, a physical pad later (with `ROAD#2`); feedback on and off, aim sweeps, before/after clips. Then freeze jump, acceleration and gravity. [§2](docs/polish-plan.md#2-establish-movement-and-camera-feel). |
 | `POL#4` | DECISION | MED | S | Route-trial answers: partial opposite stick braking, released pad aim snapping to facing; accept or fix the short-landing slide-off, 120-wide step walk-off, 60-unit overshoot, leftward drop-through landing. [Qualification](docs/polish-movement-course.md#qualification-still-required). |
 | `POL#5` | DECISION | MED | S | Takeoff/landing puff timing and intensity, decided with poses and audio; nearly invisible at 4P 720p. [Values](docs/polish-feedback.md#authored-prototype-values). |
-| `POL#10` | OPEN | HIGH | L | The rest of the feedback table: footsteps, skid, painted-surface flecks, hurt flash/flinch, elimination burst, muzzle flash, screen shake, empty-paint cue, menu focus motion. Sounds wait on `POL#20`. [§4](docs/polish-plan.md#movement-and-interaction-feedback). |
+| `POL#10` | OPEN | HIGH | L | The rest of the feedback table: footsteps, skid, painted-surface flecks, hurt flash/flinch, elimination burst, muzzle flash, screen shake, empty-paint cue, menu focus motion. Sounds wait on `POL#22`; the cues are in [audio-inventory §4](docs/audio-inventory.md#4-the-new-cue-list). [§4](docs/polish-plan.md#movement-and-interaction-feedback). |
 | `POL#11` | OPEN | HIGH | L | Per-weapon projectile and impact (all five share `projectile_3`), liquid splat shapes, droplets, wet highlight, repaint impact with exact ownership. [§4](docs/polish-plan.md#paint-and-feedback). |
 | `POL#12` | OPEN | MED | M | Idle muzzle drip (its five rules), roller contact/settle, idle breathing, blinking and lean out of phase. [§4](docs/polish-plan.md#tool-personality-and-quiet-detail). |
 | `POL#13` | OPEN | MED | M | A reduce-effects option that cuts optional shake, flashes and ambient detail but keeps useful cues; repeated-sound variants. [§4](docs/polish-plan.md#detail-across-the-world-interface-and-match). |
@@ -95,9 +97,9 @@ never a row.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#20` | OPEN | HIGH | M | Inventory every wave, bank entry, loop and cue reference with a replace-or-retire entry each; set a sound direction. [§5](docs/polish-plan.md#inventory-and-production). |
-| `POL#22` | DECISION | HIGH | XL | Produce or obtain the full replacement set (music per arena, menu, results; UI, movement, every weapon, impacts) with provenance and licences. After `POL#20`. |
-| `POL#23` | BLOCKED | HIGH | L | Integrate it: recipe, staging, release list, the audio-free CI/ZIP checks, README/NOTICE/CLAUDE.md; mix at 1/2/4 players. Waits on `POL#22`. [§5](docs/polish-plan.md#integration-mix-and-distribution). |
+| `POL#22` | DECISION | HIGH | XL | Confirm or replace the [proposed sound direction](docs/audio-inventory.md#5-sound-direction-a-proposal) and answer its [questions](docs/audio-inventory.md#63-waiting-on-the-author); then produce or obtain the [cue list](docs/audio-inventory.md#4-the-new-cue-list), Tier 1 first, each with a provenance record. |
+| `POL#23` | BLOCKED | HIGH | L | Integrate it: the [dispositions](docs/audio-inventory.md#2-legacy-inventory-replace-or-retire) and every [switchboard site](docs/audio-inventory.md#3-the-switchboard-where-cue-names-live), minding its traps; mix at 1/2/4 players. Waits on `POL#22`. |
+| `POL#26` | OPEN | LOW | S | Present-day audio defects the inventory found: the pause-open cue plays twice backing out of a confirmation, the countdown wave runs 2.4 s into play and survives pause, the time-up cue is cut by the reveal, results' fill and fanfare never play after a reveal. [Traps 2-5](docs/audio-inventory.md#33-traps-a-replacement-must-know). |
 | `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains, mute, suspension, resumed loops, the multiplayer mix; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
 
 ## Acceptance and release
