@@ -75,6 +75,13 @@
     "title_subtitle_position": { "x": 150.0, "y": 625.0 },
     "title_start_position": { "x": 150.0, "y": 765.0 },
     "home_subtitle_position": { "x": 150.0, "y": 300.0 },
+    "home_spacing": { "x": 250.0, "y": 120.0 },
+    "credits": {
+      "font": "gill_sans_mt_bold_24",
+      "position": { "x": 150.0, "y": 290.0 },
+      "back_position": { "x": 150.0, "y": 865.0 },
+      "text": "ColourWars - Matt Harding\nBuilt with the Labrador engine (MIT).\nMicrosoft - DirectX Tool Kit, DirectXTex, DirectXMath and XAudio2Redist (MIT).\nMicrosoft content tools - XWBTool, MakeSpriteFont and texconv (MIT).\nRapidJSON - THL A29 Limited, a Tencent company, and Milo Yip (MIT).\nCollision routines - Christer Ericson, Real-Time Collision Detection (2005).\nFonts - compiled Gill Sans MT and Courier New glyphs; font files are not included.\nMenu artwork - generated for ColourWars with OpenAI image generation.\n\nAccepted replacement audio sources (CC0; game integration pending):\nJoseph SARDIN / BigSoundBank; OwlishMedia / owlstorm; unkleceeg;\nMateusz Dabrowski / FreePats; Versilian Studios LLC / VCSL.\nOriginal audio arrangements and production code - authored with Codex (MIT).\nFull notices, source credits and licence terms: NOTICE, LICENSE and licenses/\ninside the release folder. Legacy commercial audio is not distributed."
+    },
     "fonts": {
       "title": "gill_sans_ultra_bold_144",
       "announcement": "gill_sans_mt_bold_144",

@@ -82,6 +82,10 @@ Back discards unapplied changes. From Pause, Back returns to the pause menu;
 Resume uses the new settings in the current match. Volume is 0-100% of the
 authored mix, including menu sounds, and zero mutes that category.
 
+**Credits** on the home menu acknowledges the engine, third-party code, content
+tools, fonts, artwork and accepted replacement audio sources. Full notices and
+licence terms are included as `NOTICE`, `LICENSE` and `licenses/` in the release.
+
 | Action | Gamepad | Keyboard and mouse |
 |---|---|---|
 | Move | Left stick | A/D |

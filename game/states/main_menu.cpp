@@ -238,6 +238,7 @@ void MainMenuHome::update_page(float /*dt*/)
 }
 void MainMenuHome::init()
 {
+	this->set_widget_spacing(this->look().home_spacing);
 	this->set_prompts({
 		{ L"A", L"Select" },
 		{ L"B", L"Back" } });
@@ -282,11 +283,17 @@ void MainMenuHome::init()
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
+	this->credits_ = std::make_unique<UiTextDropShadow>(
+		"credits", L"Credits", this->menu_style().item_font,
+		this->calculate_widget_position(0, 4), this->render_resources(),
+		this->menu_style().unhighlight, this->menu_style().shadow_colour,
+		this->menu_style().item_shadow_offset);
+
 	this->exit_ = std::make_unique<UiTextDropShadow>(
 		"exit",
 		L"Exit",
 		this->menu_style().item_font,
-		this->calculate_widget_position(0, 4),
+		this->calculate_widget_position(0, 5),
 		this->render_resources(),
 		this->menu_style().unhighlight,
 		this->menu_style().shadow_colour,
@@ -301,6 +308,7 @@ void MainMenuHome::init()
 	this->text_container_->add_child(this->heading_.get());
 	this->text_container_->add_child(this->play_.get());
 	this->text_container_->add_child(this->options_.get());
+	this->text_container_->add_child(this->credits_.get());
 	this->text_container_->add_child(this->exit_.get());
 	this->subtitle_ = std::make_unique<UiTextDropShadow>(
 		"subtitle", L"Paint the arena. Claim the win.",
@@ -321,6 +329,12 @@ void MainMenuHome::init()
 			this->play_wave(this->confirm_sound_);
 			this->context()->transition_to(
 				std::make_unique<MainMenuOptions>(this->menu_context()));
+		});
+	this->focus_.add(this->credits_.get(), [this]
+		{
+			this->play_wave(this->confirm_sound_);
+			this->context()->transition_to(
+				std::make_unique<MainMenuCredits>(this->menu_context()));
 		});
 	this->focus_.add(this->exit_.get(), [this]
 		{

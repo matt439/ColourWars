@@ -52,6 +52,8 @@ std::unique_ptr<MainMenuPage> GameMenu::build_page(MainMenuScreen screen) const
 		return std::make_unique<MainMenuHome>(context);
 	case MainMenuScreen::options:
 		return std::make_unique<MainMenuOptions>(context);
+	case MainMenuScreen::credits:
+		return std::make_unique<MainMenuCredits>(context);
 	case MainMenuScreen::mode_select:
 		return std::make_unique<MainMenuModeSelect>(context);
 	case MainMenuScreen::player_count:

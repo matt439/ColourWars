@@ -320,6 +320,14 @@ namespace
 
 		menu.options_value_colour = read_colour(json, "options_value_colour");
 		menu.options_spacing = read_vector(json, "options_spacing");
+		menu.home_spacing = read_positive_vector(json, "home_spacing");
+
+		const JsonValue credits = json.object("credits");
+		menu.credits_font = credits.identifier("font");
+		menu.credits_position = read_finite_vector(credits, "position");
+		menu.credits_back_position = read_finite_vector(credits, "back_position");
+		menu.credits_text = drawable_text::widen_drawable(credits.string("text"),
+			credits.where() + ": text");
 
 		const JsonValue description = json.object("weapon_description");
 		menu.weapon_description_colour = read_colour(description, "colour");
@@ -862,6 +870,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.font("main_menu.fonts.title", this->main_menu_.title_font);
 	check.font("main_menu.fonts.announcement", this->main_menu_.announcement_font);
 	check.font("main_menu.fonts.weapon_description", this->main_menu_.weapon_description_font);
+	check.font("main_menu.credits.font", this->main_menu_.credits_font);
 	check.font("controls_settings.help_font", this->controls_settings_.help_font);
 	check.font("results_menu.contribution_font", this->results_menu_.contribution_font);
 	check.font("prompt_bar.font", this->prompt_bar_.font);

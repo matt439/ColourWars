@@ -101,6 +101,7 @@ add_executable(ColourWars WIN32
     states/end_menu.cpp
     states/game_states.cpp
     states/main_menu.cpp
+    states/main_menu_credits.cpp
     states/main_menu_options.cpp
     states/main_menu_players.cpp
     states/main_menu_stage_select.cpp

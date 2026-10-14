@@ -3,6 +3,10 @@
 ColourWars is MIT licensed (see LICENSE). This file records what in the working
 tree is not ColourWars' to license, and what is deliberately absent.
 
+The main menu's Credits page summarises these acknowledgements and the engine's
+notice. Full terms remain here, in LICENSE and in the release's `licenses/`
+folder. The accepted replacement audio is labelled as awaiting game integration.
+
 The engine is not covered here. It is a submodule at `external/labrador` with
 its own LICENSE and its own NOTICE, and the third-party code it carries —
 Microsoft's `DeviceResources` and `StepTimer`, Christer Ericson's collision

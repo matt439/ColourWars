@@ -139,6 +139,7 @@ struct MainMenuPresentation
 	mattmath::Vector2F title_subtitle_position;
 	mattmath::Vector2F title_start_position;
 	mattmath::Vector2F home_subtitle_position;
+	mattmath::Vector2F home_spacing;
 	std::string title_font;
 	std::string announcement_font;
 	std::string weapon_description_font;
@@ -169,6 +170,10 @@ struct MainMenuPresentation
 	SelectPresentation team_select;
 	SelectPresentation weapon_select;
 	StageSelectPresentation stage_select;
+	std::string credits_font;
+	mattmath::Vector2F credits_position;
+	mattmath::Vector2F credits_back_position;
+	std::wstring credits_text;
 
 	PresentationSound music;
 	std::string error_sound;

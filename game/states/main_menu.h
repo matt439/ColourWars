@@ -17,6 +17,7 @@ enum class MainMenuScreen
 	title,
 	home,
 	options,
+	credits,
 	mode_select,
 	player_count,
 	team_select,
@@ -86,7 +87,22 @@ private:
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> play_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> options_ = nullptr;
+	std::unique_ptr<labrador::UiTextDropShadow> credits_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> exit_ = nullptr;
+};
+
+class MainMenuCredits final : public MainMenuPage
+{
+public:
+	explicit MainMenuCredits(MenuContext* context);
+	void update_page(float dt) override;
+	void init() override;
+private:
+	std::unique_ptr<labrador::UiTexture> background_;
+	std::unique_ptr<labrador::UiTextDropShadow> heading_;
+	std::unique_ptr<labrador::UiTextDropShadow> body_;
+	std::unique_ptr<labrador::UiTextDropShadow> back_;
+	void return_home();
 };
 
 class MainMenuOptions final : public MainMenuPage
