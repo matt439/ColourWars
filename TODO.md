@@ -14,8 +14,8 @@ commits delivered beat by beat, and settle the [Paint.exe art rules](docs/polish
 that the characters, tools, environment and UI all wait on. The author's order is gameplay
 style first, UI after.
 
-1. **`DOC#1`–`DOC#4`: one doc-drift pass.** README, the polish plan's status header, the roadmap
-   intro and AGENTS.md all predate the backstory and the Paint.exe direction.
+The ordered actions are done (`STORY#3`, `ENG#PIN` with `ENG#LEDGER`, `DOC#1`–`DOC#4`, on
+2026-10-14). The aim now waits on the author below; pick the next actions from the OPEN rows.
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Art:** confirm the Paint.exe round-2 picks (`POL#1`); this gates `POL#7`–`POL#9` and `POL#16`.
@@ -214,10 +214,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `DOC#1` | OPEN | MED | S | README predates the backstory: no intro or reveal, says results keep team bars, claims 3 sprite sheets (4 ship), and its layout table lacks `editor/`, `scripts/`, `docs/`. |
-| `DOC#2` | OPEN | MED | S | [polish-plan.md](docs/polish-plan.md)'s status header stops at 2026-10-08 and prescribes pixel art; point it at Paint.exe and the backstory and say what the backstory build delivered. |
-| `DOC#3` | OPEN | LOW | S | [feature-roadmap.md](docs/feature-roadmap.md)'s intro still gives "detailed pixel art" as the direction and counts three stages. |
-| `DOC#4` | OPEN | LOW | S | AGENTS.md lags CLAUDE.md: no Developer console section, six GameData pointers not seven, a "Codex.ai/code" header. |
 | `CI#1` | OPEN | LOW | M | CI runs none of the window-driven checks (`check-debug-console`, `check-movement-feedback`, `check-workshop-*`). |
 | `CI#2` | OPEN | LOW | S | The package step checks 5 console RTTI names; `scripts/acceptance/debug_console.cpp` checks 16. |
 | `TOOL#1` | OPEN | LOW | S | Under PowerShell 5.1, `$PSScriptRoot` defaults inside `param()` come out empty (`check-startup`, `check-debug-console`, `check-movement-feedback`, `check-workshop-playable`); move them into the body. |

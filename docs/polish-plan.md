@@ -33,10 +33,32 @@ pixel-flush, retains the Movement Course route trials as CI acceptance, and
 captures feedback on and off while the camera moves. These are candidates
 awaiting human review.
 
+Direction changed on 2026-10-09: the author chose **Paint.exe Maximalism**
+(crude, mouse-drawn box-head figures, embraced deliberately) over the workshop
+pixel-art kit, which the second to fifth increments above built and which is
+now superseded. Gameplay style comes first, UI after. The round-2 picks (Zoom
+400% values, Tool Props terrain, airbrush cast shadows, a black keyline under
+paint, figure variant E with a head accent for teammates) are panel consensus
+not yet confirmed by the author, so §1 is still to be redone for Paint.exe;
+where this plan says pixel art below, read that style. The kit stays in the
+Movement Course comparison until it is retired or kept.
+
+The theme, picked on the same style board, is a grey, unsaved picture with one
+palette slot left and two team colours fighting for it. [The backstory](backstory.md)
+records it, and its build on 2026-10-12 and 13 delivered the respawn redraw,
+grey scenery with each team on its own half, the opening (monitor, person,
+preview flicker, undo, leaving, push through the glass; A, B or Start skips; a
+quick rematch), the reveal (back into the monitor, the person hovers each
+colour, clicks the winner, the coverage shows and the person leaves, or closes
+the program when nobody painted) and the figures acting. Solo practice skips
+both ends, and the results page keeps only the percentages after the reveal.
+Its pop, sigh and chair-creak sounds wait on waves. Open work and its order are
+in [TODO.md](../TODO.md).
+
 ## Goal and direction
 
 Make ColourWars look and play like a finished local multiplayer paint game,
-with detailed, distinctive pixel art and levels designed around movement,
+with a distinctive, consistent art style and levels designed around movement,
 painting and encounters. The first deliverable is one complete, polished match
 that establishes the standard for the rest of the game.
 
@@ -47,7 +69,8 @@ standard; finish also requires iteration on timing, transitions and personality.
 
 The user's direction is explicit:
 
-- Use a consistent pixel-art style throughout the game.
+- Use a consistent art style throughout the game (pixel art as first given;
+  Paint.exe Maximalism since 2026-10-09).
 - Replace the generic character of the newer weapon designs with distinctive
   paint tools, designed together with their wielders and firing animations.
 - Add substantial environmental and background detail, depth and identity.

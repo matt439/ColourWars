@@ -1,14 +1,21 @@
 # Feature roadmap
 
 The next presentation, game-feel, audio and arena-design work is defined in the
-[polish and level-design plan](polish-plan.md). Its direction is consistent,
-detailed pixel art, distinctive paint tools and redesigned playable layouts,
-with a full replacement of all music and sound effects and expressive feedback
-for actions such as jumping and landing. The target is a good indie game's finish,
-including quiet details such as an occasional idle muzzle drip, tool settling and
-environmental life. Start with one complete reference match and review its feel in
-motion. That work is planned; the sections below record implemented increments and
-their remaining acceptance checks.
+[polish and level-design plan](polish-plan.md); [TODO.md](../TODO.md) gives its
+order and status. The art direction is Paint.exe Maximalism (crude, mouse-drawn
+box-head figures), chosen on 2026-10-09 over the plan's original pixel art, and
+its fiction is the [backstory](backstory.md): a grey, unsaved picture with one
+palette slot left, which two team colours fight to fill. Gameplay style comes
+first, UI after; the round-2 picks still await the author's confirmation
+(`POL#1`). The rest of the direction is distinctive paint tools and redesigned
+playable layouts, with a full replacement of all music and sound effects and
+expressive feedback for actions such as jumping and landing. The target is a
+good indie game's finish, including quiet details such as an occasional idle
+muzzle drip, tool settling and environmental life. Start with one complete
+reference match and review its feel in motion. That work is planned, apart from
+the backstory's opening, respawn and reveal, which its "Building it" section
+records as built bar the pop, sigh and chair-creak sounds; the sections below
+record implemented increments and their remaining acceptance checks.
 
 ## First increment: explicit joining and reconnect pause
 
@@ -180,7 +187,7 @@ script; its exact-adapter skip was checked separately. The engine is unchanged.
 The next acceptance work requires hardware and is still outstanding:
 
 1. Run the extracted Release ZIP on a clean Windows 10/11 x64 machine.
-2. Play two- and four-player sessions across all three stages and five weapons,
+2. Play two- and four-player sessions across the three arenas and five weapons,
    checking ammo exhaustion/recovery, paint coverage, readable HUDs and controls.
 3. Exercise joining, disconnect/reconnect during setup and play, pause/settings,
    focus changes, fullscreen/resize, series draws, rematches and return to menu.

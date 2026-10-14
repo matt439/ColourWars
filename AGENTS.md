@@ -1,6 +1,6 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+This file provides guidance to Codex when working with code in this repository.
 
 ## What this is
 
@@ -33,6 +33,13 @@ the game's. And the historical documents — `docs/review/` here and in the
 engine — are the reviews as written, so rewriting them would make a record stop
 matching what was actually reviewed.
 
+## Open work
+
+[TODO.md](TODO.md) is the index of open work: **NOW** gives the order, and each
+row points to the doc that owns its detail. A fresh thread starts there. Its
+editing rules are at its end; the main one is that a row leaves in the same
+commit that finishes it.
+
 ## Build and run
 
 Requires **VCPKG_ROOT** set (`CMakePresets.json` reads it for the toolchain
@@ -49,6 +56,39 @@ cmake --preset x64-debug            # or x64-release
 cmake --build --preset x64-debug
 out/build/x64-debug/game/ColourWars.exe
 ```
+
+### Developer console (Debug only)
+
+Debug builds take launch arguments and have a console and a debug menu; Release
+compiles out the console, menu, registry, commands and binds (the unreachable
+`DebugMatchTarget`/`DebugPageTarget` interfaces, their adapters and a few plain
+`Level`/`Player` members remain, so no layout depends on `_DEBUG`). Full reference: [docs/debug-console.md](docs/debug-console.md).
+
+```
+out/build/x64-debug/game/ColourWars.exe +stage movement_course +players 4 +visual posed
+```
+
+Each `+name` starts a statement; the match starts without menu navigation. In a
+match **`** opens the console (the match freezes while it is open; Escape
+closes), **F2**-**F4** collision, camera and paint overlays, **F5** restart,
+**F6** pause, **F7** step, **F8** cycle the Movement Course art, **F9** toggle
+movement feedback. Anywhere, **F10**/**F11** or holding pad **Back+Start** opens
+the debug menu (F10 is taken back from the system menu by a Debug-only message
+hook; see the doc). `help` lists the commands. The console also tunes
+`tuning.json`/`presentation.json` live (`tune`; `tune.save` writes only the
+edited tokens back to `game/content/`), puts scripted bots on idle seats
+(`+stage movement_course +players 4 +bot all paint`), and records and replays
+seeded matches bit for bit (`seed`, `record`, `play`). The F-keys are default
+binds (`bind`/`binds`, kept in `%LOCALAPPDATA%\ColourWars\debug\binds.cfg`), and
+`console.live 1` keeps the match running under the console. A repeatable review
+is one command - `ColourWars.exe +exec review_feedback_ab +quit` - with the
+scripts in `scripts/debug/`. The gate
+`COLOURWARS_DEV_TOOLS` comes from `_DEBUG` in `game/debug/dev_tools.h` - never a
+`/D` flag, so the acceptance probes agree on class layouts - and no existing
+class has a member that depends on it. Code is in `game/debug/`; the CPU case is
+`scripts/acceptance/debug_console.cpp` (its checks are in the same-named
+folder; `run-acceptance.ps1` compiles a case's folder with it), which also
+checks that the Release executable carries none of the console's RTTI names.
 
 The build mirrors `game/content/` beside the exe (the `colourwars_content`
 target, which runs every build so asset-only edits are picked up), so the game
@@ -130,11 +170,12 @@ are historical, not current.
 ### Service bag, not globals
 
 [game/game_data.h](game/game_data.h) — `GameData` is handed to every state,
-object and drawable at construction. It holds exactly six borrowed pointers: the
+object and drawable at construction. It holds exactly seven borrowed pointers: the
 engine `Application`, this game's `Save`, the level registry, the stage list, the
-tuning and the presentation. Everything else that looks like a service
+tuning, the presentation and the developer `DebugDirector` (inert in Release, and
+`DebugDirector::inert()` when unset). Everything else that looks like a service
 (`ThreadPool`, `Gamepads`, `RenderResources`, …) is a forward to the shell. All
-six are owned by `wWinMain` in [game/main.cpp](game/main.cpp) and declared above
+seven are owned by `wWinMain` in [game/main.cpp](game/main.cpp) and declared above
 the `Application`, so they outlive every state that borrows them.
 
 ### State stack

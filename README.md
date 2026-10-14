@@ -3,11 +3,22 @@
 A local split-screen paint-shooter for up to four players. Two teams, one
 arena, and a scoreboard that counts painted surface rather than kills.
 
+The arena is a picture left unsaved in a paint program: everything in it is
+grey, and the palette has one empty slot. Each match opens full screen on the
+monitor of the person at the computer, who previews one team's colour over
+each half of the picture, undoes both and walks away; then the camera pushes
+through the glass and split screen begins. When the clock runs out it pulls
+back to the monitor, the person returns, hovers each colour over the whole
+picture and clicks the winner, and the coverage percentages appear. If nobody
+painted, the person closes the program instead. A, B or Start (Space, Escape
+or Enter) skips the opening, a restart or rematch starts at the preview, and
+solo practice skips the person at both ends. See [the backstory](docs/backstory.md).
+
 The presentation uses dark ink panels, cream lettering and bright paint
 accents, with original menu artwork and a compact split-screen HUD. Health
 and paint meters are labelled; menus mark the focused choice with both a
 colour and a panel. The three arenas use pale paintable surfaces against
-muted, panelled backgrounds. Colours and spacing are authored in
+grey scenery; the game refuses a hue there. Colours and spacing are authored in
 `game/content/presentation.json`; arena decoration lives in the level JSONs.
 Stage selection previews the actual arena objects alongside the match setup,
 with a separate confirmation before starting. The opening countdown shows
@@ -22,13 +33,16 @@ the session. For solo practice, choose Single Match and 1 Player. The experiment
 and platform-drop trials; select it explicitly, as Random uses the three arenas.
 On that arena's selection page, Up/Down switches between original artwork and
 two [playable workshop art comparisons](docs/polish-playable-kit.md), with animated
-painters, player badges and tiled platforms. These remain polish candidates.
+painters, player badges and tiled platforms. These are superseded studies:
+the chosen art direction is Paint.exe Maximalism, crude mouse-drawn box-heads,
+and its open decisions are in [TODO.md](TODO.md).
 
 Results show cumulative series wins and each player's **surface held** as a
 percentage of the arena. Capturing neutral or enemy paint earns its area;
 enemy repaint transfers credit, while friendly repaint keeps the original
 owner. This measures paint remaining at the finish, rather than total shots
-or paint laid during the round. Team bars retain their share of painted area.
+or paint laid during the round. After the reveal the page keeps only the
+percentages; solo practice, which has no reveal, still fills the team bars.
 
 Play with XInput gamepads, or with one keyboard-and-mouse player alongside
 them. Up to four players can play at once. The device that selects the player
@@ -56,7 +70,8 @@ Options > Team palette keeps Random as the default, or fixes Team A/B to
 blue/orange, pink/green or blue/yellow. Use Left/Right to choose, then Apply
 to save it between launches. Fixed palettes also stay fixed on a rematch.
 Each gameplay HUD names Team A or Team B on its dark identity panel; results
-label the teams with A/B letters beside the bars and percentages.
+label the teams with A/B letters beside the percentages (and the bars, when
+shown).
 
 Options and Pause both offer **Controls / audio**, with a controls reference,
 five levels of controller stick sensitivity, and separate music and SFX volume.
@@ -87,16 +102,23 @@ no client is a library of guesses, and ColourWars is what keeps saying "this
 API is awkward" loudly enough to be worth fixing.
 
 ```
-game/                 ~12.8k lines   the game: states, objects, content
+game/                 ~34k lines     the game: states, objects, content, and
+                                     ~14k of Debug-only tools in game/debug/
+editor/               ~2k lines      the desktop level editor
+scripts/                             acceptance checks, startup, capture and
+                                     art-build scripts, developer-console scripts
+docs/                                the backstory, polish plan, roadmap,
+                                     guides and reviews
 external/labrador/                   the engine, as a submodule
 external/rapidjson/                  vendored, for the save and level files
-cmake/                               the wave-bank recipe
+cmake/                               the wave-bank recipe, release packaging
+                                     and the build stamp
 ```
 
 ## Building
 
-**Windows only**, inherited from the engine: the render backend is Direct3D 11
-and the audio backend is XAudio2.
+**Windows only**: the game starts from `wWinMain` and builds the engine's
+default backends, Direct3D 11 for rendering and XAudio2 for audio.
 
 ### Clone
 
@@ -147,7 +169,7 @@ feedback. Release ignores `+` arguments and contains none of it. See
 [the developer console](docs/debug-console.md).
 
 There is no `ctest` step here: the engine's test suite lives with
-the engine. Labrador puts its tests, its benchmark and its sample behind
+the engine. Labrador puts its tests, its benchmark and its samples behind
 `PROJECT_IS_TOP_LEVEL`, so consuming it as a submodule brings in the library
 and nothing else.
 
@@ -231,7 +253,7 @@ committing to produce a package labelled with that commit.
 
 Only the assets listed in [cmake/release_assets.cmake](cmake/release_assets.cmake)
 are packaged; configure checks that the list matches the runtime manifest.
-The ZIP includes licence notices, the seven compiled fonts, three sprite sheets,
+The ZIP includes licence notices, the seven compiled fonts, four sprite sheets,
 the three arenas and Movement Course, tuning, presentation and the optional sound-bank definition.
 It is always silent: local wave banks and source audio are excluded even on a
 developer's machine. Development art, content tools and saves are excluded too.
