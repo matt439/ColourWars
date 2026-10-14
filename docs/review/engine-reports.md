@@ -37,6 +37,18 @@ ColourWars applies the same convention to profile saves. No audio-bus report
 closed. Report 6 now records the existing client mixing exhibit instead of
 claiming it has not been written.
 
+**Moved 2026-09-26 to `4cefb68`**, upstream master that day, and re-read under
+[What the 2026-09-26 bump changed](#what-the-2026-09-26-bump-changed). Nothing
+closed.
+
+**Re-checked 2026-10-14 against `52e809a`** (`v0.1.0` and three documentation
+commits), seventy-five commits on. Every live report was read against master and
+every exhibit against this tree: nothing closed, a dozen citations had drifted
+and are corrected below, and the camera entry under
+[What is deliberately not here](#what-is-deliberately-not-here) turned out to have
+been answered by this repository. See
+[What the 2026-10-14 bump changed](#what-the-2026-10-14-bump-changed).
+
 ## The rule that governs this file
 
 **Check the engine's master before filing, not the pin.** `external/labrador`
@@ -76,7 +88,7 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 13 | `Key` has no names | the key table in `game/debug/debug_keys.cpp` | draft — low priority; exhibit present |
 | 14 | No frame statistics or GPU timing | `DebugDirector::begin_match_draw` and the QPC timing in `update_match`; `debug_perf.*` | draft — exhibit present; recheck upstream before filing |
 
-Nothing else is outstanding, on either side, beyond reports 9-14 below. The fullscreen workaround the
+Nothing else is outstanding, on either side, beyond reports 6 and 9-14 below. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
@@ -88,22 +100,26 @@ reachable on a machine with no pad.
 **Exhibit added by the controls/audio increment.** `game/play_settings.h`
 holds the saved music and SFX gains; `game/states/menu_page.cpp`,
 `game/objects/level.cpp`, `player.cpp`, `weapon.cpp`, `weapon_bucket.cpp`,
-`weapon_sniper.cpp`, and `structure_paintable.cpp` apply them at individual
-emitters. Resuming a match or weapon also reapplies the gain. The client now
+`weapon_sniper.cpp`, `structure_paintable.cpp`, `level_intro.cpp` (the
+reveal's hover and click) and `controls_settings_menu.cpp` (the music preview)
+apply them at individual emitters. Resuming a match or weapon also reapplies the gain. The client now
 demonstrates the duplicated mixing work that was previously hypothetical.
 
-On 2026-09-26, the pinned audio API and local Labrador `master` at `03c3b96`
-still had no bus/master-gain interface. This is a local source check, not a
-fresh remote-master check. The report remains unfiled; recheck upstream before
+On 2026-10-14, Labrador master at `52e809a` still had no bus/master-gain
+interface: the audio headers changed only in comments, and the new `webaudio`
+backend declares nothing above the seam. The engine's own product documents now
+take a provisional position (its `STORIES.md` OCA-51: "no volume bus without a
+demand argument"), so the filing has to make that argument: every client
+otherwise multiplies a gain into every emitter, as this one does. The report remains unfiled; recheck upstream before
 filing. The exhibit supports shared music/SFX gain. Listener and voice-budget
 requests below remain separate proposals, not implemented requirements.
 
 ### What happens
 
 `SoundBank::play_wave` and `play_effect` take a volume **per call**
-(`sound_bank.h:129,135`) and the class carries no gain. `AudioResources` is a
+(`sound_bank.h:125,131`, and `set_effect_volume` at `:136`) and the class carries no gain. `AudioResources` is a
 bank registry with no gain either. The one object that could do it globally is
-a private member of `Application` (`application.h:252`) with no accessor among
+a private member of `Application` (`application.h:282`) with no accessor among
 its services. So a client can only multiply a gain into every emitter, cannot
 touch a fire-and-forget wave it holds no handle to, and cannot reach the object
 that could do it globally.
@@ -156,8 +172,8 @@ frame whatever state is on top, and a way to say "this key press is mine".
 the stack, and `Keyboard` has no notion of a consumed key. So the console:
 
 - turned `MenuPage::update` into a non-virtual template method (`update` calls
-  `DebugDirector::before_page_update`, then the page's `update_page`, across 14
-  overrides) and added a hook at the top of `GameLevel::update`, purely so the
+  `DebugDirector::before_page_update`, then the page's `update_page`, across 15
+  overrides, the Debug menu's among them) and added a hook at the top of `GameLevel::update`, purely so the
   toggle key is seen on every screen;
 - is a pushed, non-covering state — the only way to keep `PlayerInput` and
   `MenuInput` off the keyboard while someone types. The cost is the real one:
@@ -258,7 +274,7 @@ wanted F10.
 
 The window procedure forwards `WM_SYSKEYDOWN`/`WM_SYSKEYUP` to the keyboard
 and then, deliberately, to `DefWindowProc` ("Alt+F4 and F10 are the system's",
-`window.cpp`). On a `WS_OVERLAPPEDWINDOW`, `DefWindowProc` turns an F10 or a
+`engine/app/win32/window.cpp`). On a `WS_OVERLAPPEDWINDOW`, `DefWindowProc` turns an F10 or a
 lone Alt release into `SC_KEYMENU` and enters the system menu's modal loop:
 `Application`'s pump stops ticking until another key or a click ends menu mode,
 and that key is eaten. `scripts/check-debug-console.ps1` records it for Alt
@@ -314,8 +330,8 @@ value came from. Live tuning needs all three, so it does without:
 - **A dead key cannot be told from a live one** except by experiment: the
   acceptance case replaces every number and boolean, one at a time, with a
   string and requires the reader to throw naming it
-  (`check_tune_consumed` in `scripts/acceptance/debug_console.cpp`; 395 values
-  today).
+  (`check_tune_consumed` in `scripts/acceptance/debug_console/tune_checks.cpp`;
+  some five hundred values today).
 
 ### The ask, when it goes
 
@@ -325,6 +341,11 @@ value came from. Live tuning needs all three, so it does without:
 file and the message rewrite; the second and third would delete
 `json_spans.cpp`, and with `keys()` the consumed-leaf check could become a
 reader-side "unknown key" error at startup instead of a test.
+
+**None of this is a write.** The engine's product documents file this report as
+"JSON write" against the read-only asymmetry `ARCHITECTURE.md` settles. The ask
+is reading: parse from memory, list keys, say where a value came from. Say so
+in the first line when it goes.
 
 ---
 
@@ -375,6 +396,10 @@ and present times) and, later, GPU timestamp queries on `Renderer`. Answering
 the first would delete the draw hook and the screenshot suppression, and let the
 overlay show the whole frame.
 
+The engine defers a frame-time overlay of its own (its `TODO.md` REV#10, "waits
+for a client that needs it"). This exhibit is that client; cite REV#10 when
+filing, and ask for the accessor rather than an engine-drawn overlay.
+
 ---
 
 # Closed
@@ -410,7 +435,8 @@ every client would otherwise write the same remembered `bool`; and
 
 **Spent** in `2857160`. All three exhibits deleted:
 `GameData::window_has_foreground()`, `GameLevel::match_has_the_foreground()`
-and its `window_active_` member, and `MainMenuTitle::update`'s poll.
+and its `window_active_` member, and `MainMenuTitle::update`'s poll (the page's
+hook is `update_page` now).
 
 **The prediction was wrong about the third.** It became `context()->active()`,
 not the callback pair — that page gates a refresh it does *every frame*, so
@@ -553,21 +579,19 @@ Re-checked 2026-08-15 against `6b5c0bd`; citations re-pointed 2026-09-17 at
 `984cf13`, where the comment sweeps moved every one of them by a few lines and
 changed none of the facts.
 
-- **`CameraTools` never sets a scale**, so field of view is whatever the pane's
-  pixel size is and a 4K player sees nine times the world a 720p player does.
-  Still true, and still not a defect to file: it needs someone to decide first
-  whether the engine's camera owns a resolution-independent world height.
-
-  **What changed is that the engine has now written down the adjacent
-  contract.** `camera_tools.h:13-28` says `viewport_size` is in *world* units,
-  that `calculate_camera` never reads `prev_camera.scale` and must not, and
-  that passing pixels "is correct only at scale 1, silently and everywhere".
-  This game passes `player_viewport(i).size()` — pixels — at
-  `level.cpp:91,472`, which is correct *because* it never zooms, and would go
-  quietly wrong the day it does. Worth knowing before anyone adds a zoom.
+- **Who owns a resolution-independent world height.** This entry used to say
+  `CameraTools` never sets a scale, so a 4K player saw nine times the world a
+  720p player did. That stopped being true here, not in the engine: `fbd45dc`
+  added `PlayerCamera::follow` (`game/objects/player_camera.cpp`), which sets
+  `scale` from the screen height over `presentation.json`'s
+  `camera.reference_height` of 1080 and passes the visible rectangle in world
+  units, as `camera_tools.h:13-24` asks. What is left is a question, not a
+  defect: whether the engine's camera should own that reference height, which
+  `PlayerCamera` now re-derives along with centring an axis wider than the
+  arena. `PlayerCamera` is the exhibit if it is ever asked.
 
 - **`Renderer::window_size_changed` returns a signal `Application` ignores**
-  (`application.cpp:389,416`, both `std::ignore =`), and **nothing reports the
+  (`application.cpp:436,463`, both `std::ignore =`), and **nothing reports the
   desktop size**. Both still true.
 
   **But the reason this was parked has expired.** It was filed under "one part
@@ -598,15 +622,16 @@ changed none of the facts.
   of its own window procedure dies silently, which is the one failure mode T6
   is meant to rule out.
 
-- **The write side of `json.h`.** Still absent, still correct:
+- **The write side of `json.h`.** Still absent, still correct (the engine's
+  OCA-53 plans a guide, not an API, and declines a save facility under T1):
   `ARCHITECTURE.md` names the read-only asymmetry and settles it, and T12
   declines automatic serialisation. What survives is narrower — the ~50-line
   atomic-write protocol in `game/save.cpp` is entirely game-agnostic and no
   second client should re-derive it — and is a small ask best made alongside
   something else.
 
-- **`Scene::contacts()` having no reader** (`scene.h:198`), **`labrador::Label`
-  having no client** (`engine/render/label.h:28` — it moved out of `scene/`),
+- **`Scene::contacts()` having no reader** (`scene.h:200`), **`labrador::Label`
+  having no client** (`engine/render/label.h:26` — it moved out of `scene/`),
   and the anti-tunnelling bound never being evaluated. Still true, and still
   not engine defects. They are things this client has not got round to
   exercising, which is a debt this repository owes the engine rather than the
@@ -860,3 +885,53 @@ presses did not advance the title screen. The keyboard snapshots live state at
 each poll and the menu requires a press followed by a later release, so a short
 synthetic pair can be missed; this does not establish an input regression.
 No controller, match, or audio-playback validation is claimed.
+
+# What the 2026-10-14 bump changed
+
+Moved from `4cefb68` to upstream master at `52e809a`: seventy-five commits, the
+`v0.1.0` tag among them. Most are the web port, the website and documentation.
+The engine now keeps `CHANGES.md`, a list of what a game can see change, with a
+backfill from `4cefb68` written for exactly this move; it was followed item by
+item.
+
+**Source changes, all from `4175640`.** `app.initialize(instance, show_command)`
+became `app.initialize()` in `game/main.cpp`, whose `wWinMain` stops naming the
+two parameters. The three window-driven probes
+(`scripts/acceptance/*_visual.cpp`) passed `SW_HIDE` and now set
+`ApplicationOptions::visible = false`. Nothing else in the backfill reached this
+tree: no file got a Win32 name through `application.h`, nothing calls
+`Application::window()`, makes a `Window` or implements `WindowNotify`, and the
+one direct `GamepadReader` (`bot_checks.cpp`) never reads it.
+
+**Two behaviour changes with no compile error.** Both are Windows-only and
+neither needs code here.
+
+- **Touch is no longer a mouse click** (`eaa9b3f`). A tap in a match used to
+  paint and aim the keyboard/mouse seat; now a finger does nothing, because
+  nothing reads `Application::touch()`. Menus never took the mouse. Playing by
+  touch would be a new feature. Not checked: this machine has no touchscreen.
+- **A window restored without activation stays inactive** (`ea90387`). A match
+  restored behind another window stays frozen and silent until it is clicked,
+  as after an alt-tab; every page already gates on `context()->active()`, so no
+  missing-pad pause can open meanwhile. Menu music still resumes with the
+  device. Not driven.
+
+**Closed: nothing.** Each live report and each parked ask was re-read against
+master with its exhibits. The engine now tracks the seven drafts as one item
+(its `TODO.md` PI-09, waiting on what ColourWars detail may be published, and
+`STORIES.md` PI-10, deciding each one), and asks that a decline cite the
+passage it rests on. The corrections this pass made are in place above: report
+6's exhibit list and line numbers, report 9's override count, report 11's moved
+window file, report 12's check location and its "not a write" framing, report
+14's REV#10, report 2's `update_page`, and the parked engine citations.
+
+**What this repository had already answered.** The camera entry under
+[What is deliberately not here](#what-is-deliberately-not-here) described a
+4K player seeing nine times the world. `PlayerCamera` has fixed a 1080-unit
+world height since `fbd45dc`; the entry is now the narrower ownership question.
+
+**Validation:** `x64-debug` and `x64-release` reconfigured and built under
+`/W4 /WX`; consumer acceptance passed on both, `check-startup` passed on both,
+and the movement-feedback, workshop-playable and workshop-style probes passed
+with their windows hidden through `visible`. No pad, touchscreen or audio
+playback was exercised.

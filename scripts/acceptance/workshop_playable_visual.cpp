@@ -322,8 +322,9 @@ int wmain(int argc, wchar_t** argv)
         options.resolution = ScreenResolution::s_1280_720;
         options.fullscreen = false;
         options.max_threads = 4;
+        options.visible = false;
         Application app(options);
-        app.initialize(GetModuleHandleW(nullptr), SW_HIDE);
+        app.initialize();
         const RenderDeviceInfo& device = app.renderer()->device_info();
         std::cout << "DEVICE " << device.backend << ' ' << device.api << ' ' << device.device_name << '\n';
         require(device.backend == "d3d11" && device.kind == RenderDeviceKind::hardware,

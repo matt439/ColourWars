@@ -14,10 +14,7 @@ commits delivered beat by beat, and settle the [Paint.exe art rules](docs/polish
 that the characters, tools, environment and UI all wait on. The author's order is gameplay
 style first, UI after.
 
-1. **`ENG#PIN`: move the Labrador pin to engine master.** Then re-read the
-   [ledger](docs/review/engine-reports.md), as every pin bump requires, and do `ENG#LEDGER` in the
-   same pass.
-2. **`DOC#1`–`DOC#4`: one doc-drift pass.** README, the polish plan's status header, the roadmap
+1. **`DOC#1`–`DOC#4`: one doc-drift pass.** README, the polish plan's status header, the roadmap
    intro and AGENTS.md all predate the backstory and the Paint.exe direction.
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
@@ -182,8 +179,6 @@ engine master before filing, not the pin. Gap-audit Class 3 items not yet in the
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ENG#PIN` | OPEN | MED | M | Move the pin from `4cefb68` to engine master (56 commits): migrate `app.initialize(instance, show_command)` with the engine's CHANGES.md backfill, check the touch and restore-activation changes, record what the bump changed. |
-| `ENG#LEDGER` | OPEN | LOW | S | The ledger's "nothing else outstanding beyond 9–14" omits report 6, and the 2026-09-26 bump has no Re-checked line. |
 | `ENG#6` | OPEN | MED | S | File report 6: no audio bus, master gain, listener or voice cap. [Report](docs/review/engine-reports.md#6-no-audio-bus-master-gain-listener-or-voice-cap--draft-with-mixing-exhibit). |
 | `ENG#9` | OPEN | MED | S | File report 9: no application-level per-frame hook or input consume scope (`DBG#4` waits on it). [Report](docs/review/engine-reports.md#9-no-application-level-per-frame-hook-or-input-capture--draft-with-console-exhibit). |
 | `ENG#10` | OPEN | LOW | S | File report 10: no read-back of the presented frame. [Report](docs/review/engine-reports.md#10-no-way-to-read-back-the-frame-that-was-presented--draft-with-screenshot-exhibit). |
@@ -191,7 +186,7 @@ engine master before filing, not the pin. Gap-audit Class 3 items not yet in the
 | `ENG#12` | OPEN | MED | S | File report 12: JSON is read-only, path-only, with no keys or source spans. [Report](docs/review/engine-reports.md#12-json-is-read-only-path-only-and-opaque--draft-with-live-tuning-exhibit). |
 | `ENG#13` | OPEN | LOW | S | File report 13: `Key` has no names. [Report](docs/review/engine-reports.md#13-key-has-no-names--draft-low-priority). |
 | `ENG#14` | OPEN | LOW | S | File report 14: no frame statistics or GPU timing (`DBG#5` waits on it). [Report](docs/review/engine-reports.md#14-no-frame-statistics-or-gpu-timing--draft-with-perf-exhibit). |
-| `ENG#CAMERA` | DECISION | LOW | S | Should the engine camera own a resolution-independent world height (4K sees 9× the world of 720p)? Decide before any report or zoom. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
+| `ENG#CAMERA` | DECISION | LOW | S | Should the engine camera own the resolution-independent world height that `PlayerCamera` already fixes at 1080 units here? Only an ask, not a defect. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `GAP#F2` | BLOCKED | LOW | S | The action-map/Gamepads report (per-slot lookup, trigger threshold, "what did this pad press"). Waits on `GAP#4.2`. |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half is report 14. |

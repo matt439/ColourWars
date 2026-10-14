@@ -522,8 +522,9 @@ int wmain(int argc, wchar_t** argv)
         options.resolution = ScreenResolution::s_1280_720;
         options.fullscreen = false;
         options.max_threads = 4;
+        options.visible = false;
         Application app(options);
-        app.initialize(GetModuleHandleW(nullptr), SW_HIDE);
+        app.initialize();
         const auto& device = app.renderer()->device_info();
         std::cout << "DEVICE backend=" << device.backend << " api=" << device.api
             << " name=" << device.device_name << " vendor=" << device.vendor_id

@@ -28,8 +28,7 @@ extern "C"
 	__declspec(dllexport) int AmdPowerXpressRequestHighPerformance = 1;
 }
 
-int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
-	_In_ int show_command)
+int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 {
 	try
 	{
@@ -72,7 +71,7 @@ int WINAPI wWinMain(_In_ HINSTANCE instance, _In_opt_ HINSTANCE, _In_ LPWSTR,
 		GameData data;
 
 		Application app(std::move(options));
-		app.initialize(instance, show_command);
+		app.initialize();
 
 		// Register the game's level resource kind. Level definitions survive device
 		// restoration, so this kind has no reload callback.
