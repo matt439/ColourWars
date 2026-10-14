@@ -1,14 +1,14 @@
 #pragma once
 
-#include "game/input_slots.h"
+#include "game/paint_owners.h"
 #include <array>
 
 struct PaintTotal
 {
 	float team_a = 0.0f;
 	float team_b = 0.0f;
-	// Held area credited to each input slot, not its index in the match roster.
-	std::array<float, input_slots::count> player_areas{};
+	// Held area by paint owner: device slots, then device-less views.
+	std::array<float, paint_owners::count> player_areas{};
 
 	// All paintable area, including neutral tiles, for the arena coverage score.
 	float total = 0.0f;

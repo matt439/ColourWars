@@ -497,12 +497,11 @@ MatchPaint GameLevel::debug_paint() const
 	paint.team_a = info.team_a_area;
 	paint.team_b = info.team_b_area;
 	paint.total = info.total_area;
-	// player_areas is indexed by device slot; an idle dummy has none.
+	// Convert roster positions to the same owners used by their projectiles.
 	for (const MenuPlayerSettings& player : this->settings_.player_settings())
 	{
-		paint.seats.push_back(player.num >= 0 &&
-			static_cast<std::size_t>(player.num) < info.player_areas.size() ?
-			info.player_areas[static_cast<std::size_t>(player.num)] : 0.0f);
+		const int owner = paint_owners::index(player.num, static_cast<int>(paint.seats.size()));
+		paint.seats.push_back(owner >= 0 ? info.player_areas.at(static_cast<size_t>(owner)) : 0.0f);
 	}
 	return paint;
 }

@@ -45,6 +45,7 @@ public:
 	void set_for_deletion(bool for_deletion) override;
 
 	float delete_timer() const;
+	// Paint-owner index; device-less players have a separate owner by view.
 	int player_num() const;
 
 	// A muzzle can extend through cover even when its owner cannot. Check

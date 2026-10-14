@@ -205,7 +205,7 @@ PaintTotal StructurePaintable::paint_total() const
 	{
 		total.total += paint_tile.area();
 		const int owner = paint_tile.player_num();
-		if (owner >= 0 && owner < input_slots::count)
+		if (owner >= 0 && static_cast<size_t>(owner) < total.player_areas.size())
 		{
 			total.player_areas[owner] += paint_tile.area();
 		}

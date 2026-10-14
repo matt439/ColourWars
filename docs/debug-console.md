@@ -439,9 +439,18 @@ device (or the neutral input of an idle dummy):
   to join" for a dummy), and every seat says `Replay` while a replay drives the
   match. The label is a plain list of strings on `Level` that only the Debug
   director sets; Release never fills it.
-- `status` adds `bot <behaviour>` to each driven seat. The paint overlay's
-  per-seat column stays 0 for a bot on an idle dummy, because paint is credited
-  to a device slot and a dummy has none; team totals count everything.
+- `status` adds `bot <behaviour>` to each driven seat. The paint overlay and
+  results credit surface held by every seat, including bots on idle dummies.
+  Device players keep their slot-based credit; each device-less player has a
+  separate paint owner by view. Friendly repaint retains the original capturer's
+  credit, and enemy repaint transfers it.
+
+Per-seat credit completed on 2026-10-15 (`DBG#3`). Debug and Release consumer
+acceptance passed: separate dummy owners, sparse device slots, friendly/enemy
+repaint, result percentages, and real bot projectiles accounting for all held
+paint. The seeded real-Level recording still replays with matching checksums.
+Debug startup passed with an isolated save and graceful shutdown. Evidence is
+under `out/acceptance/{x64-debug,x64-release}/` and `out/validation/dbg3-startup/`.
 
 ## Seed, record and play
 
@@ -976,6 +985,5 @@ as the game. In Release:
   `tune.save`.
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
-- **Per-seat paint for bots on idle dummies** (credited to no device slot).
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
   this machine has no pad; both are covered on the CPU side.

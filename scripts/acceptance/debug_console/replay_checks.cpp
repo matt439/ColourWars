@@ -415,6 +415,18 @@ namespace debug_console_acceptance
 			file.inputs.size() == 4 && file.seed == 7u && file.dt_bits == std::bit_cast<std::uint32_t>(dt),
 			"The file holds 600 updates, 10 checkpoints, the suspend, four seats, the seed and dt");
 		require(file.final_print.team_a != 0 || file.final_print.team_b != 0, "The bots painted");
+		const LevelEndInfo held = match.level->level_end_info();
+		float credited = 0.0f;
+		float bot_credit = 0.0f;
+		for (int view = 0; view < match.level->player_count(); ++view)
+		{
+			const int device = match.level->player(view).player_num();
+			const float area = held.player_areas.at(static_cast<size_t>(paint_owners::index(device, view)));
+			credited += area;
+			if (device == -1) { bot_credit += area; }
+		}
+		require(bot_credit > 0.0f && std::fabs(credited - held.team_a_area - held.team_b_area) < 1.0f,
+			"Real bot projectiles credit device-less seats and account for all held paint");
 		// Recorded seats are post-filter: the keyboard seat as scripted, the bots' own.
 		require(file.inputs[0].size() == file.inputs[1].size() && file.inputs[1].size() > 300 &&
 			std::any_of(file.inputs[2].begin(), file.inputs[2].end(), [](const PlayerInputData& input)

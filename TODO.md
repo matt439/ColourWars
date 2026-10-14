@@ -196,7 +196,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 |---|---|---|---|---|
 | `DBG#1` | OPEN | LOW | M | `tune` handles numbers only, and `tune.save` cannot insert a missing key. |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
-| `DBG#3` | OPEN | LOW | S | Paint by bots on idle dummy seats gets no per-seat credit. |
 | `DBG#4` | BLOCKED | LOW | S | Typing in the live console blanks the whole keyboard seat. Waits on `ENG#9`. |
 | `DBG#5` | BLOCKED | LOW | S | The perf overlay has no GPU, present or submit time. Waits on `ENG#14`. |
 | `DBG#6` | DEFERRED | LOW | M | Scripts stop when the window loses focus; no run-while-inactive switch. |

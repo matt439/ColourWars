@@ -181,7 +181,8 @@ Implemented:
   tile assigns its full area to the projectile's owner; enemy repaint transfers
   that credit, and friendly repaint retains the previous owner's credit.
   Repeated hits never accumulate extra area. Respawns and reconnects retain
-  ownership through the match's fixed device slots.
+  ownership through the match's fixed device slots. Device-less debug players
+  instead keep separate ownership by view, including in the results and paint overlay.
 - Contribution uses the same tiles and areas as team scoring. Individual
   percentages use the whole arena, including unpainted surface; the competitive
   team bars still show each team's share of painted surface. Displayed values

@@ -88,6 +88,29 @@ int main(int argc, char** argv)
         paint(*split, {0, 0, 100, thickness}, PlayerTeam::b, 1);
         area_is(split->paint_total().team_a, 0);
         area_is(split->paint_total().player_areas[1], split->paint_total().total);
+
+        // Sparse devices and multiple device-less seats must never share credit.
+        const int first_dummy = paint_owners::index(-1, 1);
+        const int second_dummy = paint_owners::index(-1, 3);
+        const int keyboard = paint_owners::index(input_slots::keyboard_and_mouse, 0);
+        require(first_dummy != second_dummy && first_dummy != keyboard &&
+            paint_owners::index(3, 1) == 3 && paint_owners::index(-1, 4) == -1,
+            "Paint owners alias devices or other dummy seats");
+        paint(*split, {0, 0, 100, thickness}, PlayerTeam::a, first_dummy);
+        area_is(split->paint_total().player_areas[1], 0);
+        area_is(split->paint_total().player_areas[first_dummy], split->paint_total().total);
+        paint(*split, {0, 0, 100, thickness}, PlayerTeam::a, second_dummy);
+        area_is(split->paint_total().player_areas[first_dummy], split->paint_total().total);
+        area_is(split->paint_total().player_areas[second_dummy], 0);
+        paint(*split, {0, 0, 100, thickness}, PlayerTeam::b, second_dummy);
+        area_is(split->paint_total().player_areas[first_dummy], 0);
+        area_is(split->paint_total().player_areas[second_dummy], split->paint_total().total);
+        LevelEndInfo dummy_result;
+        dummy_result.total_area = split->paint_total().total;
+        dummy_result.player_areas = split->paint_total().player_areas;
+        require(dummy_result.player_percentage_string(second_dummy) == L"100.0%" &&
+            dummy_result.player_percentage_string(keyboard) == L"0.0%",
+            "Results omit dummy credit or give it to the keyboard player");
         LevelEndInfo result;
         result.total_area = split->paint_total().total;
         result.team_b_area = split->paint_total().team_b;

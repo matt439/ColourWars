@@ -1,6 +1,6 @@
 #pragma once
 
-#include "game/input_slots.h"
+#include "game/paint_owners.h"
 #include <array>
 
 #include "game/objects/team_colour.h"
@@ -11,8 +11,8 @@ struct LevelEndInfo
 	TeamColour team_colours = TeamColour();
 	float team_a_area = 0.0f;
 	float team_b_area = 0.0f;
-	// Surface still held at the finish, indexed by device slot, not seat.
-	std::array<float, input_slots::count> player_areas{};
+	// Surface still held at the finish, indexed by paint owner, not seat.
+	std::array<float, paint_owners::count> player_areas{};
 	std::wstring player_percentage_string(int slot) const;
 
 	// Total paintable area, including unpainted tiles, for the coverage score.

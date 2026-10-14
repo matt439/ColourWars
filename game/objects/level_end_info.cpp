@@ -115,7 +115,7 @@ std::wstring LevelEndInfo::winning_team_string() const
 
 std::wstring LevelEndInfo::player_percentage_string(int slot) const
 {
-	// An idle seat (slot -1, from the debug `players` command) owns no paint.
+	// Invalid or unattributed owners have no per-player credit.
 	if (slot < 0 || static_cast<size_t>(slot) >= this->player_areas.size())
 	{
 		return percentage_string(0.0f);

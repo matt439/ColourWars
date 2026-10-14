@@ -12,7 +12,7 @@
 class Level;
 
 // Paint coverage as the developer overlay shows it: areas in world units,
-// seats in view order (an idle dummy paints nothing).
+// seats in view order, including device-less players driven by bots.
 struct MatchPaint
 {
 	float team_a = 0.0f;

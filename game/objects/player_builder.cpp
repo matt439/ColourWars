@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/player_builder.h"
+#include "game/paint_owners.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -78,7 +79,7 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 			this->weapon_builder_->build_weapon(
 				this->tuning_,
 				setting.team,
-				setting.num,
+				paint_owners::index(setting.num, view_index),
 				view_index,
 				team_colours.team_colour(setting.team),
 				setting.weapon,

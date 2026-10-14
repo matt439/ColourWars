@@ -70,7 +70,7 @@ MatchFingerprint MatchFingerprint::of(const Level& level, int updates)
 	hash = mix(hash, print.team_a);
 	hash = mix(hash, print.team_b);
 	hash = mix(hash, print.total);
-	// Slot-attributed paint: idle dummies (slot -1) are never attributed.
+	// Include device and device-less ownership so replay checks catch credit changes.
 	for (const float area : info.player_areas)
 	{
 		hash = mix(hash, bits_from_float(area));

@@ -15,6 +15,7 @@ public:
 
 	// Sprayer and mister use RelativeVelocityWeapon directly. Sniper and bucket
 	// override firing sound; roller overrides aim and tint.
+	// player_num is the projectile's paint owner, not necessarily a device slot.
 	static std::unique_ptr<Weapon> build_weapon(
 		const GameTuning* tuning,
 		PlayerTeam team,
