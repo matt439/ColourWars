@@ -171,7 +171,7 @@ def main():
             peak_dbfs=20 * math.log10(max(np.max(np.abs(pcm.astype(float))) / 32768, 1e-12)),
             rms_dbfs=20 * math.log10(max(np.sqrt(np.mean((pcm.astype(float)/32768)**2)), 1e-12)),
             loop_start=0 if loop else None, loop_end_inclusive=len(pcm)-1 if loop else None,
-            review_status='Candidate: technical checks passed; author listening and multiplayer acceptance pending'))
+            review_status='Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3'))
     (HERE / 'cues.json').write_text(json.dumps({'version': 1, 'cues': cues}, indent=2)+'\n')
     (HERE / 'PROVENANCE.json').write_text(json.dumps({'version': 1, 'assets': provenance}, indent=2)+'\n')
     print(f'Rendered {len(cues)} foley candidates from {len(needed)} retained recordings.')

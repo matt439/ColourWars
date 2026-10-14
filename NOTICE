@@ -36,9 +36,9 @@ Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 Source: https://github.com/microsoft/DirectXTK and
 https://github.com/microsoft/DirectXTex
 
-## Replacement audio production candidates (CC0 sources)
+## Replacement audio production set (CC0 sources)
 
-`game/audio/paint_exe/` retains the replacement candidate recordings, editable
+`game/audio/paint_exe/` retains the replacement recordings, editable
 scores/recipes and exported WAVs for POL#22. These files are distributed; they
 are separate from the legacy live bank described below. Exact per-file creators,
 source URLs, licence evidence, modifications and hashes are recorded in
@@ -51,7 +51,7 @@ Studios LLC / VCSL. CC0 requires no attribution. The original ColourWars
 arrangements and production code were authored with Codex and use this
 repository's MIT licence; the source recordings retain their CC0 terms.
 
-These are production candidates awaiting listening review. POL#23 has not yet
+The author accepted this production set on 2026-10-14. POL#23 has not yet
 changed the game's content bindings or release package. A fresh clone still uses
 the existing optional-bank silent fallback described below.
 

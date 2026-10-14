@@ -21,5 +21,6 @@ stores a full-file forward `smpl` loop. `ui.count_in` intentionally reuses the
 
 UI focus is deliberately quieter than confirmation; refusal and countdown lead
 the mix; cursor waver and cheating figures are nearly silent. Those values are
-candidate mastering choices, not approved game settings. No listening acceptance
-or runtime integration is claimed.
+accepted production mastering choices, not final game settings. The author
+accepted this set on 2026-10-14; [acceptance.json](../acceptance.json) records the
+exact masters. Runtime integration and in-game mix acceptance remain pending.

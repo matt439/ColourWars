@@ -1,8 +1,9 @@
-# Physical sound candidates
+# Physical sound production set
 
-These are the `POL#22` production candidates for players, paint, tools and the
-outside room. They are not a live bank and have not passed author listening or
-the one-, two- and four-player game acceptance. The frozen room/picture rule
+The author accepted these `POL#22` cues for players, paint, tools and the outside
+room on 2026-10-14; [the acceptance record](../acceptance.json) names the exact
+masters. They are not a live bank; one-, two- and four-player game acceptance
+remains ROAD#3. The frozen room/picture rule
 still belongs to the runtime integration: room cues play outside the monitor;
 the picture stays silent while the person is present.
 

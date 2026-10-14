@@ -1,8 +1,9 @@
 # Paint.exe acoustic music production
 
-Produced on 2026-10-14 for `POL#22`. These are review candidates, not a claim of
-human listening approval or the `ROAD#3` in-game mix acceptance. Integration
-belongs to `POL#23`; this directory changes no runtime music reference.
+Produced for `POL#22` on 2026-10-14 and accepted by the author the same day; the
+exact masters and response are in [acceptance.json](../acceptance.json). `ROAD#3` in-game mix
+acceptance remains pending. Integration belongs to `POL#23`; this directory
+changes no runtime music reference.
 
 The arrangements and melodies were authored by Codex specifically for ColourWars.
 They use recorded acoustic instruments: a tenor ukulele, an upright piano,
@@ -85,8 +86,8 @@ mapping once. The FreePats ukulele already uses scientific pitch names.
   hashes are recorded per asset in `measurements.json`.
 - Final MS-ADPCM conversion and XWB packing are separate from these editable
   PCM masters. The encoded bank must retain each declared loop region and be
-  checked separately. The selected masters plus the rest of the cue set still
-  need human listening together at one, two and four players.
+  checked separately. The author accepted the selected masters with the complete
+  cue set; actual one-, two- and four-player gameplay checks remain ROAD#3.
 
 ## Source provenance
 
@@ -114,4 +115,5 @@ Primary source pages, checked 2026-10-14:
 Voluntary credit: **Acoustic recordings: Mateusz Dąbrowski / FreePats and
 Versilian Studios LLC / Sam Gossner (CC0 1.0). Original ColourWars arrangements:
 Codex, 2026-10-14.** Retain this provenance beside the production sources; do not
-represent the music as a commissioned human performance or as human-auditioned.
+represent the music as a commissioned human performance. Author acceptance is
+recorded separately; no detailed listening observations are claimed.

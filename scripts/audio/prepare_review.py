@@ -40,6 +40,17 @@ def save_json(path: Path, value: dict) -> None:
     path.write_text(json.dumps(value, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def acceptance_status(cues: list[dict]) -> str:
+    path = PRODUCTION / "acceptance.json"
+    if path.is_file():
+        record = json.loads(path.read_text(encoding="utf-8"))
+        masters = {cue["id"]: cue["sha256"] for cue in cues}
+        if (record.get("status") == "accepted" and len(masters) == len(cues)
+                and record.get("master_sha256") == masters):
+            return f"Author accepted this set on {record['date']} for POL#23 integration."
+    return "Production candidates; listening acceptance pending."
+
+
 def collect() -> tuple[list[dict], dict[str, dict]]:
     cues, sources = [], {}
     for name in ("music", "foley", "interface"):
@@ -66,7 +77,7 @@ def collect() -> tuple[list[dict], dict[str, dict]]:
             cues.append(cue)
     cues.sort(key=lambda cue: (cue["tier"], cue["id"]))
     save_json(PRODUCTION / "cues.json", {
-        "version": 1, "status": "production candidates; listening acceptance pending",
+        "version": 1, "status": acceptance_status(cues),
         "required_cues": REQUIRED, "cues": cues,
     })
     save_json(PRODUCTION / "sources.json", {"version": 1, "sources": list(sources.values())})
@@ -78,16 +89,19 @@ def collect() -> tuple[list[dict], dict[str, dict]]:
 
 
 def provenance(cues: list[dict], sources: dict[str, dict]) -> None:
-    lines = ["# Paint.exe candidate audio provenance", "",
-        "Produced 2026-10-14 for POL#22. This candidate bank is outside live content.",
+    status = acceptance_status(cues)
+    lines = ["# Paint.exe audio provenance", "",
+        "Produced 2026-10-14 for POL#22. This production bank is outside live content.",
+        status + " Runtime mix acceptance remains ROAD#3.",
+        "[acceptance.json](acceptance.json) records the author's response and the exact accepted master hashes.",
         "Every source is retained and hashed in [sources.json](sources.json). Every exported wave",
         "has the record below and a hash in [cues.json](cues.json). No legacy audio was used.", "",
         "The source recordings use CC0 1.0. Source redistribution and bundling in a release/bank",
         "are permitted by each source's recorded licence. No attribution is required; voluntary",
         "credits are retained here and in NOTICE. Original ColourWars arrangements and edit recipes",
         "were authored with Codex; repository-original production code and arrangements use the",
-        "repository MIT licence. Source recordings retain their CC0 terms. No human recording or",
-        "listening approval by the repository author is claimed.", "",
+        "repository MIT licence. Source recordings retain their CC0 terms. No human recording",
+        "by the repository author is claimed.", "",
         "Exports: PCM signed 16-bit, 44.1 kHz; music stereo, effects mono except room/ambient beds.",
         "The isolated bank build encodes music as MS-ADPCM (512-byte stereo blocks) and copies",
         "authored loops. Effects remain PCM. Each project retains exact source excerpts, pitches,",
@@ -116,7 +130,7 @@ def provenance(cues: list[dict], sources: dict[str, dict]) -> None:
             "- Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.",
             f"- Modifications: {cue['description']} Exact trims, layer edits, gains and loop points in [{production}]({production}) and its renderer.",
             "- Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.",
-            "- Production date: 2026-10-14. Status: awaiting listening review.", ""]
+            f"- Production date: 2026-10-14. Status: {status}", ""]
     (PRODUCTION / "PROVENANCE.md").write_text("\n".join(lines), encoding="utf-8")
 
 
@@ -246,7 +260,7 @@ input,select{font:inherit;padding:10px;border:2px solid #25282d;background:white
 [hidden]{display:none!important}.status{background:#ffe6a5;border-left:5px solid #b06a00;padding:12px 16px}.small{font-size:14px}label{display:flex;gap:8px;align-items:center}
 </style><main><header><p>COLOURWARS / POL#22 / 14 OCTOBER 2026</p><h1>Paint.exe audio review</h1>
 <p>Recorded paint, paper and mechanisms. Original arrangements for ukulele, upright piano and hand percussion.</p>
-<p class="status">Production candidates. Listening approval and in-game mix acceptance are pending. These files do not change the game's live audio.</p>
+<p class="status">ACCEPTANCE_STATUS In-game mix acceptance remains pending. These files do not change the game's live audio.</p>
 <p><a href="README.md">Production notes</a> · <a href="PROVENANCE.md">Every source and licence</a> · <a href="auditions/timeline.json">Exact audition timeline</a></p></header>
 <h2>Hear the set together</h2><p>Same 49-second scripted scene at 1, 2 and 4 players, using the same output gain. Intro room → countdown → movement and weapons → time-up → reveal. These are offline arrangements, not gameplay recordings. Useful cues should stay readable as players are added.</p>
 <div class="grid">MIX_CARDS</div><p class="small">Check the sprayer, roller, mister, sniper and bucket by ear; compare movement and paint repetition; listen to the music joins. Tier 3 detail is optional and should default to silent or nearly silent. The Movement Course keeps no music or ambience.</p>
@@ -256,7 +270,7 @@ const search=document.querySelector('#search'),tier=document.querySelector('#tie
 function filter(){let shown=0;for(const card of cards){card.hidden=!(card.dataset.search.includes(search.value.toLowerCase())&&(!tier.value||card.dataset.tier===tier.value));if(!card.hidden)shown++;}document.querySelector('#count').textContent=shown+' cues';}
 search.addEventListener('input',filter);tier.addEventListener('change',filter);filter();
 document.addEventListener('play',event=>{if(event.target.tagName==='AUDIO')for(const audio of document.querySelectorAll('audio'))if(audio!==event.target)audio.pause();},true);
-</script></html>'''.replace('MIX_CARDS', mix_cards).replace('CUE_CARDS', '\n'.join(cards))
+</script></html>'''.replace('MIX_CARDS', mix_cards).replace('CUE_CARDS', '\n'.join(cards)).replace('ACCEPTANCE_STATUS', html.escape(acceptance_status(cues)))
     (PRODUCTION / "index.html").write_text(page, encoding="utf-8")
 
 

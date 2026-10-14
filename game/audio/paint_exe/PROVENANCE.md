@@ -1,6 +1,8 @@
-# Paint.exe candidate audio provenance
+# Paint.exe audio provenance
 
-Produced 2026-10-14 for POL#22. This candidate bank is outside live content.
+Produced 2026-10-14 for POL#22. This production bank is outside live content.
+Author accepted this set on 2026-10-14 for POL#23 integration. Runtime mix acceptance remains ROAD#3.
+[acceptance.json](acceptance.json) records the author's response and the exact accepted master hashes.
 Every source is retained and hashed in [sources.json](sources.json). Every exported wave
 has the record below and a hash in [cues.json](cues.json). No legacy audio was used.
 
@@ -8,8 +10,8 @@ The source recordings use CC0 1.0. Source redistribution and bundling in a relea
 are permitted by each source's recorded licence. No attribution is required; voluntary
 credits are retained here and in NOTICE. Original ColourWars arrangements and edit recipes
 were authored with Codex; repository-original production code and arrangements use the
-repository MIT licence. Source recordings retain their CC0 terms. No human recording or
-listening approval by the repository author is claimed.
+repository MIT licence. Source recordings retain their CC0 terms. No human recording
+by the repository author is claimed.
 
 Exports: PCM signed 16-bit, 44.1 kHz; music stereo, effects mono except room/ambient beds.
 The isolated bank build encodes music as MS-ADPCM (512-byte stereo blocks) and copies
@@ -740,7 +742,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Hand claps and cheerful acoustic strum after the person leaves. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.count_beat
 
@@ -752,7 +754,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: A single wooden count beat with a muted acoustic pitch. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.glass_out
 
@@ -764,7 +766,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Lowered paper flutter and muffled body knock pull through the glass. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.go
 
@@ -776,7 +778,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Clap and rising ukulele triad mark the playable edge. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.reveal_click
 
@@ -788,7 +790,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Firm double mouse switch seals the chosen colour. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.reveal_hover
 
@@ -800,7 +802,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Single tiny recorded switch distinct from menu motion. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.slump
 
@@ -812,7 +814,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Paper flump and a muted falling pluck, with no pain vocal. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.time_up
 
@@ -824,7 +826,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Falling two-hit wooden punctuation; under two seconds. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### music.close_quarters
 
@@ -836,7 +838,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Quick syncopated upright-piano tune, damped ukulele strums and cajon; a minor detour, call-and-response middle and high-register final reprise. Exact trims, layer edits, gains and loop points in [music/score.json](music/score.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### music.menu
 
@@ -848,7 +850,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: A quiet bedroom-desk miniature: plucked tenor ukulele, warm upright piano answers, body taps; four distinct eight-bar phrases with space between gestures. Exact trims, layer edits, gains and loop points in [music/score.json](music/score.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### paint.splash.01
 
@@ -860,7 +862,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short tactile wet impact; separate source take. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### paint.splash.02
 
@@ -872,7 +874,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short tactile wet impact; separate source take. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### paint.splash.03
 
@@ -884,7 +886,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short tactile wet impact; separate source take. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### paint.splash.04
 
@@ -896,7 +898,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short tactile wet impact; separate source take. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### paint.splash.05
 
@@ -908,7 +910,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short tactile wet impact; separate source take. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### paint.splash.06
 
@@ -920,7 +922,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short tactile wet impact; separate source take. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.hurt
 
@@ -932,7 +934,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Wet fruit slap and crushed-paper snap. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.jump
 
@@ -944,7 +946,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Quick upward paper flick and nib release. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.land.01
 
@@ -956,7 +958,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Paper flump with a short low paper-body contact. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.land.02
 
@@ -968,7 +970,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Paper flump with a short low paper-body contact. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.land.03
 
@@ -980,7 +982,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Paper flump with a short low paper-body contact. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.land.04
 
@@ -992,7 +994,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Paper flump with a short low paper-body contact. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.pop
 
@@ -1004,7 +1006,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: A real water-bubble burst, with a soft wet body. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.respawn
 
@@ -1016,7 +1018,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Final marker flourish lands in a small paper contact. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.skid
 
@@ -1028,7 +1030,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Brief dragged marker squeak for a committed reversal. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.step.01
 
@@ -1040,7 +1042,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short marker contact on paper; separate recorded nib gesture. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.step.02
 
@@ -1052,7 +1054,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short marker contact on paper; separate recorded nib gesture. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.step.03
 
@@ -1064,7 +1066,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short marker contact on paper; separate recorded nib gesture. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.step.04
 
@@ -1076,7 +1078,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short marker contact on paper; separate recorded nib gesture. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.step.05
 
@@ -1088,7 +1090,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short marker contact on paper; separate recorded nib gesture. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.step.06
 
@@ -1100,7 +1102,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short marker contact on paper; separate recorded nib gesture. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### roller.lift
 
@@ -1112,7 +1114,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Tacky wet peel as the drum leaves a surface. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### roller.loop
 
@@ -1124,7 +1126,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Tacky wet drum: foamy sponge compression under a slowed wall-brush stroke. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### roller.settle
 
@@ -1136,7 +1138,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Soft wet drum contact with a low handle tap. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### roller.start
 
@@ -1148,7 +1150,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Wet sponge grabs the floor with a small handle contact. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### roller.stop
 
@@ -1160,7 +1162,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Wet drum releases pressure and settles. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### room.chair
 
@@ -1172,7 +1174,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: A real chair creak plus a restrained chair movement contact. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### room.sigh
 
@@ -1184,7 +1186,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: A close recorded human exhale, softened as heard outside the monitor. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### sprayer.loop
 
@@ -1196,7 +1198,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Coarse pressured spray with a wet foam undertone. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### sprayer.start
 
@@ -1208,7 +1210,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Pump squeeze and first wet valve opening. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### sprayer.stop
 
@@ -1220,7 +1222,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Pump return with a brief residual spray tail. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### ui.cancel
 
@@ -1232,7 +1234,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Lower double switch moving back; short and dry. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### ui.confirm
 
@@ -1244,7 +1246,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Mouse switch and an upward two-note ukulele answer. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### ui.error
 
@@ -1256,7 +1258,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Three muffled wooden taps; a refusal without a harsh alarm. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### ui.move
 
@@ -1268,7 +1270,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: One dry mouse switch tick; restrained for repeated navigation. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### ui.pause_open
 
@@ -1280,7 +1282,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Paper fold and damped wood tap, separate from confirm. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### ui.ready
 
@@ -1292,7 +1294,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Physical switch followed by a bright three-note acoustic lift. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### weapon.empty
 
@@ -1304,7 +1306,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Dry pump mechanism: short double mechanical refusal. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### weapon.recovered
 
@@ -1316,7 +1318,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: A clear valve catch followed by a tiny liquid plop. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### bucket.throw
 
@@ -1328,7 +1330,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: A swung tin contact over a wet bucket slosh. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.colour_in
 
@@ -1340,7 +1342,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Paper unfurls into a short bright acoustic chord. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.glass_in
 
@@ -1352,7 +1354,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Reversed paper lift with a soft landing knock crosses into the picture. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.last_ten
 
@@ -1364,7 +1366,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short unpitched body tap; conveys time only, never team or score. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.reveal_close
 
@@ -1376,7 +1378,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Downward paper fold and low releasing switch close a drawn match. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.skip
 
@@ -1388,7 +1390,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Two crisp switch ticks for the skipped opening. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.undo
 
@@ -1400,7 +1402,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Quiet reverse paper tick and mouse release for the person undoing colour. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### mister.loop
 
@@ -1412,7 +1414,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Fine atomiser fizz, higher and softer than the sprayer. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### mister.start
 
@@ -1424,7 +1426,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Fine atomiser opens with a fast spray hiss. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### mister.stop
 
@@ -1436,7 +1438,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Fine nozzle closes with a short remaining hiss. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### music.end_sting.close_quarters
 
@@ -1448,7 +1450,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Acoustic cadence under two seconds in the close quarters track's home key; standalone one-shot, ending on its own decay. Exact trims, layer edits, gains and loop points in [music/score.json](music/score.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### music.end_sting.king_of_the_hill
 
@@ -1460,7 +1462,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Acoustic cadence under two seconds in the king of the hill track's home key; standalone one-shot, ending on its own decay. Exact trims, layer edits, gains and loop points in [music/score.json](music/score.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### music.end_sting.turbulence
 
@@ -1472,7 +1474,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Acoustic cadence under two seconds in the turbulence track's home key; standalone one-shot, ending on its own decay. Exact trims, layer edits, gains and loop points in [music/score.json](music/score.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### music.king_of_the_hill
 
@@ -1484,7 +1486,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Broad climbing ukulele melody with alternating upright bass and chords, handclaps and shaker; a contrasting minor passage rises back into the home theme. Exact trims, layer edits, gains and loop points in [music/score.json](music/score.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### music.results
 
@@ -1496,7 +1498,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short palette-complete coda: upright piano answers ukulele, a brief handclap pulse resolves to a quiet C-major-sixth chord; export trimmed to its natural decay. Exact trims, layer edits, gains and loop points in [music/score.json](music/score.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### music.turbulence
 
@@ -1508,7 +1510,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: D-dorian ukulele and piano exchange, irregular bongo accents and a two-bar clave; a brighter middle, quieter return and rising final phrase create 48 bars of movement. Exact trims, layer edits, gains and loop points in [music/score.json](music/score.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### paint.capture
 
@@ -1520,7 +1522,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Wet colour-change plop with a firm small contact. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### paint.dud
 
@@ -1532,7 +1534,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Small dry impact where liquid cannot take. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### paint.impact.bucket
 
@@ -1544,7 +1546,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Tool-specific wet contact: bucket. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### paint.impact.mister
 
@@ -1556,7 +1558,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Tool-specific wet contact: mister. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### paint.impact.roller
 
@@ -1568,7 +1570,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Tool-specific wet contact: roller. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### paint.impact.sniper
 
@@ -1580,7 +1582,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Tool-specific wet contact: sniper. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### paint.impact.sprayer
 
@@ -1592,7 +1594,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Tool-specific wet contact: sprayer. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.redraw
 
@@ -1604,7 +1606,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Fast marker scribble: a continuous cyclic drawing gesture. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.step_painted.01
 
@@ -1616,7 +1618,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Marker contact with a quiet foamy wet sole. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.step_painted.02
 
@@ -1628,7 +1630,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Marker contact with a quiet foamy wet sole. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.step_painted.03
 
@@ -1640,7 +1642,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Marker contact with a quiet foamy wet sole. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.step_painted.04
 
@@ -1652,7 +1654,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Marker contact with a quiet foamy wet sole. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### results.draw
 
@@ -1664,7 +1666,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Unresolved open fifth; no winner fanfare on a tie. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### results.fill
 
@@ -1676,7 +1678,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Light cycling hand percussion for the non-reveal percentage fill. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### results.winner
 
@@ -1688,7 +1690,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Short acoustic major cadence with a hand clap. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### room.tone
 
@@ -1700,7 +1702,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Quiet recorded desktop-computer fan; dual mono preserves the source spatial image. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### sniper.ready
 
@@ -1712,7 +1714,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: One distinct latch re-engagement. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### sniper.shot
 
@@ -1724,7 +1726,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: A single sharp pressure release with a physical valve click. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### ui.count_in
 
@@ -1736,7 +1738,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: The same count beat as match.count_beat, as specified for resume. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### ui.pad_back
 
@@ -1748,7 +1750,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Two raised knocks resolve upward when a controller returns. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### ui.pad_lost
 
@@ -1760,7 +1762,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Two hollow low knocks distinguish disconnection from menu refusal. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### bucket.slosh
 
@@ -1772,7 +1774,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Quiet foamy liquid shift while carrying a bucket. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### end.series
 
@@ -1784,7 +1786,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: A fuller acoustic cadence celebrates the completed series. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.cheat
 
@@ -1796,7 +1798,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Tiny paper rustle for the frozen figures cheating; optional and very quiet. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### match.waver
 
@@ -1808,7 +1810,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Nearly inaudible mouse wheel fragment; optional decorative cursor hesitation. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.bonk
 
@@ -1820,7 +1822,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Dull paper-body tap for a ceiling contact. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.drop
 
@@ -1832,7 +1834,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Thin paper slip when dropping through a platform. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### player.hit_confirm
 
@@ -1844,7 +1846,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Small recorded finger-like tap, kept below damage cues. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### room.breath
 
@@ -1856,7 +1858,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: One understated recorded human breath. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### room.footsteps
 
@@ -1868,7 +1870,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Two soft physical room steps, receding in level. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### tool.drip
 
@@ -1880,7 +1882,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Single real drop, nearly off by default. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### ui.unready
 
@@ -1892,7 +1894,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Two downward plucks and a releasing switch. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### ui.volume_preview
 
@@ -1904,7 +1906,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Compact wood, pluck and paper sample covers useful SFX frequencies. Exact trims, layer edits, gains and loop points in [interface/project.json](interface/project.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### weapon.blocked
 
@@ -1916,7 +1918,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Dry small mechanism/body tap for cover obstruction. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### world.ambience.close_quarters
 
@@ -1928,7 +1930,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Quiet nearby room fan; optional decorative bed. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### world.ambience.king_of_the_hill
 
@@ -1940,7 +1942,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Muffled air extractor in a larger distant room. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### world.ambience.turbulence
 
@@ -1952,7 +1954,7 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: Higher air-extractor texture for the elevated arena. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.
 
 ### world.detail
 
@@ -1964,4 +1966,4 @@ layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 - Attribution: none required for CC0 recordings; retain repository MIT notice for original code/arrangements.
 - Modifications: An occasional real pipe-like droplet; off by default. Exact trims, layer edits, gains and loop points in [foley/recipes.json](foley/recipes.json) and its renderer.
 - Export settings: 44.1 kHz, PCM16 master; see common settings above and machine-checked bank report.
-- Production date: 2026-10-14. Status: awaiting listening review.
+- Production date: 2026-10-14. Status: Author accepted this set on 2026-10-14 for POL#23 integration.

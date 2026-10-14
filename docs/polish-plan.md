@@ -422,9 +422,10 @@ match, then complete the remaining weapons and arenas before final acceptance.
 
 The inventory, the new cue list and a proposed sound direction are in
 [audio-inventory.md](audio-inventory.md) (2026-10-14); the direction is accepted.
-The [complete candidate set](audio-inventory.md#7-pol22-production-candidates)
+The [complete production set](audio-inventory.md#7-pol22-production-candidates)
 now has retained sources, per-wave provenance, reproducible exports and an
-isolated bank. POL#22 awaits listening review; POL#23 owns integration.
+isolated bank. The author accepted the set on 2026-10-14, closing POL#22;
+POL#23 owns integration and ROAD#3 owns in-game audio acceptance.
 
 - Inventory every source wave, bank entry, loop instance and runtime reference,
   including tuning, presentation, level music and any code-selected cues. Give

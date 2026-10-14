@@ -1,4 +1,4 @@
-# Paint.exe audio production candidates
+# Paint.exe audio production set
 
 Produced on 2026-10-14 for **POL#22**. Open [index.html](index.html) in a browser
 to hear individual cues and the same scripted scene at one, two and four players.
@@ -6,8 +6,10 @@ Start with Tier 1. There are **103 WAV masters covering all 85 cue groups** in
 [audio-inventory §4](../../../docs/audio-inventory.md#4-the-new-cue-list):
 49 Tier 1 waves, 37 Tier 2 waves and 17 Tier 3 waves.
 
-These are complete production candidates, **not listening-approved assets**.
-POL#22 remains open for the author's listening pass and any resulting revisions.
+**The author accepted the complete set on 2026-10-14**, replying "sounds good"
+to the explicit request to accept it for POL#23 integration or name revisions.
+POL#22 is closed; [acceptance.json](acceptance.json) records the exact 103 accepted
+master hashes. No revisions were requested.
 No game sound binding or live bank changes here; POL#23 owns that migration.
 ROAD#3 still owns actual multiplayer, pause/resume, volume and release acceptance.
 
@@ -22,7 +24,7 @@ ROAD#3 still owns actual multiplayer, pause/resume, volume and release acceptanc
 - [foley/README.md](foley/README.md): 64 physical cues from marker, paper, water,
   mechanisms and room recordings. Includes six footsteps, six splashes, four
   landings and four painted-step variants. The pop, sigh and chair creak are
-  sourced candidates for STORY#1/STORY#2, not recordings by the repository author.
+  accepted sourced cues for STORY#1/STORY#2, not recordings by the repository author.
 - [interface/project.json](interface/project.json): 31 short arrangements of
   recorded mouse switches, paper, instrument body taps, claps and ukulele notes.
   UI cues belong to the invented program; no real operating-system sound is used.
@@ -37,8 +39,8 @@ ROAD#3 still owns actual multiplayer, pause/resume, volume and release acceptanc
 
 Sources remain in their downloaded formats. Most are lossless WAV; the chair
 creak is explicitly a CC0 high-quality MP3 preview, not a lossless original.
-Its original WAV requires a Freesound login. This quality choice is visible in
-the foley source record and should be checked in the listening pass.
+Its original WAV requires a Freesound login. This source choice is visible in
+the foley record and included in the accepted set.
 
 ## Reproduce
 
@@ -87,22 +89,23 @@ Eleven pipeline tests pass, including a real ADPCM/XWB build and corrupt
 metadata rejection. All three renderers reproduce their WAVs byte for byte.
 
 The listening page's local links and audio formats were checked. Browser UI
-automation was unavailable in this session, so no browser playback or human
-auditory review is claimed. Technical seam checks do not establish a pleasing
-musical join, good timbre, or intelligibility under four-player load.
+automation was unavailable during production; no automated playback or detailed
+ear-test observations are claimed. The author's later acceptance is recorded
+separately. Technical seam checks do not establish musical fit or intelligibility
+under four-player load. The technical snapshots preserve the original pre-approval
+state; [acceptance.json](acceptance.json) is the current acceptance record.
 
-## Listening exit for POL#22
+## Acceptance and remaining integration
 
-1. Listen to Tier 1 in the page, then the 1/2/4-player comparisons at a fixed
-   speaker volume. Identify each tool without looking; check that hurt, empty,
-   elimination and countdown remain clear. Check whether the music fits the art.
-2. Listen across repeated music and weapon loop joins. Review repeated
-   steps/landings/splashes, UI refusal versus cancel, and the three story cues.
-3. Review Tiers 2 and 3; reject unnecessary decorative audio. Their production
-   does not require enabling them: ambient/tool detail should default to off,
-   and the Movement Course stays silent except for player/action cues.
-4. Record accepted/rejected cue IDs and requested changes in audio-inventory §7.
-   Once the listening revisions are settled, close POL#22 and begin POL#23.
+The accepted set is the production committed in `104cfd0`. The catalogue,
+provenance and listening page read its acceptance record; changing any master,
+adding or removing a cue makes regenerated output pending review again.
+No audio is changed by this acceptance update.
+
+POL#23 is ready to integrate the bank, hooks, mix and distribution. ROAD#3 then
+qualifies actual gains/mute, pause/focus/resume, multiplayer mix and both release
+paths. Tier 3 detail stays optional and defaults off or nearly off. The Movement
+Course stays silent except for player/action cues.
 
 The intro/reveal audition keeps picture sound silent while the person is
 present. The winner/loser reactions follow the person's departure, as the

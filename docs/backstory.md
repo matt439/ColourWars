@@ -149,13 +149,13 @@ Decided with the author on 2026-10-12, while the first slice was built:
 | Beat | State |
 |---|---|
 | Respawn: the redraw at the spawn | Built. `RespawnRedraw`; strokes and timings in `presentation.json` `respawn_redraw` |
-| Respawn: the pop | Still the old death yell. [Sourced candidate produced](audio-inventory.md#7-pol22-production-candidates); listening approval, bank entry and tuning swap remain (`STORY#1`) |
+| Respawn: the pop | Still the old death yell. [Sourced pop accepted](audio-inventory.md#7-pol22-production-candidates); bank entry and tuning swap remain (`STORY#1`, with `POL#23`) |
 | Grey scenery, each team on its own half | Built. Enforced by the game and the level editor |
 | Opening: monitor, person, preview, undo, leaving, countdown in the picture, push through the glass | Built. `level_intro.cpp`; `Monitor`, `Silhouette`, `ScreenCursor`; timings in `tuning.json` `match.opening`, look in `presentation.json` `opening` |
 | Opening: skip, quick rematch | Built. A, B or Start skips; a Start (Escape) pressed while the intro plays is a skip, never a pause, however late after GO it is released (`latch_intro_pause`); a rematch starts at the preview |
 | Rematch: a new random monitor | Built. Rolled per match from `opening.bezel_shades` and the decorations |
 | Opening: figures looking at their hands, then across at the other side | Built. `FigureActing` repaints the eyes the respawn strokes locate |
-| Opening: sigh and chair creak | [Sourced candidates produced](audio-inventory.md#7-pol22-production-candidates); listening approval, bank entries, tuning slots and play calls remain (`STORY#2`) |
+| Opening: sigh and chair creak | [Sourced cues accepted](audio-inventory.md#7-pol22-production-candidates); bank entries, tuning slots and play calls remain (`STORY#2`, with `POL#23`) |
 | Reveal: pull back into the monitor, the person sits, hovers each colour over the whole picture, wavers, clicks the winner, the slot fills, the coverage shows, the person leaves | Built. `level_intro.cpp`; timings in `tuning.json` `match.reveal`, sounds `match.sounds.hover/click`; the results page then keeps only the percentages |
 | Reveal, nobody painted: the person stares, then closes the program instead of choosing | Built. The glass goes to `opening.desktop_colour` |
 | Reveal: figures freezing but cheating (darting eyes, sweat, shaking knees), then celebrating or slumping once the person has gone | Built. `tuning.json` `match.reveal.react`, `presentation.json` `opening.acting` |

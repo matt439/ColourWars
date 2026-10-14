@@ -6,7 +6,8 @@ Status: inventory taken on 2026-10-14 at `2f052b9`, for
 [section 5](#5-sound-direction-accepted) on 2026-10-14; their other answers are in
 [section 6.3](#63-decisions-and-what-is-still-open). The complete candidate set
 produced later the same day is recorded in [section 7](#7-pol22-production-candidates).
-Listening approval is still pending; no asset is approved by the technical checks.
+The author accepted the complete set on 2026-10-14; that response, rather than
+the technical checks, closes POL#22. Runtime integration and acceptance remain.
 
 This page lists every legacy wave, bank entry, loop instance and cue reference,
 and gives each one a replace-or-retire entry. It then lists every cue the
@@ -473,9 +474,9 @@ An asset with an empty licence field does not go into `waves`.
 
 - **`POL#22`** has produced Tiers 1–3, with a provenance record for every wave,
   editable sources and technical qualification ([section 7](#7-pol22-production-candidates)).
-  The remaining step is listening to the candidates together at one, two and
-  four players and revising any rejected cues. The review page includes offline
-  comparisons; these are not actual gameplay acceptance.
+  The author accepted the complete set on 2026-10-14 with no requested revisions,
+  closing this item. The review page includes offline comparisons; these are
+  not actual gameplay acceptance.
 - **`POL#23`** carries out the dispositions in section 2 and updates every site
   in section 3, in a single migration:
   - Delete the legacy `.xwb` and both staged copies before the first build.
@@ -514,17 +515,16 @@ Answered by the author on 2026-10-14:
 
 Nothing is still open here.
 
-The pop, sigh and chair-creak (`STORY#1`, `STORY#2`) now have sourced candidates
-in section 7. The author can accept those or supply their own recordings; the
-live game still needs the bank entries, slots and calls.
+The sourced pop, sigh and chair-creak (`STORY#1`, `STORY#2`) are accepted with
+the set in section 7. The live game still needs the bank entries, slots and calls.
 
 ## 7. POL#22 production candidates
 
-**2026-10-14: production complete; listening review pending.**
+**2026-10-14: production complete and author accepted; POL#22 closed.**
 [Open the listening page](../game/audio/paint_exe/index.html), starting with Tier 1,
 then the same scripted scene at one, two and four players. The
 [production README](../game/audio/paint_exe/README.md) gives reproduction commands
-and the listening exit. The files are under `game/audio/paint_exe/`, outside
+and the acceptance record. The files are under `game/audio/paint_exe/`, outside
 staged content; the live game and legacy bank have not changed.
 
 | Deliverable | Retained result |
@@ -534,7 +534,7 @@ staged content; the live game and legacy bank have not changed.
 | Music | Original Codex-authored ukulele/upright-piano/hand-percussion arrangements using recorded CC0 samples. Menu 87.27 s, Close Quarters 76.19 s, Hill 85.71 s, Turbulence 83.48 s; three corresponding ending stings and a results coda. Editable scores and rendered event records are retained. |
 | Interface/match | 31 short arrangements of recorded switches, paper, taps, claps and acoustic plucks; no OS sounds. `ui.count_in` deliberately shares the countdown beat. |
 | Provenance | 71 unchanged, hashed source recordings; exact creator/source/licence/redistribution fields in [sources.json](../game/audio/paint_exe/sources.json), and [one record per wave](../game/audio/paint_exe/PROVENANCE.md) beside the candidate bank definition. All recorded sources are CC0; original code/arrangements use the repository MIT licence. |
-| Review | Individual cue players, automatic loop repeat and fixed-gain 1/2/4-player offline mixes. The timeline keeps picture sound out of the room interval and reactions after the person leaves. Browser playback/human listening was not available in this session. |
+| Review | Individual cue players, automatic loop repeat and fixed-gain 1/2/4-player offline mixes. The timeline keeps picture sound out of the room interval and reactions after the person leaves. The author accepted the set after the review request; no automated browser playback or detailed listening observations are claimed. |
 | Bank | An isolated, named XWB with 103 entries, 22,772,676 bytes; no legacy input or timestamp reuse. Output is under `out/audio-production/`, never the live bank. |
 
 The technical proposals in §5.2 are now exercised: one bank, 44.1 kHz, PCM16
@@ -556,10 +556,19 @@ musical fit, timbre, pleasant loop joins or four-player intelligibility.
 
 The chair creak's retained source is explicitly a CC0 HQ MP3 preview; its
 lossless Freesound original requires login. The source format and exact URL
-are recorded. Audition its quality with the other room cues. No repository-author
-recording is claimed for the sourced pop, sigh or chair.
+are recorded. This source choice is included in the accepted set. No
+repository-author recording is claimed for the sourced pop, sigh or chair.
 
-**Remaining POL#22 exit:** record which cue IDs are accepted, which need revision,
-and whether any Tier 3 detail should be discarded. No listening approval has
-been inferred. The TODO row therefore stays `DECISION`, narrowed to this review.
-Once it passes, POL#23 performs the §2/§3 migration and ROAD#3 tests the real game.
+**Author acceptance:** in response to the explicit request to name revisions or
+accept the complete set for POL#23 integration, with the listening page and
+1/2/4-player mixes linked, the author replied **"sounds good"** on 2026-10-14.
+All 103 masters from `104cfd0`, covering 85 cue groups including the three story
+cues, are accepted; no revisions were requested. The
+[acceptance record](../game/audio/paint_exe/acceptance.json) binds this response to
+their exact hashes. Regenerated catalogues show acceptance only while those
+masters match. Original technical snapshots retain their pre-approval status.
+
+POL#22 leaves TODO; POL#23 is now open for the §2/§3 migration, and the story rows
+are open for their integration work. Tier 3 remains optional with the existing
+default-off direction. ROAD#3 still tests the actual game, mix and release;
+accepting the assets does not close those checks.

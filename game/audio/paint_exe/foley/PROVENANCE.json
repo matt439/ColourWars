@@ -47,7 +47,7 @@
       "rms_dbfs": -25.558793413961602,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.step.02",
@@ -95,7 +95,7 @@
       "rms_dbfs": -24.00026260811661,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.step.03",
@@ -143,7 +143,7 @@
       "rms_dbfs": -24.253547481738845,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.step.04",
@@ -191,7 +191,7 @@
       "rms_dbfs": -28.247672261830942,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.step.05",
@@ -239,7 +239,7 @@
       "rms_dbfs": -28.171080448663034,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.step.06",
@@ -287,7 +287,7 @@
       "rms_dbfs": -28.67157807573409,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.land.01",
@@ -346,7 +346,7 @@
       "rms_dbfs": -22.818417912815455,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.land.02",
@@ -405,7 +405,7 @@
       "rms_dbfs": -25.66089976380806,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.land.03",
@@ -464,7 +464,7 @@
       "rms_dbfs": -30.904046958957707,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.land.04",
@@ -523,7 +523,7 @@
       "rms_dbfs": -37.581435078621084,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.jump",
@@ -579,7 +579,7 @@
       "rms_dbfs": -22.00028607202373,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.skid",
@@ -626,7 +626,7 @@
       "rms_dbfs": -24.67568326475273,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.hurt",
@@ -681,7 +681,7 @@
       "rms_dbfs": -20.991537421643173,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.pop",
@@ -738,7 +738,7 @@
       "rms_dbfs": -18.00027524150752,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.redraw",
@@ -787,7 +787,7 @@
       "rms_dbfs": -25.000277277304587,
       "loop_start": 0,
       "loop_end_inclusive": 46856,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.respawn",
@@ -844,7 +844,7 @@
       "rms_dbfs": -26.107556467217993,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.step_painted.01",
@@ -901,7 +901,7 @@
       "rms_dbfs": -25.000261414471705,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.step_painted.02",
@@ -958,7 +958,7 @@
       "rms_dbfs": -27.778451476752046,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.step_painted.03",
@@ -1015,7 +1015,7 @@
       "rms_dbfs": -25.000270805591143,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.step_painted.04",
@@ -1072,7 +1072,7 @@
       "rms_dbfs": -25.35747496484591,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.bonk",
@@ -1119,7 +1119,7 @@
       "rms_dbfs": -25.00027050878126,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.drop",
@@ -1166,7 +1166,7 @@
       "rms_dbfs": -26.000255993529496,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "player.hit_confirm",
@@ -1214,7 +1214,7 @@
       "rms_dbfs": -26.000237303720123,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "sprayer.start",
@@ -1260,7 +1260,7 @@
       "rms_dbfs": -22.000256013222938,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "sprayer.loop",
@@ -1318,7 +1318,7 @@
       "rms_dbfs": -23.00027902104243,
       "loop_start": 0,
       "loop_end_inclusive": 17639,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "sprayer.stop",
@@ -1364,7 +1364,7 @@
       "rms_dbfs": -24.000268997808398,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "roller.loop",
@@ -1424,7 +1424,7 @@
       "rms_dbfs": -24.00026304753655,
       "loop_start": 0,
       "loop_end_inclusive": 20089,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "roller.start",
@@ -1481,7 +1481,7 @@
       "rms_dbfs": -24.009544019033285,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "roller.stop",
@@ -1528,7 +1528,7 @@
       "rms_dbfs": -27.68470689370831,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "roller.lift",
@@ -1575,7 +1575,7 @@
       "rms_dbfs": -26.36906330613249,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "roller.settle",
@@ -1632,7 +1632,7 @@
       "rms_dbfs": -32.889233219787904,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "weapon.empty",
@@ -1689,7 +1689,7 @@
       "rms_dbfs": -22.816755363706804,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "weapon.recovered",
@@ -1746,7 +1746,7 @@
       "rms_dbfs": -24.99630853089933,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "mister.start",
@@ -1793,7 +1793,7 @@
       "rms_dbfs": -23.000275824339333,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "mister.loop",
@@ -1843,7 +1843,7 @@
       "rms_dbfs": -25.00028362585223,
       "loop_start": 0,
       "loop_end_inclusive": 19336,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "mister.stop",
@@ -1890,7 +1890,7 @@
       "rms_dbfs": -25.000255754901318,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "sniper.shot",
@@ -1947,7 +1947,7 @@
       "rms_dbfs": -18.286096973616594,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "sniper.ready",
@@ -1994,7 +1994,7 @@
       "rms_dbfs": -23.121371262162718,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "bucket.throw",
@@ -2052,7 +2052,7 @@
       "rms_dbfs": -23.550902196609066,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "paint.splash.01",
@@ -2101,7 +2101,7 @@
       "rms_dbfs": -26.00443283282576,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "paint.splash.02",
@@ -2150,7 +2150,7 @@
       "rms_dbfs": -30.76133151041917,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "paint.splash.03",
@@ -2199,7 +2199,7 @@
       "rms_dbfs": -30.976131649566025,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "paint.splash.04",
@@ -2258,7 +2258,7 @@
       "rms_dbfs": -28.289888714607656,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "paint.splash.05",
@@ -2317,7 +2317,7 @@
       "rms_dbfs": -24.000262557579962,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "paint.splash.06",
@@ -2376,7 +2376,7 @@
       "rms_dbfs": -26.7466930599611,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "paint.capture",
@@ -2431,7 +2431,7 @@
       "rms_dbfs": -24.000262798972642,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "paint.dud",
@@ -2478,7 +2478,7 @@
       "rms_dbfs": -25.000253641120764,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "paint.impact.sprayer",
@@ -2527,7 +2527,7 @@
       "rms_dbfs": -30.07318352900394,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "paint.impact.roller",
@@ -2576,7 +2576,7 @@
       "rms_dbfs": -33.59885937010192,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "paint.impact.mister",
@@ -2625,7 +2625,7 @@
       "rms_dbfs": -24.000260066772636,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "paint.impact.sniper",
@@ -2674,7 +2674,7 @@
       "rms_dbfs": -26.106010742844134,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "paint.impact.bucket",
@@ -2723,7 +2723,7 @@
       "rms_dbfs": -27.203366554880503,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "weapon.blocked",
@@ -2771,7 +2771,7 @@
       "rms_dbfs": -26.000292957855578,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "bucket.slosh",
@@ -2819,7 +2819,7 @@
       "rms_dbfs": -30.00027135598582,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "tool.drip",
@@ -2867,7 +2867,7 @@
       "rms_dbfs": -32.000243991346764,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "room.sigh",
@@ -2915,7 +2915,7 @@
       "rms_dbfs": -26.68367299751724,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "room.chair",
@@ -2974,7 +2974,7 @@
       "rms_dbfs": -28.064786628299125,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "room.tone",
@@ -3026,7 +3026,7 @@
       "rms_dbfs": -37.000242847179734,
       "loop_start": 0,
       "loop_end_inclusive": 372644,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "room.footsteps",
@@ -3084,7 +3084,7 @@
       "rms_dbfs": -29.000279307149647,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "room.breath",
@@ -3132,7 +3132,7 @@
       "rms_dbfs": -32.000267827672346,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "world.ambience.close_quarters",
@@ -3183,7 +3183,7 @@
       "rms_dbfs": -40.000268866029174,
       "loop_start": 0,
       "loop_end_inclusive": 379259,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "world.ambience.king_of_the_hill",
@@ -3234,7 +3234,7 @@
       "rms_dbfs": -40.00025778068819,
       "loop_start": 0,
       "loop_end_inclusive": 418949,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "world.ambience.turbulence",
@@ -3285,7 +3285,7 @@
       "rms_dbfs": -40.000274697274065,
       "loop_start": 0,
       "loop_end_inclusive": 418949,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     },
     {
       "id": "world.detail",
@@ -3334,7 +3334,7 @@
       "rms_dbfs": -32.469337185571526,
       "loop_start": null,
       "loop_end_inclusive": null,
-      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+      "review_status": "Technical production record; current author acceptance is in ../acceptance.json; in-game acceptance remains ROAD#3"
     }
   ]
 }

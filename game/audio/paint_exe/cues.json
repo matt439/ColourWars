@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "status": "production candidates; listening acceptance pending",
+  "status": "Author accepted this set on 2026-10-14 for POL#23 integration.",
   "required_cues": [
     "music.menu",
     "music.close_quarters",
