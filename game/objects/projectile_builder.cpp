@@ -17,7 +17,7 @@ std::vector<std::unique_ptr<Projectile>>
 		PlayerTeam team,
 		int player_num,
 		const Colour& team_colour,
-		projectile_type type,
+		ProjectileType type,
 		RenderResources* render_resources,
 		float rotation,
 		const Vector2F& origin,
@@ -32,32 +32,32 @@ std::vector<std::unique_ptr<Projectile>>
 
 	switch (type)
     {
-    case SPRAY:
+    case ProjectileType::spray:
 		projectiles.push_back(
 			std::make_unique<ProjectileSpray>(
 				rectangle, velocity, team, player_num, team_colour,
 				render_resources, &tuning, rotation, origin, flip,
 				layer_depth));
 		return projectiles;
-    case JET:
+    case ProjectileType::jet:
 		projectiles.push_back(
 			std::make_unique<ProjectileJet>(
 				rectangle, velocity, team, player_num, team_colour,
 				render_resources, &tuning, rotation, origin, flip,
 				layer_depth));
 		return projectiles;
-	case ROLLING:
+	case ProjectileType::rolling:
 		projectiles.push_back(
 			std::make_unique<ProjectileRolling>(
 				rectangle, velocity, team, player_num, team_colour,
 				render_resources, &tuning, rotation, origin, flip,
 				layer_depth));
 		return projectiles;
-	case MIST:
+	case ProjectileType::mist:
 		return build_mist_projectiles(
 			position, velocity, team, player_num, team_colour, &tuning,
 			render_resources, rotation, origin, flip, layer_depth);
-	case BALL:
+	case ProjectileType::ball:
 		projectiles.push_back(
 			std::make_unique<ProjectileBall>(
 				rectangle, velocity, team, player_num, team_colour,

@@ -22,7 +22,7 @@ public:
 		PlayerTeam team,
 		int player_num,
 		const labrador::Colour& team_colour,
-		projectile_type type,
+		ProjectileType type,
 		labrador::RenderResources* render_resources,
 		const ProjectileTuning* tuning,
 		const labrador::Colour& color = labrador::Colour::white,
@@ -73,7 +73,7 @@ protected:
 	CollisionObjectType collision_type() const;
 
 	const labrador::Colour& team_colour() const;
-	projectile_type type() const;
+	ProjectileType type() const;
 
 	float timer() const;
 	void alter_timer(float time);
@@ -97,7 +97,7 @@ private:
 
 	int player_num_ = -1;
 	labrador::Colour team_colour_ = labrador::Colour::gray;
-	projectile_type type_ = SPRAY;
+	ProjectileType type_ = ProjectileType::spray;
 
 	PlayerTeam team_ = PlayerTeam::none;
 	bool for_deletion_ = false;
@@ -113,7 +113,7 @@ public:
 		PlayerTeam team,
 		int player_num,
 		const labrador::Colour& team_colour,
-		projectile_type type,
+		ProjectileType type,
 		labrador::RenderResources* render_resources,
 		const ProjectileTuning* tuning,
 		const labrador::Colour& color = labrador::Colour::white,

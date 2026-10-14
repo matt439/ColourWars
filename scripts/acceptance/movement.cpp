@@ -370,9 +370,9 @@ int main(int argc, char** argv)
         killed->floor();
         killed->tick(input(true, true));
         const ProjectileSpray shot(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
-            PlayerTeam::b, 1, Colour::white, &render, &tuning.projectile(SPRAY));
+            PlayerTeam::b, 1, Colour::white, &render, &tuning.projectile(ProjectileType::spray));
         const int fatal_hits = static_cast<int>(std::ceil(tuning.player().starting_health /
-            tuning.projectile(SPRAY).details.player_damage)) + 1;
+            tuning.projectile(ProjectileType::spray).details.player_damage)) + 1;
         for (int hit = 0; hit < fatal_hits && killed->player->health() > 0; ++hit)
         {
             killed->player->on_contact(shot, Vector2F::ZERO, 0);

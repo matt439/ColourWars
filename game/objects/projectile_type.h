@@ -1,11 +1,11 @@
 #pragma once
 
 // Projectile kinds shared by weapon tuning and projectile construction.
-enum projectile_type
+enum class ProjectileType
 {
-	SPRAY,
-	JET,
-	ROLLING,
-	MIST,
-	BALL
+	spray,
+	jet,
+	rolling,
+	mist,
+	ball
 };

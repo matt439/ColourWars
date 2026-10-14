@@ -17,7 +17,7 @@ ProjectileSpray::ProjectileSpray(const RectangleF& rectangle,
 	SpriteFlip flip,
 	float layer_depth) :
 	DiffusingProjectile(velocity, team, player_num, team_colour,
-		SPRAY, render_resources,
+		ProjectileType::spray, render_resources,
 		tuning,
 		team_colour, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)

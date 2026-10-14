@@ -233,7 +233,7 @@ public:
 
 	// Throws std::out_of_range if the requested record was not supplied.
 	const WeaponTuning& weapon(WeaponType type) const;
-	const ProjectileTuning& projectile(projectile_type type) const;
+	const ProjectileTuning& projectile(ProjectileType type) const;
 
 private:
 	std::string source_path_;
@@ -243,7 +243,7 @@ private:
 	static constexpr size_t WEAPON_COUNT =
 		static_cast<size_t>(WeaponType::bucket) + 1;
 	static constexpr size_t PROJECTILE_COUNT =
-		static_cast<size_t>(BALL) + 1;
+		static_cast<size_t>(ProjectileType::ball) + 1;
 
 	InputTuning input_;
 	MatchTuning match_;

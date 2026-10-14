@@ -198,11 +198,11 @@ int main(int argc, char** argv)
                 for (PlayerTeam team : { PlayerTeam::a, PlayerTeam::b })
                 {
                     RectangleF splash = before.bounds();
-                    const Vector2F half = tuning.projectile(SPRAY).details.col_rect_size / 2.0f;
+                    const Vector2F half = tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f;
                     splash.offset(half.x, half.y);
                     const ProjectileSpray shot(splash, Vector2F::ZERO, team,
                         team == PlayerTeam::a ? 0 : 1, Colour::white, &render,
-                        &tuning.projectile(SPRAY));
+                        &tuning.projectile(ProjectileType::spray));
                     original_paint->on_contact(shot, Vector2F::ZERO, 0);
                     workshop_paint->on_contact(shot, Vector2F::ZERO, 0);
                     same_paint(*original_paint, *workshop_paint);

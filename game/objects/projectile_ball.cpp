@@ -17,7 +17,7 @@ ProjectileBall::ProjectileBall(const RectangleF& rectangle,
 	SpriteFlip flip,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
-		BALL, render_resources,
+		ProjectileType::ball, render_resources,
 		tuning,
 		team_colour, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)

@@ -20,16 +20,16 @@ namespace
 		return Vector2F(vector.number("x"), vector.number("y"));
 	}
 
-	projectile_type read_projectile_type(const JsonValue& parent,
+	ProjectileType read_projectile_type(const JsonValue& parent,
 		const char* key)
 	{
 		const std::string name = parent.string(key);
 
-		if (name == "spray") { return SPRAY; }
-		if (name == "jet") { return JET; }
-		if (name == "rolling") { return ROLLING; }
-		if (name == "mist") { return MIST; }
-		if (name == "ball") { return BALL; }
+		if (name == "spray") { return ProjectileType::spray; }
+		if (name == "jet") { return ProjectileType::jet; }
+		if (name == "rolling") { return ProjectileType::rolling; }
+		if (name == "mist") { return ProjectileType::mist; }
+		if (name == "ball") { return ProjectileType::ball; }
 
 		throw std::runtime_error(parent.where() + ": '" + name +
 			"' is not a projectile. Expected one of spray, jet, rolling, "
@@ -455,7 +455,7 @@ GameTuning::GameTuning(const char* path)
 	const Vector2F max_velocity = read_vector(projectiles, "max_velocity");
 
 	const auto add_projectile = [this, &projectiles, &max_velocity](
-		projectile_type type, const char* key)
+		ProjectileType type, const char* key)
 	{
 		const size_t index = static_cast<size_t>(type);
 		this->projectiles_[index] = read_projectile(projectiles, key);
@@ -463,11 +463,11 @@ GameTuning::GameTuning(const char* path)
 		this->projectile_tuned_[index] = true;
 	};
 
-	add_projectile(SPRAY, "spray");
-	add_projectile(JET, "jet");
-	add_projectile(ROLLING, "rolling");
-	add_projectile(MIST, "mist");
-	add_projectile(BALL, "ball");
+	add_projectile(ProjectileType::spray, "spray");
+	add_projectile(ProjectileType::jet, "jet");
+	add_projectile(ProjectileType::rolling, "rolling");
+	add_projectile(ProjectileType::mist, "mist");
+	add_projectile(ProjectileType::ball, "ball");
 }
 
 void GameTuning::validate_resources(const RenderResources& render,
@@ -542,17 +542,17 @@ void GameTuning::validate_resources(const RenderResources& render,
 	weapon(WeaponType::mister, "mister");
 	weapon(WeaponType::bucket, "bucket");
 
-	const auto projectile = [&](projectile_type type, const char* key)
+	const auto projectile = [&](ProjectileType type, const char* key)
 	{
 		const ProjectileDetails& details = this->projectile(type).details;
 		check.animation(std::string("projectiles.") + key + ".animation",
 			details.sheet_name, details.animation_strip_name);
 	};
-	projectile(SPRAY, "spray");
-	projectile(JET, "jet");
-	projectile(ROLLING, "rolling");
-	projectile(MIST, "mist");
-	projectile(BALL, "ball");
+	projectile(ProjectileType::spray, "spray");
+	projectile(ProjectileType::jet, "jet");
+	projectile(ProjectileType::rolling, "rolling");
+	projectile(ProjectileType::mist, "mist");
+	projectile(ProjectileType::ball, "ball");
 }
 
 void GameTuning::validate_match_sounds(const RenderResources& render,
@@ -610,7 +610,7 @@ const WeaponTuning& GameTuning::weapon(WeaponType type) const
 	return this->weapons_[index];
 }
 
-const ProjectileTuning& GameTuning::projectile(projectile_type type) const
+const ProjectileTuning& GameTuning::projectile(ProjectileType type) const
 {
 	const size_t index = static_cast<size_t>(type);
 	if (index >= PROJECTILE_COUNT || !this->projectile_tuned_[index])

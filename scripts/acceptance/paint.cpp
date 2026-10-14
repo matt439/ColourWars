@@ -58,10 +58,10 @@ int main(int argc, char** argv)
             // Spray construction converts the supplied launch position into
             // a collision origin by subtracting half its authored size.
             RectangleF launch = splash;
-            const Vector2F half_size = tuning.projectile(SPRAY).details.col_rect_size / 2.0f;
+            const Vector2F half_size = tuning.projectile(ProjectileType::spray).details.col_rect_size / 2.0f;
             launch.offset(half_size.x, half_size.y);
             const ProjectileSpray shot(launch, Vector2F::ZERO, team, owner,
-                Colour::white, &render, &tuning.projectile(SPRAY));
+                Colour::white, &render, &tuning.projectile(ProjectileType::spray));
             surface.on_contact(shot, Vector2F::ZERO, 0);
         };
 

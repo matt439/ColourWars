@@ -79,7 +79,7 @@ inline bool is_projectile(CollisionObjectType type)
 
 // Projectile kind without its firing team, used to look up damage tuning.
 // Throws if the tag is not a projectile.
-projectile_type to_projectile_type(CollisionObjectType type);
+ProjectileType to_projectile_type(CollisionObjectType type);
 
 inline bool is_structure(CollisionObjectType type)
 {

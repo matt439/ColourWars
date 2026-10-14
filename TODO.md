@@ -161,7 +161,6 @@ frozen as above. These add to the hierarchies, never flatten them (CLAUDE.md); D
 | `GAP#D3` | OPEN | MED | M | Check the engine's anti-tunnelling bound at tuning load and against real geometry; the sniper's 2000 u/s already exceeds it. |
 | `GAP#D4` | OPEN | MED | M | Give `Scene::contacts()` a reader (natural home for hit feedback, `POL#10`) and use `labrador::Label` somewhere. |
 | `GAP#D5` | OPEN | MED | M | Rotated and moving structures behind the builder, one of each in a shipped stage, so the SAT and moving-response paths get a client. |
-| `GAP#D7` | OPEN | LOW | S | `projectile_type` uses SCREAMING enumerators; WeaponType ordering has no static_assert; dead `mine`/`curling`/`water` enumerators. |
 
 ## Engine reports
 

@@ -83,25 +83,25 @@ CollisionMask collision_mask(CollisionObjectType type)
 	}
 }
 
-projectile_type to_projectile_type(CollisionObjectType type)
+ProjectileType to_projectile_type(CollisionObjectType type)
 {
 	switch (type)
 	{
 	case CollisionObjectType::projectile_spray_team_a:
 	case CollisionObjectType::projectile_spray_team_b:
-		return SPRAY;
+		return ProjectileType::spray;
 	case CollisionObjectType::projectile_jet_team_a:
 	case CollisionObjectType::projectile_jet_team_b:
-		return JET;
+		return ProjectileType::jet;
 	case CollisionObjectType::projectile_rolling_team_a:
 	case CollisionObjectType::projectile_rolling_team_b:
-		return ROLLING;
+		return ProjectileType::rolling;
 	case CollisionObjectType::projectile_mist_team_a:
 	case CollisionObjectType::projectile_mist_team_b:
-		return MIST;
+		return ProjectileType::mist;
 	case CollisionObjectType::projectile_ball_team_a:
 	case CollisionObjectType::projectile_ball_team_b:
-		return BALL;
+		return ProjectileType::ball;
 	default:
 		throw std::runtime_error("Collision type " +
 			std::to_string(static_cast<int>(type)) + " is not paint.");

@@ -45,7 +45,7 @@ struct WeaponDetails
 	float ammo_usage = 0.0f;
 	std::string sheet_name = "";
 	std::string frame_name = "";
-	projectile_type proj_type = SPRAY;
+	ProjectileType proj_type = ProjectileType::spray;
 	std::string sound_bank_name = "";
 	std::string shoot_sound_name = "";
 	float shoot_sound_volume = 1.0f;

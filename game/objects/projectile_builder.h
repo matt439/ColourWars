@@ -23,7 +23,7 @@ public:
 		PlayerTeam team,
 		int player_num,
 		const labrador::Colour& team_colour,
-		projectile_type type,
+		ProjectileType type,
 		labrador::RenderResources* render_resources,
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,

@@ -454,7 +454,7 @@ int main(int argc, char** argv)
                 candidate.player->resume_sounds();
                 ProjectileSpray hit(RectangleF(0.0f, 0.0f, 15.0f, 15.0f),
                     Vector2F::ZERO, PlayerTeam::b, 1, Colour::orange,
-                    &render, &tuning.projectile(SPRAY));
+                    &render, &tuning.projectile(ProjectileType::spray));
                 for (int shot = 0; shot < 200; ++shot)
                 {
                     baseline.player->on_contact(hit, Vector2F::ZERO, 0.0f);
@@ -578,7 +578,7 @@ int main(int argc, char** argv)
         require(drawn_pose(*banded_dither.player) == 2 && nearest_pose(art, inside) == 3,
             "the hysteresis band did not hold the previous pose");
         ProjectileSpray fatal(RectangleF(0.0f, 0.0f, 15.0f, 15.0f),
-            Vector2F::ZERO, PlayerTeam::b, 1, Colour::orange, &render, &tuning.projectile(SPRAY));
+            Vector2F::ZERO, PlayerTeam::b, 1, Colour::orange, &render, &tuning.projectile(ProjectileType::spray));
         for (int shot = 0; shot < 200; ++shot)
         {
             banded_dither.player->on_contact(fatal, Vector2F::ZERO, 0.0f);

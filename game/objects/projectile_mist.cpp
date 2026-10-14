@@ -17,7 +17,7 @@ ProjectileMist::ProjectileMist(const RectangleF& rectangle,
 	SpriteFlip flip,
 	float layer_depth) :
 	DiffusingProjectile(velocity, team, player_num, team_colour,
-		MIST, render_resources,
+		ProjectileType::mist, render_resources,
 		tuning,
 		team_colour, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)

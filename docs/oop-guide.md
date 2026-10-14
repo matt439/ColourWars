@@ -161,8 +161,10 @@ For a new selectable primary weapon, keep these registrations together:
    Random itself. Update the concrete count in
    [GameTuning](../game/tuning.h) if adding after its current last primary:
    `WEAPON_COUNT` is currently `WeaponType::bucket + 1`. `max_prim_wep` aliases
-   `random_primary`; unsupported secondary names after it are not playable
-   weapons and do not belong in the primary range.
+   `random_primary`. Compile-time checks beside the enum enforce this contiguous
+   order and the boundary after `bucket`; update them with the registrations.
+   `grenade_std` is still passed as an ignored secondary placeholder, and `none`
+   marks an unset weapon. Neither belongs in the primary range.
 2. Add its record under `weapons` in [tuning.json](../game/content/tuning.json).
    In [tuning.cpp](../game/tuning.cpp), register it in both the constructor's
    `add_weapon` list and `validate_resources`' weapon list. Supply the sprite,
@@ -193,10 +195,11 @@ For a new selectable primary weapon, keep these registrations together:
    repository deliberately has no `ctest` suite; engine tests cover the engine.
 
 If the weapon introduces a new projectile kind, also update
-[projectile_type.h](../game/objects/projectile_type.h), its concrete class and
+[projectile_type.h](../game/objects/projectile_type.h) (`ProjectileType`, with
+snake_case scoped enumerators), its concrete class and
 [ProjectileBuilder](../game/objects/projectile_builder.cpp), the projectile
 count/loading/validation in GameTuning (`PROJECTILE_COUNT` currently ends at
-`BALL + 1`), and the projectile entry in tuning.json.
+`ProjectileType::ball + 1`), and the projectile entry in tuning.json.
 Follow the existing team-tag mappings and contact handling in
 [collision_object_type.h](../game/objects/collision_object_type.h),
 [collision_object_type.cpp](../game/objects/collision_object_type.cpp),

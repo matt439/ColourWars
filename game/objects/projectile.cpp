@@ -79,7 +79,7 @@ Projectile::Projectile(const Vector2F& velocity,
     PlayerTeam team,
     int player_num,
     const Colour& team_colour,
-    projectile_type type,
+    ProjectileType type,
     RenderResources* render_resources,
     const ProjectileTuning* tuning,
     const Colour& color,
@@ -105,7 +105,7 @@ DiffusingProjectile::DiffusingProjectile(
     PlayerTeam team,
     int player_num,
     const Colour& team_colour,
-    projectile_type type,
+    ProjectileType type,
     RenderResources* render_resources,
     const ProjectileTuning* tuning,
     const Colour& color,
@@ -190,7 +190,7 @@ void Projectile::resolve_launch_obstruction(const Vector2F& origin,
 void Projectile::resolve_movement_contacts(
     std::span<CollisionObject* const> objects)
 {
-    if (this->type_ == ROLLING || this->for_deletion_ ||
+    if (this->type_ == ProjectileType::rolling || this->for_deletion_ ||
         !this->first_update_done_)
     {
         return;
@@ -213,7 +213,7 @@ void Projectile::resolve_sweep(const RectangleF& start,
         // extra launch hit. Masks retain ramp pass-through, friendly-fire
         // exclusion and dead players' empty collision mask.
         const bool structure = object->layer() == collision_layers::STRUCTURE;
-        if ((launch && this->type_ == ROLLING && !structure) ||
+        if ((launch && this->type_ == ProjectileType::rolling && !structure) ||
             object->for_deletion() ||
             !layers_collide(this->layer(), this->mask(),
                 object->layer(), object->mask()))
@@ -284,40 +284,40 @@ CollisionTag Projectile::tag() const
 }
 CollisionObjectType Projectile::collision_type() const
 {
-    projectile_type type = this->type();
+    ProjectileType type = this->type();
     switch (this->team())
     {
     case PlayerTeam::a:
         switch (type)
         {
-        case SPRAY:
+        case ProjectileType::spray:
 			return CollisionObjectType::projectile_spray_team_a;
-        case MIST:
+        case ProjectileType::mist:
             return CollisionObjectType::projectile_mist_team_a;
-        case JET:
+        case ProjectileType::jet:
             return CollisionObjectType::projectile_jet_team_a;
-        case ROLLING:
+        case ProjectileType::rolling:
             return CollisionObjectType::projectile_rolling_team_a;
-        case BALL:
+        case ProjectileType::ball:
             return CollisionObjectType::projectile_ball_team_a;
         default:
-            throw std::exception("Invalid projectile_type value.");
+            throw std::exception("Invalid ProjectileType value.");
         }
     case PlayerTeam::b:
         switch (type)
         {
-        case SPRAY:
+        case ProjectileType::spray:
             return CollisionObjectType::projectile_spray_team_b;
-        case MIST:
+        case ProjectileType::mist:
             return CollisionObjectType::projectile_mist_team_b;
-        case JET:
+        case ProjectileType::jet:
             return CollisionObjectType::projectile_jet_team_b;
-        case ROLLING:
+        case ProjectileType::rolling:
             return CollisionObjectType::projectile_rolling_team_b;
-        case BALL:
+        case ProjectileType::ball:
             return CollisionObjectType::projectile_ball_team_b;
         default:
-            throw std::exception("Invalid projectile_type value.");
+            throw std::exception("Invalid ProjectileType value.");
         }
     default:
         throw std::exception("Invalid PlayerTeam value.");
@@ -343,7 +343,7 @@ const Colour& Projectile::team_colour() const
 {
     return this->team_colour_;
 }
-projectile_type Projectile::type() const
+ProjectileType Projectile::type() const
 {
     return this->type_;
 }

@@ -17,7 +17,7 @@ ProjectileJet::ProjectileJet(const RectangleF& rectangle,
 	SpriteFlip flip,
 	float layer_depth) :
 	Projectile(velocity, team, player_num, team_colour,
-		JET, render_resources,
+		ProjectileType::jet, render_resources,
 		tuning,
 		team_colour, rotation, origin, flip, layer_depth),
 	rectangle_(rectangle)
