@@ -397,6 +397,11 @@ namespace colourwars_editor
             metadata.RemoveMember("spawn_locations");
             metadata.RemoveMember("collision_objects");
             metadata.RemoveMember("non_collision_objects");
+            // Show the runtime default without changing the source document.
+            if (!metadata.HasMember("include_in_random"))
+            {
+                metadata.AddMember("include_in_random", true, metadata.GetAllocator());
+            }
             append_properties(metadata, "", result);
         }
         else { append_properties(value, "", result); }
@@ -413,6 +418,13 @@ namespace colourwars_editor
             const rapidjson::Pointer pointer(pointer_text.c_str());
             if (!pointer.IsValid()) { fail("Invalid property path."); }
             Json* target = pointer.Get(object);
+            if (target == nullptr && entry.kind == EntryKind::level &&
+                pointer_text == "/include_in_random")
+            {
+                if (value != "true" && value != "false") { fail("Use true or false for this property."); }
+                object.AddMember("include_in_random", value == "true", document.GetAllocator());
+                return;
+            }
             if (target == nullptr) { fail("The selected property no longer exists."); }
             if (target->IsString())
             {

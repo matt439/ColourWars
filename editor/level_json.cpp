@@ -249,6 +249,10 @@ namespace colourwars_editor
         {
             if (!document.IsObject()) { fail("A level must be a JSON object."); }
             validate_display_name(string(document, "display_name"));
+            if (document.HasMember("include_in_random") && !document["include_in_random"].IsBool())
+            {
+                fail("include_in_random must be true or false.");
+            }
             if (string(document, "icon_frame").empty()) { fail("The level needs an icon frame."); }
             const Json& sound = member(document, "sound");
             if (string(sound, "sound_bank_name").empty()) { fail("The level needs a sound bank."); }

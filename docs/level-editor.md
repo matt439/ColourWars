@@ -102,9 +102,10 @@ game's assets. The editor checks document structure and geometry; the game's
 startup validation resolves the actual resources.
 
 An optional top-level `include_in_random` boolean defaults to `true`. Set it to
-`false` in the JSON for an experimental course that should remain explicitly
-selectable without appearing in Random matches. The editor preserves this field
-on save; it is not currently exposed in the property inspector.
+`false` in the level entry's property inspector for an experimental course that
+should remain explicitly selectable without appearing in Random matches. When
+the JSON omits the field, the inspector shows its default `true` without changing
+the document. Applying a changed value adds the field; undo restores its omission.
 
 Each team must retain at least four spawns inside `out_of_bounds`. The other
 bounds control camera limits and the match's zoom-out presentation. Resizing
@@ -123,9 +124,17 @@ launch/open/respond/close check. Neither creates a game graphics/audio device.
 They cover the shipped levels, unknown-field preservation, both rectangle
 encodings, ramps, the palette, undo/redo and save
 state, Unicode paths and failure recovery. Evidence and generated test levels
-remain in `out/acceptance/<preset>/level-editor/`. Use `-SkipBuild` only after
+remain in `out/acceptance/<preset>/level-editor/`. They also check the optional
+Random setting's default, insertion, validation, undo/redo and save/reopen.
+Use `-SkipBuild` only after
 building both `colourwars_editor_acceptance` and `ColourWarsEditor` for the
 current source.
+
+On 2026-10-15, both presets passed the document checks (including the optional
+Random setting) and hidden GUI launch/open/respond/close checks. Evidence:
+`out/acceptance/x64-debug/level-editor/088ef35b371047ee97c715f163c61008/`
+and `out/acceptance/x64-release/level-editor/2ca17df03ee24d7683cb8131b44fb245/`.
+The manual GUI and saved-stage play checks below remain open (`ED#5`).
 
 For a manual GUI check, open each shipped arena, select a platform, move and
 resize it, edit a field, duplicate/delete, undo/redo, and save a copy. Reopen

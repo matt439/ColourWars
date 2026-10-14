@@ -180,6 +180,60 @@ namespace
         std::cout << "PASS unknown fields, Unicode paths and both rectangle encodings\n";
     }
 
+    void check_random_setting(const fs::path& scratch)
+    {
+        LevelDocument document;
+        const fs::path path = scratch / "random-setting.json";
+        document.save(path);
+        const Entry level = entry(document, EntryKind::level);
+        const std::string original = document.serialize();
+        require(!parse(original).HasMember("include_in_random"), "Fixture must omit Random setting");
+        std::size_t count = 0;
+        for (const Property& property : document.properties(level))
+        {
+            if (property.path == "include_in_random")
+            {
+                ++count;
+                require(property.boolean && property.value == "true", "Missing Random setting must show true");
+            }
+        }
+        require(count == 1 && document.serialize() == original && !document.dirty() &&
+            !document.can_undo(), "Inspecting the default must not edit the document");
+        reject_without_change(document, [&] { document.set_property(level, "include_in_random", "0"); },
+            "Invalid optional boolean was accepted");
+        reject_without_change(document, [&] { document.set_property(level, "unknown_optional", "false"); },
+            "Inspector inserted an unknown missing field");
+        document.set_property(level, "include_in_random", "false");
+        require(!parse(document.serialize())["include_in_random"].GetBool() && document.dirty(),
+            "Applying false must add the Random setting");
+        require(document.undo() && document.serialize() == original && !document.dirty(),
+            "Undo must restore omission and saved state");
+        require(document.redo() && !parse(document.serialize())["include_in_random"].GetBool(),
+            "Redo must restore explicit false");
+        document.save(path);
+        LevelDocument reopened;
+        reopened.load(path);
+        require(!parse(reopened.serialize())["include_in_random"].GetBool(), "Save/reopen lost false");
+        count = 0;
+        for (const Property& property : reopened.properties(level))
+            if (property.path == "include_in_random")
+            {
+                ++count;
+                require(property.boolean && property.value == "false", "Existing false must show false");
+            }
+        require(count == 1, "Existing Random setting must appear once");
+        reopened.set_property(level, "/include_in_random", "true");
+        require(parse(reopened.serialize())["include_in_random"].GetBool(), "Existing setting did not toggle");
+        reject_without_change(reopened, [&] { reopened.set_property(level, "include_in_random", "yes"); },
+            "Invalid existing boolean was accepted");
+        std::string malformed = original;
+        malformed.insert(malformed.find('{') + 1, "\n\"include_in_random\": \"false\",");
+        const fs::path invalid = scratch / "invalid-random-setting.json";
+        write(invalid, malformed);
+        reject_without_change(reopened, [&] { reopened.load(invalid); }, "Non-boolean Random setting loaded");
+        std::cout << "PASS optional Random setting, validation, history and persistence\n";
+    }
+
     void check_palette_and_ramps(const fs::path& scratch)
     {
         LevelDocument document;
@@ -364,6 +418,7 @@ int wmain(int argc, wchar_t* argv[])
         check_shipped_levels(repo, scratch);
         check_unknown_fields_and_rectangles(scratch);
         check_palette_and_ramps(scratch);
+        check_random_setting(scratch);
         check_history_and_failures(scratch);
         std::cout << "PASS level editor document acceptance\n";
         return 0;
