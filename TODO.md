@@ -20,9 +20,9 @@ The ordered actions are done (`STORY#3`, `ENG#PIN` with `ENG#LEDGER`, `DOC#1`–
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Art:** confirm the Paint.exe round-2 picks (`POL#1`); this gates `POL#7`–`POL#9` and `POL#16`.
   Then decide whether to retire the workshop kit (`POL#2`).
-- **Sounds:** the pop, sigh and chair-creak `.wav` files (`STORY#1`, `STORY#2`), and the
-  [proposed sound direction](docs/audio-inventory.md#5-sound-direction-a-proposal) with its five
-  questions (`POL#22`).
+- **Sounds:** the pop, sigh and chair-creak `.wav` files (`STORY#1`, `STORY#2`), and producing
+  or obtaining the replacement set in the [accepted direction](docs/audio-inventory.md#5-sound-direction-accepted)
+  (`POL#22`); one call left there, music on the Movement Course.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 - **Calls:** `POL#4`, `POL#5`, `POL#15`, `GAP#1.2`, `GAP#1.3`, `GAP#1.5`, `GAP#8.6`,
@@ -97,7 +97,7 @@ never a row.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#22` | DECISION | HIGH | XL | Confirm or replace the [proposed sound direction](docs/audio-inventory.md#5-sound-direction-a-proposal) and answer its [questions](docs/audio-inventory.md#63-waiting-on-the-author); then produce or obtain the [cue list](docs/audio-inventory.md#4-the-new-cue-list), Tier 1 first, each with a provenance record. |
+| `POL#22` | DECISION | HIGH | XL | Produce or obtain the [cue list](docs/audio-inventory.md#4-the-new-cue-list) in the accepted direction, Tier 1 first; sources are committed, so each needs redistribution rights in its provenance record. Open call: music on the Movement Course. [Decisions](docs/audio-inventory.md#63-decisions-and-what-is-still-open). |
 | `POL#23` | BLOCKED | HIGH | L | Integrate it: the [dispositions](docs/audio-inventory.md#2-legacy-inventory-replace-or-retire) and every [switchboard site](docs/audio-inventory.md#3-the-switchboard-where-cue-names-live), minding its traps; mix at 1/2/4 players. Waits on `POL#22`. |
 | `POL#26` | OPEN | LOW | S | Present-day audio defects the inventory found: the pause-open cue plays twice backing out of a confirmation, the countdown wave runs 2.4 s into play and survives pause, the time-up cue is cut by the reveal, results' fill and fanfare never play after a reveal. [Traps 2-5](docs/audio-inventory.md#33-traps-a-replacement-must-know). |
 | `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains, mute, suspension, resumed loops, the multiplayer mix; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |

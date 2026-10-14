@@ -2,9 +2,10 @@
 
 Status: inventory taken on 2026-10-14 at `2f052b9`, for
 [polish plan §5](polish-plan.md#5-replace-the-entire-audio-set) and TODO row
-`POL#20`. The sound direction in [section 5](#5-sound-direction-a-proposal) is a
-**proposal awaiting the author**. Nothing on this page selects or approves an
-asset.
+`POL#20`. The author accepted the sound direction in
+[section 5](#5-sound-direction-accepted) on 2026-10-14; their other answers are in
+[section 6.3](#63-decisions-and-what-is-still-open). Nothing on this page
+selects or approves an asset.
 
 This page lists every legacy wave, bank entry, loop instance and cue reference,
 and gives each one a replace-or-retire entry. It then lists every cue the
@@ -117,8 +118,8 @@ None of this is verified. It is recorded so that the NOTICE revision in
 - **Commercial songs.** `caramelldansen`, `dragostea_din_tei` and `holly_dolly`
   are named after well-known commercial songs. NOTICE says there are four
   commercial tracks, but it does not say whether the fourth is `Steamboat` or
-  `Top_Of_The_Morning`. **Only the author can answer that.** Both are retired
-  either way.
+  `Top_Of_The_Morning`, and the author does not know (2026-10-14). Both are
+  retired either way, so NOTICE can keep the count without naming the fourth.
 - **Countdown.** `smash_countdown` is probably audio taken from a game. NOTICE's
   "four music tracks" statement does not cover it.
 - **Embedded authors.** Two waves name one: `UIerror2` (John Lencioni, Sound
@@ -376,9 +377,11 @@ in place of `stop_effect(..., true)`, and music ducking under pause instead of
 the hard pause. Both need a client music director (`GAP#5.1`).
 `set_effect_volume` (`sound_bank.h:136`) is enough to build one.
 
-## 5. Sound direction: a proposal
+## 5. Sound direction: accepted
 
-**This section is a proposal for the author to confirm or reject.** It follows
+**Accepted by the author on 2026-10-14**, including the rule that the picture is
+silent while the person is present. The technical targets in 5.2 are still
+proposals for `POL#22` to confirm in production. It follows
 the fiction in [backstory.md](backstory.md): a paint program on someone's old
 PC, crude mouse-drawn figures, one empty palette slot, and a person seen only as
 a bezel, cursor and silhouette.
@@ -487,14 +490,26 @@ An asset with an empty licence field does not go into `waves`.
   resumed loops, the multiplayer mix, then the audible release and the
   missing-bank fallback, each checked separately.
 
-### 6.3 Waiting on the author
+### 6.3 Decisions and what is still open
 
-1. Whether the fourth commercial track is `Steamboat` or `Top_Of_The_Morning`
-   (for NOTICE only).
-2. Confirm or replace the sound direction in section 5, including the rule that
-   the picture is silent while the person is present.
-3. Whether the Movement Course has music.
-4. Whether to commit source waves (that needs redistribution rights) or keep
-   them outside the repository with a reproducible fetch.
-5. The pop, sigh and chair-creak recordings already promised (`STORY#1`,
-   `STORY#2`). Each one fills a Tier 1 row above.
+Answered by the author on 2026-10-14:
+
+- **The sound direction in section 5 is accepted**, including the silent picture
+  while the person is present.
+- **Source waves are committed to this repository.** Every new asset therefore
+  needs redistribution rights for its source as well as its use (the
+  "Source redistribution" field in 6.1 must be yes), and `POL#23` replaces the
+  `*.wav` ignore rule (`.gitignore:370`) with one that keeps out only the legacy
+  folder. Once the set is in, a fresh clone is audible, and the "a fresh clone is
+  silent" text in README, NOTICE, CLAUDE.md and AGENTS.md goes.
+- **The fourth commercial track is unknown.** NOTICE keeps "four" without naming
+  it; both candidates are retired either way.
+
+Still open:
+
+- **Whether the Movement Course has music.** It is the movement test stage, not
+  an arena; the recommendation is silence, which needs the stage `sound` block to
+  become optional (trap 7).
+
+Not a question, but owed: the pop, sigh and chair-creak recordings (`STORY#1`,
+`STORY#2`), which fill Tier 1 rows above and should follow the accepted direction.
