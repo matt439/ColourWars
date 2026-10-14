@@ -15,7 +15,7 @@ GameData* GameMenu::data() const
 void GameMenu::init()
 {
 	this->menu_input_ = std::make_unique<MenuInput>(this->data()->gamepads(),
-		this->data()->keyboard());
+		this->data()->keyboard(), this->data()->tuning());
 	this->menu_level_settings_ = std::make_unique<MenuLevelSettings>();
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
 		this->menu_input_.get(), this->menu_level_settings_.get());
@@ -130,7 +130,7 @@ void GameLevel::init()
 
 	this->menu_input_ = std::make_unique<MenuInput>(
 		this->data()->gamepads(),
-		this->data()->keyboard());
+		this->data()->keyboard(), this->data()->tuning());
 
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
 		this->menu_input_.get(), &this->settings_);

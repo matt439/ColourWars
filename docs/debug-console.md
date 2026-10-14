@@ -364,10 +364,19 @@ their addresses, and only the edited number changes.
 
 | Scope | Paths | Applies |
 |---|---|---|
-| live | `tuning.player.*` (not `size`), `tuning.match.sounds.*.volume`, `tuning.weapons.*`, `tuning.projectiles.*` (not sizes), `tuning.match.opening.*`, `tuning.match.reveal.*`, `presentation.movement_feedback/respawn_redraw/opening/debug_overlay/hud/camera.*` | at once |
+| live | `tuning.input.*`, `tuning.player.*` (not `size`), `tuning.match.sounds.*.volume`, `tuning.weapons.*`, `tuning.projectiles.*` (not sizes), `tuning.match.opening.*`, `tuning.match.reveal.*`, `presentation.movement_feedback/respawn_redraw/opening/debug_overlay/hud/camera.*` | at once |
 | new shots | `tuning.projectiles.*.size`, `*.collision_size` | the next projectile |
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, `presentation.workshop_player.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
+
+The `tuning.input` block controls the jump/shoot trigger thresholds, movement
+stick deadzone and menu stick engagement/release thresholds. The shipped values
+preserve the previous feel (0.6/0.6 triggers, 0.5 movement, 0.8/0.6 menu).
+All five are normalized to [0, 1]; movement deadzone must be below 1, and menu
+thresholds must satisfy `0 < release < engage <= 1` so neutral always releases.
+They are read each frame and can be tuned live, for example
+`tune tuning.input.movement_deadzone 0.4`. Aim sensitivity/deadzone stays in
+saved Controls preferences; menu repeat timings stay in presentation data.
 
 **Steps.** `next`/`prev` (and the debug menu's Left/Right) step a decimal value
 by one unit of the digit below its leading one (2000 by 100, 0.35 by 0.01, 900 by

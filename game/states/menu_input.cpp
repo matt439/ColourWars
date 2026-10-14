@@ -39,7 +39,7 @@ Direction MenuDirectionRepeat::update(const std::array<bool, 4>& held,
 }
 
 Direction MenuDirectionRepeat::update_pad(const GamepadState& pad,
-	float dt, float delay, float interval)
+	float dt, float delay, float interval, const InputTuning& tuning)
 {
 	const float values[] = { -pad.left_stick.y, pad.left_stick.y,
 		-pad.left_stick.x, pad.left_stick.x };
@@ -49,7 +49,7 @@ Direction MenuDirectionRepeat::update_pad(const GamepadState& pad,
 	for (int i = 0; i < direction_key_count; ++i)
 	{
 		this->stick_[i] = values[i] >= (this->stick_[i] ?
-			digital_absence_threshold : digital_presence_threshold);
+			tuning.menu_release_threshold : tuning.menu_engage_threshold);
 		held[i] = this->stick_[i] || pad.is_down(buttons[i]);
 	}
 	return this->update(held, dt, delay, interval);
@@ -66,7 +66,7 @@ void MenuInput::update_directions(float dt, float delay, float interval)
 			continue;
 		}
 		this->directions_[slot] = this->navigation_[slot].update_pad(
-			this->gamepads_->state(slot), dt, delay, interval);
+			this->gamepads_->state(slot), dt, delay, interval, this->tuning_->input());
 	}
 	const int slot = input_slots::keyboard_and_mouse;
 	if (!this->keyboard_->focused() || this->keyboard_->just_focused())
@@ -93,8 +93,9 @@ void MenuInput::reset_directions()
 	}
 }
 
-MenuInput::MenuInput(const Gamepads* gamepads, const Keyboard* keyboard) :
-	gamepads_(gamepads), keyboard_(keyboard)
+MenuInput::MenuInput(const Gamepads* gamepads, const Keyboard* keyboard,
+	const GameTuning* tuning) :
+	gamepads_(gamepads), keyboard_(keyboard), tuning_(tuning)
 {
 }
 

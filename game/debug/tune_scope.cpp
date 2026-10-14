@@ -18,6 +18,8 @@ namespace
 	// pointer into the live object is read on every step (or on the event the
 	// value is about: a respawn, a refill, an animation change).
 	constexpr ScopeRow scope_rows[] = {
+		// Input readers borrow GameTuning and read thresholds each frame.
+		{ "tuning.input.**", TuneScope::live },
 		// Copied into the player's rectangle by PlayerBuilder.
 		{ "tuning.player.size.*", TuneScope::rebuild },
 		// Player::player_tuning() every step; frame_time at each animation change.

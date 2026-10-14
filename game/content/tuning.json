@@ -1,4 +1,11 @@
 {
+    "input": {
+        "trigger_shoot_threshold": 0.6,
+        "trigger_jump_threshold": 0.6,
+        "movement_deadzone": 0.5,
+        "menu_engage_threshold": 0.8,
+        "menu_release_threshold": 0.6
+    },
     "match": {
         "duration": 240.0,
         "duration_choices": [

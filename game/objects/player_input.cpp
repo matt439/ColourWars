@@ -24,14 +24,14 @@ PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
 	// button would otherwise look newly pressed. Preserve the held state.
 	result.jump_held = gamepads.held(slot, GamepadButton::a) ||
 		gamepads.trigger_held(slot, GamepadTrigger::left,
-			trigger_jump_threshold);
+			this->tuning_->input().trigger_jump_threshold);
 	result.jump_pressed = !gamepads.just_connected(slot) &&
 		(gamepads.pressed(slot, GamepadButton::a) ||
 			gamepads.trigger_pressed(slot, GamepadTrigger::left,
-				trigger_jump_threshold));
+				this->tuning_->input().trigger_jump_threshold));
 
 	result.primary_shoot = gamepads.trigger_held(slot, GamepadTrigger::right,
-		trigger_shoot_threshold);
+		this->tuning_->input().trigger_shoot_threshold);
 
 	// Open menus on release so the opening button is no longer held.
 	// MenuInput arming also handles other buttons held during the transition.
@@ -42,7 +42,7 @@ PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
 		gamepads.released(slot, GamepadButton::b) ||
 		gamepads.released(slot, GamepadButton::start);
 
-	result.x_movement = apply_deadzone(pad.left_stick.x, stick_deadzone);
+	result.x_movement = apply_deadzone(pad.left_stick.x, this->tuning_->input().movement_deadzone);
 
 	// Map the downward stick threshold to a device-independent drop action.
 	result.drop_through = pad.left_stick.y >

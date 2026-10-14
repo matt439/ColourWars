@@ -4,6 +4,7 @@
 #include "engine/input/keyboard.h"
 #include "engine/ui/navigation.h"
 #include "game/input_slots.h"
+#include "game/tuning.h"
 #include "game/states/menu_input_action.h"
 #include <array>
 #include <vector>
@@ -12,10 +13,6 @@ class MenuLevelSettings;
 
 namespace menu_input_consts
 {
-	// Stick engagement and release thresholds, independent of gameplay deadzones.
-	constexpr float digital_presence_threshold = 0.8f;
-	constexpr float digital_absence_threshold = 0.6f;
-
 	// Menu button mappings; arming flags use these table indices.
 	struct ActionButton
 	{
@@ -77,7 +74,7 @@ public:
 	labrador::Direction update(const std::array<bool, 4>& held, float dt,
 		float delay, float interval);
 	labrador::Direction update_pad(const labrador::GamepadState& pad, float dt,
-		float delay, float interval);
+		float delay, float interval, const InputTuning& tuning);
 private:
 	bool ready_ = false;
 	labrador::DirectionRepeat repeat_;
@@ -96,7 +93,7 @@ class MenuInput
 {
 public:
 	MenuInput(const labrador::Gamepads* gamepads,
-		const labrador::Keyboard* keyboard);
+		const labrador::Keyboard* keyboard, const GameTuning* tuning);
 
 	// Advance navigation once before a page update; reads below do not advance time.
 	void update_directions(float dt, float delay, float interval);
@@ -123,6 +120,7 @@ private:
 
 	const labrador::Gamepads* gamepads_ = nullptr;
 	const labrador::Keyboard* keyboard_ = nullptr;
+	const GameTuning* tuning_ = nullptr;
 
 	// Per slot and action: whether this menu observed the current press.
 	// This prevents releasing a gameplay-held button from activating a new menu.

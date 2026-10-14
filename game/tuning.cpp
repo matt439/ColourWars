@@ -172,6 +172,24 @@ namespace
 		return value;
 	}
 
+	InputTuning read_input(const JsonValue& root)
+	{
+		const JsonValue json = root.object("input");
+		InputTuning input;
+		input.trigger_shoot_threshold = read_number_in(json, "trigger_shoot_threshold", 0.0f, 1.0f);
+		input.trigger_jump_threshold = read_number_in(json, "trigger_jump_threshold", 0.0f, 1.0f);
+		input.movement_deadzone = read_number_in(json, "movement_deadzone", 0.0f, 1.0f);
+		input.menu_engage_threshold = read_number_in(json, "menu_engage_threshold", 0.0f, 1.0f);
+		input.menu_release_threshold = read_number_in(json, "menu_release_threshold", 0.0f, 1.0f);
+		if (input.movement_deadzone >= 1.0f || input.menu_release_threshold <= 0.0f ||
+			input.menu_release_threshold >= input.menu_engage_threshold)
+		{
+			throw std::runtime_error(json.where() +
+				": movement_deadzone must be below 1; menu thresholds must satisfy 0 < release < engage <= 1.");
+		}
+		return input;
+	}
+
 	MatchTuning read_match(const JsonValue& root)
 	{
 		const JsonValue json = root.object("match");
@@ -410,6 +428,7 @@ GameTuning::GameTuning(const char* path)
 	this->source_path_ = path;
 	const JsonValue root = document.root();
 
+	this->input_ = read_input(root);
 	this->match_ = read_match(root);
 	this->paint_ = read_paint(root);
 	this->player_ = read_player(root);
@@ -554,6 +573,11 @@ const MatchTuning& GameTuning::match() const
 const PaintTuning& GameTuning::paint() const
 {
 	return this->paint_;
+}
+
+const InputTuning& GameTuning::input() const
+{
+	return this->input_;
 }
 
 const PlayerTuning& GameTuning::player() const

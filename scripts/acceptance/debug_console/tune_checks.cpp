@@ -93,6 +93,7 @@ namespace debug_console_acceptance
 				"The scope row '" + pattern + "' matches a path the files have");
 		}
 		const std::pair<const char*, TuneScope> samples[] = {
+			{ "tuning.input.movement_deadzone", TuneScope::live },
 			{ "tuning.player.gravity", TuneScope::live },
 			{ "tuning.player.size.x", TuneScope::rebuild },
 			{ "tuning.player.animations.running.frame_time", TuneScope::live },

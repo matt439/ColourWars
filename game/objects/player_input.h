@@ -11,13 +11,6 @@
 
 namespace player_input_consts
 {
-	constexpr float trigger_shoot_threshold = 0.6f;
-	constexpr float trigger_jump_threshold = 0.6f;
-
-	// Scalar movement deadzone, rescaled after applying the threshold.
-	// Aim uses the separate radial deadzone in saved preferences.
-	constexpr float stick_deadzone = 0.5f;
-
 	// Fixed gameplay bindings for the keyboard/mouse slot.
 	constexpr labrador::Key move_left_key = labrador::Key::a;
 	constexpr labrador::Key move_right_key = labrador::Key::d;
@@ -39,7 +32,7 @@ class PlayerInput
 {
 public:
 	// Borrow tuning and preferences. Read preferences each frame so pause-menu
-	// settings apply immediately; tuning supplies the drop-through threshold.
+	// settings apply immediately; tuning supplies pad thresholds.
 	PlayerInput(const labrador::Gamepads* gamepads,
 		const labrador::Keyboard* keyboard,
 		const labrador::Mouse* mouse,

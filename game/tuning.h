@@ -30,6 +30,16 @@ struct SoundTuning
 	float volume = 1.0f;
 };
 
+// Normalized pad thresholds. Aim deadzone remains a saved player preference.
+struct InputTuning
+{
+	float trigger_shoot_threshold = 0.0f;
+	float trigger_jump_threshold = 0.0f;
+	float movement_deadzone = 0.0f;
+	float menu_engage_threshold = 0.0f;
+	float menu_release_threshold = 0.0f;
+};
+
 // Match phase durations and countdown presentation.
 // The opening's beats before the countdown (docs/backstory.md, "Opening"), in
 // seconds. They move the match's state machine, so they are tuning.
@@ -210,6 +220,7 @@ public:
 	void validate_match_sounds(const labrador::RenderResources& render,
 		const labrador::AudioResources& audio, const std::string& bank) const;
 
+	const InputTuning& input() const;
 	const MatchTuning& match() const;
 	const PaintTuning& paint() const;
 	const PlayerTuning& player() const;
@@ -234,6 +245,7 @@ private:
 	static constexpr size_t PROJECTILE_COUNT =
 		static_cast<size_t>(BALL) + 1;
 
+	InputTuning input_;
 	MatchTuning match_;
 	PaintTuning paint_;
 	PlayerTuning player_;

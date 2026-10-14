@@ -286,7 +286,7 @@ MenuContext* DebugDirectorImpl::menu_context()
 	if (this->menu_context_ == nullptr && this->data_ != nullptr)
 	{
 		this->menu_input_ = std::make_unique<MenuInput>(this->data_->gamepads(),
-			this->data_->keyboard());
+			this->data_->keyboard(), this->data_->tuning());
 		this->menu_settings_ = std::make_unique<MenuLevelSettings>();
 		this->menu_context_ = std::make_unique<MenuContext>(this->data_,
 			this->menu_input_.get(), this->menu_settings_.get());

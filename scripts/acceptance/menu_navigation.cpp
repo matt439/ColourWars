@@ -3,6 +3,8 @@
 #include "game/presentation.h"
 #include <cstdlib>
 #include <filesystem>
+#include <fstream>
+#include <iterator>
 #include <iostream>
 #include <stdexcept>
 
@@ -14,6 +16,35 @@ namespace
     {
         if (!condition) { throw std::runtime_error(message); }
     }
+
+    struct InputVariant
+    {
+        std::filesystem::path path = std::filesystem::temp_directory_path() /
+            ("ColourWars-input-" + std::to_string(GetCurrentProcessId()) + ".json");
+        std::string source;
+
+        explicit InputVariant(const std::filesystem::path& content)
+        {
+            std::ifstream file(content / "tuning.json");
+            source.assign(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        }
+        ~InputVariant()
+        {
+            std::error_code ignored;
+            std::filesystem::remove(path, ignored);
+        }
+        GameTuning load(const char* key, const char* value) const
+        {
+            std::string text = source;
+            const size_t field = text.find(std::string("\"") + key + "\"");
+            require(field != std::string::npos, "Input tuning field must exist");
+            const size_t begin = text.find(':', field) + 1;
+            const size_t end = text.find_first_of(",}", begin);
+            text.replace(begin, end - begin, value);
+            { std::ofstream file(path); file << text; }
+            return GameTuning(path.string().c_str());
+        }
+    };
 
     uint16_t button(GamepadButton value)
     {
@@ -27,6 +58,7 @@ int main(int argc, char** argv)
     {
         require(argc == 2, "Expected staged content directory");
         const Presentation look((std::filesystem::path(argv[1]) / "presentation.json").string().c_str());
+        const GameTuning tuning((std::filesystem::path(argv[1]) / "tuning.json").string().c_str());
         const float delay = look.menu().repeat_delay;
         const float interval = look.menu().repeat_interval;
         require(delay > interval && interval > 0, "Authored repeat must have a longer first delay");
@@ -35,7 +67,7 @@ int main(int argc, char** argv)
         pad.connected = true;
         const auto step = [&](float dt = 0.0f)
         {
-            return navigation.update_pad(pad, dt, delay, interval);
+            return navigation.update_pad(pad, dt, delay, interval, tuning.input());
         };
         pad.buttons = button(GamepadButton::dpad_down);
         require(step(10) == Direction::none, "Opening under a held dpad must stay neutral");
@@ -70,13 +102,51 @@ int main(int argc, char** argv)
         pad.left_stick.x = 0.9f;
         require(step() == Direction::right, "Neutral must rearm stick navigation");
 
+        // Exercise authored thresholds that would fail with the old constants.
+        InputVariant variant(argv[1]);
+        const GameTuning lower_engage = variant.load("menu_engage_threshold", "0.65");
+        const GameTuning lower_release = variant.load("menu_release_threshold", "0.3");
+        navigation = MenuDirectionRepeat();
+        pad.left_stick = {};
+        navigation.update_pad(pad, 0, delay, interval, lower_engage.input());
+        pad.left_stick.y = -0.7f;
+        require(navigation.update_pad(pad, 0, delay, interval, lower_engage.input()) == Direction::up,
+            "Authored engagement threshold must control navigation");
+        pad.left_stick.y = -0.4f;
+        require(navigation.update_pad(pad, delay + interval, delay, interval, lower_release.input()) == Direction::up,
+            "Authored release threshold must control hysteresis");
+        pad.left_stick.y = -0.2f;
+        require(navigation.update_pad(pad, 0, delay, interval, lower_release.input()) == Direction::none,
+            "Authored release threshold must allow neutral");
+        for (const char* field : { "trigger_shoot_threshold", "trigger_jump_threshold",
+            "movement_deadzone", "menu_engage_threshold", "menu_release_threshold" })
+        {
+            for (const char* value : { "-0.01", "1.01", "1e40" })
+            {
+                bool rejected = false;
+                try { variant.load(field, value); }
+                catch (const std::exception&) { rejected = true; }
+                require(rejected, "Out-of-range input threshold must be rejected");
+            }
+        }
+        for (const auto& invalid : { std::pair{ "movement_deadzone", "1" },
+            std::pair{ "menu_release_threshold", "0" },
+            std::pair{ "menu_release_threshold", "0.8" },
+            std::pair{ "menu_engage_threshold", "0.5" } })
+        {
+            bool rejected = false;
+            try { variant.load(invalid.first, invalid.second); }
+            catch (const std::exception&) { rejected = true; }
+            require(rejected, "Unusable input ranges must be rejected");
+        }
+
         GamepadReader reader;
         Gamepads pads(&reader);
         Keyboard keyboard;
         keyboard.set_focused(true);
         keyboard.poll();
         keyboard.poll();
-        MenuInput input(&pads, &keyboard);
+        MenuInput input(&pads, &keyboard, &tuning);
         const auto keys = [&](float dt = 0.0f)
         {
             keyboard.poll();

@@ -93,9 +93,9 @@ namespace
     // COPIED from PlayerInput::pad_input (game/objects/player_input.cpp). It
     // reads the engine's concrete XInput Gamepads, which has no seam for raw
     // stick values, so these three mappings must be kept in step by hand.
-    float pad_movement(float raw_x)
+    float pad_movement(float raw_x, const GameTuning& tuning)
     {
-        return apply_deadzone(raw_x, player_input_consts::stick_deadzone);
+        return apply_deadzone(raw_x, tuning.input().movement_deadzone);
     }
 
     bool pad_drop(float raw_y, const GameTuning& tuning)
@@ -533,13 +533,13 @@ namespace
         const Surface& lane = s.course.named("recovery_floor");
         const float max_speed = s.tuning.player().max_velocity.x;
         std::cout << "NOTE analog magnitudes use a COPY of PlayerInput::pad_input's mapping: "
-            "apply_deadzone(raw, stick_deadzone=" << player_input_consts::stick_deadzone
+            "apply_deadzone(raw, stick_deadzone=" << s.tuning.input().movement_deadzone
             << "), drop when raw y > drop_down_analog_threshold.\n";
         std::vector<std::vector<float>> traces;
         const std::vector<float> raws{ 0.45f, 0.55f, 0.65f, 0.75f, 0.9f, 1.0f };
         for (const float raw : raws)
         {
-            const float movement = pad_movement(raw);
+            const float movement = pad_movement(raw, s.tuning);
             Run run(s, standing_on(s, lane, lane.rectangle.left() + 100.0f));
             run.settle();
             const float start = run.player->center().x;
@@ -585,7 +585,7 @@ namespace
             Run run(s, standing_on(s, lane, 1000.0f), { max_speed, 0.0f });
             run.settle(1, input(false, false, 1.0f));
             require(run.player->velocity().x == max_speed, "braking fixture did not start at full speed");
-            const float movement = -pad_movement(raw);
+            const float movement = -pad_movement(raw, s.tuning);
             const float start = run.player->center().x;
             int ticks = 0;
             for (; run.player->velocity().x > 0.0f && ticks < 300; ++ticks)
