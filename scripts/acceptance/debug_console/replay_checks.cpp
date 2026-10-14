@@ -10,6 +10,7 @@
 #include "game/objects/level.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/level_loaded_info.h"
+#include "game/states/pause_menu.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
 #include "engine/audio/sound_bank.h"
@@ -672,6 +673,37 @@ namespace debug_console_acceptance
 		match.level->update(skip, dt);
 		require(match.level->state() == LevelState::opening,
 			"A device nobody in the match holds does not skip");
+
+		// Start over the intro skips it; the same press released after GO
+		// must not then open pause (GameLevel's gate, here without a window).
+		{
+			std::array<bool, input_slots::count> latched{};
+			std::vector<PlayerInputData> pad(input_slots::count);
+			const auto frame = [&](bool held, bool released)
+				{
+					const size_t seat = static_cast<size_t>(match.level->player(0).player_num());
+					pad.assign(input_slots::count, PlayerInputData());
+					pad[seat].pause_held = held;
+					pad[seat].toggle_pause_menu = released;
+					pad[seat].skip_intro = released;
+					latch_intro_pause(match.level->intro_playing(), pad, latched);
+					match.level->update(pad, dt);
+					return pad[seat].toggle_pause_menu;
+				};
+			require(match.level->intro_playing() && !frame(true, false),
+				"Start goes down over the intro");
+			for (int ticks = 0; ticks < 20000 && !match.level->match_started(); ++ticks)
+			{
+				frame(true, false);
+			}
+			require(!match.level->intro_playing() && !frame(false, true),
+				"A Start pressed over the intro and released after GO does not pause");
+			require(!frame(true, false) && frame(false, true),
+				"A fresh Start after GO pauses");
+			match.build();
+			require(!frame(false, true) && match.level->state() == LevelState::start_countdown,
+				"A Start released over the intro skips it without pausing");
+		}
 
 		// A rematch starts with the colours being tried.
 		match.opening = OpeningMode::quick;

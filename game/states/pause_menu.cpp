@@ -36,6 +36,30 @@ int disconnected_player_slot(const MenuLevelSettings& settings,
 	return -1;
 }
 
+void latch_intro_pause(bool intro_playing, std::vector<PlayerInputData>& player_inputs,
+	std::array<bool, input_slots::count>& latched)
+{
+	const size_t slots = std::min(player_inputs.size(), latched.size());
+	for (size_t i = 0; i < slots; i++)
+	{
+		PlayerInputData& input = player_inputs[i];
+		if (intro_playing && (input.pause_held || input.toggle_pause_menu))
+		{
+			latched[i] = true;
+		}
+		if (latched[i] && input.toggle_pause_menu)
+		{
+			input.toggle_pause_menu = false;
+			latched[i] = false;
+		}
+		else if (!input.pause_held)
+		{
+			// Released while nothing read it, under a menu or out of focus.
+			latched[i] = false;
+		}
+	}
+}
+
 PauseMenuPage::PauseMenuPage(MenuContext* context, int player_num) :
 	MenuPage(context),
 	pausing_player_(player_num)

@@ -10,6 +10,7 @@
 #include "game/states/main_menu.h"
 #include "game/states/end_menu.h"
 #include "game/objects/player_input.h"
+#include "game/input_slots.h"
 #include "game/debug/debug_targets.h"
 
 // Stack shapes during a session:
@@ -81,6 +82,9 @@ private:
 	std::unique_ptr<PlayerInput> player_input_ = nullptr;
 	std::unique_ptr<MenuInput> menu_input_ = nullptr;
 	bool covered_ = false;
+	// Per device slot: a Start or Escape press that began over the intro. Its
+	// release never opens pause, even when it comes after GO.
+	std::array<bool, input_slots::count> pause_over_intro_{};
 
 	// Shared context for menus above the match; settings_ outlives those pages.
 	std::unique_ptr<MenuContext> menu_context_ = nullptr;

@@ -230,6 +230,10 @@ void GameLevel::update(float dt)
 	// A pad's Back and Start edges consumed by the debug-menu chord reach
 	// neither the pause check nor the players' F1 overlay. Inert in Release.
 	this->data()->debug().filter_match_inputs(player_inputs);
+	// Over the intro, Start skips it instead (Level::update), and that press
+	// cannot open pause even if it is released after GO.
+	latch_intro_pause(this->level_->intro_playing(), player_inputs,
+		this->pause_over_intro_);
 
 	// Check current presence, not just a disconnect edge: focus loss can hide
 	// the edge, and no participant may lose match time while reconnecting.
@@ -242,9 +246,7 @@ void GameLevel::update(float dt)
 		return;
 	}
 
-	// Over the intro, Start skips it instead (Level::update).
-	const int pause_menu_player = this->level_->intro_playing() ? -1 :
-		this->check_for_pause_input(player_inputs);
+	const int pause_menu_player = this->check_for_pause_input(player_inputs);
 	if (pause_menu_player != -1)
 	{
 		this->open_pause_menu(pause_menu_player);

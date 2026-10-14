@@ -14,12 +14,10 @@ commits delivered beat by beat, and settle the [Paint.exe art rules](docs/polish
 that the characters, tools, environment and UI all wait on. The author's order is gameplay
 style first, UI after.
 
-1. **`STORY#3`: a late Start opens pause just after GO.** Code-only, in the feature that just
-   shipped; record it in the backstory's Building-it table too.
-2. **`ENG#PIN`: move the Labrador pin to engine master.** Then re-read the
+1. **`ENG#PIN`: move the Labrador pin to engine master.** Then re-read the
    [ledger](docs/review/engine-reports.md), as every pin bump requires, and do `ENG#LEDGER` in the
    same pass.
-3. **`DOC#1`–`DOC#4`: one doc-drift pass.** README, the polish plan's status header, the roadmap
+2. **`DOC#1`–`DOC#4`: one doc-drift pass.** README, the polish plan's status header, the roadmap
    intro and AGENTS.md all predate the backstory and the Paint.exe direction.
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
@@ -38,7 +36,6 @@ beat is built; the table says which.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `STORY#3` | OPEN | MED | S | Start released after a skip or after the push opens pause: `skip_intro` clears `intro_countdown_`, and GameLevel suppresses pause only while `intro_playing()`. Not yet in the doc's table. |
 | `STORY#1` | DECISION | MED | S | Respawn pop: the splat still plays the death yell. Needs the author's `.wav`, then a `sound_bank_1.json` entry and the tuning swap. |
 | `STORY#2` | DECISION | LOW | S | Opening sigh and chair creak: the sigh pose animates silently. Needs the author's `.wav` files, bank entries, `match.sounds` slots and a play call at the leave beat. |
 

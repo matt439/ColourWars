@@ -152,7 +152,7 @@ Decided with the author on 2026-10-12, while the first slice was built:
 | Respawn: the pop | Still the old death yell; waits for a pop sound in the bank |
 | Grey scenery, each team on its own half | Built. Enforced by the game and the level editor |
 | Opening: monitor, person, preview, undo, leaving, countdown in the picture, push through the glass | Built. `level_intro.cpp`; `Monitor`, `Silhouette`, `ScreenCursor`; timings in `tuning.json` `match.opening`, look in `presentation.json` `opening` |
-| Opening: skip, quick rematch | Built. A, B or Start skips; a rematch starts at the preview |
+| Opening: skip, quick rematch | Built. A, B or Start skips; a Start (Escape) pressed while the intro plays is a skip, never a pause, however late after GO it is released (`latch_intro_pause`); a rematch starts at the preview |
 | Rematch: a new random monitor | Built. Rolled per match from `opening.bezel_shades` and the decorations |
 | Opening: figures looking at their hands, then across at the other side | Built. `FigureActing` repaints the eyes the respawn strokes locate |
 | Opening: sigh and chair creak | Not started: the bank has no such waves |

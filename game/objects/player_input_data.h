@@ -17,6 +17,9 @@ struct PlayerInputData
 
 	bool toggle_debug = false;
 	bool toggle_pause_menu = false;
+	// Start or Escape down: lets a press begun over the intro be told apart
+	// from a fresh one when it is released (latch_intro_pause).
+	bool pause_held = false;
 	// A, B or Start released (Space, Escape or Enter): skips the intro.
 	bool skip_intro = false;
 

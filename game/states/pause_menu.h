@@ -5,6 +5,8 @@
 #include "game/states/menu_page.h"
 #include "engine/core/state_context.h"
 #include "engine/render/colour.h"
+#include "game/objects/player_input_data.h"
+#include "game/input_slots.h"
 
 
 class DebugDirector;
@@ -21,6 +23,13 @@ bool pad_seat_missing(int slot, const labrador::Gamepads& gamepads,
 	const DebugDirector& debug);
 int disconnected_player_slot(const MenuLevelSettings& settings,
 	const labrador::Gamepads& gamepads, const DebugDirector& debug);
+
+// Over the intro, Start (Escape) skips it rather than pausing. A press that
+// begins while the intro plays is latched for its device slot, and its
+// release clears toggle_pause_menu however late it comes: a skip held past
+// GO, or a Start held while another button skipped, never opens pause.
+void latch_intro_pause(bool intro_playing, std::vector<PlayerInputData>& player_inputs,
+	std::array<bool, input_slots::count>& latched);
 
 
 class PauseMenuPage : public MenuPage
