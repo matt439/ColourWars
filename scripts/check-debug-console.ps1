@@ -2,7 +2,7 @@
 param(
     [ValidateSet('x64-debug')]
     [string]$Preset = 'x64-debug',
-    [string]$OutputDirectory = (Join-Path $PSScriptRoot '../out/validation/debug-console'),
+    [string]$OutputDirectory,
     [ValidateRange(4, 120)]
     [int]$StartupSeconds = 12,
     # The lone-Alt probe is informational (engine report 11) and leaves the
@@ -54,6 +54,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+# Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
+if (-not $OutputDirectory) {
+    $OutputDirectory = Join-Path $PSScriptRoot '../out/validation/debug-console'
+}
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $executable = Join-Path $repo "out/build/$Preset/game/ColourWars.exe"

@@ -2,7 +2,7 @@
 param(
     [Parameter(Mandatory = $true)]
     [string]$Executable,
-    [string]$OutputDirectory = (Join-Path $PSScriptRoot '../out/validation/startup'),
+    [string]$OutputDirectory,
     [ValidateRange(1, 120)]
     [int]$StartupSeconds = 15,
     [switch]$RequireNoAudio,
@@ -14,6 +14,11 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+# Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
+if (-not $OutputDirectory) {
+    $OutputDirectory = Join-Path $PSScriptRoot '../out/validation/startup'
+}
 
 $executablePath = (Resolve-Path -LiteralPath $Executable).Path
 if (-not (Test-Path -LiteralPath $executablePath -PathType Leaf)) {

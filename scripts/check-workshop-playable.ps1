@@ -7,11 +7,16 @@ param(
     # Captures scripted movement and continuous aim at 60 Hz; bounds storage.
     [ValidateRange(0, 180)]
     [int] $SequenceFrames = 0,
-    [string] $OutputDirectory = (Join-Path $PSScriptRoot '../out/validation/workshop-playable')
+    [string] $OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+# Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
+if (-not $OutputDirectory) {
+    $OutputDirectory = Join-Path $PSScriptRoot '../out/validation/workshop-playable'
+}
 
 function Invoke-Logged {
     param([string] $Command, [string[]] $Arguments, [string] $LogPath)

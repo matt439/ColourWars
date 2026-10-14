@@ -213,8 +213,6 @@ flow and a console over the menus are deliberately not done and get no rows.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `CI#1` | OPEN | LOW | M | CI runs none of the window-driven checks (`check-debug-console`, `check-movement-feedback`, `check-workshop-*`). |
-| `CI#2` | OPEN | LOW | S | The package step checks 5 console RTTI names; `scripts/acceptance/debug_console.cpp` checks 16. |
-| `TOOL#1` | OPEN | LOW | S | Under PowerShell 5.1, `$PSScriptRoot` defaults inside `param()` come out empty (`check-startup`, `check-debug-console`, `check-movement-feedback`, `check-workshop-playable`); move them into the body. |
 
 ## Areas with no open rows
 

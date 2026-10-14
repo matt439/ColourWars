@@ -10,11 +10,16 @@ param(
     # Paired on/off route sequences are four-player only by default; this adds
     # the one-player route (three more modes of two 720p frames per tick).
     [switch] $OnePlayerRouteSequences,
-    [string] $OutputDirectory = (Join-Path $PSScriptRoot '../out/validation/movement-feedback')
+    [string] $OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+# Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
+if (-not $OutputDirectory) {
+    $OutputDirectory = Join-Path $PSScriptRoot '../out/validation/movement-feedback'
+}
 
 function Invoke-Logged {
     param([string] $Command, [string[]] $Arguments, [string] $LogPath)
