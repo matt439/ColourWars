@@ -69,7 +69,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	this->zoom_out_sound_ =
 		this->sound_bank_->resolve_effect(match.zoom_out_sound.name);
 	this->countdown_sound_ =
-		this->sound_bank_->resolve_wave(match.countdown_sound.name);
+		this->sound_bank_->resolve_effect(match.countdown_sound.name);
 
 	if (opening != OpeningMode::off)
 	{
@@ -99,6 +99,7 @@ Level::~Level()
 		this->sound_bank_->stop_effect(this->music_, true);
 	}
 	this->sound_bank_->stop_effect(this->zoom_out_sound_, true);
+	this->sound_bank_->stop_effect(this->countdown_sound_, true);
 	this->stop_player_sounds();
 }
 
@@ -118,6 +119,7 @@ void Level::pause_audio() const
 		this->sound_bank_->pause_effect(this->music_);
 	}
 	this->sound_bank_->pause_effect(this->zoom_out_sound_);
+	this->sound_bank_->pause_effect(this->countdown_sound_);
 	this->pause_player_sounds();
 }
 
@@ -132,6 +134,9 @@ void Level::resume() const
 	this->sound_bank_->set_effect_volume(this->zoom_out_sound_,
 		this->tuning_->match().zoom_out_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->zoom_out_sound_);
+	this->sound_bank_->set_effect_volume(this->countdown_sound_,
+		this->tuning_->match().countdown_sound.volume * this->preferences_->sfx_gain());
+	this->sound_bank_->resume_effect(this->countdown_sound_);
 	this->resume_player_sounds();
 }
 
@@ -168,7 +173,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			{
 				this->sound_bank_->play_effect(this->music_, true, this->music_volume_ * this->preferences_->music_gain());
 			}
-			this->sound_bank_->play_wave(this->countdown_sound_,
+			this->sound_bank_->play_effect(this->countdown_sound_, false,
 				this->tuning_->match().countdown_sound.volume * this->preferences_->sfx_gain());
 		}
 		this->start_timer_ -= dt;
@@ -210,6 +215,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 				this->sound_bank_->stop_effect(this->music_, true);
 			}
 			this->stop_player_sounds();
+			this->sound_bank_->stop_effect(this->countdown_sound_, true);
 			this->sound_bank_->play_effect(this->zoom_out_sound_, false,
 				this->tuning_->match().zoom_out_sound.volume * this->preferences_->sfx_gain());
 			this->start_reveal();
@@ -223,7 +229,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		{
 			this->state_ = LevelState::overview;
 			this->zoom_out_timer_ = 0.0f;
-			this->sound_bank_->stop_effect(this->zoom_out_sound_, true);
+			// Let the transition tail finish naturally; destruction still owns it.
 		}
 
 		// refresh_layout refits the endpoints when the window changes size.

@@ -95,7 +95,7 @@ never a row.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#23` | OPEN | HIGH | L | Integrate the accepted set: the [dispositions](docs/audio-inventory.md#2-legacy-inventory-replace-or-retire) and every [switchboard site](docs/audio-inventory.md#3-the-switchboard-where-cue-names-live), minding its traps; mix at 1/2/4 players. |
-| `POL#26` | OPEN | LOW | S | Present-day audio defects the inventory found: the pause-open cue plays twice backing out of a confirmation, the countdown wave runs 2.4 s into play and survives pause, the time-up cue is cut by the reveal, results' fill and fanfare never play after a reveal. [Traps 2-5](docs/audio-inventory.md#33-traps-a-replacement-must-know). |
+| `POL#26` | OPEN | LOW | S | The legacy countdown recording still runs 2.4 s into play; replace it with separate beats/GO in `POL#23`. Other playback defects are repaired. [Runtime follow-up](docs/audio-inventory.md#8-runtime-defect-follow-up-pol26). |
 | `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains, mute, suspension, resumed loops, the multiplayer mix; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
 
 ## Acceptance and release

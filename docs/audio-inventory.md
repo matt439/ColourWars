@@ -158,7 +158,7 @@ editor default.
 
 | File | Key (line) | Resolved as | Resolved at | Validated at |
 |---|---|---|---|---|
-| `tuning.json` | `match.sounds.countdown` (:27) | wave, in **the level's** bank | `level.cpp:67-68` | `tuning.cpp:534`, once per stage (`content_validation.cpp:33-34`) |
+| `tuning.json` | `match.sounds.countdown` (:27) | effect, in **the level's** bank (since 2026-10-15) | `level.cpp` | `tuning.cpp:534`, once per stage (`content_validation.cpp:33-34`) |
 | | `match.sounds.zoom_out` (:28) | effect | `level.cpp:65-66` | `tuning.cpp:535` |
 | | `match.sounds.hover` (:29), `click` (:30) | wave | `level.cpp:80-81`, only when the opening runs | `tuning.cpp:536-537` |
 | | `paint.sound_bank` (:74), `paint.splash_sound` (:75) | wave | `structure_paintable.cpp:38-40` | `tuning.cpp:454` |
@@ -220,22 +220,28 @@ cue fails only on a machine that has the real bank.
    bank JSON, so renaming the tuning entry changes nothing, and nothing checks
    that the two names agree. Either make that name `<weapon>.start`, or remove
    it from the schema.
-2. **The countdown is one baked wave, 2.4 s longer than the countdown.** The
-   rest of it plays over live play. It is a fire-and-forget wave, so the pause
-   menu cannot stop it, and a restart from pause (`game_states.cpp:157-161,
-   308`) can start a second one while the first is still playing.
-3. **The time-up cue plays over the reveal.** It starts on the same tick as
-   `start_reveal()` (`level.cpp:194-196`) and gets cut off at 2.0 s.
-4. **Results sounds do not play in a normal match.** When the opening has run,
-   `results_menu.cpp:306-318` skips both the fill and the fanfare ("the reveal
-   was the fill and the fanfare"), but the reveal itself has no fanfare. The
-   opening is off only in solo play or by debug choice
-   (`game_states.cpp:170-173`).
-5. **The pause-open cue fires twice.** A back press in `PauseMenuConfirmation`
-   plays cancel (`pause_menu.cpp:371`) and then returns to
-   `PauseMenuInitial`, whose `init` plays the open sound again (:342). The
-   confirmation's No (:463-465) does the same, and a restart confirmation
-   that sees a lost pad returns there too (:358-364).
+2. **The countdown is still one oversized baked wave.** It is 5.375 s against
+   the 3.0 s countdown, so the tail still overlaps live play. `POL#23` replaces
+   it with individual beats and GO. Since 2026-10-15 it is a named effect,
+   validated as an effect, paused/resumed with the level (including gain
+   changes), and stopped when the level ends or is destroyed. Restarting can
+   no longer leave an orphan countdown playing over the next match.
+3. **The time-up transition now rings out.** Since 2026-10-15 the end of the
+   camera zoom no longer hard-stops its effect. It remains pause-aware and
+   is stopped when the level is destroyed. `POL#23` still replaces the legacy
+   whistle with the time-up/glass cues; the picture stays silent while the
+   person is present.
+4. **Results after a reveal now play the fanfare.** Since 2026-10-15 the first
+   results update plays it once, after the person has left. The fill loop is
+   intentionally absent there: the reveal already showed the percentages and
+   the results page has no bar-fill animation. Solo/debug without a reveal
+   retain their animated bars, fill loop and completion fanfare. The legacy
+   fanfare still serves draws too; `POL#23` supplies the distinct draw cue.
+5. **The pause-open cue belongs to entering pause.** Since 2026-10-15 returning
+   from confirmation (Back, No, or a lost pad during restart confirmation)
+   recreates the initial page without replaying the open cue. Back/No still
+   play cancel. Opening a new pause session still plays the open cue; the
+   controls/audio page returns to the existing pause page.
 6. **Menu sounds have no volume field.** Direction, confirm, cancel, error,
    ready and pause-open are plain strings (`presentation.h:71-73, 171-172,
    186`) and always play at 1.0 × SFX. Their gain must be built into the
@@ -483,7 +489,7 @@ An asset with an empty licence field does not go into `waves`.
   - Retire `Steamboat`, `unused/wave_bank_1.json`, `sound list.txt` and
     `cmd.txt`, and stop staging what the game never loads (`GAP#8.6`).
   - Turn off `create_effect_instance_for_each_wave` and name each instance
-    explicitly.
+    explicitly, including any pause-aware countdown voice.
   - Fix trap 1 by making the looping weapons' `shoot_sound` their `start` cue,
     or by removing it.
   - Change the editor default.
@@ -572,3 +578,19 @@ POL#22 leaves TODO; POL#23 is now open for the §2/§3 migration, and the story 
 are open for their integration work. Tier 3 remains optional with the existing
 default-off direction. ROAD#3 still tests the actual game, mix and release;
 accepting the assets does not close those checks.
+
+## 8. Runtime defect follow-up (POL#26)
+
+2026-10-15: countdown voice ownership, pause confirmation returns, the time-up
+transition tail and the post-reveal fanfare are repaired. The remaining defect
+is the oversized legacy countdown recording; it needs the separate beat/GO
+integration in POL#23. No replacement asset, bank migration or audible mix
+acceptance is claimed by these lifecycle changes. ROAD#3 retains listening,
+multiplayer and hardware acceptance.
+
+Validation: `scripts/run-acceptance.ps1 -Preset x64-debug` and `x64-release`
+both passed, including the Debug real-Level opening/reveal/replay checks and
+Release developer-tool exclusion. `scripts/check-startup.ps1` passed against
+the Debug executable with the local bank, an isolated save and graceful
+shutdown (`out/validation/pol26-debug/`). These checks exercise construction,
+validation and state flow; they do not listen to or assert the emitted audio.

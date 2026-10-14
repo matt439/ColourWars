@@ -69,7 +69,7 @@ public:
 		const labrador::Mouse* mouse,
 		OpeningMode opening);
 
-	// Stop the level's music, transition sound and player weapon loops.
+	// Stop the level's music, countdown, transition sound and player weapon loops.
 	~Level();
 
 	Level(const Level&) = delete;
@@ -156,7 +156,7 @@ private:
 	// Resolve the level's music and fixed match sounds once at construction.
 	labrador::SoundBank::EffectHandle music_;
 	labrador::SoundBank::EffectHandle zoom_out_sound_;
-	labrador::SoundBank::WaveHandle countdown_sound_;
+	labrador::SoundBank::EffectHandle countdown_sound_;
 	float music_volume_ = 0.0f;
 
 	// Written during the main-thread update and read by render workers for dt/fps.

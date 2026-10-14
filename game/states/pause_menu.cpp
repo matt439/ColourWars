@@ -151,8 +151,8 @@ ProcessedMenuInput PauseMenuPage::pausing_player_input(
 	return ProcessedMenuInput();
 }
 
-PauseMenuInitial::PauseMenuInitial(MenuContext* context, int player_num) :
-	PauseMenuPage(context, player_num)
+PauseMenuInitial::PauseMenuInitial(MenuContext* context, int player_num, bool opening) :
+	PauseMenuPage(context, player_num), opening_(opening)
 {
 
 }
@@ -339,7 +339,10 @@ void PauseMenuInitial::init()
 		});
 
 	this->refresh_connections();
-	this->play_wave(this->window_open_sound_);
+	if (this->opening_)
+	{
+		this->play_wave(this->window_open_sound_);
+	}
 }
 
 PauseMenuConfirmation::PauseMenuConfirmation(MenuContext* context,
@@ -360,7 +363,7 @@ void PauseMenuConfirmation::update_page(float /*dt*/)
 			this->data()->debug()) != -1)
 	{
 		this->context()->transition_to(std::make_unique<PauseMenuInitial>(
-			this->menu_context(), this->pausing_player()));
+			this->menu_context(), this->pausing_player(), false));
 		return;
 	}
 	const ProcessedMenuInput input =
@@ -370,7 +373,7 @@ void PauseMenuConfirmation::update_page(float /*dt*/)
 	{
 		this->play_wave(this->cancel_sound_);
 		this->context()->transition_to(std::make_unique<PauseMenuInitial>(
-			this->menu_context(), this->pausing_player()));
+			this->menu_context(), this->pausing_player(), false));
 		return;
 	}
 	if (input.action == MenuInputAction::proceed)
@@ -462,7 +465,7 @@ void PauseMenuConfirmation::init()
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(std::make_unique<PauseMenuInitial>(
-				this->menu_context(), this->pausing_player()));
+				this->menu_context(), this->pausing_player(), false));
 		});
 	this->focus_.add(this->yes_.get(), [this]
 		{

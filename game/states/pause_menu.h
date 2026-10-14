@@ -71,12 +71,14 @@ private:
 class PauseMenuInitial final : public PauseMenuPage
 {
 public:
-	PauseMenuInitial(MenuContext* context, int player_num);
+	// Returning from a confirmation keeps the same pause session.
+	PauseMenuInitial(MenuContext* context, int player_num, bool opening = true);
 	void init() override;
 	void update_page(float dt) override;
 	// Resume (or quit, to leave the match) through the PauseMenuAction frame.
 	bool debug_dismiss(bool leaving_match) override;
 private:
+	bool opening_ = true;
 	void refresh_connections();
 	bool waiting_for_players_ = false;
 	std::unique_ptr<labrador::UiTextDropShadow> connection_status_ = nullptr;

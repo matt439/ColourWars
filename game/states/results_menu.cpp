@@ -305,10 +305,10 @@ void ResultsMenuInitial::init()
 
 	if (this->revealed_)
 	{
-		// The reveal was the fill and the fanfare: the numbers, at once.
+		// The reveal already showed the numbers. Keep the bars hidden,
+		// but let the first update play the fanfare after the person has left.
 		this->delay_timer_ = look.team_fill_delay;
 		this->fill_timer_ = look.team_fill_time;
-		this->winner_sound_played_ = true;
 		this->fill_box_->set_hidden(true);
 		this->team_a_fill_->set_hidden(true);
 		this->team_b_fill_->set_hidden(true);

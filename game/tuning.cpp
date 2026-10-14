@@ -531,7 +531,7 @@ void GameTuning::validate_match_sounds(const RenderResources& render,
 	const AudioResources& audio, const std::string& bank) const
 {
 	const ResourceValidation check(this->source_path_, render, audio);
-	check.wave("match.sounds.countdown.name", bank, this->match_.countdown_sound.name);
+	check.effect("match.sounds.countdown.name", bank, this->match_.countdown_sound.name);
 	check.effect("match.sounds.zoom_out.name", bank, this->match_.zoom_out_sound.name);
 	check.wave("match.sounds.hover.name", bank, this->match_.hover_sound.name);
 	check.wave("match.sounds.click.name", bank, this->match_.click_sound.name);
