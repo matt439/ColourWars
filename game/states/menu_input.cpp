@@ -6,6 +6,93 @@ using namespace mattmath;
 using namespace menu_input_consts;
 using namespace labrador;
 
+Direction MenuDirectionRepeat::update(const std::array<bool, 4>& held,
+	float dt, float delay, float interval)
+{
+	Direction wanted = Direction::none;
+	int count = 0;
+	for (int i = 0; i < direction_key_count; ++i)
+	{
+		if (held[i])
+		{
+			wanted = direction_keys[i].direction;
+			++count;
+		}
+	}
+	if (count == 0)
+	{
+		if (!this->ready_)
+		{
+			this->repeat_ = DirectionRepeat(delay, interval);
+		}
+		this->ready_ = true;
+		return this->repeat_.update(Direction::none, dt);
+	}
+	// Conflicting/diagonal input must return to neutral rather than selecting
+	// a direction by table order or firing when one of the controls is released.
+	if (!this->ready_ || count != 1)
+	{
+		this->ready_ = false;
+		return Direction::none;
+	}
+	return this->repeat_.update(wanted, dt);
+}
+
+Direction MenuDirectionRepeat::update_pad(const GamepadState& pad,
+	float dt, float delay, float interval)
+{
+	const float values[] = { -pad.left_stick.y, pad.left_stick.y,
+		-pad.left_stick.x, pad.left_stick.x };
+	const GamepadButton buttons[] = { GamepadButton::dpad_up,
+		GamepadButton::dpad_down, GamepadButton::dpad_left, GamepadButton::dpad_right };
+	std::array<bool, 4> held = {};
+	for (int i = 0; i < direction_key_count; ++i)
+	{
+		this->stick_[i] = values[i] >= (this->stick_[i] ?
+			digital_absence_threshold : digital_presence_threshold);
+		held[i] = this->stick_[i] || pad.is_down(buttons[i]);
+	}
+	return this->update(held, dt, delay, interval);
+}
+
+void MenuInput::update_directions(float dt, float delay, float interval)
+{
+	for (int slot = 0; slot < input_slots::pad_count; ++slot)
+	{
+		if (!this->gamepads_->connected(slot) || this->gamepads_->just_connected(slot))
+		{
+			this->navigation_[slot] = MenuDirectionRepeat();
+			this->directions_[slot] = Direction::none;
+			continue;
+		}
+		this->directions_[slot] = this->navigation_[slot].update_pad(
+			this->gamepads_->state(slot), dt, delay, interval);
+	}
+	const int slot = input_slots::keyboard_and_mouse;
+	if (!this->keyboard_->focused() || this->keyboard_->just_focused())
+	{
+		this->navigation_[slot] = MenuDirectionRepeat();
+		this->directions_[slot] = Direction::none;
+		return;
+	}
+	std::array<bool, 4> held = {};
+	for (int i = 0; i < direction_key_count; ++i)
+	{
+		held[i] = this->keyboard_->held(direction_keys[i].key) ||
+			this->keyboard_->held(direction_keys[i].alternate);
+	}
+	this->directions_[slot] = this->navigation_[slot].update(held, dt, delay, interval);
+}
+
+void MenuInput::reset_directions()
+{
+	for (int slot = 0; slot < input_slots::count; ++slot)
+	{
+		this->navigation_[slot] = MenuDirectionRepeat();
+		this->directions_[slot] = Direction::none;
+	}
+}
+
 MenuInput::MenuInput(const Gamepads* gamepads, const Keyboard* keyboard) :
 	gamepads_(gamepads), keyboard_(keyboard)
 {
@@ -69,51 +156,7 @@ ProcessedMenuInput MenuInput::menu_input(const Gamepads& gamepads, int slot)
 		}
 	}
 
-	// Use raw stick samples: a direction fires when consecutive frames cross
-	// back inside the return threshold, independently of movement dead zones.
-	const Vector2F stick = now.left_stick;
-	const Vector2F was = before.left_stick;
-
-	const bool analog_up =
-		was.y < -digital_presence_threshold &&
-		stick.y > -digital_absence_threshold;
-	const bool analog_down =
-		was.y > digital_presence_threshold &&
-		stick.y < digital_absence_threshold;
-	const bool analog_left =
-		was.x < -digital_presence_threshold &&
-		stick.x > -digital_absence_threshold;
-	const bool analog_right =
-		was.x > digital_presence_threshold &&
-		stick.x < digital_absence_threshold;
-
-	const bool no_dpad_now =
-		!now.is_down(GamepadButton::dpad_up) &&
-		!now.is_down(GamepadButton::dpad_down) &&
-		!now.is_down(GamepadButton::dpad_left) &&
-		!now.is_down(GamepadButton::dpad_right);
-
-	const auto dpad_released = [&before, no_dpad_now](GamepadButton button)
-	{
-		return no_dpad_now && before.is_down(button);
-	};
-
-	if (analog_up || dpad_released(GamepadButton::dpad_up))
-	{
-		result.direction = labrador::Direction::up;
-	}
-	else if (analog_down || dpad_released(GamepadButton::dpad_down))
-	{
-		result.direction = labrador::Direction::down;
-	}
-	else if (analog_left || dpad_released(GamepadButton::dpad_left))
-	{
-		result.direction = labrador::Direction::left;
-	}
-	else if (analog_right || dpad_released(GamepadButton::dpad_right))
-	{
-		result.direction = labrador::Direction::right;
-	}
+	result.direction = this->directions_[slot];
 
 	return result;
 }
@@ -178,16 +221,7 @@ ProcessedMenuInput MenuInput::keyboard_menu_input(const Keyboard& keyboard)
 		}
 	}
 
-	// Keyboard navigation uses press edges; pad navigation uses releases
-	// and stick return crossings.
-	for (const DirectionKey& entry : direction_keys)
-	{
-		if (keyboard.pressed(entry.key) || keyboard.pressed(entry.alternate))
-		{
-			result.direction = entry.direction;
-			break;
-		}
-	}
+	result.direction = this->directions_[input_slots::keyboard_and_mouse];
 
 	return result;
 }
@@ -229,6 +263,8 @@ void MenuInput::reset_pad_actions(int slot)
 	{
 		return;
 	}
+	this->navigation_[slot] = MenuDirectionRepeat();
+	this->directions_[slot] = Direction::none;
 	for (bool& armed : this->armed_[slot])
 	{
 		armed = false;
@@ -237,6 +273,7 @@ void MenuInput::reset_pad_actions(int slot)
 
 void MenuInput::reset_actions()
 {
+	this->reset_directions();
 	for (auto& slot : this->armed_)
 	{
 		for (bool& armed : slot)

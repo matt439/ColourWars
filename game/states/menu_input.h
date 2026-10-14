@@ -5,16 +5,16 @@
 #include "engine/ui/navigation.h"
 #include "game/input_slots.h"
 #include "game/states/menu_input_action.h"
+#include <array>
 #include <vector>
 
 class MenuLevelSettings;
 
 namespace menu_input_consts
 {
-	// Return-crossing thresholds for consecutive raw stick samples.
-	// Equal values provide no hysteresis.
+	// Stick engagement and release thresholds, independent of gameplay deadzones.
 	constexpr float digital_presence_threshold = 0.8f;
-	constexpr float digital_absence_threshold = 0.8f;
+	constexpr float digital_absence_threshold = 0.6f;
 
 	// Menu button mappings; arming flags use these table indices.
 	struct ActionButton
@@ -70,6 +70,20 @@ namespace menu_input_consts
 	};
 }
 
+// One device's held navigation, blocked until neutral after a context change.
+class MenuDirectionRepeat
+{
+public:
+	labrador::Direction update(const std::array<bool, 4>& held, float dt,
+		float delay, float interval);
+	labrador::Direction update_pad(const labrador::GamepadState& pad, float dt,
+		float delay, float interval);
+private:
+	bool ready_ = false;
+	labrador::DirectionRepeat repeat_;
+	std::array<bool, 4> stick_ = {};
+};
+
 struct ProcessedMenuInput
 {
 	labrador::Direction direction = labrador::Direction::none;
@@ -83,6 +97,10 @@ class MenuInput
 public:
 	MenuInput(const labrador::Gamepads* gamepads,
 		const labrador::Keyboard* keyboard);
+
+	// Advance navigation once before a page update; reads below do not advance time.
+	void update_directions(float dt, float delay, float interval);
+	void reset_directions();
 
 	// Returns input_slots::count entries indexed by device slot; absent devices
 	// are neutral. Actions fire on release only if their press was observed here.
@@ -111,6 +129,9 @@ private:
 	// reset_actions() clears ownership when input changes context.
 	bool armed_[input_slots::pad_count]
 		[menu_input_consts::action_button_count] = {};
+
+	MenuDirectionRepeat navigation_[input_slots::count];
+	labrador::Direction directions_[input_slots::count] = {};
 
 	// Keyboard arming is indexed by action_keys, not the pad button table.
 	bool key_armed_[menu_input_consts::action_key_count] = {};

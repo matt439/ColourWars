@@ -29,6 +29,7 @@
       "this block. They still agreed, which is the only reason nobody had",
       "noticed; a fifth menu would have made it four places to keep in step."
     ],
+    "navigation": { "repeat_delay": 0.4, "repeat_interval": 0.1 },
     "fonts": {
       "heading": "gill_sans_mt_bold_72",
       "item": "gill_sans_mt_bold_48",

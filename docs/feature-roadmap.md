@@ -225,3 +225,31 @@ The next acceptance work requires hardware and is still outstanding:
    audible release and missing-bank fallback separately afterward.
 5. Relaunch and confirm saved settings; record device models, display layout,
    build revision and observed failures before choosing the next feature increment.
+
+## Menu navigation follow-up (GAP#4.4)
+
+2026-10-15: pad sticks, d-pads, arrow keys and WASD now move on engagement and
+repeat while held. `menu_style.navigation` in `presentation.json` sets the
+first delay (0.4 s) and later interval (0.1 s); both must be finite and positive.
+The game consumes Labrador's `DirectionRepeat`, with at most one move per update
+and no catch-up burst after a hitch. Stick engagement is 0.8 and release is 0.6,
+independent of gameplay deadzones. Conflicting directions require neutral before
+navigation resumes; aliases for the same keyboard direction count as one.
+
+Each device has its own repeat and neutral gate. Opening or returning to a page,
+resetting input ownership, reconnecting a pad or regaining keyboard focus clears
+navigation ownership. A control held across that boundary must return to neutral
+before moving the new page. Navigation advances once in `MenuPage::update`;
+repeated reads, including roster-order reads, return the same direction.
+Confirm, Back and Start retain their existing armed release behavior.
+
+The CPU acceptance case `menu_navigation` covers held-page entry, press/repeat
+cadence, long frames, stick hysteresis, conflicting directions, keyboard focus,
+repeatable reads and unchanged confirmation ownership. Physical-pad feel remains
+part of ROAD#2; synthetic state checks do not close that session.
+
+Validation: `scripts/run-acceptance.ps1 -Preset x64-debug` and `x64-release`
+both passed, including the new case and Release developer-tool exclusion.
+`scripts/check-startup.ps1` passed for both executables with isolated saves and
+graceful shutdown; evidence is under `out/validation/menu-navigation-debug/`
+and `out/validation/menu-navigation-release/`.

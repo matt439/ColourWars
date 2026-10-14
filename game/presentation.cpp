@@ -242,6 +242,10 @@ namespace
 
 		MenuStyle style;
 
+		const JsonValue navigation = json.object("navigation");
+		style.repeat_delay = read_positive(navigation, "repeat_delay");
+		style.repeat_interval = read_positive(navigation, "repeat_interval");
+
 		const JsonValue fonts = json.object("fonts");
 		style.heading_font = fonts.string("heading");
 		style.item_font = fonts.string("item");

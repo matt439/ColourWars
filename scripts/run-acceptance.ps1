@@ -143,7 +143,7 @@ try {
     # DLL imports still resolve from the same staged folder as the game.
     # A case may own a same-named folder of extra .cpp sources.
     $env:PATH = "$gameDirectory;$previousPath"
-    foreach ($case in 'ammo', 'settings', 'paint', 'camera_framing', 'movement', 'stage_selection', 'team_palette',
+    foreach ($case in 'ammo', 'settings', 'paint', 'camera_framing', 'movement', 'stage_selection', 'team_palette', 'menu_navigation',
         'workshop_player', 'workshop_terrain', 'movement_course', 'debug_console') {
         $sources = @(Join-Path $PSScriptRoot "acceptance/$case.cpp")
         $parts = Join-Path $PSScriptRoot "acceptance/$case"

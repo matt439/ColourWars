@@ -12,6 +12,7 @@ MenuPage::MenuPage(MenuContext* context) :
 		context->data()->audio_resources()),
 	context_(context)
 {
+	this->input()->reset_directions();
 	const MenuStyle& style = this->menu_style();
 	this->direction_sound_ = this->resolve_wave(style.direction_sound);
 	this->confirm_sound_ = this->resolve_wave(style.confirm_sound);
@@ -28,7 +29,14 @@ void MenuPage::update(float dt)
 	{
 		return;
 	}
+	const MenuStyle& style = this->menu_style();
+	this->input()->update_directions(dt, style.repeat_delay, style.repeat_interval);
 	this->update_page(dt);
+}
+
+void MenuPage::on_resume()
+{
+	this->input()->reset_directions();
 }
 
 bool MenuPage::debug_start_match(const MenuLevelSettings& /*plan*/)

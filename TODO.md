@@ -129,8 +129,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed.
 | `GAP#3.2` | OPEN | LOW | M | Options: no restore-defaults, no revert after a resolution change, display and palette unreachable from pause, Back lands at the top, Exit quits unconfirmed. |
 | `GAP#3.3` | OPEN | LOW | S | No Credits page acknowledging NOTICE's third-party work. |
 | `GAP#4.2` | OPEN | MED | L | No action map or rebinding: bindings are constexprs in `player_input.h`/`menu_input.h`. The engine's `gamepad.h` waits on this client (Class 2 D6); `GAP#F2` waits on it. |
-| `GAP#4.3` | OPEN | LOW | S | Trigger thresholds, the stick deadzone and the menu 0.8 hysteresis are header constants; move them to an input tuning block. |
-| `GAP#4.4` | OPEN | MED | S | Menu directions fire on the release edge, with no auto-repeat and no arming across a page change, so a held direction leaks into the next page. |
+| `GAP#4.3` | OPEN | LOW | S | Trigger thresholds, the stick deadzone and the menu direction thresholds are header constants; move them to an input tuning block. |
 | `GAP#5.1` | OPEN | MED | L | Hard cuts between screens; the level build blocks on the last menu frame; no music fades or ducking, and results and end screens have no track. |
 | `GAP#5.4` | OPEN | LOW | S | No last-ten-seconds clock highlight; the DebugText fps line is `1/dt` of a fixed step, a constant. |
 | `GAP#6.1` | OPEN | MED | M | The last match setup is not saved, so every launch walks the whole menu path again. |

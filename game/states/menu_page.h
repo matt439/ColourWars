@@ -34,6 +34,7 @@ public:
 	// the console or launch arguments), then runs the page's own update_page.
 	void update(float dt) final;
 	void init() override = 0;
+	void on_resume() override;
 
 	// Debug hooks (DebugPageTarget). Only main-menu pages, whose frame starts
 	// a match on close, start one; only the pause, controls, results and end

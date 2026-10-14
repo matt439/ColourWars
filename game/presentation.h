@@ -69,6 +69,8 @@ struct MenuStyle
 	mattmath::Vector2F box_size = { 0.0f, 0.0f };
 
 	std::string sound_bank;
+	float repeat_delay = 0.0f;
+	float repeat_interval = 0.0f;
 	std::string direction_sound;
 	std::string confirm_sound;
 	std::string cancel_sound;
