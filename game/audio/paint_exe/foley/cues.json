@@ -1,0 +1,862 @@
+{
+  "version": 1,
+  "cues": [
+    {
+      "id": "player.step.01",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_01.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.step.02",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_02.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.step.03",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_03.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.step.04",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_04.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.step.05",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_05.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.step.06",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_06.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.land.01",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_land_01.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_crumple1",
+        "owlish_paper_turn1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.land.02",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_land_02.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_crumple1",
+        "owlish_paper_turn2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.land.03",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_land_03.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_crumple1",
+        "owlish_paper_flips1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.land.04",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_land_04.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_crumple1",
+        "owlish_paper_flips2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.jump",
+      "cue_id": "player.jump",
+      "tier": 1,
+      "description": "Quick upward paper flick and nib release.",
+      "path": "game/audio/paint_exe/foley/masters/player_jump.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_whiteboard",
+        "owlish_paper_turn1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.skid",
+      "cue_id": "player.skid",
+      "tier": 1,
+      "description": "Brief dragged marker squeak for a committed reversal.",
+      "path": "game/audio/paint_exe/foley/masters/player_skid.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_whiteboard"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.hurt",
+      "cue_id": "player.hurt",
+      "tier": 1,
+      "description": "Wet fruit slap and crushed-paper snap.",
+      "path": "game/audio/paint_exe/foley/masters/player_hurt.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_fruit1",
+        "owlish_paper_crumple2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.pop",
+      "cue_id": "player.pop",
+      "tier": 1,
+      "description": "A real water-bubble burst, with a soft wet body.",
+      "path": "game/audio/paint_exe/foley/masters/player_pop.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_bubbles",
+        "owlish_fruit2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.redraw",
+      "cue_id": "player.redraw",
+      "tier": 2,
+      "description": "Fast marker scribble: a continuous cyclic drawing gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_redraw.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.respawn",
+      "cue_id": "player.respawn",
+      "tier": 1,
+      "description": "Final marker flourish lands in a small paper contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_respawn.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_whiteboard",
+        "owlish_paper_turn1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.step_painted.01",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_painted_01.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.step_painted.02",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_painted_02.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.step_painted.03",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_painted_03.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.step_painted.04",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_painted_04.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.bonk",
+      "cue_id": "player.bonk",
+      "tier": 3,
+      "description": "Dull paper-body tap for a ceiling contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_bonk.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_tap"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.drop",
+      "cue_id": "player.drop",
+      "tier": 3,
+      "description": "Thin paper slip when dropping through a platform.",
+      "path": "game/audio/paint_exe/foley/masters/player_drop.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_turn2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "player.hit_confirm",
+      "cue_id": "player.hit_confirm",
+      "tier": 3,
+      "description": "Small recorded finger-like tap, kept below damage cues.",
+      "path": "game/audio/paint_exe/foley/masters/player_hit_confirm.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_tap"
+      ],
+      "recommended_gain": 0.55,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "sprayer.start",
+      "cue_id": "sprayer.start",
+      "tier": 1,
+      "description": "Pump squeeze and first wet valve opening.",
+      "path": "game/audio/paint_exe/foley/masters/sprayer_start.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_pump"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "sprayer.loop",
+      "cue_id": "sprayer.loop",
+      "tier": 1,
+      "description": "Coarse pressured spray with a wet foam undertone.",
+      "path": "game/audio/paint_exe/foley/masters/sprayer_loop.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_long_spray",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "sprayer.stop",
+      "cue_id": "sprayer.stop",
+      "tier": 1,
+      "description": "Pump return with a brief residual spray tail.",
+      "path": "game/audio/paint_exe/foley/masters/sprayer_stop.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_pump"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "roller.loop",
+      "cue_id": "roller.loop",
+      "tier": 1,
+      "description": "Tacky wet drum: foamy sponge compression under a slowed wall-brush stroke.",
+      "path": "game/audio/paint_exe/foley/masters/roller_loop.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_brush",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "roller.start",
+      "cue_id": "roller.start",
+      "tier": 1,
+      "description": "Wet sponge grabs the floor with a small handle contact.",
+      "path": "game/audio/paint_exe/foley/masters/roller_start.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_tap"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "roller.stop",
+      "cue_id": "roller.stop",
+      "tier": 1,
+      "description": "Wet drum releases pressure and settles.",
+      "path": "game/audio/paint_exe/foley/masters/roller_stop.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "roller.lift",
+      "cue_id": "roller.lift",
+      "tier": 1,
+      "description": "Tacky wet peel as the drum leaves a surface.",
+      "path": "game/audio/paint_exe/foley/masters/roller_lift.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "roller.settle",
+      "cue_id": "roller.settle",
+      "tier": 1,
+      "description": "Soft wet drum contact with a low handle tap.",
+      "path": "game/audio/paint_exe/foley/masters/roller_settle.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "weapon.empty",
+      "cue_id": "weapon.empty",
+      "tier": 1,
+      "description": "Dry pump mechanism: short double mechanical refusal.",
+      "path": "game/audio/paint_exe/foley/masters/weapon_empty.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "weapon.recovered",
+      "cue_id": "weapon.recovered",
+      "tier": 1,
+      "description": "A clear valve catch followed by a tiny liquid plop.",
+      "path": "game/audio/paint_exe/foley/masters/weapon_recovered.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_drips",
+        "owlish_plug"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "mister.start",
+      "cue_id": "mister.start",
+      "tier": 2,
+      "description": "Fine atomiser opens with a fast spray hiss.",
+      "path": "game/audio/paint_exe/foley/masters/mister_start.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "mister.loop",
+      "cue_id": "mister.loop",
+      "tier": 2,
+      "description": "Fine atomiser fizz, higher and softer than the sprayer.",
+      "path": "game/audio/paint_exe/foley/masters/mister_loop.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_long_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "mister.stop",
+      "cue_id": "mister.stop",
+      "tier": 2,
+      "description": "Fine nozzle closes with a short remaining hiss.",
+      "path": "game/audio/paint_exe/foley/masters/mister_stop.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "sniper.shot",
+      "cue_id": "sniper.shot",
+      "tier": 2,
+      "description": "A single sharp pressure release with a physical valve click.",
+      "path": "game/audio/paint_exe/foley/masters/sniper_shot.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug",
+        "owlish_pump"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "sniper.ready",
+      "cue_id": "sniper.ready",
+      "tier": 2,
+      "description": "One distinct latch re-engagement.",
+      "path": "game/audio/paint_exe/foley/masters/sniper_ready.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "bucket.throw",
+      "cue_id": "bucket.throw",
+      "tier": 2,
+      "description": "A swung tin contact over a wet bucket slosh.",
+      "path": "game/audio/paint_exe/foley/masters/bucket_throw.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_1",
+        "owlish_metal_clank"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "paint.splash.01",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_01.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "paint.splash.02",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_02.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "paint.splash.03",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_03.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_6"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "paint.splash.04",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_04.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "paint.splash.05",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_05.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "paint.splash.06",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_06.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "paint.capture",
+      "cue_id": "paint.capture",
+      "tier": 2,
+      "description": "Wet colour-change plop with a firm small contact.",
+      "path": "game/audio/paint_exe/foley/masters/paint_capture.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_bubbles",
+        "owlish_fruit2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "paint.dud",
+      "cue_id": "paint.dud",
+      "tier": 2,
+      "description": "Small dry impact where liquid cannot take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_dud.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_tap"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "paint.impact.sprayer",
+      "cue_id": "paint.impact.sprayer",
+      "tier": 2,
+      "description": "Tool-specific wet contact: sprayer.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_sprayer.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "paint.impact.roller",
+      "cue_id": "paint.impact.roller",
+      "tier": 2,
+      "description": "Tool-specific wet contact: roller.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_roller.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "paint.impact.mister",
+      "cue_id": "paint.impact.mister",
+      "tier": 2,
+      "description": "Tool-specific wet contact: mister.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_mister.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "paint.impact.sniper",
+      "cue_id": "paint.impact.sniper",
+      "tier": 2,
+      "description": "Tool-specific wet contact: sniper.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_sniper.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_fruit3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "paint.impact.bucket",
+      "cue_id": "paint.impact.bucket",
+      "tier": 2,
+      "description": "Tool-specific wet contact: bucket.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_bucket.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "weapon.blocked",
+      "cue_id": "weapon.blocked",
+      "tier": 3,
+      "description": "Dry small mechanism/body tap for cover obstruction.",
+      "path": "game/audio/paint_exe/foley/masters/weapon_blocked.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug"
+      ],
+      "recommended_gain": 0.5,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "bucket.slosh",
+      "cue_id": "bucket.slosh",
+      "tier": 3,
+      "description": "Quiet foamy liquid shift while carrying a bucket.",
+      "path": "game/audio/paint_exe/foley/masters/bucket_slosh.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge"
+      ],
+      "recommended_gain": 0.3,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "tool.drip",
+      "cue_id": "tool.drip",
+      "tier": 3,
+      "description": "Single real drop, nearly off by default.",
+      "path": "game/audio/paint_exe/foley/masters/tool_drip.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_drips"
+      ],
+      "recommended_gain": 0.25,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "room.sigh",
+      "cue_id": "room.sigh",
+      "tier": 1,
+      "description": "A close recorded human exhale, softened as heard outside the monitor.",
+      "path": "game/audio/paint_exe/foley/masters/room_sigh.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sigh"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "room.chair",
+      "cue_id": "room.chair",
+      "tier": 1,
+      "description": "A real chair creak plus a restrained chair movement contact.",
+      "path": "game/audio/paint_exe/foley/masters/room_chair.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_chair",
+        "unkleceeg_chair_creak"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "room.tone",
+      "cue_id": "room.tone",
+      "tier": 2,
+      "description": "Quiet recorded desktop-computer fan; dual mono preserves the source spatial image.",
+      "path": "game/audio/paint_exe/foley/masters/room_tone.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_pc_fan"
+      ],
+      "recommended_gain": 0.65,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "room.footsteps",
+      "cue_id": "room.footsteps",
+      "tier": 3,
+      "description": "Two soft physical room steps, receding in level.",
+      "path": "game/audio/paint_exe/foley/masters/room_footsteps.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_footstep1",
+        "owlish_footstep2"
+      ],
+      "recommended_gain": 0.5,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "room.breath",
+      "cue_id": "room.breath",
+      "tier": 3,
+      "description": "One understated recorded human breath.",
+      "path": "game/audio/paint_exe/foley/masters/room_breath.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_breath"
+      ],
+      "recommended_gain": 0.4,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "world.ambience.close_quarters",
+      "cue_id": "world.ambience.close_quarters",
+      "tier": 3,
+      "description": "Quiet nearby room fan; optional decorative bed.",
+      "path": "game/audio/paint_exe/foley/masters/world_ambience_close_quarters.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_fan"
+      ],
+      "recommended_gain": 0.25,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "world.ambience.king_of_the_hill",
+      "cue_id": "world.ambience.king_of_the_hill",
+      "tier": 3,
+      "description": "Muffled air extractor in a larger distant room.",
+      "path": "game/audio/paint_exe/foley/masters/world_ambience_king_of_the_hill.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_extractor"
+      ],
+      "recommended_gain": 0.25,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "world.ambience.turbulence",
+      "cue_id": "world.ambience.turbulence",
+      "tier": 3,
+      "description": "Higher air-extractor texture for the elevated arena.",
+      "path": "game/audio/paint_exe/foley/masters/world_ambience_turbulence.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_extractor"
+      ],
+      "recommended_gain": 0.25,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    },
+    {
+      "id": "world.detail",
+      "cue_id": "world.detail",
+      "tier": 3,
+      "description": "An occasional real pipe-like droplet; off by default.",
+      "path": "game/audio/paint_exe/foley/masters/world_detail.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_drips"
+      ],
+      "recommended_gain": 0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json"
+    }
+  ]
+}

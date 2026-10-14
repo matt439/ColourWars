@@ -1,0 +1,8221 @@
+{
+  "sample_rate": 44100,
+  "events": [
+    {
+      "frame": 0,
+      "role": "bass",
+      "note": "G2",
+      "gain": 0.19705,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 47235,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.19771,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 23389,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.09152,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 24698,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.09247,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 25691,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.08608,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 70683,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.08719,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 71816,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08852,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 73171,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.08206,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 0,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.15851,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 47007,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.13141,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 23751,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08864,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 71180,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08487,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 0,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05324,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 12110,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03577,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 23575,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05361,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 35290,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03537,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 47123,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04683,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 59154,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03793,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 70651,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04805,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 82859,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03253,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 94808,
+      "role": "bass",
+      "note": "F#2",
+      "gain": 0.19966,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 142076,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.18839,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 117908,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.09703,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 119474,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.08969,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 120379,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.09818,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 165042,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.07969,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 166267,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.08336,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 167027,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.08805,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 94229,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.1799,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 141566,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.13387,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 117880,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08959,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 165354,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09463,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 94692,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0453,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 106308,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03709,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 118366,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05501,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 129840,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03361,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 141488,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05069,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 153715,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03744,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 165583,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04583,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 177060,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03652,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 188972,
+      "role": "bass",
+      "note": "E3",
+      "gain": 0.19163,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 236354,
+      "role": "bass",
+      "note": "B2",
+      "gain": 0.20773,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 212516,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.08867,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 213475,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.09652,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 214781,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.08755,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 259666,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.08521,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 260960,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08027,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 261929,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.08487,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 189063,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.16074,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 236454,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12723,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 212524,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09624,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 260176,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08363,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 188994,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05167,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 200517,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03141,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 212611,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04705,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 224639,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03212,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 236117,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05353,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 248362,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03378,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 259694,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05104,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 271927,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03334,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 283219,
+      "role": "bass",
+      "note": "B2",
+      "gain": 0.20125,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 330722,
+      "role": "bass",
+      "note": "F#3",
+      "gain": 0.20425,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 306853,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.09417,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 307868,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.0953,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 308715,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.09587,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 354245,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.08611,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 355559,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.0855,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 356356,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.07774,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 283568,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.16543,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 330670,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12416,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 307317,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0871,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 354437,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08357,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 283365,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05049,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 295327,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03437,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 307166,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04986,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 318860,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03458,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 330891,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05449,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 342470,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03512,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 354442,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04753,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 366031,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03799,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 377604,
+      "role": "bass",
+      "note": "C3",
+      "gain": 0.19665,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 425079,
+      "role": "bass",
+      "note": "G2",
+      "gain": 0.1912,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 401325,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.09404,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 402498,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.0914,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 403258,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.09367,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 449214,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.07937,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 449478,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.0806,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 450641,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.08109,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 378009,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.1766,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 425431,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.11819,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 401814,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09277,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 448778,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09731,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 378302,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05156,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 389795,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03461,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 401701,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04608,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 413381,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03372,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 425003,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05289,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 437226,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03793,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 448602,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05068,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 460467,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03427,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 472468,
+      "role": "bass",
+      "note": "B2",
+      "gain": 0.2161,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 519541,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.21258,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 496122,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.09448,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 497341,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.09045,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 498087,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.09,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 543153,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.08584,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 544035,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.07789,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 545243,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.08295,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 472384,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.1616,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 519620,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12935,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 496099,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0858,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 543086,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10032,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 472783,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05176,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 484227,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03385,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 495855,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04803,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 507980,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03229,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 519937,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04543,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 531798,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03777,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 543564,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04631,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 554943,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03521,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 567119,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.19488,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 613991,
+      "role": "bass",
+      "note": "E3",
+      "gain": 0.2164,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 590435,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.08834,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 591703,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.09782,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 592426,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.09543,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 637961,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.08652,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 639198,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.07967,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 639498,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.08846,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 566776,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.17802,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 614433,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12453,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 590755,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09417,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 637784,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09879,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 567010,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05275,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 578736,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03295,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 590496,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05508,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 602405,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03432,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 614410,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.048,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 626219,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0317,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 637962,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04962,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 649825,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0335,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 661806,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.19307,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 708763,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.20813,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 685275,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.09432,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 686303,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.09142,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 686991,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.09631,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 732195,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.08732,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 733199,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.08732,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 734008,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.08054,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 661599,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.16064,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 708828,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.127,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 685011,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0984,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 732138,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09115,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 661536,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0502,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 673468,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03469,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 684907,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05346,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 696819,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03472,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 709000,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05212,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 720714,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03687,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 732654,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05127,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 744382,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03744,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 720626,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05858,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_1"
+    },
+    {
+      "frame": 732280,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07035,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_2"
+    },
+    {
+      "frame": 743967,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08537,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_1"
+    },
+    {
+      "frame": 750276,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09402,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_2"
+    },
+    {
+      "frame": 0,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.25218,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 35637,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.23203,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 47521,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.22051,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 70760,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.24187,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 94554,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.27131,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 118484,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.22675,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 130143,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.2239,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 141927,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.24877,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 188811,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.26267,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 212491,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.24846,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 236413,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.22653,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 247759,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.22544,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 259638,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.23257,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 283161,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.25084,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 319319,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.23614,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 330984,
+      "role": "melody",
+      "note": "F#4",
+      "gain": 0.21833,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 378013,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.27481,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 401242,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.2437,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 413466,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.22163,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 425080,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.24486,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 448757,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.21773,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 472162,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.26773,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 496085,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.23966,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 519487,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.22143,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 566815,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.24717,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 578662,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.24706,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 590288,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.21766,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 614132,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.22764,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 637992,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.2173,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 661774,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.24597,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 685513,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.23199,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 697217,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.22393,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 708713,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.23847,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 755681,
+      "role": "bass",
+      "note": "C3",
+      "gain": 0.19544,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 803302,
+      "role": "bass",
+      "note": "G2",
+      "gain": 0.18088,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 779778,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.08164,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 780269,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.0807,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 781669,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.08537,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 826619,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.0749,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 827805,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.06962,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 829134,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.07151,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 755887,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.16119,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 803397,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.11607,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 779755,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08726,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 826585,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07868,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 756306,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04813,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 767866,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02993,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 779601,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04172,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 791531,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03441,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 803410,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04476,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 815041,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0303,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 826819,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04825,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 838741,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03354,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 850158,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.18536,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 898083,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.18922,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 874067,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.08691,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 875303,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.08313,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 876131,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.0852,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 921417,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.0769,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 922667,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.0787,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 923110,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.07466,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 850741,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.15218,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 897879,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12205,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 874317,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08286,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 921524,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07769,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 850196,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04135,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 862469,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03018,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 874196,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04615,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 885889,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02863,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 897660,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04658,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 909285,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03039,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 921383,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04878,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 933131,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03223,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 944908,
+      "role": "bass",
+      "note": "B2",
+      "gain": 0.18658,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 992414,
+      "role": "bass",
+      "note": "F#3",
+      "gain": 0.18931,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 968335,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.08025,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 969829,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.08536,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 970884,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.07867,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 1015763,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.07051,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 1017115,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.08009,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 1017534,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.07832,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 945243,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.15941,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 992398,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10796,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 968334,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08182,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 1015985,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08574,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 945031,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04477,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 956619,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03425,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 968378,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04546,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 980660,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03189,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 992078,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04791,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1003996,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03092,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1016012,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04277,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1027425,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02906,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1039839,
+      "role": "bass",
+      "note": "E3",
+      "gain": 0.17943,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 1086905,
+      "role": "bass",
+      "note": "B2",
+      "gain": 0.19399,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 1063026,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.08573,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 1064261,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08517,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1065348,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.08645,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1110577,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.07967,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1111133,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.07253,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1111980,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.07542,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 1039355,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.13804,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 1086527,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.1165,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 1063433,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.082,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 1110640,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08596,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 1039770,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04858,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1051544,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03051,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1063084,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04209,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1075208,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02816,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1086881,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04285,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1098416,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02944,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1110504,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04848,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1121959,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03273,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1134252,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.17615,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 1180949,
+      "role": "bass",
+      "note": "E3",
+      "gain": 0.18141,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 1157757,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.08569,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 1158426,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08353,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1159696,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.07775,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1204641,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.07009,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1205487,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.07984,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1206568,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.07979,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 1133719,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.13579,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 1181224,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.11813,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 1157917,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07632,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 1204786,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08518,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 1133931,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04098,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1145735,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03267,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1157566,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04587,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1169442,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02857,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1181330,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0423,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1192762,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03357,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1204865,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0424,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1216487,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03087,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1228160,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.19574,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 1275721,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.17734,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 1251820,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.08698,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 1252997,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.07861,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 1253895,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.08631,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1299328,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.07455,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1300051,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.07128,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 1301030,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.07637,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 1228283,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.14582,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 1275920,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12103,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 1252121,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08504,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 1299421,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08569,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 1228366,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04743,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1240468,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03178,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1252250,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04792,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1263996,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03303,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1275936,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04649,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1287348,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03367,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1299097,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04958,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1311048,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03167,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1323362,
+      "role": "bass",
+      "note": "G2",
+      "gain": 0.18982,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 1370160,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.1916,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 1346786,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.08556,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 1347854,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.07911,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1348723,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.08176,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1394084,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.0734,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1394540,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.07749,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1396002,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.07232,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 1322991,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.15213,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 1370201,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10668,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 1346755,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07463,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 1394081,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08024,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 1323085,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04486,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1334785,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0336,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1346384,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04836,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1358465,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02861,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1370295,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04407,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1382168,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02928,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1394018,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04575,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1405856,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02812,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1417648,
+      "role": "bass",
+      "note": "B2",
+      "gain": 0.19417,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 1464758,
+      "role": "bass",
+      "note": "F#3",
+      "gain": 0.19023,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 1441432,
+      "role": "strum",
+      "note": "D#4",
+      "gain": 0.08868,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 1441744,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.08055,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 1443233,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.08433,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 1488369,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.07841,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 1489202,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.07845,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 1490146,
+      "role": "strum",
+      "note": "D#4",
+      "gain": 0.07789,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 1417375,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.16306,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 1464822,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12145,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 1441382,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0795,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 1488301,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0752,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 1417500,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04829,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1429257,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03289,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1441131,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04141,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1452958,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03136,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1464744,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04608,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1476773,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03412,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1488325,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04939,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1499963,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.032,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1476284,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05517,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_1"
+    },
+    {
+      "frame": 1488472,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.06914,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_2"
+    },
+    {
+      "frame": 1500330,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07941,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_1"
+    },
+    {
+      "frame": 1505900,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09819,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_2"
+    },
+    {
+      "frame": 755703,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.22878,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 779465,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.1965,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 791118,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.19148,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 803610,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.19113,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 826650,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.21534,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 850794,
+      "role": "melody",
+      "note": "A5",
+      "gain": 0.21748,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 886307,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.21703,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 897675,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.21275,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 921106,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.21652,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 944985,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.23831,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 968242,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.21712,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 991979,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.21213,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 1004438,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.21811,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 1015854,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.2065,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 1039158,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.22659,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 1075188,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.1989,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 1086787,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.20135,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 1134352,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.23698,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 1157337,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.21163,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 1169391,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.20243,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 1181514,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.2016,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 1204751,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.21633,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 1228107,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.22685,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 1240172,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.21458,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 1252123,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.20886,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 1275793,
+      "role": "melody",
+      "note": "A5",
+      "gain": 0.21255,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 1299345,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.19989,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 1323208,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.21382,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 1346797,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.20689,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 1370592,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.19742,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 1393492,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.2048,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 1417111,
+      "role": "melody",
+      "note": "F#4",
+      "gain": 0.23207,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 1429526,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.21452,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 1440947,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.19053,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 1464734,
+      "role": "melody",
+      "note": "D#5",
+      "gain": 0.20323,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 1488506,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.19792,
+      "pan": 0.17,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 803248,
+      "role": "melody",
+      "note": "E4",
+      "gain": 0.06179,
+      "pan": 0.3,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 827269,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.06488,
+      "pan": 0.3,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 897532,
+      "role": "melody",
+      "note": "F#4",
+      "gain": 0.06694,
+      "pan": 0.3,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 921290,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.06282,
+      "pan": 0.3,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 992021,
+      "role": "melody",
+      "note": "D4",
+      "gain": 0.06303,
+      "pan": 0.3,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 1015569,
+      "role": "melody",
+      "note": "F#4",
+      "gain": 0.06089,
+      "pan": 0.3,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 1086954,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.06806,
+      "pan": 0.3,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1110041,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.06795,
+      "pan": 0.3,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1181190,
+      "role": "melody",
+      "note": "E4",
+      "gain": 0.06393,
+      "pan": 0.3,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 1204930,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.06109,
+      "pan": 0.3,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 1275471,
+      "role": "melody",
+      "note": "D4",
+      "gain": 0.06861,
+      "pan": 0.3,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 1299576,
+      "role": "melody",
+      "note": "F#4",
+      "gain": 0.06591,
+      "pan": 0.3,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 1370607,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.06488,
+      "pan": 0.3,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1393642,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.0678,
+      "pan": 0.3,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1464899,
+      "role": "melody",
+      "note": "F#4",
+      "gain": 0.06198,
+      "pan": 0.3,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 1488426,
+      "role": "melody",
+      "note": "D#4",
+      "gain": 0.06652,
+      "pan": 0.3,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 1511755,
+      "role": "bass",
+      "note": "E3",
+      "gain": 0.16055,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 1559282,
+      "role": "bass",
+      "note": "B2",
+      "gain": 0.16427,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 1535938,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.07872,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 1536767,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08053,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1537565,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.07634,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1582582,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.07534,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1583959,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.07515,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1584631,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.07333,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 1512099,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.1372,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 1559297,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0998,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 1535808,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08205,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 1582770,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07681,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 1511915,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03863,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1523595,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.028,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1535684,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04109,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1547278,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02701,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1559364,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04054,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1571074,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02956,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1583126,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03953,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1594991,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03011,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1606361,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.18406,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 1653847,
+      "role": "bass",
+      "note": "E3",
+      "gain": 0.16586,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 1630455,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.07352,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 1631313,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.07407,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1631965,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.08022,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1677222,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.07121,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1678458,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.07291,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1679626,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.06605,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 1606513,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.1262,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 1653991,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10923,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 1629837,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0704,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 1677198,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07453,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 1606249,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04305,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1618035,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02744,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1630174,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04479,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1642096,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02885,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1653994,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0384,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1665850,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02733,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1677328,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04386,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1688882,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03045,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1701254,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.16215,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 1748503,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.1672,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 1724579,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.07757,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 1725651,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.07727,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 1726609,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.07621,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1772185,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.06554,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1773095,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.07295,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 1774014,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.07199,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 1701231,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12746,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 1748259,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09881,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 1724591,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08306,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 1772048,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07124,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 1700994,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04683,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1712509,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02951,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1724861,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04489,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1736488,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0284,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1748070,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03997,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1759998,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03042,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1772054,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04332,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1783458,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03026,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1795283,
+      "role": "bass",
+      "note": "G2",
+      "gain": 0.1754,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 1842845,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.16024,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 1819240,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.07387,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 1820118,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08248,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1820790,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.07781,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1866030,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.07429,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1867717,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.07205,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1868656,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.07301,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 1795311,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.13929,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 1842954,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10427,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 1819011,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0762,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 1866083,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08473,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 1795390,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0392,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1807143,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02916,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1819297,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04593,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1830633,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03149,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1842643,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04456,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1854801,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02741,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1866614,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04688,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1878097,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03035,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 1890165,
+      "role": "bass",
+      "note": "C3",
+      "gain": 0.16262,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 1937138,
+      "role": "bass",
+      "note": "G2",
+      "gain": 0.16891,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 1913859,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.08244,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 1914752,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.07593,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1915693,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.08138,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1961109,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.06798,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1961686,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.07112,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 1962751,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.07504,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 1890227,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.13018,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 1937177,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.11455,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 1913666,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07635,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 1960940,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07148,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 1889923,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04439,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1901648,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0296,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1913594,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04422,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1925430,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03192,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1937323,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04052,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1949028,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02911,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1960840,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04559,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 1972663,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02751,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 1984355,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.16095,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 2032095,
+      "role": "bass",
+      "note": "E3",
+      "gain": 0.18393,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 2007747,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.08064,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 2009456,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08148,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 2010253,
+      "role": "strum",
+      "note": "C#5",
+      "gain": 0.07278,
+      "pan": -0.33,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 2055015,
+      "role": "strum",
+      "note": "C#5",
+      "gain": 0.07501,
+      "pan": -0.33,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 2056095,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.06844,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 2057192,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.06908,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 1984548,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.14286,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 2031514,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10684,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 2007963,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08114,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 2055397,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0809,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 1984220,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03977,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 1996196,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03233,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2008376,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04202,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2020170,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03158,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2031764,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04124,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2043419,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02982,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2055115,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03903,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2067244,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0289,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2079124,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.1729,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 2126631,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.18155,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 2102352,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.07353,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 2103969,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.08309,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2104549,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.07363,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2149507,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.06615,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2150849,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.07421,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2152027,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.0657,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 2079005,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12705,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 2126519,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.11841,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 2102470,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08347,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 2149725,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.06957,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 2079061,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04606,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2090532,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03231,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2102757,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03851,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2114376,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02981,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2126391,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04503,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2137965,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.02785,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2149695,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04548,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2161802,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03198,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2173385,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.17662,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 2220981,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.16488,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 2197471,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.07917,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 2198336,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.07473,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2199457,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.0804,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2244281,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.07353,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2245164,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.06556,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2246523,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.07288,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 2173496,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.14687,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 2220930,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10441,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 2197296,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08456,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 2244486,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08415,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 2173226,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03982,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2185273,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03188,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2197052,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04161,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2208924,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03068,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2220798,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04401,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2232444,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0322,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2244488,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04098,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2256419,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0314,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2232710,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05396,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_1"
+    },
+    {
+      "frame": 2244449,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0611,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_2"
+    },
+    {
+      "frame": 2256261,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07101,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_1"
+    },
+    {
+      "frame": 2261992,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07928,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_2"
+    },
+    {
+      "frame": 1511782,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.2438,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1535754,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.20037,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 1559048,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.19917,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 1570686,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.20539,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 1582719,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.21743,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 1606116,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.24507,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1618602,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.21748,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 1630233,
+      "role": "melody",
+      "note": "A5",
+      "gain": 0.20825,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A5"
+    },
+    {
+      "frame": 1654088,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.2189,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 1677251,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.22888,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 1700612,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.2494,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 1724711,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.22571,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 1748297,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.22073,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 1771902,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.20862,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1795543,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.23046,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 1831134,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.20118,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 1843013,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.20771,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 1889680,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.24914,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 1902092,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.22032,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 1913640,
+      "role": "melody",
+      "note": "B5",
+      "gain": 0.22425,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C6"
+    },
+    {
+      "frame": 1937125,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.22178,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 1960640,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.21455,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 1984435,
+      "role": "melody",
+      "note": "C#5",
+      "gain": 0.23084,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 1996390,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.22122,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 2008447,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.22216,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 2031844,
+      "role": "melody",
+      "note": "A5",
+      "gain": 0.2175,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A5"
+    },
+    {
+      "frame": 2054985,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.208,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 2078876,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.22444,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 2102887,
+      "role": "melody",
+      "note": "A5",
+      "gain": 0.19909,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A5"
+    },
+    {
+      "frame": 2126543,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.22338,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 2137762,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.20792,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 2150125,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.2084,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 2173480,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.24862,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2185355,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.20994,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2197300,
+      "role": "melody",
+      "note": "F#4",
+      "gain": 0.20364,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 2221093,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.2054,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2244598,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.20694,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 2267913,
+      "role": "bass",
+      "note": "C3",
+      "gain": 0.22339,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 2315456,
+      "role": "bass",
+      "note": "G2",
+      "gain": 0.23283,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 2291257,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.1001,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 2292956,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.09741,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 2293256,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.09866,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2338484,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.08489,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2339656,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08439,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 2340926,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.09331,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 2268289,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.17063,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 2315328,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.13496,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 2291339,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09247,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 2338766,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.1012,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 2268271,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05805,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2279747,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0388,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2291505,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04931,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2303143,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03986,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2315323,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05625,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2327049,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0385,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2338820,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05059,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2350855,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03955,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2362734,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.21651,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 2410023,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.21213,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 2386221,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.10155,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 2386984,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.09327,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2388275,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.10314,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2433347,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.09226,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2434435,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.08542,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2435047,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.09066,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 2362201,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.16805,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 2409850,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.14145,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 2386093,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09233,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 2433497,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08921,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 2362745,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05864,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2374584,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04097,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2385938,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05305,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2397771,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03489,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2409735,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05246,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2421657,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03744,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2433548,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04869,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2445258,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03639,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2457375,
+      "role": "bass",
+      "note": "B2",
+      "gain": 0.2075,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 2504619,
+      "role": "bass",
+      "note": "F#3",
+      "gain": 0.22715,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 2481018,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.10225,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 2481715,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.10394,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 2482357,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.09988,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2528244,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.08837,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2528944,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.08842,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 2529476,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.0935,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 2457129,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.18609,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 2504371,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.13377,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 2480646,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09237,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 2527665,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08863,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 2456919,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04961,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2468907,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0408,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2480405,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04888,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2492180,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03511,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2504128,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04845,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2516167,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03917,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2528077,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05194,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2539396,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03611,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2551267,
+      "role": "bass",
+      "note": "E3",
+      "gain": 0.23284,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 2598674,
+      "role": "bass",
+      "note": "B2",
+      "gain": 0.21049,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 2575098,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.09527,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 2575745,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.09334,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 2577243,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.09658,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2622650,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.08398,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2623161,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08896,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 2623927,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.08792,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 2551262,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.18881,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 2598504,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.14521,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 2575411,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08963,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 2622308,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09711,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 2551656,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05347,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2563162,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0396,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2575144,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05593,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2586649,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03883,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2598922,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05516,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2610330,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03902,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2622382,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04954,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2634476,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03992,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2645720,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.23085,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 2693256,
+      "role": "bass",
+      "note": "E3",
+      "gain": 0.22631,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 2669559,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.10325,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 2670921,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.10311,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 2671915,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.09747,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2717056,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.09418,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2718008,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08408,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 2718903,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.09129,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 2645975,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.16964,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 2693336,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.13494,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 2669805,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09884,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 2716651,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.1061,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 2645845,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05214,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2657563,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03508,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2669863,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0488,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2681676,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03648,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2693442,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05149,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2705230,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03596,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2717063,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04956,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2728979,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03681,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2740684,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.23234,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 2787786,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.23024,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 2764312,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.09996,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 2765233,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.10385,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2766299,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.09474,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2810989,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.09033,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2812294,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.08522,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2813246,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.08321,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 2740383,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.16224,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 2787446,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.14019,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 2764207,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0916,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 2811318,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08933,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 2740408,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05589,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2752571,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03394,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2764335,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05791,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2775965,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03846,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2787820,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05916,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2799501,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03358,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2811462,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0588,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2823174,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03617,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2834971,
+      "role": "bass",
+      "note": "G2",
+      "gain": 0.22219,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 2882388,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.20863,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 2858296,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.09429,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 2859412,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.10107,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 2860882,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.10201,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2906166,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.09212,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2906968,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08996,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 2908042,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.08424,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 2834741,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.19236,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 2882489,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12624,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 2858487,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09489,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 2906108,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10443,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 2834695,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05282,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2847059,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03498,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2858858,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0496,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2870488,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03588,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2882015,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05801,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2893831,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04083,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2905978,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04853,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 2917454,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04077,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 2929347,
+      "role": "bass",
+      "note": "B2",
+      "gain": 0.23235,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 2976834,
+      "role": "bass",
+      "note": "F#3",
+      "gain": 0.22651,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 2952779,
+      "role": "strum",
+      "note": "D#4",
+      "gain": 0.10177,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 2954279,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.09283,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 2955435,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.09615,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 3000064,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.09046,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 3001589,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.0882,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 3002275,
+      "role": "strum",
+      "note": "D#4",
+      "gain": 0.08918,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 2929744,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.19272,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 2976949,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.14263,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 2952944,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09697,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 3000620,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10352,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 2929508,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0535,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2941498,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03792,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2952847,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05379,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2964761,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03464,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2977022,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05307,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 2988410,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03806,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3000192,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05239,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3011891,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03345,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 2988295,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.06682,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_1"
+    },
+    {
+      "frame": 3000165,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.07915,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_2"
+    },
+    {
+      "frame": 3012227,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08546,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_1"
+    },
+    {
+      "frame": 3018133,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.11659,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_2"
+    },
+    {
+      "frame": 2267617,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.25106,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 2291481,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.22172,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 2303806,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.22004,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2315311,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.23127,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2338508,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.23671,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 2362488,
+      "role": "melody",
+      "note": "A5",
+      "gain": 0.24578,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A5"
+    },
+    {
+      "frame": 2398139,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.22795,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 2409785,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.24291,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 2433635,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.23012,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 2457282,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.25807,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 2480627,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.21659,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 2504603,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.23369,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2515991,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.22222,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 2527533,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.24208,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 2551283,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.25085,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 2586710,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.23739,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 2598713,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.24655,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2645683,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.25212,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 2669381,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.24031,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2681783,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.23052,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2693354,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.23185,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 2716776,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.22862,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2740665,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.24736,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 2752091,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.21934,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 2764271,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.21963,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 2787800,
+      "role": "melody",
+      "note": "A5",
+      "gain": 0.23139,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A5"
+    },
+    {
+      "frame": 2811682,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.22119,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 2834891,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.25029,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 2858736,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.23763,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 2882454,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.22387,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2905678,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.22348,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 2929110,
+      "role": "melody",
+      "note": "F#4",
+      "gain": 0.24816,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 2941116,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.23562,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 2953085,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.23367,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 2976630,
+      "role": "melody",
+      "note": "D#5",
+      "gain": 0.24791,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 3000080,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.24667,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 2314908,
+      "role": "melody",
+      "note": "E4",
+      "gain": 0.06229,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 2339250,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.06284,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 2409532,
+      "role": "melody",
+      "note": "F#4",
+      "gain": 0.06373,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 2433617,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.06762,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 2504430,
+      "role": "melody",
+      "note": "D4",
+      "gain": 0.06197,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_C3"
+    },
+    {
+      "frame": 2527539,
+      "role": "melody",
+      "note": "F#4",
+      "gain": 0.06759,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 2598862,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.06829,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 2622420,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.06586,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 2693619,
+      "role": "melody",
+      "note": "E4",
+      "gain": 0.06591,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 2717213,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.06676,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 2787649,
+      "role": "melody",
+      "note": "D4",
+      "gain": 0.06617,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_C3"
+    },
+    {
+      "frame": 2811584,
+      "role": "melody",
+      "note": "F#4",
+      "gain": 0.06761,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 2882578,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.0652,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 2905822,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.06714,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 2977073,
+      "role": "melody",
+      "note": "F#4",
+      "gain": 0.06822,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 3000556,
+      "role": "melody",
+      "note": "D#4",
+      "gain": 0.06192,
+      "pan": 0.3,
+      "source_id": "music.vcsl.piano_C3"
+    },
+    {
+      "frame": 3023754,
+      "role": "bass",
+      "note": "G2",
+      "gain": 0.22983,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 3071445,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.2127,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 3047682,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.10213,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 3048410,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.09792,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 3049816,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.10415,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3094633,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.08895,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3096191,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08627,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 3096588,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.09258,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 3023994,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.16415,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 3071549,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12497,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 3047598,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10284,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 3094636,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09475,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 3023720,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05363,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3035960,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03942,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3047342,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05563,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3059721,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03968,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3071290,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05029,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3083272,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03961,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3094733,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05875,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3106796,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03727,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3118252,
+      "role": "bass",
+      "note": "F#2",
+      "gain": 0.20505,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 3165659,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.22183,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 3141921,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.0973,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 3143223,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.09242,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 3143690,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.09359,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 3189649,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.09497,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 3190687,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.08763,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 3191594,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.08811,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 3118617,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.18862,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 3166050,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12928,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 3142109,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09047,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 3189068,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10154,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 3118605,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0493,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3130015,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03925,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3142187,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05037,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3153758,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03779,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3165758,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04866,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3177602,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03479,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3189372,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05059,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3201426,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04002,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3213226,
+      "role": "bass",
+      "note": "E3",
+      "gain": 0.2173,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 3260540,
+      "role": "bass",
+      "note": "B2",
+      "gain": 0.22275,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 3236821,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.09973,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 3237390,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.10113,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 3238234,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.09411,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3283605,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.09268,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3284594,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08841,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 3286146,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.09163,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 3213021,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.17126,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 3260435,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.14925,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 3236875,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09912,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 3283914,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08834,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 3213246,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05208,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3225012,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04042,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3236531,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05053,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3248430,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03974,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3260472,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05214,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3272138,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03487,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3283575,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04971,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3295808,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04046,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3307179,
+      "role": "bass",
+      "note": "B2",
+      "gain": 0.21493,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 3354477,
+      "role": "bass",
+      "note": "F#3",
+      "gain": 0.21212,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 3331269,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.09231,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 3331700,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.10469,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 3333057,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.10094,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 3378417,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.09277,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 3379303,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.08687,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 3380334,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.09305,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 3307722,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.16679,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 3354913,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12536,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 3331236,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10598,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 3378211,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09351,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 3307698,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05158,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3319066,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0338,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3330852,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04877,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3342959,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03706,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3355005,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05499,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3366807,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03715,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3378390,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05297,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3390090,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03444,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3402057,
+      "role": "bass",
+      "note": "C3",
+      "gain": 0.20588,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 3449444,
+      "role": "bass",
+      "note": "G2",
+      "gain": 0.21902,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 3425405,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.0981,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 3426492,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.09753,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 3427859,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.09909,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3473035,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.09338,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3473595,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08482,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 3474778,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.08307,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 3402255,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.1828,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 3449436,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.13396,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 3425365,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09857,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 3472953,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09978,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 3401771,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04931,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3414026,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03731,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3425706,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05348,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3437733,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03656,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3449319,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05083,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3460818,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03787,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3472977,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05053,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3484852,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03865,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3496717,
+      "role": "bass",
+      "note": "B2",
+      "gain": 0.21879,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 3543551,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.21686,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 3520521,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.09294,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 3521332,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.0948,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 3521851,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.09247,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3567754,
+      "role": "strum",
+      "note": "B4",
+      "gain": 0.09006,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3568053,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.08717,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 3569099,
+      "role": "strum",
+      "note": "D4",
+      "gain": 0.09437,
+      "pan": -0.33,
+      "source_id": "music.ukulele.D4"
+    },
+    {
+      "frame": 3496193,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.16623,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 3543743,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.12763,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 3519869,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09981,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 3567124,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08865,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_2"
+    },
+    {
+      "frame": 3496448,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04927,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3508061,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03481,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3519890,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05908,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3532235,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03965,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3543648,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05026,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3555414,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03994,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3567675,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05897,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3579465,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03728,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3590921,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.20393,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 3637953,
+      "role": "bass",
+      "note": "E3",
+      "gain": 0.20757,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G2"
+    },
+    {
+      "frame": 3614996,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.10022,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 3615684,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.09603,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 3616646,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.10585,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3661605,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.08874,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3662875,
+      "role": "strum",
+      "note": "G4",
+      "gain": 0.0845,
+      "pan": -0.33,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 3663423,
+      "role": "strum",
+      "note": "E4",
+      "gain": 0.08364,
+      "pan": -0.33,
+      "source_id": "music.ukulele.E4"
+    },
+    {
+      "frame": 3591180,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.1763,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 3638032,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.13652,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 3614771,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09427,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 3661620,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10071,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_3"
+    },
+    {
+      "frame": 3590899,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.0554,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3602860,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03362,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3614744,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04911,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3626139,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03502,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3638483,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05722,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3649924,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03443,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3662006,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05891,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_1"
+    },
+    {
+      "frame": 3673715,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04057,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_1"
+    },
+    {
+      "frame": 3685667,
+      "role": "bass",
+      "note": "D3",
+      "gain": 0.21409,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_C2"
+    },
+    {
+      "frame": 3732946,
+      "role": "bass",
+      "note": "A2",
+      "gain": 0.20993,
+      "pan": -0.05,
+      "source_id": "music.vcsl.piano_G1"
+    },
+    {
+      "frame": 3709470,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.09753,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 3710091,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.094,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 3711350,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.09301,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3756077,
+      "role": "strum",
+      "note": "C5",
+      "gain": 0.08785,
+      "pan": -0.33,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3757232,
+      "role": "strum",
+      "note": "A4",
+      "gain": 0.09326,
+      "pan": -0.33,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 3758430,
+      "role": "strum",
+      "note": "F#4",
+      "gain": 0.09154,
+      "pan": -0.33,
+      "source_id": "music.ukulele.F#4"
+    },
+    {
+      "frame": 3685729,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.15862,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_2"
+    },
+    {
+      "frame": 3732694,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.1246,
+      "pan": 0.06,
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    {
+      "frame": 3709271,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09712,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 3756604,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08874,
+      "pan": 0.17,
+      "source_id": "music.vcsl.clap_1"
+    },
+    {
+      "frame": 3685560,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05407,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3697181,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03471,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3709407,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04923,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3720936,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03484,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3732734,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.05689,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3744280,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03744,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3756427,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.04842,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_down_2"
+    },
+    {
+      "frame": 3768035,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.03357,
+      "pan": 0.42,
+      "source_id": "music.vcsl.shaker_up_2"
+    },
+    {
+      "frame": 3744803,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.06742,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_1"
+    },
+    {
+      "frame": 3756468,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.08078,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_2"
+    },
+    {
+      "frame": 3767884,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09167,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_1"
+    },
+    {
+      "frame": 3774237,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.09964,
+      "pan": -0.18,
+      "source_id": "music.vcsl.bongo_2"
+    },
+    {
+      "frame": 3024261,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.25119,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 3059069,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.24457,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3070982,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.23834,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 3094714,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.24024,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 3118230,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.24594,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 3141961,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.23664,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 3153656,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.2351,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 3165749,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.24827,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 3213086,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.26325,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 3236357,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.24155,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 3260224,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.24275,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 3272152,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.2458,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 3283755,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.21962,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3307117,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.26269,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 3343096,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.22976,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3354790,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.22139,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 3402355,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.26063,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 3425510,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.2376,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 3437516,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.22999,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 3448977,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.2469,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3473219,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.22342,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3496458,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.24338,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 3520332,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.2399,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3543781,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.22258,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 3591076,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.24684,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A4"
+    },
+    {
+      "frame": 3602969,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.22267,
+      "pan": -0.08,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 3614866,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.24427,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 3638328,
+      "role": "melody",
+      "note": "G5",
+      "gain": 0.23222,
+      "pan": -0.08,
+      "source_id": "music.ukulele.G5"
+    },
+    {
+      "frame": 3662203,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.24111,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 3685751,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.24359,
+      "pan": -0.08,
+      "source_id": "music.ukulele.F5"
+    },
+    {
+      "frame": 3708942,
+      "role": "melody",
+      "note": "E5",
+      "gain": 0.21754,
+      "pan": -0.08,
+      "source_id": "music.ukulele.D#5"
+    },
+    {
+      "frame": 3720978,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.23658,
+      "pan": -0.08,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 3732504,
+      "role": "melody",
+      "note": "A5",
+      "gain": 0.22913,
+      "pan": -0.08,
+      "source_id": "music.ukulele.A5"
+    }
+  ]
+}

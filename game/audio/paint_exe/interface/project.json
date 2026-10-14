@@ -1,0 +1,911 @@
+{
+  "version": 1,
+  "sample_rate": 44100,
+  "samples": {
+    "mouse": {
+      "path": "game/audio/paint_exe/interface/sources/mouse.wav",
+      "source_id": "interface.owlish.mouse"
+    },
+    "flip": {
+      "path": "game/audio/paint_exe/interface/sources/flip.wav",
+      "source_id": "interface.owlish.flip"
+    },
+    "uke": {
+      "path": "game/audio/paint_exe/music/sources/ukulele/samples/C4.wav",
+      "source_id": "music.ukulele.C4"
+    },
+    "body": {
+      "path": "game/audio/paint_exe/music/sources/ukulele/samples/body-tap.wav",
+      "source_id": "music.ukulele.body_tap"
+    },
+    "chuck": {
+      "path": "game/audio/paint_exe/music/sources/ukulele/samples/chuck.wav",
+      "source_id": "music.ukulele.chuck"
+    },
+    "clap": {
+      "path": "game/audio/paint_exe/music/sources/vcsl/Clap_rr1.wav",
+      "source_id": "music.vcsl.clap_1"
+    },
+    "cajon": {
+      "path": "game/audio/paint_exe/music/sources/vcsl/Cajon_hit1_mp_rr1.wav",
+      "source_id": "music.vcsl.cajon_low_1"
+    },
+    "piano": {
+      "path": "game/audio/paint_exe/music/sources/vcsl/Upright1_Sus_C3_vl1_rr1.wav",
+      "source_id": "music.vcsl.piano_C3"
+    }
+  },
+  "cues": [
+    {
+      "id": "ui.move",
+      "tier": 1,
+      "description": "One dry mouse switch tick; restrained for repeated navigation.",
+      "layers": [
+        {
+          "sample": "mouse",
+          "at": 0,
+          "start": 0.51,
+          "end": 0.62,
+          "semitones": 3,
+          "gain": 1
+        }
+      ],
+      "peak_dbfs": -14
+    },
+    {
+      "id": "ui.confirm",
+      "tier": 1,
+      "description": "Mouse switch and an upward two-note ukulele answer.",
+      "layers": [
+        {
+          "sample": "mouse",
+          "at": 0,
+          "start": 0.51,
+          "end": 0.62,
+          "semitones": 0,
+          "gain": 1
+        },
+        {
+          "sample": "uke",
+          "at": 0.035,
+          "end": 0.16,
+          "semitones": 7,
+          "gain": 0.24,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.1,
+          "end": 0.16,
+          "semitones": 12,
+          "gain": 0.2,
+          "fade_out": 0.04
+        }
+      ],
+      "peak_dbfs": -10
+    },
+    {
+      "id": "ui.cancel",
+      "tier": 1,
+      "description": "Lower double switch moving back; short and dry.",
+      "layers": [
+        {
+          "sample": "mouse",
+          "at": 0,
+          "start": 0.64,
+          "end": 0.75,
+          "semitones": -3,
+          "gain": 1
+        },
+        {
+          "sample": "mouse",
+          "at": 0.065,
+          "start": 0.51,
+          "end": 0.62,
+          "semitones": -6,
+          "gain": 0.6
+        }
+      ],
+      "peak_dbfs": -10
+    },
+    {
+      "id": "ui.error",
+      "tier": 1,
+      "description": "Three muffled wooden taps; a refusal without a harsh alarm.",
+      "layers": [
+        {
+          "sample": "body",
+          "at": 0,
+          "semitones": -5,
+          "gain": 1
+        },
+        {
+          "sample": "body",
+          "at": 0.085,
+          "semitones": -5,
+          "gain": 0.8
+        },
+        {
+          "sample": "body",
+          "at": 0.17,
+          "semitones": -8,
+          "gain": 0.6
+        }
+      ],
+      "peak_dbfs": -7
+    },
+    {
+      "id": "ui.ready",
+      "tier": 1,
+      "description": "Physical switch followed by a bright three-note acoustic lift.",
+      "layers": [
+        {
+          "sample": "mouse",
+          "at": 0,
+          "start": 0.51,
+          "end": 0.62,
+          "semitones": 0,
+          "gain": 1
+        },
+        {
+          "sample": "uke",
+          "at": 0.025,
+          "end": 0.55,
+          "semitones": 0,
+          "gain": 0.35,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.1,
+          "end": 0.55,
+          "semitones": 4,
+          "gain": 0.35,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.175,
+          "end": 0.55,
+          "semitones": 7,
+          "gain": 0.35,
+          "fade_out": 0.04
+        }
+      ],
+      "peak_dbfs": -8
+    },
+    {
+      "id": "ui.pause_open",
+      "tier": 1,
+      "description": "Paper fold and damped wood tap, separate from confirm.",
+      "layers": [
+        {
+          "sample": "flip",
+          "at": 0,
+          "start": 0.43,
+          "end": 0.8,
+          "semitones": 5,
+          "gain": 0.5
+        },
+        {
+          "sample": "body",
+          "at": 0,
+          "semitones": -2,
+          "gain": 1
+        }
+      ],
+      "peak_dbfs": -12
+    },
+    {
+      "id": "ui.unready",
+      "tier": 3,
+      "description": "Two downward plucks and a releasing switch.",
+      "layers": [
+        {
+          "sample": "mouse",
+          "at": 0,
+          "start": 0.64,
+          "end": 0.75,
+          "semitones": 0,
+          "gain": 1
+        },
+        {
+          "sample": "uke",
+          "at": 0.025,
+          "end": 0.55,
+          "semitones": 4,
+          "gain": 0.35,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.1,
+          "end": 0.55,
+          "semitones": 0,
+          "gain": 0.35,
+          "fade_out": 0.04
+        }
+      ],
+      "peak_dbfs": -11
+    },
+    {
+      "id": "ui.pad_lost",
+      "tier": 2,
+      "description": "Two hollow low knocks distinguish disconnection from menu refusal.",
+      "layers": [
+        {
+          "sample": "body",
+          "at": 0,
+          "semitones": -12,
+          "gain": 1
+        },
+        {
+          "sample": "body",
+          "at": 0.19,
+          "semitones": -12,
+          "gain": 0.7
+        }
+      ],
+      "peak_dbfs": -7
+    },
+    {
+      "id": "ui.pad_back",
+      "tier": 2,
+      "description": "Two raised knocks resolve upward when a controller returns.",
+      "layers": [
+        {
+          "sample": "body",
+          "at": 0,
+          "semitones": 0,
+          "gain": 1
+        },
+        {
+          "sample": "body",
+          "at": 0.12,
+          "semitones": 7,
+          "gain": 0.8
+        },
+        {
+          "sample": "uke",
+          "at": 0.12,
+          "end": 0.18,
+          "semitones": 7,
+          "gain": 0.3,
+          "fade_out": 0.04
+        }
+      ],
+      "peak_dbfs": -8
+    },
+    {
+      "id": "ui.volume_preview",
+      "tier": 3,
+      "description": "Compact wood, pluck and paper sample covers useful SFX frequencies.",
+      "layers": [
+        {
+          "sample": "body",
+          "at": 0,
+          "semitones": 0,
+          "gain": 1
+        },
+        {
+          "sample": "uke",
+          "at": 0.04,
+          "end": 0.18,
+          "semitones": 7,
+          "gain": 0.45,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "flip",
+          "at": 0.08,
+          "start": 0.43,
+          "end": 0.8,
+          "semitones": 5,
+          "gain": 0.25
+        }
+      ],
+      "peak_dbfs": -10
+    },
+    {
+      "id": "match.count_beat",
+      "tier": 1,
+      "description": "A single wooden count beat with a muted acoustic pitch.",
+      "layers": [
+        {
+          "sample": "body",
+          "at": 0,
+          "semitones": 0,
+          "gain": 1
+        },
+        {
+          "sample": "uke",
+          "at": 0,
+          "end": 0.14,
+          "semitones": 0,
+          "gain": 0.25,
+          "fade_out": 0.04
+        }
+      ],
+      "peak_dbfs": -6
+    },
+    {
+      "id": "ui.count_in",
+      "tier": 2,
+      "description": "The same count beat as match.count_beat, as specified for resume.",
+      "layers": [
+        {
+          "sample": "body",
+          "at": 0,
+          "semitones": 0,
+          "gain": 1
+        },
+        {
+          "sample": "uke",
+          "at": 0,
+          "end": 0.14,
+          "semitones": 0,
+          "gain": 0.25,
+          "fade_out": 0.04
+        }
+      ],
+      "peak_dbfs": -6
+    },
+    {
+      "id": "match.go",
+      "tier": 1,
+      "description": "Clap and rising ukulele triad mark the playable edge.",
+      "layers": [
+        {
+          "sample": "clap",
+          "at": 0,
+          "gain": 0.8
+        },
+        {
+          "sample": "uke",
+          "at": 0,
+          "end": 0.55,
+          "semitones": 0,
+          "gain": 0.35,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.035,
+          "end": 0.55,
+          "semitones": 4,
+          "gain": 0.35,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.07,
+          "end": 0.55,
+          "semitones": 7,
+          "gain": 0.35,
+          "fade_out": 0.04
+        }
+      ],
+      "peak_dbfs": -5
+    },
+    {
+      "id": "match.time_up",
+      "tier": 1,
+      "description": "Falling two-hit wooden punctuation; under two seconds.",
+      "layers": [
+        {
+          "sample": "cajon",
+          "at": 0,
+          "gain": 0.6,
+          "end": 0.4
+        },
+        {
+          "sample": "uke",
+          "at": 0,
+          "end": 0.4,
+          "semitones": 7,
+          "gain": 0.5,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.16,
+          "end": 0.5,
+          "semitones": 0,
+          "gain": 0.5,
+          "fade_out": 0.04
+        }
+      ],
+      "peak_dbfs": -5
+    },
+    {
+      "id": "match.glass_out",
+      "tier": 1,
+      "description": "Lowered paper flutter and muffled body knock pull through the glass.",
+      "layers": [
+        {
+          "sample": "flip",
+          "at": 0,
+          "start": 0.43,
+          "end": 0.8,
+          "semitones": -10,
+          "gain": 1,
+          "lowpass": 1500
+        },
+        {
+          "sample": "body",
+          "at": 0,
+          "semitones": -12,
+          "gain": 0.4
+        }
+      ],
+      "peak_dbfs": -12
+    },
+    {
+      "id": "match.glass_in",
+      "tier": 2,
+      "description": "Reversed paper lift with a soft landing knock crosses into the picture.",
+      "layers": [
+        {
+          "sample": "flip",
+          "at": 0,
+          "start": 0.43,
+          "end": 0.8,
+          "semitones": -5,
+          "gain": 1,
+          "reverse": true,
+          "lowpass": 3000
+        },
+        {
+          "sample": "body",
+          "at": 0.18,
+          "semitones": -7,
+          "gain": 0.4
+        }
+      ],
+      "peak_dbfs": -12
+    },
+    {
+      "id": "match.reveal_hover",
+      "tier": 1,
+      "description": "Single tiny recorded switch distinct from menu motion.",
+      "layers": [
+        {
+          "sample": "mouse",
+          "at": 0,
+          "start": 0.64,
+          "end": 0.75,
+          "semitones": 7,
+          "gain": 0.6
+        }
+      ],
+      "peak_dbfs": -18
+    },
+    {
+      "id": "match.reveal_click",
+      "tier": 1,
+      "description": "Firm double mouse switch seals the chosen colour.",
+      "layers": [
+        {
+          "sample": "mouse",
+          "at": 0,
+          "start": 0.51,
+          "end": 0.62,
+          "semitones": 0,
+          "gain": 1
+        },
+        {
+          "sample": "mouse",
+          "at": 0.065,
+          "start": 0.64,
+          "end": 0.75,
+          "semitones": 0,
+          "gain": 0.7
+        }
+      ],
+      "peak_dbfs": -9
+    },
+    {
+      "id": "match.reveal_close",
+      "tier": 2,
+      "description": "Downward paper fold and low releasing switch close a drawn match.",
+      "layers": [
+        {
+          "sample": "mouse",
+          "at": 0,
+          "start": 0.64,
+          "end": 0.75,
+          "semitones": -7,
+          "gain": 1
+        },
+        {
+          "sample": "flip",
+          "at": 0.035,
+          "start": 0.43,
+          "end": 0.8,
+          "semitones": -4,
+          "gain": 0.35
+        }
+      ],
+      "peak_dbfs": -12
+    },
+    {
+      "id": "match.celebrate",
+      "tier": 1,
+      "description": "Hand claps and cheerful acoustic strum after the person leaves.",
+      "layers": [
+        {
+          "sample": "clap",
+          "at": 0,
+          "gain": 0.7
+        },
+        {
+          "sample": "clap",
+          "at": 0.16,
+          "gain": 0.45,
+          "semitones": 1
+        },
+        {
+          "sample": "uke",
+          "at": 0,
+          "end": 0.55,
+          "semitones": 0,
+          "gain": 0.35,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.025,
+          "end": 0.55,
+          "semitones": 4,
+          "gain": 0.35,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.05,
+          "end": 0.55,
+          "semitones": 7,
+          "gain": 0.35,
+          "fade_out": 0.04
+        }
+      ],
+      "peak_dbfs": -9
+    },
+    {
+      "id": "match.slump",
+      "tier": 1,
+      "description": "Paper flump and a muted falling pluck, with no pain vocal.",
+      "layers": [
+        {
+          "sample": "flip",
+          "at": 0,
+          "start": 0.43,
+          "end": 0.8,
+          "semitones": -8,
+          "gain": 0.6
+        },
+        {
+          "sample": "uke",
+          "at": 0,
+          "end": 0.35,
+          "semitones": 2,
+          "gain": 0.25,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.14,
+          "end": 0.4,
+          "semitones": -3,
+          "gain": 0.2,
+          "fade_out": 0.04
+        }
+      ],
+      "peak_dbfs": -14
+    },
+    {
+      "id": "match.colour_in",
+      "tier": 2,
+      "description": "Paper unfurls into a short bright acoustic chord.",
+      "layers": [
+        {
+          "sample": "flip",
+          "at": 0,
+          "start": 0.43,
+          "end": 0.8,
+          "semitones": 7,
+          "gain": 0.5
+        },
+        {
+          "sample": "uke",
+          "at": 0.035,
+          "end": 0.22,
+          "semitones": 0,
+          "gain": 0.2,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.05,
+          "end": 0.22,
+          "semitones": 7,
+          "gain": 0.2,
+          "fade_out": 0.04
+        }
+      ],
+      "peak_dbfs": -14
+    },
+    {
+      "id": "match.skip",
+      "tier": 2,
+      "description": "Two crisp switch ticks for the skipped opening.",
+      "layers": [
+        {
+          "sample": "mouse",
+          "at": 0,
+          "start": 0.51,
+          "end": 0.62,
+          "semitones": 5,
+          "gain": 1
+        },
+        {
+          "sample": "mouse",
+          "at": 0.055,
+          "start": 0.51,
+          "end": 0.62,
+          "semitones": 8,
+          "gain": 0.6
+        }
+      ],
+      "peak_dbfs": -14
+    },
+    {
+      "id": "match.undo",
+      "tier": 2,
+      "description": "Quiet reverse paper tick and mouse release for the person undoing colour.",
+      "layers": [
+        {
+          "sample": "flip",
+          "at": 0,
+          "start": 0.43,
+          "end": 0.8,
+          "semitones": 12,
+          "gain": 0.25,
+          "reverse": true
+        },
+        {
+          "sample": "mouse",
+          "at": 0,
+          "start": 0.64,
+          "end": 0.75,
+          "semitones": -4,
+          "gain": 1
+        }
+      ],
+      "peak_dbfs": -17
+    },
+    {
+      "id": "match.last_ten",
+      "tier": 2,
+      "description": "Short unpitched body tap; conveys time only, never team or score.",
+      "layers": [
+        {
+          "sample": "body",
+          "at": 0,
+          "semitones": 5,
+          "gain": 1
+        }
+      ],
+      "peak_dbfs": -10
+    },
+    {
+      "id": "match.waver",
+      "tier": 3,
+      "description": "Nearly inaudible mouse wheel fragment; optional decorative cursor hesitation.",
+      "layers": [
+        {
+          "sample": "mouse",
+          "at": 0,
+          "start": 3.9,
+          "end": 4.06,
+          "lowpass": 2200
+        }
+      ],
+      "peak_dbfs": -27
+    },
+    {
+      "id": "match.cheat",
+      "tier": 3,
+      "description": "Tiny paper rustle for the frozen figures cheating; optional and very quiet.",
+      "layers": [
+        {
+          "sample": "flip",
+          "at": 0,
+          "start": 0.43,
+          "end": 0.8,
+          "semitones": 8,
+          "gain": 1,
+          "lowpass": 1600
+        }
+      ],
+      "peak_dbfs": -30
+    },
+    {
+      "id": "results.fill",
+      "tier": 2,
+      "description": "Light cycling hand percussion for the non-reveal percentage fill.",
+      "layers": [
+        {
+          "sample": "body",
+          "at": 0.0,
+          "semitones": 0,
+          "gain": 1
+        },
+        {
+          "sample": "body",
+          "at": 0.25,
+          "semitones": 5,
+          "gain": 0.6
+        },
+        {
+          "sample": "body",
+          "at": 0.5,
+          "semitones": 0,
+          "gain": 1
+        },
+        {
+          "sample": "body",
+          "at": 0.75,
+          "semitones": 5,
+          "gain": 0.6
+        },
+        {
+          "sample": "body",
+          "at": 1.0,
+          "semitones": 0,
+          "gain": 1
+        },
+        {
+          "sample": "body",
+          "at": 1.25,
+          "semitones": 5,
+          "gain": 0.6
+        },
+        {
+          "sample": "body",
+          "at": 1.5,
+          "semitones": 0,
+          "gain": 1
+        },
+        {
+          "sample": "body",
+          "at": 1.75,
+          "semitones": 5,
+          "gain": 0.6
+        }
+      ],
+      "peak_dbfs": -17,
+      "loop": true,
+      "duration": 2
+    },
+    {
+      "id": "results.winner",
+      "tier": 2,
+      "description": "Short acoustic major cadence with a hand clap.",
+      "layers": [
+        {
+          "sample": "uke",
+          "at": 0,
+          "end": 0.55,
+          "semitones": 0,
+          "gain": 0.35,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.13,
+          "end": 0.55,
+          "semitones": 4,
+          "gain": 0.35,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.26,
+          "end": 0.55,
+          "semitones": 7,
+          "gain": 0.35,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.39,
+          "end": 0.8,
+          "semitones": 12,
+          "gain": 0.45,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "clap",
+          "at": 0.39,
+          "gain": 0.5
+        }
+      ],
+      "peak_dbfs": -8
+    },
+    {
+      "id": "results.draw",
+      "tier": 2,
+      "description": "Unresolved open fifth; no winner fanfare on a tie.",
+      "layers": [
+        {
+          "sample": "uke",
+          "at": 0,
+          "end": 0.8,
+          "semitones": 0,
+          "gain": 0.4,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.05,
+          "end": 0.8,
+          "semitones": 7,
+          "gain": 0.35,
+          "fade_out": 0.04
+        }
+      ],
+      "peak_dbfs": -12
+    },
+    {
+      "id": "end.series",
+      "tier": 3,
+      "description": "A fuller acoustic cadence celebrates the completed series.",
+      "layers": [
+        {
+          "sample": "uke",
+          "at": 0,
+          "end": 0.55,
+          "semitones": 0,
+          "gain": 0.35,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.12,
+          "end": 0.55,
+          "semitones": 4,
+          "gain": 0.35,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.24,
+          "end": 0.55,
+          "semitones": 7,
+          "gain": 0.35,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "uke",
+          "at": 0.36,
+          "end": 0.9,
+          "semitones": 12,
+          "gain": 0.4,
+          "fade_out": 0.04
+        },
+        {
+          "sample": "clap",
+          "at": 0.36,
+          "gain": 0.5
+        },
+        {
+          "sample": "clap",
+          "at": 0.55,
+          "gain": 0.35
+        }
+      ],
+      "peak_dbfs": -8
+    }
+  ]
+}

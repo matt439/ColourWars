@@ -1,0 +1,1459 @@
+{
+  "version": 1,
+  "recipes": [
+    {
+      "id": "player.step.01",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "layers": [
+        {
+          "source": "bsb_marker",
+          "seconds": [
+            0.4,
+            0.78
+          ],
+          "speed": 1.65,
+          "lowpass": 7500
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -8
+    },
+    {
+      "id": "player.step.02",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "layers": [
+        {
+          "source": "bsb_marker",
+          "seconds": [
+            1.0,
+            1.22
+          ],
+          "speed": 1.65,
+          "lowpass": 7500
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -8
+    },
+    {
+      "id": "player.step.03",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "layers": [
+        {
+          "source": "bsb_marker",
+          "seconds": [
+            9.92,
+            10.22
+          ],
+          "speed": 1.65,
+          "lowpass": 7500
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -8
+    },
+    {
+      "id": "player.step.04",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "layers": [
+        {
+          "source": "bsb_marker",
+          "seconds": [
+            13.12,
+            13.42
+          ],
+          "speed": 1.65,
+          "lowpass": 7500
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -8
+    },
+    {
+      "id": "player.step.05",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "layers": [
+        {
+          "source": "bsb_marker",
+          "seconds": [
+            17.0,
+            17.26
+          ],
+          "speed": 1.65,
+          "lowpass": 7500
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -8
+    },
+    {
+      "id": "player.step.06",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "layers": [
+        {
+          "source": "bsb_marker",
+          "seconds": [
+            18.42,
+            18.75
+          ],
+          "speed": 1.65,
+          "lowpass": 7500
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -8
+    },
+    {
+      "id": "player.land.01",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "layers": [
+        {
+          "source": "owlish_paper_turn1",
+          "seconds": [
+            0,
+            0.58
+          ],
+          "speed": 1.12,
+          "lowpass": 6000
+        },
+        {
+          "source": "owlish_paper_crumple1",
+          "seconds": [
+            0.0,
+            0.23
+          ],
+          "speed": 0.82,
+          "lowpass": 900,
+          "level_db": -24
+        }
+      ],
+      "rms_db": -21,
+      "peak_db": -5
+    },
+    {
+      "id": "player.land.02",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "layers": [
+        {
+          "source": "owlish_paper_turn2",
+          "seconds": [
+            0.57,
+            1.13
+          ],
+          "speed": 1.12,
+          "lowpass": 6000
+        },
+        {
+          "source": "owlish_paper_crumple1",
+          "seconds": [
+            0.0,
+            0.23
+          ],
+          "speed": 0.82,
+          "lowpass": 900,
+          "level_db": -24
+        }
+      ],
+      "rms_db": -21,
+      "peak_db": -5
+    },
+    {
+      "id": "player.land.03",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "layers": [
+        {
+          "source": "owlish_paper_flips1",
+          "seconds": [
+            0.95,
+            1.55
+          ],
+          "speed": 1.12,
+          "lowpass": 6000
+        },
+        {
+          "source": "owlish_paper_crumple1",
+          "seconds": [
+            0.0,
+            0.23
+          ],
+          "speed": 0.82,
+          "lowpass": 900,
+          "level_db": -24
+        }
+      ],
+      "rms_db": -21,
+      "peak_db": -5
+    },
+    {
+      "id": "player.land.04",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "layers": [
+        {
+          "source": "owlish_paper_flips2",
+          "seconds": [
+            3.55,
+            4.15
+          ],
+          "speed": 1.12,
+          "lowpass": 6000
+        },
+        {
+          "source": "owlish_paper_crumple1",
+          "seconds": [
+            0.0,
+            0.23
+          ],
+          "speed": 0.82,
+          "lowpass": 900,
+          "level_db": -24
+        }
+      ],
+      "rms_db": -21,
+      "peak_db": -5
+    },
+    {
+      "id": "player.jump",
+      "cue_id": "player.jump",
+      "tier": 1,
+      "description": "Quick upward paper flick and nib release.",
+      "layers": [
+        {
+          "source": "owlish_paper_turn1",
+          "seconds": [
+            0,
+            0.38
+          ],
+          "speed": 1.5
+        },
+        {
+          "source": "bsb_whiteboard",
+          "seconds": [
+            0.3,
+            0.5
+          ],
+          "speed": 1.4,
+          "level_db": -25
+        }
+      ],
+      "rms_db": -22
+    },
+    {
+      "id": "player.skid",
+      "cue_id": "player.skid",
+      "tier": 1,
+      "description": "Brief dragged marker squeak for a committed reversal.",
+      "layers": [
+        {
+          "source": "bsb_whiteboard",
+          "seconds": [
+            4.03,
+            4.5
+          ],
+          "speed": 1.18,
+          "lowpass": 6500
+        }
+      ],
+      "rms_db": -23
+    },
+    {
+      "id": "player.hurt",
+      "cue_id": "player.hurt",
+      "tier": 1,
+      "description": "Wet fruit slap and crushed-paper snap.",
+      "layers": [
+        {
+          "source": "owlish_fruit1",
+          "seconds": [
+            0,
+            0.42
+          ]
+        },
+        {
+          "source": "owlish_paper_crumple2",
+          "seconds": [
+            0.03,
+            0.22
+          ],
+          "level_db": -23
+        }
+      ],
+      "rms_db": -18,
+      "peak_db": -2
+    },
+    {
+      "id": "player.pop",
+      "cue_id": "player.pop",
+      "tier": 1,
+      "description": "A real water-bubble burst, with a soft wet body.",
+      "layers": [
+        {
+          "source": "bsb_bubbles",
+          "seconds": [
+            4.38,
+            4.76
+          ],
+          "speed": 1.25,
+          "lowpass": 7000
+        },
+        {
+          "source": "owlish_fruit2",
+          "seconds": [
+            0,
+            0.25
+          ],
+          "level_db": -25
+        }
+      ],
+      "rms_db": -18,
+      "peak_db": -2
+    },
+    {
+      "id": "player.redraw",
+      "cue_id": "player.redraw",
+      "tier": 2,
+      "description": "Fast marker scribble: a continuous cyclic drawing gesture.",
+      "layers": [
+        {
+          "source": "bsb_marker",
+          "seconds": [
+            18.62,
+            20.48
+          ],
+          "speed": 1.6,
+          "lowpass": 7500
+        }
+      ],
+      "loop": true,
+      "crossfade": 0.1,
+      "rms_db": -25
+    },
+    {
+      "id": "player.respawn",
+      "cue_id": "player.respawn",
+      "tier": 1,
+      "description": "Final marker flourish lands in a small paper contact.",
+      "layers": [
+        {
+          "source": "bsb_whiteboard",
+          "seconds": [
+            5.05,
+            5.8
+          ],
+          "speed": 1.4
+        },
+        {
+          "source": "owlish_paper_turn1",
+          "seconds": [
+            0.06,
+            0.35
+          ],
+          "speed": 1.2,
+          "offset": 0.3,
+          "level_db": -24
+        }
+      ],
+      "rms_db": -19
+    },
+    {
+      "id": "player.step_painted.01",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "layers": [
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            0.4,
+            0.65
+          ],
+          "speed": 1.35,
+          "lowpass": 5000
+        },
+        {
+          "source": "bsb_marker",
+          "seconds": [
+            13.12,
+            13.3
+          ],
+          "speed": 1.65,
+          "level_db": -26
+        }
+      ],
+      "rms_db": -25
+    },
+    {
+      "id": "player.step_painted.02",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "layers": [
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            1.48,
+            1.73
+          ],
+          "speed": 1.35,
+          "lowpass": 5000
+        },
+        {
+          "source": "bsb_marker",
+          "seconds": [
+            13.12,
+            13.3
+          ],
+          "speed": 1.65,
+          "level_db": -26
+        }
+      ],
+      "rms_db": -25
+    },
+    {
+      "id": "player.step_painted.03",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "layers": [
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            4.3,
+            4.55
+          ],
+          "speed": 1.35,
+          "lowpass": 5000
+        },
+        {
+          "source": "bsb_marker",
+          "seconds": [
+            13.12,
+            13.3
+          ],
+          "speed": 1.65,
+          "level_db": -26
+        }
+      ],
+      "rms_db": -25
+    },
+    {
+      "id": "player.step_painted.04",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "layers": [
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            5.72,
+            5.97
+          ],
+          "speed": 1.35,
+          "lowpass": 5000
+        },
+        {
+          "source": "bsb_marker",
+          "seconds": [
+            13.12,
+            13.3
+          ],
+          "speed": 1.65,
+          "level_db": -26
+        }
+      ],
+      "rms_db": -25
+    },
+    {
+      "id": "player.bonk",
+      "cue_id": "player.bonk",
+      "tier": 3,
+      "description": "Dull paper-body tap for a ceiling contact.",
+      "layers": [
+        {
+          "source": "owlish_tap",
+          "seconds": [
+            0.1,
+            0.42
+          ],
+          "lowpass": 1300,
+          "speed": 0.85
+        }
+      ],
+      "rms_db": -25
+    },
+    {
+      "id": "player.drop",
+      "cue_id": "player.drop",
+      "tier": 3,
+      "description": "Thin paper slip when dropping through a platform.",
+      "layers": [
+        {
+          "source": "owlish_paper_turn2",
+          "seconds": [
+            0.66,
+            0.94
+          ],
+          "speed": 1.3,
+          "highpass": 650
+        }
+      ],
+      "rms_db": -26
+    },
+    {
+      "id": "player.hit_confirm",
+      "cue_id": "player.hit_confirm",
+      "tier": 3,
+      "description": "Small recorded finger-like tap, kept below damage cues.",
+      "layers": [
+        {
+          "source": "owlish_tap",
+          "seconds": [
+            0.1,
+            0.3
+          ],
+          "speed": 1.7,
+          "lowpass": 4500
+        }
+      ],
+      "rms_db": -26,
+      "gain": 0.55
+    },
+    {
+      "id": "sprayer.start",
+      "cue_id": "sprayer.start",
+      "tier": 1,
+      "description": "Pump squeeze and first wet valve opening.",
+      "layers": [
+        {
+          "source": "owlish_pump",
+          "seconds": [
+            0.53,
+            1.08
+          ],
+          "lowpass": 10000
+        }
+      ],
+      "rms_db": -22
+    },
+    {
+      "id": "sprayer.loop",
+      "cue_id": "sprayer.loop",
+      "tier": 1,
+      "description": "Coarse pressured spray with a wet foam undertone.",
+      "layers": [
+        {
+          "source": "bsb_long_spray",
+          "seconds": [
+            2.1,
+            2.58
+          ],
+          "lowpass": 11000
+        },
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            4.04,
+            4.52
+          ],
+          "lowpass": 2800,
+          "level_db": -28
+        }
+      ],
+      "loop": true,
+      "crossfade": 0.08,
+      "rms_db": -23
+    },
+    {
+      "id": "sprayer.stop",
+      "cue_id": "sprayer.stop",
+      "tier": 1,
+      "description": "Pump return with a brief residual spray tail.",
+      "layers": [
+        {
+          "source": "owlish_pump",
+          "seconds": [
+            1.77,
+            2.12
+          ],
+          "lowpass": 8000
+        }
+      ],
+      "rms_db": -24
+    },
+    {
+      "id": "roller.loop",
+      "cue_id": "roller.loop",
+      "tier": 1,
+      "description": "Tacky wet drum: foamy sponge compression under a slowed wall-brush stroke.",
+      "layers": [
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            4.02,
+            4.52
+          ],
+          "speed": 0.9,
+          "lowpass": 4000
+        },
+        {
+          "source": "bsb_brush",
+          "seconds": [
+            7.02,
+            7.52
+          ],
+          "speed": 0.95,
+          "lowpass": 2000,
+          "level_db": -25
+        }
+      ],
+      "loop": true,
+      "crossfade": 0.1,
+      "rms_db": -24
+    },
+    {
+      "id": "roller.start",
+      "cue_id": "roller.start",
+      "tier": 1,
+      "description": "Wet sponge grabs the floor with a small handle contact.",
+      "layers": [
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            0.32,
+            0.82
+          ],
+          "speed": 0.9,
+          "lowpass": 5000
+        },
+        {
+          "source": "owlish_tap",
+          "seconds": [
+            0.1,
+            0.28
+          ],
+          "lowpass": 1600,
+          "level_db": -26
+        }
+      ],
+      "rms_db": -23
+    },
+    {
+      "id": "roller.stop",
+      "cue_id": "roller.stop",
+      "tier": 1,
+      "description": "Wet drum releases pressure and settles.",
+      "layers": [
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            1.58,
+            2.02
+          ],
+          "speed": 0.82,
+          "lowpass": 3500
+        }
+      ],
+      "rms_db": -25
+    },
+    {
+      "id": "roller.lift",
+      "cue_id": "roller.lift",
+      "tier": 1,
+      "description": "Tacky wet peel as the drum leaves a surface.",
+      "layers": [
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            5.63,
+            6.07
+          ],
+          "speed": 1.18,
+          "lowpass": 5000
+        }
+      ],
+      "rms_db": -24
+    },
+    {
+      "id": "roller.settle",
+      "cue_id": "roller.settle",
+      "tier": 1,
+      "description": "Soft wet drum contact with a low handle tap.",
+      "layers": [
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            8.3,
+            8.95
+          ],
+          "speed": 0.92,
+          "lowpass": 4000
+        },
+        {
+          "source": "owlish_fruit3",
+          "seconds": [
+            0,
+            0.25
+          ],
+          "lowpass": 1500,
+          "level_db": -27
+        }
+      ],
+      "rms_db": -23
+    },
+    {
+      "id": "weapon.empty",
+      "cue_id": "weapon.empty",
+      "tier": 1,
+      "description": "Dry pump mechanism: short double mechanical refusal.",
+      "layers": [
+        {
+          "source": "owlish_plug",
+          "seconds": [
+            0.0,
+            0.2
+          ],
+          "lowpass": 8000
+        },
+        {
+          "source": "owlish_plug",
+          "seconds": [
+            0.0,
+            0.15
+          ],
+          "speed": 0.88,
+          "offset": 0.13,
+          "level_db": -22
+        }
+      ],
+      "rms_db": -18,
+      "peak_db": -3
+    },
+    {
+      "id": "weapon.recovered",
+      "cue_id": "weapon.recovered",
+      "tier": 1,
+      "description": "A clear valve catch followed by a tiny liquid plop.",
+      "layers": [
+        {
+          "source": "owlish_plug",
+          "seconds": [
+            0,
+            0.2
+          ],
+          "speed": 1.25
+        },
+        {
+          "source": "bsb_drips",
+          "seconds": [
+            1.52,
+            1.83
+          ],
+          "speed": 1.35,
+          "offset": 0.08,
+          "level_db": -23
+        }
+      ],
+      "rms_db": -20
+    },
+    {
+      "id": "mister.start",
+      "cue_id": "mister.start",
+      "tier": 2,
+      "description": "Fine atomiser opens with a fast spray hiss.",
+      "layers": [
+        {
+          "source": "bsb_spray",
+          "seconds": [
+            0.24,
+            0.61
+          ],
+          "speed": 1.3,
+          "highpass": 800
+        }
+      ],
+      "rms_db": -23
+    },
+    {
+      "id": "mister.loop",
+      "cue_id": "mister.loop",
+      "tier": 2,
+      "description": "Fine atomiser fizz, higher and softer than the sprayer.",
+      "layers": [
+        {
+          "source": "bsb_long_spray",
+          "seconds": [
+            6.35,
+            7.05
+          ],
+          "speed": 1.3,
+          "highpass": 1800,
+          "lowpass": 12500
+        }
+      ],
+      "loop": true,
+      "crossfade": 0.1,
+      "rms_db": -25
+    },
+    {
+      "id": "mister.stop",
+      "cue_id": "mister.stop",
+      "tier": 2,
+      "description": "Fine nozzle closes with a short remaining hiss.",
+      "layers": [
+        {
+          "source": "bsb_spray",
+          "seconds": [
+            2.48,
+            2.81
+          ],
+          "speed": 1.3,
+          "highpass": 1000
+        }
+      ],
+      "rms_db": -25
+    },
+    {
+      "id": "sniper.shot",
+      "cue_id": "sniper.shot",
+      "tier": 2,
+      "description": "A single sharp pressure release with a physical valve click.",
+      "layers": [
+        {
+          "source": "owlish_pump",
+          "seconds": [
+            3.04,
+            3.61
+          ],
+          "speed": 1.55,
+          "highpass": 350
+        },
+        {
+          "source": "owlish_plug",
+          "seconds": [
+            0,
+            0.2
+          ],
+          "level_db": -22
+        }
+      ],
+      "rms_db": -18,
+      "peak_db": -2
+    },
+    {
+      "id": "sniper.ready",
+      "cue_id": "sniper.ready",
+      "tier": 2,
+      "description": "One distinct latch re-engagement.",
+      "layers": [
+        {
+          "source": "owlish_plug",
+          "seconds": [
+            0,
+            0.25
+          ],
+          "speed": 0.8,
+          "lowpass": 6000
+        }
+      ],
+      "rms_db": -22
+    },
+    {
+      "id": "bucket.throw",
+      "cue_id": "bucket.throw",
+      "tier": 2,
+      "description": "A swung tin contact over a wet bucket slosh.",
+      "layers": [
+        {
+          "source": "owlish_metal_clank",
+          "seconds": [
+            0,
+            0.6
+          ],
+          "speed": 0.82,
+          "lowpass": 4500,
+          "level_db": -22
+        },
+        {
+          "source": "bsb_small_splash_1",
+          "seconds": [
+            0,
+            0.84
+          ],
+          "speed": 0.85,
+          "lowpass": 6000
+        }
+      ],
+      "rms_db": -20
+    },
+    {
+      "id": "paint.splash.01",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "layers": [
+        {
+          "source": "bsb_small_splash_1",
+          "seconds": [
+            0,
+            0.75
+          ],
+          "speed": 1.6,
+          "highpass": 120,
+          "lowpass": 8500
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -5
+    },
+    {
+      "id": "paint.splash.02",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "layers": [
+        {
+          "source": "bsb_small_splash_3",
+          "seconds": [
+            0,
+            0.65
+          ],
+          "speed": 1.6,
+          "highpass": 120,
+          "lowpass": 8500
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -5
+    },
+    {
+      "id": "paint.splash.03",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "layers": [
+        {
+          "source": "bsb_small_splash_6",
+          "seconds": [
+            0,
+            0.68
+          ],
+          "speed": 1.45,
+          "highpass": 120,
+          "lowpass": 8500
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -5
+    },
+    {
+      "id": "paint.splash.04",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "layers": [
+        {
+          "source": "owlish_fruit1",
+          "seconds": [
+            0,
+            0.42
+          ],
+          "speed": 1.0,
+          "highpass": 120,
+          "lowpass": 8500
+        },
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            0.3,
+            0.57
+          ],
+          "speed": 1.6,
+          "level_db": -26
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -5
+    },
+    {
+      "id": "paint.splash.05",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "layers": [
+        {
+          "source": "owlish_fruit2",
+          "seconds": [
+            0,
+            0.4
+          ],
+          "speed": 1.0,
+          "highpass": 120,
+          "lowpass": 8500
+        },
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            1.58,
+            1.85
+          ],
+          "speed": 1.6,
+          "level_db": -26
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -5
+    },
+    {
+      "id": "paint.splash.06",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "layers": [
+        {
+          "source": "owlish_fruit3",
+          "seconds": [
+            0,
+            0.41
+          ],
+          "speed": 1.0,
+          "highpass": 120,
+          "lowpass": 8500
+        },
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            4.3,
+            4.57
+          ],
+          "speed": 1.6,
+          "level_db": -26
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -5
+    },
+    {
+      "id": "paint.capture",
+      "cue_id": "paint.capture",
+      "tier": 2,
+      "description": "Wet colour-change plop with a firm small contact.",
+      "layers": [
+        {
+          "source": "bsb_bubbles",
+          "seconds": [
+            8.43,
+            8.72
+          ],
+          "speed": 1.5
+        },
+        {
+          "source": "owlish_fruit2",
+          "seconds": [
+            0,
+            0.17
+          ],
+          "level_db": -24
+        }
+      ],
+      "rms_db": -24
+    },
+    {
+      "id": "paint.dud",
+      "cue_id": "paint.dud",
+      "tier": 2,
+      "description": "Small dry impact where liquid cannot take.",
+      "layers": [
+        {
+          "source": "owlish_tap",
+          "seconds": [
+            0.1,
+            0.4
+          ],
+          "speed": 1.3,
+          "lowpass": 3500
+        }
+      ],
+      "rms_db": -25
+    },
+    {
+      "id": "paint.impact.sprayer",
+      "cue_id": "paint.impact.sprayer",
+      "tier": 2,
+      "description": "Tool-specific wet contact: sprayer.",
+      "layers": [
+        {
+          "source": "bsb_small_splash_3",
+          "seconds": [
+            0,
+            0.56
+          ],
+          "speed": 1.65,
+          "highpass": 120,
+          "lowpass": 9000
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -5
+    },
+    {
+      "id": "paint.impact.roller",
+      "cue_id": "paint.impact.roller",
+      "tier": 2,
+      "description": "Tool-specific wet contact: roller.",
+      "layers": [
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            4.25,
+            4.85
+          ],
+          "speed": 0.9,
+          "highpass": 120,
+          "lowpass": 9000
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -5
+    },
+    {
+      "id": "paint.impact.mister",
+      "cue_id": "paint.impact.mister",
+      "tier": 2,
+      "description": "Tool-specific wet contact: mister.",
+      "layers": [
+        {
+          "source": "bsb_spray",
+          "seconds": [
+            0.26,
+            0.55
+          ],
+          "speed": 1.5,
+          "highpass": 120,
+          "lowpass": 9000
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -5
+    },
+    {
+      "id": "paint.impact.sniper",
+      "cue_id": "paint.impact.sniper",
+      "tier": 2,
+      "description": "Tool-specific wet contact: sniper.",
+      "layers": [
+        {
+          "source": "owlish_fruit3",
+          "seconds": [
+            0,
+            0.38
+          ],
+          "speed": 1.25,
+          "highpass": 120,
+          "lowpass": 9000
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -5
+    },
+    {
+      "id": "paint.impact.bucket",
+      "cue_id": "paint.impact.bucket",
+      "tier": 2,
+      "description": "Tool-specific wet contact: bucket.",
+      "layers": [
+        {
+          "source": "bsb_small_splash_1",
+          "seconds": [
+            0,
+            1.05
+          ],
+          "speed": 0.88,
+          "highpass": 120,
+          "lowpass": 9000
+        }
+      ],
+      "rms_db": -24,
+      "peak_db": -5
+    },
+    {
+      "id": "weapon.blocked",
+      "cue_id": "weapon.blocked",
+      "tier": 3,
+      "description": "Dry small mechanism/body tap for cover obstruction.",
+      "layers": [
+        {
+          "source": "owlish_plug",
+          "seconds": [
+            0,
+            0.16
+          ],
+          "speed": 0.9,
+          "lowpass": 2500
+        }
+      ],
+      "rms_db": -26,
+      "gain": 0.5
+    },
+    {
+      "id": "bucket.slosh",
+      "cue_id": "bucket.slosh",
+      "tier": 3,
+      "description": "Quiet foamy liquid shift while carrying a bucket.",
+      "layers": [
+        {
+          "source": "bsb_sponge",
+          "seconds": [
+            6.76,
+            7.55
+          ],
+          "speed": 0.85,
+          "lowpass": 3500
+        }
+      ],
+      "rms_db": -30,
+      "gain": 0.3
+    },
+    {
+      "id": "tool.drip",
+      "cue_id": "tool.drip",
+      "tier": 3,
+      "description": "Single real drop, nearly off by default.",
+      "layers": [
+        {
+          "source": "bsb_drips",
+          "seconds": [
+            1.51,
+            1.94
+          ],
+          "speed": 1.1,
+          "lowpass": 6000
+        }
+      ],
+      "rms_db": -32,
+      "gain": 0.25
+    },
+    {
+      "id": "room.sigh",
+      "cue_id": "room.sigh",
+      "tier": 1,
+      "description": "A close recorded human exhale, softened as heard outside the monitor.",
+      "layers": [
+        {
+          "source": "bsb_sigh",
+          "seconds": [
+            2.0,
+            3.65
+          ],
+          "highpass": 110,
+          "lowpass": 5200
+        }
+      ],
+      "rms_db": -25,
+      "peak_db": -7
+    },
+    {
+      "id": "room.chair",
+      "cue_id": "room.chair",
+      "tier": 1,
+      "description": "A real chair creak plus a restrained chair movement contact.",
+      "layers": [
+        {
+          "source": "unkleceeg_chair_creak",
+          "seconds": [
+            7.9,
+            9.35
+          ],
+          "highpass": 100,
+          "lowpass": 5000
+        },
+        {
+          "source": "bsb_chair",
+          "seconds": [
+            5.45,
+            5.95
+          ],
+          "highpass": 100,
+          "lowpass": 1800,
+          "level_db": -28
+        }
+      ],
+      "rms_db": -26,
+      "peak_db": -7
+    },
+    {
+      "id": "room.tone",
+      "cue_id": "room.tone",
+      "tier": 2,
+      "description": "Quiet recorded desktop-computer fan; dual mono preserves the source spatial image.",
+      "layers": [
+        {
+          "source": "bsb_pc_fan",
+          "seconds": [
+            0.3,
+            9.2
+          ],
+          "highpass": 80,
+          "lowpass": 4000
+        }
+      ],
+      "loop": true,
+      "crossfade": 0.45,
+      "rms_db": -37,
+      "peak_db": -18,
+      "channels": 2,
+      "gain": 0.65
+    },
+    {
+      "id": "room.footsteps",
+      "cue_id": "room.footsteps",
+      "tier": 3,
+      "description": "Two soft physical room steps, receding in level.",
+      "layers": [
+        {
+          "source": "owlish_footstep1",
+          "seconds": [
+            0,
+            0.39
+          ],
+          "lowpass": 2800
+        },
+        {
+          "source": "owlish_footstep2",
+          "seconds": [
+            0,
+            0.38
+          ],
+          "lowpass": 2300,
+          "level_db": -22,
+          "offset": 0.45
+        }
+      ],
+      "rms_db": -29,
+      "gain": 0.5
+    },
+    {
+      "id": "room.breath",
+      "cue_id": "room.breath",
+      "tier": 3,
+      "description": "One understated recorded human breath.",
+      "layers": [
+        {
+          "source": "owlish_breath",
+          "seconds": [
+            0.8,
+            1.6
+          ],
+          "highpass": 120,
+          "lowpass": 4000
+        }
+      ],
+      "rms_db": -32,
+      "gain": 0.4
+    },
+    {
+      "id": "world.ambience.close_quarters",
+      "cue_id": "world.ambience.close_quarters",
+      "tier": 3,
+      "description": "Quiet nearby room fan; optional decorative bed.",
+      "layers": [
+        {
+          "source": "bsb_fan",
+          "seconds": [
+            0.1,
+            9.1
+          ],
+          "highpass": 100,
+          "lowpass": 3000
+        }
+      ],
+      "loop": true,
+      "crossfade": 0.4,
+      "rms_db": -40,
+      "peak_db": -22,
+      "gain": 0.25
+    },
+    {
+      "id": "world.ambience.king_of_the_hill",
+      "cue_id": "world.ambience.king_of_the_hill",
+      "tier": 3,
+      "description": "Muffled air extractor in a larger distant room.",
+      "layers": [
+        {
+          "source": "bsb_extractor",
+          "seconds": [
+            2,
+            12
+          ],
+          "highpass": 65,
+          "lowpass": 1400
+        }
+      ],
+      "loop": true,
+      "crossfade": 0.5,
+      "rms_db": -40,
+      "peak_db": -22,
+      "gain": 0.25
+    },
+    {
+      "id": "world.ambience.turbulence",
+      "cue_id": "world.ambience.turbulence",
+      "tier": 3,
+      "description": "Higher air-extractor texture for the elevated arena.",
+      "layers": [
+        {
+          "source": "bsb_extractor",
+          "seconds": [
+            10,
+            20
+          ],
+          "highpass": 200,
+          "lowpass": 5500
+        }
+      ],
+      "loop": true,
+      "crossfade": 0.5,
+      "rms_db": -40,
+      "peak_db": -22,
+      "gain": 0.25
+    },
+    {
+      "id": "world.detail",
+      "cue_id": "world.detail",
+      "tier": 3,
+      "description": "An occasional real pipe-like droplet; off by default.",
+      "layers": [
+        {
+          "source": "bsb_drips",
+          "seconds": [
+            7.48,
+            7.94
+          ],
+          "speed": 0.9,
+          "lowpass": 4000
+        }
+      ],
+      "rms_db": -33,
+      "gain": 0,
+      "trim_final_tail_dbfs": -60
+    }
+  ]
+}

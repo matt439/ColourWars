@@ -1,0 +1,2531 @@
+{
+  "kind": "offline scripted mix, not gameplay capture",
+  "duration_seconds": 49,
+  "fixed_output_gain": 0.65,
+  "per_player_attenuation": false,
+  "mixes": [
+    {
+      "players": 1,
+      "path": "auditions/mix-1p.ogg",
+      "peak_dbfs": -4.440060982223118,
+      "events": [
+        {
+          "cue": "room.tone",
+          "at_seconds": 0,
+          "gain": 0.5,
+          "duration_seconds": 6
+        },
+        {
+          "cue": "match.reveal_hover",
+          "at_seconds": 0.4,
+          "gain": 1,
+          "duration_seconds": 0.07337868480725623
+        },
+        {
+          "cue": "match.undo",
+          "at_seconds": 1,
+          "gain": 1,
+          "duration_seconds": 0.17634920634920634
+        },
+        {
+          "cue": "room.sigh",
+          "at_seconds": 1.8,
+          "gain": 1,
+          "duration_seconds": 1.65
+        },
+        {
+          "cue": "room.chair",
+          "at_seconds": 3.1,
+          "gain": 1,
+          "duration_seconds": 1.0182766439909297
+        },
+        {
+          "cue": "room.footsteps",
+          "at_seconds": 4.1,
+          "gain": 1,
+          "duration_seconds": 0.6503174603174603
+        },
+        {
+          "cue": "music.close_quarters",
+          "at_seconds": 6,
+          "gain": 0.65,
+          "duration_seconds": 28
+        },
+        {
+          "cue": "match.count_beat",
+          "at_seconds": 6,
+          "gain": 1,
+          "duration_seconds": 0.2863265306122449
+        },
+        {
+          "cue": "match.count_beat",
+          "at_seconds": 7,
+          "gain": 1,
+          "duration_seconds": 0.2863265306122449
+        },
+        {
+          "cue": "match.count_beat",
+          "at_seconds": 8,
+          "gain": 1,
+          "duration_seconds": 0.2863265306122449
+        },
+        {
+          "cue": "match.glass_in",
+          "at_seconds": 8,
+          "gain": 1,
+          "duration_seconds": 0.5965986394557823
+        },
+        {
+          "cue": "match.go",
+          "at_seconds": 9,
+          "gain": 1,
+          "duration_seconds": 0.55
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 9.5,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 9.92,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 10.34,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 10.76,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 11.18,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 11.6,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 12.02,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 12.44,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 12.86,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 13.28,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 13.7,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 14.120000000000001,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 14.54,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 14.96,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 15.379999999999999,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 15.8,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 13.0,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.01",
+          "at_seconds": 13.7,
+          "gain": 0.8,
+          "duration_seconds": 0.40714285714285714
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 19.0,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.01",
+          "at_seconds": 19.7,
+          "gain": 0.8,
+          "duration_seconds": 0.40714285714285714
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 25.0,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.01",
+          "at_seconds": 25.7,
+          "gain": 0.8,
+          "duration_seconds": 0.40714285714285714
+        },
+        {
+          "cue": "sprayer.start",
+          "at_seconds": 11.0,
+          "gain": 1,
+          "duration_seconds": 0.3321768707482993
+        },
+        {
+          "cue": "sprayer.loop",
+          "at_seconds": 11.08,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "sprayer.stop",
+          "at_seconds": 12.48,
+          "gain": 1,
+          "duration_seconds": 0.35
+        },
+        {
+          "cue": "paint.splash.01",
+          "at_seconds": 11.2,
+          "gain": 0.65,
+          "duration_seconds": 0.42394557823129253
+        },
+        {
+          "cue": "paint.splash.02",
+          "at_seconds": 11.5,
+          "gain": 0.65,
+          "duration_seconds": 0.38482993197278914
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 11.799999999999999,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "sprayer.start",
+          "at_seconds": 16.5,
+          "gain": 1,
+          "duration_seconds": 0.3321768707482993
+        },
+        {
+          "cue": "sprayer.loop",
+          "at_seconds": 16.58,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "sprayer.stop",
+          "at_seconds": 17.98,
+          "gain": 1,
+          "duration_seconds": 0.35
+        },
+        {
+          "cue": "paint.splash.02",
+          "at_seconds": 16.7,
+          "gain": 0.65,
+          "duration_seconds": 0.38482993197278914
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 17.0,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 17.3,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "sprayer.start",
+          "at_seconds": 22.0,
+          "gain": 1,
+          "duration_seconds": 0.3321768707482993
+        },
+        {
+          "cue": "sprayer.loop",
+          "at_seconds": 22.08,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "sprayer.stop",
+          "at_seconds": 23.48,
+          "gain": 1,
+          "duration_seconds": 0.35
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 22.2,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 22.5,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 22.8,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "sprayer.start",
+          "at_seconds": 28.0,
+          "gain": 1,
+          "duration_seconds": 0.3321768707482993
+        },
+        {
+          "cue": "sprayer.loop",
+          "at_seconds": 28.08,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "sprayer.stop",
+          "at_seconds": 29.48,
+          "gain": 1,
+          "duration_seconds": 0.35
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 28.2,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 28.5,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "paint.splash.06",
+          "at_seconds": 28.8,
+          "gain": 0.65,
+          "duration_seconds": 0.23573696145124717
+        },
+        {
+          "cue": "player.hurt",
+          "at_seconds": 23.0,
+          "gain": 1,
+          "duration_seconds": 0.313718820861678
+        },
+        {
+          "cue": "weapon.empty",
+          "at_seconds": 26.0,
+          "gain": 1,
+          "duration_seconds": 0.27791383219954646
+        },
+        {
+          "cue": "weapon.recovered",
+          "at_seconds": 27.1,
+          "gain": 1,
+          "duration_seconds": 0.2861451247165533
+        },
+        {
+          "cue": "player.pop",
+          "at_seconds": 29.8,
+          "gain": 1,
+          "duration_seconds": 0.30401360544217687
+        },
+        {
+          "cue": "player.redraw",
+          "at_seconds": 30.4,
+          "gain": 0.65,
+          "duration_seconds": 1.5
+        },
+        {
+          "cue": "player.respawn",
+          "at_seconds": 32,
+          "gain": 1,
+          "duration_seconds": 0.5416780045351474
+        },
+        {
+          "cue": "match.time_up",
+          "at_seconds": 34,
+          "gain": 1,
+          "duration_seconds": 0.66
+        },
+        {
+          "cue": "match.glass_out",
+          "at_seconds": 34.1,
+          "gain": 1,
+          "duration_seconds": 0.6458049886621315
+        },
+        {
+          "cue": "room.tone",
+          "at_seconds": 36,
+          "gain": 0.5,
+          "duration_seconds": 8
+        },
+        {
+          "cue": "room.chair",
+          "at_seconds": 37,
+          "gain": 1,
+          "duration_seconds": 1.0182766439909297
+        },
+        {
+          "cue": "match.reveal_hover",
+          "at_seconds": 38.8,
+          "gain": 1,
+          "duration_seconds": 0.07337868480725623
+        },
+        {
+          "cue": "match.reveal_hover",
+          "at_seconds": 40,
+          "gain": 1,
+          "duration_seconds": 0.07337868480725623
+        },
+        {
+          "cue": "match.reveal_click",
+          "at_seconds": 41.3,
+          "gain": 1,
+          "duration_seconds": 0.17498866213151928
+        },
+        {
+          "cue": "room.chair",
+          "at_seconds": 42.3,
+          "gain": 0.65,
+          "duration_seconds": 1.0182766439909297
+        },
+        {
+          "cue": "match.celebrate",
+          "at_seconds": 44,
+          "gain": 1,
+          "duration_seconds": 0.55
+        },
+        {
+          "cue": "match.slump",
+          "at_seconds": 44.25,
+          "gain": 1,
+          "duration_seconds": 0.6150566893424037
+        },
+        {
+          "cue": "results.winner",
+          "at_seconds": 46,
+          "gain": 1,
+          "duration_seconds": 0.7887074829931973
+        }
+      ]
+    },
+    {
+      "players": 2,
+      "path": "auditions/mix-2p.ogg",
+      "peak_dbfs": -3.743371168548947,
+      "events": [
+        {
+          "cue": "room.tone",
+          "at_seconds": 0,
+          "gain": 0.5,
+          "duration_seconds": 6
+        },
+        {
+          "cue": "match.reveal_hover",
+          "at_seconds": 0.4,
+          "gain": 1,
+          "duration_seconds": 0.07337868480725623
+        },
+        {
+          "cue": "match.undo",
+          "at_seconds": 1,
+          "gain": 1,
+          "duration_seconds": 0.17634920634920634
+        },
+        {
+          "cue": "room.sigh",
+          "at_seconds": 1.8,
+          "gain": 1,
+          "duration_seconds": 1.65
+        },
+        {
+          "cue": "room.chair",
+          "at_seconds": 3.1,
+          "gain": 1,
+          "duration_seconds": 1.0182766439909297
+        },
+        {
+          "cue": "room.footsteps",
+          "at_seconds": 4.1,
+          "gain": 1,
+          "duration_seconds": 0.6503174603174603
+        },
+        {
+          "cue": "music.close_quarters",
+          "at_seconds": 6,
+          "gain": 0.65,
+          "duration_seconds": 28
+        },
+        {
+          "cue": "match.count_beat",
+          "at_seconds": 6,
+          "gain": 1,
+          "duration_seconds": 0.2863265306122449
+        },
+        {
+          "cue": "match.count_beat",
+          "at_seconds": 7,
+          "gain": 1,
+          "duration_seconds": 0.2863265306122449
+        },
+        {
+          "cue": "match.count_beat",
+          "at_seconds": 8,
+          "gain": 1,
+          "duration_seconds": 0.2863265306122449
+        },
+        {
+          "cue": "match.glass_in",
+          "at_seconds": 8,
+          "gain": 1,
+          "duration_seconds": 0.5965986394557823
+        },
+        {
+          "cue": "match.go",
+          "at_seconds": 9,
+          "gain": 1,
+          "duration_seconds": 0.55
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 9.5,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 9.92,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 10.34,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 10.76,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 11.18,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 11.6,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 12.02,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 12.44,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 12.86,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 13.28,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 13.7,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 14.120000000000001,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 14.54,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 14.96,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 15.379999999999999,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 15.8,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 13.0,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.01",
+          "at_seconds": 13.7,
+          "gain": 0.8,
+          "duration_seconds": 0.40714285714285714
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 19.0,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.01",
+          "at_seconds": 19.7,
+          "gain": 0.8,
+          "duration_seconds": 0.40714285714285714
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 25.0,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.01",
+          "at_seconds": 25.7,
+          "gain": 0.8,
+          "duration_seconds": 0.40714285714285714
+        },
+        {
+          "cue": "sprayer.start",
+          "at_seconds": 11.0,
+          "gain": 1,
+          "duration_seconds": 0.3321768707482993
+        },
+        {
+          "cue": "sprayer.loop",
+          "at_seconds": 11.08,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "sprayer.stop",
+          "at_seconds": 12.48,
+          "gain": 1,
+          "duration_seconds": 0.35
+        },
+        {
+          "cue": "paint.splash.01",
+          "at_seconds": 11.2,
+          "gain": 0.65,
+          "duration_seconds": 0.42394557823129253
+        },
+        {
+          "cue": "paint.splash.02",
+          "at_seconds": 11.5,
+          "gain": 0.65,
+          "duration_seconds": 0.38482993197278914
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 11.799999999999999,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "sprayer.start",
+          "at_seconds": 16.5,
+          "gain": 1,
+          "duration_seconds": 0.3321768707482993
+        },
+        {
+          "cue": "sprayer.loop",
+          "at_seconds": 16.58,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "sprayer.stop",
+          "at_seconds": 17.98,
+          "gain": 1,
+          "duration_seconds": 0.35
+        },
+        {
+          "cue": "paint.splash.02",
+          "at_seconds": 16.7,
+          "gain": 0.65,
+          "duration_seconds": 0.38482993197278914
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 17.0,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 17.3,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "sprayer.start",
+          "at_seconds": 22.0,
+          "gain": 1,
+          "duration_seconds": 0.3321768707482993
+        },
+        {
+          "cue": "sprayer.loop",
+          "at_seconds": 22.08,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "sprayer.stop",
+          "at_seconds": 23.48,
+          "gain": 1,
+          "duration_seconds": 0.35
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 22.2,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 22.5,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 22.8,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "sprayer.start",
+          "at_seconds": 28.0,
+          "gain": 1,
+          "duration_seconds": 0.3321768707482993
+        },
+        {
+          "cue": "sprayer.loop",
+          "at_seconds": 28.08,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "sprayer.stop",
+          "at_seconds": 29.48,
+          "gain": 1,
+          "duration_seconds": 0.35
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 28.2,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 28.5,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "paint.splash.06",
+          "at_seconds": 28.8,
+          "gain": 0.65,
+          "duration_seconds": 0.23573696145124717
+        },
+        {
+          "cue": "player.hurt",
+          "at_seconds": 23.0,
+          "gain": 1,
+          "duration_seconds": 0.313718820861678
+        },
+        {
+          "cue": "weapon.empty",
+          "at_seconds": 26.0,
+          "gain": 1,
+          "duration_seconds": 0.27791383219954646
+        },
+        {
+          "cue": "weapon.recovered",
+          "at_seconds": 27.1,
+          "gain": 1,
+          "duration_seconds": 0.2861451247165533
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 9.573,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 9.993,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 10.413,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 10.833,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 11.253,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 11.673,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 12.093,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 12.513,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 12.933,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 13.353,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 13.773,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 14.193000000000001,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 14.613,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 15.033000000000001,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 15.453,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 15.873000000000001,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 13.073,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.02",
+          "at_seconds": 13.773,
+          "gain": 0.8,
+          "duration_seconds": 0.5
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 19.073,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.02",
+          "at_seconds": 19.773,
+          "gain": 0.8,
+          "duration_seconds": 0.5
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 25.073,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.02",
+          "at_seconds": 25.773,
+          "gain": 0.8,
+          "duration_seconds": 0.5
+        },
+        {
+          "cue": "roller.start",
+          "at_seconds": 11.073,
+          "gain": 1,
+          "duration_seconds": 0.5555555555555556
+        },
+        {
+          "cue": "roller.loop",
+          "at_seconds": 11.153,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "roller.stop",
+          "at_seconds": 12.553,
+          "gain": 1,
+          "duration_seconds": 0.5365986394557823
+        },
+        {
+          "cue": "paint.splash.02",
+          "at_seconds": 11.273,
+          "gain": 0.65,
+          "duration_seconds": 0.38482993197278914
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 11.573,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 11.873,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "roller.start",
+          "at_seconds": 16.573,
+          "gain": 1,
+          "duration_seconds": 0.5555555555555556
+        },
+        {
+          "cue": "roller.loop",
+          "at_seconds": 16.653,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "roller.stop",
+          "at_seconds": 18.053,
+          "gain": 1,
+          "duration_seconds": 0.5365986394557823
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 16.773,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 17.073,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 17.373,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "roller.start",
+          "at_seconds": 22.073,
+          "gain": 1,
+          "duration_seconds": 0.5555555555555556
+        },
+        {
+          "cue": "roller.loop",
+          "at_seconds": 22.153,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "roller.stop",
+          "at_seconds": 23.553,
+          "gain": 1,
+          "duration_seconds": 0.5365986394557823
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 22.273,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 22.573,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "paint.splash.06",
+          "at_seconds": 22.873,
+          "gain": 0.65,
+          "duration_seconds": 0.23573696145124717
+        },
+        {
+          "cue": "roller.start",
+          "at_seconds": 28.073,
+          "gain": 1,
+          "duration_seconds": 0.5555555555555556
+        },
+        {
+          "cue": "roller.loop",
+          "at_seconds": 28.153,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "roller.stop",
+          "at_seconds": 29.553,
+          "gain": 1,
+          "duration_seconds": 0.5365986394557823
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 28.273,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "paint.splash.06",
+          "at_seconds": 28.573,
+          "gain": 0.65,
+          "duration_seconds": 0.23573696145124717
+        },
+        {
+          "cue": "paint.splash.01",
+          "at_seconds": 28.873,
+          "gain": 0.65,
+          "duration_seconds": 0.42394557823129253
+        },
+        {
+          "cue": "player.hurt",
+          "at_seconds": 23.073,
+          "gain": 1,
+          "duration_seconds": 0.313718820861678
+        },
+        {
+          "cue": "weapon.empty",
+          "at_seconds": 26.073,
+          "gain": 1,
+          "duration_seconds": 0.27791383219954646
+        },
+        {
+          "cue": "weapon.recovered",
+          "at_seconds": 27.173000000000002,
+          "gain": 1,
+          "duration_seconds": 0.2861451247165533
+        },
+        {
+          "cue": "player.pop",
+          "at_seconds": 29.8,
+          "gain": 1,
+          "duration_seconds": 0.30401360544217687
+        },
+        {
+          "cue": "player.redraw",
+          "at_seconds": 30.4,
+          "gain": 0.65,
+          "duration_seconds": 1.5
+        },
+        {
+          "cue": "player.respawn",
+          "at_seconds": 32,
+          "gain": 1,
+          "duration_seconds": 0.5416780045351474
+        },
+        {
+          "cue": "match.time_up",
+          "at_seconds": 34,
+          "gain": 1,
+          "duration_seconds": 0.66
+        },
+        {
+          "cue": "match.glass_out",
+          "at_seconds": 34.1,
+          "gain": 1,
+          "duration_seconds": 0.6458049886621315
+        },
+        {
+          "cue": "room.tone",
+          "at_seconds": 36,
+          "gain": 0.5,
+          "duration_seconds": 8
+        },
+        {
+          "cue": "room.chair",
+          "at_seconds": 37,
+          "gain": 1,
+          "duration_seconds": 1.0182766439909297
+        },
+        {
+          "cue": "match.reveal_hover",
+          "at_seconds": 38.8,
+          "gain": 1,
+          "duration_seconds": 0.07337868480725623
+        },
+        {
+          "cue": "match.reveal_hover",
+          "at_seconds": 40,
+          "gain": 1,
+          "duration_seconds": 0.07337868480725623
+        },
+        {
+          "cue": "match.reveal_click",
+          "at_seconds": 41.3,
+          "gain": 1,
+          "duration_seconds": 0.17498866213151928
+        },
+        {
+          "cue": "room.chair",
+          "at_seconds": 42.3,
+          "gain": 0.65,
+          "duration_seconds": 1.0182766439909297
+        },
+        {
+          "cue": "match.celebrate",
+          "at_seconds": 44,
+          "gain": 1,
+          "duration_seconds": 0.55
+        },
+        {
+          "cue": "match.slump",
+          "at_seconds": 44.25,
+          "gain": 1,
+          "duration_seconds": 0.6150566893424037
+        },
+        {
+          "cue": "results.winner",
+          "at_seconds": 46,
+          "gain": 1,
+          "duration_seconds": 0.7887074829931973
+        }
+      ]
+    },
+    {
+      "players": 4,
+      "path": "auditions/mix-4p.ogg",
+      "peak_dbfs": -2.888104220717997,
+      "events": [
+        {
+          "cue": "room.tone",
+          "at_seconds": 0,
+          "gain": 0.5,
+          "duration_seconds": 6
+        },
+        {
+          "cue": "match.reveal_hover",
+          "at_seconds": 0.4,
+          "gain": 1,
+          "duration_seconds": 0.07337868480725623
+        },
+        {
+          "cue": "match.undo",
+          "at_seconds": 1,
+          "gain": 1,
+          "duration_seconds": 0.17634920634920634
+        },
+        {
+          "cue": "room.sigh",
+          "at_seconds": 1.8,
+          "gain": 1,
+          "duration_seconds": 1.65
+        },
+        {
+          "cue": "room.chair",
+          "at_seconds": 3.1,
+          "gain": 1,
+          "duration_seconds": 1.0182766439909297
+        },
+        {
+          "cue": "room.footsteps",
+          "at_seconds": 4.1,
+          "gain": 1,
+          "duration_seconds": 0.6503174603174603
+        },
+        {
+          "cue": "music.close_quarters",
+          "at_seconds": 6,
+          "gain": 0.65,
+          "duration_seconds": 28
+        },
+        {
+          "cue": "match.count_beat",
+          "at_seconds": 6,
+          "gain": 1,
+          "duration_seconds": 0.2863265306122449
+        },
+        {
+          "cue": "match.count_beat",
+          "at_seconds": 7,
+          "gain": 1,
+          "duration_seconds": 0.2863265306122449
+        },
+        {
+          "cue": "match.count_beat",
+          "at_seconds": 8,
+          "gain": 1,
+          "duration_seconds": 0.2863265306122449
+        },
+        {
+          "cue": "match.glass_in",
+          "at_seconds": 8,
+          "gain": 1,
+          "duration_seconds": 0.5965986394557823
+        },
+        {
+          "cue": "match.go",
+          "at_seconds": 9,
+          "gain": 1,
+          "duration_seconds": 0.55
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 9.5,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 9.92,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 10.34,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 10.76,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 11.18,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 11.6,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 12.02,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 12.44,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 12.86,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 13.28,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 13.7,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 14.120000000000001,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 14.54,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 14.96,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 15.379999999999999,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 15.8,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 13.0,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.01",
+          "at_seconds": 13.7,
+          "gain": 0.8,
+          "duration_seconds": 0.40714285714285714
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 19.0,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.01",
+          "at_seconds": 19.7,
+          "gain": 0.8,
+          "duration_seconds": 0.40714285714285714
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 25.0,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.01",
+          "at_seconds": 25.7,
+          "gain": 0.8,
+          "duration_seconds": 0.40714285714285714
+        },
+        {
+          "cue": "sprayer.start",
+          "at_seconds": 11.0,
+          "gain": 1,
+          "duration_seconds": 0.3321768707482993
+        },
+        {
+          "cue": "sprayer.loop",
+          "at_seconds": 11.08,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "sprayer.stop",
+          "at_seconds": 12.48,
+          "gain": 1,
+          "duration_seconds": 0.35
+        },
+        {
+          "cue": "paint.splash.01",
+          "at_seconds": 11.2,
+          "gain": 0.65,
+          "duration_seconds": 0.42394557823129253
+        },
+        {
+          "cue": "paint.splash.02",
+          "at_seconds": 11.5,
+          "gain": 0.65,
+          "duration_seconds": 0.38482993197278914
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 11.799999999999999,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "sprayer.start",
+          "at_seconds": 16.5,
+          "gain": 1,
+          "duration_seconds": 0.3321768707482993
+        },
+        {
+          "cue": "sprayer.loop",
+          "at_seconds": 16.58,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "sprayer.stop",
+          "at_seconds": 17.98,
+          "gain": 1,
+          "duration_seconds": 0.35
+        },
+        {
+          "cue": "paint.splash.02",
+          "at_seconds": 16.7,
+          "gain": 0.65,
+          "duration_seconds": 0.38482993197278914
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 17.0,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 17.3,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "sprayer.start",
+          "at_seconds": 22.0,
+          "gain": 1,
+          "duration_seconds": 0.3321768707482993
+        },
+        {
+          "cue": "sprayer.loop",
+          "at_seconds": 22.08,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "sprayer.stop",
+          "at_seconds": 23.48,
+          "gain": 1,
+          "duration_seconds": 0.35
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 22.2,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 22.5,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 22.8,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "sprayer.start",
+          "at_seconds": 28.0,
+          "gain": 1,
+          "duration_seconds": 0.3321768707482993
+        },
+        {
+          "cue": "sprayer.loop",
+          "at_seconds": 28.08,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "sprayer.stop",
+          "at_seconds": 29.48,
+          "gain": 1,
+          "duration_seconds": 0.35
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 28.2,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 28.5,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "paint.splash.06",
+          "at_seconds": 28.8,
+          "gain": 0.65,
+          "duration_seconds": 0.23573696145124717
+        },
+        {
+          "cue": "player.hurt",
+          "at_seconds": 23.0,
+          "gain": 1,
+          "duration_seconds": 0.313718820861678
+        },
+        {
+          "cue": "weapon.empty",
+          "at_seconds": 26.0,
+          "gain": 1,
+          "duration_seconds": 0.27791383219954646
+        },
+        {
+          "cue": "weapon.recovered",
+          "at_seconds": 27.1,
+          "gain": 1,
+          "duration_seconds": 0.2861451247165533
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 9.573,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 9.993,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 10.413,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 10.833,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 11.253,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 11.673,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 12.093,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 12.513,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 12.933,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 13.353,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 13.773,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 14.193000000000001,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 14.613,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 15.033000000000001,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 15.453,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 15.873000000000001,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 13.073,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.02",
+          "at_seconds": 13.773,
+          "gain": 0.8,
+          "duration_seconds": 0.5
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 19.073,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.02",
+          "at_seconds": 19.773,
+          "gain": 0.8,
+          "duration_seconds": 0.5
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 25.073,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.02",
+          "at_seconds": 25.773,
+          "gain": 0.8,
+          "duration_seconds": 0.5
+        },
+        {
+          "cue": "roller.start",
+          "at_seconds": 11.073,
+          "gain": 1,
+          "duration_seconds": 0.5555555555555556
+        },
+        {
+          "cue": "roller.loop",
+          "at_seconds": 11.153,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "roller.stop",
+          "at_seconds": 12.553,
+          "gain": 1,
+          "duration_seconds": 0.5365986394557823
+        },
+        {
+          "cue": "paint.splash.02",
+          "at_seconds": 11.273,
+          "gain": 0.65,
+          "duration_seconds": 0.38482993197278914
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 11.573,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 11.873,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "roller.start",
+          "at_seconds": 16.573,
+          "gain": 1,
+          "duration_seconds": 0.5555555555555556
+        },
+        {
+          "cue": "roller.loop",
+          "at_seconds": 16.653,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "roller.stop",
+          "at_seconds": 18.053,
+          "gain": 1,
+          "duration_seconds": 0.5365986394557823
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 16.773,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 17.073,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 17.373,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "roller.start",
+          "at_seconds": 22.073,
+          "gain": 1,
+          "duration_seconds": 0.5555555555555556
+        },
+        {
+          "cue": "roller.loop",
+          "at_seconds": 22.153,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "roller.stop",
+          "at_seconds": 23.553,
+          "gain": 1,
+          "duration_seconds": 0.5365986394557823
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 22.273,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 22.573,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "paint.splash.06",
+          "at_seconds": 22.873,
+          "gain": 0.65,
+          "duration_seconds": 0.23573696145124717
+        },
+        {
+          "cue": "roller.start",
+          "at_seconds": 28.073,
+          "gain": 1,
+          "duration_seconds": 0.5555555555555556
+        },
+        {
+          "cue": "roller.loop",
+          "at_seconds": 28.153,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "roller.stop",
+          "at_seconds": 29.553,
+          "gain": 1,
+          "duration_seconds": 0.5365986394557823
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 28.273,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "paint.splash.06",
+          "at_seconds": 28.573,
+          "gain": 0.65,
+          "duration_seconds": 0.23573696145124717
+        },
+        {
+          "cue": "paint.splash.01",
+          "at_seconds": 28.873,
+          "gain": 0.65,
+          "duration_seconds": 0.42394557823129253
+        },
+        {
+          "cue": "player.hurt",
+          "at_seconds": 23.073,
+          "gain": 1,
+          "duration_seconds": 0.313718820861678
+        },
+        {
+          "cue": "weapon.empty",
+          "at_seconds": 26.073,
+          "gain": 1,
+          "duration_seconds": 0.27791383219954646
+        },
+        {
+          "cue": "weapon.recovered",
+          "at_seconds": 27.173000000000002,
+          "gain": 1,
+          "duration_seconds": 0.2861451247165533
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 9.646,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 10.066,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 10.486,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 10.906,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 11.326,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 11.746,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 12.166,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 12.586,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 13.006,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 13.426,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 13.846,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 14.266000000000002,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 14.686,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 15.106000000000002,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 15.526,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 15.946000000000002,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 13.146,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.03",
+          "at_seconds": 13.846,
+          "gain": 0.8,
+          "duration_seconds": 0.5357142857142857
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 19.146,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.03",
+          "at_seconds": 19.846,
+          "gain": 0.8,
+          "duration_seconds": 0.5357142857142857
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 25.146,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.03",
+          "at_seconds": 25.846,
+          "gain": 0.8,
+          "duration_seconds": 0.5357142857142857
+        },
+        {
+          "cue": "mister.start",
+          "at_seconds": 11.146,
+          "gain": 1,
+          "duration_seconds": 0.28462585034013604
+        },
+        {
+          "cue": "mister.loop",
+          "at_seconds": 11.226,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "mister.stop",
+          "at_seconds": 12.626000000000001,
+          "gain": 1,
+          "duration_seconds": 0.2538548752834467
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 11.346,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 11.646,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 11.946,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "mister.start",
+          "at_seconds": 16.646,
+          "gain": 1,
+          "duration_seconds": 0.28462585034013604
+        },
+        {
+          "cue": "mister.loop",
+          "at_seconds": 16.726,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "mister.stop",
+          "at_seconds": 18.126,
+          "gain": 1,
+          "duration_seconds": 0.2538548752834467
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 16.846,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 17.146,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "paint.splash.06",
+          "at_seconds": 17.446,
+          "gain": 0.65,
+          "duration_seconds": 0.23573696145124717
+        },
+        {
+          "cue": "mister.start",
+          "at_seconds": 22.146,
+          "gain": 1,
+          "duration_seconds": 0.28462585034013604
+        },
+        {
+          "cue": "mister.loop",
+          "at_seconds": 22.226,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "mister.stop",
+          "at_seconds": 23.626,
+          "gain": 1,
+          "duration_seconds": 0.2538548752834467
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 22.346,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "paint.splash.06",
+          "at_seconds": 22.646,
+          "gain": 0.65,
+          "duration_seconds": 0.23573696145124717
+        },
+        {
+          "cue": "paint.splash.01",
+          "at_seconds": 22.946,
+          "gain": 0.65,
+          "duration_seconds": 0.42394557823129253
+        },
+        {
+          "cue": "mister.start",
+          "at_seconds": 28.146,
+          "gain": 1,
+          "duration_seconds": 0.28462585034013604
+        },
+        {
+          "cue": "mister.loop",
+          "at_seconds": 28.226,
+          "gain": 0.72,
+          "duration_seconds": 1.4
+        },
+        {
+          "cue": "mister.stop",
+          "at_seconds": 29.626,
+          "gain": 1,
+          "duration_seconds": 0.2538548752834467
+        },
+        {
+          "cue": "paint.splash.06",
+          "at_seconds": 28.346,
+          "gain": 0.65,
+          "duration_seconds": 0.23573696145124717
+        },
+        {
+          "cue": "paint.splash.01",
+          "at_seconds": 28.646,
+          "gain": 0.65,
+          "duration_seconds": 0.42394557823129253
+        },
+        {
+          "cue": "paint.splash.02",
+          "at_seconds": 28.946,
+          "gain": 0.65,
+          "duration_seconds": 0.38482993197278914
+        },
+        {
+          "cue": "player.hurt",
+          "at_seconds": 23.146,
+          "gain": 1,
+          "duration_seconds": 0.313718820861678
+        },
+        {
+          "cue": "weapon.empty",
+          "at_seconds": 26.146,
+          "gain": 1,
+          "duration_seconds": 0.27791383219954646
+        },
+        {
+          "cue": "weapon.recovered",
+          "at_seconds": 27.246000000000002,
+          "gain": 1,
+          "duration_seconds": 0.2861451247165533
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 9.719,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 10.139,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 10.559,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 10.979,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 11.399,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 11.818999999999999,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 12.238999999999999,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 12.658999999999999,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 13.078999999999999,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 13.498999999999999,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.step.02",
+          "at_seconds": 13.918999999999999,
+          "gain": 0.72,
+          "duration_seconds": 0.13333333333333333
+        },
+        {
+          "cue": "player.step.03",
+          "at_seconds": 14.339,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.04",
+          "at_seconds": 14.758999999999999,
+          "gain": 0.72,
+          "duration_seconds": 0.18183673469387754
+        },
+        {
+          "cue": "player.step.05",
+          "at_seconds": 15.179,
+          "gain": 0.72,
+          "duration_seconds": 0.09287981859410431
+        },
+        {
+          "cue": "player.step.06",
+          "at_seconds": 15.598999999999998,
+          "gain": 0.72,
+          "duration_seconds": 0.10732426303854875
+        },
+        {
+          "cue": "player.step.01",
+          "at_seconds": 16.019000000000002,
+          "gain": 0.72,
+          "duration_seconds": 0.2303174603174603
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 13.219,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.04",
+          "at_seconds": 13.918999999999999,
+          "gain": 0.8,
+          "duration_seconds": 0.45342403628117917
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 19.219,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.04",
+          "at_seconds": 19.919,
+          "gain": 0.8,
+          "duration_seconds": 0.45342403628117917
+        },
+        {
+          "cue": "player.jump",
+          "at_seconds": 25.219,
+          "gain": 0.8,
+          "duration_seconds": 0.25333333333333335
+        },
+        {
+          "cue": "player.land.04",
+          "at_seconds": 25.919,
+          "gain": 0.8,
+          "duration_seconds": 0.45342403628117917
+        },
+        {
+          "cue": "sniper.shot",
+          "at_seconds": 11.219,
+          "gain": 1,
+          "duration_seconds": 0.2587981859410431
+        },
+        {
+          "cue": "bucket.throw",
+          "at_seconds": 12.418999999999999,
+          "gain": 1,
+          "duration_seconds": 0.9770975056689343
+        },
+        {
+          "cue": "paint.splash.04",
+          "at_seconds": 11.418999999999999,
+          "gain": 0.65,
+          "duration_seconds": 0.31798185941043083
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 11.719,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "paint.splash.06",
+          "at_seconds": 12.018999999999998,
+          "gain": 0.65,
+          "duration_seconds": 0.23573696145124717
+        },
+        {
+          "cue": "sniper.shot",
+          "at_seconds": 16.719,
+          "gain": 1,
+          "duration_seconds": 0.2587981859410431
+        },
+        {
+          "cue": "bucket.throw",
+          "at_seconds": 17.919,
+          "gain": 1,
+          "duration_seconds": 0.9770975056689343
+        },
+        {
+          "cue": "paint.splash.05",
+          "at_seconds": 16.919,
+          "gain": 0.65,
+          "duration_seconds": 0.28723356009070294
+        },
+        {
+          "cue": "paint.splash.06",
+          "at_seconds": 17.219,
+          "gain": 0.65,
+          "duration_seconds": 0.23573696145124717
+        },
+        {
+          "cue": "paint.splash.01",
+          "at_seconds": 17.519000000000002,
+          "gain": 0.65,
+          "duration_seconds": 0.42394557823129253
+        },
+        {
+          "cue": "sniper.shot",
+          "at_seconds": 22.219,
+          "gain": 1,
+          "duration_seconds": 0.2587981859410431
+        },
+        {
+          "cue": "bucket.throw",
+          "at_seconds": 23.419,
+          "gain": 1,
+          "duration_seconds": 0.9770975056689343
+        },
+        {
+          "cue": "paint.splash.06",
+          "at_seconds": 22.419,
+          "gain": 0.65,
+          "duration_seconds": 0.23573696145124717
+        },
+        {
+          "cue": "paint.splash.01",
+          "at_seconds": 22.719,
+          "gain": 0.65,
+          "duration_seconds": 0.42394557823129253
+        },
+        {
+          "cue": "paint.splash.02",
+          "at_seconds": 23.019000000000002,
+          "gain": 0.65,
+          "duration_seconds": 0.38482993197278914
+        },
+        {
+          "cue": "sniper.shot",
+          "at_seconds": 28.219,
+          "gain": 1,
+          "duration_seconds": 0.2587981859410431
+        },
+        {
+          "cue": "bucket.throw",
+          "at_seconds": 29.419,
+          "gain": 1,
+          "duration_seconds": 0.9770975056689343
+        },
+        {
+          "cue": "paint.splash.01",
+          "at_seconds": 28.419,
+          "gain": 0.65,
+          "duration_seconds": 0.42394557823129253
+        },
+        {
+          "cue": "paint.splash.02",
+          "at_seconds": 28.719,
+          "gain": 0.65,
+          "duration_seconds": 0.38482993197278914
+        },
+        {
+          "cue": "paint.splash.03",
+          "at_seconds": 29.019000000000002,
+          "gain": 0.65,
+          "duration_seconds": 0.4500226757369615
+        },
+        {
+          "cue": "player.hurt",
+          "at_seconds": 23.219,
+          "gain": 1,
+          "duration_seconds": 0.313718820861678
+        },
+        {
+          "cue": "weapon.empty",
+          "at_seconds": 26.219,
+          "gain": 1,
+          "duration_seconds": 0.27791383219954646
+        },
+        {
+          "cue": "weapon.recovered",
+          "at_seconds": 27.319000000000003,
+          "gain": 1,
+          "duration_seconds": 0.2861451247165533
+        },
+        {
+          "cue": "player.pop",
+          "at_seconds": 29.8,
+          "gain": 1,
+          "duration_seconds": 0.30401360544217687
+        },
+        {
+          "cue": "player.redraw",
+          "at_seconds": 30.4,
+          "gain": 0.65,
+          "duration_seconds": 1.5
+        },
+        {
+          "cue": "player.respawn",
+          "at_seconds": 32,
+          "gain": 1,
+          "duration_seconds": 0.5416780045351474
+        },
+        {
+          "cue": "match.time_up",
+          "at_seconds": 34,
+          "gain": 1,
+          "duration_seconds": 0.66
+        },
+        {
+          "cue": "match.glass_out",
+          "at_seconds": 34.1,
+          "gain": 1,
+          "duration_seconds": 0.6458049886621315
+        },
+        {
+          "cue": "room.tone",
+          "at_seconds": 36,
+          "gain": 0.5,
+          "duration_seconds": 8
+        },
+        {
+          "cue": "room.chair",
+          "at_seconds": 37,
+          "gain": 1,
+          "duration_seconds": 1.0182766439909297
+        },
+        {
+          "cue": "match.reveal_hover",
+          "at_seconds": 38.8,
+          "gain": 1,
+          "duration_seconds": 0.07337868480725623
+        },
+        {
+          "cue": "match.reveal_hover",
+          "at_seconds": 40,
+          "gain": 1,
+          "duration_seconds": 0.07337868480725623
+        },
+        {
+          "cue": "match.reveal_click",
+          "at_seconds": 41.3,
+          "gain": 1,
+          "duration_seconds": 0.17498866213151928
+        },
+        {
+          "cue": "room.chair",
+          "at_seconds": 42.3,
+          "gain": 0.65,
+          "duration_seconds": 1.0182766439909297
+        },
+        {
+          "cue": "match.celebrate",
+          "at_seconds": 44,
+          "gain": 1,
+          "duration_seconds": 0.55
+        },
+        {
+          "cue": "match.slump",
+          "at_seconds": 44.25,
+          "gain": 1,
+          "duration_seconds": 0.6150566893424037
+        },
+        {
+          "cue": "results.winner",
+          "at_seconds": 46,
+          "gain": 1,
+          "duration_seconds": 0.7887074829931973
+        }
+      ]
+    }
+  ]
+}

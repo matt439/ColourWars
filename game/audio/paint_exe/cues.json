@@ -1,0 +1,1674 @@
+{
+  "version": 1,
+  "status": "production candidates; listening acceptance pending",
+  "required_cues": [
+    "music.menu",
+    "music.close_quarters",
+    "music.king_of_the_hill",
+    "music.turbulence",
+    "music.results",
+    "music.end_sting",
+    "match.count_beat",
+    "match.go",
+    "match.time_up",
+    "match.glass_out",
+    "match.glass_in",
+    "match.reveal_hover",
+    "match.reveal_click",
+    "match.reveal_close",
+    "match.celebrate",
+    "match.slump",
+    "match.colour_in",
+    "match.skip",
+    "match.undo",
+    "match.last_ten",
+    "room.sigh",
+    "room.chair",
+    "room.tone",
+    "room.footsteps",
+    "room.breath",
+    "match.waver",
+    "match.cheat",
+    "player.jump",
+    "player.land",
+    "player.step",
+    "player.skid",
+    "player.hurt",
+    "player.pop",
+    "player.redraw",
+    "player.respawn",
+    "player.step_painted",
+    "player.bonk",
+    "player.drop",
+    "player.hit_confirm",
+    "sprayer.loop",
+    "sprayer.start",
+    "sprayer.stop",
+    "roller.loop",
+    "roller.start",
+    "roller.stop",
+    "roller.lift",
+    "roller.settle",
+    "weapon.empty",
+    "weapon.recovered",
+    "mister.loop",
+    "mister.start",
+    "mister.stop",
+    "sniper.shot",
+    "sniper.ready",
+    "bucket.throw",
+    "paint.splash",
+    "paint.capture",
+    "paint.dud",
+    "paint.impact.sprayer",
+    "paint.impact.roller",
+    "paint.impact.mister",
+    "paint.impact.sniper",
+    "paint.impact.bucket",
+    "weapon.blocked",
+    "bucket.slosh",
+    "tool.drip",
+    "world.ambience.close_quarters",
+    "world.ambience.king_of_the_hill",
+    "world.ambience.turbulence",
+    "world.detail",
+    "ui.move",
+    "ui.confirm",
+    "ui.cancel",
+    "ui.error",
+    "ui.ready",
+    "ui.pause_open",
+    "ui.unready",
+    "ui.pad_lost",
+    "ui.pad_back",
+    "ui.count_in",
+    "results.fill",
+    "results.winner",
+    "results.draw",
+    "end.series",
+    "ui.volume_preview"
+  ],
+  "cues": [
+    {
+      "id": "match.celebrate",
+      "cue_id": "match.celebrate",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.celebrate.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.vcsl.clap_1"
+      ],
+      "description": "Hand claps and cheerful acoustic strum after the person leaves.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "33e40aa5c0b4ae9e6da4bd5b3db9fcd5ed699bc90656ff75261d46d3976475e4"
+    },
+    {
+      "id": "match.count_beat",
+      "cue_id": "match.count_beat",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.count_beat.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.ukulele.body_tap"
+      ],
+      "description": "A single wooden count beat with a muted acoustic pitch.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "cb862eb8958570b4f5446b978ca00088d1ce2a442ff1dcdef6328b65aef36919"
+    },
+    {
+      "id": "match.glass_out",
+      "cue_id": "match.glass_out",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.glass_out.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "music.ukulele.body_tap"
+      ],
+      "description": "Lowered paper flutter and muffled body knock pull through the glass.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "d23c42729810d65dc77886d66c7cb3715bf0eab6b7c5b22ca13c5cf9ff2cb2b7"
+    },
+    {
+      "id": "match.go",
+      "cue_id": "match.go",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.go.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.vcsl.clap_1"
+      ],
+      "description": "Clap and rising ukulele triad mark the playable edge.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "99a3326b1fb7868130d28898c4fb84041941a6034ea9e4023fbc221ead9a36b5"
+    },
+    {
+      "id": "match.reveal_click",
+      "cue_id": "match.reveal_click",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.reveal_click.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse"
+      ],
+      "description": "Firm double mouse switch seals the chosen colour.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "78ffa066389cb1f4aae43862bc92f28ea423cba51a6c0a25f2b62120d8fef81b"
+    },
+    {
+      "id": "match.reveal_hover",
+      "cue_id": "match.reveal_hover",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.reveal_hover.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse"
+      ],
+      "description": "Single tiny recorded switch distinct from menu motion.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "5395bfbd7a8130604fbe553ef7bb25c183da94622d146b5555042009e61c6533"
+    },
+    {
+      "id": "match.slump",
+      "cue_id": "match.slump",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.slump.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "music.ukulele.C4"
+      ],
+      "description": "Paper flump and a muted falling pluck, with no pain vocal.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "0aceeded3f011a11d055c68a4052066cb73f658f3436c73c2d14a7d6a5ac0a3e"
+    },
+    {
+      "id": "match.time_up",
+      "cue_id": "match.time_up",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.time_up.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.vcsl.cajon_low_1"
+      ],
+      "description": "Falling two-hit wooden punctuation; under two seconds.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "a2843e352fb09964addedd2e72fcefa418a070420def7595c7f8b40e5b5cfa9e"
+    },
+    {
+      "id": "music.close_quarters",
+      "tier": 1,
+      "path": "game/audio/paint_exe/music/waves/music_close_quarters.wav",
+      "loop": true,
+      "source_ids": [
+        "music.ukulele.A4",
+        "music.ukulele.B4",
+        "music.ukulele.C#5",
+        "music.ukulele.C4",
+        "music.ukulele.D#5",
+        "music.ukulele.D4",
+        "music.ukulele.E4",
+        "music.ukulele.F5",
+        "music.ukulele.G4",
+        "music.ukulele.G5",
+        "music.ukulele.chuck",
+        "music.vcsl.bongo_1",
+        "music.vcsl.bongo_2",
+        "music.vcsl.cajon_high_1",
+        "music.vcsl.cajon_high_2",
+        "music.vcsl.cajon_low_1",
+        "music.vcsl.cajon_low_2",
+        "music.vcsl.piano_C2",
+        "music.vcsl.piano_C3",
+        "music.vcsl.piano_C4",
+        "music.vcsl.piano_G1",
+        "music.vcsl.piano_G2",
+        "music.vcsl.piano_G3",
+        "music.vcsl.piano_G4",
+        "music.vcsl.shaker_down_1",
+        "music.vcsl.shaker_down_2",
+        "music.vcsl.shaker_up_1",
+        "music.vcsl.shaker_up_2"
+      ],
+      "description": "Quick syncopated upright-piano tune, damped ukulele strums and cajon; a minor detour, call-and-response middle and high-register final reprise.",
+      "production_source": "game/audio/paint_exe/music/score.json",
+      "cue_id": "music.close_quarters",
+      "sha256": "1289a767c526772bc0df6093e1102a8fc0063315c0332ec99fb1301dcd708df8"
+    },
+    {
+      "id": "music.menu",
+      "tier": 1,
+      "path": "game/audio/paint_exe/music/waves/music_menu.wav",
+      "loop": true,
+      "source_ids": [
+        "music.ukulele.A4",
+        "music.ukulele.A5",
+        "music.ukulele.B4",
+        "music.ukulele.C#5",
+        "music.ukulele.C6",
+        "music.ukulele.D#5",
+        "music.ukulele.D4",
+        "music.ukulele.E4",
+        "music.ukulele.F5",
+        "music.ukulele.G4",
+        "music.ukulele.G5",
+        "music.ukulele.body_tap",
+        "music.ukulele.chuck",
+        "music.vcsl.piano_C2",
+        "music.vcsl.piano_C3",
+        "music.vcsl.piano_C4",
+        "music.vcsl.piano_G1",
+        "music.vcsl.piano_G2",
+        "music.vcsl.piano_G3",
+        "music.vcsl.piano_G4",
+        "music.vcsl.shaker_up_1"
+      ],
+      "description": "A quiet bedroom-desk miniature: plucked tenor ukulele, warm upright piano answers, body taps; four distinct eight-bar phrases with space between gestures.",
+      "production_source": "game/audio/paint_exe/music/score.json",
+      "cue_id": "music.menu",
+      "sha256": "aad32bfb53945c9b4933be6e4bc333afa18b43467b0f9f09fa0fa906a92972e6"
+    },
+    {
+      "id": "paint.splash.01",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_01.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "217b4b5af0ce935d15d75a799350960489576eca918f2e4e2ed04caf3e48c880"
+    },
+    {
+      "id": "paint.splash.02",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_02.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "a197a877d6289bc1e355886428f6b94b065ef97ee3c6e45475d684ec76c45a02"
+    },
+    {
+      "id": "paint.splash.03",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_03.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_6"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "92ec2e5e0a0d41c262f2e958a2e79c608946ac95e7bbef04fb93aa127883e010"
+    },
+    {
+      "id": "paint.splash.04",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_04.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "ee652aa01641272768d5b1298dd7514afc2971a28a92a79020d10a6d42ad6914"
+    },
+    {
+      "id": "paint.splash.05",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_05.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "e0fbe22f34129363dbe38449171d6b6b333844c449552dc138ba2bae8363b1b2"
+    },
+    {
+      "id": "paint.splash.06",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_06.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "d78bf787376495baa6abb45530b3293c77c52e43d5a1688a43d579a63f50db89"
+    },
+    {
+      "id": "player.hurt",
+      "cue_id": "player.hurt",
+      "tier": 1,
+      "description": "Wet fruit slap and crushed-paper snap.",
+      "path": "game/audio/paint_exe/foley/masters/player_hurt.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_fruit1",
+        "owlish_paper_crumple2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "2668a23851352134528c64076d26043144f6ee067ae0ca119da915845a7b115c"
+    },
+    {
+      "id": "player.jump",
+      "cue_id": "player.jump",
+      "tier": 1,
+      "description": "Quick upward paper flick and nib release.",
+      "path": "game/audio/paint_exe/foley/masters/player_jump.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_whiteboard",
+        "owlish_paper_turn1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "06230a049a5580f1947f590aae24a9b2f0b13bdfcc14601b2db2794ed95d7425"
+    },
+    {
+      "id": "player.land.01",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_land_01.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_crumple1",
+        "owlish_paper_turn1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "a87081d3fdec3705991a5796eee5ee5c59454c69f22035f21d2a3f740a5ff423"
+    },
+    {
+      "id": "player.land.02",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_land_02.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_crumple1",
+        "owlish_paper_turn2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "fdd75d912e4798615d332f9aab203402b804ccc9c290a5c4a500f0b0ae733947"
+    },
+    {
+      "id": "player.land.03",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_land_03.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_crumple1",
+        "owlish_paper_flips1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "ff361ee97b8eb8633e5a170ad8e7a355bfe42c0b330975d109a49587028c8d20"
+    },
+    {
+      "id": "player.land.04",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_land_04.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_crumple1",
+        "owlish_paper_flips2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "95943e566d83eeac93b51913eb7612229c6b44c4ebcf52391eb2260c37e3b531"
+    },
+    {
+      "id": "player.pop",
+      "cue_id": "player.pop",
+      "tier": 1,
+      "description": "A real water-bubble burst, with a soft wet body.",
+      "path": "game/audio/paint_exe/foley/masters/player_pop.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_bubbles",
+        "owlish_fruit2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "95add58778d44abc66d04c1e3040a1ea9771a51ba5928b0e0e1ae65579632e01"
+    },
+    {
+      "id": "player.respawn",
+      "cue_id": "player.respawn",
+      "tier": 1,
+      "description": "Final marker flourish lands in a small paper contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_respawn.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_whiteboard",
+        "owlish_paper_turn1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "5fa37336934d95689bbe5625bbde5c5e6bce054c7e08e9fdd9c1f6b058770edb"
+    },
+    {
+      "id": "player.skid",
+      "cue_id": "player.skid",
+      "tier": 1,
+      "description": "Brief dragged marker squeak for a committed reversal.",
+      "path": "game/audio/paint_exe/foley/masters/player_skid.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_whiteboard"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "052d0b14d402655201691e7d4561122bdb273e1c48783be6ba8ceb63d6944011"
+    },
+    {
+      "id": "player.step.01",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_01.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "f179046e6832eebefb07b3a4edc928f3f02cef93ac82ecc26f494f2b1c65ac37"
+    },
+    {
+      "id": "player.step.02",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_02.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "f0749089361726800db03f7b422777330da74dfd6d304e7780bef2a1b3d81bd0"
+    },
+    {
+      "id": "player.step.03",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_03.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "0a8bcd324ec15675e6de425ef49a0c2417264dcae688dd87d08b30269e4fab8e"
+    },
+    {
+      "id": "player.step.04",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_04.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "a475be8136f32aaaa4da8edad3c3ab366525af2d5e04dbfb59f910c209483bcc"
+    },
+    {
+      "id": "player.step.05",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_05.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "746a30d4cbda6bdb019b4d5cdddfe06eb6d2687ddd84e88639b9b0326107891d"
+    },
+    {
+      "id": "player.step.06",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_06.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "268da5882e43207d31e37edacf1a21289a39e479765b2e022c5c2b26a86afb15"
+    },
+    {
+      "id": "roller.lift",
+      "cue_id": "roller.lift",
+      "tier": 1,
+      "description": "Tacky wet peel as the drum leaves a surface.",
+      "path": "game/audio/paint_exe/foley/masters/roller_lift.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "3933eaa5229ea299a9fb93978e9459695770f65ae418c0ffcb7bde966e3cf60d"
+    },
+    {
+      "id": "roller.loop",
+      "cue_id": "roller.loop",
+      "tier": 1,
+      "description": "Tacky wet drum: foamy sponge compression under a slowed wall-brush stroke.",
+      "path": "game/audio/paint_exe/foley/masters/roller_loop.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_brush",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "058236157f763660eea059ce087d970eaa5c111c4710e104a534dc6ee07a72fd"
+    },
+    {
+      "id": "roller.settle",
+      "cue_id": "roller.settle",
+      "tier": 1,
+      "description": "Soft wet drum contact with a low handle tap.",
+      "path": "game/audio/paint_exe/foley/masters/roller_settle.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "9246031e23b979c5b4140ddd82594c8d746114847855193aed53bd6a4ac6d322"
+    },
+    {
+      "id": "roller.start",
+      "cue_id": "roller.start",
+      "tier": 1,
+      "description": "Wet sponge grabs the floor with a small handle contact.",
+      "path": "game/audio/paint_exe/foley/masters/roller_start.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_tap"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "527da0baadc07ed20fc6749bee7d66f77fc2bdf425cbb11968835c3bcc284ae8"
+    },
+    {
+      "id": "roller.stop",
+      "cue_id": "roller.stop",
+      "tier": 1,
+      "description": "Wet drum releases pressure and settles.",
+      "path": "game/audio/paint_exe/foley/masters/roller_stop.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "b5c9a140545c87bc0d2b134e3f660a99e3dc8248c3e95826aac3e38df707516a"
+    },
+    {
+      "id": "room.chair",
+      "cue_id": "room.chair",
+      "tier": 1,
+      "description": "A real chair creak plus a restrained chair movement contact.",
+      "path": "game/audio/paint_exe/foley/masters/room_chair.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_chair",
+        "unkleceeg_chair_creak"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "864b69adf8d132d67380c05de6cc4b9f3c81372ac149ca74ae664ca6675419ec"
+    },
+    {
+      "id": "room.sigh",
+      "cue_id": "room.sigh",
+      "tier": 1,
+      "description": "A close recorded human exhale, softened as heard outside the monitor.",
+      "path": "game/audio/paint_exe/foley/masters/room_sigh.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sigh"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "c81ff28a02606293fe942565aceb570b725ce76eb4cd19c20d3ec5b9a23f84f6"
+    },
+    {
+      "id": "sprayer.loop",
+      "cue_id": "sprayer.loop",
+      "tier": 1,
+      "description": "Coarse pressured spray with a wet foam undertone.",
+      "path": "game/audio/paint_exe/foley/masters/sprayer_loop.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_long_spray",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "b7d041c18f681dd3dbed6fe53884d7ca698a486eaf29bccd0d07f4c09ffb7f40"
+    },
+    {
+      "id": "sprayer.start",
+      "cue_id": "sprayer.start",
+      "tier": 1,
+      "description": "Pump squeeze and first wet valve opening.",
+      "path": "game/audio/paint_exe/foley/masters/sprayer_start.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_pump"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "6b8b7520c8e3858d6649a68b32327153a7509ed87448b8b3e359539616a88a34"
+    },
+    {
+      "id": "sprayer.stop",
+      "cue_id": "sprayer.stop",
+      "tier": 1,
+      "description": "Pump return with a brief residual spray tail.",
+      "path": "game/audio/paint_exe/foley/masters/sprayer_stop.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_pump"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "1343683426d9f38be146889f5de6ef78f7c09938d0ba8dc007e723d8f5f40c1d"
+    },
+    {
+      "id": "ui.cancel",
+      "cue_id": "ui.cancel",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/ui.cancel.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse"
+      ],
+      "description": "Lower double switch moving back; short and dry.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "81582253ea91f6c68117a7f1d11ebf72972d57e723850aaeae8d9a4dafd980e9"
+    },
+    {
+      "id": "ui.confirm",
+      "cue_id": "ui.confirm",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/ui.confirm.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse",
+        "music.ukulele.C4"
+      ],
+      "description": "Mouse switch and an upward two-note ukulele answer.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "d0af2c59acde686d55b303d264ee3d2b6a77a8ab98b88a9514cc73d794600f54"
+    },
+    {
+      "id": "ui.error",
+      "cue_id": "ui.error",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/ui.error.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.body_tap"
+      ],
+      "description": "Three muffled wooden taps; a refusal without a harsh alarm.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "b83f757fea84bffd1cbc72d39d2c872957322dd18d2c7e668f78abc07a3ba189"
+    },
+    {
+      "id": "ui.move",
+      "cue_id": "ui.move",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/ui.move.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse"
+      ],
+      "description": "One dry mouse switch tick; restrained for repeated navigation.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "1538a1fb95fef9810e37915d0bf469080b8a82b374b124e922f72727caa84c58"
+    },
+    {
+      "id": "ui.pause_open",
+      "cue_id": "ui.pause_open",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/ui.pause_open.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "music.ukulele.body_tap"
+      ],
+      "description": "Paper fold and damped wood tap, separate from confirm.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "cc817560101f4c195276538d6649bc2d3e48ad51fefaa0bbb4eb9be8dfc5473d"
+    },
+    {
+      "id": "ui.ready",
+      "cue_id": "ui.ready",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/ui.ready.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse",
+        "music.ukulele.C4"
+      ],
+      "description": "Physical switch followed by a bright three-note acoustic lift.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "64c247c29add2ab6f3fc85eb51972e34511bf2a037b05eae0887cc4bec29e8c7"
+    },
+    {
+      "id": "weapon.empty",
+      "cue_id": "weapon.empty",
+      "tier": 1,
+      "description": "Dry pump mechanism: short double mechanical refusal.",
+      "path": "game/audio/paint_exe/foley/masters/weapon_empty.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "12cef068c2dc84a28d10a8a8bd353c18a2d67c76d5639f7ac8aa2ff17da635ef"
+    },
+    {
+      "id": "weapon.recovered",
+      "cue_id": "weapon.recovered",
+      "tier": 1,
+      "description": "A clear valve catch followed by a tiny liquid plop.",
+      "path": "game/audio/paint_exe/foley/masters/weapon_recovered.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_drips",
+        "owlish_plug"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "2d23909ffe761bc40252a3437edbc1cd28a5492fa4e9b838761495ad1411510f"
+    },
+    {
+      "id": "bucket.throw",
+      "cue_id": "bucket.throw",
+      "tier": 2,
+      "description": "A swung tin contact over a wet bucket slosh.",
+      "path": "game/audio/paint_exe/foley/masters/bucket_throw.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_1",
+        "owlish_metal_clank"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "2e94a35d55deb614c2aac52c86862baa9406ed30fcc355f234600960ff285ad4"
+    },
+    {
+      "id": "match.colour_in",
+      "cue_id": "match.colour_in",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/match.colour_in.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "music.ukulele.C4"
+      ],
+      "description": "Paper unfurls into a short bright acoustic chord.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "c3919a54ec076def6874e2e3d83461d073774006988c5a46eef5098c402d8f11"
+    },
+    {
+      "id": "match.glass_in",
+      "cue_id": "match.glass_in",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/match.glass_in.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "music.ukulele.body_tap"
+      ],
+      "description": "Reversed paper lift with a soft landing knock crosses into the picture.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "5795288bd0918645aaa631caec91201baf3bdc6e3ac20443fa8a10e1c49e3edc"
+    },
+    {
+      "id": "match.last_ten",
+      "cue_id": "match.last_ten",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/match.last_ten.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.body_tap"
+      ],
+      "description": "Short unpitched body tap; conveys time only, never team or score.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "47fb4662d4858f955f58cf1f3063613abb642e07bf34ee1a04f08c0f20c01f64"
+    },
+    {
+      "id": "match.reveal_close",
+      "cue_id": "match.reveal_close",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/match.reveal_close.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "interface.owlish.mouse"
+      ],
+      "description": "Downward paper fold and low releasing switch close a drawn match.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "5f2cad2ad5549a985b5bda8417516cb9d1e5d2fd3fdb9cb6450126536a30adbf"
+    },
+    {
+      "id": "match.skip",
+      "cue_id": "match.skip",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/match.skip.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse"
+      ],
+      "description": "Two crisp switch ticks for the skipped opening.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "c60d54cd60849d814ffd7c8ea0a8d27c1e079dfc4e18ca72593e68644a9bfc43"
+    },
+    {
+      "id": "match.undo",
+      "cue_id": "match.undo",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/match.undo.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "interface.owlish.mouse"
+      ],
+      "description": "Quiet reverse paper tick and mouse release for the person undoing colour.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "ba5c621ba7fb8860d0c437a469aa198e5d290c3b5a1431bfe9177583a5026e2e"
+    },
+    {
+      "id": "mister.loop",
+      "cue_id": "mister.loop",
+      "tier": 2,
+      "description": "Fine atomiser fizz, higher and softer than the sprayer.",
+      "path": "game/audio/paint_exe/foley/masters/mister_loop.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_long_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "f98632d24e8d5071b00b423bae03dea7b1242f48eb8a60237e4575b4a333487a"
+    },
+    {
+      "id": "mister.start",
+      "cue_id": "mister.start",
+      "tier": 2,
+      "description": "Fine atomiser opens with a fast spray hiss.",
+      "path": "game/audio/paint_exe/foley/masters/mister_start.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "ba321f7bf5fb47d238fae8bcbd4d89fea29c03c3d8747df58ff1e50ded49bd8c"
+    },
+    {
+      "id": "mister.stop",
+      "cue_id": "mister.stop",
+      "tier": 2,
+      "description": "Fine nozzle closes with a short remaining hiss.",
+      "path": "game/audio/paint_exe/foley/masters/mister_stop.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "5a70d365b163d2a427025fda482e680848312a0ad508d92f06d0d48315799d47"
+    },
+    {
+      "id": "music.end_sting.close_quarters",
+      "tier": 2,
+      "path": "game/audio/paint_exe/music/waves/music_end_sting_close_quarters.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.ukulele.E4",
+        "music.ukulele.G4",
+        "music.ukulele.body_tap",
+        "music.vcsl.piano_C3",
+        "music.vcsl.piano_C4",
+        "music.vcsl.piano_G3"
+      ],
+      "description": "Acoustic cadence under two seconds in the close quarters track's home key; standalone one-shot, ending on its own decay.",
+      "production_source": "game/audio/paint_exe/music/score.json",
+      "cue_id": "music.end_sting",
+      "sha256": "360b507d07645a05fb009bf544199a47c64a693e0277e07f9e7e9778843d1eb7"
+    },
+    {
+      "id": "music.end_sting.king_of_the_hill",
+      "tier": 2,
+      "path": "game/audio/paint_exe/music/waves/music_end_sting_king_of_the_hill.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.B4",
+        "music.ukulele.C#5",
+        "music.ukulele.G4",
+        "music.ukulele.body_tap",
+        "music.vcsl.piano_C4",
+        "music.vcsl.piano_G3",
+        "music.vcsl.piano_G4"
+      ],
+      "description": "Acoustic cadence under two seconds in the king of the hill track's home key; standalone one-shot, ending on its own decay.",
+      "production_source": "game/audio/paint_exe/music/score.json",
+      "cue_id": "music.end_sting",
+      "sha256": "3c2ff87109d1ce5684898729018ba07d073864700617537cb08fa16b58fa1191"
+    },
+    {
+      "id": "music.end_sting.turbulence",
+      "tier": 2,
+      "path": "game/audio/paint_exe/music/waves/music_end_sting_turbulence.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.A4",
+        "music.ukulele.D4",
+        "music.ukulele.E4",
+        "music.ukulele.body_tap",
+        "music.vcsl.piano_C3",
+        "music.vcsl.piano_G3"
+      ],
+      "description": "Acoustic cadence under two seconds in the turbulence track's home key; standalone one-shot, ending on its own decay.",
+      "production_source": "game/audio/paint_exe/music/score.json",
+      "cue_id": "music.end_sting",
+      "sha256": "5df854369ed8762bd94a34e976a205c6b1693ac449b0a2ddc1691ac31465b8c1"
+    },
+    {
+      "id": "music.king_of_the_hill",
+      "tier": 2,
+      "path": "game/audio/paint_exe/music/waves/music_king_of_the_hill.wav",
+      "loop": true,
+      "source_ids": [
+        "music.ukulele.A4",
+        "music.ukulele.A5",
+        "music.ukulele.B4",
+        "music.ukulele.C#5",
+        "music.ukulele.C6",
+        "music.ukulele.D#5",
+        "music.ukulele.D4",
+        "music.ukulele.E4",
+        "music.ukulele.F#4",
+        "music.ukulele.F5",
+        "music.ukulele.G4",
+        "music.ukulele.G5",
+        "music.vcsl.bongo_1",
+        "music.vcsl.bongo_2",
+        "music.vcsl.cajon_low_1",
+        "music.vcsl.cajon_low_2",
+        "music.vcsl.clap_1",
+        "music.vcsl.clap_2",
+        "music.vcsl.clap_3",
+        "music.vcsl.piano_C2",
+        "music.vcsl.piano_C3",
+        "music.vcsl.piano_C4",
+        "music.vcsl.piano_G1",
+        "music.vcsl.piano_G2",
+        "music.vcsl.piano_G3",
+        "music.vcsl.piano_G4",
+        "music.vcsl.shaker_down_1",
+        "music.vcsl.shaker_down_2",
+        "music.vcsl.shaker_up_1",
+        "music.vcsl.shaker_up_2"
+      ],
+      "description": "Broad climbing ukulele melody with alternating upright bass and chords, handclaps and shaker; a contrasting minor passage rises back into the home theme.",
+      "production_source": "game/audio/paint_exe/music/score.json",
+      "cue_id": "music.king_of_the_hill",
+      "sha256": "0b417ae7ba61394d3f2a60cfef61ced01ddb7f072397a849004f00bfa6e1c5d0"
+    },
+    {
+      "id": "music.results",
+      "tier": 2,
+      "path": "game/audio/paint_exe/music/waves/music_results.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.A4",
+        "music.ukulele.B4",
+        "music.ukulele.C#5",
+        "music.ukulele.C4",
+        "music.ukulele.D#5",
+        "music.ukulele.E4",
+        "music.ukulele.G4",
+        "music.ukulele.body_tap",
+        "music.vcsl.clap_1",
+        "music.vcsl.clap_2",
+        "music.vcsl.clap_3",
+        "music.vcsl.piano_G4"
+      ],
+      "description": "Short palette-complete coda: upright piano answers ukulele, a brief handclap pulse resolves to a quiet C-major-sixth chord; export trimmed to its natural decay.",
+      "production_source": "game/audio/paint_exe/music/score.json",
+      "cue_id": "music.results",
+      "sha256": "072fd8fb7f0ac43c4566b28ace3644a3baf4da23844e97f3a296a71c3e51cb26"
+    },
+    {
+      "id": "music.turbulence",
+      "tier": 2,
+      "path": "game/audio/paint_exe/music/waves/music_turbulence.wav",
+      "loop": true,
+      "source_ids": [
+        "music.ukulele.A4",
+        "music.ukulele.A5",
+        "music.ukulele.B4",
+        "music.ukulele.C#5",
+        "music.ukulele.C4",
+        "music.ukulele.C6",
+        "music.ukulele.D#5",
+        "music.ukulele.D4",
+        "music.ukulele.E4",
+        "music.ukulele.F5",
+        "music.ukulele.G4",
+        "music.ukulele.G5",
+        "music.vcsl.bongo_1",
+        "music.vcsl.bongo_2",
+        "music.vcsl.cajon_high_1",
+        "music.vcsl.cajon_high_2",
+        "music.vcsl.cajon_low_1",
+        "music.vcsl.cajon_low_2",
+        "music.vcsl.claves",
+        "music.vcsl.piano_C2",
+        "music.vcsl.piano_C3",
+        "music.vcsl.piano_C4",
+        "music.vcsl.piano_G1",
+        "music.vcsl.piano_G2",
+        "music.vcsl.piano_G3",
+        "music.vcsl.piano_G4",
+        "music.vcsl.shaker_down_1",
+        "music.vcsl.shaker_down_2",
+        "music.vcsl.shaker_up_1",
+        "music.vcsl.shaker_up_2"
+      ],
+      "description": "D-dorian ukulele and piano exchange, irregular bongo accents and a two-bar clave; a brighter middle, quieter return and rising final phrase create 48 bars of movement.",
+      "production_source": "game/audio/paint_exe/music/score.json",
+      "cue_id": "music.turbulence",
+      "sha256": "40706e27047ea828c3a4e9567ed0b0e5080dc2e549200c6ca7d18a81d838a977"
+    },
+    {
+      "id": "paint.capture",
+      "cue_id": "paint.capture",
+      "tier": 2,
+      "description": "Wet colour-change plop with a firm small contact.",
+      "path": "game/audio/paint_exe/foley/masters/paint_capture.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_bubbles",
+        "owlish_fruit2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "ec1a8fcb10caa774f05f1ecc586eacc4125c5f73ed7151050517b98f07dbcedd"
+    },
+    {
+      "id": "paint.dud",
+      "cue_id": "paint.dud",
+      "tier": 2,
+      "description": "Small dry impact where liquid cannot take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_dud.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_tap"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "978f68b31abb80f5375fe4eb6b2ec6ca8b61c9e5770dbedce348b7bd6ca5e502"
+    },
+    {
+      "id": "paint.impact.bucket",
+      "cue_id": "paint.impact.bucket",
+      "tier": 2,
+      "description": "Tool-specific wet contact: bucket.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_bucket.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "efe31edc06861609072942b0e3625325cf27db8f013d7b163ae53d9b363c0ed2"
+    },
+    {
+      "id": "paint.impact.mister",
+      "cue_id": "paint.impact.mister",
+      "tier": 2,
+      "description": "Tool-specific wet contact: mister.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_mister.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "5c12e933daa86e2401030f33fc549a8917b47e8d9c6de9ce49afb40f3241e3d1"
+    },
+    {
+      "id": "paint.impact.roller",
+      "cue_id": "paint.impact.roller",
+      "tier": 2,
+      "description": "Tool-specific wet contact: roller.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_roller.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "c65cc68df7310b3ef6867125973a9be6f5d2f38e84c60388acaa11c54b05dcf9"
+    },
+    {
+      "id": "paint.impact.sniper",
+      "cue_id": "paint.impact.sniper",
+      "tier": 2,
+      "description": "Tool-specific wet contact: sniper.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_sniper.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_fruit3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "3a936f734c071b1181ffd53ccad1af713fcdc05ee9fff338ad69f33d54a5638e"
+    },
+    {
+      "id": "paint.impact.sprayer",
+      "cue_id": "paint.impact.sprayer",
+      "tier": 2,
+      "description": "Tool-specific wet contact: sprayer.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_sprayer.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "c523283291f3145a4ca6959438b80568ceac09590ce3a26103a4511d04933baa"
+    },
+    {
+      "id": "player.redraw",
+      "cue_id": "player.redraw",
+      "tier": 2,
+      "description": "Fast marker scribble: a continuous cyclic drawing gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_redraw.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "9130389dd4908a56c1ce6d6749fa2653af22392f80e19ca683e66a3af3d3f5e5"
+    },
+    {
+      "id": "player.step_painted.01",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_painted_01.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "3310c6efba25eca2fd22bdb061db7f3792a25c8ca0b58341ae8cf01543dd7f54"
+    },
+    {
+      "id": "player.step_painted.02",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_painted_02.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "f4b1f3642ed803f389ab2aae4a87dab840637507a2b1b686cc8c6ba8ba410505"
+    },
+    {
+      "id": "player.step_painted.03",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_painted_03.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "73b084eb13fc7f8857771b4012ed16a3dea64cd4734df97827200e5bb7ac9c6d"
+    },
+    {
+      "id": "player.step_painted.04",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_painted_04.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "a576f8a8f14281ab72e06f3b5df8f16a8a30444b30e339879b2b7e0ee1cbecbe"
+    },
+    {
+      "id": "results.draw",
+      "cue_id": "results.draw",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/results.draw.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4"
+      ],
+      "description": "Unresolved open fifth; no winner fanfare on a tie.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "51d44300d30135d3e902a886b947561e01b811da9a2499dfbc899cedc954a827"
+    },
+    {
+      "id": "results.fill",
+      "cue_id": "results.fill",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/results.fill.wav",
+      "loop": true,
+      "source_ids": [
+        "music.ukulele.body_tap"
+      ],
+      "description": "Light cycling hand percussion for the non-reveal percentage fill.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "4e5659345aa55eafd630c62fbad0c2ecac556dbe7014b9e244f8958521f3b563"
+    },
+    {
+      "id": "results.winner",
+      "cue_id": "results.winner",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/results.winner.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.vcsl.clap_1"
+      ],
+      "description": "Short acoustic major cadence with a hand clap.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "59817997c3176faa680a8266fa83653ad037fae966a1590cc2475a558f406d3c"
+    },
+    {
+      "id": "room.tone",
+      "cue_id": "room.tone",
+      "tier": 2,
+      "description": "Quiet recorded desktop-computer fan; dual mono preserves the source spatial image.",
+      "path": "game/audio/paint_exe/foley/masters/room_tone.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_pc_fan"
+      ],
+      "recommended_gain": 0.65,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "ca5f50789176139b115a6f2ef580184c7c25f411a838d57ab6208e0a691f7d4b"
+    },
+    {
+      "id": "sniper.ready",
+      "cue_id": "sniper.ready",
+      "tier": 2,
+      "description": "One distinct latch re-engagement.",
+      "path": "game/audio/paint_exe/foley/masters/sniper_ready.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "d964086e0ce84ceb85fa0409852c324f5e7e57fca41002edc7d81eb5d6571d7f"
+    },
+    {
+      "id": "sniper.shot",
+      "cue_id": "sniper.shot",
+      "tier": 2,
+      "description": "A single sharp pressure release with a physical valve click.",
+      "path": "game/audio/paint_exe/foley/masters/sniper_shot.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug",
+        "owlish_pump"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "c64d4531ddeaae3cd3739db485939f6cdf67cc2c0ddd59c6ae24cf5ee25c9edd"
+    },
+    {
+      "id": "ui.count_in",
+      "cue_id": "ui.count_in",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/ui.count_in.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.ukulele.body_tap"
+      ],
+      "description": "The same count beat as match.count_beat, as specified for resume.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "cb862eb8958570b4f5446b978ca00088d1ce2a442ff1dcdef6328b65aef36919"
+    },
+    {
+      "id": "ui.pad_back",
+      "cue_id": "ui.pad_back",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/ui.pad_back.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.ukulele.body_tap"
+      ],
+      "description": "Two raised knocks resolve upward when a controller returns.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "698abd29a39abfa9ea47b69c6c2bd90c71ead77d1b1c8b32f93d98cf7a1667ad"
+    },
+    {
+      "id": "ui.pad_lost",
+      "cue_id": "ui.pad_lost",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/ui.pad_lost.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.body_tap"
+      ],
+      "description": "Two hollow low knocks distinguish disconnection from menu refusal.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "1cd107a7e698f6cc9d408e5f723600145b920bfaa89a69c0bc1c0fc0132e5fd4"
+    },
+    {
+      "id": "bucket.slosh",
+      "cue_id": "bucket.slosh",
+      "tier": 3,
+      "description": "Quiet foamy liquid shift while carrying a bucket.",
+      "path": "game/audio/paint_exe/foley/masters/bucket_slosh.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge"
+      ],
+      "recommended_gain": 0.3,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "c6900b6ec1683e25cf9cea7c2455dc59ed73b53c333809ee6408b70feea7e6aa"
+    },
+    {
+      "id": "end.series",
+      "cue_id": "end.series",
+      "tier": 3,
+      "path": "game/audio/paint_exe/interface/waves/end.series.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.vcsl.clap_1"
+      ],
+      "description": "A fuller acoustic cadence celebrates the completed series.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "92ea6a4b7cf883b3ec95b998e1dd91d8c3ce56bf6e25653d76536f422976d09b"
+    },
+    {
+      "id": "match.cheat",
+      "cue_id": "match.cheat",
+      "tier": 3,
+      "path": "game/audio/paint_exe/interface/waves/match.cheat.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip"
+      ],
+      "description": "Tiny paper rustle for the frozen figures cheating; optional and very quiet.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "28a0499d2e7808659de994dc842082779d10dda049e94776073e4ed2522ae6e0"
+    },
+    {
+      "id": "match.waver",
+      "cue_id": "match.waver",
+      "tier": 3,
+      "path": "game/audio/paint_exe/interface/waves/match.waver.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse"
+      ],
+      "description": "Nearly inaudible mouse wheel fragment; optional decorative cursor hesitation.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "3daf40aa8b4f065fbc72d886c479a56688980f4d0a51bba0e6f42c016d7b6ef6"
+    },
+    {
+      "id": "player.bonk",
+      "cue_id": "player.bonk",
+      "tier": 3,
+      "description": "Dull paper-body tap for a ceiling contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_bonk.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_tap"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "6a65370f511ec549378c8c1414b3bb6651e56f2319f548d750813adbc1ac8f91"
+    },
+    {
+      "id": "player.drop",
+      "cue_id": "player.drop",
+      "tier": 3,
+      "description": "Thin paper slip when dropping through a platform.",
+      "path": "game/audio/paint_exe/foley/masters/player_drop.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_turn2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "aaa6f5f5c46093361dd0274a69d361e3f89a39be56af79d85e12a84e1b2563e8"
+    },
+    {
+      "id": "player.hit_confirm",
+      "cue_id": "player.hit_confirm",
+      "tier": 3,
+      "description": "Small recorded finger-like tap, kept below damage cues.",
+      "path": "game/audio/paint_exe/foley/masters/player_hit_confirm.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_tap"
+      ],
+      "recommended_gain": 0.55,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "febea35a1ff571b6bcd0ad03ee1edffe665445d14bd8b9bc872069222bf6769b"
+    },
+    {
+      "id": "room.breath",
+      "cue_id": "room.breath",
+      "tier": 3,
+      "description": "One understated recorded human breath.",
+      "path": "game/audio/paint_exe/foley/masters/room_breath.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_breath"
+      ],
+      "recommended_gain": 0.4,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "18716d2e505a1e904fe098678dc0d240d1bbe4f5074c78631f7d24871ef93b44"
+    },
+    {
+      "id": "room.footsteps",
+      "cue_id": "room.footsteps",
+      "tier": 3,
+      "description": "Two soft physical room steps, receding in level.",
+      "path": "game/audio/paint_exe/foley/masters/room_footsteps.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_footstep1",
+        "owlish_footstep2"
+      ],
+      "recommended_gain": 0.5,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "3779663e839fa091573e91e1a9abeec97aafe82b9749389e0c54c8bab1e8bb09"
+    },
+    {
+      "id": "tool.drip",
+      "cue_id": "tool.drip",
+      "tier": 3,
+      "description": "Single real drop, nearly off by default.",
+      "path": "game/audio/paint_exe/foley/masters/tool_drip.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_drips"
+      ],
+      "recommended_gain": 0.25,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "96b82ba3078dcd4fa1c7df4e7c0b03f8a24f4808de7f824034900eb1dc29afac"
+    },
+    {
+      "id": "ui.unready",
+      "cue_id": "ui.unready",
+      "tier": 3,
+      "path": "game/audio/paint_exe/interface/waves/ui.unready.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse",
+        "music.ukulele.C4"
+      ],
+      "description": "Two downward plucks and a releasing switch.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "a84ece6f190eb37fa97d17d71ba03a61ee2898b395e92c2e8a67e0cc16e0c3f0"
+    },
+    {
+      "id": "ui.volume_preview",
+      "cue_id": "ui.volume_preview",
+      "tier": 3,
+      "path": "game/audio/paint_exe/interface/waves/ui.volume_preview.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "music.ukulele.C4",
+        "music.ukulele.body_tap"
+      ],
+      "description": "Compact wood, pluck and paper sample covers useful SFX frequencies.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "c02ff58f218c4bb715123c9f3c75203045a97ec4a70c618e9786650c41294895"
+    },
+    {
+      "id": "weapon.blocked",
+      "cue_id": "weapon.blocked",
+      "tier": 3,
+      "description": "Dry small mechanism/body tap for cover obstruction.",
+      "path": "game/audio/paint_exe/foley/masters/weapon_blocked.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug"
+      ],
+      "recommended_gain": 0.5,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "5c026aea9e3d477b699808eb8db6a3ccab5dc48bc6c850c0f4497629419af0cd"
+    },
+    {
+      "id": "world.ambience.close_quarters",
+      "cue_id": "world.ambience.close_quarters",
+      "tier": 3,
+      "description": "Quiet nearby room fan; optional decorative bed.",
+      "path": "game/audio/paint_exe/foley/masters/world_ambience_close_quarters.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_fan"
+      ],
+      "recommended_gain": 0.25,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "72c7ce570338646c346c49c25dbfd94173cf442275d87e8d5e5fd9c06e12f484"
+    },
+    {
+      "id": "world.ambience.king_of_the_hill",
+      "cue_id": "world.ambience.king_of_the_hill",
+      "tier": 3,
+      "description": "Muffled air extractor in a larger distant room.",
+      "path": "game/audio/paint_exe/foley/masters/world_ambience_king_of_the_hill.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_extractor"
+      ],
+      "recommended_gain": 0.25,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "ea75daf9d4c9664f3f7c75551291d1a20fb8986e88f92b4fe6c931ef9ab37282"
+    },
+    {
+      "id": "world.ambience.turbulence",
+      "cue_id": "world.ambience.turbulence",
+      "tier": 3,
+      "description": "Higher air-extractor texture for the elevated arena.",
+      "path": "game/audio/paint_exe/foley/masters/world_ambience_turbulence.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_extractor"
+      ],
+      "recommended_gain": 0.25,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "45051e4b21fa048d96e6834f26f442ff14ca10818b0874a5d4bf392a28248fe5"
+    },
+    {
+      "id": "world.detail",
+      "cue_id": "world.detail",
+      "tier": 3,
+      "description": "An occasional real pipe-like droplet; off by default.",
+      "path": "game/audio/paint_exe/foley/masters/world_detail.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_drips"
+      ],
+      "recommended_gain": 0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "sha256": "3018478d708985e9b2e043ab4c932d3e1691e5459495f64271b32d2518bcb340"
+    }
+  ]
+}

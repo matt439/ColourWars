@@ -1,0 +1,36 @@
+{
+  "sources": [
+    {
+      "id": "interface.owlish.mouse",
+      "creator": "OwlishMedia (owlstorm)",
+      "url": "https://opengameart.org/content/sound-effects-pack",
+      "download_url": "https://opengameart.org/sites/default/files/Owlish%20Media%20Sound%20Effects.zip",
+      "archive_member": "Technology/mouse-clicks-scrolls.wav",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "path": "game/audio/paint_exe/interface/sources/mouse.wav",
+      "sha256": "dd77764a64af240e57f15a822f48704c961008cced14a531388768c6ba15f6a8",
+      "obtained": "2026-10-14",
+      "redistribution": true,
+      "release_use": true,
+      "attribution": "None required",
+      "evidence": "game/audio/paint_exe/interface/licenses/OwlishMedia-source.html"
+    },
+    {
+      "id": "interface.owlish.flip",
+      "creator": "OwlishMedia (owlstorm)",
+      "url": "https://opengameart.org/content/sound-effects-pack",
+      "download_url": "https://opengameart.org/sites/default/files/Owlish%20Media%20Sound%20Effects.zip",
+      "archive_member": "Impacts/flip.wav",
+      "license": "CC0-1.0",
+      "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+      "path": "game/audio/paint_exe/interface/sources/flip.wav",
+      "sha256": "6417ec2df1c35cc59b4da67af03b854d015165721e434e3afe2fb23db65cebd5",
+      "obtained": "2026-10-14",
+      "redistribution": true,
+      "release_use": true,
+      "attribution": "None required",
+      "evidence": "game/audio/paint_exe/interface/licenses/OwlishMedia-source.html"
+    }
+  ]
+}

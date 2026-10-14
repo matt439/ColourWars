@@ -1,0 +1,149 @@
+[
+  {
+    "path": "sources/vcsl/Upright1_Sus_C2_vl1_rr1.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Chordophones/Zithers/Upright%20Piano%2C%20Yamaha/Sustains/Upright1_Sus_C2_vl1_rr1.wav",
+    "upstream_path": "Chordophones/Zithers/Upright Piano, Yamaha/Sustains/Upright1_Sus_C2_vl1_rr1.wav",
+    "sha256": "355a8143f827a30f58f1a5102b9f3b980bd743ab0e22009e016ff237781e8d01",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Upright1_Sus_G2_vl1_rr1.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Chordophones/Zithers/Upright%20Piano%2C%20Yamaha/Sustains/Upright1_Sus_G2_vl1_rr1.wav",
+    "upstream_path": "Chordophones/Zithers/Upright Piano, Yamaha/Sustains/Upright1_Sus_G2_vl1_rr1.wav",
+    "sha256": "9205ca35e2da43b3957b01c437294a24ab3c062ed9b58203b63ad95f4e15461f",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Upright1_Sus_C3_vl1_rr1.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Chordophones/Zithers/Upright%20Piano%2C%20Yamaha/Sustains/Upright1_Sus_C3_vl1_rr1.wav",
+    "upstream_path": "Chordophones/Zithers/Upright Piano, Yamaha/Sustains/Upright1_Sus_C3_vl1_rr1.wav",
+    "sha256": "a22976e015b2a4826bd67512eb9b62cc734cc6ef790255f37b683bf56cfe0256",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Upright1_Sus_G3_vl1_rr1.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Chordophones/Zithers/Upright%20Piano%2C%20Yamaha/Sustains/Upright1_Sus_G3_vl1_rr1.wav",
+    "upstream_path": "Chordophones/Zithers/Upright Piano, Yamaha/Sustains/Upright1_Sus_G3_vl1_rr1.wav",
+    "sha256": "1a261431459446c02407c810728e99787dba814c1c8ea4de3696a30b9d15facf",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Upright1_Sus_C4_vl1_rr1.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Chordophones/Zithers/Upright%20Piano%2C%20Yamaha/Sustains/Upright1_Sus_C4_vl1_rr1.wav",
+    "upstream_path": "Chordophones/Zithers/Upright Piano, Yamaha/Sustains/Upright1_Sus_C4_vl1_rr1.wav",
+    "sha256": "4c8ae105fe25cee84c27b61a92a863bd0bb1ed05b40561d2c99557dd2cd598b5",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Upright1_Sus_G4_vl1_rr1.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Chordophones/Zithers/Upright%20Piano%2C%20Yamaha/Sustains/Upright1_Sus_G4_vl1_rr1.wav",
+    "upstream_path": "Chordophones/Zithers/Upright Piano, Yamaha/Sustains/Upright1_Sus_G4_vl1_rr1.wav",
+    "sha256": "c826915b7d06f9a40f76e79f7038c05554260e964372c8cc47c4fbbb0b8e849f",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Cajon_hit1_mp_rr1.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Cajon/Cajon_hit1_mp_rr1.wav",
+    "upstream_path": "Idiophones/Struck Idiophones/Cajon/Cajon_hit1_mp_rr1.wav",
+    "sha256": "4103c4a847a8cc8860b9449ef26619b56825e972f1bfa0427bdd3f5e36ca81aa",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Cajon_hit1_mp_rr2.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Cajon/Cajon_hit1_mp_rr2.wav",
+    "upstream_path": "Idiophones/Struck Idiophones/Cajon/Cajon_hit1_mp_rr2.wav",
+    "sha256": "f28fcadf95557619fe9f8a1b8ad1af511fbccba67608960c7b2a78040f03f01e",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Cajon_hit2_mp_rr1.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Cajon/Cajon_hit2_mp_rr1.wav",
+    "upstream_path": "Idiophones/Struck Idiophones/Cajon/Cajon_hit2_mp_rr1.wav",
+    "sha256": "aa8836ba7ff3f79a4e6ce82b8a42e0c17321fd44300403a05a47012a5173bfc9",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Cajon_hit2_mp_rr2.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Cajon/Cajon_hit2_mp_rr2.wav",
+    "upstream_path": "Idiophones/Struck Idiophones/Cajon/Cajon_hit2_mp_rr2.wav",
+    "sha256": "802697b43b68b32c37e717367871164c22508d0baa7310582abbd44ed168756c",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Clap_rr1.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Claps/Clap_rr1.wav",
+    "upstream_path": "Idiophones/Struck Idiophones/Claps/Clap_rr1.wav",
+    "sha256": "4c9f3fe4a34733b9be6ed9ce5e5aad48b19c1029ae9c6dd1b96294a847539e3f",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Clap_rr2.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Claps/Clap_rr2.wav",
+    "upstream_path": "Idiophones/Struck Idiophones/Claps/Clap_rr2.wav",
+    "sha256": "5ae64e838b76d0658cc541f07c3c7dcfd4b08815a915f32843a8279bf2c33b9a",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Clap_rr3.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Claps/Clap_rr3.wav",
+    "upstream_path": "Idiophones/Struck Idiophones/Claps/Clap_rr3.wav",
+    "sha256": "e8c13dc41f31b479f8e3ec49e9dfc49c17d299cce36eedb657fe170f0e6fcb44",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Mid_ShakerDouble_Down_rr1.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Shaker%2C%20Small/Mid_ShakerDouble_Down_rr1.wav",
+    "upstream_path": "Idiophones/Struck Idiophones/Shaker, Small/Mid_ShakerDouble_Down_rr1.wav",
+    "sha256": "0df7c271e1dba4de7304f7df81886390dd9ae698bfdd6df570026af4f2223574",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Mid_ShakerDouble_Down_rr2.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Shaker%2C%20Small/Mid_ShakerDouble_Down_rr2.wav",
+    "upstream_path": "Idiophones/Struck Idiophones/Shaker, Small/Mid_ShakerDouble_Down_rr2.wav",
+    "sha256": "1bf11b6a055ace8b6fbe2c158f7bea449c91e4d72f97b9464b4856184aaf186d",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Mid_ShakerDouble_Up_rr1.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Shaker%2C%20Small/Mid_ShakerDouble_Up_rr1.wav",
+    "upstream_path": "Idiophones/Struck Idiophones/Shaker, Small/Mid_ShakerDouble_Up_rr1.wav",
+    "sha256": "69a10776db0b838bc6555be2dbdb41e1521bb28bba2e89963d1bf779bfb5b61f",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Mid_ShakerDouble_Up_rr2.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Shaker%2C%20Small/Mid_ShakerDouble_Up_rr2.wav",
+    "upstream_path": "Idiophones/Struck Idiophones/Shaker, Small/Mid_ShakerDouble_Up_rr2.wav",
+    "sha256": "661f7591bf5fc77d8b69c61bd52425af20d0f5692bdd2f68c74a684c5f02d26d",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/BongoH_Hit1_v2_rr1_Mid.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Membranophones/Struck%20Membranophones/Bongos/BongoH_Hit1_v2_rr1_Mid.wav",
+    "upstream_path": "Membranophones/Struck Membranophones/Bongos/BongoH_Hit1_v2_rr1_Mid.wav",
+    "sha256": "dd9b6239a151702966a995937f74ac022c9bb950c967277fbd16beaced0c9e1a",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/BongoH_Hit1_v2_rr2_Mid.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Membranophones/Struck%20Membranophones/Bongos/BongoH_Hit1_v2_rr2_Mid.wav",
+    "upstream_path": "Membranophones/Struck Membranophones/Bongos/BongoH_Hit1_v2_rr2_Mid.wav",
+    "sha256": "03d4653d70e2180643872da4ebb94845f4da81b8d8f9ba2c7df3a611bd9d65ac",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Claves1_Hit_v1_rr1_Mid.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Idiophones/Struck%20Idiophones/Claves/Claves1_Hit_v1_rr1_Mid.wav",
+    "upstream_path": "Idiophones/Struck Idiophones/Claves/Claves1_Hit_v1_rr1_Mid.wav",
+    "sha256": "19379cc794b9e50d4dc55200238e27091bedab63b7370eb625490c7a96631b34",
+    "source_id": "vcsl"
+  },
+  {
+    "path": "sources/vcsl/Upright1_Sus_G1_vl1_rr1.wav",
+    "url": "https://raw.githubusercontent.com/sgossner/VCSL/c1ea7bcc3c7309650ab0da9d15c9cd1fbc4a4c7e/Chordophones/Zithers/Upright%20Piano%2C%20Yamaha/Sustains/Upright1_Sus_G1_vl1_rr1.wav",
+    "upstream_path": "Chordophones/Zithers/Upright Piano, Yamaha/Sustains/Upright1_Sus_G1_vl1_rr1.wav",
+    "sha256": "0bebce51b44d51d1085c76da67e14a0118a386fa364bbc590e250ab4e3b8e188",
+    "source_id": "vcsl"
+  }
+]

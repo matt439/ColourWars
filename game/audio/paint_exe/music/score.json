@@ -1,0 +1,1259 @@
+{
+  "version": 1,
+  "composer": "Codex-authored original arrangements, 2026-10-14; no pre-existing compositions or melodies used.",
+  "pitch_notation": "Scientific: C4=MIDI60. Durations and positions are quarter-note beats; each melody string is one 4/4 bar.",
+  "chords": {
+    "C6": {
+      "bass": "C3",
+      "bass_fifth": "G3",
+      "notes": [
+        "E4",
+        "G4",
+        "A4"
+      ]
+    },
+    "G7": {
+      "bass": "G2",
+      "bass_fifth": "D3",
+      "notes": [
+        "F4",
+        "G4",
+        "B4"
+      ]
+    },
+    "G/B": {
+      "bass": "B2",
+      "bass_fifth": "D3",
+      "notes": [
+        "D4",
+        "G4",
+        "B4"
+      ]
+    },
+    "Am7": {
+      "bass": "A2",
+      "bass_fifth": "E3",
+      "notes": [
+        "E4",
+        "G4",
+        "C5"
+      ]
+    },
+    "Em7": {
+      "bass": "E3",
+      "bass_fifth": "B2",
+      "notes": [
+        "D4",
+        "G4",
+        "B4"
+      ]
+    },
+    "F6": {
+      "bass": "F2",
+      "bass_fifth": "C3",
+      "notes": [
+        "F4",
+        "A4",
+        "D5"
+      ]
+    },
+    "C/E": {
+      "bass": "E3",
+      "bass_fifth": "G3",
+      "notes": [
+        "E4",
+        "G4",
+        "C5"
+      ]
+    },
+    "Dm7": {
+      "bass": "D3",
+      "bass_fifth": "A2",
+      "notes": [
+        "F4",
+        "A4",
+        "C5"
+      ]
+    },
+    "Fmaj7": {
+      "bass": "F2",
+      "bass_fifth": "C3",
+      "notes": [
+        "E4",
+        "A4",
+        "C5"
+      ]
+    },
+    "E7": {
+      "bass": "E3",
+      "bass_fifth": "B2",
+      "notes": [
+        "E4",
+        "G#4",
+        "D5"
+      ]
+    },
+    "G6": {
+      "bass": "G2",
+      "bass_fifth": "D3",
+      "notes": [
+        "E4",
+        "G4",
+        "B4"
+      ]
+    },
+    "D/F#": {
+      "bass": "F#2",
+      "bass_fifth": "A2",
+      "notes": [
+        "D4",
+        "F#4",
+        "A4"
+      ]
+    },
+    "Bm7": {
+      "bass": "B2",
+      "bass_fifth": "F#3",
+      "notes": [
+        "D4",
+        "F#4",
+        "A4"
+      ]
+    },
+    "Cmaj7": {
+      "bass": "C3",
+      "bass_fifth": "G2",
+      "notes": [
+        "E4",
+        "G4",
+        "B4"
+      ]
+    },
+    "G/B2": {
+      "bass": "B2",
+      "bass_fifth": "D3",
+      "notes": [
+        "D4",
+        "G4",
+        "B4"
+      ]
+    },
+    "D7": {
+      "bass": "D3",
+      "bass_fifth": "A2",
+      "notes": [
+        "F#4",
+        "A4",
+        "C5"
+      ]
+    },
+    "A7": {
+      "bass": "A2",
+      "bass_fifth": "E3",
+      "notes": [
+        "E4",
+        "G4",
+        "C#5"
+      ]
+    },
+    "B7": {
+      "bass": "B2",
+      "bass_fifth": "F#3",
+      "notes": [
+        "D#4",
+        "F#4",
+        "A4"
+      ]
+    },
+    "Dm6": {
+      "bass": "D3",
+      "bass_fifth": "A2",
+      "notes": [
+        "F4",
+        "A4",
+        "B4"
+      ]
+    },
+    "G9": {
+      "bass": "G2",
+      "bass_fifth": "D3",
+      "notes": [
+        "F4",
+        "A4",
+        "B4"
+      ]
+    },
+    "Bb6": {
+      "bass": "A#2",
+      "bass_fifth": "F3",
+      "notes": [
+        "D4",
+        "G4",
+        "A#4"
+      ]
+    },
+    "A7sus": {
+      "bass": "A2",
+      "bass_fifth": "E3",
+      "notes": [
+        "D4",
+        "G4",
+        "A4"
+      ]
+    }
+  },
+  "tracks": [
+    {
+      "id": "music.menu",
+      "title": "Cursor at Rest",
+      "tier": 1,
+      "bpm": 88,
+      "seed": 2201,
+      "style": "desk",
+      "rms_dbfs": -23,
+      "description": "A quiet bedroom-desk miniature: plucked tenor ukulele, warm upright piano answers, body taps; four distinct eight-bar phrases with space between gestures.",
+      "sections": {
+        "A": {
+          "chords": [
+            "C6",
+            "G/B",
+            "Am7",
+            "Em7",
+            "F6",
+            "C/E",
+            "Dm7",
+            "G7"
+          ],
+          "melody": [
+            "E5:1 G5:0.5 A5:0.5 G5:1 r:1",
+            "D5:1.5 G5:0.5 B4:1 r:1",
+            "C5:0.5 E5:1.5 G5:1 E5:1",
+            "D5:1 B4:1 r:1 G4:1",
+            "A4:1 C5:0.5 D5:0.5 A5:1 r:1",
+            "G5:1 E5:0.5 D5:0.5 C5:2",
+            "F5:1 E5:0.5 D5:0.5 A4:1 C5:1",
+            "B4:1 D5:1 G4:1 r:1"
+          ]
+        },
+        "B": {
+          "chords": [
+            "Fmaj7",
+            "Em7",
+            "Dm7",
+            "G7",
+            "Am7",
+            "Em7",
+            "F6",
+            "G7"
+          ],
+          "melody": [
+            "C5:0.5 A4:0.5 E5:1 F5:1 r:1",
+            "G5:1.5 E5:0.5 D5:1 B4:1",
+            "A4:1 D5:1 F5:0.5 E5:0.5 D5:1",
+            "B4:1 A4:0.5 G4:0.5 D5:1 r:1",
+            "E5:0.5 G5:0.5 A5:1 C6:1 A5:1",
+            "B5:1 G5:1 E5:1 r:1",
+            "A5:0.5 G5:0.5 F5:1 D5:1 C5:1",
+            "B4:1 D5:0.5 F5:0.5 G5:1 r:1"
+          ],
+          "answer": [
+            "r:2 A3:1 C4:1",
+            "r:2 B3:1 G3:1",
+            "r:2 A3:1 C4:1",
+            "r:2 D4:1 B3:1",
+            "r:2 C4:1 E4:1",
+            "r:2 B3:1 D4:1",
+            "r:2 A3:1 C4:1",
+            "r:2 B3:1 D4:1"
+          ]
+        },
+        "C": {
+          "chords": [
+            "Am7",
+            "Fmaj7",
+            "C/E",
+            "G7",
+            "Dm7",
+            "Em7",
+            "F6",
+            "G7"
+          ],
+          "melody": [
+            "E5:1 r:0.5 G5:0.5 A5:1 E5:1",
+            "F5:1.5 E5:0.5 C5:1 A4:1",
+            "G4:0.5 C5:0.5 E5:1 G5:1 r:1",
+            "F5:0.5 D5:1.5 B4:1 r:1",
+            "A4:1 F5:1 E5:0.5 D5:0.5 C5:1",
+            "B4:1 D5:0.5 E5:0.5 G5:1 r:1",
+            "A5:1 F5:1 D5:1 A4:1",
+            "B4:1 D5:1 G5:0.5 F5:0.5 D5:1"
+          ]
+        }
+      },
+      "form": [
+        {
+          "section": "A",
+          "lead": "uke",
+          "intensity": 0.65,
+          "melody_gain": 0.19,
+          "variation": 0,
+          "answer": false
+        },
+        {
+          "section": "B",
+          "lead": "uke",
+          "intensity": 0.8,
+          "melody_gain": 0.21,
+          "variation": 0,
+          "answer": true
+        },
+        {
+          "section": "C",
+          "lead": "piano",
+          "intensity": 0.72,
+          "melody_gain": 0.19,
+          "variation": 0,
+          "answer": false
+        },
+        {
+          "section": "A",
+          "lead": "uke",
+          "intensity": 0.7,
+          "melody_gain": 0.19,
+          "variation": 1,
+          "answer": false
+        }
+      ]
+    },
+    {
+      "id": "music.close_quarters",
+      "title": "Desk Drawer Dash",
+      "tier": 1,
+      "bpm": 126,
+      "seed": 2202,
+      "style": "dash",
+      "rms_dbfs": -21,
+      "description": "Quick syncopated upright-piano tune, damped ukulele strums and cajon; a minor detour, call-and-response middle and high-register final reprise.",
+      "sections": {
+        "A": {
+          "chords": [
+            "C6",
+            "Am7",
+            "Dm7",
+            "G7",
+            "F6",
+            "C/E",
+            "Dm7",
+            "G7"
+          ],
+          "melody": [
+            "E4:0.5 G4:0.5 C5:0.75 r:0.25 G4:0.5 A4:0.5 E4:1",
+            "C5:0.5 B4:0.5 A4:1 E4:0.5 G4:0.5 A4:1",
+            "F4:0.5 A4:0.5 D5:0.75 r:0.25 C5:0.5 A4:0.5 F4:1",
+            "B4:0.75 D5:0.25 G4:1 r:0.5 F4:0.5 D4:1",
+            "A4:0.5 C5:0.5 D5:1 C5:0.5 A4:0.5 F4:1",
+            "G4:0.5 E4:0.5 C4:0.75 r:0.25 E4:0.5 G4:0.5 C5:1",
+            "A4:0.5 F4:0.5 D4:0.5 F4:0.5 A4:0.5 C5:0.5 D5:1",
+            "B4:0.5 G4:0.5 D5:0.5 F5:0.5 D5:0.75 r:0.25 G4:1"
+          ]
+        },
+        "B": {
+          "chords": [
+            "F6",
+            "G7",
+            "Em7",
+            "Am7",
+            "Dm7",
+            "G7",
+            "C6",
+            "G7"
+          ],
+          "melody": [
+            "C5:1 A4:0.5 F4:0.5 A4:0.75 r:0.25 D5:1",
+            "B4:1 G4:0.5 D4:0.5 F4:0.5 G4:0.5 B4:1",
+            "G4:0.5 B4:0.5 E5:0.5 D5:0.5 B4:1 G4:1",
+            "C5:0.75 E5:0.25 A5:1 G5:0.5 E5:0.5 C5:1",
+            "D5:0.5 A4:0.5 F4:1 A4:0.5 C5:0.5 D5:1",
+            "F5:0.75 D5:0.25 B4:0.5 G4:0.5 D5:1 r:1",
+            "E5:0.5 C5:0.5 A4:0.5 G4:0.5 E4:0.75 r:0.25 C4:1",
+            "D4:0.5 F4:0.5 G4:0.5 B4:0.5 D5:1 G4:1"
+          ],
+          "answer": [
+            "r:2 C5:0.5 A4:0.5 F4:1",
+            "r:2 D5:0.5 B4:0.5 G4:1",
+            "r:2 E5:0.5 D5:0.5 B4:1",
+            "r:2 E5:0.5 C5:0.5 A4:1",
+            "r:2 F5:0.5 D5:0.5 A4:1",
+            "r:2 F5:0.5 D5:0.5 B4:1",
+            "r:2 E5:0.5 C5:0.5 G4:1",
+            "r:2 D5:0.5 B4:0.5 G4:1"
+          ]
+        },
+        "C": {
+          "chords": [
+            "Am7",
+            "F6",
+            "Dm7",
+            "E7",
+            "Am7",
+            "F6",
+            "Dm7",
+            "G7"
+          ],
+          "melody": [
+            "A4:0.5 E5:0.5 C5:1 G4:0.5 A4:0.5 E4:1",
+            "F4:1 A4:0.5 C5:0.5 D5:0.75 r:0.25 C5:1",
+            "A4:0.5 D5:0.5 F5:1 E5:0.5 D5:0.5 A4:1",
+            "G#4:0.5 B4:0.5 D5:1 E5:0.5 D5:0.5 B4:1",
+            "C5:1 A4:0.5 G4:0.5 E4:0.5 G4:0.5 A4:1",
+            "A4:0.5 C5:0.5 D5:0.5 F5:0.5 E5:0.5 D5:0.5 C5:1",
+            "F5:0.5 D5:0.5 C5:0.5 A4:0.5 F4:1 D4:1",
+            "G4:0.5 B4:0.5 D5:0.5 F5:0.5 G5:0.75 r:0.25 D5:1"
+          ]
+        }
+      },
+      "form": [
+        {
+          "section": "A",
+          "lead": "piano",
+          "intensity": 0.92,
+          "melody_gain": 0.23,
+          "variation": 0,
+          "answer": false
+        },
+        {
+          "section": "A",
+          "lead": "uke",
+          "intensity": 0.8,
+          "melody_gain": 0.23,
+          "variation": 1,
+          "answer": false
+        },
+        {
+          "section": "B",
+          "lead": "piano",
+          "intensity": 1,
+          "melody_gain": 0.23,
+          "variation": 0,
+          "answer": true
+        },
+        {
+          "section": "C",
+          "lead": "uke",
+          "intensity": 0.87,
+          "melody_gain": 0.24,
+          "variation": 0,
+          "answer": false
+        },
+        {
+          "section": "A",
+          "lead": "piano",
+          "intensity": 1,
+          "melody_gain": 0.23,
+          "variation": 2,
+          "answer": false
+        }
+      ]
+    },
+    {
+      "id": "music.king_of_the_hill",
+      "title": "Cardboard Crown",
+      "tier": 2,
+      "bpm": 112,
+      "seed": 2203,
+      "style": "crown",
+      "rms_dbfs": -21,
+      "description": "Broad climbing ukulele melody with alternating upright bass and chords, handclaps and shaker; a contrasting minor passage rises back into the home theme.",
+      "sections": {
+        "A": {
+          "chords": [
+            "G6",
+            "D/F#",
+            "Em7",
+            "Bm7",
+            "Cmaj7",
+            "G/B2",
+            "Am7",
+            "D7"
+          ],
+          "melody": [
+            "G4:1.5 B4:0.5 D5:1 E5:1",
+            "F#5:1 D5:0.5 A4:0.5 D5:1 r:1",
+            "E5:1 G5:1 F#5:0.5 E5:0.5 B4:1",
+            "D5:1.5 B4:0.5 F#4:1 r:1",
+            "E5:1 G5:0.5 E5:0.5 C5:1 B4:1",
+            "D5:1 B4:1 G4:1 r:1",
+            "A4:0.5 C5:0.5 E5:1 G5:1 E5:1",
+            "F#5:1 E5:0.5 D5:0.5 A4:1 r:1"
+          ]
+        },
+        "B": {
+          "chords": [
+            "Cmaj7",
+            "D7",
+            "Bm7",
+            "Em7",
+            "Am7",
+            "D7",
+            "G6",
+            "B7"
+          ],
+          "melody": [
+            "G5:1 E5:0.5 C5:0.5 B4:1 E5:1",
+            "A5:1.5 F#5:0.5 E5:1 D5:1",
+            "F#5:1 D5:1 B4:0.5 D5:0.5 F#5:1",
+            "G5:1.5 E5:0.5 B4:1 r:1",
+            "E5:1 C5:0.5 A4:0.5 G4:1 C5:1",
+            "D5:0.5 E5:0.5 F#5:1 A5:1 F#5:1",
+            "G5:1 D5:1 B4:1 G4:1",
+            "F#4:0.5 A4:0.5 B4:1 D#5:1 F#5:1"
+          ],
+          "answer": [
+            "r:2 E4:1 G4:1",
+            "r:2 F#4:1 A4:1",
+            "r:2 D4:1 F#4:1",
+            "r:2 G4:1 B4:1",
+            "r:2 E4:1 A4:1",
+            "r:2 D4:1 F#4:1",
+            "r:2 G4:1 B4:1",
+            "r:2 F#4:1 D#4:1"
+          ]
+        },
+        "C": {
+          "chords": [
+            "Em7",
+            "Am7",
+            "D7",
+            "G6",
+            "Cmaj7",
+            "A7",
+            "D7",
+            "D7"
+          ],
+          "melody": [
+            "B4:1 E5:1 G5:0.5 F#5:0.5 E5:1",
+            "C5:0.5 E5:0.5 A5:1 G5:1 E5:1",
+            "F#5:1 D5:1 A4:1 C5:1",
+            "B4:1.5 D5:0.5 G5:1 r:1",
+            "E5:0.5 G5:0.5 B5:1 G5:1 E5:1",
+            "C#5:0.5 E5:0.5 G5:1 A5:1 G5:1",
+            "F#5:1 A5:1 F#5:0.5 E5:0.5 D5:1",
+            "C5:0.5 A4:0.5 F#4:1 A4:1 D5:1"
+          ]
+        }
+      },
+      "form": [
+        {
+          "section": "A",
+          "lead": "uke",
+          "intensity": 0.93,
+          "melody_gain": 0.25,
+          "variation": 0,
+          "answer": false
+        },
+        {
+          "section": "B",
+          "lead": "piano",
+          "intensity": 0.84,
+          "melody_gain": 0.22,
+          "variation": 0,
+          "answer": true
+        },
+        {
+          "section": "C",
+          "lead": "uke",
+          "intensity": 0.79,
+          "melody_gain": 0.23,
+          "variation": 0,
+          "answer": false
+        },
+        {
+          "section": "B",
+          "lead": "uke",
+          "intensity": 1,
+          "melody_gain": 0.25,
+          "variation": 0,
+          "answer": true
+        },
+        {
+          "section": "A",
+          "lead": "uke",
+          "intensity": 1,
+          "melody_gain": 0.25,
+          "variation": 2,
+          "answer": false
+        }
+      ]
+    },
+    {
+      "id": "music.turbulence",
+      "title": "Paper Fan Fandango",
+      "tier": 2,
+      "bpm": 138,
+      "seed": 2204,
+      "style": "fan",
+      "rms_dbfs": -21,
+      "description": "D-dorian ukulele and piano exchange, irregular bongo accents and a two-bar clave; a brighter middle, quieter return and rising final phrase create 48 bars of movement.",
+      "sections": {
+        "A": {
+          "chords": [
+            "Dm7",
+            "G9",
+            "Dm6",
+            "C6",
+            "F6",
+            "G7",
+            "Em7",
+            "A7"
+          ],
+          "melody": [
+            "D5:0.5 A4:0.5 C5:0.5 D5:0.5 F5:0.75 E5:0.25 D5:1",
+            "B4:0.75 D5:0.25 G5:0.5 F5:0.5 D5:1 r:1",
+            "A4:0.5 D5:0.5 F5:0.75 E5:0.25 D5:0.5 B4:0.5 A4:1",
+            "G4:0.5 C5:0.5 E5:1 G5:0.5 E5:0.5 C5:1",
+            "A4:0.75 C5:0.25 D5:0.5 F5:0.5 E5:1 D5:1",
+            "B4:0.5 D5:0.5 F5:0.5 G5:0.5 F5:0.75 D5:0.25 B4:1",
+            "E5:0.5 D5:0.5 B4:0.75 G4:0.25 B4:1 D5:1",
+            "C#5:0.5 E5:0.5 G5:0.5 A5:0.5 G5:1 E5:1"
+          ]
+        },
+        "B": {
+          "chords": [
+            "F6",
+            "G7",
+            "Em7",
+            "A7",
+            "Dm6",
+            "G9",
+            "Dm7",
+            "A7sus"
+          ],
+          "melody": [
+            "F5:1 A5:0.5 G5:0.5 F5:0.5 E5:0.5 D5:1",
+            "G5:0.75 F5:0.25 D5:0.5 B4:0.5 A4:1 G4:1",
+            "B4:0.5 E5:0.5 G5:1 F#5:0.5 E5:0.5 D5:1",
+            "C#5:0.75 E5:0.25 A5:0.5 G5:0.5 E5:1 r:1",
+            "F5:0.5 E5:0.5 D5:0.5 B4:0.5 A4:0.75 D5:0.25 F5:1",
+            "G5:0.5 F5:0.5 D5:0.5 B4:0.5 A4:0.75 G4:0.25 B4:1",
+            "D5:1 F5:0.5 A5:0.5 C6:0.5 A5:0.5 F5:1",
+            "E5:0.5 D5:0.5 C5:0.5 A4:0.5 G4:1 A4:1"
+          ],
+          "answer": [
+            "r:2 A4:0.5 G4:0.5 F4:1",
+            "r:2 B4:0.5 A4:0.5 G4:1",
+            "r:2 G4:0.5 E4:0.5 B3:1",
+            "r:2 C#4:0.5 E4:0.5 G4:1",
+            "r:2 B3:0.5 D4:0.5 F4:1",
+            "r:2 B3:0.5 D4:0.5 F4:1",
+            "r:2 A3:0.5 C4:0.5 D4:1",
+            "r:2 E4:0.5 D4:0.5 A3:1"
+          ]
+        },
+        "C": {
+          "chords": [
+            "Bb6",
+            "C6",
+            "Dm7",
+            "Dm6",
+            "F6",
+            "G9",
+            "Em7",
+            "A7"
+          ],
+          "melody": [
+            "D5:1 G5:0.5 A#5:0.5 A5:0.75 G5:0.25 F5:1",
+            "E5:0.5 G5:0.5 C6:1 A5:0.5 G5:0.5 E5:1",
+            "F5:0.75 D5:0.25 A4:0.5 C5:0.5 D5:1 r:1",
+            "B4:0.5 D5:0.5 F5:0.5 E5:0.5 D5:0.5 B4:0.5 A4:1",
+            "C5:1 A4:0.5 F4:0.5 A4:0.5 C5:0.5 D5:1",
+            "F5:0.5 A5:0.5 G5:0.5 F5:0.5 D5:1 B4:1",
+            "E5:0.5 G5:0.5 F#5:0.75 E5:0.25 D5:1 B4:1",
+            "C#5:0.5 E5:0.5 G5:0.5 A5:0.5 C#6:0.5 A5:0.5 E5:1"
+          ]
+        }
+      },
+      "form": [
+        {
+          "section": "A",
+          "lead": "uke",
+          "intensity": 0.9,
+          "melody_gain": 0.25,
+          "variation": 0,
+          "answer": false
+        },
+        {
+          "section": "B",
+          "lead": "piano",
+          "intensity": 0.9,
+          "melody_gain": 0.22,
+          "variation": 0,
+          "answer": true
+        },
+        {
+          "section": "A",
+          "lead": "uke",
+          "intensity": 0.72,
+          "melody_gain": 0.22,
+          "variation": 1,
+          "answer": false
+        },
+        {
+          "section": "C",
+          "lead": "piano",
+          "intensity": 0.98,
+          "melody_gain": 0.24,
+          "variation": 0,
+          "answer": false
+        },
+        {
+          "section": "B",
+          "lead": "uke",
+          "intensity": 0.88,
+          "melody_gain": 0.24,
+          "variation": 0,
+          "answer": true
+        },
+        {
+          "section": "A",
+          "lead": "uke",
+          "intensity": 1,
+          "melody_gain": 0.25,
+          "variation": 2,
+          "answer": false
+        }
+      ]
+    }
+  ],
+  "stings": [
+    {
+      "id": "music.end_sting.close_quarters",
+      "seconds": 2,
+      "bpm": 126,
+      "seed": 2212,
+      "rms_dbfs": -22,
+      "description": "Acoustic cadence under two seconds in the close quarters track's home key; standalone one-shot, ending on its own decay.",
+      "notes": [
+        [
+          "piano",
+          "G4",
+          0.0,
+          0.22,
+          0.1,
+          -0.15
+        ],
+        [
+          "piano",
+          "B4",
+          0.035,
+          0.22,
+          0.1,
+          0.0
+        ],
+        [
+          "piano",
+          "D5",
+          0.07,
+          0.22,
+          0.1,
+          0.15
+        ],
+        [
+          "uke",
+          "C4",
+          0.45,
+          1.5,
+          0.18,
+          -0.15
+        ],
+        [
+          "uke",
+          "E4",
+          0.485,
+          1.5,
+          0.18,
+          0.0
+        ],
+        [
+          "uke",
+          "G4",
+          0.52,
+          1.5,
+          0.18,
+          0.15
+        ],
+        [
+          "piano",
+          "C4",
+          0.45,
+          1.3,
+          0.11,
+          -0.15
+        ],
+        [
+          "piano",
+          "E4",
+          0.485,
+          1.3,
+          0.11,
+          0.0
+        ],
+        [
+          "piano",
+          "G4",
+          0.52,
+          1.3,
+          0.11,
+          0.15
+        ]
+      ],
+      "hits": [
+        [
+          "body_tap",
+          0.45,
+          0.12,
+          0.1
+        ]
+      ]
+    },
+    {
+      "id": "music.end_sting.king_of_the_hill",
+      "seconds": 2,
+      "bpm": 112,
+      "seed": 2213,
+      "rms_dbfs": -22,
+      "description": "Acoustic cadence under two seconds in the king of the hill track's home key; standalone one-shot, ending on its own decay.",
+      "notes": [
+        [
+          "piano",
+          "A4",
+          0.0,
+          0.22,
+          0.1,
+          -0.15
+        ],
+        [
+          "piano",
+          "C5",
+          0.035,
+          0.22,
+          0.1,
+          0.0
+        ],
+        [
+          "piano",
+          "F#5",
+          0.07,
+          0.22,
+          0.1,
+          0.15
+        ],
+        [
+          "uke",
+          "G4",
+          0.45,
+          1.5,
+          0.18,
+          -0.15
+        ],
+        [
+          "uke",
+          "B4",
+          0.485,
+          1.5,
+          0.18,
+          0.0
+        ],
+        [
+          "uke",
+          "D5",
+          0.52,
+          1.5,
+          0.18,
+          0.15
+        ],
+        [
+          "piano",
+          "G4",
+          0.45,
+          1.3,
+          0.11,
+          -0.15
+        ],
+        [
+          "piano",
+          "B4",
+          0.485,
+          1.3,
+          0.11,
+          0.0
+        ],
+        [
+          "piano",
+          "D5",
+          0.52,
+          1.3,
+          0.11,
+          0.15
+        ]
+      ],
+      "hits": [
+        [
+          "body_tap",
+          0.45,
+          0.12,
+          0.1
+        ]
+      ]
+    },
+    {
+      "id": "music.end_sting.turbulence",
+      "seconds": 2,
+      "bpm": 138,
+      "seed": 2214,
+      "rms_dbfs": -22,
+      "description": "Acoustic cadence under two seconds in the turbulence track's home key; standalone one-shot, ending on its own decay.",
+      "notes": [
+        [
+          "piano",
+          "C#4",
+          0.0,
+          0.22,
+          0.1,
+          -0.15
+        ],
+        [
+          "piano",
+          "E4",
+          0.035,
+          0.22,
+          0.1,
+          0.0
+        ],
+        [
+          "piano",
+          "G4",
+          0.07,
+          0.22,
+          0.1,
+          0.15
+        ],
+        [
+          "uke",
+          "D4",
+          0.45,
+          1.5,
+          0.18,
+          -0.15
+        ],
+        [
+          "uke",
+          "F4",
+          0.485,
+          1.5,
+          0.18,
+          0.0
+        ],
+        [
+          "uke",
+          "A4",
+          0.52,
+          1.5,
+          0.18,
+          0.15
+        ],
+        [
+          "piano",
+          "D4",
+          0.45,
+          1.3,
+          0.11,
+          -0.15
+        ],
+        [
+          "piano",
+          "F4",
+          0.485,
+          1.3,
+          0.11,
+          0.0
+        ],
+        [
+          "piano",
+          "A4",
+          0.52,
+          1.3,
+          0.11,
+          0.15
+        ]
+      ],
+      "hits": [
+        [
+          "body_tap",
+          0.45,
+          0.12,
+          0.1
+        ]
+      ]
+    },
+    {
+      "id": "music.results",
+      "seconds": 7,
+      "bpm": 96,
+      "seed": 2220,
+      "rms_dbfs": -22,
+      "description": "Short palette-complete coda: upright piano answers ukulele, a brief handclap pulse resolves to a quiet C-major-sixth chord; export trimmed to its natural decay.",
+      "notes": [
+        [
+          "uke",
+          "C4",
+          0.0,
+          0.9,
+          0.13,
+          -0.15
+        ],
+        [
+          "uke",
+          "E4",
+          0.035,
+          0.9,
+          0.13,
+          0.0
+        ],
+        [
+          "uke",
+          "G4",
+          0.07,
+          0.9,
+          0.13,
+          0.15
+        ],
+        [
+          "uke",
+          "A4",
+          1.5,
+          0.9,
+          0.13,
+          -0.15
+        ],
+        [
+          "uke",
+          "C5",
+          1.535,
+          0.9,
+          0.13,
+          0.0
+        ],
+        [
+          "uke",
+          "E5",
+          1.57,
+          0.9,
+          0.13,
+          0.15
+        ],
+        [
+          "uke",
+          "F4",
+          3.0,
+          0.9,
+          0.13,
+          -0.15
+        ],
+        [
+          "uke",
+          "A4",
+          3.035,
+          0.9,
+          0.13,
+          0.0
+        ],
+        [
+          "uke",
+          "C5",
+          3.07,
+          0.9,
+          0.13,
+          0.15
+        ],
+        [
+          "uke",
+          "G4",
+          4.5,
+          0.9,
+          0.13,
+          -0.15
+        ],
+        [
+          "uke",
+          "B4",
+          4.535,
+          0.9,
+          0.13,
+          0.0
+        ],
+        [
+          "uke",
+          "D5",
+          4.57,
+          0.9,
+          0.13,
+          0.15
+        ],
+        [
+          "uke",
+          "C4",
+          6.0,
+          2.2,
+          0.13,
+          -0.15
+        ],
+        [
+          "uke",
+          "E4",
+          6.035,
+          2.2,
+          0.13,
+          0.0
+        ],
+        [
+          "uke",
+          "G4",
+          6.07,
+          2.2,
+          0.13,
+          0.15
+        ],
+        [
+          "uke",
+          "C5",
+          6.105,
+          2.2,
+          0.13,
+          0.29999999999999993
+        ],
+        [
+          "piano",
+          "E5",
+          0,
+          0.4,
+          0.2,
+          0.1
+        ],
+        [
+          "piano",
+          "G5",
+          0.5,
+          0.4,
+          0.2,
+          0.1
+        ],
+        [
+          "piano",
+          "A5",
+          1,
+          0.4,
+          0.2,
+          0.1
+        ],
+        [
+          "piano",
+          "C6",
+          1.5,
+          0.4,
+          0.2,
+          0.1
+        ],
+        [
+          "piano",
+          "A5",
+          2.5,
+          0.4,
+          0.2,
+          0.1
+        ],
+        [
+          "piano",
+          "F5",
+          3,
+          0.4,
+          0.2,
+          0.1
+        ],
+        [
+          "piano",
+          "A5",
+          3.5,
+          0.4,
+          0.2,
+          0.1
+        ],
+        [
+          "piano",
+          "G5",
+          4,
+          0.4,
+          0.2,
+          0.1
+        ],
+        [
+          "piano",
+          "B5",
+          4.5,
+          0.4,
+          0.2,
+          0.1
+        ],
+        [
+          "piano",
+          "D6",
+          5,
+          0.4,
+          0.2,
+          0.1
+        ],
+        [
+          "piano",
+          "B5",
+          5.5,
+          0.4,
+          0.2,
+          0.1
+        ],
+        [
+          "piano",
+          "C6",
+          6,
+          2,
+          0.2,
+          0.1
+        ]
+      ],
+      "hits": [
+        [
+          "clap_1",
+          1,
+          0.1,
+          0.2
+        ],
+        [
+          "clap_2",
+          3,
+          0.09,
+          0.2
+        ],
+        [
+          "clap_3",
+          5,
+          0.08,
+          0.2
+        ],
+        [
+          "body_tap",
+          6,
+          0.12,
+          0
+        ]
+      ]
+    }
+  ]
+}

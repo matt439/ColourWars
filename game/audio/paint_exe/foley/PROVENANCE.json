@@ -1,0 +1,3340 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "id": "player.step.01",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_01.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.step.01",
+        "cue_id": "player.step",
+        "tier": 1,
+        "description": "Short marker contact on paper; separate recorded nib gesture.",
+        "layers": [
+          {
+            "source": "bsb_marker",
+            "seconds": [
+              0.4,
+              0.78
+            ],
+            "speed": 1.65,
+            "lowpass": 7500
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -8
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "f179046e6832eebefb07b3a4edc928f3f02cef93ac82ecc26f494f2b1c65ac37",
+      "frames": 10157,
+      "duration_seconds": 0.2303174603174603,
+      "peak_dbfs": -8.000117030469568,
+      "rms_dbfs": -25.558793413961602,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.step.02",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_02.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.step.02",
+        "cue_id": "player.step",
+        "tier": 1,
+        "description": "Short marker contact on paper; separate recorded nib gesture.",
+        "layers": [
+          {
+            "source": "bsb_marker",
+            "seconds": [
+              1.0,
+              1.22
+            ],
+            "speed": 1.65,
+            "lowpass": 7500
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -8
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "f0749089361726800db03f7b422777330da74dfd6d304e7780bef2a1b3d81bd0",
+      "frames": 5880,
+      "duration_seconds": 0.13333333333333333,
+      "peak_dbfs": -10.688037520930902,
+      "rms_dbfs": -24.00026260811661,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.step.03",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_03.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.step.03",
+        "cue_id": "player.step",
+        "tier": 1,
+        "description": "Short marker contact on paper; separate recorded nib gesture.",
+        "layers": [
+          {
+            "source": "bsb_marker",
+            "seconds": [
+              9.92,
+              10.22
+            ],
+            "speed": 1.65,
+            "lowpass": 7500
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -8
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "0a8bcd324ec15675e6de425ef49a0c2417264dcae688dd87d08b30269e4fab8e",
+      "frames": 8019,
+      "duration_seconds": 0.18183673469387754,
+      "peak_dbfs": -8.000117030469568,
+      "rms_dbfs": -24.253547481738845,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.step.04",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_04.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.step.04",
+        "cue_id": "player.step",
+        "tier": 1,
+        "description": "Short marker contact on paper; separate recorded nib gesture.",
+        "layers": [
+          {
+            "source": "bsb_marker",
+            "seconds": [
+              13.12,
+              13.42
+            ],
+            "speed": 1.65,
+            "lowpass": 7500
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -8
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "a475be8136f32aaaa4da8edad3c3ab366525af2d5e04dbfb59f910c209483bcc",
+      "frames": 8019,
+      "duration_seconds": 0.18183673469387754,
+      "peak_dbfs": -8.000117030469568,
+      "rms_dbfs": -28.247672261830942,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.step.05",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_05.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.step.05",
+        "cue_id": "player.step",
+        "tier": 1,
+        "description": "Short marker contact on paper; separate recorded nib gesture.",
+        "layers": [
+          {
+            "source": "bsb_marker",
+            "seconds": [
+              17.0,
+              17.26
+            ],
+            "speed": 1.65,
+            "lowpass": 7500
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -8
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "746a30d4cbda6bdb019b4d5cdddfe06eb6d2687ddd84e88639b9b0326107891d",
+      "frames": 4096,
+      "duration_seconds": 0.09287981859410431,
+      "peak_dbfs": -8.000117030469568,
+      "rms_dbfs": -28.171080448663034,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.step.06",
+      "cue_id": "player.step",
+      "tier": 1,
+      "description": "Short marker contact on paper; separate recorded nib gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_06.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.step.06",
+        "cue_id": "player.step",
+        "tier": 1,
+        "description": "Short marker contact on paper; separate recorded nib gesture.",
+        "layers": [
+          {
+            "source": "bsb_marker",
+            "seconds": [
+              18.42,
+              18.75
+            ],
+            "speed": 1.65,
+            "lowpass": 7500
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -8
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "268da5882e43207d31e37edacf1a21289a39e479765b2e022c5c2b26a86afb15",
+      "frames": 4733,
+      "duration_seconds": 0.10732426303854875,
+      "peak_dbfs": -8.000117030469568,
+      "rms_dbfs": -28.67157807573409,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.land.01",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_land_01.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_crumple1",
+        "owlish_paper_turn1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.land.01",
+        "cue_id": "player.land",
+        "tier": 1,
+        "description": "Paper flump with a short low paper-body contact.",
+        "layers": [
+          {
+            "source": "owlish_paper_turn1",
+            "seconds": [
+              0,
+              0.58
+            ],
+            "speed": 1.12,
+            "lowpass": 6000
+          },
+          {
+            "source": "owlish_paper_crumple1",
+            "seconds": [
+              0.0,
+              0.23
+            ],
+            "speed": 0.82,
+            "lowpass": 900,
+            "level_db": -24
+          }
+        ],
+        "rms_db": -21,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "a87081d3fdec3705991a5796eee5ee5c59454c69f22035f21d2a3f740a5ff423",
+      "frames": 17955,
+      "duration_seconds": 0.40714285714285714,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -22.818417912815455,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.land.02",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_land_02.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_crumple1",
+        "owlish_paper_turn2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.land.02",
+        "cue_id": "player.land",
+        "tier": 1,
+        "description": "Paper flump with a short low paper-body contact.",
+        "layers": [
+          {
+            "source": "owlish_paper_turn2",
+            "seconds": [
+              0.57,
+              1.13
+            ],
+            "speed": 1.12,
+            "lowpass": 6000
+          },
+          {
+            "source": "owlish_paper_crumple1",
+            "seconds": [
+              0.0,
+              0.23
+            ],
+            "speed": 0.82,
+            "lowpass": 900,
+            "level_db": -24
+          }
+        ],
+        "rms_db": -21,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "fdd75d912e4798615d332f9aab203402b804ccc9c290a5c4a500f0b0ae733947",
+      "frames": 22050,
+      "duration_seconds": 0.5,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -25.66089976380806,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.land.03",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_land_03.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_crumple1",
+        "owlish_paper_flips1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.land.03",
+        "cue_id": "player.land",
+        "tier": 1,
+        "description": "Paper flump with a short low paper-body contact.",
+        "layers": [
+          {
+            "source": "owlish_paper_flips1",
+            "seconds": [
+              0.95,
+              1.55
+            ],
+            "speed": 1.12,
+            "lowpass": 6000
+          },
+          {
+            "source": "owlish_paper_crumple1",
+            "seconds": [
+              0.0,
+              0.23
+            ],
+            "speed": 0.82,
+            "lowpass": 900,
+            "level_db": -24
+          }
+        ],
+        "rms_db": -21,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "ff361ee97b8eb8633e5a170ad8e7a355bfe42c0b330975d109a49587028c8d20",
+      "frames": 23625,
+      "duration_seconds": 0.5357142857142857,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -30.904046958957707,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.land.04",
+      "cue_id": "player.land",
+      "tier": 1,
+      "description": "Paper flump with a short low paper-body contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_land_04.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_crumple1",
+        "owlish_paper_flips2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.land.04",
+        "cue_id": "player.land",
+        "tier": 1,
+        "description": "Paper flump with a short low paper-body contact.",
+        "layers": [
+          {
+            "source": "owlish_paper_flips2",
+            "seconds": [
+              3.55,
+              4.15
+            ],
+            "speed": 1.12,
+            "lowpass": 6000
+          },
+          {
+            "source": "owlish_paper_crumple1",
+            "seconds": [
+              0.0,
+              0.23
+            ],
+            "speed": 0.82,
+            "lowpass": 900,
+            "level_db": -24
+          }
+        ],
+        "rms_db": -21,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "95943e566d83eeac93b51913eb7612229c6b44c4ebcf52391eb2260c37e3b531",
+      "frames": 19996,
+      "duration_seconds": 0.45342403628117917,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -37.581435078621084,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.jump",
+      "cue_id": "player.jump",
+      "tier": 1,
+      "description": "Quick upward paper flick and nib release.",
+      "path": "game/audio/paint_exe/foley/masters/player_jump.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_whiteboard",
+        "owlish_paper_turn1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.jump",
+        "cue_id": "player.jump",
+        "tier": 1,
+        "description": "Quick upward paper flick and nib release.",
+        "layers": [
+          {
+            "source": "owlish_paper_turn1",
+            "seconds": [
+              0,
+              0.38
+            ],
+            "speed": 1.5
+          },
+          {
+            "source": "bsb_whiteboard",
+            "seconds": [
+              0.3,
+              0.5
+            ],
+            "speed": 1.4,
+            "level_db": -25
+          }
+        ],
+        "rms_db": -22
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "06230a049a5580f1947f590aae24a9b2f0b13bdfcc14601b2db2794ed95d7425",
+      "frames": 11172,
+      "duration_seconds": 0.25333333333333335,
+      "peak_dbfs": -3.323448149835253,
+      "rms_dbfs": -22.00028607202373,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.skid",
+      "cue_id": "player.skid",
+      "tier": 1,
+      "description": "Brief dragged marker squeak for a committed reversal.",
+      "path": "game/audio/paint_exe/foley/masters/player_skid.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_whiteboard"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.skid",
+        "cue_id": "player.skid",
+        "tier": 1,
+        "description": "Brief dragged marker squeak for a committed reversal.",
+        "layers": [
+          {
+            "source": "bsb_whiteboard",
+            "seconds": [
+              4.03,
+              4.5
+            ],
+            "speed": 1.18,
+            "lowpass": 6500
+          }
+        ],
+        "rms_db": -23
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "052d0b14d402655201691e7d4561122bdb273e1c48783be6ba8ceb63d6944011",
+      "frames": 17566,
+      "duration_seconds": 0.3983219954648526,
+      "peak_dbfs": -3.0003622493859567,
+      "rms_dbfs": -24.67568326475273,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.hurt",
+      "cue_id": "player.hurt",
+      "tier": 1,
+      "description": "Wet fruit slap and crushed-paper snap.",
+      "path": "game/audio/paint_exe/foley/masters/player_hurt.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_fruit1",
+        "owlish_paper_crumple2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.hurt",
+        "cue_id": "player.hurt",
+        "tier": 1,
+        "description": "Wet fruit slap and crushed-paper snap.",
+        "layers": [
+          {
+            "source": "owlish_fruit1",
+            "seconds": [
+              0,
+              0.42
+            ]
+          },
+          {
+            "source": "owlish_paper_crumple2",
+            "seconds": [
+              0.03,
+              0.22
+            ],
+            "level_db": -23
+          }
+        ],
+        "rms_db": -18,
+        "peak_db": -2
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "2668a23851352134528c64076d26043144f6ee067ae0ca119da915845a7b115c",
+      "frames": 13835,
+      "duration_seconds": 0.313718820861678,
+      "peak_dbfs": -2.0001827379579966,
+      "rms_dbfs": -20.991537421643173,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.pop",
+      "cue_id": "player.pop",
+      "tier": 1,
+      "description": "A real water-bubble burst, with a soft wet body.",
+      "path": "game/audio/paint_exe/foley/masters/player_pop.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_bubbles",
+        "owlish_fruit2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.pop",
+        "cue_id": "player.pop",
+        "tier": 1,
+        "description": "A real water-bubble burst, with a soft wet body.",
+        "layers": [
+          {
+            "source": "bsb_bubbles",
+            "seconds": [
+              4.38,
+              4.76
+            ],
+            "speed": 1.25,
+            "lowpass": 7000
+          },
+          {
+            "source": "owlish_fruit2",
+            "seconds": [
+              0,
+              0.25
+            ],
+            "level_db": -25
+          }
+        ],
+        "rms_db": -18,
+        "peak_db": -2
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "95add58778d44abc66d04c1e3040a1ea9771a51ba5928b0e0e1ae65579632e01",
+      "frames": 13407,
+      "duration_seconds": 0.30401360544217687,
+      "peak_dbfs": -3.381939210181586,
+      "rms_dbfs": -18.00027524150752,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.redraw",
+      "cue_id": "player.redraw",
+      "tier": 2,
+      "description": "Fast marker scribble: a continuous cyclic drawing gesture.",
+      "path": "game/audio/paint_exe/foley/masters/player_redraw.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_marker"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.redraw",
+        "cue_id": "player.redraw",
+        "tier": 2,
+        "description": "Fast marker scribble: a continuous cyclic drawing gesture.",
+        "layers": [
+          {
+            "source": "bsb_marker",
+            "seconds": [
+              18.62,
+              20.48
+            ],
+            "speed": 1.6,
+            "lowpass": 7500
+          }
+        ],
+        "loop": true,
+        "crossfade": 0.1,
+        "rms_db": -25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; continuous overlap loop and smpl region",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "9130389dd4908a56c1ce6d6749fa2653af22392f80e19ca683e66a3af3d3f5e5",
+      "frames": 46857,
+      "duration_seconds": 1.062517006802721,
+      "peak_dbfs": -9.012354304422882,
+      "rms_dbfs": -25.000277277304587,
+      "loop_start": 0,
+      "loop_end_inclusive": 46856,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.respawn",
+      "cue_id": "player.respawn",
+      "tier": 1,
+      "description": "Final marker flourish lands in a small paper contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_respawn.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_whiteboard",
+        "owlish_paper_turn1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.respawn",
+        "cue_id": "player.respawn",
+        "tier": 1,
+        "description": "Final marker flourish lands in a small paper contact.",
+        "layers": [
+          {
+            "source": "bsb_whiteboard",
+            "seconds": [
+              5.05,
+              5.8
+            ],
+            "speed": 1.4
+          },
+          {
+            "source": "owlish_paper_turn1",
+            "seconds": [
+              0.06,
+              0.35
+            ],
+            "speed": 1.2,
+            "offset": 0.3,
+            "level_db": -24
+          }
+        ],
+        "rms_db": -19
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "5fa37336934d95689bbe5625bbde5c5e6bce054c7e08e9fdd9c1f6b058770edb",
+      "frames": 23888,
+      "duration_seconds": 0.5416780045351474,
+      "peak_dbfs": -3.0003622493859567,
+      "rms_dbfs": -26.107556467217993,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.step_painted.01",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_painted_01.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.step_painted.01",
+        "cue_id": "player.step_painted",
+        "tier": 2,
+        "description": "Marker contact with a quiet foamy wet sole.",
+        "layers": [
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              0.4,
+              0.65
+            ],
+            "speed": 1.35,
+            "lowpass": 5000
+          },
+          {
+            "source": "bsb_marker",
+            "seconds": [
+              13.12,
+              13.3
+            ],
+            "speed": 1.65,
+            "level_db": -26
+          }
+        ],
+        "rms_db": -25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "3310c6efba25eca2fd22bdb061db7f3792a25c8ca0b58341ae8cf01543dd7f54",
+      "frames": 8167,
+      "duration_seconds": 0.18519274376417233,
+      "peak_dbfs": -6.894965582872961,
+      "rms_dbfs": -25.000261414471705,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.step_painted.02",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_painted_02.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.step_painted.02",
+        "cue_id": "player.step_painted",
+        "tier": 2,
+        "description": "Marker contact with a quiet foamy wet sole.",
+        "layers": [
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              1.48,
+              1.73
+            ],
+            "speed": 1.35,
+            "lowpass": 5000
+          },
+          {
+            "source": "bsb_marker",
+            "seconds": [
+              13.12,
+              13.3
+            ],
+            "speed": 1.65,
+            "level_db": -26
+          }
+        ],
+        "rms_db": -25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "f4b1f3642ed803f389ab2aae4a87dab840637507a2b1b686cc8c6ba8ba410505",
+      "frames": 8167,
+      "duration_seconds": 0.18519274376417233,
+      "peak_dbfs": -3.0003622493859567,
+      "rms_dbfs": -27.778451476752046,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.step_painted.03",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_painted_03.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.step_painted.03",
+        "cue_id": "player.step_painted",
+        "tier": 2,
+        "description": "Marker contact with a quiet foamy wet sole.",
+        "layers": [
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              4.3,
+              4.55
+            ],
+            "speed": 1.35,
+            "lowpass": 5000
+          },
+          {
+            "source": "bsb_marker",
+            "seconds": [
+              13.12,
+              13.3
+            ],
+            "speed": 1.65,
+            "level_db": -26
+          }
+        ],
+        "rms_db": -25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "73b084eb13fc7f8857771b4012ed16a3dea64cd4734df97827200e5bb7ac9c6d",
+      "frames": 8167,
+      "duration_seconds": 0.18519274376417233,
+      "peak_dbfs": -7.970205768179243,
+      "rms_dbfs": -25.000270805591143,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.step_painted.04",
+      "cue_id": "player.step_painted",
+      "tier": 2,
+      "description": "Marker contact with a quiet foamy wet sole.",
+      "path": "game/audio/paint_exe/foley/masters/player_step_painted_04.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_marker",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.step_painted.04",
+        "cue_id": "player.step_painted",
+        "tier": 2,
+        "description": "Marker contact with a quiet foamy wet sole.",
+        "layers": [
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              5.72,
+              5.97
+            ],
+            "speed": 1.35,
+            "lowpass": 5000
+          },
+          {
+            "source": "bsb_marker",
+            "seconds": [
+              13.12,
+              13.3
+            ],
+            "speed": 1.65,
+            "level_db": -26
+          }
+        ],
+        "rms_db": -25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "a576f8a8f14281ab72e06f3b5df8f16a8a30444b30e339879b2b7e0ee1cbecbe",
+      "frames": 8167,
+      "duration_seconds": 0.18519274376417233,
+      "peak_dbfs": -3.0003622493859567,
+      "rms_dbfs": -25.35747496484591,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.bonk",
+      "cue_id": "player.bonk",
+      "tier": 3,
+      "description": "Dull paper-body tap for a ceiling contact.",
+      "path": "game/audio/paint_exe/foley/masters/player_bonk.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_tap"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.bonk",
+        "cue_id": "player.bonk",
+        "tier": 3,
+        "description": "Dull paper-body tap for a ceiling contact.",
+        "layers": [
+          {
+            "source": "owlish_tap",
+            "seconds": [
+              0.1,
+              0.42
+            ],
+            "lowpass": 1300,
+            "speed": 0.85
+          }
+        ],
+        "rms_db": -25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "6a65370f511ec549378c8c1414b3bb6651e56f2319f548d750813adbc1ac8f91",
+      "frames": 10069,
+      "duration_seconds": 0.2283219954648526,
+      "peak_dbfs": -6.628805705168754,
+      "rms_dbfs": -25.00027050878126,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.drop",
+      "cue_id": "player.drop",
+      "tier": 3,
+      "description": "Thin paper slip when dropping through a platform.",
+      "path": "game/audio/paint_exe/foley/masters/player_drop.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_paper_turn2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.drop",
+        "cue_id": "player.drop",
+        "tier": 3,
+        "description": "Thin paper slip when dropping through a platform.",
+        "layers": [
+          {
+            "source": "owlish_paper_turn2",
+            "seconds": [
+              0.66,
+              0.94
+            ],
+            "speed": 1.3,
+            "highpass": 650
+          }
+        ],
+        "rms_db": -26
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "aaa6f5f5c46093361dd0274a69d361e3f89a39be56af79d85e12a84e1b2563e8",
+      "frames": 9499,
+      "duration_seconds": 0.2153968253968254,
+      "peak_dbfs": -6.390452427249867,
+      "rms_dbfs": -26.000255993529496,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "player.hit_confirm",
+      "cue_id": "player.hit_confirm",
+      "tier": 3,
+      "description": "Small recorded finger-like tap, kept below damage cues.",
+      "path": "game/audio/paint_exe/foley/masters/player_hit_confirm.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_tap"
+      ],
+      "recommended_gain": 0.55,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "player.hit_confirm",
+        "cue_id": "player.hit_confirm",
+        "tier": 3,
+        "description": "Small recorded finger-like tap, kept below damage cues.",
+        "layers": [
+          {
+            "source": "owlish_tap",
+            "seconds": [
+              0.1,
+              0.3
+            ],
+            "speed": 1.7,
+            "lowpass": 4500
+          }
+        ],
+        "rms_db": -26,
+        "gain": 0.55
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "febea35a1ff571b6bcd0ad03ee1edffe665445d14bd8b9bc872069222bf6769b",
+      "frames": 2961,
+      "duration_seconds": 0.06714285714285714,
+      "peak_dbfs": -11.347589068815536,
+      "rms_dbfs": -26.000237303720123,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "sprayer.start",
+      "cue_id": "sprayer.start",
+      "tier": 1,
+      "description": "Pump squeeze and first wet valve opening.",
+      "path": "game/audio/paint_exe/foley/masters/sprayer_start.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_pump"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "sprayer.start",
+        "cue_id": "sprayer.start",
+        "tier": 1,
+        "description": "Pump squeeze and first wet valve opening.",
+        "layers": [
+          {
+            "source": "owlish_pump",
+            "seconds": [
+              0.53,
+              1.08
+            ],
+            "lowpass": 10000
+          }
+        ],
+        "rms_db": -22
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "6b8b7520c8e3858d6649a68b32327153a7509ed87448b8b3e359539616a88a34",
+      "frames": 14649,
+      "duration_seconds": 0.3321768707482993,
+      "peak_dbfs": -4.924812720415652,
+      "rms_dbfs": -22.000256013222938,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "sprayer.loop",
+      "cue_id": "sprayer.loop",
+      "tier": 1,
+      "description": "Coarse pressured spray with a wet foam undertone.",
+      "path": "game/audio/paint_exe/foley/masters/sprayer_loop.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_long_spray",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "sprayer.loop",
+        "cue_id": "sprayer.loop",
+        "tier": 1,
+        "description": "Coarse pressured spray with a wet foam undertone.",
+        "layers": [
+          {
+            "source": "bsb_long_spray",
+            "seconds": [
+              2.1,
+              2.58
+            ],
+            "lowpass": 11000
+          },
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              4.04,
+              4.52
+            ],
+            "lowpass": 2800,
+            "level_db": -28
+          }
+        ],
+        "loop": true,
+        "crossfade": 0.08,
+        "rms_db": -23
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; continuous overlap loop and smpl region",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "b7d041c18f681dd3dbed6fe53884d7ca698a486eaf29bccd0d07f4c09ffb7f40",
+      "frames": 17640,
+      "duration_seconds": 0.4,
+      "peak_dbfs": -10.933737735249387,
+      "rms_dbfs": -23.00027902104243,
+      "loop_start": 0,
+      "loop_end_inclusive": 17639,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "sprayer.stop",
+      "cue_id": "sprayer.stop",
+      "tier": 1,
+      "description": "Pump return with a brief residual spray tail.",
+      "path": "game/audio/paint_exe/foley/masters/sprayer_stop.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_pump"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "sprayer.stop",
+        "cue_id": "sprayer.stop",
+        "tier": 1,
+        "description": "Pump return with a brief residual spray tail.",
+        "layers": [
+          {
+            "source": "owlish_pump",
+            "seconds": [
+              1.77,
+              2.12
+            ],
+            "lowpass": 8000
+          }
+        ],
+        "rms_db": -24
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "1343683426d9f38be146889f5de6ef78f7c09938d0ba8dc007e723d8f5f40c1d",
+      "frames": 15435,
+      "duration_seconds": 0.35,
+      "peak_dbfs": -5.752292583682613,
+      "rms_dbfs": -24.000268997808398,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "roller.loop",
+      "cue_id": "roller.loop",
+      "tier": 1,
+      "description": "Tacky wet drum: foamy sponge compression under a slowed wall-brush stroke.",
+      "path": "game/audio/paint_exe/foley/masters/roller_loop.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_brush",
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "roller.loop",
+        "cue_id": "roller.loop",
+        "tier": 1,
+        "description": "Tacky wet drum: foamy sponge compression under a slowed wall-brush stroke.",
+        "layers": [
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              4.02,
+              4.52
+            ],
+            "speed": 0.9,
+            "lowpass": 4000
+          },
+          {
+            "source": "bsb_brush",
+            "seconds": [
+              7.02,
+              7.52
+            ],
+            "speed": 0.95,
+            "lowpass": 2000,
+            "level_db": -25
+          }
+        ],
+        "loop": true,
+        "crossfade": 0.1,
+        "rms_db": -24
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; continuous overlap loop and smpl region",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "058236157f763660eea059ce087d970eaa5c111c4710e104a534dc6ee07a72fd",
+      "frames": 20090,
+      "duration_seconds": 0.45555555555555555,
+      "peak_dbfs": -6.405401850556293,
+      "rms_dbfs": -24.00026304753655,
+      "loop_start": 0,
+      "loop_end_inclusive": 20089,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "roller.start",
+      "cue_id": "roller.start",
+      "tier": 1,
+      "description": "Wet sponge grabs the floor with a small handle contact.",
+      "path": "game/audio/paint_exe/foley/masters/roller_start.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_tap"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "roller.start",
+        "cue_id": "roller.start",
+        "tier": 1,
+        "description": "Wet sponge grabs the floor with a small handle contact.",
+        "layers": [
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              0.32,
+              0.82
+            ],
+            "speed": 0.9,
+            "lowpass": 5000
+          },
+          {
+            "source": "owlish_tap",
+            "seconds": [
+              0.1,
+              0.28
+            ],
+            "lowpass": 1600,
+            "level_db": -26
+          }
+        ],
+        "rms_db": -23
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "527da0baadc07ed20fc6749bee7d66f77fc2bdf425cbb11968835c3bcc284ae8",
+      "frames": 24500,
+      "duration_seconds": 0.5555555555555556,
+      "peak_dbfs": -3.0003622493859567,
+      "rms_dbfs": -24.009544019033285,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "roller.stop",
+      "cue_id": "roller.stop",
+      "tier": 1,
+      "description": "Wet drum releases pressure and settles.",
+      "path": "game/audio/paint_exe/foley/masters/roller_stop.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "roller.stop",
+        "cue_id": "roller.stop",
+        "tier": 1,
+        "description": "Wet drum releases pressure and settles.",
+        "layers": [
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              1.58,
+              2.02
+            ],
+            "speed": 0.82,
+            "lowpass": 3500
+          }
+        ],
+        "rms_db": -25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "b5c9a140545c87bc0d2b134e3f660a99e3dc8248c3e95826aac3e38df707516a",
+      "frames": 23664,
+      "duration_seconds": 0.5365986394557823,
+      "peak_dbfs": -3.0003622493859567,
+      "rms_dbfs": -27.68470689370831,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "roller.lift",
+      "cue_id": "roller.lift",
+      "tier": 1,
+      "description": "Tacky wet peel as the drum leaves a surface.",
+      "path": "game/audio/paint_exe/foley/masters/roller_lift.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "roller.lift",
+        "cue_id": "roller.lift",
+        "tier": 1,
+        "description": "Tacky wet peel as the drum leaves a surface.",
+        "layers": [
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              5.63,
+              6.07
+            ],
+            "speed": 1.18,
+            "lowpass": 5000
+          }
+        ],
+        "rms_db": -24
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "3933eaa5229ea299a9fb93978e9459695770f65ae418c0ffcb7bde966e3cf60d",
+      "frames": 16445,
+      "duration_seconds": 0.37290249433106576,
+      "peak_dbfs": -3.0003622493859567,
+      "rms_dbfs": -26.36906330613249,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "roller.settle",
+      "cue_id": "roller.settle",
+      "tier": 1,
+      "description": "Soft wet drum contact with a low handle tap.",
+      "path": "game/audio/paint_exe/foley/masters/roller_settle.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "roller.settle",
+        "cue_id": "roller.settle",
+        "tier": 1,
+        "description": "Soft wet drum contact with a low handle tap.",
+        "layers": [
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              8.3,
+              8.95
+            ],
+            "speed": 0.92,
+            "lowpass": 4000
+          },
+          {
+            "source": "owlish_fruit3",
+            "seconds": [
+              0,
+              0.25
+            ],
+            "lowpass": 1500,
+            "level_db": -27
+          }
+        ],
+        "rms_db": -23
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "9246031e23b979c5b4140ddd82594c8d746114847855193aed53bd6a4ac6d322",
+      "frames": 31158,
+      "duration_seconds": 0.706530612244898,
+      "peak_dbfs": -3.0003622493859567,
+      "rms_dbfs": -32.889233219787904,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "weapon.empty",
+      "cue_id": "weapon.empty",
+      "tier": 1,
+      "description": "Dry pump mechanism: short double mechanical refusal.",
+      "path": "game/audio/paint_exe/foley/masters/weapon_empty.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "weapon.empty",
+        "cue_id": "weapon.empty",
+        "tier": 1,
+        "description": "Dry pump mechanism: short double mechanical refusal.",
+        "layers": [
+          {
+            "source": "owlish_plug",
+            "seconds": [
+              0.0,
+              0.2
+            ],
+            "lowpass": 8000
+          },
+          {
+            "source": "owlish_plug",
+            "seconds": [
+              0.0,
+              0.15
+            ],
+            "speed": 0.88,
+            "offset": 0.13,
+            "level_db": -22
+          }
+        ],
+        "rms_db": -18,
+        "peak_db": -3
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "12cef068c2dc84a28d10a8a8bd353c18a2d67c76d5639f7ac8aa2ff17da635ef",
+      "frames": 12256,
+      "duration_seconds": 0.27791383219954646,
+      "peak_dbfs": -3.0003622493859567,
+      "rms_dbfs": -22.816755363706804,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "weapon.recovered",
+      "cue_id": "weapon.recovered",
+      "tier": 1,
+      "description": "A clear valve catch followed by a tiny liquid plop.",
+      "path": "game/audio/paint_exe/foley/masters/weapon_recovered.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_drips",
+        "owlish_plug"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "weapon.recovered",
+        "cue_id": "weapon.recovered",
+        "tier": 1,
+        "description": "A clear valve catch followed by a tiny liquid plop.",
+        "layers": [
+          {
+            "source": "owlish_plug",
+            "seconds": [
+              0,
+              0.2
+            ],
+            "speed": 1.25
+          },
+          {
+            "source": "bsb_drips",
+            "seconds": [
+              1.52,
+              1.83
+            ],
+            "speed": 1.35,
+            "offset": 0.08,
+            "level_db": -23
+          }
+        ],
+        "rms_db": -20
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "2d23909ffe761bc40252a3437edbc1cd28a5492fa4e9b838761495ad1411510f",
+      "frames": 12619,
+      "duration_seconds": 0.2861451247165533,
+      "peak_dbfs": -3.0003622493859567,
+      "rms_dbfs": -24.99630853089933,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "mister.start",
+      "cue_id": "mister.start",
+      "tier": 2,
+      "description": "Fine atomiser opens with a fast spray hiss.",
+      "path": "game/audio/paint_exe/foley/masters/mister_start.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "mister.start",
+        "cue_id": "mister.start",
+        "tier": 2,
+        "description": "Fine atomiser opens with a fast spray hiss.",
+        "layers": [
+          {
+            "source": "bsb_spray",
+            "seconds": [
+              0.24,
+              0.61
+            ],
+            "speed": 1.3,
+            "highpass": 800
+          }
+        ],
+        "rms_db": -23
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "ba321f7bf5fb47d238fae8bcbd4d89fea29c03c3d8747df58ff1e50ded49bd8c",
+      "frames": 12552,
+      "duration_seconds": 0.28462585034013604,
+      "peak_dbfs": -8.963860914431363,
+      "rms_dbfs": -23.000275824339333,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "mister.loop",
+      "cue_id": "mister.loop",
+      "tier": 2,
+      "description": "Fine atomiser fizz, higher and softer than the sprayer.",
+      "path": "game/audio/paint_exe/foley/masters/mister_loop.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_long_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "mister.loop",
+        "cue_id": "mister.loop",
+        "tier": 2,
+        "description": "Fine atomiser fizz, higher and softer than the sprayer.",
+        "layers": [
+          {
+            "source": "bsb_long_spray",
+            "seconds": [
+              6.35,
+              7.05
+            ],
+            "speed": 1.3,
+            "highpass": 1800,
+            "lowpass": 12500
+          }
+        ],
+        "loop": true,
+        "crossfade": 0.1,
+        "rms_db": -25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; continuous overlap loop and smpl region",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "f98632d24e8d5071b00b423bae03dea7b1242f48eb8a60237e4575b4a333487a",
+      "frames": 19337,
+      "duration_seconds": 0.43848072562358276,
+      "peak_dbfs": -10.626557041972156,
+      "rms_dbfs": -25.00028362585223,
+      "loop_start": 0,
+      "loop_end_inclusive": 19336,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "mister.stop",
+      "cue_id": "mister.stop",
+      "tier": 2,
+      "description": "Fine nozzle closes with a short remaining hiss.",
+      "path": "game/audio/paint_exe/foley/masters/mister_stop.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "mister.stop",
+        "cue_id": "mister.stop",
+        "tier": 2,
+        "description": "Fine nozzle closes with a short remaining hiss.",
+        "layers": [
+          {
+            "source": "bsb_spray",
+            "seconds": [
+              2.48,
+              2.81
+            ],
+            "speed": 1.3,
+            "highpass": 1000
+          }
+        ],
+        "rms_db": -25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "5a70d365b163d2a427025fda482e680848312a0ad508d92f06d0d48315799d47",
+      "frames": 11195,
+      "duration_seconds": 0.2538548752834467,
+      "peak_dbfs": -12.010505735091389,
+      "rms_dbfs": -25.000255754901318,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "sniper.shot",
+      "cue_id": "sniper.shot",
+      "tier": 2,
+      "description": "A single sharp pressure release with a physical valve click.",
+      "path": "game/audio/paint_exe/foley/masters/sniper_shot.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug",
+        "owlish_pump"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "sniper.shot",
+        "cue_id": "sniper.shot",
+        "tier": 2,
+        "description": "A single sharp pressure release with a physical valve click.",
+        "layers": [
+          {
+            "source": "owlish_pump",
+            "seconds": [
+              3.04,
+              3.61
+            ],
+            "speed": 1.55,
+            "highpass": 350
+          },
+          {
+            "source": "owlish_plug",
+            "seconds": [
+              0,
+              0.2
+            ],
+            "level_db": -22
+          }
+        ],
+        "rms_db": -18,
+        "peak_db": -2
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "c64d4531ddeaae3cd3739db485939f6cdf67cc2c0ddd59c6ae24cf5ee25c9edd",
+      "frames": 11413,
+      "duration_seconds": 0.2587981859410431,
+      "peak_dbfs": -2.0001827379579966,
+      "rms_dbfs": -18.286096973616594,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "sniper.ready",
+      "cue_id": "sniper.ready",
+      "tier": 2,
+      "description": "One distinct latch re-engagement.",
+      "path": "game/audio/paint_exe/foley/masters/sniper_ready.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "sniper.ready",
+        "cue_id": "sniper.ready",
+        "tier": 2,
+        "description": "One distinct latch re-engagement.",
+        "layers": [
+          {
+            "source": "owlish_plug",
+            "seconds": [
+              0,
+              0.25
+            ],
+            "speed": 0.8,
+            "lowpass": 6000
+          }
+        ],
+        "rms_db": -22
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "d964086e0ce84ceb85fa0409852c324f5e7e57fca41002edc7d81eb5d6571d7f",
+      "frames": 12137,
+      "duration_seconds": 0.27521541950113376,
+      "peak_dbfs": -3.0003622493859567,
+      "rms_dbfs": -23.121371262162718,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "bucket.throw",
+      "cue_id": "bucket.throw",
+      "tier": 2,
+      "description": "A swung tin contact over a wet bucket slosh.",
+      "path": "game/audio/paint_exe/foley/masters/bucket_throw.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_1",
+        "owlish_metal_clank"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "bucket.throw",
+        "cue_id": "bucket.throw",
+        "tier": 2,
+        "description": "A swung tin contact over a wet bucket slosh.",
+        "layers": [
+          {
+            "source": "owlish_metal_clank",
+            "seconds": [
+              0,
+              0.6
+            ],
+            "speed": 0.82,
+            "lowpass": 4500,
+            "level_db": -22
+          },
+          {
+            "source": "bsb_small_splash_1",
+            "seconds": [
+              0,
+              0.84
+            ],
+            "speed": 0.85,
+            "lowpass": 6000
+          }
+        ],
+        "rms_db": -20
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "2e94a35d55deb614c2aac52c86862baa9406ed30fcc355f234600960ff285ad4",
+      "frames": 43090,
+      "duration_seconds": 0.9770975056689343,
+      "peak_dbfs": -3.0003622493859567,
+      "rms_dbfs": -23.550902196609066,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "paint.splash.01",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_01.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "paint.splash.01",
+        "cue_id": "paint.splash",
+        "tier": 1,
+        "description": "Short tactile wet impact; separate source take.",
+        "layers": [
+          {
+            "source": "bsb_small_splash_1",
+            "seconds": [
+              0,
+              0.75
+            ],
+            "speed": 1.6,
+            "highpass": 120,
+            "lowpass": 8500
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "217b4b5af0ce935d15d75a799350960489576eca918f2e4e2ed04caf3e48c880",
+      "frames": 18696,
+      "duration_seconds": 0.42394557823129253,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -26.00443283282576,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "paint.splash.02",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_02.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "paint.splash.02",
+        "cue_id": "paint.splash",
+        "tier": 1,
+        "description": "Short tactile wet impact; separate source take.",
+        "layers": [
+          {
+            "source": "bsb_small_splash_3",
+            "seconds": [
+              0,
+              0.65
+            ],
+            "speed": 1.6,
+            "highpass": 120,
+            "lowpass": 8500
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "a197a877d6289bc1e355886428f6b94b065ef97ee3c6e45475d684ec76c45a02",
+      "frames": 16971,
+      "duration_seconds": 0.38482993197278914,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -30.76133151041917,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "paint.splash.03",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_03.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_6"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "paint.splash.03",
+        "cue_id": "paint.splash",
+        "tier": 1,
+        "description": "Short tactile wet impact; separate source take.",
+        "layers": [
+          {
+            "source": "bsb_small_splash_6",
+            "seconds": [
+              0,
+              0.68
+            ],
+            "speed": 1.45,
+            "highpass": 120,
+            "lowpass": 8500
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "92ec2e5e0a0d41c262f2e958a2e79c608946ac95e7bbef04fb93aa127883e010",
+      "frames": 19846,
+      "duration_seconds": 0.4500226757369615,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -30.976131649566025,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "paint.splash.04",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_04.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "paint.splash.04",
+        "cue_id": "paint.splash",
+        "tier": 1,
+        "description": "Short tactile wet impact; separate source take.",
+        "layers": [
+          {
+            "source": "owlish_fruit1",
+            "seconds": [
+              0,
+              0.42
+            ],
+            "speed": 1.0,
+            "highpass": 120,
+            "lowpass": 8500
+          },
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              0.3,
+              0.57
+            ],
+            "speed": 1.6,
+            "level_db": -26
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "ee652aa01641272768d5b1298dd7514afc2971a28a92a79020d10a6d42ad6914",
+      "frames": 14023,
+      "duration_seconds": 0.31798185941043083,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -28.289888714607656,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "paint.splash.05",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_05.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "paint.splash.05",
+        "cue_id": "paint.splash",
+        "tier": 1,
+        "description": "Short tactile wet impact; separate source take.",
+        "layers": [
+          {
+            "source": "owlish_fruit2",
+            "seconds": [
+              0,
+              0.4
+            ],
+            "speed": 1.0,
+            "highpass": 120,
+            "lowpass": 8500
+          },
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              1.58,
+              1.85
+            ],
+            "speed": 1.6,
+            "level_db": -26
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "e0fbe22f34129363dbe38449171d6b6b333844c449552dc138ba2bae8363b1b2",
+      "frames": 12667,
+      "duration_seconds": 0.28723356009070294,
+      "peak_dbfs": -5.375088797272051,
+      "rms_dbfs": -24.000262557579962,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "paint.splash.06",
+      "cue_id": "paint.splash",
+      "tier": 1,
+      "description": "Short tactile wet impact; separate source take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_splash_06.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge",
+        "owlish_fruit3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "paint.splash.06",
+        "cue_id": "paint.splash",
+        "tier": 1,
+        "description": "Short tactile wet impact; separate source take.",
+        "layers": [
+          {
+            "source": "owlish_fruit3",
+            "seconds": [
+              0,
+              0.41
+            ],
+            "speed": 1.0,
+            "highpass": 120,
+            "lowpass": 8500
+          },
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              4.3,
+              4.57
+            ],
+            "speed": 1.6,
+            "level_db": -26
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "d78bf787376495baa6abb45530b3293c77c52e43d5a1688a43d579a63f50db89",
+      "frames": 10396,
+      "duration_seconds": 0.23573696145124717,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -26.7466930599611,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "paint.capture",
+      "cue_id": "paint.capture",
+      "tier": 2,
+      "description": "Wet colour-change plop with a firm small contact.",
+      "path": "game/audio/paint_exe/foley/masters/paint_capture.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_bubbles",
+        "owlish_fruit2"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "paint.capture",
+        "cue_id": "paint.capture",
+        "tier": 2,
+        "description": "Wet colour-change plop with a firm small contact.",
+        "layers": [
+          {
+            "source": "bsb_bubbles",
+            "seconds": [
+              8.43,
+              8.72
+            ],
+            "speed": 1.5
+          },
+          {
+            "source": "owlish_fruit2",
+            "seconds": [
+              0,
+              0.17
+            ],
+            "level_db": -24
+          }
+        ],
+        "rms_db": -24
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "ec1a8fcb10caa774f05f1ecc586eacc4125c5f73ed7151050517b98f07dbcedd",
+      "frames": 8526,
+      "duration_seconds": 0.19333333333333333,
+      "peak_dbfs": -11.57369874699553,
+      "rms_dbfs": -24.000262798972642,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "paint.dud",
+      "cue_id": "paint.dud",
+      "tier": 2,
+      "description": "Small dry impact where liquid cannot take.",
+      "path": "game/audio/paint_exe/foley/masters/paint_dud.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_tap"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "paint.dud",
+        "cue_id": "paint.dud",
+        "tier": 2,
+        "description": "Small dry impact where liquid cannot take.",
+        "layers": [
+          {
+            "source": "owlish_tap",
+            "seconds": [
+              0.1,
+              0.4
+            ],
+            "speed": 1.3,
+            "lowpass": 3500
+          }
+        ],
+        "rms_db": -25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "978f68b31abb80f5375fe4eb6b2ec6ca8b61c9e5770dbedce348b7bd6ca5e502",
+      "frames": 5966,
+      "duration_seconds": 0.13528344671201814,
+      "peak_dbfs": -8.276118989388097,
+      "rms_dbfs": -25.000253641120764,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "paint.impact.sprayer",
+      "cue_id": "paint.impact.sprayer",
+      "tier": 2,
+      "description": "Tool-specific wet contact: sprayer.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_sprayer.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "paint.impact.sprayer",
+        "cue_id": "paint.impact.sprayer",
+        "tier": 2,
+        "description": "Tool-specific wet contact: sprayer.",
+        "layers": [
+          {
+            "source": "bsb_small_splash_3",
+            "seconds": [
+              0,
+              0.56
+            ],
+            "speed": 1.65,
+            "highpass": 120,
+            "lowpass": 9000
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "c523283291f3145a4ca6959438b80568ceac09590ce3a26103a4511d04933baa",
+      "frames": 14053,
+      "duration_seconds": 0.31866213151927436,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -30.07318352900394,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "paint.impact.roller",
+      "cue_id": "paint.impact.roller",
+      "tier": 2,
+      "description": "Tool-specific wet contact: roller.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_roller.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "paint.impact.roller",
+        "cue_id": "paint.impact.roller",
+        "tier": 2,
+        "description": "Tool-specific wet contact: roller.",
+        "layers": [
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              4.25,
+              4.85
+            ],
+            "speed": 0.9,
+            "highpass": 120,
+            "lowpass": 9000
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "c65cc68df7310b3ef6867125973a9be6f5d2f38e84c60388acaa11c54b05dcf9",
+      "frames": 29400,
+      "duration_seconds": 0.6666666666666666,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -33.59885937010192,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "paint.impact.mister",
+      "cue_id": "paint.impact.mister",
+      "tier": 2,
+      "description": "Tool-specific wet contact: mister.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_mister.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_spray"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "paint.impact.mister",
+        "cue_id": "paint.impact.mister",
+        "tier": 2,
+        "description": "Tool-specific wet contact: mister.",
+        "layers": [
+          {
+            "source": "bsb_spray",
+            "seconds": [
+              0.26,
+              0.55
+            ],
+            "speed": 1.5,
+            "highpass": 120,
+            "lowpass": 9000
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "5c12e933daa86e2401030f33fc549a8917b47e8d9c6de9ce49afb40f3241e3d1",
+      "frames": 8526,
+      "duration_seconds": 0.19333333333333333,
+      "peak_dbfs": -9.933324921700423,
+      "rms_dbfs": -24.000260066772636,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "paint.impact.sniper",
+      "cue_id": "paint.impact.sniper",
+      "tier": 2,
+      "description": "Tool-specific wet contact: sniper.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_sniper.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_fruit3"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "paint.impact.sniper",
+        "cue_id": "paint.impact.sniper",
+        "tier": 2,
+        "description": "Tool-specific wet contact: sniper.",
+        "layers": [
+          {
+            "source": "owlish_fruit3",
+            "seconds": [
+              0,
+              0.38
+            ],
+            "speed": 1.25,
+            "highpass": 120,
+            "lowpass": 9000
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "3a936f734c071b1181ffd53ccad1af713fcdc05ee9fff338ad69f33d54a5638e",
+      "frames": 7778,
+      "duration_seconds": 0.1763718820861678,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -26.106010742844134,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "paint.impact.bucket",
+      "cue_id": "paint.impact.bucket",
+      "tier": 2,
+      "description": "Tool-specific wet contact: bucket.",
+      "path": "game/audio/paint_exe/foley/masters/paint_impact_bucket.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_small_splash_1"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "paint.impact.bucket",
+        "cue_id": "paint.impact.bucket",
+        "tier": 2,
+        "description": "Tool-specific wet contact: bucket.",
+        "layers": [
+          {
+            "source": "bsb_small_splash_1",
+            "seconds": [
+              0,
+              1.05
+            ],
+            "speed": 0.88,
+            "highpass": 120,
+            "lowpass": 9000
+          }
+        ],
+        "rms_db": -24,
+        "peak_db": -5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "efe31edc06861609072942b0e3625325cf27db8f013d7b163ae53d9b363c0ed2",
+      "frames": 48586,
+      "duration_seconds": 1.1017233560090702,
+      "peak_dbfs": -5.000377362660108,
+      "rms_dbfs": -27.203366554880503,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "weapon.blocked",
+      "cue_id": "weapon.blocked",
+      "tier": 3,
+      "description": "Dry small mechanism/body tap for cover obstruction.",
+      "path": "game/audio/paint_exe/foley/masters/weapon_blocked.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_plug"
+      ],
+      "recommended_gain": 0.5,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "weapon.blocked",
+        "cue_id": "weapon.blocked",
+        "tier": 3,
+        "description": "Dry small mechanism/body tap for cover obstruction.",
+        "layers": [
+          {
+            "source": "owlish_plug",
+            "seconds": [
+              0,
+              0.16
+            ],
+            "speed": 0.9,
+            "lowpass": 2500
+          }
+        ],
+        "rms_db": -26,
+        "gain": 0.5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "5c026aea9e3d477b699808eb8db6a3ccab5dc48bc6c850c0f4497629419af0cd",
+      "frames": 7120,
+      "duration_seconds": 0.16145124716553289,
+      "peak_dbfs": -11.626102463344818,
+      "rms_dbfs": -26.000292957855578,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "bucket.slosh",
+      "cue_id": "bucket.slosh",
+      "tier": 3,
+      "description": "Quiet foamy liquid shift while carrying a bucket.",
+      "path": "game/audio/paint_exe/foley/masters/bucket_slosh.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sponge"
+      ],
+      "recommended_gain": 0.3,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "bucket.slosh",
+        "cue_id": "bucket.slosh",
+        "tier": 3,
+        "description": "Quiet foamy liquid shift while carrying a bucket.",
+        "layers": [
+          {
+            "source": "bsb_sponge",
+            "seconds": [
+              6.76,
+              7.55
+            ],
+            "speed": 0.85,
+            "lowpass": 3500
+          }
+        ],
+        "rms_db": -30,
+        "gain": 0.3
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "c6900b6ec1683e25cf9cea7c2455dc59ed73b53c333809ee6408b70feea7e6aa",
+      "frames": 40988,
+      "duration_seconds": 0.9294331065759637,
+      "peak_dbfs": -7.5467357694510175,
+      "rms_dbfs": -30.00027135598582,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "tool.drip",
+      "cue_id": "tool.drip",
+      "tier": 3,
+      "description": "Single real drop, nearly off by default.",
+      "path": "game/audio/paint_exe/foley/masters/tool_drip.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_drips"
+      ],
+      "recommended_gain": 0.25,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "tool.drip",
+        "cue_id": "tool.drip",
+        "tier": 3,
+        "description": "Single real drop, nearly off by default.",
+        "layers": [
+          {
+            "source": "bsb_drips",
+            "seconds": [
+              1.51,
+              1.94
+            ],
+            "speed": 1.1,
+            "lowpass": 6000
+          }
+        ],
+        "rms_db": -32,
+        "gain": 0.25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "96b82ba3078dcd4fa1c7df4e7c0b03f8a24f4808de7f824034900eb1dc29afac",
+      "frames": 13123,
+      "duration_seconds": 0.29757369614512474,
+      "peak_dbfs": -12.650542887142384,
+      "rms_dbfs": -32.000243991346764,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "room.sigh",
+      "cue_id": "room.sigh",
+      "tier": 1,
+      "description": "A close recorded human exhale, softened as heard outside the monitor.",
+      "path": "game/audio/paint_exe/foley/masters/room_sigh.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_sigh"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "room.sigh",
+        "cue_id": "room.sigh",
+        "tier": 1,
+        "description": "A close recorded human exhale, softened as heard outside the monitor.",
+        "layers": [
+          {
+            "source": "bsb_sigh",
+            "seconds": [
+              2.0,
+              3.65
+            ],
+            "highpass": 110,
+            "lowpass": 5200
+          }
+        ],
+        "rms_db": -25,
+        "peak_db": -7
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "c81ff28a02606293fe942565aceb570b725ce76eb4cd19c20d3ec5b9a23f84f6",
+      "frames": 72765,
+      "duration_seconds": 1.65,
+      "peak_dbfs": -7.0005506829029605,
+      "rms_dbfs": -26.68367299751724,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "room.chair",
+      "cue_id": "room.chair",
+      "tier": 1,
+      "description": "A real chair creak plus a restrained chair movement contact.",
+      "path": "game/audio/paint_exe/foley/masters/room_chair.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_chair",
+        "unkleceeg_chair_creak"
+      ],
+      "recommended_gain": 1.0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "room.chair",
+        "cue_id": "room.chair",
+        "tier": 1,
+        "description": "A real chair creak plus a restrained chair movement contact.",
+        "layers": [
+          {
+            "source": "unkleceeg_chair_creak",
+            "seconds": [
+              7.9,
+              9.35
+            ],
+            "highpass": 100,
+            "lowpass": 5000
+          },
+          {
+            "source": "bsb_chair",
+            "seconds": [
+              5.45,
+              5.95
+            ],
+            "highpass": 100,
+            "lowpass": 1800,
+            "level_db": -28
+          }
+        ],
+        "rms_db": -26,
+        "peak_db": -7
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "864b69adf8d132d67380c05de6cc4b9f3c81372ac149ca74ae664ca6675419ec",
+      "frames": 44906,
+      "duration_seconds": 1.0182766439909297,
+      "peak_dbfs": -7.0005506829029605,
+      "rms_dbfs": -28.064786628299125,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "room.tone",
+      "cue_id": "room.tone",
+      "tier": 2,
+      "description": "Quiet recorded desktop-computer fan; dual mono preserves the source spatial image.",
+      "path": "game/audio/paint_exe/foley/masters/room_tone.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_pc_fan"
+      ],
+      "recommended_gain": 0.65,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "room.tone",
+        "cue_id": "room.tone",
+        "tier": 2,
+        "description": "Quiet recorded desktop-computer fan; dual mono preserves the source spatial image.",
+        "layers": [
+          {
+            "source": "bsb_pc_fan",
+            "seconds": [
+              0.3,
+              9.2
+            ],
+            "highpass": 80,
+            "lowpass": 4000
+          }
+        ],
+        "loop": true,
+        "crossfade": 0.45,
+        "rms_db": -37,
+        "peak_db": -18,
+        "channels": 2,
+        "gain": 0.65
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; continuous overlap loop and smpl region",
+      "export": "PCM signed 16-bit little-endian 2-channel WAV, 44100 Hz",
+      "sha256": "ca5f50789176139b115a6f2ef580184c7c25f411a838d57ab6208e0a691f7d4b",
+      "frames": 372645,
+      "duration_seconds": 8.45,
+      "peak_dbfs": -25.403681910045137,
+      "rms_dbfs": -37.000242847179734,
+      "loop_start": 0,
+      "loop_end_inclusive": 372644,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "room.footsteps",
+      "cue_id": "room.footsteps",
+      "tier": 3,
+      "description": "Two soft physical room steps, receding in level.",
+      "path": "game/audio/paint_exe/foley/masters/room_footsteps.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_footstep1",
+        "owlish_footstep2"
+      ],
+      "recommended_gain": 0.5,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "room.footsteps",
+        "cue_id": "room.footsteps",
+        "tier": 3,
+        "description": "Two soft physical room steps, receding in level.",
+        "layers": [
+          {
+            "source": "owlish_footstep1",
+            "seconds": [
+              0,
+              0.39
+            ],
+            "lowpass": 2800
+          },
+          {
+            "source": "owlish_footstep2",
+            "seconds": [
+              0,
+              0.38
+            ],
+            "lowpass": 2300,
+            "level_db": -22,
+            "offset": 0.45
+          }
+        ],
+        "rms_db": -29,
+        "gain": 0.5
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "3779663e839fa091573e91e1a9abeec97aafe82b9749389e0c54c8bab1e8bb09",
+      "frames": 28679,
+      "duration_seconds": 0.6503174603174603,
+      "peak_dbfs": -7.511416971169629,
+      "rms_dbfs": -29.000279307149647,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "room.breath",
+      "cue_id": "room.breath",
+      "tier": 3,
+      "description": "One understated recorded human breath.",
+      "path": "game/audio/paint_exe/foley/masters/room_breath.wav",
+      "loop": false,
+      "source_ids": [
+        "owlish_breath"
+      ],
+      "recommended_gain": 0.4,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "room.breath",
+        "cue_id": "room.breath",
+        "tier": 3,
+        "description": "One understated recorded human breath.",
+        "layers": [
+          {
+            "source": "owlish_breath",
+            "seconds": [
+              0.8,
+              1.6
+            ],
+            "highpass": 120,
+            "lowpass": 4000
+          }
+        ],
+        "rms_db": -32,
+        "gain": 0.4
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "18716d2e505a1e904fe098678dc0d240d1bbe4f5074c78631f7d24871ef93b44",
+      "frames": 35280,
+      "duration_seconds": 0.8,
+      "peak_dbfs": -14.337366804623404,
+      "rms_dbfs": -32.000267827672346,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "world.ambience.close_quarters",
+      "cue_id": "world.ambience.close_quarters",
+      "tier": 3,
+      "description": "Quiet nearby room fan; optional decorative bed.",
+      "path": "game/audio/paint_exe/foley/masters/world_ambience_close_quarters.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_fan"
+      ],
+      "recommended_gain": 0.25,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "world.ambience.close_quarters",
+        "cue_id": "world.ambience.close_quarters",
+        "tier": 3,
+        "description": "Quiet nearby room fan; optional decorative bed.",
+        "layers": [
+          {
+            "source": "bsb_fan",
+            "seconds": [
+              0.1,
+              9.1
+            ],
+            "highpass": 100,
+            "lowpass": 3000
+          }
+        ],
+        "loop": true,
+        "crossfade": 0.4,
+        "rms_db": -40,
+        "peak_db": -22,
+        "gain": 0.25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; continuous overlap loop and smpl region",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "72c7ce570338646c346c49c25dbfd94173cf442275d87e8d5e5fd9c06e12f484",
+      "frames": 379260,
+      "duration_seconds": 8.6,
+      "peak_dbfs": -25.730730579300598,
+      "rms_dbfs": -40.000268866029174,
+      "loop_start": 0,
+      "loop_end_inclusive": 379259,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "world.ambience.king_of_the_hill",
+      "cue_id": "world.ambience.king_of_the_hill",
+      "tier": 3,
+      "description": "Muffled air extractor in a larger distant room.",
+      "path": "game/audio/paint_exe/foley/masters/world_ambience_king_of_the_hill.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_extractor"
+      ],
+      "recommended_gain": 0.25,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "world.ambience.king_of_the_hill",
+        "cue_id": "world.ambience.king_of_the_hill",
+        "tier": 3,
+        "description": "Muffled air extractor in a larger distant room.",
+        "layers": [
+          {
+            "source": "bsb_extractor",
+            "seconds": [
+              2,
+              12
+            ],
+            "highpass": 65,
+            "lowpass": 1400
+          }
+        ],
+        "loop": true,
+        "crossfade": 0.5,
+        "rms_db": -40,
+        "peak_db": -22,
+        "gain": 0.25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; continuous overlap loop and smpl region",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "ea75daf9d4c9664f3f7c75551291d1a20fb8986e88f92b4fe6c931ef9ab37282",
+      "frames": 418950,
+      "duration_seconds": 9.5,
+      "peak_dbfs": -27.380235993478866,
+      "rms_dbfs": -40.00025778068819,
+      "loop_start": 0,
+      "loop_end_inclusive": 418949,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "world.ambience.turbulence",
+      "cue_id": "world.ambience.turbulence",
+      "tier": 3,
+      "description": "Higher air-extractor texture for the elevated arena.",
+      "path": "game/audio/paint_exe/foley/masters/world_ambience_turbulence.wav",
+      "loop": true,
+      "source_ids": [
+        "bsb_extractor"
+      ],
+      "recommended_gain": 0.25,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "world.ambience.turbulence",
+        "cue_id": "world.ambience.turbulence",
+        "tier": 3,
+        "description": "Higher air-extractor texture for the elevated arena.",
+        "layers": [
+          {
+            "source": "bsb_extractor",
+            "seconds": [
+              10,
+              20
+            ],
+            "highpass": 200,
+            "lowpass": 5500
+          }
+        ],
+        "loop": true,
+        "crossfade": 0.5,
+        "rms_db": -40,
+        "peak_db": -22,
+        "gain": 0.25
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; continuous overlap loop and smpl region",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "45051e4b21fa048d96e6834f26f442ff14ca10818b0874a5d4bf392a28248fe5",
+      "frames": 418950,
+      "duration_seconds": 9.5,
+      "peak_dbfs": -27.07565045043964,
+      "rms_dbfs": -40.000274697274065,
+      "loop_start": 0,
+      "loop_end_inclusive": 418949,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    },
+    {
+      "id": "world.detail",
+      "cue_id": "world.detail",
+      "tier": 3,
+      "description": "An occasional real pipe-like droplet; off by default.",
+      "path": "game/audio/paint_exe/foley/masters/world_detail.wav",
+      "loop": false,
+      "source_ids": [
+        "bsb_drips"
+      ],
+      "recommended_gain": 0,
+      "production_source": "game/audio/paint_exe/foley/recipes.json",
+      "creator": "ColourWars edit from credited recordings",
+      "license": "CC0-1.0",
+      "release_use": true,
+      "redistribution": true,
+      "attribution": "None required; creators credited voluntarily in sources.json",
+      "obtained": "2026-10-14",
+      "recipe": {
+        "id": "world.detail",
+        "cue_id": "world.detail",
+        "tier": 3,
+        "description": "An occasional real pipe-like droplet; off by default.",
+        "layers": [
+          {
+            "source": "bsb_drips",
+            "seconds": [
+              7.48,
+              7.94
+            ],
+            "speed": 0.9,
+            "lowpass": 4000
+          }
+        ],
+        "rms_db": -33,
+        "gain": 0,
+        "trim_final_tail_dbfs": -60
+      },
+      "modifications": "Mono fold-down, source-time excerpt, recorded-layer mix, speed/filter edits as listed, DC removal, polyphase resampling, RMS/peak mastering; onset trim and short edge fades",
+      "export": "PCM signed 16-bit little-endian 1-channel WAV, 44100 Hz",
+      "sha256": "3018478d708985e9b2e043ab4c932d3e1691e5459495f64271b32d2518bcb340",
+      "frames": 14924,
+      "duration_seconds": 0.3384126984126984,
+      "peak_dbfs": -11.368170594089953,
+      "rms_dbfs": -32.469337185571526,
+      "loop_start": null,
+      "loop_end_inclusive": null,
+      "review_status": "Candidate: technical checks passed; author listening and multiplayer acceptance pending"
+    }
+  ]
+}

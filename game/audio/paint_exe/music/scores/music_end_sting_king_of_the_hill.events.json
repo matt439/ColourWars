@@ -1,0 +1,85 @@
+{
+  "sample_rate": 44100,
+  "events": [
+    {
+      "frame": 0,
+      "role": "melody",
+      "note": "A4",
+      "gain": 0.1,
+      "pan": -0.15,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 827,
+      "role": "melody",
+      "note": "C5",
+      "gain": 0.1,
+      "pan": 0.0,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 1654,
+      "role": "melody",
+      "note": "F#5",
+      "gain": 0.1,
+      "pan": 0.15,
+      "source_id": "music.vcsl.piano_G4"
+    },
+    {
+      "frame": 10631,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.18,
+      "pan": -0.15,
+      "source_id": "music.ukulele.G4"
+    },
+    {
+      "frame": 11458,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.18,
+      "pan": 0.0,
+      "source_id": "music.ukulele.B4"
+    },
+    {
+      "frame": 12285,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.18,
+      "pan": 0.15,
+      "source_id": "music.ukulele.C#5"
+    },
+    {
+      "frame": 10631,
+      "role": "melody",
+      "note": "G4",
+      "gain": 0.11,
+      "pan": -0.15,
+      "source_id": "music.vcsl.piano_G3"
+    },
+    {
+      "frame": 11458,
+      "role": "melody",
+      "note": "B4",
+      "gain": 0.11,
+      "pan": 0.0,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 12285,
+      "role": "melody",
+      "note": "D5",
+      "gain": 0.11,
+      "pan": 0.15,
+      "source_id": "music.vcsl.piano_C4"
+    },
+    {
+      "frame": 10849,
+      "role": "percussion",
+      "note": null,
+      "gain": 0.10602,
+      "pan": 0.1,
+      "source_id": "music.ukulele.body_tap"
+    }
+  ]
+}

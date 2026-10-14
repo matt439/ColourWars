@@ -1,0 +1,428 @@
+{
+  "version": 1,
+  "cues": [
+    {
+      "id": "ui.move",
+      "cue_id": "ui.move",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/ui.move.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse"
+      ],
+      "description": "One dry mouse switch tick; restrained for repeated navigation.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "1538a1fb95fef9810e37915d0bf469080b8a82b374b124e922f72727caa84c58"
+    },
+    {
+      "id": "ui.confirm",
+      "cue_id": "ui.confirm",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/ui.confirm.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse",
+        "music.ukulele.C4"
+      ],
+      "description": "Mouse switch and an upward two-note ukulele answer.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "d0af2c59acde686d55b303d264ee3d2b6a77a8ab98b88a9514cc73d794600f54"
+    },
+    {
+      "id": "ui.cancel",
+      "cue_id": "ui.cancel",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/ui.cancel.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse"
+      ],
+      "description": "Lower double switch moving back; short and dry.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "81582253ea91f6c68117a7f1d11ebf72972d57e723850aaeae8d9a4dafd980e9"
+    },
+    {
+      "id": "ui.error",
+      "cue_id": "ui.error",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/ui.error.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.body_tap"
+      ],
+      "description": "Three muffled wooden taps; a refusal without a harsh alarm.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "b83f757fea84bffd1cbc72d39d2c872957322dd18d2c7e668f78abc07a3ba189"
+    },
+    {
+      "id": "ui.ready",
+      "cue_id": "ui.ready",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/ui.ready.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse",
+        "music.ukulele.C4"
+      ],
+      "description": "Physical switch followed by a bright three-note acoustic lift.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "64c247c29add2ab6f3fc85eb51972e34511bf2a037b05eae0887cc4bec29e8c7"
+    },
+    {
+      "id": "ui.pause_open",
+      "cue_id": "ui.pause_open",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/ui.pause_open.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "music.ukulele.body_tap"
+      ],
+      "description": "Paper fold and damped wood tap, separate from confirm.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "cc817560101f4c195276538d6649bc2d3e48ad51fefaa0bbb4eb9be8dfc5473d"
+    },
+    {
+      "id": "ui.unready",
+      "cue_id": "ui.unready",
+      "tier": 3,
+      "path": "game/audio/paint_exe/interface/waves/ui.unready.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse",
+        "music.ukulele.C4"
+      ],
+      "description": "Two downward plucks and a releasing switch.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "a84ece6f190eb37fa97d17d71ba03a61ee2898b395e92c2e8a67e0cc16e0c3f0"
+    },
+    {
+      "id": "ui.pad_lost",
+      "cue_id": "ui.pad_lost",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/ui.pad_lost.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.body_tap"
+      ],
+      "description": "Two hollow low knocks distinguish disconnection from menu refusal.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "1cd107a7e698f6cc9d408e5f723600145b920bfaa89a69c0bc1c0fc0132e5fd4"
+    },
+    {
+      "id": "ui.pad_back",
+      "cue_id": "ui.pad_back",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/ui.pad_back.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.ukulele.body_tap"
+      ],
+      "description": "Two raised knocks resolve upward when a controller returns.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "698abd29a39abfa9ea47b69c6c2bd90c71ead77d1b1c8b32f93d98cf7a1667ad"
+    },
+    {
+      "id": "ui.volume_preview",
+      "cue_id": "ui.volume_preview",
+      "tier": 3,
+      "path": "game/audio/paint_exe/interface/waves/ui.volume_preview.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "music.ukulele.C4",
+        "music.ukulele.body_tap"
+      ],
+      "description": "Compact wood, pluck and paper sample covers useful SFX frequencies.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "c02ff58f218c4bb715123c9f3c75203045a97ec4a70c618e9786650c41294895"
+    },
+    {
+      "id": "match.count_beat",
+      "cue_id": "match.count_beat",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.count_beat.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.ukulele.body_tap"
+      ],
+      "description": "A single wooden count beat with a muted acoustic pitch.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "cb862eb8958570b4f5446b978ca00088d1ce2a442ff1dcdef6328b65aef36919"
+    },
+    {
+      "id": "ui.count_in",
+      "cue_id": "ui.count_in",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/ui.count_in.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.ukulele.body_tap"
+      ],
+      "description": "The same count beat as match.count_beat, as specified for resume.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "cb862eb8958570b4f5446b978ca00088d1ce2a442ff1dcdef6328b65aef36919"
+    },
+    {
+      "id": "match.go",
+      "cue_id": "match.go",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.go.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.vcsl.clap_1"
+      ],
+      "description": "Clap and rising ukulele triad mark the playable edge.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "99a3326b1fb7868130d28898c4fb84041941a6034ea9e4023fbc221ead9a36b5"
+    },
+    {
+      "id": "match.time_up",
+      "cue_id": "match.time_up",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.time_up.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.vcsl.cajon_low_1"
+      ],
+      "description": "Falling two-hit wooden punctuation; under two seconds.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "a2843e352fb09964addedd2e72fcefa418a070420def7595c7f8b40e5b5cfa9e"
+    },
+    {
+      "id": "match.glass_out",
+      "cue_id": "match.glass_out",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.glass_out.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "music.ukulele.body_tap"
+      ],
+      "description": "Lowered paper flutter and muffled body knock pull through the glass.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "d23c42729810d65dc77886d66c7cb3715bf0eab6b7c5b22ca13c5cf9ff2cb2b7"
+    },
+    {
+      "id": "match.glass_in",
+      "cue_id": "match.glass_in",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/match.glass_in.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "music.ukulele.body_tap"
+      ],
+      "description": "Reversed paper lift with a soft landing knock crosses into the picture.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "5795288bd0918645aaa631caec91201baf3bdc6e3ac20443fa8a10e1c49e3edc"
+    },
+    {
+      "id": "match.reveal_hover",
+      "cue_id": "match.reveal_hover",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.reveal_hover.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse"
+      ],
+      "description": "Single tiny recorded switch distinct from menu motion.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "5395bfbd7a8130604fbe553ef7bb25c183da94622d146b5555042009e61c6533"
+    },
+    {
+      "id": "match.reveal_click",
+      "cue_id": "match.reveal_click",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.reveal_click.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse"
+      ],
+      "description": "Firm double mouse switch seals the chosen colour.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "78ffa066389cb1f4aae43862bc92f28ea423cba51a6c0a25f2b62120d8fef81b"
+    },
+    {
+      "id": "match.reveal_close",
+      "cue_id": "match.reveal_close",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/match.reveal_close.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "interface.owlish.mouse"
+      ],
+      "description": "Downward paper fold and low releasing switch close a drawn match.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "5f2cad2ad5549a985b5bda8417516cb9d1e5d2fd3fdb9cb6450126536a30adbf"
+    },
+    {
+      "id": "match.celebrate",
+      "cue_id": "match.celebrate",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.celebrate.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.vcsl.clap_1"
+      ],
+      "description": "Hand claps and cheerful acoustic strum after the person leaves.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "33e40aa5c0b4ae9e6da4bd5b3db9fcd5ed699bc90656ff75261d46d3976475e4"
+    },
+    {
+      "id": "match.slump",
+      "cue_id": "match.slump",
+      "tier": 1,
+      "path": "game/audio/paint_exe/interface/waves/match.slump.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "music.ukulele.C4"
+      ],
+      "description": "Paper flump and a muted falling pluck, with no pain vocal.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "0aceeded3f011a11d055c68a4052066cb73f658f3436c73c2d14a7d6a5ac0a3e"
+    },
+    {
+      "id": "match.colour_in",
+      "cue_id": "match.colour_in",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/match.colour_in.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "music.ukulele.C4"
+      ],
+      "description": "Paper unfurls into a short bright acoustic chord.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "c3919a54ec076def6874e2e3d83461d073774006988c5a46eef5098c402d8f11"
+    },
+    {
+      "id": "match.skip",
+      "cue_id": "match.skip",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/match.skip.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse"
+      ],
+      "description": "Two crisp switch ticks for the skipped opening.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "c60d54cd60849d814ffd7c8ea0a8d27c1e079dfc4e18ca72593e68644a9bfc43"
+    },
+    {
+      "id": "match.undo",
+      "cue_id": "match.undo",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/match.undo.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip",
+        "interface.owlish.mouse"
+      ],
+      "description": "Quiet reverse paper tick and mouse release for the person undoing colour.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "ba5c621ba7fb8860d0c437a469aa198e5d290c3b5a1431bfe9177583a5026e2e"
+    },
+    {
+      "id": "match.last_ten",
+      "cue_id": "match.last_ten",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/match.last_ten.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.body_tap"
+      ],
+      "description": "Short unpitched body tap; conveys time only, never team or score.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "47fb4662d4858f955f58cf1f3063613abb642e07bf34ee1a04f08c0f20c01f64"
+    },
+    {
+      "id": "match.waver",
+      "cue_id": "match.waver",
+      "tier": 3,
+      "path": "game/audio/paint_exe/interface/waves/match.waver.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.mouse"
+      ],
+      "description": "Nearly inaudible mouse wheel fragment; optional decorative cursor hesitation.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "3daf40aa8b4f065fbc72d886c479a56688980f4d0a51bba0e6f42c016d7b6ef6"
+    },
+    {
+      "id": "match.cheat",
+      "cue_id": "match.cheat",
+      "tier": 3,
+      "path": "game/audio/paint_exe/interface/waves/match.cheat.wav",
+      "loop": false,
+      "source_ids": [
+        "interface.owlish.flip"
+      ],
+      "description": "Tiny paper rustle for the frozen figures cheating; optional and very quiet.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "28a0499d2e7808659de994dc842082779d10dda049e94776073e4ed2522ae6e0"
+    },
+    {
+      "id": "results.fill",
+      "cue_id": "results.fill",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/results.fill.wav",
+      "loop": true,
+      "source_ids": [
+        "music.ukulele.body_tap"
+      ],
+      "description": "Light cycling hand percussion for the non-reveal percentage fill.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "4e5659345aa55eafd630c62fbad0c2ecac556dbe7014b9e244f8958521f3b563"
+    },
+    {
+      "id": "results.winner",
+      "cue_id": "results.winner",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/results.winner.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.vcsl.clap_1"
+      ],
+      "description": "Short acoustic major cadence with a hand clap.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "59817997c3176faa680a8266fa83653ad037fae966a1590cc2475a558f406d3c"
+    },
+    {
+      "id": "results.draw",
+      "cue_id": "results.draw",
+      "tier": 2,
+      "path": "game/audio/paint_exe/interface/waves/results.draw.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4"
+      ],
+      "description": "Unresolved open fifth; no winner fanfare on a tie.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "51d44300d30135d3e902a886b947561e01b811da9a2499dfbc899cedc954a827"
+    },
+    {
+      "id": "end.series",
+      "cue_id": "end.series",
+      "tier": 3,
+      "path": "game/audio/paint_exe/interface/waves/end.series.wav",
+      "loop": false,
+      "source_ids": [
+        "music.ukulele.C4",
+        "music.vcsl.clap_1"
+      ],
+      "description": "A fuller acoustic cadence celebrates the completed series.",
+      "production_source": "game/audio/paint_exe/interface/project.json",
+      "sha256": "92ea6a4b7cf883b3ec95b998e1dd91d8c3ce56bf6e25653d76536f422976d09b"
+    }
+  ]
+}
