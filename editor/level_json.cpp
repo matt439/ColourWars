@@ -251,11 +251,15 @@ namespace colourwars_editor
             validate_display_name(string(document, "display_name"));
             if (string(document, "icon_frame").empty()) { fail("The level needs an icon frame."); }
             const Json& sound = member(document, "sound");
-            if (string(sound, "sound_bank_name").empty() || string(sound, "music_name").empty())
+            if (string(sound, "sound_bank_name").empty()) { fail("The level needs a sound bank."); }
+            // Music is optional as a pair; a stage with neither is silent.
+            const bool named = sound.HasMember("music_name");
+            if (named != sound.HasMember("music_volume"))
             {
-                fail("The level needs a sound bank and music name.");
+                fail("Music name and music volume come together, or neither for a silent stage.");
             }
-            if (number(sound, "music_volume") < 0.0) { fail("Music volume must not be negative."); }
+            if (named && string(sound, "music_name").empty()) { fail("The music name must not be empty."); }
+            if (named && number(sound, "music_volume") < 0.0) { fail("Music volume must not be negative."); }
             const Json& bounds = member(document, "level_bounds");
             for (const char* name : bounds_names) { plain_rectangle(member(bounds, name)); }
             const Rect arena = plain_rectangle(member(bounds, "out_of_bounds"));

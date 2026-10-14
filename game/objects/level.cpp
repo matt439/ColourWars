@@ -61,7 +61,11 @@ Level::Level(std::unique_ptr<Scene> scene,
 		render_resources, &presentation->hud());
 	this->sound_bank_ = audio_resources->sound_bank(sound_bank_name);
 
-	this->music_ = this->sound_bank_->resolve_effect(music_name);
+	// A silent stage leaves music_ unresolved; every music call checks it.
+	if (!music_name.empty())
+	{
+		this->music_ = this->sound_bank_->resolve_effect(music_name);
+	}
 	this->zoom_out_sound_ =
 		this->sound_bank_->resolve_effect(match.zoom_out_sound.name);
 	this->countdown_sound_ =
@@ -90,7 +94,10 @@ Level::Level(std::unique_ptr<Scene> scene,
 
 Level::~Level()
 {
-	this->sound_bank_->stop_effect(this->music_, true);
+	if (this->music_.valid())
+	{
+		this->sound_bank_->stop_effect(this->music_, true);
+	}
 	this->sound_bank_->stop_effect(this->zoom_out_sound_, true);
 	this->stop_player_sounds();
 }
@@ -106,18 +113,24 @@ void Level::suspend() const
 
 void Level::pause_audio() const
 {
-	this->sound_bank_->pause_effect(this->music_);
+	if (this->music_.valid())
+	{
+		this->sound_bank_->pause_effect(this->music_);
+	}
 	this->sound_bank_->pause_effect(this->zoom_out_sound_);
 	this->pause_player_sounds();
 }
 
 void Level::resume() const
 {
-	this->sound_bank_->set_effect_volume(this->music_,
-		this->music_volume_ * this->preferences_->music_gain());
+	if (this->music_.valid())
+	{
+		this->sound_bank_->set_effect_volume(this->music_,
+			this->music_volume_ * this->preferences_->music_gain());
+		this->sound_bank_->resume_effect(this->music_);
+	}
 	this->sound_bank_->set_effect_volume(this->zoom_out_sound_,
 		this->tuning_->match().zoom_out_sound.volume * this->preferences_->sfx_gain());
-	this->sound_bank_->resume_effect(this->music_);
 	this->sound_bank_->resume_effect(this->zoom_out_sound_);
 	this->resume_player_sounds();
 }
@@ -151,7 +164,10 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 	{
 		if (this->start_timer_ >= this->tuning_->match().countdown)
 		{
-			this->sound_bank_->play_effect(this->music_, true, this->music_volume_ * this->preferences_->music_gain());
+			if (this->music_.valid())
+			{
+				this->sound_bank_->play_effect(this->music_, true, this->music_volume_ * this->preferences_->music_gain());
+			}
 			this->sound_bank_->play_wave(this->countdown_sound_,
 				this->tuning_->match().countdown_sound.volume * this->preferences_->sfx_gain());
 		}
@@ -189,7 +205,10 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			// already renders the newly entered state this frame.
 			this->zoom_out_camera_ = this->zoom_out_start_camera_;
 
-			this->sound_bank_->stop_effect(this->music_, true);
+			if (this->music_.valid())
+			{
+				this->sound_bank_->stop_effect(this->music_, true);
+			}
 			this->stop_player_sounds();
 			this->sound_bank_->play_effect(this->zoom_out_sound_, false,
 				this->tuning_->match().zoom_out_sound.volume * this->preferences_->sfx_gain());

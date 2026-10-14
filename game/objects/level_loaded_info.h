@@ -54,6 +54,9 @@ public:
 	labrador::JsonValue non_collision_objects_json() const;
 
 	std::string sound_bank_name() const;
+	// A stage may leave out music_name and music_volume together: it is silent.
+	bool has_music() const;
+	// Empty and 0 for a silent stage.
 	std::string music_name() const;
 	float music_volume() const;
 

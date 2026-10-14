@@ -61,7 +61,7 @@ retired.
 | 3 | `DeathImpactYellSingle` (:7) | 0.569 s | `player.sounds.death` (`tuning.json:101`), played on the alive-to-dead edge at `player.cpp:467` | W | Replace with `player.pop` (`STORY#1`). Map it to `death`, not to `respawn`: `backstory.md:78` puts the pop "as the paint comes off", and `TODO.md:36` calls it the "Respawn pop" only loosely |
 | 4 | `dragostea_din_tei` (:8) | 214.1 s, 37.8 MB | King of the Hill music, `levels/king_of_the_hill.json:7`. It is also the music for three unloaded stages: `levels/unused/base.json:6`, `levels/unused/structure_test_old.json:6` and `levels/unused/test_1.json:6` | L (music) | Retire (commercial track). Replace with `music.king_of_the_hill`. Remove the three unused references, or the stages themselves (`GAP#8.6`) |
 | 5 | `DrumRoll` (:9) | 4.888 s | `results_menu.sounds.fill` (`presentation.json:192`). Looped at `results_menu.cpp:319` only when no reveal ran; stopped at :39 and :63 | L | Replace with `results.fill`. That path runs only in solo practice or debug ([trap 4](#33-traps-a-replacement-must-know)) |
-| 6 | `holly_dolly` (:10) | 174.5 s, 30.8 MB | Close Quarters music, `levels/close_quarters.json:7`. Movement Course music at volume 0.0, `levels/movement_course.json:13-14` (`ED#6`). The editor's new-level default, `editor/level_document.cpp:212` | L (music) | Retire (commercial track). Replace with `music.close_quarters`. Movement Course gets `music.movement_course`, or an explicit no-music decision. Change the editor default in the same commit |
+| 6 | `holly_dolly` (:10) | 174.5 s, 30.8 MB | Close Quarters music, `levels/close_quarters.json:7`. Movement Course music at volume 0.0 until 2026-10-14, when the stage became silent. The editor's new-level default, `editor/level_document.cpp:212` | L (music) | Retire (commercial track). Replace with `music.close_quarters`. Change the editor default in the same commit |
 | 7 | `LaserGun` (:11) | 0.307 s | `weapons.bucket.shoot_sound` (`tuning.json:204`), played once per throw at `weapon_bucket.cpp:29-35` | W | Replace with `bucket.throw` |
 | 8 | `party_horn` (:12) | 1.045 s | `results_menu.sounds.winner` (`presentation.json:191`), played once at `results_menu.cpp:64`, and on a draw too | W | Replace with `results.winner` and `results.draw` |
 | 9 | `slide_whistle_up` (:13) | 1.992 s | `match.sounds.zoom_out` (`tuning.json:28`). Started at time-up (`level.cpp:194-195`), hard-stopped when `match.zoom_out` (2.0 s, `tuning.json:5`) ends (`level.cpp:207`). Paused and resumed with the level (`level.cpp:107-122`) | E | Replace with `match.time_up` and `match.glass_out` |
@@ -106,7 +106,7 @@ weapon would be enough. Changing that is a schema decision, because
 | `XWBTool.exe` | `game/content/sounds/sound_bank_1/` (tracked; MIT, `NOTICE:31`) | The bank compiler | Keep, unless `POL#22` changes the tool. It moves with the bank folder if the bank is renamed |
 | `sound_bank_1.xwb`, local and staged | `game/content/sounds/`, `out/build/x64-debug/game/sounds/`, `out/build/x64-release/game/sounds/` (all identical) | The built legacy bank | Retire. Delete all three before the first replacement build, because when sources are missing the recipe reuses a bank that is not older than its definition (`build_wave_bank.cmake:17-23`) |
 | Music in `levels/unused/` | `base.json:6`, `structure_test_old.json:6`, `test_1.json:6`. `level_0.json` has no `sound` block and could not load | Unloaded stages | Retire with the stages, or point them at the new music (`GAP#8.6`) |
-| Movement Course placeholder note | `levels/movement_course.json:6`: "Music is muted while the replacement-audio work is pending; the schema still resolves its existing wave name." | A `_comment` string that names the legacy situation | Retire. Rewrite or delete it in the commit that settles `music.movement_course` (`ED#6`) |
+| Movement Course placeholder note | `levels/movement_course.json:6` | Said the music was muted pending replacement | Retired 2026-10-14: the note now says the stage is deliberately silent |
 | Review fixtures named after the legacy set | `out/review-2026-09-26-data/` (git-ignored, `.gitignore:374`): 24 placeholder waves of 8,864 B each under `authored/sounds/sound_bank_1/`, a 213,460 B `package/ColourWars-windows-x64/sounds/sound_bank_1.xwb`, a 22 B `bank-fix-trlmi5xc/stage/another_private_bank.xwb`, and five `sound_bank_1.json` files (two of 1,821 B, two of 1,802 B and a 28 B stub) | Synthetic stand-ins from the 2026-09-26 review's packaging checks. They are not the legacy audio (the `.xwb` differs from the real bank from byte 25), but they carry the legacy file names | Retire (delete the folder) before `POL#23`, so that no stray file named `sound_bank_1.xwb` or `WaterSplashing.wav` can be mistaken for, or copied into, the replacement set |
 | Release ZIPs already built | `out/build/x64-release/packages/ColourWars-windows-x64.zip` and the `out/validation/*/…/ColourWars-windows-x64/sounds/` trees | Checked: they hold only `sound_bank_1.json`, no `.xwb` or `.wav` | Nothing to retire. They are rebuilt by `POL#23`; the CI ZIP check (`ci.yml:90-92`) keeps guarding them until it is changed |
 
@@ -170,7 +170,7 @@ editor default.
 | | `main_menu.sounds.error/ready` (:113-114) | wave | `main_menu.cpp:15-16` | `presentation.cpp:845-846` |
 | | `pause_menu.window_open_sound` (:145) | wave | `pause_menu.cpp:67-68` | `presentation.cpp:848` |
 | | `results_menu.sounds.winner/fill` (:191-192) | wave / effect | `results_menu.cpp:15-16` | `presentation.cpp:849-850` |
-| `levels/*.json` | `sound.sound_bank_name`, `music_name`, `music_volume` (`close_quarters.json:6-8`, `king_of_the_hill.json:6-8`, `turbulence.json:6-8`, `movement_course.json:12-14`) | effect | read at `level_loaded_info.cpp:255-266`, passed through `level_builder.cpp:97-99`, resolved at `level.cpp:62-64` | `level_loaded_info.cpp:170-179` |
+| `levels/*.json` | `sound.sound_bank_name`, `music_name`, `music_volume` (`close_quarters.json:6-8`, `king_of_the_hill.json:6-8`, `turbulence.json:6-8`; `movement_course.json` names only the bank). `music_name` and `music_volume` are optional as a pair: a stage with neither is silent | effect | read at `level_loaded_info.cpp:255-266`, passed through `level_builder.cpp:97-99`, resolved at `level.cpp:62-64` | `level_loaded_info.cpp:170-179` |
 | `sound_bank_1.json` | `waves` (:4-27), `sound_effect_instances` (:30-127) | the bank | `sound_bank_loader.cpp:50-97` | |
 | `editor/level_document.cpp:212` | new-level `sound` block (`holly_dolly`, 0.3) | written into new stages | | `editor/level_json.cpp:253-258` checks only that the names are non-empty (`ED#3`) |
 
@@ -238,9 +238,11 @@ cue fails only on a machine that has the real bank.
    ready and pause-open are plain strings (`presentation.h:71-73, 171-172,
    186`) and always play at 1.0 × SFX. Their gain must be built into the
    wave, or the schema must change (`GAP#8.2`).
-7. **A stage cannot leave out music.** `level_loaded_info.cpp:34-36` requires
-   the `sound` block. "No music" for the Movement Course needs either a schema
-   change or a silent cue.
+7. **A stage needs its `sound` block for the bank, but not music.** Since
+   2026-10-14 `music_name` and `music_volume` may be left out together, and the
+   stage is silent (`LevelLoadedInfo::has_music`; `Level` leaves `music_`
+   unresolved and checks it at every call). The Movement Course is the one
+   silent stage. The level editor accepts the same rule.
 8. **Things that keep playing when the window loses focus.** Menu music and
    the results fill loop do not pause on focus loss; only minimising does
    (`external/labrador/engine/app/application.cpp:389-403`). In a match,
@@ -290,7 +292,6 @@ detection logic is needed. Every new slot must be added to startup validation
 | `music.close_quarters` | Countdown start (`level.cpp:154`) | yes | exists: level `music_name` | 1 | `holly_dolly` |
 | `music.king_of_the_hill` | as above | yes | exists | 2 | `dragostea_din_tei` |
 | `music.turbulence` | as above | yes | exists | 2 | `caramelldansen` |
-| `music.movement_course` | as above | yes | exists, or an explicit no-music decision (trap 7, `ED#6`) | 2 | `holly_dolly` at volume 0 |
 | `music.results` | Results and end screens | yes or a sting | add: `results_menu.cpp` resolves no music (`GAP#5.1`) | 2 | — |
 | `music.end_sting` | Time-up, instead of the hard stop at `level.cpp:192` | no | add | 2 | — |
 
@@ -505,11 +506,10 @@ Answered by the author on 2026-10-14:
 - **The fourth commercial track is unknown.** NOTICE keeps "four" without naming
   it; both candidates are retired either way.
 
-Still open:
+- **The Movement Course is silent.** It is the movement test stage, where
+  footsteps and landings should be heard alone. Done the same day (trap 7).
 
-- **Whether the Movement Course has music.** It is the movement test stage, not
-  an arena; the recommendation is silence, which needs the stage `sound` block to
-  become optional (trap 7).
+Nothing is still open here.
 
 Not a question, but owed: the pop, sigh and chair-creak recordings (`STORY#1`,
 `STORY#2`), which fill Tier 1 rows above and should follow the accepted direction.

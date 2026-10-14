@@ -170,8 +170,11 @@ void LevelLoadedInfo::validate_content(const LevelObjectBuilder& builder,
 	}
 	try
 	{
-		audio_resources.sound_bank(this->sound_bank_name())->
-			resolve_effect(this->music_name());
+		const SoundBank* bank = audio_resources.sound_bank(this->sound_bank_name());
+		if (this->has_music())
+		{
+			bank->resolve_effect(this->music_name());
+		}
 	}
 	catch (const std::exception& error)
 	{
@@ -256,13 +259,26 @@ std::string LevelLoadedInfo::sound_bank_name() const
 {
 	return this->json_doc_.root().object("sound").string("sound_bank_name");
 }
+bool LevelLoadedInfo::has_music() const
+{
+	const JsonValue sound = this->json_doc_.root().object("sound");
+	const bool named = sound.has("music_name");
+	if (named != sound.has("music_volume"))
+	{
+		throw std::runtime_error(sound.where() +
+			": music_name and music_volume come together, or neither for a silent stage.");
+	}
+	return named;
+}
 std::string LevelLoadedInfo::music_name() const
 {
-	return this->json_doc_.root().object("sound").string("music_name");
+	return this->has_music() ?
+		this->json_doc_.root().object("sound").string("music_name") : std::string();
 }
 float LevelLoadedInfo::music_volume() const
 {
-	return this->json_doc_.root().object("sound").number("music_volume");
+	return this->has_music() ?
+		this->json_doc_.root().object("sound").number("music_volume") : 0.0f;
 }
 
 std::vector<Vector2F>
