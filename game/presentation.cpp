@@ -173,6 +173,69 @@ namespace
 		return select;
 	}
 
+	TeamPalettePresentation read_team_palette(const JsonValue& root)
+	{
+		const JsonValue json = root.object("team_palette");
+		TeamPalettePresentation palette;
+		const JsonValue colours = json.array("colours");
+		for (size_t index = 0; index < colours.size(); ++index)
+		{
+			const JsonValue entry = colours.at(index);
+			const std::string name = entry.identifier("name");
+			if (name.empty()) { throw std::runtime_error(entry.where() + ": team colour name must not be empty."); }
+			for (const NamedTeamColour& existing : palette.colours)
+			{
+				if (existing.name == name)
+				{
+					throw std::runtime_error(entry.where() + ": duplicate team colour '" + name + "'.");
+				}
+			}
+			palette.colours.push_back({ name, read_colour(entry, "colour") });
+		}
+		const JsonValue pairs = json.array("pairs");
+		for (size_t index = 0; index < pairs.size(); ++index)
+		{
+			const JsonValue entry = pairs.at(index);
+			const std::string key = entry.identifier("key");
+			if (key.empty()) { throw std::runtime_error(entry.where() + ": team pair key must not be empty."); }
+			if (key == "random")
+			{
+				throw std::runtime_error(entry.where() + ": 'random' is a preference, not a fixed pair.");
+			}
+			for (const TeamPaletteEntry& existing : palette.pairs)
+			{
+				if (existing.key == key)
+				{
+					throw std::runtime_error(entry.where() + ": duplicate team pair '" + key + "'.");
+				}
+			}
+			const auto resolve = [&](const char* field) -> Colour
+			{
+				const std::string name = entry.identifier(field);
+				for (const NamedTeamColour& colour : palette.colours)
+				{
+					if (colour.name == name) { return colour.colour; }
+				}
+				throw std::runtime_error(entry.where() + ": '" + field + "' names unknown team colour '" + name + "'.");
+			};
+			const std::wstring label = drawable_text::widen_drawable(entry.identifier("label"), entry.where() + ": label");
+			if (label.empty())
+			{
+				throw std::runtime_error(entry.where() + ": team pair label must not be empty.");
+			}
+			palette.pairs.push_back({ key, label, { resolve("team_a"), resolve("team_b") } });
+		}
+		// Saved fixed preferences must always resolve, regardless of array order.
+		for (int value = 0; value < static_cast<int>(TeamColourPair::count); ++value)
+		{
+			const char* key = TeamColourTools::palette_key(static_cast<TeamColourPair>(value));
+			bool found = false;
+			for (const TeamPaletteEntry& pair : palette.pairs) { found |= pair.key == key; }
+			if (!found) { throw std::runtime_error(pairs.where() + ": missing fixed team pair '" + key + "'."); }
+		}
+		return palette;
+	}
+
 	MenuStyle read_menu_style(const JsonValue& root)
 	{
 		const JsonValue json = root.object("menu_style");
@@ -583,12 +646,34 @@ namespace
 	}
 }
 
+const TeamPaletteEntry& TeamPalettePresentation::fixed_pair(TeamColourPair pair) const
+{
+	const char* key = TeamColourTools::palette_key(pair);
+	for (const TeamPaletteEntry& entry : this->pairs)
+	{
+		if (entry.key == key) { return entry; }
+	}
+	throw std::invalid_argument("Missing fixed team palette");
+}
+
+const TeamPaletteEntry& TeamPalettePresentation::random_pair(size_t draw) const
+{
+	if (this->pairs.empty()) { throw std::invalid_argument("No team palette pairs to draw"); }
+	return this->pairs[draw % this->pairs.size()];
+}
+
+const TeamPalettePresentation& Presentation::team_palette() const
+{
+	return this->team_palette_;
+}
+
 Presentation::Presentation(const char* path)
 {
 	const JsonDocument document = read_json_file(path);
 	this->source_path_ = path;
 	const JsonValue root = document.root();
 
+	this->team_palette_ = read_team_palette(root);
 	this->menu_ = read_menu_style(root);
 	this->main_menu_ = read_main_menu(root);
 	const JsonValue controls = root.object("controls_settings");

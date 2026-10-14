@@ -7,6 +7,22 @@
     "file and the position in it named."
   ],
 
+  "team_palette": {
+    "_comment": "Fixed preference keys are stable save identifiers. Additional pairs join the Random draw.",
+    "colours": [
+      { "name": "blue", "colour": "0634CC" },
+      { "name": "yellow", "colour": "FFFF00" },
+      { "name": "orange", "colour": "FF7F00" },
+      { "name": "pink", "colour": "FF007F" },
+      { "name": "green", "colour": "00FF00" }
+    ],
+    "pairs": [
+      { "key": "blue_orange", "label": "A: Blue / B: Orange", "team_a": "blue", "team_b": "orange" },
+      { "key": "pink_green", "label": "A: Pink / B: Green", "team_a": "pink", "team_b": "green" },
+      { "key": "blue_yellow", "label": "A: Blue / B: Yellow", "team_a": "blue", "team_b": "yellow" }
+    ]
+  },
+
   "menu_style": {
     "_comment": [
       "The four menu families all drew themselves from an identical copy of",

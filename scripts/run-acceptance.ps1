@@ -133,7 +133,8 @@ try {
         (Join-Path $build 'generated'))) {
         $common += '/I' + (Quote-ResponsePath $include)
     }
-    foreach ($include in @((Join-Path $installed 'include/directxtk'),
+    foreach ($include in @((Join-Path $repo 'external/rapidjson/include'),
+        (Join-Path $installed 'include/directxtk'),
         (Join-Path $installed 'include/xaudio2redist'), (Join-Path $installed 'include'))) {
         $common += '/external:I' + (Quote-ResponsePath $include)
     }
@@ -142,7 +143,7 @@ try {
     # DLL imports still resolve from the same staged folder as the game.
     # A case may own a same-named folder of extra .cpp sources.
     $env:PATH = "$gameDirectory;$previousPath"
-    foreach ($case in 'ammo', 'settings', 'paint', 'camera_framing', 'movement', 'stage_selection',
+    foreach ($case in 'ammo', 'settings', 'paint', 'camera_framing', 'movement', 'stage_selection', 'team_palette',
         'workshop_player', 'workshop_terrain', 'movement_course', 'debug_console') {
         $sources = @(Join-Path $PSScriptRoot "acceptance/$case.cpp")
         $parts = Join-Path $PSScriptRoot "acceptance/$case"

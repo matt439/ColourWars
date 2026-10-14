@@ -54,7 +54,7 @@ Implemented:
   Apply saves the choice; leaving without Apply discards changes.
 - Fixed palettes apply to new matches and restarts. Older saves and unknown
   or malformed palette fields fall back to Random, preserving valid display
-  settings. Random still draws from all three pairs.
+  settings. Random draws from the authored `team_palette.pairs` list.
 - Each gameplay HUD spells out Team A or Team B below the player/device label,
   using the existing white text and dark backing. Results retain their A/B
   markers and labelled percentages, including the one-team practice result.
@@ -67,6 +67,33 @@ four layouts with both team assignments. The probe checks HUD/menu bounds,
 player/result colours, solo result visibility and the rematch route, and
 captures gameplay, options and results for visual inspection. The engine pin
 and source are unchanged.
+
+### Team palette content (GAP#2.2, 2026-10-15)
+
+`presentation.json` now owns `team_palette`: a `colours` array of named colours
+(`name`, `colour`, using the existing named/hex colour reader) and a `pairs`
+array (`key`, `label`, `team_a`, `team_b`). Each team field references a named
+colour. The shipped five colours, three pairs and A/B assignments are unchanged.
+Match building, fixed weapon previews and Options labels read the same block.
+The default `TeamColour` value is neutral grey; match builders supply the
+selected authored pair explicitly.
+
+The fixed-preference enum and its three save keys remain stable. Every file must
+include those keys once; changing array order does not change saved selections.
+Extra keyed pairs join Random through a content edit, without a rebuild. Making
+one of those extra pairs a fixed Options choice still requires adding its enum
+and save-key mapping. The random roll uses the array length. A random weapon
+preview stays neutral and consumes no draw.
+
+Startup rejects duplicate colour names or pair keys, empty identifiers/labels,
+unknown colour references, malformed colours, missing fixed preferences and a
+pair keyed `random`, with file/field context. The `team_palette` consumer case
+checks the original values, edits and reordered fixed preferences, expansion to
+a fourth random pair, and invalid-content guards.
+
+Validation: Debug and Release consumer acceptance suites and isolated Debug
+startup passed. These are data/construction checks; no new visual or colour
+accessibility qualification is claimed.
 
 ## Third increment: release package
 

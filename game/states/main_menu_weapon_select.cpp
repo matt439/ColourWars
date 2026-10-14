@@ -233,7 +233,7 @@ void MainMenuWeaponSelect::init()
 	const TeamColourPair palette = this->save()->team_palette();
 	const TeamColour preview_colours = palette == TeamColourPair::random
 		? TeamColour(Colour::white, Colour::white)
-		: TeamColourTools::team_colours(palette);
+		: TeamColourTools::team_colours(palette, this->presentation().team_palette());
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");

@@ -648,14 +648,12 @@ int main(int argc, char** argv)
         const float background_luminance = PlayerVisual::relative_luminance(*background);
         std::cout << std::fixed << std::setprecision(2)
             << "Workshop mask contrast (floor " << floor << "; outline/background):\n";
-        using namespace team_colour_consts;
-        const std::pair<const char*, Colour> teams[] = { { "blue", TEAM_BLUE },
-            { "yellow", TEAM_YELLOW }, { "orange", TEAM_ORANGE },
-            { "pink", TEAM_PINK }, { "green", TEAM_GREEN } };
         float weakest_outline = std::numeric_limits<float>::max();
         float weakest_lit = std::numeric_limits<float>::max();
-        for (const auto& [name, team] : teams)
+        for (const NamedTeamColour& entry : presentation.team_palette().colours)
         {
+            const std::string& name = entry.name;
+            const Colour team = entry.colour;
             const Colour tint = PlayerVisual::mask_tint(team, floor);
             require(PlayerVisual::relative_luminance(tint) >= floor - 0.0005f,
                 "the mask tint did not reach its luminance floor");

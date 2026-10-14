@@ -355,15 +355,9 @@ void MainMenuOptions::cycle_team_palette(labrador::Direction direction)
 void MainMenuOptions::update_team_palette_selection_text()
 {
 	// State which colour belongs to which team before starting a match.
-	const wchar_t* label = L"Random";
-	switch (this->team_palette_selection_)
-	{
-	case TeamColourPair::blue_orange: label = L"A: Blue / B: Orange"; break;
-	case TeamColourPair::pink_green: label = L"A: Pink / B: Green"; break;
-	case TeamColourPair::blue_yellow: label = L"A: Blue / B: Yellow"; break;
-	case TeamColourPair::random: break;
-	default: throw std::invalid_argument("Invalid team palette");
-	}
+	const std::wstring label = this->team_palette_selection_ == TeamColourPair::random
+		? L"Random"
+		: this->presentation().team_palette().fixed_pair(this->team_palette_selection_).label;
 	this->team_palette_row_->set_value(label);
 }
 

@@ -192,7 +192,7 @@ namespace
         Study(Application& app, const GameTuning& tuning, const Presentation& presentation,
             const Kit& kit, const PlaySettings& preferences, TeamColourPair palette) :
             app_(app), tuning_(tuning), presentation_(presentation), kit_(kit),
-            colours_(TeamColourTools::team_colours(palette)),
+            colours_(TeamColourTools::team_colours(palette, presentation.team_palette())),
             hud_(app.render_resources(), &presentation.hud())
         {
             require(kit.sprite("painter").size == tuning.player().size,

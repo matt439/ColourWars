@@ -5,6 +5,7 @@
 #include "engine/render/colour.h"
 #include "game/objects/weapon_type.h"
 #include "game/objects/player_visual.h"
+#include "game/objects/team_colour.h"
 
 #include <array>
 #include <string>
@@ -396,6 +397,30 @@ struct OpeningPresentation
 };
 
 // Presentation settings parsed once at startup.
+struct NamedTeamColour
+{
+	std::string name;
+	labrador::Colour colour = labrador::Colour::gray;
+};
+
+struct TeamPaletteEntry
+{
+	std::string key;
+	std::wstring label;
+	TeamColour colours;
+};
+
+// Fixed preference keys remain save-compatible. Extra authored entries join
+// Random without adding an enum or a fixed Options choice.
+struct TeamPalettePresentation
+{
+	std::vector<NamedTeamColour> colours;
+	std::vector<TeamPaletteEntry> pairs;
+
+	const TeamPaletteEntry& fixed_pair(TeamColourPair pair) const;
+	const TeamPaletteEntry& random_pair(size_t draw) const;
+};
+
 class Presentation
 {
 public:
@@ -405,6 +430,7 @@ public:
 	void validate_resources(const labrador::RenderResources& render,
 		const labrador::AudioResources& audio) const;
 
+	const TeamPalettePresentation& team_palette() const;
 	const MenuStyle& menu() const;
 	const MainMenuPresentation& main_menu() const;
 	const ControlsSettingsPresentation& controls_settings() const;
@@ -428,6 +454,7 @@ public:
 
 private:
 	std::string source_path_;
+	TeamPalettePresentation team_palette_;
 	MenuStyle menu_;
 	MainMenuPresentation main_menu_;
 	ControlsSettingsPresentation controls_settings_;

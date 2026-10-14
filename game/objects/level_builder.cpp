@@ -44,7 +44,7 @@ std::unique_ptr<Level>
 	const LevelLoadedInfo* load_info =
 		this->level_infos_->get(settings.stage());
 
-	const TeamColour team_colours = team_colour_->team_colours(palette);
+	const TeamColour team_colours = team_colour_->team_colours(palette, this->presentation_->team_palette());
 	// The existing course geometry and scored faces stay authoritative. Only
 	// rectangular paintables use the material study; ramps and jump-through
 	// platforms keep their distinct diagnostic treatment during comparison.

@@ -1,7 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/team_colour.h"
 
-using namespace team_colour_consts;
+#include "game/presentation.h"
 using namespace labrador;
 
 TeamColour::TeamColour(const Colour& team_a, const Colour& team_b)
@@ -23,38 +23,19 @@ const Colour& TeamColour::team_colour(PlayerTeam team) const
 	}
 }
 
-TeamColour TeamColourTools::generate_random_team_colour()
+TeamColour TeamColourTools::generate_random_team_colour(const TeamPalettePresentation& palette)
 {
-	int enum_count = static_cast<int>(TeamColourPair::count);
-	int random = rand() % enum_count;
-	switch (random)
-	{
-	case 0:
-		return BLUE_ORANGE;
-	case 1:
-		return PINK_GREEN;
-	case 2:
-		return BLUE_YELLOW;
-	default:
-		return BLUE_ORANGE;
-	}
+	return palette.random_pair(static_cast<size_t>(rand())).colours;
 }
 
-TeamColour TeamColourTools::team_colours(TeamColourPair team_colour)
+TeamColour TeamColourTools::team_colours(TeamColourPair team_colour,
+	const TeamPalettePresentation& palette)
 {
-	switch (team_colour)
+	if (team_colour == TeamColourPair::random)
 	{
-	case TeamColourPair::random:
-		return generate_random_team_colour();
-	case TeamColourPair::blue_orange:
-		return BLUE_ORANGE;
-	case TeamColourPair::pink_green:
-		return PINK_GREEN;
-	case TeamColourPair::blue_yellow:
-		return BLUE_YELLOW;
-	default:
-		throw std::invalid_argument("Invalid team palette");
+		return generate_random_team_colour(palette);
 	}
+	return palette.fixed_pair(team_colour).colours;
 }
 
 const char* TeamColourTools::palette_key(TeamColourPair palette)
