@@ -97,9 +97,9 @@ RectangleF MovementFeedback::bounds(const RectangleF& player_bounds) const
         // Include snapping in both axes so a neighbouring pane never culls it.
         const bool contact = effect.kind == MovementFeedbackKind::step ||
             effect.kind == MovementFeedbackKind::skid;
-        const float margin = contact ? 3.0f * burst.particle_size +
-            this->presentation_->keyline_width + 2.0f * this->presentation_->pixel_size :
-            2.0f * burst.particle_size + 2.0f * this->presentation_->pixel_size;
+        const float margin = 3.0f * burst.particle_size +
+            this->presentation_->keyline_width +
+            (contact ? 2.0f : 3.0f) * this->presentation_->pixel_size;
         result = RectangleF::union_of(result, RectangleF(
             effect.position.x - burst.spread - margin,
             effect.position.y - burst.lift - margin,
@@ -161,37 +161,164 @@ void MovementFeedback::draw_contact(DrawList& draw_list, const Effect& effect) c
     }
 }
 
+void MovementFeedback::draw_burst(DrawList& draw_list, const Effect& effect) const
+{
+    const MovementFeedbackPresentation& look = *this->presentation_;
+    const MovementBurstPresentation& burst = this->style(effect.kind);
+    const float progress = effect.age / burst.duration;
+    const float fade = 1.0f - progress;
+    const float spread = burst.spread * effect.strength * progress;
+    const float lift = burst.lift * effect.strength * progress * (2.0f - progress);
+    const float pixel = look.pixel_size;
+    const auto snap = [pixel](float value) { return std::round(value / pixel) * pixel; };
+    const float size = std::max(pixel, snap(burst.particle_size *
+        effect.strength * (1.0f - progress * 0.5f)));
+    std::array<RectangleF, 8> shape{};
+    std::array<RectangleF, 2> highlights{};
+    for (size_t side = 0; side < highlights.size(); ++side)
+    {
+        const float direction = side == 0 ? -1.0f : 1.0f;
+        const float x = snap(effect.position.x + direction * (size + spread));
+        const float y = snap(effect.position.y - lift - size);
+        // Connected, stepped lobes: takeoff reaches upwards; landing spreads
+        // low across the contact. Mirror the authored offsets, not the world
+        // anchor. Partition their union below so faded joins never overdraw.
+        const auto lobe = [&](float along, float down, float width, float height)
+        {
+            return RectangleF(x + direction * along * size - width * size * 0.5f,
+                y + down * size, width * size, height * size);
+        };
+        const bool landing = effect.kind == MovementFeedbackKind::landing;
+        const std::array<RectangleF, 3> lobes = landing ?
+            std::array{ lobe(0.0f, 0.35f, 1.25f, 0.65f),
+                lobe(-0.15f, 0.1f, 0.65f, 0.55f),
+                lobe(0.55f, 0.6f, 0.65f, 0.4f) } :
+            std::array{ lobe(0.0f, 0.2f, 0.9f, 0.8f),
+                lobe(-0.15f, -0.15f, 0.55f, 0.65f),
+                lobe(0.35f, 0.55f, 0.65f, 0.45f) };
+        const RectangleF& crown = lobes[1];
+        highlights[side] = RectangleF(crown.x + crown.width * 0.2f, crown.y + pixel * 0.25f,
+            std::min(pixel, crown.width * 0.5f), std::min(pixel, crown.height * 0.5f));
+        // One detached chip on each side keeps the contact lively without a
+        // random stream or new particle storage.
+        const float chip = std::max(pixel, snap(size * 0.2f));
+        const RectangleF fleck(snap(x + direction * (size + chip) - chip * 0.5f),
+            snap(y + (landing ? size * 0.45f : -pixel)), chip, chip);
+        // Include the chip in the union, even when a wide keyline joins it to
+        // the body. The neutral centre and outline must each blend only once.
+        for (size_t index = 0; index < lobes.size(); ++index) { shape[side * 4 + index] = lobes[index]; }
+        shape[side * 4 + 3] = fleck;
+    }
+    this->draw_puff(draw_list, shape, highlights, fade);
+}
+
+void MovementFeedback::draw_puff(DrawList& draw_list,
+    const std::array<RectangleF, 8>& lobes,
+    const std::array<RectangleF, 2>& highlights, float fade) const
+{
+    const MovementFeedbackPresentation& look = *this->presentation_;
+    std::array<RectangleF, 8> outer = lobes;
+    std::array<float, 36> x_cuts{};
+    std::array<float, 36> y_cuts{};
+    for (size_t index = 0; index < lobes.size(); ++index)
+    {
+        outer[index].inflate(look.keyline_width);
+        x_cuts[index * 4] = lobes[index].left();
+        x_cuts[index * 4 + 1] = lobes[index].right();
+        x_cuts[index * 4 + 2] = outer[index].left();
+        x_cuts[index * 4 + 3] = outer[index].right();
+        y_cuts[index * 4] = lobes[index].top();
+        y_cuts[index * 4 + 1] = lobes[index].bottom();
+        y_cuts[index * 4 + 2] = outer[index].top();
+        y_cuts[index * 4 + 3] = outer[index].bottom();
+    }
+    for (size_t index = 0; index < highlights.size(); ++index)
+    {
+        x_cuts[32 + index * 2] = highlights[index].left();
+        x_cuts[33 + index * 2] = highlights[index].right();
+        y_cuts[32 + index * 2] = highlights[index].top();
+        y_cuts[33 + index * 2] = highlights[index].bottom();
+    }
+    std::sort(x_cuts.begin(), x_cuts.end());
+    std::sort(y_cuts.begin(), y_cuts.end());
+    const auto x_end = std::unique(x_cuts.begin(), x_cuts.end());
+    const auto y_end = std::unique(y_cuts.begin(), y_cuts.end());
+
+    // Split the outline, body and glint into disjoint horizontal spans, then
+    // join vertical neighbours. Storage is bounded by the fixed authored lobes.
+    // Every covered pixel blends once even midway through a translucent fade.
+    struct Span { RectangleF rectangle; int ink; };
+    std::array<Span, 1225> spans{}; // At most 35 by 35 cells between the cuts.
+    size_t count = 0;
+    const auto append = [&](float left, float right, float top, float bottom, int ink)
+    {
+        if (right <= left) { return; }
+        for (size_t index = 0; index < count; ++index)
+        {
+            Span& span = spans[index];
+            if (span.ink == ink && span.rectangle.left() == left &&
+                span.rectangle.right() == right && span.rectangle.bottom() == top)
+            {
+                span.rectangle.height = bottom - span.rectangle.top();
+                return;
+            }
+        }
+        spans[count++] = { RectangleF(left, top, right - left, bottom - top), ink };
+    };
+    const auto contains = [](const RectangleF& rectangle, float x, float y)
+    {
+        return x > rectangle.left() && x < rectangle.right() &&
+            y > rectangle.top() && y < rectangle.bottom();
+    };
+    for (auto row = y_cuts.begin(); row + 1 < y_end; ++row)
+    {
+        const float top = *row;
+        const float bottom = *(row + 1);
+        const float y = top + (bottom - top) * 0.5f;
+        float left = x_cuts.front();
+        int ink = -1;
+        for (auto column = x_cuts.begin(); column + 1 < x_end; ++column)
+        {
+            const float x = *column + (*(column + 1) - *column) * 0.5f;
+            const bool body = std::any_of(lobes.begin(), lobes.end(),
+                [&](const RectangleF& rectangle) { return contains(rectangle, x, y); });
+            const bool shell = std::any_of(outer.begin(), outer.end(),
+                [&](const RectangleF& rectangle) { return contains(rectangle, x, y); });
+            const bool glint = body && std::any_of(highlights.begin(), highlights.end(),
+                [&](const RectangleF& rectangle) { return contains(rectangle, x, y); });
+            const int next_ink = body ? (glint ? 2 : 1) :
+                (shell ? 0 : -1);
+            if (next_ink != ink)
+            {
+                if (ink >= 0) { append(left, *column, top, bottom, ink); }
+                left = *column;
+                ink = next_ink;
+            }
+        }
+        if (ink >= 0) { append(left, *(x_end - 1), top, bottom, ink); }
+    }
+    const std::array colours{ look.keyline, look.colour, look.highlight };
+    for (size_t index = 0; index < count; ++index)
+    {
+        const Span& span = spans[index];
+        this->draw_with(draw_list, span.rectangle, this->frame(),
+            colours[static_cast<size_t>(span.ink)] * fade,
+            Vector2F::ZERO, SpriteFlip::none, 0.0f);
+    }
+}
+
 void MovementFeedback::draw(DrawList& draw_list) const
 {
     if (!this->presentation_->enabled) { return; }
-    const float pixel = this->presentation_->pixel_size;
-    const auto snap = [pixel](float value) { return std::round(value / pixel) * pixel; };
     for (const Effect& effect : this->effects())
     {
         if (effect.kind == MovementFeedbackKind::step || effect.kind == MovementFeedbackKind::skid)
         {
             this->draw_contact(draw_list, effect);
-            continue;
         }
-        const MovementBurstPresentation& burst = this->style(effect.kind);
-        const float progress = effect.age / burst.duration;
-        const float fade = 1.0f - progress;
-        const float spread = burst.spread * effect.strength * progress;
-        const float lift = burst.lift * effect.strength * progress * (2.0f - progress);
-        const float size = std::max(pixel, snap(burst.particle_size *
-            effect.strength * (1.0f - progress * 0.5f)));
-
-        for (const float direction : { -1.0f, 1.0f })
+        else
         {
-            const float x = snap(effect.position.x + direction * (size + spread));
-            const float y = snap(effect.position.y - lift - size);
-            const RectangleF puff(x - size / 2.0f, y, size, size);
-            this->draw_with(draw_list, puff, this->frame(),
-                this->presentation_->colour * fade, Vector2F::ZERO, SpriteFlip::none, 0.0f);
-            const RectangleF fleck(x + direction * size, y - pixel,
-                pixel, pixel);
-            this->draw_with(draw_list, fleck, this->frame(),
-                this->presentation_->highlight * fade, Vector2F::ZERO, SpriteFlip::none, 0.0f);
+            this->draw_burst(draw_list, effect);
         }
     }
 }

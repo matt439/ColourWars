@@ -381,7 +381,7 @@
     }
   },
   "movement_feedback": {
-    "_comment": "Cosmetic contact puffs and keylined step/skid flecks in world units. Steps share the audio stride; wet flecks use the contacted paint colour. No scored paint or audio.",
+    "_comment": "Cosmetic keylined takeoff/landing puffs and step/skid flecks in world units. Steps share the audio stride; only wet step/skid flecks use the contacted paint colour. No scored paint or audio.",
     "enabled": true,
     "sprite_sheet": "sprite_sheet_1",
     "fill_frame": "pixel",

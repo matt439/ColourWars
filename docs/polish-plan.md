@@ -648,6 +648,14 @@ Show player contributions clearly and make the rematch route easy to follow.
 Measure loading pauses before choosing transition behaviour. Preserve the deliberate
 withholding of live coverage percentages so the ending remains a reveal.
 
+**Takeoff/landing production puffs implemented (2026-10-15, part of `POL#16`).**
+The [drawing and evidence](polish-feedback.md#paintexe-production-puffs-2026-10-15)
+replace the prototype squares with neutral, stepped, black-keylined silhouettes:
+a rising takeoff crown and a lower, wider landing cloud. Existing timing,
+impact strength, movement and paint ownership are unchanged. These shared cues
+apply to all five tools; the reference-arena composition and match/UI treatment
+remain open.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

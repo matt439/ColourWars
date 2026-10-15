@@ -34,9 +34,9 @@ nothing. Scene teardown destroys the player and its trail.
 The effect has no collision object, ammunition use, damage or scored paint.
 Player collision bounds and movement tuning are unchanged. Visual culling bounds
 include the remaining trail, so it can still be drawn after the player moves out
-of a view. Storage holds at most eight bursts per player, each drawing four small
-quads; a ninth replaces the oldest. This is a storage/draw bound, not a frame-time
-or crowded-combat performance claim.
+of a view. Storage holds at most eight bursts per player; a ninth replaces the
+oldest. The fixed authored shapes bound the drawing work independently of elapsed
+time. This is a storage bound, not a frame-time or crowded-combat performance claim.
 
 <a id="authored-prototype-values"></a>
 
@@ -65,18 +65,75 @@ falls still strengthen it. Event emission is immediate on the successful jump
 or resolved contact tick, with the same ordering and suppression rules above.
 These are usable defaults that remain editable in presentation data.
 
-The two-unit effect grid keeps the existing fleck geometry stable; it does not
-set the production art density. The historical workshop kit is retired, and
-the accepted [Paint.exe art rules](polish-plan.md#1-establish-the-art-and-display-rules)
-govern later contact sprite production. Invalid non-positive or non-finite
+The two-unit effect grid keeps moving anchors and particle sizes stable; it does
+not set the production art density. The historical workshop kit is retired. The
+production puffs below follow the accepted
+[Paint.exe art rules](polish-plan.md#1-establish-the-art-and-display-rules).
+Invalid non-positive or non-finite
 dimensions/timings, inconsistent impact speeds, strength above one and particles
 smaller than one effect pixel are rejected at startup. The fill frame is checked
 against loaded resources.
 
-The neutral colour avoids implying new paint ownership. Final contact sprite
-shapes, takeoff/landing character poses, painted-surface variation and the complete
-audio mix still need coordinated production and review. This intensity change
-adds no audio cue or gameplay effect.
+The neutral colour avoids implying new paint ownership. The
+[painter action poses](polish-painter.md#action-poses),
+[painted step/skid variation](polish-movement-contact.md) and accepted movement
+sounds now accompany these events. The complete composition and audio mix still
+need review. This drawing pass adds no audio cue or gameplay effect.
+
+## Paint.exe production puffs (2026-10-15)
+
+Implemented as a gameplay-art increment of `POL#16`. The prototype squares now
+have connected, stepped silhouettes with black keylines, neutral bodies and a
+small white highlight. Takeoff has a taller crown; landing spreads lower and
+wider across the support. Each side has one detached neutral chip. The lobes,
+outlines and highlights are partitioned into disjoint rectangles so fading does
+not expose internal joins or brighten overlapping fills. The shared fill texel
+supplies the shapes; there is no new atlas or art build dependency.
+
+The existing outward motion, rise, shrinking recovery, fade, landing strength
+and authored values remain unchanged. Actual successful jumps and resolved
+landings still produce the events; drawing remains const. Puffs stay neutral
+even on painted support. Their culling allowance includes the wider silhouette,
+detached chips, keyline and snapping, including small valid particles. Step/skid
+artwork and all movement, collision, ammunition, damage and scoring rules retain
+their existing paths. Reduced effects retain these useful movement cues.
+
+Production validation on 2026-10-15:
+
+- Debug and Release build under `/W4 /WX` and pass all 21 consumer acceptance
+  cases each, including actual movement/contact events, bounded storage,
+  pause/death/respawn and enabled/disabled gameplay equivalence.
+- Both pass the D3D11 hardware movement-feedback probe on the NVIDIA GeForce
+  RTX 5080: one/four views at 720p, 1080p and QHD; initial/mid takeoff and landing,
+  expiry, twelve frozen redraws and the moving aim-swept course routes.
+  Differences stay inside projected bounds and below one percent of a pane.
+- The isolated matrix checks neutral fill and black keyline at native gameplay
+  scales, minimum/full landing strength, distinct silhouettes with equal numeric
+  styles, disabled/frozen drawing and clean single-blend colours through fading.
+  Valid wide keylines and tiny three-unit particles cover culling extremes; the
+  tiny fixture uses 16× inspection without an extra pixel of bounds slack.
+- Isolated Debug and Release startup pass with the accepted sound bank, a
+  system-only PATH and graceful shutdown.
+
+The four-player 720p per-pane minima match in Debug and Release. `Readable`
+counts pixels with a maximum RGB channel difference of at least 32:
+
+| Phase | Changed pixels | Readable pixels |
+|---|---:|---:|
+| Takeoff | 614 | 614 |
+| Mid takeoff | 380 | 244 |
+| Landing | 835 | 835 |
+| Mid landing | 464 | 292 |
+
+Native [takeoff](images/polish-feedback/production-takeoff-720p.png) and
+[landing](images/polish-feedback/production-landing-720p.png) captures retain
+the current course and UI. Full frames and isolated fading silhouettes were
+inspected. Evidence is under `out/validation/movement-bursts/` and
+`out/acceptance/`; visual run IDs are Debug
+`778e04baecac478fac55bf290c6998f6` and Release
+`1d66bc9b00db46cf95ba1a7fdbffed18`. These scripted checks and image inspection
+do not establish human movement feel, crowded-match readability, listening or
+physical-controller acceptance.
 
 ## Reproduce the checks
 
@@ -116,7 +173,7 @@ at a 60 Hz simulation step. It is optional because raw PPM sequences use substan
 space. These scripted inputs do not exercise a physical controller or establish
 interactive frame pacing.
 
-## Current validation (2026-10-15)
+## Intensity validation before production puffs (2026-10-15)
 
 Debug and Release builds and all 11 consumer acceptance cases passed with the
 current values. Both visual probes passed on **NVIDIA GeForce RTX 5080, D3D11
@@ -141,8 +198,8 @@ was at least 32:
 Full-size PNG conversions of all four active Debug phases were inspected.
 Neutral bodies and flecks remain visible into recovery close to the feet/contact,
 with the HUD and platform edges readable in these empty-course stills. The light
-body initially meets the light floor before spreading away. This is the existing
-simple geometry; final Paint.exe contact sprites remain production work.
+body initially meets the light floor before spreading away. These captures record
+the earlier square geometry; the production puffs above supersede that drawing.
 
 Evidence, including `result.json`, diagnostics and `captures/phases.csv`, is
 retained under `out/validation/pol4-pol5/visual/`:

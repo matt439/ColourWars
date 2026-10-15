@@ -77,6 +77,7 @@ $result = [ordered]@{
     weapons = @('sprayer', 'roller', 'sprayer', 'roller')
     inputs = 'Scripted pad-slot inputs at the real 60 Hz simulation step; no physical-device claim.'
     audio = 'Muted; this check establishes no listening acceptance.'
+    isolated_bursts = 'Four controlled panes: takeoff, minimum landing, full landing, landing with takeoff numeric style. Birth/mid/late at real 4P camera scales, 720p/1080p/QHD; neutral fill and black keyline, distinct silhouettes, single-blend fade colours, enabled/disabled and frozen redraw, bounds including valid wide-keyline and tiny styles. Tiny style uses 16x inspection and no extra raster-bounds slack.'
     sequence_frames = $SequenceFrames
     route = [ordered]@{
         player_counts = @(1, 4)
@@ -205,7 +206,7 @@ try {
         throw 'The visual probe unexpectedly created a save.'
     }
     $result.outcome = 'passed'
-    $result.diagnostic = 'Matched feedback frames, resolution matrix, suspended redraw and the moving aim-swept route passed. Visual review remains separate.'
+    $result.diagnostic = 'Matched feedback frames, isolated puff art/strength/bounds matrix, resolution matrix, suspended redraw and the moving aim-swept route passed. Visual review remains separate.'
 }
 catch {
     $failure = $_

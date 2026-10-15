@@ -5,7 +5,8 @@ Implemented 2026-10-15 as part of `POL#10`, following the
 black-keylined flecks accompany a supported step; three trail a fast reversal.
 They rise briefly, settle toward the contact and fade. Quiet corrections, idle
 feet, airborne motion and movement blocked by a wall do not produce a trail.
-The existing takeoff/landing puffs and painter poses keep their treatment.
+The later [takeoff/landing production pass](polish-feedback.md#paintexe-production-puffs-2026-10-15)
+uses the same neutral, black-keylined language; the painter poses keep their treatment.
 
 ## Events, paint and lifetime
 

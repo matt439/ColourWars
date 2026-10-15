@@ -56,4 +56,8 @@ private:
         float strength, float direction = 1.0f,
         std::optional<labrador::Colour> paint_colour = std::nullopt);
     void draw_contact(labrador::DrawList& draw_list, const Effect& effect) const;
+    void draw_burst(labrador::DrawList& draw_list, const Effect& effect) const;
+    void draw_puff(labrador::DrawList& draw_list,
+        const std::array<mattmath::RectangleF, 8>& lobes,
+        const std::array<mattmath::RectangleF, 2>& highlights, float fade) const;
 };

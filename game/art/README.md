@@ -85,6 +85,13 @@ Only `game/content/textures/paint_fx.{json,dds}` enters runtime content.
 The [implementation and validation record](../../docs/polish-paint-effects.md)
 describes exact surface ownership, paint keylines, wet settling and culling.
 
+Takeoff/landing puffs and step/skid flecks use the existing fill texel. Their
+editable shapes are in [`movement_feedback.cpp`](../objects/movement_feedback.cpp),
+with dimensions, timing and colours in `presentation.json.movement_feedback`.
+The [production puff record](../../docs/polish-feedback.md#paintexe-production-puffs-2026-10-15)
+describes the distinct silhouettes, clean fading and renderer checks. Normal
+builds reproduce this code-drawn artwork without an atlas-generation step.
+
 ## Runtime content separation (GAP#8.6)
 
 Implemented 2026-10-15. Tracked runtime content in `game/content/` is the reviewed set
