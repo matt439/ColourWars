@@ -169,6 +169,17 @@ struct MenuPaperArtPresentation
 	mattmath::Vector2F focus_padding;
 };
 
+struct StickPreviewPresentation
+{
+	mattmath::RectangleF raw_movement;
+	mattmath::RectangleF movement_response;
+	mattmath::RectangleF aim;
+	mattmath::Vector2F aim_readout_position;
+	mattmath::Vector2F association_position;
+	float marker_size = 0.0f;
+	float line_width = 0.0f;
+};
+
 struct ControlsSettingsPresentation
 {
 	MenuPaperArtPresentation art;
@@ -181,6 +192,7 @@ struct ControlsSettingsPresentation
 	std::string item_font;
 	std::string help_font;
 	PresentationSound volume_preview_sound;
+	StickPreviewPresentation stick_preview;
 };
 
 struct MainMenuPresentation

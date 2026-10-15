@@ -79,6 +79,35 @@ SaveData Save::load_from_json(const char* json_path) const
     read_preference("music_volume", 0, 100, data.play.music_volume);
     read_preference("sfx_volume", 0, 100, data.play.sfx_volume);
 
+    // Each saved profile belongs to its XInput slot. Missing legacy profiles
+    // inherit the authored movement and the existing shared aim preference.
+    // Recover each field independently, including malformed array entries.
+    try
+    {
+        const JsonValue profiles = root.array("pad_sticks");
+        const size_t count = std::min(profiles.size(), data.play.sticks.size());
+        for (size_t slot = 0; slot < count; ++slot)
+        {
+            const JsonValue profile = profiles.at(slot);
+            const auto read_deadzone = [&profile](const char* key, int& destination)
+            {
+                try
+                {
+                    const int value = profile.integer(key);
+                    if (value >= -1 && value <= 90) { destination = value; }
+                }
+                catch (const std::runtime_error&)
+                {
+                }
+            };
+            read_deadzone("movement_deadzone", data.play.sticks[slot].movement_deadzone);
+            read_deadzone("aim_deadzone", data.play.sticks[slot].aim_deadzone);
+        }
+    }
+    catch (const std::runtime_error&)
+    {
+    }
+
     try
     {
         data.play.view_shake = root.boolean("view_shake");
@@ -195,6 +224,15 @@ bool Save::write_save_file(const SaveData& data) const
     Value palette(TeamColourTools::palette_key(data.team_palette), d.GetAllocator());
     d.AddMember("team_palette", palette, d.GetAllocator());
     d.AddMember("aim_sensitivity", data.play.aim_sensitivity, d.GetAllocator());
+    Value pad_sticks(kArrayType);
+    for (const StickSettings& settings : data.play.sticks)
+    {
+        Value profile(kObjectType);
+        profile.AddMember("movement_deadzone", settings.movement_deadzone, d.GetAllocator());
+        profile.AddMember("aim_deadzone", settings.aim_deadzone, d.GetAllocator());
+        pad_sticks.PushBack(profile, d.GetAllocator());
+    }
+    d.AddMember("pad_sticks", pad_sticks, d.GetAllocator());
     d.AddMember("music_volume", data.play.music_volume, d.GetAllocator());
     d.AddMember("sfx_volume", data.play.sfx_volume, d.GetAllocator());
     d.AddMember("view_shake", data.play.view_shake, d.GetAllocator());
@@ -338,6 +376,12 @@ bool Save::set_play_settings_and_save(const PlaySettings& settings)
     {
         throw std::invalid_argument("Play settings are outside their supported range");
     }
-    this->save_data_.play = settings;
+    PlaySettings normalized = settings;
+    for (StickSettings& profile : normalized.sticks)
+    {
+        profile.movement_deadzone = StickSettings::normalized_deadzone(profile.movement_deadzone);
+        profile.aim_deadzone = StickSettings::normalized_deadzone(profile.aim_deadzone);
+    }
+    this->save_data_.play = normalized;
     return this->save_to_file();
 }

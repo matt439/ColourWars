@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/player_input.h"
 #include "game/input_slots.h"
+#include "game/objects/stick_response.h"
 
 using namespace mattmath;
 using namespace player_input_consts;
@@ -42,14 +43,16 @@ PlayerInputData PlayerInput::pad_input(const Gamepads& gamepads, int slot) const
 		gamepads.released(slot, GamepadButton::b) ||
 		gamepads.released(slot, GamepadButton::start);
 
-	result.x_movement = apply_deadzone(pad.left_stick.x, this->tuning_->input().movement_deadzone);
+	const StickResponse response = stick_response(pad.left_stick, pad.right_stick,
+		this->tuning_->input().movement_deadzone, *this->preferences_, slot);
+	result.x_movement = response.movement;
 
 	// Map the downward stick threshold to a device-independent drop action.
 	result.drop_through = pad.left_stick.y >
 		this->tuning_->player().drop_down_analog_threshold;
 
 	// Apply a radial deadzone, then retain only the non-zero aim direction.
-	const Vector2F aim = apply_deadzone(pad.right_stick, this->preferences_->aim_deadzone());
+	const Vector2F aim = response.aim;
 	result.shoot_direction_requested = aim != Vector2F::ZERO;
 	if (result.shoot_direction_requested)
 	{

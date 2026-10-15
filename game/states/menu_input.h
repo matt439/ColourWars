@@ -74,7 +74,7 @@ public:
 	labrador::Direction update(const std::array<bool, 4>& held, float dt,
 		float delay, float interval);
 	labrador::Direction update_pad(const labrador::GamepadState& pad, float dt,
-		float delay, float interval, const InputTuning& tuning);
+		float delay, float interval, const InputTuning& tuning, bool use_stick = true);
 private:
 	bool ready_ = false;
 	labrador::DirectionRepeat repeat_;
@@ -96,7 +96,7 @@ public:
 		const labrador::Keyboard* keyboard, const GameTuning* tuning);
 
 	// Advance navigation once before a page update; reads below do not advance time.
-	void update_directions(float dt, float delay, float interval);
+	void update_directions(float dt, float delay, float interval, bool use_stick = true);
 	void reset_directions();
 
 	// Returns input_slots::count entries indexed by device slot; absent devices

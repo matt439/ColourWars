@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iterator>
+#include <limits>
 #include <stdexcept>
 #include <string>
 
@@ -91,6 +92,202 @@ namespace
 			actual.aim_marker == wanted.aim_marker &&
 			actual.reduce_effects == wanted.reduce_effects,
 			"Shared play preferences did not survive reloading");
+		for (int slot = 0; slot < input_slots::pad_count; ++slot)
+		{
+			require(actual.stick_settings(slot).movement_deadzone ==
+				wanted.stick_settings(slot).movement_deadzone &&
+				actual.stick_settings(slot).aim_deadzone ==
+				wanted.stick_settings(slot).aim_deadzone,
+				"A pad slot's stick preferences did not survive reloading");
+		}
+	}
+
+	void write_stick_fixture(const IsolatedSaveDirectory& directory,
+		const std::string& stick_member, int sensitivity = 4)
+	{
+		std::ofstream output(directory.save_path(), std::ios::binary | std::ios::trunc);
+		output << "{\"resolution\":{\"x\":1280,\"y\":720},\"fullscreen\":true,"
+			"\"team_palette\":\"blue_yellow\",\"aim_sensitivity\":" << sensitivity <<
+			",\"music_volume\":20,\"sfx_volume\":80,\"view_shake\":false,"
+			"\"aim_marker\":false,\"reduce_effects\":true" << stick_member << '}';
+		require(output.good(), "Could not write the stick-preference save fixture");
+	}
+
+	void require_fixture_preferences(const Save& restored)
+	{
+		const PlaySettings& play = restored.play_settings();
+		require(restored.resolution() == labrador::ScreenResolution::s_1280_720 &&
+			restored.fullscreen() && restored.team_palette() == TeamColourPair::blue_yellow &&
+			play.aim_sensitivity == 4 && play.music_volume == 20 && play.sfx_volume == 80 &&
+			!play.view_shake && !play.aim_marker && play.reduce_effects,
+			"Stick-preference recovery reset an unrelated saved preference");
+	}
+
+	void check_stick_loading(const IsolatedSaveDirectory& directory)
+	{
+		struct Fixture
+		{
+			const char* value;
+			int expected;
+		};
+		const Fixture fixtures[] = {
+			{ nullptr, -1 }, { "-1", -1 }, { "0", 0 }, { "90", 90 },
+			{ "null", -1 }, { "true", -1 }, { "false", -1 }, { "\"25\"", -1 },
+			{ "[]", -1 }, { "{}", -1 }, { "1.5", -1 }, { "-2", -1 },
+			{ "91", -1 }, { "2147483648", -1 }
+		};
+		for (const bool movement : { false, true })
+		{
+			const char* key = movement ? "movement_deadzone" : "aim_deadzone";
+			const char* other = movement ? "aim_deadzone" : "movement_deadzone";
+			for (const Fixture& fixture : fixtures)
+			{
+				std::string profile = std::string("{\"") + other + "\":55";
+				if (fixture.value != nullptr)
+				{
+					profile += std::string(",\"") + key + "\":" + fixture.value;
+				}
+				profile += '}';
+				write_stick_fixture(directory, ",\"pad_sticks\":["
+					"{\"movement_deadzone\":10,\"aim_deadzone\":15}," + profile + ',' +
+					"{\"movement_deadzone\":35,\"aim_deadzone\":45},"
+					"{\"movement_deadzone\":70,\"aim_deadzone\":80}]");
+				Save restored;
+				restored.load_save_file();
+				require_fixture_preferences(restored);
+				const PlaySettings& play = restored.play_settings();
+				require(play.stick_settings(1).movement_deadzone == (movement ? fixture.expected : 55) &&
+					play.stick_settings(1).aim_deadzone == (movement ? 55 : fixture.expected),
+					"Missing, invalid or boundary stick field changed its sibling or used the wrong fallback");
+				require(play.stick_settings(0).movement_deadzone == 10 &&
+					play.stick_settings(0).aim_deadzone == 15 &&
+					play.stick_settings(2).movement_deadzone == 35 &&
+					play.stick_settings(2).aim_deadzone == 45 &&
+					play.stick_settings(3).movement_deadzone == 70 &&
+					play.stick_settings(3).aim_deadzone == 80,
+					"One corrupt pad field changed another XInput slot's preferences");
+				require(restored.save_to_file(), "Could not save recovered stick preferences");
+				check_round_trip(restored);
+			}
+		}
+
+		for (const char* member : { "", ",\"pad_sticks\":null", ",\"pad_sticks\":true",
+			",\"pad_sticks\":{}", ",\"pad_sticks\":\"pads\"", ",\"pad_sticks\":[]" })
+		{
+			write_stick_fixture(directory, member);
+			Save restored;
+			restored.load_save_file();
+			require_fixture_preferences(restored);
+			for (int slot = 0; slot < input_slots::pad_count; ++slot)
+			{
+				require(restored.play_settings().stick_settings(slot).movement_deadzone == -1 &&
+					restored.play_settings().stick_settings(slot).aim_deadzone == -1,
+					"Missing or malformed stick profile container did not inherit defaults");
+			}
+		}
+
+		write_stick_fixture(directory, ",\"pad_sticks\":[null,"
+			"{\"movement_deadzone\":25,\"aim_deadzone\":40},true,"
+			"{\"movement_deadzone\":65,\"aim_deadzone\":75},"
+			"{\"movement_deadzone\":90,\"aim_deadzone\":90}]");
+		Save recovered;
+		recovered.load_save_file();
+		require_fixture_preferences(recovered);
+		const PlaySettings& recovered_play = recovered.play_settings();
+		require(recovered_play.stick_settings(0).movement_deadzone == -1 &&
+			recovered_play.stick_settings(0).aim_deadzone == -1 &&
+			recovered_play.stick_settings(1).movement_deadzone == 25 &&
+			recovered_play.stick_settings(1).aim_deadzone == 40 &&
+			recovered_play.stick_settings(2).movement_deadzone == -1 &&
+			recovered_play.stick_settings(2).aim_deadzone == -1 &&
+			recovered_play.stick_settings(3).movement_deadzone == 65 &&
+			recovered_play.stick_settings(3).aim_deadzone == 75,
+			"Invalid or excess array entries changed valid XInput slot profiles");
+		require(recovered.save_to_file(), "Could not save recovered profile array");
+		check_round_trip(recovered);
+
+		write_stick_fixture(directory, ",\"pad_sticks\":[{\"aim_deadzone\":20}]");
+		Save shortened;
+		shortened.load_save_file();
+		require_fixture_preferences(shortened);
+		require(shortened.play_settings().stick_settings(0).movement_deadzone == -1 &&
+			shortened.play_settings().stick_settings(0).aim_deadzone == 20,
+			"Partial first profile did not retain its valid field");
+		for (int slot = 1; slot < input_slots::pad_count; ++slot)
+		{
+			require(shortened.play_settings().stick_settings(slot).movement_deadzone == -1 &&
+				shortened.play_settings().stick_settings(slot).aim_deadzone == -1,
+				"Absent trailing profile did not inherit defaults");
+		}
+	}
+
+	void check_legacy_sticks(const IsolatedSaveDirectory& directory)
+	{
+		constexpr float legacy_deadzones[] = { 0.70f, 0.60f, 0.50f, 0.35f, 0.20f };
+		for (int sensitivity = 1; sensitivity <= 5; ++sensitivity)
+		{
+			write_stick_fixture(directory, "", sensitivity);
+			Save restored;
+			restored.load_save_file();
+			const PlaySettings& play = restored.play_settings();
+			for (int slot = 0; slot < input_slots::pad_count; ++slot)
+			{
+				require(play.stick_settings(slot).movement_deadzone == -1 &&
+					play.stick_settings(slot).aim_deadzone == -1 &&
+					play.movement_deadzone(slot, 0.275f) == 0.275f &&
+					play.aim_deadzone(slot) == legacy_deadzones[sensitivity - 1],
+					"A legacy save changed its authored movement or shared aim deadzone");
+			}
+			require(restored.save_to_file(), "Could not round-trip a legacy aim preference");
+			check_round_trip(restored);
+			Save canonical;
+			canonical.load_save_file();
+			for (int slot = 0; slot < input_slots::pad_count; ++slot)
+			{
+				require(canonical.play_settings().aim_deadzone(slot) == legacy_deadzones[sensitivity - 1],
+					"Saving legacy preferences changed an inherited aim deadzone");
+			}
+		}
+	}
+
+	void check_stick_api(const IsolatedSaveDirectory& directory)
+	{
+		Save save;
+		PlaySettings play;
+		play.sticks[0] = { 10, 20 };
+		play.sticks[1] = { 30, 40 };
+		play.sticks[2] = { 50, 60 };
+		play.sticks[3] = { 70, 80 };
+		require(save.set_play_settings_and_save(play), "Could not save four separate pad profiles");
+		check_round_trip(save);
+		require(contents(directory.save_path()).find("\"pad_sticks\":[") != std::string::npos,
+			"Saving pad profiles did not write their canonical array");
+
+		play.sticks[0] = { -999, 999 };
+		play.sticks[1] = { 999, -999 };
+		play.sticks[2] = { 0, 90 };
+		play.sticks[3] = { 90, 0 };
+		require(save.set_play_settings_and_save(play), "Could not save normalized pad profiles");
+		const PlaySettings& normalized = save.play_settings();
+		require(normalized.stick_settings(0).movement_deadzone == -1 &&
+			normalized.stick_settings(0).aim_deadzone == 90 &&
+			normalized.stick_settings(1).movement_deadzone == 90 &&
+			normalized.stick_settings(1).aim_deadzone == -1 &&
+			normalized.stick_settings(2).movement_deadzone == 0 &&
+			normalized.stick_settings(2).aim_deadzone == 90 &&
+			normalized.stick_settings(3).movement_deadzone == 90 &&
+			normalized.stick_settings(3).aim_deadzone == 0,
+			"Pad preference API did not normalize to inherit or the supported 0..90 percent range");
+		check_round_trip(save);
+		for (const int slot : { -1, input_slots::keyboard_and_mouse, input_slots::count,
+			(std::numeric_limits<int>::min)(), (std::numeric_limits<int>::max)() })
+		{
+			require(normalized.stick_settings(slot).movement_deadzone == -1 &&
+				normalized.stick_settings(slot).aim_deadzone == -1 &&
+				normalized.movement_deadzone(slot, 0.275f) == 0.275f &&
+				normalized.aim_deadzone(slot) == normalized.aim_deadzone(),
+				"Invalid or keyboard slot did not safely inherit global stick defaults");
+		}
 	}
 
 	void check_boolean_loading(const IsolatedSaveDirectory& directory,
@@ -227,8 +424,12 @@ int main()
 			"reduce_effects", &PlaySettings::reduce_effects);
 		check_boolean_loading(directory, "reduce_effects", &PlaySettings::reduce_effects,
 			"view_shake", &PlaySettings::view_shake);
+		check_stick_loading(directory);
+		check_legacy_sticks(directory);
+		check_stick_api(directory);
 		std::cout << "PASS settings: bulk apply, validation, persistence failure, recovery, "
-			"view-shake/aim-marker/reduce-effects default/type recovery and boolean persistence\n";
+			"boolean recovery, four pad profiles, typed field recovery, legacy aim inheritance, "
+			"stick normalization and persistence\n";
 		return 0;
 	}
 	catch (const std::exception& error)

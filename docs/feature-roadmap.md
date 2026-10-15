@@ -174,15 +174,17 @@ Implemented:
 - Options and Pause open the same Controls / audio page, with a persistent
   controller and keyboard/mouse reference. Returning preserves the parent
   page, including pending display/palette selections, and never resumes a match.
-- Stick sensitivity has five levels. Since aiming selects an absolute direction,
-  sensitivity changes the radial aim deadzone (70%, 60%, 50%, 35%, 20%), rather
-  than scaling a vector that is then normalized. Level 3 preserves the original
-  behavior. Movement, mouse cursor aim and fixed roller aim are unchanged.
+- **Pad sticks** opens separate movement and radial aim deadzones for Pad 1-4,
+  with a live raw-input/response preview. The profiles follow XInput slots,
+  independently of player/view numbers. Old saves inherit authored movement
+  and their former global sensitivity (70%, 60%, 50%, 35%, 20%) until edited.
+  Mouse cursor aim and fixed roller aim keep their existing behavior.
 - Separate music and SFX volume scale the authored mix from 0-100%, including
   menu clicks, results, paint, player and weapon sounds. Apply affects menu
   music immediately; paused music and weapon loops pick up the new gain before
   resuming, and subsequent sounds use the new gain when played.
-- Apply saves all three preferences for every player; Back discards unapplied
+- Apply saves the shared preferences; the Pad sticks child applies its profiles
+  separately without losing pending parent changes. Back discards unapplied
   changes. Older or malformed fields fall back independently. A live match reads
   the saved preferences, and new matches and restarts use them too. Settings
   retain pause-menu input ownership and the disconnected-player fallback.

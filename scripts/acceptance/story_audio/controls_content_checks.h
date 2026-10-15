@@ -151,6 +151,113 @@ namespace
 				((content_height + menu.box_size.y) / 2.0f - menu.layout.position.y) / 7.0f);
 		});
 
+		// The stick preview shares this page's authored right column. Reject
+		// negative drawing geometry, escaped markers, overlapping regions and
+		// misplaced readouts before opening either settings page.
+		rejected("stick_preview", [](rapidjson::Document& json)
+			{ json["controls_settings"].RemoveMember("stick_preview"); });
+		rejected("stick_preview", [](rapidjson::Document& json)
+			{ json["controls_settings"]["stick_preview"].SetArray(); });
+		for (const char* key : { "marker_size", "line_width" })
+		{
+			rejected(key, [&](rapidjson::Document& json)
+				{ json["controls_settings"]["stick_preview"].RemoveMember(key); });
+			rejected(key, [&](rapidjson::Document& json)
+				{ json["controls_settings"]["stick_preview"][key].SetString("3", json.GetAllocator()); });
+			for (const double value : { -0.001, 0.0, 1.0e100 })
+			{
+				rejected(key, [&](rapidjson::Document& json)
+					{ json["controls_settings"]["stick_preview"][key].SetDouble(value); });
+			}
+		}
+		rejected("marker_size", [](rapidjson::Document& json)
+			{ json["controls_settings"]["stick_preview"]["marker_size"].SetFloat(24.001f); });
+		rejected("line_width", [](rapidjson::Document& json)
+			{ json["controls_settings"]["stick_preview"]["line_width"].SetFloat(8.001f); });
+		for (const float marker : { menu.stick_preview.line_width,
+			menu.stick_preview.line_width * 2.0f })
+		{
+			rejected("marker_size", [&](rapidjson::Document& json)
+				{ json["controls_settings"]["stick_preview"]["marker_size"].SetFloat(marker); });
+		}
+		for (const char* key : { "raw_movement", "movement_response", "aim" })
+		{
+			rejected(key, [&](rapidjson::Document& json)
+				{ json["controls_settings"]["stick_preview"].RemoveMember(key); });
+			rejected(key, [&](rapidjson::Document& json)
+				{ json["controls_settings"]["stick_preview"][key].SetNull(); });
+			for (const char* field : { "position", "size" })
+			{
+				rejected(key, [&](rapidjson::Document& json)
+					{ json["controls_settings"]["stick_preview"][key].RemoveMember(field); });
+				rejected(key, [&](rapidjson::Document& json)
+					{ json["controls_settings"]["stick_preview"][key][field].SetNull(); });
+				for (const char* axis : { "x", "y" })
+				{
+					rejected(key, [&](rapidjson::Document& json)
+						{ json["controls_settings"]["stick_preview"][key][field].RemoveMember(axis); });
+					for (const double value : { -0.001, 0.0, 1.0e100 })
+					{
+						rejected(key, [&](rapidjson::Document& json)
+							{ json["controls_settings"]["stick_preview"][key][field][axis].SetDouble(value); });
+					}
+				}
+			}
+			rejected(key, [&](rapidjson::Document& json)
+				{ json["controls_settings"]["stick_preview"][key]["position"]["x"].SetFloat(menu.controls_position.x - 1.0f); });
+			rejected(key, [&](rapidjson::Document& json)
+				{ json["controls_settings"]["stick_preview"][key]["size"]["x"].SetFloat(menu.controls_size.x + 1.0f); });
+			rejected("marker_size", [&](rapidjson::Document& json)
+				{ json["controls_settings"]["stick_preview"][key]["size"]["x"].SetFloat(menu.stick_preview.marker_size * 2.0f); });
+			rejected("line_width", [&](rapidjson::Document& json)
+				{ json["controls_settings"]["stick_preview"][key]["size"]["y"].SetFloat(menu.stick_preview.line_width * 2.0f); });
+		}
+		rejected("aim", [&](rapidjson::Document& json)
+			{ json["controls_settings"]["stick_preview"]["aim"]["size"]["y"].SetFloat(menu.stick_preview.aim.height - 1.0f); });
+		for (const char* key : { "aim_readout_position", "association_position" })
+		{
+			rejected(key, [&](rapidjson::Document& json)
+				{ json["controls_settings"]["stick_preview"].RemoveMember(key); });
+			rejected(key, [&](rapidjson::Document& json)
+				{ json["controls_settings"]["stick_preview"][key].SetNull(); });
+			for (const char* axis : { "x", "y" })
+			{
+				rejected(key, [&](rapidjson::Document& json)
+					{ json["controls_settings"]["stick_preview"][key].RemoveMember(axis); });
+				for (const double value : { -0.001, 0.0, 1.0e100 })
+				{
+					rejected(key, [&](rapidjson::Document& json)
+						{ json["controls_settings"]["stick_preview"][key][axis].SetDouble(value); });
+				}
+				rejected(key, [&](rapidjson::Document& json)
+					{ json["controls_settings"]["stick_preview"][key][axis].SetFloat(axis[0] == 'x' ?
+						menu.controls_position.x + menu.controls_size.x : menu.controls_position.y + menu.controls_size.y); });
+			}
+		}
+		rejected("raw_movement", [&](rapidjson::Document& json)
+			{ json["controls_settings"]["stick_preview"]["raw_movement"]["position"]["y"].SetFloat(menu.controls_position.y); });
+		rejected("movement_response", [&](rapidjson::Document& json)
+			{ json["controls_settings"]["stick_preview"]["movement_response"]["position"]["y"].SetFloat(menu.stick_preview.raw_movement.bottom()); });
+		rejected("aim", [&](rapidjson::Document& json)
+			{ json["controls_settings"]["stick_preview"]["aim"]["position"]["y"].SetFloat(menu.stick_preview.movement_response.bottom()); });
+		rejected("association_position", [&](rapidjson::Document& json)
+			{ json["controls_settings"]["stick_preview"]["association_position"]["y"].SetFloat(menu.stick_preview.aim.bottom()); });
+		rejected("aim_readout_position", [&](rapidjson::Document& json)
+			{ json["controls_settings"]["stick_preview"]["aim_readout_position"]["x"].SetFloat(menu.stick_preview.aim.right()); });
+		for (const float y : { menu.stick_preview.aim.y - 1.0f, menu.stick_preview.aim.bottom() })
+		{
+			rejected("aim_readout_position", [&](rapidjson::Document& json)
+				{ json["controls_settings"]["stick_preview"]["aim_readout_position"]["y"].SetFloat(y); });
+		}
+		const Presentation widest_preview = variants.load([](rapidjson::Document& json)
+		{
+			json["controls_settings"]["stick_preview"]["marker_size"].SetFloat(24.0f);
+			json["controls_settings"]["stick_preview"]["line_width"].SetFloat(8.0f);
+		});
+		require(widest_preview.controls_settings().stick_preview.marker_size == 24.0f &&
+			widest_preview.controls_settings().stick_preview.line_width == 8.0f,
+			"Valid maximum stick-preview marker and line widths were rejected");
+
 		// The maximum paper size preserves the menu margins; row seven and its
 		// focus card still end above the status. Text fitting uses real fonts.
 		require(menu.box_size == mattmath::Vector2F(1760.0f, content_height - 40.0f) &&

@@ -186,6 +186,15 @@
     "status_position": { "x": 220.0, "y": 888.0 },
     "item_font": "gill_sans_mt_bold_36",
     "help_font": "gill_sans_mt_bold_24",
+    "stick_preview": {
+      "raw_movement": { "position": { "x": 1120.0, "y": 315.0 }, "size": { "x": 620.0, "y": 24.0 } },
+      "movement_response": { "position": { "x": 1120.0, "y": 395.0 }, "size": { "x": 620.0, "y": 24.0 } },
+      "aim": { "position": { "x": 1120.0, "y": 500.0 }, "size": { "x": 210.0, "y": 210.0 } },
+      "aim_readout_position": { "x": 1360.0, "y": 500.0 },
+      "association_position": { "x": 1120.0, "y": 750.0 },
+      "marker_size": 12.0,
+      "line_width": 3.0
+    },
     "sounds": {
       "volume_preview": { "name": "ui.volume_preview", "volume": 0.7 }
     },

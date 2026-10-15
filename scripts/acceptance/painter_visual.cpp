@@ -15,6 +15,8 @@
 #include "game/states/results_menu.h"
 #include "game/states/main_menu.h"
 #include "game/states/controls_settings_menu.h"
+#include "game/states/stick_settings_menu.h"
+#include "game/objects/stick_response.h"
 #include "game/build_info.h"
 #include "game/save.h"
 #include "game/debug/dev_tools.h"
@@ -2501,6 +2503,7 @@ namespace
 #include "scripts/acceptance/painter_visual/main_menu_checks.h"
 #include "scripts/acceptance/painter_visual/settings_menu_checks.h"
 #include "scripts/acceptance/painter_visual/controls_menu_checks.h"
+#include "scripts/acceptance/painter_visual/stick_settings_checks.h"
 }
 
 int wmain(int argc, wchar_t** argv)
@@ -2514,8 +2517,8 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"resume" || std::wstring(argv[3]) == L"end-menu" ||
             std::wstring(argv[3]) == L"pause-menu" || std::wstring(argv[3]) == L"results-menu" ||
             std::wstring(argv[3]) == L"main-menu" || std::wstring(argv[3]) == L"settings-menu" ||
-            std::wstring(argv[3]) == L"controls-menu")),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu]");
+            std::wstring(argv[3]) == L"controls-menu" || std::wstring(argv[3]) == L"stick-settings")),
+            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -2530,6 +2533,7 @@ int wmain(int argc, wchar_t** argv)
         const bool main_menu_only = argc == 4 && std::wstring(argv[3]) == L"main-menu";
         const bool settings_menu_only = argc == 4 && std::wstring(argv[3]) == L"settings-menu";
         const bool controls_menu_only = argc == 4 && std::wstring(argv[3]) == L"controls-menu";
+        const bool stick_settings_only = argc == 4 && std::wstring(argv[3]) == L"stick-settings";
         std::cout << std::unitbuf;
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
@@ -2576,9 +2580,16 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         const Canvas canvas(app.render_resources());
+        if (stick_settings_only)
+        {
+            stick_settings_matrix(app, canvas, tuning, presentation, output);
+            std::cout << "PASS stick-settings-only hardware check; other painter matrices were not run\n";
+            return 0;
+        }
         if (controls_menu_only)
         {
             controls_menu_matrix(app, levels, canvas, tuning, presentation, content, output);
+            stick_settings_matrix(app, canvas, tuning, presentation, output);
             std::cout << "PASS controls-menu-only hardware check; other painter matrices were not run\n";
             return 0;
         }
@@ -2863,6 +2874,7 @@ int wmain(int argc, wchar_t** argv)
         results_menu_matrix(app, canvas, tuning, presentation, output);
         settings_menu_matrix(app, canvas, tuning, presentation, output);
         controls_menu_matrix(app, levels, canvas, tuning, presentation, content, output);
+        stick_settings_matrix(app, canvas, tuning, presentation, output);
         main_menu_matrix(app, canvas, tuning, presentation, output);
         require(records.good(), "capture record write failed");
         std::cout << "PASS real builder roster; 1P/4P 720p/1080p/QHD; three palettes; "

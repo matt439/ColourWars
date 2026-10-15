@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/controls_settings_menu.h"
+#include "game/states/stick_settings_menu.h"
 #include <algorithm>
 
 using namespace labrador;
@@ -65,7 +66,14 @@ void ControlsSettingsMenu::init()
 					this->presentation().controls_settings().art.focus_ink);
 			}, &look.art, value_limit);
 	};
-	this->aim_ = make_row("aim", L"Stick sensitivity", 0, this->selection_.aim_sensitivity, 1, 5, 1);
+	UiText* sticks = add_text("sticks", L"Pad sticks", style.item_font,
+		this->calculate_widget_position(0, 0), look.art.ink);
+	this->focus_.add(sticks, [this]
+	{
+		this->play_wave(this->confirm_sound_);
+		this->input()->reset_actions();
+		this->context()->push(std::make_unique<StickSettingsMenu>(this->menu_context(), this->pausing_player()));
+	});
 	this->music_ = make_row("music", L"Music volume", 1, this->selection_.music_volume, 0, 100, 10);
 	this->sfx_ = make_row("sfx", L"SFX volume", 2, this->selection_.sfx_volume, 0, 100, 10);
 	this->view_shake_ = std::make_unique<OptionRow>("view_shake", L"View shake",
@@ -98,7 +106,7 @@ void ControlsSettingsMenu::init()
 			this->set_status(L"Apply to save changes for all players.",
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
-	for (OptionRow* row : { this->aim_.get(), this->music_.get(), this->sfx_.get(),
+	for (OptionRow* row : { this->music_.get(), this->sfx_.get(),
 		this->view_shake_.get(), this->aim_marker_.get(), this->reduce_effects_.get() })
 	{
 		this->text_container_->add_child(row);
@@ -113,7 +121,7 @@ void ControlsSettingsMenu::init()
 	this->set_status(L"Apply to save changes for all players.", look.art.focus_ink);
 	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(back, [this] { this->close(); });
-	UiText* controls = add_text("controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nHigher sensitivity: less stick travel.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
+	UiText* controls = add_text("controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
 		look.help_font, look.controls_position, look.art.ink);
 	const RectangleF help = controls->bounds();
 	controls->set_scale(std::min({ 1.0f, look.controls_size.x / help.width,
@@ -136,8 +144,6 @@ void ControlsSettingsMenu::set_status(const std::wstring& text, const Colour& co
 
 void ControlsSettingsMenu::refresh_values()
 {
-	const wchar_t* labels[] = { L"1 (low)", L"2", L"3 (normal)", L"4", L"5 (high)" };
-	this->aim_->set_value(labels[this->selection_.aim_sensitivity - 1]);
 	this->music_->set_value(std::to_wstring(this->selection_.music_volume) + L"%");
 	this->sfx_->set_value(std::to_wstring(this->selection_.sfx_volume) + L"%");
 	this->view_shake_->set_value(this->selection_.view_shake ? L"On" : L"Off");
@@ -147,6 +153,8 @@ void ControlsSettingsMenu::refresh_values()
 
 void ControlsSettingsMenu::apply_settings()
 {
+	// The child commits pad profiles independently of these shared preferences.
+	this->selection_.sticks = this->save()->play_settings().sticks;
 	const bool saved = this->save()->set_play_settings_and_save(this->selection_);
 	if (this->pausing_player() < 0)
 	{

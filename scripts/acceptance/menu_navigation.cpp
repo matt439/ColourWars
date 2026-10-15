@@ -102,6 +102,42 @@ int main(int argc, char** argv)
         pad.left_stick.x = 0.9f;
         require(step() == Direction::right, "Neutral must rearm stick navigation");
 
+        // Calibration reserves both sticks for the response preview. A full
+        // stick push cannot change the selected pad, row or deadzone, while
+        // the D-pad keeps ordinary press, repeat and page-rearming behavior.
+        MenuDirectionRepeat dpad_only;
+        GamepadState calibration;
+        calibration.connected = true;
+        calibration.left_stick = { 1.0f, 1.0f };
+        calibration.right_stick = { -1.0f, -1.0f };
+        const auto calibration_step = [&](float dt = 0.0f)
+        {
+            return dpad_only.update_pad(calibration, dt, delay, interval, tuning.input(), false);
+        };
+        require(calibration_step() == Direction::none && calibration_step(10.0f) == Direction::none,
+            "Calibration stick movement must not navigate or repeat without D-pad input");
+        calibration.buttons = button(GamepadButton::dpad_down);
+        require(calibration_step() == Direction::down,
+            "Calibration D-pad must navigate while both sticks are held");
+        require(calibration_step(delay + interval) == Direction::down,
+            "Calibration D-pad must retain held navigation repeat");
+        calibration.buttons = 0;
+        require(calibration_step() == Direction::none,
+            "Calibration D-pad release must stay neutral with sticks held");
+        calibration.left_stick = { -1.0f, 0.0f };
+        calibration.buttons = button(GamepadButton::dpad_right);
+        require(calibration_step() == Direction::right,
+            "An opposing calibration stick must not cancel D-pad navigation");
+        dpad_only = MenuDirectionRepeat();
+        require(calibration_step(10.0f) == Direction::none,
+            "Calibration page reset must discard a held D-pad");
+        calibration.buttons = 0;
+        require(calibration_step() == Direction::none,
+            "Calibration D-pad must rearm through neutral even with a full stick held");
+        calibration.buttons = button(GamepadButton::dpad_right);
+        require(calibration_step() == Direction::right,
+            "Calibration D-pad must work after the page reset and neutral input");
+
         // Exercise authored thresholds that would fail with the old constants.
         InputVariant variant(argv[1]);
         const GameTuning lower_engage = variant.load("menu_engage_threshold", "0.65");

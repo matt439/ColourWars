@@ -29,7 +29,6 @@ private:
 	std::unique_ptr<labrador::UiTexture> background_;
 	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::vector<std::unique_ptr<labrador::UiText>> text_;
-	std::unique_ptr<OptionRow> aim_;
 	std::unique_ptr<OptionRow> music_;
 	std::unique_ptr<OptionRow> sfx_;
 	std::unique_ptr<OptionRow> view_shake_;

@@ -74,10 +74,10 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     preview_volume = 0.0f;
     const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) -
         look.box_size) / 2.0f, look.box_size);
-    const std::array<const wchar_t*, 8> labels{ L"Stick sensitivity", L"Music volume", L"SFX volume",
+    const std::array<const wchar_t*, 8> labels{ L"Pad sticks", L"Music volume", L"SFX volume",
         L"View shake", L"Aim marker", L"Reduce effects", L"Apply", L"Back" };
-    const std::array<const char*, 8> names{ "sensitivity", "music", "sfx", "shake", "marker", "effects", "apply", "back" };
-    const std::wstring help = L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nHigher sensitivity: less stick travel.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.";
+    const std::array<const char*, 8> names{ "pad-sticks", "music", "sfx", "shake", "marker", "effects", "apply", "back" };
+    const std::wstring help = L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.";
     const std::wstring pending_status = L"Apply to save changes for all players.";
     const auto measure = [&](const std::string& font, const std::wstring& text)
     {
@@ -123,8 +123,7 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             row_label(row).height + art.focus_padding.y * 2.0f < look.layout.spacing.y,
             "Controls/audio action card escapes paper or overlaps another row");
     }
-    for (const auto& entry : std::array<std::pair<size_t, const wchar_t*>, 10>{ {
-        { 0, L"1 (low)" }, { 0, L"2" }, { 0, L"3 (normal)" }, { 0, L"4" }, { 0, L"5 (high)" },
+    for (const auto& entry : std::array<std::pair<size_t, const wchar_t*>, 5>{ {
         { 1, L"100%" }, { 2, L"0%" }, { 3, L"Off" }, { 4, L"On" }, { 5, L"Off" } } })
     {
         require(row_label(entry.first).right() + art.focus_padding.x < value_bounds(entry.first, entry.second).x &&
@@ -204,7 +203,7 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             "Native Controls/audio copy lost readable ink/paper contrast");
     };
     using Values = std::array<std::wstring, 6>;
-    const Values initial{ L"3 (normal)", L"0%", L"0%", L"On", L"On", L"Off" };
+    const Values initial{ L"", L"0%", L"0%", L"On", L"On", L"Off" };
     // One reference frame contains all authored copy, independent of the real
     // page's widget tree. Cropping each measured extent catches truncation,
     // missing lines, misplaced text, unwanted shadows and wrong filtering.
@@ -224,7 +223,10 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         for (size_t row = 0; row < labels.size(); ++row)
         {
             add(labels[row], look.item_font, row_label(row).position(), row == selected ? art.focus_ink : art.ink);
-            if (row < values.size()) { add(values[row], look.item_font, value_bounds(row, values[row]).position(), art.ink); }
+            if (row < values.size() && !values[row].empty())
+            {
+                add(values[row], look.item_font, value_bounds(row, values[row]).position(), art.ink);
+            }
         }
         add(status, look.help_font, look.status_position, status_colour,
             status_bounds(status).width / measure(look.help_font, status).x);
@@ -337,20 +339,11 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         tap(Key::up); std::ignore = assert_focus(main_menu_frame(app), row_label(6));
     }
 
-    // Real edits at both clamps, then a shorter/longer sensitivity round trip.
+    // Real volume edits at both clamps; the first action opens Pad sticks.
     // Values remain pending until Apply; SFX previews are silenced above.
     resize_page({ 1280, 720 }); open(std::make_unique<ControlsSettingsMenu>(&context));
     const std::string original = saved_bytes();
     Values values = initial;
-    for (int step = 0; step < 10; ++step) { tap(Key::left); }
-    values[0] = L"1 (low)"; std::ignore = capture("sensitivity-min", 0, values, pending_status, art.focus_ink);
-    for (int step = 0; step < 10; ++step) { tap(Key::right); }
-    values[0] = L"5 (high)"; std::ignore = capture("sensitivity-max", 0, values, pending_status, art.focus_ink);
-    tap(Key::left); values[0] = L"4";
-    lettering(main_menu_frame(app), 0, values, pending_status, art.focus_ink);
-    tap(Key::left); values[0] = L"3 (normal)";
-    lettering(main_menu_frame(app), 0, values, pending_status, art.focus_ink);
-    tap(Key::right); tap(Key::right); values[0] = L"5 (high)";
     for (size_t row = 1; row <= 2; ++row)
     {
         tap(Key::down);
@@ -370,10 +363,10 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         !play.reduce_effects && play.music_volume == 0 && play.sfx_volume == 0,
         "Controls/audio changed active settings or saved before Apply");
     tap(Key::down); tap(Key::enter);
-    require(play.aim_sensitivity == 5 && !play.view_shake && !play.aim_marker && play.reduce_effects &&
+    require(play.aim_sensitivity == 3 && !play.view_shake && !play.aim_marker && play.reduce_effects &&
         play.music_volume == 0 && play.sfx_volume == 0, "Actual Controls/audio Apply lost pending settings");
     Save reloaded; reloaded.load_save_file();
-    require(reloaded.play_settings().aim_sensitivity == 5 && !reloaded.play_settings().view_shake &&
+    require(reloaded.play_settings().aim_sensitivity == 3 && !reloaded.play_settings().view_shake &&
         !reloaded.play_settings().aim_marker && reloaded.play_settings().reduce_effects &&
         reloaded.play_settings().music_volume == 0 && reloaded.play_settings().sfx_volume == 0 &&
         reloaded.resolution() == ScreenResolution::s_1920_1080 &&
@@ -391,13 +384,13 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     require(std::filesystem::remove(blocked), "Cannot remove isolated Controls/audio write refusal");
     tap(Key::down); tap(Key::enter);
     require(stack.depth() == 1, "Controls/audio Back action did not pop its own page");
-    open(std::make_unique<ControlsSettingsMenu>(&context)); tap(Key::left);
-    for (int row = 0; row < 7; ++row) { tap(Key::down); }
+    open(std::make_unique<ControlsSettingsMenu>(&context)); tap(Key::down); tap(Key::right);
+    for (int row = 1; row < 7; ++row) { tap(Key::down); }
     tap(Key::enter);
-    require(stack.depth() == 1 && play.aim_sensitivity == 5 && saved_bytes() == last_saved,
+    require(stack.depth() == 1 && play.aim_sensitivity == 3 && saved_bytes() == last_saved,
         "Controls/audio Back action persisted an unapplied change");
-    open(std::make_unique<ControlsSettingsMenu>(&context)); tap(Key::left); tap(Key::escape);
-    require(stack.depth() == 1 && play.aim_sensitivity == 5 && saved_bytes() == last_saved,
+    open(std::make_unique<ControlsSettingsMenu>(&context)); tap(Key::down); tap(Key::right); tap(Key::escape);
+    require(stack.depth() == 1 && play.aim_sensitivity == 3 && saved_bytes() == last_saved,
         "Controls/audio Escape persisted an unapplied change");
 
     // The underlying Options instance keeps pending display values and cursor.
@@ -406,12 +399,12 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const Frame pending_options = main_menu_frame(app);
     tap(Key::enter); tick(); require(stack.depth() == 3, "Options did not push actual Controls/audio");
     const Frame controls_from_options = main_menu_frame(app);
-    tap(Key::left);
+    tap(Key::down); tap(Key::right);
     require(controls_from_options.pixels != main_menu_frame(app).pixels,
         "Controls/audio Options-return fixture did not stage its discardable edit");
     tap(Key::escape); tick(0.5f);
     require(stack.depth() == 2 && pending_options.pixels == main_menu_frame(app).pixels &&
-        saved_bytes() == last_saved && play.aim_sensitivity == 5,
+        saved_bytes() == last_saved && play.aim_sensitivity == 3,
         "Controls/audio return lost pending Options values/focus or saved its own edits");
 
     // Actual GameLevel owns the Pause frame: returning from Controls/audio
@@ -438,13 +431,19 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const Frame paused = main_menu_frame(app);
     tap(Key::enter); tick(); require(stack.depth() == 4, "Pause did not push actual Controls/audio");
     const Frame controls_from_pause = main_menu_frame(app);
-    tap(Key::left);
+    tap(Key::enter); tick(); require(stack.depth() == 5, "Paused Controls/audio did not push Pad sticks");
+    tap(Key::down); tap(Key::right); tick(0.75f); tap(Key::escape); tick(0.75f);
+    require(stack.depth() == 4 && game->resume_remaining() == 0.0f &&
+        frozen == resume_observation(game->level()) && controls_from_pause.pixels == main_menu_frame(app).pixels &&
+        saved_bytes() == last_saved,
+        "Pad sticks return changed/resumed the paused match, lost parent focus or saved a pending edit");
+    tap(Key::down); tap(Key::right);
     require(controls_from_pause.pixels != main_menu_frame(app).pixels,
         "Controls/audio Pause-return fixture did not stage its discardable edit");
     tick(0.75f); tap(Key::escape); tick(0.75f);
     require(stack.depth() == 3 && game->resume_remaining() == 0.0f &&
         frozen == resume_observation(game->level()) && paused.pixels == main_menu_frame(app).pixels &&
-        saved_bytes() == last_saved && play.aim_sensitivity == 5,
+        saved_bytes() == last_saved && play.aim_sensitivity == 3,
         "Controls/audio return resumed/changed the paused match, lost focus or saved pending edits");
     require(records.good(), "Controls/audio capture record write failed");
     std::cout << "PASS Controls/audio: complete fitted help, labels/values/status in linear ink; all eight cards/arrows, "

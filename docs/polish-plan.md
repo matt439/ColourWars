@@ -1169,13 +1169,66 @@ worth testing if one person's confirmation repeatedly starts play before the
 others are ready; it also adds friction, so it should not become mandatory by
 assumption. Give disconnected groups a clear way back to the menu.
 
-The [aim preference](../game/play_settings.h) currently sets one radial deadzone
-for everyone, although players may bring different controllers. Try individual
-stick deadzones with a small live response preview, labelled for what they change.
-Test two controllers together and retain settings by the documented player/device
-association. Full remapping is a separate usability candidate. Preserve the
-existing A-or-left-trigger jump choice, and introduce no new requirement to take
-the aiming thumb off the stick.
+**Per-pad deadzones and live preview implemented (2026-10-15, part of `POL#18`).**
+Options and Pause > Controls / audio > **Pad sticks** selects Pad 1-4 and sets
+separate **Move deadzone** and **Aim deadzone** percentages (0-90%, in five-point
+steps). The preview shows raw horizontal movement, rescaled movement response,
+the right stick's radial cutoff, raw position and active direction. A hollow
+square marks raw aiming and a solid square marks a new aim direction; inside
+the cutoff the page says **No new aim**, matching the character's retained aim.
+Use the D-pad or keyboard to navigate this page; both sticks stay available for
+testing without moving focus or changing a pending setting.
+The pending settings affect the preview immediately; Apply activates and saves
+all four profiles. Back discards only unapplied edits, and returns to the
+covering page without resuming the match. The parent keeps pending shared
+preferences and preserves profiles applied in the child when it later saves.
+
+Profiles in [`PlaySettings`](../game/play_settings.h) and the save's `pad_sticks`
+array belong to **XInput device slots**, labelled **Pad 1-4** on the page; they
+are independent of the roster/view's player number. Opening from a pad's pause
+selects that slot; otherwise the first connected pad, or Pad 1 when none is
+connected. Disconnected slots stay editable and show **disconnected**, with
+neutral input. A reconnect to a different slot uses that slot's profile, so the
+page explicitly asks players to check their slot after reconnecting. This is
+slot persistence, with no claim of physical device identity or automatic
+mid-match reassignment (`ROAD#4`).
+
+Absent or individually malformed profile fields inherit the authored movement
+threshold and the old save's shared aim sensitivity. Editing a threshold makes
+that field an explicit percentage. Shared gameplay/preview math preserves
+continuous movement from zero to full speed after the horizontal cutoff and
+uses a radial aim cutoff before normalizing direction. Live matches read
+applied profiles on every input sample. Drop-through, menu navigation, mouse
+aim, fixed roller aim and A-or-left-trigger jump keep their existing rules.
+`presentation.json.controls_settings.stick_preview` owns chart geometry;
+the page reuses the existing paper, fonts and solid texel.
+
+Validation: Debug and Release build under `/W4 /WX` and pass all 23 consumer
+cases. Save fixtures cover four distinct profiles, independent malformed-field
+recovery, legacy inheritance, safe bounds and round trips. Shared input checks
+cover cutoff continuity, full travel, radial direction and live changes in
+individual slots. Navigation checks keep fully deflected sticks out of menu
+actions while retaining D-pad repeats and neutral rearming.
+
+Both D3D11 hardware preview matrices pass on the NVIDIA GeForce RTX 5080 at
+720p, 1080p and QHD: native copy/contrast, five focus cards, initial/pausing slot
+selection, pending cutoff previews, clamps, Apply/reload/write refusal,
+Back/Escape discard and parent Apply preserving child profiles. Repeated drawing,
+Reduce effects and resize preserve the page. Both parent Controls/audio matrices
+also pass six display sizes/aspects, including
+Pause > Controls/audio > Pad sticks and back with the match and save frozen.
+The retained
+[720p capture](images/polish-stick-settings/pad-sticks-720p.png) shows the
+disconnected-pad preview. Rerun with
+`scripts/check-painter.ps1 -Preset x64-debug -StickSettingsOnly` (or `x64-release`).
+Debug and extracted Release startup pass
+with isolated saves and a system-only PATH; the 53-file ZIP retains the accepted
+bank and byte-identical presentation data. Evidence is under `out/acceptance/`
+and `out/validation/stick-*`.
+
+Physical review with two controllers, including drift, partial movement, aiming
+and reconnect-slot identification, remains in `POL#18`/`ROAD#2`. Full remapping
+remains separate (`GAP#4.2`).
 
 ### Make the finished paint job worth looking at
 

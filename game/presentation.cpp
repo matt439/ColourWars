@@ -557,7 +557,6 @@ namespace
 		menu.item_font = json.identifier("item_font");
 		menu.help_font = json.identifier("help_font");
 		menu.volume_preview_sound = read_sound(json.object("sounds"), "volume_preview");
-
 		const float edge = menu.art.keyline_width * 3.0f;
 		const Vector2F top = (Vector2F(1920.0f, content_height) - menu.box_size) / 2.0f + Vector2F(edge);
 		const Vector2F bottom = (Vector2F(1920.0f, content_height) + menu.box_size) / 2.0f -
@@ -602,6 +601,68 @@ namespace
 		{
 			throw std::runtime_error(json.where() + ": heading_position, controls_position and status_position must order "
 				"the heading, eight rows and status without overlapping the help column.");
+		}
+
+		// Validate the shared page layout first so its diagnostics still identify
+		// a malformed controls column before the preview placed inside it.
+		const JsonValue preview = json.object("stick_preview");
+		const auto read_preview_box = [&](const char* key)
+		{
+			const JsonValue box = preview.object(key);
+			return RectangleF(read_finite_vector(box, "position"), read_positive_vector(box, "size"));
+		};
+		menu.stick_preview.raw_movement = read_preview_box("raw_movement");
+		menu.stick_preview.movement_response = read_preview_box("movement_response");
+		menu.stick_preview.aim = read_preview_box("aim");
+		menu.stick_preview.aim_readout_position = read_finite_vector(preview, "aim_readout_position");
+		menu.stick_preview.association_position = read_finite_vector(preview, "association_position");
+		menu.stick_preview.marker_size = read_positive(preview, "marker_size");
+		menu.stick_preview.line_width = read_positive(preview, "line_width");
+		const StickPreviewPresentation& view = menu.stick_preview;
+		if (view.marker_size > 24.0f || view.line_width > 8.0f ||
+			view.marker_size <= view.line_width * 2.0f)
+		{
+			throw std::runtime_error(preview.where() + ": marker_size must be <=24 and greater than twice line_width; line_width must be <=8.");
+		}
+		const RectangleF preview_bounds(menu.controls_position, menu.controls_size);
+		const auto check_preview_box = [&](const char* key, const RectangleF& box)
+		{
+			if (!preview_bounds.contains(box) || box.width <= view.marker_size * 2.0f ||
+				box.height <= view.line_width * 2.0f)
+			{
+				throw std::runtime_error(preview.where() + ": '" + key +
+					"' must fit controls_size and leave space for marker_size and line_width.");
+			}
+		};
+		check_preview_box("raw_movement", view.raw_movement);
+		check_preview_box("movement_response", view.movement_response);
+		check_preview_box("aim", view.aim);
+		if (view.aim.width != view.aim.height)
+		{
+			throw std::runtime_error(preview.where() + ": aim must be square.");
+		}
+		const auto check_preview_position = [&](const char* key, const Vector2F& position)
+		{
+			if (position.x < preview_bounds.x || position.x >= preview_bounds.right() ||
+				position.y < preview_bounds.y || position.y >= preview_bounds.bottom())
+			{
+				throw std::runtime_error(preview.where() + ": '" + key + "' must fit inside controls_size.");
+			}
+		};
+		check_preview_position("aim_readout_position", view.aim_readout_position);
+		check_preview_position("association_position", view.association_position);
+		if (view.raw_movement.y <= preview_bounds.y ||
+			view.movement_response.y <= view.raw_movement.bottom() ||
+			view.aim.y <= view.movement_response.bottom() ||
+			view.association_position.y <= view.aim.bottom())
+		{
+			throw std::runtime_error(preview.where() +
+				": raw_movement, movement_response, aim and association_position must be ordered with gaps for their labels.");
+		}
+		if (view.aim_readout_position.x <= view.aim.right() ||
+			view.aim_readout_position.y < view.aim.y || view.aim_readout_position.y >= view.aim.bottom())
+		{
+			throw std::runtime_error(preview.where() + ": aim_readout_position must sit beside the aim box.");
 		}
 		return menu;
 	}

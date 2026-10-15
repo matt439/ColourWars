@@ -73,11 +73,15 @@ label the teams with A/B letters beside the percentages (and the bars, when
 shown).
 
 Options and Pause both offer **Controls / audio**, with a controls reference,
-five levels of controller stick sensitivity, separate music and SFX volume,
+per-pad movement and aim deadzones, separate music and SFX volume,
 and On/Off **View shake** and **Aim marker** settings (both On by default).
-Higher sensitivity needs less aim-stick travel; level 3 preserves the original
-deadzone. Mouse aim follows the cursor and the roller keeps its fixed aim.
-Use Left/Right to adjust, then Apply to save for all players and future launches.
+Open **Pad sticks** to select Pad 1-4, adjust each deadzone from 0-90%, and
+watch raw stick input and its movement/aim response before applying it.
+Use D-pad/arrows on that page so the sticks stay free for testing.
+Profiles follow the pad slot, independently of player numbers; check the slot
+after reconnecting. Old saves keep their existing deadzones until edited.
+Mouse aim follows the cursor and the roller keeps its fixed aim.
+Use Left/Right to adjust; Apply saves the current page's changes for future launches.
 Back discards unapplied changes. From Pause, Back returns to the pause menu;
 Resume uses the new settings in the current match. Volume is 0-100% of the
 authored mix, including menu sounds, and zero mutes that category.
