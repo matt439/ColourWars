@@ -43,6 +43,9 @@ launches, collisions or simulation randomness. The pane's HUD and dividers use
 their existing screen cameras. A remote player's event cannot shake the local
 pane.
 
+The saved [Reduce effects preference](polish-reduced-effects.md) overrides shake
+while On and preserves the separate View shake setting for later use.
+
 **View shake** defaults On in **Controls / audio**, reachable from Options and
 Pause. Left selects Off, Right selects On; Apply saves it for every player and
 future launches. Back discards pending edits. Older saves and malformed values
@@ -54,8 +57,9 @@ updates cannot age it. Pause/reconnect suspension, time-up, placement and both
 respawn paths clear it. Off prevents new events and immediately selects the
 stable render camera, including beneath pause at an unchanged window size.
 The next live update clears any retained accent. Essential contact and paint
-cues stay available when shake is Off. A combined reduced-effects control for
-flashes and ambient detail remains `POL#13`.
+cues stay available when shake is Off. The combined
+[reduced-effects control](polish-reduced-effects.md) also cuts optional firing
+flashes and idle detail (`POL#13`, implemented 2026-10-15).
 
 ## Verification
 

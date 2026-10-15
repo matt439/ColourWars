@@ -267,7 +267,8 @@ RectangleF Player::posed_rectangle() const
     const RectangleF posed(base.x + this->pose_.offset.x, base.y + this->pose_.offset.y + squash,
         base.width, base.height - squash);
     return this->state_ == PlayerState::alive && this->health_ > 0.0f &&
-        this->pose_.tool && !this->pose_.whole ? this->quiet_character_.rectangle(posed) : posed;
+        this->pose_.tool && !this->pose_.whole && !this->preferences_->reduce_effects ?
+        this->quiet_character_.rectangle(posed) : posed;
 }
 
 bool Player::drawn_whole() const
@@ -316,7 +317,8 @@ void Player::draw_figure(DrawList& draw_list, const RectangleF& rectangle, bool 
             this->grey_.value_or(this->TextureObject::colour()), flip);
         AnimationObject::draw_with(draw_list, rectangle,
             this->AnimationObject::colour(), flip);
-        if (this->quiet_character_.state().blinking && this->state_ == PlayerState::alive &&
+        if (!this->preferences_->reduce_effects && this->quiet_character_.state().blinking &&
+            this->state_ == PlayerState::alive &&
             this->pose_.tool && !this->pose_.whole)
         {
             this->attachments_.draw_blink(draw_list, rectangle, this->facing_right());
@@ -461,7 +463,7 @@ void Player::end_contacts(std::span<const Contact> contacts)
             {
                 this->movement_feedback_.land(this->support_position_,
                     this->support_impact_speed_);
-                if (this->preferences_->view_shake)
+                if (this->preferences_->view_shake_enabled())
                 {
                     this->view_shake_.land(this->support_impact_speed_);
                 }
@@ -549,7 +551,7 @@ void Player::end_contacts(std::span<const Contact> contacts)
         this->primary_->reset_motion();
     }
 
-    this->quiet_character_.update(can_act,
+    this->quiet_character_.update(can_act && !this->preferences_->reduce_effects,
         this->supported_this_tick_ && this->is_on_ground(),
         std::abs(this->velocity().x) < 0.01f && std::abs(this->input_.x_movement) < 0.01f &&
             !this->input_.primary_shoot,
@@ -702,7 +704,7 @@ void Player::on_projectile_contact(CollisionObjectType other_type)
     {
         this->start_action(PlayerAnimationState::hurt);
         this->combat_feedback_.hurt();
-        if (this->preferences_->view_shake) { this->view_shake_.hurt(); }
+        if (this->preferences_->view_shake_enabled()) { this->view_shake_.hurt(); }
     }
 
     this->health_regen_timer_ = 0.0f;
@@ -725,7 +727,7 @@ void Player::update(float dt)
     // on its actual tick at age zero, irrespective of the number of views.
     this->movement_feedback_.update(dt);
     this->combat_feedback_.update(dt);
-    this->view_shake_.update(dt, this->preferences_->view_shake);
+    this->view_shake_.update(dt, this->preferences_->view_shake_enabled());
     this->age_action(dt);
     if (this->state_ == PlayerState::alive && this->health_ <= 0.0f)
     {
@@ -741,7 +743,7 @@ void Player::update(float dt)
         this->set_move_state(PlayerMoveState::in_air);
         this->start_action(PlayerAnimationState::elimination);
         this->combat_feedback_.eliminate(this->rectangle_);
-        if (this->preferences_->view_shake) { this->view_shake_.eliminate(); }
+        if (this->preferences_->view_shake_enabled()) { this->view_shake_.eliminate(); }
         this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume * this->preferences_->sfx_gain());
     }
 

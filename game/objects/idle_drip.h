@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <span>
 
+struct PlaySettings;
+
 // Scene-owned decoration, explicitly advanced after contacts and muzzle repair.
 // It never joins collision dispatch and cannot spend paint or capture a surface.
 class IdleDrip final : public labrador::GameObject, public labrador::TextureObject
@@ -23,7 +25,7 @@ public:
 
     IdleDrip(const IdleDripPresentation* presentation,
         labrador::RenderResources* resources, const labrador::Colour& colour,
-        uint32_t identity);
+        uint32_t identity, const PlaySettings* preferences = nullptr);
 
     // Scene's ordinary update precedes final player contacts. Level calls
     // advance exactly once afterwards, including for eliminated players.
@@ -41,6 +43,7 @@ public:
 
 private:
     const IdleDripPresentation* presentation_;
+    const PlaySettings* preferences_;
     labrador::Colour paint_;
     uint32_t sequence_;
     float interval_ = 0.0f;

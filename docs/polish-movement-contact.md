@@ -95,9 +95,11 @@ Release `5e4d9e6decae4802ba3cfb069a90e448`.
 
 ## Remaining feedback
 
-`POL#10` retains optional view shake and menu focus motion. The
+`POL#10` retains menu focus motion; [optional view shake](polish-view-shake.md) is
+implemented. The
 [muzzle/paint-supply accents](polish-weapon-feedback.md) and
 [quiet character detail and idle dripping](polish-plan.md#tool-personality-and-quiet-detail) are implemented;
-reduce-effects settings remain `POL#13`. Human movement feel, crowded-match
+[reduce-effects settings](polish-reduced-effects.md) are also implemented
+(`POL#13`). Human movement feel, crowded-match
 readability in the reference arena, physical controllers and frame pacing remain
 their existing acceptance work.

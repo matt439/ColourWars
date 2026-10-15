@@ -88,7 +88,8 @@ namespace
 			actual.music_volume == wanted.music_volume &&
 			actual.sfx_volume == wanted.sfx_volume &&
 			actual.view_shake == wanted.view_shake &&
-			actual.aim_marker == wanted.aim_marker,
+			actual.aim_marker == wanted.aim_marker &&
+			actual.reduce_effects == wanted.reduce_effects,
 			"Shared play preferences did not survive reloading");
 	}
 
@@ -101,16 +102,18 @@ namespace
 			const char* value;
 			bool expected;
 		};
+		const bool default_value = PlaySettings{}.*preference;
+		const bool other_value = !(PlaySettings{}.*other_preference);
 		const Fixture fixtures[] = {
-			{ nullptr, true },
+			{ nullptr, default_value },
 			{ "true", true },
 			{ "false", false },
-			{ "null", true },
-			{ "0", true },
-			{ "1", true },
-			{ "\"false\"", true },
-			{ "[]", true },
-			{ "{}", true }
+			{ "null", default_value },
+			{ "0", default_value },
+			{ "1", default_value },
+			{ "\"false\"", default_value },
+			{ "[]", default_value },
+			{ "{}", default_value }
 		};
 		for (const Fixture& fixture : fixtures)
 		{
@@ -118,7 +121,8 @@ namespace
 				std::ofstream output(directory.save_path(), std::ios::binary | std::ios::trunc);
 				output << "{\"resolution\":{\"x\":1280,\"y\":720},\"fullscreen\":true,"
 					"\"team_palette\":\"blue_yellow\",\"aim_sensitivity\":4,"
-					"\"music_volume\":20,\"sfx_volume\":80,\"" << other_key << "\":false";
+					"\"music_volume\":20,\"sfx_volume\":80,\"" << other_key << "\":" <<
+					(other_value ? "true" : "false");
 				if (fixture.value != nullptr)
 				{
 					output << ",\"" << key << "\":" << fixture.value;
@@ -130,11 +134,11 @@ namespace
 			restored.load_save_file();
 			const PlaySettings& play = restored.play_settings();
 			require(play.*preference == fixture.expected,
-				"Absent or invalid boolean preference did not use its enabled default");
+				"Absent or invalid boolean preference did not use its default");
 			require(restored.resolution() == labrador::ScreenResolution::s_1280_720 &&
 				restored.fullscreen() && restored.team_palette() == TeamColourPair::blue_yellow &&
 				play.aim_sensitivity == 4 && play.music_volume == 20 && play.sfx_volume == 80 &&
-				!(play.*other_preference),
+				play.*other_preference == other_value,
 				"Boolean-preference recovery reset an unrelated saved preference");
 			require(restored.save_to_file(), "Could not canonicalize the boolean-preference save fixture");
 			const std::string canonical = std::string("\"") + key + "\":" +
@@ -158,7 +162,16 @@ int main()
 		play.sfx_volume = 70;
 		require(play.view_shake, "View shake is not enabled by default");
 		require(play.aim_marker, "Aim marker is not enabled by default");
+		require(!play.reduce_effects, "Reduce effects is not disabled by default");
+		require(play.view_shake_enabled(), "Default settings suppressed view shake");
+		play.reduce_effects = true;
+		require(!play.view_shake_enabled() && play.view_shake,
+			"Reduce effects did not suppress shake while retaining the individual preference");
+		play.reduce_effects = false;
 		play.view_shake = false;
+		require(!play.view_shake_enabled(), "Individual view-shake setting did not suppress shake");
+		play.reduce_effects = true;
+		require(!play.view_shake_enabled(), "Reduce effects re-enabled disabled view shake");
 		play.aim_marker = false;
 		require(save.set_play_settings_and_save(play), "Initial play save failed");
 		require(save.set_display_settings_and_save(
@@ -192,6 +205,7 @@ int main()
 		play.music_volume = 0;
 		play.view_shake = true;
 		play.aim_marker = true;
+		play.reduce_effects = false;
 		const bool play_saved = save.set_play_settings_and_save(play);
 		CloseHandle(locked);
 		require(!display_saved && !play_saved,
@@ -199,7 +213,7 @@ int main()
 		require(save.resolution() == labrador::ScreenResolution::s_1280_720 &&
 			!save.fullscreen() && save.team_palette() == TeamColourPair::pink_green &&
 			save.play_settings().music_volume == 0 && save.play_settings().view_shake &&
-			save.play_settings().aim_marker,
+			save.play_settings().aim_marker && !save.play_settings().reduce_effects,
 			"Failed saves lost the active settings");
 		require(contents(directory.save_path()) == original,
 			"Failed replacement damaged the previous save");
@@ -210,9 +224,11 @@ int main()
 		check_boolean_loading(directory, "view_shake", &PlaySettings::view_shake,
 			"aim_marker", &PlaySettings::aim_marker);
 		check_boolean_loading(directory, "aim_marker", &PlaySettings::aim_marker,
+			"reduce_effects", &PlaySettings::reduce_effects);
+		check_boolean_loading(directory, "reduce_effects", &PlaySettings::reduce_effects,
 			"view_shake", &PlaySettings::view_shake);
 		std::cout << "PASS settings: bulk apply, validation, persistence failure, recovery, "
-			"view-shake/aim-marker default/type recovery and boolean persistence\n";
+			"view-shake/aim-marker/reduce-effects default/type recovery and boolean persistence\n";
 		return 0;
 	}
 	catch (const std::exception& error)

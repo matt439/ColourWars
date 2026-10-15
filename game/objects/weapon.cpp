@@ -100,7 +100,8 @@ void Weapon::draw(DrawList& draw_list, bool debug) const
     if (this->feedback_ != nullptr)
     {
         this->feedback_->draw(draw_list, this->nozzle_pos(), this->draw_pos(),
-            this->rotation(), this->type(), this->paint_override_.value_or(this->team_colour()));
+            this->rotation(), this->type(), this->paint_override_.value_or(this->team_colour()),
+            this->preferences_->reduce_effects);
     }
 
     if (debug)
@@ -313,7 +314,8 @@ void Weapon::select_motion_pose()
 
 void Weapon::draw_mist_tail(DrawList& draw_list) const
 {
-    if (this->motion_presentation_ == nullptr || !this->motion_presentation_->enabled ||
+    if (this->preferences_->reduce_effects || this->motion_presentation_ == nullptr ||
+        !this->motion_presentation_->enabled ||
         this->motion_.mist_tail_remaining <= 0.0f) { return; }
     const auto& look = *this->motion_presentation_;
     const float fade = this->motion_.mist_tail_remaining / look.mist_tail_duration;

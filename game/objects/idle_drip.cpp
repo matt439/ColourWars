@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/idle_drip.h"
 #include "game/objects/collision_object_type.h"
+#include "game/play_settings.h"
 #include "engine/collision/narrow_phase.h"
 
 #include <cmath>
@@ -9,9 +10,10 @@ using namespace labrador;
 using namespace mattmath;
 
 IdleDrip::IdleDrip(const IdleDripPresentation* presentation,
-    RenderResources* resources, const Colour& colour, uint32_t identity) :
+    RenderResources* resources, const Colour& colour, uint32_t identity,
+    const PlaySettings* preferences) :
     TextureObject(presentation->sprite_sheet, presentation->fill_frame, resources),
-    presentation_(presentation), paint_(colour),
+    presentation_(presentation), preferences_(preferences), paint_(colour),
     sequence_(0x9e3779b9u ^ ((identity + 1u) * 0x85ebca6bu))
 {
     if (this->sequence_ == 0) { this->sequence_ = 1; }
@@ -53,6 +55,17 @@ void IdleDrip::advance(bool settled, const Vector2F& nozzle, float rotation,
     float dt, std::span<CollisionObject* const> terrain)
 {
     if (dt <= 0.0f || !std::isfinite(dt)) { return; }
+    if (this->preferences_ != nullptr && this->preferences_->reduce_effects)
+    {
+        // Retire an interrupted bead's expired interval as well as its shape.
+        // Restoring detail waits for a fresh bead instead of replaying it.
+        if (this->was_settled_ || this->bead_age_ >= 0.0f || this->count_ > 0)
+        {
+            this->interval_ = this->next_interval();
+        }
+        this->clear();
+        return;
+    }
     const IdleDripPresentation& look = *this->presentation_;
     if (!look.enabled)
     {
@@ -157,7 +170,8 @@ void IdleDrip::draw_bead(DrawList& list, const RectangleF& rectangle) const
 
 void IdleDrip::draw(DrawList& list) const
 {
-    if (!this->presentation_->enabled) { return; }
+    if (!this->presentation_->enabled ||
+        (this->preferences_ != nullptr && this->preferences_->reduce_effects)) { return; }
     if (this->attached()) { this->draw_bead(list, this->bead_rectangle()); }
     for (const Drop& drop : this->drops()) { this->draw_bead(list, this->drop_rectangle(drop)); }
 }

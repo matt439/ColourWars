@@ -55,7 +55,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 		{
 			drip = this->scene_->add(std::make_unique<IdleDrip>(
 				&presentation->idle_drip(), render_resources, player->team_colour(),
-				static_cast<uint32_t>(this->idle_drips_.size())));
+				static_cast<uint32_t>(this->idle_drips_.size()), preferences));
 		}
 		this->idle_drips_.push_back(drip);
 	}
@@ -632,7 +632,7 @@ void Level::update_players_after_resolve()
 Camera Level::view_camera(int view) const
 {
 	const Player& player = *this->players_.at(static_cast<size_t>(view));
-	if (this->state_ != LevelState::active || !this->preferences_->view_shake ||
+	if (this->state_ != LevelState::active || !this->preferences_->view_shake_enabled() ||
 		player.view_shake().offset() == Vector2F::ZERO) { return player.camera(); }
 	return PlayerCamera::displaced(player.camera(),
 		this->viewport_manager_->player_viewport(view), player.view_shake().offset(),

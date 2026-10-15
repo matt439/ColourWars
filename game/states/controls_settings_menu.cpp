@@ -79,22 +79,32 @@ void ControlsSettingsMenu::init()
 			this->status_->set_text(L"Apply to save changes for all players.");
 			this->status_->set_colour(this->menu_style().highlight);
 		});
+	this->reduce_effects_ = std::make_unique<OptionRow>("reduce_effects", L"Reduce effects",
+		this->calculate_widget_position(0, 5), this->calculate_widget_position(1, 5),
+		style, this->presentation().main_menu().options_value_colour, this->render_resources(),
+		[this](Direction direction)
+		{
+			this->selection_.reduce_effects = direction == Direction::right;
+			this->refresh_values();
+			this->status_->set_text(L"Apply to save changes for all players.");
+			this->status_->set_colour(this->menu_style().highlight);
+		});
 	for (OptionRow* row : { this->aim_.get(), this->music_.get(), this->sfx_.get(),
-		this->view_shake_.get(), this->aim_marker_.get() })
+		this->view_shake_.get(), this->aim_marker_.get(), this->reduce_effects_.get() })
 	{
 		this->text_container_->add_child(row);
 		this->focus_.add(row);
 	}
 	this->refresh_values();
 	UiTextDropShadow* apply = add_text("apply", L"Apply", style.item_font,
-		this->calculate_widget_position(0, 5), style.unhighlight);
-	UiTextDropShadow* back = add_text("back", L"Back", style.item_font,
 		this->calculate_widget_position(0, 6), style.unhighlight);
+	UiTextDropShadow* back = add_text("back", L"Back", style.item_font,
+		this->calculate_widget_position(0, 7), style.unhighlight);
 	this->status_ = add_text("status", L"Apply to save changes for all players.",
-		look.help_font, this->calculate_widget_position(0, 7), style.highlight);
+		look.help_font, this->calculate_widget_position(0, 8), style.highlight);
 	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(back, [this] { this->close(); });
-	add_text("controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nHigher sensitivity: less stick travel.",
+	add_text("controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nHigher sensitivity: less stick travel.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
 		look.help_font, look.controls_position, style.highlight);
 }
 
@@ -106,6 +116,7 @@ void ControlsSettingsMenu::refresh_values()
 	this->sfx_->set_value(std::to_wstring(this->selection_.sfx_volume) + L"%");
 	this->view_shake_->set_value(this->selection_.view_shake ? L"On" : L"Off");
 	this->aim_marker_->set_value(this->selection_.aim_marker ? L"On" : L"Off");
+	this->reduce_effects_->set_value(this->selection_.reduce_effects ? L"On" : L"Off");
 }
 
 void ControlsSettingsMenu::apply_settings()

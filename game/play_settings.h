@@ -9,9 +9,11 @@ struct PlaySettings
 	int sfx_volume = 100;
 	bool view_shake = true;
 	bool aim_marker = true;
+	bool reduce_effects = false;
 
 	float music_gain() const { return static_cast<float>(music_volume) / 100.0f; }
 	float sfx_gain() const { return static_cast<float>(sfx_volume) / 100.0f; }
+	bool view_shake_enabled() const { return this->view_shake && !this->reduce_effects; }
 
 	// Absolute stick aiming has no turn speed. Sensitivity controls the radial
 	// deadzone; the default setting uses half the stick's travel.

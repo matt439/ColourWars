@@ -339,6 +339,43 @@ namespace
         std::cout << "PASS idle drip: frozen deltas, const/disabled draw, feature switch and fixed capacity\n";
     }
 
+    void check_live_preference(World& world)
+    {
+        auto look = world.presentation.idle_drip();
+        look.lifetime = 100.0f;
+        PlaySettings preferences;
+        IdleDrip drip(&look, &world.render, Colour::white, 0, &preferences);
+        detach(drip, look);
+        attach(drip);
+        const auto before = observation(drip);
+        preferences.reduce_effects = true;
+        // A default list cannot accept sprites. Deliberate suppression must
+        // return before touching it, including while the match is paused.
+        DrawList suppressed;
+        for (int view = 0; view < 4; ++view) { drip.draw(suppressed); }
+        require(observation(drip) == before,
+            "Reduced-effects draw mutated the frozen residual-paint state");
+        drip.advance(true, Vector2F::ZERO, 0.0f, dt, {});
+        require(!drip.attached() && drip.drops().empty() && drip.bounds() == RectangleF::ZERO,
+            "Reduced-effects update retained attached or detached residual paint");
+        for (int tick = 0; tick < 600; ++tick)
+        {
+            drip.advance(true, Vector2F::ZERO, 0.0f, dt, {});
+        }
+        require(!drip.attached() && drip.drops().empty(),
+            "Reduced-effects sprayer generated new residual paint");
+        preferences.reduce_effects = false;
+        require(!drip.attached() && drip.drops().empty(),
+            "Restoring effects resurrected an old attached or detached drip");
+        drip.advance(true, Vector2F::ZERO, 0.0f, dt, {});
+        require(!drip.attached() && drip.drops().empty() &&
+            drip.interval_remaining() >= look.interval_min - dt,
+            "Restoring effects skipped the fresh residual-paint wait");
+        attach(drip);
+        require(drip.drops().empty(), "Fresh bead inherited previous detached drops");
+        std::cout << "PASS idle drip preference: frozen draw suppression, active clear, no new drips and fresh restart\n";
+    }
+
     PlayerInputData input()
     {
         PlayerInputData result;
@@ -375,9 +412,7 @@ namespace
     void check_level_integration(World& enabled_world, const std::filesystem::path& content)
     {
         World disabled_world(content);
-        // The original Presentation is mutable; only its read-only accessor is
-        // exposed to clients. Alter the fixture's switch before building Level.
-        const_cast<IdleDripPresentation&>(disabled_world.presentation.idle_drip()).enabled = false;
+        disabled_world.preferences.reduce_effects = true;
         std::srand(753);
         auto enabled = enabled_world.build();
         std::srand(753);
@@ -486,6 +521,7 @@ int main(int argc, char** argv)
         check_attachment_and_falling(world);
         check_terrain(world);
         check_freeze_disable_and_capacity(world);
+        check_live_preference(world);
         check_level_integration(world, content);
         check_round_end(content);
         return 0;

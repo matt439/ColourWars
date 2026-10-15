@@ -35,7 +35,7 @@ public:
 
     void draw(labrador::DrawList& draw_list, const mattmath::Vector2F& nozzle,
         const mattmath::Vector2F& pivot, float angle, WeaponType type,
-        const labrador::Colour& team_colour) const;
+        const labrador::Colour& team_colour, bool reduce_effects = false) const;
     mattmath::RectangleF bounds(const mattmath::Vector2F& nozzle,
         const mattmath::Vector2F& pivot, WeaponType type) const;
 

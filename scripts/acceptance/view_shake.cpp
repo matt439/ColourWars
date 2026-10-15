@@ -416,9 +416,52 @@ namespace
         std::cout << "PASS player view shake: accepted damage, private view, spawn/landing, dead contacts and lifecycle resets\n";
     }
 
+    void check_reduced_preference(World& world)
+    {
+        PlaySettings preferences;
+        for (const bool enabled : { false, true })
+        {
+            for (const bool reduced : { false, true })
+            {
+                preferences.view_shake = enabled;
+                preferences.reduce_effects = reduced;
+                require(preferences.view_shake_enabled() == (enabled && !reduced),
+                    "Reduced-effects camera policy lost the separate view-shake preference");
+            }
+        }
+        Course course(world, true);
+        course.tick();
+        const ProjectileSpray shot = world.shot();
+        course.hit(shot);
+        require(course.player->view_shake().remaining() > 0.0f,
+            "Live reduced-effects fixture did not begin a damage accent");
+        course.preferences.reduce_effects = true;
+        course.tick();
+        course.hit(shot);
+        require(course.preferences.view_shake && course.player->view_shake().remaining() == 0.0f &&
+            course.player->view_shake().offset() == Vector2F::ZERO,
+            "Reduced effects retained or admitted shake, or overwrote the independent preference");
+        course.eliminate(shot);
+        course.tick();
+        require(course.player->state() == PlayerState::dead &&
+            course.player->view_shake().remaining() == 0.0f &&
+            course.player->combat_feedback().elimination_remaining() > 0.0f,
+            "Reduced elimination shook the view or removed useful elimination feedback");
+        course.preferences.reduce_effects = false;
+        course.tick();
+        require(course.player->view_shake().remaining() == 0.0f,
+            "Restoring effects replayed a suppressed camera event");
+        course.player->force_respawn();
+        course.hit(shot);
+        require(course.player->view_shake().remaining() > 0.0f,
+            "Restored effects failed to honour the preserved view-shake preference");
+        std::cout << "PASS view shake reduced-effects preference: independent setting, live clear, gated damage/death and fresh restore\n";
+    }
+
     void check_simulation_equivalence(World& world)
     {
-        Course moving(world, true), quiet(world, false);
+        Course moving(world, true), quiet(world, true);
+        quiet.preferences.reduce_effects = true;
         const ProjectileSpray shot = world.shot();
         bool shake_seen = false;
         bool respawned = false;
@@ -514,6 +557,7 @@ int main(int argc, char** argv)
         check_landings(world.presentation.camera().shake);
         check_render_camera(world.presentation.camera());
         check_player_events(world);
+        check_reduced_preference(world);
         check_simulation_equivalence(world);
         check_validation(content);
         return 0;

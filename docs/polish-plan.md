@@ -512,8 +512,8 @@ menu focus motion remains `POL#10`.
 world-camera accent on accepted damage, elimination and heavier landings.
 Each player's pane reacts only to that player; the base aiming camera, HUD,
 collision and scoring remain stable. Controls / audio exposes a saved View
-shake switch from the main menu and pause. The broader reduced-effects pass
-and repeated-sound variants remain `POL#13`.
+shake switch from the main menu and pause. The combined
+[reduced-effects preference](polish-reduced-effects.md) is implemented under `POL#13`.
 
 **Exit condition:** a complete match in the reference arena feels visually coherent
 and responsive. Jumping, landing and movement have visible, correctly timed feedback.
@@ -551,6 +551,13 @@ their intensity. Combat and movement should remain easy to read while decorative
 activity can stay quiet. Provide a way to reduce optional shake, flashes and ambient
 effects while retaining useful cues. Test the combined experience for repeated
 matches, as a charming detail can become tiring when repeated constantly.
+
+**Reduced effects implemented (2026-10-15, `POL#13`).** The saved
+[Reduce effects preference](polish-reduced-effects.md) overrides optional view
+shake, omits muzzle bursts/refill rays and quiet figure/drip/released-mist detail,
+and retains gameplay contacts, damage, paint, identity and readiness cues. Options
+and Pause share its Apply/Back behavior. The replacement audio already supplies
+independently cycled, bounded footstep, landing, wet-contact and splash variants.
 
 ## 5. Replace the entire audio set
 

@@ -128,18 +128,20 @@ namespace
 
     struct Course
     {
+        PlaySettings preferences;
         Scene scene{ nullptr, nullptr };
         Player* player;
 
-        Course(World& world, const FigurePresentation* figure, WeaponType type)
+        Course(World& world, const FigurePresentation* figure, WeaponType type) :
+            preferences(world.preferences)
         {
             const RectangleF body(0.0f, -world.tuning.player().size.y,
                 world.tuning.player().size.x, world.tuning.player().size.y);
             auto weapon = WeaponBuilder::build_weapon(&world.tuning, PlayerTeam::a, 0, 0,
-                Colour::white, type, body.center(), &world.render, &world.audio, &world.preferences);
+                Colour::white, type, body.center(), &world.render, &world.audio, &this->preferences);
             player = scene.add(std::make_unique<Player>(body, &world.tuning,
                 &world.presentation.movement_feedback(), &world.presentation.combat_feedback(),
-                &world.presentation.respawn_redraw(), &world.render, &world.audio, &world.preferences,
+                &world.presentation.respawn_redraw(), &world.render, &world.audio, &this->preferences,
                 0, PlayerTeam::a, type, std::move(weapon), WeaponType::none, Colour::white,
                 Viewport{}, body.position(), Vector2F::ZERO, 0.0f, Vector2F::ZERO,
                 SpriteFlip::none, 0.0f, 0, figure, 0));
@@ -165,8 +167,6 @@ namespace
 
     void check_real_player(World& world)
     {
-        FigurePresentation disabled = world.presentation.figure();
-        disabled.quiet.enabled = false;
         bool seen_rest = false;
         bool seen_lean = false;
         size_t shots = 0;
@@ -174,7 +174,8 @@ namespace
             WeaponType::mister, WeaponType::bucket })
         {
             Course animated(world, &world.presentation.figure(), type);
-            Course plain(world, &disabled, type);
+            Course plain(world, &world.presentation.figure(), type);
+            plain.preferences.reduce_effects = true;
             for (int tick = 0; tick < 1200; ++tick)
             {
                 PlayerInputData input;
@@ -218,7 +219,7 @@ namespace
                 seen_rest = seen_rest || a.quiet_character().state().breath > 0.0f;
                 seen_lean = seen_lean || a.quiet_character().state().lean != 0.0f;
                 require(b.quiet_character().state() == QuietCharacter::State{},
-                    "Disabled quiet character advanced visible posing");
+                    "Reduced-effects player retained quiet posing");
             }
             animated.player->set_pose(FigurePose{ Vector2F(1.0f, 2.0f), 0.1f, false, false });
             const RectangleF story = animated.player->posed_rectangle();
@@ -227,7 +228,50 @@ namespace
                 "Story figure inherited ordinary idle motion");
         }
         require(seen_rest && seen_lean && shots > 0, "Real-player comparison missed quiet posing or paid fire");
-        std::cout << "PASS quiet character: actual Player integration preserves five tools' shots, travel, collision, ammo, health, aim and muzzle; story/reset remain clean\n";
+        std::cout << "PASS quiet character: reduced-effects Player preserves five tools' shots, travel, collision, ammo, health, aim and muzzle; story/reset remain clean\n";
+    }
+
+    void check_live_preference(World& world)
+    {
+        Course course(world, &world.presentation.figure(), WeaponType::sprayer);
+        PlayerInputData idle;
+        idle.connected = true;
+        for (int tick = 0; tick < 600 &&
+            course.player->quiet_character().state().breath == 0.0f; ++tick)
+        {
+            std::ignore = course.tick(idle);
+        }
+        const auto before = course.player->quiet_character().state();
+        require(before.breath > 0.0f &&
+            course.player->posed_rectangle() != course.player->rectangle(),
+            "Live reduced-effects fixture never reached a quiet body pose");
+
+        course.preferences.reduce_effects = true;
+        require(course.player->posed_rectangle() == course.player->rectangle() &&
+            course.player->quiet_character().state() == before,
+            "Reducing effects did not immediately suppress the frozen pose without mutating it");
+        std::ignore = course.tick(idle);
+        require(course.player->quiet_character().state() == QuietCharacter::State{},
+            "Active reduced-effects update retained quiet character state");
+        course.preferences.reduce_effects = false;
+        require(course.player->posed_rectangle() == course.player->rectangle(),
+            "Restoring effects resurrected an old quiet body pose");
+        for (int tick = 0; static_cast<float>(tick + 1) * dt <
+            world.presentation.figure().quiet.settle_time; ++tick)
+        {
+            std::ignore = course.tick(idle);
+            require(course.player->quiet_character().state().breath == 0.0f &&
+                !course.player->quiet_character().state().blinking,
+                "Restoring effects bypassed quiet-character settling");
+        }
+        bool resumed = false;
+        for (int tick = 0; tick < 600; ++tick)
+        {
+            std::ignore = course.tick(idle);
+            resumed = resumed || course.player->quiet_character().state().breath > 0.0f;
+        }
+        require(resumed, "Restored effects never resumed fresh quiet character motion");
+        std::cout << "PASS quiet character preference: frozen suppression, active clear, fresh settling and restored motion\n";
     }
 
     void check_validation(const std::filesystem::path& content)
@@ -285,6 +329,7 @@ int main(int argc, char** argv)
         require(world.presentation.figure().quiet.enabled, "Reviewed quiet character detail must be enabled");
         check_rest_and_interruptions(world.presentation.figure());
         check_real_player(world);
+        check_live_preference(world);
         check_validation(content);
         return 0;
     }

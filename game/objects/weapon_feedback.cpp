@@ -70,11 +70,12 @@ void WeaponFeedback::draw_block(DrawList& draw_list, const Vector2F& center,
 }
 
 void WeaponFeedback::draw(DrawList& draw_list, const Vector2F& nozzle,
-    const Vector2F& pivot, float angle, WeaponType type, const Colour& team_colour) const
+    const Vector2F& pivot, float angle, WeaponType type, const Colour& team_colour,
+    bool reduce_effects) const
 {
     if (!this->presentation_->enabled) { return; }
     const auto& look = *this->presentation_;
-    if (this->state_.muzzle_remaining > 0.0f && type != WeaponType::roller)
+    if (!reduce_effects && this->state_.muzzle_remaining > 0.0f && type != WeaponType::roller)
     {
         const float alpha = std::clamp(this->state_.muzzle_remaining / look.muzzle_duration, 0.0f, 1.0f);
         const float progress = 1.0f - alpha;
@@ -137,6 +138,7 @@ void WeaponFeedback::draw(DrawList& draw_list, const Vector2F& nozzle,
         // paint for a whole shot. This is a brief event, not a readiness meter.
         this->draw_block(draw_list, status, Vector2F(size * 0.65f, size),
             0.0f, team_colour, alpha);
+        if (reduce_effects) { return; }
         for (const float side : { -1.0f, 1.0f })
         {
             this->draw_block(draw_list, status + Vector2F(side * size, 0.0f),

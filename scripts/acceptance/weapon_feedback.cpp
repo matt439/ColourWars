@@ -72,11 +72,13 @@ namespace
         }
 
         std::unique_ptr<Weapon> weapon(WeaponType type,
-            const WeaponFeedbackPresentation* look)
+            const WeaponFeedbackPresentation* look,
+            const PlaySettings* preference_override = nullptr)
         {
             return WeaponBuilder::build_weapon(&this->tuning, PlayerTeam::a,
                 2, 0, Colour::white, type, Vector2F::ZERO,
-                &this->render, &this->audio, &this->preferences,
+                &this->render, &this->audio,
+                preference_override != nullptr ? preference_override : &this->preferences,
                 &this->presentation.tool_motion(), look);
         }
 
@@ -181,6 +183,31 @@ namespace
         require(quiet.state() == WeaponFeedbackState{},
             "Disabled weapon presentation emitted a pulse");
         std::cout << "PASS weapon feedback: helper expiry, frozen/invalid deltas, stream limiter and disabled presentation\n";
+    }
+
+    void check_reduced_muzzle_draw(World& world)
+    {
+        WeaponFeedback feedback(&world.presentation.weapon_feedback(), &world.render);
+        for (const WeaponType type : tools)
+        {
+            feedback.clear();
+            feedback.shot(type);
+            const auto before = feedback.state();
+            // This list has no device. Only a deliberately suppressed muzzle
+            // may use it; useful status/readiness cues are renderer-tested.
+            DrawList suppressed;
+            for (int view = 0; view < 4; ++view)
+            {
+                feedback.draw(suppressed, Vector2F(40.0f, -20.0f), Vector2F::ZERO,
+                    PI / 3.0f, type, Colour::white, true);
+            }
+            require(feedback.state() == before,
+                "Reduced-effects muzzle drawing mutated the shared shot event");
+            feedback.update(world.presentation.weapon_feedback().muzzle_duration + dt);
+            require(feedback.state() == WeaponFeedbackState{},
+                "Suppressed muzzle event stopped ageing or survived its lifetime");
+        }
+        std::cout << "PASS weapon feedback reduced effects: five-tool muzzle draw suppression, frozen fan-out and ordinary expiry\n";
     }
 
     void check_paid_shots(World& world)
@@ -435,12 +462,12 @@ namespace
 
     void check_simulation_equivalence(World& world)
     {
-        WeaponFeedbackPresentation disabled = world.presentation.weapon_feedback();
-        disabled.enabled = false;
+        PlaySettings reduced = world.preferences;
+        reduced.reduce_effects = true;
         for (const WeaponType type : tools)
         {
             auto visible = world.weapon(type);
-            auto quiet = world.weapon(type, &disabled);
+            auto quiet = world.weapon(type, &world.presentation.weapon_feedback(), &reduced);
             size_t shots = 0;
             bool pulse_seen = false;
             for (int tick = 0; tick < 2400; ++tick)
@@ -461,8 +488,8 @@ namespace
                     visible->nozzle_pos() == quiet->nozzle_pos() &&
                     visible->motion_state() == quiet->motion_state(),
                     "Weapon feedback changed paint resources, readiness, aim, muzzle or tool motion");
-                require(state(*quiet) == WeaponFeedbackState{},
-                    "Disabled weapon presentation emitted a visual cue during real simulation");
+                require(state(*quiet) == state(*visible),
+                    "Reduced effects changed shot, dry-fire or refill event eligibility/timing");
                 pulse_seen = pulse_seen || state(*visible) != WeaponFeedbackState{};
             }
             require(shots > 0 && pulse_seen,
@@ -474,7 +501,7 @@ namespace
         prime(*omitted, world.tuning);
         require(!update(*omitted, input(true)).empty(),
             "Omitting presentation prevented normal weapon firing");
-        std::cout << "PASS weapon feedback: five-tool on/off paint, cadence, ownership, aim and projectile trajectory equivalence\n";
+        std::cout << "PASS weapon feedback: five-tool reduced-effects paint, cadence, ownership, aim, mechanism, projectile and status-event equivalence\n";
     }
 
     void check_validation(const std::filesystem::path& content)
@@ -565,6 +592,7 @@ int main(int argc, char** argv)
         require(world.presentation.weapon_feedback().enabled,
             "Reviewed weapon feedback must be enabled in staged content");
         check_timers(world);
+        check_reduced_muzzle_draw(world);
         check_paid_shots(world);
         check_empty_and_recovery(world);
         check_independent_motion(world);
