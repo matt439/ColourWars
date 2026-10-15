@@ -35,5 +35,9 @@ namespace directory_consts
 	// executable-relative save/debug without LOCALAPPDATA. UTF-8; not created
 	// here.
 	std::string debug_directory();
+
+	// One automatic failure record in the per-user profile. Empty when no
+	// LOCALAPPDATA is available; diagnostics never fall back to shared content.
+	std::string fatal_report_path();
 }
 

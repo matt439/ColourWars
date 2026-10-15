@@ -7,6 +7,7 @@ add_executable(ColourWars WIN32
     content_validation.cpp
     directory_consts.cpp
     drawable_text.cpp
+    fatal_report.cpp
     game_data.cpp
     main.cpp
     presentation.cpp

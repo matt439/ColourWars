@@ -89,4 +89,11 @@ namespace directory_consts
 		return labrador::resolved_under(labrador::executable_directory(),
 			std::string("./save/") + SAVE_FILE_NAME);
 	}
+
+	std::string fatal_report_path()
+	{
+		const std::filesystem::path root = local_app_data();
+		return root.empty() ? std::string() :
+			labrador::path_to_utf8(root / GAME_FOLDER_NAME / "last-error.log");
+	}
 }

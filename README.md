@@ -36,6 +36,12 @@ Its five round-2 rules are accepted in [the polish plan](docs/polish-plan.md#1-e
 the superseded workshop comparison was retired on 2026-10-15. Open work is in
 [TODO.md](TODO.md).
 
+Caught startup and runtime failures show the original cause in an error dialog
+and stderr, then exit with code 1. The latest failure also writes diagnostic
+metadata to `%LOCALAPPDATA%\ColourWars\last-error.log`; arbitrary error text and
+player data stay out of that file. See [failure reporting](docs/failure-reporting.md)
+for the recorded fields, checks and exception boundary.
+
 Results show cumulative series wins and each player's **surface held** as a
 percentage of the arena. Capturing neutral or enemy paint earns its area;
 enemy repaint transfers credit, while friendly repaint keeps the original

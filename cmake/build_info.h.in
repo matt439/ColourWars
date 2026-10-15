@@ -3,4 +3,9 @@
 namespace build_info
 {
     inline constexpr wchar_t label[] = L"@BUILD_LABEL@";
+    inline constexpr char game_revision[] = "@game_full@";
+    inline constexpr char engine_revision[] = "@engine_full@";
+    inline constexpr char configuration[] = "@CONFIG@";
+    inline constexpr char render_backend[] = "@RENDER_BACKEND@";
+    inline constexpr char audio_backend[] = "@AUDIO_BACKEND@";
 }

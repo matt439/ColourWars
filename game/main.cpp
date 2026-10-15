@@ -5,6 +5,7 @@
 #include "game/content_validation.h"
 #include "game/directory_consts.h"
 #include "game/drawable_text.h"
+#include "game/fatal_report.h"
 #include "game/debug/debug_director.h"
 #include "game/game_data.h"
 #include "game/objects/level_loaded_info.h"
@@ -30,6 +31,7 @@ extern "C"
 
 int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 {
+	FailurePhase phase = FailurePhase::preferences;
 	try
 	{
 		// Seed before stage, weapon, or palette selection uses rand().
@@ -59,6 +61,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		// are validated after the manifest loads; both objects outlive Application.
 		// Mutable only through the developer director (Debug `reload` and
 		// `feedback`); GameData hands everything else const pointers.
+		phase = FailurePhase::definitions;
 		GameTuning tuning(
 			resolved_under(content_root, TUNING_PATH).c_str());
 
@@ -70,6 +73,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 
 		GameData data;
 
+		phase = FailurePhase::initialization;
 		Application app(std::move(options));
 		app.initialize();
 
@@ -99,10 +103,12 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 			});
 
 		// Asset directories resolve relative to the manifest.
+		phase = FailurePhase::manifest;
 		app.load_manifest(MANIFEST_PATH);
 
 		// Check every name, stage and authored string against the loaded assets
 		// before the first menu. The Debug `reload` command runs the same checks.
+		phase = FailurePhase::validation;
 		validate_game_content(tuning, presentation, app.render_resources(),
 			app.audio_resources(), level_infos, stages, save.play_settings());
 
@@ -125,16 +131,14 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 				arguments.emplace_back(__wargv[i]);
 			}
 		}
+		phase = FailurePhase::launch;
 		debug.run_launch_arguments(arguments);
 
+		phase = FailurePhase::running;
 		return app.run(std::make_unique<GameMenu>(&data));
 	}
-	catch (const std::exception& e)
+	catch (...)
 	{
-		// Report failures visibly even when the process has no console.
-		fprintf(stderr, "startup failure: %s\n", e.what());
-		MessageBoxA(nullptr, e.what(), "ColourWars - startup failure",
-			MB_OK | MB_ICONERROR);
-		return 1;
+		return present_fatal_error(phase, std::current_exception());
 	}
 }
