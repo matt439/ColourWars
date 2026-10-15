@@ -116,7 +116,7 @@ void ResultsMenuInitial::init()
 
 	this->box_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF(Vector2F::ZERO, look.box_size),
-		this->render_resources(), &look.art, &this->focus_);
+		this->render_resources(), &style, &look.art, &this->focus_);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 	const auto center_text = [](UiTextDropShadow& text, float y)
 	{
@@ -137,8 +137,8 @@ void ResultsMenuInitial::init()
 
 	this->fill_box_ = std::make_unique<UiTexture>(
 		"fill_box",
-		"sprite_sheet_1",
-		"pixel",
+		style.sprite_sheet,
+		style.fill_frame,
 		RectangleF(Vector2F::ZERO, look.fill_box_size),
 		this->render_resources(),
 		look.art.ink);
@@ -148,15 +148,15 @@ void ResultsMenuInitial::init()
 		this->box_->rectangle().position().y + look.fill_box_y_offset);
 	this->fill_box_->set_position(fill_box_position);
 	this->fill_track_ = std::make_unique<UiTexture>(
-		"fill_track", "sprite_sheet_1", "pixel",
+		"fill_track", style.sprite_sheet, style.fill_frame,
 		RectangleF(fill_box_position + Vector2F(look.art.keyline_width),
 			look.fill_box_size - Vector2F(look.art.keyline_width * 2.0f)),
 		this->render_resources(), look.track_colour);
 
 	this->team_a_fill_ = std::make_unique<UiTexture>(
 		"team_a_fill",
-		"sprite_sheet_1",
-		"pixel",
+		style.sprite_sheet,
+		style.fill_frame,
 		RectangleF(Vector2F::ZERO,
 			Vector2F(0.0f, look.team_fill_size.y)),
 		this->render_resources(),
@@ -166,8 +166,8 @@ void ResultsMenuInitial::init()
 
 	this->team_b_fill_ = std::make_unique<UiTexture>(
 		"team_b_fill",
-		"sprite_sheet_1",
-		"pixel",
+		style.sprite_sheet,
+		style.fill_frame,
 		RectangleF(Vector2F::ZERO,
 			Vector2F(0.0f, look.team_fill_size.y)),
 		this->render_resources(),
@@ -204,12 +204,12 @@ void ResultsMenuInitial::init()
 	RectangleF team_a_percentage_panel = this->team_a_percentage_->bounds();
 	team_a_percentage_panel.inflate(look.art.focus_padding);
 	this->team_a_percentage_panel_ = std::make_unique<MenuPaperArtwork>(
-		team_a_percentage_panel, this->render_resources(), &look.art, &this->focus_);
+		team_a_percentage_panel, this->render_resources(), &style, &look.art, &this->focus_);
 	this->team_a_percentage_panel_->set_hidden(true);
 	RectangleF team_b_percentage_panel = this->team_b_percentage_->bounds();
 	team_b_percentage_panel.inflate(look.art.focus_padding);
 	this->team_b_percentage_panel_ = std::make_unique<MenuPaperArtwork>(
-		team_b_percentage_panel, this->render_resources(), &look.art, &this->focus_);
+		team_b_percentage_panel, this->render_resources(), &style, &look.art, &this->focus_);
 	this->team_b_percentage_panel_->set_hidden(true);
 
 	this->winner_ = std::make_unique<UiTextDropShadow>(

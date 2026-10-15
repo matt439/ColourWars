@@ -206,9 +206,9 @@ void MainMenuStageSelect::init()
 	RectangleF edge = preview;
 	edge.inflate(style.rule_height);
 	this->preview_edge_ = std::make_unique<UiTexture>("preview_edge",
-		"sprite_sheet_1", "pixel", edge, resources, style.panel_edge_colour);
+		style.sprite_sheet, style.fill_frame, edge, resources, style.panel_edge_colour);
 	this->preview_background_ = std::make_unique<UiTexture>("preview_background",
-		"sprite_sheet_1", "pixel", preview, resources,
+		style.sprite_sheet, style.fill_frame, preview, resources,
 		this->presentation().hud().player_identity_background_colour);
 	this->stage_preview_ = std::make_unique<StagePreview>("stage_preview",
 		preview, this->data());
@@ -226,10 +226,10 @@ void MainMenuStageSelect::init()
 
 	const RectangleF briefing(look.briefing.position, look.briefing.size);
 	this->briefing_background_ = std::make_unique<UiTexture>("briefing_background",
-		"sprite_sheet_1", "pixel", briefing, resources,
+		style.sprite_sheet, style.fill_frame, briefing, resources,
 		this->presentation().hud().player_identity_background_colour);
 	this->briefing_accent_ = std::make_unique<UiTexture>("briefing_accent",
-		"sprite_sheet_1", "pixel", RectangleF(briefing.position(),
+		style.sprite_sheet, style.fill_frame, RectangleF(briefing.position(),
 			Vector2F(briefing.width, style.accent_width)), resources, style.highlight);
 	const Vector2F info = briefing.position() + look.briefing_padding;
 	const Vector2F row = look.briefing.spacing;

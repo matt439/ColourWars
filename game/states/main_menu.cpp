@@ -134,7 +134,7 @@ void MainMenuTitle::init()
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
 	this->background_ = std::make_unique<UiTexture>("background",
-		"sprite_sheet_1", "pixel", RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(), look.title_background_colour);
 	this->title_ = std::make_unique<UiText>("title", L"COLOUR\nWARS",
 		look.title_font, Vector2F(0.0f, look.title_y), this->render_resources(), look.art.ink);
@@ -159,7 +159,7 @@ void MainMenuTitle::init()
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.title_box_size) / 2.0f,
 			look.title_box_size),
-		this->render_resources(), &look.art, &this->focus_, this->start_.get());
+		this->render_resources(), &style, &look.art, &this->focus_, this->start_.get());
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
@@ -219,7 +219,7 @@ void MainMenuHome::init()
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
 	this->background_ = std::make_unique<UiTexture>("background",
-		"sprite_sheet_1", "pixel", RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(), look.home_background_colour);
 	this->heading_ = std::make_unique<UiText>("heading", L"Make your mark.",
 		style.heading_font, this->calculate_widget_position(0, 0), this->render_resources(), look.art.ink);
@@ -236,7 +236,7 @@ void MainMenuHome::init()
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f,
 			look.home_box_size),
-		this->render_resources(), &look.art, &this->focus_, this->play_.get());
+		this->render_resources(), &style, &look.art, &this->focus_, this->play_.get());
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());

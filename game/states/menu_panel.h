@@ -11,7 +11,7 @@ public:
 	MenuIcon(const std::string& name, const std::string& frame,
 		const mattmath::RectangleF& rectangle, labrador::RenderResources* resources,
 		const labrador::Colour& colour, const MenuStyle* style,
-		const std::string& sheet_name = "sprite_sheet_1");
+		const std::string& sheet_name);
 	// An empty paint name is an icon with no team-coloured region.
 	void set_sprite_frame(const std::string& frame, const std::string& paint_frame = "",
 		const std::string& supply_strip = "");
@@ -31,7 +31,7 @@ class MenuPaperArtwork final : public labrador::UiTexture
 {
 public:
 	MenuPaperArtwork(const mattmath::RectangleF& rectangle,
-		labrador::RenderResources* resources, const MenuPaperArtPresentation* art,
+		labrador::RenderResources* resources, const MenuStyle* style, const MenuPaperArtPresentation* art,
 		const labrador::FocusGroup* focus, const labrador::UiWidget* primary = nullptr);
 	void draw(labrador::DrawList& list) const override;
 private:

@@ -222,6 +222,29 @@ namespace
 		const JsonValue json = root.object("menu_style");
 
 		MenuStyle style;
+		const JsonValue layout = json.object("layout");
+		style.layout.position = read_finite_vector(layout, "position");
+		style.layout.size = read_positive_vector(layout, "size");
+		style.layout.spacing = read_finite_vector(layout, "spacing");
+		if (style.layout.position.x < 0.0f || style.layout.position.y < 0.0f ||
+			style.layout.position.x + style.layout.size.x > 1920.0f ||
+			style.layout.position.y + style.layout.size.y > 1080.0f)
+		{
+			throw std::runtime_error(layout.where() +
+				": 'position' and 'size' must place the first widget inside the (1920,1080) menu design.");
+		}
+		if (style.layout.spacing.x < 0.0f || style.layout.spacing.y < 0.0f ||
+			style.layout.spacing.x > 1920.0f || style.layout.spacing.y > 1080.0f)
+		{
+			throw std::runtime_error(layout.where() +
+				": 'spacing' must be nonnegative and at most (1920,1080).");
+		}
+		style.sprite_sheet = json.identifier("sprite_sheet");
+		style.fill_frame = json.identifier("fill_frame");
+		if (style.sprite_sheet.empty() || style.fill_frame.empty())
+		{
+			throw std::runtime_error(json.where() + ": 'sprite_sheet' and 'fill_frame' must not be empty.");
+		}
 
 		const JsonValue navigation = json.object("navigation");
 		style.repeat_delay = read_positive(navigation, "repeat_delay");
@@ -451,6 +474,25 @@ namespace
 		menu.player_count_spacing = read_vector(json, "player_count_spacing");
 
 		menu.team_select = read_select(json, "team_select");
+		const JsonValue team_select = json.object("team_select");
+		menu.team_select_sheet = team_select.identifier("sheet");
+		if (menu.team_select_sheet.empty())
+		{
+			throw std::runtime_error(team_select.where() + ": 'sheet' must not be empty.");
+		}
+		const JsonValue frames = team_select.object("frames");
+		const JsonValue selected_frames = team_select.object("selected_frames");
+		const char* roles[] = { "a", "center", "b" };
+		for (size_t index = 0; index < std::size(roles); ++index)
+		{
+			menu.team_select_frames[index] = frames.identifier(roles[index]);
+			menu.team_select_selected_frames[index] = selected_frames.identifier(roles[index]);
+			if (menu.team_select_frames[index].empty() || menu.team_select_selected_frames[index].empty())
+			{
+				throw std::runtime_error(team_select.where() + ": 'frames' and 'selected_frames' role '" +
+					roles[index] + "' must not be empty.");
+			}
+		}
 		menu.weapon_select = read_select(json, "weapon_select");
 		const JsonValue stage = json.object("stage_select");
 		menu.stage_select.preview_position = read_vector(stage, "preview_position");
@@ -1684,6 +1726,15 @@ void Presentation::validate_resources(const RenderResources& render,
 	const AudioResources& audio) const
 {
 	const ResourceValidation check(this->source_path_, render, audio);
+	check.frame("menu_style.fill_frame", this->menu_.sprite_sheet, this->menu_.fill_frame);
+	const char* roles[] = { "a", "center", "b" };
+	for (size_t index = 0; index < std::size(roles); ++index)
+	{
+		check.frame(std::string("main_menu.team_select.frames.") + roles[index],
+			this->main_menu_.team_select_sheet, this->main_menu_.team_select_frames[index]);
+		check.frame(std::string("main_menu.team_select.selected_frames.") + roles[index],
+			this->main_menu_.team_select_sheet, this->main_menu_.team_select_selected_frames[index]);
+	}
 	check.font("menu_style.fonts.heading", this->menu_.heading_font);
 	check.font("menu_style.fonts.item", this->menu_.item_font);
 	check.font("menu_style.fonts.detail", this->menu_.detail_font);
@@ -1757,15 +1808,8 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.effect("results_menu.sounds.fill.name", bank, this->results_menu_.fill_sound.name);
 	check.effect("results_menu.music.name", bank, this->results_menu_.music.name);
 
-	// These menu pictures are chosen by the page code, so they have no JSON
-	// field to walk. Check them too before the player can reach those pages.
-	for (const char* frame : { "pixel", "square_white_4", "team_select_a",
-		"team_select_center", "team_select_b", "team_select_a_selected",
-		"team_select_center_selected", "team_select_b_selected" })
-	{
-		check.frame(std::string("built-in menu frame '") + frame + "'",
-			"sprite_sheet_1", frame);
-	}
+	// Non-menu primitive drawing and developer overlays still use this texel.
+	check.frame("built-in primitive frame 'pixel'", "sprite_sheet_1", "pixel");
 	for (const char* frame : { "pixel", "sprayer", "sniper", "roller",
 		"mister", "bucket", "random", "error" })
 	{

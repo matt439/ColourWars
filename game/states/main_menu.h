@@ -235,6 +235,10 @@ private:
 
 	std::vector<std::unique_ptr<PlayerWidgets>> player_widgets_;
 	std::vector<TeamSelectState> select_states_;
+	// Pair frame names with the atlas captured by this page's UiTextures.
+	// A presentation rebase reaches newly opened pages, never this pairing.
+	std::array<std::string, 3> team_select_frames_;
+	std::array<std::string, 3> team_select_selected_frames_;
 	void shuffle_teams();
 	void update_team_select_visuals();
 	void deselect_and_unconfirm_all_widgets();

@@ -38,9 +38,21 @@ struct MusicMixPresentation
 	float restore_time = 0.0f;
 };
 
+// Widget position, size and spacing in menu design coordinates.
+struct WidgetLayout
+{
+	mattmath::Vector2F position = { 0.0f, 0.0f };
+	mattmath::Vector2F size = { 0.0f, 0.0f };
+	mattmath::Vector2F spacing = { 0.0f, 0.0f };
+};
+
 // Shared menu style, with screen-specific overrides in the records below.
 struct MenuStyle
 {
+	WidgetLayout layout;
+	// Solid fills shared by menu backgrounds, chrome, paper and previews.
+	std::string sprite_sheet;
+	std::string fill_frame;
 	std::string heading_font;
 	std::string item_font;
 	std::string detail_font;
@@ -84,14 +96,6 @@ struct MenuStyle
 	std::string direction_sound;
 	std::string confirm_sound;
 	std::string cancel_sound;
-};
-
-// Widget position, size and spacing in menu design coordinates.
-struct WidgetLayout
-{
-	mattmath::Vector2F position = { 0.0f, 0.0f };
-	mattmath::Vector2F size = { 0.0f, 0.0f };
-	mattmath::Vector2F spacing = { 0.0f, 0.0f };
 };
 
 // Per-player choice layout, positioned by row and column indices.
@@ -251,6 +255,10 @@ struct MainMenuPresentation
 	mattmath::Vector2F player_count_spacing = { 0.0f, 0.0f };
 
 	SelectPresentation team_select;
+	// Three fixed roles: Team A, unassigned, Team B. The current choice selects a frame.
+	std::string team_select_sheet;
+	std::array<std::string, 3> team_select_frames;
+	std::array<std::string, 3> team_select_selected_frames;
 	SelectPresentation weapon_select;
 	StageSelectPresentation stage_select;
 	std::string credits_font;

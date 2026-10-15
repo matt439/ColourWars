@@ -147,6 +147,101 @@ namespace debug_console_acceptance
 			read_text(scratch.staged / L"tuning.json") == staged_before,
 			"File reset restores all motion values and leaves source/staged JSON untouched");
 	}
+
+	void check_menu_layout_tunes(DebugDirectorImpl& impl, Presentation& presentation,
+		const ScratchContent& scratch)
+	{
+		const std::string root = "presentation.menu_style.layout.";
+		const std::vector<std::string> paths{ root + "position.x", root + "position.y",
+			root + "size.x", root + "size.y", root + "spacing.x", root + "spacing.y" };
+		std::vector<std::string> baseline;
+		for (const std::string& path : paths)
+		{
+			baseline.push_back(impl.tune_token(path));
+			require(!baseline.back().empty(), "The shared menu layout has a tunable path " + path);
+		}
+		const MenuStyle* const style = &presentation.menu();
+		const WidgetLayout* const layout = &style->layout;
+		const char* const sheet = style->sprite_sheet.data();
+		const char* const fill = style->fill_frame.data();
+		const auto state = [&]
+		{
+			return std::vector<float>{ layout->position.x, layout->position.y, layout->size.x,
+				layout->size.y, layout->spacing.x, layout->spacing.y };
+		};
+		const auto edits = [&]
+		{
+			std::vector<std::string> values;
+			for (const auto& [path, edit] : impl.tune_document("presentation")->edits())
+				{ values.push_back(path + "=" + edit.baseline_token + "->" + edit.current_token); }
+			return values;
+		};
+		const auto reject = [&](const std::string& path, const std::string& value)
+		{
+			const auto before = state();
+			const auto before_edits = edits();
+			const std::string before_text = impl.tune_document("presentation")->current().text();
+			require(!impl.execute("tune " + path + " " + value).ok && state() == before &&
+				edits() == before_edits &&
+				impl.tune_document("presentation")->current().text() == before_text,
+				"Rejected " + path + "=" + value + " preserves layout, tokens and pending edits");
+		};
+		const auto set = [&](std::size_t index, const char* value)
+			{ require(impl.execute("tune " + paths[index] + " " + value).ok,
+				"Valid shared menu layout tune " + paths[index] + "=" + value); };
+		const auto initial = state();
+		const std::string source_before = read_text(scratch.source / L"presentation.json");
+		const std::string staged_before = read_text(scratch.staged / L"presentation.json");
+		set(0, "0");
+		set(1, "0");
+		set(2, "1920");
+		set(3, "1080");
+		set(4, "0");
+		set(5, "0");
+		require(state() == std::vector<float>{ 0.0f, 0.0f, 1920.0f, 1080.0f, 0.0f, 0.0f },
+			"A shared menu widget may reach the design edges, and spacing may be zero");
+		set(4, "1920");
+		set(5, "1080");
+		reject(paths[0], "1");
+		reject(paths[1], "1");
+		reject(paths[2], "1921");
+		reject(paths[3], "1081");
+		reject(paths[4], "1921");
+		reject(paths[5], "1081");
+		reject(paths[2], "0");
+		reject(paths[3], "0");
+		for (const std::string& path : paths)
+		{
+			for (const char* invalid : { "-0.01", "1e100", "nan", "inf" }) { reject(path, invalid); }
+		}
+		set(2, "200");
+		set(3, "100");
+		set(0, "25");
+		set(1, "30");
+		set(4, "230");
+		set(5, "130");
+		require(state() == std::vector<float>{ 25.0f, 30.0f, 200.0f, 100.0f, 230.0f, 130.0f } &&
+			&presentation.menu() == style && &presentation.menu().layout == layout &&
+			style->sprite_sheet.data() == sheet && style->fill_frame.data() == fill,
+			"Layout tunes retain the shared record, layout address and named-resource buffers");
+		require(impl.execute("tune " + paths[0]).ok &&
+			log_contains(impl.log(), "(applies when the screen is next opened)", DebugSeverity::info) &&
+			log_contains(impl.log(), paths[0] + " = " + impl.tune_token(paths[0]) +
+				"  (file: " + baseline[0] + ")  [next screen]", DebugSeverity::info),
+			"Shared menu layout tune setters and getters report next-screen scope");
+		for (const char* path : { "presentation.menu_style.sprite_sheet", "presentation.menu_style.fill_frame",
+			"presentation.main_menu.team_select.sheet", "presentation.main_menu.team_select.frames.a",
+			"presentation.main_menu.team_select.selected_frames.a" })
+			{ reject(path, "sprite_sheet_1"); }
+		require(impl.execute("tune.reset " + paths[0]).ok && layout->position.x == initial[0] &&
+			layout->position.y == 30.0f && impl.tune_token(paths[0]) == baseline[0],
+			"A layout path reset restores its baseline without undoing other layout edits");
+		require(impl.execute("tune.reset presentation").ok && state() == initial &&
+			impl.tune_document("presentation")->edits().empty() &&
+			read_text(scratch.source / L"presentation.json") == source_before &&
+			read_text(scratch.staged / L"presentation.json") == staged_before,
+			"Presentation reset restores the shared menu layout without writing source or staged JSON");
+	}
 	}
 
 	void check_json_spans(const std::filesystem::path& game_directory)
@@ -242,6 +337,9 @@ namespace debug_console_acceptance
 			{ "presentation.camera.reference_height", TuneScope::live },
 			{ "presentation.match.countdown_center_y", TuneScope::rebuild },
 			{ "presentation.main_menu.title_y", TuneScope::next_screen },
+			{ "presentation.menu_style.layout.position.x", TuneScope::next_screen },
+			{ "presentation.menu_style.layout.size.y", TuneScope::next_screen },
+			{ "presentation.menu_style.layout.spacing.x", TuneScope::next_screen },
 		};
 		for (const auto& [path, scope] : samples)
 		{
@@ -419,6 +517,7 @@ namespace debug_console_acceptance
 		// Keep these edits after the existing exact tune.diff count and restore
 		// them before the save/conflict fixtures below.
 		check_motion_tunes(impl, tuning, scratch);
+		check_menu_layout_tunes(impl, presentation, scratch);
 
 		// tune.save, CRLF tuning: exactly that token changes.
 		const std::string tuning_before = read_text(scratch.source / L"tuning.json");

@@ -242,7 +242,7 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
         UiTexture focus_widget("expected-stick-focus", "sprite_sheet_1", "pixel",
             row_bounds(selected, values), app.render_resources());
         FocusGroup focus; focus.add(&focus_widget);
-        const MenuPaperArtwork artwork(panel, app.render_resources(), &art, &focus);
+        const MenuPaperArtwork artwork(panel, app.render_resources(), &style, &art, &focus);
         const Canvas paper(app.render_resources(), art.paper);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         DrawList list = renderer.view(0);

@@ -66,8 +66,8 @@ void MenuIcon::draw(DrawList& list) const
 }
 
 MenuPaperArtwork::MenuPaperArtwork(const RectangleF& rectangle, RenderResources* resources,
-	const MenuPaperArtPresentation* art, const FocusGroup* focus, const UiWidget* primary) :
-	UiTexture("box", "sprite_sheet_1", "pixel", rectangle, resources),
+	const MenuStyle* style, const MenuPaperArtPresentation* art, const FocusGroup* focus, const UiWidget* primary) :
+	UiTexture("box", style->sprite_sheet, style->fill_frame, rectangle, resources),
 	art_(art), focus_(focus), primary_(primary)
 {
 }

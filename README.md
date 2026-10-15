@@ -20,6 +20,8 @@ and paint meters are labelled; menus mark the focused choice with both a
 colour and a panel. The three arenas use pale paintable surfaces against
 grey scenery; the game refuses a hue there. Colours and spacing are authored in
 `game/content/presentation.json`; arena decoration lives in the level JSONs.
+The shared menu layout, fill atlas and team-selection pictures are described in
+[menu presentation](docs/menu-presentation.md).
 Stage selection previews the actual arena objects alongside the match setup,
 with a separate confirmation before starting. The opening countdown shows
 compact controls cards for the keyboard/mouse and gamepads present in the match.

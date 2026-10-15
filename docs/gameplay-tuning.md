@@ -54,7 +54,7 @@ on the next projectile update, including existing objects. Mist spread applies
 to newly constructed shots; a flying pellet keeps its launch direction. See
 [the console's tuning scopes](debug-console.md#live-tuning).
 
-## Verification and remaining gap
+## Verification and menu presentation
 
 The `gameplay_tuning` consumer case uses the actual builders, roller and
 projectile integrator without creating a graphics or audio device. It checks
@@ -66,7 +66,7 @@ Debug-console acceptance checks the new tuning scopes and rejected-edit rollback
 Run `scripts/run-acceptance.ps1 -Preset x64-debug` and repeat with `x64-release`
 from an x64 Visual Studio Developer shell.
 
-GAP#8.5 remains open for the menu widget geometry and hardcoded `sprite_sheet_1`
-menu choices.
-The historical [gap audit](review/gap-audit.md#85-the-cjson-line-is-drawn-inconsistently)
-is unchanged; [TODO.md](../TODO.md) records only the remaining work.
+The remaining menu geometry and sheet choices are documented in
+[menu presentation](menu-presentation.md). The historical
+[gap audit](review/gap-audit.md#85-the-cjson-line-is-drawn-inconsistently) is unchanged;
+[TODO.md](../TODO.md) records open work.

@@ -37,6 +37,13 @@
       "this block. They still agreed, which is the only reason nobody had",
       "noticed; a fifth menu would have made it four places to keep in step."
     ],
+    "layout": {
+      "position": { "x": 150.0, "y": 150.0 },
+      "size": { "x": 300.0, "y": 75.0 },
+      "spacing": { "x": 250.0, "y": 150.0 }
+    },
+    "sprite_sheet": "sprite_sheet_1",
+    "fill_frame": "pixel",
     "navigation": { "repeat_delay": 0.4, "repeat_interval": 0.1 },
     "fonts": {
       "heading": "gill_sans_mt_bold_72",
@@ -135,6 +142,9 @@
     "mode_select_spacing": { "x": 250.0, "y": 100.0 },
     "player_count_spacing": { "x": 250.0, "y": 100.0 },
     "team_select": {
+      "sheet": "sprite_sheet_1",
+      "frames": { "a": "team_select_a", "center": "team_select_center", "b": "team_select_b" },
+      "selected_frames": { "a": "team_select_a_selected", "center": "team_select_center_selected", "b": "team_select_b_selected" },
       "spacing": { "x": 250.0, "y": 125.0 },
       "size": { "x": 50.0, "y": 50.0 },
       "selected": "75EDD7",

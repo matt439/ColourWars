@@ -148,8 +148,8 @@ void MainMenuOptions::init()
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		"sprite_sheet_1",
-		"pixel",
+		style.sprite_sheet,
+		style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
 		look.home_background_colour);
@@ -229,7 +229,7 @@ void MainMenuOptions::init()
 		look.options_status_position, this->render_resources(), look.art.focus_ink);
 
 	this->paper_ = std::make_unique<MenuPaperArtwork>(paper_bounds,
-		this->render_resources(), &look.art, &this->focus_);
+		this->render_resources(), &style, &look.art, &this->focus_);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");

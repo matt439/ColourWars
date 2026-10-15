@@ -273,6 +273,47 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     require(same_plan(settings, solo) && frame().pixels == solo_frame.pixels,
         "Solo team-selection accepted a shuffle");
 
+    // tune.save can rebase a valid external presentation while this page is
+    // open. Its UiTextures retain their atlas, so both frame-name groups must
+    // remain paired with that atlas until the page is opened again.
+    {
+        const Presentation original = presentation;
+        struct RestoreTeamPresentation
+        {
+            StateContext& stack;
+            Presentation& live;
+            const Presentation& original;
+            ~RestoreTeamPresentation() { this->stack.clear(); this->live = this->original; }
+        } restore{ stack, presentation, original };
+        open(2);
+        const Frame original_page = frame();
+        Presentation replacement = original;
+        auto& replacement_look = const_cast<MainMenuPresentation&>(replacement.main_menu());
+        replacement_look.team_select_sheet = "menu_paint";
+        replacement_look.team_select_frames.fill("backdrop");
+        replacement_look.team_select_selected_frames.fill("backdrop");
+        replacement.validate_resources(*app.render_resources(), *app.audio_resources());
+        presentation = replacement;
+        tick(); tick();
+        require(frame().pixels == original_page.pixels,
+            "An open Team Select mixed rebased frame names with its captured original atlas");
+        open(2);
+        const Frame replacement_page = frame();
+        require(replacement_page.pixels != original_page.pixels,
+            "Reopening Team Select did not adopt the valid replacement atlas/frame names");
+        verify_team_page(settings, "Reopened Team Select did not match its replacement asset presentation");
+        presentation = original;
+        tick(); tick();
+        require(frame().pixels == replacement_page.pixels,
+            "An open replacement Team Select reread frame names from the restored presentation");
+        open(2);
+        require(frame().pixels == original_page.pixels,
+            "Reopening Team Select after restoration did not restore the original assets");
+        save(original_page, output / "team-setup-assets-original-detail.ppm");
+        save(replacement_page, output / "team-setup-assets-rebased-detail.ppm");
+        std::cout << "PASS Team Select keeps atlas/frame snapshots across presentation assignment and adopts replacements on reopen\n";
+    }
+
     // One actual match owns this committed shuffled roster through a normal
     // pause restart and two series rounds. Idle seats produce draws: the End
     // page's Replay Draw uses the same Session::next_round continuation path.

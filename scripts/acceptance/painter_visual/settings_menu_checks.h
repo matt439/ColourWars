@@ -229,7 +229,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         FocusGroup focus;
         if (focused.has_value()) { focus.add(&focus_widget); }
         const MenuPaperArtwork artwork(focused.has_value() ? options_panel : credits_panel,
-            app.render_resources(), &art, &focus);
+            app.render_resources(), &style, &art, &focus);
         const auto fixture = [&](TextureFilter filter)
         {
             Renderer& renderer = *app.renderer();

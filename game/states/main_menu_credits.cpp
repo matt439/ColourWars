@@ -40,7 +40,7 @@ void MainMenuCredits::init()
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
 	this->background_ = std::make_unique<UiTexture>("background",
-		"sprite_sheet_1", "pixel",
+		style.sprite_sheet, style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION), this->render_resources(),
 		look.home_background_colour);
 	this->heading_ = std::make_unique<UiText>("heading", L"Credits",
@@ -54,7 +54,7 @@ void MainMenuCredits::init()
 		look.art.focus_ink);
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.credits_box_size) / 2.0f,
-			look.credits_box_size), this->render_resources(), &look.art, &this->focus_);
+			look.credits_box_size), this->render_resources(), &style, &look.art, &this->focus_);
 
 	// Keep every authored credit visible above Back and inside the paper face.
 	const RectangleF body = this->body_->bounds();

@@ -118,7 +118,6 @@ the accepted `GAP#8.6` scope.
 |---|---|---|---|---|
 | `GAP#8.2` | OPEN | LOW | M | Range checks are ad hoc: no shared content-value checks or cross-field checks; menu sounds unbounded. |
 | `GAP#8.4` | OPEN | LOW | M | Player-visible text is C++ literals; weapon name and icon come from a switch with an `L"ERROR"` fallback (fold into weapon tuning). |
-| `GAP#8.5` | OPEN | LOW | S | Menu widget geometry and hardcoded `sprite_sheet_1` menu choices remain in C++. [Gameplay tuning and boundary](docs/gameplay-tuning.md). |
 | `GAP#8.7` | OPEN | LOW | M | Fonts cannot be regenerated (no recipe for the 7 atlases); no text wrapping. |
 
 ## Engine demonstration

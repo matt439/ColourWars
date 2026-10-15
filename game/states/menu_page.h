@@ -132,7 +132,7 @@ private:
 	labrador::FontHandle brand_font_;
 	MenuContext* context_ = nullptr;
 	std::unique_ptr<PromptBar> prompt_bar_ = nullptr;
-	mattmath::Vector2F widget_position_ = { 150.0f, 150.0f };
-	mattmath::Vector2F widget_size_ = { 300.0f, 75.0f };
-	mattmath::Vector2F widget_spacing_ = { 250.0f, 150.0f };
+	mattmath::Vector2F widget_position_;
+	mattmath::Vector2F widget_size_;
+	mattmath::Vector2F widget_spacing_;
 };

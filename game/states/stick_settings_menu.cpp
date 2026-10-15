@@ -11,8 +11,8 @@ using namespace mattmath;
 class StickResponsePreview final : public UiTexture
 {
 public:
-	StickResponsePreview(RenderResources* resources, const ControlsSettingsPresentation* look) :
-		UiTexture("stick_preview", "sprite_sheet_1", "pixel",
+	StickResponsePreview(RenderResources* resources, const MenuStyle* style, const ControlsSettingsPresentation* look) :
+		UiTexture("stick_preview", style->sprite_sheet, style->fill_frame,
 			RectangleF(look->controls_position, look->controls_size), resources), look_(look)
 	{
 	}
@@ -119,13 +119,13 @@ void StickSettingsMenu::init()
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.ink });
 	this->set_prompts({ { L"D-pad/arrows", L"Navigate / change" }, { L"A", L"Select" },
 		{ L"B", L"Back (discard unapplied changes)" } });
-	this->background_ = std::make_unique<UiTexture>("background", "sprite_sheet_1", "pixel",
+	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet, style.fill_frame,
 		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), this->render_resources(),
 		this->presentation().main_menu().home_background_colour);
 	this->paper_ = std::make_unique<MenuPaperArtwork>(RectangleF(
 		(Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
-		look.box_size), this->render_resources(), &look.art, &this->focus_);
-	this->preview_ = std::make_unique<StickResponsePreview>(this->render_resources(), &look);
+		look.box_size), this->render_resources(), &style, &look.art, &this->focus_);
+	this->preview_ = std::make_unique<StickResponsePreview>(this->render_resources(), &style, &look);
 	this->texture_container_ = std::make_unique<UiContainer>("textures");
 	for (UiObject* object : { static_cast<UiObject*>(this->background_.get()),
 		static_cast<UiObject*>(this->paper_.get()), static_cast<UiObject*>(this->preview_.get()) })

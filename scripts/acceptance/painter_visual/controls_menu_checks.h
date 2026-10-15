@@ -233,7 +233,7 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         UiTexture focus_widget("expected-controls-focus", "sprite_sheet_1", "pixel",
             row_bounds(selected, selected < values.size() ? values[selected] : L""), app.render_resources());
         FocusGroup focus; focus.add(&focus_widget);
-        const MenuPaperArtwork artwork(panel, app.render_resources(), &art, &focus);
+        const MenuPaperArtwork artwork(panel, app.render_resources(), &style, &art, &focus);
         const Canvas paper(app.render_resources(), art.paper);
         const auto fixture = [&](TextureFilter filter)
         {

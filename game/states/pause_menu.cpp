@@ -248,7 +248,7 @@ void PauseMenuInitial::init()
 	this->box_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
-		&look.art, &this->focus_);
+		&style, &look.art, &this->focus_);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(look.layout.position);
@@ -398,7 +398,7 @@ void PauseMenuConfirmation::init()
 	this->box_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
-		&look.art, &this->focus_);
+		&style, &look.art, &this->focus_);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(look.layout.position);

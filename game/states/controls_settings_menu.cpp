@@ -25,14 +25,14 @@ void ControlsSettingsMenu::init()
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.ink });
 	this->set_prompts({ { L"Left/Right", L"Change" }, { L"A", L"Select" },
 		{ L"B", L"Back (discard unapplied changes)" } });
-	this->background_ = std::make_unique<UiTexture>("background", "sprite_sheet_1", "pixel",
+	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet, style.fill_frame,
 		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
 		this->render_resources(), this->presentation().main_menu().home_background_colour);
 	const RectangleF paper_bounds(
 		(Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
 		look.box_size);
 	this->paper_ = std::make_unique<MenuPaperArtwork>(paper_bounds,
-		this->render_resources(), &look.art, &this->focus_);
+		this->render_resources(), &style, &look.art, &this->focus_);
 	const Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
 		look.art.shadow_offset - this->calculate_widget_position(1, 0).x,
 		look.layout.spacing.y - look.art.focus_padding.y * 2.0f);

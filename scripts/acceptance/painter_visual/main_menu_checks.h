@@ -7,6 +7,91 @@ Frame main_menu_frame(Application& app)
     return read(*app.renderer());
 }
 
+// Construct the production base with real audio/render resources. A CPU-only
+// fixture cannot reach this constructor through MenuContext's service bag.
+void menu_widget_geometry_checks(MenuContext& context, Presentation& presentation,
+    const std::filesystem::path& output)
+{
+    class MenuGeometryProbe final : public MenuPage
+    {
+    public:
+        explicit MenuGeometryProbe(MenuContext* menu_context) : MenuPage(menu_context) {}
+        void init() override {}
+        void update_page(float /*dt*/) override {}
+        using MenuPage::widget_position;
+        using MenuPage::widget_size;
+        using MenuPage::widget_spacing;
+        using MenuPage::calculate_widget_position;
+        using MenuPage::set_widget_position;
+        using MenuPage::set_widget_size;
+        using MenuPage::set_widget_spacing;
+    };
+
+    WidgetLayout& layout = const_cast<MenuStyle&>(presentation.menu()).layout;
+    const WidgetLayout original = layout;
+    require(original.position == Vector2F(150.0f, 150.0f) &&
+        original.size == Vector2F(300.0f, 75.0f) &&
+        original.spacing == Vector2F(250.0f, 150.0f),
+        "Shared menu widget defaults changed from their shipped geometry");
+    std::ofstream records(output / "menu-widget-geometry.csv");
+    records << "case,position_x,position_y,size_x,size_y,spacing_x,spacing_y,column_2_x,row_3_y\n";
+    const auto check = [&](const char* name, const MenuGeometryProbe& page,
+        const WidgetLayout& expected)
+    {
+        require(page.widget_position() == expected.position && page.widget_size() == expected.size &&
+            page.widget_spacing() == expected.spacing,
+            "Actual MenuPage geometry differs from its constructor snapshot or page override");
+        require(page.calculate_widget_position(0, 0) == expected.position &&
+            page.calculate_widget_position(2, 3) == expected.position +
+                Vector2F(expected.spacing.x * 2.0f, expected.spacing.y * 3.0f) &&
+            page.calculate_widget_position(-1, -1) == expected.position - expected.spacing,
+            "Actual MenuPage row/column placement changed its design-space calculation");
+        const Vector2F placed = page.calculate_widget_position(2, 3);
+        records << name << ',' << page.widget_position().x << ',' << page.widget_position().y << ',' <<
+            page.widget_size().x << ',' << page.widget_size().y << ',' <<
+            page.widget_spacing().x << ',' << page.widget_spacing().y << ',' <<
+            placed.x << ',' << placed.y << '\n';
+    };
+
+    {
+        struct RestoreWidgetLayout
+        {
+            WidgetLayout& layout;
+            WidgetLayout original;
+            ~RestoreWidgetLayout() { this->layout = this->original; }
+        } restore{ layout, original };
+        MenuGeometryProbe shipped(&context);
+        check("shipped", shipped, original);
+        const WidgetLayout custom{ Vector2F(129.5f, 84.25f), Vector2F(410.0f, 92.0f),
+            Vector2F(330.0f, 111.0f) };
+        layout = custom;
+        MenuGeometryProbe authored(&context);
+        check("custom", authored, custom);
+        check("shipped-snapshot-after-custom", shipped, original);
+
+        const WidgetLayout next{ Vector2F(200.0f, 210.0f), Vector2F(315.0f, 80.0f),
+            Vector2F(275.0f, 160.0f) };
+        layout = next;
+        check("custom-snapshot-after-edit", authored, custom);
+        MenuGeometryProbe reopened(&context);
+        check("reopened-after-edit", reopened, next);
+
+        const WidgetLayout overridden{ Vector2F(41.5f, 63.25f), Vector2F(145.0f, 67.0f),
+            Vector2F(33.5f, 22.25f) };
+        shipped.set_widget_position(overridden.position);
+        shipped.set_widget_size(overridden.size);
+        shipped.set_widget_spacing(overridden.spacing);
+        check("page-overrides", shipped, overridden);
+        check("other-page-after-overrides", reopened, next);
+        require(layout.position == next.position && layout.size == next.size &&
+            layout.spacing == next.spacing,
+            "Per-page widget setters changed the shared presentation geometry");
+    }
+    MenuGeometryProbe restored(&context);
+    check("restored-baseline", restored, original);
+    require(records.good(), "Menu widget geometry evidence write failed");
+}
+
 void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
@@ -21,6 +106,7 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     MenuInput input(app.gamepads(), app.keyboard(), &tuning);
     MenuLevelSettings settings;
     MenuContext context(&data, &input, &settings);
+    menu_widget_geometry_checks(context, presentation, output);
     StateContext& stack = app;
     struct ClearMainStates
     {
@@ -399,7 +485,8 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     require(IsWindow(window) != FALSE, "Main-menu probe lost its hidden window before Exit");
     tap(Key::enter);
     require(IsWindow(window) == FALSE, "Actual Home Exit did not close its isolated window");
-    std::cout << "PASS actual title/home: centered measured lettering, native ink/paper contrast, "
+    std::cout << "PASS actual menu widget geometry: shipped/custom constructor snapshots, reopened edits, "
+        "page overrides and row/column placement; title/home: centered measured lettering, native ink/paper contrast, "
         "all focus cards/arrows, Start/Back/Play/Options/Credits/Exit, frozen/reduced redraw, draw RNG, "
         "resize and 720p/1080p/QHD/4:3/16:10/ultrawide paper bounds\n";
 }

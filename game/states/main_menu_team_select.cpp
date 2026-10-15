@@ -209,6 +209,7 @@ bool MainMenuTeamSelect::all_players_unconfirmed() const
 void MainMenuTeamSelect::update_team_select_visuals()
 {
 	this->deselect_and_unconfirm_all_widgets();
+	const auto& frames = this->team_select_selected_frames_;
 
 	for (int i = 0; i < this->player_count(); i++)
 	{
@@ -217,17 +218,17 @@ void MainMenuTeamSelect::update_team_select_visuals()
 		{
 		case PlayerTeam::a:
 			this->player_widgets_[i]->player_a->set_sprite_frame(
-				"team_select_a_selected");
+				frames[0]);
 			selected_widget = this->player_widgets_[i]->player_a.get();
 			break;
 		case PlayerTeam::none:
 			this->player_widgets_[i]->player_center->set_sprite_frame(
-				"team_select_center_selected");
+				frames[1]);
 			selected_widget = this->player_widgets_[i]->player_center.get();
 			break;
 		case PlayerTeam::b:
 			this->player_widgets_[i]->player_b->set_sprite_frame(
-				"team_select_b_selected");
+				frames[2]);
 			selected_widget = this->player_widgets_[i]->player_b.get();
 			break;
 		}
@@ -241,14 +242,15 @@ void MainMenuTeamSelect::update_team_select_visuals()
 }
 void MainMenuTeamSelect::deselect_and_unconfirm_all_widgets()
 {
+	const auto& frames = this->team_select_frames_;
 	for (int i = 0; i < this->player_count(); i++)
 	{
 		this->player_widgets_[i]->player_a->set_sprite_frame(
-			"team_select_a");
+			frames[0]);
 		this->player_widgets_[i]->player_center->set_sprite_frame(
-			"team_select_center");
+			frames[1]);
 		this->player_widgets_[i]->player_b->set_sprite_frame(
-			"team_select_b");
+			frames[2]);
 
 		this->player_widgets_[i]->player_a->set_colour(
 			this->look().team_select.unselected);
@@ -262,6 +264,9 @@ void MainMenuTeamSelect::init()
 {
 	// A button held on the preceding page cannot shuffle or confirm this one.
 	this->input()->reset_actions();
+	const MainMenuPresentation& look = this->look();
+	this->team_select_frames_ = look.team_select_frames;
+	this->team_select_selected_frames_ = look.team_select_selected_frames;
 	std::vector<PromptBar::Prompt> prompts{
 		{ L"Left/Right", L"Pick a team" },
 		{ L"A", L"Confirm" },
@@ -342,8 +347,8 @@ void MainMenuTeamSelect::init()
 
 		widgets->player_a = std::make_unique<UiTexture>(
 			name + "_a",
-			"sprite_sheet_1",
-			"team_select_a",
+			look.team_select_sheet,
+			this->team_select_frames_[0],
 			RectangleF(this->calculate_widget_position(2, i + 2), this->look().team_select.size),
 			this->render_resources());
 
@@ -351,16 +356,16 @@ void MainMenuTeamSelect::init()
 
 		widgets->player_center = std::make_unique<UiTexture>(
 			name + "_center",
-			"sprite_sheet_1",
-			"team_select_center",
+			look.team_select_sheet,
+			this->team_select_frames_[1],
 			RectangleF(widgets->player_a->rectangle().position() + move,
 				this->look().team_select.size),
 			this->render_resources());
 
 		widgets->player_b = std::make_unique<UiTexture>(
 			name + "_b",
-			"sprite_sheet_1",
-			"team_select_b",
+			look.team_select_sheet,
+			this->team_select_frames_[2],
 			RectangleF(widgets->player_center->rectangle().position() + move,
 				this->look().team_select.size),
 			this->render_resources());

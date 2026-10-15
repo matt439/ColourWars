@@ -367,6 +367,15 @@ their addresses, and only the edited number changes.
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
+The shared `presentation.menu_style.layout.position/size/spacing` values use
+the menu's 1920 by 1080 design coordinates and apply when a page is next opened.
+For example, `tune presentation.menu_style.layout.spacing.y 140` changes the
+default row spacing; pages with their own layout still use their overrides.
+Position must be nonnegative, size positive and the first widget must fit within
+the design area. Spacing may be zero and is bounded by the design size on each
+axis. Named menu sheets and frames remain string settings edited in the JSON;
+`tune` changes numbers and booleans.
+
 Mist `spread_step` constructs the velocity fan when a shot is created. Roller
 `aim_tilt` and the shared projectile `wind_stop_factor` are read during updates,
 so tuning them affects existing objects. Angles are radians: mist spread accepts

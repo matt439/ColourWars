@@ -14,12 +14,15 @@ MenuPage::MenuPage(MenuContext* context) :
 {
 	this->input()->reset_directions();
 	const MenuStyle& style = this->menu_style();
+	this->widget_position_ = style.layout.position;
+	this->widget_size_ = style.layout.size;
+	this->widget_spacing_ = style.layout.spacing;
 	this->direction_sound_ = this->resolve_wave(style.direction_sound);
 	this->confirm_sound_ = this->resolve_wave(style.confirm_sound);
 	this->cancel_sound_ = this->resolve_wave(style.cancel_sound);
-	this->chrome_sheet_ = this->render_resources()->resolve_sprite_sheet("sprite_sheet_1");
+	this->chrome_sheet_ = this->render_resources()->resolve_sprite_sheet(style.sprite_sheet);
 	this->chrome_pixel_ = this->render_resources()->sprite_sheet(this->chrome_sheet_)->
-		resolve_sprite_frame("pixel");
+		resolve_sprite_frame(style.fill_frame);
 	this->brand_font_ = this->render_resources()->resolve_sprite_font(style.brand_font);
 }
 
