@@ -16,12 +16,13 @@ param(
     [switch] $ResultsMenuOnly,
     [switch] $MainMenuOnly,
     [switch] $SettingsMenuOnly,
+    [switch] $ControlsMenuOnly,
     [string] $OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -110,7 +111,9 @@ function Write-ContactSheet {
                 $_.Name -like 'supply-*-detail.ppm' -or $_.Name -like 'hud-*-detail.ppm' -or
                 $_.Name -like 'resume-*-detail.ppm' -or $_.Name -like 'end-menu-*-detail.ppm' -or
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
-                $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' } | Sort-Object Name) {
+                $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
+                $_.Name -like 'controls-menu-*-detail.ppm' -or
+                $_.Name -eq 'controls-menu-sensitivity-1280x720.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
             if ($header -notmatch '^P6\n(\d+) (\d+)\n255\n') { throw "Unsupported capture header: $($file.FullName)" }
@@ -205,6 +208,9 @@ function Write-ContactSheet {
         $mainMenu = @($images | Where-Object { $_.name -like 'main-menu-*-1280x720-detail' })
         Write-ContactSheetPages -Images $mainMenu -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-main-menu-contact'
+        $controlsMenu = @($images | Where-Object { $_.name -like 'controls-menu-*-1280x720-detail' })
+        Write-ContactSheetPages -Images $controlsMenu -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-controls-menu-contact'
     }
     finally {
         foreach ($item in $images) { $item.bitmap.Dispose() }
@@ -242,7 +248,7 @@ $process = $null
 $failure = $null
 $result = [ordered]@{
     outcome = 'failed'
-    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } elseif ($ResultsMenuOnly) { 'results-menu-only' } elseif ($MainMenuOnly) { 'main-menu-only' } elseif ($SettingsMenuOnly) { 'settings-menu-only' } else { 'full-painter-matrix' }
+    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } elseif ($ResultsMenuOnly) { 'results-menu-only' } elseif ($MainMenuOnly) { 'main-menu-only' } elseif ($SettingsMenuOnly) { 'settings-menu-only' } elseif ($ControlsMenuOnly) { 'controls-menu-only' } else { 'full-painter-matrix' }
     preset = $Preset
     game_revision = (& git rev-parse HEAD)
     engine_revision = (& git -C external/labrador rev-parse HEAD)
@@ -325,6 +331,17 @@ elseif ($SupplyOnly) {
         $result.Remove($key)
     }
     $result.checks = $result.supply_checks
+}
+elseif ($ControlsMenuOnly) {
+    $result.player_counts = @(1)
+    $result.palettes = @('blue_yellow')
+    $result.weapons = @('sprayer')
+    $result.actions = @('row-change', 'numeric-clamps', 'apply', 'failed-save', 'back-discard', 'options-return', 'pause-return')
+    $result.input_slots = @(4)
+    $result.inputs = 'Public keyboard through production Controls/audio, Options, Pause and actual GameLevel/StateContext, with a separate isolated save profile. Preview gain is zero for this raster check; saved music/SFX remain muted.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.Remove('stage')
+    $result.checks = 'Controls/audio paper, all eight focus cards and detached arrows; measured full labels/values, bounded complete controller/keyboard/readiness/effects help and save status, native linear text and ink/paper contrast across 720p/1080p/QHD, 4:3, 16:10 and ultrawide. Actual clamps and pending edits, Apply with persisted reload, controlled save failure, Back discard, pending Options values/focus and actual paused GameLevel return. Frozen redraw/state, draw RNG, static Reduce effects and resize. No physical-controller, human readability, preview audition or listening acceptance.'
 }
 elseif ($SettingsMenuOnly) {
     $result.player_counts = @()
@@ -518,6 +535,7 @@ try {
     elseif ($ResultsMenuOnly) { $probeArguments += 'results-menu' }
     elseif ($MainMenuOnly) { $probeArguments += 'main-menu' }
     elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
+    elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -535,21 +553,32 @@ try {
         Get-Content -LiteralPath (Join-Path $run 'run.err') | ForEach-Object { Write-Host $_ }
         throw "Visual probe exited with $($process.ExitCode)."
     }
-    $expectedSaveFailure = 'save failure: Could not write ' + (Join-Path $captures 'settings-profile/ColourWars/save_data.json') + '.'
+    $expectedSaveFailures = @{}
+    if ($SettingsMenuOnly -or $result.scope -eq 'full-painter-matrix') {
+        $line = 'save failure: Could not write ' + (Join-Path $captures 'settings-profile/ColourWars/save_data.json') + '.'
+        $expectedSaveFailures[$line] = 1
+    }
+    if ($ControlsMenuOnly -or $result.scope -eq 'full-painter-matrix') {
+        $line = 'save failure: Could not write ' + (Join-Path $captures 'controls-profile/ColourWars/save_data.json') + '.'
+        $expectedSaveFailures[$line] = 1
+    }
     $expectedSaveTail = 'Your settings will not be remembered.'
-    $saveFailureCount = 0
+    $expectedTailCount = $expectedSaveFailures.Count
     $saveTailCount = 0
     foreach ($line in Get-Content -LiteralPath (Join-Path $run 'run.err')) {
-        if ($line -eq $expectedSaveFailure) { ++$saveFailureCount; continue }
+        if ($expectedSaveFailures.ContainsKey($line) -and $expectedSaveFailures[$line] -gt 0) {
+            --$expectedSaveFailures[$line]
+            continue
+        }
         if ($line -eq $expectedSaveTail) { ++$saveTailCount; continue }
         if ($line.Trim() -ne '' -and
             $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
             throw "Unexpected probe diagnostic: $line"
         }
     }
-    $expectedSaveCount = if ($SettingsMenuOnly -or $result.scope -eq 'full-painter-matrix') { 1 } else { 0 }
-    if ($saveFailureCount -ne $expectedSaveCount -or $saveTailCount -ne $expectedSaveCount) {
-        throw 'The controlled isolated settings-save failure did not produce exactly its expected diagnostic.'
+    if (@($expectedSaveFailures.Values | Where-Object { $_ -ne 0 }).Count -ne 0 -or
+        $saveTailCount -ne $expectedTailCount) {
+        throw 'The controlled isolated settings-save failures did not produce exactly their expected diagnostics.'
     }
     if (-not (Test-Path -LiteralPath $saveFixture -PathType Leaf) -or
         (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
@@ -576,6 +605,9 @@ try {
     }
     elseif ($SupplyOnly) {
         $result.diagnostic = 'Supply-only visual check passed: sprayer/mister full, half and empty native reservoirs; exact authored-layer registration, unchanged silhouette and permanent hardware, all 1P/4P720 palettes/aim quadrants/facing inputs/poses and representative 4P1080/QHD. Reduced effects, motion-disabled rendering, ammo clamps, paid depletion, natural regeneration/reset, menu previews and tool switching, frozen pixels/weapon state/draw RNG and unchanged match observation/Debug fingerprint passed. Other painter matrices were not run.'
+    }
+    elseif ($ControlsMenuOnly) {
+        $result.diagnostic = 'Controls-menu-only hardware check passed: actual Controls/audio edits/clamps, delayed Apply, persisted reload and failed-save warning, Back discard, pending Options values/focus and actual GameLevel Pause return. Complete fitted help, measured labels/values/status, native linear ink, paper/cards/arrows/contrast, frozen redraw/state, draw RNG, static Reduce effects and resize passed across six sizes/aspects. Other painter matrices, physical controllers, human readability, preview audition and listening acceptance were not run.'
     }
     elseif ($SettingsMenuOnly) {
         $result.diagnostic = 'Settings-menu-only hardware check passed: actual Options/Credits navigation, row edits, delayed Apply, persisted reload and failed-save warning, Controls/audio return, Back discard, disabled fullscreen resolution and retained windowed preset. Measured full copy/values/status, native paper/cards/arrows/contrast, frozen redraw, draw RNG, static Reduce effects and resize passed across six sizes/aspects. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'

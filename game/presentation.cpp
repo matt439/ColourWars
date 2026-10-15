@@ -535,6 +535,77 @@ namespace
 		return drawing;
 	}
 
+	ControlsSettingsPresentation read_controls_settings(const JsonValue& root, float content_height)
+	{
+		const JsonValue json = root.object("controls_settings");
+		ControlsSettingsPresentation menu;
+		menu.box_size = read_positive_vector(json, "box_size");
+		if (menu.box_size.x > 1760.0f || menu.box_size.y > content_height - 40.0f)
+		{
+			throw std::runtime_error(json.where() +
+				": box_size must be at most 1760 wide and leave 20 pixels above and below within menu_style.chrome.footer_y.");
+		}
+		menu.art = read_menu_paper(json, menu.box_size);
+		menu.heading_position = read_finite_vector(json, "heading_position");
+		menu.controls_position = read_finite_vector(json, "controls_position");
+		menu.controls_size = read_positive_vector(json, "controls_size");
+		menu.status_position = read_finite_vector(json, "status_position");
+		const JsonValue layout = json.object("layout");
+		menu.layout.position = read_finite_vector(layout, "position");
+		menu.layout.size = read_positive_vector(layout, "size");
+		menu.layout.spacing = read_positive_vector(layout, "spacing");
+		menu.item_font = json.identifier("item_font");
+		menu.help_font = json.identifier("help_font");
+		menu.volume_preview_sound = read_sound(json.object("sounds"), "volume_preview");
+
+		const float edge = menu.art.keyline_width * 3.0f;
+		const Vector2F top = (Vector2F(1920.0f, content_height) - menu.box_size) / 2.0f + Vector2F(edge);
+		const Vector2F bottom = (Vector2F(1920.0f, content_height) + menu.box_size) / 2.0f -
+			Vector2F(menu.art.shadow_offset + edge);
+		const auto inside_panel = [&](const Vector2F& point, const char* key)
+		{
+			if (point.x <= top.x || point.x >= bottom.x || point.y <= top.y || point.y >= bottom.y)
+			{
+				throw std::runtime_error(json.where() + ": '" + key + "' must fit inside box_size.");
+			}
+		};
+		inside_panel(menu.heading_position, "heading_position");
+		inside_panel(menu.controls_position, "controls_position");
+		inside_panel(menu.status_position, "status_position");
+		if (menu.status_position.x >= (1920.0f + menu.box_size.x) / 2.0f -
+			menu.art.shadow_offset - menu.art.focus_padding.x)
+		{
+			throw std::runtime_error(json.where() + ": status_position must leave positive text width inside box_size and art.focus_padding.");
+		}
+		inside_panel(menu.layout.position - menu.art.focus_padding, "layout.position");
+		const Vector2F help_bottom = menu.controls_position + menu.controls_size;
+		if (help_bottom.x >= bottom.x || help_bottom.y >= bottom.y)
+		{
+			throw std::runtime_error(json.where() + ": controls_position and controls_size must fit inside box_size.");
+		}
+
+		// Six settings and Apply/Back share the left column. Reserve their
+		// authored size, focus card and shadow before the help and status text.
+		const Vector2F last_row_bottom = menu.layout.position + menu.layout.size +
+			Vector2F(menu.layout.spacing.x, menu.layout.spacing.y * 7.0f);
+		const Vector2F rows_bottom = last_row_bottom + menu.art.focus_padding + Vector2F(menu.art.shadow_offset);
+		if (rows_bottom.x >= menu.controls_position.x || rows_bottom.y >= bottom.y ||
+			menu.layout.spacing.x <= menu.layout.size.x + menu.art.focus_padding.x ||
+			menu.layout.spacing.y < menu.layout.size.y + menu.art.focus_padding.y * 2.0f + menu.art.shadow_offset)
+		{
+			throw std::runtime_error(json.where() + ": layout.position, layout.size and layout.spacing must keep eight rows "
+				"and their focus cards inside box_size and before controls_position.");
+		}
+		if (menu.heading_position.y >= menu.layout.position.y - menu.art.focus_padding.y ||
+			menu.heading_position.y >= menu.controls_position.y ||
+			menu.status_position.y <= rows_bottom.y || menu.status_position.x >= menu.controls_position.x)
+		{
+			throw std::runtime_error(json.where() + ": heading_position, controls_position and status_position must order "
+				"the heading, eight rows and status without overlapping the help column.");
+		}
+		return menu;
+	}
+
 	PauseMenuPresentation read_pause_menu(const JsonValue& root)
 	{
 		const JsonValue json = root.object("pause_menu");
@@ -1326,12 +1397,7 @@ Presentation::Presentation(const char* path)
 	this->team_palette_ = read_team_palette(root);
 	this->menu_ = read_menu_style(root);
 	this->main_menu_ = read_main_menu(root, this->menu_.footer_y);
-	const JsonValue controls = root.object("controls_settings");
-	this->controls_settings_.layout = read_layout(controls, "layout");
-	this->controls_settings_.heading_position = read_vector(controls, "heading_position");
-	this->controls_settings_.controls_position = read_vector(controls, "controls_position");
-	this->controls_settings_.help_font = controls.string("help_font");
-	this->controls_settings_.volume_preview_sound = read_sound(controls.object("sounds"), "volume_preview");
+	this->controls_settings_ = read_controls_settings(root, this->menu_.footer_y);
 	this->pause_menu_ = read_pause_menu(root);
 	this->end_menu_ = read_end_menu(root);
 	this->results_menu_ = read_results_menu(root);
@@ -1547,6 +1613,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.font("main_menu.fonts.weapon_description", this->main_menu_.weapon_description_font);
 	check.font("main_menu.credits.font", this->main_menu_.credits_font);
 	check.font("controls_settings.help_font", this->controls_settings_.help_font);
+	check.font("controls_settings.item_font", this->controls_settings_.item_font);
 	check.font("results_menu.contribution_font", this->results_menu_.contribution_font);
 	check.font("prompt_bar.font", this->prompt_bar_.font);
 	check.font("debug_overlay.font", this->debug_overlay_.font);

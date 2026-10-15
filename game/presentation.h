@@ -93,15 +93,6 @@ struct SelectPresentation
 	labrador::Colour unselected = labrador::Colour::white;
 };
 
-struct ControlsSettingsPresentation
-{
-	WidgetLayout layout;
-	mattmath::Vector2F heading_position;
-	mattmath::Vector2F controls_position;
-	std::string help_font;
-	PresentationSound volume_preview_sound;
-};
-
 struct StageSelectPresentation
 {
 	mattmath::Vector2F preview_position;
@@ -176,6 +167,20 @@ struct MenuPaperArtPresentation
 	float keyline_width = 0.0f;
 	float shadow_offset = 0.0f;
 	mattmath::Vector2F focus_padding;
+};
+
+struct ControlsSettingsPresentation
+{
+	MenuPaperArtPresentation art;
+	mattmath::Vector2F box_size;
+	WidgetLayout layout;
+	mattmath::Vector2F heading_position;
+	mattmath::Vector2F controls_position;
+	mattmath::Vector2F controls_size;
+	mattmath::Vector2F status_position;
+	std::string item_font;
+	std::string help_font;
+	PresentationSound volume_preview_sound;
 };
 
 struct MainMenuPresentation

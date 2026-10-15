@@ -779,6 +779,15 @@ retain their behavior. Shipped text fits at its natural font size, including
 all palette names and the long save-failure status. Controls/audio, match setup, selection
 cards and stage preview remain open, with arena and human-review gates unchanged.
 
+**Controls/audio artwork implemented (2026-10-15, part of `POL#16`).** The
+[shared settings page](polish-main-menu.md#controlsaudio) extends the stepped
+paper, dark lettering and detached focus arrow to both Options and Pause.
+Compact setting cards enclose each label and value; the complete controls
+legend and Apply/save status fit beside and below the settings. Pending edits,
+SFX audition, Apply, Back discard and the paused match retain their existing
+rules. Match setup, selection cards and stage preview remain open, alongside
+the existing arena and human-review gates.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

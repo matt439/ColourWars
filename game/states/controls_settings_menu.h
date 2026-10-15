@@ -2,6 +2,7 @@
 
 #include "game/states/pause_menu.h"
 #include "game/states/option_row.h"
+#include "game/states/menu_panel.h"
 
 // Pushed above either Options or Pause. The underlying page and its pending
 // selections survive, and leaving this page never resumes a paused match.
@@ -16,19 +17,23 @@ public:
 	// Closes like Back. Not PauseMenuPage's way out: this page is pushed with
 	// no result, and pop(PauseMenuAction) on its frame would throw.
 	bool debug_dismiss(bool leaving_match) final;
+protected:
+	bool shows_focus_backing() const override { return false; }
 private:
 	void refresh_values();
+	void set_status(const std::wstring& text, const labrador::Colour& colour);
 	void apply_settings();
 	void close();
 	PlaySettings selection_;
 	labrador::SoundBank::WaveHandle volume_preview_sound_;
 	std::unique_ptr<labrador::UiTexture> background_;
-	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> text_;
+	std::unique_ptr<MenuPaperArtwork> paper_;
+	std::vector<std::unique_ptr<labrador::UiText>> text_;
 	std::unique_ptr<OptionRow> aim_;
 	std::unique_ptr<OptionRow> music_;
 	std::unique_ptr<OptionRow> sfx_;
 	std::unique_ptr<OptionRow> view_shake_;
 	std::unique_ptr<OptionRow> aim_marker_;
 	std::unique_ptr<OptionRow> reduce_effects_;
-	labrador::UiTextDropShadow* status_ = nullptr;
+	labrador::UiText* status_ = nullptr;
 };

@@ -16,79 +16,88 @@ void ControlsSettingsMenu::init()
 {
 	this->input()->reset_actions();
 	this->selection_ = this->save()->play_settings();
-	const MenuStyle& style = this->menu_style();
 	const ControlsSettingsPresentation& look = this->presentation().controls_settings();
+	MenuStyle style = this->menu_style();
+	style.item_font = look.item_font;
 	this->set_widget_position(look.layout.position);
 	this->set_widget_spacing(look.layout.spacing);
-	this->focus_.set_style({ style.highlight, style.unhighlight, style.disabled });
+	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.ink });
 	this->set_prompts({ { L"Left/Right", L"Change" }, { L"A", L"Select" },
 		{ L"B", L"Back (discard unapplied changes)" } });
-	this->background_ = std::make_unique<UiTexture>("background", this->presentation().main_menu().backdrop_sheet,
-		this->presentation().main_menu().backdrop_frame, RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
-		this->render_resources(), this->presentation().main_menu().options_background_colour);
+	this->background_ = std::make_unique<UiTexture>("background", "sprite_sheet_1", "pixel",
+		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
+		this->render_resources(), this->presentation().main_menu().home_background_colour);
+	const RectangleF paper_bounds(
+		(Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
+		look.box_size);
+	this->paper_ = std::make_unique<MenuPaperArtwork>(paper_bounds,
+		this->render_resources(), &look.art, &this->focus_);
+	const Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
+		look.art.shadow_offset - this->calculate_widget_position(1, 0).x,
+		look.layout.spacing.y - look.art.focus_padding.y * 2.0f);
 	this->texture_container_ = std::make_unique<UiContainer>("textures");
 	this->texture_container_->add_child(this->background_.get());
+	this->texture_container_->add_child(this->paper_.get());
 	this->text_container_ = std::make_unique<UiContainer>("text");
-	const auto add_text = [this, &style](const char* name, const std::wstring& value,
+	const auto add_text = [this](const char* name, const std::wstring& value,
 		const std::string& font, const Vector2F& position, const Colour& colour)
 	{
-		this->text_.push_back(std::make_unique<UiTextDropShadow>(name, value, font,
-			position, this->render_resources(), colour, style.shadow_colour,
-			style.detail_shadow_offset));
-		UiTextDropShadow* widget = this->text_.back().get();
+		this->text_.push_back(std::make_unique<UiText>(name, value, font,
+			position, this->render_resources(), colour));
+		UiText* widget = this->text_.back().get();
 		this->text_container_->add_child(widget);
 		return widget;
 	};
 	add_text("heading", L"Controls / audio", style.heading_font,
-		look.heading_position, style.heading_colour);
-	const auto make_row = [this, &style](const char* name, const wchar_t* label,
+		look.heading_position, look.art.ink);
+	const auto make_row = [this, &style, &look, &value_limit](const char* name, const wchar_t* label,
 		int row, int& value, int minimum, int maximum, int step)
 	{
 		return std::make_unique<OptionRow>(name, label,
 			this->calculate_widget_position(0, row), this->calculate_widget_position(1, row),
-			style, this->presentation().main_menu().options_value_colour, this->render_resources(),
+			style, look.art.ink, this->render_resources(),
 			[this, &value, minimum, maximum, step](Direction direction)
 			{
 				value = std::clamp(value + (direction == Direction::right ? step : -step),
 					minimum, maximum);
 				this->refresh_values();
-				this->status_->set_text(L"Apply to save changes for all players.");
-				this->status_->set_colour(this->menu_style().highlight);
-			});
+				this->set_status(L"Apply to save changes for all players.",
+					this->presentation().controls_settings().art.focus_ink);
+			}, &look.art, value_limit);
 	};
 	this->aim_ = make_row("aim", L"Stick sensitivity", 0, this->selection_.aim_sensitivity, 1, 5, 1);
 	this->music_ = make_row("music", L"Music volume", 1, this->selection_.music_volume, 0, 100, 10);
 	this->sfx_ = make_row("sfx", L"SFX volume", 2, this->selection_.sfx_volume, 0, 100, 10);
 	this->view_shake_ = std::make_unique<OptionRow>("view_shake", L"View shake",
 		this->calculate_widget_position(0, 3), this->calculate_widget_position(1, 3),
-		style, this->presentation().main_menu().options_value_colour, this->render_resources(),
+		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
 			this->selection_.view_shake = direction == Direction::right;
 			this->refresh_values();
-			this->status_->set_text(L"Apply to save changes for all players.");
-			this->status_->set_colour(this->menu_style().highlight);
-		});
+			this->set_status(L"Apply to save changes for all players.",
+				this->presentation().controls_settings().art.focus_ink);
+		}, &look.art, value_limit);
 	this->aim_marker_ = std::make_unique<OptionRow>("aim_marker", L"Aim marker",
 		this->calculate_widget_position(0, 4), this->calculate_widget_position(1, 4),
-		style, this->presentation().main_menu().options_value_colour, this->render_resources(),
+		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
 			this->selection_.aim_marker = direction == Direction::right;
 			this->refresh_values();
-			this->status_->set_text(L"Apply to save changes for all players.");
-			this->status_->set_colour(this->menu_style().highlight);
-		});
+			this->set_status(L"Apply to save changes for all players.",
+				this->presentation().controls_settings().art.focus_ink);
+		}, &look.art, value_limit);
 	this->reduce_effects_ = std::make_unique<OptionRow>("reduce_effects", L"Reduce effects",
 		this->calculate_widget_position(0, 5), this->calculate_widget_position(1, 5),
-		style, this->presentation().main_menu().options_value_colour, this->render_resources(),
+		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
 		{
 			this->selection_.reduce_effects = direction == Direction::right;
 			this->refresh_values();
-			this->status_->set_text(L"Apply to save changes for all players.");
-			this->status_->set_colour(this->menu_style().highlight);
-		});
+			this->set_status(L"Apply to save changes for all players.",
+				this->presentation().controls_settings().art.focus_ink);
+		}, &look.art, value_limit);
 	for (OptionRow* row : { this->aim_.get(), this->music_.get(), this->sfx_.get(),
 		this->view_shake_.get(), this->aim_marker_.get(), this->reduce_effects_.get() })
 	{
@@ -96,16 +105,33 @@ void ControlsSettingsMenu::init()
 		this->focus_.add(row);
 	}
 	this->refresh_values();
-	UiTextDropShadow* apply = add_text("apply", L"Apply", style.item_font,
-		this->calculate_widget_position(0, 6), style.unhighlight);
-	UiTextDropShadow* back = add_text("back", L"Back", style.item_font,
-		this->calculate_widget_position(0, 7), style.unhighlight);
-	this->status_ = add_text("status", L"Apply to save changes for all players.",
-		look.help_font, this->calculate_widget_position(0, 8), style.highlight);
+	UiText* apply = add_text("apply", L"Apply", style.item_font,
+		this->calculate_widget_position(0, 6), look.art.ink);
+	UiText* back = add_text("back", L"Back", style.item_font,
+		this->calculate_widget_position(0, 7), look.art.ink);
+	this->status_ = add_text("status", L"", look.help_font, look.status_position, look.art.focus_ink);
+	this->set_status(L"Apply to save changes for all players.", look.art.focus_ink);
 	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(back, [this] { this->close(); });
-	add_text("controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nHigher sensitivity: less stick travel.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
-		look.help_font, look.controls_position, style.highlight);
+	UiText* controls = add_text("controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nHigher sensitivity: less stick travel.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
+		look.help_font, look.controls_position, look.art.ink);
+	const RectangleF help = controls->bounds();
+	controls->set_scale(std::min({ 1.0f, look.controls_size.x / help.width,
+		look.controls_size.y / help.height }));
+}
+
+void ControlsSettingsMenu::set_status(const std::wstring& text, const Colour& colour)
+{
+	this->status_->set_text(text);
+	this->status_->set_colour(colour);
+	this->status_->set_scale(1.0f);
+	const ControlsSettingsPresentation& look = this->presentation().controls_settings();
+	const float available = this->paper_->rectangle().right() - look.art.shadow_offset -
+		look.art.focus_padding.x - look.status_position.x;
+	if (this->status_->bounds().width > available)
+	{
+		this->status_->set_scale(available / this->status_->bounds().width);
+	}
 }
 
 void ControlsSettingsMenu::refresh_values()
@@ -129,10 +155,10 @@ void ControlsSettingsMenu::apply_settings()
 			music.volume * this->save()->play_settings().music_gain());
 	}
 	this->play_wave(this->confirm_sound_);
-	this->status_->set_text(saved ? L"Applied and saved for all players." :
-		L"Active for this run. Could not save.");
-	this->status_->set_colour(saved ? this->menu_style().highlight :
-		this->menu_style().warning);
+	this->set_status(saved ? L"Applied and saved for all players." :
+		L"Active for this run. Could not save.",
+		saved ? this->presentation().controls_settings().art.focus_ink :
+		this->presentation().main_menu().options_warning_colour);
 }
 
 void ControlsSettingsMenu::close()

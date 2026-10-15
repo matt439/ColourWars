@@ -72,7 +72,7 @@ scripts/run-acceptance.ps1 -Preset x64-debug
 scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -MainMenuOnly
 ```
 
-Use `x64-release` for the Release checks. Controls/audio, match setup,
+Use `x64-release` for the Release checks. Match setup,
 selection cards and stage preview remain under `POL#16`. Reference-arena
 composition, movement feel, physical controllers and listening acceptance
 retain their TODO owners.
@@ -103,8 +103,7 @@ font size. No new atlas or generation step is required.
 Keyboard and pad actions, staged display changes, Apply, save-failure behavior,
 the retained windowed preset, Back discard and return from Controls/audio keep
 their existing rules. Existing Credits copy and music/sound bindings are
-unchanged. Controls/audio retains its current artwork and colours; its full
-paper treatment belongs with the remaining menu work. Reduce effects keeps
+unchanged. The Controls/audio paper increment is recorded below. Reduce effects keeps
 both pages static and fully readable.
 
 The retained native 720p views show [Options](images/polish-main-menu/settings-720p.png),
@@ -144,3 +143,73 @@ Use `x64-release` for Release. The checks use keyboard input and isolated save
 files; fullscreen metadata exercises disabled-resolution navigation while only
 Off is applied to the offscreen windowed probe. Physical-pad, human readability,
 movement-feel and listening acceptance remain with their TODO owners.
+
+## Controls/audio
+
+Implemented on 2026-10-15, part of `POL#16`. The page shared by Options and
+Pause now uses the same pale stepped paper, dark ink and solid neutral surround.
+Each setting's focus card contains its label and value, with a detached ink
+arrow; Apply and Back use the same focus treatment. The complete existing
+controller, keyboard, menu, readiness and reduced-effects legend remains
+visible in the right column. Status messages use dark ink, with a separate
+warning ink when a save fails. The common controls footer stays visible.
+
+Editable geometry is in `presentation.json.controls_settings`: `box_size`,
+`heading_position`, `layout`, `controls_position`, `controls_size` and
+`status_position`. The dedicated `item_font` keeps eight setting/action rows
+clear of one another. Its `art` uses the shared paper recipe with compact
+vertical card padding and a smaller shadow. Settings use plain lettering;
+the texture layer retains point sampling and the text layer linear sampling.
+The legend fits its measured width and height without removing lines; labels,
+values and status can fit narrower authored spaces. No new atlas is needed.
+
+The six existing settings retain their ranges and staged Apply behavior.
+SFX audition still uses the pending volume, including when the saved volume
+is mute. Back discards unapplied changes. Returning to Options preserves its
+pending display choices and focus; returning to Pause leaves the match paused.
+The opening device and disconnected-device fallback retain their existing
+rules. Reduce effects keeps the drawing static.
+
+Debug and Release build under `/W4 /WX` and each pass all 22 consumer cases.
+After the final status-width validation fix, both focused content cases pass
+again, including coordinated layouts that previously allowed zero or negative
+status space. Startup rejects malformed paper, missing fonts, nonfinite or
+unusable geometry, overlapping rows/help and status positions outside the paper.
+
+The D3D11 check uses the actual page and public keyboard input through
+`StateContext`, with its own isolated save. It checks all eight focus positions
+at 720p, 1080p, QHD, 4:3, 16:10 and ultrawide; complete labels, values, help and
+status are compared with independently drawn linear text. The twenty-line help
+measures 565 by 744.078 design units and fits at scale 0.940761. Settings and
+status retain their natural font size. Checks also cover numeric clamps,
+pending changes, Apply and reload, controlled write failure, both Back routes,
+Options' retained pending choices/focus and return to an actual paused match.
+Frozen redraw, draw randomness, Reduce effects and exact resize round trips
+are included. Preview audio is muted for these raster/navigation checks.
+
+Both focused D3D11 matrices pass on the NVIDIA GeForce RTX 5080. The Release
+Options/Credits matrix also passes after the shared runner changes. The retained
+native 720p views show [Controls/audio](images/polish-main-menu/controls-720p.png)
+and its [save-failure status](images/polish-main-menu/controls-save-failed-720p.png).
+
+The 53-file Release ZIP contains all 26 reviewed runtime assets byte for byte
+and excludes authoring/debug/source files. Isolated Debug and extracted Release
+startup pass with the accepted bank and a system-only PATH; a separate extracted
+copy passes the missing-bank fallback with its single expected diagnostic.
+Every process closes gracefully without opening the player's real save.
+
+Evidence is under `out/acceptance/` and `out/validation/controls-menu/`, with
+build, content, acceptance and visual logs in `out/validation/controls-menu-*.log`.
+Successful controls runs are Debug `04a44aa6c4244b29ac0f85399c7d838d` and Release
+`93499a368244445ca609c60b97d91517`. Package evidence is in
+`package-99714b468c0a496da36d48f0c754fb29/` below that evidence root.
+
+Rerun from an x64 Visual Studio Developer shell:
+
+```powershell
+scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -ControlsMenuOnly
+```
+
+Use `x64-release` for Release. Match setup, selection cards and stage preview
+remain under `POL#16`. Physical-pad, movement-feel, human readability and
+listening acceptance retain their existing TODO owners.
