@@ -91,6 +91,178 @@ void resume_native_tap(Application& app, WPARAM key)
 }
 #endif
 
+void menu_music_flow_matrix(Application& app, GameData& data, const Presentation& presentation,
+    const std::filesystem::path& output)
+{
+    StateContext& stack = app;
+    const SoundBank* bank = app.audio_resources()->sound_bank(presentation.menu().sound_bank);
+    require(bank->audible(), "Menu-music hardware flow requires the accepted real sound bank");
+    const auto music = bank->resolve_effect(presentation.main_menu().music.name);
+    const auto arena = bank->resolve_effect("music.close_quarters");
+    auto& play = const_cast<PlaySettings&>(data.save()->play_settings());
+    struct RestoreVolume
+    {
+        PlaySettings& play;
+        int original;
+        ~RestoreVolume() { this->play.music_volume = this->original; }
+    } restore_volume{ play, play.music_volume };
+    // A finite 1% music setting exercises the real pending fade; SFX stay muted.
+    play.music_volume = 1;
+    const float fade = presentation.music_mix().fade_out;
+    std::ofstream evidence(output / "menu-music.csv");
+    evidence << "phase,depth,menu_state,menu_looping,arena_state\n";
+    const auto tick = [&](float elapsed = dt)
+    {
+        app.keyboard()->poll();
+        app.mouse()->poll();
+        stack.update(elapsed);
+    };
+    const auto tap = [&](Key key)
+    {
+        app.keyboard()->on_key_down(key); tick(0.0f);
+        app.keyboard()->on_key_up(key); tick(0.0f);
+    };
+    const auto record = [&](const char* phase)
+    {
+        evidence << phase << ',' << stack.depth() << ',' << static_cast<int>(bank->effect_state(music))
+            << ',' << bank->is_effect_looping(music) << ',' << static_cast<int>(bank->effect_state(arena)) << '\n';
+    };
+    const auto playing = [&]
+    {
+        require(bank->effect_state(music) == SoundState::playing && bank->is_effect_looping(music),
+            "The actual GameMenu owner lost its looping menu voice");
+    };
+    const auto page = [&](const char* phase, Key action, int depth)
+    {
+        const Frame before = resume_stack_frame(app);
+        // A replacement page must borrow the existing paused voice. Calling
+        // Play from its constructor/init would wake it even on these dt0 ticks.
+        bank->pause_effect(music);
+        tap(action);
+        require(stack.depth() == depth && bank->effect_state(music) == SoundState::paused,
+            "Main-menu page navigation replayed its shared voice or reached the wrong stack depth");
+        require(before.pixels != resume_stack_frame(app).pixels,
+            "Menu-music navigation failed to replace the expected visible page");
+        tick(0.0f);
+        require(bank->effect_state(music) == SoundState::paused,
+            "A nonpositive page tick resumed the persistent menu voice");
+        tick();
+        playing();
+        record(phase);
+    };
+    stack.clear();
+    stack.notify_activation(true);
+    stack.push(std::make_unique<GameMenu>(&data));
+    require(stack.depth() == 2, "Actual GameMenu did not own its initial title page");
+    playing();
+    tick(presentation.music_mix().fade_in + dt);
+    record("title");
+    page("home", Key::enter, 2);
+    tap(Key::down);
+    page("options", Key::enter, 2);
+    // Fullscreen disables the resolution row and initially focuses Fullscreen.
+    for (int move = 0; move < (data.save()->fullscreen() ? 2 : 3); ++move) { tap(Key::down); }
+    page("controls", Key::enter, 3);
+    page("sticks", Key::enter, 4);
+    const Frame settings = resume_stack_frame(app);
+    stack.notify_activation(false);
+    require(bank->effect_state(music) == SoundState::paused,
+        "Focus loss under nested main-menu settings left music playing");
+    tick(fade + 1.0f);
+    stack.notify_activation(true);
+    tick(0.0f);
+    require(stack.depth() == 4 && bank->effect_state(music) == SoundState::paused &&
+        settings.pixels == resume_stack_frame(app).pixels,
+        "Focus return under nested settings resumed music before a positive page tick or changed the page");
+    tick();
+    playing();
+    record("settings-focus-return");
+#if COLOURWARS_DEV_TOOLS
+    const auto developer_cover = [&](bool menu, int depth, const char* phase)
+    {
+        resume_native_tap(app, menu ? VK_F10 : VK_OEM_3);
+        require(stack.depth() == depth + 1 && bank->effect_state(music) == SoundState::paused,
+            "A developer overlay above the main menu failed to suspend its music");
+        stack.notify_activation(false);
+        tick();
+        stack.notify_activation(true);
+        tick();
+        require(bank->effect_state(music) == SoundState::paused,
+            "Focus return under a main-menu developer overlay woke its suspended music");
+        resume_native_tap(app, menu ? VK_F10 : VK_ESCAPE);
+        require(stack.depth() == depth && bank->effect_state(music) == SoundState::paused,
+            "Closing a main-menu developer overlay did not retain the suspended voice until the page tick");
+        tick();
+        playing();
+        record(phase);
+    };
+    developer_cover(true, 4, "settings-debug-menu-return");
+#endif
+    page("controls-return", Key::escape, 3);
+#if COLOURWARS_DEV_TOOLS
+    developer_cover(false, 3, "controls-console-return");
+#endif
+    page("options-return", Key::escape, 2);
+    page("home-return", Key::escape, 2);
+    tap(Key::down); tap(Key::down);
+    page("credits", Key::enter, 2);
+    page("credits-home-return", Key::escape, 2);
+    page("mode", Key::enter, 2);
+    page("player-count", Key::enter, 2);
+    page("join", Key::enter, 2);
+    page("weapon", Key::enter, 2);
+    page("stage", Key::enter, 2);
+    // The shared fixture lists Movement Course first and Close Quarters next.
+    tap(Key::right);
+    tap(Key::enter);
+    tap(Key::enter);
+    const Frame pending = resume_stack_frame(app);
+    require(stack.depth() == 2 && bank->effect_state(music) == SoundState::playing &&
+        bank->effect_state(arena) == SoundState::stopped,
+        "Final Stage confirmation skipped the outgoing menu fade or began the arena early");
+    tap(Key::enter); tap(Key::enter); tap(Key::escape); tap(Key::down);
+    tick(0.0f); tick(-1.0f);
+    require(pending.pixels == resume_stack_frame(app).pixels && stack.depth() == 2,
+        "Input or nonpositive time changed the latched Stage exit");
+    stack.notify_activation(false);
+    tick(fade + 1.0f);
+    require(stack.depth() == 2 && bank->effect_state(music) == SoundState::paused &&
+        bank->effect_state(arena) == SoundState::stopped && pending.pixels == resume_stack_frame(app).pixels,
+        "An unfocused outgoing menu fade dispatched its match or changed the pending page");
+    stack.notify_activation(true);
+    tick(fade * 0.25f);
+    require(stack.depth() == 2 && bank->effect_state(music) == SoundState::playing &&
+        bank->effect_state(arena) == SoundState::stopped && pending.pixels == resume_stack_frame(app).pixels,
+        "The first partial outgoing menu tick completed the exit or lost its pending page");
+    record("stage-exit-partial");
+    tick(fade + dt);
+    require(stack.depth() == 2 && bank->effect_state(music) == SoundState::stopped &&
+        pending.pixels != resume_stack_frame(app).pixels,
+        "The outgoing menu fade failed to stop its voice and dispatch exactly one match");
+    record("stage-exit-complete");
+    play.music_volume = 0;
+    const int opening_steps = static_cast<int>((data.tuning()->match().countdown + 1.0f) / dt) + 4;
+    for (int step = 0; step < opening_steps; ++step) { tick(); }
+    require(bank->effect_state(arena) == SoundState::playing && bank->is_effect_looping(arena) &&
+        bank->effect_state(music) == SoundState::stopped,
+        "Menu handoff failed to leave only the actual arena loop playing");
+    tap(Key::escape); tick(0.0f);
+    require(stack.depth() == 3, "Menu-music return fixture did not reach actual Pause");
+    tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::enter); tick(0.0f);
+    tap(Key::up); tap(Key::enter);
+    require(stack.depth() == 2 && bank->effect_state(arena) == SoundState::stopped,
+        "Actual Quit did not return to the persistent GameMenu or stop arena ownership");
+    tick();
+    playing();
+    record("quit-home");
+    stack.clear();
+    require(bank->effect_state(music) == SoundState::stopped,
+        "Destroying the actual GameMenu retained its music voice");
+    record("owner-destroyed");
+    require(evidence.good(), "Menu-music flow evidence write failed");
+    std::cout << "PASS actual GameMenu music ownership, page/settings continuity, focus, outgoing fade and match return\n";
+}
+
 void results_music_flow_matrix(Application& app, GameData& data, const Presentation& presentation,
     const std::filesystem::path& output)
 {
@@ -98,6 +270,13 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
     const SoundBank* bank = app.audio_resources()->sound_bank(presentation.menu().sound_bank);
     require(bank->audible(), "Results-music hardware flow requires the accepted real sound bank");
     const auto music = bank->resolve_effect(presentation.results_menu().music.name);
+    auto& play = const_cast<PlaySettings&>(data.save()->play_settings());
+    struct RestoreVolume
+    {
+        PlaySettings& play;
+        int original;
+        ~RestoreVolume() { this->play.music_volume = this->original; }
+    } restore_volume{ play, play.music_volume };
     std::ofstream evidence(output / "results-music.csv");
     evidence << "players,round,phase,depth,sound_state\n";
     for (const int count : { 1, 2, 4 })
@@ -152,10 +331,27 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
             // Release uses the ordinary story-skip key; Debug already has
             // intro off. Solo practice has no person at either end.
             if (game->level().intro_playing()) { tap(Key::enter); }
-            for (int step = 0; step < 3000 && stack.depth() == 2; ++step) { tick(); }
+            for (int step = 0; step < 3000 && stack.depth() == 2; ++step)
+            {
+#if COLOURWARS_DEV_TOOLS
+                // Replay completion can hold the final simulation frame before
+                // GameLevel opens Results. Reproduce that clock state at the
+                // same boundary without creating a separate recording.
+                if (count == 1 && game->level().state() == LevelState::finished)
+                {
+                    require(data.debug().impl()->execute("pause on").ok,
+                        "Cannot hold the final frame before opening Results");
+                }
+#endif
+                tick();
+            }
             require(stack.depth() == 3 && game->level().state() == LevelState::finished,
                 "Actual short GameLevel did not reach its results page");
-            require(bank->effect_state(music) == SoundState::playing && !bank->is_effect_looping(music),
+            SoundState expected = SoundState::playing;
+#if COLOURWARS_DEV_TOOLS
+            if (count == 1) { expected = SoundState::paused; }
+#endif
+            require(bank->effect_state(music) == expected && !bank->is_effect_looping(music),
                 "Actual results page did not begin the owned nonlooping coda");
         };
         const auto results_ready = [&]
@@ -164,6 +360,52 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
             const int steps = static_cast<int>((look.team_fill_delay + look.team_fill_time +
                 look.show_results_delay + 1.0f) / dt) + 4;
             for (int step = 0; step < steps; ++step) { tick(); }
+        };
+        const auto choose_end = [&](int round)
+        {
+#if COLOURWARS_DEV_TOOLS
+            if (count == 1)
+            {
+                require(data.debug().impl()->execute("pause on").ok &&
+                    bank->effect_state(music) == SoundState::paused,
+                    "Cannot suspend the muted End coda with the developer clock");
+                tap(Key::enter);
+                require(stack.depth() == (round == 1 ? 2 : 1) &&
+                    bank->effect_state(music) == SoundState::stopped,
+                    "A paused developer clock blocked an ordinary muted End Rematch/Exit action");
+                record(round, "end-clock-paused-dispatch");
+                require(data.debug().impl()->execute("pause off").ok,
+                    "Cannot restore the clock after the muted End action");
+                return;
+            }
+#endif
+            if (count != 2) { tap(Key::enter); return; }
+            // Retain the existing muted 1/4-seat immediate exits; the two-seat
+            // rematch and change-teams routes exercise finite audible fades.
+            play.music_volume = 1;
+            const auto frozen = resume_observation(game->level());
+            tap(Key::enter);
+            const Frame pending = resume_stack_frame(app);
+            require(stack.depth() == 3 && !ended && bank->effect_state(music) == SoundState::playing,
+                "An audible End action skipped its pending coda fade");
+            tap(Key::enter); tap(Key::enter); tap(Key::escape); tap(Key::up);
+            tick(0.0f); tick(-1.0f);
+            require(stack.depth() == 3 && !ended && pending.pixels == resume_stack_frame(app).pixels &&
+                frozen == resume_observation(game->level()),
+                "Repeated input or nonpositive time changed the latched End action");
+            stack.notify_activation(false);
+            tick(presentation.music_mix().fade_out + 1.0f);
+            require(stack.depth() == 3 && !ended && bank->effect_state(music) == SoundState::paused &&
+                frozen == resume_observation(game->level()),
+                "An unfocused End fade dispatched its action or advanced the finished world");
+            stack.notify_activation(true);
+            tick(presentation.music_mix().fade_out * 0.25f);
+            require(stack.depth() == 3 && !ended && bank->effect_state(music) == SoundState::playing &&
+                pending.pixels == resume_stack_frame(app).pixels && frozen == resume_observation(game->level()),
+                "A partial End fade dispatched early or changed its pending page/world");
+            record(round, "end-exit-partial");
+            tick(presentation.music_mix().fade_out + dt);
+            play.music_volume = 0;
         };
         for (int round = 1; round <= 2; ++round)
         {
@@ -174,6 +416,16 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
                 "Focus loss under the actual results page did not pause the coda");
             record(round, "results-unfocused");
             stack.notify_activation(true);
+#if COLOURWARS_DEV_TOOLS
+            if (count == 1)
+            {
+                require(bank->effect_state(music) == SoundState::paused,
+                    "Focus return woke a results coda created under the paused developer clock");
+                record(round, "results-clock-paused-focus-return");
+                require(data.debug().impl()->execute("pause off").ok,
+                    "Cannot release the clock held before Results opened");
+            }
+#endif
             require(bank->effect_state(music) == SoundState::playing,
                 "Focus return under the covering results page did not resume the coda");
 #if COLOURWARS_DEV_TOOLS
@@ -220,7 +472,7 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
             {
                 // Rematch is the initial action. Its real callback must stop
                 // the previous coda before the new round can create another.
-                tap(Key::enter);
+                choose_end(round);
                 require(stack.depth() == 2 && bank->effect_state(music) == SoundState::stopped &&
                     game->level().state() != LevelState::finished,
                     "Actual Rematch retained the old coda or failed to rebuild the round");
@@ -252,7 +504,7 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
                 tick(0.0f);
                 const int moves = count == 2 ? 1 : 4;
                 for (int move = 0; move < moves; ++move) { tap(Key::down); }
-                tap(Key::enter);
+                choose_end(round);
                 require(ended && stack.depth() == 1 && bank->effect_state(music) == SoundState::stopped,
                     "Leaving the actual End page did not destroy and stop its owned coda");
                 record(round, count == 2 ? "change-teams" : "exit");
@@ -801,6 +1053,7 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
         require(ended && stack.depth() == 1, "Actual Quit did not leave the match immediately");
         std::cout << "PASS actual " << count << "P GameLevel pause/resume input, freeze, focus, restart and quit\n";
     }
+    menu_music_flow_matrix(app, data, presentation, output);
     arena_music_flow_matrix(app, data, tuning, presentation, output);
     results_music_flow_matrix(app, data, presentation, output);
     require(evidence.good(), "Resume evidence write failed");

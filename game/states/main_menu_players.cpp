@@ -160,7 +160,6 @@ void MainMenuPlayerCount::init()
 				std::make_unique<MainMenuModeSelect>(this->menu_context()));
 		});
 
-	this->play_music(this->music_, this->look().music.volume);
 }
 
 void MainMenuPlayerCount::start_join(int players, ScreenLayout layout)
@@ -217,7 +216,6 @@ void MainMenuJoin::init()
 		style.detail_shadow_offset);
 	this->text_container_->add_child(this->status_.get());
 	this->refresh_players(this->input()->player_inputs(*this->level_settings()));
-	this->play_music(this->music_, this->look().music.volume);
 }
 
 void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs)

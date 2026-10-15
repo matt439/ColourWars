@@ -27,8 +27,10 @@ void MenuPage::update(float dt)
 {
 	if (this->data()->debug().before_page_update(*this, dt))
 	{
+		this->menu_context()->suspend_music();
 		return;
 	}
+	const bool leaving = this->menu_context()->music_exit_pending();
 	const MenuStyle& style = this->menu_style();
 	this->input()->update_directions(dt, style.repeat_delay, style.repeat_interval,
 		this->accepts_stick_navigation());
@@ -37,6 +39,7 @@ void MenuPage::update(float dt)
 		this->menu_context()->update_connection_audio();
 		this->menu_context()->update_music(dt);
 	}
+	if (leaving || this->menu_context()->music_exit_pending()) { return; }
 	this->update_page(dt);
 }
 
@@ -303,10 +306,4 @@ void MenuPage::play_effect(SoundBank::EffectHandle effect, bool loop,
 {
 	SoundBankObject::play_effect(effect, loop,
 		volume * this->save()->play_settings().sfx_gain(), pitch, pan);
-}
-
-void MenuPage::play_music(SoundBank::EffectHandle effect, float volume) const
-{
-	SoundBankObject::play_effect(effect, true,
-		volume * this->save()->play_settings().music_gain());
 }

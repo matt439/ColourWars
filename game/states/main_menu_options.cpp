@@ -267,7 +267,6 @@ void MainMenuOptions::init()
 	// Refresh after registration so fullscreen disables the row before first draw.
 	this->refresh_resolution_row();
 
-	this->play_music(this->music_, this->look().music.volume);
 }
 
 void MainMenuOptions::cycle_resolution(

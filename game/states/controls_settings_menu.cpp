@@ -156,12 +156,8 @@ void ControlsSettingsMenu::apply_settings()
 	// The child commits pad profiles independently of these shared preferences.
 	this->selection_.sticks = this->save()->play_settings().sticks;
 	const bool saved = this->save()->set_play_settings_and_save(this->selection_);
-	if (this->pausing_player() < 0)
-	{
-		const PresentationSound& music = this->presentation().main_menu().music;
-		this->set_effect_volume(this->resolve_effect(music.name),
-			music.volume * this->save()->play_settings().music_gain());
-	}
+	// Apply the saved gain through the owner so an in-progress fade survives.
+	this->menu_context()->update_music(0.0f);
 	this->play_wave(this->confirm_sound_);
 	this->set_status(saved ? L"Applied and saved for all players." :
 		L"Active for this run. Could not save.",

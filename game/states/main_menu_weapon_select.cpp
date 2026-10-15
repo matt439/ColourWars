@@ -328,7 +328,6 @@ void MainMenuWeaponSelect::init()
 		this->player_widgets_.push_back(std::move(widgets));
 	}
 	this->update_weapon_select_visuals();
-	this->play_music(this->music_, this->look().music.volume);
 }
 std::wstring MainMenuWeaponSelect::weapon_description(WeaponType type) const
 {

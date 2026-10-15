@@ -53,7 +53,6 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 			if (this->select_state_.state == ConfirmationState::confirmed)
 			{
 				this->play_wave(this->confirm_sound_);
-				this->stop_effect(this->music_, true);
 				if (this->select_state_.slot == this->random_slot())
 				{
 					this->select_state_.slot = this->pick_random_stage();
@@ -62,7 +61,10 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 
 				// Settings are already in GameMenu's context. Pop once and return so
 				// simultaneous inputs cannot also pop the state underneath.
-				this->context()->pop();
+				this->menu_context()->finish_with_music([context = this->context()]
+				{
+					context->pop();
+				});
 				return;
 			}
 			else
@@ -282,7 +284,6 @@ void MainMenuStageSelect::init()
 	this->text_container_->add_child(this->selection_status_.get());
 	this->text_container_->add_child(this->selection_hint_.get());
 	this->update_stage_select_visuals();
-	this->play_music(this->music_, this->look().music.volume);
 }
 void MainMenuStageSelect::cycle_stages(labrador::Direction direction)
 {

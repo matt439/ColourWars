@@ -591,7 +591,9 @@ lost/back cues, and a completed-series cue. The shared resume count-in now uses
 the accepted `ui.count_in` beat. The accepted results coda and each arena's
 ending sting are integrated. Arena music now fades in, fades under its ending
 sting and ducks through pause/reconnect/settings and the resume count-in.
-Menu/results transition fades and listening remain open.
+Menu music now has one owner across setup and nested settings; menu/results
+entry and exit fades preserve their outgoing page until the handoff. Optional
+detail assessment and listening remain open.
 
 - Inventory every source wave, bank entry, loop instance and runtime reference,
   including tuning, presentation, level music and any code-selected cues. Give

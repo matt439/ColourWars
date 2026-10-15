@@ -81,5 +81,4 @@ void MainMenuCredits::init()
 	this->text_container_->add_child(this->body_.get());
 	this->text_container_->add_child(this->back_.get());
 	this->focus_.add(this->back_.get(), [this] { this->return_home(); });
-	this->play_music(this->music_, look.music.volume);
 }

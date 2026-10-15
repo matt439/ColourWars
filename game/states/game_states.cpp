@@ -19,6 +19,11 @@ void GameMenu::init()
 	this->menu_level_settings_ = std::make_unique<MenuLevelSettings>();
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
 		this->menu_input_.get(), this->menu_level_settings_.get());
+	this->menu_context_->set_music_update([this](float dt) { this->update_music(dt); });
+	this->menu_context_->set_music_suspend([this]
+	{
+		if (this->music_) { this->music_->suspend(); }
+	});
 
 	this->open_menu(MainMenuScreen::title);
 }
@@ -36,6 +41,11 @@ void GameMenu::draw(Renderer& /*renderer*/) const
 
 void GameMenu::open_menu(MainMenuScreen screen)
 {
+	const Presentation& look = *this->data()->presentation();
+	this->music_ = std::make_unique<ScreenMusic>(look.menu().sound_bank,
+		this->data()->audio_resources(), &this->data()->save()->play_settings(),
+		look.main_menu().music, look.music_mix(), true);
+	if (!this->context()->active()) { this->music_->suspend(); }
 	this->menu_input_->reset_actions();
 	// Closing the page starts a match with the settings in the shared context.
 	this->context()->push(this->build_page(screen),
@@ -72,10 +82,32 @@ std::unique_ptr<MainMenuPage> GameMenu::build_page(MainMenuScreen screen) const
 
 void GameMenu::start_match()
 {
+	// Release resolved bank handles before a queued content reload can replace it.
+	this->menu_context_->cancel_music_exit();
+	this->music_.reset();
 	// Keep the menu context and its settings alive beneath the match.
 	this->context()->push<EndMenuAction>(
 		std::make_unique<GameLevel>(this->data(), *this->menu_level_settings_),
 		[this](const EndMenuAction& action) { this->on_match_ended(action); });
+}
+
+void GameMenu::on_deactivated()
+{
+	if (this->music_) { this->music_->suspend(); }
+}
+
+void GameMenu::update_music(float dt)
+{
+	if (!this->music_ || !this->context()->active()) { return; }
+	// Only a normal page tick restores playback. Focus returning underneath a
+	// developer overlay must not resume a track whose page is still covered.
+	if (dt > 0.0f && std::isfinite(dt)) { this->music_->resume(); }
+	if (this->menu_context_->music_exit_pending()) { this->music_->fade_out(); }
+	this->music_->update(dt);
+	if (this->menu_context_->music_exit_pending() && this->music_->finished())
+	{
+		this->menu_context_->complete_music_exit();
+	}
 }
 
 void GameMenu::on_match_ended(const EndMenuAction& action)
@@ -162,6 +194,7 @@ void GameLevel::init()
 // LevelBuilder needs the match layout before it builds split-screen dividers.
 void GameLevel::build_and_enter_level()
 {
+	this->menu_context_->cancel_music_exit();
 	// Stop the old coda before a content reload can replace its bank.
 	this->results_audio_.reset();
 	this->resume_countdown_.cancel();
@@ -334,11 +367,33 @@ void GameLevel::draw(Renderer& renderer) const
 
 void GameLevel::update_music(float dt)
 {
-	if (!(dt > 0.0f) || !std::isfinite(dt) || !this->context()->active() ||
-		this->data()->debug().match_audio_paused()) { return; }
+	if (dt < 0.0f || !std::isfinite(dt) || !this->context()->active()) { return; }
+	if (this->data()->debug().match_audio_paused())
+	{
+		// A replay can finish with the developer clock paused. Results/End are
+		// still interactive: leaving their suspended coda must not wait on a
+		// frozen ramp. Only a normal page drives this context, never its cover.
+		if (this->menu_context_->music_exit_pending())
+		{
+			this->results_audio_.reset();
+			this->menu_context_->complete_music_exit();
+		}
+		return;
+	}
 	// A developer overlay can cover Results/End without uncovering GameLevel
 	// when it closes. Their next normal page tick restores the existing coda.
-	if (this->results_audio_) { this->results_audio_->resume(); }
+	if (this->results_audio_)
+	{
+		if (dt > 0.0f) { this->results_audio_->resume(); }
+		if (this->menu_context_->music_exit_pending()) { this->results_audio_->fade_out(); }
+		this->results_audio_->update(dt);
+	}
+	if (this->menu_context_->music_exit_pending() &&
+		(!this->results_audio_ || this->results_audio_->finished()))
+	{
+		this->menu_context_->complete_music_exit();
+		return;
+	}
 	if ((this->pause_menu_open_ && this->covered_) ||
 		(!this->covered_ && this->resume_countdown_.active()))
 	{
@@ -438,6 +493,7 @@ void GameLevel::open_results_menu()
 	this->session_.finish_round(result);
 	this->results_audio_ = std::make_unique<ResultsAudio>(this->data()->audio_resources(),
 		&this->data()->save()->play_settings(), *this->data()->presentation());
+	if (this->data()->debug().match_audio_paused()) { this->results_audio_->suspend(); }
 	this->menu_input_->reset_actions();
 	this->context()->push(
 		std::make_unique<ResultsMenuInitial>(this->menu_context_.get(),
@@ -478,6 +534,7 @@ void GameLevel::on_end_menu_closed(const EndMenuAction& action)
 
 void GameLevel::leave_match(EndMenuAction action) const
 {
+	this->menu_context_->cancel_music_exit();
 	this->context()->pop(action);
 }
 

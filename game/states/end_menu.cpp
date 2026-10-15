@@ -19,12 +19,16 @@ const EndMenuPresentation& EndMenuPage::look() const
 
 void EndMenuPage::finish(EndMenuAction action) const
 {
-	this->context()->pop(action);
+	this->menu_context()->finish_with_music([context = this->context(), action]
+	{
+		context->pop(action);
+	});
 }
 
 bool EndMenuPage::debug_dismiss(bool leaving_match)
 {
-	this->finish(leaving_match ? EndMenuAction::exit : EndMenuAction::restart);
+	this->menu_context()->cancel_music_exit();
+	this->context()->pop(leaving_match ? EndMenuAction::exit : EndMenuAction::restart);
 	return true;
 }
 

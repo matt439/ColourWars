@@ -347,7 +347,6 @@ void MainMenuTeamSelect::init()
 		this->player_widgets_.push_back(std::move(widgets));
 	}
 
-	this->play_music(this->music_, this->look().music.volume);
 }
 
 #pragma endregion MainMenuTeamSelect

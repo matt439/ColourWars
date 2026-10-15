@@ -1,5 +1,9 @@
 #pragma once
 
+#include "game/states/menu_context.h"
+#include "game/states/screen_music.h"
+#include <limits>
+
 // Included after story_audio.cpp's recording world and content helpers.
 namespace
 {
@@ -60,12 +64,16 @@ namespace
 		}
 	}
 
+	void check_screen_music(World& world);
+	void check_music_exit_callbacks();
+
 	void check_results_audio(World& world)
 	{
 		world.level.reset();
 		const int original_music = world.preferences.music_volume;
 		const int original_sfx = world.preferences.sfx_volume;
 		const auto& music = world.presentation.results_menu().music;
+		const auto& mix = world.presentation.music_mix();
 		world.preferences.music_volume = 35;
 		world.preferences.sfx_volume = 0;
 		world.begin = recorded_sounds(world.device).size();
@@ -73,7 +81,14 @@ namespace
 			ResultsAudio audio(&world.audio, &world.preferences, world.presentation);
 			require(world.plays(music.name) == 1 && world.state(music.name) == SoundState::playing,
 				"Results coda did not begin once on its owned voice");
-			world.volume_is(music.name, music.volume * 0.35f);
+			world.volume_is(music.name, 0.0f);
+			require(!audio.finished(), "A fresh silent-gain coda was mistaken for a finished exit");
+			audio.update(mix.fade_in * 0.5f);
+			require(close_to(world.last_volume(music.name), music.volume * 0.35f * 0.5f),
+				"Results coda missed its fade-in midpoint");
+			audio.update(mix.fade_in * 0.5f);
+			require(close_to(world.last_volume(music.name), music.volume * 0.35f),
+				"Results coda failed to reach its authored music gain");
 			audio.resume();
 			audio.resume();
 			require(world.plays(music.name) == 1 &&
@@ -117,6 +132,9 @@ namespace
 			ResultsAudio fresh(&world.audio, &world.preferences, world.presentation);
 			require(world.plays(music.name) == 1 && close_to(world.last_volume(music.name), 0.0f),
 				"A fresh results page failed to start its own muted coda");
+			fresh.fade_out();
+			require(fresh.finished() && world.state(music.name) == SoundState::stopped,
+				"Muted results exit waited for an inaudible fade");
 		}
 		require(world.state(music.name) == SoundState::stopped &&
 			music_voice_calls(world, music.name, SoundCall::stop_voice) > 0,
@@ -125,12 +143,213 @@ namespace
 		missing_bank.add_sound_bank(world.presentation.menu().sound_bank, SoundBank::silent());
 		{
 			ResultsAudio silent(&missing_bank, &world.preferences, world.presentation);
+			silent.update(mix.fade_in);
 			silent.suspend();
 			silent.resume();
 			silent.resume();
+			silent.fade_out();
+			require(silent.finished(), "Silent-bank results exit did not finish immediately");
 		}
 		world.preferences.music_volume = original_music;
 		world.preferences.sfx_volume = original_sfx;
+		check_screen_music(world);
+		check_music_exit_callbacks();
+	}
+
+	void check_screen_music(World& world)
+	{
+		const int original_music = world.preferences.music_volume;
+		const int original_sfx = world.preferences.sfx_volume;
+		const auto& music = world.presentation.main_menu().music;
+		const auto& mix = world.presentation.music_mix();
+		const auto& bank = world.presentation.menu().sound_bank;
+		world.preferences.music_volume = 40;
+		world.preferences.sfx_volume = 0;
+		world.begin = recorded_sounds(world.device).size();
+		{
+			ScreenMusic audio(bank, &world.audio, &world.preferences, music, mix, true);
+			require(world.plays(music.name) == 1 && world.state(music.name) == SoundState::playing &&
+				close_to(world.last_volume(music.name), 0.0f) && !audio.finished(),
+				"Screen owner did not start exactly one zero-gain menu loop");
+			const auto voice = world.voices.at(music.name);
+			for (size_t index = world.begin; index < recorded_sounds(world.device).size(); ++index)
+			{
+				const auto& call = recorded_sounds(world.device)[index];
+				if (call.voice == voice && call.call == SoundCall::play_voice)
+				{
+					require(call.loop, "Persistent menu music was played as a one-shot");
+				}
+			}
+			const auto before_invalid = recorded_sounds(world.device).size();
+			for (const float invalid : { -1.0f, std::numeric_limits<float>::infinity(),
+				std::numeric_limits<float>::quiet_NaN() })
+			{
+				audio.update(invalid);
+			}
+			require(recorded_sounds(world.device).size() == before_invalid,
+				"Negative/nonfinite screen-music time emitted audio calls");
+			audio.update(mix.fade_in * 0.5f);
+			require(close_to(world.last_volume(music.name), music.volume * 0.4f * 0.5f),
+				"Persistent menu music missed its fade-in midpoint");
+			world.preferences.music_volume = 20;
+			audio.update(0.0f);
+			require(close_to(world.last_volume(music.name), music.volume * 0.2f * 0.5f),
+				"Zero-time settings refresh advanced the envelope or ignored applied gain");
+			audio.resume();
+			audio.resume();
+			require(world.plays(music.name) == 1 &&
+				music_voice_calls(world, music.name, SoundCall::resume_voice) == 0,
+				"Repeated screen-owner reuse restarted or resumed an already playing menu loop");
+			audio.suspend();
+			const auto paused = recorded_sounds(world.device).size();
+			audio.update(mix.fade_in * 20.0f);
+			require(world.state(music.name) == SoundState::paused && recorded_sounds(world.device).size() == paused,
+				"Focus suspension advanced the menu fade or adjusted its paused voice");
+			world.preferences.music_volume = 60;
+			world.preferences.sfx_volume = 100;
+			audio.resume();
+			audio.resume();
+			require(world.state(music.name) == SoundState::playing && world.plays(music.name) == 1 &&
+				music_voice_calls(world, music.name, SoundCall::resume_voice) == 1 &&
+				close_to(world.last_volume(music.name), music.volume * 0.6f * 0.5f),
+				"Menu focus return lost its current envelope/preferences or replayed the loop");
+			audio.update(mix.fade_in * 0.5f);
+			require(close_to(world.last_volume(music.name), music.volume * 0.6f),
+				"Menu fade-in did not continue from its suspended midpoint");
+			audio.fade_out();
+			audio.update(mix.fade_out * 0.5f);
+			require(!audio.finished() && close_to(world.last_volume(music.name), music.volume * 0.6f * 0.5f),
+				"Screen exit missed its fade midpoint or finished too early");
+			audio.fade_out();
+			audio.update(mix.fade_out * 0.5f);
+			require(audio.finished() && world.state(music.name) == SoundState::stopped &&
+				close_to(world.last_volume(music.name), 0.0f) && world.plays(music.name) == 1,
+				"Repeated exit requests reset the fade or failed to stop the menu loop at zero");
+			audio.resume();
+			audio.update(mix.fade_out * 20.0f);
+			require(world.state(music.name) == SoundState::stopped && world.plays(music.name) == 1 &&
+				music_voice_calls(world, music.name, SoundCall::resume_voice) == 1,
+				"Focus/updates resurrected a completed screen-music exit");
+		}
+
+		world.preferences.music_volume = 100;
+		world.begin = recorded_sounds(world.device).size();
+		{
+			ScreenMusic interrupted(bank, &world.audio, &world.preferences, music, mix, true);
+			interrupted.update(mix.fade_in * 0.25f);
+			interrupted.fade_out();
+			interrupted.update(mix.fade_out * 0.5f);
+			require(close_to(world.last_volume(music.name), music.volume * 0.125f),
+				"Exit during entry jumped to full gain instead of fading from the current value");
+			interrupted.suspend();
+			interrupted.update(mix.fade_out * 10.0f);
+			interrupted.resume();
+			require(close_to(world.last_volume(music.name), music.volume * 0.125f),
+				"Focus interruption advanced a pending exit fade");
+			interrupted.fade_out();
+			interrupted.update(mix.fade_out * 0.5f);
+			require(interrupted.finished() && world.state(music.name) == SoundState::stopped &&
+				world.plays(music.name) == 1, "Interrupted menu exit failed to finish without replay");
+		}
+		world.begin = recorded_sounds(world.device).size();
+		{
+			ScreenMusic drained(bank, &world.audio, &world.preferences, music, mix, false);
+			drained.update(mix.fade_in);
+			// Publicly reproduce the state reported after an asynchronous buffer
+			// drain. The recorder itself has no clock or natural-completion event.
+			world.device.stop_voice(world.voices.at(music.name), true);
+			drained.suspend();
+			drained.resume();
+			drained.fade_out();
+			drained.update(mix.fade_out);
+			require(drained.finished() && world.state(music.name) == SoundState::stopped &&
+				world.plays(music.name) == 1 &&
+				music_voice_calls(world, music.name, SoundCall::resume_voice) == 0,
+				"A drained one-shot restarted when its screen exited or regained focus");
+		}
+		for (const bool authored_silent : { false, true })
+		{
+			PresentationSound quiet = music;
+			quiet.volume = authored_silent ? 0.0f : music.volume;
+			world.preferences.music_volume = authored_silent ? 100 : 0;
+			world.begin = recorded_sounds(world.device).size();
+			ScreenMusic muted(bank, &world.audio, &world.preferences, quiet, mix, true);
+			muted.update(mix.fade_in);
+			muted.fade_out();
+			require(muted.finished() && world.state(music.name) == SoundState::stopped && world.plays(music.name) == 1,
+				"Muted/authored-zero screen exit waited for an inaudible fade or replayed music");
+		}
+		world.preferences.music_volume = 100;
+		world.begin = recorded_sounds(world.device).size();
+		{
+			ScreenMusic zero(bank, &world.audio, &world.preferences, music, mix, true);
+			zero.fade_out();
+			require(zero.finished() && world.state(music.name) == SoundState::stopped,
+				"Exit at the untouched zero-gain entry boundary delayed the screen");
+		}
+		AudioResources missing;
+		missing.add_sound_bank(bank, SoundBank::silent());
+		const auto absent = recorded_sounds(world.device).size();
+		{
+			ScreenMusic silent(bank, &missing, &world.preferences, music, mix, true);
+			silent.update(mix.fade_in);
+			silent.suspend();
+			silent.resume();
+			silent.fade_out();
+			require(silent.finished(), "Missing-bank screen exit failed its immediate completion path");
+		}
+		require(recorded_sounds(world.device).size() == absent,
+			"Silent-bank screen music reached an audible recorder device");
+		world.preferences.music_volume = original_music;
+		world.preferences.sfx_volume = original_sfx;
+	}
+
+	void check_music_exit_callbacks()
+	{
+		MenuContext standalone(nullptr, nullptr, nullptr);
+		int immediate = 0;
+		standalone.finish_with_music([&] { ++immediate; });
+		standalone.complete_music_exit();
+		require(immediate == 1 && !standalone.music_exit_pending(),
+			"A standalone page without a music owner did not finish immediately once");
+
+		MenuContext context(nullptr, nullptr, nullptr);
+		int updates = 0;
+		float elapsed = -1.0f;
+		int suspended = 0;
+		context.set_music_update([&](float dt) { ++updates; elapsed = dt; });
+		context.set_music_suspend([&] { ++suspended; });
+		int completed = 0;
+		context.finish_with_music([&]
+		{
+			require(!context.music_exit_pending(), "Music completion invoked its callback before clearing it");
+			++completed;
+		});
+		require(context.music_exit_pending() && updates == 1 && elapsed == 0.0f && completed == 0,
+			"Owned page exit failed to request a zero-time fade start and retain its callback");
+		context.finish_with_music([&] { completed += 100; });
+		require(updates == 1, "A repeated page exit restarted its pending music transition");
+		context.suspend_music();
+		require(suspended == 1 && context.music_exit_pending(), "Music suspension dropped its pending exit");
+		context.update_music(0.25f);
+		require(updates == 2 && elapsed == 0.25f && completed == 0,
+			"A top-page music update ran the pending finish before the owner completed it");
+		context.complete_music_exit();
+		context.complete_music_exit();
+		require(completed == 1 && !context.music_exit_pending(), "Music completion duplicated or replaced the first exit");
+		context.finish_with_music([&] { completed += 100; });
+		context.cancel_music_exit();
+		context.complete_music_exit();
+		require(completed == 1 && !context.music_exit_pending(), "Cancelled debug navigation retained a stale exit callback");
+		context.finish_with_music([&]
+		{
+			++completed;
+			context.finish_with_music([&] { ++completed; });
+		});
+		context.complete_music_exit();
+		require(completed == 2 && context.music_exit_pending(), "A callback could not queue a distinct later exit safely");
+		context.complete_music_exit();
+		require(completed == 3 && !context.music_exit_pending(), "Reentrant exit bookkeeping lost or duplicated a callback");
 	}
 
 	class EndingStageVariant

@@ -823,7 +823,8 @@ finished. Rematch, setup/main-menu exit and destruction stop the old voice;
 reset happens before content reload can replace its bank. Winner/draw and
 completed-series SFX retain their independent cues. The four new effect instances
 refer to already accepted bank waves; masters, production inventory and XWB bytes
-are unchanged. This increment does not establish listening balance or add fades.
+are unchanged. The later screen-music increment adds entry/exit fades; listening
+balance remains unqualified.
 
 The arena-mix increment (2026-10-15) reads fade-in/out durations, pause gain,
 duck time and restore time from `presentation.json`'s `music_mix`. The arena
@@ -850,6 +851,30 @@ voices leave it unchanged. Repeated duck targets keep their progress; interrupte
 ramps retarget continuously. Restart, quit, reload and destruction still cancel
 owned voices before the next opening. The Movement Course has no arena loop.
 
+The screen-music increment (2026-10-15) gives GameMenu one `ScreenMusic`
+owner for its entire setup session, including title, selection, credits and
+nested settings. Page construction no longer replays the shared music instance.
+The owner starts at zero and uses the same authored `music_mix.fade_in` and
+`fade_out` as the arena. Leaving stage selection or choosing application Exit
+latches one action, holds the outgoing page and ignores further navigation
+until the voice is silent. Its handles are released before match construction
+and pending content reload. Returning from a match creates a fresh owner from
+the current presentation.
+
+ResultsAudio uses the same ramp while retaining its nonlooping coda and shared
+ownership across Results and End. Results-to-End navigation preserves its
+position; only Rematch, setup or main-menu exit starts its fade out. A natural
+ending, muted music or missing bank completes the handoff immediately. Neither
+focus return nor repeated exit input restarts a finished voice. Focus loss and
+blocking developer covers pause playback and ramp progress; the next ordinary
+page update restores the menu voice. Applied volume multiplies the current ramp
+without resetting it. Developer navigation can cancel a pending handoff and
+leave immediately, retaining existing script/reload behaviour. Results created
+under a paused developer clock start suspended; ordinary End choices can leave
+that silent coda immediately, including after a replay holds its final frame.
+Native window close and teardown stop the owned voice immediately. These are audio transitions;
+visual screen cuts and loading presentation remain `GAP#5.1`.
+
 **POL#23 remains open.** Putting an accepted wave into the bank does not create
 a gameplay trigger. Complete the required new cues from section 4, assess Tier
 3 detail individually and keep it off or nearly off by default:
@@ -857,8 +882,7 @@ a gameplay trigger. Complete the required new cues from section 4, assess Tier
 - Movement: optional bonk/drop/hit-confirm details.
 - Paint/tool detail: optional blocked/slosh/drip cues.
 - Room: optional footsteps/breath/waver/cheat.
-- Menus/music: smooth menu/results music entry and exit, including their ownership
-  across loading and rematch (`GAP#5.1`); optional world ambience/detail.
+- World: optional ambience/detail, after the reference arena establishes a need.
 - Mix: useful action cues above weapon voices, movement, music and decorative
   detail; limits on repeating impacts/steps; actual one-, two- and four-player
   audition with music/SFX gains, mute, focus, suspension and resumed loops.
@@ -1002,7 +1026,7 @@ and `out/acceptance/`; the successful flow run IDs are
 `flow-debug/x64-debug/0d609441a7f4461d88738d3f081a08b4` and
 `flow-release/x64-release/d6896daa9c7d4d8fa15e608e9bec6201`.
 These establish runtime ownership and requests, not listening/mix acceptance.
-Transition fades/ducking remain POL#23 and GAP#5.1; listening remains ROAD#3.
+The arena and screen-music increments below add fades/ducking; listening remains ROAD#3.
 
 Arena-mix validation (2026-10-15): Debug and Release build under `/W4 /WX`
 and pass all 23 consumer cases. Focused console/audio cases pass again after
@@ -1032,5 +1056,34 @@ system-only PATH and graceful close. Evidence is under
 are `flow-debug/x64-debug/ca87923bb8894ae59606a749fa05efda` and
 `flow-release/x64-release/e203bc0df948488f91aec618c6a8b9d7`.
 These checks establish gain requests and lifecycle, not listening quality.
-Menu/results music transitions remain POL#23; screen cuts/loading remain GAP#5.1,
-and listening/multiplayer mix acceptance remains ROAD#3.
+The screen-music increment below completes menu/results ownership and fades;
+screen cuts/loading remain GAP#5.1, and listening/multiplayer mix acceptance
+remains ROAD#3.
+
+Screen-music validation (2026-10-15): Debug and Release build under `/W4 /WX`
+and pass all 23 consumer cases. Focused console/audio cases pass again after
+the paused-clock exit fix. The recorder checks exact entry/exit gains, entry
+interruption, repeated targets, current volume/mute, invalid-time rejection,
+zero-time volume refresh, suspended ramps, no stopped-voice resurrection,
+silent-bank exits and one-shot callback/cancellation behaviour.
+
+Both actual D3D11/XAudio2 flow matrices pass on the RTX 5080: GameMenu owns
+one looping voice through setup, credits and nested settings; no page replay
+occurs on zero-time navigation. Focus and blocking developer covers preserve
+its position. Final stage selection holds its visible page and ignores repeated
+input until the fade ends before match construction; Quit returns to fresh
+menu music. Results-to-End retains one coda, with finite-gain Rematch/setup
+fades, focus-frozen pending actions, immediate muted exits and natural completion
+without replay. Debug also covers Results opening under a paused clock and
+ordinary End exits while it stays paused. Extra seats are idle/bot fixtures,
+not physical-pad acceptance.
+
+The six bank-publication checks pass. The final 53-file Release ZIP retains
+the accepted bank byte for byte, provenance and existing development exclusions.
+Isolated Debug and extracted Release startup pass with the real bank and
+separately without it, using a system-only PATH and graceful close. Evidence
+is under `out/validation/menu-music-flow/` and `out/acceptance/`; final hardware
+runs are `final-debug/x64-debug/9005e062a2a14253b062c97cada46919` and
+`final-release/x64-release/5232a20aff7244ac853e8c0cb87472c5`. These checks
+establish requests, ownership and flow; optional detail/mix assessment remains
+POL#23, listening remains ROAD#3 and visual transitions/loading remain GAP#5.1.

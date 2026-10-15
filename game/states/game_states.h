@@ -35,12 +35,15 @@ public:
 	void update(float dt) override;
 	void draw(labrador::Renderer& renderer) const override;
 	void init() override;
+	void on_deactivated() override;
 
 private:
 	GameData* game_data_ = nullptr;
 	std::unique_ptr<MenuInput> menu_input_ = nullptr;
 	std::unique_ptr<MenuLevelSettings> menu_level_settings_ = nullptr;
 	std::unique_ptr<MenuContext> menu_context_ = nullptr;
+	std::unique_ptr<ScreenMusic> music_;
+	void update_music(float dt);
 
 	void open_menu(MainMenuScreen screen);
 	std::unique_ptr<MainMenuPage> build_page(MainMenuScreen screen) const;

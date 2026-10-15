@@ -22,13 +22,23 @@ public:
 	// Enabled only by GameLevel; a setup-menu roster is still being edited.
 	void reset_connection_audio();
 	void update_connection_audio();
-	// GameLevel lends its current music clock to the top covering menu page.
+	// The screen owner lends its music clock to the top covering menu page.
 	void set_music_update(std::function<void(float)> update);
 	void update_music(float dt);
+	void set_music_suspend(std::function<void()> suspend);
+	void suspend_music();
+	// Keep the outgoing page visible and ignore further input until its owner
+	// finishes the fade. Callbacks capture the state context, never the page.
+	void finish_with_music(std::function<void()> finish);
+	bool music_exit_pending() const;
+	void complete_music_exit();
+	void cancel_music_exit();
 private:
 	GameData* data_ = nullptr;
 	MenuInput* input_ = nullptr;
 	MenuLevelSettings* level_settings_ = nullptr;
 	std::unique_ptr<ConnectionAudio> connection_audio_;
 	std::function<void(float)> music_update_;
+	std::function<void()> music_suspend_;
+	std::function<void()> music_exit_;
 };

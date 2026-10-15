@@ -16,12 +16,11 @@ MainMenuPage::MainMenuPage(MenuContext* context) :
 	this->error_sound_ = this->resolve_wave(look.error_sound);
 	this->ready_sound_ = this->resolve_wave(look.ready_sound);
 	this->unready_sound_ = this->resolve_wave(look.unready_sound.name);
-	this->music_ = this->resolve_effect(look.music.name);
 }
 
 bool MainMenuPage::debug_start_match(const MenuLevelSettings& plan)
 {
-	this->stop_effect(this->music_, true);
+	this->menu_context()->cancel_music_exit();
 	*this->level_settings() = plan;
 	this->context()->pop();
 	return true;
@@ -171,7 +170,6 @@ void MainMenuTitle::init()
 	this->text_container_->add_child(this->start_.get());
 	this->text_container_->add_child(this->no_pad_.get());
 	this->text_container_->add_child(this->build_id_.get());
-	this->play_music(this->music_, look.music.volume);
 }
 
 #pragma endregion MainMenuTitle
@@ -272,10 +270,12 @@ void MainMenuHome::init()
 		});
 	this->focus_.add(this->exit_.get(), [this]
 		{
-			this->data()->application()->quit();
+			this->menu_context()->finish_with_music([application = this->data()->application()]
+			{
+				application->quit();
+			});
 		});
 
-	this->play_music(this->music_, this->look().music.volume);
 }
 
 #pragma endregion MainMenuHome
@@ -468,7 +468,6 @@ void MainMenuModeSelect::init()
 				std::make_unique<MainMenuHome>(this->menu_context()));
 		});
 
-	this->play_music(this->music_, this->look().music.volume);
 }
 
 #pragma endregion MainMenuModeSelect

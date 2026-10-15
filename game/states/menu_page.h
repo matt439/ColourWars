@@ -116,7 +116,6 @@ protected:
 		float pitch = 0.0f, float pan = 0.0f) const;
 	void play_effect(labrador::SoundBank::EffectHandle effect, bool loop = false,
 		float volume = 1.0f, float pitch = 0.0f, float pan = 0.0f) const;
-	void play_music(labrador::SoundBank::EffectHandle effect, float volume) const;
 
 	// Optional control legend, drawn after page widgets. Set only actions
 	// this page accepts; it can be built before or after the widget trees.

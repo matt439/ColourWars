@@ -54,7 +54,6 @@ protected:
 	labrador::SoundBank::WaveHandle error_sound_;
 	labrador::SoundBank::WaveHandle ready_sound_;
 	labrador::SoundBank::WaveHandle unready_sound_;
-	labrador::SoundBank::EffectHandle music_;
 private:
 	std::vector<PromptBar::Prompt> player_prompts_;
 	bool waiting_for_players_ = false;

@@ -39,6 +39,37 @@ void MenuContext::update_music(float dt)
 	if (this->music_update_) { this->music_update_(dt); }
 }
 
+void MenuContext::set_music_suspend(std::function<void()> suspend)
+{
+	this->music_suspend_ = std::move(suspend);
+}
+
+void MenuContext::suspend_music()
+{
+	if (this->music_suspend_) { this->music_suspend_(); }
+}
+
+void MenuContext::finish_with_music(std::function<void()> finish)
+{
+	if (this->music_exit_) { return; }
+	if (!this->music_update_) { finish(); return; }
+	this->music_exit_ = std::move(finish);
+	// Begin at the current gain; a muted, missing or drained voice can leave
+	// immediately, without making the player wait for inaudible music.
+	this->update_music(0.0f);
+}
+
+bool MenuContext::music_exit_pending() const { return static_cast<bool>(this->music_exit_); }
+
+void MenuContext::complete_music_exit()
+{
+	std::function<void()> finish = std::move(this->music_exit_);
+	this->music_exit_ = nullptr;
+	if (finish) { finish(); }
+}
+
+void MenuContext::cancel_music_exit() { this->music_exit_ = nullptr; }
+
 void MenuContext::update_connection_audio()
 {
 	if (!this->connection_audio_) { return; }
