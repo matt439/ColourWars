@@ -33,8 +33,8 @@ includes it.
 Three build tools are retained in this repository:
 
 - `scripts/audio/tools/XWBTool.exe` — the wave-bank compiler.
-- `game/content/fonts/MakeSpriteFont.exe` — the sprite-font compiler.
-- `game/content/textures/texconv.exe` — the texture converter.
+- `game/art/tools/MakeSpriteFont.exe` — the sprite-font compiler.
+- `game/art/tools/texconv.exe` — the texture converter.
 
 Copyright (c) Microsoft Corporation. Licensed under the MIT License.
 Source: https://github.com/microsoft/DirectXTK and
@@ -83,8 +83,9 @@ included and are not ColourWars' to license.
 
 ### Menu artwork
 
-`game/content/textures/menu_paint.png` is original artwork generated for
+`game/art/sources/textures/menu_paint.png` is original artwork generated for
 ColourWars using OpenAI image generation. The matching `.dds` is a lossless
-RGBA conversion used at runtime; `menu_paint.json` defines its sprite frame.
+RGBA conversion used at runtime in `game/content/textures/`;
+`menu_paint.json` defines its sprite frame.
 The release includes the DDS and frame definition, while the PNG is retained
 as the source artwork.

@@ -1,30 +1,5 @@
-# The complete redistributable runtime content list. Never install a content
-# directory or the development output directory wholesale: both may contain
-# the local commercial wave bank, source art and asset-building tools.
-set(COLOURWARS_RELEASE_ASSETS
-    manifest.json
-    tuning.json
-    presentation.json
-    fonts/courier_new_bold_16.spritefont
-    fonts/gill_sans_mt_bold_24.spritefont
-    fonts/gill_sans_mt_bold_36.spritefont
-    fonts/gill_sans_mt_bold_48.spritefont
-    fonts/gill_sans_mt_bold_72.spritefont
-    fonts/gill_sans_mt_bold_144.spritefont
-    fonts/gill_sans_ultra_bold_144.spritefont
-    textures/sprite_sheet_1.dds
-    textures/sprite_sheet_1.json
-    textures/menu_paint.dds
-    textures/menu_paint.json
-    textures/weapon_paint.dds
-    textures/weapon_paint.json
-    levels/king_of_the_hill.json
-    levels/turbulence.json
-    levels/close_quarters.json
-    levels/movement_course.json
-    sounds/paint_exe.json
-    sounds/paint_exe.xwb
-)
+# Configure-time validation for the shared development and Release content.
+include("${CMAKE_CURRENT_LIST_DIR}/runtime_assets.cmake")
 
 # A manifest edit must be reconciled with the reviewed list above. The accepted
 # bank and definition are both required in the audible release.
@@ -73,13 +48,13 @@ if(NOT bank_check EQUAL 0)
     message(FATAL_ERROR "Release audio validation failed")
 endif()
 list(SORT expected)
-set(actual "${COLOURWARS_RELEASE_ASSETS}")
+set(actual "${COLOURWARS_RUNTIME_ASSETS}")
 list(SORT actual)
 if(NOT actual STREQUAL expected)
-    message(FATAL_ERROR "Manifest and cmake/release_assets.cmake disagree. Review the release asset list.")
+    message(FATAL_ERROR "Manifest and cmake/runtime_assets.cmake disagree. Review the runtime asset list.")
 endif()
-foreach(asset IN LISTS COLOURWARS_RELEASE_ASSETS)
-    if(asset STREQUAL "sounds/paint_exe.xwb" AND NOT EXISTS "${content}/${asset}")
+foreach(asset IN LISTS COLOURWARS_RUNTIME_ASSETS)
+    if(asset IN_LIST COLOURWARS_OPTIONAL_RUNTIME_ASSETS AND NOT EXISTS "${content}/${asset}")
         continue()
     endif()
     if(NOT EXISTS "${content}/${asset}")

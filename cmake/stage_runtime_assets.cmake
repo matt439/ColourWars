@@ -1,0 +1,115 @@
+# Mirror only reviewed runtime assets beside the executable. This runs every
+# build so asset-only edits and removals do not depend on an executable relink.
+cmake_minimum_required(VERSION 3.26)
+foreach(required CONTENT_DIR BUILD_DIR STAGE_DIR)
+    if(NOT DEFINED ${required} OR "${${required}}" STREQUAL "")
+        message(FATAL_ERROR "stage_runtime_assets.cmake needs ${required}")
+    endif()
+endforeach()
+include("${CMAKE_CURRENT_LIST_DIR}/runtime_assets.cmake")
+
+# Resolve links before any mutation. The output must be the game directory in
+# this build tree (or a configuration below it), and must not overlap content.
+file(REAL_PATH "${CONTENT_DIR}" content_root)
+file(REAL_PATH "${BUILD_DIR}" build_root)
+file(REAL_PATH "${BUILD_DIR}/game" game_output)
+file(REAL_PATH "${STAGE_DIR}" stage_root)
+cmake_path(IS_PREFIX build_root "${game_output}" NORMALIZE game_in_build)
+cmake_path(IS_PREFIX game_output "${stage_root}" NORMALIZE stage_in_game)
+cmake_path(IS_PREFIX content_root "${stage_root}" NORMALIZE stage_in_content)
+cmake_path(IS_PREFIX stage_root "${content_root}" NORMALIZE content_in_stage)
+if(NOT game_in_build OR game_output STREQUAL build_root
+    OR NOT stage_in_game OR stage_in_content OR content_in_stage)
+    message(FATAL_ERROR "Runtime staging target must be inside this build's game output and separate from source content: ${STAGE_DIR}")
+endif()
+
+# Check all source files, including present-bank validation, before touching a
+# previous mirror. Only the optional bank may be absent.
+set(expected_assets "")
+set(expected_directories "${COLOURWARS_RUNTIME_DIRECTORIES}")
+foreach(asset IN LISTS COLOURWARS_RUNTIME_ASSETS)
+    cmake_path(NORMAL_PATH asset OUTPUT_VARIABLE normalized_asset)
+    cmake_path(IS_ABSOLUTE asset absolute_asset)
+    if(absolute_asset OR NOT asset STREQUAL normalized_asset
+        OR asset MATCHES "(^|/)\\.\\.(/|$)")
+        message(FATAL_ERROR "Invalid runtime asset path: ${asset}")
+    endif()
+    if(NOT EXISTS "${content_root}/${asset}")
+        if(asset IN_LIST COLOURWARS_OPTIONAL_RUNTIME_ASSETS)
+            continue()
+        endif()
+        message(FATAL_ERROR "Missing runtime asset: ${asset}")
+    endif()
+    if(IS_DIRECTORY "${content_root}/${asset}")
+        message(FATAL_ERROR "Runtime source asset must be a file: ${asset}")
+    endif()
+    list(APPEND expected_assets "${asset}")
+    get_filename_component(directory "${asset}" DIRECTORY)
+    while(NOT directory STREQUAL "")
+        list(APPEND expected_directories "${directory}")
+        get_filename_component(directory "${directory}" DIRECTORY)
+    endwhile()
+endforeach()
+execute_process(COMMAND "${CMAKE_COMMAND}"
+    "-DBANK_DIR=${content_root}/sounds"
+    -P "${CMAKE_CURRENT_LIST_DIR}/check_wave_bank.cmake"
+    RESULT_VARIABLE bank_check)
+if(NOT bank_check EQUAL 0)
+    message(FATAL_ERROR "Runtime audio validation failed")
+endif()
+
+# Reject links/reparse points throughout owned directories before copying or
+# deleting anything. A stale directory may be removed recursively only after
+# every existing descendant resolves to its literal path within that mirror.
+set(staged_entries "")
+foreach(directory IN LISTS COLOURWARS_RUNTIME_DIRECTORIES)
+    set(owned_root "${stage_root}/${directory}")
+    file(REAL_PATH "${owned_root}" owned_resolved)
+    if(IS_SYMLINK "${owned_root}" OR NOT owned_root STREQUAL owned_resolved)
+        message(FATAL_ERROR "Runtime staging refuses a linked content directory: ${owned_root}")
+    endif()
+    if(EXISTS "${owned_root}" AND NOT IS_DIRECTORY "${owned_root}")
+        message(FATAL_ERROR "Runtime staging content path must be a directory: ${owned_root}")
+    endif()
+    file(GLOB_RECURSE entries LIST_DIRECTORIES TRUE RELATIVE "${stage_root}"
+        "${owned_root}/*")
+    foreach(entry IN LISTS entries)
+        set(entry_path "${stage_root}/${entry}")
+        file(REAL_PATH "${entry_path}" entry_resolved)
+        cmake_path(IS_PREFIX owned_root "${entry_resolved}" NORMALIZE entry_in_owned)
+        if(IS_SYMLINK "${entry_path}" OR NOT entry_in_owned
+            OR NOT entry_path STREQUAL entry_resolved)
+            message(FATAL_ERROR "Runtime staging refuses a linked content entry: ${entry_path}")
+        endif()
+    endforeach()
+    list(APPEND staged_entries ${entries})
+endforeach()
+
+foreach(asset IN LISTS expected_assets)
+    set(destination "${stage_root}/${asset}")
+    file(REAL_PATH "${destination}" destination_resolved)
+    if(IS_SYMLINK "${destination}" OR NOT destination STREQUAL destination_resolved)
+        message(FATAL_ERROR "Runtime staging refuses a linked runtime asset: ${destination}")
+    endif()
+    if(IS_DIRECTORY "${destination}")
+        message(FATAL_ERROR "Runtime staging destination must be a file: ${destination}")
+    endif()
+endforeach()
+foreach(entry IN LISTS staged_entries)
+    if(NOT entry IN_LIST expected_assets AND NOT entry IN_LIST expected_directories)
+        # Every removal is under one of the four roots checked above. Removing
+        # an absent optional bank also clears a previously audible mirror.
+        file(REMOVE_RECURSE "${stage_root}/${entry}")
+        if(EXISTS "${stage_root}/${entry}")
+            message(FATAL_ERROR "Could not remove stale runtime asset: ${entry}")
+        endif()
+    endif()
+endforeach()
+foreach(directory IN LISTS COLOURWARS_RUNTIME_DIRECTORIES)
+    file(MAKE_DIRECTORY "${stage_root}/${directory}")
+endforeach()
+foreach(asset IN LISTS expected_assets)
+    get_filename_component(directory "${asset}" DIRECTORY)
+    file(MAKE_DIRECTORY "${stage_root}/${directory}")
+    file(COPY_FILE "${content_root}/${asset}" "${stage_root}/${asset}" ONLY_IF_DIFFERENT)
+endforeach()

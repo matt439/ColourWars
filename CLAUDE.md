@@ -90,7 +90,8 @@ class has a member that depends on it. Code is in `game/debug/`; the CPU case is
 folder; `run-acceptance.ps1` compiles a case's folder with it), which also
 checks that the Release executable carries none of the console's RTTI names.
 
-The build mirrors `game/content/` beside the exe (the `colourwars_content`
+The build mirrors the reviewed runtime assets from `game/content/` beside the exe
+([cmake/runtime_assets.cmake](cmake/runtime_assets.cmake), the `colourwars_content`
 target, which runs every build so asset-only edits are picked up), so the game
 runs from anywhere. It resolves content beside the executable, not against the
 working directory — the engine's rule (`engine/app/content_root.h`), which

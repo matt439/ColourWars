@@ -1,0 +1,32 @@
+# The reviewed runtime content shared by development staging and Release.
+# Never copy a content directory wholesale: it may contain private audio,
+# editable source art, historical assets and asset-building tools.
+set(COLOURWARS_RUNTIME_ASSETS
+    manifest.json
+    tuning.json
+    presentation.json
+    fonts/courier_new_bold_16.spritefont
+    fonts/gill_sans_mt_bold_24.spritefont
+    fonts/gill_sans_mt_bold_36.spritefont
+    fonts/gill_sans_mt_bold_48.spritefont
+    fonts/gill_sans_mt_bold_72.spritefont
+    fonts/gill_sans_mt_bold_144.spritefont
+    fonts/gill_sans_ultra_bold_144.spritefont
+    textures/sprite_sheet_1.dds
+    textures/sprite_sheet_1.json
+    textures/menu_paint.dds
+    textures/menu_paint.json
+    textures/weapon_paint.dds
+    textures/weapon_paint.json
+    levels/king_of_the_hill.json
+    levels/turbulence.json
+    levels/close_quarters.json
+    levels/movement_course.json
+    sounds/paint_exe.json
+    sounds/paint_exe.xwb
+)
+
+# Only these directories belong to the staging mirror. Root files such as
+# executables, DLLs and developer captures must never be removed by staging.
+set(COLOURWARS_RUNTIME_DIRECTORIES fonts textures levels sounds)
+set(COLOURWARS_OPTIONAL_RUNTIME_ASSETS sounds/paint_exe.xwb)

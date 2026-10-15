@@ -175,76 +175,15 @@ namespace source_paths
     @ONLY)
 target_include_directories(ColourWars PRIVATE "${PROJECT_BINARY_DIR}/generated")
 
-# Stage content beside the executable, where the game resolves it.
-# Run every build so asset-only edits are copied without an executable relink;
-# if_different skips unchanged files.
-add_custom_target(colourwars_content ALL)
-
-# Retiring the comparison must also clean its old atlas from existing builds;
-# copying the remaining content alone would leave those staged files behind.
-add_custom_command(TARGET colourwars_content PRE_BUILD
-    COMMAND "${CMAKE_COMMAND}" -E rm -f
-        "$<TARGET_FILE_DIR:ColourWars>/textures/workshop_kit.dds"
-        "$<TARGET_FILE_DIR:ColourWars>/textures/workshop_kit.json"
-        "$<TARGET_FILE_DIR:ColourWars>/textures/workshop_kit.png"
-    VERBATIM
-)
-
-# Check the accepted, tracked bank before staging it. Reproduction/encoding is
-# an explicit authoring step; an ordinary game build needs no audio tools.
-add_custom_command(TARGET colourwars_content PRE_BUILD
+# Stage the same reviewed assets as Release, pruning stale files only inside
+# the build's four owned content directories. Root DLLs and other outputs stay.
+# Run every build so asset-only edits/removals need no executable relink.
+add_custom_target(colourwars_content ALL
     COMMAND "${CMAKE_COMMAND}"
-        "-DBANK_DIR=${CMAKE_CURRENT_SOURCE_DIR}/content/sounds"
-        -P "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/check_wave_bank.cmake"
-    COMMAND "${CMAKE_COMMAND}"
-        "-DBANK_FILE=${CMAKE_CURRENT_SOURCE_DIR}/content/sounds/paint_exe.xwb"
-        "-DSTAGE_DIR=$<TARGET_FILE_DIR:ColourWars>/sounds"
-        -P "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/stage_wave_bank.cmake"
+        "-DCONTENT_DIR=${CMAKE_CURRENT_SOURCE_DIR}/content"
+        "-DBUILD_DIR=${PROJECT_BINARY_DIR}"
+        "-DSTAGE_DIR=$<TARGET_FILE_DIR:ColourWars>"
+        -P "${PROJECT_SOURCE_DIR}/cmake/stage_runtime_assets.cmake"
     VERBATIM
 )
-# Audio staging is an allow-list. Neither private legacy waves nor production
-# masters, licence source evidence or authoring tools belong beside the game.
-add_custom_command(TARGET colourwars_content POST_BUILD
-    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-        "${CMAKE_CURRENT_SOURCE_DIR}/content/sounds/paint_exe.json"
-        "$<TARGET_FILE_DIR:ColourWars>/sounds/paint_exe.json"
-    VERBATIM
-)
-foreach(content_file manifest.json tuning.json presentation.json)
-    add_custom_command(TARGET colourwars_content POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E copy_if_different
-            "${CMAKE_CURRENT_SOURCE_DIR}/content/${content_file}"
-            "$<TARGET_FILE_DIR:ColourWars>/${content_file}"
-        VERBATIM
-    )
-endforeach()
-# Enumerate entries to exclude source waves and asset-building tools (see NOTICE).
-# CONFIGURE_DEPENDS detects new top-level entries; subdirectories are copied whole.
-foreach(content_dir textures levels fonts)
-    file(GLOB content_entries CONFIGURE_DEPENDS
-        "${CMAKE_CURRENT_SOURCE_DIR}/content/${content_dir}/*")
-    add_custom_command(TARGET colourwars_content POST_BUILD
-        COMMAND "${CMAKE_COMMAND}" -E make_directory
-            "$<TARGET_FILE_DIR:ColourWars>/${content_dir}"
-        VERBATIM
-    )
-    foreach(content_entry IN LISTS content_entries)
-        get_filename_component(entry_name "${content_entry}" NAME)
-        # Asset-building tools stay behind.
-        if("${entry_name}" MATCHES "\\.exe$")
-            continue()
-        endif()
-        if(IS_DIRECTORY "${content_entry}")
-            set(copy_command copy_directory_if_different)
-        else()
-            set(copy_command copy_if_different)
-        endif()
-        add_custom_command(TARGET colourwars_content POST_BUILD
-            COMMAND "${CMAKE_COMMAND}" -E ${copy_command}
-                "${content_entry}"
-                "$<TARGET_FILE_DIR:ColourWars>/${content_dir}/${entry_name}"
-            VERBATIM
-        )
-    endforeach()
-endforeach()
 add_dependencies(ColourWars colourwars_content)

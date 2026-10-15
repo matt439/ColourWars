@@ -155,9 +155,10 @@ cmake --preset x64-debug          # or x64-release
 cmake --build --preset x64-debug
 ```
 
-The game runs from its own output directory, which the build fills with
-`game/content/` — so `out/build/x64-debug/game/ColourWars.exe` runs from
-anywhere.
+The game runs from its own output directory, which the build fills with the
+[reviewed runtime assets](cmake/runtime_assets.cmake) from `game/content/`, so
+`out/build/x64-debug/game/ColourWars.exe` runs from anywhere. Editable sources,
+historical assets and content tools live under [game/art/](game/art/README.md).
 
 Debug builds also take developer launch arguments and have a console, for
 reviewing without walking the menus:
@@ -254,8 +255,8 @@ backends. The identifier refreshes on every build, with `-dirty` for local
 changes and `source-archive` when Git metadata is unavailable. Rebuild after
 committing to produce a package labelled with that commit.
 
-Only the assets listed in [cmake/release_assets.cmake](cmake/release_assets.cmake)
-are packaged; configure checks that the list matches the runtime manifest.
+Only the assets listed in [cmake/runtime_assets.cmake](cmake/runtime_assets.cmake)
+are staged and packaged; configure checks that the list matches the runtime manifest.
 The ZIP includes licence notices, the seven compiled fonts, four sprite sheets,
 the three arenas and Movement Course, tuning, presentation, the replacement
 sound-bank definition and validated `paint_exe.xwb`, with audio provenance and

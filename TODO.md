@@ -61,7 +61,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#17` | BLOCKED | HIGH | XL | Close Quarters reference blockout against the §3 requirements table (routes, spawns, paint budget, weapon roles, pacing, side fairness, recovery pocket). Waits on `POL#3`. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after CQ is accepted; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#3` | UNSCOPED | LOW | M | Resource names (sheet, frame, icon, colour, music) are checked only at game startup; the editor takes any non-empty name. |
-| `ED#4` | UNSCOPED | LOW | S | Registering a stage is manual (`manifest.json` and `cmake/release_assets.cmake`); the editor does not help. |
+| `ED#4` | UNSCOPED | LOW | S | Registering a stage is manual (`manifest.json` and `cmake/runtime_assets.cmake`); the editor does not help. |
 | `ED#5` | OPEN | LOW | S | The manual GUI pass and the play-test of a saved stage have no recorded result. [Acceptance](docs/level-editor.md#acceptance-checks). |
 | `ED#6` | OPEN | LOW | S | Movement Course placeholder: it borrows Turbulence's icon frame; give it its own icon. |
 
@@ -124,7 +124,6 @@ the accepted `GAP#8.6` scope.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `GAP#8.6` | OPEN | LOW | S | Move unused assets and editable sources to `game/art/`; share the reviewed runtime allow-list with development staging and remove stale staged extras. [Scope](game/art/README.md#runtime-content-separation-gap86). |
 | `GAP#8.2` | OPEN | LOW | M | Range checks are ad hoc: no shared content-value checks or cross-field checks; menu sounds unbounded. |
 | `GAP#8.3` | OPEN | LOW | M | The level format has no doc, schema or `format` key. |
 | `GAP#8.4` | OPEN | LOW | M | Player-visible text is C++ literals; weapon name and icon come from a switch with an `L"ERROR"` fallback (fold into weapon tuning). |

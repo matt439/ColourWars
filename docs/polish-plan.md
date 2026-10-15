@@ -161,9 +161,10 @@ confirmed round-2 choices are:
 | Paint edge | Black keyline under paint |
 | Figures and teammate identity | Variant E with a head accent for teammates |
 
-These names refer to the round-2 visual study. Retain that study, or a link to
-it, with the production sources; no copy or link is currently recorded in this
-repository. The names do not specify numeric colours, sprite dimensions or
+These names refer to the [round-2 visual study](../game/art/references/style-board/index.html)
+([original artifact](https://claude.ai/artifact/9J5kQgRMvVtXPe6r6cJ7vP)),
+supplied by the author on 2026-10-15 and retained with the
+[production sources](../game/art/README.md). The names do not specify numeric colours, sprite dimensions or
 finished assets. The workshop kit and its pixel-grid choices remain historical
 comparison evidence, rather than the production art standard.
 

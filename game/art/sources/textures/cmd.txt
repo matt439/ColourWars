@@ -1,0 +1,2 @@
+From the repository root (legacy sprite-sheet conversion):
+game\art\tools\texconv.exe game\art\sources\textures\sprite_sheet_1.png -pmalpha -m 1 -f BC3_UNORM -y -o game\content\textures

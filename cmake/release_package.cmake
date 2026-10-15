@@ -34,7 +34,7 @@ if(MSVC AND NOT CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS)
 endif()
 install(PROGRAMS ${CMAKE_INSTALL_SYSTEM_RUNTIME_LIBS} DESTINATION .)
 
-foreach(asset IN LISTS COLOURWARS_RELEASE_ASSETS)
+foreach(asset IN LISTS COLOURWARS_RUNTIME_ASSETS)
     get_filename_component(directory "${asset}" DIRECTORY)
     if(directory STREQUAL "")
         set(directory ".")

@@ -619,6 +619,12 @@ normal Release ZIP includes this bank, provenance and CC0 terms. The bank can
 be omitted for the existing optional silent fallback, which is checked
 separately. Private legacy waves and banks cannot supply either path.
 
+Development staging and Release now share
+[`runtime_assets.cmake`](../cmake/runtime_assets.cmake). The guarded
+[`stage_runtime_assets.cmake`](../cmake/stage_runtime_assets.cmake) replaces the
+historical bank-only stager named in §3, validating the bank before copying and
+removing its stale staged copy when the optional source bank is absent.
+
 The old generated `out/review-2026-09-26-data/` fixtures remain inactive archival
 output. They are outside the explicit bank inputs, staging and release list;
 the accepted artifact receipt excludes them from runtime publication. Their

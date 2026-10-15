@@ -73,18 +73,13 @@ class RuntimeBankChecks(unittest.TestCase):
         self.assertIn("audible release requires", self.check(require=True).stderr)
 
     def test_incremental_staging_removes_legacy_and_absent_bank(self) -> None:
-        stage = self.folder / "stage"
-        (stage / "unused").mkdir(parents=True)
-        for name in ("sound_bank_1.xwb", "sound_bank_1.json", "sound list.txt", "unused/wave_bank_1.json"):
-            (stage / name).write_bytes(b"old")
-        command = ["cmake", f"-DBANK_FILE={self.bank}", f"-DSTAGE_DIR={stage}",
-                   "-P", str(ROOT / "cmake/stage_wave_bank.cmake")]
-        subprocess.run(command, check=True, capture_output=True)
-        self.assertEqual((stage / self.bank.name).read_bytes(), self.bank.read_bytes())
-        self.assertEqual([path.name for path in stage.rglob("*") if path.is_file()], [self.bank.name])
-        self.bank.unlink()
-        subprocess.run(command, check=True, capture_output=True)
-        self.assertFalse((stage / self.bank.name).exists())
+        # Exercise the shared content mirror used by game builds, including
+        # stale audio removal and optional-bank remove/restore, without
+        # modifying the tracked bank or either configured build directory.
+        result = subprocess.run(["cmake", f"-DTEST_DIR={self.folder}", "-P",
+            str(ROOT / "cmake/check_runtime_staging.cmake")], text=True, capture_output=True)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Runtime staging checks passed", result.stdout)
 
     def test_publisher_requires_the_exact_accepted_master_set(self) -> None:
         manifest = {"cues": [{"id": "ui.confirm"}]}

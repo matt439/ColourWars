@@ -204,7 +204,7 @@ For a new selectable primary weapon, keep these registrations together:
    needs source permission, master acceptance and bank publication through the
    [audio workflow](../game/audio/paint_exe/README.md). Existing asset
    files are staged on build. New resource files also need the manifest and
-   [release asset list](../cmake/release_assets.cmake) updated. Optional audio
+   [runtime asset list](../cmake/runtime_assets.cmake) updated. Optional audio
    remains optional; the game must still work with its silent bank.
 6. Build Debug and Release, cycle through the new menu choice and Random, and
    start a match. Check its distinctive hook, ammo exhaustion/regeneration,

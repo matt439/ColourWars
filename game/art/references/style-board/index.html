@@ -1,0 +1,539 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>ColourWars Style Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+/* Layout: a pin-up crit wall. Baselines first, then the panel's read, then the full wall of concepts as a filterable grid with a detail sheet. */
+:root{
+  --paper:#f3f4f1; --sheet:#ffffff; --ink:#1d2024; --muted:#5d636b; --rule:#d9dbd6;
+  --team-a:#0634cc; --team-b:#e86f00; --chip:#e9ebe6; --good:#2f7d4f; --warn:#b4541c;
+  --display:"Bricolage Grotesque", "Arial Black", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  --mono:"JetBrains Mono", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#16181b; --sheet:#1f2226; --ink:#eceee9; --muted:#a2a8b0; --rule:#33373d;
+  --team-a:#6f8dff; --team-b:#ff9a3d; --chip:#2a2e33; --good:#6cc38f; --warn:#f08a4b; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#16181b; --sheet:#1f2226; --ink:#eceee9; --muted:#a2a8b0; --rule:#33373d;
+  --team-a:#6f8dff; --team-b:#ff9a3d; --chip:#2a2e33; --good:#6cc38f; --warn:#f08a4b; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font:16px/1.55 var(--body);margin:0}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:20px;padding-block:28px 64px}
+h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1.1;text-wrap:balance;margin:0}
+h1{font-size:clamp(2.1rem,5vw,3.4rem);letter-spacing:-.02em}
+h2{font-size:1.55rem;margin-bottom:14px}
+h3{font-size:1.1rem}
+p{margin:0}
+.lede{max-width:66ch;color:var(--muted);margin-top:12px;font-size:1.05rem}
+.swatch{display:inline-block;width:.8em;height:.8em;border-radius:50%;vertical-align:baseline;margin-inline:2px}
+.eyebrow{font:500 .72rem/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+section{margin-top:44px}
+.baselines{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:20px}
+.base{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:14px;display:grid;gap:10px;min-width:0}
+.base img{width:100%;border-radius:3px;display:block;background:#fff}
+.base .pair{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.base p{color:var(--muted);font-size:.95rem}
+.panel{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px}
+.judge{border-top:4px solid var(--ink);padding-top:12px;display:grid;gap:8px;min-width:0}
+.judge .pick{font-family:var(--display);font-weight:800;font-size:1.25rem}
+.judge p{font-size:.95rem}
+.judge details summary{cursor:pointer;color:var(--muted);font-size:.9rem}
+.judge details p{margin-top:8px;white-space:pre-line}
+.lessons{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:18px 20px;margin-top:22px}
+.lessons ul{margin:10px 0 0;padding-left:20px;display:grid;gap:6px}
+.toolbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);padding-block:12px;border-bottom:1px solid var(--rule);display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center}
+.seg{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.seg .eyebrow{margin-right:6px}
+.seg button{font:500 .85rem var(--body);border:1px solid var(--rule);background:var(--sheet);color:var(--ink);padding:5px 11px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+button:focus-visible,.card:focus-visible{outline:3px solid var(--team-a);outline-offset:2px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,360px),1fr));gap:22px;margin-top:22px}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;cursor:pointer;min-width:0;text-align:left;font:inherit;color:inherit;padding:0}
+.card .shot{aspect-ratio:16/9;background:#000;display:grid;place-items:center;overflow:hidden}
+.card .shot img{width:100%;height:100%;object-fit:cover;display:block}
+.card .shot.small img{width:auto;height:auto;max-width:100%;image-rendering:auto;object-fit:contain}
+.card .body{padding:14px 16px 16px;display:grid;gap:10px;flex:1}
+.card .top{display:flex;justify-content:space-between;align-items:start;gap:10px}
+.rank{font:500 .8rem var(--mono);color:var(--muted)}
+.score{font:500 1.35rem/1 var(--mono);font-variant-numeric:tabular-nums}
+.score small{font-size:.7rem;color:var(--muted)}
+.kind{font:500 .7rem var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:var(--chip);color:var(--muted);margin-left:6px;vertical-align:middle}
+.kind.mix{background:var(--team-b);color:#1a1a1a}
+.one{font-size:.92rem;color:var(--muted)}
+.meters{display:grid;grid-template-columns:auto 1fr auto;gap:4px 10px;align-items:center;font-size:.8rem}
+.meters .lab{color:var(--muted)}
+.bar{height:6px;background:var(--chip);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--ink)}
+.bar.inv i{background:var(--warn)}
+.meters .v{font:500 .78rem var(--mono);font-variant-numeric:tabular-nums;color:var(--muted)}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chips span{font-size:.75rem;background:var(--chip);padding:2px 8px;border-radius:999px;color:var(--muted)}
+.star{border:1px solid var(--rule);background:var(--sheet);color:var(--ink);border-radius:999px;padding:3px 10px;font:500 .8rem var(--body);cursor:pointer}
+.star[aria-pressed="true"]{background:var(--team-a);color:#fff;border-color:var(--team-a)}
+.note{color:var(--muted);font-size:.9rem;margin-top:14px;max-width:80ch}
+dialog{border:0;padding:0;background:var(--sheet);color:var(--ink);width:min(1180px,calc(100vw - 24px));max-height:calc(100vh - 24px);border-radius:8px}
+dialog::backdrop{background:rgba(10,12,14,.72)}
+.dlg{padding:18px 20px 26px;display:grid;gap:16px}
+.dlg header{display:flex;justify-content:space-between;gap:12px;align-items:start;flex-wrap:wrap}
+.dlg .views{display:flex;gap:4px;flex-wrap:wrap}
+.dlg .stage{background:#000;border-radius:4px;display:grid;place-items:center;min-height:200px}
+.dlg .stage img{max-width:100%;display:block}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,320px),1fr));gap:18px 28px}
+.cols > div{min-width:0;display:grid;gap:6px;align-content:start}
+.cols ul{margin:0;padding-left:18px;display:grid;gap:4px;font-size:.93rem}
+.cols p{font-size:.93rem;white-space:pre-line}
+.close{font:500 .9rem var(--body);border:1px solid var(--rule);background:var(--chip);color:var(--ink);border-radius:999px;padding:6px 14px;cursor:pointer}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-top:26px;border-bottom:2px solid var(--ink)}
+.tabs button{font:800 1rem var(--display);border:0;background:transparent;color:var(--muted);padding:10px 14px;cursor:pointer;border-radius:6px 6px 0 0}
+.tabs button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.podium{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,340px),1fr));gap:22px}
+.podium .card .score{font-size:1.6rem}
+.figure-study{display:grid;gap:18px}
+.figure-study > img{width:100%;border:1px solid var(--rule);border-radius:4px;background:#fff;display:block}
+.recipe{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px 28px}
+.recipe > div{border-top:3px solid var(--ink);padding-top:10px;display:grid;gap:6px;align-content:start;min-width:0}
+.recipe p{font-size:.95rem}
+.premises{display:grid;gap:8px}
+.premises details{background:var(--sheet);border:1px solid var(--rule);border-radius:6px;padding:12px 16px}
+.premises summary{cursor:pointer;display:grid;grid-template-columns:3.2rem 1fr;gap:4px 12px;align-items:baseline}
+.premises summary .score{font-size:1.1rem}
+.premises summary .ln{grid-column:2;color:var(--muted);font-size:.92rem}
+.premises .full{margin-top:12px}
+.logline{font-size:1.02rem;max-width:72ch}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px}
+.opt{all:unset;box-sizing:border-box;cursor:pointer;background:var(--sheet);border:2px solid var(--rule);border-radius:8px;padding:12px 14px;display:grid;gap:6px;align-content:start;font-size:.9rem}
+.opt:focus-visible{outline:3px solid var(--team-a);outline-offset:2px}
+.opt h4{margin:0;font:800 1.02rem var(--display)}
+.opt .m{color:var(--muted)}
+.opt .lbl{font:500 .68rem var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.opt[aria-pressed="true"]{border-color:var(--team-a);box-shadow:inset 0 0 0 1px var(--team-a)}
+.opt[aria-pressed="true"] h4::before{content:"✓ ";color:var(--team-a)}
+.opt.clash{border-color:var(--warn)}
+.clashnote{color:var(--warn);font-size:.85rem;font-weight:700}
+@media (prefers-reduced-motion:no-preference){.card{transition:transform .15s ease}.card:hover{transform:translateY(-2px)}}
+</style>
+
+<div class="wrap">
+  <p class="eyebrow">Gameplay art direction · 9 Oct 2026</p>
+  <h1>ColourWars Style Board</h1>
+  <p class="lede">Every concept shows the same moment: <span class="swatch" style="background:var(--team-a)"></span>blue sprays from the floor, <span class="swatch" style="background:var(--team-b)"></span>orange rolls a ledge, and painted surface is the score. There is no HUD on purpose; the UI gets designed after the gameplay look is settled.</p>
+
+  <nav class="tabs" aria-label="Rounds">
+    <button data-tab="round5" aria-pressed="true">Round 5 · Pick the pieces</button>
+    <button data-tab="round4" aria-pressed="false">Round 4 · Save Changes, refined</button>
+    <button data-tab="round3" aria-pressed="false">Round 3 · Theme</button>
+    <button data-tab="round2" aria-pressed="false">Round 2 · Paint.exe variations</button>
+    <button data-tab="round1" aria-pressed="false">Round 1 · Nineteen styles</button>
+  </nav>
+
+  <div id="round5">
+    <section>
+      <h2>Build your premise</h2>
+      <p class="lede" style="margin:-6px 0 18px">Three things are fixed: <b>a drawing open in a paint program</b>, <b>one empty palette slot that the two team colours want</b>, and <b>the person at the computer, shown as a cursor</b>. Everything else is open, so here it is as six questions with five or six options each. Pick one option per question, or none. If two of your picks contradict each other, both are flagged. Your picks are saved in this browser, and the summary at the bottom can be copied and pasted back to me.</p>
+      <h3>Four ready-made combinations</h3>
+      <p class="note" style="margin:4px 0 14px">Each one picks a single option for every question. Load one, then swap individual pieces.</p>
+      <div class="recipe" id="combos"></div>
+    </section>
+    <div id="qs"></div>
+    <section>
+      <h2>Your picks</h2>
+      <div class="lessons" style="margin-top:0"><div id="summary"></div>
+      <p style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap"><button class="star" id="copyPicks">Copy as text</button><button class="star" id="clearPicks">Clear</button></p></div>
+    </section>
+  </div>
+
+  <div id="round4" hidden>
+    <section>
+      <h2>Save Changes to untitled?, version 2</h2>
+      <p class="lede" style="margin:-6px 0 18px">You picked Save Changes and kept one thing fixed: two colours fighting for the last palette slot. Five writers rebuilt everything around that core from different angles: petty gods, an election, the drawings' own story, a version with no dated software, and the creator as a character. Three judges scored them on how long the idea keeps producing new jokes and content, how well it fits the gameplay, and production risk. An editor merged the best parts into the version below.</p>
+      <div id="v2"></div>
+    </section>
+    <section>
+      <h2>Your decisions</h2>
+      <p class="lede" style="margin:-6px 0 18px">These are the places where the versions really diverged. The v2 premise above follows each recommendation, and any of them can be swapped.</p>
+      <div class="recipe" id="decisions"></div>
+    </section>
+    <section>
+      <h2>What changed from version 1</h2>
+      <div class="lessons" style="margin-top:0"><ul id="changes"></ul></div>
+    </section>
+    <section>
+      <h2>The five versions</h2>
+      <p class="lede" style="margin:-6px 0 18px">Sorted by the panel average. Each judge picked a different winner: longevity chose the gods, gameplay fit chose the election, and production risk chose the grey decorators. That split is why version 2 is a graft rather than any single one of them.</p>
+      <div class="premises" id="vlist"></div>
+    </section>
+  </div>
+
+  <div id="round3" hidden>
+    <section>
+      <h2>Why does this world fight over paint?</h2>
+      <p class="lede" style="margin:-6px 0 18px">Splatoon's premise sounds mad, but it works because the story explains the mechanic: ink is what squids are made of, and Turf War is their sport. Five writers pitched 30 premises from five angles: strange species, the world as a drawing, mundane life pushed to extremes, myth and apocalypse, and childhood. An editor merged them into 23. Three judges scored each one on how well the story explains the game, how memorable it is and how well it fits the art, and whether one developer can carry it with art and jokes. The top six are drawn below in the Paint.exe recipe.</p>
+      <div class="lessons" style="margin-top:0">
+        <h3>All three judges proposed the same hybrid: Save Changes with Feed the Hues</h3>
+        <p style="margin-top:8px;max-width:80ch">The universe is <i>untitled.bmp</i>, a 16-colour file open since 1998 with one palette slot left. The two team colours are petty, hungry minor gods campaigning for that slot, and the box-heads are the only people the Hand can draw: their congregations. When the Hand clicks <b>Save</b>, the colour covering more of the canvas gets the slot and the loser dithers to grey. That Save is your end-of-match reveal, and the next match is a rematch because the program forgets its palette when it closes. The greys in the world are failed gods, which is why the world has no colour. The first commandment is <i>THOU SHALT NOT DRAW WELL</i>.</p>
+        <p style="margin-top:10px;max-width:80ch"><b>If you want to keep the painter tradesmen:</b> combine The Last Coat with Save Changes. The decorators are contracted to paint the next universe, and the Big Bang is the Hand clicking Save: <i>UNIVERSE #4,118,002: MOSTLY ORANGE</i>.</p>
+        <h3 style="margin-top:16px">What separated the top premises from the rest</h3>
+        <ul>
+          <li><b>They make the crude art true inside the world.</b> Aliasing is physics, drawing badly is piety, and the box head is a house.</li>
+          <li><b>They explain why the world is grey.</b> A full palette, rationed colour, extinct colour or starving gods turn the "team colours are taken" art rule into story.</li>
+          <li><b>They explain the rematch.</b> The program forgets, a new universe begins, or the season comes round again.</li>
+          <li><b>The random colour pairs were the weakest link</b> almost everywhere. Save Changes explains them best: the Edit Colours dialog only offers candidates in pairs.</li>
+          <li><b>Pure tradesman premises were safe but not weird enough.</b> The tradesman versions that scored made the trade cosmic: The Last Coat, and the Hueherds of Hue Season.</li>
+        </ul>
+      </div>
+    </section>
+    <section>
+      <h2>The top six, drawn</h2>
+      <div class="toolbar" role="toolbar" aria-label="Image view">
+        <div class="seg" data-group="view3"><span class="eyebrow">Image</span>
+          <button data-v="scene" aria-pressed="true">Scene</button><button data-v="world" aria-pressed="false">World sheet</button><button data-v="small" aria-pressed="false">Quarter pane</button></div>
+      </div>
+      <div class="grid" id="grid3"></div>
+    </section>
+    <section>
+      <h2>All 23 premises</h2>
+      <p class="lede" style="margin:-6px 0 18px">Sorted by panel average. Open one to read the whole pitch.</p>
+      <div class="premises" id="plist"></div>
+    </section>
+  </div>
+
+  <div id="round2" hidden>
+    <section>
+      <h2>Ten ways to push Paint.exe</h2>
+      <p class="lede" style="margin:-6px 0 18px">You picked Paint.exe Maximalism. Each variation pushes it one way, and every one applies the round-1 fixes: heavier figures, a keyline under the paint, and all three colour pairs tested. The same three judges ranked them.</p>
+      <div class="podium" id="podium"></div>
+    </section>
+
+    <section>
+      <h2>The figure</h2>
+      <p class="lede" style="margin:-6px 0 18px">The box-head was the weakest part of round 1 in split screen. Eight versions, at real size and at the 28 px a quarter pane gives them. All three judges picked <b>E</b>.</p>
+      <div class="figure-study">
+        <img src="img/p2_figures_scene.webp" alt="Figure study: eight box-head painter variants A to H at full and quarter-pane size">
+        <img src="img/p2_figures_sheet.webp" alt="Character sheet for the chosen figure variants in every team colour">
+        <div class="lessons">
+          <h3>Recommended: figure E, made slightly heavier</h3>
+          <ul>
+            <li><b>Overalls:</b> a team-coloured bib and trouser legs on a white shirt. It's the largest block of colour for the least ink, and it's still your box-head.</li>
+            <li><b>Line weight:</b> about 7–8 px at 110 px tall, drawn outside the fill so the outline never eats into the team colour.</li>
+            <li><b>Teammate marker:</b> a bobble or antenna on top of the head, about twice the size in the study. Only shapes above the head survive at 28 px; stripes and flaps vanish.</li>
+            <li><b>Face:</b> two square eyes and one flat mouth, no nose. X eyes and a splat of the enemy colour when hit.</li>
+            <li><b>Tools:</b> a back-tank sprayer whose gauge window shows ammo, and a roller drawn as a cylinder. Neither crosses the torso.</li>
+            <li><b>Key art:</b> keep the fat-limbed figure <b>F</b> for posters, the store capsule and the title screen.</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>The combined recipe</h2>
+      <p class="lede" style="margin:-6px 0 18px">Working separately, the three judges converged on one style. Zoom 400% sets the value system, Tool Props supplies the terrain, Airbrush supplies the shadows, and True Maximalism is reserved for the title screen.</p>
+      <div class="recipe">
+        <div><h3>Canvas and line</h3><p>A white Paint canvas with a visible canvas edge. Chunky aliased mouse-wobble lines, with the staircase visible. Treat it as a texture, not a literal low-res grid, so the camera can still move smoothly. Leave one or two white pinholes in every bucket fill.</p></div>
+        <div><h3>Three value tiers</h3><p>The backdrop is light-grey doodles only. Walkable ground is mid-to-dark grey with a black outline. Only players and paint are saturated. The rule a player learns without being told: a black outline means you can stand on it.</p></div>
+        <div><h3>Team colours are taken</h3><p>No blue, orange, pink, green or yellow anywhere in the world, the sun included. The jokes say so: <i>SUN (YELLOW IS TAKEN)</i>. Non-team palette chips such as maroon, teal and brown are allowed on small props.</p></div>
+        <div><h3>Paint</h3><p>A flat bucket fill on a 2.5–3 px black keyline, baked into the stamps. Roller trails are flat with short drips; sprayer coats are patchy with long drips. Mist in the air has no rim and gains one when it lands.</p></div>
+        <div><h3>Terrain from Paint's tools</h3><p>Eraser blocks, a marching-ants selection box, a text box that types <i>platform|</i>, a resize-handle step, and a pencil ramp as a one-off landmark. Drop the palette-strip floor and the ghosted "Untitled".</p></div>
+        <div><h3>Depth with the airbrush</h3><p>Square-speck airbrush shadows under every floating platform (they replace the hang-lines), and slabs darkening toward the underside. Baked into tiles, never a full-screen haze. The sprayer's mist is the same speck in team colour.</p></div>
+        <div><h3>Where the maximalism goes</h3><p>Density goes in the top band and at the screen edges; the play lanes stay calm. Per screen: 3–5 big grey gags, 2–3 captioned Paint jokes, and one <i>by matt (age 7)</i> signature per stage. Full-volume WordArt, rainbows and multiple suns appear only on the title screen, capsule and trailer.</p></div>
+        <div><h3>Arena themes</h3><p>One rule set with swaps: the default white page, a Tools stage, a Black Canvas night stage (the same tiers inverted), and a kid's-landscape stage whose walkable ground keeps its own darker fill.</p></div>
+        <div><h3>Acceptance check</h3><p>Every new stage or surface passes two checks. First, a swatch grid of all three colour pairs on each surface. Second, the 28 px figure line-up at quarter-pane size.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>All ten</h2>
+      <div class="toolbar" role="toolbar" aria-label="Image view">
+        <div class="seg" data-group="view2"><span class="eyebrow">Image</span>
+          <button data-v="scene" aria-pressed="true">Scene</button><button data-v="sheet" aria-pressed="false">Character sheet</button><button data-v="small" aria-pressed="false">Quarter pane</button></div>
+      </div>
+      <div class="grid" id="grid2"></div>
+      <p class="note">Critic scores are 1–10; for cost, lower is better. Open a card for the variation's style rules, the critic's keep and drop list, and each judge's reasoning.</p>
+    </section>
+  </div>
+
+  <div id="round1" hidden>
+  <section>
+    <h2>Where you are now</h2>
+    <div class="baselines">
+      <div class="base">
+        <p class="eyebrow">Original · MS Paint</p>
+        <div class="pair"><img src="img/original_chars.webp" alt="Original box-head stick figures in flat caps"><img src="img/original_levels.webp" alt="Original arenas: white with grey platforms and blue walls"></div>
+        <p>Box head, dot eyes, flat cap, single-line limbs on white. Crude, but nobody else has it.</p>
+      </div>
+      <div class="base">
+        <p class="eyebrow">Candidate · Workshop pixel art</p>
+        <img src="img/pixel_scene.webp" alt="Pixel-art paint workshop concept">
+        <p>An AI-generated reference, so it is more polished than these sketches. Panel average <b id="pixelAvg"></b>/100, last of 20.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>What the panel said</h2>
+    <p class="lede" style="margin:-6px 0 18px">Three judges ranked every concept, each through a different lens. The scores on the cards are the average of their three.</p>
+    <div class="panel" id="panel"></div>
+    <div class="lessons">
+      <h3>Rules that held across every style</h3>
+      <ul>
+        <li><b>Put a dark value under the paint.</b> Dark ledges or a dark keyline below the paint was the strongest predictor of readability in a quarter pane.</li>
+        <li><b>Keep team hues out of the world.</b> Blue ballpoint ink and navy riso ink swallow the blue team. Use charcoal or graphite for world ink.</li>
+        <li><b>Outline the paint.</b> Yellow disappears on cream and white grounds without a dark rim, which affects most of these concepts.</li>
+        <li><b>Make figures heavier.</b> Hairline stick limbs turn into specks at 480×270. Use thicker lines, a filled body, or a larger cap and tool.</li>
+        <li><b>Prototype paper grain and halftone in motion.</b> Full-screen texture reads as static in a small pane and may shimmer when the camera scrolls.</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>The wall</h2>
+    <div class="toolbar" role="toolbar" aria-label="Filter and sort concepts">
+      <div class="seg" data-group="kind"><span class="eyebrow">Show</span>
+        <button data-v="all" aria-pressed="true">All</button><button data-v="pure" aria-pressed="false">Single style</button><button data-v="mix" aria-pressed="false">Mixed</button><button data-v="star" aria-pressed="false">My shortlist</button></div>
+      <div class="seg" data-group="sort"><span class="eyebrow">Sort</span>
+        <button data-v="avg" aria-pressed="true">Panel</button><button data-v="identity" aria-pressed="false">Identity</button><button data-v="exposure" aria-pressed="false">Least compared</button><button data-v="read" aria-pressed="false">Readability</button><button data-v="cost" aria-pressed="false">Cheapest</button></div>
+      <div class="seg" data-group="view"><span class="eyebrow">Image</span>
+        <button data-v="scene" aria-pressed="true">Scene</button><button data-v="sheet" aria-pressed="false">Character sheet</button><button data-v="small" aria-pressed="false">Quarter pane</button></div>
+    </div>
+    <div class="grid" id="grid"></div>
+    <p class="note">Critic scores are 1–10. For <em>compared</em>, <em>cost</em> and <em>skill bar</em>, lower is better and the bar is drawn in orange. The <em>Quarter pane</em> view shows each scene at 480×270, its real size in four-player split screen. Every concept is hand-built SVG, rendered and then corrected from the render. Read them as direction sketches, not finished art: a style's potential can be stronger than its sketch.</p>
+  </section>
+  </div>
+</div>
+
+<dialog id="dlg" aria-label="Concept detail"><div class="dlg" id="dlgBody"></div></dialog>
+
+<script>
+(function(){
+const LENS={identity:'Identity lens',production:'Production lens',player:'Player lens'};
+const LENS_Q={identity:'Is it distinct and ownable, and does it keep the original\'s soul?',production:'Can a solo non-artist ship a whole game in it?',player:'Does it read in 4-way split, and does it sell on a store page?'};
+const state={kind:'all',sort:'avg',view:'scene'};
+let data, stars=new Set();
+try{stars=new Set(JSON.parse(localStorage.getItem('cw-stars')||'[]'))}catch(e){}
+function saveStars(){try{localStorage.setItem('cw-stars',JSON.stringify([...stars]))}catch(e){}}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const img=(s,v)=>`img/${s.id}_${v}.webp`;
+const byId=id=>id==='pixel_baseline'?{name:'Workshop pixel art'}:data.styles.find(s=>s.id===id)||{name:id};
+
+function meter(lab,v,inv){return `<span class="lab">${lab}</span><span class="bar${inv?' inv':''}"><i style="width:${v*10}%"></i></span><span class="v">${v}</span>`}
+
+function render(){
+  let list=data.styles.slice();
+  if(state.kind==='pure'||state.kind==='mix') list=list.filter(s=>s.kind===state.kind);
+  if(state.kind==='star') list=list.filter(s=>stars.has(s.id));
+  const key={avg:s=>-s.avg,identity:s=>-s.identity*100-s.avg,exposure:s=>s.exposure*100-s.avg,read:s=>-s.read*100-s.avg,cost:s=>s.cost*100-s.avg}[state.sort];
+  list.sort((a,b)=>key(a)-key(b));
+  const rankOf=Object.fromEntries(data.styles.slice().sort((a,b)=>b.avg-a.avg).map((s,i)=>[s.id,i+1]));
+  const g=document.getElementById('grid');
+  if(!list.length){g.innerHTML='<p class="note">Your shortlist is empty. Use ☆ Shortlist on a card to add a concept.</p>';return}
+  g.innerHTML=list.map(s=>`
+   <div class="card" tabindex="0" role="button" data-id="${s.id}" aria-label="${esc(s.name)} details">
+    <div class="shot${state.view==='small'?' small':''}"><img loading="lazy" src="${img(s,state.view)}" alt="${esc(s.name)} ${state.view}"></div>
+    <div class="body">
+      <div class="top"><div><span class="rank">#${rankOf[s.id]}</span><h3>${esc(s.name)}<span class="kind ${s.kind}">${s.kind==='mix'?'mixed':'single'}</span></h3></div>
+        <div class="score">${s.avg.toFixed(0)}<small>/100</small></div></div>
+      <p class="one">${esc(s.one_liner)}</p>
+      <div class="meters">${meter('Identity',s.identity)}${meter('Readability',s.read)}${meter('Paint contrast',s.paint)}${meter('Compared',s.exposure,1)}${meter('Cost',s.cost,1)}${meter('Skill bar',s.bar,1)}</div>
+      <div class="chips">${s.comps.slice(0,4).map(c=>`<span>${esc(c.split(/[(:]/)[0].trim())}</span>`).join('')}</div>
+      <div><button class="star" data-star="${s.id}" aria-pressed="${stars.has(s.id)}">${stars.has(s.id)?'★ Shortlisted':'☆ Shortlist'}</button></div>
+    </div></div>`).join('');
+}
+
+function panel(){
+  document.getElementById('pixelAvg').textContent=data.pixel.avg.toFixed(0);
+  document.getElementById('panel').innerHTML=data.panel.map(p=>{
+    const top=byId(p.top);
+    return `<div class="judge"><p class="eyebrow">${LENS[p.lens]}</p><p style="color:var(--muted);font-size:.9rem">${LENS_Q[p.lens]}</p>
+      <p class="pick">${esc(top.name)}</p>
+      <p>${esc(p.mix.split(/(?<=\.)\s/)[0])}</p>
+      <details><summary>Full recommendation and notes</summary><p>${esc(p.mix)}</p><p><b>Avoid:</b>\n${p.avoid.map(a=>'• '+esc(a)).join('\n')}</p><p>${esc(p.notes)}</p></details></div>`}).join('');
+}
+
+function openDetail(id){
+  const s=data.styles.find(x=>x.id===id); let v=state.view;
+  const body=document.getElementById('dlgBody');
+  const draw=()=>{
+    body.innerHTML=`<header><div><p class="eyebrow">${s.kind==='mix'?'Mixed style':'Single style'} · panel ${s.avg.toFixed(0)}/100 · sketch quality ${s.q}/10</p><h2 style="margin:4px 0 0">${esc(s.name)}</h2></div>
+      <div class="views">${['scene','sheet','small'].map(k=>`<button class="star" data-view="${k}" aria-pressed="${k===v}">${{scene:'Scene',sheet:'Character sheet',small:'Quarter pane'}[k]}</button>`).join('')}<button class="close" data-close>Close</button></div></header>
+      <div class="stage"><img src="${img(s,v)}" alt="${esc(s.name)} ${v}"></div>
+      <p style="max-width:80ch">${esc(s.one_liner)}</p>
+      <div class="cols">
+        <div><h3>Verdict</h3><p>${esc(s.verdict)}</p></div>
+        <div><h3>Panel</h3>${['identity','production','player'].map(l=>`<p><b>${LENS[l]} · ${s.judges[l].score}</b> ${esc(s.judges[l].reason)}</p>`).join('')}</div>
+        <div><h3>Strengths</h3><ul>${s.strengths.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+        <div><h3>Risks</h3><ul>${s.risks.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+        <div><h3>What people will compare it to</h3><ul>${s.comps.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+        <div><h3>Why it could be yours</h3><p>${esc(s.ownable)}</p></div>
+        <div><h3>Animation</h3><p>${esc(s.anim)}</p></div>
+        <div><h3>Engine fit</h3><p>${esc(s.engine)}</p></div>
+        <div><h3>The brief</h3><p>${esc(s.brief)}</p></div>
+        <div><h3>Artist's own assessment</h3><p>${esc(s.self)}</p></div>
+      </div>`;
+  };
+  draw();
+  body.onclick=e=>{const b=e.target.closest('[data-view]');if(b){v=b.dataset.view;draw()} if(e.target.closest('[data-close]'))document.getElementById('dlg').close()};
+  const d=document.getElementById('dlg'); d.showModal(); d.scrollTop=0;
+}
+
+document.querySelectorAll('.seg').forEach(seg=>seg.addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  state[seg.dataset.group]=b.dataset.v;
+  seg.querySelectorAll('button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  ({view2:render2,view3:render3}[seg.dataset.group]||render)();
+}));
+
+// Round 2
+let data2; state.view2='scene';
+const img2=(v,k)=>`img/p2_${v.id}_${k}.webp`;
+function card2(v,rank){
+  const c=v.c;
+  return `<div class="card" tabindex="0" role="button" data-id2="${v.id}" aria-label="${esc(v.name)} details">
+    <div class="shot${state.view2==='small'?' small':''}"><img loading="lazy" src="${img2(v,state.view2)}" alt="${esc(v.name)} ${state.view2}"></div>
+    <div class="body">
+      <div class="top"><div><span class="rank">#${rank}</span><h3>${esc(v.name)}</h3></div><div class="score">${v.avg.toFixed(0)}<small>/100</small></div></div>
+      <p class="one">${esc(v.one_liner)}</p>
+      <div class="meters">${meter('Still Paint.exe',c.paintexe_fidelity)}${meter('Looks deliberate',c.deliberate_not_unfinished)}${meter('Split-screen read',c.readability_split_screen)}${meter('Figures at 480px',c.figure_readability)}${meter('Paint, all pairs',c.paint_contrast_all_pairs)}${meter('Capsule appeal',c.capsule_appeal)}${meter('Cost',c.solo_dev_cost,1)}</div>
+    </div></div>`;
+}
+function render2(){
+  const list=data2.variants.filter(v=>v.avg!=null).sort((a,b)=>b.avg-a.avg);
+  document.getElementById('podium').innerHTML=list.slice(0,3).map((v,i)=>card2(v,i+1)).join('');
+  document.getElementById('grid2').innerHTML=list.map((v,i)=>card2(v,i+1)).join('');
+}
+function openDetail2(id){
+  const s=data2.variants.find(x=>x.id===id); let v=state.view2;
+  const body=document.getElementById('dlgBody');
+  const L={identity:'Identity lens',production:'Production lens',player:'Player lens'};
+  const draw=()=>{
+    body.innerHTML=`<header><div><p class="eyebrow">Paint.exe variation · panel ${s.avg.toFixed(0)}/100 · sketch quality ${s.c.concept_quality}/10</p><h2 style="margin:4px 0 0">${esc(s.name)}</h2></div>
+      <div class="views">${['scene','sheet','small'].map(k=>`<button class="star" data-view="${k}" aria-pressed="${k===v}">${{scene:'Scene',sheet:'Character sheet',small:'Quarter pane'}[k]}</button>`).join('')}<button class="close" data-close>Close</button></div></header>
+      <div class="stage"><img src="${img2(s,v)}" alt="${esc(s.name)} ${v}"></div>
+      <p style="max-width:80ch">${esc(s.one_liner)}</p>
+      <div class="cols">
+        <div><h3>Verdict</h3><p>${esc(s.verdict)}</p></div>
+        <div><h3>Panel</h3>${['identity','production','player'].map(l=>`<p><b>${L[l]} · ${s.judges[l].score}</b> ${esc(s.judges[l].reason)}</p>`).join('')}</div>
+        <div><h3>Keep</h3><ul>${s.keep.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+        <div><h3>Drop</h3><ul>${s.drop.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+        <div><h3>Style rules</h3><ul>${s.rules.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
+        <div><h3>The brief</h3><p>${esc(s.brief)}</p></div>
+        <div><h3>What changed from round 1</h3><p>${esc(s.changed)}</p></div>
+        <div><h3>Artist's own assessment</h3><p>${esc(s.self)}</p></div>
+      </div>`;
+  };
+  draw();
+  body.onclick=e=>{const b=e.target.closest('[data-view]');if(b){v=b.dataset.view;draw()} if(e.target.closest('[data-close]'))document.getElementById('dlg').close()};
+  const d=document.getElementById('dlg'); d.showModal(); d.scrollTop=0;
+}
+['podium','grid2'].forEach(id=>{const el=document.getElementById(id);
+  el.addEventListener('click',e=>{const c=e.target.closest('[data-id2]'); if(c) openDetail2(c.dataset.id2)});
+  el.addEventListener('keydown',e=>{const c=e.target.closest('[data-id2]'); if(c&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openDetail2(c.dataset.id2)}});
+});
+// Round 3
+let data3; state.view3='scene';
+const TL={coherence:'Story explains game',identity:'Memorable, fits the art',production:'Solo-dev friendly'};
+const ANG={species:'Strange species',meta:'World as a drawing',mundane:'Mundane, pushed',mythic:'Myth and apocalypse',childhood:'Childhood'};
+function premiseCols(p){
+  return `<div class="cols">
+    <div><h3>The world</h3><p>${esc(p.world)}</p></div>
+    <div><h3>Who you play</h3><p>${esc(p.who_you_play)}</p></div>
+    <div><h3>Why paint matters</h3><p>${esc(p.why_paint)}</p></div>
+    <div><h3>The teams</h3><p>${esc(p.teams)}</p></div>
+    <div><h3>Weapons</h3><p>${esc(p.weapons)}</p></div>
+    <div><h3>Arenas</h3><ul>${p.arenas.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>
+    <div><h3>Tone</h3><p>${esc(p.tone)}</p></div>
+    <div><h3>Art fit</h3><p>${esc(p.art_fit)}</p></div>
+    <div><h3>Risks</h3><p>${esc(p.risks)}</p></div>
+    <div><h3>Panel</h3>${Object.keys(TL).filter(l=>p.judges[l]).map(l=>`<p><b>${TL[l]} · ${p.judges[l].score}</b> ${esc(p.judges[l].reason)}</p>`).join('')}</div>
+  </div>`;
+}
+function render3(){
+  const top=data3.premises.filter(p=>p.drawn);
+  document.getElementById('grid3').innerHTML=top.map((p,i)=>`<div class="card" tabindex="0" role="button" data-id3="${p.id}" aria-label="${esc(p.name)} details">
+    <div class="shot${state.view3==='small'?' small':''}"><img loading="lazy" src="img/t3_${p.id}_${state.view3}.webp" alt="${esc(p.name)} ${state.view3}"></div>
+    <div class="body"><div class="top"><div><span class="rank">#${i+1} · ${ANG[p.angle]||p.angle}</span><h3>${esc(p.name)}</h3></div><div class="score">${p.avg.toFixed(0)}<small>/100</small></div></div>
+    <p class="one">${esc(p.logline)}</p></div></div>`).join('');
+  document.getElementById('plist').innerHTML=data3.premises.map(p=>`<details><summary><span class="score">${p.avg.toFixed(0)}</span><b>${esc(p.name)} <span class="kind">${ANG[p.angle]||p.angle}</span>${p.drawn?' <span class="kind mix">drawn</span>':''}</b><span class="ln">${esc(p.logline)}</span></summary><div class="full">${premiseCols(p)}</div></details>`).join('');
+}
+function openDetail3(id){
+  const p=data3.premises.find(x=>x.id===id); let v=state.view3;
+  const body=document.getElementById('dlgBody');
+  const draw=()=>{
+    body.innerHTML=`<header><div><p class="eyebrow">${ANG[p.angle]||p.angle} · panel ${p.avg.toFixed(0)}/100</p><h2 style="margin:4px 0 0">${esc(p.name)}</h2></div>
+      <div class="views">${['scene','world','small'].map(k=>`<button class="star" data-view="${k}" aria-pressed="${k===v}">${{scene:'Scene',world:'World sheet',small:'Quarter pane'}[k]}</button>`).join('')}<button class="close" data-close>Close</button></div></header>
+      <div class="stage"><img src="img/t3_${p.id}_${v}.webp" alt="${esc(p.name)} ${v}"></div>
+      <p class="logline">${esc(p.logline)}</p>${premiseCols(p)}`;
+  };
+  draw();
+  body.onclick=e=>{const b=e.target.closest('[data-view]');if(b){v=b.dataset.view;draw()} if(e.target.closest('[data-close]'))document.getElementById('dlg').close()};
+  const d=document.getElementById('dlg'); d.showModal(); d.scrollTop=0;
+}
+const g3=document.getElementById('grid3');
+g3.addEventListener('click',e=>{const c=e.target.closest('[data-id3]'); if(c) openDetail3(c.dataset.id3)});
+g3.addEventListener('keydown',e=>{const c=e.target.closest('[data-id3]'); if(c&&(e.key==='Enter'||e.key===' ')){e.preventDefault();openDetail3(c.dataset.id3)}});
+fetch('data3.json').then(r=>r.json()).then(d=>{data3=d;render3()}).catch(()=>{g3.innerHTML='<p class="note">The theme data did not load. Reload the page to try again.</p>'});
+
+// Round 5
+let data5, picks5={};
+try{picks5=JSON.parse(localStorage.getItem('cw-picks5')||'{}')||{}}catch(_){picks5={}}
+const savePicks=()=>{try{localStorage.setItem('cw-picks5',JSON.stringify(picks5))}catch(_){}};
+function clashes5(){
+  const chosen=new Set(Object.values(picks5)); const out=[];
+  data5.clashes.forEach(c=>{const ids=(c.match(/[a-z]+(?:-[a-z]+)+/g)||[]).filter(i=>data5.questions.some(q=>q.options.some(o=>o.id===i)));
+    const hit=ids.filter(i=>chosen.has(i)); if(hit.length>=2) out.push({ids:hit,text:c})});
+  return out;
+}
+function render5(){
+  const cl=clashes5(), bad=new Set(cl.flatMap(c=>c.ids));
+  const name=id=>{for(const q of data5.questions){const o=q.options.find(o=>o.id===id); if(o) return o.name}return id};
+  document.getElementById('combos').innerHTML=data5.combos.map((c,i)=>`<div><h3>${esc(c.name)}</h3><p class="note" style="margin:0">${esc(c.flavour)}</p><p>${esc(c.pitch)}</p><p class="note" style="margin:0">${c.picks.map(name).map(esc).join(' · ')}</p><p><button class="star" data-combo="${i}">Load these picks</button></p></div>`).join('');
+  document.getElementById('qs').innerHTML=data5.questions.map((q,qi)=>`<section><h2>${qi+1}. ${esc(q.title)}</h2><p class="lede" style="margin:-6px 0 14px">${esc(q.why_it_matters)}</p><div class="opts">${q.options.map(o=>`<button class="opt${bad.has(o.id)?' clash':''}" data-q="${q.key}" data-o="${o.id}" aria-pressed="${picks5[q.key]===o.id}"><h4>${esc(o.name)}</h4><span>${esc(o.pitch)}</span><span class="lbl">Gives</span><span class="m">${esc(o.gives)}</span><span class="lbl">Costs</span><span class="m">${esc(o.costs)}</span><span class="lbl">The moment</span><span class="m"><i>${esc(o.moment)}</i></span></button>`).join('')}</div></section>`).join('');
+  const lines=data5.questions.map((q,i)=>{const o=q.options.find(o=>o.id===picks5[q.key]); return {q:q.title,o}});
+  document.getElementById('summary').innerHTML=`<ul>${lines.map(l=>`<li><b>${esc(l.q)}</b> ${l.o?esc(l.o.name):'<span class="note">not picked</span>'}</li>`).join('')}</ul>${cl.map(c=>`<p class="clashnote">Clash: ${esc(c.text)}</p>`).join('')}`;
+}
+document.getElementById('round5').addEventListener('click',e=>{
+  const o=e.target.closest('[data-o]'); if(o){const q=o.dataset.q; picks5[q]=picks5[q]===o.dataset.o?undefined:o.dataset.o; if(!picks5[q]) delete picks5[q]; savePicks(); render5(); return}
+  const c=e.target.closest('[data-combo]'); if(c){picks5={}; data5.combos[+c.dataset.combo].picks.forEach(id=>{const q=data5.questions.find(q=>q.options.some(x=>x.id===id)); if(q) picks5[q.key]=id}); savePicks(); render5(); document.getElementById('qs').scrollIntoView({behavior:'smooth'}); return}
+  if(e.target.closest('#clearPicks')){picks5={}; savePicks(); render5(); return}
+  if(e.target.closest('#copyPicks')){const t=data5.questions.map(q=>{const o=q.options.find(o=>o.id===picks5[q.key]); return q.title+' '+(o?o.name:'(none)')}).join(String.fromCharCode(10)); const b=e.target.closest('#copyPicks');
+    (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>{b.textContent='Copied'},()=>{prompt('Copy your picks:',t)}).finally(()=>setTimeout(()=>b.textContent='Copy as text',1500))}
+});
+fetch('data5.json').then(r=>r.json()).then(d=>{data5=d;render5()}).catch(()=>{document.getElementById('qs').innerHTML='<p class="note">The round 5 data did not load. Reload the page to try again.</p>'});
+
+// Round 4
+const TL4={longevity:'Longevity, weirdness',gameplay:'Gameplay fit',production:'Production, risk'};
+function bibleCols(b){
+  const P=(h,t)=>`<div><h3>${h}</h3><p>${esc(t)}</p></div>`;
+  return `<div class="cols">${P('The world',b.world)}${P('The colours',b.the_colours)}${P('The creator',b.the_creator)}${P('Who you play',b.who_you_play)}${P('Why they fight',b.why_they_fight)}${P('Reveal and rematch',b.reveal_and_rematch)}${P('The pairs',b.pairs_explained)}${P('Weapons',b.weapons)}
+    <div><h3>Arenas</h3><ul>${b.arenas.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>${P('Menus and meta',b.menus_and_meta)}${P('How it keeps going',b.escalation)}
+    <div><h3>Captions</h3><ul>${b.tone_captions.map(a=>`<li>${esc(a)}</li>`).join('')}</ul></div>${P('Names',b.name_options)}${P('Risks',b.risks)}
+    ${b.judges?`<div><h3>Panel</h3>${Object.keys(TL4).filter(l=>b.judges[l]).map(l=>`<p><b>${TL4[l]} · ${b.judges[l].score}</b> <i>Strongest:</i> ${esc(b.judges[l].strongest)} <i>Weakest:</i> ${esc(b.judges[l].weakest)}</p>`).join('')}</div>`:''}</div>`;
+}
+fetch('data4.json').then(r=>r.json()).then(d=>{
+  const b=d.synth.bible;
+  document.getElementById('v2').innerHTML=`<p class="logline" style="font-size:1.15rem;margin-bottom:6px"><b>${esc(b.logline)}</b></p><p class="note" style="margin:0 0 18px">${esc(b.angle)}</p>${bibleCols(b)}`;
+  document.getElementById('decisions').innerHTML=d.synth.open_decisions.map(q=>`<div><h3>${esc(q.question)}</h3><ul style="margin:0;padding-left:18px;font-size:.93rem">${q.options.map(o=>`<li>${esc(o)}</li>`).join('')}</ul><p><b>Recommended:</b> ${esc(q.recommendation)}</p></div>`).join('');
+  document.getElementById('changes').innerHTML=d.synth.changes_from_v1.map(c=>`<li>${esc(c)}</li>`).join('');
+  document.getElementById('vlist').innerHTML=d.variants.map(v=>`<details><summary><span class="score">${v.avg}</span><b>${esc(v.name)} <span class="kind">${esc(v.id.replace('save-changes-',''))}</span></b><span class="ln">${esc(v.angle)}</span></summary><div class="full"><p class="logline">${esc(v.logline)}</p>${bibleCols(v)}</div></details>`).join('');
+}).catch(()=>{document.getElementById('v2').innerHTML='<p class="note">The round 4 data did not load. Reload the page to try again.</p>'});
+
+function showTab(t){
+  ['round1','round2','round3','round4','round5'].forEach(r=>document.getElementById(r).hidden=t!==r);
+  document.querySelectorAll('.tabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tab===t));
+}
+document.querySelector('.tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]'); if(b){showTab(b.dataset.tab); try{history.replaceState(null,'','#'+b.dataset.tab)}catch(_){}}});
+if(['#round1','#round2','#round3','#round4'].includes(location.hash)) showTab(location.hash.slice(1));
+fetch('data2.json').then(r=>r.json()).then(d=>{data2=d;render2()}).catch(()=>{document.getElementById('grid2').innerHTML='<p class="note">The round 2 data did not load. Reload the page to try again.</p>'});
+const grid=document.getElementById('grid');
+grid.addEventListener('click',e=>{
+  const st=e.target.closest('[data-star]');
+  if(st){const id=st.dataset.star; stars.has(id)?stars.delete(id):stars.add(id); saveStars(); render(); return}
+  const c=e.target.closest('.card'); if(c) openDetail(c.dataset.id);
+});
+grid.addEventListener('keydown',e=>{const c=e.target.closest('.card'); if(c&&(e.key==='Enter'||e.key===' ')&&!e.target.closest('[data-star]')){e.preventDefault();openDetail(c.dataset.id)}});
+document.getElementById('dlg').addEventListener('click',e=>{if(e.target.id==='dlg')e.target.close()});
+
+fetch('data.json').then(r=>r.json()).then(d=>{data=d;panel();render()}).catch(()=>{document.getElementById('grid').innerHTML='<p class="note">The concept data did not load. Reload the page to try again.</p>'});
+})();
+</script>
+
+</body></html>

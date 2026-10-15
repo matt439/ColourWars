@@ -99,8 +99,9 @@ namespace ColourWars {
 
 $repo = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $textures = Join-Path $repo 'game/content/textures'
+$working = Join-Path $repo 'game/art/sources/textures'
 $source = [Drawing.Bitmap]::FromFile((Join-Path $repo 'game/art/weapon_paint_source.png'))
-$legacy = [Drawing.Bitmap]::FromFile((Join-Path $textures 'sprite_sheet_1.png'))
+$legacy = [Drawing.Bitmap]::FromFile((Join-Path $working 'sprite_sheet_1.png'))
 $atlas = [Drawing.Bitmap]::new(1024, 1024, [Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $graphics = [Drawing.Graphics]::FromImage($atlas)
 $frames = [Collections.Generic.List[object]]::new()
@@ -165,7 +166,7 @@ try {
         Add-Frame ($frame.name + '_paint') @($box.X, ($box.Y + 512), $box.Width, $box.Height)
     }
 
-    [ColourWars.WeaponPaintLayers]::SaveAtlasPng($atlas, (Join-Path $textures 'weapon_paint.png'))
+    [ColourWars.WeaponPaintLayers]::SaveAtlasPng($atlas, (Join-Path $working 'weapon_paint.png'))
     $definition = [ordered]@{ animation_strips = @(); sprite_frames = $frames.ToArray() }
     $json = ($definition | ConvertTo-Json -Depth 6) + [Environment]::NewLine
     [IO.File]::WriteAllText((Join-Path $textures 'weapon_paint.json'), $json,
@@ -180,7 +181,7 @@ finally {
 
 # Labrador blends premultiplied texels. Keep the small atlas uncompressed to
 # preserve the fine alpha edges and colour blocks at native gameplay size.
-& (Join-Path $textures 'texconv.exe') (Join-Path $textures 'weapon_paint.png') `
+& (Join-Path $repo 'game/art/tools/texconv.exe') (Join-Path $working 'weapon_paint.png') `
     -pmalpha -m 1 -f R8G8B8A8_UNORM -y -o $textures
 if ($LASTEXITCODE -ne 0) { throw "texconv failed with exit code $LASTEXITCODE" }
 Write-Output 'Built weapon_paint.png, .json and premultiplied .dds.'

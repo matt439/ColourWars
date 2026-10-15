@@ -1,12 +1,24 @@
-# Weapon artwork
+# Art sources and runtime content
 
 The accepted Paint.exe art rules are in the
 [polish plan](../../docs/polish-plan.md#1-establish-the-art-and-display-rules).
+The author's [accepted round-2 study](references/style-board/index.html)
+([original artifact](https://claude.ai/artifact/9J5kQgRMvVtXPe6r6cJ7vP))
+is the reference for Zoom 400% values, Tool Props terrain, airbrush shadows,
+black paint keylines and figure E with teammate head accents.
+The complete export, including all five rounds of JSON and 112 local images,
+is retained unchanged in `references/style-board/`. Serve that directory over
+HTTP to use the board's JSON-backed tabs; direct image files remain viewable
+without running the board. The export still requests its display fonts from
+Google Fonts. Later-round proposals in the export do not change the accepted
+choices recorded in the polish plan.
 The workshop kit, comparison modes, atlas and dedicated probes were retired on
 2026-10-15. Its historical concept image and prompt remain in `polish/`; the
 [study records](../../docs/polish-playable-kit.md) and Git history retain the
 review evidence. The existing weapon atlases below remain in use while their
 Paint.exe replacements are authored and reviewed.
+
+## Weapon artwork
 
 `weapon_paint_source.png` is the original transparent sprite sheet generated
 with the built-in imagegen tool. `weapon_paint_prompt.txt` records the prompt.
@@ -19,8 +31,10 @@ powershell -ExecutionPolicy Bypass -File scripts/build-weapon-art.ps1
 ```
 
 This crops and packs the five weapons, copies the legacy
-utility frames, and regenerates `game/content/textures/weapon_paint.{png,json,dds}`.
-This uses Windows System.Drawing and the repository's existing texconv tool.
+utility frames from `sources/textures/sprite_sheet_1.png`, and regenerates
+`sources/textures/weapon_paint.png` here and
+`game/content/textures/weapon_paint.{json,dds}`. This uses Windows System.Drawing
+and the retained `tools/texconv.exe`.
 No image service or Python dependency is needed to reproduce the runtime atlas.
 
 Gameplay frames have four texels per world unit. Their aim pivots are at the
@@ -50,25 +64,55 @@ JSON.
 
 ## Runtime content separation (GAP#8.6)
 
-Decision accepted 2026-10-15; the moves and development staging changes remain
-unimplemented. Move unused and historical assets, including old textures,
-unused fonts and levels, into `game/art/`, with the archive separate from active
-working sources. Move editable sources here too, preserving authoring inputs
-and updating their recipes together. In particular,
-[`build-weapon-art.ps1`](../../scripts/build-weapon-art.ps1) still reads
-`game/content/textures/sprite_sheet_1.png`; that input must remain available
-after its move. Preserve the required authoring tools and update references to
-any that move.
+Implemented 2026-10-15. Tracked runtime content in `game/content/` is the reviewed set
+shared by development staging and Release in
+[`runtime_assets.cmake`](../../cmake/runtime_assets.cmake). Manifest changes are
+checked against that list at configure time. Authoring and historical material
+is retained here:
 
-Release packaging already uses the reviewed allow-list in
-[`release_assets.cmake`](../../cmake/release_assets.cmake). Share that runtime
-list with development staging, replacing its broad directory copies. Remove
-stale staged extras only within the build's owned content directories. Preserve
-the optional sound-bank fallback and its removal of a stale staged bank when
-the source bank is absent.
+| Location | Retained material |
+|---|---|
+| `sources/textures/` | Sprite-sheet PNG/XCF, menu PNG, generated weapon PNG and legacy texture conversion command |
+| `sources/levels/` | Publisher layouts and historical movement notes; playable JSONs remain runtime content |
+| `sources/fonts/` | Historical font command example; regeneration recipes for the shipped fonts remain `GAP#8.7` |
+| `tools/` | Existing texconv and MakeSpriteFont executables |
+| `archive/textures/` | Old texture kit and unused player-frame experiment |
+| `archive/fonts/` | Unused compiled fonts |
+| `archive/levels/` | Unused historical level JSONs |
 
-Implementation validation must cover weapon-art reproduction, Debug and Release
-builds, clean and existing staging trees containing only the allowed runtime
-assets, Release package inspection, and startup with the accepted bank and with
-the optional bank absent. Recording this decision does not complete those
-checks or close the implementation work.
+The 138 relocated files were byte-checked before recipe edits. The weapon packer
+uses the relocated utility source and tool; its DDS, JSON and working PNG still
+reproduce byte for byte. The legacy texture command and historical font example
+now use repository-root paths; neither adds a new build dependency.
+
+[`stage_runtime_assets.cmake`](../../cmake/stage_runtime_assets.cmake) runs on
+every build, copies only the shared list, and prunes stale files within the
+owned `fonts/`, `textures/`, `levels/` and `sounds/` directories. It validates
+the source set and accepted bank before changing the mirror, rejects linked
+content entries, and checks that the destination stays within the build's game
+output. Other output-root files, including DLLs and developer captures, are
+preserved. An absent optional bank also removes its stale staged copy; Release
+packaging continues to require the accepted bank.
+
+Validation on 2026-10-15:
+
+- Debug and Release build and pass all 11 consumer acceptance cases each.
+- All six runtime-bank tests pass, including the shared staging regression.
+  Clean and stale mirrors, bank removal/restoration, invalid-bank and file-type
+  rejection before cleanup, unrelated-file preservation and Windows junction
+  rejection are covered. File symlinks require a privilege unavailable in this
+  shell; the root-link check uses a directory junction here instead.
+- Both existing build mirrors and the extracted 49-file Release ZIP contain
+  exactly the same 22 runtime assets, byte-matching their sources. No authoring
+  assets or tools enter the ZIP.
+- Isolated Debug and extracted Release startup pass with the accepted bank and
+  separately without it, using a system-only PATH and graceful shutdown. Each
+  missing-bank run reports the expected single optional-audio diagnostic.
+
+Evidence is in `out/validation/content-separation/` and `out/acceptance/`.
+These checks close `GAP#8.6`; clean-PC, physical-pad and listening acceptance
+remain in their existing TODO rows. To rerun the staging regression alone:
+
+```powershell
+cmake -DTEST_DIR=out/validation/content-separation -P cmake/check_runtime_staging.cmake
+```

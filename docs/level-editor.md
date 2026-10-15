@@ -130,8 +130,9 @@ A new file is not automatically a menu stage. To register it:
 1. Save it as `game/content/levels/<name>.json`.
 2. Add `<name>` without the extension to the `level` asset group's `names`
    in `game/content/manifest.json`.
-3. Add `levels/<name>.json` to `COLOURWARS_RELEASE_ASSETS` in
-   `cmake/release_assets.cmake`. Configure checks that these two lists agree.
+3. Add `levels/<name>.json` to `COLOURWARS_RUNTIME_ASSETS` in
+   `cmake/runtime_assets.cmake`, shared by development staging and Release.
+   Configure checks that these two lists agree.
 4. Configure/build again, then start the game and choose the new stage.
 
 The file's `display_name` and `icon_frame` control its menu presentation.
