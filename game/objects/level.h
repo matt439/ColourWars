@@ -89,6 +89,9 @@ public:
 	// the menu is not taken as a new press.
 	void suspend() const;
 	void resume() const;
+	// Complete the count-in without a simulation tick. Neutral jump input
+	// rearms the next press; old fire loops must not return before a new shot.
+	void prepare_resume(const std::vector<PlayerInputData>& inputs);
 	// Pauses the same voices without touching any player: for a frozen
 	// simulation that no menu covers (the Debug clock's pause).
 	void pause_audio() const;
@@ -104,6 +107,8 @@ public:
 
 	// Read-only rendering; scene objects and overlays may be drawn concurrently.
 	void draw(labrador::Renderer& renderer) const;
+	// Shared paper signal over the frozen panes; this never advances the world.
+	void draw_resume_countdown(labrador::Renderer& renderer, float remaining) const;
 
 	LevelState state() const;
 	// The countdown is over and the players move.
@@ -203,6 +208,7 @@ private:
 	std::wstring countdown_label_;
 	mattmath::RectangleF countdown_number_box_;
 	std::unique_ptr<labrador::TextDropShadow> countdown_heading_ = nullptr;
+	std::unique_ptr<labrador::TextDropShadow> resume_heading_;
 	mattmath::RectangleF countdown_card_;
 	std::unique_ptr<labrador::TextDropShadow> stage_entry_;
 	mattmath::RectangleF stage_entry_card_;

@@ -587,8 +587,9 @@ now have separate pause-aware pen loops per player, and exposed painted support
 selects wet step/landing variants within the same movement budgets. Remaining
 hooks and the listening mix stay in POL#23. The menu-feedback increment adds
 distinct unready and pending SFX-volume previews, shared match/pause pad
-lost/back cues, and a completed-series cue. Results music, ending stings,
-fades/ducking and the resume count-in remain open.
+lost/back cues, and a completed-series cue. The shared resume count-in now uses
+the accepted `ui.count_in` beat. Results music, ending stings and fades/ducking
+remain open.
 
 - Inventory every source wave, bank entry, loop instance and runtime reference,
   including tuning, presentation, level music and any code-selected cues. Give
@@ -997,15 +998,64 @@ recover paint and choose a useful tool without another person explaining the gam
 
 ### Make couch play comfortable between actions and rounds
 
-Prototype a short shared count-in after pause or reconnect. Currently
-[closing pause](../game/states/game_states.cpp) resumes the match immediately.
-During the proposed count-in, show each character clearly and freeze physics and
-all gameplay timers, including match time, ammunition and health regeneration,
-shot cooldowns and respawn. Allow re-pausing and handle disconnect/focus loss
-normally. Test whether it prevents surprise starts without making frequent short
-pauses tiresome. Consume the menu action and suppress stale jump/pause edges across
-the transition. Define and test how held fire resumes while preserving deliberate
-movement and aim input.
+**Shared resume count-in implemented (2026-10-15, part of `POL#18`).**
+[Closing pause](../game/states/game_states.cpp) with Resume, including after a
+reconnect, shows a shared **RESUMING 2–1** paper signal over the frozen player
+panes. Returning focus to live play starts the same count. The existing opening
+countdown and ending retain their own timing; Restart builds a fresh round and
+Quit leaves immediately. Returning a pad still requires explicit Resume.
+
+`presentation.json.pause_menu.resume_countdown` owns the duration (two seconds
+by default, greater than zero and at most three). `ResumeCountdown` gates the
+whole `Level::update` call and the developer clock/seat filter, so physics,
+match time, ammunition and health regeneration, shot cooldowns, respawn and
+cosmetic timers receive no count-in time. A long final tick never spills its
+excess into play. Resize and repeated draws refresh presentation without
+advancing the world. The signal reuses the accepted countdown drawing;
+Reduce effects keeps its settled, readable form. Player badges emphasise the
+characters at entry and again when play resumes.
+
+A fresh pause can interrupt the count. A missing participant reopens reconnect
+pause; focus loss freezes the world and starts a full count after return,
+including focus changes under a covering menu. Movement and aim remain held
+intentions. Jump presses, fire and drop-through held across the last beat need
+release before rearming. A jump already in flight retains its held extension;
+a neutral jump observed during the count permits a fresh press on the first
+live tick. The Start/Escape press used to leave a menu cannot reopen it on
+release. Old weapon loops stop before audio resumes, while a suspended redraw
+keeps its position.
+
+The accepted `ui.count_in` sounds once per displayed positive second, using
+current SFX gain/mute. Its owned voice stops on completion, re-pause, focus loss,
+rebuild and teardown; missed beats never queue. Match music and player voices
+stay suspended until the count completes. The bank's wave bytes are unchanged.
+Physical-pad play still needs to establish whether the brief wait prevents
+surprise starts without making frequent pauses tiresome (`ROAD#2`).
+
+Validation: Debug and Release build under `/W4 /WX` and pass all 22 consumer
+cases. Focused final movement and recording-audio reruns cover count-in
+release/rearming, unchanged airborne arcs, content rejection, beat ownership,
+gain/mute, cancellation, silent-bank playback and stale firing-loop cleanup.
+The actual `GameLevel` hardware probe passes in both builds on the NVIDIA
+GeForce RTX 5080. Keyboard/mouse drives real pause pages in 1/2/4-player layouts;
+other seats are idle fixtures. It checks re-pause, live and covered focus return,
+Restart/Quit, held versus fresh actions, nonpositive time and oversized final
+ticks. Pending health/ammo recovery, shot readiness, flying paint, dead-player
+respawn/redraw, cosmetics and underlying world/HUD pixels remain frozen through
+the gate. Shared paper bounds and frozen redraw pass at 720p, 1080p and QHD,
+including a 4P720 second beat with Reduce effects. Retained captures show the
+[shared 2](images/polish-resume/resume-4p-720p.png) and
+[settled reduced-effects 1](images/polish-resume/resume-4p-reduced-720p.png).
+
+The 53-file Release ZIP byte-matches all 26 runtime assets. Isolated Debug and
+extracted Release startup pass with the bank and a system-only PATH; a separate
+extracted copy passes the missing-bank fallback with one expected diagnostic.
+No player's real save is opened. Evidence is under `out/acceptance/`,
+`out/validation/resume-*.log` and `out/validation/resume-visual-final/`; final
+visual run IDs are Debug `343c9b1190d24d15a0197e182d423756` and Release
+`2d0a9c2039234fe08a63b1b1b9be912f`. Rerun the hardware check with
+`scripts/check-painter.ps1 -Preset x64-debug -ResumeOnly` (or `x64-release`).
+These checks do not establish physical-pad, listening or human comfort acceptance.
 
 Compare a prominent **Rematch** action with the current single-match **Restart**
 wording and first focus on **Change Teams** in the

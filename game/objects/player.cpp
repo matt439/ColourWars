@@ -1127,6 +1127,11 @@ void Player::reset_jump_input()
     this->jump_waiting_for_release_ = true;
 }
 
+void Player::observe_jump_release(bool held)
+{
+    if (!held) { this->jump_waiting_for_release_ = false; }
+}
+
 const RectangleF& Player::rectangle() const
 {
 	return this->rectangle_;

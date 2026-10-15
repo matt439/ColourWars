@@ -365,6 +365,11 @@ namespace
 		const JsonValue json = root.object("pause_menu");
 
 		PauseMenuPresentation menu;
+		menu.resume_countdown = read_positive(json, "resume_countdown");
+		if (menu.resume_countdown > 3.0f)
+		{
+			throw std::runtime_error(json.where() + ": 'resume_countdown' must be at most 3 seconds.");
+		}
 		menu.box_size = read_vector(json, "box_size");
 		menu.box_colour = read_colour(json, "box_colour");
 		menu.layout = read_layout(json, "layout");
@@ -372,6 +377,7 @@ namespace
 		const JsonValue sounds = json.object("sounds");
 		menu.pad_lost_sound = read_sound(sounds, "pad_lost");
 		menu.pad_back_sound = read_sound(sounds, "pad_back");
+		menu.resume_sound = read_sound(sounds, "resume");
 		return menu;
 	}
 
@@ -1347,6 +1353,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.wave("pause_menu.window_open_sound", bank, this->pause_menu_.window_open_sound);
 	check.wave("pause_menu.sounds.pad_lost.name", bank, this->pause_menu_.pad_lost_sound.name);
 	check.wave("pause_menu.sounds.pad_back.name", bank, this->pause_menu_.pad_back_sound.name);
+	check.effect("pause_menu.sounds.resume.name", bank, this->pause_menu_.resume_sound.name);
 	check.wave("end_menu.sounds.series.name", bank, this->end_menu_.series_sound.name);
 	check.wave("results_menu.sounds.winner.name", bank, this->results_menu_.winner_sound.name);
 	check.wave("results_menu.sounds.draw.name", bank, this->results_menu_.draw_sound.name);

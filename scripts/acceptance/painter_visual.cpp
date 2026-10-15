@@ -9,10 +9,12 @@
 #include "game/objects/countdown_art.h"
 #include "game/objects/reveal_art.h"
 #include "game/states/menu_panel.h"
+#include "game/states/game_states.h"
 #include "game/save.h"
 #include "game/debug/dev_tools.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
+#include "game/debug/debug_director_impl.h"
 #endif
 
 #include <filesystem>
@@ -2485,6 +2487,7 @@ namespace
 #include "scripts/acceptance/painter_visual/reveal_checks.h"
 #include "scripts/acceptance/painter_visual/hud_checks.h"
 #include "scripts/acceptance/painter_visual/supply_checks.h"
+#include "scripts/acceptance/painter_visual/resume_checks.h"
 }
 
 int wmain(int argc, wchar_t** argv)
@@ -2494,8 +2497,9 @@ int wmain(int argc, wchar_t** argv)
         require(argc == 3 || (argc == 4 && (std::wstring(argv[3]) == L"identity" ||
             std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"monitor" ||
             std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"closing" ||
-            std::wstring(argv[3]) == L"supply" || std::wstring(argv[3]) == L"hud")),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud]");
+            std::wstring(argv[3]) == L"supply" || std::wstring(argv[3]) == L"hud" ||
+            std::wstring(argv[3]) == L"resume")),
+            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -2503,6 +2507,7 @@ int wmain(int argc, wchar_t** argv)
         const bool closing_only = argc == 4 && std::wstring(argv[3]) == L"closing";
         const bool supply_only = argc == 4 && std::wstring(argv[3]) == L"supply";
         const bool hud_only = argc == 4 && std::wstring(argv[3]) == L"hud";
+        const bool resume_only = argc == 4 && std::wstring(argv[3]) == L"resume";
         std::cout << std::unitbuf;
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
@@ -2549,6 +2554,12 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         const Canvas canvas(app.render_resources());
+        if (resume_only)
+        {
+            resume_matrix(app, levels, tuning, presentation, content, output);
+            std::cout << "PASS resume-only actual GameLevel hardware check\n";
+            return 0;
+        }
         if (hud_only)
         {
             hud_matrix(app, builder, canvas, presentation, output);
@@ -2788,6 +2799,7 @@ int wmain(int argc, wchar_t** argv)
         for (int tick = 0; tick < 600 && player.state() == PlayerState::dead; ++tick) { level->update(inputs, dt); }
         require(player.state() == PlayerState::alive, "redraw did not respawn within 600 ticks");
         capture(app, *level, canvas, output, "1p-respawn", records);
+        resume_matrix(app, levels, tuning, presentation, content, output);
         require(records.good(), "capture record write failed");
         std::cout << "PASS real builder roster; 1P/4P 720p/1080p/QHD; three palettes; "
             "five action clips and five tool mechanisms, distinct pinned body/tool rasters; "

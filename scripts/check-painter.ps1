@@ -10,12 +10,13 @@ param(
     [switch] $ClosingOnly,
     [switch] $SupplyOnly,
     [switch] $HudOnly,
+    [switch] $ResumeOnly,
     [string] $OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -101,7 +102,8 @@ function Write-ContactSheet {
         foreach ($file in Get-ChildItem -LiteralPath $CaptureDirectory -Filter '*.ppm' -File |
             Where-Object { $_.Name -like '*-player*.ppm' -or $_.Name -like 'monitor-*.ppm' -or
                 $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or
-                $_.Name -like 'supply-*-detail.ppm' -or $_.Name -like 'hud-*-detail.ppm' } | Sort-Object Name) {
+                $_.Name -like 'supply-*-detail.ppm' -or $_.Name -like 'hud-*-detail.ppm' -or
+                $_.Name -like 'resume-*-detail.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
             if ($header -notmatch '^P6\n(\d+) (\d+)\n255\n') { throw "Unsupported capture header: $($file.FullName)" }
@@ -230,7 +232,7 @@ $process = $null
 $failure = $null
 $result = [ordered]@{
     outcome = 'failed'
-    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } else { 'full-painter-matrix' }
+    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } else { 'full-painter-matrix' }
     preset = $Preset
     game_revision = (& git rev-parse HEAD)
     engine_revision = (& git -C external/labrador rev-parse HEAD)
@@ -313,6 +315,16 @@ elseif ($SupplyOnly) {
         $result.Remove($key)
     }
     $result.checks = $result.supply_checks
+}
+elseif ($ResumeOnly) {
+    $result.player_counts = @(1, 2, 4)
+    $result.palettes = @('runtime-save-default')
+    $result.weapons = @('sprayer')
+    $result.actions = @('pause', 'resume', 'jump', 'fire', 'drop', 'death', 'focus', 'restart', 'quit')
+    $result.input_slots = @(4, -1)
+    $result.inputs = 'Public keyboard/mouse message input through actual GameLevel, StateContext and pause pages; other seats are idle dummies, with idle bots in Debug. No physical pad claim.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Actual 1P/2P/4P pause-page Resume freezes the world through count-in, nonpositive time, re-pause, focus loss/return and a long GO-crossing update. Public player health/ammo/cooldown/dead respawn, live projectile count, detailed cosmetic observation and underlying world/HUD raster remain fixed. Held jump/fire/drop remain suppressed until neutral and a deliberate new request; fresh pause interrupts the count. Actual keyboard-driven Restart clears the gate and Quit leaves immediately. Shared RESUMING paper is bounded and frozen at native 720p/1080p/QHD with exact resize round-trip. Muted hardware rendering; no human readability or listening acceptance.'
 }
 elseif ($HudOnly) {
     $result.player_counts = @(1, 2, 3, 4)
@@ -435,6 +447,7 @@ try {
     elseif ($ClosingOnly) { $probeArguments += 'closing' }
     elseif ($SupplyOnly) { $probeArguments += 'supply' }
     elseif ($HudOnly) { $probeArguments += 'hud' }
+    elseif ($ResumeOnly) { $probeArguments += 'resume' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -483,6 +496,9 @@ try {
     }
     elseif ($SupplyOnly) {
         $result.diagnostic = 'Supply-only visual check passed: sprayer/mister full, half and empty native reservoirs; exact authored-layer registration, unchanged silhouette and permanent hardware, all 1P/4P720 palettes/aim quadrants/facing inputs/poses and representative 4P1080/QHD. Reduced effects, motion-disabled rendering, ammo clamps, paid depletion, natural regeneration/reset, menu previews and tool switching, frozen pixels/weapon state/draw RNG and unchanged match observation/Debug fingerprint passed. Other painter matrices were not run.'
+    }
+    elseif ($ResumeOnly) {
+        $result.diagnostic = 'Resume-only actual GameLevel hardware check passed: 1P/2P/4P keyboard-driven pause/resume/re-pause, focus loss/return, full world/HUD raster and detailed player/projectile/cosmetic freeze, dead respawn, held-action rearming, long final count-in step, Restart and Quit. Native bounded RESUMING paper, repeated frozen drawing and exact 720p/1080p/QHD resize round-trip passed. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'
     }
     elseif ($HudOnly) {
         $result.diagnostic = 'HUD-only visual check passed: exact full/half/empty and clamped health/paint tracks, exterior keylines, dark-text/pale-paper raster contrast, 1P/2P/3P/4P720, all three 1P/4P palettes and representative 1080p/QHD/4:3/portrait/ultrawide. Own-pane bounds, static Reduce effects information, frozen pixels/draw RNG, real-match observation/Debug fingerprint and resize round-trip passed. Existing final-ten clock matrix passed. Other painter matrices and human readability acceptance were not run.'

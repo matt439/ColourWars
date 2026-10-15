@@ -241,6 +241,19 @@ void Level::resume() const
 	this->resume_player_sounds();
 }
 
+void Level::prepare_resume(const std::vector<PlayerInputData>& inputs)
+{
+	for (Player* player : this->players_)
+	{
+		player->primary_weapon().stop_sounds();
+		const int slot = player->player_num();
+		if (slot >= 0 && static_cast<size_t>(slot) < inputs.size())
+		{
+			player->observe_jump_release(inputs[slot].jump_held || inputs[slot].jump_pressed);
+		}
+	}
+}
+
 void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt,
 	SeatInputFilter* seats)
 {

@@ -368,6 +368,39 @@ int main(int argc, char** argv)
         paused->tick(input(true, true));
         require(paused->player->velocity().y < 0, "release did not rearm jump after pause");
 
+        auto counted_release = course();
+        counted_release->floor();
+        counted_release->tick();
+        counted_release->player->reset_jump_input();
+        const RectangleF counted_position = counted_release->player->rectangle();
+        const Vector2F counted_velocity = counted_release->player->velocity();
+        const float counted_health = counted_release->player->health();
+        const float counted_ammo = counted_release->player->weapon_ammo();
+        counted_release->player->observe_jump_release(false);
+        require(counted_release->player->rectangle() == counted_position &&
+            counted_release->player->velocity() == counted_velocity &&
+            counted_release->player->health() == counted_health &&
+            counted_release->player->weapon_ammo() == counted_ammo,
+            "Observing a count-in release advanced the frozen player");
+        counted_release->tick(input(true, true));
+        require(counted_release->player->velocity().y < 0 &&
+            counted_release->feedback_count(MovementFeedbackKind::takeoff) == 1,
+            "A neutral count-in sample failed to permit the first live jump press");
+
+        auto counted_hold = course();
+        counted_hold->floor();
+        counted_hold->tick();
+        counted_hold->player->reset_jump_input();
+        counted_hold->player->observe_jump_release(true);
+        counted_hold->tick(input(true, true));
+        require(counted_hold->player->velocity().y == 0 &&
+            counted_hold->feedback_count(MovementFeedbackKind::takeoff) == 0,
+            "A jump held through count-in became a fresh live jump");
+        counted_hold->player->observe_jump_release(false);
+        counted_hold->tick(input(true, true));
+        require(counted_hold->player->velocity().y < 0,
+            "Releasing a held count-in jump did not rearm the next press");
+
         auto paused_grace = course(0, { tuning.player().max_velocity.x, 0 });
         paused_grace->leave_ledge();
         paused_grace->player->reset_jump_input();
@@ -385,7 +418,11 @@ int main(int argc, char** argv)
         bool returned_to_floor = false;
         for (int tick = 0; tick < 150; ++tick)
         {
-            if (tick == 10) { suspended->player->reset_jump_input(); }
+            if (tick == 10)
+            {
+                suspended->player->reset_jump_input();
+                suspended->player->observe_jump_release(true);
+            }
             uninterrupted->tick(input(tick == 0, true));
             // Model the held jump plus an activation edge from the menu on
             // resume. It must not become a new buffer or cut the current jump.
@@ -400,6 +437,7 @@ int main(int argc, char** argv)
         }
         require(returned_to_floor && suspended->player->velocity().y == 0,
             "pause/resume queued an extra jump while the button remained held");
+        std::cout << "PASS count-in jump release: first live press, held suppression and preserved airborne arc\n";
 
         auto dropped = course();
         dropped->floor(CollisionObjectType::structure_jump_through);

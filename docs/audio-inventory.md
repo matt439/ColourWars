@@ -792,6 +792,16 @@ best-of series reaches the end menu; single matches, drawn/ongoing series rounds
 and subsequent menu updates stay quiet. New choices and gains live in
 `presentation.json`, with startup name/range checks and current SFX gain/mute.
 
+The shared pause/reconnect and focus-return count-in (`POL#18`, 2026-10-15)
+now owns an effect instance for the accepted `ui.count_in`. It sounds once per
+displayed positive second with current SFX gain/mute, without missed-beat
+catch-up or an added GO cue. Re-pause, focus loss, completion, rebuild and
+teardown cancel its voice. Music and player voices remain paused until live
+play returns; old fire loops are stopped before resumption because held fire
+requires release. The source wave and accepted bank bytes are unchanged.
+Recording-backend checks cover beats, interruptions, gain edits/mute,
+destruction and the silent-bank fallback. Listening remains `ROAD#3`.
+
 **POL#23 remains open.** Putting an accepted wave into the bank does not create
 a gameplay trigger. Complete the required new cues from section 4, assess Tier
 3 detail individually and keep it off or nearly off by default:
@@ -799,7 +809,7 @@ a gameplay trigger. Complete the required new cues from section 4, assess Tier
 - Movement: optional bonk/drop/hit-confirm details.
 - Paint/tool detail: optional blocked/slosh/drip cues.
 - Room: optional footsteps/breath/waver/cheat.
-- Menus/music: reconnect count-in (`POL#18`); results music, arena ending stings and
+- Menus/music: results music, arena ending stings and
   transition fades/ducking (`GAP#5.1`); optional world ambience/detail.
 - Mix: useful action cues above weapon voices, movement, music and decorative
   detail; limits on repeating impacts/steps; actual one-, two- and four-player

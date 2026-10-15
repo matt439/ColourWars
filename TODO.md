@@ -43,7 +43,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#3` | OPEN | HIGH | M | Movement-feel playtest (§2 exit): keyboard/mouse now, a physical pad later (with `ROAD#2`); feedback on and off, aim sweeps, before/after clips. Then freeze jump, acceleration and gravity. [§2](docs/polish-plan.md#2-establish-movement-and-camera-feel). |
 | `POL#10` | OPEN | HIGH | L | Menu focus and selection motion. [§4](docs/polish-plan.md#movement-and-interaction-feedback). |
 | `POL#14` | BLOCKED | MED | M | Human review of the implemented player badges, aim/readiness and blocked-shot cues in the reference composition; waits on the arena (`POL#17`). [§8](docs/polish-plan.md#help-players-read-the-tool-and-the-fight). |
-| `POL#18` | OPEN | MED | M | Couch play: a shared count-in after pause or reconnect that freezes every timer and eats stale edges; per-player stick deadzones with a preview; a prominent Rematch on the end menu. [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
+| `POL#18` | OPEN | MED | M | Couch play: per-player stick deadzones with a response preview, and a prominent Rematch on the end menu. Shared resume count-in implemented; physical-pad comfort review remains. [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 
 ## Levels and the editor
@@ -68,7 +68,7 @@ mix still belong here; a missing-bank silent fallback is not a defect.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#23` | OPEN | HIGH | L | Wire [results music, ending stings and transitions](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration), plus the reconnect count-in after `POL#18`; assess optional detail and mix at 1/2/4 players. |
+| `POL#23` | OPEN | HIGH | L | Wire [results music, ending stings and transitions](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration); assess optional detail and mix at 1/2/4 players. |
 | `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains, mute, suspension, resumed loops, the multiplayer mix; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
 
 ## Acceptance and release

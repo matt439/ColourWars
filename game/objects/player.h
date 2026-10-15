@@ -166,6 +166,8 @@ public:
     // Context changes discard queued jumps and require a release before a new
     // press. Level calls this when a pause/reconnect menu covers the match.
     void reset_jump_input();
+    // Context transitions can observe neutral input while simulation is frozen.
+    void observe_jump_release(bool held);
     void set_camera(const labrador::Camera& camera);
 
 	const mattmath::RectangleF& rectangle() const;

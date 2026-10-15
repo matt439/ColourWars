@@ -12,6 +12,8 @@
 #include "game/objects/player_input.h"
 #include "game/input_slots.h"
 #include "game/debug/debug_targets.h"
+#include "game/states/resume_countdown.h"
+#include "game/states/resume_audio.h"
 
 // Stack shapes during a session:
 //
@@ -60,6 +62,9 @@ public:
 	void update(float dt) override;
 	void draw(labrador::Renderer& renderer) const override;
 	void init() override;
+	// Read-only match/transition status; observing it never advances either clock.
+	const Level& level() const;
+	float resume_remaining() const;
 
 	// Stack coverage stops simulation updates; these callbacks suspend and
 	// resume the audio that continues independently.
@@ -82,6 +87,11 @@ private:
 	std::unique_ptr<PlayerInput> player_input_ = nullptr;
 	std::unique_ptr<MenuInput> menu_input_ = nullptr;
 	bool covered_ = false;
+	bool pause_menu_open_ = false;
+	bool focus_interrupted_ = false;
+	ResumeCountdown resume_countdown_;
+	std::unique_ptr<ResumeAudio> resume_audio_;
+	void begin_resume_countdown();
 	// Per device slot: a Start or Escape press that began over the intro. Its
 	// release never opens pause, even when it comes after GO.
 	std::array<bool, input_slots::count> pause_over_intro_{};

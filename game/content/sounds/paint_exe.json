@@ -106,6 +106,7 @@
   ],
   "create_effect_instance_for_each_wave": false,
   "sound_effect_instances": [
+    { "name": "ui.count_in", "wave": "ui.count_in" },
     {
       "name": "player.redraw.0",
       "wave": "player.redraw"

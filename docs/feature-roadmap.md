@@ -77,6 +77,12 @@ Identity is bound to an XInput slot for the match. A controller returning in a
 different slot requires quitting and joining again. Physical-device identity
 and reassignment during a match are follow-up work if this proves inconvenient.
 
+The [shared resume count-in](polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds)
+(`POL#18`, 2026-10-15) now holds the whole live match for two seconds after
+explicit Resume or focus return. Returning a pad still leaves the menu open.
+Movement/aim carry through; held fire/drop-through and stale jump/pause edges
+are rearmed through release. Physical-controller comfort remains in `ROAD#2`.
+
 Validation: both normal Debug and Release builds; a temporary native roster
 probe for duplicate claims, capacity, stable seats, reset and labels; and a
 temporary build using scripted gamepad states at the existing reader seam for

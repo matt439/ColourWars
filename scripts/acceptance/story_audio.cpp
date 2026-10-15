@@ -7,6 +7,7 @@
 #include "game/objects/structure_paintable.h"
 #include "game/objects/paint_audio.h"
 #include "game/states/connection_audio.h"
+#include "game/states/resume_audio.h"
 #include "game/objects/projectile_jet.h"
 #include "engine/assets/sound_bank_loader.h"
 #include "engine/assets/sprite_sheet_loader.h"
@@ -1960,7 +1961,9 @@ namespace
 
 #include "scripts/acceptance/story_audio/painted_checks.h"
 #include "scripts/acceptance/story_audio/connection_checks.h"
+#include "scripts/acceptance/story_audio/resume_checks.h"
 #include "scripts/acceptance/story_audio/menu_content_checks.h"
+#include "scripts/acceptance/story_audio/resume_content_checks.h"
 #include "scripts/acceptance/story_audio/closing_content_checks.h"
 #include "scripts/acceptance/story_audio/hud_content_checks.h"
 }
@@ -1975,11 +1978,14 @@ int main(int argc, char** argv)
 		require(argc == 2, "Usage: story_audio.exe <content directory>");
 		World world{ std::filesystem::path(argv[1]) };
 		check_menu_audio_content(world, std::filesystem::path(argv[1]));
+		check_resume_content(world, std::filesystem::path(argv[1]));
 		check_foreground_art_content(std::filesystem::path(argv[1]));
 		check_countdown_art_content(std::filesystem::path(argv[1]));
 		check_closing_art_content(std::filesystem::path(argv[1]));
 		check_hud_paper_content(std::filesystem::path(argv[1]));
 		check_connection_audio(world);
+		check_resume_audio(world);
+		check_resume_weapon_audio(world);
 		const ContentVariant content(std::filesystem::path(argv[1]) / "tuning.json");
 		check_match_content(world, content);
 		check_last_ten_boundaries(world);
@@ -2019,6 +2025,7 @@ int main(int argc, char** argv)
 		check_paint_duds_and_launch(world);
 		check_level_paint_after_owner_death(world);
 		std::cout << "PASS story audio: menu cue content, connection edges/aggregation/gains/mute, "
+			"resume content/beats/cancellation/gains/mute and stale-fire loop cleanup, "
 			"opening/reveal content, swatch/undo/colour/glass/skip edges, "
 			"winner/draw click/close and per-team reactions, long-step cue order, off/solo, "
 			"countdown/GO/last-ten/time up, room-tone loop boundaries, gains/mute, suspension, destruction, weapon feedback validation, "

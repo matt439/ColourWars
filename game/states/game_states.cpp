@@ -158,6 +158,9 @@ void GameLevel::init()
 // LevelBuilder needs the match layout before it builds split-screen dividers.
 void GameLevel::build_and_enter_level()
 {
+	this->resume_countdown_.cancel();
+	this->resume_audio_.reset();
+	this->focus_interrupted_ = false;
 	// Destroy the old level first: its destructor stops music in the shared bank
 	// and would otherwise stop the new level's track.
 	this->level_.reset();
@@ -178,6 +181,8 @@ void GameLevel::build_and_enter_level()
 		this->data()->save()->team_palette(), opening);
 	this->data()->debug().after_level_build(*this);
 	this->menu_context_->reset_connection_audio();
+	this->resume_audio_ = std::make_unique<ResumeAudio>(this->data()->audio_resources(),
+		&this->data()->save()->play_settings(), *this->data()->presentation());
 
 	// Discard loading time so fixed-step updates do not advance the new match
 	// to catch up with the time spent building it.
@@ -188,6 +193,11 @@ void GameLevel::build_and_enter_level()
 // leave the match's voices paused until the menu is also closed.
 void GameLevel::on_activated()
 {
+	if (!this->covered_ && this->focus_interrupted_)
+	{
+		this->begin_resume_countdown();
+	}
+	if (!this->covered_) { this->focus_interrupted_ = false; }
 	if (!this->covered_) { this->level_->emphasise_players(); }
 	if (this->audio_may_play())
 	{
@@ -197,11 +207,14 @@ void GameLevel::on_activated()
 
 bool GameLevel::audio_may_play() const
 {
-	return !this->covered_ && this->context()->active() &&
+	return !this->covered_ && !this->pause_menu_open_ &&
+		!this->resume_countdown_.active() && this->context()->active() &&
 		!this->data()->debug().match_audio_paused();
 }
 void GameLevel::on_deactivated()
 {
+	this->focus_interrupted_ = this->level_->state() == LevelState::active;
+	this->resume_audio_->stop();
 	this->level_->suspend();
 	this->data()->debug().match_suspended(*this);
 }
@@ -238,6 +251,7 @@ void GameLevel::update(float dt)
 	// cannot open pause even if it is released after GO.
 	latch_intro_pause(this->level_->intro_playing(), player_inputs,
 		this->pause_over_intro_);
+	this->resume_countdown_.filter_inputs(player_inputs);
 
 	// Check current presence, not just a disconnect edge: focus loss can hide
 	// the edge, and no participant may lose match time while reconnecting.
@@ -261,6 +275,25 @@ void GameLevel::update(float dt)
 		return;
 	}
 
+	if (this->resume_countdown_.active())
+	{
+		// Do not enter the debug clock, seat filters or Level at all: every
+		// simulation timer and cosmetic stays at its completed pre-pause tick.
+		if (this->resume_countdown_.advance(dt))
+		{
+			this->resume_audio_->stop();
+			this->level_->prepare_resume(player_inputs);
+			this->level_->emphasise_players();
+			if (this->audio_may_play()) { this->level_->resume(); }
+		}
+		else if (dt > 0.0f)
+		{
+			this->resume_audio_->update(this->resume_countdown_.remaining());
+		}
+		// Even a long final tick is entirely count-in time, never catch-up play.
+		return;
+	}
+
 	// One Level::update, or the debug clock's 0..4 fixed-dt updates.
 	this->data()->debug().update_match(*this, player_inputs, dt);
 }
@@ -273,12 +306,17 @@ void GameLevel::draw(Renderer& renderer) const
 	// its presentation on this thread before Scene::draw starts any workers.
 	this->level_->refresh_layout();
 	this->level_->draw(renderer);
+	if (this->resume_countdown_.active())
+	{
+		this->level_->draw_resume_countdown(renderer, this->resume_countdown_.remaining());
+	}
 	this->data()->debug().draw_status(renderer);
 }
 
 void GameLevel::on_suspend()
 {
 	this->covered_ = true;
+	this->resume_audio_->stop();
 	// Pausing updates alone would leave weapon loops and music playing.
 	this->level_->suspend();
 	this->data()->debug().match_suspended(*this);
@@ -287,6 +325,14 @@ void GameLevel::on_suspend()
 void GameLevel::on_resume()
 {
 	this->covered_ = false;
+	// StateContext uncovers us before delivering the menu's result. Only its
+	// Resume result may start a count-in; Restart and Quit take other paths.
+	if (this->pause_menu_open_) { return; }
+	if (this->focus_interrupted_)
+	{
+		this->begin_resume_countdown();
+		this->focus_interrupted_ = false;
+	}
 	this->level_->emphasise_players();
 	if (this->audio_may_play())
 	{
@@ -296,6 +342,7 @@ void GameLevel::on_resume()
 
 void GameLevel::open_pause_menu(int player_num)
 {
+	this->pause_menu_open_ = true;
 	this->menu_input_->reset_actions();
 	this->context()->push<PauseMenuAction>(
 		std::make_unique<PauseMenuInitial>(this->menu_context_.get(),
@@ -308,10 +355,12 @@ void GameLevel::open_pause_menu(int player_num)
 
 void GameLevel::on_pause_menu_closed(const PauseMenuAction& action)
 {
+	this->pause_menu_open_ = false;
 	switch (action)
 	{
 	case PauseMenuAction::resume:
-		// on_resume() handles audio when the menu closes.
+		this->begin_resume_countdown();
+		if (this->audio_may_play()) { this->level_->resume(); }
 		break;
 	case PauseMenuAction::restart:
 		this->build_and_enter_level();
@@ -321,6 +370,19 @@ void GameLevel::on_pause_menu_closed(const PauseMenuAction& action)
 		break;
 	}
 }
+
+void GameLevel::begin_resume_countdown()
+{
+	this->focus_interrupted_ = false;
+	if (this->level_->state() != LevelState::active) { return; }
+	this->resume_countdown_.begin(this->data()->presentation()->pause_menu().resume_countdown);
+	this->resume_audio_->stop();
+	this->level_->suspend();
+	this->level_->emphasise_players();
+}
+
+const Level& GameLevel::level() const { return *this->level_; }
+float GameLevel::resume_remaining() const { return this->resume_countdown_.remaining(); }
 
 void GameLevel::open_results_menu()
 {

@@ -221,6 +221,9 @@ struct MainMenuPresentation
 
 struct PauseMenuPresentation
 {
+	// A shared wall-clock count-in; the match itself stays frozen throughout.
+	float resume_countdown = 0.0f;
+	PresentationSound resume_sound;
 	mattmath::Vector2F box_size;
 	labrador::Colour box_colour = labrador::Colour::black;
 	WidgetLayout layout;

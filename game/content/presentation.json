@@ -163,6 +163,7 @@
   },
 
   "pause_menu": {
+    "resume_countdown": 2.0,
     "box_size": { "x": 900.0, "y": 800.0 },
     "box_colour": "182233",
     "layout": {
@@ -173,7 +174,8 @@
     "window_open_sound": "ui.pause_open",
     "sounds": {
       "pad_lost": { "name": "ui.pad_lost", "volume": 0.65 },
-      "pad_back": { "name": "ui.pad_back", "volume": 0.65 }
+      "pad_back": { "name": "ui.pad_back", "volume": 0.65 },
+      "resume": { "name": "ui.count_in", "volume": 0.65 }
     }
   },
 

@@ -50,6 +50,10 @@ void Level::build_opening_frame(RenderResources* render_resources)
 		render_resources, this->presentation_->match().countdown_art.ink,
 		this->presentation_->match().countdown_art.paper,
 		menu.detail_shadow_offset);
+	this->resume_heading_ = std::make_unique<TextDropShadow>(
+		L"RESUMING", menu.detail_font, Vector2F::ZERO, render_resources,
+		this->presentation_->match().countdown_art.ink,
+		this->presentation_->match().countdown_art.paper, menu.detail_shadow_offset);
 	this->centre_countdown_text();
 
 	// Keep these reminders synchronized with PlayerInput bindings, showing only
@@ -129,6 +133,17 @@ void Level::centre_countdown_text()
 	this->countdown_heading_->set_position(Vector2F(
 		(resolution.x - heading_bounds.width * heading_scale) / 2.0f,
 		this->countdown_card_.y + padding.y) - heading_bounds.position() * heading_scale);
+	const RectangleF resume_bounds = RectangleF::union_of(
+		this->resume_heading_->text_bounds_at(Vector2F::ZERO, 1.0f),
+		this->resume_heading_->text_bounds_at(menu.detail_shadow_offset, 1.0f));
+	const float resume_scale = std::min(heading_scale,
+		(card_size.x - padding.x * 2.0f) / resume_bounds.width);
+	this->resume_heading_->set_scale(resume_scale);
+	this->resume_heading_->set_shadow_scale(resume_scale);
+	this->resume_heading_->set_shadow_offset(menu.detail_shadow_offset * resume_scale);
+	this->resume_heading_->set_position(Vector2F(
+		(resolution.x - resume_bounds.width * resume_scale) / 2.0f,
+		this->countdown_card_.y + padding.y) - resume_bounds.position() * resume_scale);
 	const float number_top = this->countdown_card_.y + padding.y * 2.0f +
 		heading_bounds.height * heading_scale;
 	this->countdown_number_box_ = RectangleF(
@@ -271,6 +286,24 @@ std::vector<RectangleF> Level::opening_cards() const
 	}
 	if (!this->stage_entry_name().empty()) { cards.push_back(this->stage_entry_card_); }
 	return cards;
+}
+
+void Level::draw_resume_countdown(Renderer& renderer, float remaining) const
+{
+	if (!(remaining > 0.0f) || this->state_ != LevelState::active) { return; }
+	DrawList list = renderer.view(renderer.view_count() - 1);
+	list.set_viewport(this->viewport_manager_->fullscreen_viewport());
+	list.set_camera(Camera::DEFAULT_CAMERA);
+	list.set_filter(TextureFilter::point);
+	this->countdown_art_->draw_card(list, this->countdown_card_, this->opening_scale());
+	const float duration = this->presentation_->pause_menu().resume_countdown;
+	const float beat_age = std::min(duration - remaining, std::ceil(remaining) - remaining);
+	this->countdown_art_->draw(list, this->countdown_number_box_,
+		std::to_wstring(static_cast<int>(std::ceil(remaining))), beat_age,
+		this->preferences_->reduce_effects);
+	list.set_filter(TextureFilter::linear);
+	this->resume_heading_->draw(list);
+	list.set_filter(TextureFilter::point);
 }
 
 void Level::draw_countdown_text(DrawList& draw_list) const
