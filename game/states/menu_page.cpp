@@ -14,6 +14,8 @@ MenuPage::MenuPage(MenuContext* context) :
 {
 	this->input()->reset_directions();
 	const MenuStyle& style = this->menu_style();
+	this->text_ = this->presentation().menu_text();
+	this->prompt_look_ = this->presentation().prompt_bar();
 	this->widget_position_ = style.layout.position;
 	this->widget_size_ = style.layout.size;
 	this->widget_spacing_ = style.layout.spacing;
@@ -99,8 +101,14 @@ void MenuPage::set_prompts(const std::vector<PromptBar::Prompt>& prompts)
 	this->prompt_bar_ = std::make_unique<PromptBar>(
 		"prompt_bar",
 		with_keys,
-		this->presentation().prompt_bar(),
+		this->prompt_look_,
 		this->render_resources());
+}
+
+void MenuPage::set_prompts(MenuPrompt prompt)
+{
+	this->prompt_bar_ = std::make_unique<PromptBar>("prompt_bar",
+		this->text_.prompt(prompt), this->prompt_look_, this->render_resources());
 }
 
 void MenuPage::draw(Renderer& renderer) const
@@ -183,6 +191,10 @@ const MenuStyle& MenuPage::menu_style() const
 {
 	return this->context_->data()->presentation()->menu();
 }
+const MenuText& MenuPage::text() const
+{
+	return this->text_;
+}
 MenuLevelSettings* MenuPage::level_settings() const
 {
 	return this->context_->level_settings();
@@ -262,7 +274,7 @@ void MenuPage::draw_chrome(DrawList& list) const
 	list.set_filter(TextureFilter::linear);
 	if (this->shows_brand())
 	{
-		list.draw_text(this->brand_font_, L"C O L O U R W A R S   /   LOCAL PAINT BATTLES",
+		list.draw_text(this->brand_font_, this->text_.brand,
 			style.brand_position, style.unhighlight, 1.0f, 0.0f, Vector2F::ZERO, 0.0f);
 	}
 

@@ -142,10 +142,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->selection_hint_->set_scale(hint_scale);
 	this->selection_hint_->set_shadow_scale(hint_scale);
 	this->selection_hint_->set_shadow_offset(this->menu_style().detail_shadow_offset * hint_scale);
-	this->set_player_prompts(confirmed ? std::vector<PromptBar::Prompt>{
-		{ L"A", L"Start match" }, { L"B", L"Unlock arena" } } :
-		std::vector<PromptBar::Prompt>{ { L"Left/Right", L"Browse arenas" },
-			{ L"A", L"Lock arena" }, { L"B", L"Back" } });
+	this->set_player_prompts(confirmed ? MenuPrompt::arena_locked : MenuPrompt::arena_browse);
 	this->displayed_slot_ = slot;
 	this->displayed_state_ = state;
 }
@@ -198,7 +195,7 @@ void MainMenuStageSelect::init()
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION), resources,
 		this->look().play_background_colour);
 	this->heading_ = std::make_unique<UiTextDropShadow>("heading",
-		L"Choose your arena", style.heading_font,
+		this->text().heading(MenuHeading::arena), style.heading_font,
 		this->calculate_widget_position(0, 0), resources,
 		style.heading_colour, style.shadow_colour, style.heading_shadow_offset);
 

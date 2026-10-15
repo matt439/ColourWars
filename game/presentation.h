@@ -46,6 +46,29 @@ struct WidgetLayout
 	mattmath::Vector2F spacing = { 0.0f, 0.0f };
 };
 
+enum class MenuHeading
+{
+	home, options, credits, controls_audio, pad_sticks, players, join_players,
+	mode, teams, weapons, arena, count
+};
+
+enum class MenuPrompt
+{
+	title, select_back, options, controls, sticks, mode, join, team, team_shuffle,
+	weapon, arena_browse, arena_locked, missing_player, pause, pause_missing,
+	select, credits, count
+};
+
+// Fixed roles select display text; navigation and accepted inputs remain code.
+struct MenuText
+{
+	std::wstring brand;
+	std::array<std::wstring, static_cast<size_t>(MenuHeading::count)> headings;
+	std::array<std::wstring, static_cast<size_t>(MenuPrompt::count)> prompts;
+	const std::wstring& heading(MenuHeading heading) const;
+	const std::wstring& prompt(MenuPrompt prompt) const;
+};
+
 // Shared menu style, with screen-specific overrides in the records below.
 struct MenuStyle
 {
@@ -821,6 +844,7 @@ public:
 
 	const TeamPalettePresentation& team_palette() const;
 	const MenuStyle& menu() const;
+	const MenuText& menu_text() const;
 	const MusicMixPresentation& music_mix() const;
 	const MainMenuPresentation& main_menu() const;
 	const ControlsSettingsPresentation& controls_settings() const;
@@ -852,6 +876,7 @@ private:
 	std::string source_path_;
 	TeamPalettePresentation team_palette_;
 	MenuStyle menu_;
+	MenuText menu_text_;
 	MusicMixPresentation music_mix_;
 	MainMenuPresentation main_menu_;
 	ControlsSettingsPresentation controls_settings_;

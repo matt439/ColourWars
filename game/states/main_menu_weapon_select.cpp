@@ -199,10 +199,7 @@ void MainMenuWeaponSelect::init()
 	this->weapon_select_art_ = this->look().weapon_select_art;
 	this->weapon_descriptions_ = this->look().weapon_descriptions;
 
-	this->set_player_prompts({
-		{ L"Left/Right", L"Change weapon" },
-		{ L"A", L"Confirm" },
-		{ L"B", L"Cancel" } });
+	this->set_player_prompts(MenuPrompt::weapon);
 
 	this->set_widget_spacing(this->look().weapon_select.spacing);
 	// A random palette is not chosen until the level is built. Keep that
@@ -230,7 +227,7 @@ void MainMenuWeaponSelect::init()
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
-		L"Weapon Select",
+		this->text().heading(MenuHeading::weapons),
 		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),

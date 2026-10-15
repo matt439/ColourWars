@@ -23,8 +23,7 @@ void ControlsSettingsMenu::init()
 	this->set_widget_position(look.layout.position);
 	this->set_widget_spacing(look.layout.spacing);
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.ink });
-	this->set_prompts({ { L"Left/Right", L"Change" }, { L"A", L"Select" },
-		{ L"B", L"Back (discard unapplied changes)" } });
+	this->set_prompts(MenuPrompt::controls);
 	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet, style.fill_frame,
 		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
 		this->render_resources(), this->presentation().main_menu().home_background_colour);
@@ -49,7 +48,7 @@ void ControlsSettingsMenu::init()
 		this->text_container_->add_child(widget);
 		return widget;
 	};
-	add_text("heading", L"Controls / audio", style.heading_font,
+	add_text("heading", this->text().heading(MenuHeading::controls_audio), style.heading_font,
 		look.heading_position, look.art.ink);
 	const auto make_row = [this, &style, &look, &value_limit](const char* name, const wchar_t* label,
 		int row, int& value, int minimum, int maximum, int step)

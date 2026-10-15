@@ -123,10 +123,7 @@ void MainMenuOptions::init()
 	const MenuStyle& style = this->menu_style();
 	this->set_widget_position(look.options_position);
 	this->set_widget_spacing(look.options_spacing);
-	this->set_prompts({
-		{ L"Left/Right", L"Change" },
-		{ L"A", L"Select" },
-		{ L"B", L"Back" } });
+	this->set_prompts(MenuPrompt::options);
 
 	// Disabling a row greys its label; the displayed value keeps its own colour.
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
@@ -156,7 +153,7 @@ void MainMenuOptions::init()
 
 	this->heading_ = std::make_unique<UiText>(
 		"heading",
-		L"Options",
+		this->text().heading(MenuHeading::options),
 		this->menu_style().heading_font,
 		look.options_heading_position,
 		this->render_resources(),

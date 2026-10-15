@@ -105,12 +105,69 @@ edits do not rename save or command identifiers. `random` is a display choice,
 not a weapon-tuning record: confirmation still resolves it through the existing
 random-primary selection, without changing selection order or RNG draws.
 
+## Shared headings and complete control legends
+
+The required `menu_text` object stores the shared menu brand, eleven headings
+and seventeen complete prompt-bar legends:
+
+| JSON path | Required keys |
+|---|---|
+| `menu_text.brand` | One brand-line string |
+| `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
+| `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits` |
+
+Every field is required. Each string uses the existing UTF-8 punctuation
+normalization, must contain printable nonblank text on one line, and must use
+the supported U+0020 to U+007E content range after normalization. Startup checks
+the actual drawing font and measured bounds in the menu's design coordinates.
+
+| Text | Font | Position and lower boundary | Shadow allowance |
+|---|---|---|---|
+| Brand | `menu_style.chrome.brand_font` | `menu_style.chrome.brand_position`, above `menu_style.chrome.footer_y` | None |
+| Headings | `menu_style.fonts.heading` | Page heading position, above `menu_style.chrome.footer_y` | `menu_style.shadow.heading_offset` |
+| Complete legends | `prompt_bar.font` | `prompt_bar.position`, above 1080 | `prompt_bar.shadow_offset` |
+
+Home, Options and Credits use their existing authored heading positions, and
+Controls / audio and Pad sticks use `controls_settings.heading_position`. The
+other headings use `menu_style.layout.position`. All lines reserve a right
+margin equal to `menu_style.chrome.brand_position.x`: measured width plus the
+absolute horizontal shadow must be at most `1920 - position.x - right_margin`.
+Measured height plus the absolute vertical shadow must be at most
+`lower_boundary - position.y`. Equality is accepted. Negative or nonfinite
+positions, shadows extending beyond the left/top edges, and overflowing text
+fail with the authored key in the diagnostic.
+There is no character-count limit, and leading or trailing spacing is not
+trimmed.
+
+A prompt value is the entire displayed line, including keyboard equivalents,
+spaces and separators. For example, the shipped `title` legend is
+`A/Enter Start`; the `missing_player` legend is
+`" Reconnect controller    B/Esc Change players"`, including its leading blank.
+The shipped strings preserve the previous wording and spacing. Complete legends
+are display data: changing `A/Enter` does not remap confirmation, and keys and
+actions are not substituted into a format template at runtime. The fixed
+heading and prompt keys identify existing C++ flows; page order, input handling
+and transitions remain in code.
+
+`MenuPage` captures the text and `PromptBarPresentation` when the page is
+constructed. An open page keeps that paired text and prompt font when stage
+confirmation, controller availability or pause state changes its legend.
+Reloading presentation does not mix a new legend with the old page's prompt
+look; reopening adopts the new values. Ordinary pages select a complete legend
+through the typed prompt setter. The vector-of-button/action `PromptBar`
+constructor remains available for developer tools and tests.
+
+These strings are edited in JSON and remain outside numeric `tune`. The schema
+adds no locale axis, automatic wrapping or runtime formatting language.
+
 ## Verification and boundary
 
 The `menu_presentation` consumer case checks layout limits, required identifiers,
 custom sparse atlases, resource errors and actual paper-art construction without
 a graphics or audio device. The `weapon_catalog` case checks the weapon catalog's
 required fields, display-text rules and resource/layer compatibility.
+The `menu_text` case checks required shared headings/legends, text normalization,
+font coverage and measured design bounds.
 Debug-console acceptance checks layout edit scopes, rollback and reset.
 
 The native painter checks exercise real page construction, copied geometry,
@@ -127,10 +184,14 @@ the focused `MainMenuOnly`, `SettingsMenuOnly`, `ControlsMenuOnly`, `PauseMenuOn
 uses its scripted input backend; the other checks retain the real backend.
 `WeaponCatalogOnly` checks the catalog on real weapon pages, including page
 snapshots across catalog replacement and reopening.
+`MenuTextOnly` checks authored headings and complete legends on real pages,
+including their captured text/look when a page updates its prompt or reopens.
 
 The non-menu primitive texel retains its own startup checks. Together with
 [gameplay tuning](gameplay-tuning.md), the shared layout and sheet choices define
 the data boundary implemented for gap-audit 8.5. The weapon catalog implements
-the name/artwork part of GAP#8.4; other player-visible C++ text remains open under
-that item. It introduces no locale selection, font regeneration or text wrapping.
-The historical audit is unchanged.
+the name/artwork part of GAP#8.4, and `menu_text` implements shared headings and
+control legends. Row labels, status messages, dynamic match/results/pause/end
+titles, title-screen and home-hero copy, and other player-visible C++ text remain
+open under that item. Font regeneration, wrapping and locale selection remain
+separate work. The historical audit is unchanged.

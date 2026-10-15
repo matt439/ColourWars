@@ -46,9 +46,7 @@ void MainMenuPlayerCount::update_page(float /*dt*/)
 }
 void MainMenuPlayerCount::init()
 {
-	this->set_prompts({
-		{ L"A", L"Select" },
-		{ L"B", L"Back" } });
+	this->set_prompts(MenuPrompt::select_back);
 
 	// Devices can be connected and claimed on the next page.
 	this->focus_.set_style({ this->menu_style().highlight,
@@ -67,7 +65,7 @@ void MainMenuPlayerCount::init()
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
-		L"Number of Players",
+		this->text().heading(MenuHeading::players),
 		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -186,8 +184,7 @@ MainMenuJoin::MainMenuJoin(MenuContext* context) : MainMenuPage(context)
 
 void MainMenuJoin::init()
 {
-	this->set_prompts({ { L"A", L"Join / P1 continue" },
-		{ L"B", L"Leave / P1 back" } });
+	this->set_prompts(MenuPrompt::join);
 	this->set_widget_spacing(this->look().player_count_spacing);
 	const MenuStyle& style = this->menu_style();
 	this->background_ = std::make_unique<UiTexture>("background",
@@ -197,7 +194,7 @@ void MainMenuJoin::init()
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
 	this->text_container_ = std::make_unique<UiContainer>("text_container");
-	this->heading_ = std::make_unique<UiTextDropShadow>("heading", L"Join Players",
+	this->heading_ = std::make_unique<UiTextDropShadow>("heading", this->text().heading(MenuHeading::join_players),
 		style.heading_font, this->calculate_widget_position(0, 0),
 		this->render_resources(), style.heading_colour, style.shadow_colour,
 		style.heading_shadow_offset);

@@ -224,21 +224,18 @@ void PauseMenuInitial::refresh_connections()
 		this->input()->reset_actions();
 		if (this->waiting_for_players_)
 		{
-			this->set_prompts({ { L"", L"Reconnect pads to resume" },
-				{ L"A", L"Select" } });
+			this->set_prompts(MenuPrompt::pause_missing);
 		}
 		else
 		{
-			this->set_prompts({ { L"A", L"Select" }, { L"B/Start", L"Resume" } });
+			this->set_prompts(MenuPrompt::pause);
 		}
 	}
 }
 
 void PauseMenuInitial::init()
 {
-	this->set_prompts({
-		{ L"A", L"Select" },
-		{ L"B/Start", L"Resume" } });
+	this->set_prompts(MenuPrompt::pause);
 
 	const MenuStyle& style = this->menu_style();
 	const PauseMenuPresentation& look = this->look();
@@ -386,9 +383,7 @@ void PauseMenuConfirmation::update_page(float /*dt*/)
 
 void PauseMenuConfirmation::init()
 {
-	this->set_prompts({
-		{ L"A", L"Select" },
-		{ L"B", L"Back" } });
+	this->set_prompts(MenuPrompt::select_back);
 
 	const MenuStyle& style = this->menu_style();
 	const PauseMenuPresentation& look = this->look();

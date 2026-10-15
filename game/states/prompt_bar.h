@@ -22,4 +22,8 @@ public:
 		const std::vector<Prompt>& prompts,
 		const PromptBarPresentation& look,
 		labrador::RenderResources* render_resources);
+	// Authored complete legends bypass the developer/test vector formatter.
+	PromptBar(const std::string& name, const std::wstring& legend,
+		const PromptBarPresentation& look,
+		labrador::RenderResources* render_resources);
 };

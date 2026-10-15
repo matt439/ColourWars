@@ -29,8 +29,14 @@ PromptBar::PromptBar(const std::string& name,
 	const std::vector<Prompt>& prompts,
 	const PromptBarPresentation& look,
 	RenderResources* render_resources) :
+	PromptBar(name, join(prompts), look, render_resources)
+{
+}
+
+PromptBar::PromptBar(const std::string& name, const std::wstring& legend,
+	const PromptBarPresentation& look, RenderResources* render_resources) :
 	UiTextDropShadow(name,
-		join(prompts),
+		legend,
 		look.font,
 		look.position,
 		render_resources,

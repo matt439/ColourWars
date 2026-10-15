@@ -36,14 +36,14 @@ void MainMenuCredits::init()
 {
 	const MenuStyle& style = this->menu_style();
 	const MainMenuPresentation& look = this->look();
-	this->set_prompts({ { L"A", L"Back" }, { L"B", L"Back" } });
+	this->set_prompts(MenuPrompt::credits);
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
 	this->background_ = std::make_unique<UiTexture>("background",
 		style.sprite_sheet, style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION), this->render_resources(),
 		look.home_background_colour);
-	this->heading_ = std::make_unique<UiText>("heading", L"Credits",
+	this->heading_ = std::make_unique<UiText>("heading", this->text().heading(MenuHeading::credits),
 		style.heading_font, look.credits_heading_position,
 		this->render_resources(), look.art.ink);
 	this->body_ = std::make_unique<UiText>("credits_body", look.credits_text,

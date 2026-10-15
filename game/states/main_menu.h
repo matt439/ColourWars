@@ -48,14 +48,14 @@ protected:
 	// Return true while the roster is missing a controller. Keep each player's
 	// row and offer reconnect or return to the count screen to choose again.
 	bool wait_for_players(const std::vector<ProcessedMenuInput>& inputs);
-	void set_player_prompts(const std::vector<PromptBar::Prompt>& prompts);
+	void set_player_prompts(MenuPrompt prompts);
 
 	// Family-specific sounds; the looping music is stopped before entering a match.
 	labrador::SoundBank::WaveHandle error_sound_;
 	labrador::SoundBank::WaveHandle ready_sound_;
 	labrador::SoundBank::WaveHandle unready_sound_;
 private:
-	std::vector<PromptBar::Prompt> player_prompts_;
+	MenuPrompt player_prompts_ = MenuPrompt::select_back;
 	bool waiting_for_players_ = false;
 };
 

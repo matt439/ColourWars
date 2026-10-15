@@ -267,12 +267,8 @@ void MainMenuTeamSelect::init()
 	const MainMenuPresentation& look = this->look();
 	this->team_select_frames_ = look.team_select_frames;
 	this->team_select_selected_frames_ = look.team_select_selected_frames;
-	std::vector<PromptBar::Prompt> prompts{
-		{ L"Left/Right", L"Pick a team" },
-		{ L"A", L"Confirm" },
-		{ L"B", L"Cancel" } };
-	if (this->player_count() >= 2) { prompts.push_back({ L"X", L"Random teams" }); }
-	this->set_player_prompts(prompts);
+	this->set_player_prompts(this->player_count() >= 2 ?
+		MenuPrompt::team_shuffle : MenuPrompt::team);
 
 	this->set_widget_spacing(this->look().team_select.spacing);
 
@@ -294,7 +290,7 @@ void MainMenuTeamSelect::init()
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
-		L"Team Select",
+		this->text().heading(MenuHeading::teams),
 		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),

@@ -84,6 +84,42 @@
     }
   },
 
+  "menu_text": {
+    "brand": "C O L O U R W A R S   /   LOCAL PAINT BATTLES",
+    "headings": {
+      "home": "Make your mark.",
+      "options": "Options",
+      "credits": "Credits",
+      "controls_audio": "Controls / audio",
+      "pad_sticks": "Pad sticks",
+      "players": "Number of Players",
+      "join_players": "Join Players",
+      "mode": "Mode Select",
+      "teams": "Team Select",
+      "weapons": "Weapon Select",
+      "arena": "Choose your arena"
+    },
+    "prompts": {
+      "title": "A/Enter Start",
+      "select_back": "A/Enter Select    B/Esc Back",
+      "options": "Left/Right Change    A/Enter Select    B/Esc Back",
+      "controls": "Left/Right Change    A/Enter Select    B/Esc Back (discard unapplied changes)",
+      "sticks": "D-pad/arrows Navigate / change    A/Enter Select    B/Esc Back (discard unapplied changes)",
+      "mode": "A/Enter Select    Left/Right Match length    B/Esc Back",
+      "join": "A/Enter Join / P1 continue    B/Esc Leave / P1 back",
+      "team": "Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel",
+      "team_shuffle": "Left/Right Pick a team    A/Enter Confirm    B/Esc Cancel    X/R Random teams",
+      "weapon": "Left/Right Change weapon    A/Enter Confirm    B/Esc Cancel",
+      "arena_browse": "Left/Right Browse arenas    A/Enter Lock arena    B/Esc Back",
+      "arena_locked": "A/Enter Start match    B/Esc Unlock arena",
+      "missing_player": " Reconnect controller    B/Esc Change players",
+      "pause": "A/Enter Select    B/Start/Esc Resume",
+      "pause_missing": " Reconnect pads to resume    A/Enter Select",
+      "select": "A/Enter Select",
+      "credits": "A/Enter Back    B/Esc Back"
+    }
+  },
+
   "main_menu": {
     "backdrop": { "sheet": "menu_paint", "frame": "backdrop" },
     "title_box_size": { "x": 1320.0, "y": 920.0 },
@@ -334,7 +370,8 @@
 
   "_prompt_bar_comment": [
     "The button legend along the bottom of every menu page. What each page",
-    "says is in C++ beside the buttons it reads; where it sits and what it",
+    "does stays beside the buttons it reads; its named legend is menu_text.",
+    "Where it sits and what it",
     "looks like is here, once, because it is the same on all of them.",
     "y is 990 of the 1080 the menus are authored in."
   ],

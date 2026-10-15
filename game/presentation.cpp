@@ -21,6 +21,43 @@ namespace
 	constexpr std::array<const char*, WeaponSelectArtworkPresentation::CHOICES> weapon_choice_keys{
 		"sprayer", "sniper", "roller", "mister", "bucket", "random"
 	};
+	constexpr std::array<const char*, static_cast<size_t>(MenuHeading::count)> menu_heading_keys{
+		"home", "options", "credits", "controls_audio", "pad_sticks", "players", "join_players",
+		"mode", "teams", "weapons", "arena"
+	};
+	constexpr std::array<const char*, static_cast<size_t>(MenuPrompt::count)> menu_prompt_keys{
+		"title", "select_back", "options", "controls", "sticks", "mode", "join", "team", "team_shuffle",
+		"weapon", "arena_browse", "arena_locked", "missing_player", "pause", "pause_missing", "select", "credits"
+	};
+
+	std::wstring read_menu_line(const JsonValue& json, const char* key)
+	{
+		std::wstring text = drawable_text::widen_drawable(json.string(key), json.where() + ": " + key);
+		if (text.find_first_not_of(L' ') == std::wstring::npos ||
+			text.find_first_of(L"\r\n") != std::wstring::npos)
+		{
+			throw std::runtime_error(json.where() + ": '" + key + "' must be nonblank and single-line.");
+		}
+		return text;
+	}
+
+	MenuText read_menu_text(const JsonValue& root)
+	{
+		const JsonValue json = root.object("menu_text");
+		MenuText text;
+		text.brand = read_menu_line(json, "brand");
+		const JsonValue headings = json.object("headings");
+		for (size_t index = 0; index < text.headings.size(); ++index)
+		{
+			text.headings[index] = read_menu_line(headings, menu_heading_keys[index]);
+		}
+		const JsonValue prompts = json.object("prompts");
+		for (size_t index = 0; index < text.prompts.size(); ++index)
+		{
+			text.prompts[index] = read_menu_line(prompts, menu_prompt_keys[index]);
+		}
+		return text;
+	}
 
 	Vector2F read_vector(const JsonValue& parent, const char* key)
 	{
@@ -1522,6 +1559,16 @@ const TeamPalettePresentation& Presentation::team_palette() const
 	return this->team_palette_;
 }
 
+const std::wstring& MenuText::heading(MenuHeading heading) const
+{
+	return this->headings.at(static_cast<size_t>(heading));
+}
+
+const std::wstring& MenuText::prompt(MenuPrompt prompt) const
+{
+	return this->prompts.at(static_cast<size_t>(prompt));
+}
+
 const WeaponChoicePresentation& WeaponSelectArtworkPresentation::choice(WeaponType type) const
 {
 	const size_t index = static_cast<size_t>(type);
@@ -1541,6 +1588,7 @@ Presentation::Presentation(const char* path)
 
 	this->team_palette_ = read_team_palette(root);
 	this->menu_ = read_menu_style(root);
+	this->menu_text_ = read_menu_text(root);
 	const JsonValue music_mix = root.object("music_mix");
 	const auto music_duration = [&](const char* key)
 	{
@@ -1792,6 +1840,49 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.font("prompt_bar.font", this->prompt_bar_.font);
 	check.font("debug_overlay.font", this->debug_overlay_.font);
 	check.font("hud.timer.font", this->hud_.timer_font);
+	const auto check_menu_line = [&](const std::string& key, const std::wstring& text,
+		const std::string& font, const Vector2F& position, float bottom, const Vector2F& shadow)
+	{
+		const std::string where = this->source_path_ + ": " + key;
+		drawable_text::check_font_can_draw(&render, font, text, where);
+		const Vector2F size = render.measure_text(render.resolve_sprite_font(font), text);
+		const float width = 1920.0f - position.x - this->menu_.brand_position.x;
+		const float height = bottom - position.y;
+		if (!std::isfinite(position.x) || !std::isfinite(position.y) ||
+			position.x < 0.0f || position.y < 0.0f || !std::isfinite(width) || !std::isfinite(height) ||
+			!std::isfinite(shadow.x) || !std::isfinite(shadow.y) ||
+			position.x + std::min(0.0f, shadow.x) < 0.0f ||
+			position.y + std::min(0.0f, shadow.y) < 0.0f ||
+			!std::isfinite(size.x) || !std::isfinite(size.y) ||
+			size.x + std::abs(shadow.x) > width || size.y + std::abs(shadow.y) > height)
+		{
+			throw std::runtime_error(where + " must fit its menu design area including its shadow and right margin.");
+		}
+	};
+	check_menu_line("menu_text.brand", this->menu_text_.brand, this->menu_.brand_font,
+		this->menu_.brand_position, this->menu_.footer_y, Vector2F::ZERO);
+	for (size_t index = 0; index < this->menu_text_.headings.size(); ++index)
+	{
+		Vector2F position = this->menu_.layout.position;
+		switch (static_cast<MenuHeading>(index))
+		{
+		case MenuHeading::home: position = this->main_menu_.home_position; break;
+		case MenuHeading::options: position = this->main_menu_.options_heading_position; break;
+		case MenuHeading::credits: position = this->main_menu_.credits_heading_position; break;
+		case MenuHeading::controls_audio:
+		case MenuHeading::pad_sticks: position = this->controls_settings_.heading_position; break;
+		default: break;
+		}
+		check_menu_line(std::string("menu_text.headings.") + menu_heading_keys[index],
+			this->menu_text_.headings[index], this->menu_.heading_font, position,
+			this->menu_.footer_y, this->menu_.heading_shadow_offset);
+	}
+	for (size_t index = 0; index < this->menu_text_.prompts.size(); ++index)
+	{
+		check_menu_line(std::string("menu_text.prompts.") + menu_prompt_keys[index],
+			this->menu_text_.prompts[index], this->prompt_bar_.font, this->prompt_bar_.position,
+			1080.0f, this->prompt_bar_.shadow_offset);
+	}
 	check.font("hud.meter_label_font", this->hud_.meter_label_font);
 	check.font("hud.player_identity.font", this->hud_.player_identity_font);
 	check.frame("hud.fill_frame", this->hud_.sprite_sheet, this->hud_.fill_frame);
@@ -1917,6 +2008,11 @@ void Presentation::validate_resources(const RenderResources& render,
 const MenuStyle& Presentation::menu() const
 {
 	return this->menu_;
+}
+
+const MenuText& Presentation::menu_text() const
+{
+	return this->menu_text_;
 }
 
 const MusicMixPresentation& Presentation::music_mix() const

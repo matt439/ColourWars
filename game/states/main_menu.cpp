@@ -51,8 +51,7 @@ std::vector<int> MainMenuPage::connected_slots() const
 	return result;
 }
 
-void MainMenuPage::set_player_prompts(
-	const std::vector<PromptBar::Prompt>& prompts)
+void MainMenuPage::set_player_prompts(MenuPrompt prompts)
 {
 	this->player_prompts_ = prompts;
 	this->set_prompts(prompts);
@@ -73,9 +72,7 @@ bool MainMenuPage::wait_for_players(
 		this->waiting_for_players_ = missing;
 		if (missing)
 		{
-			this->set_prompts({
-				{ L"", L"Reconnect controller" },
-				{ L"B", L"Change players" } });
+			this->set_prompts(MenuPrompt::missing_player);
 		}
 		else
 		{
@@ -128,7 +125,7 @@ void MainMenuTitle::update_page(float /*dt*/)
 }
 void MainMenuTitle::init()
 {
-	this->set_prompts({ { L"A", L"Start" } });
+	this->set_prompts(MenuPrompt::title);
 	const MainMenuPresentation& look = this->look();
 	const MenuStyle& style = this->menu_style();
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
@@ -215,13 +212,13 @@ void MainMenuHome::init()
 	const MenuStyle& style = this->menu_style();
 	this->set_widget_position(look.home_position);
 	this->set_widget_spacing(look.home_spacing);
-	this->set_prompts({ { L"A", L"Select" }, { L"B", L"Back" } });
+	this->set_prompts(MenuPrompt::select_back);
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
 	this->background_ = std::make_unique<UiTexture>("background",
 		style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(), look.home_background_colour);
-	this->heading_ = std::make_unique<UiText>("heading", L"Make your mark.",
+	this->heading_ = std::make_unique<UiText>("heading", this->text().heading(MenuHeading::home),
 		style.heading_font, this->calculate_widget_position(0, 0), this->render_resources(), look.art.ink);
 	this->subtitle_ = std::make_unique<UiText>("subtitle", L"Paint the arena. Claim the win.",
 		style.detail_font, look.home_subtitle_position, this->render_resources(), look.art.ink);
@@ -345,10 +342,7 @@ void MainMenuModeSelect::update_page(float /*dt*/)
 }
 void MainMenuModeSelect::init()
 {
-	this->set_prompts({
-		{ L"A", L"Select" },
-		{ L"Left/Right", L"Match length" },
-		{ L"B", L"Back" } });
+	this->set_prompts(MenuPrompt::mode);
 
 	// Every mode uses the same player setup and paint scoring.
 	this->focus_.set_style({ this->menu_style().highlight,
@@ -367,7 +361,7 @@ void MainMenuModeSelect::init()
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
-		L"Mode Select",
+		this->text().heading(MenuHeading::mode),
 		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),

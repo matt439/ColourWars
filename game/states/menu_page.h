@@ -79,6 +79,7 @@ protected:
 
 	const Presentation& presentation() const;
 	const MenuStyle& menu_style() const;
+	const MenuText& text() const;
 
 	MenuLevelSettings* level_settings() const;
 	MenuInput* input() const;
@@ -120,6 +121,7 @@ protected:
 	// Optional control legend, drawn after page widgets. Set only actions
 	// this page accepts; it can be built before or after the widget trees.
 	void set_prompts(const std::vector<PromptBar::Prompt>& prompts);
+	void set_prompts(MenuPrompt prompt);
 
 	mattmath::Vector2F float_resolution() const;
 
@@ -132,6 +134,8 @@ private:
 	labrador::FontHandle brand_font_;
 	MenuContext* context_ = nullptr;
 	std::unique_ptr<PromptBar> prompt_bar_ = nullptr;
+	MenuText text_;
+	PromptBarPresentation prompt_look_;
 	mattmath::Vector2F widget_position_;
 	mattmath::Vector2F widget_size_;
 	mattmath::Vector2F widget_spacing_;

@@ -117,8 +117,7 @@ void StickSettingsMenu::init()
 	this->set_widget_position(look.layout.position);
 	this->set_widget_spacing(look.layout.spacing);
 	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.ink });
-	this->set_prompts({ { L"D-pad/arrows", L"Navigate / change" }, { L"A", L"Select" },
-		{ L"B", L"Back (discard unapplied changes)" } });
+	this->set_prompts(MenuPrompt::sticks);
 	this->background_ = std::make_unique<UiTexture>("background", style.sprite_sheet, style.fill_frame,
 		RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), this->render_resources(),
 		this->presentation().main_menu().home_background_colour);
@@ -142,7 +141,7 @@ void StickSettingsMenu::init()
 		this->text_container_->add_child(text);
 		return text;
 	};
-	add_text("heading", L"Pad sticks", style.heading_font, look.heading_position);
+	add_text("heading", this->text().heading(MenuHeading::pad_sticks), style.heading_font, look.heading_position);
 	const Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
 		look.art.shadow_offset - this->calculate_widget_position(1, 0).x,
 		look.layout.spacing.y - look.art.focus_padding.y * 2.0f);

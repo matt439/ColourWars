@@ -2535,6 +2535,7 @@ namespace
 #include "scripts/acceptance/painter_visual/results_menu_checks.h"
 #include "scripts/acceptance/painter_visual/main_menu_checks.h"
 #include "scripts/acceptance/painter_visual/weapon_catalog_checks.h"
+#include "scripts/acceptance/painter_visual/menu_text_checks.h"
 #include "scripts/acceptance/painter_visual/settings_menu_checks.h"
 #include "scripts/acceptance/painter_visual/controls_menu_checks.h"
 #include "scripts/acceptance/painter_visual/stick_settings_checks.h"
@@ -2555,8 +2556,9 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"pause-menu" || std::wstring(argv[3]) == L"results-menu" ||
             std::wstring(argv[3]) == L"main-menu" || std::wstring(argv[3]) == L"settings-menu" ||
             std::wstring(argv[3]) == L"controls-menu" || std::wstring(argv[3]) == L"stick-settings" ||
-            std::wstring(argv[3]) == L"team-setup" || std::wstring(argv[3]) == L"weapon-catalog")),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|weapon-catalog]");
+            std::wstring(argv[3]) == L"team-setup" || std::wstring(argv[3]) == L"weapon-catalog" ||
+            std::wstring(argv[3]) == L"menu-text")),
+            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|weapon-catalog|menu-text]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -2570,6 +2572,7 @@ int wmain(int argc, wchar_t** argv)
         const bool results_menu_only = argc == 4 && std::wstring(argv[3]) == L"results-menu";
         const bool main_menu_only = argc == 4 && std::wstring(argv[3]) == L"main-menu";
         const bool weapon_catalog_only = argc == 4 && std::wstring(argv[3]) == L"weapon-catalog";
+        const bool menu_text_only = argc == 4 && std::wstring(argv[3]) == L"menu-text";
         const bool settings_menu_only = argc == 4 && std::wstring(argv[3]) == L"settings-menu";
         const bool controls_menu_only = argc == 4 && std::wstring(argv[3]) == L"controls-menu";
         const bool stick_settings_only = argc == 4 && std::wstring(argv[3]) == L"stick-settings";
@@ -2634,6 +2637,12 @@ int wmain(int argc, wchar_t** argv)
             return 0;
         }
 #endif
+        if (menu_text_only)
+        {
+            menu_text_matrix(app, levels, canvas, tuning, presentation, output);
+            std::cout << "PASS menu-text-only hardware check; other painter matrices were not run\n";
+            return 0;
+        }
         if (weapon_catalog_only)
         {
             weapon_catalog_matrix(app, levels, tuning, presentation, output);
@@ -2935,6 +2944,7 @@ int wmain(int argc, wchar_t** argv)
         settings_menu_matrix(app, canvas, tuning, presentation, output);
         controls_menu_matrix(app, levels, canvas, tuning, presentation, content, output);
         stick_settings_matrix(app, canvas, tuning, presentation, output);
+        menu_text_matrix(app, levels, canvas, tuning, presentation, output);
         weapon_catalog_matrix(app, levels, tuning, presentation, output);
         main_menu_matrix(app, canvas, tuning, presentation, output);
         require(records.good(), "capture record write failed");
