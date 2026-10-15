@@ -239,6 +239,13 @@ namespace
 		match.click_sound = read_sound(sounds, "click");
 		match.sigh_sound = read_sound(sounds, "sigh");
 		match.chair_sound = read_sound(sounds, "chair");
+		match.glass_in_sound = read_sound(sounds, "glass_in");
+		match.close_sound = read_sound(sounds, "close");
+		match.celebrate_sound = read_sound(sounds, "celebrate");
+		match.slump_sound = read_sound(sounds, "slump");
+		match.colour_in_sound = read_sound(sounds, "colour_in");
+		match.skip_sound = read_sound(sounds, "skip");
+		match.undo_sound = read_sound(sounds, "undo");
 
 		const JsonValue opening = json.object("opening");
 		match.opening.settle = json_non_negative(opening, "settle");
@@ -648,6 +655,13 @@ void GameTuning::validate_match_sounds(const RenderResources& render,
 	check.wave("match.sounds.click.name", bank, this->match_.click_sound.name);
 	check.effect("match.sounds.sigh.name", bank, this->match_.sigh_sound.name);
 	check.effect("match.sounds.chair.name", bank, this->match_.chair_sound.name);
+	check.effect("match.sounds.glass_in.name", bank, this->match_.glass_in_sound.name);
+	check.wave("match.sounds.close.name", bank, this->match_.close_sound.name);
+	check.effect("match.sounds.celebrate.name", bank, this->match_.celebrate_sound.name);
+	check.effect("match.sounds.slump.name", bank, this->match_.slump_sound.name);
+	check.effect("match.sounds.colour_in.name", bank, this->match_.colour_in_sound.name);
+	check.effect("match.sounds.skip.name", bank, this->match_.skip_sound.name);
+	check.effect("match.sounds.undo.name", bank, this->match_.undo_sound.name);
 }
 
 const MatchTuning& GameTuning::match() const

@@ -244,8 +244,15 @@ private:
 	// its person making a noise after the silhouette has stopped or gone.
 	labrador::SoundBank::EffectHandle sigh_sound_;
 	labrador::SoundBank::EffectHandle chair_sound_;
+	labrador::SoundBank::EffectHandle glass_in_sound_;
+	labrador::SoundBank::EffectHandle celebrate_sound_;
+	labrador::SoundBank::EffectHandle slump_sound_;
+	labrador::SoundBank::EffectHandle colour_in_sound_;
+	labrador::SoundBank::EffectHandle skip_sound_;
+	labrador::SoundBank::EffectHandle undo_sound_;
 	// The countdown plays in the picture and ends by pushing through the glass.
 	bool intro_countdown_ = false;
+	bool glass_in_started_ = false;
 	std::unique_ptr<Monitor> monitor_;
 	std::unique_ptr<Silhouette> silhouette_;
 	std::unique_ptr<ScreenCursor> cursor_;
@@ -274,6 +281,7 @@ private:
 	PlayerTeam winner_ = PlayerTeam::none;
 	labrador::SoundBank::WaveHandle hover_sound_;
 	labrador::SoundBank::WaveHandle click_sound_;
+	labrador::SoundBank::WaveHandle close_sound_;
 	labrador::FontHandle percent_font_;
 
 	RevealBeat reveal_beat() const;

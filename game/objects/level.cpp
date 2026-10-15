@@ -74,6 +74,12 @@ Level::Level(std::unique_ptr<Scene> scene,
 	this->time_up_sound_ = this->sound_bank_->resolve_effect(match.time_up_sound.name);
 	this->sigh_sound_ = this->sound_bank_->resolve_effect(match.sigh_sound.name);
 	this->chair_sound_ = this->sound_bank_->resolve_effect(match.chair_sound.name);
+	this->glass_in_sound_ = this->sound_bank_->resolve_effect(match.glass_in_sound.name);
+	this->celebrate_sound_ = this->sound_bank_->resolve_effect(match.celebrate_sound.name);
+	this->slump_sound_ = this->sound_bank_->resolve_effect(match.slump_sound.name);
+	this->colour_in_sound_ = this->sound_bank_->resolve_effect(match.colour_in_sound.name);
+	this->skip_sound_ = this->sound_bank_->resolve_effect(match.skip_sound.name);
+	this->undo_sound_ = this->sound_bank_->resolve_effect(match.undo_sound.name);
 
 	if (opening != OpeningMode::off)
 	{
@@ -87,6 +93,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 		this->percent_font_ = render_resources->resolve_sprite_font(look.percent_font);
 		this->hover_sound_ = this->sound_bank_->resolve_wave(match.hover_sound.name);
 		this->click_sound_ = this->sound_bank_->resolve_wave(match.click_sound.name);
+		this->close_sound_ = this->sound_bank_->resolve_wave(match.close_sound.name);
 		this->state_ = LevelState::opening;
 		// A quick rematch starts with the colours being tried.
 		this->opening_time_ = opening == OpeningMode::quick ? match.opening.settle : 0.0f;
@@ -108,6 +115,12 @@ Level::~Level()
 	this->sound_bank_->stop_effect(this->time_up_sound_, true);
 	this->sound_bank_->stop_effect(this->sigh_sound_, true);
 	this->sound_bank_->stop_effect(this->chair_sound_, true);
+	this->sound_bank_->stop_effect(this->glass_in_sound_, true);
+	this->sound_bank_->stop_effect(this->celebrate_sound_, true);
+	this->sound_bank_->stop_effect(this->slump_sound_, true);
+	this->sound_bank_->stop_effect(this->colour_in_sound_, true);
+	this->sound_bank_->stop_effect(this->skip_sound_, true);
+	this->sound_bank_->stop_effect(this->undo_sound_, true);
 	this->stop_player_sounds();
 }
 
@@ -132,6 +145,12 @@ void Level::pause_audio() const
 	this->sound_bank_->pause_effect(this->time_up_sound_);
 	this->sound_bank_->pause_effect(this->sigh_sound_);
 	this->sound_bank_->pause_effect(this->chair_sound_);
+	this->sound_bank_->pause_effect(this->glass_in_sound_);
+	this->sound_bank_->pause_effect(this->celebrate_sound_);
+	this->sound_bank_->pause_effect(this->slump_sound_);
+	this->sound_bank_->pause_effect(this->colour_in_sound_);
+	this->sound_bank_->pause_effect(this->skip_sound_);
+	this->sound_bank_->pause_effect(this->undo_sound_);
 	this->pause_player_sounds();
 }
 
@@ -161,6 +180,24 @@ void Level::resume() const
 	this->sound_bank_->set_effect_volume(this->chair_sound_,
 		this->tuning_->match().chair_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->chair_sound_);
+	this->sound_bank_->set_effect_volume(this->glass_in_sound_,
+		this->tuning_->match().glass_in_sound.volume * this->preferences_->sfx_gain());
+	this->sound_bank_->resume_effect(this->glass_in_sound_);
+	this->sound_bank_->set_effect_volume(this->celebrate_sound_,
+		this->tuning_->match().celebrate_sound.volume * this->preferences_->sfx_gain());
+	this->sound_bank_->resume_effect(this->celebrate_sound_);
+	this->sound_bank_->set_effect_volume(this->slump_sound_,
+		this->tuning_->match().slump_sound.volume * this->preferences_->sfx_gain());
+	this->sound_bank_->resume_effect(this->slump_sound_);
+	this->sound_bank_->set_effect_volume(this->colour_in_sound_,
+		this->tuning_->match().colour_in_sound.volume * this->preferences_->sfx_gain());
+	this->sound_bank_->resume_effect(this->colour_in_sound_);
+	this->sound_bank_->set_effect_volume(this->skip_sound_,
+		this->tuning_->match().skip_sound.volume * this->preferences_->sfx_gain());
+	this->sound_bank_->resume_effect(this->skip_sound_);
+	this->sound_bank_->set_effect_volume(this->undo_sound_,
+		this->tuning_->match().undo_sound.volume * this->preferences_->sfx_gain());
+	this->sound_bank_->resume_effect(this->undo_sound_);
 	this->resume_player_sounds();
 }
 
@@ -169,8 +206,11 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt,
 {
 	this->refresh_layout();
 	this->frame_dt_ = dt;
-	this->update_state(player_inputs, dt, seats);
-	this->update_acting(dt);
+	if (dt > 0.0f)
+	{
+		this->update_state(player_inputs, dt, seats);
+		this->update_acting(dt);
+	}
 
 	// Refresh on every path so views and overlays reflect the completed tick.
 	this->refresh_views();
@@ -202,6 +242,15 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		}
 		const float before = this->start_timer_;
 		this->start_timer_ -= dt;
+		// Only the opening countdown pushes through the monitor. A long tick
+		// crossing its start still owns one transition cue, never a backlog.
+		if (this->intro_countdown_ && !this->glass_in_started_ &&
+			this->start_timer_ <= this->tuning_->match().opening.push)
+		{
+			this->glass_in_started_ = true;
+			this->sound_bank_->play_effect(this->glass_in_sound_, false,
+				this->tuning_->match().glass_in_sound.volume * this->preferences_->sfx_gain());
+		}
 		// One cue for the displayed number, including the initial beat. A long
 		// tick never queues the missed beats over GO or live play.
 		if (this->start_timer_ > 0.0f &&

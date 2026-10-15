@@ -634,6 +634,7 @@ legacy names do not make them migration inputs.
 | Menus and results | Direction, confirm, cancel, error, ready, pause-open, results fill, winner and distinct draw use their replacement cues |
 | Match start/end | Repeated `match.count_beat` edges and one `match.go`; separate time-up and glass-out voices replace the whistle |
 | Opening and reveal | Reveal hover/click use the replacement cues; the accepted sigh/chair cues have tuning slots and pause-aware phase-edge playback |
+| Opening/reveal detail (2026-10-15) | Opening swatch hovers, undo, colour-in, skip and glass-in; distinct draw-close and one winning/losing reaction per participating team after the person leaves |
 
 The pop's data swap closes STORY#1. The sigh/chair bank entries, tuning slots
 and play calls close STORY#2. The per-beat countdown/GO replaces the 5.375-second
@@ -679,6 +680,23 @@ movement cue or audio timer advances on a nonpositive update. All gains use
 the current SFX preference, including mute; pause freezes the simulation and
 creates no catch-up cues. These quiet initial gains remain listening candidates.
 
+The opening/reveal increment follows timeline edges, including both preview
+hovers when a long update crosses them. Undo follows the previews, colour-in
+starts the countdown, and glass-in starts during its authored final `push`
+span. A skip stops the bypassed room, undo, colour-in and glass-in voices,
+plays its own cue once and continues the split-screen countdown. A draw shows
+no swatch previews, so its reveal plays neither hover nor winner-click: it
+uses the distinct close cue and has no celebration or slump. A winning reveal
+plays each participating team's reaction once after the person has left,
+independently of how many figures or panes it has.
+
+New choices and gains live under `match.sounds`; startup validation checks all
+names and volumes. The longer cues use explicit effect voices owned by the
+level: pause suspends them, resume refreshes their SFX gain without replaying
+them, and teardown stops them. Solo and intro-off matches have none of these
+story cues. Nonpositive updates refresh views without advancing the match or
+emitting new cues. The quiet authored gains remain listening candidates.
+
 **POL#23 remains open.** Putting an accepted wave into the bank does not create
 a gameplay trigger. Complete the required new cues from section 4, assess Tier
 3 detail individually and keep it off or nearly off by default:
@@ -687,8 +705,7 @@ a gameplay trigger. Complete the required new cues from section 4, assess Tier
   details.
 - Paint: splash variation and repetition limits, capture/dud and per-tool
   impacts; optional blocked/slosh/drip cues.
-- Match and room: glass-in, opening preview hover, close/celebrate/slump,
-  colour-in/skip/undo/last-ten; room tone and optional footsteps/breath/waver/cheat.
+- Match and room: last-ten; room tone and optional footsteps/breath/waver/cheat.
 - Menus/music: pad lost/back, reconnect count-in (`POL#18`), distinct unready
   and volume-preview hooks, series cue; results music, arena ending stings and
   transition fades/ducking (`GAP#5.1`); optional world ambience/detail.
@@ -738,3 +755,16 @@ Debug and Release startup pass with the real bank and, separately, without it;
 each closes gracefully. Evidence is under `out/validation/movement-audio/`
 and `out/acceptance/`. These checks establish cue requests and preserved gameplay;
 listening intensity and the multiplayer mix remain ROAD#3.
+
+Opening/reveal-audio validation (2026-10-15): Debug and Release builds and all
+13 consumer acceptance cases pass. The expanded `story_audio` recorder checks
+the new cue names and volume ranges, swatch/undo/colour/glass/skip edges,
+positive versus nonpositive updates, full/quick/skipped/off/solo matches,
+real painted A/B wins versus draws, four-player team reaction counts and
+chronological cue order across long reveal updates. It also checks current
+gains/mute, skip cancellation, pause/resume without replay and teardown.
+The six audio publication checks pass. Isolated Debug and Release startup pass
+with the real bank and, separately, without it; each closes gracefully.
+Evidence is under `out/validation/opening-audio/`, the adjacent build/acceptance
+logs and `out/acceptance/`. These checks establish cue requests and lifecycle
+behaviour; ROAD#3 retains listening and multiplayer mix acceptance.

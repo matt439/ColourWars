@@ -151,6 +151,30 @@
       "wave": "room.chair"
     },
     {
+      "name": "match.glass_in",
+      "wave": "match.glass_in"
+    },
+    {
+      "name": "match.celebrate",
+      "wave": "match.celebrate"
+    },
+    {
+      "name": "match.slump",
+      "wave": "match.slump"
+    },
+    {
+      "name": "match.colour_in",
+      "wave": "match.colour_in"
+    },
+    {
+      "name": "match.skip",
+      "wave": "match.skip"
+    },
+    {
+      "name": "match.undo",
+      "wave": "match.undo"
+    },
+    {
       "name": "sprayer_a0",
       "wave": "sprayer.loop"
     },

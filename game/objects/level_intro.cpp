@@ -147,9 +147,14 @@ void Level::colour_players(bool team_a, bool team_b)
 void Level::skip_intro()
 {
 	// Do not advance through the remaining story beats on a skip, or let a
-	// room cue already in progress follow the person into the split countdown.
+	// bypassed story cue follow the person into the split countdown.
 	this->sound_bank_->stop_effect(this->sigh_sound_, true);
 	this->sound_bank_->stop_effect(this->chair_sound_, true);
+	this->sound_bank_->stop_effect(this->undo_sound_, true);
+	this->sound_bank_->stop_effect(this->colour_in_sound_, true);
+	this->sound_bank_->stop_effect(this->glass_in_sound_, true);
+	this->sound_bank_->play_effect(this->skip_sound_, false,
+		this->tuning_->match().skip_sound.volume * this->preferences_->sfx_gain());
 	// Straight to the split-screen countdown, from its start if it had not begun.
 	this->state_ = LevelState::start_countdown;
 	this->intro_countdown_ = false;
@@ -167,8 +172,23 @@ void Level::update_opening(const std::vector<PlayerInputData>& player_inputs, fl
 	this->opening_time_ += dt;
 	const MatchTuning& match = this->tuning_->match();
 	const OpeningTuning& timing = match.opening;
-	const float leave = timing.settle + timing.preview * 2.0f + timing.undo;
+	const float undo = timing.settle + timing.preview * 2.0f;
+	const float leave = undo + timing.undo;
 	const float gain = this->preferences_->sfx_gain();
+	// The cursor reaches each swatch before that half receives its colour.
+	// Test the actual timeline edges so a long update does not lose either.
+	for (const float edge : { timing.settle + reach * timing.preview,
+		timing.settle + timing.preview + reach * timing.preview })
+	{
+		if (crossed(before, this->opening_time_, edge))
+		{
+			this->sound_bank_->play_wave(this->hover_sound_, match.hover_sound.volume * gain);
+		}
+	}
+	if (crossed(before, this->opening_time_, undo))
+	{
+		this->sound_bank_->play_effect(this->undo_sound_, false, match.undo_sound.volume * gain);
+	}
 	if (crossed(before, this->opening_time_, leave))
 	{
 		this->sound_bank_->play_effect(this->sigh_sound_, false, match.sigh_sound.volume * gain);
@@ -180,6 +200,8 @@ void Level::update_opening(const std::vector<PlayerInputData>& player_inputs, fl
 	if (this->opening_time_ >= this->opening_length())
 	{
 		// The figures come alive in their colours as the countdown starts.
+		this->sound_bank_->play_effect(this->colour_in_sound_, false,
+			match.colour_in_sound.volume * gain);
 		this->state_ = LevelState::start_countdown;
 		this->intro_countdown_ = true;
 		this->colour_players(true, true);
@@ -370,29 +392,57 @@ Level::RevealBeat Level::reveal_beat() const
 
 void Level::update_reveal(float dt)
 {
-	const RevealBeat before = this->reveal_beat();
 	const float before_time = this->reveal_time_;
 	this->reveal_time_ += dt;
-	const RevealBeat after = this->reveal_beat();
 	const MatchTuning& match = this->tuning_->match();
 	const RevealTuning& timing = match.reveal;
 	const float gain = this->preferences_->sfx_gain();
-	const float leave = timing.walk_in + timing.hover * 2.0f + timing.decide + timing.show;
+	const float click = timing.walk_in + timing.hover * 2.0f + timing.decide;
+	const float leave = click + timing.show;
+	const bool closing = this->winner_ == PlayerTeam::none;
 	if (crossed(before_time, this->reveal_time_, reveal_sit * timing.walk_in))
 	{
 		this->sound_bank_->play_effect(this->chair_sound_, false, match.chair_sound.volume * gain);
+	}
+	// A draw moves to the close button and shows no colour swatches.
+	if (!closing)
+	{
+		for (const float edge : { timing.walk_in + reach * timing.hover,
+			timing.walk_in + timing.hover + reach * timing.hover })
+		{
+			if (crossed(before_time, this->reveal_time_, edge))
+			{
+				this->sound_bank_->play_wave(this->hover_sound_, match.hover_sound.volume * gain);
+			}
+		}
+	}
+	if (crossed(before_time, this->reveal_time_, click))
+	{
+		this->sound_bank_->play_wave(closing ? this->close_sound_ : this->click_sound_,
+			(closing ? match.close_sound.volume : match.click_sound.volume) * gain);
 	}
 	if (crossed(before_time, this->reveal_time_, leave))
 	{
 		this->sound_bank_->play_effect(this->chair_sound_, false, match.chair_sound.volume * gain);
 	}
-	if ((after.showing_a && !before.showing_a) || (after.showing_b && !before.showing_b))
+	// The picture stays silent while the person is in the room. Each team
+	// gets one reaction after they leave, however many figures it contains.
+	if (!closing && crossed(before_time, this->reveal_time_, leave + timing.leave))
 	{
-		this->sound_bank_->play_wave(this->hover_sound_, match.hover_sound.volume * gain);
-	}
-	if (after.clicked && !before.clicked)
-	{
-		this->sound_bank_->play_wave(this->click_sound_, match.click_sound.volume * gain);
+		const bool winners = std::any_of(this->players_.begin(), this->players_.end(),
+			[this](const Player* player) { return player->team() == this->winner_; });
+		const bool losers = std::any_of(this->players_.begin(), this->players_.end(),
+			[this](const Player* player) { return player->team() != this->winner_; });
+		if (winners)
+		{
+			this->sound_bank_->play_effect(this->celebrate_sound_, false,
+				match.celebrate_sound.volume * gain);
+		}
+		if (losers)
+		{
+			this->sound_bank_->play_effect(this->slump_sound_, false,
+				match.slump_sound.volume * gain);
+		}
 	}
 	if (this->reveal_time_ >= this->reveal_length())
 	{

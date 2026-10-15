@@ -113,6 +113,13 @@ struct MatchTuning
 	SoundTuning click_sound;
 	SoundTuning sigh_sound;
 	SoundTuning chair_sound;
+	SoundTuning glass_in_sound;
+	SoundTuning close_sound;
+	SoundTuning celebrate_sound;
+	SoundTuning slump_sound;
+	SoundTuning colour_in_sound;
+	SoundTuning skip_sound;
+	SoundTuning undo_sound;
 };
 
 // Animation clip selection and optional timing override.

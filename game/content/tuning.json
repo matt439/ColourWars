@@ -45,7 +45,14 @@
             "sigh": { "name": "room.sigh", "volume": 1.0 },
             "chair": { "name": "room.chair", "volume": 1.0 },
             "hover": { "name": "match.reveal_hover", "volume": 0.6 },
-            "click": { "name": "match.reveal_click", "volume": 1.0 }
+            "click": { "name": "match.reveal_click", "volume": 1.0 },
+            "glass_in": { "name": "match.glass_in", "volume": 0.6 },
+            "close": { "name": "match.reveal_close", "volume": 0.6 },
+            "celebrate": { "name": "match.celebrate", "volume": 0.5 },
+            "slump": { "name": "match.slump", "volume": 0.4 },
+            "colour_in": { "name": "match.colour_in", "volume": 0.5 },
+            "skip": { "name": "match.skip", "volume": 0.5 },
+            "undo": { "name": "match.undo", "volume": 0.5 }
         },
         "opening": {
             "_comment": [
