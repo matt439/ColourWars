@@ -108,14 +108,16 @@ random-primary selection, without changing selection order or RNG draws.
 ## Shared headings and complete control legends
 
 The required `menu_text` object stores the shared menu brand, eleven headings,
-seventeen complete prompt-bar legends and ten Home/Options/Credits row labels:
+seventeen complete prompt-bar legends, eighteen row labels and a solo-practice
+hint:
 
 | JSON path | Required keys |
 |---|---|
 | `menu_text.brand` | One brand-line string |
 | `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
 | `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits` |
-| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back` |
+| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players` |
+| `menu_text.solo_practice_hint` | One Mode Select hint string |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
 normalization, must contain printable nonblank text on one line, and must use
@@ -177,9 +179,9 @@ adds no locale axis, automatic wrapping or runtime formatting language.
 | `team_palette` | `Team palette` | Options label |
 | `controls_audio` | `Controls / audio` | Options action |
 | `apply` | `Apply` | Options action |
-| `back` | `Back` | Options and Credits action |
+| `back` | `Back` | Options, Credits, Mode and Player Count action |
 
-All ten fields are required and follow the same nonblank, single-line and
+These ten roles are required and follow the same nonblank, single-line and
 punctuation-normalization rules as the other shared text. Startup checks each
 against `menu_style.fonts.item` and requires finite, positive measured bounds.
 Plain actions retain their measured size. Their text bounds, expanded on each
@@ -205,6 +207,59 @@ page retains its current labels after presentation changes, and reopening
 adopts the edits. The names are string settings edited in JSON, outside numeric
 `tune`.
 
+### Mode and Player Count labels
+
+The remaining eight required `menu_text.items` roles preserve the existing
+mode-selection and player-count choices:
+
+| Key | Shipped text | Use |
+|---|---|---|
+| `single_match` | `Single Match` | Mode row 2 |
+| `best_of_three` | `Best of 3` | Mode row 3 |
+| `best_of_five` | `Best of 5` | Mode row 4 |
+| `match_length` | `Match length` | Mode duration-row label, row 5 |
+| `one_player_practice` | `1 Player (practice)` | Player Count row 2 |
+| `two_players` | `2 Players` | Player Count row 3 |
+| `three_players` | `3 Players` | Player Count row 4 |
+| `four_players` | `4 Players` | Player Count row 5 |
+
+Both pages reuse `menu_text.items.back` at row 6. The separate required
+`menu_text.solo_practice_hint` defaults to `Solo practice: choose Single Match`
+at Mode row 7. Rows use the existing widget origin and each page's authored
+spacing; these are display roles, with the existing choice order, actions and
+input handling retained.
+
+The same normalized, nonblank, single-line text rules apply. Mode and Player
+Count labels use `menu_style.fonts.item` and
+`menu_style.shadow.item_offset`. The solo hint uses `menu_style.fonts.detail`
+with that same **item** shadow offset, preserving its existing drawing style.
+Startup checks the actual font glyphs and the union of the measured text and
+its item shadow using the design-line rule above: reserve the shared right
+margin, stay above the footer, and keep the shadow inside the left/top design
+edges. These rows retain their measured font size.
+
+For each focusable Mode/Player Count row, the measured text height plus the
+absolute item-shadow y offset must be at most the page's vertical spacing
+(`main_menu.mode_select_spacing.y` or `main_menu.player_count_spacing.y`). This
+retains the existing overlap of focus backings while keeping the text and its
+shadow within one row's stride.
+`match_length` must additionally satisfy
+`measured_width + abs(item_shadow.x) <= 2 * main_menu.mode_select_spacing.x`
+to fit before its existing duration-value column. That is one complete
+`OptionRow`, so this column check adds no inner focus padding. Boundary equality
+is accepted.
+
+The nonfocusable solo hint uses its detail-font measurement and item shadow
+with the same footer, right-margin and left/top checks. It has no row-height
+cap or focus-padding allowance.
+
+The strings come from the page's captured `MenuText`; presentation changes
+leave an open page's labels and hint intact, and reopening adopts the edits.
+They remain outside numeric `tune`. The hint is a complete display string,
+without placeholders or runtime formatting, and changes no practice-mode
+behavior. The existing duration values remain separate from the authored
+`match_length` label.
+
 ## Verification and boundary
 
 The `menu_presentation` consumer case checks layout limits, required identifiers,
@@ -213,7 +268,7 @@ a graphics or audio device. The `weapon_catalog` case checks the weapon catalog'
 required fields, display-text rules and resource/layer compatibility.
 The `menu_text` case checks required shared headings/legends/row labels, text
 normalization, font coverage and measured design/paper bounds, including fitted
-Options labels.
+Options labels and shadowed Mode/Player Count rows and solo hint.
 Debug-console acceptance checks layout edit scopes, rollback and reset.
 
 The native painter checks exercise real page construction, copied geometry,
@@ -231,15 +286,15 @@ uses its scripted input backend; the other checks retain the real backend.
 `WeaponCatalogOnly` checks the catalog on real weapon pages, including page
 snapshots across catalog replacement and reopening.
 `MenuTextOnly` checks authored headings, complete legends and Home/Options/Credits
-row labels on real pages, including their captured text/look when a page updates
-its prompt or reopens.
+and Mode/Player Count row labels and hint on real pages, including their captured
+text/look when a page updates its prompt or reopens.
 
 The non-menu primitive texel retains its own startup checks. Together with
 [gameplay tuning](gameplay-tuning.md), the shared layout and sheet choices define
 the data boundary implemented for gap-audit 8.5. The weapon catalog implements
 the name/artwork part of GAP#8.4, and `menu_text` implements shared headings,
-control legends and Home/Options/Credits row labels. Controls and stick-settings
-labels, status/value text, composed match/results/pause/end text, title-screen
-and home-hero copy, and other player-visible C++ text remain open under that
-item. Font regeneration, wrapping and locale selection remain separate work.
-The historical audit is unchanged.
+control legends, Home/Options/Credits and Mode/Player Count row labels, and the
+solo-practice hint. Controls and stick-settings labels, status/value text,
+composed match/results/pause/end text, title-screen and home-hero copy, and other
+player-visible C++ text remain open under that item. Font regeneration, wrapping
+and locale selection remain separate work. The historical audit is unchanged.

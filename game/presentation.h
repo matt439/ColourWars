@@ -62,13 +62,15 @@ enum class MenuPrompt
 enum class MenuItem
 {
 	play, options, credits, exit, resolution, fullscreen, team_palette,
-	controls_audio, apply, back, count
+	controls_audio, apply, back, single_match, best_of_three, best_of_five,
+	match_length, one_player_practice, two_players, three_players, four_players, count
 };
 
 // Fixed roles select display text; navigation and accepted inputs remain code.
 struct MenuText
 {
 	std::wstring brand;
+	std::wstring solo_practice_hint;
 	std::array<std::wstring, static_cast<size_t>(MenuHeading::count)> headings;
 	std::array<std::wstring, static_cast<size_t>(MenuPrompt::count)> prompts;
 	std::array<std::wstring, static_cast<size_t>(MenuItem::count)> items;

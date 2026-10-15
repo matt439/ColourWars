@@ -86,6 +86,7 @@
 
   "menu_text": {
     "brand": "C O L O U R W A R S   /   LOCAL PAINT BATTLES",
+    "solo_practice_hint": "Solo practice: choose Single Match",
     "headings": {
       "home": "Make your mark.",
       "options": "Options",
@@ -128,7 +129,15 @@
       "team_palette": "Team palette",
       "controls_audio": "Controls / audio",
       "apply": "Apply",
-      "back": "Back"
+      "back": "Back",
+      "single_match": "Single Match",
+      "best_of_three": "Best of 3",
+      "best_of_five": "Best of 5",
+      "match_length": "Match length",
+      "one_player_practice": "1 Player (practice)",
+      "two_players": "2 Players",
+      "three_players": "3 Players",
+      "four_players": "4 Players"
     }
   },
 

@@ -371,7 +371,7 @@ void MainMenuModeSelect::init()
 
 	this->standard_ = std::make_unique<UiTextDropShadow>(
 		"standard",
-		L"Single Match",
+		this->text().item(MenuItem::single_match),
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
@@ -381,7 +381,7 @@ void MainMenuModeSelect::init()
 
 	this->best_of_three_ = std::make_unique<UiTextDropShadow>(
 		"best_of_three",
-		L"Best of 3",
+		this->text().item(MenuItem::best_of_three),
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
@@ -391,7 +391,7 @@ void MainMenuModeSelect::init()
 
 	this->best_of_five_ = std::make_unique<UiTextDropShadow>(
 		"best_of_five",
-		L"Best of 5",
+		this->text().item(MenuItem::best_of_five),
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
@@ -401,7 +401,7 @@ void MainMenuModeSelect::init()
 
 	this->practice_ = std::make_unique<UiTextDropShadow>(
 		"practice",
-		L"Solo practice: choose Single Match",
+		this->text().solo_practice_hint,
 		this->menu_style().detail_font,
 		this->calculate_widget_position(0, 7),
 		this->render_resources(),
@@ -411,7 +411,7 @@ void MainMenuModeSelect::init()
 
 	this->back_ = std::make_unique<UiTextDropShadow>(
 		"back",
-		L"Back",
+		this->text().item(MenuItem::back),
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 6),
 		this->render_resources(),
@@ -419,7 +419,7 @@ void MainMenuModeSelect::init()
 		this->menu_style().shadow_colour,
 		this->menu_style().item_shadow_offset);
 
-	this->duration_row_ = std::make_unique<OptionRow>("duration", L"Match length",
+	this->duration_row_ = std::make_unique<OptionRow>("duration", this->text().item(MenuItem::match_length),
 		this->calculate_widget_position(0, 5), this->calculate_widget_position(2, 5),
 		this->menu_style(), this->look().options_value_colour, this->render_resources(),
 		[this](Direction direction) { this->cycle_duration(direction); });

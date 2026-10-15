@@ -31,7 +31,8 @@ namespace
 	};
 	constexpr std::array<const char*, static_cast<size_t>(MenuItem::count)> menu_item_keys{
 		"play", "options", "credits", "exit", "resolution", "fullscreen", "team_palette",
-		"controls_audio", "apply", "back"
+		"controls_audio", "apply", "back", "single_match", "best_of_three", "best_of_five",
+		"match_length", "one_player_practice", "two_players", "three_players", "four_players"
 	};
 
 	std::wstring read_menu_line(const JsonValue& json, const char* key)
@@ -50,6 +51,7 @@ namespace
 		const JsonValue json = root.object("menu_text");
 		MenuText text;
 		text.brand = read_menu_line(json, "brand");
+		text.solo_practice_hint = read_menu_line(json, "solo_practice_hint");
 		const JsonValue headings = json.object("headings");
 		for (size_t index = 0; index < text.headings.size(); ++index)
 		{
@@ -1954,6 +1956,48 @@ void Presentation::validate_resources(const RenderResources& render,
 			main.options_box_size, main.options_spacing.y, index < 3);
 	}
 	check_menu_item(MenuItem::back, main.credits_back_position, main.credits_box_size, 0.0f, false);
+	const auto check_setup_item = [&](MenuItem item, const Vector2F& spacing, int row, bool duration_label)
+	{
+		const std::string key = std::string("menu_text.items.") + menu_item_keys[static_cast<size_t>(item)];
+		const std::string where = this->source_path_ + ": " + key;
+		const Vector2F shadow = this->menu_.item_shadow_offset;
+		if (!std::isfinite(spacing.y) || spacing.y <= 0.0f ||
+			(duration_label && (!std::isfinite(spacing.x) || spacing.x <= 0.0f)))
+		{
+			throw std::runtime_error(where + " requires positive finite setup row/column spacing.");
+		}
+		const Vector2F position = this->menu_.layout.position + Vector2F(0.0f, spacing.y * static_cast<float>(row));
+		const std::wstring& text = this->menu_text_.item(item);
+		check_menu_line(key, text, this->menu_.item_font, position, this->menu_.footer_y, shadow);
+		const Vector2F size = render.measure_text(render.resolve_sprite_font(this->menu_.item_font), text);
+		if (size.y + std::abs(shadow.y) > spacing.y)
+		{
+			throw std::runtime_error(where + " must fit its setup row including its item shadow.");
+		}
+		if (duration_label && size.x + std::abs(shadow.x) > spacing.x * 2.0f)
+		{
+			// The existing, unfitted OptionRow puts its value two columns later.
+			throw std::runtime_error(where + " must end before its duration value column including its item shadow.");
+		}
+	};
+	const MenuItem mode_items[]{ MenuItem::single_match, MenuItem::best_of_three, MenuItem::best_of_five,
+		MenuItem::match_length, MenuItem::back };
+	for (size_t index = 0; index < std::size(mode_items); ++index)
+	{
+		check_setup_item(mode_items[index], main.mode_select_spacing, static_cast<int>(index) + 2,
+			mode_items[index] == MenuItem::match_length);
+	}
+	const MenuItem player_items[]{ MenuItem::one_player_practice, MenuItem::two_players,
+		MenuItem::three_players, MenuItem::four_players, MenuItem::back };
+	for (size_t index = 0; index < std::size(player_items); ++index)
+	{
+		check_setup_item(player_items[index], main.player_count_spacing, static_cast<int>(index) + 2, false);
+	}
+	// The nonfocusable hint retains the detail font and the item-shadow offset
+	// that its existing widget uses; it has no action-row fit or focus padding.
+	check_menu_line("menu_text.solo_practice_hint", this->menu_text_.solo_practice_hint, this->menu_.detail_font,
+		this->menu_.layout.position + Vector2F(0.0f, main.mode_select_spacing.y * 7.0f),
+		this->menu_.footer_y, this->menu_.item_shadow_offset);
 	check.font("hud.meter_label_font", this->hud_.meter_label_font);
 	check.font("hud.player_identity.font", this->hud_.player_identity_font);
 	check.frame("hud.fill_frame", this->hud_.sprite_sheet, this->hud_.fill_frame);

@@ -48,10 +48,14 @@ namespace
         { "select", L"A/Enter Select" }, { "credits", L"A/Enter Back    B/Esc Back" }
     };
     constexpr wchar_t brand[] = L"C O L O U R W A R S   /   LOCAL PAINT BATTLES";
+    constexpr wchar_t practice_hint[] = L"Solo practice: choose Single Match";
     constexpr DefaultText items[]{
         { "play", L"Play" }, { "options", L"Options" }, { "credits", L"Credits" }, { "exit", L"Exit" },
         { "resolution", L"Resolution" }, { "fullscreen", L"Fullscreen" }, { "team_palette", L"Team palette" },
-        { "controls_audio", L"Controls / audio" }, { "apply", L"Apply" }, { "back", L"Back" }
+        { "controls_audio", L"Controls / audio" }, { "apply", L"Apply" }, { "back", L"Back" },
+        { "single_match", L"Single Match" }, { "best_of_three", L"Best of 3" }, { "best_of_five", L"Best of 5" },
+        { "match_length", L"Match length" }, { "one_player_practice", L"1 Player (practice)" },
+        { "two_players", L"2 Players" }, { "three_players", L"3 Players" }, { "four_players", L"4 Players" }
     };
 
     rapidjson::Document read_document(const std::filesystem::path& path)
@@ -164,7 +168,7 @@ namespace
     void check_defaults(const Presentation& presentation)
     {
         const MenuText& text = presentation.menu_text();
-        require(text.brand == brand && text.headings.size() == std::size(headings) &&
+        require(text.brand == brand && text.solo_practice_hint == practice_hint && text.headings.size() == std::size(headings) &&
             text.prompts.size() == std::size(prompts) && text.items.size() == std::size(items),
             "Shared menu text changed its brand or fixed role count");
         for (size_t index = 0; index < std::size(headings); ++index)
@@ -248,17 +252,23 @@ namespace
                 { text_field(d, group, key).SetString("bad\0text", 8, d.GetAllocator()); });
         };
         required(nullptr, "brand");
+        required(nullptr, "solo_practice_hint");
         for (const auto& entry : headings) { required("headings", entry.key); }
         for (const auto& entry : prompts) { required("prompts", entry.key); }
         for (const auto& entry : items) { required("items", entry.key); }
     }
 
     struct TextRole { const char* group; const char* key; };
-    constexpr TextRole categories[]{ {nullptr, "brand"}, {"headings", "home"}, {"prompts", "title"}, {"items", "play"} };
+    constexpr TextRole categories[]{ {nullptr, "brand"}, {"headings", "home"}, {"prompts", "title"},
+        {"items", "play"}, {nullptr, "solo_practice_hint"} };
 
     void select_font(rapidjson::Document& d, const TextRole& role, const char* font)
     {
-        if (role.group == nullptr) { d["menu_style"]["chrome"]["brand_font"].SetString(font, d.GetAllocator()); }
+        if (role.group == nullptr && std::string(role.key) == "solo_practice_hint")
+        {
+            d["menu_style"]["fonts"]["detail"].SetString(font, d.GetAllocator());
+        }
+        else if (role.group == nullptr) { d["menu_style"]["chrome"]["brand_font"].SetString(font, d.GetAllocator()); }
         else if (std::string(role.group) == "headings")
         {
             d["menu_style"]["fonts"]["heading"].SetString(font, d.GetAllocator());
@@ -281,7 +291,8 @@ namespace
         });
         const std::wstring expected = L"  A \"B\"-C...  ";
         require(normalized.menu_text().brand == expected && normalized.menu_text().heading(MenuHeading::home) == expected &&
-            normalized.menu_text().prompt(MenuPrompt::title) == expected && normalized.menu_text().item(MenuItem::play) == expected,
+            normalized.menu_text().prompt(MenuPrompt::title) == expected && normalized.menu_text().item(MenuItem::play) == expected &&
+            normalized.menu_text().solo_practice_hint == expected,
             "Shared menu text did not normalize punctuation/NBSP while preserving authored outer spaces");
         normalized.validate_resources(world.render, world.audio);
         const SpriteFontFile font = read_sprite_font_file((content / "fonts/gill_sans_mt_bold_24.spritefont").string());
@@ -344,7 +355,7 @@ namespace
     void check_inclusive_bounds(Variants& variants, World& world)
     {
         std::vector<Glyph> glyphs;
-        for (const char32_t character : { U'F', U'i', U't' })
+        for (char32_t character = U' '; character <= U'~'; ++character)
         {
             glyphs.push_back({ character, mattmath::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f });
         }
@@ -481,7 +492,9 @@ namespace
 
     void check_item_bounds(Variants& variants, World& world)
     {
-        for (const char* key : { "play", "options", "credits", "exit", "controls_audio", "apply", "back" })
+        for (const char* key : { "play", "options", "credits", "exit", "controls_audio", "apply", "back",
+            "single_match", "best_of_three", "best_of_five", "match_length", "one_player_practice",
+            "two_players", "three_players", "four_players" })
         {
             variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
                 { d["menu_text"]["items"][key].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
@@ -525,6 +538,116 @@ namespace
             d["main_menu"]["home_position"]["x"].SetFloat(right_position + 0.25f);
         }, &world);
     }
+
+    void check_setup_text(Variants& variants, World& world)
+    {
+        constexpr const char* setup_keys[]{ "single_match", "best_of_three", "best_of_five", "match_length",
+            "one_player_practice", "two_players", "three_players", "four_players" };
+        const auto normalized = variants.load([&](rapidjson::Document& d)
+        {
+            for (const char* key : setup_keys)
+            {
+                d["menu_text"]["items"][key].SetString("A\xC2\xA0\xE2\x80\x94" "B");
+            }
+        });
+        normalized.validate_resources(world.render, world.audio);
+        for (size_t index = 10; index < std::size(items); ++index)
+        {
+            require(normalized.menu_text().item(static_cast<MenuItem>(index)) == L"A -B",
+                "Mode/player item did not normalize its authored punctuation and NBSP");
+        }
+        for (const char* key : setup_keys)
+        {
+            variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
+            {
+                d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+                d["menu_text"]["items"][key].SetString("Glyph~");
+            }, &world);
+        }
+        const auto exact_setup = [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_exact");
+            d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
+            for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
+            d["menu_text"]["solo_practice_hint"].SetString("Fit");
+            d["menu_style"]["shadow"]["item_offset"]["x"].SetFloat(1.5f);
+            d["menu_style"]["shadow"]["item_offset"]["y"].SetFloat(1.5f);
+        };
+        const float row_height = 20.0f + 1.5f;
+        for (const char* spacing : { "mode_select_spacing", "player_count_spacing" })
+        {
+            const auto row_edge = [&](rapidjson::Document& d)
+            {
+                exact_setup(d);
+                d["main_menu"][spacing]["y"].SetFloat(row_height);
+            };
+            const auto fits = variants.load(row_edge);
+            fits.validate_resources(world.render, world.audio);
+            variants.rejects(std::string("items.") + (std::string(spacing) == "mode_select_spacing" ?
+                "single_match" : "one_player_practice"), [&](rapidjson::Document& d)
+            {
+                row_edge(d);
+                d["main_menu"][spacing]["y"].SetFloat(std::nextafter(row_height, 0.0f));
+            }, &world);
+            for (const double invalid : { 0.0, -1.0, 1e100 })
+            {
+                variants.rejects(std::string("items.") + (std::string(spacing) == "mode_select_spacing" ?
+                    "single_match" : "one_player_practice"), [&](rapidjson::Document& d)
+                {
+                    exact_setup(d);
+                    d["main_menu"][spacing]["y"].SetDouble(invalid);
+                }, &world);
+            }
+        }
+        const auto column_edge = [&](rapidjson::Document& d)
+        {
+            exact_setup(d);
+            d["main_menu"]["mode_select_spacing"]["x"].SetFloat(12.75f);
+        };
+        const auto fits_column = variants.load(column_edge);
+        fits_column.validate_resources(world.render, world.audio);
+        variants.rejects("items.match_length", [&](rapidjson::Document& d)
+        {
+            column_edge(d);
+            d["main_menu"]["mode_select_spacing"]["x"].SetFloat(std::nextafter(12.75f, 0.0f));
+        }, &world);
+        for (const double invalid : { 0.0, -1.0, 1e100 })
+        {
+            variants.rejects("items.match_length", [&](rapidjson::Document& d)
+            {
+                exact_setup(d);
+                d["main_menu"]["mode_select_spacing"]["x"].SetDouble(invalid);
+            }, &world);
+        }
+
+        const auto hint_edge = [&](rapidjson::Document& d)
+        {
+            exact_setup(d);
+            d["menu_style"]["layout"]["position"]["y"].SetFloat(238.5f);
+            d["main_menu"]["mode_select_spacing"]["y"].SetInt(100);
+        };
+        const auto fits_hint = variants.load(hint_edge);
+        fits_hint.validate_resources(world.render, world.audio);
+        variants.rejects("solo_practice_hint", [&](rapidjson::Document& d)
+        {
+            hint_edge(d);
+            d["menu_style"]["layout"]["position"]["y"].SetFloat(238.75f);
+        }, &world);
+
+        const auto left_edge = [&](rapidjson::Document& d)
+        {
+            exact_setup(d);
+            d["menu_style"]["layout"]["position"]["x"].SetFloat(1.5f);
+            d["menu_style"]["shadow"]["item_offset"]["x"].SetFloat(-1.5f);
+        };
+        const auto touches_left = variants.load(left_edge);
+        touches_left.validate_resources(world.render, world.audio);
+        variants.rejects("items.single_match", [&](rapidjson::Document& d)
+        {
+            left_edge(d);
+            d["menu_style"]["layout"]["position"]["x"].SetFloat(1.25f);
+        }, &world);
+    }
 }
 
 int main(int argc, char** argv)
@@ -542,6 +665,7 @@ int main(int argc, char** argv)
         check_text_and_fonts(variants, world, content);
         check_inclusive_bounds(variants, world);
         check_item_bounds(variants, world);
+        check_setup_text(variants, world);
         check_option_row_fitting(variants, world);
         check_prompt_bar(world, defaults);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "

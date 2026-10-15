@@ -75,7 +75,7 @@ void MainMenuPlayerCount::init()
 
 	this->_1_player = std::make_unique<UiTextDropShadow>(
 		"1_player",
-		L"1 Player (practice)",
+		this->text().item(MenuItem::one_player_practice),
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
@@ -85,7 +85,7 @@ void MainMenuPlayerCount::init()
 
 	this->_2_players = std::make_unique<UiTextDropShadow>(
 		"2_players",
-		L"2 Players",
+		this->text().item(MenuItem::two_players),
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
@@ -95,7 +95,7 @@ void MainMenuPlayerCount::init()
 
 	this->_3_players = std::make_unique<UiTextDropShadow>(
 		"3_players",
-		L"3 Players",
+		this->text().item(MenuItem::three_players),
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
@@ -105,7 +105,7 @@ void MainMenuPlayerCount::init()
 
 	this->_4_players = std::make_unique<UiTextDropShadow>(
 		"4_players",
-		L"4 Players",
+		this->text().item(MenuItem::four_players),
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
@@ -115,7 +115,7 @@ void MainMenuPlayerCount::init()
 
 	this->back_ = std::make_unique<UiTextDropShadow>(
 		"back",
-		L"Back",
+		this->text().item(MenuItem::back),
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 6),
 		this->render_resources(),
