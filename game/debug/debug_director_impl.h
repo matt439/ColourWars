@@ -432,6 +432,11 @@ private:
 	// The perf overlay.
 	DebugPerf perf_;
 	bool overlay_perf_ = false;
+	std::optional<std::filesystem::path> perf_capture_path_;
+	int perf_width_ = 0;
+	int perf_height_ = 0;
+	DebugStatus start_perf_capture(const DebugArgs& args);
+	void finish_perf_capture();
 
 	bool staging_ = false;
 	void push_seat_labels(DebugMatchTarget& match);

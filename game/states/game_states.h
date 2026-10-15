@@ -139,6 +139,7 @@ private:
 	bool debug_kill(int seat) override;
 	MatchPaint debug_paint() const override;
 	bool debug_countdown_over() const override;
+	bool debug_perf_ready() const override;
 	void debug_set_seat_labels(const std::vector<std::wstring>& labels) override;
 	std::vector<mattmath::RectangleF> debug_screen_obstacles() const override;
 

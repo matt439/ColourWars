@@ -124,6 +124,7 @@ void DebugDirectorImpl::detach_match(const DebugMatchTarget& match)
 {
 	if (this->match_ == &match)
 	{
+		this->perf_.break_interval();
 		// The level is still alive: a recording ends with its final state.
 		this->stop_recording("the match ended");
 		this->stop_playing("the match ended");

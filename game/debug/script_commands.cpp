@@ -17,6 +17,9 @@
 #include <cmath>
 #include <ctime>
 #include <fstream>
+#include <iomanip>
+#include <locale>
+#include <sstream>
 
 // Phase 4: scripts (exec, wait, echo), history, the live console, screenshot
 // folders and the perf overlay. Binds are in bind_commands.cpp.
@@ -378,28 +381,114 @@ std::string DebugDirectorImpl::rebuild_note() const
 		": queued; rebuilds when the debug menu closes" : ": rebuilding the match";
 }
 
+DebugStatus DebugDirectorImpl::start_perf_capture(const DebugArgs& args)
+{
+	int frames = 0;
+	if (!DebugArgs::parse_int(args.text(0), frames) || frames < 1 ||
+		frames > static_cast<int>(DebugPerf::max_capture_frames))
+	{
+		return DebugStatus::failure("perf.capture: expected 1-36000 rendered intervals");
+	}
+	const std::string& label = args.text(1);
+	if (label.empty() || label.size() > 64 || !std::all_of(label.begin(), label.end(), [](char c)
+	{
+		return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+			(c >= '0' && c <= '9') || c == '-' || c == '_';
+	}))
+	{
+		return DebugStatus::failure("perf.capture: label must use 1-64 letters, digits, '-' or '_'");
+	}
+	if (this->perf_capture_path_ || this->perf_.capture_active() || this->perf_.capture_ready())
+	{
+		return DebugStatus::failure("perf.capture: another capture is pending");
+	}
+	if (this->application_ == nullptr || !this->application_->active() || this->match_ == nullptr ||
+		!this->clock_.is_default() || this->debug_menu_ != nullptr || this->live_open_ ||
+		!this->match_->debug_perf_ready() || this->rebuild_queued() ||
+		this->application_->depth() != (this->console_open_ ? 3 : 2))
+	{
+		return DebugStatus::failure("perf.capture: needs a focused live match at timescale 1 with no rebuild queued");
+	}
+	const auto directory = this->user_directory();
+	if (!directory) { return DebugStatus::failure("perf.capture: no developer output directory"); }
+	const mattmath::Vector2I size = this->application_->resolution_manager()->resolution_ivec();
+	this->perf_width_ = size.x;
+	this->perf_height_ = size.y;
+	if (!this->perf_.start_capture(static_cast<std::size_t>(frames)))
+	{
+		return DebugStatus::failure("perf.capture: could not start recording");
+	}
+	this->perf_capture_path_ = *directory / L"perf" / labrador::widen(label);
+	return DebugStatus::success("perf.capture: recording " + std::to_string(frames) +
+		" rendered intervals (CPU wall time, diagnostic only)", true);
+}
+
+void DebugDirectorImpl::finish_perf_capture()
+{
+	if (!this->perf_capture_path_ || !this->perf_.capture_ready()) { return; }
+	std::filesystem::path csv_path = *this->perf_capture_path_;
+	csv_path += L".csv";
+	std::filesystem::path json_path = *this->perf_capture_path_;
+	json_path += L".json";
+	std::ostringstream csv;
+	csv.imbue(std::locale::classic());
+	csv << std::setprecision(17) << "frame,frame_ms,update_ms,draw_ms,updates,objects,projectiles\n";
+	std::size_t index = 0;
+	for (const DebugPerf::Frame& frame : this->perf_.captured_frames())
+	{
+		csv << ++index << ',' << frame.frame_ms << ',' << frame.update_ms << ',' << frame.draw_ms << ','
+			<< frame.updates << ',' << frame.objects << ',' << frame.projectiles << '\n';
+	}
+	const std::string json = "{\n  \"schema_version\": 1,\n  \"requested_frames\": " +
+		std::to_string(this->perf_.capture_target()) + ",\n  \"captured_frames\": " + std::to_string(index) +
+		",\n  \"complete\": " + (this->perf_.capture_complete() ? "true" : "false") +
+		",\n  \"reason\": \"" + this->perf_.capture_reason() +
+		"\",\n  \"timing_scope\": \"match_draw_begin_to_begin_cpu_wall_ms\"\n}\n";
+	const bool written = debug_files::write_file(csv_path, csv.str()) && debug_files::write_file(json_path, json);
+	const bool complete = this->perf_.capture_complete();
+	this->perf_capture_path_.reset();
+	this->perf_.discard_capture();
+	this->perf_.break_interval();
+	if (written)
+	{
+		this->log_.info(std::string("perf.capture: ") + (complete ? "complete " : "interrupted ") +
+			std::to_string(index) + " intervals: " + labrador::path_to_utf8(csv_path));
+	}
+	else { this->log_.error("perf.capture: could not write CSV/JSON output"); }
+}
+
 // ---------------------------------------------------------------------------
 // Drawing
 
 void DebugDirectorImpl::begin_match_draw()
 {
-	if (!this->capturing_)
+	// A covered match still draws, sometimes several times between updates.
+	// It and an inactive window must never create a pacing interval.
+	if (this->capturing_ || this->application_ == nullptr || !this->application_->active() ||
+		this->application_->depth() != 2 || this->debug_menu_ != nullptr ||
+		this->console_open_)
 	{
-		this->perf_.begin_draw(perf_now_ms());
+		this->perf_.break_interval();
+		return;
 	}
+	const mattmath::Vector2I size = this->application_->resolution_manager()->resolution_ivec();
+	if (this->perf_.capture_active() && (!this->clock_.is_default() || this->live_open_ ||
+		this->match_ == nullptr || !this->match_->debug_perf_ready() ||
+		size.x != this->perf_width_ || size.y != this->perf_height_))
+	{
+		this->perf_.break_interval();
+	}
+	this->perf_.begin_draw(perf_now_ms());
 }
 
 void DebugDirectorImpl::draw_status(labrador::Renderer& renderer)
 {
-	if (!this->capturing_)
-	{
-		this->perf_.end_draw(perf_now_ms());
-	}
 	const Level* level = this->match_ != nullptr ? this->match_->debug_level() : nullptr;
 	if (level != nullptr)
 	{
 		this->perf_.set_counts(level->collision_object_count(), level->projectile_count());
 	}
+	if (!this->capturing_) { this->perf_.end_draw(perf_now_ms()); }
 	const GameData& data = *this->data_;
 	using Anchor = DebugConsoleView::Anchor;
 	// Bottom corners, clear of the opening cards and of each other: the paint
@@ -623,8 +712,14 @@ void DebugDirectorImpl::register_script_commands()
 	add("perf.reset", "forget the measured frames", {},
 		[this](Args, DebugLog&)
 		{
+			if (this->perf_capture_path_) { return DebugStatus::failure("perf: a capture is pending"); }
 			this->perf_.reset();
 			return DebugStatus::success("perf: reset");
 		}, traits("view", Form::hidden));
+
+	add("perf.capture", "capture 1-36000 rendered match intervals, then export CSV and JSON; script barrier",
+		{ { "frames", false, {} }, { "label", false, {} } },
+		[this](Args args, DebugLog&) { return this->start_perf_capture(args); },
+		traits("view", Form::hidden));
 }
 #endif

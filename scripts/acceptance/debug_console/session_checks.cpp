@@ -10,6 +10,7 @@
 #include "game/debug/debug_text_field.h"
 #include "game/debug/tune_document.h"
 #include "game/session.h"
+#include <limits>
 #include <optional>
 
 // Binds, history, live-console input, the perf ring and polish.
@@ -267,6 +268,152 @@ namespace debug_console_acceptance
 		perf.end_draw(9018.0);
 		require(perf.size() == 2 && perf.frame().max == 16.0 && perf.update().max == 0.5,
 			"break_interval: the gap and the updates before it are not a frame");
+
+		// A capture keeps its whole chronological recording independently of
+		// the overlay ring. Starting one must not include the previous gap.
+		require(!perf.start_capture(0) && !perf.start_capture(36001) &&
+			!perf.capture_active() && !perf.capture_ready() && perf.size() == 2,
+			"Capture bounds reject zero and more than 36000 without disturbing the ring");
+		perf.add_update(99.0);
+		require(perf.start_capture(300) && perf.capture_active() && !perf.capture_ready() &&
+			!perf.capture_complete() && perf.capture_target() == 300 &&
+			perf.captured_frames().empty() && perf.capture_reason().empty(),
+			"A bounded capture starts empty and active");
+		require(!perf.start_capture(1) && perf.capture_target() == 300,
+			"An active recording cannot be replaced");
+		perf.end_draw(99999.0);
+		require(perf.capture_active() && perf.captured_frames().empty(),
+			"An unmatched draw end does not consume or interrupt the capture");
+		perf.add_update(88.0);
+		perf.begin_draw(10000.0);
+		perf.end_draw(10002.0);
+		require(perf.size() == 2 && perf.captured_frames().empty() && perf.capture_active(),
+			"The first capture draw only primes its interval and discards earlier updates");
+		for (int i = 1; i <= 300; ++i)
+		{
+			const int updates = i % 3;
+			if (updates > 0) { perf.add_update(0.25); }
+			if (updates > 1) { perf.add_update(0.5); }
+			perf.set_counts(100 + i, i % 7);
+			const double begin = 10000.0 + 17.0 * i;
+			perf.begin_draw(begin);
+			perf.end_draw(begin + 1.0 + (i % 3));
+			require(perf.captured_frames().size() == static_cast<std::size_t>(i) &&
+				perf.capture_active() == (i < 300),
+				"Capture counts actual rendered frames, including zero-update and catch-up frames");
+		}
+		require(!perf.capture_active() && perf.capture_ready() && perf.capture_complete() &&
+			perf.capture_reason() == "complete" && perf.size() == DebugPerf::capacity,
+			"The exact target completes while the overlay ring remains bounded");
+		for (int i = 1; i <= 300; ++i)
+		{
+			const DebugPerf::Frame& frame = perf.captured_frames()[static_cast<std::size_t>(i - 1)];
+			const int updates = i % 3;
+			const double update_ms = updates == 0 ? 0.0 : updates == 1 ? 0.25 : 0.75;
+			require(frame.frame_ms == 17.0 && frame.draw_ms == 1.0 + (i % 3) &&
+				frame.updates == updates && frame.update_ms == update_ms &&
+				frame.objects == 100 + i && frame.projectiles == i % 7,
+				"Capture retains each interval, CPU sum and population snapshot in chronological order");
+		}
+		require(perf.at(0).objects == 400 && perf.at(DebugPerf::capacity - 1).objects == 161 &&
+			!perf.start_capture(1), "The ring retains its newest rows and a completed capture awaits disposal");
+		perf.set_counts(999, 999);
+		perf.begin_draw(15117.0);
+		perf.end_draw(15119.0);
+		perf.break_interval();
+		require(perf.captured_frames().size() == 300 && perf.captured_frames().back().objects == 400 &&
+			perf.capture_complete() && perf.capture_reason() == "complete" && perf.at(0).objects == 999,
+			"Later frames and gaps cannot overrun or change a completed recording");
+		perf.discard_capture();
+		require(!perf.capture_active() && !perf.capture_ready() && !perf.capture_complete() &&
+			perf.capture_target() == 0 && perf.capture_reason().empty() &&
+			perf.captured_frames().empty() && perf.size() == DebugPerf::capacity,
+			"Discard clears only capture state and preserves the overlay history");
+
+		perf.reset();
+		require(perf.start_capture(4), "Start an interruptible capture");
+		perf.begin_draw(100.0);
+		perf.end_draw(102.0);
+		perf.add_update(0.5);
+		perf.begin_draw(116.0);
+		perf.end_draw(118.0);
+		perf.add_update(7.0);
+		perf.break_interval();
+		require(!perf.capture_active() && perf.capture_ready() && !perf.capture_complete() &&
+			perf.capture_target() == 4 && perf.capture_reason() == "interrupted" &&
+			perf.captured_frames().size() == 1 && perf.size() == 1 && !perf.start_capture(1),
+			"A gap retains an explicitly incomplete recording and refuses replacement");
+		perf.begin_draw(9000.0);
+		perf.end_draw(9001.0);
+		perf.add_update(0.25);
+		perf.begin_draw(9016.0);
+		perf.end_draw(9018.0);
+		require(perf.size() == 2 && perf.frame().max == 16.0 && perf.at(0).update_ms == 0.25 &&
+			perf.captured_frames().size() == 1 && perf.capture_reason() == "interrupted",
+			"The ring re-primes after a gap but an interrupted capture never silently resumes");
+		perf.discard_capture();
+		require(perf.start_capture(1), "A discarded recording permits a new one-frame capture");
+		perf.begin_draw(10000.0);
+		perf.end_draw(10001.0);
+		require(perf.capture_active() && perf.captured_frames().empty(),
+			"A fresh capture primes again even when the ring already has a previous frame");
+		const double nan = (std::numeric_limits<double>::quiet_NaN)();
+		const double infinity = (std::numeric_limits<double>::infinity)();
+		for (const double invalid : { -1.0, nan, infinity, -infinity }) { perf.add_update(invalid); }
+		perf.add_update(0.0);
+		perf.begin_draw(10016.0);
+		perf.end_draw(10016.0);
+		require(perf.capture_complete() && perf.captured_frames().size() == 1 &&
+			perf.captured_frames()[0].updates == 1 && perf.captured_frames()[0].update_ms == 0.0 &&
+			perf.captured_frames()[0].draw_ms == 0.0,
+			"Invalid update durations are ignored; genuine zero-duration updates and draws remain valid");
+
+		// Invalid timestamps must produce an interrupted partial capture,
+		// rather than a negative/non-finite interval or a poisoned ring.
+		for (const bool invalid_end : { false, true })
+		{
+			for (const double invalid : { -1.0, nan, infinity, -infinity, 115.0, 116.0 })
+			{
+				perf.reset();
+				require(perf.start_capture(3), "Start a capture for invalid-clock coverage");
+				perf.begin_draw(100.0);
+				perf.end_draw(102.0);
+				perf.add_update(0.5);
+				perf.begin_draw(116.0);
+				perf.end_draw(118.0);
+				perf.add_update(9.0);
+				if (invalid_end)
+				{
+					perf.begin_draw(132.0);
+					perf.end_draw(invalid);
+				}
+				else
+				{
+					perf.begin_draw(invalid);
+					perf.end_draw(134.0);
+				}
+				require(perf.capture_ready() && !perf.capture_complete() &&
+					perf.capture_reason() == "interrupted" && perf.captured_frames().size() == 1 &&
+					perf.size() == 1 && perf.at(0).frame_ms == 16.0 && perf.at(0).update_ms == 0.5,
+					"Negative, non-finite and backwards timestamps retain only valid rows");
+				perf.begin_draw(9000.0);
+				perf.end_draw(9002.0);
+				perf.begin_draw(9016.0);
+				perf.end_draw(9018.0);
+				require(perf.size() == 2 && perf.at(0).frame_ms == 16.0 &&
+					perf.at(0).updates == 0 && perf.captured_frames().size() == 1,
+					"Invalid-clock recovery re-primes and drops pending updates without reviving the capture");
+			}
+		}
+		perf.reset();
+		require(!perf.capture_active() && !perf.capture_ready() && perf.capture_target() == 0 &&
+			perf.captured_frames().empty() && perf.capture_reason().empty() && perf.size() == 0,
+			"Reset clears interrupted captures and all overlay samples");
+		require(perf.start_capture(36000), "The documented upper capture bound is accepted");
+		perf.reset();
+		require(!perf.capture_active() && !perf.capture_ready() && perf.capture_target() == 0 &&
+			perf.captured_frames().empty() && perf.size() == 0,
+			"Reset also cancels an active capture");
 	}
 
 	void check_polish(GameTuning& tuning, Presentation& presentation)
@@ -360,6 +507,34 @@ namespace debug_console_acceptance
 		const std::vector<std::filesystem::path> stale = stale_tune_directories(temp.root);
 		require(stale.size() == 1 && stale[0].filename() == L"ColourWars-tune-999999",
 			"Only the empty ColourWars-tune-<digits> folder is stale");
+
+		// Grammar and availability fail before any device or output is needed.
+		// A real capture/barrier uses the hardware probe's Application loop.
+		TestDirector perf_test(tuning, presentation);
+		DebugDirectorImpl& perf_impl = perf_test.impl;
+		for (const std::string& command : { "perf.capture", "perf.capture 1",
+			"perf.capture 1 label extra", "perf.capture 0 label", "perf.capture -1 label",
+			"perf.capture 36001 label", "perf.capture 2147483648 label", "perf.capture abc label",
+			"perf.capture 1.5 label", "perf.capture 1e2 label", "perf.capture nan label",
+			"perf.capture 1 \"\"", "perf.capture 1 ../escape", "perf.capture 1 sub/dir",
+			"perf.capture 1 sub\\dir", "perf.capture 1 C:escape", "perf.capture 1 \"two words\"" })
+		{
+			const DebugStatus result = perf_impl.execute(command);
+			require(!result.ok && result.message.find("needs a focused live match") == std::string::npos &&
+				!perf_impl.perf().capture_active() &&
+				!perf_impl.perf().capture_ready(), "Invalid capture grammar cannot arm a recording: " + command);
+		}
+		const DebugStatus long_label = perf_impl.execute("perf.capture 1 " + std::string(65, 'a'));
+		require(!long_label.ok && long_label.message.find("label must use 1-64") != std::string::npos,
+			"Capture labels have a bounded safe filename");
+		for (const std::string& command : { std::string("perf.capture 1 valid-A_9"),
+			"perf.capture 36000 " + std::string(64, 'a') })
+		{
+			const DebugStatus result = perf_impl.execute(command);
+			require(!result.ok && result.message.find("needs a focused live match") != std::string::npos &&
+				!perf_impl.perf().capture_active() && !perf_impl.perf().capture_ready(),
+				"Valid capture arguments still require a live focused Application match");
+		}
 	}
 }
 #endif

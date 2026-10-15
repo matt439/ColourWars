@@ -164,7 +164,7 @@ running.
 | `wait <n>\|<x>s\|match\|frames <n>\|replay\|record`, `echo <text>` | in a script: wait for updates, match seconds, the match, hook frames, a replay or a recording; print a line |
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
-| `perf`, `perf.reset` | print or clear the [perf](#perf) numbers |
+| `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers or export a bounded rendered-frame capture |
 | `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number or boolean in `tuning.json` / `presentation.json` (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
@@ -758,10 +758,22 @@ lines; `perf.reset` starts again. It is measured whenever a match runs, overlay
 or not, and only while the match is on top: a build, the menus, a page over the
 match (pause, results) or a screenshot's capture is a gap, not a frame - the
 first draw after one starts a new interval and records nothing (so does the
-very first). Time spent minimised is not detected as a gap.
-**Not measured**: present, the GPU and the render submit - `Application`
+very first). Focus loss and covering pages now break the interval immediately,
+including draws that occur before another simulation update.
+Frame intervals include intervening submit/Present wall time indirectly.
+**Not measured separately**: Present, GPU work or scan-out - `Application`
 exposes no frame statistics and `Renderer` no timestamp queries (engine report
 14). The panel says CPU for that reason.
+
+`perf.capture <1-36000> <label>` records chronological raw intervals independently
+of the ring, then writes CSV and completion JSON under `debug/perf/` in the user
+profile. Labels use 1–64 letters, digits, `_` or `-`. Sampling starts with a fresh
+interval in a live match at 1x; focus/coverage, count-ins, clock changes, resizing,
+rebuilds and screenshots invalidate continuity. Export happens after sampling,
+and a script's next statement waits for it. `perf.reset` refuses while a capture
+is pending. Interrupted captures are marked incomplete. The
+[frame-pacing workflow](polish-frame-pacing.md) adds isolated workloads,
+machine/load metadata, percentile summaries and the remaining POL#25 acceptance.
 
 ## Movement Course review recipes
 

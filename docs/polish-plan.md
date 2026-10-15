@@ -843,7 +843,9 @@ For each implementation increment, retain a short evidence record:
   pacing observations. Name unresolved questions and the next experiment.
 - Measured frame pacing and effect behaviour against the intended 60 fps target
   on a recorded reference machine. Set the supported hardware baseline before
-  claiming performance acceptance.
+  claiming performance acceptance. The [capture workflow](polish-frame-pacing.md)
+  records bounded rendered intervals and machine/load metadata; hidden or shared-load
+  diagnostics do not qualify the baseline.
 
 Qualify these cases across the finished content:
 

@@ -8,13 +8,15 @@
 // The perf overlay's numbers: the last `capacity` rendered match frames, each
 // with the interval since the previous one, the CPU time of the game's own
 // Level::update calls in it and of its own match draw. Fed with explicit
-// timestamps in milliseconds, so it can be tested without a clock. What it
-// does not see - present, the GPU and the render submit - is engine report
-// 14. Debug-only bodies.
+// timestamps in milliseconds, so it can be tested without a clock. The frame
+// interval includes intervening submit/Present wall time indirectly; separate
+// Present durations and GPU/scan-out timings remain engine report 14.
+// Debug-only bodies.
 class DebugPerf
 {
 public:
 	static constexpr std::size_t capacity = 240;
+	static constexpr std::size_t max_capture_frames = 36000;
 
 	struct Frame
 	{
@@ -22,6 +24,8 @@ public:
 		double update_ms = 0.0;
 		double draw_ms = 0.0;
 		int updates = 0;
+		int objects = 0;
+		int projectiles = 0;
 	};
 
 	struct Series
@@ -45,6 +49,16 @@ public:
 	// rather than timing the gap, and updates so far are forgotten.
 	void break_interval();
 	void set_counts(int objects, int projectiles);
+	// A bounded chronological recording, independent of the overlay ring.
+	// The first draw primes the interval. Export happens after recording ends.
+	bool start_capture(std::size_t target);
+	bool capture_active() const { return this->capture_active_; }
+	bool capture_ready() const { return this->capture_target_ != 0 && !this->capture_active_; }
+	bool capture_complete() const { return this->capture_ready() && this->capture_reason_ == "complete"; }
+	const std::vector<Frame>& captured_frames() const { return this->capture_frames_; }
+	std::size_t capture_target() const { return this->capture_target_; }
+	const std::string& capture_reason() const { return this->capture_reason_; }
+	void discard_capture();
 
 	std::size_t size() const { return this->size_; }
 	// 0 is the newest.
@@ -69,6 +83,10 @@ private:
 	double last_begin_ = -1.0;
 	int objects_ = 0;
 	int projectiles_ = 0;
+	std::vector<Frame> capture_frames_;
+	std::size_t capture_target_ = 0;
+	bool capture_active_ = false;
+	std::string capture_reason_;
 
 	template <typename Field>
 	Series series(Field field) const;

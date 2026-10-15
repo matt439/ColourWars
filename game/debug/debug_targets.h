@@ -80,6 +80,12 @@ public:
 
 	// The countdown is over and the players move (`wait match`).
 	virtual bool debug_countdown_over() const = 0;
+	// A pacing capture needs live simulation, including the screen's resume
+	// gate. Kept separate from `wait match`, which describes the round start.
+	virtual bool debug_perf_ready() const
+	{
+		return this->debug_countdown_over() && !this->debug_level_finished();
+	}
 	// What each seat's HUD says instead of its device ("Bot: paint",
 	// "Replay"), by view; an empty string or a short list keeps the device.
 	virtual void debug_set_seat_labels(const std::vector<std::wstring>& labels) = 0;

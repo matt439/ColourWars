@@ -697,6 +697,14 @@ bool GameLevel::debug_countdown_over() const
 	return this->level_->match_started();
 }
 
+bool GameLevel::debug_perf_ready() const
+{
+	// A typed capture closes its developer console before sampling. The
+	// director checks focus/clock/coverage; this answers the gameplay gates.
+	return this->level_->state() == LevelState::active && !this->pause_menu_open_ &&
+		!this->resume_countdown_.active();
+}
+
 void GameLevel::debug_set_seat_labels(const std::vector<std::wstring>& labels)
 {
 	if (this->level_ != nullptr)

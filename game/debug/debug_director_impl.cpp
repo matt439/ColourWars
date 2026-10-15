@@ -183,6 +183,9 @@ void DebugDirectorImpl::run_launch_statements(const std::vector<std::string>& st
 
 void DebugDirectorImpl::tick_scripts(bool from_hook)
 {
+	// Writes only after sampling has stopped, before a script can quit or
+	// rebuild. Manual captures are serviced even with no script running.
+	this->finish_perf_capture();
 	if (!this->scripts_.running())
 	{
 		return;
@@ -200,7 +203,7 @@ void DebugDirectorImpl::tick_scripts(bool from_hook)
 			{
 				this->capture_screenshot_if_ready();
 			}
-			return this->pending_screenshot_.has_value();
+			return this->pending_screenshot_.has_value() || this->perf_capture_path_.has_value();
 		},
 		this->log_);
 	this->inline_capture_ = false;

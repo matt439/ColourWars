@@ -889,12 +889,22 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
             tap(Key::escape);
             require(stack.depth() == 3, "A fresh Escape did not open the real pause page");
             tick(0.0f);
+#if COLOURWARS_DEV_TOOLS
+            require(!data.debug().impl()->execute("perf.capture 1 pause-rejected").ok &&
+                !data.debug().impl()->perf().capture_active(),
+                "A covered pause page armed a live-match pacing capture");
+#endif
         };
         const auto resume = [&]
         {
             tap(Key::enter);
             require(stack.depth() == 2 && game->resume_remaining() == duration,
                 "Actual pause-page Resume did not start one full count-in");
+#if COLOURWARS_DEV_TOOLS
+            require(!data.debug().impl()->execute("perf.capture 1 countin-rejected").ok &&
+                !data.debug().impl()->perf().capture_active(),
+                "A frozen resume count-in armed a live-match pacing capture");
+#endif
         };
         const auto record = [&](const char* phase)
         {
@@ -962,6 +972,11 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
         tick(duration * 0.25f);
         stack.notify_activation(false);
         const float unfocused = game->resume_remaining();
+#if COLOURWARS_DEV_TOOLS
+        require(!data.debug().impl()->execute("perf.capture 1 focus-rejected").ok &&
+            !data.debug().impl()->perf().capture_active(),
+            "An unfocused match armed a live-match pacing capture");
+#endif
         tick(duration + 8.0f);
         require(game->resume_remaining() == unfocused && frozen == resume_observation(level),
             "An unfocused GameLevel advanced its resume clock or world");

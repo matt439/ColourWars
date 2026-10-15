@@ -4,15 +4,23 @@
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/debug_perf.h"
 #include <cstdio>
+#include <cmath>
 
 void DebugPerf::add_update(double ms)
 {
+	if (ms < 0.0 || !std::isfinite(ms)) { return; }
 	this->pending_update_ms_ += ms;
 	++this->pending_updates_;
 }
 
 void DebugPerf::begin_draw(double now_ms)
 {
+	if (!std::isfinite(now_ms) || now_ms < 0.0 ||
+		(this->last_begin_ >= 0.0 && now_ms <= this->last_begin_))
+	{
+		this->break_interval();
+		return;
+	}
 	this->draw_begin_ = now_ms;
 }
 
@@ -20,6 +28,11 @@ void DebugPerf::end_draw(double now_ms)
 {
 	if (this->draw_begin_ < 0.0)
 	{
+		return;
+	}
+	if (!std::isfinite(now_ms) || now_ms < this->draw_begin_)
+	{
+		this->break_interval();
 		return;
 	}
 	if (this->last_begin_ < 0.0)
@@ -36,6 +49,8 @@ void DebugPerf::end_draw(double now_ms)
 	frame.draw_ms = now_ms - this->draw_begin_;
 	frame.update_ms = this->pending_update_ms_;
 	frame.updates = this->pending_updates_;
+	frame.objects = this->objects_;
+	frame.projectiles = this->projectiles_;
 	this->last_begin_ = this->draw_begin_;
 	this->draw_begin_ = -1.0;
 	this->pending_update_ms_ = 0.0;
@@ -44,14 +59,48 @@ void DebugPerf::end_draw(double now_ms)
 	this->frames_[this->next_] = frame;
 	this->next_ = (this->next_ + 1) % capacity;
 	this->size_ = std::min(this->size_ + 1, capacity);
+	if (this->capture_active_)
+	{
+		this->capture_frames_.push_back(frame);
+		if (this->capture_frames_.size() == this->capture_target_)
+		{
+			this->capture_active_ = false;
+			this->capture_reason_ = "complete";
+		}
+	}
 }
 
 void DebugPerf::break_interval()
 {
+	if (this->capture_active_)
+	{
+		this->capture_active_ = false;
+		this->capture_reason_ = "interrupted";
+	}
 	this->last_begin_ = -1.0;
 	this->draw_begin_ = -1.0;
 	this->pending_update_ms_ = 0.0;
 	this->pending_updates_ = 0;
+}
+
+bool DebugPerf::start_capture(std::size_t target)
+{
+	if (target == 0 || target > max_capture_frames || this->capture_target_ != 0) { return false; }
+	this->break_interval();
+	this->capture_frames_.clear();
+	this->capture_frames_.reserve(target);
+	this->capture_target_ = target;
+	this->capture_active_ = true;
+	this->capture_reason_.clear();
+	return true;
+}
+
+void DebugPerf::discard_capture()
+{
+	this->capture_frames_.clear();
+	this->capture_target_ = 0;
+	this->capture_active_ = false;
+	this->capture_reason_.clear();
 }
 
 void DebugPerf::set_counts(int objects, int projectiles)
