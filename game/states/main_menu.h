@@ -8,6 +8,7 @@
 #include "game/states/menu_panel.h"
 #include "game/states/option_row.h"
 #include "game/states/stage_preview.h"
+#include "game/states/ui_player_badge.h"
 #include "engine/core/state_context.h"
 #include "engine/render/colour.h"
 
@@ -209,6 +210,7 @@ private:
 	struct PlayerWidgets
 	{
 		std::unique_ptr<labrador::UiTextDropShadow> player = nullptr;
+		std::unique_ptr<UiPlayerBadge> badge;
 		std::unique_ptr<labrador::UiTexture> player_a = nullptr;
 		std::unique_ptr<labrador::UiTexture> player_center = nullptr;
 		std::unique_ptr<labrador::UiTexture> player_b = nullptr;
@@ -253,6 +255,7 @@ private:
 	struct Widgets
 	{
 		std::unique_ptr<labrador::UiTextDropShadow> player = nullptr;
+		std::unique_ptr<UiPlayerBadge> badge;
 		std::unique_ptr<MenuIcon> weapon_icon = nullptr;
 		std::unique_ptr<labrador::UiTextDropShadow> weapon_name = nullptr;
 		std::unique_ptr<labrador::UiTextDropShadow> weapon_description = nullptr;

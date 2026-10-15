@@ -188,6 +188,7 @@ void GameLevel::build_and_enter_level()
 // leave the match's voices paused until the menu is also closed.
 void GameLevel::on_activated()
 {
+	if (!this->covered_) { this->level_->emphasise_players(); }
 	if (this->audio_may_play())
 	{
 		this->level_->resume();
@@ -286,6 +287,7 @@ void GameLevel::on_suspend()
 void GameLevel::on_resume()
 {
 	this->covered_ = false;
+	this->level_->emphasise_players();
 	if (this->audio_may_play())
 	{
 		this->level_->resume();

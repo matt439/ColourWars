@@ -488,6 +488,32 @@ namespace
 		return hud;
 	}
 
+	PlayerIdentityPresentation read_player_identity(const JsonValue& root)
+	{
+		const JsonValue json = root.object("player_identity");
+		PlayerIdentityPresentation identity;
+		identity.enabled = json.boolean("enabled");
+		identity.world_size = read_positive_vector(json, "world_size");
+		identity.world_offset = read_finite_vector(json, "world_offset");
+		identity.emphasis_duration = read_positive(json, "emphasis_duration");
+		identity.emphasis_scale = read_positive(json, "emphasis_scale");
+		identity.ui_size = read_positive_vector(json, "ui_size");
+		identity.ui_gap = read_positive(json, "ui_gap");
+		identity.background_colour = read_colour(json, "background_colour");
+		identity.ink_colour = read_colour(json, "ink_colour");
+		identity.border = read_positive(json, "border");
+		if (identity.emphasis_scale < 1.0f || identity.emphasis_scale > 2.0f ||
+			identity.border * 2.0f >= std::min(identity.ui_size.x, identity.ui_size.y) ||
+			identity.background_colour.a != 1.0f || identity.ink_colour.a != 1.0f ||
+			identity.background_colour == identity.ink_colour)
+		{
+			throw std::runtime_error(json.where() +
+				": emphasis_scale must be 1..2, border must leave room for the glyph, "
+				"and badge colours must be distinct and opaque.");
+		}
+		return identity;
+	}
+
 	IdleDripPresentation read_idle_drip(const JsonValue& root)
 	{
 		const JsonValue json = root.object("idle_drip");
@@ -917,6 +943,7 @@ Presentation::Presentation(const char* path)
 	this->results_menu_ = read_results_menu(root);
 	this->prompt_bar_ = read_prompt_bar(root);
 	this->hud_ = read_hud(root);
+	this->player_identity_ = read_player_identity(root);
 	this->camera_.reference_height = read_positive(root.object("camera"), "reference_height");
 	const JsonValue shake = root.object("camera").object("shake");
 	ViewShakePresentation& kick = this->camera_.shake;
@@ -1221,6 +1248,11 @@ const ResultsMenuPresentation& Presentation::results_menu() const
 const PromptBarPresentation& Presentation::prompt_bar() const
 {
 	return this->prompt_bar_;
+}
+
+const PlayerIdentityPresentation& Presentation::player_identity() const
+{
+	return this->player_identity_;
 }
 
 const HudPresentation& Presentation::hud() const

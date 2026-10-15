@@ -280,6 +280,19 @@
     }
   },
 
+  "player_identity": {
+    "enabled": true,
+    "world_size": { "x": 36.0, "y": 28.0 },
+    "world_offset": { "x": 0.0, "y": -22.0 },
+    "emphasis_duration": 1.2,
+    "emphasis_scale": 1.35,
+    "ui_size": { "x": 54.0, "y": 42.0 },
+    "ui_gap": 12.0,
+    "background_colour": "WHITE",
+    "ink_colour": "BLACK",
+    "border": 2.0
+  },
+
   "camera": {
     "reference_height": 1080.0,
     "shake": {

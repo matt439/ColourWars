@@ -20,9 +20,11 @@ namespace
 }
 
 InterfaceGameplay::InterfaceGameplay(RenderResources* render_resources,
-	const HudPresentation* look) :
+	const HudPresentation* look, const PlayerIdentityPresentation* identity) :
 	render_resources_(render_resources),
 	look_(look),
+	identity_(identity),
+	player_badge_(identity, render_resources),
 	sheet_(render_resources->resolve_sprite_sheet(look->sprite_sheet)),
 	fill_frame_(render_resources->sprite_sheet(this->sheet_)->
 		resolve_sprite_frame(look->fill_frame)),
@@ -75,15 +77,21 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	draw_list.set_filter(TextureFilter::linear);
 	this->draw_timer(draw_list, resolution, timer, scale);
 
-	const std::wstring identity = L"P" + std::to_wstring(player_index + 1) +
+	const std::wstring identity = PlayerBadge::label(player_index) +
 		(team == PlayerTeam::a ? L"  /  TEAM A\n" : L"  /  TEAM B\n") +
 		device_label;
 	const Vector2F identity_pos(resolution.x * look.player_identity_offset.x,
 		resolution.y * look.player_identity_offset.y);
 	const Vector2F identity_size = this->render_resources()->measure_text(
 		this->player_identity_font_, identity) * scale;
+	const Vector2F badge_size = this->identity_->ui_size * scale;
+	const float badge_width = this->identity_->enabled
+		? badge_size.x + this->identity_->ui_gap * scale : 0.0f;
+	const Vector2F label_pos = identity_pos + Vector2F(badge_width, 0.0f);
 	const RectangleF identity_panel(identity_pos - padding,
-		identity_size + padding * 2.0f);
+		Vector2F(identity_size.x + badge_width,
+			std::max(identity_size.y, this->identity_->enabled ? badge_size.y : 0.0f)) +
+			padding * 2.0f);
 	draw_list.set_filter(TextureFilter::point);
 	sprite_sheet->draw(draw_list, this->fill_frame_, identity_panel,
 		look.player_identity_background_colour);
@@ -92,12 +100,14 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	sprite_sheet->draw(draw_list, this->fill_frame_,
 		RectangleF(identity_panel.position(),
 			Vector2F(stripe_width, identity_panel.height)), team_colour);
+	this->player_badge_.draw(draw_list, RectangleF(identity_pos + Vector2F(0.0f,
+		(identity_size.y - badge_size.y) / 2.0f), badge_size), player_index);
 	draw_list.set_filter(TextureFilter::linear);
 	draw_list.draw_text(this->player_identity_font_, identity,
-		identity_pos + look.player_identity_shadow_offset * scale,
+		label_pos + look.player_identity_shadow_offset * scale,
 		look.player_identity_shadow_colour, scale,
 		0.0f, Vector2F::ZERO, 0.0f);
-	draw_list.draw_text(this->player_identity_font_, identity, identity_pos,
+	draw_list.draw_text(this->player_identity_font_, identity, label_pos,
 		look.player_identity_colour, scale,
 		0.0f, Vector2F::ZERO, 0.0f);
 

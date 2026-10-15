@@ -268,6 +268,23 @@ struct PromptBarPresentation
 	mattmath::Vector2F shadow_offset = { 0.0f, 0.0f };
 };
 
+// Shared monochrome roster badge. Geometry is cosmetic; device slots never
+// choose identity. UI sizes are design units, world sizes are world units.
+struct PlayerIdentityPresentation
+{
+	bool enabled = true;
+	mattmath::Vector2F world_size;
+	// Bottom-centre offset above the player's collision rectangle.
+	mattmath::Vector2F world_offset;
+	float emphasis_duration = 0.0f;
+	float emphasis_scale = 1.0f;
+	mattmath::Vector2F ui_size;
+	float ui_gap = 0.0f;
+	labrador::Colour background_colour = labrador::Colour::white;
+	labrador::Colour ink_colour = labrador::Colour::black;
+	float border = 0.0f;
+};
+
 // Gameplay HUD: health, ammo, match timer and player identity. The respawn
 // wait has no number: the figure being redrawn at its spawn is the timer.
 // Margins, bar dimensions and text positions use viewport fractions. Shadow
@@ -628,6 +645,7 @@ public:
 	const ResultsMenuPresentation& results_menu() const;
 	const PromptBarPresentation& prompt_bar() const;
 	const HudPresentation& hud() const;
+	const PlayerIdentityPresentation& player_identity() const;
 	const MatchPresentation& match() const;
 	const CameraPresentation& camera() const;
 	const MovementFeedbackPresentation& movement_feedback() const;
@@ -657,6 +675,7 @@ private:
 	ResultsMenuPresentation results_menu_;
 	PromptBarPresentation prompt_bar_;
 	HudPresentation hud_;
+	PlayerIdentityPresentation player_identity_;
 	MatchPresentation match_;
 	CameraPresentation camera_;
 	MovementFeedbackPresentation movement_feedback_;

@@ -98,6 +98,8 @@ adds the sprayer's residual bead and falling drip, plus quiet character motion; 
 matching impacts and roller contact flecks. The later
 [aim/readiness cue](polish-aim-marker.md) displays actual shot eligibility;
 the [bare-cover contact cue](polish-blocked-shots.md) explains an obstructed
-shot. Identity and human review remain `POL#14`.
+shot. The [shared player badges](polish-plan.md#help-players-read-the-tool-and-the-fight)
+now carry roster identity across selection, figure, pane and results;
+human review remains `POL#14`.
 These automated checks and image inspection do not establish
 human movement-feel, controller, listening or final composition acceptance.

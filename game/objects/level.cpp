@@ -43,6 +43,10 @@ Level::Level(std::unique_ptr<Scene> scene,
 	this->preferences_ = preferences;
 	this->presentation_ = presentation;
 	this->render_resources_ = render_resources;
+	this->player_badge_ = std::make_unique<PlayerBadge>(
+		&presentation->player_identity(), render_resources);
+	this->player_identity_remaining_.assign(this->players_.size(),
+		presentation->player_identity().emphasis_duration);
 	this->paint_audio_ = std::make_unique<PaintAudio>(&tuning->paint(), audio_resources, preferences);
 	this->blocked_shot_feedback_ = std::make_unique<BlockedShotFeedback>(
 		&presentation->blocked_shot(), render_resources);
@@ -74,7 +78,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 		render_resources, resolution_manager,
 		&presentation->debug_overlay());
 	this->interface_gameplay_ = std::make_unique<InterfaceGameplay>(
-		render_resources, &presentation->hud());
+		render_resources, &presentation->hud(), &presentation->player_identity());
 	this->sound_bank_ = audio_resources->sound_bank(sound_bank_name);
 
 	// A silent stage leaves music_ unresolved; every music call checks it.
@@ -309,6 +313,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 					this->tuning_->match().go_sound.volume * this->preferences_->sfx_gain());
 			}
 			this->state_ = LevelState::active;
+			if (before > 0.0f || starting) { this->emphasise_players(); }
 			this->intro_countdown_ = false;
 		}
 		else
@@ -411,6 +416,12 @@ float Level::zoom_out_camera_ratio() const
 void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs,
 	float dt, SeatInputFilter* seats)
 {
+	std::array<bool, 4> was_dead{};
+	for (size_t view = 0; view < this->players_.size(); ++view)
+	{
+		was_dead[view] = this->players_[view]->state() == PlayerState::dead;
+	}
+	this->update_player_identity(dt);
 	// Run the scene phases in order, with game-specific work between them.
 	this->paint_audio_->update(dt);
 	this->blocked_shot_feedback_->update(dt);
@@ -442,6 +453,14 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	}
 
 	this->update_players_after_resolve();
+	for (size_t view = 0; view < this->players_.size(); ++view)
+	{
+		if (was_dead[view] && this->players_[view]->state() == PlayerState::alive)
+		{
+			this->player_identity_remaining_[view] =
+				this->presentation_->player_identity().emphasis_duration;
+		}
+	}
 	this->update_idle_drips(dt);
 
 	// Retire deleted/out-of-bounds objects and admit this tick's projectiles.
@@ -741,6 +760,11 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		list.set_camera(this->scene_->view(view_index).camera);
 		player->primary_weapon().draw_aim_marker(list);
 	}
+	if (this->player_identity_visible(view_index))
+	{
+		list.set_filter(TextureFilter::point);
+		this->player_badge_->draw(list, this->player_identity_bounds(view_index), view_index);
+	}
 
 	// Dividers use window coordinates; subtract the pane's screen origin
 	// to draw them into this viewport.
@@ -780,6 +804,50 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	{
 		this->debug_text_->draw_debug_info(list, player,
 			this->projectile_count_, this->frame_dt_);
+	}
+}
+
+bool Level::player_identity_visible(int view) const
+{
+	return view >= 0 && view < this->player_count() &&
+		this->presentation_->player_identity().enabled &&
+		(this->state_ == LevelState::start_countdown || this->state_ == LevelState::active) &&
+		this->player(view).state() == PlayerState::alive && this->player(view).health() > 0.0f;
+}
+
+float Level::player_identity_emphasis(int view) const
+{
+	if (!this->player_identity_visible(view) || this->preferences_->reduce_effects)
+	{
+		return 0.0f;
+	}
+	return std::clamp(this->player_identity_remaining_[static_cast<size_t>(view)] /
+		this->presentation_->player_identity().emphasis_duration, 0.0f, 1.0f);
+}
+
+RectangleF Level::player_identity_bounds(int view) const
+{
+	const PlayerIdentityPresentation& look = this->presentation_->player_identity();
+	const RectangleF body = this->player(view).rectangle();
+	const float scale = 1.0f + (look.emphasis_scale - 1.0f) *
+		this->player_identity_emphasis(view);
+	const Vector2F size = look.world_size * scale;
+	const Vector2F bottom = Vector2F(body.center().x, body.top()) + look.world_offset;
+	return RectangleF(bottom - Vector2F(size.x * 0.5f, size.y), size);
+}
+
+void Level::emphasise_players()
+{
+	if (this->state_ != LevelState::active) { return; }
+	std::fill(this->player_identity_remaining_.begin(), this->player_identity_remaining_.end(),
+		this->presentation_->player_identity().emphasis_duration);
+}
+
+void Level::update_player_identity(float dt)
+{
+	for (float& remaining : this->player_identity_remaining_)
+	{
+		remaining = std::max(0.0f, remaining - std::max(0.0f, dt));
 	}
 }
 
@@ -844,6 +912,8 @@ bool Level::place_player(int view, const Vector2F& top_left)
 	if (player->state() == PlayerState::dead)
 	{
 		player->force_respawn();
+		this->player_identity_remaining_[static_cast<size_t>(view)] =
+			this->presentation_->player_identity().emphasis_duration;
 	}
 	player->place_at(top_left);
 	player->update_weapon_position();
@@ -859,7 +929,13 @@ bool Level::respawn_player(int view)
 		return false;
 	}
 	Player* player = this->players_[static_cast<size_t>(view)];
+	const bool was_dead = player->state() == PlayerState::dead;
 	player->force_respawn();
+	if (was_dead)
+	{
+		this->player_identity_remaining_[static_cast<size_t>(view)] =
+			this->presentation_->player_identity().emphasis_duration;
+	}
 	player->update_weapon_position();
 	this->refresh_player_cameras();
 	this->refresh_views();

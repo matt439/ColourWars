@@ -5,6 +5,7 @@
 #include "engine/math/vector2f.h"
 #include "game/presentation.h"
 #include "game/objects/player_team.h"
+#include "game/objects/player_badge.h"
 
 
 class InterfaceGameplay
@@ -12,7 +13,7 @@ class InterfaceGameplay
 public:
     // The presentation is borrowed and outlives every level: main() owns it.
     InterfaceGameplay(labrador::RenderResources* render_resources,
-        const HudPresentation* look);
+        const HudPresentation* look, const PlayerIdentityPresentation* identity);
 
     // Shared by render workers. Keep per-view state in parameters and locals;
     // const on the owning unique_ptr does not make its pointee const.
@@ -56,6 +57,8 @@ private:
     // Borrowed services and presentation; both outlive the HUD.
     labrador::RenderResources* render_resources_ = nullptr;
     const HudPresentation* look_ = nullptr;
+    const PlayerIdentityPresentation* identity_ = nullptr;
+    PlayerBadge player_badge_;
 
     // Resolve assets at construction. Declare sheet_ first because frame handles
     // are resolved against it.

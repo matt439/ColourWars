@@ -84,6 +84,10 @@ void ResultsMenuInitial::update_page(float dt)
 			{
 				detail->set_hidden(false);
 			}
+			for (const auto& badge : this->player_badges_)
+			{
+				badge->set_hidden(false);
+			}
 			
 			if (this->show_results_timer_ >= look.show_results_delay)
 			{
@@ -304,6 +308,11 @@ void ResultsMenuInitial::init()
 			end_info.player_percentage_string(paint_owners::index(player.num, static_cast<int>(i))),
 			look.contribution_position + Vector2F(0.0f,
 				look.contribution_spacing * static_cast<float>(i + 1)), look.contribution_font);
+		this->player_badges_.push_back(std::make_unique<UiPlayerBadge>(
+			"player_badge_" + std::to_string(i + 1),
+			UiPlayerBadge::before(this->details_.back()->bounds(), this->presentation().player_identity()),
+			static_cast<int>(i), &this->presentation().player_identity(), this->render_resources(), true));
+		this->texture_container_->add_child(this->player_badges_.back().get());
 	}
 
 	if (this->revealed_)

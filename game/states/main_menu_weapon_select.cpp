@@ -283,6 +283,9 @@ void MainMenuWeaponSelect::init()
 			this->calculate_widget_position(0, i + 2),
 			this->render_resources(),
 			this->look().weapon_select.unselected);
+		widgets->badge = std::make_unique<UiPlayerBadge>(name + "_badge",
+			UiPlayerBadge::before(widgets->player->bounds(), this->presentation().player_identity()),
+			i, &this->presentation().player_identity(), this->render_resources());
 
 		widgets->weapon_icon = std::make_unique<MenuIcon>(
 			name + "_wep_icon",
@@ -317,6 +320,7 @@ void MainMenuWeaponSelect::init()
 			this->look().weapon_description_shadow_offset);
 
 		this->texture_container_->add_child(widgets->weapon_icon.get());
+		this->texture_container_->add_child(widgets->badge.get());
 		this->text_container_->add_child(widgets->weapon_name.get());
 		this->text_container_->add_child(widgets->player.get());
 		this->text_container_->add_child(widgets->weapon_description.get());

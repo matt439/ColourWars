@@ -308,6 +308,9 @@ void MainMenuTeamSelect::init()
 			this->look().team_select.unselected,
 			this->menu_style().shadow_colour,
 			this->menu_style().item_shadow_offset);
+		widgets->badge = std::make_unique<UiPlayerBadge>(name + "_badge",
+			UiPlayerBadge::before(widgets->player->bounds(), this->presentation().player_identity()),
+			i, &this->presentation().player_identity(), this->render_resources());
 
 		widgets->player_a = std::make_unique<UiTexture>(
 			name + "_a",
@@ -337,6 +340,7 @@ void MainMenuTeamSelect::init()
 		this->texture_container_->add_child(widgets->player_a.get());
 		this->texture_container_->add_child(widgets->player_center.get());
 		this->texture_container_->add_child(widgets->player_b.get());
+		this->texture_container_->add_child(widgets->badge.get());
 
 		this->text_container_->add_child(widgets->player.get());
 

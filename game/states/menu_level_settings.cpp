@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/states/menu_level_settings.h"
 #include "game/input_slots.h"
+#include "game/objects/player_badge.h"
 using namespace labrador;
 
 std::optional<float> MenuLevelSettings::duration() const
@@ -144,7 +145,7 @@ std::wstring MenuLevelSettings::player_label(int player_index) const
 {
 	const MenuPlayerSettings& player =
 		this->player_settings_.at(static_cast<size_t>(player_index));
-	return L"P" + std::to_wstring(player_index + 1) + L" - " +
+	return PlayerBadge::label(player_index) + L" - " +
 		input_slots::device_name(player.num);
 }
 

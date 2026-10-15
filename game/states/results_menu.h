@@ -4,6 +4,7 @@
 #include "game/session.h"
 #include "engine/render/colour.h"
 #include "game/states/menu_page.h"
+#include "game/states/ui_player_badge.h"
 
 
 class ResultsMenuPage : public MenuPage
@@ -41,6 +42,7 @@ private:
 	Session session_;
 	bool revealed_ = false;
 	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> details_;
+	std::vector<std::unique_ptr<UiPlayerBadge>> player_badges_;
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> fill_box_ = nullptr;

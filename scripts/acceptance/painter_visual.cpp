@@ -5,6 +5,7 @@
 #include "game/objects/projectile_spray.h"
 #include "game/objects/weapon_feedback.h"
 #include "game/objects/blocked_shot_feedback.h"
+#include "game/objects/player_badge.h"
 #include "game/save.h"
 #include "game/debug/dev_tools.h"
 #if COLOURWARS_DEV_TOOLS
@@ -110,6 +111,7 @@ namespace
             const WeaponFeedbackState& weapon_feedback = tool.feedback()->state();
             const CombatFeedback& combat = player.combat_feedback();
             const RectangleF death = combat.death_rectangle();
+            const RectangleF identity = level.player_identity_bounds(view);
             const QuietCharacter::State& quiet = player.quiet_character().state();
             values.insert(values.end(), { body.x, body.y, body.width, body.height,
                 player.velocity().x, player.velocity().y, player.health(), player.weapon_ammo(),
@@ -125,6 +127,8 @@ namespace
                 weapon_feedback.empty_remaining, weapon_feedback.recovered_remaining, combat.hurt_remaining(),
                 combat.elimination_remaining(), death.x, death.y, death.width, death.height,
                 quiet.breath, quiet.lean, quiet.blinking ? 1.0f : 0.0f });
+            values.insert(values.end(), { level.player_identity_visible(view) ? 1.0f : 0.0f,
+                level.player_identity_emphasis(view), identity.x, identity.y, identity.width, identity.height });
             const IdleDrip* drip = level.idle_drip(view);
             values.push_back(drip != nullptr ? 1.0f : 0.0f);
             if (drip != nullptr)
@@ -321,7 +325,7 @@ namespace
 
     std::unique_ptr<Level> build(Application& app, LevelBuilder& builder,
         int count, TeamColourPair palette, bool roller = false, bool same_team = false,
-        WeaponType tool = WeaponType::none)
+        WeaponType tool = WeaponType::none, OpeningMode opening = OpeningMode::off)
     {
         MenuLevelSettings settings;
         settings.set_player_count(count);
@@ -342,7 +346,7 @@ namespace
                 (roller ? WeaponType::roller : tools[view]));
         }
         app.viewport_manager()->set_layout(settings.screen_layout());
-        auto level = builder.build_level(settings, palette, OpeningMode::off);
+        auto level = builder.build_level(settings, palette, opening);
         require(level->player_count() == count, "builder changed the roster count");
         for (int view = 0; view < count; ++view)
         {
@@ -1682,7 +1686,7 @@ namespace
     Frame shake_hud(Application& app, const Level& level, const GameTuning& tuning,
         const Presentation& presentation, const Colour& background)
     {
-        const InterfaceGameplay hud(app.render_resources(), &presentation.hud());
+        const InterfaceGameplay hud(app.render_resources(), &presentation.hud(), &presentation.player_identity());
         const Canvas canvas(app.render_resources(), background);
         Renderer& renderer = *app.renderer();
         renderer.begin_frame();
@@ -2014,6 +2018,212 @@ namespace
         std::cout << "PASS aim marker: actual ready/recovering/empty tools in all palettes and quadrants, four own panes at 720p, representative 1080p/QHD, independent marker raster bounds, pause, frozen redraw and unchanged fingerprint\n";
     }
 
+    Frame identity_context_crop(const Frame& frame, const Level& level, int view,
+        const Viewport& viewport)
+    {
+        const RectangleF body = level.player(view).rectangle();
+        const RectangleF badge = level.player_identity_bounds(view);
+        const float left = std::min(body.left(), badge.left());
+        const float top = std::min(body.top(), badge.top());
+        const float right = std::max(body.right(), badge.right());
+        const float bottom = std::max(body.bottom(), badge.bottom());
+        const RectangleF projected = level.view_camera(view).calculate_view_rectangle(
+            RectangleF(left, top, right - left, bottom - top));
+        const RectangleI pane = viewport.pixel_rect();
+        const int x0 = std::max(pane.x, pane.x + static_cast<int>(std::floor(projected.x)) - 12);
+        const int y0 = std::max(pane.y, pane.y + static_cast<int>(std::floor(projected.y)) - 12);
+        const int x1 = std::min(pane.right(), pane.x + static_cast<int>(std::ceil(projected.right())) + 12);
+        const int y1 = std::min(pane.bottom(), pane.y + static_cast<int>(std::ceil(projected.bottom())) + 12);
+        require(x1 > x0 && y1 > y0, "Identity context did not intersect its own pane");
+        Frame crop{ x1 - x0, y1 - y0, {} };
+        for (int y = y0; y < y1; ++y)
+        {
+            const size_t start = (static_cast<size_t>(y) * static_cast<size_t>(frame.width) +
+                static_cast<size_t>(x0)) * 4;
+            crop.pixels.insert(crop.pixels.end(), frame.pixels.begin() + start,
+                frame.pixels.begin() + start + static_cast<size_t>(crop.width) * 4);
+        }
+        return crop;
+    }
+
+    void identity_capture(Application& app, Level& level, Presentation& presentation,
+        const std::filesystem::path& output, const std::string& stem, std::ofstream& records)
+    {
+        const auto before = observation(level);
+#if COLOURWARS_DEV_TOOLS
+        const MatchFingerprint fingerprint = MatchFingerprint::of(level, 0);
+#endif
+        const Frame enabled = render(level, *app.renderer());
+        require(enabled.pixels == render(level, *app.renderer()).pixels,
+            "Frozen identity Level redraw changed pixels");
+        auto& look = const_cast<PlayerIdentityPresentation&>(presentation.player_identity());
+        // Hide only the world badge at the identical state. The same shared
+        // renderer still draws the pane's UI badge, so every delta below must
+        // belong to the owner above the figure, not its HUD or another player.
+        const Vector2F world_size = look.world_size;
+        look.world_size = Vector2F::ZERO;
+        const Frame disabled = render(level, *app.renderer());
+        look.world_size = world_size;
+        require(enabled.pixels == render(level, *app.renderer()).pixels,
+            "Restoring world identity size did not restore its raster");
+        save(enabled, output / (stem + ".ppm"));
+        for (int view = 0; view < level.player_count(); ++view)
+        {
+            const Viewport& viewport = app.viewport_manager()->player_viewport(view);
+            const RectangleF bounds = level.player_identity_bounds(view);
+            Frame crop{};
+            const size_t changed = check_projected_bounds(enabled, disabled,
+                level.view_camera(view).calculate_view_rectangle(bounds), viewport, crop);
+            require(level.player_identity_visible(view) ? changed > 0 : changed == 0,
+                "World identity visibility or own-pane raster bounds did not match lifecycle");
+            if (changed > 0)
+            {
+                save(identity_context_crop(enabled, level, view, viewport), output /
+                    (stem + "-context-player" + std::to_string(view + 1) + ".ppm"));
+                save(crop, output / (stem + "-badge-player" + std::to_string(view + 1) + ".ppm"));
+            }
+            records << stem << ',' << view + 1 << ',' << level.player(view).player_num() << ','
+                << level.player_identity_visible(view) << ',' << level.player_identity_emphasis(view) << ','
+                << changed << ',' << bounds.x << ',' << bounds.y << ',' << bounds.width << ',' << bounds.height << '\n';
+        }
+        require(before == observation(level), "Identity draws changed simulation or cosmetic timers");
+#if COLOURWARS_DEV_TOOLS
+        require(MatchFingerprint::difference(fingerprint, MatchFingerprint::of(level, 0)).empty(),
+            "Identity draws changed replay fingerprint");
+#endif
+    }
+
+    void identity_matrix(Application& app, LevelBuilder& builder, Presentation& presentation,
+        PlaySettings& preferences, const std::filesystem::path& output)
+    {
+        const RestoreFlag restore_reduced{ preferences.reduce_effects, preferences.reduce_effects };
+        preferences.reduce_effects = false;
+        std::ofstream records(output / "player-identity.csv");
+        records << "capture,view,input_slot,visible,emphasis,changed_pixels,bounds_x,bounds_y,bounds_width,bounds_height\n";
+        const auto inputs = neutral_inputs();
+        for (const TeamColourPair palette : { TeamColourPair::blue_orange,
+            TeamColourPair::pink_green, TeamColourPair::blue_yellow })
+        {
+            auto level = build(app, builder, 4, palette, false, true, WeaponType::sprayer);
+            settle(*level, inputs);
+            resize(app, *level, { 1280, 720 });
+            // All four identical same-team tools overlap. Only roster identity
+            // and the existing head accents can distinguish the figures.
+            for (int view = 0; view < 4; ++view)
+            {
+                require(level->place_player(view, { 1400.0f + 12.0f * static_cast<float>(view), 1275.0f }),
+                    "Could not overlap same-team identity fixtures");
+            }
+            for (int tick = 0; tick < 600 && level->player_identity_emphasis(0) > 0.0f; ++tick)
+            {
+                level->update(inputs, dt);
+            }
+            require(level->player_identity_emphasis(0) == 0.0f, "Identity emphasis did not settle");
+            const std::string prefix = std::string("4p-identity-") + TeamColourTools::palette_key(palette);
+            identity_capture(app, *level, presentation, output, prefix + "-overlap-quiet-1280", records);
+            const RectangleF quiet = level->player_identity_bounds(0);
+            if (palette == TeamColourPair::blue_orange)
+            {
+                // Pin the shared renderer at exactly one pane-local position
+                // and native gameplay size. Team tint, bodies and subpixel
+                // camera differences cannot make two roster digits differ.
+                const Viewport& viewport = app.viewport_manager()->player_viewport(0);
+                const RectangleF projected = level->view_camera(0).calculate_view_rectangle(quiet);
+                const RectangleF box(Vector2F(24, 24), projected.size());
+                const Canvas canvas(app.render_resources());
+                const PlayerBadge badge(&presentation.player_identity(), app.render_resources());
+                const auto glyph = [&](int roster)
+                {
+                    Renderer& renderer = *app.renderer();
+                    renderer.begin_frame();
+                    renderer.set_view_count(1);
+                    DrawList list = renderer.view(0);
+                    list.set_viewport(viewport);
+                    list.set_camera(Camera::DEFAULT_CAMERA);
+                    canvas.draw(list, RectangleF(Vector2F::ZERO, viewport.size()));
+                    if (roster >= 0) { badge.draw(list, box, roster); }
+                    return read(renderer);
+                };
+                const Frame blank = glyph(-1);
+                std::vector<Frame> digits;
+                for (int roster = 0; roster < 4; ++roster)
+                {
+                    const Frame image = glyph(roster);
+                    Frame crop{};
+                    require(check_projected_bounds(image, blank, box, viewport, crop) > 0,
+                        "Shared roster badge produced no native-size glyph");
+                    for (const Frame& earlier : digits)
+                    {
+                        require(crop.pixels != earlier.pixels,
+                            "Two roster badge numbers have identical native-size rasters");
+                    }
+                    save(crop, output / ("4p-identity-glyph-quiet-1280-player" +
+                        std::to_string(roster + 1) + ".ppm"));
+                    digits.push_back(std::move(crop));
+                }
+            }
+            level->emphasise_players();
+            require(level->player_identity_emphasis(0) == 1.0f &&
+                level->player_identity_bounds(0).width > quiet.width,
+                "Requested identity emphasis did not expand the world badge");
+            identity_capture(app, *level, presentation, output, prefix + "-overlap-emphasis-1280", records);
+            preferences.reduce_effects = true;
+            require(level->player_identity_visible(0) && level->player_identity_emphasis(0) == 0.0f &&
+                level->player_identity_bounds(0).width == quiet.width,
+                "Reduce effects hid identity or retained its animated emphasis");
+            identity_capture(app, *level, presentation, output, prefix + "-overlap-reduced-1280", records);
+            preferences.reduce_effects = false;
+            if (palette != TeamColourPair::blue_orange) { continue; }
+            for (const Vector2I size : { Vector2I(1920, 1080), Vector2I(2560, 1440) })
+            {
+                resize(app, *level, size);
+                identity_capture(app, *level, presentation, output,
+                    prefix + "-overlap-emphasis-" + std::to_string(size.x), records);
+            }
+            resize(app, *level, { 1280, 720 });
+            auto crossing = inputs;
+            require(level->place_player(0, { 1400, 1275 }) && level->place_player(1, { 1512, 1275 }),
+                "Could not place teammate crossing fixture");
+            crossing[static_cast<size_t>(level->player(0).player_num())].x_movement = 1.0f;
+            crossing[static_cast<size_t>(level->player(1).player_num())].x_movement = -1.0f;
+            for (int tick = 0; tick < 60 &&
+                level->player(0).rectangle().x <= level->player(1).rectangle().x; ++tick)
+            {
+                level->update(crossing, dt);
+            }
+            require(level->player(0).rectangle().x > level->player(1).rectangle().x,
+                "Same-team scripted players did not cross");
+            identity_capture(app, *level, presentation, output, prefix + "-crossed-1280", records);
+            level->suspend();
+            identity_capture(app, *level, presentation, output, prefix + "-paused-1280", records);
+            level->resume();
+            require(level->kill_player(0), "Could not kill identity fixture");
+            level->update(inputs, dt);
+            require(!level->player_identity_visible(0), "Dead player retained an owner badge");
+            identity_capture(app, *level, presentation, output, prefix + "-dead-1280", records);
+            for (int tick = 0; tick < 600 && level->player(0).state() != PlayerState::alive; ++tick)
+            {
+                level->update(inputs, dt);
+            }
+            require(level->player(0).state() == PlayerState::alive &&
+                level->player_identity_visible(0) && level->player_identity_emphasis(0) > 0.0f,
+                "Respawn did not restore and emphasise the owning identity");
+            identity_capture(app, *level, presentation, output, prefix + "-respawn-1280", records);
+        }
+        auto sparse = build(app, builder, 2, TeamColourPair::blue_orange, false, true);
+        settle(*sparse, inputs);
+        resize(app, *sparse, { 1280, 720 });
+        identity_capture(app, *sparse, presentation, output, "2p-identity-sparse-slots-1280", records);
+        auto story = build(app, builder, 4, TeamColourPair::blue_orange,
+            false, true, WeaponType::sprayer, OpeningMode::quick);
+        resize(app, *story, { 1280, 720 });
+        require(story->intro_playing() && !story->player_identity_visible(0),
+            "Story fixture did not suppress world identity");
+        identity_capture(app, *story, presentation, output, "4p-identity-story-hidden-1280", records);
+        require(records.good(), "Identity record write failed");
+        std::cout << "PASS player identity: three 4P720 palettes, same-team overlap/crossing, sparse/reordered input slots, quiet/emphasis/reduced effects, 1080p/QHD bounds, dead/respawn/story/pause, own-pane world-only raster deltas, frozen cosmetic state and fingerprint\n";
+    }
+
     void shake_matrix(Application& app, LevelBuilder& builder, const GameTuning& tuning,
         const Presentation& presentation, PlaySettings& preferences, const std::filesystem::path& output)
     {
@@ -2123,7 +2333,9 @@ int wmain(int argc, wchar_t** argv)
 {
     try
     {
-        require(argc == 3, "usage: painter_visual <staged-content> <output>");
+        require(argc == 3 || (argc == 4 && std::wstring(argv[3]) == L"identity"),
+            "usage: painter_visual <staged-content> <output> [identity]");
+        const bool identity_only = argc == 4;
         std::cout << std::unitbuf;
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
@@ -2170,6 +2382,13 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         const Canvas canvas(app.render_resources());
+        if (identity_only)
+        {
+            identity_matrix(app, builder, presentation, preferences, output);
+            require(records.good(), "Capture record write failed");
+            std::cout << "PASS identity-only visual check; other painter matrices were not run\n";
+            return 0;
+        }
         // Base captures below keep their normal movement effects. Disable them
         // only while checking action-body frame differences in this matrix.
         presentation.set_movement_feedback_enabled(false);
@@ -2210,6 +2429,7 @@ int wmain(int argc, wchar_t** argv)
         quiet_matrix(app, builder, canvas, presentation, output, records);
         reduced_effects_matrix(app, builder, canvas, presentation, preferences, output, records);
         shake_matrix(app, builder, tuning, presentation, preferences, output);
+        identity_matrix(app, builder, presentation, preferences, output);
         {
             // Depletion pays hundreds of shots without wall-clock audio
             // updates. A silent bank keeps this renderer check independent of

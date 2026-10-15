@@ -792,8 +792,8 @@ to the four aimed tools. A chevron, recovery bars and a dry cross distinguish
 ready, cooldown and insufficient paint using the same gates as firing, even
 when fire is released. The marker follows nozzle direction; it predicts no hit
 point and the fixed-aim roller has none. Controls / audio saves its On/Off
-preference. The shared player-identity system and human review in the reference
-composition remain open.
+preference. The shared player badges are implemented below; human review in
+the reference composition remains open.
 
 **Bare-cover contact implemented (2026-10-15, part of `POL#14`).** The
 [implementation and evidence](polish-blocked-shots.md) add a bounded, detached
@@ -802,6 +802,57 @@ hits cover without splashing a paintable tile. Launch contacts survive immediate
 projectile deletion; flight contacts use the same cue. Existing wet splashes
 remain the response on painted hits. The queue ages once per active tick,
 freezes under pause and clears at time-up, without changing paint or firing.
+
+**Shared player identity implemented (2026-10-15, part of `POL#14`).** A
+monochrome pencil-cell `P1`–`P4` box uses the same
+[badge drawing](../game/objects/player_badge.cpp) beside team/weapon selection
+labels, in each pane's HUD and on the results contribution rows. The existing
+device labels and accepted teammate head accents remain. Identity follows
+roster/view order throughout; keyboard and sparse or reordered pad slots do
+not choose the number, and results retain their input-slot paint attribution.
+
+Each pane draws only its own figure's badge above the head accent. It stays
+quiet during ordinary play, enlarges briefly at the countdown/live start,
+actual respawn and return from a covering menu or focus loss, then settles.
+The cue follows the same world camera as the character, including optional
+view shake. Dead/redrawing figures, the story opening and the ending overview
+have no local badge. Positive live ticks age the emphasis; pause and repeated
+const draws cannot advance it. Reduced effects retain a steady, readable badge
+without enlargement. Match timers, controls, shots and scoring are unchanged.
+
+`presentation.json.player_identity` owns world/UI dimensions and spacing,
+opaque contrasting ink, border, duration and emphasis scale. The shared box
+needs no new atlas. The existing menu layouts carry the identity drawing;
+the full UI artwork pass remains `POL#16`. Human identification/readiness
+review remains `POL#14`, after `POL#17` supplies the reference composition.
+
+Validation on 2026-10-15: Debug and Release build under `/W4 /WX` and each pass
+all 21 consumer acceptance cases. The new case checks 1/2/4-player roster
+mapping, countdown/live/death/redraw/natural and developer respawns, resume,
+nonpositive updates, reduced effects and malformed presentation. Repeated
+emphasis and disabled/enabled comparisons preserve actual movement, aim,
+shots, ammunition, health, paint ownership and scores.
+
+Both builds pass the focused hardware D3D11 identity probe on the NVIDIA
+GeForce RTX 5080. All three four-player palettes cover identical-tool teammates
+overlapping and crossing, quiet/enlarged/reduced badges, sparse/reordered
+device slots, pause and death/respawn/story gates. Representative 1080p/QHD
+captures check projected bounds. Same-state world-badge on/off differences
+stay inside each owning badge rectangle; native `P1`–`P4` rasters differ, and
+frozen draws preserve pixels, cosmetic state and Debug replay fingerprints.
+The [retained four-player overlap capture](images/polish-player-identity/overlap-720p.png)
+shows the quiet badges at 720p. Evidence is under
+`out/validation/player-identity/` and `out/acceptance/`; focused run IDs are
+Debug `ed17d825a8d24b179681195bf66b6660` and Release
+`4977bb0d0fe74ac19d5fa04cc72c0f44`. Rerun with
+`scripts/check-painter.ps1 -Preset x64-debug -IdentityOnly` (or `x64-release`).
+These checks and image inspection do not establish human readability acceptance.
+
+Isolated Debug, Release and extracted Release startup pass with the accepted
+bank and a system-only PATH; the separate extracted missing-bank copy also
+starts and closes gracefully with its single expected silent-bank diagnostic.
+The 53-file Release ZIP contains all 26 reviewed runtime assets byte for byte
+and no authoring files. The full Debug painter regression matrix also passes.
 
 ### Give the arena decisions that use the existing rules
 

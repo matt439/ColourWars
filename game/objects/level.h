@@ -33,6 +33,7 @@
 #include "game/objects/paint_audio.h"
 #include "game/objects/idle_drip.h"
 #include "game/objects/blocked_shot_feedback.h"
+#include "game/objects/player_badge.h"
 
 enum class LevelState
 {
@@ -119,6 +120,11 @@ public:
 	const IdleDrip* idle_drip(int view) const;
 	// A local cue only during live play; frozen pause draws preserve its state.
 	bool aim_marker_visible(int view) const;
+	bool player_identity_visible(int view) const;
+	float player_identity_emphasis(int view) const;
+	mattmath::RectangleF player_identity_bounds(int view) const;
+	// Reacquire one's own figure after a covering menu or focus loss.
+	void emphasise_players();
 	const BlockedShotFeedback& blocked_shot_feedback() const;
 
 	LevelEndInfo level_end_info() const;
@@ -148,6 +154,8 @@ public:
 private:
 	std::unique_ptr<PaintAudio> paint_audio_;
 	std::unique_ptr<BlockedShotFeedback> blocked_shot_feedback_;
+	std::unique_ptr<PlayerBadge> player_badge_;
+	std::vector<float> player_identity_remaining_;
 	std::unique_ptr<labrador::Scene> scene_ = nullptr;
 
 	// Borrowed from scene_. Players are never retired: death leads to respawn,
@@ -363,6 +371,7 @@ private:
 	// The HUD, the dividers and the debug text, over one pane.
 	// Runs on the worker that owns that view.
 	void draw_player_overlay(int view_index, labrador::DrawList& list) const;
+	void update_player_identity(float dt);
 
 	void draw_countdown_text(labrador::DrawList& draw_list) const;
 	void draw_opening_card(labrador::DrawList& draw_list,
