@@ -268,30 +268,68 @@ namespace
 		return style;
 	}
 
-	MainMenuPresentation read_main_menu(const JsonValue& root)
+	MenuPaperArtPresentation read_menu_paper(const JsonValue& json, const Vector2F& box_size);
+
+	MainMenuPresentation read_main_menu(const JsonValue& root, float content_height)
 	{
 		const JsonValue json = root.object("main_menu");
+		if (!std::isfinite(content_height) || content_height <= 40.0f || content_height > 1080.0f)
+		{
+			throw std::runtime_error(json.where() +
+				": menu_style.chrome.footer_y must be finite, greater than 40 and at most 1080.");
+		}
 
 		MainMenuPresentation menu;
+		const auto panel_size = [&](const char* key)
+		{
+			const Vector2F size = read_positive_vector(json, key);
+			if (size.x > 1760.0f || size.y > content_height - 40.0f)
+			{
+				throw std::runtime_error(json.where() + ": '" + key +
+					"' must be at most 1760 wide and leave 20 pixels above and below within menu_style.chrome.footer_y.");
+			}
+			return size;
+		};
+		menu.title_box_size = panel_size("title_box_size");
+		menu.home_box_size = panel_size("home_box_size");
+		menu.art = read_menu_paper(json, Vector2F(
+			std::min(menu.title_box_size.x, menu.home_box_size.x),
+			std::min(menu.title_box_size.y, menu.home_box_size.y)));
+		const auto position = [&](const char* key)
+		{
+			const Vector2F value = read_finite_vector(json, key);
+			if (value.x < 0.0f || value.x > 1920.0f || value.y < 0.0f || value.y > 1080.0f)
+			{
+				throw std::runtime_error(json.where() + ": '" + key +
+					"' must be nonnegative and inside the (1920,1080) menu design.");
+			}
+			return value;
+		};
+		const auto title_height = [&](const char* key)
+		{
+			const float value = json.number(key);
+			if (!std::isfinite(value) || value < 0.0f || value > 1080.0f)
+			{
+				throw std::runtime_error(json.where() + ": '" + key +
+					"' must be finite and from 0 to 1080 in the menu design.");
+			}
+			return value;
+		};
 		const JsonValue backdrop = json.object("backdrop");
 		menu.backdrop_sheet = backdrop.string("sheet");
 		menu.backdrop_frame = backdrop.string("frame");
-		menu.title_position = read_vector(json, "title_position");
-		menu.title_subtitle_position = read_vector(json, "title_subtitle_position");
-		menu.title_start_position = read_vector(json, "title_start_position");
-		menu.home_subtitle_position = read_vector(json, "home_subtitle_position");
+		menu.title_y = title_height("title_y");
+		menu.title_subtitle_y = title_height("title_subtitle_y");
+		menu.title_start_y = title_height("title_start_y");
+		menu.title_no_pad_y = title_height("title_no_pad_y");
+		menu.home_position = position("home_position");
+		menu.home_subtitle_position = position("home_subtitle_position");
 
 		const JsonValue fonts = json.object("fonts");
 		menu.title_font = fonts.string("title");
 		menu.announcement_font = fonts.string("announcement");
 		menu.weapon_description_font = fonts.string("weapon_description");
-		menu.build_id_position = read_vector(json, "build_id_position");
-
-		menu.title_text_colour = read_colour(json, "title_text_colour");
-		menu.title_start_text_colour =
-			read_colour(json, "title_start_text_colour");
-		menu.title_no_pad_text_colour =
-			read_colour(json, "title_no_pad_text_colour");
+		menu.build_id_y = title_height("build_id_y");
 
 		const JsonValue backgrounds = json.object("backgrounds");
 		menu.title_background_colour = read_colour(backgrounds, "title");
@@ -302,6 +340,37 @@ namespace
 		menu.options_value_colour = read_colour(json, "options_value_colour");
 		menu.options_spacing = read_vector(json, "options_spacing");
 		menu.home_spacing = read_positive_vector(json, "home_spacing");
+		const float edge = menu.art.keyline_width * 3.0f;
+		const float title_top = (content_height - menu.title_box_size.y) / 2.0f + edge;
+		const float title_bottom = (content_height + menu.title_box_size.y) / 2.0f -
+			menu.art.shadow_offset - edge;
+		if (menu.title_y <= title_top ||
+			menu.title_subtitle_y <= menu.title_y ||
+			menu.title_start_y <= menu.title_subtitle_y ||
+			menu.title_no_pad_y <= menu.title_start_y ||
+			menu.build_id_y <= menu.title_no_pad_y ||
+			menu.build_id_y >= title_bottom)
+		{
+			throw std::runtime_error(json.where() +
+				": title_y < title_subtitle_y < title_start_y < "
+				"title_no_pad_y < build_id_y must fit vertically inside title_box_size.");
+		}
+		const Vector2F home_top = (Vector2F(1920.0f, content_height) - menu.home_box_size) / 2.0f +
+			Vector2F(edge);
+		const Vector2F home_bottom = (Vector2F(1920.0f, content_height) + menu.home_box_size) / 2.0f -
+			Vector2F(menu.art.shadow_offset + edge);
+		if (menu.home_position.x <= home_top.x || menu.home_position.x >= home_bottom.x ||
+			menu.home_subtitle_position.x <= home_top.x || menu.home_subtitle_position.x >= home_bottom.x ||
+			menu.home_position.y <= home_top.y ||
+			menu.home_subtitle_position.y <= menu.home_position.y ||
+			menu.home_subtitle_position.y >= menu.home_position.y + menu.home_spacing.y * 2.0f ||
+			menu.home_position.y + menu.home_spacing.y * 5.0f >= home_bottom.y ||
+			menu.home_spacing.x > 1920.0f)
+		{
+			throw std::runtime_error(json.where() +
+				": home_position, home_subtitle_position and home_spacing must place the heading, "
+				"subtitle and five row intervals inside home_box_size.");
+		}
 
 		const JsonValue credits = json.object("credits");
 		menu.credits_font = credits.identifier("font");
@@ -1194,7 +1263,7 @@ Presentation::Presentation(const char* path)
 
 	this->team_palette_ = read_team_palette(root);
 	this->menu_ = read_menu_style(root);
-	this->main_menu_ = read_main_menu(root);
+	this->main_menu_ = read_main_menu(root, this->menu_.footer_y);
 	const JsonValue controls = root.object("controls_settings");
 	this->controls_settings_.layout = read_layout(controls, "layout");
 	this->controls_settings_.heading_position = read_vector(controls, "heading_position");

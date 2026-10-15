@@ -761,6 +761,14 @@ atlas colours out of the solid score track. Remaining menus, selection cards
 and stage preview stay open, with arena production and human review retaining
 their existing gates.
 
+**Title and home artwork implemented (2026-10-15, part of `POL#16`).** The
+[entry pages](polish-main-menu.md) carry the stepped paper, dark ink and quiet
+shade onto a neutral surround. The title centers from actual font widths;
+Home retains a persistent Play card and detached focus arrow. Existing copy,
+actions, prompts and music retain their behavior. Options/Credits, match setup,
+selection cards and stage preview remain open, with arena production and human
+review retaining their existing gates.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

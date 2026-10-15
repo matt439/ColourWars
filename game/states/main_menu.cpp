@@ -129,75 +129,49 @@ void MainMenuTitle::update_page(float /*dt*/)
 }
 void MainMenuTitle::init()
 {
-	this->set_prompts({
-		{ L"A", L"Start" } });
+	this->set_prompts({ { L"A", L"Start" } });
+	const MainMenuPresentation& look = this->look();
+	const MenuStyle& style = this->menu_style();
+	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
-	this->background_ = std::make_unique<UiTexture>(
-		"background",
-		this->look().backdrop_sheet,
-		this->look().backdrop_frame,
-		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
-		this->render_resources(),
-		this->look().title_background_colour);
+	this->background_ = std::make_unique<UiTexture>("background",
+		"sprite_sheet_1", "pixel", RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		this->render_resources(), look.title_background_colour);
+	this->title_ = std::make_unique<UiText>("title", L"COLOUR\nWARS",
+		look.title_font, Vector2F(0.0f, look.title_y), this->render_resources(), look.art.ink);
+	this->subtitle_ = std::make_unique<UiText>("subtitle", L"MAKE A MESS. MAKE IT YOURS.",
+		style.detail_font, Vector2F(0.0f, look.title_subtitle_y), this->render_resources(), look.art.ink);
+	this->start_ = std::make_unique<UiText>("start", L"LET'S PLAY",
+		style.item_font, Vector2F(0.0f, look.title_start_y), this->render_resources(), look.art.focus_ink);
+	this->no_pad_ = std::make_unique<UiText>("no_pad", L"Connect a controller",
+		style.item_font, Vector2F(0.0f, look.title_no_pad_y), this->render_resources(), look.art.ink, true);
+	this->build_id_ = std::make_unique<UiText>("build_id", build_info::label,
+		this->presentation().prompt_bar().font, Vector2F(0.0f, look.build_id_y),
+		this->render_resources(), look.art.ink);
 
-	this->title_ = std::make_unique<UiTextDropShadow>(
-		"title",
-		L"COLOUR\nWARS",
-		this->look().title_font,
-		this->look().title_position,
-		this->render_resources(),
-		this->look().title_text_colour,
-		this->menu_style().shadow_colour,
-		this->menu_style().title_shadow_offset);
+	// Fit the real font metrics, keeping the authored vertical rhythm.
+	for (UiText* text : { this->title_.get(), this->subtitle_.get(), this->start_.get(),
+		this->no_pad_.get(), this->build_id_.get() })
+	{
+		text->set_position(Vector2F(this->calculate_center_position(text->bounds().width,
+			DESIGN_RESOLUTION.x), text->bounds().y));
+	}
+	this->focus_.add(this->start_.get());
+	this->paper_ = std::make_unique<MenuPaperArtwork>(
+		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.title_box_size) / 2.0f,
+			look.title_box_size),
+		this->render_resources(), &look.art, &this->focus_, this->start_.get());
 
-	this->start_ = std::make_unique<UiTextDropShadow>(
-		"start",
-		L"LET'S PLAY",
-		this->menu_style().item_font,
-		this->look().title_start_position,
-		this->render_resources(),
-		this->look().title_start_text_colour,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
-
-	this->no_pad_ = std::make_unique<UiTextDropShadow>(
-		"no_pad",
-		L"Connect a controller",
-		this->menu_style().item_font,
-		Vector2F(250.0f, 800.0f),
-		this->render_resources(),
-		this->look().title_no_pad_text_colour,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset,
-		true);
-
-	this->texture_container_ = std::make_unique<UiContainer>(
-		"texture_container");
+	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
-
-	this->text_container_ = std::make_unique<UiContainer>(
-		"text_container");
+	this->texture_container_->add_child(this->paper_.get());
+	this->text_container_ = std::make_unique<UiContainer>("text_container");
 	this->text_container_->add_child(this->title_.get());
+	this->text_container_->add_child(this->subtitle_.get());
 	this->text_container_->add_child(this->start_.get());
 	this->text_container_->add_child(this->no_pad_.get());
-	this->subtitle_ = std::make_unique<UiTextDropShadow>(
-		"subtitle", L"MAKE A MESS. MAKE IT YOURS.",
-		this->menu_style().detail_font, this->look().title_subtitle_position,
-		this->render_resources(), this->menu_style().unhighlight,
-		this->menu_style().shadow_colour, this->menu_style().detail_shadow_offset);
-	this->text_container_->add_child(this->subtitle_.get());
-	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
-	this->focus_.add(this->start_.get());
-
-	this->build_id_ = std::make_unique<UiTextDropShadow>(
-		"build_id", build_info::label, this->presentation().prompt_bar().font,
-		this->look().build_id_position, this->render_resources(),
-		this->look().title_start_text_colour,
-		this->menu_style().shadow_colour,
-		this->menu_style().detail_shadow_offset);
 	this->text_container_->add_child(this->build_id_.get());
-
-	this->play_music(this->music_, this->look().music.volume);
+	this->play_music(this->music_, look.music.volume);
 }
 
 #pragma endregion MainMenuTitle
@@ -239,84 +213,43 @@ void MainMenuHome::update_page(float /*dt*/)
 }
 void MainMenuHome::init()
 {
-	this->set_widget_spacing(this->look().home_spacing);
-	this->set_prompts({
-		{ L"A", L"Select" },
-		{ L"B", L"Back" } });
+	const MainMenuPresentation& look = this->look();
+	const MenuStyle& style = this->menu_style();
+	this->set_widget_position(look.home_position);
+	this->set_widget_spacing(look.home_spacing);
+	this->set_prompts({ { L"A", L"Select" }, { L"B", L"Back" } });
+	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
-	this->focus_.set_style({ this->menu_style().highlight, this->menu_style().unhighlight });
+	this->background_ = std::make_unique<UiTexture>("background",
+		"sprite_sheet_1", "pixel", RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		this->render_resources(), look.home_background_colour);
+	this->heading_ = std::make_unique<UiText>("heading", L"Make your mark.",
+		style.heading_font, this->calculate_widget_position(0, 0), this->render_resources(), look.art.ink);
+	this->subtitle_ = std::make_unique<UiText>("subtitle", L"Paint the arena. Claim the win.",
+		style.detail_font, look.home_subtitle_position, this->render_resources(), look.art.ink);
+	this->play_ = std::make_unique<UiText>("play", L"Play", style.item_font,
+		this->calculate_widget_position(0, 2), this->render_resources(), look.art.focus_ink);
+	this->options_ = std::make_unique<UiText>("options", L"Options", style.item_font,
+		this->calculate_widget_position(0, 3), this->render_resources(), look.art.ink);
+	this->credits_ = std::make_unique<UiText>("credits", L"Credits", style.item_font,
+		this->calculate_widget_position(0, 4), this->render_resources(), look.art.ink);
+	this->exit_ = std::make_unique<UiText>("exit", L"Exit", style.item_font,
+		this->calculate_widget_position(0, 5), this->render_resources(), look.art.ink);
+	this->paper_ = std::make_unique<MenuPaperArtwork>(
+		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f,
+			look.home_box_size),
+		this->render_resources(), &look.art, &this->focus_, this->play_.get());
 
-	this->background_ = std::make_unique<UiTexture>(
-		"background",
-		this->look().backdrop_sheet,
-		this->look().backdrop_frame,
-		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
-		this->render_resources(),
-		this->look().home_background_colour);
-
-	this->heading_ = std::make_unique<UiTextDropShadow>(
-		"heading",
-		L"Make your mark.",
-		this->menu_style().heading_font,
-		this->calculate_widget_position(0, 0),
-		this->render_resources(),
-		this->menu_style().heading_colour,
-		this->menu_style().shadow_colour,
-		this->menu_style().heading_shadow_offset);
-
-	this->play_ = std::make_unique<UiTextDropShadow>(
-		"play",
-		L"Play",
-		this->menu_style().item_font,
-		this->calculate_widget_position(0, 2),
-		this->render_resources(),
-		this->menu_style().highlight,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
-
-	this->options_ = std::make_unique<UiTextDropShadow>(
-		"options",
-		L"Options",
-		this->menu_style().item_font,
-		this->calculate_widget_position(0, 3),
-		this->render_resources(),
-		this->menu_style().unhighlight,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
-
-	this->credits_ = std::make_unique<UiTextDropShadow>(
-		"credits", L"Credits", this->menu_style().item_font,
-		this->calculate_widget_position(0, 4), this->render_resources(),
-		this->menu_style().unhighlight, this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
-
-	this->exit_ = std::make_unique<UiTextDropShadow>(
-		"exit",
-		L"Exit",
-		this->menu_style().item_font,
-		this->calculate_widget_position(0, 5),
-		this->render_resources(),
-		this->menu_style().unhighlight,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
-
-	this->texture_container_ = std::make_unique<UiContainer>(
-		"texture_container");
+	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
-
-	this->text_container_ = std::make_unique<UiContainer>(
-		"text_container");
+	this->texture_container_->add_child(this->paper_.get());
+	this->text_container_ = std::make_unique<UiContainer>("text_container");
 	this->text_container_->add_child(this->heading_.get());
+	this->text_container_->add_child(this->subtitle_.get());
 	this->text_container_->add_child(this->play_.get());
 	this->text_container_->add_child(this->options_.get());
 	this->text_container_->add_child(this->credits_.get());
 	this->text_container_->add_child(this->exit_.get());
-	this->subtitle_ = std::make_unique<UiTextDropShadow>(
-		"subtitle", L"Paint the arena. Claim the win.",
-		this->menu_style().detail_font, this->look().home_subtitle_position,
-		this->render_resources(), this->menu_style().unhighlight,
-		this->menu_style().shadow_colour, this->menu_style().detail_shadow_offset);
-	this->text_container_->add_child(this->subtitle_.get());
 
 	// Navigation uses widget bounds in design space, not declaration order.
 	this->focus_.add(this->play_.get(), [this]

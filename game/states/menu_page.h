@@ -55,6 +55,8 @@ protected:
 	// says no: it opens over a running match, where the line would sit on
 	// the first pane's HUD.
 	virtual bool shows_brand() const { return true; }
+	// Pages with their own paper cards draw focus in their texture layer.
+	virtual bool shows_focus_backing() const { return true; }
 
 	mattmath::Vector2F widget_position() const;
 	mattmath::Vector2F widget_size() const;

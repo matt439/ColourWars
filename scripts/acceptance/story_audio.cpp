@@ -1963,6 +1963,7 @@ namespace
 #include "scripts/acceptance/story_audio/connection_checks.h"
 #include "scripts/acceptance/story_audio/resume_checks.h"
 #include "scripts/acceptance/story_audio/menu_content_checks.h"
+#include "scripts/acceptance/story_audio/main_menu_content_checks.h"
 #include "scripts/acceptance/story_audio/resume_content_checks.h"
 #include "scripts/acceptance/story_audio/closing_content_checks.h"
 #include "scripts/acceptance/story_audio/hud_content_checks.h"
@@ -1981,6 +1982,7 @@ int main(int argc, char** argv)
 		require(argc == 2, "Usage: story_audio.exe <content directory>");
 		World world{ std::filesystem::path(argv[1]) };
 		check_menu_audio_content(world, std::filesystem::path(argv[1]));
+		check_main_menu_art_content(std::filesystem::path(argv[1]));
 		check_resume_content(world, std::filesystem::path(argv[1]));
 		check_foreground_art_content(std::filesystem::path(argv[1]));
 		check_countdown_art_content(std::filesystem::path(argv[1]));

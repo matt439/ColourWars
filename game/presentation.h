@@ -163,25 +163,42 @@ struct CameraPresentation
 	ViewShakePresentation shake;
 };
 
+// Stepped paper and action cards, in menu design coordinates.
+struct MenuPaperArtPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour paper;
+	labrador::Colour shade;
+	labrador::Colour focus_fill;
+	labrador::Colour focus_ink;
+	// Pause uses a separate readable ink for actions awaiting controllers.
+	labrador::Colour disabled_ink;
+	float keyline_width = 0.0f;
+	float shadow_offset = 0.0f;
+	mattmath::Vector2F focus_padding;
+};
+
 struct MainMenuPresentation
 {
 	std::string backdrop_sheet;
 	std::string backdrop_frame;
-	mattmath::Vector2F title_position;
-	mattmath::Vector2F title_subtitle_position;
-	mattmath::Vector2F title_start_position;
+	// The title and home use the accepted paper treatment; setup pages retain
+	// their own presentation until their artwork increments.
+	MenuPaperArtPresentation art;
+	mattmath::Vector2F title_box_size;
+	mattmath::Vector2F home_box_size;
+	// Title text is centered using its measured width; y positions are authored.
+	float title_y = 0.0f;
+	float title_subtitle_y = 0.0f;
+	float title_start_y = 0.0f;
+	float title_no_pad_y = 0.0f;
+	mattmath::Vector2F home_position;
 	mattmath::Vector2F home_subtitle_position;
 	mattmath::Vector2F home_spacing;
 	std::string title_font;
 	std::string announcement_font;
 	std::string weapon_description_font;
-	mattmath::Vector2F build_id_position = { 0.0f, 0.0f };
-
-	labrador::Colour title_text_colour = labrador::Colour::white;
-	labrador::Colour title_start_text_colour = labrador::Colour::white;
-
-	// Colour for the title's no-controller hint.
-	labrador::Colour title_no_pad_text_colour = labrador::Colour::white;
+	float build_id_y = 0.0f;
 
 	// Separate colours allow each main-menu screen to be themed independently.
 	labrador::Colour title_background_colour = labrador::Colour::black;
@@ -217,21 +234,6 @@ struct MainMenuPresentation
 	static constexpr size_t DESCRIBED_WEAPONS =
 		static_cast<size_t>(WeaponType::random_primary) + 1;
 	std::array<std::wstring, DESCRIBED_WEAPONS> weapon_descriptions;
-};
-
-// Stepped paper and action cards, in menu design coordinates.
-struct MenuPaperArtPresentation
-{
-	labrador::Colour ink;
-	labrador::Colour paper;
-	labrador::Colour shade;
-	labrador::Colour focus_fill;
-	labrador::Colour focus_ink;
-	// Pause uses a separate readable ink for actions awaiting controllers.
-	labrador::Colour disabled_ink;
-	float keyline_width = 0.0f;
-	float shadow_offset = 0.0f;
-	mattmath::Vector2F focus_padding;
 };
 
 struct PauseMenuPresentation

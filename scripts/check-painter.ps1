@@ -14,12 +14,13 @@ param(
     [switch] $EndMenuOnly,
     [switch] $PauseMenuOnly,
     [switch] $ResultsMenuOnly,
+    [switch] $MainMenuOnly,
     [string] $OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -107,7 +108,8 @@ function Write-ContactSheet {
                 $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or
                 $_.Name -like 'supply-*-detail.ppm' -or $_.Name -like 'hud-*-detail.ppm' -or
                 $_.Name -like 'resume-*-detail.ppm' -or $_.Name -like 'end-menu-*-detail.ppm' -or
-                $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' } | Sort-Object Name) {
+                $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
+                $_.Name -like 'main-menu-*-detail.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
             if ($header -notmatch '^P6\n(\d+) (\d+)\n255\n') { throw "Unsupported capture header: $($file.FullName)" }
@@ -199,6 +201,9 @@ function Write-ContactSheet {
         $supply = @($images | Where-Object { $_.name -like 'supply-*' })
         Write-ContactSheetPages -Images $supply -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-supply-contact'
+        $mainMenu = @($images | Where-Object { $_.name -like 'main-menu-*-1280x720-detail' })
+        Write-ContactSheetPages -Images $mainMenu -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-main-menu-contact'
     }
     finally {
         foreach ($item in $images) { $item.bitmap.Dispose() }
@@ -236,7 +241,7 @@ $process = $null
 $failure = $null
 $result = [ordered]@{
     outcome = 'failed'
-    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } elseif ($ResultsMenuOnly) { 'results-menu-only' } else { 'full-painter-matrix' }
+    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } elseif ($ResultsMenuOnly) { 'results-menu-only' } elseif ($MainMenuOnly) { 'main-menu-only' } else { 'full-painter-matrix' }
     preset = $Preset
     game_revision = (& git rev-parse HEAD)
     engine_revision = (& git -C external/labrador rev-parse HEAD)
@@ -319,6 +324,17 @@ elseif ($SupplyOnly) {
         $result.Remove($key)
     }
     $result.checks = $result.supply_checks
+}
+elseif ($MainMenuOnly) {
+    $result.player_counts = @()
+    $result.palettes = @()
+    $result.weapons = @()
+    $result.actions = @('title-start', 'home-play', 'home-options', 'home-credits', 'home-exit', 'back')
+    $result.input_slots = @(4)
+    $result.inputs = 'Public keyboard input through actual MainMenuTitle/MainMenuHome and StateContext; Exit closes only this probe hidden window.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.Remove('stage')
+    $result.checks = 'Title/home paper, measured centered title text, heading/subtitle/build bounds, native ink/paper contrast and all four Home focus cards/arrows at 720p/1080p/QHD, 4:3, 16:10 and ultrawide. Actual keyboard Start/Back/Play/Options/Credits/Exit, frozen redraw, draw RNG, static Reduce effects and resize round-trip. No physical-controller, human readability or listening acceptance.'
 }
 elseif ($ResultsMenuOnly) {
     $result.player_counts = @(1, 2, 4)
@@ -488,6 +504,7 @@ try {
     elseif ($EndMenuOnly) { $probeArguments += 'end-menu' }
     elseif ($PauseMenuOnly) { $probeArguments += 'pause-menu' }
     elseif ($ResultsMenuOnly) { $probeArguments += 'results-menu' }
+    elseif ($MainMenuOnly) { $probeArguments += 'main-menu' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -536,6 +553,9 @@ try {
     }
     elseif ($SupplyOnly) {
         $result.diagnostic = 'Supply-only visual check passed: sprayer/mister full, half and empty native reservoirs; exact authored-layer registration, unchanged silhouette and permanent hardware, all 1P/4P720 palettes/aim quadrants/facing inputs/poses and representative 4P1080/QHD. Reduced effects, motion-disabled rendering, ammo clamps, paid depletion, natural regeneration/reset, menu previews and tool switching, frozen pixels/weapon state/draw RNG and unchanged match observation/Debug fingerprint passed. Other painter matrices were not run.'
+    }
+    elseif ($MainMenuOnly) {
+        $result.diagnostic = 'Main-menu-only hardware check passed: actual keyboard Start/Back/Play/Options/Credits/Exit; measured text/paper bounds, native ink/paper contrast, all four Home focus cards and detached arrows. Frozen redraw, draw RNG, static Reduce effects and resize passed across six display sizes/aspects. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'
     }
     elseif ($ResultsMenuOnly) {
         $result.diagnostic = 'Results-menu-only hardware check passed: actual results page timing and keyboard continuation, paper and score rendering, solo/absent-team and revealed/draw/series states, sparse-slot contributions, native display/aspect matrix, frozen redraw, Reduce effects and resize. Other painter matrices, human readability and listening acceptance were not run.'

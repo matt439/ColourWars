@@ -1,0 +1,127 @@
+#pragma once
+
+// The shared paper reader is covered in end_menu_content_checks.h. These
+// variants exercise the title/home integration and its authored anchor bounds.
+namespace
+{
+	void check_main_menu_art_content(const std::filesystem::path& content)
+	{
+		const MenuPresentationVariant variants(content);
+		const Presentation shipped = variants.load([](rapidjson::Document&) {});
+		const auto& menu = shipped.main_menu();
+		const float content_height = shipped.menu().footer_y;
+
+		const auto rejected = [&](const char* key, auto edit)
+		{
+			std::string diagnostic = "Presentation accepted the variant";
+			bool named = false;
+			try { std::ignore = variants.load(edit); }
+			catch (const std::runtime_error& error)
+			{
+				diagnostic = error.what();
+				named = diagnostic.find("main_menu") != std::string::npos &&
+					diagnostic.find(key) != std::string::npos;
+			}
+			if (!named)
+			{
+				throw std::runtime_error(std::string("Invalid title/home presentation field '") + key +
+					"' was accepted or lost its key: " + diagnostic);
+			}
+		};
+		rejected("art", [](rapidjson::Document& json) { json["main_menu"].RemoveMember("art"); });
+		rejected("art", [](rapidjson::Document& json) { json["main_menu"]["art"].SetArray(); });
+		rejected("focus_ink", [](rapidjson::Document& json)
+			{ json["main_menu"]["art"].RemoveMember("focus_ink"); });
+		rejected("art", [](rapidjson::Document& json)
+			{ json["main_menu"]["art"]["paper"].SetString("F0F0ED80", json.GetAllocator()); });
+		rejected("focus_padding", [&](rapidjson::Document& json)
+			{ json["main_menu"]["art"]["focus_padding"]["y"].SetFloat(menu.art.shadow_offset + menu.art.keyline_width); });
+
+		for (const char* key : { "title_box_size", "home_box_size" })
+		{
+			rejected(key, [&](rapidjson::Document& json) { json["main_menu"].RemoveMember(key); });
+			rejected(key, [&](rapidjson::Document& json) { json["main_menu"][key].SetNull(); });
+			for (const char* axis : { "x", "y" })
+			{
+				for (const double value : { 0.0,
+					axis[0] == 'x' ? 1760.001 : static_cast<double>(content_height - 40.0f) + 0.001, 1.0e100 })
+				{
+					rejected(key, [&](rapidjson::Document& json)
+						{ json["main_menu"][key][axis].SetDouble(value); });
+				}
+				rejected("box_size", [&](rapidjson::Document& json)
+				{
+					json["main_menu"][key][axis].SetFloat(menu.art.shadow_offset + menu.art.keyline_width * 6.0f);
+				});
+			}
+		}
+		for (const char* key : { "title_y", "title_subtitle_y", "title_start_y", "title_no_pad_y", "build_id_y" })
+		{
+			rejected(key, [&](rapidjson::Document& json) { json["main_menu"].RemoveMember(key); });
+			rejected(key, [&](rapidjson::Document& json) { json["main_menu"][key].SetNull(); });
+			for (const double value : { -0.001, 1080.001, 1.0e100 })
+			{
+				rejected(key, [&](rapidjson::Document& json) { json["main_menu"][key].SetDouble(value); });
+			}
+		}
+		for (const char* key : { "home_position", "home_subtitle_position" })
+		{
+			rejected(key, [&](rapidjson::Document& json) { json["main_menu"].RemoveMember(key); });
+			rejected(key, [&](rapidjson::Document& json) { json["main_menu"][key].SetNull(); });
+			for (const char* axis : { "x", "y" })
+			{
+				for (const double value : { -0.001, axis[0] == 'x' ? 1920.001 : 1080.001, 1.0e100 })
+				{
+					rejected(key, [&](rapidjson::Document& json)
+						{ json["main_menu"][key][axis].SetDouble(value); });
+				}
+			}
+		}
+		struct Anchors { const char* earlier; const char* later; };
+		for (const Anchors pair : { Anchors{ "title_y", "title_subtitle_y" },
+			Anchors{ "title_subtitle_y", "title_start_y" },
+			Anchors{ "title_start_y", "title_no_pad_y" },
+			Anchors{ "title_no_pad_y", "build_id_y" } })
+		{
+			rejected(pair.later, [&](rapidjson::Document& json)
+			{
+				auto& main = json["main_menu"];
+				main[pair.later].SetFloat(main[pair.earlier].GetFloat());
+			});
+		}
+		rejected("home_subtitle_position", [&](rapidjson::Document& json)
+			{ json["main_menu"]["home_subtitle_position"]["y"].SetFloat(menu.home_position.y); });
+		rejected("title_box_size", [&](rapidjson::Document& json)
+			{ json["main_menu"]["title_y"].SetFloat((content_height - menu.title_box_size.y) / 2.0f); });
+		rejected("title_box_size", [&](rapidjson::Document& json)
+			{ json["main_menu"]["build_id_y"].SetFloat((content_height + menu.title_box_size.y) / 2.0f); });
+		rejected("home_box_size", [&](rapidjson::Document& json)
+			{ json["main_menu"]["home_position"]["x"].SetFloat((1920.0f - menu.home_box_size.x) / 2.0f); });
+		rejected("home_spacing", [&](rapidjson::Document& json)
+		{
+			json["main_menu"]["home_spacing"]["y"].SetFloat(
+				((content_height + menu.home_box_size.y) / 2.0f - menu.home_position.y) / 5.0f);
+		});
+		for (const double value : { 0.0, 40.0, 1080.001, 1.0e100 })
+		{
+			rejected("footer_y", [&](rapidjson::Document& json)
+				{ json["menu_style"]["chrome"]["footer_y"].SetDouble(value); });
+		}
+
+		// Maximum panels keep their design margins. Measured text fitting is
+		// checked by the actual renderer rather than guessed by this reader.
+		const Presentation boundary = variants.load([&](rapidjson::Document& json)
+		{
+			auto& main = json["main_menu"];
+			for (const char* key : { "title_box_size", "home_box_size" })
+			{
+				main[key]["x"].SetFloat(1760.0f);
+				main[key]["y"].SetFloat(content_height - 40.0f);
+			}
+		});
+		const auto& valid = boundary.main_menu();
+		require(valid.title_box_size == mattmath::Vector2F(1760.0f, content_height - 40.0f) &&
+			valid.home_box_size == valid.title_box_size,
+			"Legal title/home panel boundaries were changed");
+	}
+}

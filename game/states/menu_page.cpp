@@ -257,7 +257,7 @@ void MenuPage::draw_chrome(DrawList& list) const
 	// Use the focus group's result, so the backing follows keyboard, pad,
 	// disabled rows and compound option rows without duplicating navigation.
 	const UiWidget* focused = this->focus_.focused(0);
-	if (focused != nullptr && !focused->hidden())
+	if (this->shows_focus_backing() && focused != nullptr && !focused->hidden())
 	{
 		list.set_filter(TextureFilter::point);
 		RectangleF panel = focused->bounds();

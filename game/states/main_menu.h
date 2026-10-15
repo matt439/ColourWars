@@ -66,15 +66,18 @@ public:
 	explicit MainMenuTitle(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
+	bool shows_brand() const override { return false; }
+	bool shows_focus_backing() const override { return false; }
 private:
-	std::unique_ptr<labrador::UiTextDropShadow> subtitle_;
+	std::unique_ptr<MenuPaperArtwork> paper_;
+	std::unique_ptr<labrador::UiText> subtitle_;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> title_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> start_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> build_id_ = nullptr;
+	std::unique_ptr<labrador::UiText> title_ = nullptr;
+	std::unique_ptr<labrador::UiText> start_ = nullptr;
+	std::unique_ptr<labrador::UiText> build_id_ = nullptr;
 
 	// Connection hint; the keyboard slot currently keeps it hidden.
-	std::unique_ptr<labrador::UiTextDropShadow> no_pad_ = nullptr;
+	std::unique_ptr<labrador::UiText> no_pad_ = nullptr;
 };
 
 class MainMenuHome final : public MainMenuPage
@@ -83,14 +86,17 @@ public:
 	explicit MainMenuHome(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
+	bool shows_brand() const override { return false; }
+	bool shows_focus_backing() const override { return false; }
 private:
-	std::unique_ptr<labrador::UiTextDropShadow> subtitle_;
+	std::unique_ptr<MenuPaperArtwork> paper_;
+	std::unique_ptr<labrador::UiText> subtitle_;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> play_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> options_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> credits_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> exit_ = nullptr;
+	std::unique_ptr<labrador::UiText> heading_ = nullptr;
+	std::unique_ptr<labrador::UiText> play_ = nullptr;
+	std::unique_ptr<labrador::UiText> options_ = nullptr;
+	std::unique_ptr<labrador::UiText> credits_ = nullptr;
+	std::unique_ptr<labrador::UiText> exit_ = nullptr;
 };
 
 class MainMenuCredits final : public MainMenuPage

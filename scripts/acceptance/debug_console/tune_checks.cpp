@@ -133,7 +133,7 @@ namespace debug_console_acceptance
 			{ "tuning.match.reveal.decide", TuneScope::live },
 			{ "presentation.camera.reference_height", TuneScope::live },
 			{ "presentation.match.countdown_center_y", TuneScope::rebuild },
-			{ "presentation.main_menu.title_position.x", TuneScope::next_screen },
+			{ "presentation.main_menu.title_y", TuneScope::next_screen },
 		};
 		for (const auto& [path, scope] : samples)
 		{

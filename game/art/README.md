@@ -145,6 +145,11 @@ existing solid texel. End and pause pages also use its detached focus arrow.
 The texture layer retains point sampling so the solid score bar cannot sample
 neighbouring atlas art; the separate text layer uses linear filtering.
 
+The [title and home pages](../../docs/polish-main-menu.md) use the same paper
+drawing in the texture layer, with linear-filtered lettering above it. Their
+editable palette and pen widths are in `main_menu.art`; panel sizes and text
+anchors live beside it. The neutral surround uses the existing solid texel.
+
 ## Runtime content separation (GAP#8.6)
 
 Implemented 2026-10-15. Tracked runtime content in `game/content/` is the reviewed set
