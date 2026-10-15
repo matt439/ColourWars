@@ -310,6 +310,21 @@
     "particle_size": 12,
     "keyline_width": 2
   },
+  "blocked_shot": {
+    "_comment": "Short detached cover contacts for flying paint that touched no scoring face. Outward white tick and two rebounding team beads; no paint ownership or audio changes. World units/seconds, bounded per paint owner.",
+    "enabled": true,
+    "sprite_sheet": "sprite_sheet_1",
+    "fill_frame": "square_white_4",
+    "highlight": "FFFFFF",
+    "keyline": "000000",
+    "duration": 0.16,
+    "repeat_delay": 0.08,
+    "width": 24,
+    "reach": 18,
+    "bead_size": 5,
+    "stroke_width": 4,
+    "keyline_width": 1
+  },
   "idle_drip": {
     "_comment": "Silent residual paint on a settled sprayer. World units/seconds; inset is measured behind the launch point to the drawn nozzle lip. Uses only local cosmetic randomness.",
     "enabled": true,

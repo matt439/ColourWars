@@ -38,6 +38,7 @@ enum class PlayerState
 };
 
 class StructurePaintable;
+class BlockedShotFeedback;
 
 enum class PlayerMoveState
 {
@@ -124,6 +125,7 @@ public:
     // Borrowed from the owning Level; launch hits are flushed before retired
     // shots leave this function, rather than disappearing before Scene sees them.
     void set_paint_audio(PaintAudio* audio);
+    void set_blocked_shot_feedback(BlockedShotFeedback* feedback);
     void draw(labrador::DrawList& draw_list) const override;
 
     mattmath::RectangleF bounds() const override;
@@ -240,6 +242,7 @@ public:
 
 private:
     PaintAudio* paint_audio_ = nullptr;
+    BlockedShotFeedback* blocked_shot_feedback_ = nullptr;
     labrador::Camera camera_ = labrador::Camera::DEFAULT_CAMERA;
 
     // Borrowed, never null. Includes player movement/health and projectile damage tuning.

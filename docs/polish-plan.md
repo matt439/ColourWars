@@ -785,8 +785,16 @@ to the four aimed tools. A chevron, recovery bars and a dry cross distinguish
 ready, cooldown and insufficient paint using the same gates as firing, even
 when fire is released. The marker follows nozzle direction; it predicts no hit
 point and the fixed-aim roller has none. Controls / audio saves its On/Off
-preference. Blocked-shot contact, the shared player-identity system and human
-review in the reference composition remain open.
+preference. The shared player-identity system and human review in the reference
+composition remain open.
+
+**Bare-cover contact implemented (2026-10-15, part of `POL#14`).** The
+[implementation and evidence](polish-blocked-shots.md) add a bounded, detached
+stop tick and rebounding beads at the actual struck face when flying paint
+hits cover without splashing a paintable tile. Launch contacts survive immediate
+projectile deletion; flight contacts use the same cue. Existing wet splashes
+remain the response on painted hits. The queue ages once per active tick,
+freezes under pause and clears at time-up, without changing paint or firing.
 
 ### Give the arena decisions that use the existing rules
 

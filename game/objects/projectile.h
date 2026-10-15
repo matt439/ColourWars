@@ -2,6 +2,7 @@
 
 #include "game/objects/player_team.h"
 #include "game/objects/projectile_type.h"
+#include "game/objects/blocked_shot_contact.h"
 #include "game/tuning.h"
 #include "engine/render/animation_object.h"
 #include "engine/core/moving_object.h"
@@ -9,6 +10,7 @@
 #include "game/objects/collision_object_type.h"
 #include "engine/render/colour.h"
 #include <span>
+#include <optional>
 
 class PaintAudio;
 
@@ -64,6 +66,9 @@ public:
 	// touched by a roller. Flush only after that contact batch is complete.
 	void note_paint_contact(bool painted, bool captured) const;
 	void flush_paint_audio(PaintAudio& audio);
+	// Consume after both callbacks classify the hit, before the projectile is
+	// retired. Wet tiles already have an impact; bare cover needs a detached cue.
+	std::optional<BlockedShotContact> take_blocked_contact();
 protected:
 	virtual void set_rectangle(const mattmath::RectangleF& rectangle) = 0;
 
@@ -99,6 +104,8 @@ private:
 	mutable bool geometry_contact_ = false;
 	mutable bool painted_contact_ = false;
 	mutable bool captured_contact_ = false;
+	std::optional<BlockedShotContact> blocked_contact_;
+	mutable bool wet_contact_ = false;
 	mattmath::RectangleF previous_rectangle_ = mattmath::RectangleF::ZERO;
 
 	void resolve_sweep(const mattmath::RectangleF& start,

@@ -97,6 +97,7 @@ adds the sprayer's residual bead and falling drip, plus quiet character motion; 
 [projectile and paint pass](polish-paint-effects.md) supplies liquid shot shapes,
 matching impacts and roller contact flecks. The later
 [aim/readiness cue](polish-aim-marker.md) displays actual shot eligibility;
-blocked-shot feedback, identity and human review remain `POL#14`.
+the [bare-cover contact cue](polish-blocked-shots.md) explains an obstructed
+shot. Identity and human review remain `POL#14`.
 These automated checks and image inspection do not establish
 human movement-feel, controller, listening or final composition acceptance.

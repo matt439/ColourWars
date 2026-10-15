@@ -1,4 +1,5 @@
 #include "game/pch.h"
+#include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/player.h"
 #include "game/objects/paint_audio.h"
 #include "game/objects/structure_paintable.h"
@@ -845,6 +846,11 @@ std::vector<std::unique_ptr<Projectile>>
         {
             projectile->flush_paint_audio(*this->paint_audio_);
         }
+        if (const auto contact = projectile->take_blocked_contact();
+            contact && this->blocked_shot_feedback_ != nullptr)
+        {
+            this->blocked_shot_feedback_->emit(*contact);
+        }
     }
     std::erase_if(projectiles, [](const auto& projectile)
         { return projectile->for_deletion(); });
@@ -853,6 +859,10 @@ std::vector<std::unique_ptr<Projectile>>
 void Player::set_paint_audio(PaintAudio* audio)
 {
     this->paint_audio_ = audio;
+}
+void Player::set_blocked_shot_feedback(BlockedShotFeedback* feedback)
+{
+    this->blocked_shot_feedback_ = feedback;
 }
 void Player::update_prev_rectangle()
 {

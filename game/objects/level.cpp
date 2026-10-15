@@ -44,9 +44,12 @@ Level::Level(std::unique_ptr<Scene> scene,
 	this->presentation_ = presentation;
 	this->render_resources_ = render_resources;
 	this->paint_audio_ = std::make_unique<PaintAudio>(&tuning->paint(), audio_resources, preferences);
+	this->blocked_shot_feedback_ = std::make_unique<BlockedShotFeedback>(
+		&presentation->blocked_shot(), render_resources);
 	for (Player* player : this->players_)
 	{
 		player->set_paint_audio(this->paint_audio_.get());
+		player->set_blocked_shot_feedback(this->blocked_shot_feedback_.get());
 		IdleDrip* drip = nullptr;
 		if (player->primary_weapon().type() == WeaponType::sprayer)
 		{
@@ -330,6 +333,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		if (this->timer_ <= 0.0f)
 		{
 			this->state_ = LevelState::zoom_out;
+			this->blocked_shot_feedback_->clear();
 
 			// Seed the camera now: the zoom_out arm runs next tick, but refresh_views
 			// already renders the newly entered state this frame.
@@ -409,6 +413,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 {
 	// Run the scene phases in order, with game-specific work between them.
 	this->paint_audio_->update(dt);
+	this->blocked_shot_feedback_->update(dt);
 	this->apply_player_inputs(player_inputs, seats);
 
 	this->scene_->update(dt);
@@ -421,7 +426,12 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	{
 		if (is_projectile(to_collision_type(object->tag())))
 		{
-			dynamic_cast<Projectile&>(*object).flush_paint_audio(*this->paint_audio_);
+			Projectile& projectile = dynamic_cast<Projectile&>(*object);
+			projectile.flush_paint_audio(*this->paint_audio_);
+			if (const auto contact = projectile.take_blocked_contact())
+			{
+				this->blocked_shot_feedback_->emit(*contact);
+			}
 		}
 	}
 
@@ -722,6 +732,10 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	const Player* player = this->players_[static_cast<size_t>(view_index)];
 
 	const Viewport& player_vp = this->scene_->view(view_index).viewport;
+	// Detached world contacts remain visible even if their shot or owner has
+	// retired or left the pane. Render workers only read the fixed cue storage.
+	list.set_camera(this->scene_->view(view_index).camera);
+	this->blocked_shot_feedback_->draw(list);
 	if (this->aim_marker_visible(view_index))
 	{
 		list.set_camera(this->scene_->view(view_index).camera);
@@ -776,6 +790,11 @@ bool Level::aim_marker_visible(int view) const
 	return this->state_ == LevelState::active && this->preferences_->aim_marker &&
 		this->presentation_->weapon_feedback().enabled && player.aim_marker_allowed() &&
 		player.primary_weapon().type() != WeaponType::roller;
+}
+
+const BlockedShotFeedback& Level::blocked_shot_feedback() const
+{
+	return *this->blocked_shot_feedback_;
 }
 
 void Level::set_overlays(const LevelOverlays& overlays)

@@ -388,6 +388,24 @@ struct WeaponFeedbackPresentation
 	std::array<mattmath::Vector2F, static_cast<size_t>(WeaponType::bucket) + 1> muzzle_sizes;
 };
 
+// Detached, short-lived contacts for flying paint stopped by unpainted cover.
+// These values author a cosmetic cue, never collision or surface ownership.
+struct BlockedShotPresentation
+{
+	bool enabled = true;
+	std::string sprite_sheet;
+	std::string fill_frame;
+	labrador::Colour highlight;
+	labrador::Colour keyline;
+	float duration = 0.0f;
+	float repeat_delay = 0.0f;
+	float width = 0.0f;
+	float reach = 0.0f;
+	float bead_size = 0.0f;
+	float stroke_width = 0.0f;
+	float keyline_width = 0.0f;
+};
+
 // Residual sprayer paint, entirely separate from projectiles and scoring.
 struct IdleDripPresentation
 {
@@ -615,6 +633,7 @@ public:
 	const MovementFeedbackPresentation& movement_feedback() const;
 	const CombatFeedbackPresentation& combat_feedback() const;
 	const WeaponFeedbackPresentation& weapon_feedback() const;
+	const BlockedShotPresentation& blocked_shot() const;
 	const IdleDripPresentation& idle_drip() const;
 	const FigurePresentation& figure() const;
 	const ToolMotionPresentation& tool_motion() const;
@@ -643,6 +662,7 @@ private:
 	MovementFeedbackPresentation movement_feedback_;
 	CombatFeedbackPresentation combat_feedback_;
 	WeaponFeedbackPresentation weapon_feedback_;
+	BlockedShotPresentation blocked_shot_;
 	IdleDripPresentation idle_drip_;
 	FigurePresentation figure_;
 	ToolMotionPresentation tool_motion_;

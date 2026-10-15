@@ -32,6 +32,7 @@
 #include "game/objects/figure_acting.h"
 #include "game/objects/paint_audio.h"
 #include "game/objects/idle_drip.h"
+#include "game/objects/blocked_shot_feedback.h"
 
 enum class LevelState
 {
@@ -118,6 +119,7 @@ public:
 	const IdleDrip* idle_drip(int view) const;
 	// A local cue only during live play; frozen pause draws preserve its state.
 	bool aim_marker_visible(int view) const;
+	const BlockedShotFeedback& blocked_shot_feedback() const;
 
 	LevelEndInfo level_end_info() const;
 
@@ -145,6 +147,7 @@ public:
 
 private:
 	std::unique_ptr<PaintAudio> paint_audio_;
+	std::unique_ptr<BlockedShotFeedback> blocked_shot_feedback_;
 	std::unique_ptr<labrador::Scene> scene_ = nullptr;
 
 	// Borrowed from scene_. Players are never retired: death leads to respawn,

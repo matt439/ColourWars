@@ -265,9 +265,30 @@ void Projectile::resolve_sweep(const RectangleF& start,
 }
 
 void Projectile::on_contact(const CollisionObject& other,
-    const Vector2F& /*normal*/, float /*penetration*/)
+    const Vector2F& normal, float /*penetration*/)
 {
     this->geometry_contact_ |= other.layer() == collision_layers::STRUCTURE;
+    if (!this->for_deletion_ && other.layer() == collision_layers::STRUCTURE &&
+        this->type_ != ProjectileType::rolling)
+    {
+        // The collision normal points from the shot into cover. Anchor the
+        // cue on that cover's actual face, with tangential position clamped
+        // to the face (including corner hits and very thin walls).
+        const RectangleF cover = other.shape()->bounding_box();
+        const Vector2F center = this->shape()->bounding_box().center();
+        Vector2F point(std::clamp(center.x, cover.left(), cover.right()),
+            std::clamp(center.y, cover.top(), cover.bottom()));
+        if (std::abs(normal.x) >= std::abs(normal.y))
+        {
+            point.x = normal.x > 0.0f ? cover.left() : cover.right();
+        }
+        else
+        {
+            point.y = normal.y > 0.0f ? cover.top() : cover.bottom();
+        }
+        this->blocked_contact_ = BlockedShotContact{
+            point, -normal, this->team_colour_, this->player_num_ };
+    }
     // Flying projectiles die on contact with flat geometry or enemy players.
     // Rollers override this to process every contact in their one-step volume.
     this->set_for_deletion(true);
@@ -278,6 +299,18 @@ void Projectile::note_paint_contact(bool painted, bool captured) const
     this->geometry_contact_ = true;
     this->painted_contact_ |= painted;
     this->captured_contact_ |= captured;
+    // Audio may be flushed first. Keep this classification until the visual
+    // is consumed, independently of the audio batch's reset.
+    this->wet_contact_ |= painted;
+}
+
+std::optional<BlockedShotContact> Projectile::take_blocked_contact()
+{
+    const std::optional<BlockedShotContact> result =
+        this->for_deletion_ && !this->wet_contact_ ? this->blocked_contact_ : std::nullopt;
+    this->blocked_contact_.reset();
+    this->wet_contact_ = false;
+    return result;
 }
 
 void Projectile::flush_paint_audio(PaintAudio& audio)

@@ -2,8 +2,9 @@
 
 Implemented 2026-10-15 as the gameplay cue portion of `POL#14`. The accepted
 Paint.exe keyline language carries through a small optional marker in the
-owning player's pane. Blocked-shot contact and the player-identity system
-remain open; human readability review still needs the reference arena.
+owning player's pane. The later [bare-cover contact cue](polish-blocked-shots.md)
+explains shots stopped at an obstruction. The player-identity system remains
+open; human readability review still needs the reference arena.
 
 ## Direction and eligibility
 

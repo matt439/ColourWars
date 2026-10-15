@@ -563,6 +563,37 @@ namespace
 		return feedback;
 	}
 
+	BlockedShotPresentation read_blocked_shot(const JsonValue& root)
+	{
+		const JsonValue json = root.object("blocked_shot");
+		BlockedShotPresentation contact;
+		contact.enabled = json.boolean("enabled");
+		contact.sprite_sheet = json.identifier("sprite_sheet");
+		contact.fill_frame = json.identifier("fill_frame");
+		contact.highlight = read_colour(json, "highlight");
+		contact.keyline = read_colour(json, "keyline");
+		contact.duration = read_positive(json, "duration");
+		contact.repeat_delay = read_positive(json, "repeat_delay");
+		contact.width = read_positive(json, "width");
+		contact.reach = read_positive(json, "reach");
+		contact.bead_size = read_positive(json, "bead_size");
+		contact.stroke_width = read_positive(json, "stroke_width");
+		contact.keyline_width = read_positive(json, "keyline_width");
+		if (contact.duration > 0.4f || contact.repeat_delay < 0.05f ||
+			contact.repeat_delay > 1.0f || contact.width > 48.0f || contact.reach > 48.0f ||
+			contact.bead_size > contact.width * 0.5f ||
+			contact.stroke_width > contact.width * 0.25f ||
+			contact.keyline_width * 2.0f >=
+				std::min(contact.stroke_width, contact.bead_size * 0.6f))
+		{
+			throw std::runtime_error(json.where() +
+				": blocked contacts need duration <= 0.4 seconds, repeat_delay in [0.05, 1], "
+				"width/reach <= 48, bead_size <= width / 2, stroke_width <= width / 4 "
+				"and keylines that leave visible strokes and beads.");
+		}
+		return contact;
+	}
+
 	ToolMotionPresentation read_tool_motion(const JsonValue& root)
 	{
 		const JsonValue json = root.object("tool_motion");
@@ -960,6 +991,7 @@ Presentation::Presentation(const char* path)
 			": repeat delay must cover the hurt duration and keylines must leave visible fill.");
 	}
 	this->weapon_feedback_ = read_weapon_feedback(root);
+	this->blocked_shot_ = read_blocked_shot(root);
 	this->idle_drip_ = read_idle_drip(root);
 	this->figure_ = read_figure(root);
 	this->tool_motion_ = read_tool_motion(root);
@@ -1018,6 +1050,11 @@ const WeaponFeedbackPresentation& Presentation::weapon_feedback() const
 	return this->weapon_feedback_;
 }
 
+const BlockedShotPresentation& Presentation::blocked_shot() const
+{
+	return this->blocked_shot_;
+}
+
 const IdleDripPresentation& Presentation::idle_drip() const
 {
 	return this->idle_drip_;
@@ -1071,6 +1108,8 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->combat_feedback_.fill_frame);
 	check.frame("weapon_feedback.fill_frame", this->weapon_feedback_.sprite_sheet,
 		this->weapon_feedback_.fill_frame);
+	check.frame("blocked_shot.fill_frame", this->blocked_shot_.sprite_sheet,
+		this->blocked_shot_.fill_frame);
 	check.frame("idle_drip.fill_frame", this->idle_drip_.sprite_sheet,
 		this->idle_drip_.fill_frame);
 	for (size_t index = 0; index < this->figure_.accent_frames.size(); ++index)

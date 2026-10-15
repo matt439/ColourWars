@@ -56,6 +56,7 @@ add_executable(ColourWars WIN32
     debug/tune_target.cpp
     debug/view_commands.cpp
 
+    objects/blocked_shot_feedback.cpp
     objects/collision_object_type.cpp
     objects/combat_feedback.cpp
     objects/crude_drawing.cpp
