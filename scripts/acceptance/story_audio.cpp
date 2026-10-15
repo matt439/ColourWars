@@ -1962,6 +1962,7 @@ namespace
 #include "scripts/acceptance/story_audio/connection_checks.h"
 #include "scripts/acceptance/story_audio/menu_content_checks.h"
 #include "scripts/acceptance/story_audio/closing_content_checks.h"
+#include "scripts/acceptance/story_audio/hud_content_checks.h"
 }
 
 #include "scripts/acceptance/story_audio/redraw_checks.h"
@@ -1977,6 +1978,7 @@ int main(int argc, char** argv)
 		check_foreground_art_content(std::filesystem::path(argv[1]));
 		check_countdown_art_content(std::filesystem::path(argv[1]));
 		check_closing_art_content(std::filesystem::path(argv[1]));
+		check_hud_paper_content(std::filesystem::path(argv[1]));
 		check_connection_audio(world);
 		const ContentVariant content(std::filesystem::path(argv[1]) / "tuning.json");
 		check_match_content(world, content);

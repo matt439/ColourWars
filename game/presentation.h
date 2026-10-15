@@ -316,12 +316,23 @@ struct ClosingClockPresentation
 	float beat_duration = 0.0f;
 };
 
+// Static paper backing for the live HUD, in HUD reference pixels.
+struct HudPaperPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour paper;
+	labrador::Colour shade;
+	float keyline_width = 0.0f;
+	float shadow_offset = 0.0f;
+};
+
 // Gameplay HUD: health, ammo, match timer and player identity. The respawn
 // wait has no number: the figure being redrawn at its spawn is the timer.
 // Margins, bar dimensions and text positions use viewport fractions. Shadow
 // offsets and identity padding use pixel distances scaled with the text.
 struct HudPresentation
 {
+	HudPaperPresentation paper;
 	std::string meter_label_font;
 	labrador::Colour meter_track_colour;
 	float meter_label_gap = 0.0f;

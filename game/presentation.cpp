@@ -452,6 +452,22 @@ namespace
 		const JsonValue json = root.object("hud");
 
 		HudPresentation hud;
+		const JsonValue paper = json.object("paper");
+		hud.paper.ink = read_colour(paper, "ink");
+		hud.paper.paper = read_colour(paper, "paper");
+		hud.paper.shade = read_colour(paper, "shade");
+		hud.paper.keyline_width = read_positive(paper, "keyline_width");
+		hud.paper.shadow_offset = paper.number("shadow_offset");
+		if (hud.paper.keyline_width > 4.0f ||
+			!std::isfinite(hud.paper.shadow_offset) || hud.paper.shadow_offset < 0.0f ||
+			hud.paper.shadow_offset > 12.0f || hud.paper.ink.a != 1.0f ||
+			hud.paper.paper.a != 1.0f || hud.paper.ink == hud.paper.paper ||
+			hud.paper.shade.a <= 0.0f)
+		{
+			throw std::runtime_error(paper.where() +
+				": keyline_width <= 4, shadow_offset from 0 to 12, distinct opaque ink/paper "
+				"and visible shade required.");
+		}
 		hud.meter_label_font = json.string("meter_label_font");
 		hud.meter_track_colour = read_colour(json, "meter_track_colour");
 		hud.meter_label_gap = read_positive(json, "meter_label_gap");

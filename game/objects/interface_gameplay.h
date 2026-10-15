@@ -45,6 +45,8 @@ public:
         bool clock_running = true) const;
 
 private:
+    void draw_paper_panel(labrador::DrawList& draw_list,
+        const mattmath::RectangleF& face, float scale) const;
     void draw_meter(labrador::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
         float amount,

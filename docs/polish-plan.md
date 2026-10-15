@@ -723,6 +723,15 @@ under Reduce effects. Solo practice and story skipping retain their existing
 timing. Menus, cards, stage preview, the remaining HUD, pause and results stay
 open, with arena production and review retaining their existing gates.
 
+**Live HUD artwork implemented (2026-10-15, part of `POL#16`).** The
+[per-pane paper drawing and evidence](polish-hud.md) carry the countdown's stepped
+paper, dark keyline and quiet shade through player labels, health/paint meters
+and the ordinary match clock. Labels, roster/device identity, meter quantities
+and clock placement retain their existing meaning. The drawing is static under
+Reduce effects; the final-ten clock keeps its existing brief ticks. Menus,
+cards, stage preview, pause and results remain open, with reference-arena
+production and human review retaining their existing gates.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

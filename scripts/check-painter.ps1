@@ -9,12 +9,13 @@ param(
     [switch] $CountdownOnly,
     [switch] $ClosingOnly,
     [switch] $SupplyOnly,
+    [switch] $HudOnly,
     [string] $OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -100,7 +101,7 @@ function Write-ContactSheet {
         foreach ($file in Get-ChildItem -LiteralPath $CaptureDirectory -Filter '*.ppm' -File |
             Where-Object { $_.Name -like '*-player*.ppm' -or $_.Name -like 'monitor-*.ppm' -or
                 $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or
-                $_.Name -like 'supply-*-detail.ppm' } | Sort-Object Name) {
+                $_.Name -like 'supply-*-detail.ppm' -or $_.Name -like 'hud-*-detail.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
             if ($header -notmatch '^P6\n(\d+) (\d+)\n255\n') { throw "Unsupported capture header: $($file.FullName)" }
@@ -229,7 +230,7 @@ $process = $null
 $failure = $null
 $result = [ordered]@{
     outcome = 'failed'
-    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } else { 'full-painter-matrix' }
+    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } else { 'full-painter-matrix' }
     preset = $Preset
     game_revision = (& git rev-parse HEAD)
     engine_revision = (& git -C external/labrador rev-parse HEAD)
@@ -242,6 +243,7 @@ $result = [ordered]@{
     input_slots = @(3, 1, 2, 0)
     inputs = 'Scripted pad-slot inputs at the real 60 Hz simulation step; no physical-device claim.'
     audio = 'Muted; this check establishes no listening acceptance.'
+    hud_checks = 'Real InterfaceGameplay native full/half/empty health and paint, independently supplied quantities and negative/oversized clamps. Meter differences stay inside exact tracks; the half raster agrees with full/empty on either side of its midpoint and dark keylines remain outside the track. Dark text/pale paper raster contrast, sparse keyboard/pad-slot labels, 1P/2P/3P/4P720 and all three 1P/4P palettes; representative 4P1080/QHD, 4:3, portrait and ultrawide. Isolated owner-pane artwork remains clear of pane edges, including the unused three-player quadrant. Ordinary clock and static information match under Reduce effects, repeated drawing preserves pixels/draw RNG. Real 4P match frozen pixels, public state, Debug replay fingerprint and exact 720p/1080p resize round-trip. Existing final-ten clock boundary matrix rerun; reveal cards/story timing are outside the focused HUD run. Native empty/half/full detail PNGs and full-context PPMs retained. Raster checks establish no human readability, physical-device or listening acceptance.'
     contact_checks = 'Real resolved 4P dry steps/reversals; controlled step/skid initial/middle/expired rasters in all palettes at 720p/1080p/QHD. Dry/painted and left/right raster differences, enabled/disabled comparisons, frozen direction/tint/timers and culling bounds.'
     weapon_checks = 'Actual Weapon firing workflow with locally retained projectiles: 1P all five tools and 4P mixed tools in all three palettes, four aim quadrants, then live aim/flip changes while each paid-shot pulse remains active. Roller has no muzzle pulse. Controlled 4P muzzle/empty/recovered event triggers at initial/middle/expiry, enabled/disabled at the same simulation state, at 720p/1080p/QHD. Frozen redraw and observed feedback timers, current-nozzle attachment and raster culling bounds. Empty/recovery gameplay producers are covered by separate CPU acceptance checks. Mechanism raster comparisons suppress the new pulses.'
     quiet_checks = 'Actual builder/Scene 1P and 4P sprayers in all three palettes at 720p: settled breath crest, bead growth/stretch/release/fall, blink, movement interruption and left lean. Sniper residual beads and bucket rim runoff add growth/stretch/fall, same-bead continuous four-quadrant aim with authored lip/stripe anchors, both body facings, per-tool enabled suppression, and same-state reduced-effects hiding/restoration for attached and falling liquid in every 1P/4P720 palette. Representative attached-bead extents at 1080p/QHD. Mature bead raster touches the actual rendered tool silhouette within one pixel. Same-state enabled/disabled breathing/shift rasters and controlled blink-only comparison at playing size, distinct roster phases, frozen cosmetic timers/drops, separate Scene drip raster bounds and combined nozzle/rim-context crops. All runs use muted play settings; no listening acceptance.'
@@ -312,7 +314,21 @@ elseif ($SupplyOnly) {
     }
     $result.checks = $result.supply_checks
 }
-if (-not $SupplyOnly -and ($IdentityOnly -or $QuietOnly -or $MonitorOnly -or $CountdownOnly -or $ClosingOnly)) {
+elseif ($HudOnly) {
+    $result.player_counts = @(1, 2, 3, 4)
+    $result.weapons = @('sprayer', 'sniper', 'mister', 'bucket')
+    $result.actions = @()
+    $result.input_slots = @(4, 3, 1, 0)
+    $result.inputs = 'Direct HUD quantities and sparse keyboard/pad-slot labels; one real four-player builder-owned frozen match. No physical-device claim.'
+    foreach ($key in 'contact_checks', 'weapon_checks', 'quiet_checks', 'aim_marker_checks', 'blocked_shot_checks', 'player_identity_checks', 'monitor_checks', 'countdown_checks', 'closing_checks', 'supply_checks') {
+        $result.Remove($key)
+    }
+    $result.checks = $result.hud_checks
+}
+if (-not $HudOnly -and ($IdentityOnly -or $QuietOnly -or $MonitorOnly -or $CountdownOnly -or $ClosingOnly -or $SupplyOnly)) {
+    $result.Remove('hud_checks')
+}
+if (-not $SupplyOnly -and ($IdentityOnly -or $QuietOnly -or $MonitorOnly -or $CountdownOnly -or $ClosingOnly -or $HudOnly)) {
     $result.Remove('supply_checks')
 }
 if ($result.Contains('countdown_checks')) {
@@ -418,6 +434,7 @@ try {
     elseif ($CountdownOnly) { $probeArguments += 'countdown' }
     elseif ($ClosingOnly) { $probeArguments += 'closing' }
     elseif ($SupplyOnly) { $probeArguments += 'supply' }
+    elseif ($HudOnly) { $probeArguments += 'hud' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -467,8 +484,11 @@ try {
     elseif ($SupplyOnly) {
         $result.diagnostic = 'Supply-only visual check passed: sprayer/mister full, half and empty native reservoirs; exact authored-layer registration, unchanged silhouette and permanent hardware, all 1P/4P720 palettes/aim quadrants/facing inputs/poses and representative 4P1080/QHD. Reduced effects, motion-disabled rendering, ammo clamps, paid depletion, natural regeneration/reset, menu previews and tool switching, frozen pixels/weapon state/draw RNG and unchanged match observation/Debug fingerprint passed. Other painter matrices were not run.'
     }
+    elseif ($HudOnly) {
+        $result.diagnostic = 'HUD-only visual check passed: exact full/half/empty and clamped health/paint tracks, exterior keylines, dark-text/pale-paper raster contrast, 1P/2P/3P/4P720, all three 1P/4P palettes and representative 1080p/QHD/4:3/portrait/ultrawide. Own-pane bounds, static Reduce effects information, frozen pixels/draw RNG, real-match observation/Debug fingerprint and resize round-trip passed. Existing final-ten clock matrix passed. Other painter matrices and human readability acceptance were not run.'
+    }
     else {
-        $result.diagnostic = "Painter base/action, five-tool mechanism, weapon paid-shot/aim-follow and controlled muzzle/empty/recovered on/off, step/skid contact, and actual idle drip/quiet character matrices passed. Aim readiness markers passed actual ready/recovering/empty, all palette/quadrant own-pane on/off bounds, isolated marker raster, frozen redraw and pause checks; the disabled isolated-save fixture remained unchanged. Local view shake preserved other panes, opaque HUD ink, base camera/aim, frozen redraw and simulation fingerprint, including suspension and resume. Distinct pinned body/tool and quiet on/off/blink rasters, frozen motion/feedback/quiet timers/redraw, separate player/drip raster culling bounds, elimination/redraw/respawn and idle whole-story poses passed. $identityDiagnostic $stageEntryDiagnostic"
+        $result.diagnostic = "Painter base/action, five-tool mechanism, weapon paid-shot/aim-follow and controlled muzzle/empty/recovered on/off, step/skid contact, and actual idle drip/quiet character matrices passed. Gameplay HUD full/half/empty and clamped tracks, independent health/paint, native text contrast, pane bounds, palettes/aspects, static Reduce effects, frozen real-match state and exact resize round-trip passed. Aim readiness markers passed actual ready/recovering/empty, all palette/quadrant own-pane on/off bounds, isolated marker raster, frozen redraw and pause checks; the disabled isolated-save fixture remained unchanged. Local view shake preserved other panes, opaque HUD ink, base camera/aim, frozen redraw and simulation fingerprint, including suspension and resume. Distinct pinned body/tool and quiet on/off/blink rasters, frozen motion/feedback/quiet timers/redraw, separate player/drip raster culling bounds, elimination/redraw/respawn and idle whole-story poses passed. $identityDiagnostic $stageEntryDiagnostic"
     }
 }
 catch {

@@ -97,13 +97,13 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 			std::max(identity_size.y, this->identity_->enabled ? badge_size.y : 0.0f)) +
 			padding * 2.0f);
 	draw_list.set_filter(TextureFilter::point);
-	sprite_sheet->draw(draw_list, this->fill_frame_, identity_panel,
-		look.player_identity_background_colour);
+	this->draw_paper_panel(draw_list, identity_panel, scale);
 	const float stripe_width = look.box_fill_border *
 		look.player_identity_reference_width * scale;
+	const float pen = look.paper.keyline_width * scale;
 	sprite_sheet->draw(draw_list, this->fill_frame_,
-		RectangleF(identity_panel.position(),
-			Vector2F(stripe_width, identity_panel.height)), team_colour);
+		RectangleF(identity_panel.position() + Vector2F(pen, pen * 3.0f),
+			Vector2F(stripe_width, identity_panel.height - pen * 6.0f)), team_colour);
 	this->player_badge_.draw(draw_list, RectangleF(identity_pos + Vector2F(0.0f,
 		(identity_size.y - badge_size.y) / 2.0f), badge_size), player_index);
 	draw_list.set_filter(TextureFilter::linear);
@@ -127,17 +127,51 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	const float panel_bottom = std::max(ammo_pos.y, health_pos.y) +
 		resolution.y * look.box_size.y;
 	draw_list.set_filter(TextureFilter::point);
-	sprite_sheet->draw(draw_list, this->fill_frame_,
+	this->draw_paper_panel(draw_list,
 		RectangleF(Vector2F(x_pos, panel_top) - padding,
 			Vector2F(resolution.x * look.box_size.x,
-				panel_bottom - panel_top) + padding * 2.0f),
-		look.player_identity_background_colour);
+				panel_bottom - panel_top) + padding * 2.0f), scale);
 	this->draw_meter(draw_list, resolution, health, look.health_colour,
 		health_pos, L"HEALTH", scale);
 	this->draw_meter(draw_list, resolution, ammo, team_colour,
 		ammo_pos, L"PAINT", scale);
 
 	draw_list.set_filter(TextureFilter::point);
+}
+
+void InterfaceGameplay::draw_paper_panel(DrawList& draw_list,
+	const RectangleF& face, float scale) const
+{
+	const HudPaperPresentation& art = this->look_->paper;
+	const SpriteSheet* sheet = this->render_resources()->sprite_sheet(this->sheet_);
+	const float pen = art.keyline_width * scale;
+	const float step = pen * 2.0f;
+	const float shadow = art.shadow_offset * scale;
+	const auto fill = [&](const RectangleF& box, const Colour& colour)
+	{
+		sheet->draw(draw_list, this->fill_frame_, box, CrudeDrawing::premultiplied(colour));
+	};
+	const auto paper = [&](const RectangleF& box, const Colour& colour)
+	{
+		fill(RectangleF(box.x + step, box.y, box.width - step * 2.0f, box.height), colour);
+		fill(RectangleF(box.x, box.y + step, box.width, box.height - step * 2.0f), colour);
+	};
+	draw_list.set_filter(TextureFilter::point);
+	paper(RectangleF(face.position() + Vector2F(shadow), face.size()), art.shade);
+	paper(face, art.ink);
+	const RectangleF inside(face.x + pen, face.y + pen,
+		face.width - pen * 2.0f, face.height - pen * 2.0f);
+	paper(inside, art.paper);
+	for (int pass = 3; pass > 0; --pass)
+	{
+		Colour shade = art.shade;
+		shade.a *= 0.12f;
+		const float width = pen * static_cast<float>(pass);
+		fill(RectangleF(inside.x + step, inside.bottom() - width,
+			inside.width - step * 2.0f, width), shade);
+		fill(RectangleF(inside.right() - width, inside.y + step,
+			width, inside.height - step * 2.0f), shade);
+	}
 }
 
 void InterfaceGameplay::draw_meter(DrawList& draw_list,
@@ -155,6 +189,9 @@ void InterfaceGameplay::draw_meter(DrawList& draw_list,
 	const SpriteSheet* sprite_sheet = this->render_resources()->
 		sprite_sheet(this->sheet_);
 	draw_list.set_filter(TextureFilter::point);
+	const float pen = look.paper.keyline_width * scale;
+	sprite_sheet->draw(draw_list, this->fill_frame_,
+		RectangleF(position - Vector2F(pen), size + Vector2F(pen * 2.0f)), look.paper.ink);
 	sprite_sheet->draw(draw_list, this->fill_frame_,
 		RectangleF(position, size), look.meter_track_colour);
 	// Draw exactly the owned fraction of the track, including an empty
@@ -196,9 +233,8 @@ void InterfaceGameplay::draw_timer(DrawList& draw_list,
 	}
 	const Vector2F padding = look.player_identity_padding * scale;
 	draw_list.set_filter(TextureFilter::point);
-	this->render_resources()->sprite_sheet(this->sheet_)->draw(draw_list,
-		this->fill_frame_, RectangleF(pos - padding, text_size + padding * 2.0f),
-		look.player_identity_background_colour);
+	this->draw_paper_panel(draw_list,
+		RectangleF(pos - padding, text_size + padding * 2.0f), scale);
 
 	draw_list.set_filter(TextureFilter::linear);
 	draw_list.draw_text(this->timer_font_, text,
