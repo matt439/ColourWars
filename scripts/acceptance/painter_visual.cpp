@@ -2537,6 +2537,7 @@ namespace
 #include "scripts/acceptance/painter_visual/weapon_catalog_checks.h"
 #include "scripts/acceptance/painter_visual/menu_text_checks.h"
 #include "scripts/acceptance/painter_visual/settings_menu_checks.h"
+#include "scripts/acceptance/painter_visual/controls_help_checks.h"
 #include "scripts/acceptance/painter_visual/controls_menu_checks.h"
 #include "scripts/acceptance/painter_visual/stick_settings_checks.h"
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)

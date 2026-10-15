@@ -189,11 +189,11 @@ void StickSettingsMenu::init()
 		look.stick_preview.raw_movement.position() - Vector2F(0.0f, label_height + look.art.focus_padding.y));
 	this->movement_response_ = add_text("movement_response", L"", look.help_font,
 		look.stick_preview.movement_response.position() - Vector2F(0.0f, label_height + look.art.focus_padding.y));
-	add_text("aim_label", L"Right stick: radial cutoff", look.help_font,
+	add_text("aim_label", this->text().help.aim_cutoff, look.help_font,
 		look.stick_preview.aim.position() - Vector2F(0.0f, label_height + look.art.focus_padding.y));
 	this->aim_readout_ = add_text("aim_response", L"", look.help_font, look.stick_preview.aim_readout_position);
 	UiText* association = add_text("association",
-		L"Profiles follow Pad 1-4 slots,\nnot the player number or device.\nAfter reconnecting, check the slot.\nKeyboard/mouse is unchanged.",
+		this->text().help.pad_association,
 		look.help_font, look.stick_preview.association_position);
 	const Vector2F available = look.controls_position + look.controls_size - look.stick_preview.association_position;
 	association->set_scale(std::min({ 1.0f, available.x / association->bounds().width,

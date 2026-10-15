@@ -763,4 +763,5 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         "six native sizes/aspects; clamps, delayed Apply, reload/failure and Back discard; pending Options "
         "values/focus and actual GameLevel Pause return remain intact; frozen/reduced/random/resize\n";
     controls_menu_item_checks(app, canvas, tuning, presentation, output, save_path);
+    controls_menu_help_checks(app, canvas, tuning, presentation, output, save_path);
 }

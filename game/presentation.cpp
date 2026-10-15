@@ -50,12 +50,12 @@ namespace
 		return text;
 	}
 
-	std::wstring read_menu_wordmark(const JsonValue& json)
+	std::wstring read_menu_block(const JsonValue& json, const char* key)
 	{
-		std::wstring text = drawable_text::widen_drawable(json.string("wordmark"), json.where() + ": wordmark");
+		std::wstring text = drawable_text::widen_drawable(json.string(key), json.where() + ": " + key);
 		if (text.find(L'\r') != std::wstring::npos)
 		{
-			throw std::runtime_error(json.where() + ": 'wordmark' must use LF for authored line breaks.");
+			throw std::runtime_error(json.where() + ": '" + key + "' must use LF for authored line breaks.");
 		}
 		size_t begin = 0;
 		do
@@ -64,7 +64,7 @@ namespace
 			if (text.substr(begin, end == std::wstring::npos ? end : end - begin).find_first_not_of(L' ') ==
 				std::wstring::npos)
 			{
-				throw std::runtime_error(json.where() + ": 'wordmark' must have a nonblank line between each authored LF break.");
+				throw std::runtime_error(json.where() + ": '" + key + "' must have a nonblank line between each authored LF break.");
 			}
 			if (end == std::wstring::npos) { break; }
 			begin = end + 1;
@@ -79,11 +79,15 @@ namespace
 		text.brand = read_menu_line(json, "brand");
 		text.solo_practice_hint = read_menu_line(json, "solo_practice_hint");
 		const JsonValue title = json.object("title");
-		text.title.wordmark = read_menu_wordmark(title);
+		text.title.wordmark = read_menu_block(title, "wordmark");
 		text.title.subtitle = read_menu_line(title, "subtitle");
 		text.title.start = read_menu_line(title, "start");
 		text.title.no_controller = read_menu_line(title, "no_controller");
 		text.home_subtitle = read_menu_line(json, "home_subtitle");
+		const JsonValue help = json.object("help");
+		text.help.controls = read_menu_block(help, "controls");
+		text.help.pad_association = read_menu_block(help, "pad_association");
+		text.help.aim_cutoff = read_menu_line(help, "aim_cutoff");
 		const JsonValue headings = json.object("headings");
 		for (size_t index = 0; index < text.headings.size(); ++index)
 		{
@@ -2174,6 +2178,51 @@ void Presentation::validate_resources(const RenderResources& render,
 		fixed_menu_size("menu_text.items.play", this->menu_text_.item(MenuItem::play), this->menu_.item_font));
 	play.inflate(main.art.focus_padding);
 	precedes("menu_text.home_subtitle", home_subtitle, play);
+	const RectangleF help_area(controls.controls_position, controls.controls_size);
+	check_fixed_paper("menu_text.help.controls", help_area, controls.box_size, Vector2F::ZERO);
+	const auto check_help_fit = [&](const std::string& key, const std::wstring& text,
+		const Vector2F& position, const Vector2F& available)
+	{
+		const Vector2F raw = fixed_menu_size(key, text, controls.help_font);
+		if (!std::isfinite(position.x) || !std::isfinite(position.y) ||
+			!std::isfinite(available.x) || !std::isfinite(available.y) || available.x <= 0.0f || available.y <= 0.0f ||
+			!help_area.contains(RectangleF(position, available)))
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must have a finite positive fitting area inside the controls help region.");
+		}
+		// Preserve the two pages' existing uniform fit. The available region
+		// bounds it by construction; supported long blocks need no length cap.
+		const float scale = std::min({ 1.0f, available.x / raw.x, available.y / raw.y });
+		const Vector2F fitted = raw * scale;
+		if (!std::isfinite(scale) || scale <= 0.0f || !std::isfinite(fitted.x) || !std::isfinite(fitted.y) ||
+			fitted.x <= 0.0f || fitted.y <= 0.0f)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must retain finite positive text bounds after fitting.");
+		}
+	};
+	check_help_fit("menu_text.help.controls", this->menu_text_.help.controls,
+		controls.controls_position, controls.controls_size);
+	const StickPreviewPresentation& preview = controls.stick_preview;
+	check_help_fit("menu_text.help.pad_association", this->menu_text_.help.pad_association,
+		preview.association_position, help_area.bottom_right() - preview.association_position);
+	if (preview.association_position.y < preview.aim.bottom())
+	{
+		throw std::runtime_error(this->source_path_ +
+			": menu_text.help.pad_association must begin below the aim preview.");
+	}
+	const Vector2F caption_size = fixed_menu_size("menu_text.help.aim_cutoff",
+		this->menu_text_.help.aim_cutoff, controls.help_font);
+	const float probe_height = render.measure_text(render.resolve_sprite_font(controls.help_font), L"Move").y;
+	const RectangleF caption(preview.aim.position() -
+		Vector2F(0.0f, probe_height + controls.art.focus_padding.y), caption_size);
+	if (!std::isfinite(probe_height) || probe_height <= 0.0f || !help_area.contains(caption) ||
+		caption.y < preview.movement_response.bottom() || caption.bottom() > preview.aim.y)
+	{
+		throw std::runtime_error(this->source_path_ +
+			": menu_text.help.aim_cutoff must fit unscaled inside the controls help region between the movement and aim previews.");
+	}
 	check.font("hud.meter_label_font", this->hud_.meter_label_font);
 	check.font("hud.player_identity.font", this->hud_.player_identity_font);
 	check.frame("hud.fill_frame", this->hud_.sprite_sheet, this->hud_.fill_frame);

@@ -109,7 +109,7 @@ random-primary selection, without changing selection order or RNG draws.
 
 The required `menu_text` object stores the shared menu brand, eleven headings,
 seventeen complete prompt-bar legends, thirty-six row labels, a solo-practice
-hint and five Title/Home strings:
+hint, five Title/Home strings and three Controls/Pad Sticks help strings:
 
 | JSON path | Required keys |
 |---|---|
@@ -120,12 +120,14 @@ hint and five Title/Home strings:
 | `menu_text.solo_practice_hint` | One Mode Select hint string |
 | `menu_text.title` | `wordmark`, `subtitle`, `start`, `no_controller` |
 | `menu_text.home_subtitle` | One Home subtitle string |
+| `menu_text.help` | `controls`, `pad_association`, `aim_cutoff` |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
 normalization and the supported U+0020 to U+007E printable content range after
 normalization. Text must be nonblank and single-line, except for the Title
-wordmark's authored line breaks described below. Startup checks the actual
-drawing font and measured bounds in the menu's design coordinates.
+wordmark and the Controls/Pad Sticks help blocks' authored line breaks described
+below. Startup checks the actual drawing font and measured bounds in the menu's
+design coordinates.
 
 | Text | Font | Position and lower boundary | Shadow allowance |
 |---|---|---|---|
@@ -426,9 +428,94 @@ Each page takes its labels from captured `MenuText` and resolves its item font
 on opening. Presentation changes leave an open page's text, font and fitted
 label sizes intact; reopening adopts the edits. They remain JSON string
 settings outside numeric `tune`. Labels do not change navigation, adjustment
-steps, Apply/Back behavior, saved preferences or stick previews. Multiline
-controls help, pad association text, the aim-preview caption and dynamic
+steps, Apply/Back behavior, saved preferences or stick previews. Dynamic
 status/value/readout strings remain separate C++ text.
+
+### Controls / audio and Pad Sticks help
+
+The required `menu_text.help` object supplies three fixed strings. All use
+`controls_settings.help_font`, shipped as `gill_sans_mt_bold_24`; they do not use
+the separate controls item font or shared menu detail font.
+
+| Key | Use |
+|---|---|
+| `controls` | Multiline Controls / audio instructions |
+| `pad_association` | Multiline explanation of Pad 1-4 profile association |
+| `aim_cutoff` | Unscaled caption above the right-stick preview |
+
+`controls` preserves this exact shipped text, including the authored line breaks
+and spacing:
+
+```text
+CONTROLLER
+Move / drop: left stick
+Aim: right stick    Shoot: RT
+Jump: A / LT (hold for height)
+Pause: Start    Debug: Back / View
+KEYBOARD + MOUSE
+Move: A / D    Drop: S / Down
+Aim: mouse cursor    Shoot: left click
+Jump: Space (hold for height)
+Pause: Esc    Debug: F1
+MENUS
+Navigate: stick / D-pad / arrows
+Select: A / Enter    Back: B / Esc
+AIM / READINESS
+Direction only; roller aim is fixed.
+Ready: chevron / Cooldown: bars
+No paint: cross
+Pad sticks: movement / aim deadzones.
+REDUCE EFFECTS
+Less shake, flashes and idle detail.
+```
+
+`pad_association` preserves these four lines:
+
+```text
+Profiles follow Pad 1-4 slots,
+not the player number or device.
+After reconnecting, check the slot.
+Keyboard/mouse is unchanged.
+```
+
+`aim_cutoff` defaults to `Right stick: radial cutoff`. Both multiline fields
+permit explicit LF line breaks (`\n` in JSON). After punctuation and nonbreaking
+space normalization, each authored line must contain nonblank supported text.
+Leading, trailing or consecutive line breaks that create blank lines are
+rejected, as are CR, tabs and other control characters. The caption follows the
+shared normalized, nonblank, single-line rule. No automatic wrapping or format
+placeholders are introduced.
+
+Startup checks actual help-font glyphs and finite, positive measured bounds.
+The help region begins at `controls_settings.controls_position`, has size
+`controls_settings.controls_size` and must fit the footer-centered Controls
+paper. The Controls block starts at that region's top-left and retains its
+existing fit within it. The association block starts at
+`controls_settings.stick_preview.association_position`, at or below the aim
+preview's bottom; its available size is
+`controls_position + controls_size - association_position`. Each block's scale
+is the minimum of one, available width divided by measured width, and available
+height divided by measured height. The available area must be finite, positive
+and inside the help region. The scale must be finite and positive; long
+supported blocks remain valid when their fitted bounds fit their region,
+without a character-count or minimum-scale limit. Neither block adds a focus
+backing or text shadow.
+
+The aim caption retains its measured size. Its x position is
+`controls_settings.stick_preview.aim.x`; its y position remains the preview's
+top minus the help font's measured `Move` height and
+`controls_settings.art.focus_padding.y`. `Move` is a geometry probe, not another
+display string. The caption must fit the right-hand help region, begin at or
+below the movement-response preview's bottom, and end at or above the aim
+preview's top. Its width can extend beyond the aim square within that region;
+the square is not a text-width cap. Boundary equality is accepted.
+
+Both pages use their captured `MenuText` and resolve help fonts when opened. An
+open page retains its help text, font, fitted sizes and caption position after
+presentation edits, including returning to Controls from Pad Sticks. Reopening
+adopts the edits. These strings remain JSON settings outside numeric `tune`.
+Changing the instructions does not remap input, alter profile association,
+change saved settings or modify stick-response behavior.
 
 ## Verification and boundary
 
@@ -443,7 +530,10 @@ hint, and plain Pause actions/confirmation and End action labels. Controls
 labels use their separate item font, including shared Apply/Back checks and
 width-then-height fitting. Title/Home copy adds required-key, authored-line,
 actual-font, paper and vertical-order checks while preserving generated build
-identity.
+identity. The fixed Controls/Pad Sticks help adds required-key, normalized-line,
+actual help-font and fitted-region checks. The unscaled aim caption uses its
+actual bounds and existing probe-based position, with clearance between the
+movement-response and aim previews; association text stays below the aim box.
 Debug-console acceptance checks layout edit scopes, rollback and reset.
 
 The native painter checks exercise real page construction, copied geometry,
@@ -469,7 +559,8 @@ repeated and interrupted pause, restart and quit flows.
 text/font snapshots through repeated and interrupted end-page flows.
 Use `ControlsMenuOnly` for the authored Controls / audio and Pad Sticks labels,
 their fitted columns and retained text/font across presentation replacement,
-returning from the child page and reopening.
+returning from the child page and reopening. The same scope covers the authored
+help blocks' fitting and the aim caption's retained text/font and placement.
 Use `MainMenuOnly` for Title/Home wording, centering, focus and navigation,
 including retained text/font across presentation replacement and reopening.
 
@@ -478,8 +569,8 @@ The non-menu primitive texel retains its own startup checks. Together with
 the data boundary implemented for gap-audit 8.5. The weapon catalog implements
 the name/artwork part of GAP#8.4, and `menu_text` implements shared headings,
 control legends, Home/Options/Credits, Mode/Player Count, Pause, static End and
-Controls/Pad Sticks row labels, the solo-practice hint and fixed Title/Home copy.
-Multiline controls help, pad association and aim-preview captions,
-status/value/readout text, composed match/results/pause/end text and other
-player-visible C++ text remain open under that item. Font regeneration, wrapping
-and locale selection remain separate work. The historical audit is unchanged.
+Controls/Pad Sticks row labels and help, the solo-practice hint and fixed
+Title/Home copy. Status/value/readout text, composed match/results/pause/end text
+and other player-visible C++ text remain open under that item. Font
+regeneration, wrapping and locale selection remain separate work. The historical
+audit is unchanged.

@@ -77,6 +77,13 @@ struct MenuTitleText
 	std::wstring no_controller;
 };
 
+struct MenuHelpText
+{
+	std::wstring controls;
+	std::wstring pad_association;
+	std::wstring aim_cutoff;
+};
+
 // Fixed roles select display text; navigation and accepted inputs remain code.
 struct MenuText
 {
@@ -84,6 +91,7 @@ struct MenuText
 	std::wstring solo_practice_hint;
 	MenuTitleText title;
 	std::wstring home_subtitle;
+	MenuHelpText help;
 	std::array<std::wstring, static_cast<size_t>(MenuHeading::count)> headings;
 	std::array<std::wstring, static_cast<size_t>(MenuPrompt::count)> prompts;
 	std::array<std::wstring, static_cast<size_t>(MenuItem::count)> items;

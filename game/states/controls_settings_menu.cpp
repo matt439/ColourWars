@@ -122,7 +122,7 @@ void ControlsSettingsMenu::init()
 	this->set_status(L"Apply to save changes for all players.", look.art.focus_ink);
 	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(back, [this] { this->close(); });
-	UiText* controls = add_text("controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
+	UiText* controls = add_text("controls", this->text().help.controls,
 		look.help_font, look.controls_position, look.art.ink);
 	const RectangleF help = controls->bounds();
 	controls->set_scale(std::min({ 1.0f, look.controls_size.x / help.width,

@@ -57,6 +57,20 @@ namespace
         { "start", L"LET'S PLAY", &MenuTitleText::start },
         { "no_controller", L"Connect a controller", &MenuTitleText::no_controller }
     };
+    struct HelpText { const char* key; const wchar_t* text; std::wstring MenuHelpText::* field; bool multiline; };
+    constexpr HelpText help_text[]{
+        { "controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\n"
+            L"Jump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\n"
+            L"Move: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\n"
+            L"Jump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\n"
+            L"Navigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\n"
+            L"Direction only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\n"
+            L"Pad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
+            &MenuHelpText::controls, true },
+        { "pad_association", L"Profiles follow Pad 1-4 slots,\nnot the player number or device.\n"
+            L"After reconnecting, check the slot.\nKeyboard/mouse is unchanged.", &MenuHelpText::pad_association, true },
+        { "aim_cutoff", L"Right stick: radial cutoff", &MenuHelpText::aim_cutoff, false }
+    };
     constexpr DefaultText items[]{
         { "play", L"Play" }, { "options", L"Options" }, { "credits", L"Credits" }, { "exit", L"Exit" },
         { "resolution", L"Resolution" }, { "fullscreen", L"Fullscreen" }, { "team_palette", L"Team palette" },
@@ -191,6 +205,10 @@ namespace
         {
             require(text.title.*entry.field == entry.text, std::string("Title default changed: ") + entry.key);
         }
+        for (const auto& entry : help_text)
+        {
+            require(text.help.*entry.field == entry.text, std::string("Controls/Pad Sticks help default changed: ") + entry.key);
+        }
         for (size_t index = 0; index < std::size(headings); ++index)
         {
             const auto& actual = text.heading(static_cast<MenuHeading>(index));
@@ -236,7 +254,7 @@ namespace
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
         {
-            for (const char* group : { "headings", "prompts", "items", "title" })
+            for (const char* group : { "headings", "prompts", "items", "title", "help" })
             {
                 auto& object = d["menu_text"][group];
                 rapidjson::Value reordered(rapidjson::kObjectType);
@@ -255,7 +273,7 @@ namespace
         });
         check_defaults(reversed);
         variants.rejects("", [](rapidjson::Document& d) { d.RemoveMember("menu_text"); });
-        for (const char* group : { "headings", "prompts", "items", "title" })
+        for (const char* group : { "headings", "prompts", "items", "title", "help" })
         {
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"].RemoveMember(group); });
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"][group].SetArray(); });
@@ -275,6 +293,7 @@ namespace
         required(nullptr, "solo_practice_hint");
         required(nullptr, "home_subtitle");
         for (const auto& entry : title_text) { required("title", entry.key); }
+        for (const auto& entry : help_text) { required("help", entry.key); }
         for (const auto& entry : headings) { required("headings", entry.key); }
         for (const auto& entry : prompts) { required("prompts", entry.key); }
         for (const auto& entry : items) { required("items", entry.key); }
@@ -1263,6 +1282,228 @@ namespace
             d["main_menu"]["home_subtitle_position"]["x"].SetFloat(1596.25f);
         }, &world);
     }
+
+    void check_help_text(Variants& variants, World& world)
+    {
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        {
+            for (const auto& entry : help_text)
+            {
+                d["menu_text"]["help"][entry.key].SetString(entry.multiline ?
+                    " A\xC2\xA0\xE2\x80\x94" "B \n C " : " A\xC2\xA0\xE2\x80\x94" "B ", d.GetAllocator());
+            }
+        });
+        normalized.validate_resources(world.render, world.audio);
+        for (const auto& entry : help_text)
+        {
+            require(normalized.menu_text().help.*entry.field == (entry.multiline ? L" A -B \n C " : L" A -B "),
+                std::string("Help text lost authored spacing/LF or punctuation/NBSP normalization: ") + entry.key);
+            const std::string field = std::string("help.") + entry.key;
+            for (const char* invalid : { "   ", " \xC2\xA0 ", "line\rbreak", "line\r\nbreak", "tab\ttext",
+                "control\x01", "delete\x7F", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3" })
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    d["menu_text"]["help"][entry.key].SetString(invalid, d.GetAllocator());
+                });
+            }
+            if (entry.multiline)
+            {
+                for (const char* invalid : { "\nA", "A\n", "A\n\nB", "A\n \nB", " \nA", "A\n \xC2\xA0 " })
+                {
+                    variants.rejects(field, [&](rapidjson::Document& d)
+                    {
+                        d["menu_text"]["help"][entry.key].SetString(invalid, d.GetAllocator());
+                    });
+                }
+            }
+            else
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    d["menu_text"]["help"][entry.key].SetString("line\nbreak");
+                });
+            }
+            // Heading, item and ordinary detail fonts still contain '~'.
+            // Only this help font lacks it, and its stand-in must not hide that.
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                d["controls_settings"]["help_font"].SetString("menu_text_limited");
+                d["menu_text"]["help"][entry.key].SetString("Glyph~");
+            }, &world);
+        }
+        const auto single_line_blocks = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_text"]["help"]["controls"].SetString("Controls");
+            d["menu_text"]["help"]["pad_association"].SetString("Slots");
+        });
+        single_line_blocks.validate_resources(world.render, world.audio);
+        require(single_line_blocks.menu_text().help.controls == L"Controls" &&
+            single_line_blocks.menu_text().help.pad_association == L"Slots",
+            "Help blocks replaced authored copy with fixed line counts");
+        variants.rejects("help.aim_cutoff", [](rapidjson::Document& d)
+        {
+            d["menu_text"]["help"]["aim_cutoff"].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
+        }, &world);
+    }
+
+    void check_help_fitting(Variants& variants, World& world)
+    {
+        const auto check_blocks = [&](const Presentation& look, bool width_limited, bool height_limited)
+        {
+            const auto& controls = look.controls_settings();
+            const auto font = world.render.resolve_sprite_font(controls.help_font);
+            for (const auto& entry : help_text)
+            {
+                if (!entry.multiline) { continue; }
+                const bool is_controls = std::string(entry.key) == "controls";
+                const auto position = is_controls ? controls.controls_position : controls.stick_preview.association_position;
+                const auto available = is_controls ? controls.controls_size :
+                    controls.controls_position + controls.controls_size - position;
+                std::wstring authored = look.menu_text().help.*entry.field;
+                const auto measured = world.render.measure_text(font, authored);
+                if (width_limited)
+                {
+                    require(measured.x > available.x && measured.y < available.y,
+                        "Long help fixture does not independently exercise width fitting");
+                }
+                if (height_limited)
+                {
+                    require(measured.x < available.x && measured.y > available.y,
+                        "Tall help fixture does not independently exercise height fitting");
+                }
+                UiText text(entry.key, authored, controls.help_font, position, &world.render, controls.art.ink);
+                const auto retained = authored;
+                authored = L"Changed after construction";
+                require(text.text() == retained && text.bounds() == mattmath::RectangleF(position, measured),
+                    "Actual help UiText borrowed its source or changed its unscaled measurement");
+                text.set_scale(std::min({ 1.0f, available.x / measured.x, available.y / measured.y }));
+                require(text.text() == retained && text.bounds().position() == position &&
+                    std::isfinite(text.bounds().width) && std::isfinite(text.bounds().height) &&
+                    text.bounds().width > 0.0f && text.bounds().height > 0.0f &&
+                    text.bounds().width <= available.x + 0.01f && text.bounds().height <= available.y + 0.01f,
+                    "Actual help UiText lost text, moved, or escaped its fitted help rectangle");
+                if (width_limited || height_limited)
+                {
+                    require(text.bounds().width < measured.x && text.bounds().height < measured.y,
+                        "Help block did not retain proportional down-scaling");
+                }
+                else
+                {
+                    require(text.bounds() == mattmath::RectangleF(position, measured),
+                        "Short help blocks were enlarged above their authored font size");
+                }
+                text.set_hidden(true);
+                DrawList no_device;
+                text.draw(no_device);
+            }
+        };
+        const auto short_blocks = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_text"]["help"]["controls"].SetString("Fit\nFit");
+            d["menu_text"]["help"]["pad_association"].SetString("Fit\nFit");
+        });
+        short_blocks.validate_resources(world.render, world.audio);
+        check_blocks(short_blocks, false, false);
+        const auto wide_blocks = variants.load([](rapidjson::Document& d)
+        {
+            for (const char* key : { "controls", "pad_association" })
+            {
+                d["menu_text"]["help"][key].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
+            }
+        });
+        wide_blocks.validate_resources(world.render, world.audio);
+        check_blocks(wide_blocks, true, false);
+        const auto tall_blocks = variants.load([](rapidjson::Document& d)
+        {
+            std::string lines = "Fit";
+            for (int line = 1; line < 50; ++line) { lines += "\nFit"; }
+            for (const char* key : { "controls", "pad_association" })
+            {
+                d["menu_text"]["help"][key].SetString(lines.c_str(), d.GetAllocator());
+            }
+        });
+        tall_blocks.validate_resources(world.render, world.audio);
+        check_blocks(tall_blocks, false, true);
+    }
+
+    void check_help_bounds(Variants& variants, World& world)
+    {
+        // A caption spans the remaining help column, rather than the narrower
+        // 210-wide aim box. It keeps its unscaled font, unlike both help blocks.
+        const auto caption_edge = [](rapidjson::Document& d)
+        {
+            d["controls_settings"]["help_font"].SetString("menu_text_exact");
+            d["menu_text"]["help"]["aim_cutoff"].SetString(std::string(77, 'F').c_str(), d.GetAllocator());
+        };
+        const auto fits_caption = variants.load(caption_edge);
+        fits_caption.validate_resources(world.render, world.audio);
+        const auto& controls = fits_caption.controls_settings();
+        const auto font = world.render.resolve_sprite_font(controls.help_font);
+        const auto caption_size = world.render.measure_text(font, fits_caption.menu_text().help.aim_cutoff);
+        require(caption_size.x > controls.stick_preview.aim.width && caption_size.x <= controls.controls_size.x,
+            "Aim caption fixture does not distinguish the full help column from the square aim preview");
+        const auto caption_position = controls.stick_preview.aim.position() - mattmath::Vector2F(0.0f,
+            world.render.measure_text(font, L"Move").y + controls.art.focus_padding.y);
+        UiText caption("caption", fits_caption.menu_text().help.aim_cutoff, controls.help_font,
+            caption_position, &world.render, controls.art.ink);
+        require(caption.text() == fits_caption.menu_text().help.aim_cutoff &&
+            caption.bounds() == mattmath::RectangleF(caption_position, caption_size),
+            "Actual aim caption changed its unscaled font or placement above the aim box");
+        caption.set_hidden(true);
+        DrawList no_device;
+        caption.draw(no_device);
+        variants.rejects("help.aim_cutoff", [&](rapidjson::Document& d)
+        {
+            caption_edge(d);
+            d["menu_text"]["help"]["aim_cutoff"].SetString(std::string(78, 'F').c_str(), d.GetAllocator());
+        }, &world);
+        // These preview coordinates remain legal in the geometric parser, but
+        // the measured caption now intrudes into the preceding response track.
+        variants.rejects("help.aim_cutoff", [](rapidjson::Document& d)
+        {
+            d["controls_settings"]["stick_preview"]["aim"]["position"]["y"].SetFloat(420.0f);
+        }, &world);
+        std::vector<Glyph> glyphs;
+        for (char32_t character = U' '; character <= U'~'; ++character)
+        {
+            const bool boundary_glyph = character == U'F' || character == U'G';
+            glyphs.push_back({ character, mattmath::RectangleI(0, 0, boundary_glyph ? 620 : 8,
+                character == U'F' ? 28 : character == U'G' ? 29 : 16), 0.0f, 0.0f, 0.0f });
+        }
+        world.render.add_font("menu_help_caption_exact", std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
+        const auto exact_caption = [](rapidjson::Document& d)
+        {
+            d["controls_settings"]["help_font"].SetString("menu_help_caption_exact");
+            d["menu_text"]["help"]["aim_cutoff"].SetString("F");
+        };
+        const auto touches_right_and_aim = variants.load(exact_caption);
+        touches_right_and_aim.validate_resources(world.render, world.audio);
+        require(world.render.measure_text(world.render.resolve_sprite_font("menu_help_caption_exact"), L"F") ==
+            mattmath::Vector2F(620.0f, 28.0f), "Caption boundary glyph has unexpected metrics");
+        for (const char* overflow : { "Fi", "G" })
+        {
+            variants.rejects("help.aim_cutoff", [&](rapidjson::Document& d)
+            {
+                exact_caption(d);
+                d["menu_text"]["help"]["aim_cutoff"].SetString(overflow, d.GetAllocator());
+            }, &world);
+        }
+        const auto touches_track = [&](rapidjson::Document& d)
+        {
+            exact_caption(d);
+            // Move is 20 high, plus eight units of existing focus padding:
+            // the 28-high F starts exactly at the response track's bottom.
+            d["controls_settings"]["stick_preview"]["aim"]["position"]["y"].SetFloat(447.0f);
+        };
+        const auto fits_track = variants.load(touches_track);
+        fits_track.validate_resources(world.render, world.audio);
+        variants.rejects("help.aim_cutoff", [&](rapidjson::Document& d)
+        {
+            touches_track(d);
+            d["controls_settings"]["stick_preview"]["aim"]["position"]["y"].SetFloat(446.75f);
+        }, &world);
+    }
 }
 
 int main(int argc, char** argv)
@@ -1287,6 +1528,9 @@ int main(int argc, char** argv)
         check_controls_option_rows(variants, world);
         check_title_and_home_text(variants, world, defaults);
         check_title_and_home_bounds(variants, world);
+        check_help_text(variants, world);
+        check_help_fitting(variants, world);
+        check_help_bounds(variants, world);
         check_option_row_fitting(variants, world);
         check_prompt_bar(world, defaults);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
