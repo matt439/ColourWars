@@ -104,6 +104,10 @@ namespace
 		const JsonValue confirmations = json.object("confirmations");
 		text.confirmations.restart = read_menu_line(confirmations, "restart");
 		text.confirmations.quit = read_menu_line(confirmations, "quit");
+		const JsonValue end = json.object("end");
+		text.end.match_complete = read_menu_line(end, "match_complete");
+		text.end.round_complete = read_menu_line(end, "round_complete");
+		text.end.series_complete = read_menu_line(end, "series_complete");
 		const JsonValue headings = json.object("headings");
 		for (size_t index = 0; index < text.headings.size(); ++index)
 		{
@@ -2159,6 +2163,24 @@ void Presentation::validate_resources(const RenderResources& render,
 	};
 	check_confirmation("restart", this->menu_text_.confirmations.restart);
 	check_confirmation("quit", this->menu_text_.confirmations.quit);
+	const RectangleF end_paper((Vector2F(1920.0f, 1080.0f) - end.box_size) / 2.0f, end.box_size);
+	// The first continuation row starts here regardless of its Session label.
+	const float first_end_action_top = end.layout.position.y - end.art.focus_padding.y;
+	const auto check_end_heading = [&](const char* role, const std::wstring& text)
+	{
+		const std::string key = std::string("menu_text.end.") + role;
+		const Vector2F size = fixed_menu_size(key, text, this->menu_.heading_font);
+		const RectangleF bounds((1920.0f - size.x) / 2.0f, end.heading_y, size.x, size.y);
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !std::isfinite(first_end_action_top) ||
+			!end_paper.contains(bounds) || bounds.bottom() > first_end_action_top)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit unscaled inside the End paper before the first action's focus padding.");
+		}
+	};
+	check_end_heading("match_complete", this->menu_text_.end.match_complete);
+	check_end_heading("round_complete", this->menu_text_.end.round_complete);
+	check_end_heading("series_complete", this->menu_text_.end.series_complete);
 	const auto check_fixed_paper = [&](const std::string& key, RectangleF bounds,
 		const Vector2F& paper_size, const Vector2F& padding)
 	{

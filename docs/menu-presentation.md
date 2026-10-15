@@ -110,8 +110,8 @@ random-primary selection, without changing selection order or RNG draws.
 The required `menu_text` object stores the shared menu brand, eleven headings,
 seventeen complete prompt-bar legends, thirty-six row labels, a solo-practice
 hint, five Title/Home strings, three Controls/Pad Sticks help strings, eight
-fixed save-status messages, three shared setting values and two Pause confirmation
-questions:
+fixed save-status messages, three shared setting values, two Pause confirmation
+questions and three End completion headings:
 
 | JSON path | Required keys |
 |---|---|
@@ -126,6 +126,7 @@ questions:
 | `menu_text.status` | `options_pending`, `options_saved`, `options_save_failed`, `controls_pending`, `controls_saved`, `active_save_failed`, `sticks_pending`, `sticks_saved` |
 | `menu_text.values` | `on`, `off`, `random` |
 | `menu_text.confirmations` | `restart`, `quit` |
+| `menu_text.end` | `match_complete`, `round_complete`, `series_complete` |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
 normalization and the supported U+0020 to U+007E printable content range after
@@ -390,7 +391,7 @@ Four required `menu_text.items` roles supply the static End Menu actions:
 | `exit_to_main_menu` | `Exit to Main Menu` | Ongoing-series row 1; completed-match/series row 4 |
 
 The configuration actions remain hidden during an ongoing series. The existing
-continuation action at row 0 and the session-dependent heading remain in code.
+continuation action at row 0 remains in code.
 Editing these four labels does not change which actions are available, their
 order, navigation, session continuation or music transitions.
 
@@ -410,8 +411,40 @@ accepted; these plain actions add no item-text shadow or fitting scale.
 An End page takes its labels from the captured `MenuText` and resolves their
 item font when it opens. An open page keeps its text and font after
 presentation changes; reopening adopts the edits. The strings are edited in
-JSON, outside numeric `tune`. Session-dependent continuation and heading text,
-and other composed End copy, remain separate C++ text.
+JSON, outside numeric `tune`. Session-dependent continuation text remains
+separate C++ text.
+
+### End Menu completion headings
+
+Three required `menu_text.end` strings supply the existing completion headings:
+
+| Key | Shipped text | Use |
+|---|---|---|
+| `match_complete` | `Match Complete` | Single match |
+| `round_complete` | `Round Complete` | Ongoing series, including a drawn round |
+| `series_complete` | `Series Complete` | Completed series |
+
+The normalized, nonblank, single-line content rules apply. Startup checks the
+actual `menu_style.fonts.heading` glyphs and finite, positive measured bounds.
+The shipped heading font remains `gill_sans_mt_bold_72`.
+
+Headings keep their plain, unscaled drawing style. Their actual glyph rectangle
+is centered horizontally within the full 1920 by 1080 design area at
+`end_menu.heading_y`. It must fit the outer End paper: `end_menu.box_size`,
+centered in that same full design area, shipped as 980 by 820. The heading's
+bottom edge must be at or above the first continuation action's padded top,
+`end_menu.layout.position.y - end_menu.art.focus_padding.y`. Equality is
+accepted. The heading itself has no added padding or text shadow, and no
+wrapping, automatic shrinking or upscaling.
+
+An End page takes its completion heading from its captured `MenuText` and
+resolves the heading font when it opens. An open page retains its text, font,
+measured bounds and centered position through presentation replacement;
+reopening adopts the edits. These complete strings stay outside numeric `tune`
+and introduce no placeholders or runtime formatting. The existing session
+state selects the same single-match, ongoing-series and completed-series
+branches. Heading edits do not change continuation/result/score composition,
+available actions, navigation, focus, music timing or interrupted transitions.
 
 ### Controls / audio and Pad Sticks row labels
 
@@ -667,8 +700,8 @@ fullscreen resolution, Apply/Back behavior, save identifiers or persistence.
 Fixed palette labels remain in the existing palette data and are still read
 live. Resolution and
 numeric/percentage formatting, default-deadzone notation, stage Random copy,
-connection/readout text and composed match/results/pause/end copy remain
-separate work under GAP#8.4.
+connection/readout text, player-specific Pause titles, session continuation
+text and composed match/results copy remain separate work under GAP#8.4.
 
 ## Verification and boundary
 
@@ -681,7 +714,9 @@ normalization, font coverage and measured design/paper bounds, including fitted
 Options and Controls/Pad Sticks labels, shadowed Mode/Player Count rows and solo
 hint, and plain Pause actions/confirmation and End action labels. Pause questions
 add required-key, normalization, detail-font, centered-paper and action-clearance
-checks without a fitting scale. Controls
+checks without a fitting scale. End completion headings add their required-key,
+normalization, heading-font, centered-paper and continuation-clearance checks,
+also without a fitting scale. Controls
 labels use their separate item font, including shared Apply/Back checks and
 width-then-height fitting. Title/Home copy adds required-key, authored-line,
 actual-font, paper and vertical-order checks while preserving generated build
@@ -720,8 +755,11 @@ through repeated and interrupted pause, restart and quit flows, including safe
 No focus and question/detail-font snapshots across presentation replacement and
 newly opened confirmations. `ResumeOnly` retains the match-resume transition
 checks.
-`EndMenuOnly` checks the four authored actions, both Exit positions and page
-text/font snapshots through repeated and interrupted end-page flows.
+`EndMenuOnly` checks the four authored actions, both Exit positions, all three
+completion headings and page text/font snapshots through repeated and
+interrupted end-page flows. Heading checks include a drawn round in an ongoing
+series, reopening after presentation replacement and the unchanged continuation
+choices.
 Use `ControlsMenuOnly` for the authored Controls / audio and Pad Sticks labels,
 their fitted columns and retained text/font across presentation replacement,
 returning from the child page and reopening. The same scope covers the authored
@@ -743,9 +781,10 @@ the name/artwork part of GAP#8.4, and `menu_text` implements shared headings,
 control legends, Home/Options/Credits, Mode/Player Count, Pause, static End and
 Controls/Pad Sticks row labels and help, the solo-practice hint, fixed
 Title/Home copy, fixed settings save-status messages, shared On/Off/Random
-setting values and fixed Pause confirmation questions. Other setting values,
+setting values, fixed Pause confirmation questions and End completion headings.
+Other setting values,
 stage Random copy, connection/readout text, player-specific Pause titles,
-composed match/results/end text and other
+session continuation text, composed match/results text and other
 player-visible C++ text remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical
 audit is unchanged.

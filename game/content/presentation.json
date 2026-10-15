@@ -118,6 +118,11 @@
       "restart": "Are you sure you want to restart?",
       "quit": "Are you sure you want to quit?"
     },
+    "end": {
+      "match_complete": "Match Complete",
+      "round_complete": "Round Complete",
+      "series_complete": "Series Complete"
+    },
     "headings": {
       "home": "Make your mark.",
       "options": "Options",

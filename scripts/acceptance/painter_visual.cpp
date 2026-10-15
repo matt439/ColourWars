@@ -2531,6 +2531,7 @@ namespace
 #include "scripts/acceptance/painter_visual/supply_checks.h"
 #include "scripts/acceptance/painter_visual/resume_checks.h"
 #include "scripts/acceptance/painter_visual/end_menu_checks.h"
+#include "scripts/acceptance/painter_visual/end_heading_checks.h"
 #include "scripts/acceptance/painter_visual/pause_menu_checks.h"
 #include "scripts/acceptance/painter_visual/pause_question_checks.h"
 #include "scripts/acceptance/painter_visual/results_menu_checks.h"

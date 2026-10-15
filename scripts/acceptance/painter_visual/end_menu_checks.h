@@ -338,6 +338,9 @@ void end_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& tu
         "Enter releases; unchanged continuation and frozen draw RNG\n";
 }
 
+void end_heading_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
+    Presentation& presentation, const std::filesystem::path& output);
+
 void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
@@ -622,4 +625,5 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     }
     require(records.good(), "End-menu evidence write failed");
     end_menu_item_checks(app, canvas, tuning, presentation, output);
+    end_heading_checks(app, canvas, tuning, presentation, output);
 }

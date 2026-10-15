@@ -72,7 +72,8 @@ void EndMenuInitial::init()
 	this->heading_ = std::make_unique<UiText>(
 		"heading",
 		this->session_.is_series() ? (this->session_.complete() ?
-			L"Series Complete" : L"Round Complete") : L"Match Complete",
+			this->text().end.series_complete : this->text().end.round_complete) :
+			this->text().end.match_complete,
 		style.heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),

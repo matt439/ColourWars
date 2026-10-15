@@ -109,6 +109,13 @@ struct MenuConfirmationText
 	std::wstring quit;
 };
 
+struct MenuEndText
+{
+	std::wstring match_complete;
+	std::wstring round_complete;
+	std::wstring series_complete;
+};
+
 // Fixed roles select display text; navigation and accepted inputs remain code.
 struct MenuText
 {
@@ -120,6 +127,7 @@ struct MenuText
 	MenuStatusText status;
 	MenuValueText values;
 	MenuConfirmationText confirmations;
+	MenuEndText end;
 	std::array<std::wstring, static_cast<size_t>(MenuHeading::count)> headings;
 	std::array<std::wstring, static_cast<size_t>(MenuPrompt::count)> prompts;
 	std::array<std::wstring, static_cast<size_t>(MenuItem::count)> items;
