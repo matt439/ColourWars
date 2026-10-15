@@ -155,6 +155,10 @@
       "wave": "match.time_up"
     },
     {
+      "name": "match.last_ten",
+      "wave": "match.last_ten"
+    },
+    {
       "name": "match.glass_out",
       "wave": "match.glass_out"
     },
@@ -165,6 +169,10 @@
     {
       "name": "room.chair",
       "wave": "room.chair"
+    },
+    {
+      "name": "room.tone",
+      "wave": "room.tone"
     },
     {
       "name": "match.glass_in",

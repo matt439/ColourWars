@@ -635,6 +635,7 @@ legacy names do not make them migration inputs.
 | Paint feedback (2026-10-15) | Six rotating splashes, all five tools' impacts, neutral/enemy capture and retiring bare-geometry duds, bounded per paint owner across all surfaces |
 | Menus and results | Direction, confirm, cancel, error, ready, pause-open, results fill, winner and distinct draw use their replacement cues |
 | Match start/end | Repeated `match.count_beat` edges and one `match.go`; separate time-up and glass-out voices replace the whistle |
+| Closing clock and room (2026-10-15) | One `match.last_ten` per displayed positive second at ten or below; a quiet `room.tone` loop before the push and throughout the reveal |
 | Opening and reveal | Reveal hover/click use the replacement cues; the accepted sigh/chair cues have tuning slots and pause-aware phase-edge playback |
 | Opening/reveal detail (2026-10-15) | Opening swatch hovers, undo, colour-in, skip and glass-in; distinct draw-close and one winning/losing reaction per participating team after the person leaves |
 
@@ -749,13 +750,29 @@ interval budget, and wet landings retain impact-scaled strength. Spawn settling,
 wall pressure, airborne travel, fatal contacts and nonpositive ticks retain their
 existing suppression. Authored gains remain listening candidates.
 
+The clock and room audio increment uses `match.sounds.last_ten` and `room_tone`
+for effect names and gains. Each current displayed positive second at ten or
+below sounds once, including the first active tick of a short match. A long
+update sounds only its current second; one that reaches time-up emits no late
+clock cue. Time-up stops the clock voice before its own cue. Neither cue
+depends on coverage or reveals the score.
+
+The room loop starts on the first positive full/quick opening update, survives
+the monitor countdown and stops when the glass push starts. Skipping stops it
+without starting an unheard loop. The pull back into the monitor starts it
+again, and finishing the winning or drawn reveal stops it. Intro-off and solo
+practice have no room loop. Both voices belong to Level: pause preserves their
+positions, resume refreshes the current SFX gain without replay, and teardown
+stops them. Nonpositive updates emit nothing. The quiet room gain and clock
+gain remain listening candidates; accepted masters and bank bytes are unchanged.
+
 **POL#23 remains open.** Putting an accepted wave into the bank does not create
 a gameplay trigger. Complete the required new cues from section 4, assess Tier
 3 detail individually and keep it off or nearly off by default:
 
 - Movement: optional bonk/drop/hit-confirm details.
 - Paint/tool detail: optional blocked/slosh/drip cues.
-- Match and room: last-ten; room tone and optional footsteps/breath/waver/cheat.
+- Room: optional footsteps/breath/waver/cheat.
 - Menus/music: pad lost/back, reconnect count-in (`POL#18`), distinct unready
   and volume-preview hooks, series cue; results music, arena ending stings and
   transition fades/ducking (`GAP#5.1`); optional world ambience/detail.
@@ -849,3 +866,19 @@ each with a system-only PATH and graceful close. Evidence is under
 `out/validation/redraw-painted-audio/` and `out/acceptance/`. These checks
 establish cue requests and lifecycle behaviour; listening and multiplayer mix
 remain in POL#23 and ROAD#3.
+
+Clock and room audio validation (2026-10-15): Debug and Release builds and all
+13 consumer acceptance cases pass. The expanded `story_audio` recorder checks
+displayed seconds ten through one, short one-/two-/four-player matches,
+same-second suppression, long ticks without backlogs, time-up cancellation,
+current gains/mute, pause/resume and teardown. Room checks cover full/quick
+openings at two and four players, construction and nonpositive updates,
+countdown/push boundaries, immediate/in-progress skips, reveal completion,
+intro-off/solo, loop flags and lifecycle. Coarse clock-only ticks reset player
+placement so unrelated accumulated falls do not obscure their audio assertions.
+The six audio publication checks pass. Isolated Debug and Release startup pass
+with the real bank and, separately, without it, each with a system-only PATH
+and graceful close. Evidence is under `out/validation/match-room-audio/`, the
+adjacent build/acceptance logs and `out/acceptance/`. These checks establish cue
+requests and lifecycle behaviour; listening and multiplayer mix remain in
+POL#23 and ROAD#3.

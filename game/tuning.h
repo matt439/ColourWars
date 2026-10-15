@@ -106,7 +106,9 @@ struct MatchTuning
 	SoundTuning countdown_sound;
 	SoundTuning go_sound;
 	SoundTuning time_up_sound;
+	SoundTuning last_ten_sound;
 	SoundTuning zoom_out_sound;
+	SoundTuning room_tone_sound;
 
 	OpeningTuning opening;
 	RevealTuning reveal;

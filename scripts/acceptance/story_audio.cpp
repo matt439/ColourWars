@@ -392,7 +392,8 @@ namespace
 
 	void check_match_content(World& world, const ContentVariant& content)
 	{
-		for (const char* key : { "glass_in", "close", "celebrate", "slump", "colour_in", "skip", "undo" })
+		for (const char* key : { "glass_in", "close", "celebrate", "slump", "colour_in", "skip", "undo",
+			"last_ten", "room_tone" })
 		{
 			bool rejected = false;
 			try
@@ -1960,6 +1961,7 @@ namespace
 }
 
 #include "scripts/acceptance/story_audio/redraw_checks.h"
+#include "scripts/acceptance/story_audio/match_checks.h"
 
 int main(int argc, char** argv)
 {
@@ -1969,6 +1971,10 @@ int main(int argc, char** argv)
 		World world{ std::filesystem::path(argv[1]) };
 		const ContentVariant content(std::filesystem::path(argv[1]) / "tuning.json");
 		check_match_content(world, content);
+		check_last_ten_boundaries(world);
+		check_last_ten_short_and_long_matches(world);
+		check_room_tone_boundaries(world);
+		check_room_tone_skip_off_and_teardown(world);
 		check_feedback_content(world, content);
 		check_story(world);
 		check_skip_quick_and_solo(world);
@@ -2003,7 +2009,7 @@ int main(int argc, char** argv)
 		check_level_paint_after_owner_death(world);
 		std::cout << "PASS story audio: opening/reveal content, swatch/undo/colour/glass/skip edges, "
 			"winner/draw click/close and per-team reactions, long-step cue order, off/solo, "
-			"countdown/GO/time up, gains/mute, suspension, destruction, weapon feedback validation, "
+			"countdown/GO/last-ten/time up, room-tone loop boundaries, gains/mute, suspension, destruction, weapon feedback validation, "
 			"empty/recovered/ready edges, independent loops, stop lifecycle, roller contacts, "
 			"movement content, resolved land/step/skid edges, rates, variants and four-player independence, "
 			"redraw pen boundaries/voices/lifecycle, painted support ownership and wet movement budgets, "

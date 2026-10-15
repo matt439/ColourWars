@@ -70,7 +70,7 @@ public:
 		const labrador::Mouse* mouse,
 		OpeningMode opening, std::optional<float> duration = std::nullopt);
 
-	// Stop the level's music, countdown, transition sound and player weapon loops.
+	// Stop the level's voices and player weapon/redraw loops.
 	~Level();
 
 	Level(const Level&) = delete;
@@ -161,6 +161,9 @@ private:
 	labrador::SoundBank::EffectHandle countdown_sound_;
 	labrador::SoundBank::EffectHandle go_sound_;
 	labrador::SoundBank::EffectHandle time_up_sound_;
+	labrador::SoundBank::EffectHandle last_ten_sound_;
+	// The displayed positive second most recently sounded; zero means none yet.
+	float last_ten_second_ = 0.0f;
 	float music_volume_ = 0.0f;
 
 	// Written during the main-thread update and read by render workers for dt/fps.
@@ -246,6 +249,8 @@ private:
 	// its person making a noise after the silhouette has stopped or gone.
 	labrador::SoundBank::EffectHandle sigh_sound_;
 	labrador::SoundBank::EffectHandle chair_sound_;
+	labrador::SoundBank::EffectHandle room_tone_sound_;
+	bool room_tone_playing_ = false;
 	labrador::SoundBank::EffectHandle glass_in_sound_;
 	labrador::SoundBank::EffectHandle celebrate_sound_;
 	labrador::SoundBank::EffectHandle slump_sound_;
@@ -306,6 +311,7 @@ private:
 	bool skip_requested(const std::vector<PlayerInputData>& player_inputs) const;
 	void colour_players(bool team_a, bool team_b);
 	void skip_intro();
+	void set_room_tone(bool playing);
 	void update_opening(const std::vector<PlayerInputData>& player_inputs, float dt);
 	void add_intro_views();
 	void draw_intro(labrador::Renderer& renderer) const;

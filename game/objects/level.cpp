@@ -77,6 +77,8 @@ Level::Level(std::unique_ptr<Scene> scene,
 		this->sound_bank_->resolve_effect(match.countdown_sound.name);
 	this->go_sound_ = this->sound_bank_->resolve_effect(match.go_sound.name);
 	this->time_up_sound_ = this->sound_bank_->resolve_effect(match.time_up_sound.name);
+	this->last_ten_sound_ = this->sound_bank_->resolve_effect(match.last_ten_sound.name);
+	this->room_tone_sound_ = this->sound_bank_->resolve_effect(match.room_tone_sound.name);
 	this->sigh_sound_ = this->sound_bank_->resolve_effect(match.sigh_sound.name);
 	this->chair_sound_ = this->sound_bank_->resolve_effect(match.chair_sound.name);
 	this->glass_in_sound_ = this->sound_bank_->resolve_effect(match.glass_in_sound.name);
@@ -118,6 +120,8 @@ Level::~Level()
 	this->sound_bank_->stop_effect(this->countdown_sound_, true);
 	this->sound_bank_->stop_effect(this->go_sound_, true);
 	this->sound_bank_->stop_effect(this->time_up_sound_, true);
+	this->sound_bank_->stop_effect(this->last_ten_sound_, true);
+	this->sound_bank_->stop_effect(this->room_tone_sound_, true);
 	this->sound_bank_->stop_effect(this->sigh_sound_, true);
 	this->sound_bank_->stop_effect(this->chair_sound_, true);
 	this->sound_bank_->stop_effect(this->glass_in_sound_, true);
@@ -148,6 +152,8 @@ void Level::pause_audio() const
 	this->sound_bank_->pause_effect(this->countdown_sound_);
 	this->sound_bank_->pause_effect(this->go_sound_);
 	this->sound_bank_->pause_effect(this->time_up_sound_);
+	this->sound_bank_->pause_effect(this->last_ten_sound_);
+	this->sound_bank_->pause_effect(this->room_tone_sound_);
 	this->sound_bank_->pause_effect(this->sigh_sound_);
 	this->sound_bank_->pause_effect(this->chair_sound_);
 	this->sound_bank_->pause_effect(this->glass_in_sound_);
@@ -179,6 +185,12 @@ void Level::resume() const
 	this->sound_bank_->set_effect_volume(this->time_up_sound_,
 		this->tuning_->match().time_up_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->time_up_sound_);
+	this->sound_bank_->set_effect_volume(this->last_ten_sound_,
+		this->tuning_->match().last_ten_sound.volume * this->preferences_->sfx_gain());
+	this->sound_bank_->resume_effect(this->last_ten_sound_);
+	this->sound_bank_->set_effect_volume(this->room_tone_sound_,
+		this->tuning_->match().room_tone_sound.volume * this->preferences_->sfx_gain());
+	this->sound_bank_->resume_effect(this->room_tone_sound_);
 	this->sound_bank_->set_effect_volume(this->sigh_sound_,
 		this->tuning_->match().sigh_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->sigh_sound_);
@@ -253,6 +265,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			this->start_timer_ <= this->tuning_->match().opening.push)
 		{
 			this->glass_in_started_ = true;
+			this->set_room_tone(false);
 			this->sound_bank_->play_effect(this->glass_in_sound_, false,
 				this->tuning_->match().glass_in_sound.volume * this->preferences_->sfx_gain());
 		}
@@ -296,6 +309,15 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		this->update_level_logic(player_inputs, dt, seats);
 
 		this->timer_ -= dt;
+		// Sound only the current displayed second, never missed seconds after a
+		// long update. Short matches also get their first positive clock cue.
+		const float second = std::ceil(this->timer_);
+		if (this->timer_ > 0.0f && second <= 10.0f && second != this->last_ten_second_)
+		{
+			this->last_ten_second_ = second;
+			this->sound_bank_->play_effect(this->last_ten_sound_, false,
+				this->tuning_->match().last_ten_sound.volume * this->preferences_->sfx_gain());
+		}
 		if (this->timer_ <= 0.0f)
 		{
 			this->state_ = LevelState::zoom_out;
@@ -311,6 +333,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			this->stop_player_sounds();
 			this->sound_bank_->stop_effect(this->countdown_sound_, true);
 			this->sound_bank_->stop_effect(this->go_sound_, true);
+			this->sound_bank_->stop_effect(this->last_ten_sound_, true);
 			this->sound_bank_->play_effect(this->time_up_sound_, false,
 				this->tuning_->match().time_up_sound.volume * this->preferences_->sfx_gain());
 			this->sound_bank_->play_effect(this->zoom_out_sound_, false,

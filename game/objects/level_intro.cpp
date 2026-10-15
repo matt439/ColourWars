@@ -144,10 +144,29 @@ void Level::colour_players(bool team_a, bool team_b)
 	}
 }
 
+void Level::set_room_tone(bool playing)
+{
+	if (playing == this->room_tone_playing_)
+	{
+		return;
+	}
+	this->room_tone_playing_ = playing;
+	if (playing)
+	{
+		this->sound_bank_->play_effect(this->room_tone_sound_, true,
+			this->tuning_->match().room_tone_sound.volume * this->preferences_->sfx_gain());
+	}
+	else
+	{
+		this->sound_bank_->stop_effect(this->room_tone_sound_, true);
+	}
+}
+
 void Level::skip_intro()
 {
 	// Do not advance through the remaining story beats on a skip, or let a
 	// bypassed story cue follow the person into the split countdown.
+	this->set_room_tone(false);
 	this->sound_bank_->stop_effect(this->sigh_sound_, true);
 	this->sound_bank_->stop_effect(this->chair_sound_, true);
 	this->sound_bank_->stop_effect(this->undo_sound_, true);
@@ -168,6 +187,9 @@ void Level::update_opening(const std::vector<PlayerInputData>& player_inputs, fl
 		this->skip_intro();
 		return;
 	}
+	// Room sound belongs to the monitor, including a quick opening. Starting
+	// here keeps construction and stationary presentation updates silent.
+	this->set_room_tone(true);
 	const float before = this->opening_time_;
 	this->opening_time_ += dt;
 	const MatchTuning& match = this->tuning_->match();
@@ -346,6 +368,7 @@ void Level::start_reveal()
 	{
 		return;
 	}
+	this->set_room_tone(true);
 	// The coverage is counted once, now, and is what the click and the
 	// results agree on.
 	this->end_info_ = this->level_end_info();
@@ -446,6 +469,7 @@ void Level::update_reveal(float dt)
 	}
 	if (this->reveal_time_ >= this->reveal_length())
 	{
+		this->set_room_tone(false);
 		this->state_ = LevelState::finished;
 	}
 }
