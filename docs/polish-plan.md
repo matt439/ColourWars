@@ -715,6 +715,14 @@ through continuous aim, both facings and camera scaling. Reduce effects keeps
 this information; selection previews show full reservoirs. Gameplay and the
 remaining arena/interface work retain their existing behaviour and order.
 
+**Stage-entry header implemented (2026-10-15, part of `POL#16`).** The
+[entry drawing and evidence](polish-countdown.md#stage-entry) add the loaded
+arena's name on a stepped paper header during the existing start countdown.
+It fits above the signal in every pane layout, clears at GO and remains static
+under Reduce effects. Solo practice and story skipping retain their existing
+timing. Menus, cards, stage preview, the remaining HUD, pause and results stay
+open, with arena production and review retaining their existing gates.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

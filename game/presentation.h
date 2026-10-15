@@ -134,6 +134,8 @@ struct MatchPresentation
 	mattmath::Vector2F reference_size;
 	mattmath::Vector2F countdown_size;
 	float countdown_center_y = 0.0f;
+	mattmath::Vector2F stage_entry_size;
+	float stage_entry_top = 0.0f;
 	mattmath::Vector2F controls_margin;
 	mattmath::Vector2F controls_padding;
 	float controls_gap = 0.0f;

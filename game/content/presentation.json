@@ -608,6 +608,8 @@
     "reference_size": { "x": 1920.0, "y": 1080.0 },
     "countdown_size": { "x": 360.0, "y": 310.0 },
     "countdown_center_y": 0.44,
+    "stage_entry_size": { "x": 840.0, "y": 108.0 },
+    "stage_entry_top": 72.0,
     "controls_margin": { "x": 72.0, "y": 48.0 },
     "controls_padding": { "x": 28.0, "y": 20.0 },
     "controls_gap": 32.0,

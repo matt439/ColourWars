@@ -122,6 +122,11 @@ They use the existing solid texel; no atlas recipe is needed. The
 [start-signal record](../../docs/polish-countdown.md) retains native-size evidence
 and describes the unchanged gameplay and audio boundary.
 
+The [stage-entry header](../../docs/polish-countdown.md#stage-entry) reuses that
+paper drawing with the loaded arena's name in the existing heading font.
+`game/objects/level_opening.cpp` fits it above the countdown from
+`match.stage_entry_size` and `stage_entry_top`; it clears when controls release.
+
 Closing-clock paper, shade and detached pen ticks are code drawings in
 `game/objects/interface_gameplay.cpp`; the reveal's team-labelled coverage cards
 are in `game/objects/reveal_art.cpp`. Their authored values are

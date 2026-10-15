@@ -135,6 +135,54 @@ void Level::centre_countdown_text()
 		this->countdown_card_.x + padding.x, number_top,
 		card_size.x - padding.x * 2.0f,
 		this->countdown_card_.bottom() - padding.y - number_top);
+	this->centre_stage_entry();
+}
+
+void Level::centre_stage_entry()
+{
+	const MatchPresentation& look = this->presentation_->match();
+	const MenuStyle& menu = this->presentation_->menu();
+	const Vector2F resolution = this->resolution_manager_->resolution_vec();
+	const float scale = this->opening_scale();
+	const Vector2F size = look.stage_entry_size * scale;
+	this->stage_entry_card_ = RectangleF(
+		(resolution.x - size.x) / 2.0f, look.stage_entry_top * scale, size.x, size.y);
+	const Vector2F padding = look.controls_padding * scale;
+	const float shade = look.countdown_art.shadow_offset * scale;
+	const RectangleF inside(this->stage_entry_card_.position() + padding,
+		size - padding * 2.0f - Vector2F(shade));
+	const RectangleF bounds = RectangleF::union_of(
+		this->stage_entry_->text_bounds_at(Vector2F::ZERO, 1.0f),
+		this->stage_entry_->text_bounds_at(menu.heading_shadow_offset, 1.0f));
+	// Fit both dimensions, including a font's side bearings and the shadow.
+	// This also handles authored multi-line names without clipping the paper.
+	const float text_scale = std::min({ scale,
+		inside.width / std::max(bounds.width, 1.0f),
+		inside.height / std::max(bounds.height, 1.0f) });
+	this->stage_entry_->set_scale(text_scale);
+	this->stage_entry_->set_shadow_scale(text_scale);
+	this->stage_entry_->set_shadow_offset(menu.heading_shadow_offset * text_scale);
+	this->stage_entry_text_bounds_ = RectangleF(
+		inside.center() - bounds.size() * text_scale / 2.0f, bounds.size() * text_scale);
+	this->stage_entry_->set_position(this->stage_entry_text_bounds_.position() -
+		bounds.position() * text_scale);
+}
+
+std::wstring_view Level::stage_entry_name() const
+{
+	return this->stage_entry_->text();
+}
+
+RectangleF Level::stage_entry_bounds() const
+{
+	return this->state_ == LevelState::start_countdown && !this->stage_entry_name().empty() ?
+		this->stage_entry_card_ : RectangleF::ZERO;
+}
+
+RectangleF Level::stage_entry_text_bounds() const
+{
+	return this->stage_entry_bounds().width > 0.0f ?
+		this->stage_entry_text_bounds_ : RectangleF::ZERO;
 }
 
 void Level::centre_controls_text()
@@ -221,6 +269,7 @@ std::vector<RectangleF> Level::opening_cards() const
 	{
 		cards.push_back(reminder.card);
 	}
+	if (!this->stage_entry_name().empty()) { cards.push_back(this->stage_entry_card_); }
 	return cards;
 }
 
@@ -232,6 +281,10 @@ void Level::draw_countdown_text(DrawList& draw_list) const
 		const float scale = this->opening_scale();
 		draw_list.set_filter(TextureFilter::point);
 		this->countdown_art_->draw_card(draw_list, this->countdown_card_, scale);
+		if (!this->stage_entry_name().empty())
+		{
+			this->countdown_art_->draw_card(draw_list, this->stage_entry_card_, scale);
+		}
 		for (const ControlsReminder& reminder : this->controls_reminders_)
 		{
 			this->draw_opening_card(draw_list, reminder.card, scale);
@@ -250,6 +303,7 @@ void Level::draw_countdown_text(DrawList& draw_list) const
 	if (getting_ready)
 	{
 		this->countdown_heading_->draw(draw_list);
+		this->stage_entry_->draw(draw_list);
 		for (const ControlsReminder& reminder : this->controls_reminders_)
 		{
 			reminder.heading->draw(draw_list);

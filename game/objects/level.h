@@ -36,6 +36,7 @@
 #include "game/objects/player_badge.h"
 #include "game/objects/countdown_art.h"
 #include "game/objects/reveal_art.h"
+#include <string_view>
 
 enum class LevelState
 {
@@ -64,6 +65,7 @@ public:
 		const mattmath::RectangleF& zoom_out_finish_bounds,
 		const GameTuning* tuning,
 		const Presentation* presentation,
+		const std::wstring& stage_name,
 		const std::string& sound_bank_name,
 		const std::string& music_name,
 		float music_volume,
@@ -149,6 +151,9 @@ public:
 	// The countdown's opening cards in window pixels while they are drawn,
 	// else none: what a developer panel must not cover.
 	std::vector<mattmath::RectangleF> opening_cards() const;
+	std::wstring_view stage_entry_name() const;
+	mattmath::RectangleF stage_entry_bounds() const;
+	mattmath::RectangleF stage_entry_text_bounds() const;
 	// Counts for the perf overlay, as of the last update.
 	int projectile_count() const;
 	int collision_object_count() const;
@@ -199,6 +204,9 @@ private:
 	mattmath::RectangleF countdown_number_box_;
 	std::unique_ptr<labrador::TextDropShadow> countdown_heading_ = nullptr;
 	mattmath::RectangleF countdown_card_;
+	std::unique_ptr<labrador::TextDropShadow> stage_entry_;
+	mattmath::RectangleF stage_entry_card_;
+	mattmath::RectangleF stage_entry_text_bounds_;
 
 	// One shared reminder per input device type present in the match.
 	struct ControlsReminder
@@ -385,6 +393,7 @@ private:
 	// Sets the displayed beat; drawing derives its age from the match clock.
 	void set_countdown_text(const std::wstring& text);
 	void centre_countdown_text();
+	void centre_stage_entry();
 	void centre_controls_text();
 
 	float zoom_out_camera_ratio() const;

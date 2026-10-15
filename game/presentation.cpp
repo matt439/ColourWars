@@ -1159,6 +1159,8 @@ Presentation::Presentation(const char* path)
 	this->match_.controls_margin = read_positive_vector(match, "controls_margin");
 	this->match_.controls_padding = read_positive_vector(match, "controls_padding");
 	this->match_.controls_gap = read_positive(match, "controls_gap");
+	this->match_.stage_entry_size = read_positive_vector(match, "stage_entry_size");
+	this->match_.stage_entry_top = read_positive(match, "stage_entry_top");
 	const JsonValue countdown_art = match.object("countdown_art");
 	CountdownArtPresentation& signal = this->match_.countdown_art;
 	signal.ink = read_colour(countdown_art, "ink");
@@ -1178,6 +1180,17 @@ Presentation::Presentation(const char* path)
 			": keyline_width <= 8, shadow_offset <= 16, beat_duration <= 0.5 and pulse <= 0.15 required.");
 	}
 	const MatchPresentation& intro = this->match_;
+	if (intro.stage_entry_size.x <= intro.controls_padding.x * 2.0f + signal.shadow_offset ||
+		intro.stage_entry_size.y <= intro.controls_padding.y * 2.0f + signal.shadow_offset ||
+		intro.stage_entry_size.x <= signal.keyline_width * 6.0f + signal.shadow_offset ||
+		intro.stage_entry_size.y <= signal.keyline_width * 6.0f + signal.shadow_offset ||
+		intro.stage_entry_size.x + intro.controls_margin.x * 2.0f > intro.reference_size.x ||
+		intro.stage_entry_top + intro.stage_entry_size.y + intro.controls_gap >
+			intro.reference_size.y * intro.countdown_center_y - intro.countdown_size.y / 2.0f)
+	{
+		throw std::runtime_error(match.where() +
+			": stage_entry_size and stage_entry_top must fit above the countdown with room inside their padding.");
+	}
 	if (intro.countdown_size.x <= intro.controls_padding.x * 2.0f ||
 		intro.countdown_size.y <= intro.controls_padding.y * 3.0f ||
 		intro.countdown_size.x > intro.reference_size.x ||

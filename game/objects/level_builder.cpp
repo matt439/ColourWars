@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level_builder.h"
+#include "game/drawable_text.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -88,6 +89,8 @@ std::unique_ptr<Level>
 		load_info->zoom_out_finish_bounds_rectangle(),
 		this->tuning_,
 		this->presentation_,
+		drawable_text::widen_drawable(load_info->display_name(),
+			"the display_name of stage '" + settings.stage() + "'"),
 		load_info->sound_bank_name(),
 		load_info->music_name(),
 		load_info->music_volume(),

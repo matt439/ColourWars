@@ -135,6 +135,64 @@ namespace
 	void check_countdown_art_content(const std::filesystem::path& content)
 	{
 		const MenuPresentationVariant variants(content);
+		const Presentation defaults = variants.load([](rapidjson::Document&) {});
+		const MatchPresentation& layout = defaults.match();
+		const auto stage_entry_rejected = [&](auto edit, const char* key, bool cross_field = false)
+		{
+			bool named = false;
+			try
+			{
+				std::ignore = variants.load([&](rapidjson::Document& json)
+					{ edit(json["match"], json.GetAllocator()); });
+			}
+			catch (const std::runtime_error& error)
+			{
+				const std::string message = error.what();
+				named = message.find("match") != std::string::npos &&
+					message.find(key) != std::string::npos &&
+					(!cross_field || (message.find("stage_entry_size") != std::string::npos &&
+						message.find("stage_entry_top") != std::string::npos));
+			}
+			require(named, "Invalid stage-entry layout did not fail with its match field named");
+		};
+		for (const double invalid : { 0.0, -1.0, 1.0e100 })
+		{
+			for (const char* axis : { "x", "y" })
+			{
+				stage_entry_rejected([&](rapidjson::Value& match, auto&)
+					{ match["stage_entry_size"][axis].SetDouble(invalid); }, "stage_entry_size");
+			}
+			stage_entry_rejected([&](rapidjson::Value& match, auto&)
+				{ match["stage_entry_top"].SetDouble(invalid); }, "stage_entry_top");
+		}
+		for (const char* key : { "stage_entry_size", "stage_entry_top" })
+		{
+			stage_entry_rejected([&](rapidjson::Value& match, auto&) { match.RemoveMember(key); }, key);
+			stage_entry_rejected([&](rapidjson::Value& match, auto& allocator)
+				{ match[key].SetString("invalid layout", allocator); }, key);
+		}
+		stage_entry_rejected([&](rapidjson::Value& match, auto&)
+			{ match["stage_entry_size"]["x"].SetFloat(layout.controls_padding.x * 2.0f +
+				layout.countdown_art.shadow_offset); }, "stage_entry_size", true);
+		stage_entry_rejected([&](rapidjson::Value& match, auto&)
+			{ match["stage_entry_size"]["y"].SetFloat(layout.controls_padding.y * 2.0f +
+				layout.countdown_art.shadow_offset); }, "stage_entry_size", true);
+		stage_entry_rejected([&](rapidjson::Value& match, auto&)
+			{ match["stage_entry_size"]["x"].SetFloat(layout.reference_size.x -
+				layout.controls_margin.x * 2.0f + 1.0f); }, "stage_entry_size", true);
+		stage_entry_rejected([&](rapidjson::Value& match, auto&)
+			{ match["stage_entry_top"].SetFloat(layout.reference_size.y * layout.countdown_center_y -
+				layout.countdown_size.y / 2.0f - layout.stage_entry_size.y - layout.controls_gap + 1.0f); },
+			"stage_entry_top", true);
+		for (const char* axis : { "x", "y" })
+		{
+			stage_entry_rejected([&](rapidjson::Value& match, auto&)
+			{
+				match["controls_padding"][axis].SetFloat(1.0f);
+				match["stage_entry_size"][axis].SetFloat(layout.countdown_art.keyline_width * 6.0f +
+					layout.countdown_art.shadow_offset);
+			}, "stage_entry_size", true);
+		}
 		const auto rejected = [&](auto edit, const char* key = "countdown_art")
 		{
 			bool named = false;

@@ -72,10 +72,66 @@ Evidence is under `out/validation/countdown/`, with build/consumer logs at
 `out/validation/countdown-{build,acceptance}-{debug,release}.log` and consumer
 case results under `out/acceptance/<preset>/`. The renderer receipts identify
 baseline `33c058d` plus working changes, the pinned engine, device and exact
-staged content. Closing/reveal accents and the remaining interface treatment
-stay open under `POL#16`.
+staged content. [Closing/reveal accents](polish-match-accents.md) have since
+landed; the remaining interface treatment stays open under `POL#16`.
 
 | Preset | Focused renderer run |
 |---|---|
 | Debug | `0101e70df1374ac498dae730810fb25f` |
 | Release | `de70aae8397d4d568b5abc0829481b13` |
+
+## Stage entry
+
+Implemented 2026-10-15 as another match-presentation increment of `POL#16`.
+The countdown now names the selected arena on a shared paper header above the
+start signal. It uses the loaded level's `display_name`, including when Random
+resolved the selection. The stepped black edge, pale face and quiet offset shade
+reuse the countdown drawing; the arena name uses the existing heading font in
+dark ink. No new atlas or authoring tool is needed.
+
+The header appears only during the frozen start countdown: after a full/quick
+story opening, after either kind of intro skip, and directly for solo practice
+or an opening-off match. It clears at GO while the existing GO signal finishes
+its one-second beat. It adds no story elements to solo practice. Pause and
+nonpositive updates retain the frozen header. Reduce effects retains the same
+static information. Match timing, input release and sound cues are unchanged.
+
+`presentation.json.match.stage_entry_size` and `stage_entry_top` author its
+reference-pixel size and top edge. The default is 840 by 108 at y=72 in the
+1920 by 1080 match reference. Existing controls padding leaves space for the
+paper's shadow. Text fitting measures both dimensions, including the font's
+bearings and text shadow, and is recomputed on resize. Startup rejects invalid
+dimensions, missing fields, insufficient interior room, horizontal overflow
+and overlap with the countdown. Authored names are checked against both the
+stage-selection font and the header font. The header also reserves its bounds
+against the developer panel.
+
+Validation on 2026-10-15:
+
+- Debug and Release build under `/W4 /WX` and each pass all 21 consumer cases.
+  Header-content checks cover required fields, types, finite positive values,
+  padding/keyline room, horizontal fit and countdown separation. Existing
+  story/audio and replay checks retain the gameplay boundaries.
+- Both focused hardware D3D11 countdown matrices pass on the NVIDIA GeForce
+  RTX 5080. All four authored arena names are captured at native 720p;
+  three-player, 4:3, portrait and ultrawide layouts supplement the existing
+  solo/two/four-player 720p/1080p/QHD matrix. Full/quick/off openings, early
+  story and monitor-countdown skips, pause, nonpositive updates, Reduce effects,
+  GO clearing and exact resize round-trips pass. Repeated rendering preserves
+  pixels, simulation/cosmetic state, draw RNG and Debug replay fingerprints.
+- The [native arena headers](images/polish-countdown/stage-names-720p.png) and
+  [three-player countdown](images/polish-countdown/stage-entry-720p.png) were
+  inspected without enlargement. They establish this drawing and placement;
+  reference-composition, human readability and physical-pad review remain open.
+- The 53-file Release ZIP contains all 26 reviewed runtime assets byte for
+  byte, including the revised presentation and unchanged accepted sound bank,
+  and excludes authoring/debug files. Isolated Debug and Release startup pass;
+  extracted Release also passes with the bank and separately without it, using
+  a system-only PATH. Each run closes gracefully; the absent-bank copy reports
+  its single expected silent-fallback diagnostic.
+
+Evidence is under `out/validation/stage-entry/` and `out/acceptance/`.
+Successful renderer runs are Debug `9739528068f449d69b81db44c67b85c4` and
+Release `5526fd4356674455b4cc97e0d98cdab2`. The initial Debug fixture's
+multi-second physics advance was replaced with normal frame steps before the
+successful runs; its failure evidence is retained separately.

@@ -94,10 +94,9 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 
 	for (const Stage& stage : stages)
 	{
-		drawable_text::check_font_can_draw(render,
-			menu.item_font,
-			drawable_text::widen_drawable(stage.display_name,
-				"the display_name of stage '" + stage.name + "'"),
-			"the display_name of stage '" + stage.name + "'");
+		const std::string where = "the display_name of stage '" + stage.name + "'";
+		const std::wstring name = drawable_text::widen_drawable(stage.display_name, where);
+		drawable_text::check_font_can_draw(render, menu.item_font, name, where);
+		drawable_text::check_font_can_draw(render, menu.heading_font, name, where);
 	}
 }

@@ -16,6 +16,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	const RectangleF& zoom_out_finish_bounds,
 	const GameTuning* tuning,
 	const Presentation* presentation,
+	const std::wstring& stage_name,
 	const std::string& sound_bank_name,
 	const std::string& music_name,
 	float music_volume,
@@ -43,6 +44,11 @@ Level::Level(std::unique_ptr<Scene> scene,
 	this->preferences_ = preferences;
 	this->presentation_ = presentation;
 	this->render_resources_ = render_resources;
+	const MenuStyle& menu = presentation->menu();
+	const CountdownArtPresentation& paper = presentation->match().countdown_art;
+	this->stage_entry_ = std::make_unique<TextDropShadow>(stage_name,
+		menu.heading_font, Vector2F::ZERO, render_resources,
+		paper.ink, paper.paper, menu.heading_shadow_offset);
 	this->player_badge_ = std::make_unique<PlayerBadge>(
 		&presentation->player_identity(), render_resources);
 	this->player_identity_remaining_.assign(this->players_.size(),

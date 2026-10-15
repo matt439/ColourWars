@@ -77,11 +77,11 @@ void countdown_glyph_matrix(Application& app, const Canvas& canvas,
 }
 
 std::unique_ptr<Level> countdown_level(Application& app, LevelBuilder& builder,
-    int count, OpeningMode opening)
+    int count, OpeningMode opening, const std::string& stage = "movement_course")
 {
     MenuLevelSettings settings;
     settings.set_player_count(count);
-    settings.set_stage("movement_course");
+    settings.set_stage(stage);
     settings.set_duration(10.0f);
     settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
         (count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player));
@@ -99,6 +99,44 @@ std::unique_ptr<Level> countdown_level(Application& app, LevelBuilder& builder,
     app.viewport_manager()->set_layout(settings.screen_layout());
     std::srand(9409 + count);
     return builder.build_level(settings, TeamColourPair::blue_orange, opening);
+}
+
+bool stage_entry_empty(const RectangleF& bounds)
+{
+    return bounds.x == 0.0f && bounds.y == 0.0f && bounds.width == 0.0f && bounds.height == 0.0f;
+}
+
+void stage_entry_hidden(const Level& level)
+{
+    require(stage_entry_empty(level.stage_entry_bounds()) &&
+        stage_entry_empty(level.stage_entry_text_bounds()),
+        "Stage entry survived outside the frozen start countdown");
+}
+
+void stage_entry_layout(const Level& level, const Vector2F& resolution,
+    std::wstring_view expected_name)
+{
+    require(level.state() == LevelState::start_countdown &&
+        level.stage_entry_name() == expected_name,
+        "Stage entry did not use the selected stage's authored display name");
+    const RectangleF card = level.stage_entry_bounds();
+    const RectangleF text = level.stage_entry_text_bounds();
+    require(card.width > 0.0f && card.height > 0.0f && card.x >= 0.0f && card.y >= 0.0f &&
+        card.right() <= resolution.x && card.bottom() <= resolution.y,
+        "Stage entry card escaped the display");
+    require(text.width > 0.0f && text.height > 0.0f && text.x > card.x && text.y > card.y &&
+        text.right() < card.right() && text.bottom() < card.bottom(),
+        "Stage entry text or its shadow escaped the paper card");
+    const auto cards = level.opening_cards();
+    require(!cards.empty() && cards.back() == card,
+        "Stage entry was absent from the developer panel's occupied-card bounds");
+    for (size_t index = 0; index + 1 < cards.size(); ++index)
+    {
+        const RectangleF& other = cards[index];
+        require(card.right() <= other.x || other.right() <= card.x ||
+            card.bottom() <= other.y || other.bottom() <= card.y,
+            "Stage entry overlapped the countdown or device reminders");
+    }
 }
 
 void countdown_capture(Application& app, Level& level, PlaySettings& preferences,
@@ -121,12 +159,25 @@ void countdown_capture(Application& app, Level& level, PlaySettings& preferences
     require(std::rand() == expected_random, "Countdown scene drawing consumed random numbers");
     save(first, output / (stem + "-context.ppm"));
     save(foreground_crop(first, countdown_crop_bounds(card)), output / (stem + "-detail.ppm"));
+    const RectangleF entry = level.stage_entry_bounds();
+    if (entry.width > 0.0f)
+    {
+        save(foreground_crop(first, countdown_crop_bounds(entry)), output / (stem + "-stage-entry-detail.ppm"));
+    }
     if (reduced_pair)
     {
         const RestoreFlag restore{ preferences.reduce_effects, preferences.reduce_effects };
         preferences.reduce_effects = true;
         const Frame reduced = render(level, *app.renderer());
         save(foreground_crop(reduced, countdown_crop_bounds(card)), output / (stem + "-reduced-detail.ppm"));
+        if (entry.width > 0.0f)
+        {
+            const RectangleI text = countdown_crop_bounds(level.stage_entry_text_bounds());
+            require(foreground_crop(first, text, 0).pixels == foreground_crop(reduced, text, 0).pixels,
+                "Reduce effects changed the static stage entry's information");
+            save(foreground_crop(reduced, countdown_crop_bounds(entry)),
+                output / (stem + "-stage-entry-reduced-detail.ppm"));
+        }
     }
     require(before == observation(level), "Countdown drawing changed public simulation or cosmetic state");
 #if COLOURWARS_DEV_TOOLS
@@ -135,7 +186,8 @@ void countdown_capture(Application& app, Level& level, PlaySettings& preferences
 #endif
     records << stem << ',' << level.player_count() << ',' << static_cast<int>(level.state()) << ','
         << first.width << ',' << first.height << ',' << card.x << ',' << card.y << ','
-        << card.width << ',' << card.height << '\n';
+        << card.width << ',' << card.height << ',' << entry.x << ',' << entry.y << ','
+        << entry.width << ',' << entry.height << '\n';
 }
 
 void countdown_live_signal(Application& app, Level& level, const Presentation& presentation,
@@ -155,6 +207,100 @@ void countdown_live_signal(Application& app, Level& level, const Presentation& p
         "GO signal was missing, expired early or survived its one-second beat");
 }
 
+void stage_entry_stage_matrix(Application& app, LevelBuilder& builder,
+    const GameTuning& tuning, PlaySettings& preferences,
+    const std::filesystem::path& output, std::ofstream& records)
+{
+    struct NamedStage
+    {
+        const char* stage;
+        std::wstring_view name;
+    };
+    const NamedStage stages[] = {
+        { "movement_course", L"Movement Course" },
+        { "close_quarters", L"Close Quarters" },
+        { "king_of_the_hill", L"King of the Hill" },
+        { "turbulence", L"Turbulence" }
+    };
+    const Vector2I native(1280, 720);
+    const auto inputs = neutral_inputs();
+    for (const NamedStage& stage : stages)
+    {
+        // Three players use the same four-pane layout, but a distinct roster.
+        const int count = std::string_view(stage.stage) == "close_quarters" ? 3 : 4;
+        auto level = countdown_level(app, builder, count, OpeningMode::off, stage.stage);
+        resize(app, *level, native);
+        stage_entry_layout(*level, app.resolution_manager()->resolution_vec(), stage.name);
+        const RectangleF card = level->opening_cards().front();
+        const std::string stem = "countdown-stage-" + std::string(stage.stage);
+        countdown_capture(app, *level, preferences, card, output, stem, records, true);
+        const Frame initial = render(*level, *app.renderer());
+        for (const Vector2I size : { Vector2I(1024, 768), Vector2I(960, 1080), Vector2I(2560, 720) })
+        {
+            resize(app, *level, size);
+            stage_entry_layout(*level, app.resolution_manager()->resolution_vec(), stage.name);
+            save(foreground_crop(render(*level, *app.renderer()),
+                countdown_crop_bounds(level->stage_entry_bounds())), output /
+                (stem + '-' + std::to_string(size.x) + 'x' + std::to_string(size.y) + "-entry-detail.ppm"));
+        }
+        resize(app, *level, native);
+        require(initial.pixels == render(*level, *app.renderer()).pixels,
+            "Stage entry retained stale fitting after an aspect-ratio round-trip");
+        const int countdown_ticks = static_cast<int>(std::ceil(tuning.match().countdown / dt)) + 2;
+        for (int tick = 0; tick < countdown_ticks && !level->match_started(); ++tick)
+        {
+            level->update(inputs, dt);
+        }
+        require(level->match_started(), "Stage entry delayed the established gameplay start");
+        stage_entry_hidden(*level);
+        require(level->stage_entry_name() == stage.name,
+            "Hiding stage entry changed its authored name");
+    }
+}
+
+void stage_entry_skip_matrix(Application& app, LevelBuilder& builder,
+    const GameTuning& tuning, PlaySettings& preferences,
+    const std::filesystem::path& output, std::ofstream& records)
+{
+    const auto inputs = neutral_inputs();
+    for (const OpeningMode opening : { OpeningMode::quick, OpeningMode::full })
+    {
+        for (const bool skip_countdown : { false, true })
+        {
+            auto level = countdown_level(app, builder, 2, opening, "close_quarters");
+            resize(app, *level, Vector2I(1280, 720));
+            require(level->state() == LevelState::opening && level->opening_cards().empty(),
+                "Story fixture did not begin before its opening cards");
+            stage_entry_hidden(*level);
+            if (skip_countdown)
+            {
+                for (int tick = 0; tick < 1800 && level->state() == LevelState::opening; ++tick)
+                {
+                    level->update(inputs, dt);
+                }
+                stage_entry_layout(*level, app.resolution_manager()->resolution_vec(), L"Close Quarters");
+                require(level->intro_playing(), "Story did not retain its monitor countdown before skip");
+            }
+            auto skip = inputs;
+            skip[static_cast<size_t>(input_slots::keyboard_and_mouse)].skip_intro = true;
+            level->update(skip, dt);
+            require(level->state() == LevelState::start_countdown && !level->intro_playing() &&
+                !level->match_started(), "Story skip released controls or bypassed stage entry");
+            stage_entry_layout(*level, app.resolution_manager()->resolution_vec(), L"Close Quarters");
+            const std::string mode = opening == OpeningMode::quick ? "quick" : "full";
+            countdown_capture(app, *level, preferences, level->opening_cards().front(), output,
+                "countdown-skip-" + mode + (skip_countdown ? "-monitor" : "-opening"), records, true);
+            const int countdown_ticks = static_cast<int>(std::ceil(tuning.match().countdown / dt)) + 2;
+            for (int tick = 0; tick < countdown_ticks && !level->match_started(); ++tick)
+            {
+                level->update(inputs, dt);
+            }
+            require(level->match_started(), "Skipped stage entry delayed gameplay start");
+            stage_entry_hidden(*level);
+        }
+    }
+}
+
 void countdown_matrix(Application& app, LevelBuilder& builder, const Canvas& canvas,
     const GameTuning& tuning, const Presentation& presentation, PlaySettings& preferences,
     const std::filesystem::path& output)
@@ -163,7 +309,10 @@ void countdown_matrix(Application& app, LevelBuilder& builder, const Canvas& can
     preferences.reduce_effects = false;
     countdown_glyph_matrix(app, canvas, presentation, output);
     std::ofstream records(output / "countdown.csv");
-    records << "capture,players,state,width,height,card_x,card_y,card_width,card_height\n";
+    records << "capture,players,state,width,height,card_x,card_y,card_width,card_height,"
+        "stage_x,stage_y,stage_width,stage_height\n";
+    stage_entry_stage_matrix(app, builder, tuning, preferences, output, records);
+    stage_entry_skip_matrix(app, builder, tuning, preferences, output, records);
     const auto inputs = neutral_inputs();
     for (int count : { 1, 2, 4 })
     {
@@ -180,14 +329,19 @@ void countdown_matrix(Application& app, LevelBuilder& builder, const Canvas& can
                 const Vector2I sizes[] = { { 1280, 720 }, { 1920, 1080 }, { 2560, 1440 } };
                 auto level = countdown_level(app, builder, count, opening);
                 resize(app, *level, sizes[index]);
+                if (level->state() == LevelState::opening)
+                {
+                    stage_entry_hidden(*level);
+                }
                 for (int tick = 0; tick < 1800 && level->state() == LevelState::opening; ++tick)
                 {
                     level->update(inputs, dt);
                 }
                 require(level->state() == LevelState::start_countdown && !level->match_started(),
                     "Opening did not enter its frozen countdown");
+                stage_entry_layout(*level, app.resolution_manager()->resolution_vec(), L"Movement Course");
                 const auto cards = level->opening_cards();
-                require(cards.size() == static_cast<size_t>(count == 1 ? 2 : 3),
+                require(cards.size() == static_cast<size_t>(count == 1 ? 3 : 4),
                     "Countdown lost its keyboard/pad-specific reminder cards");
                 for (const RectangleF& area : cards)
                 {
@@ -208,12 +362,16 @@ void countdown_matrix(Application& app, LevelBuilder& builder, const Canvas& can
                 // fitted geometry and the exact image, without an update.
                 const Frame native = render(*level, *app.renderer());
                 resize(app, *level, sizes[(index + 1) % 3]);
+                stage_entry_layout(*level, app.resolution_manager()->resolution_vec(), L"Movement Course");
                 resize(app, *level, sizes[index]);
                 require(native.pixels == render(*level, *app.renderer()).pixels,
                     "Countdown resize round-trip retained stale scale or placement");
                 level->update(inputs, 0.0f);
                 require(native.pixels == render(*level, *app.renderer()).pixels,
                     "Zero-time countdown update advanced its presentation");
+                level->update(inputs, -dt);
+                require(native.pixels == render(*level, *app.renderer()).pixels,
+                    "Negative-time countdown update advanced its presentation");
                 level->suspend();
                 snap("paused");
                 level->resume();
@@ -229,6 +387,7 @@ void countdown_matrix(Application& app, LevelBuilder& builder, const Canvas& can
                 level->update(inputs, 0.002f);
                 require(level->match_started() && level->state() == LevelState::active &&
                     level->opening_cards().empty(), "GO did not release controls and clear reminder cards");
+                stage_entry_hidden(*level);
                 snap("go", true);
                 countdown_live_signal(app, *level, presentation, card, true);
                 for (int tick = 0; tick < 54; ++tick) { level->update(inputs, dt); }
@@ -236,6 +395,7 @@ void countdown_matrix(Application& app, LevelBuilder& builder, const Canvas& can
                 countdown_live_signal(app, *level, presentation, card, true);
                 for (int tick = 0; tick < 7; ++tick) { level->update(inputs, dt); }
                 snap("expired");
+                stage_entry_hidden(*level);
                 countdown_live_signal(app, *level, presentation, card, false);
             }
         }
@@ -243,5 +403,7 @@ void countdown_matrix(Application& app, LevelBuilder& builder, const Canvas& can
     require(records.good(), "Countdown capture records could not be written");
     std::cout << "PASS countdown: distinct 0-9/GO glyphs, local beat/reduced/expired rasters at native "
         "720p/1080p/QHD; real solo and 2P/4P full/quick/off openings, device reminders, GO boundary, "
-        "pause, zero-time updates, resize round-trip, frozen pixels/state/draw RNG and Debug fingerprint\n";
+        "all authored stage names and bounded fitted titles, three-player roster, narrow/wide aspect ratios, "
+        "story/monitor skips, pause, nonpositive updates, resize round-trip, frozen pixels/state/draw RNG "
+        "and Debug fingerprint\n";
 }
