@@ -15,6 +15,7 @@ param(
     [switch] $PauseMenuOnly,
     [switch] $ResultsMenuOnly,
     [switch] $MainMenuOnly,
+    [switch] $WeaponCatalogOnly,
     [switch] $SettingsMenuOnly,
     [switch] $ControlsMenuOnly,
     [switch] $StickSettingsOnly,
@@ -24,7 +25,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -115,7 +116,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'team-setup-*-detail.ppm' -or
+                $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -eq 'controls-menu-pad-sticks-1280x720.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
@@ -211,6 +212,9 @@ function Write-ContactSheet {
         $mainMenu = @($images | Where-Object { $_.name -like 'main-menu-*-1280x720-detail' })
         Write-ContactSheetPages -Images $mainMenu -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-main-menu-contact'
+        $weaponCatalog = @($images | Where-Object { $_.name -like 'weapon-catalog-*-1280x720-detail' })
+        Write-ContactSheetPages -Images $weaponCatalog -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-weapon-catalog-contact'
         $controlsMenu = @($images | Where-Object { $_.name -like 'controls-menu-*-1280x720-detail' })
         Write-ContactSheetPages -Images $controlsMenu -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-controls-menu-contact'
@@ -254,7 +258,7 @@ $process = $null
 $failure = $null
 $result = [ordered]@{
     outcome = 'failed'
-    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } elseif ($ResultsMenuOnly) { 'results-menu-only' } elseif ($MainMenuOnly) { 'main-menu-only' } elseif ($SettingsMenuOnly) { 'settings-menu-only' } elseif ($ControlsMenuOnly) { 'controls-menu-only' } elseif ($StickSettingsOnly) { 'stick-settings-only' } elseif ($TeamSetupOnly) { 'team-setup-only' } else { 'full-painter-matrix' }
+    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } elseif ($ResultsMenuOnly) { 'results-menu-only' } elseif ($MainMenuOnly) { 'main-menu-only' } elseif ($WeaponCatalogOnly) { 'weapon-catalog-only' } elseif ($SettingsMenuOnly) { 'settings-menu-only' } elseif ($ControlsMenuOnly) { 'controls-menu-only' } elseif ($StickSettingsOnly) { 'stick-settings-only' } elseif ($TeamSetupOnly) { 'team-setup-only' } else { 'full-painter-matrix' }
     preset = $Preset
     game_revision = (& git rev-parse HEAD)
     engine_revision = (& git -C external/labrador rev-parse HEAD)
@@ -381,6 +385,16 @@ elseif ($SettingsMenuOnly) {
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
     $result.Remove('stage')
     $result.checks = 'Options/Credits paper, all enabled focus cards/arrows, native ink/paper contrast, measured labels, all palette values, long failure status and complete authored credits at 720p/1080p/QHD, 4:3, 16:10 and ultrawide. Actual row edits, staged Apply, persisted reload and failed-write warning, Controls/audio return preserving pending edits/focus, Back discard, disabled fullscreen resolution and retained windowed preset, Credits Select/Back, frozen redraw, draw RNG, static Reduce effects and resize. No physical-controller, human readability or listening acceptance.'
+}
+elseif ($WeaponCatalogOnly) {
+    $result.player_counts = @(1)
+    $result.palettes = @('runtime-save-default')
+    $result.weapons = @('sprayer', 'sniper', 'roller', 'mister', 'bucket', 'random')
+    $result.actions = @('browse', 'wrap-left', 'wrap-right', 'confirm-release', 'stage-back', 'mode-back', 'reopen')
+    $result.input_slots = @(4)
+    $result.inputs = 'Public keyboard input through actual Weapon/Stage/Mode Select pages on the normal GamepadReader backend.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Six historical default names and icon/body/paint/full-supply bindings compared with independent fixtures at 720p/1080p/QHD, both wraps, provisional settings, fresh release confirmation, seeded concrete Random primary, actual Stage/Mode Back preserving all roster and match settings. Edited name/body/paint/supply and a sparse alternate atlas/fill become visible on reopen; existing pages keep their snapshots across edits, reversals and cycling. Frozen raster and draw RNG, native detail/context images and CSV retained. No physical-controller, human readability, performance or listening acceptance.'
 }
 elseif ($MainMenuOnly) {
     $result.player_counts = @()
@@ -563,6 +577,7 @@ try {
     elseif ($PauseMenuOnly) { $probeArguments += 'pause-menu' }
     elseif ($ResultsMenuOnly) { $probeArguments += 'results-menu' }
     elseif ($MainMenuOnly) { $probeArguments += 'main-menu' }
+    elseif ($WeaponCatalogOnly) { $probeArguments += 'weapon-catalog' }
     elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
     elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
     elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
@@ -652,6 +667,9 @@ try {
     }
     elseif ($SettingsMenuOnly) {
         $result.diagnostic = 'Settings-menu-only hardware check passed: actual Options/Credits navigation, row edits, delayed Apply, persisted reload and failed-save warning, Controls/audio return, Back discard, disabled fullscreen resolution and retained windowed preset. Measured full copy/values/status, native paper/cards/arrows/contrast, frozen redraw, draw RNG, static Reduce effects and resize passed across six sizes/aspects. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'
+    }
+    elseif ($WeaponCatalogOnly) {
+        $result.diagnostic = 'Weapon-catalog-only hardware check passed: six historical labels and body/paint/full-supply rasters at 720p/1080p/QHD, both wraps, provisional browsing, fresh release confirmation, seeded Random primary, Stage/Mode Back preserving settings, custom layers and sparse alternate atlas/fill, reopen adoption and retained page snapshots, frozen redraw and draw RNG. Normal GamepadReader backend; other painter matrices, physical controllers, human readability, performance and listening acceptance were not run.'
     }
     elseif ($MainMenuOnly) {
         $result.diagnostic = 'Main-menu-only hardware check passed: actual keyboard Start/Back/Play/Options/Credits/Exit; measured text/paper bounds, native ink/paper contrast, all four Home focus cards and detached arrows. Frozen redraw, draw RNG, static Reduce effects and resize passed across six display sizes/aspects. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'

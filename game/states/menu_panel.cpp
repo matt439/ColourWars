@@ -7,9 +7,10 @@ using namespace mattmath;
 
 MenuIcon::MenuIcon(const std::string& name, const std::string& frame,
 	const RectangleF& rectangle, RenderResources* resources,
-	const Colour& colour, const MenuStyle* style, const std::string& sheet_name) :
+	const Colour& colour, const MenuStyle* style, const std::string& sheet_name,
+	const std::string& fill_frame) :
 	UiTexture(name, sheet_name, frame, rectangle, resources, colour),
-	style_(style), pixel_(this->sprite_sheet()->resolve_sprite_frame("pixel"))
+	style_(style), fill_frame_(this->sprite_sheet()->resolve_sprite_frame(fill_frame))
 {
 }
 
@@ -39,8 +40,8 @@ void MenuIcon::draw(DrawList& list) const
 	RectangleF border = tile;
 	border.inflate(this->style_->rule_height);
 	const SpriteSheet* sheet = this->sprite_sheet();
-	sheet->draw(list, this->pixel_, border, this->colour());
-	sheet->draw(list, this->pixel_, tile, this->style_->heading_colour);
+	sheet->draw(list, this->fill_frame_, border, this->colour());
+	sheet->draw(list, this->fill_frame_, tile, this->style_->heading_colour);
 
 	const RectangleI& source = sheet->sprite_frame(this->frame()).source_rectangle();
 	const Vector2F source_size(static_cast<float>(source.width),

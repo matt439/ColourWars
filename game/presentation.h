@@ -209,6 +209,25 @@ struct ControlsSettingsPresentation
 	StickPreviewPresentation stick_preview;
 };
 
+// Display metadata only; Random is a menu choice, not another tuned weapon.
+struct WeaponChoicePresentation
+{
+	std::wstring name;
+	std::string frame;
+	std::string paint_frame;
+	std::string supply_strip;
+};
+
+struct WeaponSelectArtworkPresentation
+{
+	static constexpr size_t CHOICES = static_cast<size_t>(WeaponType::random_primary) + 1;
+	std::string sheet;
+	std::string fill_frame;
+	std::array<WeaponChoicePresentation, CHOICES> choices;
+	// Reject non-selection enum values rather than displaying an error picture.
+	const WeaponChoicePresentation& choice(WeaponType type) const;
+};
+
 struct MainMenuPresentation
 {
 	std::string backdrop_sheet;
@@ -260,6 +279,7 @@ struct MainMenuPresentation
 	std::array<std::string, 3> team_select_frames;
 	std::array<std::string, 3> team_select_selected_frames;
 	SelectPresentation weapon_select;
+	WeaponSelectArtworkPresentation weapon_select_art;
 	StageSelectPresentation stage_select;
 	std::string credits_font;
 	mattmath::Vector2F credits_heading_position;

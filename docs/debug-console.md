@@ -376,6 +376,14 @@ the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
 `tune` changes numbers and booleans.
 
+Weapon-choice names and artwork are also string settings under
+`presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
+`reload`; an open weapon page keeps its captured catalog until the page is
+reopened. The six required choices and their resource/text validation are
+documented in [menu presentation data](menu-presentation.md#weapon-selection-names-and-artwork).
+Names must fit the existing description-column gap when measured with their
+actual font and horizontal shadow; there is no character-count limit.
+
 Mist `spread_step` constructs the velocity fan when a shot is created. Roller
 `aim_tilt` and the shared projectile `wind_stop_factor` are read during updates,
 so tuning them affects existing objects. Angles are radians: mist spread accepts

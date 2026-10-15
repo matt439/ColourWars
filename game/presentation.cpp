@@ -18,6 +18,9 @@ using namespace mattmath;
 namespace
 {
 	// JsonValue provides source context for missing keys and wrong types.
+	constexpr std::array<const char*, WeaponSelectArtworkPresentation::CHOICES> weapon_choice_keys{
+		"sprayer", "sniper", "roller", "mister", "bucket", "random"
+	};
 
 	Vector2F read_vector(const JsonValue& parent, const char* key)
 	{
@@ -494,6 +497,33 @@ namespace
 			}
 		}
 		menu.weapon_select = read_select(json, "weapon_select");
+		const JsonValue weapon_select = json.object("weapon_select");
+		WeaponSelectArtworkPresentation& artwork = menu.weapon_select_art;
+		artwork.sheet = weapon_select.identifier("sheet");
+		artwork.fill_frame = weapon_select.identifier("fill_frame");
+		if (artwork.sheet.empty() || artwork.fill_frame.empty())
+		{
+			throw std::runtime_error(weapon_select.where() + ": 'sheet' and 'fill_frame' must not be empty.");
+		}
+		const JsonValue choices = weapon_select.object("choices");
+		for (size_t index = 0; index < weapon_choice_keys.size(); ++index)
+		{
+			const JsonValue choice = choices.object(weapon_choice_keys[index]);
+			WeaponChoicePresentation& record = artwork.choices[index];
+			record.name = drawable_text::widen_drawable(choice.string("name"), choice.where() + ": name");
+			if (record.name.find_first_not_of(L' ') == std::wstring::npos ||
+				record.name.find_first_of(L"\r\n") != std::wstring::npos)
+			{
+				throw std::runtime_error(choice.where() + ": 'name' must be nonblank and single-line.");
+			}
+			record.frame = choice.identifier("frame");
+			record.paint_frame = choice.identifier("paint_frame");
+			record.supply_strip = choice.identifier("supply_strip");
+			if (record.frame.empty())
+			{
+				throw std::runtime_error(choice.where() + ": 'frame' must not be empty.");
+			}
+		}
 		const JsonValue stage = json.object("stage_select");
 		menu.stage_select.preview_position = read_vector(stage, "preview_position");
 		menu.stage_select.preview_size = read_positive_vector(stage, "preview_size");
@@ -1492,6 +1522,17 @@ const TeamPalettePresentation& Presentation::team_palette() const
 	return this->team_palette_;
 }
 
+const WeaponChoicePresentation& WeaponSelectArtworkPresentation::choice(WeaponType type) const
+{
+	const size_t index = static_cast<size_t>(type);
+	if (index >= this->choices.size())
+	{
+		throw std::out_of_range("Unsupported weapon selection type: " +
+			std::to_string(static_cast<int>(type)));
+	}
+	return this->choices[index];
+}
+
 Presentation::Presentation(const char* path)
 {
 	const JsonDocument document = read_json_file(path);
@@ -1810,26 +1851,65 @@ void Presentation::validate_resources(const RenderResources& render,
 
 	// Non-menu primitive drawing and developer overlays still use this texel.
 	check.frame("built-in primitive frame 'pixel'", "sprite_sheet_1", "pixel");
-	for (const char* frame : { "pixel", "sprayer", "sniper", "roller",
-		"mister", "bucket", "random", "error" })
+	const WeaponSelectArtworkPresentation& artwork = this->main_menu_.weapon_select_art;
+	check.frame("main_menu.weapon_select.fill_frame", artwork.sheet, artwork.fill_frame);
+	const SpriteSheet* weapon_sheet = render.sprite_sheet(artwork.sheet);
+	const float name_width = this->main_menu_.weapon_description_x_offset;
+	if (!std::isfinite(name_width) || name_width <= 0.0f)
 	{
-		check.frame(std::string("built-in weapon menu frame '") + frame + "'",
-			"weapon_paint", frame);
+		throw std::runtime_error(this->source_path_ +
+			": main_menu.weapon_description.x_offset must be finite and positive for the weapon name column.");
 	}
-	const SpriteSheet* weapon_sheet = render.sprite_sheet("weapon_paint");
-	for (const char* frame : { "sprayer", "sniper", "roller", "mister", "bucket" })
+	const FontHandle name_font = render.resolve_sprite_font(this->main_menu_.weapon_description_font);
+	for (size_t index = 0; index < artwork.choices.size(); ++index)
 	{
-		const std::string paint_name = std::string(frame) + "_paint";
-		check.frame("built-in weapon menu paint overlay", "weapon_paint", paint_name);
-		const SpriteFrame& body = weapon_sheet->sprite_frame(
-			weapon_sheet->resolve_sprite_frame(frame));
-		const SpriteFrame& paint = weapon_sheet->sprite_frame(
-			weapon_sheet->resolve_sprite_frame(paint_name));
-		if (body.source_rectangle().size() != paint.source_rectangle().size() ||
-			body.origin() != paint.origin())
+		const WeaponChoicePresentation& choice = artwork.choices[index];
+		const std::string key = std::string("main_menu.weapon_select.choices.") + weapon_choice_keys[index];
+		drawable_text::check_font_can_draw(&render, this->main_menu_.weapon_description_font,
+			choice.name, this->source_path_ + ": " + key + ".name");
+		const Vector2F name_size = render.measure_text(name_font, choice.name);
+		if (!std::isfinite(name_size.x) ||
+			name_size.x + std::abs(this->menu_.detail_shadow_offset.x) > name_width)
 		{
-			throw std::runtime_error(this->source_path_ + ": built-in weapon menu frame '" +
-				frame + "' paint overlay must match its dimensions and origin.");
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				".name must fit the name column before main_menu.weapon_description.x_offset.");
+		}
+		check.frame(key + ".frame", artwork.sheet, choice.frame);
+		const SpriteFrame& body = weapon_sheet->sprite_frame(weapon_sheet->resolve_sprite_frame(choice.frame));
+		if (body.source_rectangle().width <= 0 || body.source_rectangle().height <= 0)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				".frame must have positive source dimensions.");
+		}
+		if (!choice.paint_frame.empty())
+		{
+			check.frame(key + ".paint_frame", artwork.sheet, choice.paint_frame);
+			const SpriteFrame& paint = weapon_sheet->sprite_frame(
+				weapon_sheet->resolve_sprite_frame(choice.paint_frame));
+			if (body.source_rectangle().size() != paint.source_rectangle().size() || body.origin() != paint.origin())
+			{
+				throw std::runtime_error(this->source_path_ + ": " + key +
+					".paint_frame must match its body dimensions and origin.");
+			}
+		}
+		if (!choice.supply_strip.empty())
+		{
+			check.animation(key + ".supply_strip", artwork.sheet, choice.supply_strip);
+			const AnimationStrip& supply = weapon_sheet->animation_strip(
+				weapon_sheet->resolve_animation_strip(choice.supply_strip));
+			if (supply.frame_count() <= 0 || body.origin() != Vector2F::ZERO)
+			{
+				throw std::runtime_error(this->source_path_ + ": " + key +
+					".supply_strip needs at least one frame and a body with zero authored origin.");
+			}
+			for (int frame = 0; frame < supply.frame_count(); ++frame)
+			{
+				if (supply.frame_rect(frame).size() != body.source_rectangle().size())
+				{
+					throw std::runtime_error(this->source_path_ + ": " + key +
+						".supply_strip must retain its body dimensions for every frame.");
+				}
+			}
 		}
 	}
 }

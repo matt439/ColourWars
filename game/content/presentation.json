@@ -154,7 +154,17 @@
       "spacing": { "x": 250.0, "y": 125.0 },
       "size": { "x": 120.0, "y": 64.0 },
       "selected": "75EDD7",
-      "unselected": "WHITE"
+      "unselected": "WHITE",
+      "sheet": "weapon_paint",
+      "fill_frame": "pixel",
+      "choices": {
+        "sprayer": { "name": "Sprayer", "frame": "sprayer", "paint_frame": "sprayer_paint", "supply_strip": "sprayer_supply" },
+        "sniper": { "name": "Sniper", "frame": "sniper", "paint_frame": "sniper_paint", "supply_strip": "" },
+        "roller": { "name": "Roller", "frame": "roller", "paint_frame": "roller_paint", "supply_strip": "" },
+        "mister": { "name": "Mister", "frame": "mister", "paint_frame": "mister_paint", "supply_strip": "mister_supply" },
+        "bucket": { "name": "Bucket", "frame": "bucket", "paint_frame": "bucket_paint", "supply_strip": "" },
+        "random": { "name": "Random", "frame": "random", "paint_frame": "", "supply_strip": "" }
+      }
     },
     "stage_select": {
       "preview_position": { "x": 150.0, "y": 330.0 },

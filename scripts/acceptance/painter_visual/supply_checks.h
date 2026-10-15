@@ -217,7 +217,7 @@ void supply_menu_checks(Application& app, const Canvas& canvas, const Presentati
     const SpriteSheet* sheet = app.render_resources()->sprite_sheet("weapon_paint");
     const RectangleF box(100, 100, 140, 60);
     MenuIcon icon("supply-preview", "sprayer", box, app.render_resources(), Colour::white,
-        &presentation.menu(), "weapon_paint");
+        &presentation.menu(), "weapon_paint", "pixel");
     const auto draw = [&](const std::string& supply)
     {
         Renderer& renderer = *app.renderer();

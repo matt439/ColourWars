@@ -166,37 +166,11 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		switch (this->select_states_[i].type)
-		{
-		case WeaponType::sprayer:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sprayer", "sprayer_paint", "sprayer_supply");
-			this->player_widgets_[i]->weapon_name->set_text(L"Sprayer");
-			break;
-		case WeaponType::sniper:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sniper", "sniper_paint");
-			this->player_widgets_[i]->weapon_name->set_text(L"Sniper");
-			break;
-		case WeaponType::roller:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("roller", "roller_paint");
-			this->player_widgets_[i]->weapon_name->set_text(L"Roller");
-			break;
-		case WeaponType::mister:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("mister", "mister_paint", "mister_supply");
-			this->player_widgets_[i]->weapon_name->set_text(L"Mister");
-			break;
-		case WeaponType::bucket:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("bucket", "bucket_paint");
-			this->player_widgets_[i]->weapon_name->set_text(L"Bucket");
-			break;
-		case WeaponType::random_primary:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("random");
-			this->player_widgets_[i]->weapon_name->set_text(L"Random");
-			break;
-		default:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("error");
-			this->player_widgets_[i]->weapon_name->set_text(L"ERROR");
-			break;
-		}
+		const WeaponChoicePresentation& choice =
+			this->weapon_select_art_.choice(this->select_states_[i].type);
+		this->player_widgets_[i]->weapon_icon->set_sprite_frame(
+			choice.frame, choice.paint_frame, choice.supply_strip);
+		this->player_widgets_[i]->weapon_name->set_text(choice.name);
 
 		if (this->select_states_[i].state == ConfirmationState::confirmed)
 		{
@@ -222,6 +196,9 @@ void MainMenuWeaponSelect::unconfirm_all_widgets()
 }
 void MainMenuWeaponSelect::init()
 {
+	this->weapon_select_art_ = this->look().weapon_select_art;
+	this->weapon_descriptions_ = this->look().weapon_descriptions;
+
 	this->set_player_prompts({
 		{ L"Left/Right", L"Change weapon" },
 		{ L"A", L"Confirm" },
@@ -269,6 +246,8 @@ void MainMenuWeaponSelect::init()
 		state.state = ConfirmationState::unconfirmed;
 		state.type = this->level_settings()
 			->player_weapon(i);
+		const WeaponChoicePresentation& choice =
+			this->weapon_select_art_.choice(state.type);
 		this->select_states_.push_back(state);
 
 		auto widgets = std::make_unique<Widgets>();
@@ -289,16 +268,19 @@ void MainMenuWeaponSelect::init()
 
 		widgets->weapon_icon = std::make_unique<MenuIcon>(
 			name + "_wep_icon",
-			"sprayer",
+			choice.frame,
 			RectangleF(this->calculate_widget_position(2, i + 2), this->look().weapon_select.size),
 			this->render_resources(),
-			this->look().weapon_select.unselected, &this->menu_style(), "weapon_paint");
+			this->look().weapon_select.unselected, &this->menu_style(),
+			this->weapon_select_art_.sheet, this->weapon_select_art_.fill_frame);
+		widgets->weapon_icon->set_sprite_frame(
+			choice.frame, choice.paint_frame, choice.supply_strip);
 		widgets->weapon_icon->set_paint_colour(preview_colours.team_colour(
 			this->level_settings()->player_team(i)));
 
 		widgets->weapon_name = std::make_unique<UiTextDropShadow>(
 			name + "_wep_name",
-			L"Sprayer",
+			choice.name,
 			this->look().weapon_description_font,
 			widgets->weapon_icon->rectangle().position() +
 				Vector2F(0.0f, this->look().weapon_select.size.y +
@@ -310,7 +292,7 @@ void MainMenuWeaponSelect::init()
 
 		widgets->weapon_description = std::make_unique<UiTextDropShadow>(
 			name + "_wep_desc",
-			this->weapon_description(WeaponType::sprayer),
+			this->weapon_description(state.type),
 			this->look().weapon_description_font,
 			widgets->weapon_icon->rectangle().position() +
 				Vector2F(this->look().weapon_description_x_offset, 0.0f),
@@ -332,12 +314,7 @@ void MainMenuWeaponSelect::init()
 std::wstring MainMenuWeaponSelect::weapon_description(WeaponType type) const
 {
 	const size_t index = static_cast<size_t>(type);
-	const auto& descriptions = this->look().weapon_descriptions;
-	if (index >= descriptions.size())
-	{
-		return std::wstring();
-	}
-	return descriptions[index];
+	return this->weapon_descriptions_.at(index);
 }
 
 #pragma endregion MainMenuWeaponSelect

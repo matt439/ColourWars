@@ -281,6 +281,9 @@ private:
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 	std::vector<std::unique_ptr<Widgets>> player_widgets_;
 	std::vector<SelectState> select_states_;
+	// Keep names, frames and descriptions paired with the atlas captured on entry.
+	WeaponSelectArtworkPresentation weapon_select_art_;
+	std::array<std::wstring, MainMenuPresentation::DESCRIBED_WEAPONS> weapon_descriptions_;
 	void update_weapon_select_visuals();
 	void unconfirm_all_widgets();
 	bool all_players_confirmed() const;

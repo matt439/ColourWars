@@ -51,12 +51,67 @@ Debug `tune` reports shared layout numbers as **next screen**. Rejected values
 leave the live records and pending edits intact; strings remain outside the
 numeric tuner. See [live tuning](debug-console.md#live-tuning).
 
+## Weapon-selection names and artwork
+
+`main_menu.weapon_select.sheet` selects the weapon-choice atlas and
+`main_menu.weapon_select.fill_frame` names its solid tile frame. Both identifiers
+are required and nonempty. Their shipped values are `weapon_paint` and `pixel`;
+they are independent of the shared menu fill.
+
+The required `main_menu.weapon_select.choices` object has six fixed keys:
+`sprayer`, `sniper`, `roller`, `mister`, `bucket`, and `random`. Every choice must
+provide all four string fields below, even when an optional layer is empty:
+
+| Field | Meaning |
+|---|---|
+| `name` | Display name, normalized and checked for the font that draws it |
+| `frame` | Required, nonempty base-art frame in the selected atlas |
+| `paint_frame` | Team-coloured overlay frame; `""` disables the overlay |
+| `supply_strip` | Supply animation strip whose final frame is shown; `""` disables it |
+
+The shipped mappings preserve the former switch's choices:
+
+| Key | `name` | `frame` | `paint_frame` | `supply_strip` |
+|---|---|---|---|---|
+| `sprayer` | `Sprayer` | `sprayer` | `sprayer_paint` | `sprayer_supply` |
+| `sniper` | `Sniper` | `sniper` | `sniper_paint` | `""` |
+| `roller` | `Roller` | `roller` | `roller_paint` | `""` |
+| `mister` | `Mister` | `mister` | `mister_paint` | `mister_supply` |
+| `bucket` | `Bucket` | `bucket` | `bucket_paint` | `""` |
+| `random` | `Random` | `random` | `""` | `""` |
+
+Names use the existing UTF-8 punctuation normalization and must be nonblank,
+single-line printable text. The content range after normalization is U+0020 to
+U+007E, and startup also checks every name against the actual
+`main_menu.fonts.weapon_description` atlas. Unsupported glyphs, line breaks and
+missing fields fail while the source key is available for the diagnostic.
+The measured name width plus the absolute horizontal detail-shadow offset must
+fit `main_menu.weapon_description.x_offset`, the finite, positive gap before
+the description column. This uses the actual font's measurement rather than an
+arbitrary character limit.
+
+Startup resolves the sheet, fill, base frames and each nonempty optional layer.
+Base frames must have positive source dimensions. A paint overlay must share
+its base frame's canvas size and origin. A supply strip must have a positive
+frame count and the same canvas size as its base frame; icons using a supply
+strip require zero origin. These checks keep the fitted base artwork and its
+team-coloured layers aligned.
+
+The page captures the catalog when opened. An open page retains its names and
+artwork together if presentation is reloaded or saved; reopening uses the new
+catalog. These strings are edited in JSON and remain outside numeric `tune`.
+The fixed keys continue to identify the existing weapon enums, so display-name
+edits do not rename save or command identifiers. `random` is a display choice,
+not a weapon-tuning record: confirmation still resolves it through the existing
+random-primary selection, without changing selection order or RNG draws.
+
 ## Verification and boundary
 
 The `menu_presentation` consumer case checks layout limits, required identifiers,
 custom sparse atlases, resource errors and actual paper-art construction without
-a graphics or audio device. Debug-console acceptance checks layout edit scopes,
-rollback and reset.
+a graphics or audio device. The `weapon_catalog` case checks the weapon catalog's
+required fields, display-text rules and resource/layer compatibility.
+Debug-console acceptance checks layout edit scopes, rollback and reset.
 
 The native painter checks exercise real page construction, copied geometry,
 page overrides, keyboard navigation, focus, settings persistence, team setup,
@@ -68,11 +123,14 @@ comfort and performance acceptance remain separate TODO items.
 Run `scripts/run-acceptance.ps1 -Preset x64-debug` (and `x64-release`), then use
 the focused `MainMenuOnly`, `SettingsMenuOnly`, `ControlsMenuOnly`, `PauseMenuOnly`,
 `ResultsMenuOnly`, `EndMenuOnly` and `TeamSetupOnly` switches of
-`scripts/check-painter.ps1` for the affected pages. `TeamSetupOnly` uses its
-scripted input backend; the other focused checks retain the real backend.
+`scripts/check-painter.ps1` for the affected pages. In that set, `TeamSetupOnly`
+uses its scripted input backend; the other checks retain the real backend.
+`WeaponCatalogOnly` checks the catalog on real weapon pages, including page
+snapshots across catalog replacement and reopening.
 
-The non-menu primitive texel and weapon-icon atlas still have their own startup
-checks. They do not inherit menu fill choices. The weapon name/icon mapping is
-the separate GAP#8.4 work. Together with [gameplay tuning](gameplay-tuning.md),
-this defines the data boundary implemented for gap-audit 8.5; the historical
-audit is unchanged.
+The non-menu primitive texel retains its own startup checks. Together with
+[gameplay tuning](gameplay-tuning.md), the shared layout and sheet choices define
+the data boundary implemented for gap-audit 8.5. The weapon catalog implements
+the name/artwork part of GAP#8.4; other player-visible C++ text remains open under
+that item. It introduces no locale selection, font regeneration or text wrapping.
+The historical audit is unchanged.

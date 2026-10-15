@@ -11,7 +11,7 @@ public:
 	MenuIcon(const std::string& name, const std::string& frame,
 		const mattmath::RectangleF& rectangle, labrador::RenderResources* resources,
 		const labrador::Colour& colour, const MenuStyle* style,
-		const std::string& sheet_name);
+		const std::string& sheet_name, const std::string& fill_frame);
 	// An empty paint name is an icon with no team-coloured region.
 	void set_sprite_frame(const std::string& frame, const std::string& paint_frame = "",
 		const std::string& supply_strip = "");
@@ -19,7 +19,7 @@ public:
 	void draw(labrador::DrawList& list) const override;
 private:
 	const MenuStyle* style_;
-	labrador::SpriteSheet::frame_handle pixel_;
+	labrador::SpriteSheet::frame_handle fill_frame_;
 	labrador::SpriteSheet::frame_handle paint_frame_;
 	labrador::SpriteSheet::strip_handle supply_strip_;
 	labrador::Colour paint_colour_ = labrador::Colour::white;
