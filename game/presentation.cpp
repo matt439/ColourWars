@@ -115,6 +115,9 @@ namespace
 		text.stage.goal = read_menu_line(stage, "goal");
 		text.stage.solo_objective = read_menu_block(stage, "solo_objective");
 		text.stage.versus_objective = read_menu_block(stage, "versus_objective");
+		text.stage.random_navigation = read_menu_line(stage, "random_navigation");
+		text.stage.locked_hint = read_menu_block(stage, "locked_hint");
+		text.stage.browse_hint = read_menu_block(stage, "browse_hint");
 		const JsonValue headings = json.object("headings");
 		for (size_t index = 0; index < text.headings.size(); ++index)
 		{
@@ -2326,6 +2329,65 @@ void Presentation::validate_resources(const RenderResources& render,
 	check_stage_briefing("goal", this->menu_text_.stage.goal, 3.0f, 4.0f);
 	check_stage_briefing("solo_objective", this->menu_text_.stage.solo_objective, 4.0f, 6.0f);
 	check_stage_briefing("versus_objective", this->menu_text_.stage.versus_objective, 4.0f, 6.0f);
+	const auto finite_stage_rectangle = [](const RectangleF& bounds)
+	{
+		return std::isfinite(bounds.x) && std::isfinite(bounds.y) &&
+			std::isfinite(bounds.width) && std::isfinite(bounds.height) &&
+			std::isfinite(bounds.right()) && std::isfinite(bounds.bottom()) &&
+			bounds.width > 0.0f && bounds.height > 0.0f;
+	};
+	const auto stage_rectangles_overlap = [](const RectangleF& first, const RectangleF& second)
+	{
+		return first.x < second.right() && first.right() > second.x &&
+			first.y < second.bottom() && first.bottom() > second.y;
+	};
+	const std::string navigation_key = "menu_text.stage.random_navigation";
+	const Vector2F navigation_size = fixed_menu_size(navigation_key, this->menu_text_.stage.random_navigation,
+		this->menu_.detail_font);
+	const Vector2F stage_detail_shadow = this->menu_.detail_shadow_offset;
+	const RectangleF navigation_bounds = RectangleF::union_of(RectangleF(stage.navigation_position, navigation_size),
+		RectangleF(stage.navigation_position + stage_detail_shadow, navigation_size));
+	RectangleF preview_edge(stage.preview_position, stage.preview_size);
+	preview_edge.inflate(this->menu_.rule_height);
+	if (!std::isfinite(stage_detail_shadow.x) || !std::isfinite(stage_detail_shadow.y) ||
+		!std::isfinite(this->menu_.footer_y) || !finite_stage_rectangle(navigation_bounds) ||
+		!finite_stage_rectangle(preview_edge) || !finite_stage_rectangle(stage_briefing) ||
+		!RectangleF(0.0f, 0.0f, 1920.0f, 1080.0f).contains(navigation_bounds) ||
+		navigation_bounds.bottom() > this->menu_.footer_y ||
+		stage_rectangles_overlap(navigation_bounds, preview_edge) ||
+		stage_rectangles_overlap(navigation_bounds, stage_briefing))
+	{
+		throw std::runtime_error(this->source_path_ + ": " + navigation_key +
+			" must fit unscaled inside the design area before the footer without overlapping the preview edge or briefing panel, including its shadow.");
+	}
+	const Vector2F stage_hint_position = stage_info + stage.briefing.spacing * 7.0f;
+	const float stage_hint_width = stage.briefing.size.x - 2.0f * stage.briefing_padding.x;
+	const auto check_stage_hint = [&](const char* role, const std::wstring& text)
+	{
+		const std::string key = std::string("menu_text.stage.") + role;
+		const Vector2F size = fixed_menu_size(key, text, this->menu_.brand_font);
+		const RectangleF raw = RectangleF::union_of(RectangleF(Vector2F::ZERO, size),
+			RectangleF(stage_detail_shadow, size));
+		if (!std::isfinite(stage_hint_width) || stage_hint_width <= 0.0f || !finite_stage_rectangle(raw))
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must have a finite positive hint width and text bounds including its shadow.");
+		}
+		// Match refresh: measure at scale one and fit only the full union's width.
+		const float scale = std::min(1.0f, stage_hint_width / raw.width);
+		const Vector2F fitted_size = size * scale;
+		const RectangleF bounds = RectangleF::union_of(RectangleF(stage_hint_position, fitted_size),
+			RectangleF(stage_hint_position + stage_detail_shadow * scale, fitted_size));
+		if (!std::isfinite(scale) || scale <= 0.0f || !finite_stage_rectangle(bounds) ||
+			!stage_briefing.contains(bounds) || !RectangleF(0.0f, 0.0f, 1920.0f, 1080.0f).contains(bounds) ||
+			bounds.bottom() > this->menu_.footer_y)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit its briefing panel and design area before the footer using width-only fitting, including its scaled shadow.");
+		}
+	};
+	check_stage_hint("locked_hint", this->menu_text_.stage.locked_hint);
+	check_stage_hint("browse_hint", this->menu_text_.stage.browse_hint);
 	const Vector2F options_value_limit((1920.0f + main.options_box_size.x) / 2.0f -
 		main.art.shadow_offset - main.art.focus_padding.x - main.options_value_x,
 		main.options_spacing.y - main.art.focus_padding.y * 2.0f);

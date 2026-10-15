@@ -121,7 +121,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->stage_name_->set_shadow_offset(this->menu_style().item_shadow_offset * name_scale);
 	this->stage_name_->set_colour(confirmed ? look.selected : look.unselected);
 	this->random_mark_->set_hidden(!random);
-	this->navigation_->set_text(random ? L"<   SURPRISE ME   >" :
+	this->navigation_->set_text(random ? this->text().stage.random_navigation :
 		L"<   ARENA " + std::to_wstring(slot + 1) + L" / " +
 		std::to_wstring(this->random_slot()) + L"   >");
 	this->preview_edge_->set_colour(confirmed ? look.selected :
@@ -131,10 +131,10 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->selection_status_->set_colour(confirmed ? look.selected :
 		this->menu_style().heading_colour);
 	this->selection_hint_->set_text(confirmed ?
-		L"Confirm again to start.\nBack to change your choice." : random ?
+		this->text().stage.locked_hint : random ?
 		L"Random: " + std::to_wstring(random_stage_indices(*this->data()->stages()).size()) +
 		L" available arenas.\nConfirm to lock your choice." :
-		L"Left/Right to browse.\nConfirm to lock your choice.");
+		this->text().stage.browse_hint);
 	const RectangleF hint_bounds = RectangleF::union_of(
 		this->selection_hint_->text_bounds_at(Vector2F::ZERO, 1.0f),
 		this->selection_hint_->text_bounds_at(this->menu_style().detail_shadow_offset, 1.0f));

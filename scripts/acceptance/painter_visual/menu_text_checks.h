@@ -562,6 +562,8 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output);
 void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output);
+void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
+    GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output);
 
 void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
@@ -857,6 +859,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     title_home_text_checks(app, canvas, tuning, presentation, output, true);
     stage_random_text_checks(app, levels, canvas, tuning, presentation, output);
     stage_briefing_text_checks(app, levels, canvas, tuning, presentation, output);
+    stage_cue_text_checks(app, levels, canvas, tuning, presentation, output);
     require(records.good(), "Menu text evidence write failed");
     std::cout << "PASS shared menu text: independent brand, 11 headings and 17 formatted legends at 720p/1080p/QHD; "
         "actual arena lock/unlock; custom text/font/layout reopen and old-page snapshots through assignments, "

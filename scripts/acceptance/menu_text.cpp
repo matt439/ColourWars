@@ -116,6 +116,12 @@ namespace
         { "versus_objective", L"Cover the arena in your colour.\nMost painted surface wins.",
             &MenuStageText::versus_objective, 4, 6, true }
     };
+    struct StageCueText { const char* key; const wchar_t* text; std::wstring MenuStageText::* field; bool hint; };
+    constexpr StageCueText stage_cue_text[]{
+        { "random_navigation", L"<   SURPRISE ME   >", &MenuStageText::random_navigation, false },
+        { "locked_hint", L"Confirm again to start.\nBack to change your choice.", &MenuStageText::locked_hint, true },
+        { "browse_hint", L"Left/Right to browse.\nConfirm to lock your choice.", &MenuStageText::browse_hint, true }
+    };
     constexpr DefaultText items[]{
         { "play", L"Play" }, { "options", L"Options" }, { "credits", L"Credits" }, { "exit", L"Exit" },
         { "resolution", L"Resolution" }, { "fullscreen", L"Fullscreen" }, { "team_palette", L"Team palette" },
@@ -279,6 +285,10 @@ namespace
         {
             require(text.stage.*entry.field == entry.text, std::string("Arena briefing default changed: ") + entry.key);
         }
+        for (const auto& entry : stage_cue_text)
+        {
+            require(text.stage.*entry.field == entry.text, std::string("Arena cue default changed: ") + entry.key);
+        }
         for (size_t index = 0; index < std::size(headings); ++index)
         {
             const auto& actual = text.heading(static_cast<MenuHeading>(index));
@@ -370,6 +380,7 @@ namespace
         for (const auto& entry : end_text) { required("end", entry.key); }
         for (const auto& entry : stage_text) { required("stage", entry.key); }
         for (const auto& entry : stage_briefing_text) { required("stage", entry.key); }
+        for (const auto& entry : stage_cue_text) { required("stage", entry.key); }
         for (const auto& entry : headings) { required("headings", entry.key); }
         for (const auto& entry : prompts) { required("prompts", entry.key); }
         for (const auto& entry : items) { required("items", entry.key); }
@@ -2498,6 +2509,8 @@ namespace
         {
             d["menu_style"]["chrome"]["brand_font"].SetString("menu_text_exact");
             for (const auto& entry : stage_briefing_text) { d["menu_text"]["stage"][entry.key].SetString("Fit"); }
+            d["menu_text"]["stage"]["random_navigation"].SetString("F");
+            d["main_menu"]["stage_select"]["navigation_position"]["x"].SetFloat(1800.0f);
         };
         const auto screen_top = [&](rapidjson::Document& d)
         {
@@ -2553,6 +2566,307 @@ namespace
                 variants.rejects(std::string("stage.") + entry.key, [&](rapidjson::Document& d)
                 {
                     use_font(d, name, entry.key);
+                }, &world);
+            }
+        }
+    }
+
+    void check_stage_cue_text(Variants& variants, World& world)
+    {
+        for (const auto& entry : stage_cue_text)
+        {
+            const std::string field = std::string("stage.") + entry.key;
+            const auto normalized = variants.load([&](rapidjson::Document& d)
+            {
+                d["menu_text"]["stage"][entry.key].SetString(entry.hint ?
+                    " A\xC2\xA0\xE2\x80\x94" "B \n C " : " A\xC2\xA0\xE2\x80\x94" "B ", d.GetAllocator());
+            });
+            normalized.validate_resources(world.render, world.audio);
+            require(normalized.menu_text().stage.*entry.field == (entry.hint ? L" A -B \n C " : L" A -B "),
+                std::string("Arena cue lost authored spacing/LF or normalized punctuation: ") + entry.key);
+            for (const char* invalid : { "   ", " \xC2\xA0 ", "line\rbreak", "line\r\nbreak", "tab\ttext",
+                "control\x01", "delete\x7F", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3" })
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    d["menu_text"]["stage"][entry.key].SetString(invalid, d.GetAllocator());
+                });
+            }
+            if (entry.hint)
+            {
+                for (const char* invalid : { "\nA", "A\n", "A\n\nB", "A\n \nB", " \nA", "A\n \xC2\xA0 " })
+                {
+                    variants.rejects(field, [&](rapidjson::Document& d)
+                    {
+                        d["menu_text"]["stage"][entry.key].SetString(invalid, d.GetAllocator());
+                    });
+                }
+            }
+            else
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    d["menu_text"]["stage"][entry.key].SetString("line\nbreak");
+                });
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    d["menu_text"]["stage"][entry.key].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
+                }, &world);
+            }
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                if (entry.hint) { d["menu_style"]["chrome"]["brand_font"].SetString("menu_text_limited"); }
+                else { d["menu_style"]["fonts"]["detail"].SetString("menu_text_limited"); }
+                d["menu_text"]["stage"][entry.key].SetString("Glyph~");
+            }, &world);
+        }
+        const auto check_widgets = [&](const Presentation& look)
+        {
+            for (const auto& entry : stage_cue_text)
+            {
+                MenuStyle style = look.menu();
+                StageSelectPresentation stage = look.main_menu().stage_select;
+                const auto font_name = entry.hint ? style.brand_font : style.detail_font;
+                const auto font = world.render.resolve_sprite_font(font_name);
+                const auto point = entry.hint ? stage.briefing.position + stage.briefing_padding + stage.briefing.spacing * 7.0f :
+                    stage.navigation_position;
+                const auto captured_shadow = style.detail_shadow_offset;
+                std::wstring source = look.menu_text().stage.*entry.field;
+                const auto retained = source;
+                const auto measured = world.render.measure_text(font, source);
+                UiTextDropShadow text(entry.key, L"", font_name, point, &world.render,
+                    style.unhighlight, style.shadow_colour, captured_shadow);
+                text.set_text(source);
+                source = L"Changed after set_text";
+                style.brand_font = "gill_sans_mt_bold_48";
+                style.detail_font = "gill_sans_mt_bold_48";
+                stage.navigation_position += mattmath::Vector2F(40.0f, 40.0f);
+                stage.briefing.position += mattmath::Vector2F(40.0f, 40.0f);
+                if (!entry.hint)
+                {
+                    style.detail_shadow_offset = mattmath::Vector2F(10.0f, 10.0f);
+                    text.set_text(retained);
+                    require(text.text() == retained && text.text_bounds() == mattmath::RectangleF(point, measured) &&
+                        text.bounds() == mattmath::RectangleF::union_of(mattmath::RectangleF(point, measured),
+                            mattmath::RectangleF(point + captured_shadow, measured)) &&
+                        text.shadow_offset() == captured_shadow && text.shadow_scale() == 1.0f,
+                        "Actual arena navigation lost its copied text, captured font/position/shadow or unscaled bounds");
+                }
+                else
+                {
+                    const float original_budget = stage.briefing.size.x - stage.briefing_padding.x * 2.0f;
+                    const auto fit = [&]()
+                    {
+                        const auto raw = mattmath::RectangleF::union_of(text.text_bounds_at(mattmath::Vector2F::ZERO, 1.0f),
+                            text.text_bounds_at(style.detail_shadow_offset, 1.0f));
+                        const float budget = stage.briefing.size.x - stage.briefing_padding.x * 2.0f;
+                        const float scale = std::min(1.0f, budget / raw.width);
+                        text.set_scale(scale);
+                        text.set_shadow_scale(scale);
+                        text.set_shadow_offset(style.detail_shadow_offset * scale);
+                        return scale;
+                    };
+                    for (const bool changed_fit : { false, true })
+                    {
+                        if (changed_fit)
+                        {
+                            stage.briefing.size.x = stage.briefing_padding.x * 2.0f + original_budget / 2.0f;
+                            style.detail_shadow_offset = mattmath::Vector2F(-1.5f, -1.5f);
+                        }
+                        text.set_text(retained);
+                        const float scale = fit();
+                        const auto expected = mattmath::RectangleF::union_of(mattmath::RectangleF(point, measured * scale),
+                            mattmath::RectangleF(point + style.detail_shadow_offset * scale, measured * scale));
+                        const auto actual = text.bounds();
+                        require(text.text() == retained && std::abs(actual.x - expected.x) <= 0.01f &&
+                            std::abs(actual.y - expected.y) <= 0.01f && std::abs(actual.width - expected.width) <= 0.01f &&
+                            std::abs(actual.height - expected.height) <= 0.01f && text.shadow_scale() == scale &&
+                            text.shadow_offset() == style.detail_shadow_offset * scale && scale > 0.0f && scale <= 1.0f &&
+                            actual.width <= stage.briefing.size.x - stage.briefing_padding.x * 2.0f + 0.01f,
+                            "Actual arena hint lost its captured text/font/position or live width-only shadow fitting");
+                    }
+                    std::wstring replacement = L"Fit";
+                    text.set_text(replacement);
+                    replacement = L"Changed after replacement";
+                    require(fit() == 1.0f && text.text() == L"Fit" && text.shadow_scale() == 1.0f &&
+                        text.shadow_offset() == style.detail_shadow_offset &&
+                        text.text_bounds() == mattmath::RectangleF(point, world.render.measure_text(font, L"Fit")),
+                        "A short arena hint retained its old shrink scale, lost its copied text or used a replacement font/position");
+                }
+                text.set_hidden(true);
+                DrawList no_device;
+                text.draw(no_device);
+            }
+        };
+        check_widgets(variants.load([](rapidjson::Document&) {}));
+        for (const bool wide : { false, true })
+        {
+            const auto authored = variants.load([&](rapidjson::Document& d)
+            {
+                d["menu_text"]["stage"]["random_navigation"].SetString("Fit");
+                for (const char* key : { "locked_hint", "browse_hint" })
+                {
+                    d["menu_text"]["stage"][key].SetString(wide ? std::string(200, 'W').c_str() : "Fit", d.GetAllocator());
+                }
+            });
+            authored.validate_resources(world.render, world.audio);
+            check_widgets(authored);
+        }
+        const auto multiline = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_style"]["chrome"]["brand_font"].SetString("menu_text_exact");
+            for (const char* key : { "locked_hint", "browse_hint" })
+            {
+                d["menu_text"]["stage"][key].SetString("Fit\nFit\nFit\nFit\nFit");
+            }
+        });
+        multiline.validate_resources(world.render, world.audio);
+        check_widgets(multiline);
+    }
+
+    void check_stage_cue_bounds(Variants& variants, World& world)
+    {
+        const auto exact_navigation = [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
+            d["menu_text"]["stage"]["random_navigation"].SetString("Fit");
+        };
+        struct Edge { const char* axis; float position; float outside; };
+        const Edge nav_edges[]{ { "x", 0.0f, -0.25f }, { "x", 1895.0f, 1895.25f },
+            { "y", 0.0f, -0.25f }, { "y", 939.0f, 939.25f },
+            { "y", 832.0f, 831.75f }, { "x", 1205.0f, 1205.25f } };
+        for (const auto& edge : nav_edges)
+        {
+            const auto contact = [&](rapidjson::Document& d)
+            {
+                exact_navigation(d);
+                d["main_menu"]["stage_select"]["navigation_position"][edge.axis].SetFloat(edge.position);
+            };
+            variants.load(contact).validate_resources(world.render, world.audio);
+            variants.rejects("stage.random_navigation", [&](rapidjson::Document& d)
+            {
+                contact(d);
+                d["main_menu"]["stage_select"]["navigation_position"][edge.axis].SetFloat(edge.outside);
+            }, &world);
+        }
+        const auto panel_top = [&](rapidjson::Document& d)
+        {
+            exact_navigation(d);
+            d["main_menu"]["stage_select"]["navigation_position"]["x"].SetFloat(1230.0f);
+            d["main_menu"]["stage_select"]["navigation_position"]["y"].SetFloat(224.0f);
+        };
+        variants.load(panel_top).validate_resources(world.render, world.audio);
+        variants.rejects("stage.random_navigation", [&](rapidjson::Document& d)
+        {
+            panel_top(d);
+            d["main_menu"]["stage_select"]["navigation_position"]["y"].SetFloat(224.25f);
+        }, &world);
+        const auto negative = [&](rapidjson::Document& d)
+        {
+            exact_navigation(d);
+            for (const char* axis : { "x", "y" })
+            {
+                d["menu_style"]["shadow"]["detail_offset"][axis].SetFloat(-1.5f);
+                d["main_menu"]["stage_select"]["navigation_position"][axis].SetFloat(1.5f);
+            }
+        };
+        variants.load(negative).validate_resources(world.render, world.audio);
+        for (const char* axis : { "x", "y" })
+        {
+            variants.rejects("stage.random_navigation", [&](rapidjson::Document& d)
+            {
+                negative(d);
+                d["main_menu"]["stage_select"]["navigation_position"][axis].SetFloat(1.25f);
+            }, &world);
+        }
+        const auto add_font = [&](const std::string& name, int width, int height)
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                glyphs.push_back({ character, mattmath::RectangleI(0, 0, character == U'~' ? width : 8,
+                    character == U'~' ? height : 16), 0.0f, 0.0f, 0.0f });
+            }
+            world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 16.0f));
+        };
+        const auto use_hint = [](rapidjson::Document& d, const std::string& font, const char* key)
+        {
+            d["menu_style"]["chrome"]["brand_font"].SetString(font.c_str(), d.GetAllocator());
+            d["menu_text"]["stage"]["locked_hint"].SetString("Fit");
+            d["menu_text"]["stage"]["browse_hint"].SetString("Fit");
+            d["menu_text"]["stage"][key].SetString("~");
+        };
+        add_font("menu_stage_hint_panel_edge", 951, 223);
+        add_font("menu_stage_hint_panel_overflow", 951, 224);
+        add_font("menu_stage_hint_footer_edge", 951, 323);
+        add_font("menu_stage_hint_footer_overflow", 951, 324);
+        for (const char* key : { "locked_hint", "browse_hint" })
+        {
+            const std::string field = std::string("stage.") + key;
+            variants.load([&](rapidjson::Document& d) { use_hint(d, "menu_stage_hint_panel_edge", key); }).validate_resources(world.render, world.audio);
+            variants.rejects(field, [&](rapidjson::Document& d) { use_hint(d, "menu_stage_hint_panel_overflow", key); }, &world);
+            const auto footer = [&](rapidjson::Document& d)
+            {
+                use_hint(d, "menu_stage_hint_footer_edge", key);
+                d["main_menu"]["stage_select"]["briefing"]["size"]["y"].SetFloat(800.0f);
+            };
+            variants.load(footer).validate_resources(world.render, world.audio);
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                footer(d);
+                d["menu_style"]["chrome"]["brand_font"].SetString("menu_stage_hint_footer_overflow");
+            }, &world);
+        }
+        const auto hint_left = [](rapidjson::Document& d)
+        {
+            d["menu_style"]["chrome"]["brand_font"].SetString("menu_text_exact");
+            d["menu_text"]["stage"]["locked_hint"].SetString("Fit");
+            d["menu_text"]["stage"]["browse_hint"].SetString("Fit");
+            d["main_menu"]["stage_select"]["briefing_padding"]["x"].SetFloat(7.0f);
+            d["main_menu"]["stage_select"]["briefing"]["spacing"]["x"].SetFloat(-1.0f);
+        };
+        variants.load(hint_left).validate_resources(world.render, world.audio);
+        variants.rejects("stage.locked_hint", [&](rapidjson::Document& d)
+        {
+            hint_left(d);
+            d["menu_style"]["shadow"]["detail_offset"]["x"].SetFloat(-0.25f);
+        }, &world);
+        for (const float padding : { 270.0f, 271.0f })
+        {
+            variants.rejects("stage.locked_hint", [&](rapidjson::Document& d)
+            {
+                d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
+                d["menu_style"]["chrome"]["brand_font"].SetString("menu_text_exact");
+                for (const auto& entry : stage_text) { d["menu_text"]["stage"][entry.key].SetString("F"); }
+                d["main_menu"]["stage_select"]["briefing_padding"]["x"].SetFloat(padding);
+            }, &world);
+        }
+        for (const char* suffix : { "zero_width", "zero_height", "infinite_width", "infinite_height" })
+        {
+            for (const auto& entry : stage_cue_text)
+            {
+                variants.rejects(std::string("stage.") + entry.key, [&](rapidjson::Document& d)
+                {
+                    if (entry.hint)
+                    {
+                        use_hint(d, std::string("menu_stage_briefing_") + suffix, entry.key);
+                    }
+                    else
+                    {
+                        const std::string font = std::string("menu_stage_status_") + suffix;
+                        d["menu_style"]["fonts"]["detail"].SetString(font.c_str(), d.GetAllocator());
+                        d["menu_text"]["stage"][entry.key].SetString("~");
+                    }
+                }, &world);
+            }
+        }
+        for (const char* axis : { "x", "y" })
+        {
+            for (const double position : { -1e100, 1e100 })
+            {
+                variants.rejects("stage.random_navigation", [&](rapidjson::Document& d)
+                {
+                    d["main_menu"]["stage_select"]["navigation_position"][axis].SetDouble(position);
                 }, &world);
             }
         }
@@ -2705,32 +3019,24 @@ namespace
             // status geometry, including a full-design right-edge contact.
             d["menu_style"]["chrome"]["brand_font"].SetString("menu_text_exact");
             for (const auto& entry : stage_briefing_text) { d["menu_text"]["stage"][entry.key].SetString("F"); }
+            for (const auto& entry : stage_cue_text) { d["menu_text"]["stage"][entry.key].SetString("F"); }
+            d["main_menu"]["stage_select"]["navigation_position"]["x"].SetFloat(1800.0f);
         };
         const auto left = [&](rapidjson::Document& d)
         {
             exact(d);
-            d["main_menu"]["stage_select"]["briefing_padding"]["x"].SetFloat(30.0f);
-            d["main_menu"]["stage_select"]["briefing"]["spacing"]["x"].SetFloat(-5.0f);
+            d["main_menu"]["stage_select"]["briefing_padding"]["x"].SetFloat(1.5f);
+            d["menu_style"]["shadow"]["detail_offset"]["x"].SetFloat(-1.5f);
         };
         variants.load(left).validate_resources(world.render, world.audio);
         variants.rejects("stage.browse_status", [&](rapidjson::Document& d)
         {
             left(d);
-            d["main_menu"]["stage_select"]["briefing"]["spacing"]["x"].SetFloat(-5.0625f);
+            d["menu_style"]["shadow"]["detail_offset"]["x"].SetFloat(-1.75f);
         }, &world);
-        const auto bottom = [&](rapidjson::Document& d)
-        {
-            exact(d);
-            // Status is at723, its unscaled text/shadow is21 high. The fixed
-            // status may touch panel bottom744 before the authored hint row798.
-            d["main_menu"]["stage_select"]["briefing"]["size"]["y"].SetFloat(499.0f);
-        };
-        variants.load(bottom).validate_resources(world.render, world.audio);
-        variants.rejects("stage.browse_status", [&](rapidjson::Document& d)
-        {
-            bottom(d);
-            d["main_menu"]["stage_select"]["briefing"]["size"]["y"].SetFloat(498.75f);
-        }, &world);
+        // A later positive-height hint must also fit the panel and footer,
+        // making status-at-panel-bottom and status-at-design-bottom contacts
+        // unreachable. Hint boundary cases below own those final contacts.
         const auto negative = [&](rapidjson::Document& d)
         {
             exact(d);
@@ -2738,6 +3044,8 @@ namespace
             d["main_menu"]["stage_select"]["briefing"]["spacing"]["x"].SetFloat(-0.25f);
             d["menu_style"]["shadow"]["detail_offset"]["x"].SetFloat(-1.5f);
             d["menu_style"]["shadow"]["detail_offset"]["y"].SetFloat(-1.5f);
+            d["menu_text"]["stage"]["locked_hint"].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
+            d["menu_text"]["stage"]["browse_hint"].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
         };
         variants.load(negative).validate_resources(world.render, world.audio);
         variants.rejects("stage.browse_status", [&](rapidjson::Document& d)
@@ -2751,16 +3059,12 @@ namespace
         // edges even when the larger backing panel extends beyond them.
         // Status at y0 would put the earlier fixed briefing rows offscreen;
         // their new row-0 screen-top test replaces that unreachable contact.
-        const ScreenEdge screen_edges[]{ { "x", -30.5f, -30.75f }, { "x", 1864.5f, 1864.75f },
-            { "y", 581.0f, 581.25f } };
+        const ScreenEdge screen_edges[]{ { "x", -32.0f, -32.25f }, { "x", 1863.0f, 1863.25f } };
         for (const auto& edge : screen_edges)
         {
             const auto contact = [&](rapidjson::Document& d)
             {
                 exact(d);
-                // Earlier rows remain slightly to the right of status and
-                // use shorter copy, isolating the status's screen boundary.
-                d["main_menu"]["stage_select"]["briefing"]["spacing"]["x"].SetFloat(-0.25f);
                 d["main_menu"]["stage_select"]["briefing"]["position"][edge.axis].SetFloat(edge.position);
             };
             variants.load(contact).validate_resources(world.render, world.audio);
@@ -3160,6 +3464,8 @@ int main(int argc, char** argv)
         check_stage_briefing_bounds(variants, world);
         check_stage_status_text(variants, world);
         check_stage_status_bounds(variants, world);
+        check_stage_cue_text(variants, world);
+        check_stage_cue_bounds(variants, world);
         check_title_and_home_text(variants, world, defaults);
         check_title_and_home_bounds(variants, world);
         check_help_text(variants, world);
@@ -3172,7 +3478,8 @@ int main(int argc, char** argv)
         check_prompt_bar(world, defaults);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
-            "authored OptionRow value fitting, shadow-inclusive Random arena fitting, unscaled arena briefing/status copy and actual PromptBar measurement compatibility.\n";
+            "authored OptionRow value fitting, shadow-inclusive Random arena fitting, unscaled arena briefing/status/navigation, "
+            "width-only arena hints and actual PromptBar measurement compatibility.\n";
         return 0;
     }
     catch (const std::exception& error)

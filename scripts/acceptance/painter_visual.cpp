@@ -2540,6 +2540,7 @@ namespace
 #include "scripts/acceptance/painter_visual/menu_text_checks.h"
 #include "scripts/acceptance/painter_visual/stage_random_text_checks.h"
 #include "scripts/acceptance/painter_visual/stage_briefing_text_checks.h"
+#include "scripts/acceptance/painter_visual/stage_cue_text_checks.h"
 #include "scripts/acceptance/painter_visual/save_status_checks.h"
 #include "scripts/acceptance/painter_visual/settings_value_checks.h"
 #include "scripts/acceptance/painter_visual/settings_menu_checks.h"

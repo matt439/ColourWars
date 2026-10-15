@@ -129,7 +129,10 @@
       "briefing_label": "MATCH SETUP",
       "goal": "PAINT TO WIN",
       "solo_objective": "Make the arena your canvas.\nTry weapons. Cover more ground.",
-      "versus_objective": "Cover the arena in your colour.\nMost painted surface wins."
+      "versus_objective": "Cover the arena in your colour.\nMost painted surface wins.",
+      "random_navigation": "<   SURPRISE ME   >",
+      "locked_hint": "Confirm again to start.\nBack to change your choice.",
+      "browse_hint": "Left/Right to browse.\nConfirm to lock your choice."
     },
     "headings": {
       "home": "Make your mark.",
