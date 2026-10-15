@@ -187,6 +187,18 @@ struct PlayerTuning
 	PlayerAnimationTuning falling;
 };
 
+// Shared ammunition feedback, with optional cues for a tool's mechanism.
+struct WeaponFeedbackSounds
+{
+	SoundTuning empty;
+	SoundTuning recovered;
+	float empty_repeat_delay = 0.0f;
+	std::optional<SoundTuning> stop;
+	std::optional<SoundTuning> ready;
+	std::optional<SoundTuning> lift;
+	std::optional<SoundTuning> settle;
+};
+
 struct WeaponTuning
 {
 	WeaponDetails details;
@@ -196,6 +208,7 @@ struct WeaponTuning
 
 	// Empty for weapons using one-shot waves instead of looping effects.
 	WeaponLoopSounds loop_sounds;
+	WeaponFeedbackSounds feedback_sounds;
 };
 
 struct ProjectileTuning

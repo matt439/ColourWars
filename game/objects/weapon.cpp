@@ -51,6 +51,17 @@ Weapon::Weapon(const GameTuning* tuning,
         this->weapon_tuning_->loop_sounds, team, sound_index);
     this->shoot_sound_ = this->sound_bank_->resolve_wave(
         details.shoot_sound_name);
+    const WeaponFeedbackSounds& feedback = this->weapon_tuning_->feedback_sounds;
+    this->empty_sound_ = this->sound_bank_->resolve_wave(feedback.empty.name);
+    this->recovered_sound_ = this->sound_bank_->resolve_wave(feedback.recovered.name);
+    if (feedback.stop.has_value())
+    {
+        this->stop_sound_ = this->sound_bank_->resolve_wave(feedback.stop->name);
+    }
+    if (feedback.ready.has_value())
+    {
+        this->ready_sound_ = this->sound_bank_->resolve_wave(feedback.ready->name);
+    }
     this->paint_frame_ = this->sprite_sheet()->
         resolve_sprite_frame(details.frame_name + "_paint");
     this->nozzle_frame_ = this->sprite_sheet()->
@@ -227,11 +238,10 @@ bool Weapon::check_if_shooting_and_ammo_update(
     float dt)
 {
     const bool ok_to_shoot = input.primary_shoot;
+    const bool affordable_before = this->can_afford_shot();
     bool result = false;
 
-    if (this->shoot_timer() > this->shoot_interval() &&
-        this->can_afford_shot() &&
-        ok_to_shoot)
+    if (this->ready_to_shoot() && ok_to_shoot)
     {
         result = true;
 
@@ -242,6 +252,12 @@ bool Weapon::check_if_shooting_and_ammo_update(
             this->set_ammo(0.0f);
         }
         this->set_ammo_timer(0.0f);
+        if (dt > 0.0f)
+        {
+            this->awaiting_recovery_ = this->awaiting_recovery_ ||
+                !this->can_afford_shot();
+            this->cooldown_feedback_pending_ = true;
+        }
     }
 
     // Regenerate up to the configured starting ammo.
@@ -262,10 +278,82 @@ bool Weapon::check_if_shooting_and_ammo_update(
     this->shooting_this_update_ = result ||
         (ok_to_shoot && this->can_afford_shot());
 
+    const bool loop_was_playing = this->loop_playing_;
     this->handle_shoot_sound(result, this->shooting_this_update_);
+    if (dt > 0.0f && loop_was_playing && !this->loop_playing_ &&
+        this->weapon_tuning_->feedback_sounds.stop.has_value())
+    {
+        // Normal release or depletion only. Silent lifecycle stops bypass this
+        // path, so death, time-up, teardown and suspension have no release tail.
+        this->play_feedback_sound(this->stop_sound_,
+            *this->weapon_tuning_->feedback_sounds.stop);
+    }
+    this->update_feedback_sounds(ok_to_shoot, result, affordable_before, dt);
 
     return result;
 
+}
+bool Weapon::ready_to_shoot() const
+{
+    return this->shoot_timer() > this->shoot_interval() && this->can_afford_shot();
+}
+void Weapon::update_feedback_sounds(bool holding_shoot, bool shot,
+    bool affordable_before, float dt)
+{
+    // Acceptance probes can pay a primed shot at zero delta. Keep that gameplay
+    // behaviour, but frozen updates cannot advance or emit the new feedback.
+    if (dt <= 0.0f)
+    {
+        return;
+    }
+
+    const WeaponFeedbackSounds& feedback = this->weapon_tuning_->feedback_sounds;
+    if (!holding_shoot)
+    {
+        this->empty_warned_ = false;
+        this->empty_repeat_remaining_ = 0.0f;
+    }
+    else
+    {
+        this->empty_repeat_remaining_ = std::max(0.0f,
+            this->empty_repeat_remaining_ - dt);
+        if (!shot && !affordable_before &&
+            (!this->empty_warned_ || this->empty_repeat_remaining_ <= 0.0f))
+        {
+            this->play_feedback_sound(this->empty_sound_, feedback.empty);
+            this->empty_warned_ = true;
+            // Retain the limit across brief recoveries while fire stays held.
+            // A long update emits at most one warning, never a queued burst.
+            this->empty_repeat_remaining_ = feedback.empty_repeat_delay;
+        }
+    }
+
+    if (this->awaiting_recovery_ && this->can_afford_shot())
+    {
+        this->play_feedback_sound(this->recovered_sound_, feedback.recovered);
+        this->awaiting_recovery_ = false;
+    }
+
+    if (this->cooldown_feedback_pending_ &&
+        this->shoot_timer() > this->shoot_interval())
+    {
+        // Only a paid shot arms this edge. If paint is still unavailable when
+        // its cooldown completes, recovery has its own cue instead.
+        this->cooldown_feedback_pending_ = false;
+        if (this->ready_to_shoot() && feedback.ready.has_value())
+        {
+            this->play_feedback_sound(this->ready_sound_, *feedback.ready);
+        }
+    }
+}
+void Weapon::play_feedback_sound(SoundBank::WaveHandle sound,
+    const SoundTuning& tuning) const
+{
+    this->sound_bank_->play_wave(sound, tuning.volume * this->preferences_->sfx_gain());
+}
+void Weapon::update_ground_contact(bool /*supported*/, bool /*established_support*/,
+    float /*dt*/)
+{
 }
 bool Weapon::can_afford_shot() const
 {
@@ -532,10 +620,19 @@ WeaponType Weapon::type() const
 	return this->type_;
 }
 
-void Weapon::reset_ammo()
+void Weapon::reset_ammo(bool reset_feedback)
 {
 	// Respawn restores the configured full tank.
 	this->ammo_ = this->tuning_->starting_ammo();
+	// A forced refill is not gameplay recovery, including an infinite-ammo
+	// refill immediately after a paid shot temporarily emptied the tank.
+	this->awaiting_recovery_ = false;
+	if (reset_feedback)
+	{
+		this->empty_warned_ = false;
+		this->empty_repeat_remaining_ = 0.0f;
+		this->cooldown_feedback_pending_ = false;
+	}
 }
 
 ProjectileBuilder* Weapon::projectile_builder() const

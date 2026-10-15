@@ -147,6 +147,13 @@ All firing results are `std::vector<std::unique_ptr<Projectile>>`; ownership
 is widened to the engine collision interface only when Level adds them to
 Scene.
 
+`ready_to_shoot()` reads the same cooldown and full-shot paint gate as that
+workflow. Ammunition warnings and recovery cues belong to the shared update;
+the optional sniper readiness cue follows a paid cooldown. After contacts,
+Player calls the virtual `update_ground_contact` hook. Its default is inert;
+Roller overrides it for lift/settle sounds, after buffered jumps and spawn
+settling have been accounted for. Lifecycle `stop_sounds()` stays silent.
+
 First decide whether the change is data or behavior. Sprayer and mister show
 two tuned configurations of the same concrete class. Roller, sniper and bucket
 show subclasses with different behavior. Reuse an existing concrete class when
@@ -170,7 +177,10 @@ For a new selectable primary weapon, keep these registrations together:
    `add_weapon` list and `validate_resources`' weapon list. Supply the sprite,
    projectile kind, ammunition/timing values, sound names and relative-velocity
    settings required by its chosen implementation. A looping sound needs
-   independent voices for each team and player position.
+   independent voices for each team and player position. Each weapon supplies
+   `feedback_sounds.empty`, `recovered` and a positive `empty_repeat_delay`;
+   `stop`, `ready`, `lift` and `settle` are optional mechanism cues. Their
+   volumes are SFX multipliers in [0, 1], and startup checks their wave names.
 3. Add a case to [WeaponBuilder](../game/objects/weapon_builder.cpp) that returns
    an owning `unique_ptr<Weapon>` of the appropriate type. For a new subclass,
    declare changed hooks with `override`; add its `.cpp` to

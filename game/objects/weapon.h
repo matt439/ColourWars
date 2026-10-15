@@ -56,8 +56,18 @@ public:
 		float dt);
 
 	float ammo() const;
-	void reset_ammo();
+	// The same strict cooldown and full-shot paint gate used by firing.
+	// Player invokes it only while the player can act.
+	bool ready_to_shoot() const;
+	// Infinite-ammo refills preserve the paid shot's cooldown notification.
+	// Respawn uses the default to clear all feedback silently.
+	void reset_ammo(bool reset_feedback = true);
 	void set_player_center(const mattmath::Vector2F& player_center);
+
+	// Called once after all player contacts, with spawn settling excluded.
+	// Most tools do not respond to ground support; a roller does.
+	virtual void update_ground_contact(bool supported, bool established_support,
+		float dt);
 
 	// Never throws: weapons with no looping fire sound stop nothing.
 	virtual void stop_sounds() const;
@@ -98,6 +108,8 @@ protected:
 	bool shooting_this_update_ = false;
 
 	virtual void handle_shoot_sound(bool shooting_this_update, bool holding_shoot);
+	void play_feedback_sound(labrador::SoundBank::WaveHandle sound,
+		const SoundTuning& tuning) const;
 
 	// Tint only the paint overlay without mutating shared state during draw.
 	virtual labrador::Colour paint_colour() const;
@@ -164,6 +176,8 @@ protected:
 private:
 	// Permit only rounding at the full-shot boundary, relative to that shot's cost.
 	bool can_afford_shot() const;
+	void update_feedback_sounds(bool holding_shoot, bool shot,
+		bool affordable_before, float dt);
 
 	static labrador::SoundBank::EffectHandle resolve_loop_sound(
 		const labrador::SoundBank& sound_bank,
@@ -175,6 +189,10 @@ private:
 	// Paint overlay and debug frame handles, resolved at construction.
 	labrador::SpriteSheet::frame_handle paint_frame_;
 	labrador::SpriteSheet::frame_handle nozzle_frame_;
+	labrador::SoundBank::WaveHandle empty_sound_;
+	labrador::SoundBank::WaveHandle recovered_sound_;
+	labrador::SoundBank::WaveHandle stop_sound_;
+	labrador::SoundBank::WaveHandle ready_sound_;
 
 	// Initialized from tuning in the constructor.
 	float ammo_ = 0.0f;
@@ -185,6 +203,10 @@ private:
 	float ammo_timer_ = 0.0f;
 	// stop_sounds() is const because it changes presentation, not gameplay.
 	mutable bool loop_playing_ = false;
+	bool empty_warned_ = false;
+	float empty_repeat_remaining_ = 0.0f;
+	bool awaiting_recovery_ = false;
+	bool cooldown_feedback_pending_ = false;
 
 	PlayerTeam team_ = PlayerTeam::none;
 	int player_num_ = -1;

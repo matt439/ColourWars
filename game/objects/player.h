@@ -217,6 +217,7 @@ private:
     std::unique_ptr<PlayerVisual> workshop_visual_;
     bool had_ground_support_ = false;
     bool landing_feedback_ready_ = false;
+    float weapon_contact_dt_ = 0.0f;
     float support_impact_speed_ = 0.0f;
     mattmath::Vector2F support_position_;
 

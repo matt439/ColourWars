@@ -148,6 +148,12 @@
             "projectile": "spray",
             "sound_bank": "paint_exe",
             "shoot_sound": { "name": "sprayer.start", "volume": 1.0 },
+            "feedback_sounds": {
+                "empty": { "name": "weapon.empty", "volume": 0.8 },
+                "recovered": { "name": "weapon.recovered", "volume": 0.6 },
+                "empty_repeat_delay": 0.65,
+                "stop": { "name": "sprayer.stop", "volume": 0.6 }
+            },
             "add_player_velocity": "x_only",
             "player_velocity_amount": 1.0,
             "loop_sounds": {
@@ -167,7 +173,13 @@
             "frame": "sniper",
             "projectile": "jet",
             "sound_bank": "paint_exe",
-            "shoot_sound": { "name": "sniper.shot", "volume": 0.8 }
+            "shoot_sound": { "name": "sniper.shot", "volume": 0.8 },
+            "feedback_sounds": {
+                "empty": { "name": "weapon.empty", "volume": 0.8 },
+                "recovered": { "name": "weapon.recovered", "volume": 0.6 },
+                "empty_repeat_delay": 0.65,
+                "ready": { "name": "sniper.ready", "volume": 0.65 }
+            }
         },
 
         "roller": {
@@ -182,6 +194,14 @@
             "projectile": "rolling",
             "sound_bank": "paint_exe",
             "shoot_sound": { "name": "roller.start", "volume": 1.0 },
+            "feedback_sounds": {
+                "empty": { "name": "weapon.empty", "volume": 0.8 },
+                "recovered": { "name": "weapon.recovered", "volume": 0.6 },
+                "empty_repeat_delay": 0.65,
+                "stop": { "name": "roller.stop", "volume": 0.6 },
+                "lift": { "name": "roller.lift", "volume": 0.5 },
+                "settle": { "name": "roller.settle", "volume": 0.6 }
+            },
             "loop_sounds": {
                 "team_a": [ "roller_a0", "roller_a1", "roller_a2", "roller_a3" ],
                 "team_b": [ "roller_b0", "roller_b1", "roller_b2", "roller_b3" ]
@@ -200,6 +220,12 @@
             "projectile": "mist",
             "sound_bank": "paint_exe",
             "shoot_sound": { "name": "mister.start", "volume": 1.0 },
+            "feedback_sounds": {
+                "empty": { "name": "weapon.empty", "volume": 0.8 },
+                "recovered": { "name": "weapon.recovered", "volume": 0.6 },
+                "empty_repeat_delay": 0.65,
+                "stop": { "name": "mister.stop", "volume": 0.6 }
+            },
             "add_player_velocity": "x_only",
             "player_velocity_amount": 1.0,
             "loop_sounds": {
@@ -220,6 +246,11 @@
             "projectile": "ball",
             "sound_bank": "paint_exe",
             "shoot_sound": { "name": "bucket.throw", "volume": 0.3 },
+            "feedback_sounds": {
+                "empty": { "name": "weapon.empty", "volume": 0.8 },
+                "recovered": { "name": "weapon.recovered", "volume": 0.6 },
+                "empty_repeat_delay": 0.65
+            },
             "add_player_velocity": "x_only",
             "player_velocity_amount": 1.0
         }

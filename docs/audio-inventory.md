@@ -629,6 +629,7 @@ legacy names do not make them migration inputs.
 | Menu and arena music | `music.menu`, `music.close_quarters`, `music.king_of_the_hill`, `music.turbulence`; Movement Course has no music |
 | Player | `player.jump`, `player.hurt`, `player.pop` through the existing `death` slot, and `player.respawn` |
 | Weapons and paint | Sprayer, roller and mister start cues play once per held-fire edge, with independent per-player loop voices; `sniper.shot`, `bucket.throw`, and the first `paint.splash` variant |
+| Weapon feedback (2026-10-15) | Sprayer/roller/mister stop edges; all five tools' empty/recovered cues; sniper cooldown-ready cue; roller lift/settle on completed ground contacts |
 | Menus and results | Direction, confirm, cancel, error, ready, pause-open, results fill, winner and distinct draw use their replacement cues |
 | Match start/end | Repeated `match.count_beat` edges and one `match.go`; separate time-up and glass-out voices replace the whistle |
 | Opening and reveal | Reveal hover/click use the replacement cues; the accepted sigh/chair cues have tuning slots and pause-aware phase-edge playback |
@@ -638,14 +639,33 @@ and play calls close STORY#2. The per-beat countdown/GO replaces the 5.375-secon
 recording that used to overlap active play, closing POL#26. All three closures
 describe integration; their audible balance and timing still need ROAD#3.
 
+The weapon-feedback increment preserves shot costs, cadence and regeneration.
+A fatal hit now suppresses firing in the interval before the next update marks
+the player dead, so that interval cannot emit new weapon feedback. An empty
+trigger hold plays `weapon.empty`, then at most one reminder per authored
+`empty_repeat_delay` (0.65 seconds). Regaining a full shot's cost plays
+`weapon.recovered` once. `sniper.ready` follows a paid shot's cooldown when
+paint is available, independently of whether fire is held; it is quiet at
+spawn. Recovery uses firing's full-shot affordability test; readiness also
+observes its strict cooldown boundary, including when infinite-ammo testing
+silently refills the tank. Loop stop cues mark ordinary release or exhaustion;
+pause, death, time-up and teardown stop voices without inventing a release.
+Roller ground cues use completed contacts, including buffered takeoffs, and suppress the
+first settling contact after spawn or respawn. Ground seams stay quiet.
+New feedback edges and their timers do not advance on zero-delta updates.
+
+`weapons.<tool>.feedback_sounds` owns cue names, gains and the repeat delay;
+each wave resolves at construction and startup validation checks the authored
+names. Gains use the current SFX preference. These are integration candidates;
+their gains and the combined multiplayer mix still need listening acceptance.
+
 **POL#23 remains open.** Putting an accepted wave into the bank does not create
 a gameplay trigger. Complete the required new cues from section 4, assess Tier
 3 detail individually and keep it off or nearly off by default:
 
 - Movement: landing/steps/skid and their variants; redraw loop and painted-surface
   contacts; optional bonk/drop/hit-confirm details.
-- Weapons and paint: stop edges, roller lift/settle, empty/recovered/ready
-  feedback; splash variation and repetition limits, capture/dud and per-tool
+- Paint: splash variation and repetition limits, capture/dud and per-tool
   impacts; optional blocked/slosh/drip cues.
 - Match and room: glass-in, opening preview hover, close/celebrate/slump,
   colour-in/skip/undo/last-ten; room tone and optional footsteps/breath/waver/cheat.
@@ -673,3 +693,16 @@ system-only PATH, isolated save and graceful close. Isolated Debug missing-bank
 and real-bank startup also pass. Evidence is under `out/validation/audio-migration/`,
 including `release/package-inspection.json`. These checks establish API
 requests, asset integrity and startup, not listening or multiplayer mix quality.
+
+Weapon-feedback validation (2026-10-15): Debug and Release builds and all 13
+consumer acceptance cases pass. The expanded `story_audio` recorder checks all
+five real factory weapons, paid volleys, bounded held warnings across brief
+affordability recoveries, recovery edges, the strict sniper cooldown boundary,
+four independent loop voices, ordinary versus lifecycle stops, roller ground
+contacts, current gains/mute, infinite-ammo readiness and the fatal-health
+guard. Content variants reject missing cue names, invalid volumes and
+nonpositive repeat delays. The six audio publication checks pass. Isolated
+Debug and Release startup pass with the real bank and, separately, without it;
+each closes gracefully. Consumer logs are under `out/acceptance/`; startup
+evidence is under `out/validation/weapon-audio/`. These checks establish cue
+requests and lifecycle behaviour; ROAD#3 retains listening and multiplayer mix.

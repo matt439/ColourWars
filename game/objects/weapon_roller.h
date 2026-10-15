@@ -24,7 +24,14 @@ public:
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
 		float layer_depth = 0.0f);
 
+	void update_ground_contact(bool supported, bool established_support,
+		float dt) override;
+
 private:
+	labrador::SoundBank::WaveHandle lift_sound_;
+	labrador::SoundBank::WaveHandle settle_sound_;
+	bool had_ground_support_ = false;
+
 	void update_movement_and_rotation(PlayerInputData input,
 		const mattmath::Vector2F& player_center,
 		const mattmath::Vector2F& player_velocity,

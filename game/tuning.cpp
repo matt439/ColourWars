@@ -392,6 +392,18 @@ namespace
 		}
 
 		weapon.loop_sounds = read_loop_sounds(json);
+		const JsonValue feedback = json.object("feedback_sounds");
+		weapon.feedback_sounds.empty = read_sound(feedback, "empty");
+		weapon.feedback_sounds.recovered = read_sound(feedback, "recovered");
+		weapon.feedback_sounds.empty_repeat_delay = read_positive(feedback, "empty_repeat_delay");
+		const auto optional_sound = [&feedback](const char* name) -> std::optional<SoundTuning>
+		{
+			return feedback.has(name) ? std::optional<SoundTuning>(read_sound(feedback, name)) : std::nullopt;
+		};
+		weapon.feedback_sounds.stop = optional_sound("stop");
+		weapon.feedback_sounds.ready = optional_sound("ready");
+		weapon.feedback_sounds.lift = optional_sound("lift");
+		weapon.feedback_sounds.settle = optional_sound("settle");
 		return weapon;
 	}
 
@@ -529,6 +541,22 @@ void GameTuning::validate_resources(const RenderResources& render,
 		check.frame(prefix + ".sheet (nozzle marker)", details.sheet_name, "nozzle");
 		check.wave(prefix + ".shoot_sound.name", details.sound_bank_name,
 			details.shoot_sound_name);
+		check.wave(prefix + ".feedback_sounds.empty.name", details.sound_bank_name,
+			entry.feedback_sounds.empty.name);
+		check.wave(prefix + ".feedback_sounds.recovered.name", details.sound_bank_name,
+			entry.feedback_sounds.recovered.name);
+		const auto feedback_sound = [&](const char* key, const std::optional<SoundTuning>& sound)
+		{
+			if (sound.has_value())
+			{
+				check.wave(prefix + ".feedback_sounds." + key + ".name",
+					details.sound_bank_name, sound->name);
+			}
+		};
+		feedback_sound("stop", entry.feedback_sounds.stop);
+		feedback_sound("ready", entry.feedback_sounds.ready);
+		feedback_sound("lift", entry.feedback_sounds.lift);
+		feedback_sound("settle", entry.feedback_sounds.settle);
 		if (entry.loop_sounds.present)
 		{
 			for (size_t index = 0; index < entry.loop_sounds.team_a.size(); ++index)

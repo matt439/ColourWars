@@ -256,6 +256,7 @@ void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
 void Player::end_contacts()
 {
     const PlayerMoveState move_state = this->move_state();
+    const bool established_support = this->landing_feedback_ready_;
 
     if (this->state_ != PlayerState::alive || this->health_ <= 0.0f)
     {
@@ -329,6 +330,13 @@ void Player::end_contacts()
             this->update_animation_state();
         }
     }
+
+    // Ground-aware tool feedback sees the completed contact phase, including a
+    // buffered jump. Fatal contacts and spawn settling silently reset history.
+    const bool can_act = this->state_ == PlayerState::alive && this->health_ > 0.0f;
+    this->primary_->update_ground_contact(
+        can_act && this->supported_this_tick_ && this->is_on_ground(),
+        can_act && established_support, this->weapon_contact_dt_);
 
     this->supported_this_tick_ = false;
     this->hit_ceiling_this_tick_ = false;
@@ -521,9 +529,11 @@ std::vector<std::unique_ptr<Projectile>>
     Player::update_weapon_and_get_projectiles(float dt,
     std::span<CollisionObject* const> objects)
 {
-    // Dead players must not fire. Stop the loop explicitly because skipping
-    // weapon update also skips its normal release handling.
-    if (this->state_ != PlayerState::alive)
+    this->weapon_contact_dt_ = dt;
+    // Moving projectile contacts can be fatal before this phase, while state_
+    // still says alive. Neither those players nor dead players can act. Stop the
+    // loop explicitly because skipping update also skips normal release handling.
+    if (this->state_ != PlayerState::alive || this->health_ <= 0.0f)
     {
         this->stop_sounds();
         return {};
@@ -532,7 +542,7 @@ std::vector<std::unique_ptr<Projectile>>
     // Before, so the shot is affordable; after, so the HUD shows a full tank.
     if (this->infinite_ammo_)
     {
-        this->primary_->reset_ammo();
+        this->primary_->reset_ammo(false);
     }
     auto projectiles = this->primary_->update_and_get_projectiles(
         this->input(),
@@ -542,7 +552,7 @@ std::vector<std::unique_ptr<Projectile>>
         dt);
     if (this->infinite_ammo_)
     {
-        this->primary_->reset_ammo();
+        this->primary_->reset_ammo(false);
     }
     if (this->workshop_visual_ != nullptr)
     {
