@@ -26,6 +26,9 @@ public:
 
 	void set_rectangle_center(const mattmath::Vector2F& center);
 	void reset_and_play();
+	void reset_and_play(const std::string& sheet_name,
+		const std::string& animation_strip_name);
+	bool active() const;
 	void set_colour(const labrador::Colour& colour) override;
 
 	void update(float dt) override;
@@ -38,6 +41,11 @@ public:
 	mattmath::RectangleF bounds() const override;
 private:
 	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
+	float age_ = 0.0f;
+	float frame_time_ = 0.0f;
+	int frame_count_ = 0;
+	bool active_ = false;
+	void read_clip(const std::string& animation_strip_name);
 };
 
 
@@ -56,8 +64,13 @@ public:
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
-		float layer_depth = 0.0f);
+		float layer_depth = 0.0f,
+		bool along_x = true, bool leading = true);
 	void draw(labrador::DrawList& draw_list) const override;
+	// Structures draw all airborne splashes before their opaque surface pass,
+	// preventing a neighbouring tile's splash from covering another team's tint.
+	void draw_splash(labrador::DrawList& draw_list) const;
+	void draw_surface(labrador::DrawList& draw_list) const;
 	void update(float dt) override;
 	float area() const;
 	PlayerTeam team() const;
@@ -65,14 +78,23 @@ public:
 	// Claims the tile for a team and plays the splash. Credit belongs to the
 	// player who captured it from neutral/enemy paint; friendly repaint keeps
 	// that owner. The caller has established that the projectile reached it.
-	void paint(PlayerTeam team, int player_num);
+	void paint(PlayerTeam team, int player_num,
+		ProjectileType type = ProjectileType::spray);
 	int player_num() const;
 
 	mattmath::RectangleF bounds() const override;
+	// Contact/score bounds remain exact; this includes temporary splash overhang
+	// for the owning structure's Scene culling bounds.
+	mattmath::RectangleF visual_bounds() const;
 private:
 	mattmath::RectangleF rectangle_ = mattmath::RectangleF::ZERO;
 	PlayerTeam team_ = PlayerTeam::none;
 	int player_num_ = -1;
 	TeamColour team_colours_ = TeamColour();
+	const PaintTuning* paint_ = nullptr;
+	float wet_age_ = 0.0f;
+	bool along_x_ = true;
+	bool leading_ = true;
 	PaintTileSplash splash_;
+	mattmath::RectangleF face_band(float offset, float depth) const;
 };

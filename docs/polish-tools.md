@@ -92,7 +92,8 @@ Retained captures show [native 720p tool crops](images/polish-tools/tools-720p.p
 [four-player firing](images/polish-tools/four-player-720p.png) and
 [one-player 1080p aiming](images/polish-tools/one-player-1080p.png).
 
-Idle droplets and quiet character details remain `POL#12`; projectile/impact
-shapes, liquid paint and emitted roller flecks remain `POL#11`. Readiness cues
+Idle droplets and quiet character details remain `POL#12`; the
+[projectile and paint pass](polish-paint-effects.md) supplies liquid shot shapes,
+matching impacts and roller contact flecks. Readiness cues
 remain `POL#14`. These automated checks and image inspection do not establish
 human movement-feel, controller, listening or final composition acceptance.

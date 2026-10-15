@@ -53,8 +53,24 @@ void StructurePaintable::draw(DrawList& draw_list) const
 	Structure::draw(draw_list);
 	for (const auto& paint_tile : this->paint_tiles_)
 	{
-		paint_tile.draw(draw_list);
+		paint_tile.draw_splash(draw_list);
 	}
+	for (const auto& paint_tile : this->paint_tiles_)
+	{
+		paint_tile.draw_surface(draw_list);
+	}
+}
+
+RectangleF StructurePaintable::cull_bounds(float units_per_pixel) const
+{
+	RectangleF result = Structure::bounds();
+	for (const PaintTile& tile : this->paint_tiles_)
+	{
+		result = RectangleF::union_of(result, tile.visual_bounds());
+	}
+	// Cardinally rotated impact edges can cover a final quantized view pixel.
+	result.inflate(units_per_pixel);
+	return result;
 }
 
 void StructurePaintable::on_contact(const CollisionObject& other,
@@ -106,7 +122,7 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 			}
 
 			tile_captured |= paint_tile.team() != team;
-			paint_tile.paint(team, projectile.player_num());
+			paint_tile.paint(team, projectile.player_num(), projectile.projectile_type());
 			tile_painted = true;
 		}
 	}
@@ -159,7 +175,8 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
                     : RectangleF(leading ? edge : edge - paint.thickness, position,
                         paint.thickness, pitch);
                 paint_tiles.emplace_back(tile, this->paint_,
-                    this->render_resources(), this->team_colours_);
+                    this->render_resources(), this->team_colours_, Colour::white,
+                    0.0f, Vector2F::ZERO, SpriteFlip::none, 0.0f, along_x, leading);
             }
         };
 

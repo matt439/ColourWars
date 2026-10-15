@@ -425,6 +425,15 @@ exact scoring geometry. Bound effect lifetimes and counts for four-player play.
 Any shake should be restrained and local to the relevant view; preserve the
 responsiveness of the shared multiplayer simulation.
 
+**Projectile and surface-paint production pass implemented (2026-10-15,
+`POL#11`).** The [implementation and evidence](polish-paint-effects.md) record
+distinct liquid shots and impacts for all five tools, outward splash droplets,
+continuous black paint edges, wet settling and immediate repaint tint with
+unchanged coverage and credit. The roller remains a contact effect. Source
+artwork is reproducible; Debug/Release consumer and hardware renderer checks
+cover all palettes and 720p/1080p/QHD four-player views. Reference-arena
+composition and human readability acceptance remain `POL#7` and `POL#24`.
+
 **Exit condition:** a complete match in the reference arena feels visually coherent
 and responsive. Jumping, landing and movement have visible, correctly timed feedback.
 Players can recognise shots, hits, empty paint, elimination and respawn with sound

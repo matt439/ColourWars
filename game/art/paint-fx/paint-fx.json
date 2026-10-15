@@ -1,0 +1,103 @@
+{
+  "_comment": [
+    "Editable integer-cell liquid shapes. Lobes merge before a black inset keyline; tones are clipped to the union.",
+    "Every runtime texel is transparent or grayscale. The draw colour supplies the entire team hue.",
+    "The roller shot is transparent: its 50x50 world canvas is an instantaneous contact volume, never a flying object."
+  ],
+  "canvas_size": 32,
+  "source_texels_per_cell": 4,
+  "atlas_width": 1024,
+  "atlas_height": 1536,
+  "strips": [
+    {
+      "name": "shot_spray", "keyline": 1, "frame_time": 0.07, "looping": true,
+      "frames": [
+        { "lobes": [["ellipse",8,8,18,17],["ellipse",4,13,12,10],["ellipse",3,5,5,5],["ellipse",24,24,5,4]], "tones": [["ellipse",255,12,10,9,5],["ellipse",192,13,21,7,3]] },
+        { "lobes": [["ellipse",7,9,20,16],["ellipse",4,15,11,10],["ellipse",6,4,5,5],["ellipse",24,25,4,4]], "tones": [["ellipse",255,11,11,10,4],["ellipse",192,12,22,9,3]] },
+        { "lobes": [["ellipse",9,7,17,19],["ellipse",4,11,12,10],["ellipse",3,23,5,4],["ellipse",24,4,4,5]], "tones": [["ellipse",255,13,10,8,5],["ellipse",192,12,22,7,3]] }
+      ]
+    },
+    {
+      "name": "shot_jet", "keyline": 1, "frame_time": 0.055, "looping": true,
+      "frames": [
+        { "lobes": [["poly",4,14,20,11,29,16,20,21,4,18,11,16],["ellipse",2,14,5,5]], "tones": [["ellipse",255,16,13,9,3],["ellipse",192,14,18,10,2]] },
+        { "lobes": [["poly",4,15,22,10,29,16,22,21,4,18,12,16],["ellipse",3,12,4,4]], "tones": [["ellipse",255,17,12,8,3],["ellipse",192,15,18,10,2]] },
+        { "lobes": [["poly",5,14,20,12,29,16,20,20,4,18,12,16],["ellipse",2,17,5,4]], "tones": [["ellipse",255,16,13,9,3],["ellipse",192,14,17,10,2]] }
+      ]
+    },
+    {
+      "name": "shot_rolling", "keyline": 1, "frame_time": 0.08, "looping": true,
+      "frames": [
+        { "lobes": [], "tones": [] },
+        { "lobes": [], "tones": [] },
+        { "lobes": [], "tones": [] }
+      ]
+    },
+    {
+      "name": "shot_mist", "keyline": 1, "frame_time": 0.11, "looping": true,
+      "frames": [
+        { "lobes": [["ellipse",5,6,22,22],["ellipse",2,3,6,6],["ellipse",25,23,5,6]], "tones": [["ellipse",255,9,9,10,7],["ellipse",208,12,24,9,3]] },
+        { "lobes": [["ellipse",6,5,22,23],["ellipse",2,22,5,6],["ellipse",24,2,5,5]], "tones": [["ellipse",255,10,8,10,7],["ellipse",208,12,24,9,3]] },
+        { "lobes": [["ellipse",4,6,23,22],["ellipse",23,25,6,5],["ellipse",4,2,5,5]], "tones": [["ellipse",255,8,9,11,7],["ellipse",208,12,24,9,3]] }
+      ]
+    },
+    {
+      "name": "shot_ball", "keyline": 1, "frame_time": 0.10, "looping": true,
+      "frames": [
+        { "lobes": [["ellipse",5,7,22,21],["ellipse",4,14,10,12],["ellipse",17,5,10,13],["ellipse",3,3,5,6],["ellipse",25,25,4,4]], "tones": [["ellipse",255,9,10,10,6],["ellipse",192,10,24,12,3]] },
+        { "lobes": [["ellipse",4,8,24,20],["ellipse",18,5,9,15],["ellipse",4,19,12,10],["ellipse",3,3,5,5],["ellipse",25,3,4,4]], "tones": [["ellipse",255,8,11,12,5],["ellipse",192,10,25,12,3]] },
+        { "lobes": [["ellipse",6,6,21,23],["ellipse",3,11,13,12],["ellipse",20,14,9,11],["ellipse",4,25,4,4],["ellipse",25,3,4,5]], "tones": [["ellipse",255,10,9,10,6],["ellipse",192,10,25,12,3]] }
+      ]
+    },
+    {
+      "name": "impact_spray", "keyline": 1, "frame_time": 0.05, "looping": false,
+      "frames": [
+        { "lobes": [["ellipse",11,11,11,12],["ellipse",8,17,10,8],["ellipse",21,9,5,5]], "tones": [["ellipse",255,13,13,6,3]] },
+        { "lobes": [["ellipse",7,13,19,13],["ellipse",4,10,10,11],["ellipse",18,6,8,15],["ellipse",3,24,5,4],["ellipse",26,11,4,5]], "tones": [["ellipse",255,11,15,10,3]] },
+        { "lobes": [["ellipse",8,21,17,7],["ellipse",3,7,6,7],["ellipse",22,3,6,8],["ellipse",26,19,4,5],["ellipse",13,9,4,5]], "tones": [["ellipse",255,12,22,7,2]] },
+        { "lobes": [["ellipse",3,8,4,4],["ellipse",24,6,4,5],["ellipse",13,25,6,3],["ellipse",27,23,3,4]], "tones": [] },
+        { "lobes": [], "tones": [] }
+      ]
+    },
+    {
+      "name": "impact_jet", "keyline": 1, "frame_time": 0.045, "looping": false,
+      "frames": [
+        { "lobes": [["poly",7,14,24,12,28,16,24,20,7,18,14,16]], "tones": [["ellipse",255,18,14,7,3]] },
+        { "lobes": [["ellipse",7,11,19,13],["ellipse",2,15,12,8],["ellipse",21,5,7,14],["poly",14,15,10,4,16,10,20,16],["ellipse",27,23,3,4]], "tones": [["ellipse",255,12,13,10,3]] },
+        { "lobes": [["ellipse",3,18,8,5],["ellipse",18,22,10,5],["ellipse",8,3,5,8],["ellipse",25,5,4,7],["ellipse",13,15,5,5]], "tones": [["ellipse",255,20,23,5,2]] },
+        { "lobes": [["ellipse",3,23,5,3],["ellipse",25,23,5,3],["ellipse",10,5,3,4]], "tones": [] },
+        { "lobes": [], "tones": [] }
+      ]
+    },
+    {
+      "name": "impact_rolling", "keyline": 1, "frame_time": 0.055, "looping": false,
+      "frames": [
+        { "lobes": [["ellipse",6,19,21,8],["ellipse",9,15,8,10],["ellipse",20,17,6,8]], "tones": [["ellipse",255,10,20,12,2]] },
+        { "lobes": [["ellipse",3,19,27,9],["ellipse",6,13,9,11],["ellipse",19,14,8,12],["ellipse",2,9,4,5],["ellipse",26,10,4,5]], "tones": [["ellipse",255,8,21,17,2]] },
+        { "lobes": [["ellipse",3,23,25,5],["ellipse",4,9,5,6],["ellipse",13,14,4,5],["ellipse",25,8,5,7]], "tones": [["ellipse",255,9,24,12,2]] },
+        { "lobes": [["ellipse",5,25,7,3],["ellipse",19,25,8,3],["ellipse",4,14,3,4],["ellipse",27,13,3,4]], "tones": [] },
+        { "lobes": [], "tones": [] }
+      ]
+    },
+    {
+      "name": "impact_mist", "keyline": 1, "frame_time": 0.065, "looping": false,
+      "frames": [
+        { "lobes": [["ellipse",12,12,9,9],["ellipse",6,10,5,5],["ellipse",23,18,4,5]], "tones": [["ellipse",255,14,13,5,3]] },
+        { "lobes": [["ellipse",9,10,9,9],["ellipse",18,14,8,8],["ellipse",2,8,5,6],["ellipse",23,3,5,6],["ellipse",8,24,5,5],["ellipse",26,24,4,5]], "tones": [["ellipse",255,11,11,5,3]] },
+        { "lobes": [["ellipse",4,5,5,5],["ellipse",17,4,4,5],["ellipse",25,11,5,5],["ellipse",4,22,5,5],["ellipse",16,23,5,5],["ellipse",25,26,4,4]], "tones": [] },
+        { "lobes": [["ellipse",4,10,3,3],["ellipse",21,5,3,3],["ellipse",10,25,3,3],["ellipse",27,24,3,3]], "tones": [] },
+        { "lobes": [], "tones": [] }
+      ]
+    },
+    {
+      "name": "impact_ball", "keyline": 1, "frame_time": 0.06, "looping": false,
+      "frames": [
+        { "lobes": [["ellipse",8,9,18,18],["ellipse",5,15,12,12],["ellipse",19,8,9,13]], "tones": [["ellipse",255,12,11,9,6],["ellipse",192,11,24,12,3]] },
+        { "lobes": [["ellipse",4,13,25,15],["ellipse",3,8,11,13],["ellipse",13,3,10,17],["ellipse",23,8,7,12],["ellipse",2,24,4,5]], "tones": [["ellipse",255,9,15,14,4],["ellipse",192,11,25,12,2]] },
+        { "lobes": [["ellipse",5,22,22,7],["ellipse",2,7,7,8],["ellipse",13,2,6,9],["ellipse",24,4,6,8],["ellipse",25,17,5,6]], "tones": [["ellipse",255,9,23,12,2]] },
+        { "lobes": [["ellipse",4,15,4,5],["ellipse",15,7,4,5],["ellipse",26,15,4,5],["ellipse",9,26,10,3]], "tones": [] },
+        { "lobes": [], "tones": [] }
+      ]
+    }
+  ]
+}

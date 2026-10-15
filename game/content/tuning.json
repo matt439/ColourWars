@@ -95,8 +95,21 @@
     "sheet": "sprite_sheet_1",
     "frame": "pixel",
     "splash": {
-      "sheet": "sprite_sheet_1",
-      "animation": "splash_1"
+      "sheet": "paint_fx",
+      "animations": {
+        "spray": "impact_spray",
+        "jet": "impact_jet",
+        "rolling": "impact_rolling",
+        "mist": "impact_mist",
+        "ball": "impact_ball"
+      }
+    },
+    "visual": {
+      "edge_width": 2.0,
+      "wet_duration": 0.32,
+      "wet_highlight": 0.45,
+      "settle_depth": 2.0,
+      "splash_scale": 2.0
     },
     "sound_bank": "paint_exe",
     "splash_sounds": [
@@ -334,8 +347,8 @@
             "player_damage": 0.01,
             "size": { "x": 15.0, "y": 15.0 },
             "collision_size": { "x": 15.0, "y": 15.0 },
-            "sheet": "sprite_sheet_1",
-            "animation": "projectile_3",
+            "sheet": "paint_fx",
+            "animation": "shot_spray",
             "diffusion": {
                 "type": "linear_size_and_col_rect",
                 "start_time": 0.2,
@@ -352,8 +365,8 @@
             "player_damage": 0.334,
             "size": { "x": 20.0, "y": 20.0 },
             "collision_size": { "x": 20.0, "y": 20.0 },
-            "sheet": "sprite_sheet_1",
-            "animation": "projectile_3"
+            "sheet": "paint_fx",
+            "animation": "shot_jet"
         },
 
         "rolling": {
@@ -364,8 +377,8 @@
             "player_damage": 0.015,
             "size": { "x": 50.0, "y": 50.0 },
             "collision_size": { "x": 50.0, "y": 50.0 },
-            "sheet": "sprite_sheet_1",
-            "animation": "projectile_3"
+            "sheet": "paint_fx",
+            "animation": "shot_rolling"
         },
 
         "mist": {
@@ -376,8 +389,8 @@
             "player_damage": 0.01,
             "size": { "x": 5.0, "y": 5.0 },
             "collision_size": { "x": 5.0, "y": 5.0 },
-            "sheet": "sprite_sheet_1",
-            "animation": "projectile_3",
+            "sheet": "paint_fx",
+            "animation": "shot_mist",
             "diffusion": {
                 "type": "linear_size_and_col_rect",
                 "start_time": 0.2,
@@ -394,8 +407,8 @@
             "player_damage": 0.201,
             "size": { "x": 100.0, "y": 100.0 },
             "collision_size": { "x": 100.0, "y": 100.0 },
-            "sheet": "sprite_sheet_1",
-            "animation": "projectile_3"
+            "sheet": "paint_fx",
+            "animation": "shot_ball"
         }
     }
 }

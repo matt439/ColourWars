@@ -153,6 +153,15 @@ struct PaintTuning
 
 	std::string splash_sheet;
 	std::string splash_animation;
+	std::array<std::string, static_cast<size_t>(ProjectileType::ball) + 1> splash_animations;
+
+	// Surface decoration stays inside the scored tile; only the short airborne
+	// splash can overhang it. These values never affect its contact rectangle.
+	float edge_width = 0.0f;
+	float wet_duration = 0.0f;
+	float wet_highlight = 0.0f;
+	float settle_depth = 0.0f;
+	float splash_scale = 0.0f;
 
 	std::string sound_bank;
 	std::vector<SoundTuning> splash_sounds;

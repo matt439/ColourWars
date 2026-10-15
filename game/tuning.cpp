@@ -288,13 +288,35 @@ namespace
 			read_positive(json.object("size"), "x"),
 			read_positive(json.object("size"), "y"));
 
-		paint.thickness = json.number("thickness");
+		paint.thickness = read_positive(json, "thickness");
 		paint.sheet = json.string("sheet");
 		paint.frame = json.string("frame");
 
 		const JsonValue splash = json.object("splash");
 		paint.splash_sheet = splash.string("sheet");
-		paint.splash_animation = splash.string("animation");
+		const JsonValue animations = splash.object("animations");
+		const auto splash_animation = [&](ProjectileType type, const char* key)
+		{
+			paint.splash_animations[static_cast<size_t>(type)] = animations.string(key);
+		};
+		splash_animation(ProjectileType::spray, "spray");
+		splash_animation(ProjectileType::jet, "jet");
+		splash_animation(ProjectileType::rolling, "rolling");
+		splash_animation(ProjectileType::mist, "mist");
+		splash_animation(ProjectileType::ball, "ball");
+		paint.splash_animation = paint.splash_animations[static_cast<size_t>(ProjectileType::spray)];
+
+		const JsonValue visual = json.object("visual");
+		paint.edge_width = read_positive(visual, "edge_width");
+		paint.wet_duration = read_positive(visual, "wet_duration");
+		paint.wet_highlight = read_number_in(visual, "wet_highlight", 0.0f, 1.0f);
+		paint.settle_depth = read_positive(visual, "settle_depth");
+		paint.splash_scale = read_positive(visual, "splash_scale");
+		if (!(paint.edge_width < paint.thickness))
+		{
+			throw std::runtime_error(visual.where() +
+				": 'edge_width' must leave visible team paint inside the tile thickness.");
+		}
 
 		paint.sound_bank = json.string("sound_bank");
 		const JsonValue choices = json.array("splash_sounds");
@@ -592,8 +614,26 @@ void GameTuning::validate_resources(const RenderResources& render,
 	check.font("match.countdown_text.font", this->match_.countdown_font);
 	check.font("match.controls_text.font", this->match_.controls_font);
 	check.frame("paint.frame", this->paint_.sheet, this->paint_.frame);
-	check.animation("paint.splash.animation", this->paint_.splash_sheet,
-		this->paint_.splash_animation);
+	const auto splash = [&](ProjectileType type, const char* key)
+	{
+		check.animation(std::string("paint.splash.animations.") + key,
+			this->paint_.splash_sheet,
+			this->paint_.splash_animations[static_cast<size_t>(type)]);
+		const SpriteSheet* sheet = render.sprite_sheet(this->paint_.splash_sheet);
+		const AnimationStrip& clip = sheet->animation_strip(sheet->resolve_animation_strip(
+			this->paint_.splash_animations[static_cast<size_t>(type)]));
+		if (clip.looping() || !(clip.frame_time() > 0.0f) || clip.frame_count() <= 0 ||
+			!std::isfinite(clip.frame_time() * static_cast<float>(clip.frame_count())))
+		{
+			throw std::runtime_error(this->source_path_ + ": paint.splash.animations." + key +
+				" must be nonlooping with a finite, positive lifetime.");
+		}
+	};
+	splash(ProjectileType::spray, "spray");
+	splash(ProjectileType::jet, "jet");
+	splash(ProjectileType::rolling, "rolling");
+	splash(ProjectileType::mist, "mist");
+	splash(ProjectileType::ball, "ball");
 	for (size_t i = 0; i < this->paint_.splash_sounds.size(); ++i)
 	{
 		check.wave("paint.splash_sounds[" + std::to_string(i) + "].name",

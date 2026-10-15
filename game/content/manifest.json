@@ -20,7 +20,8 @@
                 "sprite_sheet_1",
                 "painter",
                 "menu_paint",
-                "weapon_paint"
+                "weapon_paint",
+                "paint_fx"
             ]
         },
         {

@@ -22,6 +22,7 @@ public:
 	void update(float dt) override;
 	void draw(labrador::DrawList& draw_list) const override;
 	mattmath::RectangleF bounds() const override;
+	mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
 
 	const mattmath::Shape* shape() const override;
 private:

@@ -48,6 +48,8 @@ public:
 
 	void update(float dt) override;
 	void draw(labrador::DrawList& draw_list) const override;
+	// Surface splashes affect rendering extent, never layout/contact geometry.
+	mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
 	void on_contact(const labrador::CollisionObject& other,
 		const mattmath::Vector2F& normal, float penetration) override;
 

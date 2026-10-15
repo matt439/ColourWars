@@ -75,6 +75,16 @@ so the bundled texconv preserves its channel values while premultiplying for
 the engine's UNORM pipeline. Runtime packaging includes only the DDS and frame
 JSON.
 
+## Projectile and paint artwork
+
+The [effects source and recipe](paint-fx/README.md) supply distinct liquid shot
+and surface-impact strips for all five tools, including the roller's contact
+swash. Rebuild the grayscale atlas and team-colour lineup with
+`powershell -ExecutionPolicy Bypass -File scripts/build-paint-fx-art.ps1`.
+Only `game/content/textures/paint_fx.{json,dds}` enters runtime content.
+The [implementation and validation record](../../docs/polish-paint-effects.md)
+describes exact surface ownership, paint keylines, wet settling and culling.
+
 ## Runtime content separation (GAP#8.6)
 
 Implemented 2026-10-15. Tracked runtime content in `game/content/` is the reviewed set

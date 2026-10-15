@@ -35,6 +35,8 @@ int main(int argc, char** argv)
         RenderResources render;
         render.add_sprite_sheet("sprite_sheet_1", read_sprite_sheet(
             (content / "textures/sprite_sheet_1.json").string().c_str(), TextureHandle{}));
+        render.add_sprite_sheet("paint_fx", read_sprite_sheet(
+            (content / "textures/paint_fx.json").string().c_str(), TextureHandle{}));
         AudioResources audio;
         audio.add_sound_bank("paint_exe", SoundBank::silent());
         const GameTuning tuning((content / "tuning.json").string().c_str());
@@ -44,6 +46,55 @@ int main(int argc, char** argv)
         const RectangleF rectangle(0, 0, 100, 50);
         const PaintableFaces all{ true, true, true, true };
         const PaintableFaces top{ false, true, false, false };
+
+        // No impact starts during construction. Every authored projectile
+        // chooses a bounded splash, while its exact contact/score tile stays
+        // fixed. Pausing cannot retire it; a long resumed tick must retire it.
+        const RectangleF tile_rectangle(10, 20, tuning.paint().size.x, thickness);
+        PaintTile tile(tile_rectangle, &tuning.paint(), &render, colours);
+        require(tile.visual_bounds() == tile_rectangle,
+            "A newly constructed paint tile starts an impact");
+        const float tile_area = tile.area();
+        const SpriteSheet* effects = render.sprite_sheet(tuning.paint().splash_sheet);
+        const AnimationStrip& impact = effects->animation_strip(
+            effects->resolve_animation_strip(tuning.paint().splash_animation));
+        const float impact_duration = impact.frame_time() * static_cast<float>(impact.frame_count());
+        PaintTileSplash splash(tile_rectangle, tuning.paint().splash_sheet,
+            tuning.paint().splash_animation, &render);
+        require(!splash.active(), "Splash animation plays before a paint contact");
+        splash.reset_and_play();
+        splash.update(impact_duration * 0.5f);
+        splash.update(0);
+        splash.update(-impact_duration);
+        require(splash.active(), "Nonpositive tick retired an active splash");
+        splash.update(impact_duration * 0.51f);
+        require(!splash.active(), "Nonpositive tick rewound the splash lifetime");
+        for (const ProjectileType type : { ProjectileType::spray, ProjectileType::jet,
+            ProjectileType::rolling, ProjectileType::mist, ProjectileType::ball })
+        {
+            tile.paint(PlayerTeam::a, 0, type);
+            require(tile.bounds() == tile_rectangle && tile.area() == tile_area &&
+                tile.visual_bounds().contains(tile_rectangle) &&
+                tile.visual_bounds() != tile_rectangle,
+                "Paint impact changed coverage or escaped its culling bounds");
+            const RectangleF active_bounds = tile.visual_bounds();
+            tile.update(0);
+            tile.update(-1);
+            require(tile.visual_bounds() == active_bounds,
+                "A paused or negative tick advanced the paint splash");
+            tile.update(10);
+            require(tile.visual_bounds() == tile_rectangle,
+                "Paint impact survives a long tick past its authored lifetime");
+            require(tile.team() == PlayerTeam::a && tile.player_num() == 0 &&
+                tile.area() == tile_area,
+                "Cosmetic retirement changes paint ownership");
+        }
+        tile.paint(PlayerTeam::a, 1, ProjectileType::ball);
+        require(tile.player_num() == 0, "Friendly impact steals paint credit");
+        tile.paint(PlayerTeam::b, 1, ProjectileType::jet);
+        require(tile.team() == PlayerTeam::b && tile.player_num() == 1 &&
+            tile.bounds() == tile_rectangle, "Enemy impact does not transfer exact ownership");
+
         const auto make_surface = [&](const PaintableFaces& faces,
             std::span<const RectangleF> obstacles)
         {

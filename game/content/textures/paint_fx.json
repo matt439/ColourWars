@@ -1,0 +1,127 @@
+{
+    "animation_strips":  [
+                             {
+                                 "name":  "shot_spray",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  4,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  3,
+                                 "frame_time":  0.07,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "shot_jet",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  140,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  3,
+                                 "frame_time":  0.055,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "shot_rolling",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  276,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  3,
+                                 "frame_time":  0.08,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "shot_mist",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  412,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  3,
+                                 "frame_time":  0.11,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "shot_ball",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  548,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  3,
+                                 "frame_time":  0.10,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "impact_spray",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  684,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  5,
+                                 "frame_time":  0.05,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "impact_jet",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  820,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  5,
+                                 "frame_time":  0.045,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "impact_rolling",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  956,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  5,
+                                 "frame_time":  0.055,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "impact_mist",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  1092,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  5,
+                                 "frame_time":  0.065,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "impact_ball",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  1228,
+                                                     "w":  128,
+                                                     "h":  128
+                                                 },
+                                 "frame_count":  5,
+                                 "frame_time":  0.06,
+                                 "looping":  false
+                             }
+                         ],
+    "sprite_frames":  [
+
+                      ]
+}
