@@ -312,6 +312,11 @@ used. Check the arena both clean and heavily painted with every team palette.
 
 ### Characters and distinctive weapons
 
+The [first production painter increment](polish-painter.md) begins `POL#7`:
+figure E, animated team masks, head accents and continuous tool grips, with
+idle/run/jump/fall clips and a matching respawn redraw. Dedicated action poses
+and the composition's human review remain open.
+
 Author the character, hands, weapon grips and aim poses together. Cover idle,
 running, takeoff, airborne motion, landing, firing, hurt, elimination and respawn.
 Keep silhouette and team identity readable in small views; give same-team players

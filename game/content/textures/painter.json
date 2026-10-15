@@ -1,0 +1,190 @@
+{
+    "animation_strips":  [
+                             {
+                                 "name":  "idle",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  4,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  1,
+                                 "frame_time":  0.05,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "run",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  132,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  8,
+                                 "frame_time":  0.2,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "jump",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  260,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  1,
+                                 "frame_time":  0.05,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "fall",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  388,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  1,
+                                 "frame_time":  0.05,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "idle_paint",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  516,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  1,
+                                 "frame_time":  0.05,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "run_paint",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  644,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  8,
+                                 "frame_time":  0.2,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "jump_paint",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  772,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  1,
+                                 "frame_time":  0.05,
+                                 "looping":  true
+                             },
+                             {
+                                 "name":  "fall_paint",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  900,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  1,
+                                 "frame_time":  0.05,
+                                 "looping":  true
+                             }
+                         ],
+    "sprite_frames":  [
+                          {
+                              "name":  "idle",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  4
+                                           },
+                              "size":  {
+                                           "w":  52,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "idle_paint",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  516
+                                           },
+                              "size":  {
+                                           "w":  52,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "rest_arms",
+                              "position":  {
+                                               "x":  68,
+                                               "y":  4
+                                           },
+                              "size":  {
+                                           "w":  52,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "accent_bobble",
+                              "position":  {
+                                               "x":  128,
+                                               "y":  4
+                                           },
+                              "size":  {
+                                           "w":  12,
+                                           "h":  12
+                                       }
+                          },
+                          {
+                              "name":  "accent_antenna",
+                              "position":  {
+                                               "x":  148,
+                                               "y":  4
+                                           },
+                              "size":  {
+                                           "w":  12,
+                                           "h":  12
+                                       }
+                          },
+                          {
+                              "name":  "accent_fork",
+                              "position":  {
+                                               "x":  168,
+                                               "y":  4
+                                           },
+                              "size":  {
+                                           "w":  12,
+                                           "h":  12
+                                       }
+                          },
+                          {
+                              "name":  "accent_flag",
+                              "position":  {
+                                               "x":  188,
+                                               "y":  4
+                                           },
+                              "size":  {
+                                           "w":  12,
+                                           "h":  12
+                                       }
+                          },
+                          {
+                              "name":  "pixel",
+                              "position":  {
+                                               "x":  208,
+                                               "y":  4
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          }
+                      ]
+}

@@ -488,6 +488,53 @@ namespace
 		return hud;
 	}
 
+	FigurePresentation read_figure(const JsonValue& root)
+	{
+		const JsonValue json = root.object("figure");
+		FigurePresentation figure;
+		figure.sprite_sheet = json.identifier("sprite_sheet");
+		const JsonValue accents = json.array("accent_frames");
+		if (accents.size() != figure.accent_frames.size())
+		{
+			throw std::runtime_error(accents.where() + ": needs four distinct teammate accent frames.");
+		}
+		for (size_t index = 0; index < figure.accent_frames.size(); ++index)
+		{
+			figure.accent_frames[index] = accents.at(index).as_identifier();
+			for (size_t previous = 0; previous < index; ++previous)
+			{
+				if (figure.accent_frames[index] == figure.accent_frames[previous])
+				{
+					throw std::runtime_error(accents.at(index).where() + ": teammate accent frames must be distinct.");
+				}
+			}
+		}
+		figure.rest_arms_frame = json.identifier("rest_arms_frame");
+		figure.canvas_size = read_positive_vector(json, "canvas_size");
+		figure.accent_offset = read_finite_vector(json, "accent_offset");
+		figure.accent_size = read_positive_vector(json, "accent_size");
+		figure.rear_shoulder = read_finite_vector(json, "rear_shoulder");
+		figure.front_shoulder = read_finite_vector(json, "front_shoulder");
+		figure.arm_width = read_positive(json, "arm_width");
+		figure.elbow_drop = read_positive(json, "elbow_drop");
+		figure.hand_size = read_positive(json, "hand_size");
+		figure.hand_edge = read_positive(json, "hand_edge");
+		figure.arm_colour = read_colour(json, "arm_colour");
+		figure.hand_colour = read_colour(json, "hand_colour");
+		if (figure.hand_edge * 2.0f >= figure.hand_size)
+		{
+			throw std::runtime_error(json.where() + ": 'hand_edge' must leave an interior in 'hand_size'.");
+		}
+		const JsonValue grips = json.object("grips");
+		const std::array<const char*, 5> keys = { "sprayer", "sniper", "roller", "mister", "bucket" };
+		for (size_t index = 0; index < keys.size(); ++index)
+		{
+			const JsonValue grip = grips.object(keys[index]);
+			figure.grips[index] = { read_finite_vector(grip, "rear"), read_finite_vector(grip, "front") };
+		}
+		return figure;
+	}
+
 	RespawnRedrawPresentation read_respawn_redraw(const JsonValue& root)
 	{
 		const JsonValue json = root.object("respawn_redraw");
@@ -709,6 +756,7 @@ Presentation::Presentation(const char* path)
 			": strength must be at most one, full impact speed must cover minimum speed, "
 			"and particles must be at least one presentation pixel.");
 	}
+	this->figure_ = read_figure(root);
 	this->respawn_redraw_ = read_respawn_redraw(root);
 	this->opening_ = read_opening(root);
 	const JsonValue match = root.object("match");
@@ -759,6 +807,11 @@ const RespawnRedrawPresentation& Presentation::respawn_redraw() const
 	return this->respawn_redraw_;
 }
 
+const FigurePresentation& Presentation::figure() const
+{
+	return this->figure_;
+}
+
 const OpeningPresentation& Presentation::opening() const
 {
 	return this->opening_;
@@ -788,6 +841,12 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.frame("hud.fill_frame", this->hud_.sprite_sheet, this->hud_.fill_frame);
 	check.frame("movement_feedback.fill_frame", this->movement_feedback_.sprite_sheet,
 		this->movement_feedback_.fill_frame);
+	for (size_t index = 0; index < this->figure_.accent_frames.size(); ++index)
+	{
+		check.frame("figure.accent_frames[" + std::to_string(index) + "]", this->figure_.sprite_sheet,
+			this->figure_.accent_frames[index]);
+	}
+	check.frame("figure.rest_arms_frame", this->figure_.sprite_sheet, this->figure_.rest_arms_frame);
 	check.frame("respawn_redraw.pen_frame", this->respawn_redraw_.sprite_sheet,
 		this->respawn_redraw_.pen_frame);
 	check.frame("opening.fill_frame", this->opening_.sprite_sheet,

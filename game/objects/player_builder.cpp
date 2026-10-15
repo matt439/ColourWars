@@ -51,6 +51,8 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 	{
 		// View index is match position, not input slot; connected slots may be sparse.
 		const int view_index = static_cast<int>(players.size());
+		const int teammate_index = static_cast<int>(setting.team == PlayerTeam::a
+			? team_a_index : team_b_index);
 
 		Vector2F position = Vector2F::ZERO;
 		if (setting.team == PlayerTeam::a)
@@ -91,7 +93,7 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 			viewport_manager->
 				player_viewport(view_index),
 			position, Vector2F::ZERO, 0.0f, Vector2F::ZERO,
-			SpriteFlip::none, 0.0f, view_index);
+			SpriteFlip::none, 0.0f, view_index, &this->presentation_->figure(), teammate_index);
 
 		players.push_back(std::move(player));
 	}

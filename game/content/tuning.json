@@ -183,13 +183,13 @@
             "skid_repeat_delay": 0.45
         },
         "animations": {
-            "sheet": "sprite_sheet_1",
-            "uniform": "player_right_walk_uniform",
-            "idle": { "strip": "player_right_idle" },
-            "walk": { "strip": "player_right_walk" },
-            "running": { "strip": "player_right_walk", "frame_time": 0.05 },
-            "jumping": { "strip": "player_right_jumping" },
-            "falling": { "strip": "player_right_falling" }
+            "sheet": "painter",
+            "uniform": "idle_paint",
+            "idle": { "strip": "idle", "paint_strip": "idle_paint" },
+            "walk": { "strip": "run", "paint_strip": "run_paint" },
+            "running": { "strip": "run", "paint_strip": "run_paint", "frame_time": 0.05 },
+            "jumping": { "strip": "jump", "paint_strip": "jump_paint" },
+            "falling": { "strip": "fall", "paint_strip": "fall_paint" }
         }
     },
 

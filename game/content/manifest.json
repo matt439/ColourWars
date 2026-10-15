@@ -18,6 +18,7 @@
             "directory": "./textures/",
             "names": [
                 "sprite_sheet_1",
+                "painter",
                 "menu_paint",
                 "weapon_paint"
             ]

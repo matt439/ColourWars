@@ -1,0 +1,96 @@
+{
+  "_comment": [
+    "Editable coarse painter: each character below is exactly one 4x4 source-texel block.",
+    "The 13x30 cell canvas expands to the existing 52x120 world-space hitbox.",
+    ". = transparent, K = black neutral keyline, W = white neutral, T = white team-tint mask.",
+    "All poses share the first 22 torso rows; their last eight rows animate the trouser legs.",
+    "Arms are a separate frame so connected runtime aiming arms can replace them."
+  ],
+  "cell_size": 4,
+  "width": 13,
+  "height": 30,
+  "torso": [
+    "..KKKKKKK....",
+    "..KTTTTTK....",
+    "..KWWWWTK....",
+    "..KKKKKKKKKK.",
+    "..KKKKKKKKK..",
+    "..KWWWWWWWK..",
+    "..KWKKWKKWK..",
+    "..KWKKWKKWK..",
+    "..KWWWWWWWK..",
+    "..KWWKKKWWK..",
+    "..KWWWWWWWK..",
+    "..KKKKKKKKK..",
+    "....KWWK.....",
+    "..KKKKKKKK...",
+    "..KTWWWTTK...",
+    "..KTWWWTTK...",
+    "..KTTTTTTK...",
+    "..KTTTTTTK...",
+    "..KTTTTTTK...",
+    "..KTTTTTTK...",
+    "..KTTTWTTK...",
+    "..KKKKKKKK..."
+  ],
+  "legs": {
+    "idle": [
+      "...KTK.KTK...", "...KTK.KTK...", "...KTK.KTK...", "...KTK.KTK...",
+      "...KTK.KTK...", "...KTK.KTK...", "...KTK.KTK...", "..KKKK.KKKK.."
+    ],
+    "run_0": [
+      "...KTK.KTK...", "...KTK.KTK...", "..KTTK..KTK..", "..KTK...KTK..",
+      ".KTTK...KTK..", ".KTK.....KTK.", ".KTK.....KTK.", ".KKKK....KKK."
+    ],
+    "run_1": [
+      "...KTK.KTK...", "...KTK.KTK...", "...KTK..KTK..", "...KTK..KTK..",
+      "..KTTK..KTK..", "..KTK....KTK.", "..KTK....KTK.", "..KKKK...KKK."
+    ],
+    "run_2": [
+      "...KTK.KTK...", "...KTTKKTK...", "....KTTTK....", "....KTTTK....",
+      "....KTTK.....", "....KTK......", "....KTK......", "...KKKK......"
+    ],
+    "run_3": [
+      "...KTK.KTK...", "...KTK.KTK...", "...KTK.KTTK..", "...KTK..KTK..",
+      "...KTK.KTTK..", "...KTKKKKK...", "...KTK.......", "..KKKK......."
+    ],
+    "run_4": [
+      "...KTK.KTK...", "...KTK.KTK...", "..KTK..KTTK..", "..KTK...KTK..",
+      "..KTK...KTTK.", ".KTK.....KTK.", ".KTK.....KTK.", ".KKK....KKKK."
+    ],
+    "run_5": [
+      "...KTK.KTK...", "...KTK.KTK...", "..KTK..KTK...", "..KTK..KTK...",
+      "..KTK..KTTK..", ".KTK....KTK..", ".KTK....KTK..", ".KKK...KKKK.."
+    ],
+    "run_6": [
+      "...KTK.KTK...", "...KTKKTTK...", "....KTTTK....", "....KTTTK....",
+      ".....KTTK....", "......KTK....", "......KTK....", "......KKKK..."
+    ],
+    "run_7": [
+      "...KTK.KTK...", "...KTK.KTK...", "..KTTK.KTK...", "..KTK..KTK...",
+      "..KTTK.KTK...", "...KKKKKTK...", ".......KTK...", ".......KKKK.."
+    ],
+    "jump": [
+      "...KTK.KTK...", "..KTTK.KTTK..", "..KTK...KTK..", "..KTTK.KTTK..",
+      "...KTK.KTK...", "...KKK.KKK...", ".............", "............."
+    ],
+    "fall": [
+      "...KTK.KTK...", "...KTK.KTK...", "...KTK.KTK...", "..KTTK.KTTK..",
+      "..KTK...KTK..", "..KTK...KTK..", ".KTTK...KTTK.", ".KKKK...KKKK."
+    ]
+  },
+  "rest_arms": [
+    ".............", ".............", ".............", ".............",
+    ".............", ".............", ".............", ".............",
+    ".............", ".............", ".............", ".............",
+    ".............", ".............", ".KK......KK..", ".K........K..",
+    ".K........K..", ".K........K..", ".K........K..", ".K........K..",
+    ".K........K..", ".KK......KK..", ".............", ".............",
+    ".............", ".............", ".............", ".............",
+    ".............", "............."
+  ],
+  "accent_bobble": ["KKK", "KWK", "KKK"],
+  "accent_antenna": [".K.", ".K.", "KKK"],
+  "accent_fork": ["K.K", "K.K", "KKK"],
+  "accent_flag": ["KKK", "KWK", "K.."]
+}

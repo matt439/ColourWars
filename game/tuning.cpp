@@ -146,9 +146,15 @@ namespace
 		tuning.sheet = sheet;
 		tuning.uniform_texture = uniform;
 		tuning.strip = clip.string("strip");
+		tuning.paint_strip = clip.identifier("paint_strip");
 		tuning.frame_time = clip.has("frame_time")
 			? std::optional<float>(clip.number("frame_time"))
 			: std::nullopt;
+		if (tuning.frame_time.has_value() &&
+			(!std::isfinite(*tuning.frame_time) || *tuning.frame_time <= 0.0f))
+		{
+			throw std::runtime_error(clip.where() + ": 'frame_time' must be finite and greater than zero.");
+		}
 		return tuning;
 	}
 
@@ -608,7 +614,20 @@ void GameTuning::validate_resources(const RenderResources& render,
 	{
 		const std::string prefix = std::string("player.animations.") + key;
 		check.animation(prefix + ".strip", clip.sheet, clip.strip);
+		check.animation(prefix + ".paint_strip", clip.sheet, clip.paint_strip);
 		check.frame("player.animations.uniform", clip.sheet, clip.uniform_texture);
+		const SpriteSheet* sheet = render.sprite_sheet(clip.sheet);
+		const AnimationStrip& body = sheet->animation_strip(sheet->resolve_animation_strip(clip.strip));
+		const AnimationStrip& paint = sheet->animation_strip(sheet->resolve_animation_strip(clip.paint_strip));
+		const auto& body_size = body.frame_rect(0);
+		const auto& paint_size = paint.frame_rect(0);
+		if (body.frame_count() != paint.frame_count() || body.frame_time() != paint.frame_time() ||
+			body.looping() != paint.looping() || body_size.width != paint_size.width ||
+			body_size.height != paint_size.height)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + prefix +
+				".paint_strip must match body frame count, time, looping and dimensions.");
+		}
 	};
 	animation("idle", this->player_.idle);
 	animation("walk", this->player_.walk);

@@ -5,6 +5,7 @@
 #include "game/objects/weapon_builder.h"
 #include "game/presentation.h"
 #include "engine/assets/sprite_sheet_loader.h"
+#include "engine/render/sprite_font_file.h"
 #include "engine/core/step_timer.h"
 #include "engine/math/triangle.h"
 #include "engine/scene/scene.h"
@@ -13,6 +14,9 @@
 #include <fstream>
 #include <iostream>
 #include <iterator>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 using namespace labrador;
 using namespace mattmath;
@@ -178,6 +182,20 @@ namespace
             return GameTuning(this->path_.string().c_str());
         }
 
+        template<typename Edit>
+        GameTuning tuning(Edit edit) const
+        {
+            rapidjson::Document json;
+            json.Parse(this->source_.c_str());
+            require(!json.HasParseError(), "Cannot parse movement acceptance tuning");
+            edit(json);
+            rapidjson::StringBuffer buffer;
+            rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+            json.Accept(writer);
+            this->write(std::string(buffer.GetString(), buffer.GetSize()));
+            return GameTuning(this->path_.string().c_str());
+        }
+
         Presentation presentation(const char* key, const char* value) const
         {
             std::string source = this->source_;
@@ -214,7 +232,7 @@ int main(int argc, char** argv)
         require(argc == 2, "Usage: movement.exe <content directory>");
         const std::filesystem::path content(argv[1]);
         RenderResources render;
-        for (const char* name : { "sprite_sheet_1", "weapon_paint" })
+        for (const char* name : { "sprite_sheet_1", "painter", "weapon_paint" })
         {
             render.add_sprite_sheet(name, read_sprite_sheet(
                 (content / "textures" / (std::string(name) + ".json")).string().c_str(),
@@ -224,8 +242,41 @@ int main(int argc, char** argv)
         audio.add_sound_bank("paint_exe", SoundBank::silent());
         const PlaySettings preferences;
         const GameTuning tuning((content / "tuning.json").string().c_str());
+        for (const auto& font : { tuning.match().countdown_font, tuning.match().controls_font })
+        {
+            const SpriteFontFile file = read_sprite_font_file(
+                (content / "fonts" / (font + ".spritefont")).string());
+            auto loaded = std::make_unique<Font>(TextureHandle{}, file.glyphs, file.line_spacing);
+            if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
+            render.add_font(font, std::move(loaded));
+        }
         const Presentation presentation((content / "presentation.json").string().c_str());
         const MovementFeedbackPresentation& feedback = presentation.movement_feedback();
+        tuning.validate_resources(render, audio);
+        const ContentVariant animation_content(content / "tuning.json");
+        const auto reject_animation = [&](auto edit, const char* authored_key)
+        {
+            bool rejected = false;
+            try
+            {
+                const GameTuning invalid = animation_content.tuning(edit);
+                invalid.validate_resources(render, audio);
+            }
+            catch (const std::exception& error)
+            {
+                rejected = std::string(error.what()).find(authored_key) != std::string::npos;
+            }
+            require(rejected, "Misaligned figure animation was accepted or lost its authored key");
+        };
+        reject_animation([](rapidjson::Document& json)
+        {
+            json["player"]["animations"]["idle"]["paint_strip"].SetString("run_paint", json.GetAllocator());
+        }, "player.animations.idle.paint_strip");
+        reject_animation([](rapidjson::Document& json)
+        {
+            json["player"]["animations"]["running"]["frame_time"].SetFloat(0.0f);
+        }, "frame_time");
+        std::cout << "PASS figure animation content: aligned body/paint strips and rejection of mismatched strips or zero frame time\n";
         const auto course = [&](float bottom = 0.0f,
             const Vector2F& velocity = Vector2F::ZERO)
         {

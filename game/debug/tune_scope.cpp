@@ -44,6 +44,8 @@ namespace
 		// MovementFeedback, RespawnRedraw, DebugText and InterfaceGameplay keep pointers;
 		// refresh_player_cameras reads the camera block every update.
 		{ "presentation.movement_feedback.**", TuneScope::live },
+		// FigureAttachments borrows the geometry that the numeric tuner can edit.
+		{ "presentation.figure.**", TuneScope::live },
 		{ "presentation.respawn_redraw.**", TuneScope::live },
 		// Monitor, Silhouette and ScreenCursor keep a pointer; Level reads figure_grey.
 		{ "presentation.opening.**", TuneScope::live },

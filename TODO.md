@@ -29,7 +29,7 @@ questions in the polish sub-docs are superseded, not open.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#7` | OPEN | HIGH | XL | Characters in the confirmed style: hands, grips, aim, idle, run, takeoff, air, land, firing, hurt, elimination, and a head accent for teammates readable at 4P. Owns the in-world team channel (gap audit 2.3). [§4](docs/polish-plan.md#characters-and-distinctive-weapons). |
+| `POL#7` | OPEN | HIGH | XL | Dedicated takeoff, landing, firing, hurt and elimination poses; human review of character/team readability in the reference composition. E figure, gait masks, head accents, grips and redraw are implemented. [Painter](docs/polish-painter.md), [§4](docs/polish-plan.md#characters-and-distinctive-weapons). |
 | `POL#8` | OPEN | HIGH | XL | Distinct designs for all five tools, with the secondary-motion table (pressure kick, hose, drum, gauge, slosh, mist tail). [§4](docs/polish-plan.md#characters-and-distinctive-weapons). |
 | `POL#9` | BLOCKED | HIGH | XL | Material and prop kit for the reference arena, background layers, landmarks, room life; collision silhouettes stay truthful. Waits on `POL#17`. [§4](docs/polish-plan.md#environment-and-background). |
 | `POL#16` | OPEN | MED | XL | Carry the style through menus, cards, stage preview, HUD, countdown, pause and results; extend poses and feedback to every weapon and arena. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |

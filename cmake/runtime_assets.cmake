@@ -14,6 +14,8 @@ set(COLOURWARS_RUNTIME_ASSETS
     fonts/gill_sans_ultra_bold_144.spritefont
     textures/sprite_sheet_1.dds
     textures/sprite_sheet_1.json
+    textures/painter.dds
+    textures/painter.json
     textures/menu_paint.dds
     textures/menu_paint.json
     textures/weapon_paint.dds

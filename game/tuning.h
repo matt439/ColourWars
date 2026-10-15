@@ -130,6 +130,8 @@ struct PlayerAnimationTuning
 {
 	std::string sheet;
 	std::string strip;
+	// Matching animated team-colour fill, advanced with the neutral body.
+	std::string paint_strip;
 	std::string uniform_texture;
 
 	// Absent means use the sprite strip's default frame time.

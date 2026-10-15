@@ -196,7 +196,7 @@ namespace debug_console_acceptance
 		CpuWorld(const std::filesystem::path& content, const GameTuning& tuning,
 			const Presentation& presentation)
 		{
-			for (const char* sheet : { "sprite_sheet_1", "menu_paint", "weapon_paint" })
+			for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint" })
 			{
 				this->render.add_sprite_sheet(sheet, labrador::read_sprite_sheet(
 					(content / "textures" / (std::string(sheet) + ".json")).string().c_str(),

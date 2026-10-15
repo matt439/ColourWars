@@ -18,6 +18,16 @@ The workshop kit, comparison modes, atlas and dedicated probes were retired on
 review evidence. The existing weapon atlases below remain in use while their
 Paint.exe replacements are authored and reviewed.
 
+## Painter artwork
+
+The [E painter source](painter/README.md) begins the accepted gameplay character
+pass. Its editable coarse-cell drawing, deterministic System.Drawing/texconv
+recipe and all-palette pose preview live outside runtime content. Rebuild it with
+`powershell -ExecutionPolicy Bypass -File scripts/build-painter-art.ps1`.
+Only `game/content/textures/painter.{json,dds}` is staged and packaged.
+The [implementation and review record](../../docs/polish-painter.md) states
+what this increment covers and which character work remains open.
+
 ## Weapon artwork
 
 `weapon_paint_source.png` is the original transparent sprite sheet generated

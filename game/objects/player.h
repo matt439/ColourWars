@@ -10,6 +10,8 @@
 #include "game/objects/movement_feedback.h"
 #include "game/objects/movement_audio.h"
 #include "game/objects/respawn_redraw.h"
+#include "game/objects/figure_clothing.h"
+#include "game/objects/figure_attachments.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/shape.h"
 #include "engine/math/vector2f.h"
@@ -77,6 +79,7 @@ public:
     // secondary is currently accepted but ignored; players carry one weapon.
     // The builder supplies sound_index as the roster/view index, independently
     // of sparse device slots and device-less debug players.
+    // teammate_index picks a distinct head accent within that player's team.
     Player(const mattmath::RectangleF& rectangle,
         const GameTuning* tuning,
         const MovementFeedbackPresentation* movement_feedback,
@@ -97,7 +100,9 @@ public:
         const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
         labrador::SpriteFlip flip = labrador::SpriteFlip::none,
         float layer_depth = 0.0f,
-        int sound_index = -1);
+        int sound_index = -1,
+        const FigurePresentation* figure = nullptr,
+        int teammate_index = -1);
 
     ~Player() override;
 
@@ -217,6 +222,8 @@ private:
     // Borrowed, never null. Includes player movement/health and projectile damage tuning.
     const GameTuning* tuning_ = nullptr;
 
+    FigureClothing clothing_;
+    FigureAttachments attachments_;
     MovementFeedback movement_feedback_;
     MovementAudio movement_audio_;
     float movement_audio_dt_ = 0.0f;

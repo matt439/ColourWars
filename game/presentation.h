@@ -329,6 +329,35 @@ struct MovementFeedbackPresentation
 	MovementBurstPresentation landing;
 };
 
+struct FigureGripPresentation
+{
+	// World-space offsets from the weapon's actual draw pivot before rotation.
+	mattmath::Vector2F rear;
+	mattmath::Vector2F front;
+};
+
+// Figure details in the painter's authored canvas. Grips belong to the tool,
+// while shoulders and the head accent follow the posed figure rectangle.
+struct FigurePresentation
+{
+	std::string sprite_sheet;
+	// Team-local roster indices, so all four manual teammates remain distinct.
+	std::array<std::string, 4> accent_frames;
+	std::string rest_arms_frame;
+	mattmath::Vector2F canvas_size;
+	mattmath::Vector2F accent_offset;
+	mattmath::Vector2F accent_size;
+	mattmath::Vector2F rear_shoulder;
+	mattmath::Vector2F front_shoulder;
+	float arm_width = 0.0f;
+	float elbow_drop = 0.0f;
+	float hand_size = 0.0f;
+	float hand_edge = 0.0f;
+	labrador::Colour arm_colour;
+	labrador::Colour hand_colour;
+	std::array<FigureGripPresentation, static_cast<size_t>(WeaponType::bucket) + 1> grips;
+};
+
 // One stroke of a figure as the person drew it: the path of the pen's
 // top-left corner, in texels of the right-facing idle frame. The pen draws
 // only horizontal and vertical lines, as the original art does.
@@ -455,6 +484,7 @@ public:
 	const MatchPresentation& match() const;
 	const CameraPresentation& camera() const;
 	const MovementFeedbackPresentation& movement_feedback() const;
+	const FigurePresentation& figure() const;
 	const RespawnRedrawPresentation& respawn_redraw() const;
 	const OpeningPresentation& opening() const;
 	const DebugOverlayPresentation& debug_overlay() const;
@@ -478,6 +508,7 @@ private:
 	MatchPresentation match_;
 	CameraPresentation camera_;
 	MovementFeedbackPresentation movement_feedback_;
+	FigurePresentation figure_;
 	RespawnRedrawPresentation respawn_redraw_;
 	OpeningPresentation opening_;
 	DebugOverlayPresentation debug_overlay_;

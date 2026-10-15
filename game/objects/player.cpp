@@ -13,8 +13,8 @@ using namespace labrador;
 
 namespace
 {
-    // Tint for the animated body; the uniform uses the team colour.
-    const Colour player_tint = Colour::burlywood;
+    // The authored body is neutral; its matching clothing clip carries team colour.
+    const Colour player_tint = Colour::white;
 }
 
 Player::Player(const RectangleF& rectangle,
@@ -37,7 +37,9 @@ Player::Player(const RectangleF& rectangle,
     const Vector2F& origin,
     SpriteFlip flip,
     float layer_depth,
-    int sound_index) :
+    int sound_index,
+    const FigurePresentation* figure,
+    int teammate_index) :
     MovingObject(velocity),
     AnimationObject(tuning->player().idle.sheet,
                     tuning->player().idle.strip,
@@ -46,6 +48,11 @@ Player::Player(const RectangleF& rectangle,
                   tuning->player().idle.uniform_texture,
                   render_resources, team_colour, rotation, origin, flip, layer_depth),
     tuning_(tuning),
+    clothing_(tuning->player().idle, render_resources, team_colour,
+        rotation, origin, flip, layer_depth),
+    attachments_(movement_feedback, figure, render_resources,
+        teammate_index >= 0 ? teammate_index :
+            (sound_index >= 0 ? sound_index : std::max(player_num, 0) % 4)),
     movement_feedback_(movement_feedback, render_resources),
     movement_audio_(&tuning->player().movement_sounds,
         audio_resources->sound_bank(tuning->player().sound_bank), preferences,
@@ -63,6 +70,10 @@ Player::Player(const RectangleF& rectangle,
 {
     this->preferences_ = preferences;
     const PlayerTuning& player = tuning->player();
+    if (player.idle.frame_time.has_value())
+    {
+        AnimationObject::set_frame_time(*player.idle.frame_time);
+    }
 
     this->health_ = player.starting_health;
     this->respawn_timer_ = player.respawn_delay;
@@ -110,6 +121,8 @@ void Player::set_animation_state(PlayerAnimationState new_animation_state)
     TextureObject::set_frame(info.sheet, info.uniform_texture);
 
     set_animation_strip_and_reset(info.sheet, info.strip);
+    this->clothing_.select(info);
+    AnimationObject::play();
     if (info.frame_time.has_value())
     {
         set_frame_time(*info.frame_time);
@@ -132,7 +145,10 @@ void Player::draw(DrawList& draw_list) const
     // A figure drawn whole after dying has its tool where it fell.
     if (this->pose_.tool && !this->drawn_whole())
     {
+        this->attachments_.draw_arms(draw_list, this->posed_rectangle(),
+            this->facing_right(), *this->primary_);
         this->primary_->draw(draw_list, this->showing_debug_);
+        this->attachments_.draw_hands(draw_list, this->posed_rectangle(), *this->primary_);
     }
     this->movement_feedback_.draw(draw_list);
 }
@@ -166,16 +182,17 @@ void Player::draw_figure(DrawList& draw_list, const RectangleF& rectangle) const
         ? SpriteFlip::none
         : SpriteFlip::horizontal;
 
-    // Qualify the two DrawObject bases: TextureObject and AnimationObject
-    // have independent colour, origin and rotation state.
-    TextureObject::draw_with(draw_list, rectangle,
-        this->TextureObject::frame(),
+    this->clothing_.draw(draw_list, rectangle,
         this->grey_.value_or(this->TextureObject::colour()),
-        this->TextureObject::origin(), flip,
-        this->TextureObject::draw_rotation());
+        flip);
 
     AnimationObject::draw_with(draw_list, rectangle,
         this->AnimationObject::colour(), flip);
+    this->attachments_.draw_accent(draw_list, rectangle, this->facing_right());
+    if (!this->pose_.tool || this->state_ == PlayerState::dead)
+    {
+        this->attachments_.draw_rest_arms(draw_list, rectangle, this->facing_right());
+    }
 }
 
 void Player::draw_respawn(DrawList& draw_list) const
@@ -551,6 +568,7 @@ void Player::update(float dt)
         this->update_animation_state();
 
         AnimationObject::update(dt);
+        this->clothing_.advance(dt);
 
         this->damage_sound_timer_ += dt;
     }
@@ -831,14 +849,15 @@ void Player::start_jump()
 
 RectangleF Player::bounds() const
 {
-    // Include the held weapon in the visual bounds used for scene culling.
-    if (this->primary_ == nullptr)
+    const bool held = this->primary_ != nullptr && this->state_ == PlayerState::alive &&
+        this->pose_.tool && !this->drawn_whole();
+    RectangleF visual = this->attachments_.bounds(this->posed_rectangle(),
+        this->facing_right(), held ? this->primary_.get() : nullptr);
+    if (held)
     {
-        return this->movement_feedback_.bounds(this->rectangle_);
+        visual = RectangleF::union_of(visual, this->primary_->draw_bounds());
     }
-
-    return this->movement_feedback_.bounds(
-        RectangleF::union_of(this->rectangle_, this->primary_->draw_bounds()));
+    return this->movement_feedback_.bounds(RectangleF::union_of(this->rectangle_, visual));
 }
 
 RectangleF Player::cull_bounds(float /*units_per_pixel*/) const
@@ -846,7 +865,7 @@ RectangleF Player::cull_bounds(float /*units_per_pixel*/) const
     if (this->state_ == PlayerState::dead)
     {
         return RectangleF::union_of(this->bounds(),
-            RectangleF::union_of(this->spawn_rectangle(), this->posed_rectangle()));
+            this->attachments_.bounds(this->spawn_rectangle(), this->facing_right(), nullptr));
     }
     return this->bounds();
 }
