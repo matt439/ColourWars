@@ -127,18 +127,23 @@ may skip only the exact missing-hardware-adapter diagnostic because its engine
 build has no software fallback. Content failures, crashes and other startup
 errors fail CI. Release also builds and inspects the redistributable ZIP.
 
-## Audio: a fresh clone is silent, and that is correct
+## Audio: accepted replacement bank and optional fallback
 
-The wave bank is built from `.wav` sources that are not in this repository
-(commercial tracks that cannot be redistributed, and 148 MB of them). What ships
-is the recipe: `game/content/sounds/sound_bank_1.json` (the authoritative list of
-expected waves), `XWBTool.exe`, and
-[cmake/build_wave_bank.cmake](cmake/build_wave_bank.cmake), which compiles the
-bank only when every named source wave is present.
+A fresh clone includes `game/content/sounds/paint_exe.xwb` and its definition.
+The build validates the tracked bank before staging it; normal game builds do
+not need Python or FFmpeg. All 103 accepted masters, retained CC0 recordings,
+editable scores/recipes and per-wave provenance live under
+[game/audio/paint_exe/](game/audio/paint_exe/README.md), which documents bank
+reproduction with `scripts/audio/tools/XWBTool.exe`.
 
-Absent the bank, `manifest.json` marks it `"optional": true`, the loader
-substitutes a silent bank, one line goes to stderr, and nothing else changes. Do
-not "fix" the missing bank. See [NOTICE](NOTICE).
+The existing game bindings use the replacement set; remaining new cue hooks and
+gameplay mix are `POL#23`, and actual listening/hardware acceptance is `ROAD#3`.
+The normal Release ZIP includes the validated bank, provenance and CC0 terms.
+Private legacy audio must never be staged or packaged.
+
+Absent the bank, `manifest.json` still marks it `"optional": true`: the loader
+substitutes a silent bank and reports it once on stderr. Keep that fallback
+working and check it separately from the normal release. See [NOTICE](NOTICE).
 
 ## The engine submodule
 

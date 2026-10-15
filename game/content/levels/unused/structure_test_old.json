@@ -2,8 +2,8 @@
     "level_name": "structure_test",
     "sound":
     {
-        "sound_bank_name": "sound_bank_1",
-        "music_name": "dragostea_din_tei",
+        "sound_bank_name": "paint_exe",
+        "music_name": "music.king_of_the_hill",
         "music_volume": 0.3
     },
     "spawn_locations":

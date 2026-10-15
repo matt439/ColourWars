@@ -204,7 +204,7 @@ see [feedback evidence and limitations](docs/polish-feedback.md).
 Check runtime startup separately, preferably against the extracted Release ZIP:
 
 ```powershell
-./scripts/check-startup.ps1 -Executable C:/Games/ColourWars/ColourWars.exe -RequireNoAudio -SystemOnlyPath
+./scripts/check-startup.ps1 -Executable C:/Games/ColourWars/ColourWars.exe -SystemOnlyPath
 ```
 
 It starts hidden from an unrelated directory with an isolated save, checks the
@@ -258,17 +258,18 @@ committing to produce a package labelled with that commit.
 Only the assets listed in [cmake/release_assets.cmake](cmake/release_assets.cmake)
 are packaged; configure checks that the list matches the runtime manifest.
 The ZIP includes licence notices, the seven compiled fonts, four sprite sheets,
-the three arenas and Movement Course, tuning, presentation and the optional sound-bank definition.
-It is always silent: local wave banks and source audio are excluded even on a
-developer's machine. Development art, content tools and saves are excluded too.
+the three arenas and Movement Course, tuning, presentation, the replacement
+sound-bank definition and validated `paint_exe.xwb`, with audio provenance and
+CC0 terms. Source audio, development art, content tools and saves are excluded.
 Do not distribute the normal `game/` build directory in place of this ZIP.
 Debug packaging is rejected because its runtime is not redistributable.
 
 To check a release, extract the ZIP outside the checkout, launch from a different
 working directory, confirm the title's build label, and start a solo match.
-The expected stderr message says the optional wave bank is absent. Settings
-still live in `%LOCALAPPDATA%\ColourWars\save_data.json`, independently of where
-the ZIP was extracted.
+Check music and effects as well as startup. Qualify the missing-bank fallback
+separately by removing the bank from a temporary extracted copy and using
+`-RequireNoAudio` for its startup check. Settings still live in
+`%LOCALAPPDATA%\ColourWars\save_data.json`, independently of where the ZIP was extracted.
 
 ## The engine submodule
 
@@ -305,31 +306,26 @@ what it lets this repository delete.
 
 ## Audio
 
-**A fresh clone has no sound, and that is expected.** The game runs; it is
-silent, and it says so once on stderr.
+A fresh clone and the Release ZIP include the accepted Paint.exe replacement
+audio. The live bank is `game/content/sounds/paint_exe.xwb`; its definition is
+`paint_exe.json` beside it. The build validates the tracked bank before staging
+it. Normal game builds need no audio encoder or Python installation.
 
-The wave bank is built from source `.wav` files that are not in this
-repository. Two reasons: four of the twenty-four waves are commercial music
-tracks nobody can redistribute, and the sources are 148 MB against a built bank
-of 154 MB, past GitHub's per-file limit. See [NOTICE](NOTICE).
+All 103 accepted masters, editable scores/recipes, retained CC0 recordings and
+per-wave provenance are in [game/audio/paint_exe](game/audio/paint_exe/README.md).
+That page describes how to reproduce the bank with FFmpeg and
+`scripts/audio/tools/XWBTool.exe`. Music uses MS-ADPCM; short effects use PCM16.
+The private legacy bank is retired and never staged or packaged. See
+[NOTICE](NOTICE) for licence terms and voluntary credits.
 
-What *is* here is the recipe:
+The existing game bindings use the replacement cues, including separate
+countdown beats/GO and the story's pop, sigh and chair creak. Further new cue
+hooks and the gameplay mix remain [open](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration);
+asset acceptance does not establish listening or multiplayer acceptance.
 
-- `game/content/sounds/sound_bank_1.json` — the bank's definition, and the
-  authoritative list of the waves it expects.
-- `game/content/sounds/sound_bank_1/XWBTool.exe` — Microsoft's wave-bank
-  compiler.
-- `cmake/build_wave_bank.cmake` — run from the build, it compiles the bank
-  whenever every source wave named by the definition is present, and does
-  nothing when they are not.
-
-To get audio, put a `.wav` for each name in `sound_bank_1.json`'s `waves` array
-into `game/content/sounds/sound_bank_1/` and build. The bank is compiled for
-you.
-
-Absent the bank, `game/content/manifest.json` marks it `"optional": true`, the
-loader substitutes a silent sound bank, and every play is a no-op. Nothing else
-in the game changes.
+The manifest still marks the bank `"optional": true`. If it is missing, the
+loader substitutes a silent bank and reports it once on stderr. Gameplay
+continues; the normal Release package requires the validated audible bank.
 
 ## About the code
 

@@ -139,13 +139,19 @@ try {
         $common += '/external:I' + (Quote-ResponsePath $include)
     }
 
-    # The probes use CPU-side game data and do not create a window or device.
+    # The probes use CPU-side game data and do not create a window or hardware device.
     # DLL imports still resolve from the same staged folder as the game.
     # A case may own a same-named folder of extra .cpp sources.
     $env:PATH = "$gameDirectory;$previousPath"
     foreach ($case in 'ammo', 'settings', 'paint', 'camera_framing', 'movement', 'stage_selection', 'team_palette', 'menu_navigation',
-        'workshop_player', 'workshop_terrain', 'movement_course', 'debug_console') {
+        'workshop_player', 'workshop_terrain', 'movement_course', 'debug_console', 'story_audio') {
         $sources = @(Join-Path $PSScriptRoot "acceptance/$case.cpp")
+        if ($case -eq 'story_audio') {
+            # The real game objects use the engine's audio seam unchanged.
+            # Supply its recording backend before the static engine archive,
+            # so this case can observe sound calls without opening hardware.
+            $sources += Join-Path $repo 'external/labrador/engine/audio/null/audio_device.cpp'
+        }
         $parts = Join-Path $PSScriptRoot "acceptance/$case"
         if (Test-Path -LiteralPath $parts -PathType Container) {
             $sources += @(Get-ChildItem -LiteralPath $parts -Filter '*.cpp' -File |

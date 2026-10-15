@@ -70,6 +70,10 @@ Level::Level(std::unique_ptr<Scene> scene,
 		this->sound_bank_->resolve_effect(match.zoom_out_sound.name);
 	this->countdown_sound_ =
 		this->sound_bank_->resolve_effect(match.countdown_sound.name);
+	this->go_sound_ = this->sound_bank_->resolve_effect(match.go_sound.name);
+	this->time_up_sound_ = this->sound_bank_->resolve_effect(match.time_up_sound.name);
+	this->sigh_sound_ = this->sound_bank_->resolve_effect(match.sigh_sound.name);
+	this->chair_sound_ = this->sound_bank_->resolve_effect(match.chair_sound.name);
 
 	if (opening != OpeningMode::off)
 	{
@@ -100,6 +104,10 @@ Level::~Level()
 	}
 	this->sound_bank_->stop_effect(this->zoom_out_sound_, true);
 	this->sound_bank_->stop_effect(this->countdown_sound_, true);
+	this->sound_bank_->stop_effect(this->go_sound_, true);
+	this->sound_bank_->stop_effect(this->time_up_sound_, true);
+	this->sound_bank_->stop_effect(this->sigh_sound_, true);
+	this->sound_bank_->stop_effect(this->chair_sound_, true);
 	this->stop_player_sounds();
 }
 
@@ -120,6 +128,10 @@ void Level::pause_audio() const
 	}
 	this->sound_bank_->pause_effect(this->zoom_out_sound_);
 	this->sound_bank_->pause_effect(this->countdown_sound_);
+	this->sound_bank_->pause_effect(this->go_sound_);
+	this->sound_bank_->pause_effect(this->time_up_sound_);
+	this->sound_bank_->pause_effect(this->sigh_sound_);
+	this->sound_bank_->pause_effect(this->chair_sound_);
 	this->pause_player_sounds();
 }
 
@@ -137,6 +149,18 @@ void Level::resume() const
 	this->sound_bank_->set_effect_volume(this->countdown_sound_,
 		this->tuning_->match().countdown_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->countdown_sound_);
+	this->sound_bank_->set_effect_volume(this->go_sound_,
+		this->tuning_->match().go_sound.volume * this->preferences_->sfx_gain());
+	this->sound_bank_->resume_effect(this->go_sound_);
+	this->sound_bank_->set_effect_volume(this->time_up_sound_,
+		this->tuning_->match().time_up_sound.volume * this->preferences_->sfx_gain());
+	this->sound_bank_->resume_effect(this->time_up_sound_);
+	this->sound_bank_->set_effect_volume(this->sigh_sound_,
+		this->tuning_->match().sigh_sound.volume * this->preferences_->sfx_gain());
+	this->sound_bank_->resume_effect(this->sigh_sound_);
+	this->sound_bank_->set_effect_volume(this->chair_sound_,
+		this->tuning_->match().chair_sound.volume * this->preferences_->sfx_gain());
+	this->sound_bank_->resume_effect(this->chair_sound_);
 	this->resume_player_sounds();
 }
 
@@ -165,22 +189,32 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		this->skip_intro();
 	}
 	if (this->state_ == LevelState::start_countdown ||
-		this->start_timer_ > -1.0f)
+		(this->state_ == LevelState::active && this->start_timer_ > -1.0f))
 	{
-		if (this->start_timer_ >= this->tuning_->match().countdown)
+		const bool starting = !this->countdown_started_;
+		if (starting)
 		{
+			this->countdown_started_ = true;
 			if (this->music_.valid())
 			{
 				this->sound_bank_->play_effect(this->music_, true, this->music_volume_ * this->preferences_->music_gain());
 			}
+		}
+		const float before = this->start_timer_;
+		this->start_timer_ -= dt;
+		// One cue for the displayed number, including the initial beat. A long
+		// tick never queues the missed beats over GO or live play.
+		if (this->start_timer_ > 0.0f &&
+			(starting ||
+				std::ceil(before) != std::ceil(this->start_timer_)))
+		{
 			this->sound_bank_->play_effect(this->countdown_sound_, false,
 				this->tuning_->match().countdown_sound.volume * this->preferences_->sfx_gain());
 		}
-		this->start_timer_ -= dt;
 		if (this->start_timer_ > 0.0f)
 		{
 			this->set_countdown_text(std::to_wstring(
-				static_cast<int>(this->start_timer_) + 1));
+				static_cast<int>(std::ceil(this->start_timer_))));
 		}
 		else
 		{
@@ -189,6 +223,12 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 
 		if (this->start_timer_ <= 0.0f)
 		{
+			if (this->state_ == LevelState::start_countdown)
+			{
+				this->sound_bank_->stop_effect(this->countdown_sound_, true);
+				this->sound_bank_->play_effect(this->go_sound_, false,
+					this->tuning_->match().go_sound.volume * this->preferences_->sfx_gain());
+			}
 			this->state_ = LevelState::active;
 			this->intro_countdown_ = false;
 		}
@@ -216,6 +256,9 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			}
 			this->stop_player_sounds();
 			this->sound_bank_->stop_effect(this->countdown_sound_, true);
+			this->sound_bank_->stop_effect(this->go_sound_, true);
+			this->sound_bank_->play_effect(this->time_up_sound_, false,
+				this->tuning_->match().time_up_sound.volume * this->preferences_->sfx_gain());
 			this->sound_bank_->play_effect(this->zoom_out_sound_, false,
 				this->tuning_->match().zoom_out_sound.volume * this->preferences_->sfx_gain());
 			this->start_reveal();

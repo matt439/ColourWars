@@ -371,7 +371,8 @@ FodyWeavers.xsd
 *.xwb
 *.mp3
 # POL#22 replacement production sources and masters are redistributable.
-# Keep the legacy content/sounds sources and all generated banks ignored.
+# Publish only the accepted runtime bank; keep private legacy banks ignored.
+!/game/content/sounds/paint_exe.xwb
 !/game/audio/paint_exe/**/*.wav
 !/game/audio/paint_exe/**/*.mp3
 # CMake out-of-source build tree

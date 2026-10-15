@@ -24,11 +24,12 @@ set(COLOURWARS_RELEASE_ASSETS
     levels/turbulence.json
     levels/close_quarters.json
     levels/movement_course.json
-    sounds/sound_bank_1.json
+    sounds/paint_exe.json
+    sounds/paint_exe.xwb
 )
 
-# A manifest edit must be reconciled with the reviewed list above. The bank's
-# definition is included for the silent fallback, but its .xwb never is.
+# A manifest edit must be reconciled with the reviewed list above. The accepted
+# bank and definition are both required in the audible release.
 set(content "${PROJECT_SOURCE_DIR}/game/content")
 set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
     "${content}/manifest.json")
@@ -51,7 +52,7 @@ foreach(group RANGE 0 ${last_group})
         if(NOT optional)
             message(FATAL_ERROR "Release packages require optional sound banks")
         endif()
-        set(extensions json)
+        set(extensions json xwb)
     else()
         message(FATAL_ERROR "Review release assets for new manifest kind: ${kind}")
     endif()
@@ -64,6 +65,15 @@ foreach(group RANGE 0 ${last_group})
         endforeach()
     endforeach()
 endforeach()
+# Check present audio at configure time too. An optional missing-bank build is
+# valid; release_package.cmake requires the bank when installing/packaging.
+execute_process(COMMAND "${CMAKE_COMMAND}"
+    "-DBANK_DIR=${content}/sounds"
+    -P "${CMAKE_CURRENT_LIST_DIR}/check_wave_bank.cmake"
+    RESULT_VARIABLE bank_check)
+if(NOT bank_check EQUAL 0)
+    message(FATAL_ERROR "Release audio validation failed")
+endif()
 list(SORT expected)
 set(actual "${COLOURWARS_RELEASE_ASSETS}")
 list(SORT actual)
@@ -71,6 +81,9 @@ if(NOT actual STREQUAL expected)
     message(FATAL_ERROR "Manifest and cmake/release_assets.cmake disagree. Review the release asset list.")
 endif()
 foreach(asset IN LISTS COLOURWARS_RELEASE_ASSETS)
+    if(asset STREQUAL "sounds/paint_exe.xwb" AND NOT EXISTS "${content}/${asset}")
+        continue()
+    endif()
     if(NOT EXISTS "${content}/${asset}")
         message(FATAL_ERROR "Missing release asset: ${asset}")
     endif()

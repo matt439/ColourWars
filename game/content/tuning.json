@@ -38,10 +38,14 @@
             "y": 0.78
         },
         "sounds": {
-            "countdown": { "name": "smash_countdown", "volume": 1.0 },
-            "zoom_out": { "name": "slide_whistle_up", "volume": 0.5 },
-            "hover": { "name": "UI_Clicks14", "volume": 0.6 },
-            "click": { "name": "UI_Clicks01", "volume": 1.0 }
+            "countdown": { "name": "match.count_beat", "volume": 1.0 },
+            "go": { "name": "match.go", "volume": 1.0 },
+            "time_up": { "name": "match.time_up", "volume": 1.0 },
+            "zoom_out": { "name": "match.glass_out", "volume": 1.0 },
+            "sigh": { "name": "room.sigh", "volume": 1.0 },
+            "chair": { "name": "room.chair", "volume": 1.0 },
+            "hover": { "name": "match.reveal_hover", "volume": 0.6 },
+            "click": { "name": "match.reveal_click", "volume": 1.0 }
         },
         "opening": {
             "_comment": [
@@ -85,8 +89,8 @@
       "sheet": "sprite_sheet_1",
       "animation": "splash_1"
     },
-    "sound_bank": "sound_bank_1",
-    "splash_sound": { "name": "WaterSplashing", "volume": 0.1 }
+    "sound_bank": "paint_exe",
+    "splash_sound": { "name": "paint.splash.01", "volume": 1.0 }
   },
 
   "player": {
@@ -109,12 +113,12 @@
         "health_regen_rate": 1.0,
         "respawn_delay": 3.0,
         "damage_sound_delay": 0.25,
-        "sound_bank": "sound_bank_1",
+        "sound_bank": "paint_exe",
         "sounds": {
-            "damage": { "name": "SplittingFireWood", "volume": 0.1 },
-            "death": { "name": "DeathImpactYellSingle", "volume": 1.0 },
-            "jump": { "name": "CartoonBoing", "volume": 0.2 },
-            "respawn": { "name": "ThunderCrack", "volume": 0.2 }
+            "damage": { "name": "player.hurt", "volume": 1.0 },
+            "death": { "name": "player.pop", "volume": 1.0 },
+            "jump": { "name": "player.jump", "volume": 1.0 },
+            "respawn": { "name": "player.respawn", "volume": 1.0 }
         },
         "animations": {
             "sheet": "sprite_sheet_1",
@@ -142,8 +146,8 @@
             "sheet": "weapon_paint",
             "frame": "sprayer",
             "projectile": "spray",
-            "sound_bank": "sound_bank_1",
-            "shoot_sound": { "name": "WaterSprayIntoBucket", "volume": 1.0 },
+            "sound_bank": "paint_exe",
+            "shoot_sound": { "name": "sprayer.start", "volume": 1.0 },
             "add_player_velocity": "x_only",
             "player_velocity_amount": 1.0,
             "loop_sounds": {
@@ -162,8 +166,8 @@
             "sheet": "weapon_paint",
             "frame": "sniper",
             "projectile": "jet",
-            "sound_bank": "sound_bank_1",
-            "shoot_sound": { "name": "WoodRattle", "volume": 0.8 }
+            "sound_bank": "paint_exe",
+            "shoot_sound": { "name": "sniper.shot", "volume": 0.8 }
         },
 
         "roller": {
@@ -176,8 +180,8 @@
             "sheet": "weapon_paint",
             "frame": "roller",
             "projectile": "rolling",
-            "sound_bank": "sound_bank_1",
-            "shoot_sound": { "name": "BowlingBallRoll", "volume": 1.0 },
+            "sound_bank": "paint_exe",
+            "shoot_sound": { "name": "roller.start", "volume": 1.0 },
             "loop_sounds": {
                 "team_a": [ "roller_a0", "roller_a1", "roller_a2", "roller_a3" ],
                 "team_b": [ "roller_b0", "roller_b1", "roller_b2", "roller_b3" ]
@@ -194,8 +198,8 @@
             "sheet": "weapon_paint",
             "frame": "mister",
             "projectile": "mist",
-            "sound_bank": "sound_bank_1",
-            "shoot_sound": { "name": "VulcanMachineGunSeries", "volume": 0.2 },
+            "sound_bank": "paint_exe",
+            "shoot_sound": { "name": "mister.start", "volume": 1.0 },
             "add_player_velocity": "x_only",
             "player_velocity_amount": 1.0,
             "loop_sounds": {
@@ -214,8 +218,8 @@
             "sheet": "weapon_paint",
             "frame": "bucket",
             "projectile": "ball",
-            "sound_bank": "sound_bank_1",
-            "shoot_sound": { "name": "LaserGun", "volume": 0.3 },
+            "sound_bank": "paint_exe",
+            "shoot_sound": { "name": "bucket.throw", "volume": 0.3 },
             "add_player_velocity": "x_only",
             "player_velocity_amount": 1.0
         }

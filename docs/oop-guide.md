@@ -184,7 +184,10 @@ For a new selectable primary weapon, keep these registrations together:
    The description array in [presentation.h](../game/presentation.h) includes
    `random_primary`; keep that relationship if reorganizing the enum.
 5. Supply any new frames/animations in the sprite-sheet definition and texture,
-   and any new wave/effect names in the sound-bank definition. Existing asset
+   and any new wave/effect names in the live
+   [sound-bank definition](../game/content/sounds/paint_exe.json). New audio
+   needs source permission, master acceptance and bank publication through the
+   [audio workflow](../game/audio/paint_exe/README.md). Existing asset
    files are staged on build. New resource files also need the manifest and
    [release asset list](../cmake/release_assets.cmake) updated. Optional audio
    remains optional; the game must still work with its silent bank.

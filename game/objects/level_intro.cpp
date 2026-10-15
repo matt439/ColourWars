@@ -40,6 +40,13 @@ namespace
 
 	// Of each preview: the cursor reaches the swatch, then the colour shows.
 	constexpr float reach = 0.4f;
+	constexpr float opening_stand = 0.35f;
+	constexpr float reveal_sit = 0.6f;
+
+	bool crossed(float before, float after, float edge)
+	{
+		return before < edge && after >= edge;
+	}
 }
 
 Level::OpeningBeat Level::opening_beat() const
@@ -63,8 +70,8 @@ Level::OpeningBeat Level::opening_beat() const
 
 	// The sigh, then out of the chair, then out of the room.
 	const float leaving = through(time, leave, timing.leave);
-	beat.pose.sigh = std::sin(std::clamp(leaving / 0.35f, 0.0f, 1.0f) * 3.14159265f);
-	beat.pose.stand = smooth((leaving - 0.35f) / 0.25f);
+	beat.pose.sigh = std::sin(std::clamp(leaving / opening_stand, 0.0f, 1.0f) * 3.14159265f);
+	beat.pose.stand = smooth((leaving - opening_stand) / 0.25f);
 	beat.pose.leave = smooth((leaving - 0.6f) / 0.4f);
 	return beat;
 }
@@ -139,6 +146,10 @@ void Level::colour_players(bool team_a, bool team_b)
 
 void Level::skip_intro()
 {
+	// Do not advance through the remaining story beats on a skip, or let a
+	// room cue already in progress follow the person into the split countdown.
+	this->sound_bank_->stop_effect(this->sigh_sound_, true);
+	this->sound_bank_->stop_effect(this->chair_sound_, true);
 	// Straight to the split-screen countdown, from its start if it had not begun.
 	this->state_ = LevelState::start_countdown;
 	this->intro_countdown_ = false;
@@ -152,7 +163,20 @@ void Level::update_opening(const std::vector<PlayerInputData>& player_inputs, fl
 		this->skip_intro();
 		return;
 	}
+	const float before = this->opening_time_;
 	this->opening_time_ += dt;
+	const MatchTuning& match = this->tuning_->match();
+	const OpeningTuning& timing = match.opening;
+	const float leave = timing.settle + timing.preview * 2.0f + timing.undo;
+	const float gain = this->preferences_->sfx_gain();
+	if (crossed(before, this->opening_time_, leave))
+	{
+		this->sound_bank_->play_effect(this->sigh_sound_, false, match.sigh_sound.volume * gain);
+	}
+	if (crossed(before, this->opening_time_, leave + opening_stand * timing.leave))
+	{
+		this->sound_bank_->play_effect(this->chair_sound_, false, match.chair_sound.volume * gain);
+	}
 	if (this->opening_time_ >= this->opening_length())
 	{
 		// The figures come alive in their colours as the countdown starts.
@@ -319,8 +343,8 @@ Level::RevealBeat Level::reveal_beat() const
 
 	RevealBeat beat;
 	const float walking = through(time, 0.0f, timing.walk_in);
-	beat.pose.leave = 1.0f - smooth(walking / 0.6f);
-	beat.pose.stand = 1.0f - smooth((walking - 0.6f) / 0.4f);
+	beat.pose.leave = 1.0f - smooth(walking / reveal_sit);
+	beat.pose.stand = 1.0f - smooth((walking - reveal_sit) / 0.4f);
 	const float leaving = through(time, leave, timing.leave);
 	if (leaving > 0.0f)
 	{
@@ -347,10 +371,21 @@ Level::RevealBeat Level::reveal_beat() const
 void Level::update_reveal(float dt)
 {
 	const RevealBeat before = this->reveal_beat();
+	const float before_time = this->reveal_time_;
 	this->reveal_time_ += dt;
 	const RevealBeat after = this->reveal_beat();
 	const MatchTuning& match = this->tuning_->match();
+	const RevealTuning& timing = match.reveal;
 	const float gain = this->preferences_->sfx_gain();
+	const float leave = timing.walk_in + timing.hover * 2.0f + timing.decide + timing.show;
+	if (crossed(before_time, this->reveal_time_, reveal_sit * timing.walk_in))
+	{
+		this->sound_bank_->play_effect(this->chair_sound_, false, match.chair_sound.volume * gain);
+	}
+	if (crossed(before_time, this->reveal_time_, leave))
+	{
+		this->sound_bank_->play_effect(this->chair_sound_, false, match.chair_sound.volume * gain);
+	}
 	if ((after.showing_a && !before.showing_a) || (after.showing_b && !before.showing_b))
 	{
 		this->sound_bank_->play_wave(this->hover_sound_, match.hover_sound.volume * gain);

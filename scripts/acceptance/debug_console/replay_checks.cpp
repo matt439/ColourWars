@@ -206,7 +206,7 @@ namespace debug_console_acceptance
 				if (loaded->contains(U'?')) { loaded->set_stand_in(U'?'); }
 				this->render.add_font(font, std::move(loaded));
 			}
-			this->audio.add_sound_bank("sound_bank_1", labrador::SoundBank::silent());
+			this->audio.add_sound_bank("paint_exe", labrador::SoundBank::silent());
 			for (const char* level : { "movement_course", "close_quarters" })
 			{
 				auto info = std::make_unique<LevelLoadedInfo>(

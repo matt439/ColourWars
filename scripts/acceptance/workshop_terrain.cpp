@@ -151,7 +151,7 @@ int main(int argc, char** argv)
         reject_tile_budget(RectangleF(0, 0, 128 * 255 + 4.5f, 48 * 255 + 4.5f), density);
 
         AudioResources audio;
-        audio.add_sound_bank("sound_bank_1", SoundBank::silent());
+        audio.add_sound_bank("paint_exe", SoundBank::silent());
         const GameTuning tuning((content / "tuning.json").string().c_str());
         const PlaySettings preferences;
         const TeamColour colours;

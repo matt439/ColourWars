@@ -14,8 +14,10 @@ good indie game's finish, including quiet details such as an occasional idle
 muzzle drip, tool settling and environmental life. Start with one complete
 reference match and review its feel in motion. That work is planned, apart from
 the backstory's opening, respawn and reveal, which its "Building it" section
-records as built bar the pop, sigh and chair-creak sounds; the sections below
-record implemented increments and their remaining acceptance checks.
+records as built, including the accepted pop, sigh and chair-creak sounds.
+Existing live audio bindings now use the accepted replacement set; further cue
+hooks and the gameplay mix remain open. The sections below record implemented
+increments and their remaining acceptance checks.
 
 ## First increment: explicit joining and reconnect pause
 
@@ -102,14 +104,15 @@ Implemented:
 - The Release `package` target produces `ColourWars-windows-x64.zip` with an
   explicit runtime asset list checked against the manifest. It includes the
   required DirectXTK, XAudio2Redist and release MSVC DLLs, plus licence notices.
-- Packages exclude source art, tools, saves and all audio, including a local
-  commercial wave bank. They run silently through the existing optional-bank
-  fallback. Debug packaging is rejected.
+- Packages exclude source art, source audio, tools, saves and private legacy
+  audio. Since the 2026-10-15 runtime migration they include the validated,
+  distributable replacement bank. The optional-bank silent fallback remains
+  supported. Debug packaging is rejected.
 - The title screen shows the game revision and build configuration.
   `build-info.txt` records full game/engine revisions and backends. Metadata
   refreshes on each build, including local-change markers.
 
-Validation: Debug and Release builds; ZIP extraction into a temporary directory
+Original package validation: Debug and Release builds; ZIP extraction into a temporary directory
 outside the checkout; all 16 packaged assets matched against their sources; no
 wave bank, source audio, content tools or debug symbols; launch with an isolated
 save and a minimal system-only PATH; and inspection confirming the process loads
@@ -117,6 +120,8 @@ DirectXTK, XAudio2Redist and MSVC DLLs from the extracted package. The title-scr
 identifier was visually checked. CI now builds and inspects the Release ZIP and
 uses it for the existing startup smoke check. A clean Windows machine still
 needs a separate deployment check. The engine pin and source are unchanged.
+The original validation predates replacement audio; current migration checks
+are recorded in [audio inventory §9](audio-inventory.md#9-runtime-migration-and-remaining-integration).
 
 ## Fourth increment: pause controls/settings
 
@@ -234,9 +239,9 @@ The next acceptance work requires hardware and is still outstanding:
    focus changes, fullscreen/resize, series draws, rematches and return to menu.
 4. Complete the [replacement-audio acceptance](polish-plan.md#5-replace-the-entire-audio-set)
    as that work lands: new music and effects, music/SFX gains, muting, suspension,
-   resumed weapon loops and the multiplayer mix. The current ZIP remains silent
-   until the replacement bank and packaging changes are implemented; qualify the
-   audible release and missing-bank fallback separately afterward.
+   resumed weapon loops and the multiplayer mix. The ZIP now includes the
+   replacement bank; qualify actual playback from the extracted release and the
+   missing-bank silent fallback separately.
 5. Relaunch and confirm saved settings; record device models, display layout,
    build revision and observed failures before choosing the next feature increment.
 

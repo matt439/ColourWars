@@ -100,7 +100,7 @@ int main(int argc, char** argv)
         render.add_sprite_sheet("weapon_paint",
             read_sprite_sheet(weapon_sheet_path.c_str(), TextureHandle{}));
         AudioResources audio;
-        audio.add_sound_bank("sound_bank_1", SoundBank::silent());
+        audio.add_sound_bank("paint_exe", SoundBank::silent());
         const GameTuning tuning(tuning_path.c_str());
         const PlaySettings preferences;
         const float dt = static_cast<float>(StepTimer::TicksToSeconds(

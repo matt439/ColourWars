@@ -9,7 +9,7 @@
     "include_in_random": false,
     "icon_frame": "stage_turbulence",
     "sound": {
-        "sound_bank_name": "sound_bank_1"
+        "sound_bank_name": "paint_exe"
     },
     "spawn_locations": {
         "team_a": [

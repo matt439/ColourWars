@@ -157,6 +157,8 @@ private:
 	labrador::SoundBank::EffectHandle music_;
 	labrador::SoundBank::EffectHandle zoom_out_sound_;
 	labrador::SoundBank::EffectHandle countdown_sound_;
+	labrador::SoundBank::EffectHandle go_sound_;
+	labrador::SoundBank::EffectHandle time_up_sound_;
 	float music_volume_ = 0.0f;
 
 	// Written during the main-thread update and read by render workers for dt/fps.
@@ -202,6 +204,7 @@ private:
 	// Initialized from match tuning in the constructor.
 	float timer_ = 0.0f;
 	float start_timer_ = 0.0f;
+	bool countdown_started_ = false;
 	float zoom_out_timer_ = 0.0f;
 	float overview_timer_ = 0.0f;
 
@@ -237,6 +240,10 @@ private:
 		SilhouettePose pose;
 	};
 	float opening_time_ = 0.0f;
+	// Room cues are owned voices so a paused or skipped opening cannot leave
+	// its person making a noise after the silhouette has stopped or gone.
+	labrador::SoundBank::EffectHandle sigh_sound_;
+	labrador::SoundBank::EffectHandle chair_sound_;
 	// The countdown plays in the picture and ends by pushing through the glass.
 	bool intro_countdown_ = false;
 	std::unique_ptr<Monitor> monitor_;

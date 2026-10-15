@@ -3,9 +3,9 @@
     "icon_frame": "stage_close_quarters",
     "sound":
     {
-        "sound_bank_name": "sound_bank_1",
-        "music_name": "holly_dolly",
-        "music_volume": 0.3
+        "sound_bank_name": "paint_exe",
+        "music_name": "music.close_quarters",
+        "music_volume": 0.65
     },
     "spawn_locations":
     {

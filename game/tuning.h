@@ -103,12 +103,16 @@ struct MatchTuning
 	float controls_y = 0.8f;
 
 	SoundTuning countdown_sound;
+	SoundTuning go_sound;
+	SoundTuning time_up_sound;
 	SoundTuning zoom_out_sound;
 
 	OpeningTuning opening;
 	RevealTuning reveal;
 	SoundTuning hover_sound;
 	SoundTuning click_sound;
+	SoundTuning sigh_sound;
+	SoundTuning chair_sound;
 };
 
 // Animation clip selection and optional timing override.

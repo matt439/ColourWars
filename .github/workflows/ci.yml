@@ -1,4 +1,4 @@
-# Build the game against its pinned engine and check startup without private audio.
+# Build against the pinned engine, with accepted audio and its optional fallback.
 # Engine tests and benchmarks run in Labrador's CI; this consumer has no ctest targets.
 
 name: build
@@ -55,6 +55,10 @@ jobs:
           call "%VCVARS%"
           cmake --preset ${{ matrix.preset }}
 
+      - name: Audio publication and staging checks
+        shell: pwsh
+        run: python -m unittest discover -s scripts/audio -p test_runtime_bank.py
+
       # Building also runs Labrador's include-boundary check.
       - name: Build
         run: |
@@ -87,14 +91,22 @@ jobs:
           $package = Join-Path $destination "ColourWars-windows-x64"
           $files = Get-ChildItem -LiteralPath $package -File -Recurse
           if ($files | Where-Object {
-            $_.Extension -in '.xwb', '.wav', '.mp3', '.pdb' -or
+            $_.Extension -in '.wav', '.mp3', '.ogg', '.pdb' -or
+            ($_.Extension -eq '.xwb' -and $_.FullName -ne (Join-Path $package 'sounds/paint_exe.xwb')) -or
             ($_.Extension -eq '.exe' -and $_.Name -ne 'ColourWars.exe')
-          }) { throw "Development files or audio leaked into the package" }
+          }) { throw "Development files or unreviewed audio leaked into the package" }
           foreach ($required in 'ColourWars.exe', 'DirectXTK.dll', 'xaudio2_9redist.dll',
-            'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'build-info.txt') {
+            'msvcp140.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'build-info.txt',
+            'sounds/paint_exe.json', 'sounds/paint_exe.xwb',
+            'licenses/paint_exe/PROVENANCE.md', 'licenses/paint_exe/CC0-1.0.txt',
+            'licenses/paint_exe/runtime-bank.json') {
             if (-not (Test-Path -LiteralPath (Join-Path $package $required))) {
               throw "Package is missing $required"
             }
+          }
+          $receipt = Get-Content -Raw scripts/audio/runtime-bank.json | ConvertFrom-Json
+          if ((Get-FileHash -LiteralPath (Join-Path $package 'sounds/paint_exe.xwb')).Hash -ine $receipt.sha256) {
+            throw 'Packaged bank differs from the accepted publication'
           }
           # The developer console is Debug-only. Its polymorphic classes would
           # leave MSVC RTTI names in the binary if any of it were linked.
@@ -112,14 +124,14 @@ jobs:
       # Debug supports WARP and must start. The pinned engine's Release refuses
       # software adapters: only its exact no-hardware diagnostic may be skipped.
       # Content errors, crashes, missing windows and shutdown errors fail CI.
-      - name: A clone with no audio still starts, from anywhere
+      - name: Audible clone starts from anywhere; missing-bank fallback starts separately
         shell: pwsh
         run: |
           $dir = "out/build/${{ matrix.preset }}/game"
           $arguments = @{
             Executable = Join-Path $dir 'ColourWars.exe'
             OutputDirectory = 'out/validation/startup'
-            RequireNoAudio = $true
+            RequireAudio = $true
           }
           if ('${{ matrix.preset }}' -eq 'x64-release') {
             $dir = Join-Path $env:RUNNER_TEMP "ColourWars-release/ColourWars-windows-x64"
@@ -128,6 +140,18 @@ jobs:
             $arguments.SystemOnlyPath = $true
           }
           & ./scripts/check-startup.ps1 @arguments
+          $bank = Join-Path $dir 'sounds/paint_exe.xwb'
+          $backup = Join-Path $env:RUNNER_TEMP 'paint_exe-startup-backup.xwb'
+          Move-Item -LiteralPath $bank -Destination $backup
+          try {
+            $arguments.Remove('RequireAudio')
+            $arguments.RequireNoAudio = $true
+            $arguments.OutputDirectory = 'out/validation/startup/missing-bank'
+            & ./scripts/check-startup.ps1 @arguments
+          }
+          finally {
+            Move-Item -LiteralPath $backup -Destination $bank
+          }
 
       - name: Upload startup evidence
         if: always()

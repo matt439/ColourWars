@@ -42,7 +42,10 @@ their boxes use `player.size` from source `game/content/tuning.json`.
 Use the palette to add paintable platforms, solid structures, jump-through
 platforms, left/right ramps and decorative visuals. Team spawns and the four
 bounds rectangles are also selectable and editable. The level entry exposes
-the stage name, menu icon and sound settings.
+the stage name, menu icon and sound settings. New levels use the replacement
+`paint_exe` bank and `music.close_quarters`; omit both music name and volume
+for a music-free stage such as Movement Course. Names are validated by the
+game at startup; the editor does not audition them.
 
 The property inspector lists individual fields for the current selection.
 Choose a field, edit its value and click **Apply**. Numbers use a decimal

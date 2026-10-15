@@ -9,8 +9,8 @@ thread starts here: read **NOW**, then the owner of the row it picks up.
 **The only ordering in this file.** Keep this block to the current aim and the next few actions;
 results go in their owners, and `git log` is the changelog.
 
-**Aim (2026-10-13):** finish the [backstory](docs/backstory.md) build, which the last two weeks of
-commits delivered beat by beat, and settle the [Paint.exe art rules](docs/polish-plan.md#1-establish-the-art-and-display-rules)
+**Aim (2026-10-15):** the [backstory](docs/backstory.md#building-it) build is complete, including
+its accepted sounds. Settle the [Paint.exe art rules](docs/polish-plan.md#1-establish-the-art-and-display-rules)
 that the characters, tools, environment and UI all wait on. The author's order is gameplay
 style first, UI after.
 
@@ -25,21 +25,11 @@ The ordered actions are done (`STORY#3`, `ENG#PIN` with `ENG#LEDGER`, `DOC#1`–
 - **Calls:** `POL#4`, `POL#5`, `POL#15`, `GAP#1.2`, `GAP#1.3`, `GAP#1.5`, `GAP#8.6`,
   `ENG#CAMERA`.
 
-## Backstory build
-
-**Owner:** [docs/backstory.md](docs/backstory.md#building-it), the Building-it table. Every other
-beat is built; the table says which.
-
-| id | status | sev | size | item |
-|---|---|---|---|---|
-| `STORY#1` | OPEN | MED | S | Integrate the [accepted pop](docs/audio-inventory.md#7-pol22-production-candidates) with `POL#23`: bank entry and tuning swap; the splat still plays the death yell. |
-| `STORY#2` | OPEN | LOW | S | Integrate the [accepted sigh/chair](docs/audio-inventory.md#7-pol22-production-candidates) with `POL#23`: bank entries, `match.sounds` slots and leave-beat play calls. |
-
 ## Art direction, characters and the UI
 
-**Owner:** [docs/polish-plan.md](docs/polish-plan.md) §1, §4 and §6; the 2026-10-09 switch to
-Paint.exe Maximalism is not in it yet (`DOC#2`). The pixel-kit questions in the polish sub-docs
-are superseded, not open.
+**Owner:** [docs/polish-plan.md](docs/polish-plan.md) §1, §4 and §6. It records the 2026-10-09
+switch to Paint.exe Maximalism; the round-2 art choices still await confirmation. The pixel-kit
+questions in the polish sub-docs are superseded, not open.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
@@ -87,13 +77,12 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 ## Audio replacement
 
 **Owner:** [docs/polish-plan.md §5](docs/polish-plan.md#5-replace-the-entire-audio-set). The
-backstory's three sounds are `STORY#1`/`STORY#2`, not here. A silent fresh clone is correct and
-never a row.
+accepted source set and live replacement bank are integrated. The remaining cue hooks and
+mix still belong here; a missing-bank silent fallback is not a defect.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#23` | OPEN | HIGH | L | Integrate the accepted set: the [dispositions](docs/audio-inventory.md#2-legacy-inventory-replace-or-retire) and every [switchboard site](docs/audio-inventory.md#3-the-switchboard-where-cue-names-live), minding its traps; mix at 1/2/4 players. |
-| `POL#26` | OPEN | LOW | S | The legacy countdown recording still runs 2.4 s into play; replace it with separate beats/GO in `POL#23`. Other playback defects are repaired. [Runtime follow-up](docs/audio-inventory.md#8-runtime-defect-follow-up-pol26). |
+| `POL#23` | OPEN | HIGH | L | Wire the [remaining new cues](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration) (movement, weapon edges/readiness, paint variants/limits, room/reveal details and transitions); mix at 1/2/4 players. |
 | `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains, mute, suspension, resumed loops, the multiplayer mix; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
 
 ## Acceptance and release
@@ -211,6 +200,7 @@ A new row for one of these gets its section back.
 
 | area | owner | a row returns with |
 |---|---|---|
+| Backstory build | [backstory.md, Building it](docs/backstory.md#building-it) | a missing or regressed story beat; pop, sigh and chair integration are complete |
 | Closed engine reports (1–5, 7, 8) | [engine-reports.md, Closed](docs/review/engine-reports.md#closed) | a pin bump that answers a live report and leaves a workaround to delete |
 | Feature-roadmap increments 1–5 | [feature-roadmap.md](docs/feature-roadmap.md) | a sixth increment, or a regression from the `ROAD#2` session |
 | 2026-09-26 review fixes | `docs/review/2026-09-26-*.md` (frozen) | a new review round; the hardware residue is `ROAD#2` |
@@ -265,4 +255,4 @@ editor, `ROAD` feature roadmap, `DBG` developer console, `DOC`/`CI`/`TOOL` the n
 **`size`:** engineer-hours: `S` ≤2 h · `M` 2–6 h · `L` 6–20 h · `XL` >20 h.
 
 **Out of scope for rows:** findings that hold the game to the engine's T11 ("flatten the
-hierarchy", "make it a variant") are misfiled (CLAUDE.md), and a silent fresh clone is correct.
+hierarchy", "make it a variant") are misfiled (CLAUDE.md), and a missing-bank silent fallback is correct.

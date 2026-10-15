@@ -12,7 +12,8 @@ ResultsMenuPage::ResultsMenuPage(MenuContext* context,
 	MenuPage(context),
 	level_end_info_(end_info)
 {
-	this->winner_sound_ = this->resolve_wave(this->look().winner_sound.name);
+	this->winner_sound_ = this->resolve_wave(end_info.winning_team() == PlayerTeam::none
+		? this->look().draw_sound.name : this->look().winner_sound.name);
 	this->fill_sound_ = this->resolve_effect(this->look().fill_sound.name);
 }
 
@@ -61,7 +62,9 @@ void ResultsMenuInitial::update_page(float dt)
 			{
 				this->winner_sound_played_ = true;
 				this->stop_effect(this->fill_sound_, true);
-				this->play_wave(this->winner_sound_, look.winner_sound.volume);
+				this->play_wave(this->winner_sound_,
+					this->level_end_info().winning_team() == PlayerTeam::none
+						? look.draw_sound.volume : look.winner_sound.volume);
 			}
 			// Reveal percentages only for teams that participated.
 			if (this->level_end_info().team_a_played)

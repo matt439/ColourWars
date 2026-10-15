@@ -36,7 +36,7 @@ int main(int argc, char** argv)
         render.add_sprite_sheet("sprite_sheet_1", read_sprite_sheet(
             (content / "textures/sprite_sheet_1.json").string().c_str(), TextureHandle{}));
         AudioResources audio;
-        audio.add_sound_bank("sound_bank_1", SoundBank::silent());
+        audio.add_sound_bank("paint_exe", SoundBank::silent());
         const GameTuning tuning((content / "tuning.json").string().c_str());
         const PlaySettings preferences;
         const TeamColour colours;

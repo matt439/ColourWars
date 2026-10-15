@@ -2,8 +2,9 @@
 
 Produced for `POL#22` on 2026-10-14 and accepted by the author the same day; the
 exact masters and response are in [acceptance.json](../acceptance.json). `ROAD#3` in-game mix
-acceptance remains pending. Integration belongs to `POL#23`; this directory
-changes no runtime music reference.
+acceptance remains pending. The 2026-10-15 runtime migration uses these masters
+for existing menu/arena bindings; results music, ending stings and the gameplay
+mix remain in `POL#23`.
 
 The arrangements and melodies were authored by Codex specifically for ColourWars.
 They use recorded acoustic instruments: a tenor ukulele, an upright piano,
@@ -29,7 +30,7 @@ recordings retain their publishers' CC0 1.0 dedication.
 Every letter names an eight-bar section with its own written melody and harmony;
 reprises change the lead, density, answer voice or final-register treatment as
 specified in `form`. This is not one short loop repeated to meet a duration.
-No track represents the Movement Course, which remains silent.
+No track represents the Movement Course, which has no music.
 
 ## Reproduction and editing
 
@@ -71,9 +72,11 @@ mapping once. The FreePats ukulele already uses scientific pitch names.
   and adds two very quiet reflections from the recorded mix. Performance timing
   and velocity vary by a fixed seed. No live randomness enters an export.
 - Loops have a RIFF `smpl` region from frame zero to the inclusive final frame.
-  Their total frames are exact multiples of 500 for the selected stereo
-  512-byte MS-ADPCM block format. The tempo adjustment is less than 0.004 BPM;
-  the exact tempo and frame count are in `measurements.json`.
+  Their total frames are exact multiples of 500 for the original stereo
+  512-byte MS-ADPCM target. Runtime qualification superseded that encoded
+  format: XAudio2 rejects its 500-frame blocks. The accepted PCM masters retain
+  their original tempo and frames; the tempo adjustment made during production
+  is less than 0.004 BPM, recorded exactly in `measurements.json`.
 - Instrument decays wrap across the music boundary. A 64-frame correction
   matches the final sample to the first without a fade-to-silence gap. The loop
   is the full arrangement, not a subregion of a padded file.
@@ -85,9 +88,12 @@ mapping once. The FreePats ukulele already uses scientific pitch names.
   peaks are below -1 dBFS. Exact peaks, RMS, durations, event counts and SHA256
   hashes are recorded per asset in `measurements.json`.
 - Final MS-ADPCM conversion and XWB packing are separate from these editable
-  PCM masters. The encoded bank must retain each declared loop region and be
-  checked separately. The author accepted the selected masters with the complete
-  cue set; actual one-, two- and four-player gameplay checks remain ROAD#3.
+  PCM masters. The current builder reblocks FFmpeg output into 524-byte stereo
+  blocks containing 512 frames. It extends encoded loops by at most 511 frames
+  using the boundary sample, records the padding and decoded seam measurements,
+  and checks the XWB metadata separately. No accepted PCM master is changed by
+  this derived-format correction. The author accepted those masters with the
+  complete cue set; actual one-, two- and four-player gameplay checks remain ROAD#3.
 
 ## Source provenance
 

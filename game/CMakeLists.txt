@@ -178,17 +178,24 @@ target_include_directories(ColourWars PRIVATE "${PROJECT_BINARY_DIR}/generated")
 # if_different skips unchanged files.
 add_custom_target(colourwars_content ALL)
 
-# Build the optional wave bank before staging it. Stage it explicitly because
-# the configure-time glob cannot see a bank generated for the first time.
+# Check the accepted, tracked bank before staging it. Reproduction/encoding is
+# an explicit authoring step; an ordinary game build needs no audio tools.
 add_custom_command(TARGET colourwars_content PRE_BUILD
     COMMAND "${CMAKE_COMMAND}"
         "-DBANK_DIR=${CMAKE_CURRENT_SOURCE_DIR}/content/sounds"
-        -DBANK_NAME=sound_bank_1
-        -P "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/build_wave_bank.cmake"
+        -P "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/check_wave_bank.cmake"
     COMMAND "${CMAKE_COMMAND}"
-        "-DBANK_FILE=${CMAKE_CURRENT_SOURCE_DIR}/content/sounds/sound_bank_1.xwb"
+        "-DBANK_FILE=${CMAKE_CURRENT_SOURCE_DIR}/content/sounds/paint_exe.xwb"
         "-DSTAGE_DIR=$<TARGET_FILE_DIR:ColourWars>/sounds"
         -P "${CMAKE_CURRENT_SOURCE_DIR}/../cmake/stage_wave_bank.cmake"
+    VERBATIM
+)
+# Audio staging is an allow-list. Neither private legacy waves nor production
+# masters, licence source evidence or authoring tools belong beside the game.
+add_custom_command(TARGET colourwars_content POST_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E copy_if_different
+        "${CMAKE_CURRENT_SOURCE_DIR}/content/sounds/paint_exe.json"
+        "$<TARGET_FILE_DIR:ColourWars>/sounds/paint_exe.json"
     VERBATIM
 )
 foreach(content_file manifest.json tuning.json presentation.json)
@@ -201,7 +208,7 @@ foreach(content_file manifest.json tuning.json presentation.json)
 endforeach()
 # Enumerate entries to exclude source waves and asset-building tools (see NOTICE).
 # CONFIGURE_DEPENDS detects new top-level entries; subdirectories are copied whole.
-foreach(content_dir textures levels fonts sounds)
+foreach(content_dir textures levels fonts)
     file(GLOB content_entries CONFIGURE_DEPENDS
         "${CMAKE_CURRENT_SOURCE_DIR}/content/${content_dir}/*")
     add_custom_command(TARGET colourwars_content POST_BUILD
@@ -211,10 +218,8 @@ foreach(content_dir textures levels fonts sounds)
     )
     foreach(content_entry IN LISTS content_entries)
         get_filename_component(entry_name "${content_entry}" NAME)
-        # Source waves/tools stay behind; the generated bank is staged above.
-        if("${entry_name}" STREQUAL "sound_bank_1"
-            OR "${entry_name}" STREQUAL "sound_bank_1.xwb"
-            OR "${entry_name}" MATCHES "\\.exe$")
+        # Asset-building tools stay behind.
+        if("${entry_name}" MATCHES "\\.exe$")
             continue()
         endif()
         if(IS_DIRECTORY "${content_entry}")

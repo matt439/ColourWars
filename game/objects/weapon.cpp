@@ -285,14 +285,19 @@ void Weapon::handle_shoot_sound(bool shooting_this_update, bool holding_shoot)
 
     if (holding_shoot || shooting_this_update)
     {
-        this->sound_bank_->play_effect(
-            this->loop_sound_,
-            true,
-            this->details().shoot_sound_volume * this->preferences_->sfx_gain());
+        if (!this->loop_playing_)
+        {
+            this->sound_bank_->play_wave(this->shoot_sound_,
+                this->details().shoot_sound_volume * this->preferences_->sfx_gain());
+            this->sound_bank_->play_effect(
+                this->loop_sound_, true,
+                this->details().shoot_sound_volume * this->preferences_->sfx_gain());
+            this->loop_playing_ = true;
+        }
     }
-    else
+    else if (this->loop_playing_)
     {
-        this->sound_bank_->stop_effect(this->loop_sound_, true);
+        this->stop_sounds();
     }
 }
 void Weapon::stop_sounds() const
@@ -302,6 +307,7 @@ void Weapon::stop_sounds() const
         return;
     }
     this->sound_bank_->stop_effect(this->loop_sound_, true);
+    this->loop_playing_ = false;
 }
 void Weapon::pause_sounds() const
 {

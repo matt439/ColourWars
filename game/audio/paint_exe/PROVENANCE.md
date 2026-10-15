@@ -1,6 +1,6 @@
 # Paint.exe audio provenance
 
-Produced 2026-10-14 for POL#22. This production bank is outside live content.
+Produced 2026-10-14 for POL#22. Masters stay outside live content; the runtime bank uses accepted exports.
 Author accepted this set on 2026-10-14 for POL#23 integration. Runtime mix acceptance remains ROAD#3.
 [acceptance.json](acceptance.json) records the author's response and the exact accepted master hashes.
 Every source is retained and hashed in [sources.json](sources.json). Every exported wave
@@ -14,8 +14,9 @@ repository MIT licence. Source recordings retain their CC0 terms. No human recor
 by the repository author is claimed.
 
 Exports: PCM signed 16-bit, 44.1 kHz; music stereo, effects mono except room/ambient beds.
-The isolated bank build encodes music as MS-ADPCM (512-byte stereo blocks) and copies
-authored loops. Effects remain PCM. Each project retains exact source excerpts, pitches,
+The bank build encodes music as MS-ADPCM (512-frame, 524-byte stereo blocks); full-file
+loops add at most 511 derived boundary frames. Effects remain PCM. Runtime export hashes,
+padding and decoded checks are in scripts/audio/runtime-bank.json. Each project retains source excerpts, pitches,
 layer timings, filters, gains, fades and loop edits in its recipe and renderer.
 
 ## Recorded sources

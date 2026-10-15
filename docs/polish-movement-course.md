@@ -11,9 +11,9 @@ untimed workshop. Existing arenas are unchanged.
 The source is [movement_course.json](../game/content/levels/movement_course.json).
 Open it directly in the [level editor](level-editor.md), save an experimental
 copy, then rebuild to test in the game. The reused Turbulence icon and simple
-existing blocks are placeholders. The stage is deliberately silent: its
-`sound` block names the bank and no music, so footsteps and landings are heard
-alone.
+existing blocks are placeholders. The stage deliberately has no music: its
+`sound` block names the replacement bank only. Existing action cues play;
+footstep and landing audio hooks remain in `POL#23`.
 
 ## Dimensions and route
 

@@ -1554,7 +1554,7 @@ int main(int argc, char** argv)
                 TextureHandle{}));
         }
         AudioResources audio;
-        audio.add_sound_bank("sound_bank_1", SoundBank::silent());
+        audio.add_sound_bank("paint_exe", SoundBank::silent());
         const PlaySettings preferences;
         const GameTuning tuning((content / "tuning.json").string().c_str());
         const Presentation presentation((content / "presentation.json").string().c_str());

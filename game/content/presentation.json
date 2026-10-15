@@ -61,11 +61,11 @@
       "icon_padding": { "x": 6.0, "y": 6.0 }
     },
     "box_size": { "x": 900.0, "y": 600.0 },
-    "sound_bank": "sound_bank_1",
+    "sound_bank": "paint_exe",
     "sounds": {
-      "direction": "UI_Clicks14",
-      "confirm": "UI_Clicks01",
-      "cancel": "UI_Clicks17"
+      "direction": "ui.move",
+      "confirm": "ui.confirm",
+      "cancel": "ui.cancel"
     }
   },
 
@@ -80,7 +80,7 @@
       "font": "gill_sans_mt_bold_24",
       "position": { "x": 150.0, "y": 290.0 },
       "back_position": { "x": 150.0, "y": 865.0 },
-      "text": "ColourWars - Matt Harding\nBuilt with the Labrador engine (MIT).\nMicrosoft - DirectX Tool Kit, DirectXTex, DirectXMath and XAudio2Redist (MIT).\nMicrosoft content tools - XWBTool, MakeSpriteFont and texconv (MIT).\nRapidJSON - THL A29 Limited, a Tencent company, and Milo Yip (MIT).\nCollision routines - Christer Ericson, Real-Time Collision Detection (2005).\nFonts - compiled Gill Sans MT and Courier New glyphs; font files are not included.\nMenu artwork - generated for ColourWars with OpenAI image generation.\n\nAccepted replacement audio sources (CC0; game integration pending):\nJoseph SARDIN / BigSoundBank; OwlishMedia / owlstorm; unkleceeg;\nMateusz Dabrowski / FreePats; Versilian Studios LLC / VCSL.\nOriginal audio arrangements and production code - authored with Codex (MIT).\nFull notices, source credits and licence terms: NOTICE, LICENSE and licenses/\ninside the release folder. Legacy commercial audio is not distributed."
+      "text": "ColourWars - Matt Harding\nBuilt with the Labrador engine (MIT).\nMicrosoft - DirectX Tool Kit, DirectXTex, DirectXMath and XAudio2Redist (MIT).\nMicrosoft content tools - XWBTool, MakeSpriteFont and texconv (MIT).\nRapidJSON - THL A29 Limited, a Tencent company, and Milo Yip (MIT).\nCollision routines - Christer Ericson, Real-Time Collision Detection (2005).\nFonts - compiled Gill Sans MT and Courier New glyphs; font files are not included.\nMenu artwork - generated for ColourWars with OpenAI image generation.\n\nAccepted replacement audio sources (CC0):\nJoseph SARDIN / BigSoundBank; OwlishMedia / owlstorm; unkleceeg;\nMateusz Dabrowski / FreePats; Versilian Studios LLC / VCSL.\nOriginal audio arrangements and production code - authored with Codex (MIT).\nFull notices, source credits and licence terms: NOTICE, LICENSE and licenses/\ninside the release folder. Legacy commercial audio is not distributed."
     },
     "fonts": {
       "title": "gill_sans_ultra_bold_144",
@@ -132,10 +132,10 @@
       "selected": "75EDD7",
       "unselected": "WHITE"
     },
-    "music": { "name": "Top_Of_The_Morning", "volume": 0.03 },
+    "music": { "name": "music.menu", "volume": 0.65 },
     "sounds": {
-      "error": "UIerror2",
-      "ready": "Whoosh2"
+      "error": "ui.error",
+      "ready": "ui.ready"
     },
     "weapon_descriptions": {
       "sprayer": "Fires a powerful stream of paint in an arc pattern.\nGood for beginners.",
@@ -166,7 +166,7 @@
       "size": { "x": 100.0, "y": 50.0 },
       "spacing": { "x": 200.0, "y": 130.0 }
     },
-    "window_open_sound": "UI_Clicks01"
+    "window_open_sound": "ui.pause_open"
   },
 
   "end_menu": {
@@ -212,8 +212,9 @@
       "winner": { "x": 650.0, "y": 250.0 }
     },
     "sounds": {
-      "winner": { "name": "party_horn", "volume": 1.0 },
-      "fill": { "name": "DrumRoll", "volume": 1.0 }
+      "winner": { "name": "results.winner", "volume": 1.0 },
+      "draw": { "name": "results.draw", "volume": 1.0 },
+      "fill": { "name": "results.fill", "volume": 1.0 }
     }
   },
 

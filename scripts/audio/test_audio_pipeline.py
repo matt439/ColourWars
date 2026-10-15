@@ -137,16 +137,25 @@ class ProductionChecks(unittest.TestCase):
     def test_corrupt_adpcm_predictor_rejected(self) -> None:
         coefficients = b"".join(struct.pack("<hh", *pair) for pair in
                                 [(256, 0), (512, -256), (0, 0), (192, 64), (240, 0), (460, -208), (392, -232)])
-        fmt = struct.pack("<HHIIHHHHH", 2, 1, 44100, 22579, 256, 4, 32, 500, 7) + coefficients
+        fmt = struct.pack("<HHIIHHHHH", 2, 1, 44100, 22566, 262, 4, 32, 512, 7) + coefficients
         # There are seven coefficient pairs, indexed 0-6; 7 is corrupt.
-        block = b"\x07" + b"\0" * 255
+        block = b"\x07" + b"\0" * 261
         body = b"WAVEfmt " + struct.pack("<I", len(fmt)) + fmt + b"data" + struct.pack("<I", len(block)) + block
         self.wav.write_bytes(b"RIFF" + struct.pack("<I", len(body)) + body)
         with self.assertRaisesRegex(pipeline.InvalidAudio, "predictor"):
             pipeline.inspect_adpcm(self.wav, {"channels": 1}, False)
 
+    def test_power_of_two_byte_blocks_are_not_xaudio_sample_blocks(self) -> None:
+        coefficients = b"".join(struct.pack("<hh", *pair) for pair in
+                                [(256, 0), (512, -256), (0, 0), (192, 64), (240, 0), (460, -208), (392, -232)])
+        fmt = struct.pack("<HHIIHHHHH", 2, 1, 44100, 22579, 256, 4, 32, 500, 7) + coefficients
+        body = b"WAVEfmt " + struct.pack("<I", len(fmt)) + fmt + b"data" + struct.pack("<I", 256) + b"\0" * 256
+        self.wav.write_bytes(b"RIFF" + struct.pack("<I", len(body)) + body)
+        with self.assertRaisesRegex(pipeline.InvalidAudio, "512-frame blocks"):
+            pipeline.inspect_adpcm(self.wav, {"channels": 1}, False)
+
     @unittest.skipUnless(shutil.which("ffmpeg") and
-                         (pipeline.REPOSITORY / "game/content/sounds/sound_bank_1/XWBTool.exe").is_file(),
+                         (pipeline.REPOSITORY / "scripts/audio/tools/XWBTool.exe").is_file(),
                          "integration check requires ffmpeg and the bundled XWBTool")
     def test_real_adpcm_bank_preserves_loop_and_detects_corruption(self) -> None:
         scratch_parent = pipeline.REPOSITORY / "out/audio-pipeline-tests"
@@ -154,12 +163,27 @@ class ProductionChecks(unittest.TestCase):
         with tempfile.TemporaryDirectory(dir=scratch_parent) as scratch:
             folder = Path(scratch)
             source = folder / "loop.wav"
-            write_wave(source, channels=2, looping=True)
+            write_wave(source, channels=2)
+            # Distinct samples make skipped/duplicated windows observable at
+            # the two lossless header frames of each independent ADPCM block.
+            samples = array("h", [(index * 37 % 2000) - 1000 for index in range(2000)])
+            if sys.byteorder != "little":
+                samples.byteswap()
+            with wave.open(str(source), "wb") as output:
+                output.setparams((2, 2, 44100, 0, "NONE", "PCM"))
+                output.writeframes(samples.tobytes())
+            append_loop(source, 0, 999)
             cue = {"id": "music.probe", "path": source.relative_to(pipeline.REPOSITORY).as_posix(), "loop": True}
             measured = {"id": cue["id"], **pipeline.inspect_pcm(source, True)}
             report = pipeline.build({"cues": [cue]}, {"cues": [measured], "warnings": []}, folder / "built")
             self.assertEqual(report["bank"]["entries"], 1)
-            self.assertEqual(report["exports"][0]["decoded"]["frames"], 1000)
+            self.assertEqual(report["exports"][0]["decoded"]["frames"], 1024)
+            self.assertEqual(report["exports"][0]["loop_length"], 1024)
+            self.assertEqual(report["exports"][0]["padding_frames"], 24)
+            decoded = pipeline.riff_chunks((folder / "built/decoded/music.probe.wav").read_bytes())[b"data"]
+            original = pipeline.riff_chunks(source.read_bytes())[b"data"]
+            for frame in (0, 512):
+                self.assertEqual(decoded[frame * 4:(frame + 2) * 4], original[frame * 4:(frame + 2) * 4])
             bank_path = Path(report["bank"]["path"])
             bank = bytearray(bank_path.read_bytes())
             entries_at = struct.unpack_from("<I", bank, 20)[0]

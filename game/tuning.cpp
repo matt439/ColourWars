@@ -229,9 +229,13 @@ namespace
 
 		const JsonValue sounds = json.object("sounds");
 		match.countdown_sound = read_sound(sounds, "countdown");
+		match.go_sound = read_sound(sounds, "go");
+		match.time_up_sound = read_sound(sounds, "time_up");
 		match.zoom_out_sound = read_sound(sounds, "zoom_out");
 		match.hover_sound = read_sound(sounds, "hover");
 		match.click_sound = read_sound(sounds, "click");
+		match.sigh_sound = read_sound(sounds, "sigh");
+		match.chair_sound = read_sound(sounds, "chair");
 
 		const JsonValue opening = json.object("opening");
 		match.opening.settle = json_non_negative(opening, "settle");
@@ -560,9 +564,13 @@ void GameTuning::validate_match_sounds(const RenderResources& render,
 {
 	const ResourceValidation check(this->source_path_, render, audio);
 	check.effect("match.sounds.countdown.name", bank, this->match_.countdown_sound.name);
+	check.effect("match.sounds.go.name", bank, this->match_.go_sound.name);
+	check.effect("match.sounds.time_up.name", bank, this->match_.time_up_sound.name);
 	check.effect("match.sounds.zoom_out.name", bank, this->match_.zoom_out_sound.name);
 	check.wave("match.sounds.hover.name", bank, this->match_.hover_sound.name);
 	check.wave("match.sounds.click.name", bank, this->match_.click_sound.name);
+	check.effect("match.sounds.sigh.name", bank, this->match_.sigh_sound.name);
+	check.effect("match.sounds.chair.name", bank, this->match_.chair_sound.name);
 }
 
 const MatchTuning& GameTuning::match() const

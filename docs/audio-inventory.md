@@ -7,7 +7,11 @@ Status: inventory taken on 2026-10-14 at `2f052b9`, for
 [section 6.3](#63-decisions-and-what-is-still-open). The complete candidate set
 produced later the same day is recorded in [section 7](#7-pol22-production-candidates).
 The author accepted the complete set on 2026-10-14; that response, rather than
-the technical checks, closes POL#22. Runtime integration and acceptance remain.
+the technical checks, closes POL#22. The 2026-10-15
+[runtime migration](#9-runtime-migration-and-remaining-integration) replaces the
+existing game bindings and closes STORY#1, STORY#2 and POL#26. POL#23 retains
+the remaining new cue hooks and gameplay mix; ROAD#3 retains actual listening
+and release acceptance.
 
 This page lists every legacy wave, bank entry, loop instance and cue reference,
 and gives each one a replace-or-retire entry. It then lists every cue the
@@ -15,7 +19,11 @@ finished game needs, proposes a sound direction, and gives the provenance record
 that each replacement asset must carry. `POL#22` produces the set and `POL#23`
 integrates it. Both work from this page.
 
-The legacy set cannot be shipped. [NOTICE](../NOTICE) (lines 49-52) says four of
+**Sections 1–3 preserve the pre-migration inventory and its file/line references.**
+Their dispositions and traps describe the legacy set; section 9 records what
+is now integrated and what remains. They are not directions to revive old files.
+
+The legacy set cannot be shipped. The earlier [NOTICE](../NOTICE) said four of
 the twenty-four waves are commercial music tracks. None of the twenty remaining
 waves has a recorded source or licence either (see
 [provenance](#24-provenance-of-the-legacy-set)). Polish plan §5 (lines 412-415)
@@ -23,10 +31,11 @@ accepts no existing track, sample, loop or cue as final content, so every row
 below retires the legacy item. The only open question for each one is what
 replaces it.
 
-The waves are in this checkout at `game/content/sounds/sound_bank_1/`, and the
-built `sound_bank_1.xwb` is beside the definition. Both are git-ignored
-(`.gitignore:369-372`). Durations, formats and levels below were read from those
-local files. No file was copied.
+At inventory time the local waves were at `game/content/sounds/sound_bank_1/`,
+with `sound_bank_1.xwb` beside the definition; both were git-ignored.
+Durations, formats and levels below were read from those local files. No file
+was copied into the replacement set. The legacy bank is no longer a runtime or
+packaging input.
 
 ## 1. The legacy bank in one paragraph
 
@@ -286,7 +295,11 @@ backstory beats. **Tier 2** is the remaining weapons, arenas and screens, needed
 before final acceptance. **Tier 3** is quiet detail, assessed one cue at a time.
 Polish plan §5 (lines 430-431) allows a visual idle accent to stay silent.
 
-**Hook:** *exists* means a play call is already there, so only data changes.
+The trigger locations and line numbers below were captured during inventory.
+The current implementation status is in [section 9](#9-runtime-migration-and-remaining-integration);
+the hook column records the work identified before that migration.
+
+**Hook:** *exists* means a play call was already there, so only data changes.
 *Slot* means there is an event point in code but no sound call, so a tuning slot
 and a `play_wave` call must be added. *Add* means there is no event yet, so new
 detection logic is needed. Every new slot must be added to startup validation
@@ -483,20 +496,10 @@ An asset with an empty licence field does not go into `waves`.
   The author accepted the complete set on 2026-10-14 with no requested revisions,
   closing this item. The review page includes offline comparisons; these are
   not actual gameplay acceptance.
-- **`POL#23`** carries out the dispositions in section 2 and updates every site
-  in section 3, in a single migration:
-  - Delete the legacy `.xwb` and both staged copies before the first build.
-  - Retire `Steamboat`, `unused/wave_bank_1.json`, `sound list.txt` and
-    `cmd.txt`, and stop staging what the game never loads (`GAP#8.6`).
-  - Turn off `create_effect_instance_for_each_wave` and name each instance
-    explicitly, including any pause-aware countdown voice.
-  - Fix trap 1 by making the looping weapons' `shoot_sound` their `start` cue,
-    or by removing it.
-  - Change the editor default.
-  - Change the release list, CI, the startup and visual check scripts, and the
-    ignore rules to suit the chosen workflow.
-  - Revise NOTICE, README, CLAUDE.md and AGENTS.md, keeping the absent-bank
-    fallback working.
+- **`POL#23`** has migrated the existing bindings, explicit runtime voices,
+  bank validation, staging and release packaging to the accepted replacement
+  set. It retains the new cue hooks and gameplay mix listed in
+  [section 9](#9-runtime-migration-and-remaining-integration).
 - **`ROAD#3`** accepts the result: gains, mute, focus loss, pause and resume,
   resumed loops, the multiplayer mix, then the audible release and the
   missing-bank fallback, each checked separately.
@@ -509,10 +512,10 @@ Answered by the author on 2026-10-14:
   while the person is present.
 - **Source waves are committed to this repository.** Every new asset therefore
   needs redistribution rights for its source as well as its use (the
-  "Source redistribution" field in 6.1 must be yes), and `POL#23` replaces the
-  `*.wav` ignore rule (`.gitignore:370`) with one that keeps out only the legacy
-  folder. Once the set is in, a fresh clone is audible, and the "a fresh clone is
-  silent" text in README, NOTICE, CLAUDE.md and AGENTS.md goes.
+  "Source redistribution" field in 6.1 must be yes). The accepted masters and
+  derived bank are committed; a fresh clone has audio. The silent-clone text
+  has been replaced in README, NOTICE, CLAUDE.md and AGENTS.md; the optional
+  missing-bank fallback remains supported.
 - **The fourth commercial track is unknown.** NOTICE keeps "four" without naming
   it; both candidates are retired either way.
 
@@ -521,8 +524,8 @@ Answered by the author on 2026-10-14:
 
 Nothing is still open here.
 
-The sourced pop, sigh and chair-creak (`STORY#1`, `STORY#2`) are accepted with
-the set in section 7. The live game still needs the bank entries, slots and calls.
+The sourced pop, sigh and chair-creak (`STORY#1`, `STORY#2`) were accepted with
+the set in section 7 and integrated on 2026-10-15.
 
 ## 7. POL#22 production candidates
 
@@ -531,7 +534,8 @@ the set in section 7. The live game still needs the bank entries, slots and call
 then the same scripted scene at one, two and four players. The
 [production README](../game/audio/paint_exe/README.md) gives reproduction commands
 and the acceptance record. The files are under `game/audio/paint_exe/`, outside
-staged content; the live game and legacy bank have not changed.
+staged content. The table below records that production milestone; the later
+live-bank migration is recorded in section 9.
 
 | Deliverable | Retained result |
 |---|---|
@@ -543,20 +547,25 @@ staged content; the live game and legacy bank have not changed.
 | Review | Individual cue players, automatic loop repeat and fixed-gain 1/2/4-player offline mixes. The timeline keeps picture sound out of the room interval and reactions after the person leaves. The author accepted the set after the review request; no automated browser playback or detailed listening observations are claimed. |
 | Bank | An isolated, named XWB with 103 entries, 22,772,676 bytes; no legacy input or timestamp reuse. Output is under `out/audio-production/`, never the live bank. |
 
-The technical proposals in §5.2 are now exercised: one bank, 44.1 kHz, PCM16
-effects and MS-ADPCM stereo music. Four music loops meet the 60–120 s target.
-Every looping master has an authored full-file `smpl` region; music loops use
-500-frame boundaries. FFmpeg 8.1.2 with **512-byte stereo ADPCM blocks** is the
-chosen encoder. Its missing `smpl` is restored before XWBTool packs it. The
-bundled tool preserves these loops; DirectXTK passes their bounds to XAudio2.
-Larger FFmpeg default blocks cannot be represented by XWB's mini-format even
-though XWBTool returns success, so the builder checks the encoded metadata.
+The production checks exercised the technical proposals in §5.2: one bank,
+44.1 kHz, PCM16 effects and MS-ADPCM stereo music. Four music loops meet the
+60–120 s target. Every looping master has an authored full-file `smpl` region;
+the accepted PCM music masters use 500-frame boundaries. The original encoded
+bank used FFmpeg 8.1.2 with **512-byte stereo ADPCM blocks (500 frames)**. Its
+missing `smpl` was restored before packing; the bundled tool preserved the
+metadata and DirectXTK forwarded the loop bounds.
+
+Those checks did not create an XAudio2 voice. The 2026-10-15 runtime probe
+rejected the 500-frame ADPCM format (`0x88960001`). The derived runtime encoding
+is corrected to **512 frames per 524-byte stereo block**; the 103 accepted PCM
+masters are unchanged. The original snapshots below remain a record of their
+technical checks, not evidence that their encoded bank played through XAudio2.
 
 The [retained technical record](../game/audio/paint_exe/technical-checks.json)
 checks every source/master hash, all cue groups, peaks below -1 dBFS, format,
 onset/tail, loop metadata and XWB entry/sample identity. The ADPCM music is
 decoded and checked too. The final build has zero technical listening flags;
-11 pipeline tests pass, including a real encode/pack and corrupt-metadata
+The production qualification passed 11 pipeline tests, including a real encode/pack and corrupt-metadata
 rejection. All 103 masters reproduce byte for byte. These checks do not establish
 musical fit, timbre, pleasant loop joins or four-player intelligibility.
 
@@ -574,23 +583,93 @@ cues, are accepted; no revisions were requested. The
 their exact hashes. Regenerated catalogues show acceptance only while those
 masters match. Original technical snapshots retain their pre-approval status.
 
-POL#22 leaves TODO; POL#23 is now open for the §2/§3 migration, and the story rows
-are open for their integration work. Tier 3 remains optional with the existing
-default-off direction. ROAD#3 still tests the actual game, mix and release;
-accepting the assets does not close those checks.
+POL#22 is closed. The later runtime migration closes the story integration rows;
+POL#23 retains remaining new cue hooks and mix. Tier 3 remains optional with the
+existing default-off direction. ROAD#3 still tests the actual game, mix and
+release; accepting the assets does not close those checks.
 
 ## 8. Runtime defect follow-up (POL#26)
 
 2026-10-15: countdown voice ownership, pause confirmation returns, the time-up
-transition tail and the post-reveal fanfare are repaired. The remaining defect
-is the oversized legacy countdown recording; it needs the separate beat/GO
-integration in POL#23. No replacement asset, bank migration or audible mix
-acceptance is claimed by these lifecycle changes. ROAD#3 retains listening,
+transition tail and the post-reveal fanfare are repaired. The runtime migration
+also replaces the oversized legacy countdown recording with separate
+`match.count_beat` and `match.go` cues, closing POL#26. ROAD#3 retains listening,
 multiplayer and hardware acceptance.
 
-Validation: `scripts/run-acceptance.ps1 -Preset x64-debug` and `x64-release`
+Lifecycle validation before the bank migration: `scripts/run-acceptance.ps1 -Preset x64-debug` and `x64-release`
 both passed, including the Debug real-Level opening/reveal/replay checks and
 Release developer-tool exclusion. `scripts/check-startup.ps1` passed against
 the Debug executable with the local bank, an isolated save and graceful
 shutdown (`out/validation/pol26-debug/`). These checks exercise construction,
 validation and state flow; they do not listen to or assert the emitted audio.
+
+## 9. Runtime migration and remaining integration
+
+**2026-10-15: the existing live audio bindings use the accepted Paint.exe set.**
+The runtime definition and tracked derived bank are
+`game/content/sounds/paint_exe.json` and `paint_exe.xwb`. The bank contains all
+103 accepted masters, encoded as PCM16 effects and MS-ADPCM music, with named
+music/weapon/transition voices. Music is reblocked from FFmpeg's output into
+512-frame/524-byte stereo blocks for XAudio2; an encoded loop may gain at most
+511 frames of tail padding. This changes the derived encoding, not the accepted
+PCM masters. The corrected bank is 22,765,884 bytes; its SHA-256, encoded music
+hashes, padding and decoded measurements are retained in
+[runtime-bank.json](../scripts/audio/runtime-bank.json). The build validates it before staging it; the
+normal Release ZIP includes this bank, provenance and CC0 terms. The bank can
+be omitted for the existing optional silent fallback, which is checked
+separately. Private legacy waves and banks cannot supply either path.
+
+The old generated `out/review-2026-09-26-data/` fixtures remain inactive archival
+output. They are outside the explicit bank inputs, staging and release list;
+the accepted artifact receipt excludes them from runtime publication. Their
+legacy names do not make them migration inputs.
+
+| Binding | Integrated replacement |
+|---|---|
+| Menu and arena music | `music.menu`, `music.close_quarters`, `music.king_of_the_hill`, `music.turbulence`; Movement Course has no music |
+| Player | `player.jump`, `player.hurt`, `player.pop` through the existing `death` slot, and `player.respawn` |
+| Weapons and paint | Sprayer, roller and mister start cues play once per held-fire edge, with independent per-player loop voices; `sniper.shot`, `bucket.throw`, and the first `paint.splash` variant |
+| Menus and results | Direction, confirm, cancel, error, ready, pause-open, results fill, winner and distinct draw use their replacement cues |
+| Match start/end | Repeated `match.count_beat` edges and one `match.go`; separate time-up and glass-out voices replace the whistle |
+| Opening and reveal | Reveal hover/click use the replacement cues; the accepted sigh/chair cues have tuning slots and pause-aware phase-edge playback |
+
+The pop's data swap closes STORY#1. The sigh/chair bank entries, tuning slots
+and play calls close STORY#2. The per-beat countdown/GO replaces the 5.375-second
+recording that used to overlap active play, closing POL#26. All three closures
+describe integration; their audible balance and timing still need ROAD#3.
+
+**POL#23 remains open.** Putting an accepted wave into the bank does not create
+a gameplay trigger. Complete the required new cues from section 4, assess Tier
+3 detail individually and keep it off or nearly off by default:
+
+- Movement: landing/steps/skid and their variants; redraw loop and painted-surface
+  contacts; optional bonk/drop/hit-confirm details.
+- Weapons and paint: stop edges, roller lift/settle, empty/recovered/ready
+  feedback; splash variation and repetition limits, capture/dud and per-tool
+  impacts; optional blocked/slosh/drip cues.
+- Match and room: glass-in, opening preview hover, close/celebrate/slump,
+  colour-in/skip/undo/last-ten; room tone and optional footsteps/breath/waver/cheat.
+- Menus/music: pad lost/back, reconnect count-in (`POL#18`), distinct unready
+  and volume-preview hooks, series cue; results music, arena ending stings and
+  transition fades/ducking (`GAP#5.1`); optional world ambience/detail.
+- Mix: useful action cues above weapon voices, movement, music and decorative
+  detail; limits on repeating impacts/steps; actual one-, two- and four-player
+  audition with music/SFX gains, mute, focus, suspension and resumed loops.
+
+ROAD#3 then qualifies listening from the extracted Release ZIP and the missing-bank
+fallback separately. Offline listening-page acceptance and automated construction
+checks do not establish the in-game mix, physical-pad behaviour or an audible
+release check.
+
+Migration validation: full Debug and Release consumer acceptance pass, including
+the focused `story_audio` null-recorder check for cue edges, zero-delta updates,
+countdown/time-up once on a short match, gain changes, skip/quick-rematch/solo
+and weapon held starts/pause/release/death. All 18 audio tests pass (12 pipeline,
+six runtime/publication). The 51-file Release ZIP was inspected: the corrected
+bank, provenance and CC0 terms are included; source waves/previews, private
+banks, tools and debug symbols are excluded. Extracted Release startup with the
+real XAudio2 bank and its separately omitted-bank fallback both pass with a
+system-only PATH, isolated save and graceful close. Isolated Debug missing-bank
+and real-bank startup also pass. Evidence is under `out/validation/audio-migration/`,
+including `release/package-inspection.json`. These checks establish API
+requests, asset integrity and startup, not listening or multiplayer mix quality.

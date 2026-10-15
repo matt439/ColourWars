@@ -36,10 +36,10 @@
         {
             "kind": "sound_bank",
             "directory": "./sounds/",
-            "_comment": "Optional because the wave bank is built from source audio this repository cannot distribute - see README, 'Audio'. Absent, the game runs in silence rather than throwing at startup.",
+            "_comment": "Accepted redistributable Paint.exe audio ships with the game. Optional loading keeps a missing-bank installation playable with the silent fallback; see README, 'Audio'.",
             "optional": true,
             "names": [
-                "sound_bank_1"
+                "paint_exe"
             ]
         }
     ]

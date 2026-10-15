@@ -5,7 +5,7 @@ tree is not ColourWars' to license, and what is deliberately absent.
 
 The main menu's Credits page summarises these acknowledgements and the engine's
 notice. Full terms remain here, in LICENSE and in the release's `licenses/`
-folder. The accepted replacement audio is labelled as awaiting game integration.
+folder. The accepted Paint.exe replacement bank is included in the game and release.
 
 The engine is not covered here. It is a submodule at `external/labrador` with
 its own LICENSE and its own NOTICE, and the third-party code it carries —
@@ -30,9 +30,9 @@ includes it.
 
 ### Microsoft content tools (MIT)
 
-Three build tools ship in `game/content/`, alongside the assets they produce:
+Three build tools are retained in this repository:
 
-- `game/content/sounds/sound_bank_1/XWBTool.exe` — the wave-bank compiler.
+- `scripts/audio/tools/XWBTool.exe` — the wave-bank compiler.
 - `game/content/fonts/MakeSpriteFont.exe` — the sprite-font compiler.
 - `game/content/textures/texconv.exe` — the texture converter.
 
@@ -43,8 +43,9 @@ https://github.com/microsoft/DirectXTex
 ## Replacement audio production set (CC0 sources)
 
 `game/audio/paint_exe/` retains the replacement recordings, editable
-scores/recipes and exported WAVs for POL#22. These files are distributed; they
-are separate from the legacy live bank described below. Exact per-file creators,
+scores/recipes and exported WAVs for POL#22. The game and Release ZIP use the
+derived `game/content/sounds/paint_exe.xwb`, containing all 103 accepted masters.
+Source files remain in the repository and are excluded from the ZIP. Exact per-file creators,
 source URLs, licence evidence, modifications and hashes are recorded in
 `game/audio/paint_exe/sources.json` and `game/audio/paint_exe/PROVENANCE.md`.
 
@@ -55,28 +56,22 @@ Studios LLC / VCSL. CC0 requires no attribution. The original ColourWars
 arrangements and production code were authored with Codex and use this
 repository's MIT licence; the source recordings retain their CC0 terms.
 
-The author accepted this production set on 2026-10-14. POL#23 has not yet
-changed the game's content bindings or release package. A fresh clone still uses
-the existing optional-bank silent fallback described below.
+The author accepted this production set on 2026-10-14. The 2026-10-15 runtime
+migration replaces the legacy game bindings and includes the replacement bank,
+provenance and CC0 terms in the release. Further new cue hooks and in-game mix
+acceptance remain open. If the optional bank is absent, the loader still
+substitutes a silent bank, reports it once and lets the game continue.
 
 ## Content that is deliberately not distributed
 
-### Audio
+### Retired legacy audio
 
-`game/content/sounds/` ships the bank's definition (`sound_bank_1.json`), the
-build tool, and the CMake recipe that turns source waves into
-`sound_bank_1.xwb`. It does not ship the waves or the built bank.
-
-Two reasons, and either alone would be enough:
-
-1. **Licence.** Four of the twenty-four waves are commercial music tracks. They
-   are not ColourWars' to redistribute under MIT or any other licence.
-2. **Size.** The sources are 148 MB and the built bank is 154 MB, past
-   GitHub's per-file limit.
-
-A clone therefore has no wave bank, and this is handled rather than broken: the
-manifest marks the bank optional, the loader substitutes a silent one, prints a
-line saying so, and the game runs. See README, "Audio".
+The earlier `sound_bank_1` set is excluded from the repository and release.
+Four of its twenty-four waves were commercial music tracks, and the remaining
+waves had no retained source/licence records. Those files are not ColourWars'
+to redistribute under MIT or any other licence. The roughly 154 MB PCM bank
+and its sources also exceeded practical distribution limits. No legacy sample,
+track, bank or timestamp-based reuse supplies the replacement bank.
 
 ### Fonts
 

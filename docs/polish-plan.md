@@ -52,8 +52,8 @@ quick rematch), the reveal (back into the monitor, the person hovers each
 colour, clicks the winner, the coverage shows and the person leaves, or closes
 the program when nobody painted) and the figures acting. Solo practice skips
 both ends, and the results page keeps only the percentages after the reveal.
-Its pop, sigh and chair-creak sounds wait on waves. Open work and its order are
-in [TODO.md](../TODO.md).
+Its accepted pop, sigh and chair-creak sounds are integrated as of 2026-10-15.
+Open work and its order are in [TODO.md](../TODO.md).
 
 ## Goal and direction
 
@@ -132,10 +132,10 @@ languages. The gameplay code also offers concrete polish opportunities:
 - Surface splashes and the animated results reveal already exist, but need the
   same art and feedback treatment as the rest of the game.
 
-The current private audio bank is excluded from distribution, as recorded in
-[NOTICE](../NOTICE). This plan adds a complete replacement audio set that can be
-distributed with the game. The current silent fallback remains valid during the
-transition; auditioning or remixing the old bank does not complete the audio work.
+The private legacy audio bank has been retired from live content and packaging.
+The accepted distributable replacement set now supplies the game's existing
+audio bindings; [NOTICE](../NOTICE) records its sources. Further cue hooks and
+the in-game mix remain open, with a silent fallback when the bank is missing.
 
 Relevant implementation references:
 [player](../game/objects/player.cpp), [camera and match flow](../game/objects/level.cpp),
@@ -424,8 +424,11 @@ The inventory, the new cue list and a proposed sound direction are in
 [audio-inventory.md](audio-inventory.md) (2026-10-14); the direction is accepted.
 The [complete production set](audio-inventory.md#7-pol22-production-candidates)
 now has retained sources, per-wave provenance, reproducible exports and an
-isolated bank. The author accepted the set on 2026-10-14, closing POL#22;
-POL#23 owns integration and ROAD#3 owns in-game audio acceptance.
+isolated bank. The author accepted the set on 2026-10-14, closing POL#22.
+The 2026-10-15 [runtime migration](audio-inventory.md#9-runtime-migration-and-remaining-integration)
+replaces all existing audio bindings and includes the story cues and separate
+countdown beats/GO. POL#23 retains the new hooks listed there and the gameplay
+mix; ROAD#3 owns in-game audio acceptance.
 
 - Inventory every source wave, bank entry, loop instance and runtime reference,
   including tuning, presentation, level music and any code-selected cues. Give
@@ -450,18 +453,14 @@ POL#23 owns integration and ROAD#3 owns in-game audio acceptance.
 
 ### Integration, mix and distribution
 
-Update the bank definition, source build recipe, staging, runtime references and
-release asset list to use only the replacement set. Adjust audio ignore rules for
-the selected source-asset workflow. Update packaging/CI and startup checks that
-currently require an audio-free ZIP, and revise README, NOTICE and repository
-instruction files to describe the new assets and their attribution once they exist.
-This document does not change the current packaging rules or establish rights for
-assets not yet selected.
-
-The current builder can reuse an existing local bank when sources are missing and
-the bank is newer than its definition. Build the replacement from verified inputs
-into clean output, and check provenance during migration so timestamp-based reuse
-cannot silently bring the legacy bank into a runtime or package.
+The replacement bank definition, verified bank build, staging, runtime references
+and release asset list are integrated. Only the accepted set can supply the live
+bank or package; private legacy files are excluded regardless of timestamps.
+README, NOTICE and repository instructions describe this workflow. All 103
+accepted masters are in the bank; inclusion does not mean every new cue has a
+gameplay trigger yet. Complete the remaining hooks in
+[audio inventory §9](audio-inventory.md#9-runtime-migration-and-remaining-integration),
+keeping looping/stoppable voices in the existing audio lifecycle.
 
 Retain the optional-bank fallback for missing audio and keep gameplay understandable
 when muted. The finished release should include the new distributable audio;

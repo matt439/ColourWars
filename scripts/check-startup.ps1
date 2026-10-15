@@ -6,6 +6,7 @@ param(
     [ValidateRange(1, 120)]
     [int]$StartupSeconds = 15,
     [switch]$RequireNoAudio,
+    [switch]$RequireAudio,
     [switch]$SystemOnlyPath,
     # Release has no WARP fallback. Only its exact missing-adapter diagnostic
     # can be skipped; the default remains a required hardware startup check.
@@ -25,8 +26,15 @@ if (-not (Test-Path -LiteralPath $executablePath -PathType Leaf)) {
     throw "Executable is not a file: $executablePath"
 }
 $executableDirectory = Split-Path -Parent $executablePath
+if ($RequireNoAudio -and $RequireAudio) {
+    throw 'Choose either the audible bank check or the missing-bank check.'
+}
+if ($RequireAudio -and -not (Test-Path -LiteralPath (
+    Join-Path $executableDirectory 'sounds/paint_exe.xwb'))) {
+    throw 'The startup check requires the accepted wave bank.'
+}
 if ($RequireNoAudio -and (Test-Path -LiteralPath (
-    Join-Path $executableDirectory 'sounds/sound_bank_1.xwb'))) {
+    Join-Path $executableDirectory 'sounds/paint_exe.xwb'))) {
     throw 'The startup check requires an absent optional wave bank.'
 }
 
@@ -114,6 +122,7 @@ $result = [ordered]@{
     executable = $executablePath
     working_directory = $workingDirectory
     profile = $profileDirectory
+    audio_expectation = $(if ($RequireAudio) { 'published-bank' } elseif ($RequireNoAudio) { 'missing-bank' } else { 'optional' })
     outcome = 'failed'
     diagnostic = ''
 }
@@ -144,6 +153,9 @@ try {
     while ($timer.Elapsed.TotalSeconds -lt $StartupSeconds) {
         $process.Refresh()
         [string]$stderr = Read-StartupError
+        if ($RequireAudio -and $stderr -match '(?m)^no audio: ') {
+            throw 'The audible startup check unexpectedly used a silent bank.'
+        }
         if ($stderr.Contains('startup failure:')) {
             if ($AllowNoHardwareAdapter -and
                 $stderr.Trim() -ceq 'startup failure: No Direct3D hardware device found') {
@@ -191,6 +203,9 @@ try {
             throw 'The expected optional-wave-bank fallback was not reported.'
         }
         foreach ($line in ($stderr -split '\r?\n')) {
+            if ($RequireAudio -and $line -match '^no audio: ') {
+                throw 'The audible startup check unexpectedly used a silent bank.'
+            }
             if ($line.Trim() -ne '' -and
                 $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
                 throw "Unexpected startup diagnostic: $line"
@@ -207,6 +222,9 @@ try {
         # Destruction can report errors too, after the last running-process read.
         [string]$stderr = Read-StartupError
         foreach ($line in ($stderr -split '\r?\n')) {
+            if ($RequireAudio -and $line -match '^no audio: ') {
+                throw 'The audible startup check unexpectedly used a silent bank.'
+            }
             if ($line.Trim() -ne '' -and
                 $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
                 throw "Unexpected shutdown diagnostic: $line"

@@ -235,6 +235,7 @@ struct ResultsMenuPresentation
 	mattmath::Vector2F winner_position = { 0.0f, 0.0f };
 
 	PresentationSound winner_sound;
+	PresentationSound draw_sound;
 	PresentationSound fill_sound;
 };
 

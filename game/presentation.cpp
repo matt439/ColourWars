@@ -442,6 +442,7 @@ namespace
 
 		const JsonValue sounds = json.object("sounds");
 		menu.winner_sound = read_sound(sounds, "winner");
+		menu.draw_sound = read_sound(sounds, "draw");
 		menu.fill_sound = read_sound(sounds, "fill");
 
 		return menu;
@@ -945,6 +946,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.effect("main_menu.music.name", bank, this->main_menu_.music.name);
 	check.wave("pause_menu.window_open_sound", bank, this->pause_menu_.window_open_sound);
 	check.wave("results_menu.sounds.winner.name", bank, this->results_menu_.winner_sound.name);
+	check.wave("results_menu.sounds.draw.name", bank, this->results_menu_.draw_sound.name);
 	check.effect("results_menu.sounds.fill.name", bank, this->results_menu_.fill_sound.name);
 
 	// These menu pictures are chosen by the page code, so they have no JSON

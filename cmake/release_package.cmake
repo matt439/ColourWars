@@ -17,6 +17,11 @@ if(NOT MSVC OR NOT CMAKE_SIZEOF_VOID_P EQUAL 8
 endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/release_assets.cmake")
+install(CODE "
+    set(BANK_DIR \"${PROJECT_SOURCE_DIR}/game/content/sounds\")
+    set(REQUIRE_BANK ON)
+    include(\"${CMAKE_CURRENT_LIST_DIR}/check_wave_bank.cmake\")
+")
 install(TARGETS ColourWars RUNTIME DESTINATION .)
 # Follow the imported targets, not whichever DLLs happen to be in game/.
 install(FILES $<TARGET_RUNTIME_DLLS:ColourWars> DESTINATION .)
@@ -40,6 +45,15 @@ endforeach()
 install(FILES "${PROJECT_BINARY_DIR}/generated/build-info.txt"
     "${PROJECT_SOURCE_DIR}/LICENSE" "${PROJECT_SOURCE_DIR}/NOTICE"
     "${PROJECT_SOURCE_DIR}/README.md" DESTINATION .)
+install(FILES
+    "${PROJECT_SOURCE_DIR}/game/audio/paint_exe/PROVENANCE.md"
+    "${PROJECT_SOURCE_DIR}/game/audio/paint_exe/sources.json"
+    "${PROJECT_SOURCE_DIR}/game/audio/paint_exe/cues.json"
+    "${PROJECT_SOURCE_DIR}/game/audio/paint_exe/acceptance.json"
+    "${PROJECT_SOURCE_DIR}/game/audio/paint_exe/interface/licenses/CC0-1.0.txt"
+    DESTINATION licenses/paint_exe)
+install(FILES "${PROJECT_SOURCE_DIR}/scripts/audio/runtime-bank.json"
+    DESTINATION licenses/paint_exe)
 install(FILES "${PROJECT_SOURCE_DIR}/external/labrador/LICENSE"
     DESTINATION licenses RENAME Labrador-LICENSE.txt)
 install(FILES "${PROJECT_SOURCE_DIR}/external/labrador/NOTICE"

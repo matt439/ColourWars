@@ -183,6 +183,8 @@ private:
 	bool invert_y_ = false;
 
 	float ammo_timer_ = 0.0f;
+	// stop_sounds() is const because it changes presentation, not gameplay.
+	mutable bool loop_playing_ = false;
 
 	PlayerTeam team_ = PlayerTeam::none;
 	int player_num_ = -1;

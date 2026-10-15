@@ -209,7 +209,7 @@ namespace colourwars_editor
     {
         Document document = parse(R"({
             "display_name":"New Stage", "icon_frame":"stage_close_quarters",
-            "sound":{"sound_bank_name":"sound_bank_1","music_name":"holly_dolly","music_volume":0.3},
+            "sound":{"sound_bank_name":"paint_exe","music_name":"music.close_quarters","music_volume":0.65},
             "spawn_locations":{
                 "team_a":[{"x":100,"y":1000},{"x":170,"y":1000},{"x":240,"y":1000},{"x":310,"y":1000}],
                 "team_b":[{"x":2530,"y":1000},{"x":2600,"y":1000},{"x":2670,"y":1000},{"x":2740,"y":1000}]},

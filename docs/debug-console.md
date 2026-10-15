@@ -313,7 +313,7 @@ a log line, if the rebuild cannot be planned or the match ends first.
 - `respawn [seat|all]` respawns now, at the spawn, health and ammo full, as the
   respawn timer would.
 - `kill [seat|all]` sets health to zero, through `god` too, so the next world
-  update dies as a fatal hit does: the death sound, then the figure redrawn at
+  update dies as a fatal hit does: the paint-off pop, then the figure redrawn at
   its spawn over the respawn wait. In the countdown it waits for the match to
   start, because players do not update until then.
 - `god 1`: players take no paint damage. The projectile side is unchanged, so

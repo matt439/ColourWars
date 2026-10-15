@@ -26,10 +26,11 @@ REPOSITORY = Path(__file__).resolve().parents[2]
 DEFAULT_MANIFEST = REPOSITORY / "game/audio/paint_exe/cues.json"
 MAX_PEAK = 10 ** (-1 / 20)
 SILENCE_THRESHOLD = 10 ** (-60 / 20)
-# XAudio2's ADPCM loops need block-aligned lengths; 256 bytes per channel
-# yields 500 frames and fits XWB's eight-bit stored block alignment.
+# XAudio2 requires power-of-two sample counts per ADPCM block. FFmpeg requires
+# power-of-two *byte* blocks instead, so encode overlapping windows then retain
+# the first 512 samples of each independently predicted block.
 # https://learn.microsoft.com/en-us/windows/win32/xaudio2/adpcm-overview
-ADPCM_FRAMES_PER_BLOCK = 500
+ADPCM_FRAMES_PER_BLOCK = 512
 
 
 class InvalidAudio(ValueError):
@@ -230,8 +231,8 @@ def inspect_adpcm(path: Path, source: dict, looping: bool) -> dict:
     tag, channels, rate, _, alignment, bits, extension, block_frames, coefficients = struct.unpack_from("<HHIIHHHHH", fmt)
     require((tag, channels, rate, bits, extension, block_frames, coefficients) ==
             (2, source["channels"], 44100, 4, 32, ADPCM_FRAMES_PER_BLOCK, 7),
-            "unexpected MS-ADPCM format; never use FFmpeg's oversized default block")
-    require(alignment == 256 * channels and len(chunks[b"data"]) % alignment == 0,
+            "unexpected MS-ADPCM format; XAudio2 needs 512-frame blocks, never use FFmpeg's oversized default block")
+    require(alignment == 262 * channels and len(chunks[b"data"]) % alignment == 0,
             "ADPCM must contain whole representable XWB blocks")
     require(list(struct.iter_unpack("<hh", fmt[22:50])) ==
             [(256, 0), (512, -256), (0, 0), (192, 64), (240, 0), (460, -208), (392, -232)],
@@ -244,13 +245,67 @@ def inspect_adpcm(path: Path, source: dict, looping: bool) -> dict:
     require(source["frames"] <= frames < source["frames"] + block_frames,
             "ADPCM duration differs by more than final block padding")
     region = loop_region(chunks, frames)
-    require(region == ((source["loop_start"], source["loop_length"]) if looping else None),
-            "ADPCM conversion lost or changed the authored loop")
     if looping:
-        require(all(value % block_frames == 0 for value in (source["frames"], *region)),
-                "looping music length, start, and loop length must be multiples of 500 frames")
+        require((source["loop_start"], source["loop_length"]) == (0, source["frames"]),
+                "music must author a full-file loop before final block padding")
+    require(region == ((0, frames) if looping else None),
+            "ADPCM conversion lost the full-file loop or its final block padding")
     return {"encoding": "ms-adpcm", "frames": frames, "data_bytes": len(chunks[b"data"]),
-            "block_bytes": alignment, "samples_per_block": block_frames}
+            "block_bytes": alignment, "samples_per_block": block_frames,
+            "loop_start": region[0] if region else 0, "loop_length": region[1] if region else 0}
+
+
+def encode_xaudio_adpcm(source: Path, target: Path, ffmpeg: str, measured: dict, looping: bool) -> None:
+    """Keep FFmpeg's predictor/quantizer while exporting XAudio2-compatible blocks.
+
+    A stereo FFmpeg 1024-byte block describes 1012 frames. Each input window
+    starts 512 frames after the previous window; retaining its first 524 bytes
+    keeps exactly 512 frames. The next block has its own predictor/header. The
+    last block adds at most 511 frames, holding the boundary sample for loops
+    and silence for stings; accepted PCM masters are intact.
+    """
+    original = riff_chunks(source.read_bytes())
+    channels = measured["channels"]
+    frame_bytes = channels * 2
+    pcm = original[b"data"]
+    block_count = (measured["frames"] + ADPCM_FRAMES_PER_BLOCK - 1) // ADPCM_FRAMES_PER_BLOCK
+    raw = target.with_suffix(".encoder-input.pcm")
+    oversized = target.with_suffix(".encoder-output.wav")
+    window_frames = 1012
+    with raw.open("wb") as output:
+        for block in range(block_count):
+            start = block * ADPCM_FRAMES_PER_BLOCK * frame_bytes
+            window = pcm[start:start + window_frames * frame_bytes]
+            output.write(window)
+            pad_frame = pcm[:frame_bytes] if looping else b"\0" * frame_bytes
+            output.write(pad_frame * (window_frames - len(window) // frame_bytes))
+    subprocess.run([ffmpeg, "-hide_banner", "-loglevel", "error", "-y",
+                    "-f", "s16le", "-ar", "44100", "-ac", str(channels), "-i", str(raw),
+                    "-map_metadata", "-1", "-c:a", "adpcm_ms", "-block_size", str(512 * channels),
+                    str(oversized)], check=True)
+    chunks = riff_chunks(oversized.read_bytes())
+    encoded_bytes = 512 * channels
+    retained_bytes = 262 * channels
+    require(len(chunks[b"data"]) == block_count * encoded_bytes, "unexpected FFmpeg block count")
+    payload = b"".join(chunks[b"data"][offset:offset + retained_bytes]
+                       for offset in range(0, len(chunks[b"data"]), encoded_bytes))
+    frames = block_count * ADPCM_FRAMES_PER_BLOCK
+    fmt = bytearray(chunks[b"fmt "])
+    struct.pack_into("<I", fmt, 8, 44100 * retained_bytes // ADPCM_FRAMES_PER_BLOCK)
+    struct.pack_into("<H", fmt, 12, retained_bytes)
+    struct.pack_into("<H", fmt, 18, ADPCM_FRAMES_PER_BLOCK)
+    exported = {b"fmt ": bytes(fmt), b"fact": struct.pack("<I", frames), b"data": payload}
+    if looping:
+        require((measured["loop_start"], measured["loop_length"]) == (0, measured["frames"]),
+                "music must author a full-file loop")
+        smpl = bytearray(original[b"smpl"])
+        struct.pack_into("<I", smpl, 48, frames - 1)
+        exported[b"smpl"] = bytes(smpl)
+    body = b"WAVE" + b"".join(tag + struct.pack("<I", len(data)) + data + b"\0" * (len(data) & 1)
+                                  for tag, data in exported.items())
+    target.write_bytes(b"RIFF" + struct.pack("<I", len(body)) + body)
+    raw.unlink()
+    oversized.unlink()
 
 
 def inspect_bank(path: Path, exports: list[dict]) -> dict:
@@ -278,7 +333,7 @@ def inspect_bank(path: Path, exports: list[dict]) -> dict:
         require(offset % alignment == 0 and offset + size <= regions[4][1], f"{name}: bank samples outside data")
         expected_tag = 2 if exported["encoding"] == "ms-adpcm" else 0
         require(fmt & 3 == expected_tag, f"{name}: bank encoding differs")
-        expected_alignment = 234 if expected_tag == 2 else channels * 2
+        expected_alignment = 240 if expected_tag == 2 else channels * 2
         require(((fmt >> 23) & 255) == expected_alignment, f"{name}: XWB truncated block alignment")
         wave_payload = riff_chunks(Path(exported["export_path"]).read_bytes())[b"data"]
         require(data[regions[4][0] + offset:regions[4][0] + offset + size] == wave_payload,
@@ -292,7 +347,7 @@ def build(manifest: dict, report: dict, output: Path, root: Path = REPOSITORY) -
             "derived output must stay under repository out/; this task does not replace the live bank")
     ffmpeg = shutil.which("ffmpeg")
     require(ffmpeg is not None, "ffmpeg is required to encode music")
-    xwbtool = root / "game/content/sounds/sound_bank_1/XWBTool.exe"
+    xwbtool = root / "scripts/audio/tools/XWBTool.exe"
     require(xwbtool.is_file(), "checked-in XWBTool.exe is missing")
     waves = output / "waves"
     waves.mkdir(parents=True, exist_ok=True)
@@ -302,16 +357,11 @@ def build(manifest: dict, report: dict, output: Path, root: Path = REPOSITORY) -
         target = waves / f"{cue['id']}.wav"
         exported = {**measured, "export_path": str(target), "encoding": "pcm16", "export_frames": measured["frames"]}
         if cue["id"].startswith("music."):
-            if cue["loop"]:
-                require(all(measured[field] % ADPCM_FRAMES_PER_BLOCK == 0
-                            for field in ("frames", "loop_start", "loop_length")),
-                        f"{cue['id']}: looping music must be authored on 500-frame boundaries")
-            command = [ffmpeg, "-hide_banner", "-loglevel", "error", "-y", "-i", str(source),
-                       "-map_metadata", "-1", "-c:a", "adpcm_ms", "-block_size", str(256 * measured["channels"]), str(target)]
-            subprocess.run(command, check=True)
-            copy_loop(source, target)
+            encode_xaudio_adpcm(source, target, ffmpeg, measured, cue["loop"])
             encoded = inspect_adpcm(target, measured, cue["loop"])
-            exported.update(encoding=encoded["encoding"], export_frames=encoded["frames"])
+            exported.update(encoding=encoded["encoding"], export_frames=encoded["frames"],
+                            loop_start=encoded["loop_start"], loop_length=encoded["loop_length"],
+                            padding_frames=encoded["frames"] - measured["frames"])
             # Lossy encoding can introduce a louder sample or a different join.
             # Audit what is actually heard as well as the editable PCM master.
             decoded = output / "decoded" / target.name
