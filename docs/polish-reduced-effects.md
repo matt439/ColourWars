@@ -20,6 +20,9 @@ With Reduce effects On:
 - Idle sprayer beads/drops and detached mister release haze are hidden. Active
   reduced updates retire old drips and reset quiet posing; restoring detail
   waits for fresh settling rather than replaying an interrupted bead.
+- Countdown pulse and detached countdown, cursor-click, closing-clock and
+  reveal-coverage ticks are suppressed. Their settled signals and readable
+  coverage cards remain visible at the existing match/story boundaries.
 
 Movement contacts, hurt ticks, elimination bursts, respawn redraw, blocked-shot
 contacts, actual paint splashes, wet paint, ownership/keylines and the HUD remain

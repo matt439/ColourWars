@@ -557,26 +557,19 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 	{
 		// The coverage, each half's number in its own colour.
 		const OpeningPresentation& look = this->presentation_->opening();
-		front.set_filter(TextureFilter::linear);
 		const std::wstring texts[2] = { this->end_info_.team_a_percentage_string(),
 			this->end_info_.team_b_percentage_string() };
 		const Colour colours[2] = { colour_a, colour_b };
 		for (int side = 0; side < 2; ++side)
 		{
-			const Vector2F size = this->render_resources_->measure_text(this->percent_font_, texts[side]);
-			if (size.y <= 0.0f)
-			{
-				continue;
-			}
-			const float scale = look.percent_height * window.height / size.y;
+			const float height = std::min(picture.height * 0.45f,
+				look.percent_height * window.height /
+				(1.0f - look.reveal_art.padding * 2.0f - look.reveal_art.shadow_offset));
 			const Vector2F centre(picture.x + picture.width * (side == 0 ? 0.25f : 0.75f),
 				picture.y + picture.height * 0.32f);
-			const Vector2F at = centre - size * scale * 0.5f;
-			const float drop = std::max(2.0f, scale * size.y * 0.05f);
-			front.draw_text(this->percent_font_, texts[side], at + Vector2F(drop, drop),
-				look.percent_shadow, scale, 0.0f, Vector2F::ZERO, 0.0f);
-			front.draw_text(this->percent_font_, texts[side], at, colours[side],
-				scale, 0.0f, Vector2F::ZERO, 0.0f);
+			const Vector2F size(picture.width * 0.46f, height);
+			this->reveal_art_->draw(front, RectangleF(centre - size * 0.5f, size),
+				texts[side], colours[side], click_age, this->preferences_->reduce_effects);
 		}
 		front.set_filter(TextureFilter::point);
 	}

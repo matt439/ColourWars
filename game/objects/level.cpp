@@ -113,7 +113,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 		this->cursor_ = std::make_unique<ScreenCursor>(&look, render_resources);
 		this->acting_ = std::make_unique<FigureActing>(&look, &presentation->respawn_redraw(),
 			render_resources);
-		this->percent_font_ = render_resources->resolve_sprite_font(look.percent_font);
+		this->reveal_art_ = std::make_unique<RevealArt>(&look, render_resources);
 		this->hover_sound_ = this->sound_bank_->resolve_wave(match.hover_sound.name);
 		this->click_sound_ = this->sound_bank_->resolve_wave(match.click_sound.name);
 		this->close_sound_ = this->sound_bank_->resolve_wave(match.close_sound.name);
@@ -799,7 +799,9 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		player->health() / this->tuning_->player().starting_health,
 		player->weapon_ammo() / this->tuning_->starting_ammo(),
 		this->timer_,
-		player->team_colour());
+		player->team_colour(),
+		this->preferences_->reduce_effects,
+		this->state_ == LevelState::active);
 
 	if (player->showing_debug())
 	{

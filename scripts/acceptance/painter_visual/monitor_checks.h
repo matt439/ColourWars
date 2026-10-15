@@ -515,8 +515,18 @@ void monitor_matrix(Application& app, LevelBuilder& builder, const Canvas& canva
             const Frame reduced = render(*level, *app.renderer());
             preferences.reduce_effects = false;
             const float reach = look.cursor_size * window.height * 2.0f;
-            const size_t changed = foreground_local_delta(normal, reduced,
-                RectangleF(click_tip - Vector2F(reach), Vector2F(reach * 2.0f)));
+            RectangleF response(click_tip - Vector2F(reach), Vector2F(reach * 2.0f));
+            if (count == 2)
+            {
+                // A winning click also ticks the two coverage cards in the
+                // picture. The no-paint close retains only the cursor cue.
+                const RectangleF picture = reveal_geometry.picture(window);
+                const float left = std::min(response.x, picture.x);
+                const float top = std::min(response.y, picture.y);
+                response = RectangleF(left, top, std::max(response.right(), picture.right()) - left,
+                    std::max(response.bottom(), picture.bottom()) - top);
+            }
+            const size_t changed = foreground_local_delta(normal, reduced, response);
             require(present ? changed > 0 : changed == 0,
                 "real reveal click ticks were missing, premature or did not expire");
             require(before == observation(*level), "reveal click comparison changed simulation state");

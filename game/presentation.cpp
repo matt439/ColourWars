@@ -474,6 +474,28 @@ namespace
 		hud.timer_shadow_colour = read_colour(timer, "shadow_colour");
 		hud.timer_reference_width = read_positive(timer, "reference_width");
 
+		const JsonValue closing = json.object("closing_clock");
+		ClosingClockPresentation& clock = hud.closing_clock;
+		clock.ink = read_colour(closing, "ink");
+		clock.paper = read_colour(closing, "paper");
+		clock.shade = read_colour(closing, "shade");
+		clock.text = read_colour(closing, "text");
+		clock.accent = read_colour(closing, "accent");
+		clock.keyline_width = read_positive(closing, "keyline_width");
+		clock.shadow_offset = closing.number("shadow_offset");
+		clock.tick_reach = read_positive(closing, "tick_reach");
+		clock.beat_duration = read_positive(closing, "beat_duration");
+		if (clock.keyline_width > 8.0f || !std::isfinite(clock.shadow_offset) ||
+			clock.shadow_offset < 0.0f || clock.shadow_offset > 16.0f ||
+			clock.tick_reach > 24.0f || clock.beat_duration > 0.5f ||
+			clock.ink.a != 1.0f || clock.paper.a != 1.0f || clock.text.a != 1.0f ||
+			clock.accent.a != 1.0f || clock.shade.a <= 0.0f)
+		{
+			throw std::runtime_error(closing.where() +
+				": keyline_width <= 8, shadow_offset from 0 to 16, tick_reach <= 24, "
+				"beat_duration <= 0.5, opaque ink/paper/text/accent and visible shade required.");
+		}
+
 		const JsonValue identity = json.object("player_identity");
 		hud.player_identity_font = identity.string("font");
 		hud.player_identity_offset = read_vector(identity, "offset");
@@ -954,7 +976,23 @@ namespace
 		opening.figure_grey = read_colour(json, "figure_grey");
 		opening.percent_font = json.identifier("percent_font");
 		opening.percent_height = read_fraction(json, "percent_height");
-		opening.percent_shadow = read_colour(json, "percent_shadow");
+		const JsonValue reveal_art = json.object("reveal_art");
+		RevealArtPresentation& reveal = opening.reveal_art;
+		reveal.ink = read_colour(reveal_art, "ink");
+		reveal.paper = read_colour(reveal_art, "paper");
+		reveal.shade = read_colour(reveal_art, "shade");
+		reveal.keyline_width = read_positive(reveal_art, "keyline_width");
+		reveal.padding = read_fraction(reveal_art, "padding");
+		reveal.shadow_offset = read_fraction(reveal_art, "shadow_offset");
+		reveal.tick_length = read_fraction(reveal_art, "tick_length");
+		reveal.beat_duration = read_positive(reveal_art, "beat_duration");
+		if (reveal.keyline_width > 0.06f || reveal.padding < 0.08f || reveal.padding > 0.18f ||
+			reveal.shadow_offset > 0.1f || reveal.tick_length > 0.2f || reveal.beat_duration > 0.5f)
+		{
+			throw std::runtime_error(reveal_art.where() +
+				": keyline_width must be in (0, 0.06], padding in [0.08, 0.18], "
+				"shadow_offset in [0, 0.1], tick_length in [0, 0.2] and beat_duration in (0, 0.5].");
+		}
 		const JsonValue acting = json.object("acting");
 		opening.face = read_colour(acting, "face");
 		opening.sweat = read_colour(acting, "sweat");

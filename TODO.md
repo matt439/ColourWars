@@ -30,7 +30,7 @@ questions in the polish sub-docs are superseded, not open.
 |---|---|---|---|---|
 | `POL#7` | BLOCKED | HIGH | M | Human review of character/team/tool readability in the reference composition; waits on the arena (`POL#17`). E figure, action poses, masks, accents, grips, redraw and all five tools are implemented. [Painter](docs/polish-painter.md), [tools](docs/polish-tools.md). |
 | `POL#9` | BLOCKED | HIGH | XL | Material and prop kit for the reference arena, background layers, landmarks, room life; collision silhouettes stay truthful. Waits on `POL#17`. [§4](docs/polish-plan.md#environment-and-background). |
-| `POL#16` | OPEN | MED | XL | Finish closing/reveal match accents; carry the style through menus, cards, stage preview, HUD, pause and results, then accepted arenas. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
+| `POL#16` | OPEN | MED | XL | Carry the style through menus, cards, stage preview, HUD, pause and results, then accepted arenas. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback
 
@@ -103,7 +103,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `GAP#3.2` | OPEN | LOW | M | Options: no restore-defaults, no revert after a resolution change, display and palette unreachable from pause, Back lands at the top, Exit quits unconfirmed. |
 | `GAP#4.2` | OPEN | MED | L | No action map or rebinding: bindings are constexprs in `player_input.h`/`menu_input.h`. The engine's `gamepad.h` waits on this client (Class 2 D6); `GAP#F2` waits on it. |
 | `GAP#5.1` | OPEN | MED | L | Hard cuts between screens; the level build blocks on the last menu frame; no music fades or ducking, and results and end screens have no track. |
-| `GAP#5.4` | OPEN | LOW | S | No last-ten-seconds clock highlight; the DebugText fps line is `1/dt` of a fixed step, a constant. |
+| `GAP#5.4` | OPEN | LOW | S | The DebugText fps line is `1/dt` of a fixed step, a constant. |
 | `GAP#6.1` | OPEN | MED | M | The last match setup is not saved, so every launch walks the whole menu path again. |
 | `GAP#6.2` | OPEN | MED | M | Results are never kept: per-stage records, a NEW BEST line, best % on stage select; save sections and a version key go with it. |
 | `GAP#7.3` | OPEN | MED | M | One catch in `wWinMain`, captioned "startup failure", catches in-match throws too (`Player out of bounds` among them); no crash log. |

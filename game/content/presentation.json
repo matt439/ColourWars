@@ -268,6 +268,18 @@
       "shadow_colour": "BLACK",
       "reference_width": 1920.0
     },
+    "closing_clock": {
+      "_comment": "Only the final ten positive displayed seconds. The existing font and clock keep their size and position; coarse paper, shade and detached pen ticks use HUD reference pixels. Tick age comes from the current displayed second; Reduce effects retains the settled card.",
+      "ink": "141414",
+      "paper": "FFF5DF",
+      "shade": "00000055",
+      "text": "141414",
+      "accent": "FFD34D",
+      "keyline_width": 2.0,
+      "shadow_offset": 4.0,
+      "tick_reach": 12.0,
+      "beat_duration": 0.18
+    },
     "player_identity": {
       "font": "gill_sans_mt_bold_36",
       "offset": { "x": 0.03, "y": 0.05 },
@@ -571,7 +583,17 @@
     "figure_grey": "B4B4B4",
     "percent_font": "gill_sans_ultra_bold_144",
     "percent_height": 0.11,
-    "percent_shadow": "000000",
+    "reveal_art": {
+      "_comment": "Coverage stays hidden until the reveal click. Card dimensions are fractions of its height; detached ticks use the existing click age and Reduce effects keeps the settled card.",
+      "ink": "000000",
+      "paper": "F0EBDD",
+      "shade": "00000055",
+      "keyline_width": 0.035,
+      "padding": 0.12,
+      "shadow_offset": 0.06,
+      "tick_length": 0.14,
+      "beat_duration": 0.18
+    },
     "acting": {
       "_comment": "The figures acting for the person: face paints an eye out (the body's tint), hop/slump are fractions of a figure's height, shake of its width.",
       "face": "WHITE",

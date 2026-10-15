@@ -3,6 +3,7 @@
 #include "engine/render/render_resources.h"
 #include "engine/render/colour.h"
 #include "engine/math/vector2f.h"
+#include "engine/math/rectanglef.h"
 #include "game/presentation.h"
 #include "game/objects/player_team.h"
 #include "game/objects/player_badge.h"
@@ -25,7 +26,9 @@ public:
         float health,
         float ammo,
         float timer,
-        const labrador::Colour& team_colour) const;
+        const labrador::Colour& team_colour,
+        bool reduced_effects = false,
+        bool clock_running = true) const;
 
     // The same, with the identity box's second line given ("Bot: paint")
     // instead of the device the input slot names.
@@ -37,7 +40,9 @@ public:
         float health,
         float ammo,
         float timer,
-        const labrador::Colour& team_colour) const;
+        const labrador::Colour& team_colour,
+        bool reduced_effects = false,
+        bool clock_running = true) const;
 
 private:
     void draw_meter(labrador::DrawList& draw_list,
@@ -50,7 +55,14 @@ private:
     void draw_timer(labrador::DrawList& draw_list,
         const mattmath::Vector2F& resolution,
         float timer,
-        float scale) const;
+        float scale,
+        bool reduced_effects,
+        bool clock_running) const;
+    void draw_closing_clock_panel(labrador::DrawList& draw_list,
+        const mattmath::RectangleF& text_bounds,
+        float scale,
+        float beat_age,
+        bool reduced_effects) const;
 
     labrador::RenderResources* render_resources() const;
 

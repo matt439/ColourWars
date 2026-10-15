@@ -35,6 +35,7 @@
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/player_badge.h"
 #include "game/objects/countdown_art.h"
+#include "game/objects/reveal_art.h"
 
 enum class LevelState
 {
@@ -312,7 +313,7 @@ private:
 	labrador::SoundBank::WaveHandle hover_sound_;
 	labrador::SoundBank::WaveHandle click_sound_;
 	labrador::SoundBank::WaveHandle close_sound_;
-	labrador::FontHandle percent_font_;
+	std::unique_ptr<RevealArt> reveal_art_;
 
 	RevealBeat reveal_beat() const;
 	float reveal_length() const;

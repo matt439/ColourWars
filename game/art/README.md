@@ -110,6 +110,14 @@ They use the existing solid texel; no atlas recipe is needed. The
 [start-signal record](../../docs/polish-countdown.md) retains native-size evidence
 and describes the unchanged gameplay and audio boundary.
 
+Closing-clock paper, shade and detached pen ticks are code drawings in
+`game/objects/interface_gameplay.cpp`; the reveal's team-labelled coverage cards
+are in `game/objects/reveal_art.cpp`. Their authored values are
+`presentation.json.hud.closing_clock` and `opening.reveal_art`. They reuse the
+existing fill texel and fonts, so normal builds reproduce them directly. The
+[match-accent record](../../docs/polish-match-accents.md) describes event gates,
+Reduce effects and native-size renderer evidence.
+
 ## Runtime content separation (GAP#8.6)
 
 Implemented 2026-10-15. Tracked runtime content in `game/content/` is the reviewed set

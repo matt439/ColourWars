@@ -300,6 +300,20 @@ struct PlayerIdentityPresentation
 	float border = 0.0f;
 };
 
+// Closing-clock drawing dimensions use HUD reference pixels; timing is seconds.
+struct ClosingClockPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour paper;
+	labrador::Colour shade;
+	labrador::Colour text;
+	labrador::Colour accent;
+	float keyline_width = 0.0f;
+	float shadow_offset = 0.0f;
+	float tick_reach = 0.0f;
+	float beat_duration = 0.0f;
+};
+
 // Gameplay HUD: health, ammo, match timer and player identity. The respawn
 // wait has no number: the figure being redrawn at its spawn is the timer.
 // Margins, bar dimensions and text positions use viewport fractions. Shadow
@@ -328,6 +342,7 @@ struct HudPresentation
 
 	// Reference viewport width for scaling the timer font.
 	float timer_reference_width = 1920.0f;
+	ClosingClockPresentation closing_clock;
 
 	std::string player_identity_font;
 	mattmath::Vector2F player_identity_offset = { 0.0f, 0.0f };
@@ -606,6 +621,20 @@ struct CursorArtPresentation
 	float click_reach = 0.0f;
 };
 
+// Coverage cards shown only after the person's reveal click. Measurements are
+// fractions of each card's height, so the complete drawing fits its bounds.
+struct RevealArtPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour paper;
+	labrador::Colour shade;
+	float keyline_width = 0.0f;
+	float padding = 0.0f;
+	float shadow_offset = 0.0f;
+	float tick_length = 0.0f;
+	float beat_duration = 0.0f;
+};
+
 // The monitor the picture is on, the person at it and the cursor they use:
 // the opening's look (docs/backstory.md, "Opening"). Rectangles are fractions
 // of the screen, sizes fractions of its height, colours are drawn as is.
@@ -636,6 +665,7 @@ struct OpeningPresentation
 	labrador::Colour silhouette;
 	SilhouetteArtPresentation silhouette_art;
 	CursorArtPresentation cursor_art;
+	RevealArtPresentation reveal_art;
 	// From the bottom of the screen to the top of the head, seated.
 	float adult_height = 0.0f;
 	float child_height = 0.0f;
@@ -647,7 +677,6 @@ struct OpeningPresentation
 	// The coverage the reveal shows, each half's number in its colour.
 	std::string percent_font;
 	float percent_height = 0.0f;
-	labrador::Colour percent_shadow;
 	// The figures' acting: what an eye is painted out with, the sweat, and how
 	// far a winner hops, a cheat shakes and a loser slumps, as fractions of a
 	// figure's height (the shake of its width).

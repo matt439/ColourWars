@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/interface_gameplay.h"
+#include "game/objects/crude_drawing.h"
 #include "game/input_slots.h"
 
 using namespace mattmath;
@@ -48,10 +49,12 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	float health,
 	float ammo,
 	float timer,
-	const Colour& team_colour) const
+	const Colour& team_colour,
+	bool reduced_effects, bool clock_running) const
 {
 	this->draw_gameplay_interface(draw_list, resolution, player_index,
-		input_slots::device_name(input_slot), team, health, ammo, timer, team_colour);
+		input_slots::device_name(input_slot), team, health, ammo, timer, team_colour,
+		reduced_effects, clock_running);
 }
 
 void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
@@ -62,7 +65,8 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	float health,
 	float ammo,
 	float timer,
-	const Colour& team_colour) const
+	const Colour& team_colour,
+	bool reduced_effects, bool clock_running) const
 {
 	const HudPresentation& look = *this->look_;
 	const float scale = std::min(
@@ -75,7 +79,7 @@ void InterfaceGameplay::draw_gameplay_interface(DrawList& draw_list,
 	// Scale text to both pane dimensions: a stacked two-player view is wide,
 	// but has only half the height available for its HUD.
 	draw_list.set_filter(TextureFilter::linear);
-	this->draw_timer(draw_list, resolution, timer, scale);
+	this->draw_timer(draw_list, resolution, timer, scale, reduced_effects, clock_running);
 
 	const std::wstring identity = PlayerBadge::label(player_index) +
 		(team == PlayerTeam::a ? L"  /  TEAM A\n" : L"  /  TEAM B\n") +
@@ -170,7 +174,7 @@ void InterfaceGameplay::draw_meter(DrawList& draw_list,
 		look.player_identity_colour, scale, 0.0f, Vector2F::ZERO, 0.0f);
 }
 void InterfaceGameplay::draw_timer(DrawList& draw_list,
-	const Vector2F& resolution, float timer, float scale) const
+	const Vector2F& resolution, float timer, float scale, bool reduced_effects, bool clock_running) const
 {
 	const HudPresentation& look = *this->look_;
 	const std::wstring text = format_clock(timer);
@@ -181,6 +185,15 @@ void InterfaceGameplay::draw_timer(DrawList& draw_list,
 	const Vector2F pos(
 		(resolution.x - text_size.x) / 2.0f - resolution.x * look.timer_offset.x,
 		resolution.y * look.timer_offset.y);
+	if (clock_running && timer > 0.0f && std::ceil(timer) <= 10.0f)
+	{
+		this->draw_closing_clock_panel(draw_list, RectangleF(pos, text_size), scale,
+			std::ceil(timer) - timer, reduced_effects);
+		draw_list.set_filter(TextureFilter::linear);
+		draw_list.draw_text(this->timer_font_, text, pos, look.closing_clock.text, timer_scale,
+			0.0f, Vector2F::ZERO, 0.0f);
+		return;
+	}
 	const Vector2F padding = look.player_identity_padding * scale;
 	draw_list.set_filter(TextureFilter::point);
 	this->render_resources()->sprite_sheet(this->sheet_)->draw(draw_list,
@@ -195,4 +208,62 @@ void InterfaceGameplay::draw_timer(DrawList& draw_list,
 
 	draw_list.draw_text(this->timer_font_, text, pos, look.timer_colour, timer_scale,
 		0.0f, Vector2F::ZERO, 0.0f);
+}
+
+void InterfaceGameplay::draw_closing_clock_panel(DrawList& draw_list,
+	const RectangleF& text_bounds, float scale, float beat_age, bool reduced_effects) const
+{
+	const ClosingClockPresentation& art = this->look_->closing_clock;
+	const SpriteSheet* sheet = this->render_resources()->sprite_sheet(this->sheet_);
+	const float pen = art.keyline_width * scale;
+	const float step = pen * 2.0f;
+	const float shadow = art.shadow_offset * scale;
+	const Vector2F padding(std::max(this->look_->player_identity_padding.x * scale, pen * 3.0f),
+		std::max(this->look_->player_identity_padding.y * scale, pen * 3.0f));
+	const RectangleF face(text_bounds.position() - padding, text_bounds.size() + padding * 2.0f);
+	const auto fill = [&](const RectangleF& box, const Colour& colour)
+	{
+		sheet->draw(draw_list, this->fill_frame_, box, CrudeDrawing::premultiplied(colour));
+	};
+	const auto paper = [&](const RectangleF& box, const Colour& colour)
+	{
+		fill(RectangleF(box.x + step, box.y, box.width - step * 2.0f, box.height), colour);
+		fill(RectangleF(box.x, box.y + step, box.width, box.height - step * 2.0f), colour);
+	};
+
+	draw_list.set_filter(TextureFilter::point);
+	paper(RectangleF(face.position() + Vector2F(shadow), face.size()), art.shade);
+	paper(face, art.ink);
+	const RectangleF inside(face.x + pen, face.y + pen, face.width - pen * 2.0f,
+		face.height - pen * 2.0f);
+	paper(inside, art.paper);
+	for (int pass = 3; pass > 0; --pass)
+	{
+		Colour shade = art.shade;
+		shade.a *= 0.12f;
+		const float width = pen * static_cast<float>(pass);
+		fill(RectangleF(inside.x + step, inside.bottom() - width,
+			inside.width - step * 2.0f, width), shade);
+		fill(RectangleF(inside.right() - width, inside.y + step,
+			width, inside.height - step * 2.0f), shade);
+	}
+
+	if (reduced_effects || beat_age < 0.0f || beat_age >= art.beat_duration) { return; }
+	const float remaining = 1.0f - beat_age / art.beat_duration;
+	const float reach = art.tick_reach * scale * remaining * remaining;
+	// The occupied panel expands by tick_reach + three pen widths at each side,
+	// plus the shade offset at the right/bottom. The clock itself never moves.
+	for (const float side : { -1.0f, 1.0f })
+	{
+		const float edge = side < 0.0f ? face.x - pen * 2.0f :
+			face.right() + shadow + pen * 2.0f;
+		const float x = side < 0.0f ? edge - reach : edge;
+		for (const float row : { 0.35f, 0.65f })
+		{
+			const float y = face.y + face.height * row;
+			fill(RectangleF(x, y - pen, reach + pen, pen * 2.0f), art.ink);
+			fill(RectangleF(x + pen * 0.5f, y - pen * 0.25f,
+				reach, pen * 0.5f), art.accent);
+		}
+	}
 }

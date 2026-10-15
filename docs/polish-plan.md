@@ -690,6 +690,16 @@ device reminders, story push, sound cues, control-release boundary and one-secon
 GO beat retain their behaviour. Closing/reveal accents and the remaining
 interface treatment stay open.
 
+**Closing and reveal accents implemented (2026-10-15, part of `POL#16`).** The
+[drawing and evidence](polish-match-accents.md) give the final ten displayed
+seconds a stepped pale clock card with black ink and brief detached pen ticks.
+The reveal's exact team-labelled percentages appear on matching paper cards
+with team-coloured, ink-outlined lettering only after the existing choice click.
+Their local ticks follow that click; Reduce effects retains both settled cards.
+Match clocks, sound cues, coverage, story timing and the solo overview keep their
+existing behaviour. Menus, cards, stage preview, the remaining HUD, pause and
+results treatment remain open, as does reference-arena composition acceptance.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.
