@@ -73,12 +73,15 @@
     "backdrop": { "sheet": "menu_paint", "frame": "backdrop" },
     "title_box_size": { "x": 1320.0, "y": 920.0 },
     "home_box_size": { "x": 1320.0, "y": 920.0 },
+    "options_box_size": { "x": 1640.0, "y": 920.0 },
+    "credits_box_size": { "x": 1760.0, "y": 920.0 },
     "art": {
       "ink": "1B1C20",
       "paper": "F0F0ED",
       "shade": "00000035",
       "focus_fill": "D5D5CF",
       "focus_ink": "111216",
+      "disabled_ink": "60616A",
       "keyline_width": 4.0,
       "shadow_offset": 8.0,
       "focus_padding": { "x": 28.0, "y": 18.0 }
@@ -90,10 +93,15 @@
     "home_position": { "x": 460.0, "y": 180.0 },
     "home_subtitle_position": { "x": 460.0, "y": 315.0 },
     "home_spacing": { "x": 250.0, "y": 120.0 },
+    "options_heading_position": { "x": 280.0, "y": 60.0 },
+    "options_position": { "x": 280.0, "y": 220.0 },
+    "options_value_x": 820.0,
+    "options_status_position": { "x": 820.0, "y": 885.0 },
     "credits": {
       "font": "gill_sans_mt_bold_24",
-      "position": { "x": 150.0, "y": 290.0 },
-      "back_position": { "x": 150.0, "y": 865.0 },
+      "heading_position": { "x": 180.0, "y": 80.0 },
+      "position": { "x": 180.0, "y": 240.0 },
+      "back_position": { "x": 180.0, "y": 840.0 },
       "text": "ColourWars - Matt Harding\nBuilt with the Labrador engine (MIT).\nMicrosoft - DirectX Tool Kit, DirectXTex, DirectXMath and XAudio2Redist (MIT).\nMicrosoft content tools - XWBTool, MakeSpriteFont and texconv (MIT).\nRapidJSON - THL A29 Limited, a Tencent company, and Milo Yip (MIT).\nCollision routines - Christer Ericson, Real-Time Collision Detection (2005).\nFonts - compiled Gill Sans MT and Courier New glyphs; font files are not included.\nMenu artwork - generated for ColourWars with OpenAI image generation.\n\nAccepted replacement audio sources (CC0):\nJoseph SARDIN / BigSoundBank; OwlishMedia / owlstorm; unkleceeg;\nMateusz Dabrowski / FreePats; Versilian Studios LLC / VCSL.\nOriginal audio arrangements and production code - authored with Codex (MIT).\nFull notices, source credits and licence terms: NOTICE, LICENSE and licenses/\ninside the release folder. Legacy commercial audio is not distributed."
     },
     "fonts": {
@@ -109,7 +117,8 @@
       "play": "485467"
     },
     "options_value_colour": "FFB77A",
-    "options_spacing": { "x": 250.0, "y": 100.0 },
+    "options_warning_colour": "8A301C",
+    "options_spacing": { "x": 540.0, "y": 120.0 },
     "weapon_description": {
       "colour": "WHITE_SMOKE",
       "shadow_offset": { "x": 1.0, "y": 1.0 },

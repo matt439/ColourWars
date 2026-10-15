@@ -182,11 +182,13 @@ struct MainMenuPresentation
 {
 	std::string backdrop_sheet;
 	std::string backdrop_frame;
-	// The title and home use the accepted paper treatment; setup pages retain
+	// Entry and settings pages use the accepted paper treatment; setup pages retain
 	// their own presentation until their artwork increments.
 	MenuPaperArtPresentation art;
 	mattmath::Vector2F title_box_size;
 	mattmath::Vector2F home_box_size;
+	mattmath::Vector2F options_box_size;
+	mattmath::Vector2F credits_box_size;
 	// Title text is centered using its measured width; y positions are authored.
 	float title_y = 0.0f;
 	float title_subtitle_y = 0.0f;
@@ -207,6 +209,11 @@ struct MainMenuPresentation
 	labrador::Colour play_background_colour = labrador::Colour::black;
 
 	labrador::Colour options_value_colour = labrador::Colour::white;
+	labrador::Colour options_warning_colour;
+	mattmath::Vector2F options_heading_position;
+	mattmath::Vector2F options_position;
+	mattmath::Vector2F options_status_position;
+	float options_value_x = 0.0f;
 	mattmath::Vector2F options_spacing = { 0.0f, 0.0f };
 
 	labrador::Colour weapon_description_colour = labrador::Colour::white;
@@ -220,6 +227,7 @@ struct MainMenuPresentation
 	SelectPresentation weapon_select;
 	StageSelectPresentation stage_select;
 	std::string credits_font;
+	mattmath::Vector2F credits_heading_position;
 	mattmath::Vector2F credits_position;
 	mattmath::Vector2F credits_back_position;
 	std::wstring credits_text;

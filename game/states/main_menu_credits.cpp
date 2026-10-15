@@ -37,25 +37,45 @@ void MainMenuCredits::init()
 	const MenuStyle& style = this->menu_style();
 	const MainMenuPresentation& look = this->look();
 	this->set_prompts({ { L"A", L"Back" }, { L"B", L"Back" } });
-	this->focus_.set_style({ style.highlight, style.unhighlight });
+	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
 	this->background_ = std::make_unique<UiTexture>("background",
-		look.backdrop_sheet, look.backdrop_frame,
+		"sprite_sheet_1", "pixel",
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION), this->render_resources(),
-		look.options_background_colour);
-	this->heading_ = std::make_unique<UiTextDropShadow>("heading", L"Credits",
-		style.heading_font, this->calculate_widget_position(0, 0),
-		this->render_resources(), style.heading_colour, style.shadow_colour,
-		style.heading_shadow_offset);
-	this->body_ = std::make_unique<UiTextDropShadow>("credits_body", look.credits_text,
+		look.home_background_colour);
+	this->heading_ = std::make_unique<UiText>("heading", L"Credits",
+		style.heading_font, look.credits_heading_position,
+		this->render_resources(), look.art.ink);
+	this->body_ = std::make_unique<UiText>("credits_body", look.credits_text,
 		look.credits_font, look.credits_position, this->render_resources(),
-		style.unhighlight, style.shadow_colour, style.detail_shadow_offset);
-	this->back_ = std::make_unique<UiTextDropShadow>("back", L"Back",
+		look.art.ink);
+	this->back_ = std::make_unique<UiText>("back", L"Back",
 		style.item_font, look.credits_back_position, this->render_resources(),
-		style.highlight, style.shadow_colour, style.item_shadow_offset);
+		look.art.focus_ink);
+	this->paper_ = std::make_unique<MenuPaperArtwork>(
+		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.credits_box_size) / 2.0f,
+			look.credits_box_size), this->render_resources(), &look.art, &this->focus_);
+
+	// Keep every authored credit visible above Back and inside the paper face.
+	const RectangleF body = this->body_->bounds();
+	const float available_width = this->paper_->rectangle().right() - look.art.shadow_offset -
+		look.art.focus_padding.x - look.credits_position.x;
+	const float available_height = look.credits_back_position.y - look.art.focus_padding.y -
+		look.credits_position.y;
+	float scale = 1.0f;
+	if (available_width > 0.0f && body.width > available_width)
+	{
+		scale = available_width / body.width;
+	}
+	if (available_height > 0.0f && body.height * scale > available_height)
+	{
+		scale = available_height / body.height;
+	}
+	this->body_->set_scale(scale);
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
+	this->texture_container_->add_child(this->paper_.get());
 	this->text_container_ = std::make_unique<UiContainer>("text_container");
 	this->text_container_->add_child(this->heading_.get());
 	this->text_container_->add_child(this->body_.get());

@@ -1,4 +1,4 @@
-# Paint.exe title and home pages
+# Paint.exe main-menu pages
 
 Implemented on 2026-10-15, part of `POL#16`. The title and home pages now use
 the same pale stepped paper, dark ink, black keyline and quiet edge shade as
@@ -72,7 +72,75 @@ scripts/run-acceptance.ps1 -Preset x64-debug
 scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -MainMenuOnly
 ```
 
-Use `x64-release` for the Release checks. Options/Credits, match setup,
+Use `x64-release` for the Release checks. Controls/audio, match setup,
 selection cards and stage preview remain under `POL#16`. Reference-arena
 composition, movement feel, physical controllers and listening acceptance
 retain their TODO owners.
+
+## Options and Credits
+
+Implemented on 2026-10-15, part of `POL#16`. Both pages use the existing
+`MenuPaperArtwork`, solid neutral Home surround, dark plain lettering and
+detached focus arrow. Their paper stays in the point-filtered texture layer;
+lettering retains linear filtering. The common controls footer stays visible.
+
+Options focus cards enclose the label and value together. Disabled fullscreen
+resolution has separate readable label ink while its live dimensions remain
+visible. The value column accommodates every fixed team-palette name; the
+status line has room for the complete save-failure message in dark warning ink.
+Credits retains every authored attribution and notice line above Back.
+
+The editable layout is in `presentation.json.main_menu`: `options_box_size`,
+`options_heading_position`, `options_position` (the first row),
+`options_spacing`, `options_value_x` and `options_status_position`, plus
+`credits_box_size` and the nested Credits heading, body and Back positions.
+`art.disabled_ink` and `options_warning_colour` supply the extra inks.
+Startup rejects invalid panels, anchors, row order and unusable row or column
+space. Labels and values can fit narrower authored columns, and the Credits
+body and status can fit their available areas; shipped text uses its natural
+font size. No new atlas or generation step is required.
+
+Keyboard and pad actions, staged display changes, Apply, save-failure behavior,
+the retained windowed preset, Back discard and return from Controls/audio keep
+their existing rules. Existing Credits copy and music/sound bindings are
+unchanged. Controls/audio retains its current artwork and colours; its full
+paper treatment belongs with the remaining menu work. Reduce effects keeps
+both pages static and fully readable.
+
+The retained native 720p views show [Options](images/polish-main-menu/settings-720p.png),
+[the complete Credits page](images/polish-main-menu/credits-720p.png) and
+[the save-failure status](images/polish-main-menu/settings-save-failed-720p.png).
+
+Debug and Release build under `/W4 /WX`. All 22 consumer cases pass in each
+configuration, with focused final content reruns after tightening usable row
+and column bounds. Existing title/Home hardware matrices also pass in both
+builds. The 53-file Release ZIP contains all 26 reviewed runtime assets byte
+for byte; isolated Debug and extracted Release startup pass with the accepted
+bank and a system-only PATH. A separate extracted copy passes its missing-bank
+fallback with one expected diagnostic. No player's real save is opened.
+
+Both D3D11 settings matrices pass on the NVIDIA GeForce RTX 5080. Actual pages
+retain natural-size text and linear font sampling at 720p, 1080p, QHD, 4:3,
+16:10 and ultrawide. Checks cover every enabled focus card and detached arrow,
+palette values, complete Credits text, save success/failure, delayed Apply,
+reload, discard, Controls/audio return and disabled-resolution wrap navigation.
+Frozen redraw, drawing randomness, Reduce effects and exact resize round trips
+also pass. The controlled write failure emits exactly its expected isolated-path
+diagnostic and leaves the prior save intact.
+
+Evidence is under `out/validation/settings-menu/` and `out/acceptance/`, with
+logs in `out/validation/settings-menu-*.log`. Final settings runs are Debug
+`5eeb7aeae8cd4ac6a53e0a03185dc599` and Release
+`b81ed1fe12c34cdbbd72cd3841f0525e`. Package evidence is in
+`package-659b7db52a22437a9300e4670a71b6b1/` below that evidence root.
+
+Rerun the settings-page hardware check from an x64 Visual Studio Developer shell:
+
+```powershell
+scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -SettingsMenuOnly
+```
+
+Use `x64-release` for Release. The checks use keyboard input and isolated save
+files; fullscreen metadata exercises disabled-resolution navigation while only
+Off is applied to the offscreen windowed probe. Physical-pad, human readability,
+movement-feel and listening acceptance remain with their TODO owners.

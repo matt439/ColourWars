@@ -292,9 +292,21 @@ namespace
 		};
 		menu.title_box_size = panel_size("title_box_size");
 		menu.home_box_size = panel_size("home_box_size");
+		menu.options_box_size = panel_size("options_box_size");
+		menu.credits_box_size = panel_size("credits_box_size");
 		menu.art = read_menu_paper(json, Vector2F(
-			std::min(menu.title_box_size.x, menu.home_box_size.x),
-			std::min(menu.title_box_size.y, menu.home_box_size.y)));
+			std::min({ menu.title_box_size.x, menu.home_box_size.x,
+				menu.options_box_size.x, menu.credits_box_size.x }),
+			std::min({ menu.title_box_size.y, menu.home_box_size.y,
+				menu.options_box_size.y, menu.credits_box_size.y })));
+		const JsonValue art = json.object("art");
+		menu.art.disabled_ink = read_colour(art, "disabled_ink");
+		if (menu.art.disabled_ink.a != 1.0f || menu.art.disabled_ink == menu.art.paper ||
+			menu.art.disabled_ink == menu.art.focus_fill || menu.art.disabled_ink == menu.art.ink ||
+			menu.art.disabled_ink == menu.art.focus_ink)
+		{
+			throw std::runtime_error(art.where() + ": disabled_ink must be opaque and distinct from paper and active ink.");
+		}
 		const auto position = [&](const char* key)
 		{
 			const Vector2F value = read_finite_vector(json, key);
@@ -338,7 +350,18 @@ namespace
 		menu.play_background_colour = read_colour(backgrounds, "play");
 
 		menu.options_value_colour = read_colour(json, "options_value_colour");
-		menu.options_spacing = read_vector(json, "options_spacing");
+		menu.options_warning_colour = read_colour(json, "options_warning_colour");
+		if (menu.options_warning_colour.a != 1.0f || menu.options_warning_colour == menu.art.paper ||
+			menu.options_warning_colour == menu.art.focus_fill)
+		{
+			throw std::runtime_error(json.where() +
+				": options_warning_colour must be opaque and distinct from paper and focus_fill.");
+		}
+		menu.options_heading_position = position("options_heading_position");
+		menu.options_position = position("options_position");
+		menu.options_status_position = position("options_status_position");
+		menu.options_value_x = json.number("options_value_x");
+		menu.options_spacing = read_positive_vector(json, "options_spacing");
 		menu.home_spacing = read_positive_vector(json, "home_spacing");
 		const float edge = menu.art.keyline_width * 3.0f;
 		const float title_top = (content_height - menu.title_box_size.y) / 2.0f + edge;
@@ -374,10 +397,49 @@ namespace
 
 		const JsonValue credits = json.object("credits");
 		menu.credits_font = credits.identifier("font");
+		menu.credits_heading_position = read_finite_vector(credits, "heading_position");
 		menu.credits_position = read_finite_vector(credits, "position");
 		menu.credits_back_position = read_finite_vector(credits, "back_position");
 		menu.credits_text = drawable_text::widen_drawable(credits.string("text"),
 			credits.where() + ": text");
+
+		const auto inside_panel = [&](const Vector2F& point, const Vector2F& size,
+			const char* key, const JsonValue& owner)
+		{
+			const Vector2F top = (Vector2F(1920.0f, content_height) - size) / 2.0f + Vector2F(edge);
+			const Vector2F bottom = (Vector2F(1920.0f, content_height) + size) / 2.0f -
+				Vector2F(menu.art.shadow_offset + edge);
+			if (point.x <= top.x || point.x >= bottom.x || point.y <= top.y || point.y >= bottom.y)
+			{
+				throw std::runtime_error(owner.where() + ": '" + key + "' must fit inside its box_size.");
+			}
+		};
+		inside_panel(menu.options_heading_position, menu.options_box_size, "options_heading_position", json);
+		inside_panel(menu.options_position, menu.options_box_size, "options_position", json);
+		inside_panel(menu.options_status_position, menu.options_box_size, "options_status_position", json);
+		if (!std::isfinite(menu.options_value_x) ||
+			menu.options_value_x <= menu.options_position.x + menu.art.focus_padding.x ||
+			menu.options_value_x >= (1920.0f + menu.options_box_size.x) / 2.0f -
+				menu.art.shadow_offset - menu.art.focus_padding.x)
+		{
+			throw std::runtime_error(json.where() + ": options_value_x must follow the label inside options_box_size.");
+		}
+		if (menu.options_heading_position.y >= menu.options_position.y ||
+			menu.options_position.y + menu.options_spacing.y * 5.0f >= menu.options_status_position.y ||
+			menu.options_spacing.y <= menu.art.focus_padding.y * 2.0f ||
+			menu.options_spacing.x > 1920.0f)
+		{
+			throw std::runtime_error(json.where() + ": options_heading_position, options_position, options_spacing and "
+				"options_status_position must order the heading, six rows and status inside options_box_size.");
+		}
+		inside_panel(menu.credits_heading_position, menu.credits_box_size, "heading_position", credits);
+		inside_panel(menu.credits_position, menu.credits_box_size, "position", credits);
+		inside_panel(menu.credits_back_position, menu.credits_box_size, "back_position", credits);
+		if (menu.credits_heading_position.y >= menu.credits_position.y ||
+			menu.credits_position.y >= menu.credits_back_position.y)
+		{
+			throw std::runtime_error(credits.where() + ": heading_position, position and back_position must be in vertical order.");
+		}
 
 		const JsonValue description = json.object("weapon_description");
 		menu.weapon_description_colour = read_colour(description, "colour");

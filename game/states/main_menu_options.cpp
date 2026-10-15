@@ -69,8 +69,21 @@ void MainMenuOptions::adjust_focused_value(labrador::Direction direction)
 
 	this->play_wave(this->direction_sound_);
 	row->adjust(direction);
-	this->status_->set_text(L"Apply to save changes.");
-	this->status_->set_colour(this->menu_style().highlight);
+	this->set_status(L"Apply to save changes.", this->look().art.focus_ink);
+}
+
+void MainMenuOptions::set_status(const std::wstring& text, const Colour& colour)
+{
+	this->status_->set_text(text);
+	this->status_->set_colour(colour);
+	this->status_->set_scale(1.0f);
+	const float right = this->paper_->rectangle().right() - this->look().art.shadow_offset -
+		this->look().art.focus_padding.x;
+	const float available = right - this->look().options_status_position.x;
+	if (available > 0.0f && this->status_->bounds().width > available)
+	{
+		this->status_->set_scale(available / this->status_->bounds().width);
+	}
 }
 
 void MainMenuOptions::apply_settings()
@@ -94,10 +107,9 @@ void MainMenuOptions::apply_settings()
 
 	// Refresh from the applied display state.
 	this->refresh_resolution_row();
-	this->status_->set_text(saved ? L"Settings applied and saved." :
-		L"Settings active for this run. Could not save for next time.");
-	this->status_->set_colour(saved ? this->menu_style().highlight :
-		this->menu_style().warning);
+	this->set_status(saved ? L"Settings applied and saved." :
+		L"Settings active for this run. Could not save for next time.",
+		saved ? this->look().art.focus_ink : this->look().options_warning_colour);
 }
 
 void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
@@ -107,17 +119,27 @@ void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
 
 void MainMenuOptions::init()
 {
-	this->set_widget_spacing(this->look().options_spacing);
+	const MainMenuPresentation& look = this->look();
+	const MenuStyle& style = this->menu_style();
+	this->set_widget_position(look.options_position);
+	this->set_widget_spacing(look.options_spacing);
 	this->set_prompts({
 		{ L"Left/Right", L"Change" },
 		{ L"A", L"Select" },
 		{ L"B", L"Back" } });
 
 	// Disabling a row greys its label; the displayed value keeps its own colour.
-	this->focus_.set_style({ this->menu_style().highlight,
-		this->menu_style().unhighlight,
-		this->menu_style().disabled });
-	Vector2F widget_size = this->widget_size();
+	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
+	const RectangleF paper_bounds(
+		(Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.options_box_size) / 2.0f,
+		look.options_box_size);
+	const Vector2F value_limit(
+		paper_bounds.right() - look.art.shadow_offset - look.art.focus_padding.x - look.options_value_x,
+		look.options_spacing.y - look.art.focus_padding.y * 2.0f);
+	const auto value_position = [&](int row)
+	{
+		return Vector2F(look.options_value_x, this->calculate_widget_position(0, row).y);
+	};
 
 	// Load the saved windowed preset, not the current fullscreen dimensions.
 	this->resolution_selection_ = this->save()->resolution();
@@ -126,96 +148,93 @@ void MainMenuOptions::init()
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		this->look().backdrop_sheet,
-		this->look().backdrop_frame,
+		"sprite_sheet_1",
+		"pixel",
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		this->look().options_background_colour);
+		look.home_background_colour);
 
-	this->heading_ = std::make_unique<UiTextDropShadow>(
+	this->heading_ = std::make_unique<UiText>(
 		"heading",
 		L"Options",
 		this->menu_style().heading_font,
-		this->calculate_widget_position(0, 0),
+		look.options_heading_position,
 		this->render_resources(),
-		this->menu_style().heading_colour,
-		this->menu_style().shadow_colour,
-		this->menu_style().heading_shadow_offset);
+		look.art.ink);
 
 	this->resolution_row_ = std::make_unique<OptionRow>(
 		"resolution",
 		L"Resolution",
-		this->calculate_widget_position(0, 2),
-		this->calculate_widget_position(2, 2),
+		this->calculate_widget_position(0, 0),
+		value_position(0),
 		this->menu_style(),
-		this->look().options_value_colour,
+		look.art.ink,
 		this->render_resources(),
-		[this](Direction direction) { this->cycle_resolution(direction); });
+		[this](Direction direction) { this->cycle_resolution(direction); },
+		&look.art, value_limit);
 
 	this->update_resolution_selection_text();
 
 	this->full_screen_row_ = std::make_unique<OptionRow>(
 		"full_screen",
 		L"Fullscreen",
-		this->calculate_widget_position(0, 3),
-		this->calculate_widget_position(2, 3),
+		this->calculate_widget_position(0, 1),
+		value_position(1),
 		this->menu_style(),
-		this->look().options_value_colour,
+		look.art.ink,
 		this->render_resources(),
 		[this](Direction /*direction*/)
 		{
 			// Two states, so either direction is the same toggle.
 			this->full_screen_selection_ = !this->full_screen_selection_;
 			this->update_full_screen_selection_text();
-		});
+		}, &look.art, value_limit);
 
 	this->update_full_screen_selection_text();
 
 	this->team_palette_row_ = std::make_unique<OptionRow>(
 		"team_palette",
 		L"Team palette",
-		this->calculate_widget_position(0, 4),
-		this->calculate_widget_position(2, 4),
+		this->calculate_widget_position(0, 2),
+		value_position(2),
 		this->menu_style(),
-		this->look().options_value_colour,
+		look.art.ink,
 		this->render_resources(),
-		[this](Direction direction) { this->cycle_team_palette(direction); });
+		[this](Direction direction) { this->cycle_team_palette(direction); },
+		&look.art, value_limit);
 	this->update_team_palette_selection_text();
 
-	this->controls_ = std::make_unique<UiTextDropShadow>("controls", L"Controls / audio",
-		this->menu_style().item_font, this->calculate_widget_position(0, 5),
-		this->render_resources(), this->menu_style().unhighlight,
-		this->menu_style().shadow_colour, this->menu_style().item_shadow_offset);
+	this->controls_ = std::make_unique<UiText>("controls", L"Controls / audio",
+		style.item_font, this->calculate_widget_position(0, 3),
+		this->render_resources(), look.art.ink);
 
-	this->apply_ = std::make_unique<UiTextDropShadow>(
+	this->apply_ = std::make_unique<UiText>(
 		"apply",
 		L"Apply",
 		this->menu_style().item_font,
-		this->calculate_widget_position(0, 6),
+		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		this->menu_style().unhighlight,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
+		look.art.ink);
 
-	this->back_ = std::make_unique<UiTextDropShadow>(
+	this->back_ = std::make_unique<UiText>(
 		"back",
 		L"Back",
 		this->menu_style().item_font,
-		this->calculate_widget_position(0, 7),
+		this->calculate_widget_position(0, 5),
 		this->render_resources(),
-		this->menu_style().unhighlight,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
+		look.art.ink);
 
-	this->status_ = std::make_unique<UiTextDropShadow>(
+	this->status_ = std::make_unique<UiText>(
 		"status", L"", this->presentation().prompt_bar().font,
-		this->calculate_widget_position(2, 6), this->render_resources(),
-		this->menu_style().highlight, this->menu_style().shadow_colour,
-		this->menu_style().detail_shadow_offset);
+		look.options_status_position, this->render_resources(), look.art.focus_ink);
+
+	this->paper_ = std::make_unique<MenuPaperArtwork>(paper_bounds,
+		this->render_resources(), &look.art, &this->focus_);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->background_.get());
+	this->texture_container_->add_child(this->paper_.get());
 
 	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");

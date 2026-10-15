@@ -105,11 +105,14 @@ public:
 	explicit MainMenuCredits(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
+	bool shows_brand() const override { return false; }
+	bool shows_focus_backing() const override { return false; }
 private:
+	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<labrador::UiTexture> background_;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_;
-	std::unique_ptr<labrador::UiTextDropShadow> body_;
-	std::unique_ptr<labrador::UiTextDropShadow> back_;
+	std::unique_ptr<labrador::UiText> heading_;
+	std::unique_ptr<labrador::UiText> body_;
+	std::unique_ptr<labrador::UiText> back_;
 	void return_home();
 };
 
@@ -119,18 +122,21 @@ public:
 	explicit MainMenuOptions(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
+	bool shows_brand() const override { return false; }
+	bool shows_focus_backing() const override { return false; }
 private:
+	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
+	std::unique_ptr<labrador::UiText> heading_ = nullptr;
 
 	std::unique_ptr<OptionRow> resolution_row_ = nullptr;
 	std::unique_ptr<OptionRow> full_screen_row_ = nullptr;
 	std::unique_ptr<OptionRow> team_palette_row_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> controls_ = nullptr;
+	std::unique_ptr<labrador::UiText> controls_ = nullptr;
 
-	std::unique_ptr<labrador::UiTextDropShadow> apply_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> back_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> status_ = nullptr;
+	std::unique_ptr<labrador::UiText> apply_ = nullptr;
+	std::unique_ptr<labrador::UiText> back_ = nullptr;
+	std::unique_ptr<labrador::UiText> status_ = nullptr;
 	labrador::ScreenResolution resolution_selection_ = labrador::ScreenResolution::s_1920_1080;
 	bool full_screen_selection_ = true;
 	TeamColourPair team_palette_selection_ = TeamColourPair::random;
@@ -138,6 +144,7 @@ private:
 	void cycle_team_palette(labrador::Direction direction);
 	void update_team_palette_selection_text();
 	void adjust_focused_value(labrador::Direction direction);
+	void set_status(const std::wstring& text, const labrador::Colour& colour);
 	void apply_settings();
 	void update_resolution_selection_text();
 

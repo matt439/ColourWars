@@ -30,7 +30,7 @@ questions in the polish sub-docs are superseded, not open.
 |---|---|---|---|---|
 | `POL#7` | BLOCKED | HIGH | M | Human review of character/team/tool readability in the reference composition; waits on the arena (`POL#17`). E figure, action poses, masks, accents, grips, redraw and all five tools are implemented. [Painter](docs/polish-painter.md), [tools](docs/polish-tools.md). |
 | `POL#9` | BLOCKED | HIGH | XL | Material and prop kit for the reference arena, background layers, landmarks, room life; collision silhouettes stay truthful. Waits on `POL#17`. [§4](docs/polish-plan.md#environment-and-background). |
-| `POL#16` | OPEN | MED | XL | Carry the style through Options/Credits, match setup, selection cards and stage preview, then accepted arenas. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
+| `POL#16` | OPEN | MED | XL | Carry the style through Controls/audio, match setup, selection cards and stage preview, then accepted arenas. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback
 
@@ -157,6 +157,7 @@ engine master before filing, not the pin. Gap-audit Class 3 items not yet in the
 | `GAP#F2` | BLOCKED | LOW | S | The action-map/Gamepads report (per-slot lookup, trigger threshold, "what did this pad press"). Waits on `GAP#4.2`. |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half is report 14. |
 | `ENG#15` | OPEN | MED | S | File report 15: repeated runtime packaging and content staging; game asset/release policy stays here. [Report](docs/review/engine-reports.md#15-runtime-packaging-and-content-staging-are-repeated-in-the-client--draft-with-release-exhibit). |
+| `ENG#16` | OPEN | LOW | S | Recheck master and file report 16: windowed Apply shows a deliberately hidden window. [Report](docs/review/engine-reports.md#16-windowed-apply-shows-a-deliberately-hidden-window--draft-with-probe-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console

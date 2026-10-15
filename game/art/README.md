@@ -150,6 +150,12 @@ drawing in the texture layer, with linear-filtered lettering above it. Their
 editable palette and pen widths are in `main_menu.art`; panel sizes and text
 anchors live beside it. The neutral surround uses the existing solid texel.
 
+The [Options and Credits pages](../../docs/polish-main-menu.md#options-and-credits)
+extend the same drawing, with authored panel sizes and text positions in
+`main_menu`, readable disabled-row ink and a separate dark save-warning ink.
+Options cards include each row's label and value. The complete Credits body,
+palette names and save status fit their measured areas without changing copy.
+
 ## Runtime content separation (GAP#8.6)
 
 Implemented 2026-10-15. Tracked runtime content in `game/content/` is the reviewed set

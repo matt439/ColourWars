@@ -15,6 +15,8 @@ public:
 	// The caller supplies only left or right.
 	using Adjust = std::function<void(labrador::Direction)>;
 
+	// Paper pages opt into plain ink and measured column limits; other pages
+	// retain their existing shadow treatment. A zero limit leaves that axis free.
 	OptionRow(const std::string& name,
 		const std::wstring& label,
 		const mattmath::Vector2F& label_position,
@@ -22,7 +24,9 @@ public:
 		const MenuStyle& style,
 		const labrador::Colour& value_colour,
 		labrador::RenderResources* render_resources,
-		Adjust on_adjust);
+		Adjust on_adjust,
+		const MenuPaperArtPresentation* paper_art = nullptr,
+		const mattmath::Vector2F& value_limit = mattmath::Vector2F::ZERO);
 
 	void set_value(const std::wstring& value);
 	void adjust(labrador::Direction direction) const;
@@ -31,7 +35,10 @@ public:
 	void set_colour(const labrador::Colour& colour) override;
 
 private:
-	std::unique_ptr<labrador::UiTextDropShadow> label_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> value_ = nullptr;
+	std::unique_ptr<labrador::UiWidget> label_ = nullptr;
+	std::unique_ptr<labrador::UiWidget> value_ = nullptr;
+	// Borrowed from value_; both text treatments expose the same text setters.
+	labrador::Text* value_text_ = nullptr;
+	mattmath::Vector2F value_limit_ = mattmath::Vector2F::ZERO;
 	Adjust on_adjust_;
 };

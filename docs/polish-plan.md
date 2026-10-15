@@ -769,6 +769,16 @@ actions, prompts and music retain their behavior. Options/Credits, match setup,
 selection cards and stage preview remain open, with arena production and human
 review retaining their existing gates.
 
+**Options and Credits artwork implemented (2026-10-15, part of `POL#16`).**
+The [settings pages](polish-main-menu.md#options-and-credits) extend the same
+stepped paper, dark lettering, neutral surround and detached focus arrow.
+Options cards include both label and value; disabled resolution and save
+failure have readable separate inks. The complete authored Credits text,
+staged changes, Apply, discard, fullscreen preset and Controls/audio return
+retain their behavior. Shipped text fits at its natural font size, including
+all palette names and the long save-failure status. Controls/audio, match setup, selection
+cards and stage preview remain open, with arena and human-review gates unchanged.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

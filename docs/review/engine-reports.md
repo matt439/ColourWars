@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Eight are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15). Seven are closed** and kept below as one paragraph
+> **Nine are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15, 16). Seven are closed** and kept below as one paragraph
 > each — what was asked, what shipped, and what this repository spent the
 > answer on.
 >
@@ -96,8 +96,9 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 13 | `Key` has no names | the key table in `game/debug/debug_keys.cpp` | draft — low priority; exhibit present |
 | 14 | No frame statistics or GPU timing | `DebugDirector::begin_match_draw` and the QPC timing in `update_match`; `debug_perf.*` | draft — exhibit present; recheck upstream before filing |
 | 15 | Runtime packaging and content staging are repeated in the client | `game/CMakeLists.txt`, `cmake/release_package.cmake`, `cmake/runtime_assets.cmake`, `cmake/stage_runtime_assets.cmake` | draft — exhibit present; checked against published master 2026-10-15 |
+| 16 | Windowed Apply shows a deliberately hidden window | the offscreen/hide guard in `settings_menu_checks.h` around real Options Apply | draft — checked against the pin; recheck upstream before filing |
 
-Nothing else is outstanding, on either side, beyond reports 6 and 9-15 below. The fullscreen workaround the
+Nothing else is outstanding, on either side, beyond reports 6 and 9-16 below. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
@@ -489,6 +490,28 @@ or development output directory wholesale would not answer this report.
 **Status:** unfiled draft. Recheck engine master before filing; record an
 implemented answer or a decline with its trade-off here, as for the other
 live reports.
+
+---
+
+## 16. Windowed Apply shows a deliberately hidden window — **draft with probe exhibit**
+
+Observed while driving the actual Options page on 2026-10-15. A probe started
+with `ApplicationOptions::visible = false` still becomes visible when Apply
+calls `set_fullscreen(false)`, including when it was already windowed.
+At the current pin, `Application::set_fullscreen` always calls
+`Window::leave_fullscreen` for false, and the Win32 implementation unconditionally
+calls `ShowWindow(handle, SW_SHOWNORMAL)`.
+
+**Exhibit:** the `apply` helper in
+[`settings_menu_checks.h`](../../scripts/acceptance/painter_visual/settings_menu_checks.h)
+moves its own window offscreen before the real Apply, hides it immediately
+afterward and restores the probe's input activation. It applies only Off;
+fullscreen metadata separately exercises the disabled resolution row.
+
+**Ask:** preserve deliberate hidden visibility when applying a windowed setting,
+including an already-windowed Apply. The client should not need Win32 calls
+around an ordinary application setting to retain its hidden fixture.
+This is a draft against the pin; recheck engine master before filing.
 
 ---
 
