@@ -340,11 +340,11 @@ void MainMenuOptions::update_full_screen_selection_text() const
 	std::wstring fs_text = L"";
 	if (fs)
 	{
-		fs_text = L"On";
+		fs_text = this->text().values.on;
 	}
 	else
 	{
-		fs_text = L"Off";
+		fs_text = this->text().values.off;
 	}
 	this->full_screen_row_->set_value(fs_text);
 }
@@ -371,7 +371,7 @@ void MainMenuOptions::update_team_palette_selection_text()
 {
 	// State which colour belongs to which team before starting a match.
 	const std::wstring label = this->team_palette_selection_ == TeamColourPair::random
-		? L"Random"
+		? this->text().values.random
 		: this->presentation().team_palette().fixed_pair(this->team_palette_selection_).label;
 	this->team_palette_row_->set_value(label);
 }

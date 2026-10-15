@@ -478,4 +478,5 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         "saved reload/failure, Controls/audio return and Back discard, disabled fullscreen resolution "
         "and windowed preset retention; frozen/reduced/random/resize and Credits Select/Back\n";
     save_status_checks(app, canvas, tuning, presentation, output, false);
+    settings_value_checks(app, canvas, tuning, presentation, output, false);
 }

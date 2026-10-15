@@ -765,4 +765,5 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     controls_menu_item_checks(app, canvas, tuning, presentation, output, save_path);
     controls_menu_help_checks(app, canvas, tuning, presentation, output, save_path);
     save_status_checks(app, canvas, tuning, presentation, output, true);
+    settings_value_checks(app, canvas, tuning, presentation, output, true);
 }

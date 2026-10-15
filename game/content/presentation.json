@@ -109,6 +109,11 @@
       "sticks_pending": "Apply to save pad deadzones.",
       "sticks_saved": "Pad deadzones applied and saved."
     },
+    "values": {
+      "on": "On",
+      "off": "Off",
+      "random": "Random"
+    },
     "headings": {
       "home": "Make your mark.",
       "options": "Options",

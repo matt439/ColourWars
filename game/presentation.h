@@ -96,6 +96,13 @@ struct MenuStatusText
 	std::wstring sticks_saved;
 };
 
+struct MenuValueText
+{
+	std::wstring on;
+	std::wstring off;
+	std::wstring random;
+};
+
 // Fixed roles select display text; navigation and accepted inputs remain code.
 struct MenuText
 {
@@ -105,6 +112,7 @@ struct MenuText
 	std::wstring home_subtitle;
 	MenuHelpText help;
 	MenuStatusText status;
+	MenuValueText values;
 	std::array<std::wstring, static_cast<size_t>(MenuHeading::count)> headings;
 	std::array<std::wstring, static_cast<size_t>(MenuPrompt::count)> prompts;
 	std::array<std::wstring, static_cast<size_t>(MenuItem::count)> items;

@@ -97,6 +97,10 @@ namespace
 		text.status.active_save_failed = read_menu_line(status, "active_save_failed");
 		text.status.sticks_pending = read_menu_line(status, "sticks_pending");
 		text.status.sticks_saved = read_menu_line(status, "sticks_saved");
+		const JsonValue values = json.object("values");
+		text.values.on = read_menu_line(values, "on");
+		text.values.off = read_menu_line(values, "off");
+		text.values.random = read_menu_line(values, "random");
 		const JsonValue headings = json.object("headings");
 		for (size_t index = 0; index < text.headings.size(); ++index)
 		{
@@ -2143,6 +2147,69 @@ void Presentation::validate_resources(const RenderResources& render,
 				" must fit its menu paper including any focus padding.");
 		}
 	};
+	const auto check_value = [&](const char* role, const std::wstring& text, const std::string& font,
+		const Vector2F& position, const Vector2F& limit, const Vector2F& paper_size,
+		const MenuPaperArtPresentation& art, float row_spacing, bool controls_value)
+	{
+		const std::string key = std::string("menu_text.values.") + role;
+		const Vector2F raw = fixed_menu_size(key, text, font);
+		if (!std::isfinite(limit.x) || !std::isfinite(limit.y) || limit.x <= 0.0f || limit.y <= 0.0f)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must leave finite positive value width and row height.");
+		}
+		// Match OptionRow::set_value: reset to the authored font size, fit
+		// width first, then height. Supported long values remain valid.
+		float scale = 1.0f;
+		if (raw.x > limit.x) { scale = limit.x / raw.x; }
+		if (raw.y * scale > limit.y) { scale = limit.y / raw.y; }
+		const Vector2F fitted = raw * scale;
+		if (!std::isfinite(scale) || scale <= 0.0f || !std::isfinite(fitted.x) || !std::isfinite(fitted.y) ||
+			fitted.x <= 0.0f || fitted.y <= 0.0f)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must retain finite positive fitted value bounds.");
+		}
+		const RectangleF bounds(position, fitted);
+		check_fixed_paper(key, bounds, paper_size, art.focus_padding);
+		if (fitted.y + art.focus_padding.y * 2.0f > row_spacing)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit its row including focus padding.");
+		}
+		if (controls_value && (bounds.right() + art.focus_padding.x > controls.controls_position.x ||
+			bounds.bottom() + art.focus_padding.y > controls.status_position.y))
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit before the controls help and status including focus padding.");
+		}
+	};
+	const MenuValueText& values = this->menu_text_.values;
+	const Vector2F options_value_limit((1920.0f + main.options_box_size.x) / 2.0f -
+		main.art.shadow_offset - main.art.focus_padding.x - main.options_value_x,
+		main.options_spacing.y - main.art.focus_padding.y * 2.0f);
+	const auto options_value_position = [&](int row)
+	{
+		return Vector2F(main.options_value_x, main.options_position.y + main.options_spacing.y * static_cast<float>(row));
+	};
+	check_value("on", values.on, this->menu_.item_font, options_value_position(1), options_value_limit,
+		main.options_box_size, main.art, main.options_spacing.y, false);
+	check_value("off", values.off, this->menu_.item_font, options_value_position(1), options_value_limit,
+		main.options_box_size, main.art, main.options_spacing.y, false);
+	check_value("random", values.random, this->menu_.item_font, options_value_position(2), options_value_limit,
+		main.options_box_size, main.art, main.options_spacing.y, false);
+	const Vector2F controls_value_limit(controls.controls_position.x - controls.art.focus_padding.x * 2.0f -
+		controls.art.shadow_offset - controls.layout.position.x - controls.layout.spacing.x,
+		controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
+	for (const int row : { 3, 4, 5 })
+	{
+		const Vector2F position = controls.layout.position +
+			Vector2F(controls.layout.spacing.x, controls.layout.spacing.y * static_cast<float>(row));
+		check_value("on", values.on, controls.item_font, position, controls_value_limit,
+			controls.box_size, controls.art, controls.layout.spacing.y, true);
+		check_value("off", values.off, controls.item_font, position, controls_value_limit,
+			controls.box_size, controls.art, controls.layout.spacing.y, true);
+	}
 	const auto centered_title = [&](const std::string& key, const std::wstring& text,
 		const std::string& font, float y, const Vector2F& padding)
 	{

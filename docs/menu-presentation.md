@@ -109,8 +109,8 @@ random-primary selection, without changing selection order or RNG draws.
 
 The required `menu_text` object stores the shared menu brand, eleven headings,
 seventeen complete prompt-bar legends, thirty-six row labels, a solo-practice
-hint, five Title/Home strings, three Controls/Pad Sticks help strings and eight
-fixed save-status messages:
+hint, five Title/Home strings, three Controls/Pad Sticks help strings, eight
+fixed save-status messages and three shared setting values:
 
 | JSON path | Required keys |
 |---|---|
@@ -123,6 +123,7 @@ fixed save-status messages:
 | `menu_text.home_subtitle` | One Home subtitle string |
 | `menu_text.help` | `controls`, `pad_association`, `aim_cutoff` |
 | `menu_text.status` | `options_pending`, `options_saved`, `options_save_failed`, `controls_pending`, `controls_saved`, `active_save_failed`, `sticks_pending`, `sticks_saved` |
+| `menu_text.values` | `on`, `off`, `random` |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
 normalization and the supported U+0020 to U+007E printable content range after
@@ -431,7 +432,7 @@ on opening. Presentation changes leave an open page's text, font and fitted
 label sizes intact; reopening adopts the edits. They remain JSON string
 settings outside numeric `tune`. Labels do not change navigation, adjustment
 steps, Apply/Back behavior, saved preferences or stick previews. Dynamic
-connection, setting-value and readout strings remain separate C++ text.
+connection and live readout strings remain separate C++ text.
 
 ### Controls / audio and Pad Sticks help
 
@@ -576,6 +577,67 @@ continue to read live presentation geometry for their width fit, preserving the
 existing behavior if that geometry changes while a page is open; fitted sizes
 are not a geometry snapshot.
 
+### Shared setting values
+
+The required `menu_text.values` object supplies three existing setting values:
+
+| Key | Shipped text | Use |
+|---|---|---|
+| `on` | `On` | Options Fullscreen; Controls View shake, Aim marker and Reduce effects |
+| `off` | `Off` | The same four toggle rows |
+| `random` | `Random` | Options Team palette's random choice |
+
+Each value follows the shared normalized, nonblank, single-line rules. Options
+values use `menu_style.fonts.item`, shipped as `gill_sans_mt_bold_48`; Controls
+values use `controls_settings.item_font`, shipped as `gill_sans_mt_bold_36`.
+Startup checks actual font glyphs and finite, positive raw and fitted bounds in
+each applicable context. The shared On/Off strings are checked in both fonts.
+The nine checked contexts are Options On/Off at row 1 and Random at row 2,
+plus Controls On/Off at each of rows 3, 4 and 5.
+
+All five uses retain `OptionRow`'s existing value fit. Every value change resets
+the scale to one, shrinks for the available width, then shrinks further for the
+available height if necessary. Both limit components and the fitted scale must
+remain finite and positive; there is no unscaled-width rejection,
+character-count cap, minimum
+scale or upscaling. Long supported values remain valid when their fitted bounds
+fit. Options' available width runs from `main_menu.options_value_x` to the
+Options paper's right edge minus `main_menu.art.shadow_offset` and horizontal
+focus padding; its available height is
+`main_menu.options_spacing.y - 2 * main_menu.art.focus_padding.y`.
+The shipped limits are `(924, 84)`.
+
+Controls values start in the second layout column. Their available width is
+`controls_settings.controls_position.x - 2 * controls_settings.art.focus_padding.x -
+controls_settings.art.shadow_offset - (controls_settings.layout.position.x +
+controls_settings.layout.spacing.x)`;
+their available height is
+`controls_settings.layout.spacing.y - 2 * controls_settings.art.focus_padding.y`.
+The shipped limits are `(332, 68)`. These are value limits, separate from the
+first column's fitted labels. Values keep their existing plain text style and
+colour.
+
+The fitted value rectangle expanded by the page's actual focus padding must
+fit its outer paper centered within `(1920, menu_style.chrome.footer_y)`.
+The fitted text height plus twice the vertical focus padding must also fit the
+page's row spacing. Controls' padded right edge must be at or before
+`controls_settings.controls_position.x`, and its padded bottom edge must be at
+or above `controls_settings.status_position.y`. All boundaries accept equality.
+These checks use fitted bounds, without a raw width or height cap.
+
+Each page takes these strings from its captured `MenuText`; each `OptionRow`
+retains the font and fitting geometry it was constructed with. Later callbacks
+displaying On, Off or Random retain the open page's text, font and limits after
+presentation replacement, including return from a child page. Reopening adopts
+the edits. The values remain JSON strings outside numeric `tune`. Wording
+changes do not alter boolean choices, palette selection, cycling, disabled
+fullscreen resolution, Apply/Back behavior, save identifiers or persistence.
+Fixed palette labels remain in the existing palette data and are still read
+live. Resolution and
+numeric/percentage formatting, default-deadzone notation, stage Random copy,
+connection/readout text and composed match/results/pause/end copy remain
+separate work under GAP#8.4.
+
 ## Verification and boundary
 
 The `menu_presentation` consumer case checks layout limits, required identifiers,
@@ -596,6 +658,10 @@ movement-response and aim previews; association text stays below the aim box.
 Fixed save-status coverage checks required messages, normalization, actual
 context fonts, width-only fitting, paper containment and separation from the
 actual Back/help/preview rectangles.
+Shared setting-value coverage checks required fields, normalization, actual
+Options/Controls fonts and the existing value fit, including long values and
+resetting the scale before shorter values, all nine contexts and actual
+paper/row/help-column/status boundaries.
 Debug-console acceptance checks layout edit scopes, rollback and reset.
 
 The native painter checks exercise real page construction, copied geometry,
@@ -627,6 +693,9 @@ help blocks' fitting and the aim caption's retained text/font and placement.
 through pending edits, successful and failed isolated saves, interrupted
 preferences flows, presentation replacement, child-page return and reopening.
 They check the retained text/font without treating live geometry as captured.
+Those scopes also exercise authored On/Off/Random values, width/height fitting,
+retained callback text/font/limits, reopening, cycling and isolated save/discard
+flows.
 Use `MainMenuOnly` for Title/Home wording, centering, focus and navigation,
 including retained text/font across presentation replacement and reopening.
 
@@ -636,8 +705,9 @@ the data boundary implemented for gap-audit 8.5. The weapon catalog implements
 the name/artwork part of GAP#8.4, and `menu_text` implements shared headings,
 control legends, Home/Options/Credits, Mode/Player Count, Pause, static End and
 Controls/Pad Sticks row labels and help, the solo-practice hint, fixed
-Title/Home copy and fixed settings save-status messages. Setting values,
-connection/readout text, composed match/results/pause/end text and other
+Title/Home copy, fixed settings save-status messages and shared On/Off/Random
+setting values. Other setting values, stage Random copy, connection/readout
+text, composed match/results/pause/end text and other
 player-visible C++ text remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical
 audit is unchanged.

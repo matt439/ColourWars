@@ -147,9 +147,9 @@ void ControlsSettingsMenu::refresh_values()
 {
 	this->music_->set_value(std::to_wstring(this->selection_.music_volume) + L"%");
 	this->sfx_->set_value(std::to_wstring(this->selection_.sfx_volume) + L"%");
-	this->view_shake_->set_value(this->selection_.view_shake ? L"On" : L"Off");
-	this->aim_marker_->set_value(this->selection_.aim_marker ? L"On" : L"Off");
-	this->reduce_effects_->set_value(this->selection_.reduce_effects ? L"On" : L"Off");
+	this->view_shake_->set_value(this->selection_.view_shake ? this->text().values.on : this->text().values.off);
+	this->aim_marker_->set_value(this->selection_.aim_marker ? this->text().values.on : this->text().values.off);
+	this->reduce_effects_->set_value(this->selection_.reduce_effects ? this->text().values.on : this->text().values.off);
 }
 
 void ControlsSettingsMenu::apply_settings()
