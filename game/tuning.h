@@ -164,6 +164,7 @@ struct PlayerMovementSounds
 {
 	std::vector<SoundTuning> land;
 	std::vector<SoundTuning> step;
+	std::vector<SoundTuning> step_painted;
 	SoundTuning skid;
 	float landing_full_speed = 0.0f;
 	float landing_min_gain = 0.0f;
@@ -206,6 +207,8 @@ struct PlayerTuning
 	SoundTuning death_sound;
 	SoundTuning jump_sound;
 	SoundTuning respawn_sound;
+	// One persistent redraw voice per roster seat, independent of input device.
+	std::array<SoundTuning, 4> redraw_sounds;
 	PlayerMovementSounds movement_sounds;
 
 	PlayerAnimationTuning idle;

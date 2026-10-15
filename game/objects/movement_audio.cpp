@@ -15,13 +15,18 @@ MovementAudio::MovementAudio(const PlayerMovementSounds* tuning, SoundBank* bank
     {
         this->step_.push_back(bank->resolve_wave(sound.name));
     }
+    for (const SoundTuning& sound : tuning->step_painted)
+    {
+        this->step_painted_.push_back(bank->resolve_wave(sound.name));
+    }
     this->skid_ = bank->resolve_wave(tuning->skid.name);
     this->land_index_ = static_cast<size_t>(std::max(player_num, 0)) % this->land_.size();
     this->step_index_ = static_cast<size_t>(std::max(player_num, 0)) % this->step_.size();
+    this->painted_index_ = static_cast<size_t>(std::max(player_num, 0)) % this->step_painted_.size();
 }
 
 void MovementAudio::end_contacts(bool can_act, bool supported, bool grounded,
-    float impact_speed, float distance, float previous_velocity, float input, float dt)
+    float impact_speed, float distance, float previous_velocity, float input, float dt, bool painted)
 {
     if (dt <= 0.0f)
     {
@@ -37,10 +42,17 @@ void MovementAudio::end_contacts(bool can_act, bool supported, bool grounded,
     this->skid_delay_ = std::max(0.0f, this->skid_delay_ - dt);
     if (supported && !this->had_support_ && this->established_support_)
     {
-        this->play(this->land_[this->land_index_], this->tuning_->land[this->land_index_],
-            std::clamp(impact_speed / this->tuning_->landing_full_speed,
-                this->tuning_->landing_min_gain, 1.0f));
-        this->land_index_ = (this->land_index_ + 1) % this->land_.size();
+        const float strength = std::clamp(impact_speed / this->tuning_->landing_full_speed,
+            this->tuning_->landing_min_gain, 1.0f);
+        if (painted)
+        {
+            this->play_painted(strength);
+        }
+        else
+        {
+            this->play(this->land_[this->land_index_], this->tuning_->land[this->land_index_], strength);
+            this->land_index_ = (this->land_index_ + 1) % this->land_.size();
+        }
     }
 
     // No step on the landing or takeoff tick. In particular a buffered jump
@@ -59,8 +71,15 @@ void MovementAudio::end_contacts(bool can_act, bool supported, bool grounded,
         this->braking_ = opposed;
         if (this->distance_ >= this->tuning_->stride_distance && this->step_delay_ <= 0.0f)
         {
-            this->play(this->step_[this->step_index_], this->tuning_->step[this->step_index_]);
-            this->step_index_ = (this->step_index_ + 1) % this->step_.size();
+            if (painted)
+            {
+                this->play_painted();
+            }
+            else
+            {
+                this->play(this->step_[this->step_index_], this->tuning_->step[this->step_index_]);
+                this->step_index_ = (this->step_index_ + 1) % this->step_.size();
+            }
             // A long tick can request one step, never a backlog of missed ones.
             this->distance_ = 0.0f;
             this->step_delay_ = this->tuning_->min_step_interval;
@@ -89,4 +108,11 @@ void MovementAudio::play(SoundBank::WaveHandle wave, const SoundTuning& tuning,
     float strength) const
 {
     this->bank_->play_wave(wave, tuning.volume * strength * this->preferences_->sfx_gain());
+}
+
+void MovementAudio::play_painted(float strength)
+{
+    this->play(this->step_painted_[this->painted_index_],
+        this->tuning_->step_painted[this->painted_index_], strength);
+    this->painted_index_ = (this->painted_index_ + 1) % this->step_painted_.size();
 }

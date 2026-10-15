@@ -430,8 +430,10 @@ replaces all existing audio bindings and includes the story cues and separate
 countdown beats/GO. POL#23 retains the new hooks listed there and the gameplay
 mix; ROAD#3 owns in-game audio acceptance.
 The movement increment adds impact-scaled landing variants, distance-driven
-footsteps and reversal skids with per-player repetition limits; redraw and
-painted-surface details remain in POL#23.
+footsteps and reversal skids with per-player repetition limits. Respawn redraws
+now have separate pause-aware pen loops per player, and exposed painted support
+selects wet step/landing variants within the same movement budgets. Remaining
+hooks and the listening mix stay in POL#23.
 
 - Inventory every source wave, bank entry, loop instance and runtime reference,
   including tuning, presentation, level music and any code-selected cues. Give

@@ -26,6 +26,9 @@ public:
     // The outline is finished and the figure is filled in: its own sprite takes over.
     bool filled(float progress) const;
 
+    // The part of the wait during which the outline's pen is moving.
+    bool drawing(float progress) const;
+
     // Seconds after the pop that the camera cuts to the spawn.
     float camera_hold() const;
 

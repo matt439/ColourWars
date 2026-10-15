@@ -147,7 +147,8 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
             const int count = std::max(1, static_cast<int>(length / authored_pitch));
             const float pitch = length / count;
             this->paint_strips_.push_back(PaintStrip{
-                static_cast<int>(paint_tiles.size()), count, begin, pitch, along_x });
+                static_cast<int>(paint_tiles.size()), count, begin, pitch, end, along_x,
+                along_x && leading });
             for (int i = 0; i < count; ++i)
             {
                 // Fit even partial edge tiles to the exposed segment, so
@@ -174,6 +175,21 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
     append_face(this->faces_.right, false, false);
     return paint_tiles;
 }
+PlayerTeam StructurePaintable::top_paint_team(float x) const
+{
+	for (const PaintStrip& strip : this->paint_strips_)
+	{
+		if (!strip.top || !(x >= strip.origin && x < strip.end))
+		{
+			continue;
+		}
+		const int index = std::min(static_cast<int>((x - strip.origin) / strip.pitch),
+			strip.count - 1);
+		return this->paint_tiles_[static_cast<size_t>(strip.begin + index)].team();
+	}
+	return PlayerTeam::none;
+}
+
 PaintTotal StructurePaintable::paint_total() const
 {
 	auto total = PaintTotal();

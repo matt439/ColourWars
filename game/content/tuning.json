@@ -145,6 +145,12 @@
             "jump": { "name": "player.jump", "volume": 1.0 },
             "respawn": { "name": "player.respawn", "volume": 1.0 }
         },
+        "redraw_sounds": [
+            { "name": "player.redraw.0", "volume": 0.12 },
+            { "name": "player.redraw.1", "volume": 0.12 },
+            { "name": "player.redraw.2", "volume": 0.12 },
+            { "name": "player.redraw.3", "volume": 0.12 }
+        ],
         "movement_sounds": {
             "land": [
                 { "name": "player.land.01", "volume": 0.25 },
@@ -159,6 +165,12 @@
                 { "name": "player.step.04", "volume": 0.12 },
                 { "name": "player.step.05", "volume": 0.12 },
                 { "name": "player.step.06", "volume": 0.12 }
+            ],
+            "step_painted": [
+                { "name": "player.step_painted.01", "volume": 0.16 },
+                { "name": "player.step_painted.02", "volume": 0.16 },
+                { "name": "player.step_painted.03", "volume": 0.16 },
+                { "name": "player.step_painted.04", "volume": 0.16 }
             ],
             "skid": { "name": "player.skid", "volume": 0.18 },
             "landing_full_speed": 1000.0,

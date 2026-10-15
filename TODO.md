@@ -82,7 +82,7 @@ mix still belong here; a missing-bank silent fallback is not a defect.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#23` | OPEN | HIGH | L | Wire the [remaining cues](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration) (redraw/painted steps, last-ten/room tone, menu/music transitions); assess optional detail and mix at 1/2/4 players. |
+| `POL#23` | OPEN | HIGH | L | Wire the [remaining cues](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration) (last-ten/room tone, menu/music transitions); assess optional detail and mix at 1/2/4 players. |
 | `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains, mute, suspension, resumed loops, the multiplayer mix; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
 
 ## Acceptance and release
@@ -147,7 +147,7 @@ frozen as above. These add to the hierarchies, never flatten them (CLAUDE.md); D
 | `GAP#D1` | OPEN | MED | M | Give FocusGroup's per-slot cursors a client: a per-player menu page replacing team/weapon select's hand-rolled cursors; a misfit becomes a report. |
 | `GAP#D2` | OPEN | MED | M | No toggle/cycle/slider rows beyond OptionRow, no progress bar, no modal, no list-page base. |
 | `GAP#D3` | OPEN | MED | M | Check the engine's anti-tunnelling bound at tuning load and against real geometry; the sniper's 2000 u/s already exceeds it. |
-| `GAP#D4` | OPEN | MED | M | Give `Scene::contacts()` a reader (natural home for hit feedback, `POL#10`) and use `labrador::Label` somewhere. |
+| `GAP#D4` | OPEN | MED | M | Use `labrador::Label` somewhere. |
 | `GAP#D5` | OPEN | MED | M | Rotated and moving structures behind the builder, one of each in a shipped stage, so the SAT and moving-response paths get a client. |
 
 ## Engine reports

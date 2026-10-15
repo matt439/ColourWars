@@ -53,6 +53,9 @@ public:
 		const mattmath::Vector2F& normal, float penetration) override;
 
 	PaintTotal paint_total() const override;
+	// Ownership directly under a confirmed top-support contact. Tile intervals
+	// are half open, so a seam has one answer; side/bottom paint never counts.
+	PlayerTeam top_paint_team(float x) const;
 
 private:
 	std::vector<PaintTile> paint_tiles_ = std::vector<PaintTile>();
@@ -70,7 +73,9 @@ private:
 		int count = 0;
 		float origin = 0.0f;
 		float pitch = 1.0f;
+		float end = 0.0f;
 		bool along_x = true;
+		bool top = false;
 	};
 
 	// A covered face can split into several exposed strips.

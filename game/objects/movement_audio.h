@@ -13,7 +13,8 @@ public:
         const PlaySettings* preferences, int player_num);
 
     void end_contacts(bool can_act, bool supported, bool grounded,
-        float impact_speed, float distance, float previous_velocity, float input, float dt);
+        float impact_speed, float distance, float previous_velocity, float input, float dt,
+        bool painted = false);
     void reset();
 
 private:
@@ -22,9 +23,11 @@ private:
     const PlaySettings* preferences_;
     std::vector<labrador::SoundBank::WaveHandle> land_;
     std::vector<labrador::SoundBank::WaveHandle> step_;
+    std::vector<labrador::SoundBank::WaveHandle> step_painted_;
     labrador::SoundBank::WaveHandle skid_;
     size_t land_index_ = 0;
     size_t step_index_ = 0;
+    size_t painted_index_ = 0;
     bool established_support_ = false;
     bool had_support_ = false;
     bool braking_ = false;
@@ -34,4 +37,5 @@ private:
 
     void play(labrador::SoundBank::WaveHandle wave, const SoundTuning& tuning,
         float strength = 1.0f) const;
+    void play_painted(float strength = 1.0f);
 };

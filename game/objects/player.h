@@ -16,6 +16,7 @@
 #include "engine/math/vector2f.h"
 #include "engine/render/animation_object.h"
 #include "engine/collision/collision_object.h"
+#include "engine/collision/contacts.h"
 #include "game/objects/collision_object_type.h"
 #include "engine/core/moving_object.h"
 #include "engine/audio/sound_bank.h"
@@ -29,6 +30,8 @@ enum class PlayerState
     alive,
     dead
 };
+
+class StructurePaintable;
 
 enum class PlayerMoveState
 {
@@ -72,6 +75,8 @@ public:
     // Borrowed tuning and presentation must outlive the player. The builder supplies the spawn
     // rectangle; tuning supplies movement and health parameters.
     // secondary is currently accepted but ignored; players carry one weapon.
+    // The builder supplies sound_index as the roster/view index, independently
+    // of sparse device slots and device-less debug players.
     Player(const mattmath::RectangleF& rectangle,
         const GameTuning* tuning,
         const MovementFeedbackPresentation* movement_feedback,
@@ -91,7 +96,10 @@ public:
         float rotation = 0.0f,
         const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
         labrador::SpriteFlip flip = labrador::SpriteFlip::none,
-        float layer_depth = 0.0f);
+        float layer_depth = 0.0f,
+        int sound_index = -1);
+
+    ~Player() override;
 
     void update(float dt) override;
     std::vector<std::unique_ptr<Projectile>>
@@ -116,9 +124,9 @@ public:
     // A dead player respawns rather than being retired by Scene.
     bool for_deletion() const override;
 
-    // Finish the contact phase and detect loss of ground support after all
-    // contacts have been dispatched.
-    void end_contacts();
+    // Finish the contact phase after dispatch. Measured contacts retain adjacent
+    // support candidates whose callbacks an earlier separation made redundant.
+    void end_contacts(std::span<const labrador::Contact> contacts = {});
     const MovementFeedback& movement_feedback() const;
 
     // A Movement Course presentation comparison. Construction and simulation
@@ -230,6 +238,9 @@ private:
     float weapon_contact_dt_ = 0.0f;
     float support_impact_speed_ = 0.0f;
     mattmath::Vector2F support_position_;
+    // Borrowed only for this contact phase; query after every paint callback.
+    std::vector<const StructurePaintable*> paint_supports_;
+    bool painted_support() const;
 
     const PlayerTuning& player_tuning() const;
 
@@ -272,6 +283,10 @@ private:
     labrador::SoundBank::WaveHandle death_sound_;
     labrador::SoundBank::WaveHandle jump_sound_;
     labrador::SoundBank::WaveHandle respawn_sound_;
+    labrador::SoundBank::EffectHandle redraw_sound_;
+    size_t redraw_index_ = 0;
+    mutable bool redraw_playing_ = false;
+    mutable bool redraw_paused_ = false;
 
 
     float health_regen_timer_ = 0.0f;
@@ -314,6 +329,10 @@ private:
     const PlayerAnimationTuning& animation_info(PlayerAnimationState state) const;
 
     void respawn();
+    bool redrawing() const;
+    float redraw_gain() const;
+    void update_redraw_sound(float dt) const;
+    void stop_redraw_sound() const;
 
     void set_facing_right(bool facing_right);
 

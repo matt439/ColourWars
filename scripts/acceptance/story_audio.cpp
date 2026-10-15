@@ -6,6 +6,7 @@
 #include "game/objects/structure.h"
 #include "game/objects/structure_paintable.h"
 #include "game/objects/paint_audio.h"
+#include "game/objects/projectile_jet.h"
 #include "engine/assets/sound_bank_loader.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/null/recording.h"
@@ -1192,14 +1193,15 @@ namespace
 			}
 			require(invalid, "Invalid movement sound content was accepted or lost its authored key");
 		};
-		for (const char* key : { "land", "step" })
+		for (const char* key : { "land", "step", "step_painted" })
 		{
 			rejected([&](rapidjson::Document& json)
 			{
 				json["player"]["movement_sounds"][key].Clear();
 			}, key);
-			const auto& choices = std::string(key) == "land" ?
-				world.tuning.player().movement_sounds.land : world.tuning.player().movement_sounds.step;
+			const auto& sounds = world.tuning.player().movement_sounds;
+			const auto& choices = std::string(key) == "land" ? sounds.land :
+				(std::string(key) == "step" ? sounds.step : sounds.step_painted);
 			for (size_t index = 0; index < choices.size(); ++index)
 			{
 				rejected([&](rapidjson::Document& json)
@@ -1304,7 +1306,7 @@ namespace
 			for (auto* player : this->players)
 			{
 				if (fatal) { player->kill(); }
-				player->end_contacts();
+				player->end_contacts(this->scene.contacts());
 				player->update_prev_rectangle();
 			}
 			this->scene.end_tick();
@@ -1953,7 +1955,11 @@ namespace
 			world.level->level_end_info().team_a_area > 0.0f,
 			"Level failed to flush a flying paint hit after its owner died");
 	}
+
+#include "scripts/acceptance/story_audio/painted_checks.h"
 }
+
+#include "scripts/acceptance/story_audio/redraw_checks.h"
 
 int main(int argc, char** argv)
 {
@@ -1982,6 +1988,14 @@ int main(int argc, char** argv)
 		check_movement_steps_and_walls(world);
 		check_movement_contact_kinds(world);
 		check_movement_skids_and_players(world, content);
+		check_redraw_content(world, content);
+		check_redraw_boundaries(world, content);
+		check_redraw_player_lifecycle(world);
+		check_redraw_levels(world);
+		check_painted_support_query(world);
+		check_painted_player_contacts(world);
+		check_painted_audio_budget(world);
+		check_painted_landings(world);
 		check_paint_content(world, content);
 		check_paint_limits_and_variants(world, content);
 		check_paint_contacts(world);
@@ -1992,6 +2006,7 @@ int main(int argc, char** argv)
 			"countdown/GO/time up, gains/mute, suspension, destruction, weapon feedback validation, "
 			"empty/recovered/ready edges, independent loops, stop lifecycle, roller contacts, "
 			"movement content, resolved land/step/skid edges, rates, variants and four-player independence, "
+			"redraw pen boundaries/voices/lifecycle, painted support ownership and wet movement budgets, "
 			"paint content, tool impacts/capture/duds, swept/launch contacts, roller aggregation and shared limits\n";
 		return 0;
 	}

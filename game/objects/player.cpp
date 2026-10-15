@@ -1,8 +1,11 @@
 #include "game/pch.h"
 #include "game/objects/player.h"
 #include "game/objects/paint_audio.h"
+#include "game/objects/structure_paintable.h"
 
 #include "engine/collision/resolve.h"
+
+#include <limits>
 
 using namespace DirectX;
 using namespace mattmath;
@@ -33,7 +36,8 @@ Player::Player(const RectangleF& rectangle,
     float rotation,
     const Vector2F& origin,
     SpriteFlip flip,
-    float layer_depth) :
+    float layer_depth,
+    int sound_index) :
     MovingObject(velocity),
     AnimationObject(tuning->player().idle.sheet,
                     tuning->player().idle.strip,
@@ -44,7 +48,8 @@ Player::Player(const RectangleF& rectangle,
     tuning_(tuning),
     movement_feedback_(movement_feedback, render_resources),
     movement_audio_(&tuning->player().movement_sounds,
-        audio_resources->sound_bank(tuning->player().sound_bank), preferences, player_num),
+        audio_resources->sound_bank(tuning->player().sound_bank), preferences,
+        sound_index >= 0 ? sound_index : player_num),
     respawn_redraw_(respawn_redraw, render_resources),
     primary_(std::move(primary_weapon)),
     player_num_(player_num),
@@ -72,6 +77,19 @@ Player::Player(const RectangleF& rectangle,
         this->sound_bank_->resolve_wave(player.jump_sound.name);
     this->respawn_sound_ =
         this->sound_bank_->resolve_wave(player.respawn_sound.name);
+    const int index = sound_index >= 0 ? sound_index : std::max(player_num, 0) % 4;
+    if (index >= static_cast<int>(player.redraw_sounds.size()))
+    {
+        throw std::runtime_error("Player redraw sound requires a roster index from 0 to 3");
+    }
+    this->redraw_index_ = static_cast<size_t>(index);
+    this->redraw_sound_ = this->sound_bank_->resolve_effect(
+        player.redraw_sounds[this->redraw_index_].name);
+}
+
+Player::~Player()
+{
+    this->stop_redraw_sound();
 }
 
 void Player::update_animation_state()
@@ -144,6 +162,10 @@ bool Player::drawn_whole() const
 void Player::set_pose(const FigurePose& pose)
 {
     this->pose_ = pose;
+    if (this->drawn_whole())
+    {
+        this->stop_redraw_sound();
+    }
 }
 
 void Player::draw_figure(DrawList& draw_list, const RectangleF& rectangle) const
@@ -256,8 +278,33 @@ void Player::on_contact(const CollisionObject& other, const Vector2F& normal,
     }
     this->on_structure_contact(other, normal, penetration);
 }
-void Player::end_contacts()
+void Player::end_contacts(std::span<const Contact> contacts)
 {
+    // Dispatch remeasures each pair and can skip an adjacent floor once the
+    // first has separated the feet. Retain the measured top candidates too;
+    // painted_support checks that they still touch the final footprint.
+    for (const Contact& contact : contacts)
+    {
+        const CollisionObject* other = nullptr;
+        Vector2F normal;
+        if (contact.a == this)
+        {
+            other = contact.b;
+            normal = contact.normal;
+        }
+        else if (contact.b == this)
+        {
+            other = contact.a;
+            normal = -contact.normal;
+        }
+        if (other != nullptr && normal.y > 0.0f && std::abs(normal.y) >= std::abs(normal.x))
+        {
+            if (const auto* paintable = dynamic_cast<const StructurePaintable*>(other))
+            {
+                this->paint_supports_.push_back(paintable);
+            }
+        }
+    }
     const PlayerMoveState move_state = this->move_state();
     const bool established_support = this->landing_feedback_ready_;
 
@@ -343,7 +390,7 @@ void Player::end_contacts()
         std::min(std::abs(resolved_x), std::abs(this->movement_requested_x_)) : 0.0f;
     this->movement_audio_.end_contacts(can_act, this->supported_this_tick_,
         this->is_on_ground(), this->support_impact_speed_, distance, this->movement_previous_velocity_,
-        this->input_.x_movement, this->movement_audio_dt_);
+        this->input_.x_movement, this->movement_audio_dt_, this->painted_support());
     this->movement_audio_dt_ = 0.0f;
     this->primary_->update_ground_contact(
         can_act && this->supported_this_tick_ && this->is_on_ground(),
@@ -352,7 +399,30 @@ void Player::end_contacts()
     this->supported_this_tick_ = false;
     this->hit_ceiling_this_tick_ = false;
     this->support_impact_speed_ = 0.0f;
+    this->paint_supports_.clear();
 }
+
+bool Player::painted_support() const
+{
+    for (const StructurePaintable* support : this->paint_supports_)
+    {
+        const RectangleF surface = support->shape()->bounding_box();
+        const float left = std::max(this->rectangle_.left(), surface.left());
+        const float right = std::min(this->rectangle_.right(), surface.right());
+        // Later contacts may have separated the feet from this surface. Use
+        // a few representable float steps, rather than a world-sized margin.
+        const float tolerance = 4.0f * std::numeric_limits<float>::epsilon() *
+            std::max({ 1.0f, std::abs(surface.top()), std::abs(this->rectangle_.y),
+                this->rectangle_.height, std::abs(this->rectangle_.bottom()) });
+        if (left < right && std::abs(this->rectangle_.bottom() - surface.top()) <= tolerance &&
+            support->top_paint_team(left + (right - left) / 2.0f) != PlayerTeam::none)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 void Player::on_structure_contact(const CollisionObject& other,
     const Vector2F& normal, float penetration)
 {
@@ -374,6 +444,10 @@ void Player::on_structure_contact(const CollisionObject& other,
         if (normal.y > 0.0f)
         {
             this->supported_this_tick_ = true;
+            if (const auto* paintable = dynamic_cast<const StructurePaintable*>(&other))
+            {
+                this->paint_supports_.push_back(paintable);
+            }
         }
         else
         {
@@ -468,6 +542,7 @@ void Player::on_projectile_contact(CollisionObjectType other_type)
 
 void Player::update(float dt)
 {
+    this->paint_supports_.clear();
     this->movement_audio_dt_ = dt;
     this->movement_start_x_ = this->rectangle_.x;
     this->movement_previous_velocity_ = this->velocity().x;
@@ -512,7 +587,9 @@ void Player::update(float dt)
     else if (this->state_ == PlayerState::dead)
     {
         this->reset_jump_input();
-        this->respawn_timer_ -= dt;
+        // Frozen/developer probes must not rewind the visible outline across
+        // its audio boundary before a later pause/resume.
+        this->respawn_timer_ -= std::max(dt, 0.0f);
 
         if (this->respawn_timer_ <= 0.0f)
         {
@@ -540,6 +617,7 @@ void Player::update(float dt)
         }
     }
     this->health_regen_timer_ += dt;
+    this->update_redraw_sound(dt);
 }
 std::vector<std::unique_ptr<Projectile>>
     Player::update_weapon_and_get_projectiles(float dt,
@@ -551,7 +629,7 @@ std::vector<std::unique_ptr<Projectile>>
     // loop explicitly because skipping update also skips normal release handling.
     if (this->state_ != PlayerState::alive || this->health_ <= 0.0f)
     {
-        this->stop_sounds();
+        this->primary_->stop_sounds();
         return {};
     }
 
@@ -821,6 +899,7 @@ void Player::enable_workshop_visual(const WorkshopPlayerPresentation* presentati
     }
     this->workshop_visual_ = std::make_unique<PlayerVisual>(presentation,
         render_resources, mode, view_index);
+    this->stop_redraw_sound();
 }
 
 const PlayerVisual* Player::workshop_visual() const
@@ -924,6 +1003,7 @@ const PlayerAnimationTuning& Player::animation_info(
 }
 void Player::place_at(const Vector2F& top_left)
 {
+    this->paint_supports_.clear();
     this->movement_audio_.reset();
     this->movement_audio_dt_ = 0.0f;
     this->movement_feedback_.clear();
@@ -979,6 +1059,7 @@ void Player::set_infinite_ammo(bool infinite)
 
 void Player::respawn()
 {
+    this->stop_redraw_sound();
     this->place_at(this->respawn_position_);
 	this->health_ = this->player_tuning().starting_health;
 	this->primary_->reset_ammo();
@@ -1032,14 +1113,81 @@ PlayerAnimationState Player::calculate_animation_state() const
 void Player::stop_sounds() const
 {
     this->primary_->stop_sounds();
+    this->stop_redraw_sound();
 }
 void Player::pause_sounds() const
 {
     this->primary_->pause_sounds();
+    if (this->redraw_playing_ && !this->redraw_paused_)
+    {
+        this->sound_bank_->pause_effect(this->redraw_sound_);
+        this->redraw_paused_ = true;
+    }
 }
 void Player::resume_sounds() const
 {
     this->primary_->resume_sounds();
+    if (this->redraw_playing_)
+    {
+        if (!this->redrawing())
+        {
+            this->stop_redraw_sound();
+            return;
+        }
+        this->sound_bank_->set_effect_volume(this->redraw_sound_, this->redraw_gain());
+        if (this->redraw_paused_)
+        {
+            this->sound_bank_->resume_effect(this->redraw_sound_);
+            this->redraw_paused_ = false;
+        }
+    }
+}
+
+bool Player::redrawing() const
+{
+    return this->state_ == PlayerState::dead && !this->drawn_whole() &&
+        this->workshop_visual_ == nullptr &&
+        this->respawn_redraw_.drawing(this->respawn_progress());
+}
+
+float Player::redraw_gain() const
+{
+    return this->player_tuning().redraw_sounds[this->redraw_index_].volume *
+        this->preferences_->sfx_gain();
+}
+
+void Player::update_redraw_sound(float dt) const
+{
+    // Drawing can be culled or repeated for several views; only a progressing
+    // simulation tick starts the pen, and a long tick never catches up a replay.
+    if (dt <= 0.0f)
+    {
+        return;
+    }
+    if (!this->redrawing())
+    {
+        this->stop_redraw_sound();
+        return;
+    }
+    if (!this->redraw_playing_)
+    {
+        this->sound_bank_->play_effect(this->redraw_sound_, true, this->redraw_gain());
+        this->redraw_playing_ = true;
+    }
+    else
+    {
+        this->sound_bank_->set_effect_volume(this->redraw_sound_, this->redraw_gain());
+    }
+}
+
+void Player::stop_redraw_sound() const
+{
+    if (this->redraw_playing_)
+    {
+        this->sound_bank_->stop_effect(this->redraw_sound_, true);
+        this->redraw_playing_ = false;
+        this->redraw_paused_ = false;
+    }
 }
 void Player::set_move_state(PlayerMoveState state)
 {

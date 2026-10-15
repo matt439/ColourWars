@@ -629,6 +629,7 @@ legacy names do not make them migration inputs.
 | Menu and arena music | `music.menu`, `music.close_quarters`, `music.king_of_the_hill`, `music.turbulence`; Movement Course has no music |
 | Player | `player.jump`, `player.hurt`, `player.pop` through the existing `death` slot, and `player.respawn` |
 | Movement (2026-10-15) | Four impact-scaled landing variants, six distance-driven footstep variants, and a latched high-speed reversal skid, all from completed contacts |
+| Redraw and painted support (2026-10-15) | Four independent redraw voices follow the visible pen phase; four wet variants replace dry steps/landings on exposed painted top tiles |
 | Weapons and paint | Sprayer, roller and mister start cues play once per held-fire edge, with independent per-player loop voices; `sniper.shot`, `bucket.throw`, and the first `paint.splash` variant |
 | Weapon feedback (2026-10-15) | Sprayer/roller/mister stop edges; all five tools' empty/recovered cues; sniper cooldown-ready cue; roller lift/settle on completed ground contacts |
 | Paint feedback (2026-10-15) | Six rotating splashes, all five tools' impacts, neutral/enemy capture and retiring bare-geometry duds, bounded per paint owner across all surfaces |
@@ -722,12 +723,37 @@ current SFX gain, including mute; the short waves have the same fire-and-forget
 lifecycle as movement cues. The quiet gains are listening candidates, not a
 qualified multiplayer mix.
 
+The redraw/painted-support increment uses four explicit `player.redraw_sounds`
+effect instances, selected by roster/view index rather than pad slot. Sparse
+pads, keyboard/mouse and device-less debug seats therefore retain independent
+voices. The pen loops only between the redraw presentation's `draw_from` and
+`fill_at` boundaries; hidden workshop redraws and whole-figure reveal poses stay
+quiet. Fill, respawn, time-up and teardown stop the voice. Pause/resume preserves
+its position and refreshes the current SFX gain, including mute. A long tick
+that passes the whole drawing interval creates no catch-up loop.
+
+Painted footsteps and landings select `player.movement_sounds.step_painted`
+instead of layering over the dry cue. Either team's paint qualifies; paint
+ownership and scoring are read without changing them. At the contact phase's
+end the player reads `Scene::contacts()` as well as the dispatched top-support
+callbacks, then samples the midpoint of its final foot overlap on each
+still-supporting surface. Adjacent floors remain candidates even when separation
+against one made the other's callback redundant; paint on either supporting
+overlap selects wet feedback independently of scene insertion order. This sees
+same-tick painting regardless of callback order and rejects a support moved away
+from by later separation. Only exposed top tiles qualify: painted walls,
+undersides, clipped intervals, plain ramps and jump-through platforms stay dry.
+Tile intervals are half open, giving tile seams a consistent owner. Wet variants
+rotate per player without gameplay RNG; they share the existing stride and step
+interval budget, and wet landings retain impact-scaled strength. Spawn settling,
+wall pressure, airborne travel, fatal contacts and nonpositive ticks retain their
+existing suppression. Authored gains remain listening candidates.
+
 **POL#23 remains open.** Putting an accepted wave into the bank does not create
 a gameplay trigger. Complete the required new cues from section 4, assess Tier
 3 detail individually and keep it off or nearly off by default:
 
-- Movement: redraw loop and painted-surface contacts; optional bonk/drop/hit-confirm
-  details.
+- Movement: optional bonk/drop/hit-confirm details.
 - Paint/tool detail: optional blocked/slosh/drip cues.
 - Match and room: last-ten; room tone and optional footsteps/breath/waver/cheat.
 - Menus/music: pad lost/back, reconnect count-in (`POL#18`), distinct unready
@@ -805,3 +831,21 @@ Isolated Debug and Release startup pass with the real bank and, separately,
 without it, each with a system-only PATH and graceful close. Evidence is under
 `out/validation/paint-audio/` and `out/acceptance/`. These checks establish cue
 requests and preserved gameplay; ROAD#3 retains listening and multiplayer mix.
+
+Redraw/painted-support validation (2026-10-15): Debug and Release builds and
+all 13 consumer acceptance cases pass. The expanded `story_audio` recorder
+checks redraw content rejection, independent one-/two-/four-player roster
+voices (including device-less seats), live pen boundaries and gains, mute,
+pause/resume, fill, natural/forced respawn, hidden poses/workshop art, time-up,
+teardown and nonpositive countdown stability. Painted-support checks cover
+neutral/friendly/enemy ownership, exposed versus disabled/clipped/non-top
+faces, tile boundaries, same-tick callback order, final-footprint separation,
+reversed dry/wet floor insertion order and fractional floor heights. Wet cues
+retain impact strength, buffered-jump/fatal-contact suppression, shared dry/wet
+stride and repetition limits, and independent variant cycling. The six audio
+publication checks pass; the accepted bank and masters are unchanged. Isolated
+Debug and Release startup pass with the real bank and, separately, without it,
+each with a system-only PATH and graceful close. Evidence is under
+`out/validation/redraw-painted-audio/` and `out/acceptance/`. These checks
+establish cue requests and lifecycle behaviour; listening and multiplayer mix
+remain in POL#23 and ROAD#3.

@@ -388,7 +388,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	// Loss of ground support is known only after all contacts have been dispatched.
 	for (Player* player : this->players_)
 	{
-		player->end_contacts();
+		player->end_contacts(this->scene_->contacts());
 	}
 
 	this->update_players_after_resolve();

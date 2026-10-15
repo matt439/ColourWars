@@ -90,7 +90,8 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 			team_colours.team_colour(setting.team),
 			viewport_manager->
 				player_viewport(view_index),
-			position);
+			position, Vector2F::ZERO, 0.0f, Vector2F::ZERO,
+			SpriteFlip::none, 0.0f, view_index);
 
 		if (settings.stage() == "movement_course" &&
 			settings.workshop_visual_mode() != PlayerVisualMode::original)

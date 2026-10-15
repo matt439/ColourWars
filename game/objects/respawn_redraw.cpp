@@ -16,6 +16,11 @@ bool RespawnRedraw::filled(float progress) const
     return progress >= this->presentation_->fill_at;
 }
 
+bool RespawnRedraw::drawing(float progress) const
+{
+    return progress >= this->presentation_->draw_from && !this->filled(progress);
+}
+
 float RespawnRedraw::camera_hold() const
 {
     return this->presentation_->camera_hold;

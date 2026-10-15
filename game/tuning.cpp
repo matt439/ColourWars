@@ -339,6 +339,7 @@ namespace
 		};
 		sounds.land = read_choices("land");
 		sounds.step = read_choices("step");
+		sounds.step_painted = read_choices("step_painted");
 		sounds.skid = read_sound(json, "skid");
 		sounds.landing_full_speed = read_positive(json, "landing_full_speed");
 		sounds.landing_min_gain = read_number_in(json, "landing_min_gain", 0.0f, 1.0f);
@@ -382,6 +383,24 @@ namespace
 		player.death_sound = read_sound(sounds, "death");
 		player.jump_sound = read_sound(sounds, "jump");
 		player.respawn_sound = read_sound(sounds, "respawn");
+		const JsonValue redraw = json.array("redraw_sounds");
+		if (redraw.size() != player.redraw_sounds.size())
+		{
+			throw std::runtime_error(redraw.where() +
+				": a separate redraw sound is required for each of the four players.");
+		}
+		for (size_t i = 0; i < player.redraw_sounds.size(); ++i)
+		{
+			player.redraw_sounds[i] = read_sound(redraw.at(i));
+			for (size_t previous = 0; previous < i; ++previous)
+			{
+				if (player.redraw_sounds[i].name == player.redraw_sounds[previous].name)
+				{
+					throw std::runtime_error(redraw.at(i).where() +
+						": each redraw sound must name a separate effect instance.");
+				}
+			}
+		}
 		player.movement_sounds = read_movement_sounds(json);
 
 		const JsonValue animations = json.object("animations");
@@ -602,6 +621,11 @@ void GameTuning::validate_resources(const RenderResources& render,
 		this->player_.jump_sound.name);
 	check.wave("player.sounds.respawn.name", this->player_.sound_bank,
 		this->player_.respawn_sound.name);
+	for (size_t i = 0; i < this->player_.redraw_sounds.size(); ++i)
+	{
+		check.effect("player.redraw_sounds[" + std::to_string(i) + "].name",
+			this->player_.sound_bank, this->player_.redraw_sounds[i].name);
+	}
 	const auto movement_choices = [&](const char* key,
 		const std::vector<SoundTuning>& choices)
 	{
@@ -613,6 +637,7 @@ void GameTuning::validate_resources(const RenderResources& render,
 	};
 	movement_choices("land", this->player_.movement_sounds.land);
 	movement_choices("step", this->player_.movement_sounds.step);
+	movement_choices("step_painted", this->player_.movement_sounds.step_painted);
 	check.wave("player.movement_sounds.skid.name", this->player_.sound_bank,
 		this->player_.movement_sounds.skid.name);
 

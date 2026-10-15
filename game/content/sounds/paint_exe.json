@@ -107,6 +107,22 @@
   "create_effect_instance_for_each_wave": false,
   "sound_effect_instances": [
     {
+      "name": "player.redraw.0",
+      "wave": "player.redraw"
+    },
+    {
+      "name": "player.redraw.1",
+      "wave": "player.redraw"
+    },
+    {
+      "name": "player.redraw.2",
+      "wave": "player.redraw"
+    },
+    {
+      "name": "player.redraw.3",
+      "wave": "player.redraw"
+    },
+    {
       "name": "music.menu",
       "wave": "music.menu"
     },
