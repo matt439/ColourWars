@@ -650,19 +650,19 @@ The required `menu_text.values` object supplies three existing setting values:
 |---|---|---|
 | `on` | `On` | Options Fullscreen; Controls View shake, Aim marker and Reduce effects |
 | `off` | `Off` | The same four toggle rows |
-| `random` | `Random` | Options Team palette's random choice |
+| `random` | `Random` | Options Team palette's random choice; Stage Select's Random display name |
 
 Each value follows the shared normalized, nonblank, single-line rules. Options
 values use `menu_style.fonts.item`, shipped as `gill_sans_mt_bold_48`; Controls
 values use `controls_settings.item_font`, shipped as `gill_sans_mt_bold_36`.
 Startup checks actual font glyphs and finite, positive raw and fitted bounds in
 each applicable context. The shared On/Off strings are checked in both fonts.
-The nine checked contexts are Options On/Off at row 1 and Random at row 2,
+The nine settings contexts are Options On/Off at row 1 and Random at row 2,
 plus Controls On/Off at each of rows 3, 4 and 5.
 
-All five uses retain `OptionRow`'s existing value fit. Every value change resets
-the scale to one, shrinks for the available width, then shrinks further for the
-available height if necessary. Both limit components and the fitted scale must
+All five settings uses retain `OptionRow`'s existing value fit. Every value
+change resets the scale to one, shrinks for the available width, then shrinks
+further for the available height if necessary. Both limit components and the fitted scale must
 remain finite and positive; there is no unscaled-width rejection,
 character-count cap, minimum
 scale or upscaling. Long supported values remain valid when their fitted bounds
@@ -690,18 +690,57 @@ page's row spacing. Controls' padded right edge must be at or before
 or above `controls_settings.status_position.y`. All boundaries accept equality.
 These checks use fitted bounds, without a raw width or height cap.
 
-Each page takes these strings from its captured `MenuText`; each `OptionRow`
-retains the font and fitting geometry it was constructed with. Later callbacks
-displaying On, Off or Random retain the open page's text, font and limits after
+Each settings page takes these strings from its captured `MenuText`; each
+`OptionRow` retains the font and fitting geometry it was constructed with.
+Later callbacks displaying On, Off or Random retain the open page's text, font and limits after
 presentation replacement, including return from a child page. Reopening adopts
 the edits. The values remain JSON strings outside numeric `tune`. Wording
 changes do not alter boolean choices, palette selection, cycling, disabled
 fullscreen resolution, Apply/Back behavior, save identifiers or persistence.
 Fixed palette labels remain in the existing palette data and are still read
 live. Resolution and
-numeric/percentage formatting, default-deadzone notation, stage Random copy,
-connection/readout text, player-specific Pause titles, session continuation
-text and composed match/results copy remain separate work under GAP#8.4.
+numeric/percentage formatting, default-deadzone notation, remaining stage
+Random/briefing copy, connection/readout text, player-specific Pause titles,
+session continuation text and composed match/results copy remain separate work under GAP#8.4.
+
+### Stage Select Random display name
+
+Stage Select reuses the existing `menu_text.values.random` value for its Random
+slot's display name. The shipped text remains `Random`; no JSON field or group
+is added. The same string continues to supply Options' random team-palette
+choice, with its separate `OptionRow` fit.
+
+The Stage Select name uses `menu_style.fonts.item`, shipped as
+`gill_sans_mt_bold_48`, and the existing `UiTextDropShadow` style. Its raw bounds
+are the union of the actual font's text bounds at zero and those same bounds
+translated by `menu_style.shadow.item_offset`. The existing width-only fit is
+`min(1, main_menu.stage_select.preview_size.x / raw_width)`. Text and shadow use
+that scale, and the shadow offset is scaled by the same amount. Long supported
+names remain valid when their fitted bounds fit; there is no character-count
+cap, minimum scale, wrapping, height-driven shrink or upscaling.
+
+Startup checks the actual item-font glyphs and finite, positive measured text
+and union sizes. Preview width, fitted scale and fitted union size must also be
+finite and positive; shadow offsets and rectangle positions must be finite.
+The fitted text rectangle starts at `main_menu.stage_select.name_position`
+with the measured text size multiplied by the scale. The fitted shadow rectangle
+has that same size and starts at the name position plus the shadow offset
+multiplied by the scale. Their union includes negative shadow extents. The
+complete fitted union must stay within x = 0 to 1920 and y = 0 to
+`main_menu.stage_select.preview_position.y - menu_style.chrome.rule_height`.
+Equality is accepted. These are fitted bounds: raw text wider than the preview
+remains valid when its existing width-only fit satisfies the limits.
+
+The page takes the Random name from its captured `MenuText`, and its name widget
+retains the resolved item font, position and shadow colour. An open page keeps
+those values through presentation replacement; reopening adopts the edits.
+A visual refresh still uses live preview width and item-shadow offset,
+preserving the existing behavior; fitted size and shadow offset are not page
+snapshots. Selection colours continue to read live presentation values. The
+string stays outside numeric `tune`. It does not change eligible stages, cycling, lock/unlock,
+confirm-again start, random selection or RNG draws. Navigation text such as
+`<   SURPRISE ME   >`, the Random availability count, lock/status hints and
+composed briefing text remain separate C++ copy under GAP#8.4.
 
 ## Verification and boundary
 
@@ -731,6 +770,8 @@ Shared setting-value coverage checks required fields, normalization, actual
 Options/Controls fonts and the existing value fit, including long values and
 resetting the scale before shorter values, all nine contexts and actual
 paper/row/help-column/status boundaries.
+Stage Select's shared Random name adds actual item-font and text-plus-shadow
+checks with its distinct width-only fit.
 Debug-console acceptance checks layout edit scopes, rollback and reset.
 
 The native painter checks exercise real page construction, copied geometry,
@@ -749,7 +790,9 @@ uses its scripted input backend; the other checks retain the real backend.
 snapshots across catalog replacement and reopening.
 `MenuTextOnly` checks authored headings, complete legends and Home/Options/Credits
 and Mode/Player Count row labels and hint on real pages, including their captured
-text/look when a page updates its prompt or reopens.
+text/look when a page updates its prompt or reopens. It also checks the shared
+Random stage name with an eligible-stage fixture, including text/shadow fitting,
+cycling, lock/unlock, confirm-again start and presentation replacement/reopening.
 `PauseMenuOnly` exercises the authored initial/confirmation labels and questions
 through repeated and interrupted pause, restart and quit flows, including safe
 No focus and question/detail-font snapshots across presentation replacement and
@@ -781,9 +824,10 @@ the name/artwork part of GAP#8.4, and `menu_text` implements shared headings,
 control legends, Home/Options/Credits, Mode/Player Count, Pause, static End and
 Controls/Pad Sticks row labels and help, the solo-practice hint, fixed
 Title/Home copy, fixed settings save-status messages, shared On/Off/Random
-setting values, fixed Pause confirmation questions and End completion headings.
+setting values, Stage Select's shared Random display name, fixed Pause
+confirmation questions and End completion headings.
 Other setting values,
-stage Random copy, connection/readout text, player-specific Pause titles,
+remaining stage Random/briefing copy, connection/readout text, player-specific Pause titles,
 session continuation text, composed match/results text and other
 player-visible C++ text remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical

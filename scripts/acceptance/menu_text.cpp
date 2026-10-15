@@ -1916,12 +1916,14 @@ namespace
                 }, &world);
             }
         }
-        const auto random_is_options_only = variants.load([](rapidjson::Document& d)
+        const auto random_uses_shared_item_font = variants.load([](rapidjson::Document& d)
         {
             d["controls_settings"]["item_font"].SetString("menu_text_limited");
-            d["menu_text"]["values"]["random"].SetString("Glyph~");
+            // Keep the supported '~' probe below the arena preview border;
+            // unrelated descenders in "Glyph" would exceed its name band.
+            d["menu_text"]["values"]["random"].SetString("G~");
         });
-        random_is_options_only.validate_resources(world.render, world.audio);
+        random_uses_shared_item_font.validate_resources(world.render, world.audio);
         std::vector<Glyph> glyphs;
         for (char32_t character = U' '; character <= U'~'; ++character)
         {
@@ -2073,10 +2075,231 @@ namespace
                 d["menu_style"]["fonts"]["item"].SetString(font_name, d.GetAllocator());
                 d["controls_settings"]["item_font"].SetString(font_name, d.GetAllocator());
                 for (const auto& entry : value_text) { d["menu_text"]["values"][entry.key].SetString("~"); }
+                // Random also supplies the arena name, whose existing fit
+                // shrinks only to preview width. A narrow synthetic preview
+                // keeps that separate consumer valid while all nine real
+                // OptionRow uses still exercise their width/height limits.
+                d["main_menu"]["stage_select"]["preview_size"]["x"].SetFloat(2.0f);
             });
             tall.validate_resources(world.render, world.audio);
             check_rows(tall, wide_glyph, true);
         }
+    }
+
+    void check_stage_random_fitting(Variants& variants, World& world)
+    {
+        const auto check_widget = [&](const Presentation& look, bool width_limited)
+        {
+            const auto& stage = look.main_menu().stage_select;
+            const auto& style = look.menu();
+            const auto font = world.render.resolve_sprite_font(style.item_font);
+            std::wstring source = look.menu_text().values.random;
+            const auto measured = world.render.measure_text(font, source);
+            const auto retained = source;
+            UiTextDropShadow name("random_stage_name", source, style.item_font, stage.name_position,
+                &world.render, stage.unselected, style.shadow_colour, style.item_shadow_offset);
+            source = L"Changed after construction";
+            const mattmath::RectangleF raw = mattmath::RectangleF::union_of(
+                mattmath::RectangleF(mattmath::Vector2F::ZERO, measured),
+                mattmath::RectangleF(style.item_shadow_offset, measured));
+            require(name.text() == retained && name.bounds() == mattmath::RectangleF::union_of(
+                name.text_bounds_at(stage.name_position, 1.0f),
+                name.text_bounds_at(stage.name_position + style.item_shadow_offset, 1.0f)) &&
+                raw.width == measured.x + std::abs(style.item_shadow_offset.x) &&
+                raw.height == measured.y + std::abs(style.item_shadow_offset.y) &&
+                width_limited == (raw.width > stage.preview_size.x),
+                "Actual Random stage name lost its source copy, complete signed shadow union or expected width fitting");
+            const auto fit = [&]()
+            {
+                // The runtime explicitly measures at scale 1 before every
+                // update, even when the previous displayed slot was shrunk.
+                const auto bounds = mattmath::RectangleF::union_of(
+                    name.text_bounds_at(mattmath::Vector2F::ZERO, 1.0f),
+                    name.text_bounds_at(style.item_shadow_offset, 1.0f));
+                const float scale = std::min(1.0f, stage.preview_size.x / bounds.width);
+                name.set_scale(scale);
+                name.set_shadow_scale(scale);
+                name.set_shadow_offset(style.item_shadow_offset * scale);
+                return scale;
+            };
+            const float scale = fit();
+            const mattmath::RectangleF expected(stage.name_position + raw.position() * scale, raw.size() * scale);
+            const auto actual = name.bounds();
+            require(name.text() == retained && name.text_bounds() == name.text_bounds_at(stage.name_position, scale) &&
+                std::abs(actual.x - expected.x) <= 0.01f && std::abs(actual.y - expected.y) <= 0.01f &&
+                std::abs(actual.width - expected.width) <= 0.01f && std::abs(actual.height - expected.height) <= 0.01f &&
+                name.shadow_scale() == scale && name.shadow_offset() == style.item_shadow_offset * scale &&
+                std::isfinite(actual.x) && std::isfinite(actual.y) && std::isfinite(actual.width) &&
+                std::isfinite(actual.height) && actual.width > 0.0f && actual.height > 0.0f &&
+                actual.width <= stage.preview_size.x + 0.01f &&
+                std::abs(actual.height - raw.height * scale) <= 0.01f && actual.x >= 0.0f && actual.y >= 0.0f &&
+                actual.right() <= 1920.0f && actual.bottom() <= stage.preview_position.y - style.rule_height + 0.01f,
+                "Random stage name changed position, lost shadow scaling, wrapped, or escaped proportional width-only fitting");
+            require(width_limited ? std::abs(actual.width - stage.preview_size.x) <= 0.01f : scale == 1.0f,
+                "Random stage name did not fill its width budget or enlarged a short authored name");
+            std::wstring replacement = L"Fit";
+            name.set_text(replacement);
+            replacement = L"Changed after set_text";
+            const float reset_scale = fit();
+            const auto reset = world.render.measure_text(font, L"Fit");
+            require(reset_scale == 1.0f && name.text() == L"Fit" && name.shadow_scale() == 1.0f &&
+                name.shadow_offset() == style.item_shadow_offset && name.bounds() == mattmath::RectangleF::union_of(
+                    mattmath::RectangleF(stage.name_position, reset),
+                    mattmath::RectangleF(stage.name_position + style.item_shadow_offset, reset)),
+                "Replacing a fitted Random stage name retained its shrink scale, lost its copied text or failed to reset its shadow");
+            name.set_hidden(true);
+            DrawList no_device;
+            name.draw(no_device);
+        };
+        const auto defaults = variants.load([](rapidjson::Document&) {});
+        defaults.validate_resources(world.render, world.audio);
+        check_widget(defaults, false);
+        for (const bool wide : { false, true })
+        {
+            for (const bool negative_shadow : { false, true })
+            {
+                const auto authored = variants.load([&](rapidjson::Document& d)
+                {
+                    d["menu_text"]["values"]["random"].SetString(wide ? std::string(200, 'W').c_str() : "Fit", d.GetAllocator());
+                    if (negative_shadow)
+                    {
+                        d["menu_style"]["shadow"]["item_offset"]["x"].SetFloat(-1.5f);
+                        d["menu_style"]["shadow"]["item_offset"]["y"].SetFloat(-1.5f);
+                    }
+                });
+                authored.validate_resources(world.render, world.audio);
+                check_widget(authored, wide);
+            }
+        }
+    }
+
+    void check_stage_random_bounds(Variants& variants, World& world)
+    {
+        const auto original = variants.load([](rapidjson::Document&) {});
+        const float preview_top = original.main_menu().stage_select.preview_position.y - original.menu().rule_height;
+        const auto exact = [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_exact");
+            d["menu_text"]["values"]["random"].SetString("Fit");
+        };
+        struct Edge { const char* axis; float position; float outside; };
+        const Edge edges[]{ { "x", 0.0f, -0.25f }, { "x", 1894.5f, 1894.75f },
+            { "y", 0.0f, -0.25f }, { "y", preview_top - 21.5f, preview_top - 21.25f } };
+        for (const auto& edge : edges)
+        {
+            const auto contact = [&](rapidjson::Document& d)
+            {
+                exact(d);
+                d["main_menu"]["stage_select"]["name_position"][edge.axis].SetFloat(edge.position);
+            };
+            const auto touches = variants.load(contact);
+            touches.validate_resources(world.render, world.audio);
+            variants.rejects("values.random", [&](rapidjson::Document& d)
+            {
+                contact(d);
+                d["main_menu"]["stage_select"]["name_position"][edge.axis].SetFloat(edge.outside);
+            }, &world);
+        }
+        const auto signed_contact = [&](rapidjson::Document& d)
+        {
+            exact(d);
+            for (const char* axis : { "x", "y" })
+            {
+                d["menu_style"]["shadow"]["item_offset"][axis].SetFloat(-1.5f);
+                d["main_menu"]["stage_select"]["name_position"][axis].SetFloat(1.5f);
+            }
+        };
+        const auto signed_shadow = variants.load(signed_contact);
+        signed_shadow.validate_resources(world.render, world.audio);
+        for (const char* axis : { "x", "y" })
+        {
+            variants.rejects("values.random", [&](rapidjson::Document& d)
+            {
+                signed_contact(d);
+                d["main_menu"]["stage_select"]["name_position"][axis].SetFloat(1.25f);
+            }, &world);
+        }
+        std::vector<Glyph> glyphs;
+        for (char32_t character = U' '; character <= U'~'; ++character)
+        {
+            glyphs.push_back({ character, mattmath::RectangleI(0, 0, character == U'~' ? 2018 : 8,
+                character == U'~' ? 160 : 16), 0.0f, 0.0f, 0.0f });
+        }
+        world.render.add_font("menu_stage_random_half_scale",
+            std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
+        const auto scaled_contact = [&](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_stage_random_half_scale");
+            d["menu_text"]["values"]["random"].SetString("~");
+            d["menu_style"]["shadow"]["item_offset"]["x"].SetFloat(2.0f);
+            d["menu_style"]["shadow"]["item_offset"]["y"].SetFloat(2.0f);
+            d["main_menu"]["stage_select"]["name_position"]["y"].SetFloat(preview_top - 81.0f);
+        };
+        const auto scaled = variants.load(scaled_contact);
+        scaled.validate_resources(world.render, world.audio);
+        const auto measured = world.render.measure_text(world.render.resolve_sprite_font(scaled.menu().item_font), L"~");
+        require(measured == mattmath::Vector2F(2018.0f, 160.0f) &&
+            scaled.main_menu().stage_select.preview_size.x / (measured.x + 2.0f) == 0.5f,
+            "Random stage boundary fixture no longer fits the complete 2020x162 shadow union at exactly half scale");
+        variants.rejects("values.random", [&](rapidjson::Document& d)
+        {
+            scaled_contact(d);
+            d["main_menu"]["stage_select"]["name_position"]["y"].SetFloat(preview_top - 80.75f);
+        }, &world);
+        // OptionRow can fit this tall glyph to its height. The arena name
+        // cannot: its existing behavior permits only proportional width fit.
+        variants.rejects("values.random", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_value_height_only");
+            d["menu_text"]["values"]["random"].SetString("~");
+        }, &world);
+        for (const char* axis : { "x", "y" })
+        {
+            for (const double position : { -1e100, 1e100 })
+            {
+                variants.rejects("values.random", [&](rapidjson::Document& d)
+                {
+                    d["main_menu"]["stage_select"]["name_position"][axis].SetDouble(position);
+                }, &world);
+            }
+            variants.rejects("", [&](rapidjson::Document& d)
+            {
+                // This shared setting is also validated by earlier menu
+                // consumers; any contextual menu-text rejection is correct.
+                d["menu_style"]["shadow"]["item_offset"][axis].SetDouble(1e100);
+            }, &world);
+        }
+        variants.rejects("values.random", [](rapidjson::Document& d)
+        {
+            // Positive when read as float, but too small to leave a positive
+            // fitted scale for the authored name and its complete shadow.
+            d["main_menu"]["stage_select"]["preview_size"]["x"].SetDouble(1e-45);
+        }, &world);
+        for (const double preview_y : { 0.0, -1e100, 1e100 })
+        {
+            variants.rejects("values.random", [&](rapidjson::Document& d)
+            {
+                d["main_menu"]["stage_select"]["preview_position"]["y"].SetDouble(preview_y);
+            }, &world);
+        }
+        const auto reject_preview_width = [&](double width)
+        {
+            const auto path = variants.write([&](rapidjson::Document& d)
+            {
+                d["main_menu"]["stage_select"]["preview_size"]["x"].SetDouble(width);
+            });
+            std::string diagnostic = "accepted without exception";
+            try
+            {
+                const Presentation invalid(path.string().c_str());
+                invalid.validate_resources(world.render, world.audio);
+            }
+            catch (const std::runtime_error& error) { diagnostic = error.what(); }
+            require(diagnostic.find(path.filename().string()) != std::string::npos &&
+                diagnostic.find("stage_select") != std::string::npos && diagnostic.find("preview_size") != std::string::npos,
+                "Invalid Random stage preview width lost its source and geometry context: " + diagnostic);
+        };
+        for (const double width : { 0.0, -1.0, 1e100 }) { reject_preview_width(width); }
     }
 
     void check_status_text(Variants& variants, World& world)
@@ -2424,6 +2647,8 @@ int main(int argc, char** argv)
         check_controls_option_rows(variants, world);
         check_value_text(variants, world);
         check_value_fitting(variants, world);
+        check_stage_random_fitting(variants, world);
+        check_stage_random_bounds(variants, world);
         check_title_and_home_text(variants, world, defaults);
         check_title_and_home_bounds(variants, world);
         check_help_text(variants, world);
@@ -2436,7 +2661,7 @@ int main(int argc, char** argv)
         check_prompt_bar(world, defaults);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
-            "authored OptionRow value fitting and actual PromptBar copy/measurement compatibility.\n";
+            "authored OptionRow value fitting, shadow-inclusive Random arena fitting and actual PromptBar copy/measurement compatibility.\n";
         return 0;
     }
     catch (const std::exception& error)

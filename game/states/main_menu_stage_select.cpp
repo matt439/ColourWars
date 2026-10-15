@@ -166,7 +166,7 @@ std::wstring MainMenuStageSelect::slot_display_name(int slot) const
 {
 	if (slot == this->random_slot())
 	{
-		return L"Random";
+		return this->text().values.random;
 	}
 	const StageList* stages = this->data()->stages();
 	if (slot >= 0 && slot < static_cast<int>(stages->size()))

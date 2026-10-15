@@ -558,6 +558,9 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
 
 // Shared text is selected by a fixed role. The independent literals below pin
 // the shipped wording/spacing while actual page matrices cover their routing.
+void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
+    GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output);
+
 void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
@@ -850,6 +853,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     menu_item_page_checks(app, canvas, tuning, presentation, output);
     menu_setup_text_checks(app, canvas, tuning, presentation, output);
     title_home_text_checks(app, canvas, tuning, presentation, output, true);
+    stage_random_text_checks(app, levels, canvas, tuning, presentation, output);
     require(records.good(), "Menu text evidence write failed");
     std::cout << "PASS shared menu text: independent brand, 11 headings and 17 formatted legends at 720p/1080p/QHD; "
         "actual arena lock/unlock; custom text/font/layout reopen and old-page snapshots through assignments, "

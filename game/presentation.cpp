@@ -2230,6 +2230,41 @@ void Presentation::validate_resources(const RenderResources& render,
 		}
 	};
 	const MenuValueText& values = this->menu_text_.values;
+	const std::string random_name_key = "menu_text.values.random";
+	const Vector2F random_name_size = fixed_menu_size(random_name_key, values.random, this->menu_.item_font);
+	const StageSelectPresentation& stage = main.stage_select;
+	const Vector2F name_shadow = this->menu_.item_shadow_offset;
+	const float name_bottom = stage.preview_position.y - this->menu_.rule_height;
+	if (!std::isfinite(name_shadow.x) || !std::isfinite(name_shadow.y) ||
+		!std::isfinite(stage.preview_size.x) || stage.preview_size.x <= 0.0f ||
+		!std::isfinite(name_bottom) || name_bottom <= 0.0f)
+	{
+		throw std::runtime_error(this->source_path_ + ": " + random_name_key +
+			" must have a finite shadow, positive preview width and positive name area.");
+	}
+	const RectangleF random_name_union = RectangleF::union_of(RectangleF(Vector2F::ZERO, random_name_size),
+		RectangleF(name_shadow, random_name_size));
+	if (!std::isfinite(random_name_union.x) || !std::isfinite(random_name_union.y) ||
+		!std::isfinite(random_name_union.width) || !std::isfinite(random_name_union.height) ||
+		random_name_union.width <= 0.0f || random_name_union.height <= 0.0f)
+	{
+		throw std::runtime_error(this->source_path_ + ": " + random_name_key +
+			" must have finite positive stage-name bounds including its shadow.");
+	}
+	// Match the stage page's width-only fit, including signed shadow offsets.
+	const float random_name_scale = std::min(1.0f, stage.preview_size.x / random_name_union.width);
+	const Vector2F fitted_name_size = random_name_size * random_name_scale;
+	const RectangleF fitted_random_name = RectangleF::union_of(RectangleF(stage.name_position, fitted_name_size),
+		RectangleF(stage.name_position + name_shadow * random_name_scale, fitted_name_size));
+	if (!std::isfinite(random_name_scale) || random_name_scale <= 0.0f ||
+		!std::isfinite(fitted_random_name.x) || !std::isfinite(fitted_random_name.y) ||
+		!std::isfinite(fitted_random_name.width) || !std::isfinite(fitted_random_name.height) ||
+		fitted_random_name.width <= 0.0f || fitted_random_name.height <= 0.0f ||
+		!RectangleF(0.0f, 0.0f, 1920.0f, name_bottom).contains(fitted_random_name))
+	{
+		throw std::runtime_error(this->source_path_ + ": " + random_name_key +
+			" must fit its stage-name design area above the preview edge including its scaled shadow.");
+	}
 	const Vector2F options_value_limit((1920.0f + main.options_box_size.x) / 2.0f -
 		main.art.shadow_offset - main.art.focus_padding.x - main.options_value_x,
 		main.options_spacing.y - main.art.focus_padding.y * 2.0f);
