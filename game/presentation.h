@@ -69,11 +69,21 @@ enum class MenuItem
 	reduce_effects, pad, move_deadzone, aim_deadzone, count
 };
 
+struct MenuTitleText
+{
+	std::wstring wordmark;
+	std::wstring subtitle;
+	std::wstring start;
+	std::wstring no_controller;
+};
+
 // Fixed roles select display text; navigation and accepted inputs remain code.
 struct MenuText
 {
 	std::wstring brand;
 	std::wstring solo_practice_hint;
+	MenuTitleText title;
+	std::wstring home_subtitle;
 	std::array<std::wstring, static_cast<size_t>(MenuHeading::count)> headings;
 	std::array<std::wstring, static_cast<size_t>(MenuPrompt::count)> prompts;
 	std::array<std::wstring, static_cast<size_t>(MenuItem::count)> items;

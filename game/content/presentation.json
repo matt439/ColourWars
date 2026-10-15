@@ -87,6 +87,13 @@
   "menu_text": {
     "brand": "C O L O U R W A R S   /   LOCAL PAINT BATTLES",
     "solo_practice_hint": "Solo practice: choose Single Match",
+    "title": {
+      "wordmark": "COLOUR\nWARS",
+      "subtitle": "MAKE A MESS. MAKE IT YOURS.",
+      "start": "LET'S PLAY",
+      "no_controller": "Connect a controller"
+    },
+    "home_subtitle": "Paint the arena. Claim the win.",
     "headings": {
       "home": "Make your mark.",
       "options": "Options",

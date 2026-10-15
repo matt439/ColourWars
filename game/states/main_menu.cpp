@@ -133,13 +133,13 @@ void MainMenuTitle::init()
 	this->background_ = std::make_unique<UiTexture>("background",
 		style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(), look.title_background_colour);
-	this->title_ = std::make_unique<UiText>("title", L"COLOUR\nWARS",
+	this->title_ = std::make_unique<UiText>("title", this->text().title.wordmark,
 		look.title_font, Vector2F(0.0f, look.title_y), this->render_resources(), look.art.ink);
-	this->subtitle_ = std::make_unique<UiText>("subtitle", L"MAKE A MESS. MAKE IT YOURS.",
+	this->subtitle_ = std::make_unique<UiText>("subtitle", this->text().title.subtitle,
 		style.detail_font, Vector2F(0.0f, look.title_subtitle_y), this->render_resources(), look.art.ink);
-	this->start_ = std::make_unique<UiText>("start", L"LET'S PLAY",
+	this->start_ = std::make_unique<UiText>("start", this->text().title.start,
 		style.item_font, Vector2F(0.0f, look.title_start_y), this->render_resources(), look.art.focus_ink);
-	this->no_pad_ = std::make_unique<UiText>("no_pad", L"Connect a controller",
+	this->no_pad_ = std::make_unique<UiText>("no_pad", this->text().title.no_controller,
 		style.item_font, Vector2F(0.0f, look.title_no_pad_y), this->render_resources(), look.art.ink, true);
 	this->build_id_ = std::make_unique<UiText>("build_id", build_info::label,
 		this->presentation().prompt_bar().font, Vector2F(0.0f, look.build_id_y),
@@ -220,7 +220,7 @@ void MainMenuHome::init()
 		this->render_resources(), look.home_background_colour);
 	this->heading_ = std::make_unique<UiText>("heading", this->text().heading(MenuHeading::home),
 		style.heading_font, this->calculate_widget_position(0, 0), this->render_resources(), look.art.ink);
-	this->subtitle_ = std::make_unique<UiText>("subtitle", L"Paint the arena. Claim the win.",
+	this->subtitle_ = std::make_unique<UiText>("subtitle", this->text().home_subtitle,
 		style.detail_font, look.home_subtitle_position, this->render_resources(), look.art.ink);
 	this->play_ = std::make_unique<UiText>("play", this->text().item(MenuItem::play), style.item_font,
 		this->calculate_widget_position(0, 2), this->render_resources(), look.art.focus_ink);

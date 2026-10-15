@@ -849,6 +849,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         "Text/browse/lock/unlock fixture changed the match plan");
     menu_item_page_checks(app, canvas, tuning, presentation, output);
     menu_setup_text_checks(app, canvas, tuning, presentation, output);
+    title_home_text_checks(app, canvas, tuning, presentation, output, true);
     require(records.good(), "Menu text evidence write failed");
     std::cout << "PASS shared menu text: independent brand, 11 headings and 17 formatted legends at 720p/1080p/QHD; "
         "actual arena lock/unlock; custom text/font/layout reopen and old-page snapshots through assignments, "

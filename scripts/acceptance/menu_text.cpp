@@ -49,6 +49,14 @@ namespace
     };
     constexpr wchar_t brand[] = L"C O L O U R W A R S   /   LOCAL PAINT BATTLES";
     constexpr wchar_t practice_hint[] = L"Solo practice: choose Single Match";
+    constexpr wchar_t home_subtitle[] = L"Paint the arena. Claim the win.";
+    struct TitleText { const char* key; const wchar_t* text; std::wstring MenuTitleText::* field; };
+    constexpr TitleText title_text[]{
+        { "wordmark", L"COLOUR\nWARS", &MenuTitleText::wordmark },
+        { "subtitle", L"MAKE A MESS. MAKE IT YOURS.", &MenuTitleText::subtitle },
+        { "start", L"LET'S PLAY", &MenuTitleText::start },
+        { "no_controller", L"Connect a controller", &MenuTitleText::no_controller }
+    };
     constexpr DefaultText items[]{
         { "play", L"Play" }, { "options", L"Options" }, { "credits", L"Credits" }, { "exit", L"Exit" },
         { "resolution", L"Resolution" }, { "fullscreen", L"Fullscreen" }, { "team_palette", L"Team palette" },
@@ -175,9 +183,14 @@ namespace
     void check_defaults(const Presentation& presentation)
     {
         const MenuText& text = presentation.menu_text();
-        require(text.brand == brand && text.solo_practice_hint == practice_hint && text.headings.size() == std::size(headings) &&
+        require(text.brand == brand && text.solo_practice_hint == practice_hint && text.home_subtitle == home_subtitle &&
+            text.headings.size() == std::size(headings) &&
             text.prompts.size() == std::size(prompts) && text.items.size() == std::size(items),
             "Shared menu text changed its brand or fixed role count");
+        for (const auto& entry : title_text)
+        {
+            require(text.title.*entry.field == entry.text, std::string("Title default changed: ") + entry.key);
+        }
         for (size_t index = 0; index < std::size(headings); ++index)
         {
             const auto& actual = text.heading(static_cast<MenuHeading>(index));
@@ -223,7 +236,7 @@ namespace
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
         {
-            for (const char* group : { "headings", "prompts", "items" })
+            for (const char* group : { "headings", "prompts", "items", "title" })
             {
                 auto& object = d["menu_text"][group];
                 rapidjson::Value reordered(rapidjson::kObjectType);
@@ -242,7 +255,7 @@ namespace
         });
         check_defaults(reversed);
         variants.rejects("", [](rapidjson::Document& d) { d.RemoveMember("menu_text"); });
-        for (const char* group : { "headings", "prompts", "items" })
+        for (const char* group : { "headings", "prompts", "items", "title" })
         {
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"].RemoveMember(group); });
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"][group].SetArray(); });
@@ -260,6 +273,8 @@ namespace
         };
         required(nullptr, "brand");
         required(nullptr, "solo_practice_hint");
+        required(nullptr, "home_subtitle");
+        for (const auto& entry : title_text) { required("title", entry.key); }
         for (const auto& entry : headings) { required("headings", entry.key); }
         for (const auto& entry : prompts) { required("prompts", entry.key); }
         for (const auto& entry : items) { required("items", entry.key); }
@@ -519,6 +534,10 @@ namespace
         const auto row_edge = [&](rapidjson::Document& d)
         {
             exact_items(d);
+            d["menu_style"]["fonts"]["heading"].SetString("menu_text_exact");
+            d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
+            for (const auto& entry : headings) { d["menu_text"]["headings"][entry.key].SetString("Fit"); }
+            d["menu_text"]["home_subtitle"].SetString("Fit");
             d["main_menu"]["home_spacing"]["y"].SetFloat(row_height);
             d["main_menu"]["home_subtitle_position"]["y"].SetFloat(
                 original.main_menu().home_position.y + row_height / 2.0f);
@@ -1047,6 +1066,203 @@ namespace
             fitted->bounds().width > 0.0f && fitted->bounds().width < 8.0f,
             "Controls OptionRow did not preserve and shrink a height-constrained authored label");
     }
+
+    void select_title_font(rapidjson::Document& d, const char* key, const char* font)
+    {
+        if (std::string(key) == "wordmark")
+        {
+            d["main_menu"]["fonts"]["title"].SetString(font, d.GetAllocator());
+        }
+        else
+        {
+            d["menu_style"]["fonts"][std::string(key) == "subtitle" ? "detail" : "item"].SetString(font, d.GetAllocator());
+        }
+    }
+
+    void check_title_and_home_text(Variants& variants, World& world, const Presentation& defaults)
+    {
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        {
+            for (const auto& entry : title_text)
+            {
+                d["menu_text"]["title"][entry.key].SetString(" A\xC2\xA0\xE2\x80\x94" "B ");
+            }
+            d["menu_text"]["title"]["wordmark"].SetString(" A\xC2\xA0\xE2\x80\x94" "B \n C ");
+            d["menu_text"]["home_subtitle"].SetString(" A\xC2\xA0\xE2\x80\x94" "B ");
+        });
+        require(normalized.menu_text().title.wordmark == L" A -B \n C " &&
+            normalized.menu_text().title.subtitle == L" A -B " && normalized.menu_text().title.start == L" A -B " &&
+            normalized.menu_text().title.no_controller == L" A -B " && normalized.menu_text().home_subtitle == L" A -B ",
+            "Title/Home text did not preserve authored spacing/LF and normalize punctuation/NBSP");
+        normalized.validate_resources(world.render, world.audio);
+        for (const auto& entry : title_text)
+        {
+            const std::string field = std::string("title.") + entry.key;
+            for (const char* invalid : { "   ", " \xC2\xA0 ", "line\rbreak", "line\r\nbreak", "tab\ttext",
+                "control\x01", "delete\x7F", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3" })
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    d["menu_text"]["title"][entry.key].SetString(invalid, d.GetAllocator());
+                });
+            }
+            if (std::string(entry.key) != "wordmark")
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    d["menu_text"]["title"][entry.key].SetString("line\nbreak");
+                });
+            }
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                select_title_font(d, entry.key, "menu_text_limited");
+                d["menu_text"]["title"][entry.key].SetString("Glyph~");
+            }, &world);
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                d["menu_text"]["title"][entry.key].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
+            }, &world);
+        }
+        for (const char* invalid : { "\nA", "A\n", "A\n\nB", "A\n \nB", " \nA", "A\n \xC2\xA0 " })
+        {
+            variants.rejects("title.wordmark", [invalid](rapidjson::Document& d)
+            {
+                d["menu_text"]["title"]["wordmark"].SetString(invalid, d.GetAllocator());
+            });
+        }
+        variants.rejects("title.wordmark", [](rapidjson::Document& d)
+        {
+            d["menu_text"]["title"]["wordmark"].SetString("COLOUR\nWARS\nAGAIN");
+        }, &world);
+        variants.rejects("title.wordmark", [](rapidjson::Document& d)
+        {
+            d["main_menu"]["fonts"]["title"].SetString("menu_text_tall");
+        }, &world);
+        for (const char* invalid : { "   ", "line\nbreak", "line\rbreak", "tab\ttext", "\xC3", "\xC3\xA9" })
+        {
+            variants.rejects("home_subtitle", [invalid](rapidjson::Document& d)
+            {
+                d["menu_text"]["home_subtitle"].SetString(invalid, d.GetAllocator());
+            });
+        }
+        variants.rejects("home_subtitle", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString("menu_text_limited");
+            d["menu_text"]["home_subtitle"].SetString("Glyph~");
+        }, &world);
+        variants.rejects("home_subtitle", [](rapidjson::Document& d)
+        {
+            d["menu_text"]["home_subtitle"].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
+        }, &world);
+
+        const auto font = world.render.resolve_sprite_font(defaults.main_menu().title_font);
+        const auto measured = world.render.measure_text(font, defaults.menu_text().title.wordmark);
+        const auto first_line = world.render.measure_text(font, L"COLOUR");
+        const auto second_line = world.render.measure_text(font, L"WARS");
+        require(measured.x == std::max(first_line.x, second_line.x) &&
+            measured.y > std::max(first_line.y, second_line.y),
+            "The authored wordmark no longer measures as two complete unscaled lines");
+        const mattmath::Vector2F position((1920.0f - measured.x) / 2.0f, defaults.main_menu().title_y);
+        UiText wordmark("wordmark", defaults.menu_text().title.wordmark, defaults.main_menu().title_font,
+            position, &world.render, defaults.main_menu().art.ink);
+        require(wordmark.text() == L"COLOUR\nWARS" &&
+            wordmark.bounds() == mattmath::RectangleF(position, measured),
+            "Actual UiText changed the wordmark's authored lines, centering or unscaled font bounds");
+        wordmark.set_hidden(true);
+        DrawList no_device;
+        wordmark.draw(no_device);
+    }
+
+    void check_title_and_home_bounds(Variants& variants, World& world)
+    {
+        const auto exact = [](rapidjson::Document& d)
+        {
+            for (const char* font : { "heading", "item", "detail" })
+            {
+                d["menu_style"]["fonts"][font].SetString("menu_text_exact");
+            }
+            d["main_menu"]["fonts"]["title"].SetString("menu_text_exact");
+            for (const auto& entry : headings) { d["menu_text"]["headings"][entry.key].SetString("Fit"); }
+            for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
+            for (const auto& entry : title_text) { d["menu_text"]["title"][entry.key].SetString("Fit"); }
+            d["menu_text"]["title"]["wordmark"].SetString("Fit\nFit");
+            d["menu_text"]["home_subtitle"].SetString("Fit");
+            d["menu_text"]["solo_practice_hint"].SetString("Fit");
+        };
+        const auto multiline = variants.load([&](rapidjson::Document& d)
+        {
+            exact(d);
+            d["menu_text"]["title"]["wordmark"].SetString("Fit\nFit\nFit");
+        });
+        multiline.validate_resources(world.render, world.audio);
+        require(multiline.menu_text().title.wordmark == L"Fit\nFit\nFit",
+            "Wordmark line breaks became a fixed two-line replacement instead of authored text");
+        for (const auto& entry : title_text)
+        {
+            const size_t fits_count = std::string(entry.key) == "start" ? 158 : 165;
+            const auto edge = [&](rapidjson::Document& d)
+            {
+                exact(d);
+                d["menu_text"]["title"][entry.key].SetString(std::string(fits_count, 'F').c_str(), d.GetAllocator());
+            };
+            const auto fits = variants.load(edge);
+            fits.validate_resources(world.render, world.audio);
+            variants.rejects(std::string("title.") + entry.key, [&](rapidjson::Document& d)
+            {
+                edge(d);
+                d["menu_text"]["title"][entry.key].SetString(std::string(fits_count + 1, 'F').c_str(), d.GetAllocator());
+            }, &world);
+        }
+        struct OrderEdge { const char* position; float value; float outside; const char* field; };
+        constexpr OrderEdge title_edges[]{
+            { "title_subtitle_y", 130.0f, 129.75f, "title.wordmark" },
+            { "title_start_y", 628.0f, 627.75f, "title.subtitle" },
+            { "title_no_pad_y", 718.0f, 717.75f, "title.start" },
+            { "build_id_y", 820.0f, 819.75f, "title.no_controller" }
+        };
+        for (const auto& edge : title_edges)
+        {
+            const auto edit = [&](rapidjson::Document& d)
+            {
+                exact(d);
+                d["main_menu"][edge.position].SetFloat(edge.value);
+            };
+            const auto fits = variants.load(edit);
+            fits.validate_resources(world.render, world.audio);
+            variants.rejects(edge.field, [&](rapidjson::Document& d)
+            {
+                edit(d);
+                d["main_menu"][edge.position].SetFloat(edge.outside);
+            }, &world);
+        }
+        for (const auto& edge : { std::pair<float, float>{ 200.0f, 199.75f }, { 382.0f, 382.25f } })
+        {
+            const auto edit = [&](rapidjson::Document& d)
+            {
+                exact(d);
+                d["main_menu"]["home_subtitle_position"]["y"].SetFloat(edge.first);
+            };
+            const auto fits = variants.load(edit);
+            fits.validate_resources(world.render, world.audio);
+            variants.rejects("home_subtitle", [&](rapidjson::Document& d)
+            {
+                edit(d);
+                d["main_menu"]["home_subtitle_position"]["y"].SetFloat(edge.second);
+            }, &world);
+        }
+        const auto home_edge = [&](rapidjson::Document& d)
+        {
+            exact(d);
+            d["main_menu"]["home_subtitle_position"]["x"].SetFloat(1596.0f);
+        };
+        const auto fits_home = variants.load(home_edge);
+        fits_home.validate_resources(world.render, world.audio);
+        variants.rejects("home_subtitle", [&](rapidjson::Document& d)
+        {
+            home_edge(d);
+            d["main_menu"]["home_subtitle_position"]["x"].SetFloat(1596.25f);
+        }, &world);
+    }
 }
 
 int main(int argc, char** argv)
@@ -1069,6 +1285,8 @@ int main(int argc, char** argv)
         check_end_text(variants, world);
         check_controls_text(variants, world);
         check_controls_option_rows(variants, world);
+        check_title_and_home_text(variants, world, defaults);
+        check_title_and_home_bounds(variants, world);
         check_option_row_fitting(variants, world);
         check_prompt_bar(world, defaults);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "

@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/presentation.h"
+#include "game/build_info.h"
 
 #include "engine/assets/json.h"
 #include "engine/render/text_encoding.h"
@@ -49,12 +50,40 @@ namespace
 		return text;
 	}
 
+	std::wstring read_menu_wordmark(const JsonValue& json)
+	{
+		std::wstring text = drawable_text::widen_drawable(json.string("wordmark"), json.where() + ": wordmark");
+		if (text.find(L'\r') != std::wstring::npos)
+		{
+			throw std::runtime_error(json.where() + ": 'wordmark' must use LF for authored line breaks.");
+		}
+		size_t begin = 0;
+		do
+		{
+			const size_t end = text.find(L'\n', begin);
+			if (text.substr(begin, end == std::wstring::npos ? end : end - begin).find_first_not_of(L' ') ==
+				std::wstring::npos)
+			{
+				throw std::runtime_error(json.where() + ": 'wordmark' must have a nonblank line between each authored LF break.");
+			}
+			if (end == std::wstring::npos) { break; }
+			begin = end + 1;
+		} while (begin <= text.size());
+		return text;
+	}
+
 	MenuText read_menu_text(const JsonValue& root)
 	{
 		const JsonValue json = root.object("menu_text");
 		MenuText text;
 		text.brand = read_menu_line(json, "brand");
 		text.solo_practice_hint = read_menu_line(json, "solo_practice_hint");
+		const JsonValue title = json.object("title");
+		text.title.wordmark = read_menu_wordmark(title);
+		text.title.subtitle = read_menu_line(title, "subtitle");
+		text.title.start = read_menu_line(title, "start");
+		text.title.no_controller = read_menu_line(title, "no_controller");
+		text.home_subtitle = read_menu_line(json, "home_subtitle");
 		const JsonValue headings = json.object("headings");
 		for (size_t index = 0; index < text.headings.size(); ++index)
 		{
@@ -2079,6 +2108,72 @@ void Presentation::validate_resources(const RenderResources& render,
 	check_menu_line("menu_text.solo_practice_hint", this->menu_text_.solo_practice_hint, this->menu_.detail_font,
 		this->menu_.layout.position + Vector2F(0.0f, main.mode_select_spacing.y * 7.0f),
 		this->menu_.footer_y, this->menu_.item_shadow_offset);
+	const auto fixed_menu_size = [&](const std::string& key, const std::wstring& text, const std::string& font)
+	{
+		const std::string where = this->source_path_ + ": " + key;
+		drawable_text::check_font_can_draw(&render, font, text, where);
+		const Vector2F size = render.measure_text(render.resolve_sprite_font(font), text);
+		if (!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f)
+		{
+			throw std::runtime_error(where + " must have finite positive measured text bounds.");
+		}
+		return size;
+	};
+	const auto check_fixed_paper = [&](const std::string& key, RectangleF bounds,
+		const Vector2F& paper_size, const Vector2F& padding)
+	{
+		bounds.inflate(padding);
+		const RectangleF paper((Vector2F(1920.0f, this->menu_.footer_y) - paper_size) / 2.0f, paper_size);
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !paper.contains(bounds))
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit its menu paper including any focus padding.");
+		}
+	};
+	const auto centered_title = [&](const std::string& key, const std::wstring& text,
+		const std::string& font, float y, const Vector2F& padding)
+	{
+		const Vector2F size = fixed_menu_size(key, text, font);
+		const RectangleF bounds((1920.0f - size.x) / 2.0f, y, size.x, size.y);
+		check_fixed_paper(key, bounds, main.title_box_size, padding);
+		return bounds;
+	};
+	const MenuTitleText& title = this->menu_text_.title;
+	const RectangleF wordmark = centered_title("menu_text.title.wordmark", title.wordmark,
+		main.title_font, main.title_y, Vector2F::ZERO);
+	const RectangleF subtitle = centered_title("menu_text.title.subtitle", title.subtitle,
+		this->menu_.detail_font, main.title_subtitle_y, Vector2F::ZERO);
+	RectangleF start = centered_title("menu_text.title.start", title.start,
+		this->menu_.item_font, main.title_start_y, main.art.focus_padding);
+	start.inflate(main.art.focus_padding);
+	const RectangleF no_controller = centered_title("menu_text.title.no_controller", title.no_controller,
+		this->menu_.item_font, main.title_no_pad_y, Vector2F::ZERO);
+	// Build identity remains generated, but it still shares the title's paper.
+	const RectangleF build = centered_title("main_menu.build_id_y", build_info::label,
+		this->prompt_bar_.font, main.build_id_y, Vector2F::ZERO);
+	const auto precedes = [&](const std::string& key, const RectangleF& before, const RectangleF& after)
+	{
+		if (before.bottom() > after.y)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must end before the next menu text or focus card.");
+		}
+	};
+	precedes("menu_text.title.wordmark", wordmark, subtitle);
+	precedes("menu_text.title.subtitle", subtitle, start);
+	precedes("menu_text.title.start", start, no_controller);
+	precedes("menu_text.title.no_controller", no_controller, build);
+	const RectangleF home_subtitle(main.home_subtitle_position,
+		fixed_menu_size("menu_text.home_subtitle", this->menu_text_.home_subtitle, this->menu_.detail_font));
+	check_fixed_paper("menu_text.home_subtitle", home_subtitle, main.home_box_size, Vector2F::ZERO);
+	const RectangleF home_heading(main.home_position,
+		fixed_menu_size("menu_text.headings.home", this->menu_text_.heading(MenuHeading::home), this->menu_.heading_font));
+	check_fixed_paper("menu_text.headings.home", home_heading, main.home_box_size, Vector2F::ZERO);
+	precedes("menu_text.home_subtitle", home_heading, home_subtitle);
+	RectangleF play(main.home_position + Vector2F(0.0f, main.home_spacing.y * 2.0f),
+		fixed_menu_size("menu_text.items.play", this->menu_text_.item(MenuItem::play), this->menu_.item_font));
+	play.inflate(main.art.focus_padding);
+	precedes("menu_text.home_subtitle", home_subtitle, play);
 	check.font("hud.meter_label_font", this->hud_.meter_label_font);
 	check.font("hud.player_identity.font", this->hud_.player_identity_font);
 	check.frame("hud.fill_frame", this->hud_.sprite_sheet, this->hud_.fill_frame);
