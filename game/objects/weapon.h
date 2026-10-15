@@ -6,12 +6,37 @@
 #include "game/objects/weapon_type.h"
 #include "game/objects/weapon_details.h"
 #include "game/tuning.h"
+#include "game/presentation.h"
 #include "game/objects/player_input_data.h"
 #include "engine/render/colour.h"
 #include "engine/render/texture_object.h"
 #include "game/objects/projectile_builder.h"
 #include "engine/audio/sound_bank.h"
 #include "engine/audio/audio_resources.h"
+
+enum class ToolMotionPose
+{
+	idle,
+	motion_1,
+	motion_2,
+	lift,
+};
+
+// Updated with simulation events, then read unchanged by every render view.
+// Pressure is a paid-shot pulse, not ammunition; travel is turns, modulo one.
+struct ToolMotionState
+{
+	ToolMotionPose pose = ToolMotionPose::idle;
+	float pressure = 0.0f;
+	float valve = 0.0f;
+	float travel_phase = 0.0f;
+	float lift = 0.0f;
+	float compression = 0.0f;
+	float bucket_swing = 0.0f;
+	float hose_sway = 0.0f;
+	float mist_tail_remaining = 0.0f;
+	bool operator==(const ToolMotionState&) const = default;
+};
 
 // A concrete weapon with a shared firing workflow and overridable behaviour.
 // Player owns it through this interface; tuning selects assets and balance.
@@ -64,6 +89,17 @@ public:
 	void reset_ammo(bool reset_feedback = true);
 	void set_player_center(const mattmath::Vector2F& player_center);
 
+	// Optional for direct CPU clients; the game builder supplies presentation.
+	// Switching the borrowed record resets visual history, never gameplay.
+	void set_motion_presentation(const ToolMotionPresentation* presentation);
+	void reset_motion();
+	const ToolMotionState& motion_state() const;
+	int visual_pose() const;
+	// Resolved, signed horizontal travel after every contact, with spawn settling
+	// excluded. A blocked wall and airborne movement cannot turn the drum.
+	void update_resolved_motion(bool supported, bool established_support,
+		float signed_distance, float dt);
+
 	// Called once after all player contacts, with spawn settling excluded.
 	// Most tools do not respond to ground support; a roller does.
 	virtual void update_ground_contact(bool supported, bool established_support,
@@ -76,9 +112,8 @@ public:
 	virtual void pause_sounds() const;
 	virtual void resume_sounds() const;
 
-	// Visual bounds for any rotation about an origin inside the weapon sprite.
-	// A sprite diagonal around draw_pos() covers every orientation. Player::bounds
-	// unions this with the body so scene culling includes the held weapon.
+	// Visual bounds cover every rotated pose and any detached release haze.
+	// Player::bounds unions this with the body for scene culling.
 	mattmath::RectangleF draw_bounds() const;
 
 	// Read-only attachment points for game-owned character artwork. These remain
@@ -178,6 +213,9 @@ private:
 	bool can_afford_shot() const;
 	void update_feedback_sounds(bool holding_shoot, bool shot,
 		bool affordable_before, float dt);
+	void update_motion(bool shot, float dt);
+	void select_motion_pose();
+	void draw_mist_tail(labrador::DrawList& draw_list) const;
 
 	static labrador::SoundBank::EffectHandle resolve_loop_sound(
 		const labrador::SoundBank& sound_bank,
@@ -189,6 +227,16 @@ private:
 	// Paint overlay and debug frame handles, resolved at construction.
 	labrador::SpriteSheet::frame_handle paint_frame_;
 	labrador::SpriteSheet::frame_handle nozzle_frame_;
+	std::array<labrador::SpriteSheet::frame_handle, 4> motion_frames_;
+	std::array<labrador::SpriteSheet::frame_handle, 4> motion_paint_frames_;
+	const ToolMotionPresentation* motion_presentation_ = nullptr;
+	ToolMotionState motion_;
+	labrador::RenderResources::SpriteSheetHandle mist_sheet_;
+	labrador::SpriteSheet::frame_handle mist_frame_;
+	bool motion_firing_ = false;
+	bool motion_supported_ = false;
+	mattmath::Vector2F mist_release_position_;
+	float mist_release_rotation_ = 0.0f;
 	labrador::SoundBank::WaveHandle empty_sound_;
 	labrador::SoundBank::WaveHandle recovered_sound_;
 	labrador::SoundBank::WaveHandle stop_sound_;

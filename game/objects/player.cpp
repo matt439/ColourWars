@@ -498,6 +498,16 @@ void Player::end_contacts(std::span<const Contact> contacts)
     this->primary_->update_ground_contact(
         can_act && this->supported_this_tick_ && this->is_on_ground(),
         can_act && established_support, this->weapon_contact_dt_);
+    if (can_act)
+    {
+        this->primary_->update_resolved_motion(
+            this->supported_this_tick_ && this->is_on_ground(), established_support,
+            std::copysign(distance, resolved_x), this->weapon_contact_dt_);
+    }
+    else
+    {
+        this->primary_->reset_motion();
+    }
 
     this->supported_this_tick_ = false;
     this->hit_ceiling_this_tick_ = false;
@@ -665,6 +675,7 @@ void Player::update(float dt)
         // Damage arrives during contacts, after update. Retire input before the
         // next movement tick so a fatal hit cannot produce a final jump.
         this->state_ = PlayerState::dead;
+        this->primary_->reset_motion();
         this->movement_audio_.reset();
         this->movement_feedback_.clear();
         this->had_ground_support_ = false;
@@ -743,6 +754,7 @@ std::vector<std::unique_ptr<Projectile>>
     if (this->state_ != PlayerState::alive || this->health_ <= 0.0f)
     {
         this->primary_->stop_sounds();
+        this->primary_->reset_motion();
         return {};
     }
 
@@ -1114,6 +1126,7 @@ const PlayerAnimationTuning& Player::animation_info(
 }
 void Player::place_at(const Vector2F& top_left)
 {
+    this->primary_->reset_motion();
     this->action_.reset();
     this->action_age_ = 0.0f;
     this->set_animation_state(PlayerAnimationState::idle);
@@ -1144,6 +1157,7 @@ void Player::force_respawn()
 void Player::kill()
 {
     this->health_ = 0.0f;
+    this->primary_->reset_motion();
 }
 
 void Player::set_coloured(bool coloured, const Colour& grey)
@@ -1224,6 +1238,10 @@ void Player::stop_sounds() const
 {
     this->primary_->stop_sounds();
     this->stop_redraw_sound();
+}
+void Player::reset_tool_motion()
+{
+    this->primary_->reset_motion();
 }
 void Player::pause_sounds() const
 {

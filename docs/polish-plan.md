@@ -316,6 +316,12 @@ The [production painter increments](polish-painter.md) implement `POL#7`'s artwo
 figure E, animated team masks, head accents and continuous tool grips, with
 idle/run/jump/fall and dedicated takeoff/landing/firing/hurt/elimination clips,
 plus a matching respawn redraw. The composition's human review remains open.
+The [five-tool production pass](polish-tools.md) implements `POL#8`: distinct
+Paint.exe designs, aligned paint masks and grips, paid-shot pressure recovery,
+hose motion, supported roller rotation/lift/settle, bucket slosh/handle motion
+and a detached cosmetic mist tail. The reference arena still gates composition
+acceptance; idle drips, emitted paint/flecks and per-tool projectiles retain
+their separate TODO rows.
 
 Author the character, hands, weapon grips and aim poses together. Cover idle,
 running, takeoff, airborne motion, landing, firing, hurt, elimination and respawn.

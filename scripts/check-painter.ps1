@@ -108,6 +108,26 @@ function Write-ContactSheet {
             }
             $sheet.Save((Join-Path $CaptureDirectory 'painter-actions-contact.png'), [Drawing.Imaging.ImageFormat]::Png)
         }
+        $tools = @($images | Where-Object {
+            $_.name -match '^1p-tool-.*-(idle|paid-shot|held-fire|release|recovery|travel|lift)-player1$' -or
+            $_.name -match '^4p-tool-mixed-.*-(idle|held-fire|release)-player[1-4]$' -or
+            $_.name -match '^4p-tool-roller-.*-(travel|lift)-player1$'
+        })
+        if ($tools.Count -gt 0) {
+            $graphics.Dispose()
+            $sheet.Dispose()
+            $sheet = [Drawing.Bitmap]::new($cellWidth * 4, $cellHeight * [int][Math]::Ceiling($tools.Count / 4.0))
+            $graphics = [Drawing.Graphics]::FromImage($sheet)
+            $graphics.Clear([Drawing.Color]::FromArgb(238, 238, 238))
+            for ($index = 0; $index -lt $tools.Count; ++$index) {
+                $x = ($index % 4) * $cellWidth + 8
+                $y = [int][Math]::Floor($index / 4.0) * $cellHeight + 8
+                $graphics.DrawString($tools[$index].name, $font, [Drawing.Brushes]::Black,
+                    [Drawing.RectangleF]::new($x, $y, $cellWidth - 16, 34))
+                $graphics.DrawImageUnscaled($tools[$index].bitmap, $x, $y + 36)
+            }
+            $sheet.Save((Join-Path $CaptureDirectory 'painter-tools-contact.png'), [Drawing.Imaging.ImageFormat]::Png)
+        }
     }
     finally {
         if ($null -ne $graphics) { $graphics.Dispose() }
@@ -155,7 +175,7 @@ $result = [ordered]@{
     input_slots = @(3, 1, 2, 0)
     inputs = 'Scripted pad-slot inputs at the real 60 Hz simulation step; no physical-device claim.'
     audio = 'Muted; this check establishes no listening acceptance.'
-    checks = 'Real builder/Scene rosters, both movement facings and four aim quadrants at 720p; representative facings also at 1080p/QHD; three 4P palettes; all four same-team accents in both facings. Five action clips on real jump/contact/paid-shot/damage/death events: first and second frames at both 1P facings and all three 4P palettes, with distinct fixed-position tool-free body rasters. Frozen draws byte-equal, public simulation and action state unchanged, Debug replay fingerprint unchanged. Isolated real player raster output stays inside projected cull bounds. Death, outline, fill, respawn, tool-free squash and whole-dead story poses; early elimination whole-dead raster equals later idle whole-dead raster.'
+    checks = 'Real builder/Scene rosters, both movement facings and four aim quadrants at 720p; representative facings also at 1080p/QHD; three 4P palettes; all four same-team accents in both facings. Five body action clips on actual events, both frames and distinct pinned body rasters. All five tools at 1P720 in both facings: paid fire/hold/release/recovery, hose/bucket travel and roller travel/lift. Three 4P palettes: right-facing mixed aimed tools and left-facing roller, plus 1080p/QHD extent captures. Sampled non-idle pinned tools differ from idle at gameplay zoom, including released roller travel/lift. Frozen draws byte-equal, public simulation/action/tool motion state and Debug replay fingerprint unchanged. Isolated player/tool raster output stays inside projected cull bounds. Death, outline, fill, respawn, tool-free squash and whole-dead story poses; early elimination whole-dead raster equals later idle whole-dead raster.'
     profile = $profile
     diagnostic = ''
 }
@@ -241,7 +261,8 @@ try {
 
     $result.staged_content_hashes = @(
         'manifest.json', 'tuning.json', 'presentation.json', 'levels/movement_course.json',
-        'textures/painter.dds', 'textures/painter.json' |
+        'textures/painter.dds', 'textures/painter.json',
+        'textures/weapon_paint.dds', 'textures/weapon_paint.json' |
         ForEach-Object {
             [ordered]@{ path = $_; sha256 = (Get-FileHash -LiteralPath (Join-Path $gameDirectory $_)).Hash }
         }
@@ -277,7 +298,7 @@ try {
     }
     Write-ContactSheet -CaptureDirectory $captures
     $result.outcome = 'passed'
-    $result.diagnostic = 'Painter base/action capture matrix, distinct action body frames, frozen redraw, simulation fingerprint, raster culling bounds, elimination/redraw/respawn and idle whole-story pose checks passed. Human playing-size review remains separate.'
+    $result.diagnostic = 'Painter base/action and five-tool mechanism matrices, distinct pinned body/tool rasters, frozen motion/redraw, simulation fingerprint, raster culling bounds, elimination/redraw/respawn and idle whole-story pose checks passed. Human playing-size review remains separate.'
 }
 catch {
     $failure = $_

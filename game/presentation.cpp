@@ -488,6 +488,42 @@ namespace
 		return hud;
 	}
 
+	ToolMotionPresentation read_tool_motion(const JsonValue& root)
+	{
+		const JsonValue json = root.object("tool_motion");
+		ToolMotionPresentation motion;
+		motion.enabled = json.boolean("enabled");
+		motion.shot_pose_split = read_positive(json, "shot_pose_split");
+		motion.roller_travel_per_turn = read_positive(json, "roller_travel_per_turn");
+		motion.roller_lift_time = read_positive(json, "roller_lift_time");
+		motion.roller_settle_time = read_positive(json, "roller_settle_time");
+		motion.hose_travel_per_sway = read_positive(json, "hose_travel_per_sway");
+		motion.hose_settle_time = read_positive(json, "hose_settle_time");
+		motion.bucket_travel_per_swing = read_positive(json, "bucket_travel_per_swing");
+		motion.bucket_settle_time = read_positive(json, "bucket_settle_time");
+		const JsonValue tools = json.object("tools");
+		const std::array<const char*, 5> names = { "sprayer", "sniper", "roller", "mister", "bucket" };
+		for (size_t index = 0; index < names.size(); ++index)
+		{
+			const JsonValue tool = tools.object(names[index]);
+			motion.tools[index] = { read_positive(tool, "shot_recovery"),
+				read_positive(tool, "valve_time") };
+		}
+		const JsonValue mist = json.object("mist_tail");
+		motion.mist_sheet = mist.identifier("sprite_sheet");
+		motion.mist_frame = mist.identifier("fill_frame");
+		motion.mist_tail_duration = read_positive(mist, "duration");
+		motion.mist_tail_distance = read_positive(mist, "distance");
+		motion.mist_tail_size = read_positive_vector(mist, "size");
+		motion.mist_tail_opacity = read_positive(mist, "opacity");
+		if (motion.shot_pose_split >= 1.0f || motion.mist_tail_opacity > 1.0f)
+		{
+			throw std::runtime_error(json.where() +
+				": shot_pose_split must be less than one and mist opacity at most one.");
+		}
+		return motion;
+	}
+
 	FigurePresentation read_figure(const JsonValue& root)
 	{
 		const JsonValue json = root.object("figure");
@@ -757,6 +793,7 @@ Presentation::Presentation(const char* path)
 			"and particles must be at least one presentation pixel.");
 	}
 	this->figure_ = read_figure(root);
+	this->tool_motion_ = read_tool_motion(root);
 	this->respawn_redraw_ = read_respawn_redraw(root);
 	this->opening_ = read_opening(root);
 	const JsonValue match = root.object("match");
@@ -812,6 +849,11 @@ const FigurePresentation& Presentation::figure() const
 	return this->figure_;
 }
 
+const ToolMotionPresentation& Presentation::tool_motion() const
+{
+	return this->tool_motion_;
+}
+
 const OpeningPresentation& Presentation::opening() const
 {
 	return this->opening_;
@@ -847,6 +889,8 @@ void Presentation::validate_resources(const RenderResources& render,
 			this->figure_.accent_frames[index]);
 	}
 	check.frame("figure.rest_arms_frame", this->figure_.sprite_sheet, this->figure_.rest_arms_frame);
+	check.frame("tool_motion.mist_tail.fill_frame", this->tool_motion_.mist_sheet,
+		this->tool_motion_.mist_frame);
 	check.frame("respawn_redraw.pen_frame", this->respawn_redraw_.sprite_sheet,
 		this->respawn_redraw_.pen_frame);
 	check.frame("opening.fill_frame", this->opening_.sprite_sheet,

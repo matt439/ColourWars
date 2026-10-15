@@ -195,6 +195,8 @@ public:
     void update_weapon_position() const;
     void update_prev_rectangle();
     void stop_sounds() const;
+    // Lifecycle reset is explicit and mutable, separate from const audio stops.
+    void reset_tool_motion();
 
     // Pause/resume the player's audio while a menu covers the match.
     void pause_sounds() const;

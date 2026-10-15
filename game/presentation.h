@@ -336,6 +336,34 @@ struct FigureGripPresentation
 	mattmath::Vector2F front;
 };
 
+// Seconds and distances for the held tools' mechanisms. They select authored
+// poses without moving the simulation pivot, muzzle, aim or collision shapes.
+struct ToolMotionStyle
+{
+	float shot_recovery = 0.0f;
+	float valve_time = 0.0f;
+};
+
+struct ToolMotionPresentation
+{
+	bool enabled = true;
+	std::array<ToolMotionStyle, static_cast<size_t>(WeaponType::bucket) + 1> tools;
+	float shot_pose_split = 0.0f;
+	float roller_travel_per_turn = 0.0f;
+	float roller_lift_time = 0.0f;
+	float roller_settle_time = 0.0f;
+	float hose_travel_per_sway = 0.0f;
+	float hose_settle_time = 0.0f;
+	float bucket_travel_per_swing = 0.0f;
+	float bucket_settle_time = 0.0f;
+	std::string mist_sheet;
+	std::string mist_frame;
+	float mist_tail_duration = 0.0f;
+	float mist_tail_distance = 0.0f;
+	mattmath::Vector2F mist_tail_size;
+	float mist_tail_opacity = 0.0f;
+};
+
 // Figure details in the painter's authored canvas. Grips belong to the tool,
 // while shoulders and the head accent follow the posed figure rectangle.
 struct FigurePresentation
@@ -485,6 +513,7 @@ public:
 	const CameraPresentation& camera() const;
 	const MovementFeedbackPresentation& movement_feedback() const;
 	const FigurePresentation& figure() const;
+	const ToolMotionPresentation& tool_motion() const;
 	const RespawnRedrawPresentation& respawn_redraw() const;
 	const OpeningPresentation& opening() const;
 	const DebugOverlayPresentation& debug_overlay() const;
@@ -509,6 +538,7 @@ private:
 	CameraPresentation camera_;
 	MovementFeedbackPresentation movement_feedback_;
 	FigurePresentation figure_;
+	ToolMotionPresentation tool_motion_;
 	RespawnRedrawPresentation respawn_redraw_;
 	OpeningPresentation opening_;
 	DebugOverlayPresentation debug_overlay_;

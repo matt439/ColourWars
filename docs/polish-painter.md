@@ -3,7 +3,9 @@
 Implemented 2026-10-15, beginning `POL#7`. This carries the accepted
 [figure E and Zoom 400% rules](polish-plan.md#1-establish-the-art-and-display-rules)
 into the game. The follow-up adds dedicated action poses to that foundation;
-the reference arena and the composition's human review remain open.
+the reference arena and the composition's human review remain open. The
+[five-tool production pass](polish-tools.md) subsequently replaces the legacy
+weapons and adds their mechanisms while retaining these grip anchors.
 
 ## Figure and attachments
 
@@ -93,7 +95,8 @@ no control waits for an animation to finish.
 Firing follows a paid shot before launch-obstruction retirement; an empty tank
 or a held button during cooldown cannot invent another shot. Automatic fire
 lets each short brace reach its recovery frame. The shared body phrase covers
-all five tools; their individual mechanisms and secondary motion remain `POL#8`.
+all five tools; their individual mechanisms and secondary motion are implemented
+in the [tool pass](polish-tools.md).
 Hurt takes visual priority over the other live actions and follows accepted
 damage, independently of the rate-limited hurt sound.
 
@@ -137,8 +140,8 @@ also includes every action in all five hues and 28-pixel authoring samples.
 ## Remaining character work
 
 `POL#7` still owns the final human review of character/teammate readability in a coherent
-single- and four-player gameplay composition, after the tool (`POL#8`) and
-reference-arena (`POL#17`) passes provide that composition. The legacy weapon artwork remains
-until `POL#8`; this increment supplies its hand attachments. Quiet breathing,
+single- and four-player gameplay composition, after the reference-arena
+(`POL#17`) pass provides that composition. The [five-tool artwork and motion](polish-tools.md)
+now use these hand attachments. Quiet breathing,
 blinking and settling remain `POL#12`. Terrain, paint, effects and UI keep their
 existing owners and order.

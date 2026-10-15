@@ -26,5 +26,6 @@ public:
 		const mattmath::Vector2F& player_center,
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
-		const PlaySettings* preferences);
+		const PlaySettings* preferences,
+		const ToolMotionPresentation* motion = nullptr);
 };

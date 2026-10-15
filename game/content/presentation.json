@@ -299,6 +299,33 @@
     "landing": { "duration": 0.32, "spread": 44.0, "lift": 12.0, "particle_size": 20.0 }
   },
 
+  "tool_motion": {
+    "_comment": "Cosmetic mechanisms only. Same-canvas poses retain the hands, continuous aim and launch muzzle. Roller phase follows resolved supported distance; the mist tail never creates a projectile.",
+    "enabled": true,
+    "shot_pose_split": 0.55,
+    "tools": {
+      "sprayer": { "shot_recovery": 0.14, "valve_time": 0.08 },
+      "sniper": { "shot_recovery": 1.05, "valve_time": 0.16 },
+      "roller": { "shot_recovery": 0.12, "valve_time": 0.10 },
+      "mister": { "shot_recovery": 0.16, "valve_time": 0.09 },
+      "bucket": { "shot_recovery": 0.42, "valve_time": 0.12 }
+    },
+    "roller_travel_per_turn": 84,
+    "roller_lift_time": 0.12,
+    "roller_settle_time": 0.18,
+    "hose_travel_per_sway": 170,
+    "hose_settle_time": 0.20,
+    "bucket_travel_per_swing": 140,
+    "bucket_settle_time": 0.28,
+    "mist_tail": {
+      "sprite_sheet": "sprite_sheet_1",
+      "fill_frame": "pixel",
+      "duration": 0.22,
+      "distance": 20,
+      "size": { "x": 14, "y": 5 },
+      "opacity": 0.20
+    }
+  },
   "figure": {
     "_comment": "Paint.exe E figure. Canvas dimensions and grip offsets are visual only; the weapon pivot and continuous aim remain authoritative.",
     "sprite_sheet": "painter",

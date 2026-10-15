@@ -331,6 +331,10 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 				this->sound_bank_->stop_effect(this->music_, true);
 			}
 			this->stop_player_sounds();
+			for (Player* player : this->players_)
+			{
+				player->reset_tool_motion();
+			}
 			this->sound_bank_->stop_effect(this->countdown_sound_, true);
 			this->sound_bank_->stop_effect(this->go_sound_, true);
 			this->sound_bank_->stop_effect(this->last_ten_sound_, true);

@@ -15,31 +15,39 @@ std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
     const Vector2F& player_center,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
-    const PlaySettings* preferences)
+    const PlaySettings* preferences,
+    const ToolMotionPresentation* motion)
 {
+    std::unique_ptr<Weapon> weapon;
     switch (type)
     {
     case WeaponType::sprayer:
     case WeaponType::mister:
-        return std::make_unique<RelativeVelocityWeapon>(
+        weapon = std::make_unique<RelativeVelocityWeapon>(
             tuning, team, player_num, sound_index, team_colour, type, player_center,
             render_resources, audio_resources, preferences);
+        break;
     case WeaponType::sniper:
-        return std::make_unique<WeaponSniper>(tuning, team, player_num, sound_index,
+        weapon = std::make_unique<WeaponSniper>(tuning, team, player_num, sound_index,
             team_colour, type, player_center,
             render_resources, audio_resources, preferences);
+        break;
     case WeaponType::roller:
-        return std::make_unique<WeaponRoller>(tuning, team, player_num, sound_index,
+        weapon = std::make_unique<WeaponRoller>(tuning, team, player_num, sound_index,
             team_colour, type, player_center,
             render_resources, audio_resources, preferences);
+        break;
     case WeaponType::bucket:
-        return std::make_unique<WeaponBucket>(tuning, team, player_num, sound_index,
+        weapon = std::make_unique<WeaponBucket>(tuning, team, player_num, sound_index,
             team_colour, type, player_center,
             render_resources, audio_resources, preferences);
+        break;
     default:
         throw std::runtime_error("Weapon type " +
             std::to_string(static_cast<int>(type)) +
             " has no builder: ./tuning.json describes the five a player can "
             "pick, and this is not one of them.");
     }
+    weapon->set_motion_presentation(motion);
+    return weapon;
 }

@@ -15,8 +15,8 @@ choices recorded in the polish plan.
 The workshop kit, comparison modes, atlas and dedicated probes were retired on
 2026-10-15. Its historical concept image and prompt remain in `polish/`; the
 [study records](../../docs/polish-playable-kit.md) and Git history retain the
-review evidence. The existing weapon atlases below remain in use while their
-Paint.exe replacements are authored and reviewed.
+review evidence. The production painter and five-tool atlas below now implement
+the accepted drawing language; composition review remains in the polish plan.
 
 ## Painter artwork
 
@@ -30,9 +30,12 @@ what this increment covers and which character work remains open.
 
 ## Weapon artwork
 
-`weapon_paint_source.png` is the original transparent sprite sheet generated
-with the built-in imagegen tool. `weapon_paint_prompt.txt` records the prompt.
-Keep this authoring source outside runtime content.
+The [five-tool source](weapons/README.md) is the editable Paint.exe production
+drawing: integer vectors, neutral hardware and explicit team-paint materials.
+It supplies a pressure sprayer, precision nozzle, round decorator's roller,
+garden atomiser and dented paint tin. Each has idle, two motion and lifted poses.
+The original image-generated `weapon_paint_source.png` and
+`weapon_paint_prompt.txt` remain historical authoring material.
 
 From the repository root, run:
 
@@ -40,30 +43,30 @@ From the repository root, run:
 powershell -ExecutionPolicy Bypass -File scripts/build-weapon-art.ps1
 ```
 
-This crops and packs the five weapons, copies the legacy
+This rasterises and packs the five tools, copies the legacy
 utility frames from `sources/textures/sprite_sheet_1.png`, and regenerates
 `sources/textures/weapon_paint.png` here and
-`game/content/textures/weapon_paint.{json,dds}`. This uses Windows System.Drawing
-and the retained `tools/texconv.exe`.
+`game/content/textures/weapon_paint.{json,dds}`, plus the authoring
+[lineup](weapons/lineup.png). This uses Windows System.Drawing and the retained
+`tools/texconv.exe`.
 No image service or Python dependency is needed to reproduce the runtime atlas.
 
 Gameplay frames have four texels per world unit. Their aim pivots are at the
-left centre in source texels; the crop canvases align the barrels to that line
+left centre in source texels; the source canvases align the barrels to that line
 and the roller drum with its existing paint contact. Gameplay dimensions,
 offsets, ammunition and projectile behaviour remain in `tuning.json`.
 
-The packer separates the authored coloured paint from the neutral hardware.
-Every weapon has a base frame and a grayscale `<weapon>_paint` overlay with
+The packer separates exact paint-material IDs from neutral hardware.
+Every pose has a base frame and a grayscale `<frame>_paint` overlay with
 identical dimensions and origin. The overlay is tinted with the player's actual
 team colour at draw time. The roller only colours its sleeve while firing;
 its arm and handle stay neutral. Fixed-palette menu previews use the same team
 colours, while Random stays neutral until the match chooses its palette.
 
-Mask extraction is part of the deterministic packing process, using the source
-accent hues within the reservoir and canister regions, the bucket's paint, and
-the roller sleeve region. Nozzles, triggers, gauges and other hardware retain
-their authored colours. It does not require another image generation.
-Complementary layer alpha preserves the original silhouette.
+Complementary layer alpha preserves the authored silhouette. Nozzles, triggers,
+gauges and hardware stay neutral outside the explicit wet/team regions.
+The [tool implementation and review record](../../docs/polish-tools.md) describes
+the motion, fixed grips, preserved gameplay and renderer evidence.
 
 The PNG uses straight alpha. The DDS is RGBA8 with premultiplied alpha and one
 mip level, as required by Labrador's sprite blend. Do not replace it with a

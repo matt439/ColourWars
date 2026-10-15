@@ -77,13 +77,18 @@ namespace
             const Player& player = level.player(view);
             const RectangleF body = player.rectangle();
             const Weapon& tool = player.primary_weapon();
+            const ToolMotionState& mechanism = tool.motion_state();
             values.insert(values.end(), { body.x, body.y, body.width, body.height,
                 player.velocity().x, player.velocity().y, player.health(), player.weapon_ammo(),
                 player.respawn_timer(), static_cast<float>(player.state()),
                 static_cast<float>(player.move_state()), player.facing_right() ? 1.0f : 0.0f,
                 tool.rotation(), tool.nozzle_pos().x, tool.nozzle_pos().y,
                 static_cast<float>(player.animation_state()), player.action_age(),
-                static_cast<float>(player.action_frame()) });
+                static_cast<float>(player.action_frame()),
+                static_cast<float>(tool.visual_pose()), mechanism.pressure,
+                mechanism.valve, mechanism.travel_phase, mechanism.lift,
+                mechanism.compression, mechanism.bucket_swing, mechanism.hose_sway,
+                mechanism.mist_tail_remaining });
             const auto effects = player.movement_feedback().effects();
             values.push_back(static_cast<float>(effects.size()));
             for (const auto& effect : effects)
@@ -122,6 +127,29 @@ namespace
         list.set_filter(TextureFilter::point);
         canvas.draw(list, camera_player.camera().visible_rectangle(viewport));
         if (player != nullptr) { player->draw(list); }
+        return read(renderer);
+    }
+
+    // Pin only the tool's pivot in pane pixels, at the real gameplay zoom.
+    // This removes body animation, camera follow and travelled distance from
+    // the comparison, so a changed raster must come from the tool itself.
+    Frame isolated_tool(const Player& player, const Viewport& viewport,
+        Renderer& renderer, const Canvas& canvas)
+    {
+        const Weapon& tool = player.primary_weapon();
+        const float scale = player.camera().scale;
+        const RectangleI pane = viewport.pixel_rect();
+        const Camera camera(tool.draw_pos() - Vector2F(
+            static_cast<float>(pane.width) / (2 * scale),
+            static_cast<float>(pane.height) / (2 * scale)), scale);
+        renderer.begin_frame();
+        renderer.set_view_count(1);
+        DrawList list = renderer.view(0);
+        list.set_viewport(viewport);
+        list.set_camera(camera);
+        list.set_filter(TextureFilter::point);
+        canvas.draw(list, camera.visible_rectangle(viewport));
+        tool.draw(list);
         return read(renderer);
     }
 
@@ -199,7 +227,12 @@ namespace
             records << stem << ',' << view + 1 << ',' << player.player_num() << ',' << changed << ','
                 << player.facing_right() << ',' << player.primary_weapon().rotation() << ','
                 << player.respawn_progress() << ',' << static_cast<int>(player.animation_state()) << ','
-                << player.action_age() << ',' << player.action_frame() << '\n';
+                << player.action_age() << ',' << player.action_frame() << ','
+                << player.primary_weapon().visual_pose() << ','
+                << player.primary_weapon().motion_state().pressure << ','
+                << player.primary_weapon().motion_state().valve << ','
+                << player.primary_weapon().motion_state().travel_phase << ','
+                << player.primary_weapon().motion_state().mist_tail_remaining << '\n';
         }
         require(before == observation(level), "drawing changed public simulation state");
 #if COLOURWARS_DEV_TOOLS
@@ -210,7 +243,8 @@ namespace
     }
 
     std::unique_ptr<Level> build(Application& app, LevelBuilder& builder,
-        int count, TeamColourPair palette, bool roller = false, bool same_team = false)
+        int count, TeamColourPair palette, bool roller = false, bool same_team = false,
+        WeaponType tool = WeaponType::none)
     {
         MenuLevelSettings settings;
         settings.set_player_count(count);
@@ -227,7 +261,8 @@ namespace
         for (int view = 0; view < count; ++view)
         {
             settings.set_player_team(view, same_team || view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b);
-            settings.set_player_weapon(view, roller ? WeaponType::roller : tools[view]);
+            settings.set_player_weapon(view, tool != WeaponType::none ? tool :
+                (roller ? WeaponType::roller : tools[view]));
         }
         app.viewport_manager()->set_layout(settings.screen_layout());
         auto level = builder.build_level(settings, palette, OpeningMode::off);
@@ -367,6 +402,97 @@ namespace
         action_frames(app, *level, canvas, output, prefix + "elimination", records, inputs,
             PlayerAnimationState::elimination);
     }
+
+    // Real paid shots and resolved movement select the tool poses. Capture the
+    // release and airborne phrases too: additional render views must not age
+    // either one, or leave cosmetic pixels outside the scene's cull bounds.
+    void tool_matrix(Application& app, LevelBuilder& builder, const Canvas& canvas,
+        const std::filesystem::path& output, std::ofstream& records, int count,
+        TeamColourPair palette, bool right, WeaponType tool, const std::string& name)
+    {
+        auto level = build(app, builder, count, palette, false, false, tool);
+        auto inputs = neutral_inputs();
+        settle(*level, inputs);
+        resize(app, *level, { 1280, 720 });
+        for (auto& input : inputs)
+        {
+            input.x_movement = right ? 1.0f : -1.0f;
+            input.shoot_angle = right ? -PI / 4.0f : -3.0f * PI / 4.0f;
+            input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
+        }
+        level->update(inputs, dt);
+        for (auto& input : inputs) { input.x_movement = 0; }
+        for (int tick = 0; tick < 25; ++tick) { level->update(inputs, dt); }
+        const std::string prefix = std::to_string(count) + "p-tool-" + name + "-" +
+            TeamColourTools::palette_key(palette) + (right ? "-right-" : "-left-");
+        std::vector<Frame> idle_tools;
+        for (int view = 0; view < count; ++view)
+        {
+            idle_tools.push_back(isolated_tool(level->player(view),
+                app.viewport_manager()->player_viewport(view), *app.renderer(), canvas));
+        }
+        const auto check_mechanisms = [&]()
+        {
+            for (int view = 0; view < count; ++view)
+            {
+                const Player& player = level->player(view);
+                if (player.primary_weapon().visual_pose() == 0) { continue; }
+                const Frame image = isolated_tool(player,
+                    app.viewport_manager()->player_viewport(view), *app.renderer(), canvas);
+                require(image.pixels != idle_tools[static_cast<size_t>(view)].pixels,
+                    "tool mechanism pose is indistinguishable from idle at gameplay size");
+            }
+        };
+        capture(app, *level, canvas, output, prefix + "idle", records);
+        for (auto& input : inputs) { input.primary_shoot = true; }
+        level->update(inputs, dt);
+        check_mechanisms();
+        capture(app, *level, canvas, output, prefix + "paid-shot", records);
+        for (int tick = 0; tick < 5; ++tick) { level->update(inputs, dt); }
+        check_mechanisms();
+        capture(app, *level, canvas, output, prefix + "held-fire", records);
+        for (auto& input : inputs) { input.primary_shoot = false; }
+        level->update(inputs, dt);
+        capture(app, *level, canvas, output, prefix + "release", records);
+        level->suspend();
+        capture(app, *level, canvas, output, prefix + "paused", records);
+        level->resume();
+        for (int tick = 0; tick < 8; ++tick) { level->update(inputs, dt); }
+        check_mechanisms();
+        capture(app, *level, canvas, output, prefix + "recovery", records);
+        if (tool == WeaponType::sniper || tool == WeaponType::none)
+        {
+            for (int tick = 0; tick < 30; ++tick) { level->update(inputs, dt); }
+            check_mechanisms();
+            capture(app, *level, canvas, output, prefix + "gauge-recovery", records);
+        }
+        if (tool == WeaponType::roller || tool == WeaponType::sprayer ||
+            tool == WeaponType::bucket || tool == WeaponType::none)
+        {
+            for (auto& input : inputs) { input.x_movement = right ? 1.0f : -1.0f; }
+            for (int tick = 0; tick < 12; ++tick) { level->update(inputs, dt); }
+            check_mechanisms();
+            capture(app, *level, canvas, output, prefix + "travel", records);
+        }
+        if (tool == WeaponType::roller)
+        {
+            for (auto& input : inputs) { input.jump_pressed = true; }
+            level->update(inputs, dt);
+            for (auto& input : inputs) { input.jump_pressed = false; input.x_movement = 0; }
+            for (int tick = 0; tick < 3; ++tick) { level->update(inputs, dt); }
+            check_mechanisms();
+            capture(app, *level, canvas, output, prefix + "lift", records);
+        }
+        if (count == 4)
+        {
+            for (const Vector2I size : { Vector2I(1920, 1080), Vector2I(2560, 1440) })
+            {
+                resize(app, *level, size);
+                capture(app, *level, canvas, output,
+                    prefix + "extent-" + std::to_string(size.x), records);
+            }
+        }
+    }
 }
 
 int wmain(int argc, wchar_t** argv)
@@ -378,7 +504,7 @@ int wmain(int argc, wchar_t** argv)
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
         std::filesystem::create_directories(output);
         std::ofstream records(output / "painter.csv");
-        records << "capture,view,input_slot,painter_pixels,facing_right,tool_angle,respawn_progress,animation_state,action_age,action_frame\n";
+        records << "capture,view,input_slot,painter_pixels,facing_right,tool_angle,respawn_progress,animation_state,action_age,action_frame,tool_pose,pressure,valve,travel_phase,mist_tail_remaining\n";
         Registry<LevelLoadedInfo> levels("Level");
         GameTuning tuning((content / "tuning.json").string().c_str());
         Presentation presentation((content / "presentation.json").string().c_str());
@@ -416,6 +542,25 @@ int wmain(int argc, wchar_t** argv)
         // Base captures below keep their normal movement effects. Disable them
         // only while checking action-body frame differences in this matrix.
         presentation.set_movement_feedback_enabled(false);
+        for (const bool right : { true, false })
+        {
+            for (const auto& tool : std::array<std::pair<WeaponType, const char*>, 5>{{
+                { WeaponType::sprayer, "sprayer" }, { WeaponType::sniper, "sniper" },
+                { WeaponType::roller, "roller" }, { WeaponType::mister, "mister" },
+                { WeaponType::bucket, "bucket" } }})
+            {
+                tool_matrix(app, builder, canvas, output, records, 1,
+                    TeamColourPair::blue_orange, right, tool.first, tool.second);
+            }
+        }
+        for (const TeamColourPair palette : { TeamColourPair::blue_orange,
+            TeamColourPair::pink_green, TeamColourPair::blue_yellow })
+        {
+            tool_matrix(app, builder, canvas, output, records, 4, palette, true,
+                WeaponType::none, "mixed");
+            tool_matrix(app, builder, canvas, output, records, 4, palette, false,
+                WeaponType::roller, "roller");
+        }
         for (const bool right : { true, false })
         {
             action_matrix(app, builder, canvas, tuning, output, records, 1,
@@ -560,8 +705,9 @@ int wmain(int argc, wchar_t** argv)
         capture(app, *level, canvas, output, "1p-respawn", records);
         require(records.good(), "capture record write failed");
         std::cout << "PASS real builder roster; 1P/4P 720p/1080p/QHD; three palettes; "
-            "five action clips, both frames with distinct pinned body rasters, both 1P facings and three 4P palettes; "
-            "moving aim quadrants and both facings; four same-team accents; five tools; frozen redraw; "
+            "five action clips and five tool mechanisms, distinct pinned body/tool rasters; "
+            "paid fire/hold/release/recovery, hose/bucket travel, roller lift/travel; "
+            "moving aim quadrants and both facings; four same-team accents; frozen motion/redraw; "
             "raster culling bounds; death/outline/fill/respawn; tool-free and whole story poses\n";
         return 0;
     }
