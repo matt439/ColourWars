@@ -783,14 +783,23 @@ Presentation::Presentation(const char* path)
 	feedback.minimum_strength = read_positive(movement, "minimum_strength");
 	feedback.takeoff = read_movement_burst(movement, "takeoff");
 	feedback.landing = read_movement_burst(movement, "landing");
+	feedback.step = read_movement_burst(movement, "step");
+	feedback.skid = read_movement_burst(movement, "skid");
+	feedback.keyline = read_colour(movement, "keyline");
+	feedback.keyline_width = read_positive(movement, "keyline_width");
 	if (feedback.minimum_strength > 1.0f ||
 		feedback.full_impact_speed < feedback.landing_min_speed ||
 		feedback.takeoff.particle_size < feedback.pixel_size ||
-		feedback.landing.particle_size < feedback.pixel_size)
+		feedback.landing.particle_size < feedback.pixel_size ||
+		feedback.step.particle_size < feedback.pixel_size ||
+		feedback.skid.particle_size < feedback.pixel_size ||
+		feedback.keyline_width * 2.0f >=
+			std::min(feedback.step.particle_size, feedback.skid.particle_size))
 	{
 		throw std::runtime_error(movement.where() +
 			": strength must be at most one, full impact speed must cover minimum speed, "
-			"and particles must be at least one presentation pixel.");
+			"particles must be at least one presentation pixel, and contact keylines "
+			"must leave a visible particle interior.");
 	}
 	const JsonValue combat = root.object("combat_feedback");
 	CombatFeedbackPresentation& contact = this->combat_feedback_;

@@ -175,6 +175,7 @@ $result = [ordered]@{
     input_slots = @(3, 1, 2, 0)
     inputs = 'Scripted pad-slot inputs at the real 60 Hz simulation step; no physical-device claim.'
     audio = 'Muted; this check establishes no listening acceptance.'
+    contact_checks = 'Real resolved 4P dry steps/reversals; controlled step/skid initial/middle/expired rasters in all palettes at 720p/1080p/QHD. Dry/painted and left/right raster differences, enabled/disabled comparisons, frozen direction/tint/timers and culling bounds.'
     checks = 'Real builder/Scene rosters, both movement facings and four aim quadrants at 720p; representative facings also at 1080p/QHD; three 4P palettes; all four same-team accents in both facings. Five body action clips on actual events, both frames and distinct pinned body rasters. All five tools at 1P720 in both facings: paid fire/hold/release/recovery, hose/bucket travel and roller travel/lift. Three 4P palettes: right-facing mixed aimed tools and left-facing roller, plus 1080p/QHD extent captures. Sampled non-idle pinned tools differ from idle at gameplay zoom, including released roller travel/lift. Frozen draws byte-equal, public simulation/action/tool motion state and Debug replay fingerprint unchanged. Isolated player/tool raster output stays inside projected cull bounds. Death, outline, fill, respawn, tool-free squash and whole-dead story poses; early elimination whole-dead raster equals later idle whole-dead raster. Combat on/off comparisons at identical simulation state: hurt and elimination across all three 4P palettes at 720p; controlled 4P hurt initial/recovery/expiry and elimination initial/middle/late/expiry at 720p/1080p/QHD. Combat timers/death snapshot stay unchanged during drawing; whole-dead story figures suppress the burst.'
     profile = $profile
     diagnostic = ''
@@ -298,7 +299,7 @@ try {
     }
     Write-ContactSheet -CaptureDirectory $captures
     $result.outcome = 'passed'
-    $result.diagnostic = 'Painter base/action and five-tool mechanism matrices, distinct pinned body/tool rasters, frozen motion/redraw, simulation fingerprint, raster culling bounds, elimination/redraw/respawn and idle whole-story pose checks passed. Human playing-size review remains separate.'
+    $result.diagnostic = 'Painter base/action, five-tool mechanism and step/skid contact matrices, distinct pinned body/tool rasters, frozen motion/redraw, simulation fingerprint, raster culling bounds, elimination/redraw/respawn and idle whole-story pose checks passed. Human playing-size review remains separate.'
 }
 catch {
     $failure = $_

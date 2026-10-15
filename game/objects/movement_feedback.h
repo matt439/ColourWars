@@ -4,12 +4,15 @@
 #include "engine/render/texture_object.h"
 
 #include <array>
+#include <optional>
 #include <span>
 
 enum class MovementFeedbackKind
 {
     takeoff,
-    landing
+    landing,
+    step,
+    skid
 };
 
 // A player's bounded cosmetic trail. It owns no physics or collision objects;
@@ -23,6 +26,8 @@ public:
         mattmath::Vector2F position;
         float age = 0.0f;
         float strength = 1.0f;
+        float direction = 1.0f;
+        std::optional<labrador::Colour> paint_colour;
     };
 
     MovementFeedback(const MovementFeedbackPresentation* presentation,
@@ -31,6 +36,10 @@ public:
     void update(float dt);
     void takeoff(const mattmath::Vector2F& position);
     void land(const mattmath::Vector2F& position, float speed);
+    // Resolved travel supplies direction; paint is the contacted surface's
+    // current tint, which may belong to either team. No tile is ever changed.
+    void contact(MovementFeedbackKind kind, const mattmath::Vector2F& position,
+        float direction, std::optional<labrador::Colour> paint_colour);
     void clear();
     void draw(labrador::DrawList& draw_list) const;
     mattmath::RectangleF bounds(const mattmath::RectangleF& player_bounds) const;
@@ -44,5 +53,7 @@ private:
 
     const MovementBurstPresentation& style(MovementFeedbackKind kind) const;
     void emit(MovementFeedbackKind kind, const mattmath::Vector2F& position,
-        float strength);
+        float strength, float direction = 1.0f,
+        std::optional<labrador::Colour> paint_colour = std::nullopt);
+    void draw_contact(labrador::DrawList& draw_list, const Effect& effect) const;
 };

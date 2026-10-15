@@ -438,9 +438,14 @@ composition and human readability acceptance remain `POL#7` and `POL#24`.
 [implementation and evidence](polish-combat-feedback.md) add a short, local
 white/keylined hurt accent and a detached, team-coloured elimination burst to
 the existing action poses and accepted sounds. Repeated hits rate-limit the
-accent, and the existing spawn redraw remains the arrival treatment. Movement
-contact particles, muzzle accents, optional view shake, empty-paint visuals
-and menu focus motion remain in `POL#10`.
+accent, and the existing spawn redraw remains the arrival treatment.
+
+**Movement contact particles implemented (2026-10-15, part of `POL#10`).** The
+[implementation and evidence](polish-movement-contact.md) add restrained,
+black-keylined step and reversal flecks on the existing audio stride. Painted
+support supplies its actual colour and contact point, including adjacent-floor
+seams and enemy paint. The effects remain cosmetic and bounded; muzzle accents,
+optional view shake, empty-paint visuals and menu focus motion remain `POL#10`.
 
 **Exit condition:** a complete match in the reference arena feels visually coherent
 and responsive. Jumping, landing and movement have visible, correctly timed feedback.

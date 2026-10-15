@@ -206,6 +206,13 @@ PlayerTeam StructurePaintable::top_paint_team(float x) const
 	return PlayerTeam::none;
 }
 
+std::optional<Colour> StructurePaintable::top_paint_colour(float x) const
+{
+	const PlayerTeam team = this->top_paint_team(x);
+	if (team == PlayerTeam::none) { return std::nullopt; }
+	return this->team_colours_.team_colour(team);
+}
+
 PaintTotal StructurePaintable::paint_total() const
 {
 	auto total = PaintTotal();

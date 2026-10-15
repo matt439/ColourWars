@@ -500,9 +500,19 @@ void Player::end_contacts(std::span<const Contact> contacts)
     // Separation from a wall or an overlapping spawn is not walked distance.
     const float distance = resolved_x * this->movement_requested_x_ > 0.0f ?
         std::min(std::abs(resolved_x), std::abs(this->movement_requested_x_)) : 0.0f;
-    this->movement_audio_.end_contacts(can_act, this->supported_this_tick_,
+    const std::optional<PaintedSupport> paint = this->painted_support();
+    const MovementContactCues cues = this->movement_audio_.end_contacts(can_act, this->supported_this_tick_,
         this->is_on_ground(), this->support_impact_speed_, distance, this->movement_previous_velocity_,
-        this->input_.x_movement, this->movement_audio_dt_, this->painted_support());
+        this->input_.x_movement, this->movement_audio_dt_, paint.has_value());
+    // Share the stride/reversal event with audio, including while muted. A
+    // skid replaces that tick's step visually to keep the contact uncluttered.
+    if (cues.skid || cues.step)
+    {
+        this->movement_feedback_.contact(cues.skid ? MovementFeedbackKind::skid :
+            MovementFeedbackKind::step, paint ? paint->position : this->support_position_,
+            cues.skid ? this->movement_previous_velocity_ : resolved_x,
+            paint ? std::optional<Colour>(paint->colour) : std::nullopt);
+    }
     this->movement_audio_dt_ = 0.0f;
     this->primary_->update_ground_contact(
         can_act && this->supported_this_tick_ && this->is_on_ground(),
@@ -524,7 +534,7 @@ void Player::end_contacts(std::span<const Contact> contacts)
     this->paint_supports_.clear();
 }
 
-bool Player::painted_support() const
+std::optional<Player::PaintedSupport> Player::painted_support() const
 {
     for (const StructurePaintable* support : this->paint_supports_)
     {
@@ -536,13 +546,19 @@ bool Player::painted_support() const
         const float tolerance = 4.0f * std::numeric_limits<float>::epsilon() *
             std::max({ 1.0f, std::abs(surface.top()), std::abs(this->rectangle_.y),
                 this->rectangle_.height, std::abs(this->rectangle_.bottom()) });
-        if (left < right && std::abs(this->rectangle_.bottom() - surface.top()) <= tolerance &&
-            support->top_paint_team(left + (right - left) / 2.0f) != PlayerTeam::none)
+        if (left < right && std::abs(this->rectangle_.bottom() - surface.top()) <= tolerance)
         {
-            return true;
+            if (const std::optional<Colour> colour =
+                support->top_paint_colour(left + (right - left) / 2.0f))
+            {
+                // A seam's resolving floor can be dry while this adjacent
+                // measured support is wet. Keep tint and origin together.
+                return PaintedSupport{ *colour,
+                    { left + (right - left) / 2.0f, surface.top() } };
+            }
         }
     }
-    return false;
+    return std::nullopt;
 }
 
 void Player::on_structure_contact(const CollisionObject& other,

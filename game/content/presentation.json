@@ -301,7 +301,7 @@
     "keyline_width": 2
   },
   "movement_feedback": {
-    "_comment": "Neutral contact puffs sized for four-player 720p, in world units. Disable for comparisons. No scored paint or audio.",
+    "_comment": "Cosmetic contact puffs and keylined step/skid flecks in world units. Steps share the audio stride; wet flecks use the contacted paint colour. No scored paint or audio.",
     "enabled": true,
     "sprite_sheet": "sprite_sheet_1",
     "fill_frame": "pixel",
@@ -312,7 +312,11 @@
     "full_impact_speed": 1000.0,
     "minimum_strength": 0.65,
     "takeoff": { "duration": 0.24, "spread": 30.0, "lift": 16.0, "particle_size": 16.0 },
-    "landing": { "duration": 0.32, "spread": 44.0, "lift": 12.0, "particle_size": 20.0 }
+    "landing": { "duration": 0.32, "spread": 44.0, "lift": 12.0, "particle_size": 20.0 },
+    "step": { "duration": 0.20, "spread": 18.0, "lift": 12.0, "particle_size": 8.0 },
+    "skid": { "duration": 0.28, "spread": 32.0, "lift": 18.0, "particle_size": 12.0 },
+    "keyline": "000000",
+    "keyline_width": 1.0
   },
 
   "tool_motion": {

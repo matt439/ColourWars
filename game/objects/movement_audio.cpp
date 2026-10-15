@@ -25,17 +25,18 @@ MovementAudio::MovementAudio(const PlayerMovementSounds* tuning, SoundBank* bank
     this->painted_index_ = static_cast<size_t>(std::max(player_num, 0)) % this->step_painted_.size();
 }
 
-void MovementAudio::end_contacts(bool can_act, bool supported, bool grounded,
+MovementContactCues MovementAudio::end_contacts(bool can_act, bool supported, bool grounded,
     float impact_speed, float distance, float previous_velocity, float input, float dt, bool painted)
 {
-    if (dt <= 0.0f)
+    MovementContactCues cues;
+    if (dt <= 0.0f || !std::isfinite(dt))
     {
-        return;
+        return cues;
     }
     if (!can_act)
     {
         this->reset();
-        return;
+        return cues;
     }
 
     this->step_delay_ = std::max(0.0f, this->step_delay_ - dt);
@@ -67,6 +68,7 @@ void MovementAudio::end_contacts(bool can_act, bool supported, bool grounded,
         {
             this->play(this->skid_, this->tuning_->skid);
             this->skid_delay_ = this->tuning_->skid_repeat_delay;
+            cues.skid = true;
         }
         this->braking_ = opposed;
         if (this->distance_ >= this->tuning_->stride_distance && this->step_delay_ <= 0.0f)
@@ -83,6 +85,7 @@ void MovementAudio::end_contacts(bool can_act, bool supported, bool grounded,
             // A long tick can request one step, never a backlog of missed ones.
             this->distance_ = 0.0f;
             this->step_delay_ = this->tuning_->min_step_interval;
+            cues.step = true;
         }
     }
     else
@@ -92,6 +95,7 @@ void MovementAudio::end_contacts(bool can_act, bool supported, bool grounded,
     }
     this->established_support_ = this->established_support_ || supported;
     this->had_support_ = supported && grounded;
+    return cues;
 }
 
 void MovementAudio::reset()

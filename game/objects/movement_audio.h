@@ -4,6 +4,14 @@
 #include "game/tuning.h"
 #include "engine/audio/sound_bank.h"
 
+// The same completed-contact events drive sound and cosmetic contact flecks.
+// Muting a sound changes its gain, never whether the event happened.
+struct MovementContactCues
+{
+    bool step = false;
+    bool skid = false;
+};
+
 // One player's movement cues. Completed contacts drive this once per tick;
 // drawing and the number of views never advance its variation or rate limits.
 class MovementAudio
@@ -12,7 +20,7 @@ public:
     MovementAudio(const PlayerMovementSounds* tuning, labrador::SoundBank* bank,
         const PlaySettings* preferences, int player_num);
 
-    void end_contacts(bool can_act, bool supported, bool grounded,
+    MovementContactCues end_contacts(bool can_act, bool supported, bool grounded,
         float impact_speed, float distance, float previous_velocity, float input, float dt,
         bool painted = false);
     void reset();

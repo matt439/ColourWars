@@ -13,12 +13,20 @@ MovementFeedback::MovementFeedback(const MovementFeedbackPresentation* presentat
 
 const MovementBurstPresentation& MovementFeedback::style(MovementFeedbackKind kind) const
 {
-    return kind == MovementFeedbackKind::takeoff ?
-        this->presentation_->takeoff : this->presentation_->landing;
+    switch (kind)
+    {
+    case MovementFeedbackKind::takeoff: return this->presentation_->takeoff;
+    case MovementFeedbackKind::landing: return this->presentation_->landing;
+    case MovementFeedbackKind::step: return this->presentation_->step;
+    case MovementFeedbackKind::skid: return this->presentation_->skid;
+    }
+    throw std::runtime_error("Invalid movement feedback kind");
 }
 
 void MovementFeedback::update(float dt)
 {
+    // Frozen snapshots cannot rewind or poison the shared effect ages.
+    if (dt <= 0.0f || !std::isfinite(dt)) { return; }
     size_t remaining = 0;
     for (size_t index = 0; index < this->count_; ++index)
     {
@@ -33,7 +41,7 @@ void MovementFeedback::update(float dt)
 }
 
 void MovementFeedback::emit(MovementFeedbackKind kind, const Vector2F& position,
-    float strength)
+    float strength, float direction, std::optional<Colour> paint_colour)
 {
     if (!this->presentation_->enabled) { return; }
     if (this->count_ == this->effects_.size())
@@ -42,7 +50,8 @@ void MovementFeedback::emit(MovementFeedbackKind kind, const Vector2F& position,
         std::move(this->effects_.begin() + 1, this->effects_.end(), this->effects_.begin());
         --this->count_;
     }
-    this->effects_[this->count_++] = { kind, position, 0.0f, strength };
+    this->effects_[this->count_++] = { kind, position, 0.0f, strength,
+        direction, paint_colour };
 }
 
 void MovementFeedback::takeoff(const Vector2F& position)
@@ -56,6 +65,16 @@ void MovementFeedback::land(const Vector2F& position, float speed)
     this->emit(MovementFeedbackKind::landing, position,
         std::clamp(speed / this->presentation_->full_impact_speed,
             this->presentation_->minimum_strength, 1.0f));
+}
+
+void MovementFeedback::contact(MovementFeedbackKind kind, const Vector2F& position,
+    float direction, std::optional<Colour> paint_colour)
+{
+    if (kind != MovementFeedbackKind::step && kind != MovementFeedbackKind::skid)
+    {
+        return;
+    }
+    this->emit(kind, position, 1.0f, direction < 0.0f ? -1.0f : 1.0f, paint_colour);
 }
 
 void MovementFeedback::clear()
@@ -76,14 +95,70 @@ RectangleF MovementFeedback::bounds(const RectangleF& player_bounds) const
         const MovementBurstPresentation& burst = this->style(effect.kind);
         // The outer fleck can reach two particle widths past the spread.
         // Include snapping in both axes so a neighbouring pane never culls it.
-        const float margin = 2.0f * burst.particle_size +
-            2.0f * this->presentation_->pixel_size;
+        const bool contact = effect.kind == MovementFeedbackKind::step ||
+            effect.kind == MovementFeedbackKind::skid;
+        const float margin = contact ? 3.0f * burst.particle_size +
+            this->presentation_->keyline_width + 2.0f * this->presentation_->pixel_size :
+            2.0f * burst.particle_size + 2.0f * this->presentation_->pixel_size;
         result = RectangleF::union_of(result, RectangleF(
             effect.position.x - burst.spread - margin,
             effect.position.y - burst.lift - margin,
             (burst.spread + margin) * 2.0f, burst.lift + margin * 2.0f));
     }
     return result;
+}
+
+void MovementFeedback::draw_contact(DrawList& draw_list, const Effect& effect) const
+{
+    const auto& look = *this->presentation_;
+    const auto& burst = this->style(effect.kind);
+    const float progress = effect.age / burst.duration;
+    const float fade = 1.0f - progress;
+    const float pixel = look.pixel_size;
+    const auto snap = [pixel](float value) { return std::round(value / pixel) * pixel; };
+    const Colour colour = effect.paint_colour.value_or(look.colour);
+    const auto fill = [&](const RectangleF& rectangle, const Colour& tint)
+    {
+        this->draw_with(draw_list, rectangle, this->frame(), tint * fade,
+            Vector2F::ZERO, SpriteFlip::none, 0.0f);
+    };
+    const auto border = [&](const RectangleF& rectangle)
+    {
+        const float edge = look.keyline_width;
+        fill(RectangleF(rectangle.x - edge, rectangle.y - edge,
+            rectangle.width + edge * 2.0f, rectangle.height + edge * 2.0f), look.keyline);
+    };
+    // Two footstep flecks or three skid flecks are the complete draw budget.
+    // These authored offsets never consume the match's random stream.
+    struct Fleck { float trail; float spread; float size; float rise; };
+    constexpr std::array<Fleck, 3> flecks = {{
+        { 0.5f, 0.35f, 1.0f, 0.55f },
+        { 1.2f, 0.7f, 0.8f, 1.0f },
+        { 1.8f, 1.0f, 0.6f, 0.7f },
+    }};
+    const size_t count = effect.kind == MovementFeedbackKind::skid ? 3 : 2;
+    for (size_t index = 0; index < count; ++index)
+    {
+        const Fleck& fleck = flecks[index];
+        const float size = std::max(pixel, snap(burst.particle_size * fleck.size *
+            (1.0f - progress * 0.35f)));
+        const float x = snap(effect.position.x - effect.direction *
+            (burst.particle_size * fleck.trail + burst.spread * fleck.spread * progress));
+        // Rise and settle back against the supporting face before fading out;
+        // nothing remains on that face to imply new ownership or scoring.
+        const float y = snap(effect.position.y - pixel - size * 0.25f -
+            burst.lift * fleck.rise * 4.0f * progress * (1.0f - progress));
+        const RectangleF main(x - size * 0.5f, y - size * 0.75f,
+            size, size * 0.75f);
+        const RectangleF corner(x, y - size * 0.45f,
+            size * 0.65f, size * 0.45f);
+        border(main);
+        border(corner);
+        fill(main, colour);
+        fill(corner, colour);
+        fill(RectangleF(main.x, main.y, std::min(pixel, size * 0.5f),
+            std::min(pixel, main.height)), look.highlight);
+    }
 }
 
 void MovementFeedback::draw(DrawList& draw_list) const
@@ -93,6 +168,11 @@ void MovementFeedback::draw(DrawList& draw_list) const
     const auto snap = [pixel](float value) { return std::round(value / pixel) * pixel; };
     for (const Effect& effect : this->effects())
     {
+        if (effect.kind == MovementFeedbackKind::step || effect.kind == MovementFeedbackKind::skid)
+        {
+            this->draw_contact(draw_list, effect);
+            continue;
+        }
         const MovementBurstPresentation& burst = this->style(effect.kind);
         const float progress = effect.age / burst.duration;
         const float fade = 1.0f - progress;

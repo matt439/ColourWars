@@ -258,7 +258,12 @@ private:
     mattmath::Vector2F support_position_;
     // Borrowed only for this contact phase; query after every paint callback.
     std::vector<const StructurePaintable*> paint_supports_;
-    bool painted_support() const;
+    struct PaintedSupport
+    {
+        labrador::Colour colour;
+        mattmath::Vector2F position;
+    };
+    std::optional<PaintedSupport> painted_support() const;
 
     const PlayerTuning& player_tuning() const;
 

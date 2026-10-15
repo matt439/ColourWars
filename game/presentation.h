@@ -327,6 +327,10 @@ struct MovementFeedbackPresentation
 	float minimum_strength = 0.0f;
 	MovementBurstPresentation takeoff;
 	MovementBurstPresentation landing;
+	MovementBurstPresentation step;
+	MovementBurstPresentation skid;
+	labrador::Colour keyline;
+	float keyline_width = 0.0f;
 };
 
 // Local, cosmetic contact accents and the fragments left where a figure pops.

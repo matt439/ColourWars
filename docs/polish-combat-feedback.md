@@ -86,8 +86,9 @@ Release `04925a0c672c4a79b8f3874146b0a19c`.
 
 ## Remaining feedback
 
-`POL#10` retains step/skid and painted-support particles, muzzle accents,
-optional view shake, empty-paint visuals and menu focus motion. `POL#12` owns
+`POL#10` retains muzzle accents, optional view shake, empty-paint visuals and menu
+focus motion. [Step/skid and painted-support particles](polish-movement-contact.md)
+are implemented. `POL#12` owns
 idle drips and quiet character detail; `POL#13` owns the reduce-effects option.
 Human readability in the reference match, movement feel, listening acceptance,
 physical controllers and frame pacing remain separate acceptance work.

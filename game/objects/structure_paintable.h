@@ -11,6 +11,7 @@
 #include "engine/render/colour.h"
 #include "game/tuning.h"
 #include <span>
+#include <optional>
 
 
 // Faces on which the structure generates paint tiles.
@@ -57,6 +58,7 @@ public:
 	// Ownership directly under a confirmed top-support contact. Tile intervals
 	// are half open, so a seam has one answer; side/bottom paint never counts.
 	PlayerTeam top_paint_team(float x) const;
+	std::optional<labrador::Colour> top_paint_colour(float x) const;
 
 private:
 	std::vector<PaintTile> paint_tiles_ = std::vector<PaintTile>();
