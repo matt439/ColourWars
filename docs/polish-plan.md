@@ -320,8 +320,8 @@ The [five-tool production pass](polish-tools.md) implements `POL#8`: distinct
 Paint.exe designs, aligned paint masks and grips, paid-shot pressure recovery,
 hose motion, supported roller rotation/lift/settle, bucket slosh/handle motion
 and a detached cosmetic mist tail. The reference arena still gates composition
-acceptance; idle drips, emitted paint/flecks and per-tool projectiles retain
-their separate TODO rows.
+acceptance. The projectile, contact and quiet-detail increments below extend
+that treatment without changing the match simulation.
 
 Author the character, hands, weapon grips and aim poses together. Cover idle,
 running, takeoff, airborne motion, landing, firing, hurt, elimination and respawn.
@@ -382,6 +382,60 @@ blinking/weight shifts at rest, a grip adjustment after settling, modest body le
 on acceleration and turns, and carried parts that catch up after a stop. Keep hands
 connected to grips and feet grounded. Preserve aim accuracy and muzzle behaviour.
 Avoid making every character perform the same idle loop at the same phase.
+
+**Quiet detail implemented (2026-10-15, `POL#12`).** A settled, alive sprayer
+waits a locally varied 2.8–6.2 seconds, grows a team-paint bead for 0.42 seconds
+and stretches it for another 0.18 seconds at the rendered nozzle's underside.
+The detached drop falls vertically under cosmetic gravity for at most 0.75
+seconds. Sweeping its footprint against actual terrain shapes ends it on
+contact, including thin platforms and ramps. There is no contact splash or
+sound, ammunition use, damage, paint capture or player credit.
+
+Movement, jumping, held fire (including an empty tool) and elimination cancel
+the attached bead and restart the quiet wait. Detached drops finish independently
+of the player and aim. Each sprayer has a scene-owned, bounded cosmetic object;
+Level advances it once after resolved contacts and the final muzzle repair.
+Scene culling uses the drops' own bounds, so elimination or leaving the player's
+view does not prematurely erase them. Pause freezes the state; time-up clears
+the drips before the reveal hides the tools, and teardown owns their cleanup.
+The private cosmetic sequence never draws from gameplay randomness.
+
+Every painter also has individually phased breathing and weight shifts after
+settling, occasional short blinks, and a restrained acceleration/turn lean that
+settles after stopping. These reuse the coarse drawing and neutral fill rather
+than replacing its action clips. Compression keeps the feet baseline, and the
+same posed canvas supplies the head accent and shoulders while hands retain
+the actual tool grips. Actions, airborne motion, elimination and story/redraw
+poses suppress inappropriate idle details. All sizes and timings are in
+`presentation.json` (`idle_drip` and `figure.quiet`); they remain subject to the
+reference composition's human review in `POL#7`/`POL#24`.
+
+Validation on 2026-10-15:
+
+- Debug and Release build under `/W4 /WX` and pass all 17 consumer cases.
+  The new drip case covers private timing, attachment, gravity, true ramp/thin
+  platform contacts, interruption, death/respawn, pause and time-up cleanup.
+  Enabled/disabled comparisons preserve actual Level paint scores and gameplay;
+  character comparisons preserve all five tools' shots, movement, health,
+  ammunition, aim and muzzle. Invalid character geometry/timings are rejected.
+- Both builds pass the D3D11 painter probe on the NVIDIA GeForce RTX 5080.
+  Each adds 46 quiet-detail world captures: one/four players in all three palettes
+  at 720p, plus representative stretch poses at 1080p and QHD. The mature bead's
+  raster touches the real tool lip; detached drops separate. Growth, stretching,
+  falling, breathing, blinking and both movement directions are captured.
+  Repeated frozen draws preserve pixels, cosmetic and simulation state, and Debug
+  replay fingerprints; isolated drip pixels stay within their culling bounds.
+- Isolated Debug and Release startup pass with the accepted bank, a system-only
+  PATH and graceful shutdown. No audio or atlas changes are part of this increment.
+
+CPU evidence is under `out/acceptance/`; final visual/startup evidence is under
+`out/validation/quiet-detail-final/`. Visual run IDs are
+`x64-debug/e7ea6854f2d24c5a959ed277486c98ef` and
+`x64-release/098a1cd87d2e480daa989b7579d0f2c0`; their metadata records the baseline
+revision, worktree changes and pinned engine. The retained
+[quiet-detail contact sheet](images/polish-quiet/quiet-contact.png) contains
+native-size renderer crops. These checks and image inspection leave human
+composition, movement-feel, controller and listening acceptance in their existing rows.
 
 ### Movement and interaction feedback
 

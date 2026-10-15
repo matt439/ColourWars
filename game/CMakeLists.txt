@@ -94,6 +94,7 @@ add_executable(ColourWars WIN32
     objects/team_colour.cpp
     objects/weapon.cpp
     objects/weapon_feedback.cpp
+    objects/idle_drip.cpp
     objects/weapon_bucket.cpp
     objects/weapon_builder.cpp
     objects/weapon_details.cpp

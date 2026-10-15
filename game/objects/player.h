@@ -13,6 +13,7 @@
 #include "game/objects/respawn_redraw.h"
 #include "game/objects/figure_clothing.h"
 #include "game/objects/figure_attachments.h"
+#include "game/objects/quiet_character.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/shape.h"
 #include "engine/math/vector2f.h"
@@ -142,6 +143,7 @@ public:
     void end_contacts(std::span<const labrador::Contact> contacts = {});
     const MovementFeedback& movement_feedback() const;
     const CombatFeedback& combat_feedback() const;
+    const QuietCharacter& quiet_character() const;
 
     // The equipped tool, including its current gameplay aim.
     const Weapon& primary_weapon() const;
@@ -240,6 +242,7 @@ private:
 
     FigureClothing clothing_;
     FigureAttachments attachments_;
+    QuietCharacter quiet_character_;
     MovementFeedback movement_feedback_;
     CombatFeedback combat_feedback_;
     MovementAudio movement_audio_;

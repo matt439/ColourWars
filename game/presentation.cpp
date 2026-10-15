@@ -488,6 +488,34 @@ namespace
 		return hud;
 	}
 
+	IdleDripPresentation read_idle_drip(const JsonValue& root)
+	{
+		const JsonValue json = root.object("idle_drip");
+		IdleDripPresentation drip;
+		drip.enabled = json.boolean("enabled");
+		drip.sprite_sheet = json.identifier("sprite_sheet");
+		drip.fill_frame = json.identifier("fill_frame");
+		drip.keyline = read_colour(json, "keyline");
+		drip.interval_min = read_positive(json, "interval_min");
+		drip.interval_max = read_positive(json, "interval_max");
+		drip.grow_time = read_positive(json, "grow_time");
+		drip.stretch_time = read_positive(json, "stretch_time");
+		drip.lifetime = read_positive(json, "lifetime");
+		drip.gravity = read_positive(json, "gravity");
+		drip.size = read_positive(json, "size");
+		drip.stretch = read_positive(json, "stretch");
+		drip.nozzle_inset = read_positive(json, "nozzle_inset");
+		drip.nozzle_underside = read_positive(json, "nozzle_underside");
+		drip.keyline_width = read_positive(json, "keyline_width");
+		if (drip.interval_max < drip.interval_min ||
+			drip.keyline_width * 2.0f >= drip.size)
+		{
+			throw std::runtime_error(json.where() +
+				": intervals must be ordered and keylines must leave visible paint.");
+		}
+		return drip;
+	}
+
 	WeaponFeedbackPresentation read_weapon_feedback(const JsonValue& root)
 	{
 		const JsonValue json = root.object("weapon_feedback");
@@ -592,6 +620,48 @@ namespace
 		figure.hand_edge = read_positive(json, "hand_edge");
 		figure.arm_colour = read_colour(json, "arm_colour");
 		figure.hand_colour = read_colour(json, "hand_colour");
+		const JsonValue quiet = json.object("quiet");
+		auto& motion = figure.quiet;
+		motion.enabled = quiet.boolean("enabled");
+		motion.settle_time = read_positive(quiet, "settle_time");
+		motion.breath_period = read_positive(quiet, "breath_period");
+		motion.breath_height = read_positive(quiet, "breath_height");
+		motion.shift_period = read_positive(quiet, "shift_period");
+		motion.shift_distance = read_positive(quiet, "shift_distance");
+		motion.blink_min_interval = read_positive(quiet, "blink_min_interval");
+		motion.blink_max_interval = read_positive(quiet, "blink_max_interval");
+		motion.blink_duration = read_positive(quiet, "blink_duration");
+		motion.lean_distance = read_positive(quiet, "lean_distance");
+		motion.lean_acceleration = read_positive(quiet, "lean_acceleration");
+		motion.lean_settle_time = read_positive(quiet, "lean_settle_time");
+		motion.eyelid_height = read_positive(quiet, "eyelid_height");
+		motion.face_colour = read_colour(quiet, "face_colour");
+		if (motion.blink_max_interval < motion.blink_min_interval ||
+			motion.blink_duration >= motion.blink_min_interval ||
+			motion.breath_height >= figure.canvas_size.y / 10.0f ||
+			motion.lean_distance + motion.shift_distance >= figure.canvas_size.x / 4.0f)
+		{
+			throw std::runtime_error(quiet.where() +
+				": quiet motion must stay modest and blink intervals must be ordered.");
+		}
+		const JsonValue eyes = quiet.array("eyes");
+		if (eyes.size() != motion.eyes.size())
+		{
+			throw std::runtime_error(eyes.where() + ": needs the two authored eye rectangles.");
+		}
+		for (size_t index = 0; index < motion.eyes.size(); ++index)
+		{
+			const JsonValue eye = eyes.at(index);
+			const RectangleF rectangle(eye.number("x"), eye.number("y"),
+				read_positive(eye, "width"), read_positive(eye, "height"));
+			if (!(rectangle.x >= 0.0f && rectangle.y >= 0.0f &&
+				rectangle.right() <= figure.canvas_size.x && rectangle.bottom() <= figure.canvas_size.y &&
+				motion.eyelid_height < rectangle.height))
+			{
+				throw std::runtime_error(eye.where() + ": eye must stay in the canvas and leave room for its lid.");
+			}
+			motion.eyes[index] = rectangle;
+		}
 		if (figure.hand_edge * 2.0f >= figure.hand_size)
 		{
 			throw std::runtime_error(json.where() + ": 'hand_edge' must leave an interior in 'hand_size'.");
@@ -859,6 +929,7 @@ Presentation::Presentation(const char* path)
 			": repeat delay must cover the hurt duration and keylines must leave visible fill.");
 	}
 	this->weapon_feedback_ = read_weapon_feedback(root);
+	this->idle_drip_ = read_idle_drip(root);
 	this->figure_ = read_figure(root);
 	this->tool_motion_ = read_tool_motion(root);
 	this->respawn_redraw_ = read_respawn_redraw(root);
@@ -916,6 +987,11 @@ const WeaponFeedbackPresentation& Presentation::weapon_feedback() const
 	return this->weapon_feedback_;
 }
 
+const IdleDripPresentation& Presentation::idle_drip() const
+{
+	return this->idle_drip_;
+}
+
 const RespawnRedrawPresentation& Presentation::respawn_redraw() const
 {
 	return this->respawn_redraw_;
@@ -964,6 +1040,8 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->combat_feedback_.fill_frame);
 	check.frame("weapon_feedback.fill_frame", this->weapon_feedback_.sprite_sheet,
 		this->weapon_feedback_.fill_frame);
+	check.frame("idle_drip.fill_frame", this->idle_drip_.sprite_sheet,
+		this->idle_drip_.fill_frame);
 	for (size_t index = 0; index < this->figure_.accent_frames.size(); ++index)
 	{
 		check.frame("figure.accent_frames[" + std::to_string(index) + "]", this->figure_.sprite_sheet,

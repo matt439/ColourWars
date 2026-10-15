@@ -42,7 +42,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 |---|---|---|---|---|
 | `POL#3` | OPEN | HIGH | M | Movement-feel playtest (§2 exit): keyboard/mouse now, a physical pad later (with `ROAD#2`); feedback on and off, aim sweeps, before/after clips. Then freeze jump, acceleration and gravity. [§2](docs/polish-plan.md#2-establish-movement-and-camera-feel). |
 | `POL#10` | OPEN | HIGH | L | Optional view shake and menu focus motion. [§4](docs/polish-plan.md#movement-and-interaction-feedback). |
-| `POL#12` | OPEN | MED | M | Idle muzzle drip (its five rules), breathing, blinking and lean out of phase. [§4](docs/polish-plan.md#tool-personality-and-quiet-detail). |
 | `POL#13` | OPEN | MED | M | A reduce-effects option that cuts optional shake, flashes and ambient detail but keeps useful cues; repeated-sound variants. [§4](docs/polish-plan.md#detail-across-the-world-interface-and-match). |
 | `POL#14` | OPEN | MED | M | Read the tool and the fight: a readiness cue that tells cooldown from no paint, optional aim marker, a readable blocked-shot contact; one player-identity badge across card, figure, pane and results. [§8](docs/polish-plan.md#help-players-read-the-tool-and-the-fight). |
 | `POL#18` | OPEN | MED | M | Couch play: a shared count-in after pause or reconnect that freezes every timer and eats stale edges; per-player stick deadzones with a preview; a prominent Rematch on the end menu. [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |

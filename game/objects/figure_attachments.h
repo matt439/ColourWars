@@ -48,6 +48,27 @@ public:
                 ? labrador::SpriteFlip::none : labrador::SpriteFlip::horizontal);
     }
 
+    void draw_blink(labrador::DrawList& list, const mattmath::RectangleF& figure,
+        bool facing_right) const
+    {
+        if (look_ == nullptr || !look_->quiet.enabled) { return; }
+        for (const auto& eye : look_->quiet.eyes)
+        {
+            // Leave a short black lid at the middle of the authored square eye.
+            // The eye paint-out follows the same posed canvas as the face.
+            auto local = eye;
+            if (!facing_right) { local.x = look_->canvas_size.x - local.right(); }
+            const mattmath::Vector2F scale(figure.width / look_->canvas_size.x,
+                figure.height / look_->canvas_size.y);
+            const mattmath::RectangleF target(figure.x + local.x * scale.x,
+                figure.y + local.y * scale.y, local.width * scale.x, local.height * scale.y);
+            this->fill(list, target, look_->quiet.face_colour);
+            const float lid = look_->quiet.eyelid_height * scale.y;
+            this->fill(list, mattmath::RectangleF(target.x,
+                target.y + (target.height - lid) / 2.0f, target.width, lid), look_->arm_colour);
+        }
+    }
+
     void draw_arms(labrador::DrawList& list, const mattmath::RectangleF& figure,
         bool facing_right, const Weapon& weapon) const
     {

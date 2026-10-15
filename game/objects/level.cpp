@@ -47,6 +47,14 @@ Level::Level(std::unique_ptr<Scene> scene,
 	for (Player* player : this->players_)
 	{
 		player->set_paint_audio(this->paint_audio_.get());
+		IdleDrip* drip = nullptr;
+		if (player->primary_weapon().type() == WeaponType::sprayer)
+		{
+			drip = this->scene_->add(std::make_unique<IdleDrip>(
+				&presentation->idle_drip(), render_resources, player->team_colour(),
+				static_cast<uint32_t>(this->idle_drips_.size())));
+		}
+		this->idle_drips_.push_back(drip);
 	}
 	this->overlay_sheet_ = render_resources->resolve_sprite_sheet(
 		presentation->hud().sprite_sheet);
@@ -335,6 +343,10 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			{
 				player->reset_tool_motion();
 			}
+			for (IdleDrip* drip : this->idle_drips_)
+			{
+				if (drip != nullptr) { drip->clear(); }
+			}
 			this->sound_bank_->stop_effect(this->countdown_sound_, true);
 			this->sound_bank_->stop_effect(this->go_sound_, true);
 			this->sound_bank_->stop_effect(this->last_ten_sound_, true);
@@ -419,6 +431,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	}
 
 	this->update_players_after_resolve();
+	this->update_idle_drips(dt);
 
 	// Retire deleted/out-of-bounds objects and admit this tick's projectiles.
 	// Deferred admission keeps the scene stable during iteration.
@@ -495,6 +508,34 @@ void Level::apply_player_inputs(
 	for (size_t i = 0; i < this->players_.size(); ++i)
 	{
 		this->players_[i]->set_player_input(by_view[i]);
+	}
+}
+
+const IdleDrip* Level::idle_drip(int view) const
+{
+	return this->idle_drips_.at(static_cast<size_t>(view));
+}
+
+void Level::update_idle_drips(float dt)
+{
+	for (size_t index = 0; index < this->players_.size(); ++index)
+	{
+		if (IdleDrip* drip = this->idle_drips_[index])
+		{
+			const Player& player = *this->players_[index];
+			const Weapon& weapon = player.primary_weapon();
+			const PlayerMoveState move = player.move_state();
+			const bool supported = move == PlayerMoveState::on_ground ||
+				move == PlayerMoveState::on_drop_down_ground ||
+				move == PlayerMoveState::on_ramp_left || move == PlayerMoveState::on_ramp_right;
+			const bool settled = player.state() == PlayerState::alive && player.health() > 0.0f &&
+				supported && player.velocity().x == 0.0f && player.velocity().y == 0.0f &&
+				player.input().x_movement == 0.0f && !player.input().primary_shoot &&
+				!player.input().jump_held && !player.input().jump_pressed &&
+				player.animation_state() == PlayerAnimationState::idle;
+			drip->advance(settled, weapon.nozzle_pos(), weapon.rotation(), dt,
+				this->projectile_targets_);
+		}
 	}
 }
 

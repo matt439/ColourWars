@@ -90,6 +90,7 @@ namespace
             const WeaponFeedbackState& weapon_feedback = tool.feedback()->state();
             const CombatFeedback& combat = player.combat_feedback();
             const RectangleF death = combat.death_rectangle();
+            const QuietCharacter::State& quiet = player.quiet_character().state();
             values.insert(values.end(), { body.x, body.y, body.width, body.height,
                 player.velocity().x, player.velocity().y, player.health(), player.weapon_ammo(),
                 player.respawn_timer(), static_cast<float>(player.state()),
@@ -102,7 +103,21 @@ namespace
                 mechanism.compression, mechanism.bucket_swing, mechanism.hose_sway,
                 mechanism.mist_tail_remaining, weapon_feedback.muzzle_remaining,
                 weapon_feedback.empty_remaining, weapon_feedback.recovered_remaining, combat.hurt_remaining(),
-                combat.elimination_remaining(), death.x, death.y, death.width, death.height });
+                combat.elimination_remaining(), death.x, death.y, death.width, death.height,
+                quiet.breath, quiet.lean, quiet.blinking ? 1.0f : 0.0f });
+            const IdleDrip* drip = level.idle_drip(view);
+            values.push_back(drip != nullptr ? 1.0f : 0.0f);
+            if (drip != nullptr)
+            {
+                const RectangleF bead = drip->bead_rectangle();
+                values.insert(values.end(), { drip->attached() ? 1.0f : 0.0f,
+                    drip->bead_age(), drip->interval_remaining(), bead.x, bead.y,
+                    bead.width, bead.height, static_cast<float>(drip->drops().size()) });
+                for (const auto& drop : drip->drops())
+                {
+                    values.insert(values.end(), { drop.position.x, drop.position.y, drop.age });
+                }
+            }
             const auto effects = player.movement_feedback().effects();
             values.push_back(static_cast<float>(effects.size()));
             for (const auto& effect : effects)
@@ -134,7 +149,8 @@ namespace
     };
 
     Frame isolated(const Player* player, const Player& camera_player,
-        const Viewport& viewport, Renderer& renderer, const Canvas& canvas)
+        const Viewport& viewport, Renderer& renderer, const Canvas& canvas,
+        const IdleDrip* drip = nullptr)
     {
         renderer.begin_frame();
         renderer.set_view_count(1);
@@ -144,6 +160,7 @@ namespace
         list.set_filter(TextureFilter::point);
         canvas.draw(list, camera_player.camera().visible_rectangle(viewport));
         if (player != nullptr) { player->draw(list); }
+        if (drip != nullptr) { drip->draw(list); }
         return read(renderer);
     }
 
@@ -176,12 +193,10 @@ namespace
 
     // This checks raster output, rather than reproducing the arms/accent
     // geometry in the test. Keep one pixel for rasterized partial edges.
-    size_t check_bounds(const Frame& image, const Frame& blank, const Player& player,
-        const Viewport& viewport, Frame& crop)
+    size_t check_projected_bounds(const Frame& image, const Frame& blank,
+        RectangleF bounds, const Viewport& viewport, Frame& crop)
     {
         const RectangleI pane = viewport.pixel_rect();
-        RectangleF bounds = player.camera().calculate_view_rectangle(
-            player.cull_bounds(1.0f / player.camera().scale));
         bounds.x += static_cast<float>(pane.x) - 1;
         bounds.y += static_cast<float>(pane.y) - 1;
         bounds.width += 2;
@@ -217,6 +232,13 @@ namespace
                 image.pixels.begin() + start + static_cast<size_t>(crop.width) * 4);
         }
         return changed;
+    }
+
+    size_t check_bounds(const Frame& image, const Frame& blank, const Player& player,
+        const Viewport& viewport, Frame& crop)
+    {
+        return check_projected_bounds(image, blank, player.camera().calculate_view_rectangle(
+            player.cull_bounds(1.0f / player.camera().scale)), viewport, crop);
     }
 
     void capture(Application& app, Level& level, const Canvas& canvas,
@@ -262,7 +284,10 @@ namespace
                 << player.combat_feedback().death_rectangle().x << ','
                 << player.combat_feedback().death_rectangle().y << ','
                 << player.combat_feedback().death_rectangle().width << ','
-                << player.combat_feedback().death_rectangle().height << '\n';
+                << player.combat_feedback().death_rectangle().height << ','
+                << player.quiet_character().state().breath << ','
+                << player.quiet_character().state().lean << ','
+                << player.quiet_character().state().blinking << '\n';
         }
         require(before == observation(level), "drawing changed public simulation state");
 #if COLOURWARS_DEV_TOOLS
@@ -998,6 +1023,212 @@ namespace
             }
         }
     }
+
+    // The decoration is a separate Scene object, so its falling footprint must
+    // be checked separately from the player's culling box. Keep an additional
+    // combined crop for judging the bead at its real nozzle and playing size.
+    bool raster_adjacent(const Frame& decoration, const Frame& painter,
+        const Frame& blank, const Viewport& viewport)
+    {
+        const RectangleI pane = viewport.pixel_rect();
+        const auto ink = [&](const Frame& image, int x, int y)
+        {
+            const size_t offset = (static_cast<size_t>(y) * static_cast<size_t>(image.width) +
+                static_cast<size_t>(x)) * 4;
+            return image.pixels[offset] != blank.pixels[offset] ||
+                image.pixels[offset + 1] != blank.pixels[offset + 1] ||
+                image.pixels[offset + 2] != blank.pixels[offset + 2];
+        };
+        for (int y = pane.y; y < pane.bottom(); ++y)
+        {
+            for (int x = pane.x; x < pane.right(); ++x)
+            {
+                if (!ink(decoration, x, y)) { continue; }
+                for (int neighbour_y = std::max(pane.y, y - 1);
+                    neighbour_y <= std::min(pane.bottom() - 1, y + 1); ++neighbour_y)
+                {
+                    for (int neighbour_x = std::max(pane.x, x - 1);
+                        neighbour_x <= std::min(pane.right() - 1, x + 1); ++neighbour_x)
+                    {
+                        if (ink(painter, neighbour_x, neighbour_y)) { return true; }
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+    void quiet_capture(Application& app, Level& level, const Canvas& canvas,
+        Presentation& presentation, const std::filesystem::path& output,
+        const std::string& stem, std::ofstream& records, std::ofstream& quiet_records)
+    {
+        capture(app, level, canvas, output, stem, records);
+        const auto before = observation(level);
+        auto& look = const_cast<IdleDripPresentation&>(presentation.idle_drip());
+        const RestoreFlag restore{ look.enabled, look.enabled };
+        for (int view = 0; view < level.player_count(); ++view)
+        {
+            const Player& player = level.player(view);
+            const IdleDrip* drip = level.idle_drip(view);
+            require(drip != nullptr, "sprayer builder omitted its Scene-owned idle drip");
+            const Viewport& viewport = app.viewport_manager()->player_viewport(view);
+            const Frame blank = isolated(nullptr, player, viewport, *app.renderer(), canvas);
+            look.enabled = true;
+            const Frame image = isolated(nullptr, player, viewport, *app.renderer(), canvas, drip);
+            require(image.pixels == isolated(nullptr, player, viewport, *app.renderer(), canvas, drip).pixels,
+                "frozen idle drip changed during repeated drawing");
+            Frame crop{};
+            const size_t pixels = check_projected_bounds(image, blank,
+                player.camera().calculate_view_rectangle(drip->cull_bounds(1.0f / player.camera().scale)),
+                viewport, crop);
+            require((pixels > 0) == (drip->attached() || !drip->drops().empty()),
+                "idle drip raster visibility did not match its bead/drop state");
+            if (drip->attached() && drip->bead_age() >= look.grow_time)
+            {
+                const Frame painter = isolated(&player, player, viewport, *app.renderer(), canvas);
+                require(raster_adjacent(image, painter, blank, viewport),
+                    "mature attached idle bead did not meet the rendered sprayer lip within one pixel");
+            }
+            look.enabled = false;
+            require(blank.pixels == isolated(nullptr, player, viewport, *app.renderer(), canvas, drip).pixels,
+                "disabled idle drip still drew pixels");
+            look.enabled = true;
+            const Frame combined = isolated(&player, player, viewport, *app.renderer(), canvas, drip);
+            RectangleF bounds = player.cull_bounds(1.0f / player.camera().scale);
+            if (pixels > 0)
+            {
+                bounds = RectangleF::union_of(bounds, drip->cull_bounds(1.0f / player.camera().scale));
+            }
+            require(check_projected_bounds(combined, blank,
+                player.camera().calculate_view_rectangle(RectangleF(bounds)), viewport, crop) > 0,
+                "quiet detail crop omitted its painter");
+            save(crop, output / (stem + "-detail-player" + std::to_string(view + 1) + ".ppm"));
+            quiet_records << stem << ',' << view + 1 << ',' << drip->attached() << ','
+                << drip->bead_age() << ',' << drip->interval_remaining() << ','
+                << drip->drops().size() << ',' << pixels << ','
+                << player.quiet_character().state().breath << ','
+                << player.quiet_character().state().lean << ','
+                << player.quiet_character().state().blinking << '\n';
+        }
+        require(before == observation(level), "quiet detail drawing changed observed simulation or cosmetic state");
+    }
+
+    void compare_quiet(Application& app, Level& level, const Canvas& canvas,
+        Presentation& presentation, bool blinking)
+    {
+        const auto before = observation(level);
+        auto& enabled = const_cast<bool&>(presentation.figure().quiet.enabled);
+        const RestoreFlag restore{ enabled, enabled };
+        bool changed = false;
+        for (int view = 0; view < level.player_count(); ++view)
+        {
+            const Player& player = level.player(view);
+            const Viewport& viewport = app.viewport_manager()->player_viewport(view);
+            enabled = true;
+            const Frame active = isolated(&player, player, viewport, *app.renderer(), canvas);
+            enabled = false;
+            changed |= active.pixels != isolated(&player, player, viewport, *app.renderer(), canvas).pixels;
+        }
+        require(changed, "quiet breathing/weight shift produced no visible playing-size raster change");
+        enabled = true;
+        if (blinking)
+        {
+            const Player& player = level.player(0);
+            auto& blink = const_cast<bool&>(player.quiet_character().state().blinking);
+            const RestoreFlag restore_blink{ blink, blink };
+            require(blink, "quiet blink fixture missed its closed-eye phase");
+            const Viewport& viewport = app.viewport_manager()->player_viewport(0);
+            const Frame closed = isolated(&player, player, viewport, *app.renderer(), canvas);
+            blink = false;
+            require(closed.pixels != isolated(&player, player, viewport, *app.renderer(), canvas).pixels,
+                "quiet blink did not change the eyes at playing size");
+        }
+        require(before == observation(level), "quiet on/off comparison changed observed simulation or cosmetic state");
+    }
+
+    void quiet_matrix(Application& app, LevelBuilder& builder, const Canvas& canvas,
+        Presentation& presentation, const std::filesystem::path& output, std::ofstream& records)
+    {
+        std::ofstream quiet_records(output / "quiet-detail.csv");
+        quiet_records << "capture,view,attached,bead_age,interval_remaining,drops,drip_pixels,breath,lean,blinking\n";
+        const auto& look = presentation.idle_drip();
+        for (const int count : { 1, 4 })
+        {
+            for (const TeamColourPair palette : { TeamColourPair::blue_orange,
+                TeamColourPair::pink_green, TeamColourPair::blue_yellow })
+            {
+                auto level = build(app, builder, count, palette, false, false, WeaponType::sprayer);
+                auto inputs = neutral_inputs();
+                settle(*level, inputs);
+                resize(app, *level, { 1280, 720 });
+                for (int view = 0; view < count; ++view)
+                {
+                    require(level->place_player(view, Vector2F(1200.0f + 200.0f * static_cast<float>(view), 1275)),
+                        "could not place the quiet fixture on the recovery floor");
+                }
+                for (int tick = 0; tick < 60; ++tick) { level->update(inputs, dt); }
+                const std::string prefix = std::to_string(count) + "p-quiet-" + TeamColourTools::palette_key(palette);
+                const IdleDrip* drip = level->idle_drip(0);
+                require(drip != nullptr, "quiet fixture has no sprayer drip");
+                const auto advance_until = [&](const auto& condition, const char* message)
+                {
+                    for (int tick = 0; tick < 900 && !condition(); ++tick) { level->update(inputs, dt); }
+                    require(condition(), message);
+                    require(level->state() == LevelState::active, "quiet fixture exhausted its real match clock");
+                };
+                const auto phase = [&](const std::string& name, bool extents = false)
+                {
+                    for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440) })
+                    {
+                        if (size.x != 1280 && (!extents || palette != TeamColourPair::blue_orange)) { continue; }
+                        resize(app, *level, size);
+                        quiet_capture(app, *level, canvas, presentation, output,
+                            prefix + '-' + name + '-' + std::to_string(size.x), records, quiet_records);
+                    }
+                    resize(app, *level, { 1280, 720 });
+                };
+                advance_until([&] { return level->player(0).quiet_character().state().breath >=
+                    presentation.figure().quiet.breath_height * 0.9f; },
+                    "settled character never reached its breathing crest");
+                compare_quiet(app, *level, canvas, presentation, false);
+                if (count == 4)
+                {
+                    require(level->player(0).quiet_character().state() != level->player(1).quiet_character().state(),
+                        "separate roster members shared one quiet character phase");
+                }
+                phase("breath");
+                advance_until([&] { return drip->attached() && drip->bead_age() >= look.grow_time * 0.5f &&
+                    drip->bead_age() < look.grow_time; }, "settled sprayer never grew a muzzle bead");
+                phase("grow");
+                advance_until([&] { return drip->attached() &&
+                    drip->bead_age() >= look.grow_time + look.stretch_time * 0.5f; },
+                    "settled sprayer never stretched its muzzle bead");
+                phase("stretch", true);
+                advance_until([&] { return !drip->drops().empty() && drip->drops()[0].age >= dt * 2.0f; },
+                    "settled sprayer never released a falling cosmetic drop");
+                phase("fall");
+                const float drop_y = drip->drops()[0].position.y;
+                level->update(inputs, dt);
+                require(drip->drops().empty() || drip->drops()[0].position.y > drop_y,
+                    "released idle drop did not fall downwards");
+                advance_until([&] { return level->player(0).quiet_character().state().blinking; },
+                    "settled character never blinked");
+                compare_quiet(app, *level, canvas, presentation, true);
+                phase("blink");
+                advance_until([&] { return drip->attached() && drip->bead_age() >= look.grow_time * 0.5f; },
+                    "idle bead did not return for the interruption check");
+                for (auto& input : inputs) { input.x_movement = -1.0f; }
+                level->update(inputs, dt);
+                require(!drip->attached(), "starting movement did not remove the attached idle bead");
+                phase("interrupted");
+                for (int tick = 0; tick < 6; ++tick) { level->update(inputs, dt); }
+                phase("lean-left");
+            }
+        }
+        require(quiet_records.good(), "quiet detail capture record write failed");
+        std::cout << "PASS actual settled 1P/4P sprayer grow/stretch/fall/interruption and quiet breath/blink/lean; "
+            "three 720p palettes, representative 1080p/QHD; frozen redraw, on/off rasters and Scene culling bounds\n";
+    }
 }
 
 int wmain(int argc, wchar_t** argv)
@@ -1009,7 +1240,7 @@ int wmain(int argc, wchar_t** argv)
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
         std::filesystem::create_directories(output);
         std::ofstream records(output / "painter.csv");
-        records << "capture,view,input_slot,painter_pixels,facing_right,tool_angle,respawn_progress,animation_state,action_age,action_frame,tool_pose,pressure,valve,travel_phase,mist_tail_remaining,muzzle_remaining,empty_remaining,recovered_remaining,hurt_remaining,elimination_remaining,death_x,death_y,death_width,death_height\n";
+        records << "capture,view,input_slot,painter_pixels,facing_right,tool_angle,respawn_progress,animation_state,action_age,action_frame,tool_pose,pressure,valve,travel_phase,mist_tail_remaining,muzzle_remaining,empty_remaining,recovered_remaining,hurt_remaining,elimination_remaining,death_x,death_y,death_width,death_height,breath,lean,blinking\n";
         Registry<LevelLoadedInfo> levels("Level");
         GameTuning tuning((content / "tuning.json").string().c_str());
         Presentation presentation((content / "presentation.json").string().c_str());
@@ -1080,6 +1311,7 @@ int wmain(int argc, wchar_t** argv)
         combat_matrix(app, builder, canvas, tuning, presentation, output, records);
         weapon_feedback_matrix(app, builder, canvas, presentation, output, records);
         contact_matrix(app, builder, canvas, tuning, presentation, output, records);
+        quiet_matrix(app, builder, canvas, presentation, output, records);
         presentation.set_movement_feedback_enabled(true);
         for (int count : { 1, 4 })
         {

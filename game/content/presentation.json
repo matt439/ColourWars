@@ -300,6 +300,24 @@
     "particle_size": 12,
     "keyline_width": 2
   },
+  "idle_drip": {
+    "_comment": "Silent residual paint on a settled sprayer. World units/seconds; inset is measured behind the launch point to the drawn nozzle lip. Uses only local cosmetic randomness.",
+    "enabled": true,
+    "sprite_sheet": "sprite_sheet_1",
+    "fill_frame": "square_white_4",
+    "keyline": "000000",
+    "interval_min": 2.8,
+    "interval_max": 6.2,
+    "grow_time": 0.42,
+    "stretch_time": 0.18,
+    "lifetime": 0.75,
+    "gravity": 650,
+    "size": 6,
+    "stretch": 5,
+    "nozzle_inset": 8.5,
+    "nozzle_underside": 3,
+    "keyline_width": 1
+  },
   "weapon_feedback": {
     "_comment": "Cosmetic paid-shot muzzle accents and brief empty/recovered paint responses. The roller keeps its contact effect instead of emitting a muzzle accent.",
     "enabled": true,
@@ -383,6 +401,27 @@
     "hand_edge": 4.0,
     "arm_colour": "BLACK",
     "hand_colour": "WHITE",
+    "quiet": {
+      "_comment": "Optional feet-baseline-anchored breathing and slight body lean. Source-texel distances; roster clocks and blink intervals have independent cosmetic phases.",
+      "enabled": true,
+      "settle_time": 0.50,
+      "breath_period": 3.40,
+      "breath_height": 2.0,
+      "shift_period": 7.30,
+      "shift_distance": 2.0,
+      "blink_min_interval": 2.80,
+      "blink_max_interval": 6.00,
+      "blink_duration": 0.14,
+      "lean_distance": 4.0,
+      "lean_acceleration": 3000.0,
+      "lean_settle_time": 0.18,
+      "eyes": [
+        { "x": 16.0, "y": 24.0, "width": 8.0, "height": 8.0 },
+        { "x": 28.0, "y": 24.0, "width": 8.0, "height": 8.0 }
+      ],
+      "eyelid_height": 4.0,
+      "face_colour": "WHITE"
+    },
     "grips": {
       "sprayer": { "rear": { "x": 4.0, "y": 8.0 }, "front": { "x": 22.0, "y": 4.0 } },
       "sniper": { "rear": { "x": 8.0, "y": 8.0 }, "front": { "x": 32.0, "y": 4.0 } },

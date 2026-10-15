@@ -371,6 +371,26 @@ struct WeaponFeedbackPresentation
 	std::array<mattmath::Vector2F, static_cast<size_t>(WeaponType::bucket) + 1> muzzle_sizes;
 };
 
+// Residual sprayer paint, entirely separate from projectiles and scoring.
+struct IdleDripPresentation
+{
+	bool enabled = true;
+	std::string sprite_sheet;
+	std::string fill_frame;
+	labrador::Colour keyline;
+	float interval_min = 0.0f;
+	float interval_max = 0.0f;
+	float grow_time = 0.0f;
+	float stretch_time = 0.0f;
+	float lifetime = 0.0f;
+	float gravity = 0.0f;
+	float size = 0.0f;
+	float stretch = 0.0f;
+	float nozzle_inset = 0.0f;
+	float nozzle_underside = 0.0f;
+	float keyline_width = 0.0f;
+};
+
 struct FigureGripPresentation
 {
 	// World-space offsets from the weapon's actual draw pivot before rotation.
@@ -406,6 +426,27 @@ struct ToolMotionPresentation
 	float mist_tail_opacity = 0.0f;
 };
 
+// Optional, cosmetic character motion. Distances are authored source texels;
+// its foot baseline and the tool's simulation attachments never move.
+struct QuietCharacterPresentation
+{
+	bool enabled = false;
+	float settle_time = 0.0f;
+	float breath_period = 0.0f;
+	float breath_height = 0.0f;
+	float shift_period = 0.0f;
+	float shift_distance = 0.0f;
+	float blink_min_interval = 0.0f;
+	float blink_max_interval = 0.0f;
+	float blink_duration = 0.0f;
+	float lean_distance = 0.0f;
+	float lean_acceleration = 0.0f;
+	float lean_settle_time = 0.0f;
+	std::array<mattmath::RectangleF, 2> eyes;
+	float eyelid_height = 0.0f;
+	labrador::Colour face_colour;
+};
+
 // Figure details in the painter's authored canvas. Grips belong to the tool,
 // while shoulders and the head accent follow the posed figure rectangle.
 struct FigurePresentation
@@ -426,6 +467,7 @@ struct FigurePresentation
 	labrador::Colour arm_colour;
 	labrador::Colour hand_colour;
 	std::array<FigureGripPresentation, static_cast<size_t>(WeaponType::bucket) + 1> grips;
+	QuietCharacterPresentation quiet;
 };
 
 // One stroke of a figure as the person drew it: the path of the pen's
@@ -556,6 +598,7 @@ public:
 	const MovementFeedbackPresentation& movement_feedback() const;
 	const CombatFeedbackPresentation& combat_feedback() const;
 	const WeaponFeedbackPresentation& weapon_feedback() const;
+	const IdleDripPresentation& idle_drip() const;
 	const FigurePresentation& figure() const;
 	const ToolMotionPresentation& tool_motion() const;
 	const RespawnRedrawPresentation& respawn_redraw() const;
@@ -583,6 +626,7 @@ private:
 	MovementFeedbackPresentation movement_feedback_;
 	CombatFeedbackPresentation combat_feedback_;
 	WeaponFeedbackPresentation weapon_feedback_;
+	IdleDripPresentation idle_drip_;
 	FigurePresentation figure_;
 	ToolMotionPresentation tool_motion_;
 	RespawnRedrawPresentation respawn_redraw_;

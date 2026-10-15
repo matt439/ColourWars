@@ -67,6 +67,7 @@ Player::Player(const RectangleF& rectangle,
     attachments_(movement_feedback, figure, render_resources,
         teammate_index >= 0 ? teammate_index :
             (sound_index >= 0 ? sound_index : std::max(player_num, 0) % 4)),
+    quiet_character_(figure, sound_index >= 0 ? sound_index : std::max(player_num, 0)),
     movement_feedback_(movement_feedback, render_resources),
     combat_feedback_(combat_feedback, render_resources),
     movement_audio_(&tuning->player().movement_sounds,
@@ -260,8 +261,10 @@ RectangleF Player::posed_rectangle() const
 {
     const RectangleF base = this->drawn_whole() ? this->spawn_rectangle() : this->rectangle_;
     const float squash = base.height * this->pose_.squash;
-    return RectangleF(base.x + this->pose_.offset.x, base.y + this->pose_.offset.y + squash,
+    const RectangleF posed(base.x + this->pose_.offset.x, base.y + this->pose_.offset.y + squash,
         base.width, base.height - squash);
+    return this->state_ == PlayerState::alive && this->health_ > 0.0f &&
+        this->pose_.tool && !this->pose_.whole ? this->quiet_character_.rectangle(posed) : posed;
 }
 
 bool Player::drawn_whole() const
@@ -304,6 +307,11 @@ void Player::draw_figure(DrawList& draw_list, const RectangleF& rectangle, bool 
             this->grey_.value_or(this->TextureObject::colour()), flip);
         AnimationObject::draw_with(draw_list, rectangle,
             this->AnimationObject::colour(), flip);
+        if (this->quiet_character_.state().blinking && this->state_ == PlayerState::alive &&
+            this->pose_.tool && !this->pose_.whole)
+        {
+            this->attachments_.draw_blink(draw_list, rectangle, this->facing_right());
+        }
     }
     this->attachments_.draw_accent(draw_list, rectangle, this->facing_right());
     if (!this->pose_.tool || this->state_ == PlayerState::dead)
@@ -527,6 +535,13 @@ void Player::end_contacts(std::span<const Contact> contacts)
     {
         this->primary_->reset_motion();
     }
+
+    this->quiet_character_.update(can_act,
+        this->supported_this_tick_ && this->is_on_ground(),
+        std::abs(this->velocity().x) < 0.01f && std::abs(this->input_.x_movement) < 0.01f &&
+            !this->input_.primary_shoot,
+        this->action_.has_value(), this->movement_previous_velocity_, this->velocity().x,
+        this->weapon_contact_dt_);
 
     this->supported_this_tick_ = false;
     this->hit_ceiling_this_tick_ = false;
@@ -1055,6 +1070,11 @@ const CombatFeedback& Player::combat_feedback() const
     return this->combat_feedback_;
 }
 
+const QuietCharacter& Player::quiet_character() const
+{
+    return this->quiet_character_;
+}
+
 const Weapon& Player::primary_weapon() const
 {
     if (this->primary_ == nullptr)
@@ -1161,6 +1181,7 @@ const PlayerAnimationTuning& Player::animation_info(
 }
 void Player::place_at(const Vector2F& top_left)
 {
+    this->quiet_character_.reset();
     this->combat_feedback_.clear();
     this->primary_->reset_motion();
     this->action_.reset();
@@ -1193,6 +1214,7 @@ void Player::force_respawn()
 void Player::kill()
 {
     this->health_ = 0.0f;
+    this->quiet_character_.reset();
     this->primary_->reset_motion();
 }
 
@@ -1278,6 +1300,7 @@ void Player::stop_sounds() const
 void Player::reset_tool_motion()
 {
     this->primary_->reset_motion();
+    this->quiet_character_.reset();
 }
 void Player::pause_sounds() const
 {

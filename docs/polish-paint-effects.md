@@ -97,5 +97,6 @@ Retained captures show [native shot crops](images/polish-paint-effects/shots-720
 
 These checks and image inspection do not establish human composition,
 movement-feel, controller, listening or frame-pacing acceptance. The reference
-arena and its review remain in their existing TODO rows. Idle nozzle drips
-remain `POL#12`; player hit/elimination feedback remains `POL#10`.
+arena and its review remain in their existing TODO rows.
+[Idle nozzle drips](polish-plan.md#tool-personality-and-quiet-detail) and
+[player hit/elimination feedback](polish-combat-feedback.md) are implemented.

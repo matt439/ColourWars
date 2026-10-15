@@ -142,6 +142,7 @@ also includes every action in all five hues and 28-pixel authoring samples.
 `POL#7` still owns the final human review of character/teammate readability in a coherent
 single- and four-player gameplay composition, after the reference-arena
 (`POL#17`) pass provides that composition. The [five-tool artwork and motion](polish-tools.md)
-now use these hand attachments. Quiet breathing,
-blinking and settling remain `POL#12`. Terrain, paint, effects and UI keep their
+now use these hand attachments. The [quiet-detail increment](polish-plan.md#tool-personality-and-quiet-detail)
+adds independently phased breathing, blinks, weight shifts and acceleration/turn settling.
+Terrain, paint, effects and UI keep their
 existing owners and order.

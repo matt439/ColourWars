@@ -95,8 +95,9 @@ Release `5e4d9e6decae4802ba3cfb069a90e448`.
 
 ## Remaining feedback
 
-`POL#10` retains muzzle accents, optional view shake, empty-paint visuals and menu
-focus motion. Quiet character detail and idle dripping remain `POL#12`;
+`POL#10` retains optional view shake and menu focus motion. The
+[muzzle/paint-supply accents](polish-weapon-feedback.md) and
+[quiet character detail and idle dripping](polish-plan.md#tool-personality-and-quiet-detail) are implemented;
 reduce-effects settings remain `POL#13`. Human movement feel, crowded-match
 readability in the reference arena, physical controllers and frame pacing remain
 their existing acceptance work.

@@ -31,6 +31,7 @@
 #include "game/objects/screen_cursor.h"
 #include "game/objects/figure_acting.h"
 #include "game/objects/paint_audio.h"
+#include "game/objects/idle_drip.h"
 
 enum class LevelState
 {
@@ -111,6 +112,8 @@ public:
 	// player's input slot (see players_).
 	int player_count() const;
 	const Player& player(int view) const;
+	// Null for tools without an idle drip. Index follows player(view).
+	const IdleDrip* idle_drip(int view) const;
 
 	LevelEndInfo level_end_info() const;
 
@@ -144,6 +147,8 @@ private:
 	// so these pointers remain valid for the match.
 	// The vector index is the player's view index, not their input slot (player_num()).
 	std::vector<Player*> players_;
+	// Scene-owned cosmetics, advanced after final player contacts and muzzle repair.
+	std::vector<IdleDrip*> idle_drips_;
 
 	// Scene-owned geometry and players, which live for the whole match. Flying
 	// paint sweeps this list so its cost does not grow with other projectiles.
@@ -342,6 +347,7 @@ private:
 
 	// After collision resolution, align each weapon with its corrected player position.
 	void update_players_after_resolve();
+	void update_idle_drips(float dt);
 
 	// One pane per player during the match, one fullscreen view afterward.
 	// Refresh after updates and after resize, before render workers start.
