@@ -2539,6 +2539,7 @@ namespace
 #include "scripts/acceptance/painter_visual/weapon_catalog_checks.h"
 #include "scripts/acceptance/painter_visual/menu_text_checks.h"
 #include "scripts/acceptance/painter_visual/stage_random_text_checks.h"
+#include "scripts/acceptance/painter_visual/stage_briefing_text_checks.h"
 #include "scripts/acceptance/painter_visual/save_status_checks.h"
 #include "scripts/acceptance/painter_visual/settings_value_checks.h"
 #include "scripts/acceptance/painter_visual/settings_menu_checks.h"
@@ -2583,8 +2584,8 @@ int wmain(int argc, wchar_t** argv)
         const bool controls_menu_only = argc == 4 && std::wstring(argv[3]) == L"controls-menu";
         const bool stick_settings_only = argc == 4 && std::wstring(argv[3]) == L"stick-settings";
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
-        require(argc == 4 && std::wstring(argv[3]) == L"team-setup",
-            "The scripted gamepad backend is restricted to team-setup-only acceptance");
+        require(argc == 4 && (std::wstring(argv[3]) == L"team-setup" || menu_text_only),
+            "The scripted gamepad backend is restricted to team-setup-only or menu-text-only acceptance");
 #else
         require(argc != 4 || std::wstring(argv[3]) != L"team-setup",
             "Use check-painter.ps1 -TeamSetupOnly to compile the scripted input seam");

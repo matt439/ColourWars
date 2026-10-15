@@ -111,6 +111,10 @@ namespace
 		const JsonValue stage = json.object("stage");
 		text.stage.browse_status = read_menu_line(stage, "browse_status");
 		text.stage.locked_status = read_menu_line(stage, "locked_status");
+		text.stage.briefing_label = read_menu_line(stage, "briefing_label");
+		text.stage.goal = read_menu_line(stage, "goal");
+		text.stage.solo_objective = read_menu_block(stage, "solo_objective");
+		text.stage.versus_objective = read_menu_block(stage, "versus_objective");
 		const JsonValue headings = json.object("headings");
 		for (size_t index = 0; index < text.headings.size(); ++index)
 		{
@@ -2296,6 +2300,32 @@ void Presentation::validate_resources(const RenderResources& render,
 	};
 	check_stage_status("browse_status", this->menu_text_.stage.browse_status);
 	check_stage_status("locked_status", this->menu_text_.stage.locked_status);
+	const auto check_stage_briefing = [&](const char* role, const std::wstring& text, float line, float next_line)
+	{
+		const std::string key = std::string("menu_text.stage.") + role;
+		const Vector2F size = fixed_menu_size(key, text, this->menu_.brand_font);
+		const Vector2F position = stage_info + stage.briefing.spacing * line;
+		const Vector2F shadow = this->menu_.detail_shadow_offset;
+		const RectangleF bounds = RectangleF::union_of(RectangleF(position, size), RectangleF(position + shadow, size));
+		const float next_top = (stage_info + stage.briefing.spacing * next_line).y;
+		// These labels and authored blocks retain the briefing's unscaled font.
+		// Their text is not clipped to the panel's width, including the shipped
+		// solo objective, which extends beyond its right edge.
+		if (!std::isfinite(next_top) || !std::isfinite(shadow.x) || !std::isfinite(shadow.y) ||
+			!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
+			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
+			bounds.width <= 0.0f || bounds.height <= 0.0f || bounds.y < stage_briefing.y ||
+			bounds.bottom() > stage_briefing.bottom() ||
+			!RectangleF(0.0f, 0.0f, 1920.0f, 1080.0f).contains(bounds) || bounds.bottom() > next_top)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit unscaled inside the design area and briefing vertical span before the next authored row origin, including its shadow.");
+		}
+	};
+	check_stage_briefing("briefing_label", this->menu_text_.stage.briefing_label, 0.0f, 1.0f);
+	check_stage_briefing("goal", this->menu_text_.stage.goal, 3.0f, 4.0f);
+	check_stage_briefing("solo_objective", this->menu_text_.stage.solo_objective, 4.0f, 6.0f);
+	check_stage_briefing("versus_objective", this->menu_text_.stage.versus_objective, 4.0f, 6.0f);
 	const Vector2F options_value_limit((1920.0f + main.options_box_size.x) / 2.0f -
 		main.art.shadow_offset - main.art.focus_padding.x - main.options_value_x,
 		main.options_spacing.y - main.art.focus_padding.y * 2.0f);

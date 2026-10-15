@@ -259,7 +259,7 @@ void MainMenuStageSelect::init()
 	};
 	const bool solo = this->player_count() == 1;
 	const int best_of = this->level_settings()->best_of();
-	add_briefing("briefing_label", L"MATCH SETUP", style.brand_font, 0.0f,
+	add_briefing("briefing_label", this->text().stage.briefing_label, style.brand_font, 0.0f,
 		style.highlight);
 	add_briefing("mode", solo ? L"SOLO PRACTICE" : best_of == 1 ?
 		L"SINGLE MATCH" : L"BEST OF " + std::to_wstring(best_of),
@@ -267,10 +267,9 @@ void MainMenuStageSelect::init()
 	add_briefing("roster", std::to_wstring(this->player_count()) +
 		(solo ? L" PLAYER" : L" PLAYERS / 2 TEAMS"),
 		style.brand_font, 2.0f, style.unhighlight);
-	add_briefing("goal", L"PAINT TO WIN", style.brand_font, 3.0f, style.highlight);
+	add_briefing("goal", this->text().stage.goal, style.brand_font, 3.0f, style.highlight);
 	add_briefing("objective", solo ?
-		L"Make the arena your canvas.\nTry weapons. Cover more ground." :
-		L"Cover the arena in your colour.\nMost painted surface wins.",
+		this->text().stage.solo_objective : this->text().stage.versus_objective,
 		style.brand_font, 4.0f, style.unhighlight);
 
 	this->selection_status_ = std::make_unique<UiTextDropShadow>("selection_status",

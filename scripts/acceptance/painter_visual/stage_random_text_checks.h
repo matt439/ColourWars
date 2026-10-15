@@ -316,7 +316,9 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     // Status widgets keep constructor-owned font, position, shadow offset and
     // shadow colour. Slot/state refreshes replace captured copy and live ink.
     using StageStatus = decltype(MenuText{}.stage);
-    const StageStatus old_status{ L"BROWSE~", L"LOCKED~" }, new_status{ L"FIND A STAGE", L"READY TO START" };
+    StageStatus old_status = original.menu_text().stage, new_status = original.menu_text().stage;
+    old_status.browse_status = L"BROWSE~"; old_status.locked_status = L"LOCKED~";
+    new_status.browse_status = L"FIND A STAGE"; new_status.locked_status = L"READY TO START";
     Presentation status_old = original;
     const_cast<MenuText&>(status_old.menu_text()).stage = old_status;
     status_old.validate_resources(*app.render_resources(), *app.audio_resources());

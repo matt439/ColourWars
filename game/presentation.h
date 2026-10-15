@@ -120,6 +120,10 @@ struct MenuStageText
 {
 	std::wstring browse_status;
 	std::wstring locked_status;
+	std::wstring briefing_label;
+	std::wstring goal;
+	std::wstring solo_objective;
+	std::wstring versus_objective;
 };
 
 // Fixed roles select display text; navigation and accepted inputs remain code.

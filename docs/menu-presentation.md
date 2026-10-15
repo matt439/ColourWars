@@ -111,7 +111,8 @@ The required `menu_text` object stores the shared menu brand, eleven headings,
 seventeen complete prompt-bar legends, thirty-six row labels, a solo-practice
 hint, five Title/Home strings, three Controls/Pad Sticks help strings, eight
 fixed save-status messages, three shared setting values, two Pause confirmation
-questions, three End completion headings and two Stage Select status messages:
+questions, three End completion headings, two Stage Select status messages and
+four fixed Stage Select briefing strings:
 
 | JSON path | Required keys |
 |---|---|
@@ -127,13 +128,13 @@ questions, three End completion headings and two Stage Select status messages:
 | `menu_text.values` | `on`, `off`, `random` |
 | `menu_text.confirmations` | `restart`, `quit` |
 | `menu_text.end` | `match_complete`, `round_complete`, `series_complete` |
-| `menu_text.stage` | `browse_status`, `locked_status` |
+| `menu_text.stage` | `browse_status`, `locked_status`, `briefing_label`, `goal`, `solo_objective`, `versus_objective` |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
 normalization and the supported U+0020 to U+007E printable content range after
 normalization. Text must be nonblank and single-line, except for the Title
-wordmark and the Controls/Pad Sticks help blocks' authored line breaks described
-below. Startup checks the actual drawing font and measured bounds in the menu's
+wordmark, Controls/Pad Sticks help blocks and Stage Select objective blocks'
+authored line breaks described below. Startup checks the actual drawing font and measured bounds in the menu's
 design coordinates.
 
 | Text | Font | Position and lower boundary | Shadow allowance |
@@ -701,7 +702,7 @@ fullscreen resolution, Apply/Back behavior, save identifiers or persistence.
 Fixed palette labels remain in the existing palette data and are still read
 live. Resolution and
 numeric/percentage formatting, default-deadzone notation, stage
-navigation/hint/briefing copy, connection/readout text, player-specific Pause titles,
+navigation/hints and composed mode/roster copy, connection/readout text, player-specific Pause titles,
 session continuation text and composed match/results copy remain separate work under GAP#8.4.
 
 ### Stage Select Random display name
@@ -741,7 +742,7 @@ snapshots. Selection colours continue to read live presentation values. The
 string stays outside numeric `tune`. It does not change eligible stages, cycling, lock/unlock,
 confirm-again start, random selection or RNG draws. Navigation text such as
 `<   SURPRISE ME   >`, the Random availability count, lock/unlock hints and
-composed briefing text remain separate C++ copy under GAP#8.4.
+composed mode/roster text remain separate C++ copy under GAP#8.4.
 
 ### Stage Select status messages
 
@@ -777,8 +778,67 @@ reopening adopts the edits. A refresh still reads the current selected or
 heading foreground colour, preserving the existing behavior. These complete
 strings remain outside numeric `tune`, introduce no placeholders and do not
 change eligible stages, random selection, RNG draws, navigation, confirmation,
-unlocking or confirm-again start. The navigation, hint and composed briefing
+unlocking or confirm-again start. The navigation, hint and composed mode/roster
 strings remain separate C++ text under GAP#8.4.
+
+### Fixed Stage Select briefing copy
+
+Four more required `menu_text.stage` fields supply the fixed briefing copy:
+
+| Key | Use | Briefing row | Lower row boundary |
+|---|---|---|---|
+| `briefing_label` | `MATCH SETUP` label | 0 | 1 |
+| `goal` | `PAINT TO WIN` goal | 3 | 4 |
+| `solo_objective` | Solo-practice objective block | 4 | 6 |
+| `versus_objective` | Multiplayer objective block | 4 | 6 |
+
+The two labels use the shared normalized, nonblank, single-line rules. Objective
+blocks use the same punctuation normalization and printable range, with authored
+LF line breaks between nonblank lines. CR, other control characters and empty
+or blank lines are rejected. No fixed line count or automatic wrapping is
+introduced. The shipped solo objective is:
+
+```text
+Make the arena your canvas.
+Try weapons. Cover more ground.
+```
+
+The shipped multiplayer objective is:
+
+```text
+Cover the arena in your colour.
+Most painted surface wins.
+```
+
+All four roles use the actual `menu_style.chrome.brand_font`, shipped as
+`gill_sans_mt_bold_24`, and the existing unscaled `UiTextDropShadow` style with
+`menu_style.shadow.detail_offset`. Startup checks actual font glyphs and finite,
+positive measured text and union sizes. A role's text rectangle starts at the
+briefing position plus padding plus its row multiplied by `briefing.spacing`;
+the shadow has the same size and starts at the text position plus the signed
+detail shadow offset. The complete union includes negative shadow extents and
+must fit the full 1920 by 1080 design area. Its top and bottom must also stay
+within the briefing panel's vertical span, and its bottom must be at or above
+its authored lower row's origin, using the same briefing position, padding and
+spacing. These common limits apply to all four roles. Equality is accepted.
+The panel and union sizes must be finite and positive, and positions and
+shadow offsets must be finite. These roles keep their unscaled bounds without
+shrinking or upscaling.
+
+The shipped solo objective measures 524 pixels wide including its shadow, from
+x = 1262 to 1786. It extends 16 pixels beyond the briefing panel's right edge at
+1770. The horizontal design-area boundary preserves this existing wording and
+layout.
+
+Each page takes the four roles from its captured `MenuText` and chooses the
+same solo or multiplayer objective during construction. The briefing widgets
+retain their text, resolved brand font, position, shadow offset, shadow colour
+and foreground ink through presentation replacement and selection refreshes;
+reopening adopts the edits. These strings stay outside numeric `tune` and
+introduce no placeholders or runtime formatting. They do not change match mode,
+roster, stage eligibility, navigation, locking, starting, random selection or
+RNG draws. Composed mode/roster copy and navigation/hints remain C++ text under
+GAP#8.4.
 
 ## Verification and boundary
 
@@ -813,6 +873,9 @@ checks with its distinct width-only fit.
 Its two fixed selection statuses add required-key, normalization, actual
 detail-font and unscaled signed-shadow checks inside the full briefing panel
 and design area, with the authored hint row as the lower boundary.
+The four fixed briefing roles add required-key, normalized line/block, actual
+brand-font and unscaled signed-shadow checks within the design area, the
+briefing panel's vertical span and their authored lower row boundaries.
 Debug-console acceptance checks layout edit scopes, rollback and reset.
 
 The native painter checks exercise real page construction, copied geometry,
@@ -824,9 +887,10 @@ comfort and performance acceptance remain separate TODO items.
 
 Run `scripts/run-acceptance.ps1 -Preset x64-debug` (and `x64-release`), then use
 the focused `MainMenuOnly`, `SettingsMenuOnly`, `ControlsMenuOnly`, `PauseMenuOnly`,
-`ResultsMenuOnly`, `EndMenuOnly` and `TeamSetupOnly` switches of
-`scripts/check-painter.ps1` for the affected pages. In that set, `TeamSetupOnly`
-uses its scripted input backend; the other checks retain the real backend.
+`ResultsMenuOnly`, `EndMenuOnly`, `TeamSetupOnly` and `MenuTextOnly` switches of
+`scripts/check-painter.ps1` for the affected pages. `TeamSetupOnly` and
+`MenuTextOnly` use a scripted gamepad backend; the other scopes retain the real
+gamepad backend. `MenuTextOnly` retains its public keyboard checks as well.
 `WeaponCatalogOnly` checks the catalog on real weapon pages, including page
 snapshots across catalog replacement and reopening.
 `MenuTextOnly` checks authored headings, complete legends and Home/Options/Credits
@@ -837,6 +901,13 @@ cycling, lock/unlock, confirm-again start and presentation replacement/reopening
 The same scope checks both authored Stage Select statuses, their retained
 text/font/position/shadow through source replacement, live foreground colour
 refresh and newly opened pages.
+It also checks the four fixed briefing roles in solo and multiplayer setups,
+including their retained text/font/geometry/shadow/ink through presentation
+replacement and selection refreshes, plus newly opened pages. Its scripted
+gamepad fixture supplies connected participants for the two-player briefing.
+The full painter without the scripted-pad test macro checks the one-player
+briefing and explicitly skips that two-player fixture. Physical-pad acceptance
+remains open.
 `PauseMenuOnly` exercises the authored initial/confirmation labels and questions
 through repeated and interrupted pause, restart and quit flows, including safe
 No focus and question/detail-font snapshots across presentation replacement and
@@ -868,10 +939,11 @@ the name/artwork part of GAP#8.4, and `menu_text` implements shared headings,
 control legends, Home/Options/Credits, Mode/Player Count, Pause, static End and
 Controls/Pad Sticks row labels and help, the solo-practice hint, fixed
 Title/Home copy, fixed settings save-status messages, shared On/Off/Random
-setting values, Stage Select's shared Random display name and fixed selection
-statuses, fixed Pause confirmation questions and End completion headings.
+setting values, Stage Select's shared Random display name, fixed selection
+statuses and fixed briefing copy, fixed Pause confirmation questions and End
+completion headings.
 Other setting values,
-stage navigation/hint/briefing copy, connection/readout text, player-specific Pause titles,
+stage navigation/hints and composed mode/roster copy, connection/readout text, player-specific Pause titles,
 session continuation text, composed match/results text and other
 player-visible C++ text remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical

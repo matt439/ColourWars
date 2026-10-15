@@ -125,7 +125,11 @@
     },
     "stage": {
       "browse_status": "FIND YOUR ARENA",
-      "locked_status": "ARENA LOCKED"
+      "locked_status": "ARENA LOCKED",
+      "briefing_label": "MATCH SETUP",
+      "goal": "PAINT TO WIN",
+      "solo_objective": "Make the arena your canvas.\nTry weapons. Cover more ground.",
+      "versus_objective": "Cover the arena in your colour.\nMost painted surface wins."
     },
     "headings": {
       "home": "Make your mark.",
