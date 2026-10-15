@@ -30,7 +30,7 @@ questions in the polish sub-docs are superseded, not open.
 |---|---|---|---|---|
 | `POL#7` | BLOCKED | HIGH | M | Human review of character/team/tool readability in the reference composition; waits on the arena (`POL#17`). E figure, action poses, masks, accents, grips, redraw and all five tools are implemented. [Painter](docs/polish-painter.md), [tools](docs/polish-tools.md). |
 | `POL#9` | BLOCKED | HIGH | XL | Material and prop kit for the reference arena, background layers, landmarks, room life; collision silhouettes stay truthful. Waits on `POL#17`. [§4](docs/polish-plan.md#environment-and-background). |
-| `POL#16` | OPEN | MED | XL | Carry the style through menus, cards, stage preview, pause and results, then accepted arenas. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
+| `POL#16` | OPEN | MED | XL | Carry the style through remaining menus, cards, stage preview, pause and results, then accepted arenas. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback
 
@@ -43,7 +43,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#3` | OPEN | HIGH | M | Movement-feel playtest (§2 exit): keyboard/mouse now, a physical pad later (with `ROAD#2`); feedback on and off, aim sweeps, before/after clips. Then freeze jump, acceleration and gravity. [§2](docs/polish-plan.md#2-establish-movement-and-camera-feel). |
 | `POL#10` | OPEN | HIGH | L | Menu focus and selection motion. [§4](docs/polish-plan.md#movement-and-interaction-feedback). |
 | `POL#14` | BLOCKED | MED | M | Human review of the implemented player badges, aim/readiness and blocked-shot cues in the reference composition; waits on the arena (`POL#17`). [§8](docs/polish-plan.md#help-players-read-the-tool-and-the-fight). |
-| `POL#18` | OPEN | MED | M | Couch play: per-player stick deadzones with a response preview, and a prominent Rematch on the end menu. Shared resume count-in implemented; physical-pad comfort review remains. [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
+| `POL#18` | OPEN | MED | M | Per-player stick deadzones with a live response preview and a documented player/device association; physical-pad comfort review remains. [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 
 ## Levels and the editor

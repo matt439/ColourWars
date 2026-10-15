@@ -14,8 +14,8 @@ public:
 	~EndMenuPage() override = default;
 	void init() override = 0;
 	void update_page(float dt) override = 0;
-	// Restart (the match's build adopts the queued plan and, like the
-	// page's own Restart, moves the series on) or exit to the main menu.
+	// Continue (the match's build adopts the queued plan and, like the
+	// page's own primary action, moves the series on) or exit to the main menu.
 	bool debug_dismiss(bool leaving_match) override;
 protected:
 	const EndMenuPresentation& look() const;
@@ -31,13 +31,15 @@ public:
 	explicit EndMenuInitial(MenuContext* context, const Session& session = Session());
 	void init() override;
 	void update_page(float dt) override;
+protected:
+	bool shows_brand() const override { return false; }
 private:
 	Session session_;
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> change_teams_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> change_weapons_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> change_level_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> restart_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> exit_ = nullptr;
+	std::unique_ptr<labrador::UiText> heading_ = nullptr;
+	std::unique_ptr<labrador::UiText> change_teams_ = nullptr;
+	std::unique_ptr<labrador::UiText> change_weapons_ = nullptr;
+	std::unique_ptr<labrador::UiText> change_level_ = nullptr;
+	std::unique_ptr<labrador::UiText> restart_ = nullptr;
+	std::unique_ptr<labrador::UiText> exit_ = nullptr;
 };

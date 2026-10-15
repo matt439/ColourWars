@@ -180,14 +180,25 @@
   },
 
   "end_menu": {
-    "box_colour": "182233",
+    "box_size": { "x": 980.0, "y": 820.0 },
+    "heading_y": 170.0,
+    "art": {
+      "ink": "1B1C20",
+      "paper": "F0F0ED",
+      "shade": "00000035",
+      "focus_fill": "D5D5CF",
+      "focus_ink": "111216",
+      "keyline_width": 4.0,
+      "shadow_offset": 8.0,
+      "focus_padding": { "x": 28.0, "y": 18.0 }
+    },
     "sounds": {
       "series": { "name": "end.series", "volume": 0.7 }
     },
     "layout": {
-      "position": { "x": 700.0, "y": 250.0 },
+      "position": { "x": 700.0, "y": 330.0 },
       "size": { "x": 100.0, "y": 50.0 },
-      "spacing": { "x": 100.0, "y": 85.0 }
+      "spacing": { "x": 100.0, "y": 125.0 }
     }
   },
 

@@ -386,7 +386,54 @@ namespace
 		const JsonValue json = root.object("end_menu");
 
 		EndMenuPresentation menu;
-		menu.box_colour = read_colour(json, "box_colour");
+		menu.box_size = read_positive_vector(json, "box_size");
+		menu.heading_y = read_positive(json, "heading_y");
+		if (menu.heading_y > 900.0f)
+		{
+			throw std::runtime_error(json.where() + ": heading_y must be at most 900.");
+		}
+		if (menu.box_size.x > 1600.0f || menu.box_size.y > 900.0f)
+		{
+			throw std::runtime_error(json.where() + ": box_size must be at most (1600,900).");
+		}
+		const JsonValue art = json.object("art");
+		menu.art.ink = read_colour(art, "ink");
+		menu.art.paper = read_colour(art, "paper");
+		menu.art.shade = read_colour(art, "shade");
+		menu.art.focus_fill = read_colour(art, "focus_fill");
+		menu.art.focus_ink = read_colour(art, "focus_ink");
+		menu.art.keyline_width = read_positive(art, "keyline_width");
+		menu.art.shadow_offset = art.number("shadow_offset");
+		menu.art.focus_padding = read_positive_vector(art, "focus_padding");
+		if (menu.art.keyline_width > 8.0f ||
+			!std::isfinite(menu.art.shadow_offset) || menu.art.shadow_offset < 0.0f ||
+			menu.art.shadow_offset > 24.0f || menu.art.focus_padding.x > 48.0f ||
+			menu.art.focus_padding.y > 24.0f)
+		{
+			throw std::runtime_error(art.where() +
+				": keyline_width <= 8, shadow_offset 0..24 and focus_padding <= (48,24) required.");
+		}
+		if (menu.art.focus_padding.x <= menu.art.shadow_offset + menu.art.keyline_width ||
+			menu.art.focus_padding.y <= menu.art.shadow_offset + menu.art.keyline_width)
+		{
+			throw std::runtime_error(art.where() +
+				": focus_padding must exceed shadow_offset + keyline_width on both axes.");
+		}
+		if (menu.box_size.x <= menu.art.shadow_offset + menu.art.keyline_width * 6.0f ||
+			menu.box_size.y <= menu.art.shadow_offset + menu.art.keyline_width * 6.0f)
+		{
+			throw std::runtime_error(json.where() +
+				": box_size must exceed art.shadow_offset + art.keyline_width * 6 on both axes.");
+		}
+		if (menu.art.ink.a != 1.0f || menu.art.paper.a != 1.0f ||
+			menu.art.focus_fill.a != 1.0f || menu.art.focus_ink.a != 1.0f ||
+			menu.art.shade.a <= 0.0f || menu.art.ink == menu.art.paper ||
+			menu.art.focus_ink == menu.art.focus_fill || menu.art.ink == menu.art.focus_fill ||
+			menu.art.focus_fill == menu.art.paper)
+		{
+			throw std::runtime_error(art.where() +
+				": opaque distinct paper/ink and focus colours, and visible shade required.");
+		}
 		menu.layout = read_layout(json, "layout");
 		menu.series_sound = read_sound(json.object("sounds"), "series");
 		return menu;

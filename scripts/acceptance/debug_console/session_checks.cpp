@@ -9,6 +9,7 @@
 #include "game/debug/debug_perf.h"
 #include "game/debug/debug_text_field.h"
 #include "game/debug/tune_document.h"
+#include "game/session.h"
 #include <optional>
 
 // Binds, history, live-console input, the perf ring and polish.
@@ -272,6 +273,41 @@ namespace debug_console_acceptance
 	{
 		using mattmath::RectangleF;
 		using mattmath::Vector2F;
+		// The end page offers the next playable action for each kind of finish.
+		LevelEndInfo win;
+		win.team_a_area = 1.0f;
+		for (const bool solo : { false, true })
+		{
+			Session single;
+			LevelEndInfo finish = win;
+			finish.team_b_played = !solo;
+			single.finish_round(finish);
+			require(single.complete() && single.continue_string() == L"Rematch",
+				"A finished single round or solo practice offers Rematch");
+		}
+		for (const int length : { 3, 5 })
+		{
+			Session series(length);
+			series.finish_round(LevelEndInfo{});
+			require(!series.complete() && series.continue_string() == L"Replay Draw",
+				"An unresolved series draw offers Replay Draw");
+			series.next_round();
+			for (int wins = 1; wins <= length / 2 + 1; ++wins)
+			{
+				series.finish_round(win);
+				if (series.complete())
+				{
+					require(series.continue_string() == L"Play Series Again",
+						"A completed best-of series offers Play Series Again");
+				}
+				else
+				{
+					require(series.continue_string() == L"Next Round",
+						"A decisive unfinished series offers Next Round");
+					series.next_round();
+				}
+			}
+		}
 		// The strip at 1280x720 with a KEYBOARD + MOUSE card at the bottom
 		// right and the paint panel bottom left: lifted clear of both.
 		const Vector2F screen(1280.0f, 720.0f);

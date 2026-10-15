@@ -733,6 +733,14 @@ Reduce effects; the final-ten clock keeps its existing brief ticks. Menus,
 cards, stage preview, pause and results remain open, with reference-arena
 production and human review retaining their existing gates.
 
+**End-menu artwork and primary continuation implemented (2026-10-15, part of
+`POL#16`/`POL#18`).** The [end-of-round page](#make-couch-play-comfortable-between-actions-and-rounds)
+uses stepped pale paper, dark ink, offset shade and a persistent continuation
+card. A detached ink arrow identifies the shared focus. Single matches offer
+Rematch first; series keep their round-specific continuation. Remaining menus,
+cards, stage preview, pause and results retain their existing owners, along
+with the arena and human-review gates.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.
@@ -1057,10 +1065,59 @@ visual run IDs are Debug `343c9b1190d24d15a0197e182d423756` and Release
 `scripts/check-painter.ps1 -Preset x64-debug -ResumeOnly` (or `x64-release`).
 These checks do not establish physical-pad, listening or human comfort acceptance.
 
-Compare a prominent **Rematch** action with the current single-match **Restart**
-wording and first focus on **Change Teams** in the
-[end menu](../game/states/end_menu.cpp). Keep the existing direct routes to change
-teams, tools and stage. A visible per-player ready check before the next round is
+**Primary Rematch and end-menu paper implemented (2026-10-15, part of
+`POL#18`/`POL#16`).** The [end menu](../game/states/end_menu.cpp) initially focuses
+its first, persistent paper card: **Rematch** for a single match, **Next Round**
+or **Replay Draw** for an unfinished series, and **Play Series Again** after a
+series completes. The existing restart result still rebuilds with the same
+settings and advances or resets the series through `GameLevel`; no extra ready
+step is introduced. Change Teams, Change Weapons, Change Level and Exit to Main
+Menu remain directly accessible below it. An unfinished series keeps only
+continuation and Exit, preserving its fixed roster and setup.
+
+The page carries the countdown/HUD drawing language into a static, pale stepped
+panel with dark text, a black keyline, offset shade and restrained lower/right
+edge shading. A detached ink arrow follows the engine focus group; the primary
+card remains visible while another row is focused. Reduce effects retains all
+information. The shared footer and Select prompt keep their existing keyboard
+and pad labels. Other menu pages retain their artwork.
+
+`presentation.json.end_menu` owns this page's panel size, heading position,
+first-action layout and `art` colours, keyline, shadow and focus padding.
+The row spacing leaves a gap between complete cards using the actual font
+metrics, including when a secondary action is focused beside the persistent
+primary card. Startup rejects malformed colours, invisible or identical
+text/fill choices, out-of-range dimensions and invalid paper/padding geometry.
+The drawing uses the existing solid texel and fonts; there is no new
+atlas, animation timer or random state.
+
+Validation: Debug and Release build under `/W4 /WX` and pass all 22 consumer
+cases. Final focused `story_audio` reruns cover the added heading placement and
+paper/focus content checks. Both D3D11 hardware end-menu matrices pass on the
+NVIDIA GeForce RTX 5080: actual keyboard-driven pages return every continuation,
+setup and exit result across single matches and continuing, drawn and completed
+series. Ongoing-series setup labels are absent from both pixels and navigation.
+
+The four session states fit at 720p, 1080p, QHD, 4:3, 16:10 and ultrawide.
+Actual font metrics establish separated action cards, a clear heading and a
+contained last row. Repeated drawing preserves pixels and random state; neutral
+time and Reduce effects retain the same static page. The same live page and
+cursor survive an exact 720p/1080p resize round-trip. Native captures retain
+[initial Rematch focus](images/polish-end-menu/rematch-720p.png),
+[secondary focus beside Rematch](images/polish-end-menu/secondary-focus-720p.png)
+and [completed-series continuation](images/polish-end-menu/series-720p.png).
+
+Isolated Debug and extracted Release startup pass with the accepted bank, a
+system-only PATH and graceful shutdown. The 53-file Release ZIP byte-matches
+all 26 reviewed runtime assets and excludes authoring assets. Evidence is under
+`out/acceptance/` and `out/validation/end-menu*`; final renderer run IDs are
+Debug `64e06ffaae7c42e4bcca94a413d9c562` and Release
+`ed454a07b52d4fea9795c0148531f4ad`. Rerun with
+`scripts/check-painter.ps1 -Preset x64-debug -EndMenuOnly` (or `x64-release`).
+Physical-pad comfort, listening and human readability acceptance remain in
+their existing TODO rows; this increment does not close `POL#16` or `POL#18`.
+
+A visible per-player ready check before the next round is
 worth testing if one person's confirmation repeatedly starts play before the
 others are ready; it also adds friction, so it should not become mandatory by
 assumption. Give disconnected groups a clear way back to the menu.

@@ -232,9 +232,25 @@ struct PauseMenuPresentation
 	PresentationSound pad_back_sound;
 };
 
+// End-of-round paper and action cards, in menu design coordinates.
+struct EndMenuArtPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour paper;
+	labrador::Colour shade;
+	labrador::Colour focus_fill;
+	labrador::Colour focus_ink;
+	float keyline_width = 0.0f;
+	float shadow_offset = 0.0f;
+	mattmath::Vector2F focus_padding;
+};
+
 struct EndMenuPresentation
 {
-	labrador::Colour box_colour = labrador::Colour::black;
+	EndMenuArtPresentation art;
+	mattmath::Vector2F box_size;
+	float heading_y = 0.0f;
+	// The first action, independent of the centered heading above it.
 	WidgetLayout layout;
 	PresentationSound series_sound;
 };

@@ -63,7 +63,7 @@ std::wstring Session::result_string() const
 
 std::wstring Session::continue_string() const
 {
-	if (!this->is_series()) return L"Restart";
+	if (!this->is_series()) return L"Rematch";
 	if (this->complete()) return L"Play Series Again";
 	return this->round_winner_ == PlayerTeam::none ? L"Replay Draw" : L"Next Round";
 }
