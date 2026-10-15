@@ -26,7 +26,8 @@ repetition limit and rearms when fire is released. Cooldown alone does not show 
 for a complete shot replaces it with a team-coloured bead and two white rays.
 That acknowledgement occurs once after depletion. A forced refill, including
 infinite paint, stays silent and does not invent a recovery event. The cues are
-brief event responses; the persistent readiness/aim treatment remains `POL#14`.
+brief event responses; the later [aim/readiness cue](polish-aim-marker.md)
+provides persistent shot eligibility independently of these pulses.
 
 Positive finite simulation updates age the timers once before new events are
 emitted. Frozen or invalid cosmetic deltas leave them unchanged; repeated draws

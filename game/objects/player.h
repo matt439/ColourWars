@@ -151,6 +151,7 @@ public:
 
     // The equipped tool, including its current gameplay aim.
     const Weapon& primary_weapon() const;
+    bool aim_marker_allowed() const;
     // Movement facing, which mirrors the figure.
     bool facing_right() const;
     // The selected presentation clip and its deterministic, simulation-aged

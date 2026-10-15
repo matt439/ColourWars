@@ -367,7 +367,7 @@ struct CombatFeedbackPresentation
 	float keyline_width = 0.0f;
 };
 
-// Brief, cosmetic paid-shot and paint-supply responses at the held tool.
+// Cosmetic shot/supply responses and the optional local direction/readiness cue.
 // Every size is in world units; these never change the firing workflow.
 struct WeaponFeedbackPresentation
 {
@@ -382,6 +382,9 @@ struct WeaponFeedbackPresentation
 	float keyline_width = 0.0f;
 	float status_size = 0.0f;
 	float status_offset = 0.0f;
+	float aim_marker_distance = 0.0f;
+	float aim_marker_size = 0.0f;
+	float aim_marker_stroke = 0.0f;
 	std::array<mattmath::Vector2F, static_cast<size_t>(WeaponType::bucket) + 1> muzzle_sizes;
 };
 

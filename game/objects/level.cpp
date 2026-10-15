@@ -722,6 +722,11 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	const Player* player = this->players_[static_cast<size_t>(view_index)];
 
 	const Viewport& player_vp = this->scene_->view(view_index).viewport;
+	if (this->aim_marker_visible(view_index))
+	{
+		list.set_camera(this->scene_->view(view_index).camera);
+		player->primary_weapon().draw_aim_marker(list);
+	}
 
 	// Dividers use window coordinates; subtract the pane's screen origin
 	// to draw them into this viewport.
@@ -762,6 +767,15 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 		this->debug_text_->draw_debug_info(list, player,
 			this->projectile_count_, this->frame_dt_);
 	}
+}
+
+bool Level::aim_marker_visible(int view) const
+{
+	if (view < 0 || static_cast<size_t>(view) >= this->players_.size()) { return false; }
+	const Player& player = *this->players_.at(static_cast<size_t>(view));
+	return this->state_ == LevelState::active && this->preferences_->aim_marker &&
+		this->presentation_->weapon_feedback().enabled && player.aim_marker_allowed() &&
+		player.primary_weapon().type() != WeaponType::roller;
 }
 
 void Level::set_overlays(const LevelOverlays& overlays)

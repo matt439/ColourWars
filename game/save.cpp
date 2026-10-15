@@ -87,6 +87,14 @@ SaveData Save::load_from_json(const char* json_path) const
     {
     }
 
+    try
+    {
+        data.play.aim_marker = root.boolean("aim_marker");
+    }
+    catch (const std::runtime_error&)
+    {
+    }
+
     return data;
 }
 bool Save::file_exists(const std::string& path)
@@ -182,6 +190,7 @@ bool Save::write_save_file(const SaveData& data) const
     d.AddMember("music_volume", data.play.music_volume, d.GetAllocator());
     d.AddMember("sfx_volume", data.play.sfx_volume, d.GetAllocator());
     d.AddMember("view_shake", data.play.view_shake, d.GetAllocator());
+    d.AddMember("aim_marker", data.play.aim_marker, d.GetAllocator());
 
     // Writer flushes when the root object ends, before fclose below.
     Writer<FileWriteStream> writer(os);

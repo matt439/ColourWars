@@ -167,3 +167,56 @@ RectangleF WeaponFeedback::bounds(const Vector2F& nozzle, const Vector2F& pivot,
     }
     return result;
 }
+
+void WeaponFeedback::draw_aim_marker(DrawList& draw_list, const Vector2F& nozzle,
+    float angle, WeaponReadiness readiness, const Colour& team_colour) const
+{
+    if (!this->presentation_->enabled) { return; }
+    const auto& look = *this->presentation_;
+    const float size = look.aim_marker_size;
+    const float stroke = look.aim_marker_stroke;
+    const Vector2F center = nozzle + Vector2F::unit_vec_from_angle(angle) *
+        look.aim_marker_distance;
+    const auto mark = [&](const Vector2F& offset, const Vector2F& dimensions,
+        float turn, const Colour& colour)
+    {
+        this->draw_block(draw_list, center + Vector2F::rotate_vector(offset, angle),
+            dimensions, angle + turn, colour, 1.0f);
+    };
+    switch (readiness)
+    {
+    case WeaponReadiness::ready:
+        // A forward chevron with a small paint bead. Shape, rather than team
+        // hue alone, separates readiness from recovery and a dry tool.
+        mark(Vector2F(-size * 0.1f, -size * 0.22f),
+            Vector2F(size * 0.72f, stroke), PI / 4.0f, look.highlight);
+        mark(Vector2F(-size * 0.1f, size * 0.22f),
+            Vector2F(size * 0.72f, stroke), -PI / 4.0f, look.highlight);
+        mark(Vector2F(-size * 0.45f, 0.0f), Vector2F(stroke, stroke),
+            0.0f, team_colour);
+        break;
+    case WeaponReadiness::recovering:
+        for (const float side : { -1.0f, 1.0f })
+        {
+            mark(Vector2F(side * size * 0.22f, 0.0f),
+                Vector2F(stroke, size * 0.8f), 0.0f, look.highlight);
+        }
+        break;
+    case WeaponReadiness::empty:
+        for (const float turn : { -PI / 4.0f, PI / 4.0f })
+        {
+            mark(Vector2F::ZERO, Vector2F(size * 0.85f, stroke), turn, look.highlight);
+        }
+        break;
+    }
+}
+
+RectangleF WeaponFeedback::aim_marker_bounds(const Vector2F& nozzle, float angle) const
+{
+    if (!this->presentation_->enabled) { return RectangleF(nozzle, Vector2F::ZERO); }
+    const auto& look = *this->presentation_;
+    const Vector2F center = nozzle + Vector2F::unit_vec_from_angle(angle) *
+        look.aim_marker_distance;
+    const float reach = look.aim_marker_size + look.keyline_width * 2.0f;
+    return RectangleF(center - Vector2F(reach, reach), Vector2F(reach * 2.0f, reach * 2.0f));
+}

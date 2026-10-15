@@ -85,6 +85,10 @@ public:
 	// The same strict cooldown and full-shot paint gate used by firing.
 	// Player invokes it only while the player can act.
 	bool ready_to_shoot() const;
+	WeaponReadiness readiness() const;
+	// Direction only, never a predicted hit point. The roller has no marker.
+	void draw_aim_marker(labrador::DrawList& draw_list) const;
+	mattmath::RectangleF aim_marker_bounds() const;
 	// Infinite-ammo refills preserve the paid shot's cooldown notification.
 	// Respawn uses the default to clear all feedback silently.
 	void reset_ammo(bool reset_feedback = true);

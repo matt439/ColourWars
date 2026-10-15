@@ -87,27 +87,30 @@ namespace
 		require(actual.aim_sensitivity == wanted.aim_sensitivity &&
 			actual.music_volume == wanted.music_volume &&
 			actual.sfx_volume == wanted.sfx_volume &&
-			actual.view_shake == wanted.view_shake,
+			actual.view_shake == wanted.view_shake &&
+			actual.aim_marker == wanted.aim_marker,
 			"Shared play preferences did not survive reloading");
 	}
 
-	void check_view_shake_loading(const IsolatedSaveDirectory& directory)
+	void check_boolean_loading(const IsolatedSaveDirectory& directory,
+		const char* key, bool PlaySettings::* preference,
+		const char* other_key, bool PlaySettings::* other_preference)
 	{
 		struct Fixture
 		{
-			const char* member;
+			const char* value;
 			bool expected;
 		};
 		const Fixture fixtures[] = {
-			{ "", true },
-			{ ",\"view_shake\":true", true },
-			{ ",\"view_shake\":false", false },
-			{ ",\"view_shake\":null", true },
-			{ ",\"view_shake\":0", true },
-			{ ",\"view_shake\":1", true },
-			{ ",\"view_shake\":\"false\"", true },
-			{ ",\"view_shake\":[]", true },
-			{ ",\"view_shake\":{}", true }
+			{ nullptr, true },
+			{ "true", true },
+			{ "false", false },
+			{ "null", true },
+			{ "0", true },
+			{ "1", true },
+			{ "\"false\"", true },
+			{ "[]", true },
+			{ "{}", true }
 		};
 		for (const Fixture& fixture : fixtures)
 		{
@@ -115,22 +118,29 @@ namespace
 				std::ofstream output(directory.save_path(), std::ios::binary | std::ios::trunc);
 				output << "{\"resolution\":{\"x\":1280,\"y\":720},\"fullscreen\":true,"
 					"\"team_palette\":\"blue_yellow\",\"aim_sensitivity\":4,"
-					"\"music_volume\":20,\"sfx_volume\":80" << fixture.member << '}';
-				require(output.good(), "Could not write the view-shake save fixture");
+					"\"music_volume\":20,\"sfx_volume\":80,\"" << other_key << "\":false";
+				if (fixture.value != nullptr)
+				{
+					output << ",\"" << key << "\":" << fixture.value;
+				}
+				output << '}';
+				require(output.good(), "Could not write the boolean-preference save fixture");
 			}
 			Save restored;
 			restored.load_save_file();
 			const PlaySettings& play = restored.play_settings();
-			require(play.view_shake == fixture.expected,
-				"Absent or invalid view shake did not use its enabled default");
+			require(play.*preference == fixture.expected,
+				"Absent or invalid boolean preference did not use its enabled default");
 			require(restored.resolution() == labrador::ScreenResolution::s_1280_720 &&
 				restored.fullscreen() && restored.team_palette() == TeamColourPair::blue_yellow &&
-				play.aim_sensitivity == 4 && play.music_volume == 20 && play.sfx_volume == 80,
-				"View-shake recovery reset an unrelated saved preference");
-			require(restored.save_to_file(), "Could not canonicalize the view-shake save fixture");
-			const char* canonical = fixture.expected ? "\"view_shake\":true" : "\"view_shake\":false";
+				play.aim_sensitivity == 4 && play.music_volume == 20 && play.sfx_volume == 80 &&
+				!(play.*other_preference),
+				"Boolean-preference recovery reset an unrelated saved preference");
+			require(restored.save_to_file(), "Could not canonicalize the boolean-preference save fixture");
+			const std::string canonical = std::string("\"") + key + "\":" +
+				(fixture.expected ? "true" : "false");
 			require(contents(directory.save_path()).find(canonical) != std::string::npos,
-				"Saving did not write the view-shake preference as a boolean");
+				"Saving did not write the preference as a boolean");
 			check_round_trip(restored);
 		}
 	}
@@ -147,7 +157,9 @@ int main()
 		play.music_volume = 30;
 		play.sfx_volume = 70;
 		require(play.view_shake, "View shake is not enabled by default");
+		require(play.aim_marker, "Aim marker is not enabled by default");
 		play.view_shake = false;
+		play.aim_marker = false;
 		require(save.set_play_settings_and_save(play), "Initial play save failed");
 		require(save.set_display_settings_and_save(
 			labrador::ScreenResolution::s_2560_1440, true, TeamColourPair::blue_yellow),
@@ -179,13 +191,15 @@ int main()
 			labrador::ScreenResolution::s_1280_720, false, TeamColourPair::pink_green);
 		play.music_volume = 0;
 		play.view_shake = true;
+		play.aim_marker = true;
 		const bool play_saved = save.set_play_settings_and_save(play);
 		CloseHandle(locked);
 		require(!display_saved && !play_saved,
 			"Persistence failure was reported as success");
 		require(save.resolution() == labrador::ScreenResolution::s_1280_720 &&
 			!save.fullscreen() && save.team_palette() == TeamColourPair::pink_green &&
-			save.play_settings().music_volume == 0 && save.play_settings().view_shake,
+			save.play_settings().music_volume == 0 && save.play_settings().view_shake &&
+			save.play_settings().aim_marker,
 			"Failed saves lost the active settings");
 		require(contents(directory.save_path()) == original,
 			"Failed replacement damaged the previous save");
@@ -193,9 +207,12 @@ int main()
 			"Failed replacement left a temporary save");
 		require(save.save_to_file(), "Save did not recover after the lock was released");
 		check_round_trip(save);
-		check_view_shake_loading(directory);
+		check_boolean_loading(directory, "view_shake", &PlaySettings::view_shake,
+			"aim_marker", &PlaySettings::aim_marker);
+		check_boolean_loading(directory, "aim_marker", &PlaySettings::aim_marker,
+			"view_shake", &PlaySettings::view_shake);
 		std::cout << "PASS settings: bulk apply, validation, persistence failure, recovery, "
-			"view-shake default/type recovery and boolean persistence\n";
+			"view-shake/aim-marker default/type recovery and boolean persistence\n";
 		return 0;
 	}
 	catch (const std::exception& error)

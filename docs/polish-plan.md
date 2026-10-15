@@ -779,6 +779,15 @@ should depend on colour alone.
 the reference match. Ask players to explain a failed shot and find their character
 after a crowded encounter, with sound muted and at actual four-player size.
 
+**Aim and readiness prototype implemented (2026-10-15, part of `POL#14`).** The
+[implementation and evidence](polish-aim-marker.md) add an optional local marker
+to the four aimed tools. A chevron, recovery bars and a dry cross distinguish
+ready, cooldown and insufficient paint using the same gates as firing, even
+when fire is released. The marker follows nozzle direction; it predicts no hit
+point and the fixed-aim roller has none. Controls / audio saves its On/Off
+preference. Blocked-shot contact, the shared player-identity system and human
+review in the reference composition remain open.
+
 ### Give the arena decisions that use the existing rules
 
 Make the reference blockout test three specific situations:

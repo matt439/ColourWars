@@ -74,7 +74,7 @@ shown).
 
 Options and Pause both offer **Controls / audio**, with a controls reference,
 five levels of controller stick sensitivity, separate music and SFX volume,
-and an On/Off **View shake** setting (On by default).
+and On/Off **View shake** and **Aim marker** settings (both On by default).
 Higher sensitivity needs less aim-stick travel; level 3 preserves the original
 deadzone. Mouse aim follows the cursor and the roller keeps its fixed aim.
 Use Left/Right to adjust, then Apply to save for all players and future launches.
@@ -83,6 +83,10 @@ Resume uses the new settings in the current match. Volume is 0-100% of the
 authored mix, including menu sounds, and zero mutes that category.
 View shake adds a small local world-camera accent on hurt, elimination and heavy
 landings. The HUD and aim stay steady; Off applies to every player.
+The aim marker shows a ready chevron, cooldown bars or a no-paint cross just
+beyond the nozzle in your own pane. It shows direction, including the bucket's
+initial throw direction; it does not predict where paint will hit. The fixed-aim
+roller has no marker. Shapes remain distinct with sound muted or without colour.
 
 **Credits** on the home menu acknowledges the engine, third-party code, content
 tools, fonts, artwork and accepted replacement audio sources. Full notices and

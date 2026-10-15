@@ -144,6 +144,9 @@ function Write-ContactSheet {
         })
         Write-ContactSheetPages -Images $quiet -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-quiet-contact'
+        $markers = @($images | Where-Object { $_.name -match '^4p-aim-marker-.*-player[1-4]$' })
+        Write-ContactSheetPages -Images $markers -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-aim-markers-contact'
     }
     finally {
         foreach ($item in $images) { $item.bitmap.Dispose() }
@@ -158,6 +161,11 @@ $captures = Join-Path $run 'captures'
 $working = Join-Path $run 'working-directory'
 $profile = Join-Path $run 'profile'
 $null = New-Item -ItemType Directory -Path $run, $captures, $working, $profile -Force
+$saveDirectory = Join-Path $profile 'ColourWars'
+$null = New-Item -ItemType Directory -Path $saveDirectory -Force
+$saveFixture = Join-Path $saveDirectory 'save_data.json'
+[IO.File]::WriteAllText($saveFixture, '{"aim_marker":false}', [Text.UTF8Encoding]::new($false))
+$saveFixtureHash = (Get-FileHash -LiteralPath $saveFixture).Hash
 
 foreach ($command in 'cmake', 'cl', 'git') {
     if (-not (Get-Command $command -ErrorAction SilentlyContinue)) {
@@ -191,6 +199,7 @@ $result = [ordered]@{
     contact_checks = 'Real resolved 4P dry steps/reversals; controlled step/skid initial/middle/expired rasters in all palettes at 720p/1080p/QHD. Dry/painted and left/right raster differences, enabled/disabled comparisons, frozen direction/tint/timers and culling bounds.'
     weapon_checks = 'Actual Weapon firing workflow with locally retained projectiles: 1P all five tools and 4P mixed tools in all three palettes, four aim quadrants, then live aim/flip changes while each paid-shot pulse remains active. Roller has no muzzle pulse. Controlled 4P muzzle/empty/recovered event triggers at initial/middle/expiry, enabled/disabled at the same simulation state, at 720p/1080p/QHD. Frozen redraw and observed feedback timers, current-nozzle attachment and raster culling bounds. Empty/recovery gameplay producers are covered by separate CPU acceptance checks. Mechanism raster comparisons suppress the new pulses.'
     quiet_checks = 'Actual builder/Scene 1P and 4P sprayers in all three palettes at 720p: settled breath crest, bead growth/stretch/release/fall, blink, movement interruption and left lean; representative attached-bead extents at 1080p/QHD. Mature bead raster touches the actual rendered tool silhouette within one pixel. Same-state enabled/disabled breathing/shift rasters and controlled blink-only comparison at playing size, distinct roster phases, frozen cosmetic timers/drops, separate Scene drip raster bounds and combined nozzle-context crops. All runs use muted play settings; no listening acceptance.'
+    aim_marker_checks = 'Isolated save loads aim_marker=false and remains byte-identical. Existing matrices disable markers. Actual four aimed weapons enter ready/recovering/empty through paid shots and strict cooldown, in all three palettes and four aim quadrants at 4P720; representative 4P1080/QHD. Marker fixture uses a silent bank while paying many shots without wall-clock audio updates. Same-state Level on/off raster changes lie only inside each owning pane marker bounds; all three shapes have distinct isolated native rasters. A mixed-angle/readiness roster checks independent owner panes. Repeated frozen draws, suspension, simulation state and replay fingerprint are checked. CPU acceptance separately verifies affordability boundaries, all lifecycle gates and gameplay equivalence.'
     checks = 'Real builder/Scene rosters, both movement facings and four aim quadrants at 720p; representative facings also at 1080p/QHD; three 4P palettes; all four same-team accents in both facings. Five body action clips on actual events, both frames and distinct pinned body rasters. All five tools at 1P720 in both facings: paid fire/hold/release/recovery, hose/bucket travel and roller travel/lift. Three 4P palettes: right-facing mixed aimed tools and left-facing roller, plus 1080p/QHD extent captures. Sampled non-idle pinned tools differ from idle at gameplay zoom, including released roller travel/lift. Frozen draws byte-equal, public simulation/action/tool motion state and Debug replay fingerprint unchanged. Isolated player/tool raster output stays inside projected cull bounds. Death, outline, fill, respawn, tool-free squash and whole-dead story poses; early elimination whole-dead raster equals later idle whole-dead raster. Combat on/off comparisons at identical simulation state: hurt and elimination across all three 4P palettes at 720p; controlled 4P hurt initial/recovery/expiry and elimination initial/middle/late/expiry at 720p/1080p/QHD. Combat timers/death snapshot stay unchanged during drawing; whole-dead story figures suppress the burst.'
     profile = $profile
     diagnostic = ''
@@ -309,12 +318,13 @@ try {
             throw "Unexpected probe diagnostic: $line"
         }
     }
-    if (Test-Path -LiteralPath (Join-Path $profile 'ColourWars/save_data.json')) {
-        throw 'The visual probe unexpectedly created a save.'
+    if (-not (Test-Path -LiteralPath $saveFixture -PathType Leaf) -or
+        (Get-FileHash -LiteralPath $saveFixture).Hash -ne $saveFixtureHash) {
+        throw 'The visual probe changed its isolated aim_marker=false save fixture.'
     }
     Write-ContactSheet -CaptureDirectory $captures
     $result.outcome = 'passed'
-    $result.diagnostic = 'Painter base/action, five-tool mechanism, weapon paid-shot/aim-follow and controlled muzzle/empty/recovered on/off, step/skid contact, and actual idle drip/quiet character matrices passed. Local view shake preserved other panes, opaque HUD ink, base camera/aim, frozen redraw and simulation fingerprint, including suspension and resume. Distinct pinned body/tool and quiet on/off/blink rasters, frozen motion/feedback/quiet timers/redraw, separate player/drip raster culling bounds, elimination/redraw/respawn and idle whole-story poses passed. Human playing-size review remains separate.'
+    $result.diagnostic = 'Painter base/action, five-tool mechanism, weapon paid-shot/aim-follow and controlled muzzle/empty/recovered on/off, step/skid contact, and actual idle drip/quiet character matrices passed. Aim readiness markers passed actual ready/recovering/empty, all palette/quadrant own-pane on/off bounds, isolated marker raster, frozen redraw and pause checks; the disabled isolated-save fixture remained unchanged. Local view shake preserved other panes, opaque HUD ink, base camera/aim, frozen redraw and simulation fingerprint, including suspension and resume. Distinct pinned body/tool and quiet on/off/blink rasters, frozen motion/feedback/quiet timers/redraw, separate player/drip raster culling bounds, elimination/redraw/respawn and idle whole-story poses passed. Human playing-size review remains separate.'
 }
 catch {
     $failure = $_

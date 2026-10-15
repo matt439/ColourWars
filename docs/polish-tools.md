@@ -95,6 +95,8 @@ Retained captures show [native 720p tool crops](images/polish-tools/tools-720p.p
 The [quiet-detail increment](polish-plan.md#tool-personality-and-quiet-detail)
 adds the sprayer's residual bead and falling drip, plus quiet character motion; the
 [projectile and paint pass](polish-paint-effects.md) supplies liquid shot shapes,
-matching impacts and roller contact flecks. Readiness cues
-remain `POL#14`. These automated checks and image inspection do not establish
+matching impacts and roller contact flecks. The later
+[aim/readiness cue](polish-aim-marker.md) displays actual shot eligibility;
+blocked-shot feedback, identity and human review remain `POL#14`.
+These automated checks and image inspection do not establish
 human movement-feel, controller, listening or final composition acceptance.

@@ -116,6 +116,8 @@ public:
 	labrador::Camera view_camera(int view) const;
 	// Null for tools without an idle drip. Index follows player(view).
 	const IdleDrip* idle_drip(int view) const;
+	// A local cue only during live play; frozen pause draws preserve its state.
+	bool aim_marker_visible(int view) const;
 
 	LevelEndInfo level_end_info() const;
 

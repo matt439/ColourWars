@@ -274,6 +274,12 @@ bool Player::drawn_whole() const
     return this->state_ == PlayerState::dead && this->pose_.whole;
 }
 
+bool Player::aim_marker_allowed() const
+{
+    return this->state_ == PlayerState::alive && this->health_ > 0.0f &&
+        this->pose_.tool && !this->pose_.whole && !this->grey_.has_value();
+}
+
 void Player::set_pose(const FigurePose& pose)
 {
     this->pose_ = pose;

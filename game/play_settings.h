@@ -8,6 +8,7 @@ struct PlaySettings
 	int music_volume = 100;
 	int sfx_volume = 100;
 	bool view_shake = true;
+	bool aim_marker = true;
 
 	float music_gain() const { return static_cast<float>(music_volume) / 100.0f; }
 	float sfx_gain() const { return static_cast<float>(sfx_volume) / 100.0f; }

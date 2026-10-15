@@ -535,7 +535,32 @@ bool Weapon::check_if_shooting_and_ammo_update(
 }
 bool Weapon::ready_to_shoot() const
 {
-    return this->shoot_timer() > this->shoot_interval() && this->can_afford_shot();
+    return this->readiness() == WeaponReadiness::ready;
+}
+
+WeaponReadiness Weapon::readiness() const
+{
+    // An empty tool cannot fire even after its cooldown. Reuse the full-shot
+    // rounding allowance rather than approximating eligibility from the meter.
+    if (!this->can_afford_shot()) { return WeaponReadiness::empty; }
+    return this->shoot_timer() > this->shoot_interval()
+        ? WeaponReadiness::ready : WeaponReadiness::recovering;
+}
+
+void Weapon::draw_aim_marker(DrawList& draw_list) const
+{
+    if (this->type() == WeaponType::roller || this->feedback_ == nullptr) { return; }
+    this->feedback_->draw_aim_marker(draw_list, this->nozzle_pos(), this->rotation(),
+        this->readiness(), this->team_colour());
+}
+
+RectangleF Weapon::aim_marker_bounds() const
+{
+    if (this->type() == WeaponType::roller || this->feedback_ == nullptr)
+    {
+        return RectangleF(this->nozzle_pos(), Vector2F::ZERO);
+    }
+    return this->feedback_->aim_marker_bounds(this->nozzle_pos(), this->rotation());
 }
 void Weapon::update_feedback_sounds(bool holding_shoot, bool shot,
     bool affordable_before, float dt)

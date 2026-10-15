@@ -531,6 +531,18 @@ namespace
 		feedback.keyline_width = read_positive(json, "keyline_width");
 		feedback.status_size = read_positive(json, "status_size");
 		feedback.status_offset = read_positive(json, "status_offset");
+		feedback.aim_marker_distance = read_positive(json, "aim_marker_distance");
+		feedback.aim_marker_size = read_positive(json, "aim_marker_size");
+		feedback.aim_marker_stroke = read_positive(json, "aim_marker_stroke");
+		if (feedback.aim_marker_distance > 128.0f || feedback.aim_marker_size > 32.0f ||
+			feedback.aim_marker_distance <= feedback.aim_marker_size ||
+			feedback.aim_marker_stroke > feedback.aim_marker_size / 4.0f ||
+			feedback.keyline_width >= feedback.aim_marker_stroke)
+		{
+			throw std::runtime_error(json.where() +
+				": aim marker must stay near the nozzle with distinct, visible strokes "
+				"(distance <= 128, size <= 32, distance > size, keyline < stroke <= size / 4).");
+		}
 		if (feedback.keyline_width * 2.0f >= feedback.status_size)
 		{
 			throw std::runtime_error(json.where() +

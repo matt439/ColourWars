@@ -329,7 +329,7 @@
     "keyline_width": 1
   },
   "weapon_feedback": {
-    "_comment": "Cosmetic paid-shot muzzle accents and brief empty/recovered paint responses. The roller keeps its contact effect instead of emitting a muzzle accent.",
+    "_comment": "Cosmetic shot/supply pulses and optional local aim/readiness marker. The marker shows direction, not a predicted hit; the roller keeps its contact effect and has no marker.",
     "enabled": true,
     "sprite_sheet": "sprite_sheet_1",
     "fill_frame": "square_white_4",
@@ -341,6 +341,9 @@
     "keyline_width": 1,
     "status_size": 12,
     "status_offset": 84,
+    "aim_marker_distance": 42,
+    "aim_marker_size": 16,
+    "aim_marker_stroke": 3,
     "muzzle_sizes": {
       "sprayer": { "x": 18, "y": 8 },
       "sniper": { "x": 26, "y": 10 },
