@@ -263,6 +263,9 @@ struct WeaponTuning
 {
 	WeaponDetails details;
 
+	// Roller's downward tilt from horizontal, in radians. Facing left mirrors it.
+	float aim_tilt = 0.0f;
+
 	// Defaults apply when a weapon does not inherit the player's velocity.
 	RelativeWeaponDetails relative;
 
@@ -280,6 +283,11 @@ struct ProjectileTuning
 
 	// Common integrator velocity cap, copied into each projectile record.
 	mattmath::Vector2F max_velocity = { 0.0f, 0.0f };
+
+	// Horizontal snap-to-zero speed is wind_resistance times this shared factor.
+	float wind_stop_factor = 0.0f;
+	// Mist's angular step in radians; its five-pellet pattern remains a mechanic.
+	float spread_step = 0.0f;
 };
 
 // Parsed once at startup and borrowed by gameplay objects, including during

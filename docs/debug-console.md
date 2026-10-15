@@ -362,10 +362,17 @@ their addresses, and only the edited number changes.
 
 | Scope | Paths | Applies |
 |---|---|---|
-| live | `tuning.input.*`, `tuning.player.*` (not `size`), `tuning.match.sounds.*.volume`, `tuning.weapons.*`, `tuning.projectiles.*` (not sizes), `tuning.match.opening.*`, `tuning.match.reveal.*`, `presentation.movement_feedback/respawn_redraw/opening/debug_overlay/hud/camera.*` | at once |
-| new shots | `tuning.projectiles.*.size`, `*.collision_size` | the next projectile |
+| live | `tuning.input.*`, `tuning.player.*` (not `size`), `tuning.match.sounds.*.volume`, `tuning.weapons.*`, `tuning.projectiles.*` (except sizes and mist `spread_step`), `tuning.match.opening.*`, `tuning.match.reveal.*`, `presentation.movement_feedback/respawn_redraw/opening/debug_overlay/hud/camera.*` | at once |
+| new shots | `tuning.projectiles.*.size`, `*.collision_size`, `tuning.projectiles.mist.spread_step` | the next projectile |
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
+
+Mist `spread_step` constructs the velocity fan when a shot is created. Roller
+`aim_tilt` and the shared projectile `wind_stop_factor` are read during updates,
+so tuning them affects existing objects. Angles are radians: mist spread accepts
+`0..PI/4`; roller tilt accepts `0..PI/2` with the upper endpoint excluded. The wind
+factor and each projectile's resistance must be nonnegative and finite, and
+their product must stay finite.
 
 The `tuning.input` block controls the jump/shoot trigger thresholds, movement
 stick deadzone and menu stick engagement/release thresholds. The shipped values

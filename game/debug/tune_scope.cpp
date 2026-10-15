@@ -39,6 +39,8 @@ namespace
 		// ProjectileBuilder sizes the rectangle when a shot is made.
 		{ "tuning.projectiles.*.size.*", TuneScope::new_objects },
 		{ "tuning.projectiles.*.collision_size.*", TuneScope::new_objects },
+		// ProjectileMist constructs its velocity fan once, when the shot is made.
+		{ "tuning.projectiles.mist.spread_step", TuneScope::new_objects },
 		// A projectile keeps a pointer to its ProjectileTuning record.
 		{ "tuning.projectiles.**", TuneScope::live },
 		// MovementFeedback, RespawnRedraw, DebugText and InterfaceGameplay keep pointers;

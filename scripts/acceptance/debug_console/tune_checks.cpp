@@ -6,6 +6,7 @@
 #include "game/debug/json_spans.h"
 #include "game/debug/tune_document.h"
 #include "game/debug/tune_scope.h"
+#include "engine/math/scalar.h"
 #include <algorithm>
 #include <cmath>
 #include <process.h>
@@ -41,6 +42,110 @@ namespace debug_console_acceptance
 			model.confirm(static_cast<std::size_t>(more - rows.begin()));
 		} while (labels(model.rows()) != first_page);
 		throw std::runtime_error("The debug menu has no row '" + label + "' on any page");
+	}
+
+	void check_motion_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const ScratchContent& scratch)
+	{
+		const std::string spread_path = "tuning.projectiles.mist.spread_step";
+		const std::string tilt_path = "tuning.weapons.roller.aim_tilt";
+		const std::string wind_path = "tuning.projectiles.wind_stop_factor";
+		const std::string spread_base = impl.tune_token(spread_path);
+		const std::string tilt_base = impl.tune_token(tilt_path);
+		const std::string wind_base = impl.tune_token(wind_path);
+		require(!spread_base.empty() && !tilt_base.empty() && !wind_base.empty(),
+			"Motion tuning paths are present in the actual scratch content");
+		const ProjectileTuning* const mist = &tuning.projectile(ProjectileType::mist);
+		const WeaponTuning* const roller = &tuning.weapon(WeaponType::roller);
+		const ProjectileType kinds[] = { ProjectileType::spray, ProjectileType::jet,
+			ProjectileType::rolling, ProjectileType::mist, ProjectileType::ball };
+		const auto state = [&]
+		{
+			std::vector<float> values{ mist->spread_step, roller->aim_tilt };
+			for (const ProjectileType kind : kinds)
+			{
+				const auto& projectile = tuning.projectile(kind);
+				values.push_back(projectile.wind_stop_factor);
+				values.push_back(projectile.details.wind_resistance);
+			}
+			return values;
+		};
+		const auto edits = [&]
+		{
+			std::vector<std::string> values;
+			for (const auto& [path, edit] : impl.tune_document("tuning")->edits())
+				{ values.push_back(path + "=" + edit.baseline_token + "->" + edit.current_token); }
+			return values;
+		};
+		const auto reject = [&](const std::string& path, const std::string& value)
+		{
+			const auto before = state();
+			const auto before_edits = edits();
+			const std::string before_text = impl.tune_document("tuning")->current().text();
+			require(!impl.execute("tune " + path + " " + value).ok && state() == before &&
+				edits() == before_edits && impl.tune_document("tuning")->current().text() == before_text,
+				"Rejected " + path + "=" + value + " preserves every motion record, token and pending edit");
+		};
+		const auto set = [&](const std::string& path, const std::string& value)
+			{ require(impl.execute("tune " + path + " " + value).ok, "Valid motion tune " + path + "=" + value); };
+		const std::string source_before = read_text(scratch.source / L"tuning.json");
+		const std::string staged_before = read_text(scratch.staged / L"tuning.json");
+		const auto initial = state();
+		const std::string spread_limit = tune_format(mattmath::PI / 4.0f, spread_base);
+		const std::string tilt_limit = tune_format(mattmath::PI / 2.0f, tilt_base);
+		set(spread_path, "0");
+		require(mist->spread_step == 0.0f, "Mist spread accepts its inclusive zero boundary");
+		set(spread_path, spread_limit);
+		require(mist->spread_step == mattmath::PI / 4.0f, "Mist spread accepts its inclusive PI/4 boundary");
+		set(tilt_path, "0");
+		require(roller->aim_tilt == 0.0f, "Roller tilt accepts its inclusive zero boundary");
+		const float below_vertical = std::nextafter(mattmath::PI / 2.0f, 0.0f);
+		set(tilt_path, tune_format(below_vertical, tilt_base));
+		require(roller->aim_tilt == below_vertical, "Roller tilt accepts the float immediately below PI/2");
+		reject(spread_path, tune_format(std::nextafter(mattmath::PI / 4.0f, mattmath::PI), spread_base));
+		reject(tilt_path, tilt_limit);
+		for (const std::string& path : { spread_path, tilt_path, wind_path })
+		{
+			for (const char* invalid : { "-0.01", "1e100", "nan", "inf" }) { reject(path, invalid); }
+		}
+		const float spread_live = std::stof(spread_base) == 0.4f ? 0.3f : 0.4f;
+		const float tilt_live = std::stof(tilt_base) == 0.2f ? 0.3f : 0.2f;
+		set(spread_path, tune_format(spread_live, spread_base));
+		set(tilt_path, tune_format(tilt_live, tilt_base));
+		set(wind_path, "2");
+		require(mist->spread_step == spread_live && roller->aim_tilt == tilt_live &&
+			&tuning.projectile(ProjectileType::mist) == mist && &tuning.weapon(WeaponType::roller) == roller,
+			"Accepted motion tunes update the borrowed records without moving them");
+		for (const ProjectileType kind : kinds)
+			{ require(tuning.projectile(kind).wind_stop_factor == 2.0f, "Shared wind factor reaches every projectile record"); }
+		require(impl.execute("tune " + spread_path).ok && impl.execute("tune " + tilt_path).ok &&
+			impl.execute("tune " + wind_path).ok &&
+			log_contains(impl.log(), "tune: " + spread_path + " ", DebugSeverity::info) &&
+			log_contains(impl.log(), "(applies to new shots)", DebugSeverity::info) &&
+			log_contains(impl.log(), spread_path + " = " + impl.tune_token(spread_path) +
+				"  (file: " + spread_base + ")  [new shots]", DebugSeverity::info) &&
+			log_contains(impl.log(), tilt_path + " = " + impl.tune_token(tilt_path) +
+				"  (file: " + tilt_base + ")  [live]", DebugSeverity::info) &&
+			log_contains(impl.log(), wind_path + " = " + impl.tune_token(wind_path) +
+				"  (file: " + wind_base + ")  [live]", DebugSeverity::info),
+			"Motion tune getters report new-shot spread and live tilt/wind scopes");
+		reject("tuning.projectiles.spray.wind_resistance", "-0.01");
+		reject("tuning.projectiles.spray.wind_resistance", "3e38");
+		set(wind_path, "0");
+		set("tuning.projectiles.spray.wind_resistance", "3e38");
+		reject(wind_path, "2");
+		require(impl.execute("tune.reset tuning.projectiles.spray.wind_resistance").ok,
+			"A path reset restores resistance after a rejected wind product");
+		require(impl.execute("tune.reset " + spread_path).ok &&
+			mist->spread_step == std::stof(spread_base) && roller->aim_tilt == tilt_live &&
+			mist->wind_stop_factor == 0.0f && impl.tune_token(spread_path) == spread_base,
+			"Resetting spread restores its file token without undoing live tilt/wind edits");
+		require(impl.execute("tune.reset tuning").ok && state() == initial &&
+			impl.tune_document("tuning")->edits().empty() &&
+			impl.tune_token(spread_path) == spread_base && impl.tune_token(tilt_path) == tilt_base &&
+			impl.tune_token(wind_path) == wind_base &&
+			read_text(scratch.source / L"tuning.json") == source_before &&
+			read_text(scratch.staged / L"tuning.json") == staged_before,
+			"File reset restores all motion values and leaves source/staged JSON untouched");
 	}
 	}
 
@@ -122,7 +227,10 @@ namespace debug_console_acceptance
 			{ "tuning.paint.thickness", TuneScope::rebuild },
 			{ "tuning.weapons.sprayer.offset.x", TuneScope::live },
 			{ "tuning.weapons.ammo_regen_rate", TuneScope::live },
+			{ "tuning.weapons.roller.aim_tilt", TuneScope::live },
 			{ "tuning.projectiles.spray.size.x", TuneScope::new_objects },
+			{ "tuning.projectiles.mist.spread_step", TuneScope::new_objects },
+			{ "tuning.projectiles.wind_stop_factor", TuneScope::live },
 			{ "tuning.projectiles.spray.gravity", TuneScope::live },
 			{ "presentation.movement_feedback.minimum_strength", TuneScope::live },
 			{ "presentation.weapon_feedback.muzzle_duration", TuneScope::live },
@@ -307,6 +415,10 @@ namespace debug_console_acceptance
 			"and the match rebuilds");
 		test.director.detach_match(match);
 		require(impl.execute("tune.reset").ok && tuning.paint().thickness == thickness, "tune.reset all");
+
+		// Keep these edits after the existing exact tune.diff count and restore
+		// them before the save/conflict fixtures below.
+		check_motion_tunes(impl, tuning, scratch);
 
 		// tune.save, CRLF tuning: exactly that token changes.
 		const std::string tuning_before = read_text(scratch.source / L"tuning.json");

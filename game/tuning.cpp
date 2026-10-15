@@ -514,7 +514,7 @@ namespace
 		return sounds;
 	}
 
-	WeaponTuning read_weapon(const JsonValue& weapons, const char* key)
+	WeaponTuning read_weapon(const JsonValue& weapons, const char* key, WeaponType type)
 	{
 		const JsonValue json = weapons.object(key);
 
@@ -530,6 +530,15 @@ namespace
 		details.frame_name = json.string("frame");
 		details.proj_type = read_projectile_type(json, "projectile");
 		details.sound_bank_name = json.string("sound_bank");
+		if (type == WeaponType::roller)
+		{
+			weapon.aim_tilt = read_number_in(json, "aim_tilt", 0.0f, PI_OVER_2);
+			if (!(weapon.aim_tilt < PI_OVER_2))
+			{
+				throw std::runtime_error(json.where() +
+					": 'aim_tilt' must be less than pi/2 radians to keep left and right facing distinct.");
+			}
+		}
 
 		// Use the shared volume validation even though WeaponDetails stores separate fields.
 		const SoundTuning shoot_sound = read_sound(json, "shoot_sound");
@@ -561,14 +570,25 @@ namespace
 	}
 
 	ProjectileTuning read_projectile(const JsonValue& projectiles,
-		const char* key)
+		const char* key, ProjectileType type, float wind_stop_factor)
 	{
 		const JsonValue json = projectiles.object(key);
 
 		ProjectileTuning projectile;
 		ProjectileDetails& details = projectile.details;
 		details.gravity = json.number("gravity");
-		details.wind_resistance = json.number("wind_resistance");
+		details.wind_resistance = json_non_negative(json, "wind_resistance");
+		projectile.wind_stop_factor = wind_stop_factor;
+		if (!std::isfinite(details.wind_resistance * wind_stop_factor))
+		{
+			throw std::runtime_error(json.where() +
+				": 'wind_resistance' times 'projectiles.wind_stop_factor' must produce a finite horizontal stop speed.");
+		}
+		if (type == ProjectileType::mist)
+		{
+			// The two outer pellets stay within a half-turn forward fan.
+			projectile.spread_step = read_number_in(json, "spread_step", 0.0f, PI / 4.0f);
+		}
 		details.rotat_origin = read_rotation_origin(json, "rotation_origin");
 		details.delete_timer = json.number("delete_timer");
 		details.player_damage = json.number("player_damage");
@@ -610,7 +630,7 @@ GameTuning::GameTuning(const char* path)
 	const auto add_weapon = [this, &weapons](WeaponType type, const char* key)
 	{
 		const size_t index = static_cast<size_t>(type);
-		this->weapons_[index] = read_weapon(weapons, key);
+		this->weapons_[index] = read_weapon(weapons, key, type);
 		this->weapon_tuned_[index] = true;
 	};
 
@@ -622,12 +642,13 @@ GameTuning::GameTuning(const char* path)
 
 	const JsonValue projectiles = root.object("projectiles");
 	const Vector2F max_velocity = read_vector(projectiles, "max_velocity");
+	const float wind_stop_factor = json_non_negative(projectiles, "wind_stop_factor");
 
-	const auto add_projectile = [this, &projectiles, &max_velocity](
+	const auto add_projectile = [this, &projectiles, &max_velocity, wind_stop_factor](
 		ProjectileType type, const char* key)
 	{
 		const size_t index = static_cast<size_t>(type);
-		this->projectiles_[index] = read_projectile(projectiles, key);
+		this->projectiles_[index] = read_projectile(projectiles, key, type, wind_stop_factor);
 		this->projectiles_[index].max_velocity = max_velocity;
 		this->projectile_tuned_[index] = true;
 	};

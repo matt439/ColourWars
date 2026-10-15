@@ -428,7 +428,7 @@ Vector2F Projectile::update_movement(float gravity, float wind_resistance, float
         MovingObject::set_velocity_y(-max_velocity.y);
 	}
 
-    if (std::fabs(MovingObject::velocity_x()) > wind_resistance * 4.0f)
+    if (std::fabs(MovingObject::velocity_x()) > wind_resistance * this->tuning().wind_stop_factor)
     {
         if (MovingObject::velocity_x() > 0.0f)
         {

@@ -84,7 +84,7 @@ std::vector<std::unique_ptr<Projectile>>
 	SpriteFlip flip,
 	float layer_depth)
 {
-	// Fan five mist projectiles at multiples of pi/12 around the firing direction.
+	// Five pellets and their centre-out order are mechanics; their angle is tuning.
 	constexpr float SPREAD[] = { 0.0f, 1.0f, -1.0f, 2.0f, -2.0f };
 
 	const RectangleF rectangle(position, mist->details.col_rect_size);
@@ -97,7 +97,7 @@ std::vector<std::unique_ptr<Projectile>>
 		projectiles.push_back(
 			std::make_unique<ProjectileMist>(
 				rectangle,
-				Vector2F::rotate_vector(velocity, step * mattmath::PI / 12.0f),
+				Vector2F::rotate_vector(velocity, step * mist->spread_step),
 				team,
 				player_num,
 				team_colour,

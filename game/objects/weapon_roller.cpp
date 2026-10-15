@@ -64,11 +64,11 @@ void WeaponRoller::update_movement_and_rotation(PlayerInputData /*input*/,
 {
     if (player_facing_right)  
     {
-        this->set_rotation(PI / 4.0f);
+        this->set_rotation(this->weapon_tuning_->aim_tilt);
     }
     else
     {
-        this->set_rotation(3.0f * PI / 4.0f);
+        this->set_rotation(PI - this->weapon_tuning_->aim_tilt);
     }
     this->set_player_center(player_center);
 
