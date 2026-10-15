@@ -423,7 +423,7 @@ struct BlockedShotPresentation
 	float keyline_width = 0.0f;
 };
 
-// Residual sprayer paint, entirely separate from projectiles and scoring.
+// Residual tool paint, entirely separate from projectiles and scoring.
 struct IdleDripPresentation
 {
 	bool enabled = true;
@@ -652,7 +652,7 @@ public:
 	const CombatFeedbackPresentation& combat_feedback() const;
 	const WeaponFeedbackPresentation& weapon_feedback() const;
 	const BlockedShotPresentation& blocked_shot() const;
-	const IdleDripPresentation& idle_drip() const;
+	const IdleDripPresentation& idle_drip(WeaponType type = WeaponType::sprayer) const;
 	const FigurePresentation& figure() const;
 	const ToolMotionPresentation& tool_motion() const;
 	const RespawnRedrawPresentation& respawn_redraw() const;
@@ -682,7 +682,7 @@ private:
 	CombatFeedbackPresentation combat_feedback_;
 	WeaponFeedbackPresentation weapon_feedback_;
 	BlockedShotPresentation blocked_shot_;
-	IdleDripPresentation idle_drip_;
+	std::array<IdleDripPresentation, 5> idle_drips_;
 	FigurePresentation figure_;
 	ToolMotionPresentation tool_motion_;
 	RespawnRedrawPresentation respawn_redraw_;

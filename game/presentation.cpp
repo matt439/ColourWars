@@ -514,7 +514,7 @@ namespace
 		return identity;
 	}
 
-	IdleDripPresentation read_idle_drip(const JsonValue& root)
+	std::array<IdleDripPresentation, 5> read_idle_drips(const JsonValue& root)
 	{
 		const JsonValue json = root.object("idle_drip");
 		IdleDripPresentation drip;
@@ -522,24 +522,40 @@ namespace
 		drip.sprite_sheet = json.identifier("sprite_sheet");
 		drip.fill_frame = json.identifier("fill_frame");
 		drip.keyline = read_colour(json, "keyline");
-		drip.interval_min = read_positive(json, "interval_min");
-		drip.interval_max = read_positive(json, "interval_max");
 		drip.grow_time = read_positive(json, "grow_time");
 		drip.stretch_time = read_positive(json, "stretch_time");
 		drip.lifetime = read_positive(json, "lifetime");
 		drip.gravity = read_positive(json, "gravity");
-		drip.size = read_positive(json, "size");
-		drip.stretch = read_positive(json, "stretch");
-		drip.nozzle_inset = read_positive(json, "nozzle_inset");
-		drip.nozzle_underside = read_positive(json, "nozzle_underside");
 		drip.keyline_width = read_positive(json, "keyline_width");
-		if (drip.interval_max < drip.interval_min ||
-			drip.keyline_width * 2.0f >= drip.size)
+		std::array<IdleDripPresentation, 5> tools;
+		for (IdleDripPresentation& tool : tools)
 		{
-			throw std::runtime_error(json.where() +
-				": intervals must be ordered and keylines must leave visible paint.");
+			tool = drip;
+			tool.enabled = false;
 		}
-		return drip;
+		const JsonValue profiles = json.object("tools");
+		const auto read_tool = [&](WeaponType type, const char* name)
+		{
+			const JsonValue profile = profiles.object(name);
+			IdleDripPresentation& tool = tools.at(static_cast<size_t>(type));
+			tool.enabled = drip.enabled;
+			tool.interval_min = read_positive(profile, "interval_min");
+			tool.interval_max = read_positive(profile, "interval_max");
+			tool.size = read_positive(profile, "size");
+			tool.stretch = read_positive(profile, "stretch");
+			tool.nozzle_inset = read_positive(profile, "nozzle_inset");
+			tool.nozzle_underside = read_positive(profile, "nozzle_underside");
+			if (tool.interval_max < tool.interval_min ||
+				tool.keyline_width * 2.0f >= tool.size)
+			{
+				throw std::runtime_error(profile.where() +
+					": intervals must be ordered and keylines must leave visible paint.");
+			}
+		};
+		read_tool(WeaponType::sprayer, "sprayer");
+		read_tool(WeaponType::sniper, "sniper");
+		read_tool(WeaponType::bucket, "bucket");
+		return tools;
 	}
 
 	WeaponFeedbackPresentation read_weapon_feedback(const JsonValue& root)
@@ -1019,7 +1035,7 @@ Presentation::Presentation(const char* path)
 	}
 	this->weapon_feedback_ = read_weapon_feedback(root);
 	this->blocked_shot_ = read_blocked_shot(root);
-	this->idle_drip_ = read_idle_drip(root);
+	this->idle_drips_ = read_idle_drips(root);
 	this->figure_ = read_figure(root);
 	this->tool_motion_ = read_tool_motion(root);
 	this->respawn_redraw_ = read_respawn_redraw(root);
@@ -1082,9 +1098,9 @@ const BlockedShotPresentation& Presentation::blocked_shot() const
 	return this->blocked_shot_;
 }
 
-const IdleDripPresentation& Presentation::idle_drip() const
+const IdleDripPresentation& Presentation::idle_drip(WeaponType type) const
 {
-	return this->idle_drip_;
+	return this->idle_drips_.at(static_cast<size_t>(type));
 }
 
 const RespawnRedrawPresentation& Presentation::respawn_redraw() const
@@ -1137,8 +1153,8 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->weapon_feedback_.fill_frame);
 	check.frame("blocked_shot.fill_frame", this->blocked_shot_.sprite_sheet,
 		this->blocked_shot_.fill_frame);
-	check.frame("idle_drip.fill_frame", this->idle_drip_.sprite_sheet,
-		this->idle_drip_.fill_frame);
+	check.frame("idle_drip.fill_frame", this->idle_drip().sprite_sheet,
+		this->idle_drip().fill_frame);
 	for (size_t index = 0; index < this->figure_.accent_frames.size(); ++index)
 	{
 		check.frame("figure.accent_frames[" + std::to_string(index) + "]", this->figure_.sprite_sheet,

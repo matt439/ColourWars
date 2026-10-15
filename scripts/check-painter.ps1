@@ -4,11 +4,13 @@ param(
     [string] $Preset = 'x64-debug',
     [switch] $SkipBuild,
     [switch] $IdentityOnly,
+    [switch] $QuietOnly,
     [string] $OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+if ($IdentityOnly -and $QuietOnly) { throw 'Choose only one focused painter matrix.' }
 
 # Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
 if (-not $OutputDirectory) {
@@ -194,7 +196,7 @@ $process = $null
 $failure = $null
 $result = [ordered]@{
     outcome = 'failed'
-    scope = if ($IdentityOnly) { 'player-identity-only' } else { 'full-painter-matrix' }
+    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } else { 'full-painter-matrix' }
     preset = $Preset
     game_revision = (& git rev-parse HEAD)
     engine_revision = (& git -C external/labrador rev-parse HEAD)
@@ -209,7 +211,7 @@ $result = [ordered]@{
     audio = 'Muted; this check establishes no listening acceptance.'
     contact_checks = 'Real resolved 4P dry steps/reversals; controlled step/skid initial/middle/expired rasters in all palettes at 720p/1080p/QHD. Dry/painted and left/right raster differences, enabled/disabled comparisons, frozen direction/tint/timers and culling bounds.'
     weapon_checks = 'Actual Weapon firing workflow with locally retained projectiles: 1P all five tools and 4P mixed tools in all three palettes, four aim quadrants, then live aim/flip changes while each paid-shot pulse remains active. Roller has no muzzle pulse. Controlled 4P muzzle/empty/recovered event triggers at initial/middle/expiry, enabled/disabled at the same simulation state, at 720p/1080p/QHD. Frozen redraw and observed feedback timers, current-nozzle attachment and raster culling bounds. Empty/recovery gameplay producers are covered by separate CPU acceptance checks. Mechanism raster comparisons suppress the new pulses.'
-    quiet_checks = 'Actual builder/Scene 1P and 4P sprayers in all three palettes at 720p: settled breath crest, bead growth/stretch/release/fall, blink, movement interruption and left lean; representative attached-bead extents at 1080p/QHD. Mature bead raster touches the actual rendered tool silhouette within one pixel. Same-state enabled/disabled breathing/shift rasters and controlled blink-only comparison at playing size, distinct roster phases, frozen cosmetic timers/drops, separate Scene drip raster bounds and combined nozzle-context crops. All runs use muted play settings; no listening acceptance.'
+    quiet_checks = 'Actual builder/Scene 1P and 4P sprayers in all three palettes at 720p: settled breath crest, bead growth/stretch/release/fall, blink, movement interruption and left lean. Sniper residual beads and bucket rim runoff add growth/stretch/fall, same-bead continuous four-quadrant aim with authored lip/stripe anchors, both body facings, per-tool enabled suppression, and same-state reduced-effects hiding/restoration for attached and falling liquid in every 1P/4P720 palette. Representative attached-bead extents at 1080p/QHD. Mature bead raster touches the actual rendered tool silhouette within one pixel. Same-state enabled/disabled breathing/shift rasters and controlled blink-only comparison at playing size, distinct roster phases, frozen cosmetic timers/drops, separate Scene drip raster bounds and combined nozzle/rim-context crops. All runs use muted play settings; no listening acceptance.'
     aim_marker_checks = 'Isolated save loads aim_marker=false and remains byte-identical. Existing matrices disable markers. Actual four aimed weapons enter ready/recovering/empty through paid shots and strict cooldown, in all three palettes and four aim quadrants at 4P720; representative 4P1080/QHD. Marker fixture uses a silent bank while paying many shots without wall-clock audio updates. Same-state Level on/off raster changes lie only inside each owning pane marker bounds; all three shapes have distinct isolated native rasters. A mixed-angle/readiness roster checks independent owner panes. Repeated frozen draws, suspension, simulation state and replay fingerprint are checked. CPU acceptance separately verifies affordability boundaries, all lifecycle gates and gameplay equivalence.'
     blocked_shot_checks = 'Detached contacts in actual four-pane Level drawing; controlled opaque-cover/nozzle overlap and four outward normals at native 4P720 in every palette, plus representative 1080p/QHD. Initial/middle/expired, enabled/disabled pixels, projected cue and aggregate bounds, rebound/fade raster changes, repeated frozen redraws, cosmetic timers, simulation state and Debug replay fingerprint. CPU acceptance separately checks actual launch/flight contact classification and lifecycle.'
     player_identity_checks = 'Real same-team builder rosters with identical tools in all three 4P720 palettes; overlapping figures, actual scripted teammate crossing and sparse/reordered input slots. Quiet, requested emphasis and reduce-effects captures, representative 1080p/QHD extents, pause, dead/respawn and story suppression. Same-state zero-world-size comparison preserves pane HUD badges and constrains every changed pixel to the owning world badge bounds. Distinct shared P1-P4 native glyph rasters, native context and badge crops, frozen cosmetic state, repeated redraw and Debug replay fingerprint. CPU acceptance separately verifies lifecycle and gameplay equivalence; human reading acceptance remains separate.'
@@ -225,6 +227,14 @@ if ($IdentityOnly) {
         $result.Remove($key)
     }
     $result.checks = $result.player_identity_checks
+}
+elseif ($QuietOnly) {
+    $result.weapons = @('sprayer', 'sniper', 'bucket')
+    $result.actions = @()
+    foreach ($key in 'contact_checks', 'weapon_checks', 'aim_marker_checks', 'blocked_shot_checks', 'player_identity_checks') {
+        $result.Remove($key)
+    }
+    $result.checks = $result.quiet_checks
 }
 try {
     if (-not $SkipBuild) {
@@ -318,6 +328,7 @@ try {
     $env:LOCALAPPDATA = $profile
     $probeArguments = @((Quote-Path $gameDirectory), (Quote-Path $captures))
     if ($IdentityOnly) { $probeArguments += 'identity' }
+    elseif ($QuietOnly) { $probeArguments += 'quiet' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -350,6 +361,9 @@ try {
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     if ($IdentityOnly) {
         $result.diagnostic = "Identity-only visual check passed. $identityDiagnostic Other painter matrices were not run."
+    }
+    elseif ($QuietOnly) {
+        $result.diagnostic = 'Quiet-only visual check passed: sprayer quiet character matrix, sniper residual bead and bucket rim runoff; all 1P/4P720 palettes, continuous aim/flip attachment, representative 1080p/QHD, frozen redraw/state, raster bounds, per-tool enabled and reduced-effects suppression/restoration. Other painter matrices were not run.'
     }
     else {
         $result.diagnostic = "Painter base/action, five-tool mechanism, weapon paid-shot/aim-follow and controlled muzzle/empty/recovered on/off, step/skid contact, and actual idle drip/quiet character matrices passed. Aim readiness markers passed actual ready/recovering/empty, all palette/quadrant own-pane on/off bounds, isolated marker raster, frozen redraw and pause checks; the disabled isolated-save fixture remained unchanged. Local view shake preserved other panes, opaque HUD ink, base camera/aim, frozen redraw and simulation fingerprint, including suspension and resume. Distinct pinned body/tool and quiet on/off/blink rasters, frozen motion/feedback/quiet timers/redraw, separate player/drip raster culling bounds, elimination/redraw/respawn and idle whole-story poses passed. $identityDiagnostic"

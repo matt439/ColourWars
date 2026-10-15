@@ -1283,13 +1283,13 @@ namespace
     {
         capture(app, level, canvas, output, stem, records);
         const auto before = observation(level);
-        auto& look = const_cast<IdleDripPresentation&>(presentation.idle_drip());
-        const RestoreFlag restore{ look.enabled, look.enabled };
         for (int view = 0; view < level.player_count(); ++view)
         {
             const Player& player = level.player(view);
+            auto& look = const_cast<IdleDripPresentation&>(presentation.idle_drip(player.primary_weapon().type()));
+            const RestoreFlag restore{ look.enabled, look.enabled };
             const IdleDrip* drip = level.idle_drip(view);
-            require(drip != nullptr, "sprayer builder omitted its Scene-owned idle drip");
+            require(drip != nullptr, "wet tool builder omitted its Scene-owned idle drip");
             const Viewport& viewport = app.viewport_manager()->player_viewport(view);
             const Frame blank = isolated(nullptr, player, viewport, *app.renderer(), canvas);
             look.enabled = true;
@@ -1306,7 +1306,7 @@ namespace
             {
                 const Frame painter = isolated(&player, player, viewport, *app.renderer(), canvas);
                 require(raster_adjacent(image, painter, blank, viewport),
-                    "mature attached idle bead did not meet the rendered sprayer lip within one pixel");
+                    "mature attached idle bead did not meet the rendered wet lip within one pixel");
             }
             look.enabled = false;
             require(blank.pixels == isolated(nullptr, player, viewport, *app.renderer(), canvas, drip).pixels,
@@ -1447,6 +1447,156 @@ namespace
         require(quiet_records.good(), "quiet detail capture record write failed");
         std::cout << "PASS actual settled 1P/4P sprayer grow/stretch/fall/interruption and quiet breath/blink/lean; "
             "three 720p palettes, representative 1080p/QHD; frozen redraw, on/off rasters and Scene culling bounds\n";
+    }
+
+    void wet_tool_matrix(Application& app, LevelBuilder& builder, const Canvas& canvas,
+        Presentation& presentation, PlaySettings& preferences,
+        const std::filesystem::path& output, std::ofstream& records)
+    {
+        const RestoreFlag restore_reduced{ preferences.reduce_effects, preferences.reduce_effects };
+        preferences.reduce_effects = false;
+        std::ofstream details(output / "quiet-tools-detail.csv");
+        details << "capture,view,attached,bead_age,interval_remaining,drops,drip_pixels,breath,lean,blinking\n";
+        for (const auto& tool : std::array<std::pair<WeaponType, const char*>, 2>{{
+            { WeaponType::sniper, "sniper" }, { WeaponType::bucket, "bucket" } }})
+        {
+            const auto& look = presentation.idle_drip(tool.first);
+            for (const int count : { 1, 4 })
+            {
+                for (const TeamColourPair palette : { TeamColourPair::blue_orange,
+                    TeamColourPair::pink_green, TeamColourPair::blue_yellow })
+                {
+                    auto level = build(app, builder, count, palette, false, false, tool.first);
+                    auto inputs = neutral_inputs();
+                    settle(*level, inputs);
+                    resize(app, *level, { 1280, 720 });
+                    for (int view = 0; view < count; ++view)
+                    {
+                        require(level->place_player(view,
+                            Vector2F(1200.0f + 200.0f * static_cast<float>(view), 1275)),
+                            "could not place the wet-tool fixture on the recovery floor");
+                    }
+                    for (int tick = 0; tick < 60; ++tick) { level->update(inputs, dt); }
+                    const IdleDrip* drip = level->idle_drip(0);
+                    require(drip != nullptr, "wet-tool fixture omitted its Scene-owned drip");
+                    const std::string prefix = std::to_string(count) + "p-quiet-" + tool.second + '-' +
+                        TeamColourTools::palette_key(palette);
+                    const auto advance_until = [&](const auto& condition, const char* message)
+                    {
+                        for (int tick = 0; tick < 900 && !condition(); ++tick) { level->update(inputs, dt); }
+                        require(condition(), message);
+                        require(level->state() == LevelState::active, "wet-tool fixture exhausted its real match clock");
+                    };
+                    const auto phase = [&](const std::string& name, bool extents = false)
+                    {
+                        for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440) })
+                        {
+                            if (size.x != 1280 && (!extents || palette != TeamColourPair::blue_orange)) { continue; }
+                            resize(app, *level, size);
+                            quiet_capture(app, *level, canvas, presentation, output,
+                                prefix + '-' + name + '-' + std::to_string(size.x), records, details);
+                        }
+                        resize(app, *level, { 1280, 720 });
+                    };
+                    const auto reduced = [&](const char* name)
+                    {
+                        const auto before = observation(*level);
+#if COLOURWARS_DEV_TOOLS
+                        const MatchFingerprint fingerprint = MatchFingerprint::of(*level, 0);
+#endif
+                        for (int view = 0; view < count; ++view)
+                        {
+                            const Player& player = level->player(view);
+                            const Viewport& viewport = app.viewport_manager()->player_viewport(view);
+                            const IdleDrip* decoration = level->idle_drip(view);
+                            const Frame blank = isolated(nullptr, player, viewport, *app.renderer(), canvas);
+                            const Frame normal = isolated(nullptr, player, viewport, *app.renderer(), canvas, decoration);
+                            if (view == 0) { require(normal.pixels != blank.pixels, "wet-tool reduction fixture has no visible liquid"); }
+                            preferences.reduce_effects = true;
+                            const Frame hidden = isolated(nullptr, player, viewport, *app.renderer(), canvas, decoration);
+                            require(hidden.pixels == blank.pixels && hidden.pixels ==
+                                isolated(nullptr, player, viewport, *app.renderer(), canvas, decoration).pixels,
+                                "reduce effects did not hide the frozen wet-tool bead/drop");
+                            preferences.reduce_effects = false;
+                            require(normal.pixels == isolated(nullptr, player, viewport, *app.renderer(), canvas, decoration).pixels,
+                                "normal wet-tool liquid did not return after reducing effects");
+                        }
+                        preferences.reduce_effects = true;
+                        capture(app, *level, canvas, output, prefix + '-' + name + "-reduced-1280", records);
+                        preferences.reduce_effects = false;
+                        require(before == observation(*level), "wet-tool reduced draws changed simulation/cosmetic state");
+#if COLOURWARS_DEV_TOOLS
+                        require(MatchFingerprint::difference(fingerprint, MatchFingerprint::of(*level, 0)).empty(),
+                            "wet-tool reduced draws changed the replay fingerprint");
+#endif
+                    };
+                    advance_until([&] { return drip->attached() && drip->bead_age() >= look.grow_time * 0.5f &&
+                        drip->bead_age() < look.grow_time; }, "settled wet tool never grew a bead");
+                    phase("grow");
+                    advance_until([&] { return drip->attached() &&
+                        drip->bead_age() >= look.grow_time + look.stretch_time * 0.5f; },
+                        "settled wet tool never stretched its bead");
+                    phase("stretch", true);
+                    reduced("stretch");
+                    // Change the real stick aim while this same mature bead is
+                    // still attached. The art's local wet point is measured
+                    // from the left-centre draw pivot, independently of the
+                    // projectile launch point used by the runtime attachment.
+                    int quadrant = 0;
+                    for (const float angle : { PI / 4.0f, 3.0f * PI / 4.0f, -3.0f * PI / 4.0f, -PI / 4.0f })
+                    {
+                        const float age = drip->bead_age();
+                        for (auto& input : inputs)
+                        {
+                            input.shoot_angle = angle;
+                            input.shoot_direction = Vector2F::unit_vec_from_angle(angle);
+                        }
+                        level->update(inputs, dt);
+                        require(drip->attached() && drip->bead_age() > age,
+                            "continuous wet-tool aim replaced or released the attached bead");
+                        for (int view = 0; view < count; ++view)
+                        {
+                            const IdleDrip* attached = level->idle_drip(view);
+                            if (!attached->attached()) { continue; }
+                            const Weapon& weapon = level->player(view).primary_weapon();
+                            const float side = std::abs(angle) > PI / 2.0f ? -1.0f : 1.0f;
+                            const Vector2F local = tool.first == WeaponType::sniper ? Vector2F(99, 3) : Vector2F(46, 8);
+                            const Vector2F expected = weapon.draw_pos() + Vector2F::rotate_vector(
+                                Vector2F(local.x, side * local.y), weapon.rotation());
+                            const RectangleF bead = attached->bead_rectangle();
+                            require(std::abs(bead.center().x - expected.x) < 0.01f && std::abs(bead.y - expected.y) < 0.01f,
+                                "wet bead missed the authored muzzle lip/bucket runoff stripe after aiming/flipping");
+                        }
+                        phase("aim" + std::to_string(++quadrant));
+                    }
+                    advance_until([&] { return !drip->drops().empty() && drip->drops()[0].age >= dt * 2.0f; },
+                        "settled wet tool never released a falling cosmetic drop");
+                    phase("fall");
+                    reduced("fall");
+                    const float drop_y = drip->drops()[0].position.y;
+                    level->update(inputs, dt);
+                    require(drip->drops().empty() || drip->drops()[0].position.y > drop_y,
+                        "released wet-tool drop did not fall downwards");
+                    for (auto& input : inputs) { input.x_movement = -1.0f; }
+                    level->update(inputs, dt);
+                    require(!drip->attached(), "wet-tool movement did not interrupt its bead");
+                    for (auto& input : inputs)
+                    {
+                        input.x_movement = 0;
+                        input.shoot_angle = PI;
+                        input.shoot_direction = Vector2F(-1, 0);
+                    }
+                    advance_until([&] { return drip->attached() && drip->bead_age() >= look.grow_time; },
+                        "left-facing settled wet tool never regrew a mature bead");
+                    require(!level->player(0).facing_right(), "wet-tool left-facing fixture stayed right-facing");
+                    phase("left-attached", true);
+                }
+            }
+        }
+        require(details.good(), "wet-tool detail capture record write failed");
+        std::cout << "PASS actual 1P/4P sniper residual bead and bucket rim runoff: grow/stretch/fall, "
+            "four continuous aim quadrants, flipped lip/stripe attachment and both body facings; "
+            "all 720p palettes, representative 1080p/QHD; frozen redraw, bounds and reduced-effects suppression\n";
     }
 
     bool same_pixel(const Frame& first, const Frame& second, size_t offset)
@@ -2333,9 +2483,10 @@ int wmain(int argc, wchar_t** argv)
 {
     try
     {
-        require(argc == 3 || (argc == 4 && std::wstring(argv[3]) == L"identity"),
-            "usage: painter_visual <staged-content> <output> [identity]");
-        const bool identity_only = argc == 4;
+        require(argc == 3 || (argc == 4 && (std::wstring(argv[3]) == L"identity" || std::wstring(argv[3]) == L"quiet")),
+            "usage: painter_visual <staged-content> <output> [identity|quiet]");
+        const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
+        const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         std::cout << std::unitbuf;
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
@@ -2389,6 +2540,14 @@ int wmain(int argc, wchar_t** argv)
             std::cout << "PASS identity-only visual check; other painter matrices were not run\n";
             return 0;
         }
+        if (quiet_only)
+        {
+            quiet_matrix(app, builder, canvas, presentation, output, records);
+            wet_tool_matrix(app, builder, canvas, presentation, preferences, output, records);
+            require(records.good(), "Capture record write failed");
+            std::cout << "PASS quiet-only visual check; other painter matrices were not run\n";
+            return 0;
+        }
         // Base captures below keep their normal movement effects. Disable them
         // only while checking action-body frame differences in this matrix.
         presentation.set_movement_feedback_enabled(false);
@@ -2427,6 +2586,7 @@ int wmain(int argc, wchar_t** argv)
         blocked_matrix(app, builder, canvas, presentation, output);
         contact_matrix(app, builder, canvas, tuning, presentation, output, records);
         quiet_matrix(app, builder, canvas, presentation, output, records);
+        wet_tool_matrix(app, builder, canvas, presentation, preferences, output, records);
         reduced_effects_matrix(app, builder, canvas, presentation, preferences, output, records);
         shake_matrix(app, builder, tuning, presentation, preferences, output);
         identity_matrix(app, builder, presentation, preferences, output);

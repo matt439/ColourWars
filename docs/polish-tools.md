@@ -103,3 +103,65 @@ now carry roster identity across selection, figure, pane and results;
 human review remains `POL#14`.
 These automated checks and image inspection do not establish
 human movement-feel, controller, listening or final composition acceptance.
+
+## Sniper residue and bucket runoff
+
+Implemented on 2026-10-15 as a gameplay-style increment of `POL#16`. The quiet
+tool details in the polish plan now include a smaller, less frequent bead on
+the precision nozzle and occasional runoff from the bucket's existing wet rim
+stripe. Both reuse the sprayer's scene-owned cosmetic drip, its gravity and
+terrain sweep, and its black keyline. No new atlas or sound is needed.
+
+| Tool | Quiet interval | Bead width / stretch | Attachment from the tool's left-centre draw pivot |
+|---|---|---|---|
+| Sprayer | 2.8–6.2 s | 6 / 5 world units | `(69, 3)`, unchanged nozzle lip |
+| Sniper | 4.2–8.4 s | 4 / 3 world units | `(99, 3)`, precision nozzle lip |
+| Bucket | 4.8–9.6 s | 5 / 4 world units | `(46, 8)`, end of the rim's painted runoff stripe |
+
+The bucket bead runs down the outside of the tin before falling free; it does
+not appear at the bucket's distant projectile launch point. Attachments follow
+continuous aim and the actual facing mirror, then detached drops fall vertically
+without following later aim. The three tools share the 0.42 s growth, 0.18 s
+stretch and at most 0.75 s fall. Each roster member retains a private, varied
+cosmetic sequence. Sizes, offsets and intervals live in
+`presentation.json.idle_drip.tools`; startup validates each profile independently.
+
+Only a supported, alive, motionless painter in its idle pose can grow a bead.
+Movement, jumping, held fire (including an empty tool) and elimination cancel
+the attached bead. Falling drops finish independently, disappear at actual
+terrain contact and never change ammunition, projectiles, damage or scored
+paint. Pause freezes them; time-up clears them before the reveal. Reduce effects
+suppresses all three tools' residue and starts a fresh wait when restored.
+
+Validation on 2026-10-15:
+
+- Debug and Release build under `/W4 /WX` and pass all 21 consumer cases.
+  The extended `idle_drip` case checks the three tools' independent profiles,
+  contextual content errors, actual aimed/mirrored art attachments, held empty
+  fire, interruption, pause, death/respawn, live reduced effects and time-up.
+  Enabled/disabled real matches preserve movement, shots, ammunition, health,
+  projectile counts, paint ownership and scores.
+- Both D3D11 hardware quiet-detail probes pass on the NVIDIA GeForce RTX 5080,
+  with 182 world captures each. They retain the sprayer/quiet-character matrix
+  and add sniper/bucket growth, stretching, falling, continuous aim in four
+  quadrants and both facings. All three palettes run in one/four views at 720p,
+  with representative attached beads at 1080p and QHD. Per-tool on/off and
+  reduced-effects rasters, culling bounds, repeated frozen draws, observed state
+  and Debug replay fingerprints pass. Native-size image inspection confirms
+  contact with the lip or runoff stripe through aim and facing changes.
+- Isolated Debug and Release startup pass with the accepted sound bank, a
+  system-only PATH and graceful shutdown.
+
+The retained [four-player 720p contact sheet](images/polish-tool-residue/tool-residue-720p.png)
+contains native-size renderer crops. Local evidence is under `out/acceptance/`
+and `out/validation/tool-residue/`; visual run IDs are
+`x64-debug/373ef08549bf440d95e2a83f7fd4c6eb` and
+`x64-release/1040f9f3283e413b8ba3d72eb3c6ec1a`. The focused probe runs only the
+affected quiet-detail matrices; the full painter matrix remains its default:
+
+```powershell
+scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -QuietOnly
+```
+
+Reference-arena composition and human readability review remain in `POL#7`
+and `POL#24`; remaining match and UI work stays in `POL#16`.

@@ -656,6 +656,14 @@ impact strength, movement and paint ownership are unchanged. These shared cues
 apply to all five tools; the reference-arena composition and match/UI treatment
 remain open.
 
+**Sniper/bucket quiet paint implemented (2026-10-15, part of `POL#16`).** The
+[tool detail and evidence](polish-tools.md#sniper-residue-and-bucket-runoff)
+extend the sprayer's cosmetic residual paint to a restrained precision-nozzle
+bead and runoff from the bucket's wet rim stripe. Each has its own authored
+attachment, size and quiet interval. This completes those two quiet-tool
+details from §4; stage-entry, opening/closing accents and the remaining match/UI
+treatment still belong here.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

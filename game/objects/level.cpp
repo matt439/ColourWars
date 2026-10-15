@@ -55,10 +55,11 @@ Level::Level(std::unique_ptr<Scene> scene,
 		player->set_paint_audio(this->paint_audio_.get());
 		player->set_blocked_shot_feedback(this->blocked_shot_feedback_.get());
 		IdleDrip* drip = nullptr;
-		if (player->primary_weapon().type() == WeaponType::sprayer)
+		const WeaponType type = player->primary_weapon().type();
+		if (type == WeaponType::sprayer || type == WeaponType::sniper || type == WeaponType::bucket)
 		{
 			drip = this->scene_->add(std::make_unique<IdleDrip>(
-				&presentation->idle_drip(), render_resources, player->team_colour(),
+				&presentation->idle_drip(type), render_resources, player->team_colour(),
 				static_cast<uint32_t>(this->idle_drips_.size()), preferences));
 		}
 		this->idle_drips_.push_back(drip);
