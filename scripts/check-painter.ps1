@@ -13,12 +13,13 @@ param(
     [switch] $ResumeOnly,
     [switch] $EndMenuOnly,
     [switch] $PauseMenuOnly,
+    [switch] $ResultsMenuOnly,
     [string] $OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -106,7 +107,7 @@ function Write-ContactSheet {
                 $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or
                 $_.Name -like 'supply-*-detail.ppm' -or $_.Name -like 'hud-*-detail.ppm' -or
                 $_.Name -like 'resume-*-detail.ppm' -or $_.Name -like 'end-menu-*-detail.ppm' -or
-                $_.Name -like 'pause-menu-*-detail.ppm' } | Sort-Object Name) {
+                $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
             if ($header -notmatch '^P6\n(\d+) (\d+)\n255\n') { throw "Unsupported capture header: $($file.FullName)" }
@@ -235,7 +236,7 @@ $process = $null
 $failure = $null
 $result = [ordered]@{
     outcome = 'failed'
-    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } else { 'full-painter-matrix' }
+    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } elseif ($ResultsMenuOnly) { 'results-menu-only' } else { 'full-painter-matrix' }
     preset = $Preset
     game_revision = (& git rev-parse HEAD)
     engine_revision = (& git -C external/labrador rev-parse HEAD)
@@ -318,6 +319,17 @@ elseif ($SupplyOnly) {
         $result.Remove($key)
     }
     $result.checks = $result.supply_checks
+}
+elseif ($ResultsMenuOnly) {
+    $result.player_counts = @(1, 2, 4)
+    $result.palettes = @('blue_orange', 'pink_green', 'blue_yellow')
+    $result.weapons = @()
+    $result.actions = @('fill', 'revealed', 'solo', 'draw', 'series', 'contributions', 'continue')
+    $result.input_slots = @(4, 3, 0, 2)
+    $result.inputs = 'Public keyboard input through the actual ResultsMenuInitial and StateContext; sparse pad slots are roster fixtures.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.Remove('stage')
+    $result.checks = 'Results paper, centered lettering and score cards at native 720p/1080p/QHD and differing aspects; competitive/solo score bars and percentage rendering, absent teams, sparse-slot contributions, revealed and fill timing gates, draws and series. Frozen redraw, static Reduce effects, draw RNG, resize and deliberate continuation. No human readability or listening acceptance.'
 }
 elseif ($PauseMenuOnly) {
     $result.player_counts = @(1, 2, 4)
@@ -475,6 +487,7 @@ try {
     elseif ($ResumeOnly) { $probeArguments += 'resume' }
     elseif ($EndMenuOnly) { $probeArguments += 'end-menu' }
     elseif ($PauseMenuOnly) { $probeArguments += 'pause-menu' }
+    elseif ($ResultsMenuOnly) { $probeArguments += 'results-menu' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -523,6 +536,9 @@ try {
     }
     elseif ($SupplyOnly) {
         $result.diagnostic = 'Supply-only visual check passed: sprayer/mister full, half and empty native reservoirs; exact authored-layer registration, unchanged silhouette and permanent hardware, all 1P/4P720 palettes/aim quadrants/facing inputs/poses and representative 4P1080/QHD. Reduced effects, motion-disabled rendering, ammo clamps, paid depletion, natural regeneration/reset, menu previews and tool switching, frozen pixels/weapon state/draw RNG and unchanged match observation/Debug fingerprint passed. Other painter matrices were not run.'
+    }
+    elseif ($ResultsMenuOnly) {
+        $result.diagnostic = 'Results-menu-only hardware check passed: actual results page timing and keyboard continuation, paper and score rendering, solo/absent-team and revealed/draw/series states, sparse-slot contributions, native display/aspect matrix, frozen redraw, Reduce effects and resize. Other painter matrices, human readability and listening acceptance were not run.'
     }
     elseif ($PauseMenuOnly) {
         $result.diagnostic = 'Pause-menu-only hardware check passed: actual keyboard-driven Resume, safe confirmation defaults, Restart/Quit, Controls/audio return and missing-controller recovery routes. Native paper and enabled focus cards, static Reduce effects, repeated drawing and resize passed across six display sizes/aspects. Other painter matrices, physical controllers/reconnection, human readability and listening acceptance were not run.'

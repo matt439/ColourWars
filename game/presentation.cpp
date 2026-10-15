@@ -469,19 +469,59 @@ namespace
 		const JsonValue json = root.object("results_menu");
 
 		ResultsMenuPresentation menu;
-		menu.box_size = read_vector(json, "box_size");
-		menu.session_score_position = read_vector(json, "session_score_position");
-		menu.session_result_position = read_vector(json, "session_result_position");
+		menu.box_size = read_positive_vector(json, "box_size");
+		if (menu.box_size.x > 1600.0f || menu.box_size.y > 900.0f)
+		{
+			throw std::runtime_error(json.where() + ": box_size must be at most (1600,900).");
+		}
+		menu.art = read_menu_paper(json, menu.box_size);
+		const auto read_y = [&](const char* key)
+		{
+			const float value = read_positive(json, key);
+			if (value > 900.0f)
+			{
+				throw std::runtime_error(json.where() + ": " + key + " must be at most 900.");
+			}
+			return value;
+		};
+		menu.heading_y = read_y("heading_y");
+		menu.winner_y = read_y("winner_y");
+		menu.session_score_y = read_y("session_score_y");
+		menu.session_result_y = read_y("session_result_y");
+		menu.proceed_y = read_y("proceed_y");
+		if (menu.heading_y >= menu.winner_y || menu.winner_y >= menu.session_score_y ||
+			menu.session_score_y >= menu.session_result_y)
+		{
+			throw std::runtime_error(json.where() +
+				": heading_y < winner_y < session_score_y < session_result_y required.");
+		}
 		menu.contribution_position = read_vector(json, "contribution_position");
-		menu.contribution_spacing = json.number("contribution_spacing");
+		menu.contribution_spacing = read_positive(json, "contribution_spacing");
+		if (menu.contribution_spacing > 100.0f)
+		{
+			throw std::runtime_error(json.where() + ": contribution_spacing must be at most 100.");
+		}
 		menu.contribution_font = json.string("contribution_font");
-		menu.box_colour = read_colour(json, "box_colour");
-		menu.heading_colour = read_colour(json, "heading_colour");
 
 		const JsonValue fill = json.object("fill");
-		menu.fill_box_size = read_vector(fill, "box_size");
+		menu.fill_box_size = read_positive_vector(fill, "box_size");
 		menu.fill_box_y_offset = fill.number("box_y_offset");
-		menu.team_fill_border = read_vector(fill, "border");
+		menu.team_fill_border = read_positive_vector(fill, "border");
+		menu.track_colour = read_colour(fill, "track_colour");
+		if (menu.track_colour.a != 1.0f || menu.track_colour == menu.art.ink)
+		{
+			throw std::runtime_error(fill.where() + ": track_colour must be opaque and distinct from art.ink.");
+		}
+		if (!std::isfinite(menu.fill_box_y_offset) || menu.fill_box_y_offset < 0.0f ||
+			menu.fill_box_y_offset > 900.0f || menu.fill_box_size.x > menu.box_size.x ||
+			menu.fill_box_size.y > menu.box_size.y || menu.team_fill_border.x < menu.art.keyline_width ||
+			menu.team_fill_border.y < menu.art.keyline_width ||
+			menu.team_fill_border.x * 2.0f >= menu.fill_box_size.x ||
+			menu.team_fill_border.y * 2.0f >= menu.fill_box_size.y)
+		{
+			throw std::runtime_error(fill.where() +
+				": box_size must fit the panel, box_y_offset must be 0..900, and border must contain the keyline and leave positive fill space.");
+		}
 		menu.team_fill_delay = fill.number("delay");
 		// Zero has no defined fill ratio. Reject it here instead of sending a
 		// first-frame NaN to the renderer.
@@ -492,17 +532,22 @@ namespace
 			menu.fill_box_size - menu.team_fill_border * 2.0f;
 
 		menu.show_results_delay = json.number("show_results_delay");
-
-		menu.percentage_colour = read_colour(json, "percentage_colour");
+		if (!std::isfinite(menu.team_fill_delay) || menu.team_fill_delay < 0.0f ||
+			menu.team_fill_delay > 10.0f || menu.team_fill_time > 10.0f ||
+			!std::isfinite(menu.show_results_delay) || menu.show_results_delay < 0.0f ||
+			menu.show_results_delay > 10.0f)
+		{
+			throw std::runtime_error(json.where() +
+				": fill.delay and show_results_delay must be 0..10, and fill.time must be at most 10.");
+		}
 
 		const JsonValue team_mark = json.object("team_mark");
-		menu.team_mark_size = read_vector(team_mark, "size");
+		menu.team_mark_size = read_positive_vector(team_mark, "size");
 		menu.team_mark_gap = team_mark.number("gap");
-
-		const JsonValue positions = json.object("positions");
-		menu.proceed_position = read_vector(positions, "proceed");
-		menu.heading_position = read_vector(positions, "heading");
-		menu.winner_position = read_vector(positions, "winner");
+		if (!std::isfinite(menu.team_mark_gap) || menu.team_mark_gap < 0.0f || menu.team_mark_gap > 100.0f)
+		{
+			throw std::runtime_error(team_mark.where() + ": gap must be 0..100.");
+		}
 
 		const JsonValue sounds = json.object("sounds");
 		menu.winner_sound = read_sound(sounds, "winner");
@@ -1435,8 +1480,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	// field to walk. Check them too before the player can reach those pages.
 	for (const char* frame : { "pixel", "square_white_4", "team_select_a",
 		"team_select_center", "team_select_b", "team_select_a_selected",
-		"team_select_center_selected", "team_select_b_selected", "results_menu_fill_box",
-		"results_menu_team_a_fill", "results_menu_team_b_fill" })
+		"team_select_center_selected", "team_select_b_selected" })
 	{
 		check.frame(std::string("built-in menu frame '") + frame + "'",
 			"sprite_sheet_1", frame);

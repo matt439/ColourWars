@@ -12,6 +12,7 @@
 #include "game/states/game_states.h"
 #include "game/states/end_menu.h"
 #include "game/states/pause_menu.h"
+#include "game/states/results_menu.h"
 #include "game/save.h"
 #include "game/debug/dev_tools.h"
 #if COLOURWARS_DEV_TOOLS
@@ -2492,6 +2493,7 @@ namespace
 #include "scripts/acceptance/painter_visual/resume_checks.h"
 #include "scripts/acceptance/painter_visual/end_menu_checks.h"
 #include "scripts/acceptance/painter_visual/pause_menu_checks.h"
+#include "scripts/acceptance/painter_visual/results_menu_checks.h"
 }
 
 int wmain(int argc, wchar_t** argv)
@@ -2503,8 +2505,8 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"closing" ||
             std::wstring(argv[3]) == L"supply" || std::wstring(argv[3]) == L"hud" ||
             std::wstring(argv[3]) == L"resume" || std::wstring(argv[3]) == L"end-menu" ||
-            std::wstring(argv[3]) == L"pause-menu")),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu]");
+            std::wstring(argv[3]) == L"pause-menu" || std::wstring(argv[3]) == L"results-menu")),
+            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -2515,6 +2517,7 @@ int wmain(int argc, wchar_t** argv)
         const bool resume_only = argc == 4 && std::wstring(argv[3]) == L"resume";
         const bool end_menu_only = argc == 4 && std::wstring(argv[3]) == L"end-menu";
         const bool pause_menu_only = argc == 4 && std::wstring(argv[3]) == L"pause-menu";
+        const bool results_menu_only = argc == 4 && std::wstring(argv[3]) == L"results-menu";
         std::cout << std::unitbuf;
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
@@ -2561,6 +2564,12 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         const Canvas canvas(app.render_resources());
+        if (results_menu_only)
+        {
+            results_menu_matrix(app, canvas, tuning, presentation, output);
+            std::cout << "PASS results-menu-only hardware check; other painter matrices were not run\n";
+            return 0;
+        }
         if (pause_menu_only)
         {
             pause_menu_matrix(app, canvas, tuning, presentation, output);
@@ -2821,6 +2830,7 @@ int wmain(int argc, wchar_t** argv)
         resume_matrix(app, levels, tuning, presentation, content, output);
         end_menu_matrix(app, canvas, tuning, presentation, output);
         pause_menu_matrix(app, canvas, tuning, presentation, output);
+        results_menu_matrix(app, canvas, tuning, presentation, output);
         require(records.good(), "capture record write failed");
         std::cout << "PASS real builder roster; 1P/4P 720p/1080p/QHD; three palettes; "
             "five action clips and five tool mechanisms, distinct pinned body/tool rasters; "

@@ -135,11 +135,15 @@ existing fill texel and fonts, so normal builds reproduce them directly. The
 [match-accent record](../../docs/polish-match-accents.md) describes event gates,
 Reduce effects and native-size renderer evidence.
 
-The end menu and [pause/confirmation pages](../../docs/polish-pause-menu.md)
-share the code-drawn stepped paper and focus arrow in
+The end menu, [pause/confirmation pages](../../docs/polish-pause-menu.md) and
+[results panel and percentage cards](../../docs/polish-results-menu.md)
+share the code-drawn stepped paper in
 `game/states/menu_panel.cpp` (`MenuPaperArtwork`). Colours, pen width, padding
-and shade are authored separately in `presentation.json.end_menu.art` and
-`pause_menu.art`; normal builds reproduce them from the existing solid texel.
+and shade are authored separately in `presentation.json.end_menu.art`,
+`pause_menu.art` and `results_menu.art`; normal builds reproduce them from the
+existing solid texel. End and pause pages also use its detached focus arrow.
+The texture layer retains point sampling so the solid score bar cannot sample
+neighbouring atlas art; the separate text layer uses linear filtering.
 
 ## Runtime content separation (GAP#8.6)
 

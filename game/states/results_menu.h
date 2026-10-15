@@ -38,6 +38,8 @@ public:
 	void update_page(float dt) override;
 	// Proceeds as a confirm would; the match then opens the end menu.
 	bool debug_dismiss(bool leaving_match) override;
+protected:
+	bool shows_brand() const override { return false; }
 private:
 	Session session_;
 	bool revealed_ = false;
@@ -46,6 +48,7 @@ private:
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> fill_box_ = nullptr;
+	std::unique_ptr<labrador::UiTexture> fill_track_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> team_a_fill_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> team_b_fill_ = nullptr;
 

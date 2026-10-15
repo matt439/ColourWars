@@ -261,19 +261,16 @@ struct EndMenuPresentation
 
 struct ResultsMenuPresentation
 {
+	MenuPaperArtPresentation art;
 	mattmath::Vector2F box_size = { 0.0f, 0.0f };
-	mattmath::Vector2F session_score_position = { 0.0f, 0.0f };
-	mattmath::Vector2F session_result_position = { 0.0f, 0.0f };
+	float session_score_y = 0.0f;
+	float session_result_y = 0.0f;
 	mattmath::Vector2F contribution_position = { 0.0f, 0.0f };
 	float contribution_spacing = 0.0f;
 	std::string contribution_font;
-	labrador::Colour box_colour = labrador::Colour::black;
-
-	// Overrides the shared menu heading colour.
-	labrador::Colour heading_colour = labrador::Colour::white;
-
 	mattmath::Vector2F fill_box_size = { 0.0f, 0.0f };
 	float fill_box_y_offset = 0.0f;
+	labrador::Colour track_colour;
 
 	// Fill size is derived from the box size and border.
 	mattmath::Vector2F team_fill_border = { 0.0f, 0.0f };
@@ -283,15 +280,14 @@ struct ResultsMenuPresentation
 	float team_fill_time = 0.0f;
 	float show_results_delay = 0.0f;
 
-	labrador::Colour percentage_colour = labrador::Colour::white;
-
 	// Placement boxes for native team-letter labels beside the results bar.
 	mattmath::Vector2F team_mark_size = { 0.0f, 0.0f };
 	float team_mark_gap = 0.0f;
 
-	mattmath::Vector2F proceed_position = { 0.0f, 0.0f };
-	mattmath::Vector2F heading_position = { 0.0f, 0.0f };
-	mattmath::Vector2F winner_position = { 0.0f, 0.0f };
+	// Shared centered lettering, placed from actual font measurements.
+	float proceed_y = 0.0f;
+	float heading_y = 0.0f;
+	float winner_y = 0.0f;
 
 	PresentationSound winner_sound;
 	PresentationSound draw_sound;

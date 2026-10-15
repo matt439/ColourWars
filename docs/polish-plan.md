@@ -750,6 +750,17 @@ The opening device, fallback navigation, safe No default and shared resume
 count-in retain their existing rules. Remaining menus, selection cards, stage
 preview and results stay open, along with arena production and human review.
 
+**Results artwork implemented (2026-10-15, part of `POL#16`).** The
+[results-page drawing and evidence](polish-results-menu.md) carry the same
+stepped paper, dark ink and soft shade through the score panel and labelled
+percentage cards. Centered headings and series lines use actual font widths;
+the score bar has a neutral unpainted track and a dark keyline. Competitive
+shares, solo arena coverage, device-owner contributions, reveal/continue timing
+and series flow retain their existing rules. Point sampling keeps neighbouring
+atlas colours out of the solid score track. Remaining menus, selection cards
+and stage preview stay open, with arena production and human review retaining
+their existing gates.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

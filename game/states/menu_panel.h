@@ -4,19 +4,6 @@
 #include "engine/ui/focus.h"
 #include "game/presentation.h"
 
-// The results page's existing modal frame.
-// Geometry remains a normal UiTexture so pages can center and size it.
-class MenuPanel final : public labrador::UiTexture
-{
-public:
-	MenuPanel(const std::string& name, const mattmath::RectangleF& rectangle,
-		labrador::RenderResources* resources, const labrador::Colour& colour,
-		const MenuStyle* style);
-	void draw(labrador::DrawList& list) const override;
-private:
-	const MenuStyle* style_;
-};
-
 // Fit weapon artwork inside a light tile; readiness colours the border.
 class MenuIcon final : public labrador::UiTexture
 {

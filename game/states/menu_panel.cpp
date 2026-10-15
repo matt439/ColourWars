@@ -5,32 +5,6 @@
 using namespace labrador;
 using namespace mattmath;
 
-MenuPanel::MenuPanel(const std::string& name, const RectangleF& rectangle,
-	RenderResources* resources, const Colour& colour, const MenuStyle* style) :
-	UiTexture(name, "sprite_sheet_1", "pixel", rectangle, resources, colour),
-	style_(style)
-{
-}
-
-void MenuPanel::draw(DrawList& list) const
-{
-	if (this->hidden())
-	{
-		return;
-	}
-	const MenuStyle& style = *this->style_;
-	const SpriteSheet* sheet = this->sprite_sheet();
-	RectangleF shadow = this->rectangle();
-	shadow.offset(style.panel_shadow_offset);
-	sheet->draw(list, this->frame(), shadow, style.shadow_colour);
-	RectangleF edge = this->rectangle();
-	edge.inflate(style.rule_height);
-	sheet->draw(list, this->frame(), edge, style.panel_edge_colour);
-	UiTexture::draw(list);
-	sheet->draw(list, this->frame(), RectangleF(this->rectangle().position(),
-		Vector2F(this->rectangle().width, style.accent_width)), style.highlight);
-}
-
 MenuIcon::MenuIcon(const std::string& name, const std::string& frame,
 	const RectangleF& rectangle, RenderResources* resources,
 	const Colour& colour, const MenuStyle* style, const std::string& sheet_name) :
@@ -136,7 +110,8 @@ void MenuPaperArtwork::draw(DrawList& list) const
 				(reach + 1.0f) * pen * 2.0f), this->art_->ink);
 		}
 	}
-	list.set_filter(TextureFilter::linear);
+	// Other texture widgets in this layer also use the solid texel. Keep
+	// point sampling; MenuPage selects linear filtering for its text layer.
 }
 
 

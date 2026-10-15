@@ -114,41 +114,49 @@ void ResultsMenuInitial::init()
 
 	const LevelEndInfo end_info = this->level_end_info();
 
-	this->box_ = std::make_unique<MenuPanel>(
-		"box",
+	this->box_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF(Vector2F::ZERO, look.box_size),
-		this->render_resources(),
-		look.box_colour, &style);
+		this->render_resources(), &look.art, &this->focus_);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
+	const auto center_text = [](UiTextDropShadow& text, float y)
+	{
+		text.set_position(Vector2F((DESIGN_RESOLUTION.x - text.bounds().width) / 2.0f, y));
+	};
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"title",
 		this->session_.is_series() ? L"Round " +
 			std::to_wstring(this->session_.round()) : L"Results",
 		style.heading_font,
-		look.heading_position,
+		Vector2F::ZERO,
 		this->render_resources(),
-		look.heading_colour,
-		style.shadow_colour,
-		style.heading_shadow_offset);
+		look.art.ink,
+		Colour(),
+		Vector2F::ZERO);
+	center_text(*this->heading_, look.heading_y);
 
 	this->fill_box_ = std::make_unique<UiTexture>(
 		"fill_box",
 		"sprite_sheet_1",
-		"results_menu_fill_box",
+		"pixel",
 		RectangleF(Vector2F::ZERO, look.fill_box_size),
 		this->render_resources(),
-		style.panel_edge_colour);
+		look.art.ink);
 	auto fill_box_position = Vector2F(
 		this->calculate_center_position(
 		this->fill_box_->rectangle().width, DESIGN_RESOLUTION.x),
 		this->box_->rectangle().position().y + look.fill_box_y_offset);
 	this->fill_box_->set_position(fill_box_position);
+	this->fill_track_ = std::make_unique<UiTexture>(
+		"fill_track", "sprite_sheet_1", "pixel",
+		RectangleF(fill_box_position + Vector2F(look.art.keyline_width),
+			look.fill_box_size - Vector2F(look.art.keyline_width * 2.0f)),
+		this->render_resources(), look.track_colour);
 
 	this->team_a_fill_ = std::make_unique<UiTexture>(
 		"team_a_fill",
 		"sprite_sheet_1",
-		"results_menu_team_a_fill",
+		"pixel",
 		RectangleF(Vector2F::ZERO,
 			Vector2F(0.0f, look.team_fill_size.y)),
 		this->render_resources(),
@@ -159,7 +167,7 @@ void ResultsMenuInitial::init()
 	this->team_b_fill_ = std::make_unique<UiTexture>(
 		"team_b_fill",
 		"sprite_sheet_1",
-		"results_menu_team_b_fill",
+		"pixel",
 		RectangleF(Vector2F::ZERO,
 			Vector2F(0.0f, look.team_fill_size.y)),
 		this->render_resources(),
@@ -171,9 +179,9 @@ void ResultsMenuInitial::init()
 		style.detail_font,
 		this->team_a_fill_->rectangle().position(),
 		this->render_resources(),
-		look.percentage_colour,
-		style.shadow_colour,
-		style.detail_shadow_offset,
+		look.art.ink,
+		Colour(),
+		Vector2F::ZERO,
 		true);
 
 	this->team_b_percentage_ = std::make_unique<UiTextDropShadow>(
@@ -182,9 +190,9 @@ void ResultsMenuInitial::init()
 		style.detail_font,
 		Vector2F::ZERO,
 		this->render_resources(),
-		look.percentage_colour,
-		style.shadow_colour,
-		style.detail_shadow_offset,
+		look.art.ink,
+		Colour(),
+		Vector2F::ZERO,
 		true);
 	this->team_b_percentage_->set_position(Vector2F(
 		this->calculate_team_b_fill_top_right_position().x -
@@ -194,39 +202,39 @@ void ResultsMenuInitial::init()
 	// Keep the score readable over every team palette, including yellow.
 	// Reveal these plates with the numbers so the fill animation stays visible.
 	RectangleF team_a_percentage_panel = this->team_a_percentage_->bounds();
-	team_a_percentage_panel.inflate(look.team_fill_border);
-	this->team_a_percentage_panel_ = std::make_unique<UiTexture>(
-		"team_a_percentage_panel", "sprite_sheet_1", "pixel",
-		team_a_percentage_panel, this->render_resources(), look.box_colour);
+	team_a_percentage_panel.inflate(look.art.focus_padding);
+	this->team_a_percentage_panel_ = std::make_unique<MenuPaperArtwork>(
+		team_a_percentage_panel, this->render_resources(), &look.art, &this->focus_);
 	this->team_a_percentage_panel_->set_hidden(true);
 	RectangleF team_b_percentage_panel = this->team_b_percentage_->bounds();
-	team_b_percentage_panel.inflate(look.team_fill_border);
-	this->team_b_percentage_panel_ = std::make_unique<UiTexture>(
-		"team_b_percentage_panel", "sprite_sheet_1", "pixel",
-		team_b_percentage_panel, this->render_resources(), look.box_colour);
+	team_b_percentage_panel.inflate(look.art.focus_padding);
+	this->team_b_percentage_panel_ = std::make_unique<MenuPaperArtwork>(
+		team_b_percentage_panel, this->render_resources(), &look.art, &this->focus_);
 	this->team_b_percentage_panel_->set_hidden(true);
 
 	this->winner_ = std::make_unique<UiTextDropShadow>(
 		"winner",
 		end_info.winning_team_string(),
 		style.item_font,
-		look.winner_position,
+		Vector2F::ZERO,
 		this->render_resources(),
-		look.heading_colour,
-		style.shadow_colour,
-		style.detail_shadow_offset,
+		look.art.ink,
+		Colour(),
+		Vector2F::ZERO,
 		true);
+	center_text(*this->winner_, look.winner_y);
 
 	this->proceed_ = std::make_unique<UiTextDropShadow>(
 		"proceed",
 		L"Press A/Enter to proceed",
 		style.detail_font,
-		look.proceed_position,
+		Vector2F::ZERO,
 		this->render_resources(),
-		look.heading_colour,
-		style.shadow_colour,
-		style.detail_shadow_offset,
+		look.art.ink,
+		Colour(),
+		Vector2F::ZERO,
 		true);
+	center_text(*this->proceed_, look.proceed_y);
 
 	// Fixed A/B marks label the bars throughout the fill animation.
 	const RectangleF fill_box_rect = this->fill_box_->rectangle();
@@ -239,8 +247,8 @@ void ResultsMenuInitial::init()
 			mark_y), look.team_mark_size);
 	this->team_a_mark_ = std::make_unique<UiTextDropShadow>(
 		"team_a_mark", L"A", style.item_font, Vector2F::ZERO,
-		this->render_resources(), look.heading_colour,
-		style.shadow_colour, style.item_shadow_offset);
+		this->render_resources(), look.art.ink,
+		Colour(), Vector2F::ZERO);
 	this->team_a_mark_->set_position(team_a_mark_box.center() -
 		this->team_a_mark_->bounds().center());
 
@@ -250,8 +258,8 @@ void ResultsMenuInitial::init()
 			mark_y), look.team_mark_size);
 	this->team_b_mark_ = std::make_unique<UiTextDropShadow>(
 		"team_b_mark", L"B", style.item_font, Vector2F::ZERO,
-		this->render_resources(), look.heading_colour,
-		style.shadow_colour, style.item_shadow_offset);
+		this->render_resources(), look.art.ink,
+		Colour(), Vector2F::ZERO);
 	this->team_b_mark_->set_position(team_b_mark_box.center() -
 		this->team_b_mark_->bounds().center());
 
@@ -265,6 +273,7 @@ void ResultsMenuInitial::init()
 		"texture_container");
 	this->texture_container_->add_child(this->box_.get());
 	this->texture_container_->add_child(this->fill_box_.get());
+	this->texture_container_->add_child(this->fill_track_.get());
 	this->texture_container_->add_child(this->team_a_fill_.get());
 	this->texture_container_->add_child(this->team_b_fill_.get());
 	this->texture_container_->add_child(this->team_a_percentage_panel_.get());
@@ -280,21 +289,22 @@ void ResultsMenuInitial::init()
 	this->text_container_->add_child(this->winner_.get());
 	this->text_container_->add_child(this->proceed_.get());
 
-	const auto add_detail = [this, &style, &look](const std::wstring& text,
+	const auto add_detail = [this, &look](const std::wstring& text,
 		const Vector2F& position, const std::string& font)
 		{
 			this->details_.push_back(std::make_unique<UiTextDropShadow>(
 				"detail_" + std::to_string(this->details_.size()), text, font,
-				position, this->render_resources(), look.heading_colour,
-				style.shadow_colour, style.detail_shadow_offset, true));
+				position, this->render_resources(), look.art.ink,
+				Colour(), Vector2F::ZERO, true));
 			this->text_container_->add_child(this->details_.back().get());
+			return this->details_.back().get();
 		};
 	if (this->session_.is_series())
 	{
-		add_detail(this->session_.score_string(),
-			look.session_score_position, style.detail_font);
-		add_detail(this->session_.result_string(),
-			look.session_result_position, style.detail_font);
+		center_text(*add_detail(this->session_.score_string(), Vector2F::ZERO, style.detail_font),
+			look.session_score_y);
+		center_text(*add_detail(this->session_.result_string(), Vector2F::ZERO, style.detail_font),
+			look.session_result_y);
 	}
 	add_detail(L"Surface held (% of arena)",
 		look.contribution_position, look.contribution_font);
@@ -322,6 +332,7 @@ void ResultsMenuInitial::init()
 		this->delay_timer_ = look.team_fill_delay;
 		this->fill_timer_ = look.team_fill_time;
 		this->fill_box_->set_hidden(true);
+		this->fill_track_->set_hidden(true);
 		this->team_a_fill_->set_hidden(true);
 		this->team_b_fill_->set_hidden(true);
 		this->team_a_mark_->set_hidden(true);
