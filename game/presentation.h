@@ -28,6 +28,16 @@ struct PresentationSound
 	float volume = 1.0f;
 };
 
+// Music gain ramps use the active application's clock, separate from simulation.
+struct MusicMixPresentation
+{
+	float fade_in = 0.0f;
+	float fade_out = 0.0f;
+	float pause_gain = 0.0f;
+	float duck_time = 0.0f;
+	float restore_time = 0.0f;
+};
+
 // Shared menu style, with screen-specific overrides in the records below.
 struct MenuStyle
 {
@@ -783,6 +793,7 @@ public:
 
 	const TeamPalettePresentation& team_palette() const;
 	const MenuStyle& menu() const;
+	const MusicMixPresentation& music_mix() const;
 	const MainMenuPresentation& main_menu() const;
 	const ControlsSettingsPresentation& controls_settings() const;
 	const PauseMenuPresentation& pause_menu() const;
@@ -813,6 +824,7 @@ private:
 	std::string source_path_;
 	TeamPalettePresentation team_palette_;
 	MenuStyle menu_;
+	MusicMixPresentation music_mix_;
 	MainMenuPresentation main_menu_;
 	ControlsSettingsPresentation controls_settings_;
 	PauseMenuPresentation pause_menu_;

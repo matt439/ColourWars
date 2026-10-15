@@ -1458,6 +1458,26 @@ Presentation::Presentation(const char* path)
 
 	this->team_palette_ = read_team_palette(root);
 	this->menu_ = read_menu_style(root);
+	const JsonValue music_mix = root.object("music_mix");
+	const auto music_duration = [&](const char* key)
+	{
+		const float value = read_positive(music_mix, key);
+		if (value > 5.0f)
+		{
+			throw std::runtime_error(music_mix.where() + ": " + key + " must be at most 5 seconds.");
+		}
+		return value;
+	};
+	this->music_mix_.fade_in = music_duration("fade_in");
+	this->music_mix_.fade_out = music_duration("fade_out");
+	this->music_mix_.duck_time = music_duration("duck_time");
+	this->music_mix_.restore_time = music_duration("restore_time");
+	this->music_mix_.pause_gain = music_mix.number("pause_gain");
+	if (!std::isfinite(this->music_mix_.pause_gain) ||
+		this->music_mix_.pause_gain < 0.0f || this->music_mix_.pause_gain > 1.0f)
+	{
+		throw std::runtime_error(music_mix.where() + ": pause_gain must be 0..1.");
+	}
 	this->main_menu_ = read_main_menu(root, this->menu_.footer_y);
 	this->controls_settings_ = read_controls_settings(root, this->menu_.footer_y);
 	this->pause_menu_ = read_pause_menu(root);
@@ -1773,6 +1793,11 @@ void Presentation::validate_resources(const RenderResources& render,
 const MenuStyle& Presentation::menu() const
 {
 	return this->menu_;
+}
+
+const MusicMixPresentation& Presentation::music_mix() const
+{
+	return this->music_mix_;
 }
 
 const MainMenuPresentation& Presentation::main_menu() const

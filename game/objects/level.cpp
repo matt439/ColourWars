@@ -197,20 +197,16 @@ void Level::pause_audio() const
 	this->pause_player_sounds();
 }
 
-void Level::resume() const
+void Level::resume()
 {
+	this->set_music_ducked(false);
 	if (this->end_sting_.valid())
 	{
 		this->sound_bank_->set_effect_volume(this->end_sting_,
 			this->end_sting_volume_ * this->preferences_->music_gain());
 		this->sound_bank_->resume_effect(this->end_sting_);
 	}
-	if (this->music_.valid())
-	{
-		this->sound_bank_->set_effect_volume(this->music_,
-			this->music_volume_ * this->preferences_->music_gain());
-		this->sound_bank_->resume_effect(this->music_);
-	}
+	this->resume_music();
 	this->sound_bank_->set_effect_volume(this->zoom_out_sound_,
 		this->tuning_->match().zoom_out_sound.volume * this->preferences_->sfx_gain());
 	this->sound_bank_->resume_effect(this->zoom_out_sound_);
@@ -269,6 +265,35 @@ void Level::prepare_resume(const std::vector<PlayerInputData>& inputs)
 	}
 }
 
+void Level::update_music(float dt)
+{
+	if (!(dt > 0.0f) || !std::isfinite(dt) || !this->music_.valid() ||
+		this->sound_bank_->effect_state(this->music_) != SoundState::playing) { return; }
+	this->music_fade_.advance(dt);
+	this->music_duck_.advance(dt);
+	this->sound_bank_->set_effect_volume(this->music_, this->music_volume_ *
+		this->preferences_->music_gain() * this->music_fade_.gain() * this->music_duck_.gain());
+	if (this->music_ending_ && this->music_fade_.gain() == 0.0f)
+	{
+		this->sound_bank_->stop_effect(this->music_, true);
+	}
+}
+
+void Level::set_music_ducked(bool ducked)
+{
+	const MusicMixPresentation& mix = this->presentation_->music_mix();
+	this->music_duck_.fade_to(ducked ? mix.pause_gain : 1.0f,
+		ducked ? mix.duck_time : mix.restore_time);
+}
+
+void Level::resume_music() const
+{
+	if (!this->music_.valid() || this->sound_bank_->effect_state(this->music_) != SoundState::paused) { return; }
+	this->sound_bank_->set_effect_volume(this->music_, this->music_volume_ *
+		this->preferences_->music_gain() * this->music_fade_.gain() * this->music_duck_.gain());
+	this->sound_bank_->resume_effect(this->music_);
+}
+
 void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt,
 	SeatInputFilter* seats)
 {
@@ -305,7 +330,8 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			this->countdown_started_ = true;
 			if (this->music_.valid())
 			{
-				this->sound_bank_->play_effect(this->music_, true, this->music_volume_ * this->preferences_->music_gain());
+				this->music_fade_.fade_to(1.0f, this->presentation_->music_mix().fade_in);
+				this->sound_bank_->play_effect(this->music_, true, 0.0f);
 			}
 		}
 		const float before = this->start_timer_;
@@ -381,7 +407,8 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 
 			if (this->music_.valid())
 			{
-				this->sound_bank_->stop_effect(this->music_, true);
+				this->music_ending_ = true;
+				this->music_fade_.fade_to(0.0f, this->presentation_->music_mix().fade_out);
 			}
 			if (this->end_sting_.valid())
 			{
@@ -416,6 +443,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			this->state_ = LevelState::overview;
 			this->zoom_out_timer_ = 0.0f;
 			// Even a shortened glass transition leaves the returning person silent.
+			if (this->music_.valid()) { this->sound_bank_->stop_effect(this->music_, true); }
 			if (this->end_sting_.valid()) { this->sound_bank_->stop_effect(this->end_sting_, true); }
 			// Let the glass cue's tail finish naturally; destruction still owns it.
 		}
@@ -438,7 +466,7 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		}
 	}
 	// GameLevel opens results when it sees finished, so this state needs no update arm.
-	// Music stops on entry to zoom_out; destruction also stops level sounds.
+	// Arena music fades through glass-out; overview and destruction stop it.
 
 }
 

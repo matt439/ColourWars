@@ -232,6 +232,9 @@ DebugWaitContext DebugDirectorImpl::wait_context() const
 void DebugDirectorImpl::set_console_open(bool open)
 {
 	this->console_open_ = open;
+	// A blocking console can cover an already-paused menu, so the match may
+	// receive no new on_suspend callback. Never apply this to console.live.
+	if (open && this->match_ != nullptr) { this->match_->debug_sync_audio(); }
 }
 
 bool DebugDirectorImpl::console_open() const
@@ -275,6 +278,7 @@ void DebugDirectorImpl::set_live_console_open(bool open)
 void DebugDirectorImpl::set_debug_menu(DebugMenuPage* page)
 {
 	this->debug_menu_ = page;
+	if (page != nullptr && this->match_ != nullptr) { this->match_->debug_sync_audio(); }
 	if (page == nullptr)
 	{
 		this->waiting_notice_shown_ = false;

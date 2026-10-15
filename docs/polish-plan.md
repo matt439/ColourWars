@@ -589,7 +589,9 @@ hooks and the listening mix stay in POL#23. The menu-feedback increment adds
 distinct unready and pending SFX-volume previews, shared match/pause pad
 lost/back cues, and a completed-series cue. The shared resume count-in now uses
 the accepted `ui.count_in` beat. The accepted results coda and each arena's
-ending sting are integrated; transition fades/ducking and listening remain open.
+ending sting are integrated. Arena music now fades in, fades under its ending
+sting and ducks through pause/reconnect/settings and the resume count-in.
+Menu/results transition fades and listening remain open.
 
 - Inventory every source wave, bank entry, loop instance and runtime reference,
   including tuning, presentation, level music and any code-selected cues. Give

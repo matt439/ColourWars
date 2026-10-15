@@ -90,6 +90,7 @@ public:
 	// of each is ever open.
 	void set_console_open(bool open);
 	bool console_open() const;
+	bool blocking_console_open() const { return this->console_open_; }
 	void set_debug_menu(DebugMenuPage* page);
 	bool debug_menu_open() const { return this->debug_menu_ != nullptr; }
 

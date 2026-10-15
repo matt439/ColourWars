@@ -136,6 +136,10 @@ void GameLevel::init()
 
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
 		this->menu_input_.get(), &this->settings_);
+	this->menu_context_->set_music_update([this](float dt)
+	{
+		this->update_music(dt);
+	});
 
 	this->level_builder_ = std::make_unique<LevelBuilder>(
 		this->data()->viewport_manager(),
@@ -196,7 +200,15 @@ void GameLevel::build_and_enter_level()
 void GameLevel::on_activated()
 {
 	// Results and End cover this state, but their shared coda follows focus.
-	if (this->results_audio_) { this->results_audio_->resume(); }
+	if (this->results_audio_ && !this->data()->debug().match_audio_paused())
+	{
+		this->results_audio_->resume();
+	}
+	if ((this->pause_menu_open_ && this->covered_) ||
+		(!this->covered_ && this->resume_countdown_.active()))
+	{
+		if (!this->data()->debug().match_audio_paused()) { this->level_->resume_music(); }
+	}
 	if (!this->covered_ && this->focus_interrupted_)
 	{
 		this->begin_resume_countdown();
@@ -240,6 +252,8 @@ void GameLevel::update(float dt)
 	{
 		return;
 	}
+	// This clock is outside the debug director's 0..4 simulation steps.
+	this->update_music(dt);
 
 	if (this->level_->state() == LevelState::finished)
 	{
@@ -318,12 +332,36 @@ void GameLevel::draw(Renderer& renderer) const
 	this->data()->debug().draw_status(renderer);
 }
 
+void GameLevel::update_music(float dt)
+{
+	if (!(dt > 0.0f) || !std::isfinite(dt) || !this->context()->active() ||
+		this->data()->debug().match_audio_paused()) { return; }
+	// A developer overlay can cover Results/End without uncovering GameLevel
+	// when it closes. Their next normal page tick restores the existing coda.
+	if (this->results_audio_) { this->results_audio_->resume(); }
+	if ((this->pause_menu_open_ && this->covered_) ||
+		(!this->covered_ && this->resume_countdown_.active()))
+	{
+		// Also recover the quiet voice after a developer clock pause is lifted
+		// while a gameplay pause or its count-in still covers simulation.
+		this->level_->set_music_ducked(true);
+		this->level_->resume_music();
+	}
+	this->level_->update_music(dt);
+}
+
 void GameLevel::on_suspend()
 {
 	this->covered_ = true;
 	this->resume_audio_->stop();
-	// Pausing updates alone would leave weapon loops and music playing.
+	// Gameplay voices stop here; normal pause retains only quiet arena music.
 	this->level_->suspend();
+	if (this->pause_menu_open_ && this->context()->active() &&
+		!this->data()->debug().match_audio_paused())
+	{
+		this->level_->set_music_ducked(true);
+		this->level_->resume_music();
+	}
 	this->data()->debug().match_suspended(*this);
 }
 
@@ -384,6 +422,11 @@ void GameLevel::begin_resume_countdown()
 	this->resume_audio_->stop();
 	this->level_->suspend();
 	this->level_->emphasise_players();
+	this->level_->set_music_ducked(true);
+	if (this->context()->active() && !this->data()->debug().match_audio_paused())
+	{
+		this->level_->resume_music();
+	}
 }
 
 const Level& GameLevel::level() const { return *this->level_; }
@@ -499,6 +542,14 @@ bool GameLevel::debug_level_finished() const
 
 void GameLevel::debug_sync_audio()
 {
+	if (this->results_audio_)
+	{
+		if (this->context()->active() && !this->data()->debug().match_audio_paused())
+		{
+			this->results_audio_->resume();
+		}
+		else { this->results_audio_->suspend(); }
+	}
 	if (this->audio_may_play())
 	{
 		this->level_->resume();

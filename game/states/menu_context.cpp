@@ -29,6 +29,16 @@ void MenuContext::reset_connection_audio()
 		&this->data_->save()->play_settings(), *this->data_->presentation());
 }
 
+void MenuContext::set_music_update(std::function<void(float)> update)
+{
+	this->music_update_ = std::move(update);
+}
+
+void MenuContext::update_music(float dt)
+{
+	if (this->music_update_) { this->music_update_(dt); }
+}
+
 void MenuContext::update_connection_audio()
 {
 	if (!this->connection_audio_) { return; }

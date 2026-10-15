@@ -35,6 +35,7 @@ void MenuPage::update(float dt)
 	if (dt > 0.0f && this->context()->active())
 	{
 		this->menu_context()->update_connection_audio();
+		this->menu_context()->update_music(dt);
 	}
 	this->update_page(dt);
 }

@@ -62,6 +62,35 @@ void resume_capture(Application& app, GameLevel& game, Presentation& presentatio
         "Resume drawing advanced simulation, cosmetics or its real-time clock");
 }
 
+#if COLOURWARS_DEV_TOOLS
+void resume_native_tap(Application& app, WPARAM key)
+{
+    // F10 is intercepted by the production WH_GETMESSAGE hook, so drive
+    // its native queue rather than only the Keyboard object.
+    const HWND window = static_cast<HWND>(app.window());
+    // The window maps physical scan positions, not virtual-key characters.
+    // Include the set-1 scan field that real keyboard messages carry.
+    const unsigned int scan = key == VK_OEM_3 ? 0x29u : key == VK_ESCAPE ? 0x01u :
+        key == VK_F10 ? 0x44u : 0u;
+    require(scan != 0, "Unsupported music-flow developer native key");
+    const LPARAM pressed = static_cast<LPARAM>(1u | (scan << 16));
+    const auto message = [&](UINT kind, LPARAM flags)
+    {
+        require(PostMessageW(window, kind, key, flags) != 0,
+            "Cannot queue a music-flow developer key message");
+        MSG queued{};
+        require(PeekMessageW(&queued, window, kind, kind, PM_REMOVE) != 0,
+            "Cannot read a music-flow developer key message");
+        DispatchMessageW(&queued);
+        app.keyboard()->poll();
+        app.mouse()->poll();
+        static_cast<StateContext&>(app).update(0.0f);
+    };
+    message(WM_KEYDOWN, pressed);
+    message(WM_KEYUP, pressed | static_cast<LPARAM>(0xc0000000u));
+}
+#endif
+
 void results_music_flow_matrix(Application& app, GameData& data, const Presentation& presentation,
     const std::filesystem::path& output)
 {
@@ -147,6 +176,31 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
             stack.notify_activation(true);
             require(bank->effect_state(music) == SoundState::playing,
                 "Focus return under the covering results page did not resume the coda");
+#if COLOURWARS_DEV_TOOLS
+            if (count == 2 && round == 1)
+            {
+                const auto frozen = resume_observation(game->level());
+                resume_native_tap(app, VK_F10);
+                require(stack.depth() == 4 && bank->effect_state(music) == SoundState::paused,
+                    "The developer menu above Results did not pause its owned coda");
+                stack.notify_activation(false);
+                tick();
+                stack.notify_activation(true);
+                tick();
+                require(stack.depth() == 4 && bank->effect_state(music) == SoundState::paused &&
+                    frozen == resume_observation(game->level()),
+                    "Focus return under the developer menu woke the results coda or changed the finished world");
+                record(round, "results-debug-menu-focus-return");
+                resume_native_tap(app, VK_F10);
+                require(stack.depth() == 3 && bank->effect_state(music) == SoundState::paused,
+                    "Closing the developer menu failed to return to the Results page");
+                tick();
+                require(bank->effect_state(music) == SoundState::playing &&
+                    !bank->is_effect_looping(music) && frozen == resume_observation(game->level()),
+                    "The uncovered Results page failed to resume its existing coda with the finished world frozen");
+                record(round, "results-debug-menu-closed");
+            }
+#endif
             results_ready();
             // Keep the voice paused across the real continue callback. A
             // page-owned replacement would start a new playing coda here,
@@ -210,6 +264,279 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
     require(evidence.good(), "Results-music flow evidence write failed");
 }
 
+void arena_music_flow_matrix(Application& app, GameData& data, const GameTuning& tuning,
+    const Presentation& presentation, const std::filesystem::path& output)
+{
+    StateContext& stack = app;
+    const SoundBank* bank = app.audio_resources()->sound_bank("paint_exe");
+    require(bank->audible(), "Arena-music hardware flow requires the accepted real sound bank");
+    const auto music = bank->resolve_effect("music.close_quarters");
+    const auto weapon = bank->resolve_effect(
+        tuning.weapon(WeaponType::sprayer).loop_sounds.sound_name(PlayerTeam::a, 0));
+    const float duration = presentation.pause_menu().resume_countdown;
+    std::ofstream evidence(output / "arena-music.csv");
+    evidence << "players,phase,depth,music_state,music_looping,weapon_state\n";
+    for (const int count : { 1, 2, 4 })
+    {
+        stack.clear();
+        stack.notify_activation(true);
+        stack.push(std::make_unique<ResumeProbeRoot>());
+        MenuLevelSettings settings;
+        settings.set_stage("close_quarters");
+        settings.set_duration(60.0f);
+        settings.set_player_count(count);
+        settings.begin_input_claims(input_slots::keyboard_and_mouse);
+        settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
+            count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
+        for (int view = 0; view < count; ++view)
+        {
+            settings.set_player_team(view, view == 0 ? PlayerTeam::a : PlayerTeam::b);
+            settings.set_player_weapon(view, WeaponType::sprayer);
+        }
+        auto owned = std::make_unique<GameLevel>(&data, settings);
+        GameLevel* game = owned.get();
+        bool ended = false;
+        stack.push<EndMenuAction>(std::move(owned), [&](const EndMenuAction& action)
+        {
+            require(action == EndMenuAction::exit, "Arena-music fixture left with the wrong end action");
+            ended = true;
+        });
+        const auto tick = [&](float elapsed = dt)
+        {
+            app.keyboard()->poll();
+            app.mouse()->poll();
+            stack.update(elapsed);
+        };
+        const auto tap = [&](Key value)
+        {
+            app.keyboard()->on_key_down(value); tick(0.0f);
+            app.keyboard()->on_key_up(value); tick(0.0f);
+        };
+        const auto record = [&](const char* phase)
+        {
+            evidence << count << ',' << phase << ',' << stack.depth() << ','
+                << static_cast<int>(bank->effect_state(music)) << ',' << bank->is_effect_looping(music)
+                << ',' << static_cast<int>(bank->effect_state(weapon)) << '\n';
+        };
+        const auto enter_live = [&]
+        {
+            if (game->level().intro_playing()) { tap(Key::enter); }
+            for (int step = 0; step < 2400 && game->level().state() != LevelState::active; ++step) { tick(); }
+            require(stack.depth() == 2 && game->level().state() == LevelState::active &&
+                bank->effect_state(music) == SoundState::playing && bank->is_effect_looping(music),
+                "Actual arena GameLevel did not begin its looping stage track");
+        };
+        const auto pause = [&]
+        {
+            tap(Key::escape);
+            require(stack.depth() == 3, "Arena-music fixture did not open the actual pause page");
+            // New pages reset direction arming; give the page a neutral sample.
+            tick(0.0f);
+        };
+        const auto quiet_music = [&]
+        {
+            require(bank->effect_state(music) == SoundState::playing && bank->is_effect_looping(music) &&
+                bank->effect_state(weapon) == SoundState::paused,
+                "Covered arena did not retain only its music while the fire loop stayed paused");
+        };
+        const auto covered_focus = [&](const char* phase, int depth)
+        {
+            quiet_music();
+            const auto frozen = resume_observation(game->level());
+            tick(presentation.music_mix().duck_time + 0.25f);
+            require(frozen == resume_observation(game->level()),
+                "Covered arena music tick advanced the simulation or cosmetics");
+            stack.notify_activation(false);
+            require(bank->effect_state(music) == SoundState::paused &&
+                bank->effect_state(weapon) == SoundState::paused,
+                "Focus loss under a pause/settings page left an arena or fire loop playing");
+            tick(duration + 1.0f);
+            require(frozen == resume_observation(game->level()),
+                "Unfocused covered arena advanced its simulation or cosmetics");
+            stack.notify_activation(true);
+            require(stack.depth() == depth && game->resume_remaining() == 0.0f &&
+                frozen == resume_observation(game->level()),
+                "Focus return under a pause/settings page uncovered or advanced the arena");
+            quiet_music();
+            record(phase);
+        };
+#if COLOURWARS_DEV_TOOLS
+        const auto native_tap = [&](WPARAM key)
+        {
+            resume_native_tap(app, key);
+        };
+        const auto developer_cover = [&](bool menu, int depth, const char* phase)
+        {
+            quiet_music();
+            const auto frozen = resume_observation(game->level());
+            native_tap(menu ? VK_F10 : VK_OEM_3);
+            require(stack.depth() == depth + 1 && data.debug().match_audio_paused() &&
+                bank->effect_state(music) == SoundState::paused && bank->effect_state(weapon) == SoundState::paused,
+                "A developer page above Pause/Controls failed to hard-pause arena/fire loops immediately");
+            stack.notify_activation(false);
+            tick(duration + 1.0f);
+            stack.notify_activation(true);
+            tick(duration + 1.0f);
+            require(stack.depth() == depth + 1 && game->resume_remaining() == 0.0f &&
+                frozen == resume_observation(game->level()) && bank->effect_state(music) == SoundState::paused,
+                "Focus return under a covering developer page woke arena music or advanced the world");
+            record(phase);
+            native_tap(menu ? VK_F10 : VK_ESCAPE);
+            require(stack.depth() == depth && !data.debug().match_audio_paused() &&
+                bank->effect_state(music) == SoundState::paused,
+                "Closing a developer page failed to return to its still-paused underlying page");
+            tick();
+            quiet_music();
+            require(frozen == resume_observation(game->level()),
+                "Restoring quiet music after a developer page advanced the covered world");
+        };
+#endif
+
+        enter_live();
+#if COLOURWARS_DEV_TOOLS
+        DebugDirectorImpl& debug = *data.debug().impl();
+        require(debug.execute("console.live 1").ok, "Cannot enable the arena-music live console");
+        const int before_live_console = debug.level_updates();
+        native_tap(VK_OEM_3);
+        tick();
+        require(debug.live_console_open() && !data.debug().match_audio_paused() && stack.depth() == 2 &&
+            debug.level_updates() > before_live_console && bank->effect_state(music) == SoundState::playing,
+            "The live console suspended arena music or the active simulation");
+        native_tap(VK_OEM_3);
+        require(!debug.live_console_open() && debug.execute("console.live 0").ok,
+            "Cannot close and reset the arena-music live console");
+        record("debug-live-console");
+#endif
+        app.mouse()->on_move({ 640, 0 });
+        app.mouse()->on_button_down(MouseButton::left);
+        for (int step = 0; step < 12 && bank->effect_state(weapon) != SoundState::playing; ++step) { tick(); }
+        require(bank->effect_state(weapon) == SoundState::playing && bank->is_effect_looping(weapon),
+            "Arena-music fixture did not start the actual player's fire loop");
+        record("live-fire");
+#if COLOURWARS_DEV_TOOLS
+        require(debug.execute("pause on").ok, "Cannot pause the arena-music developer clock");
+        const auto clock_frozen = resume_observation(game->level());
+        const int before_pause = debug.level_updates();
+        tick(0.5f);
+        require(debug.level_updates() == before_pause && clock_frozen == resume_observation(game->level()) &&
+            bank->effect_state(music) == SoundState::paused && bank->effect_state(weapon) == SoundState::paused,
+            "Developer pause advanced the arena or retained playing music/fire loops");
+        record("debug-pause");
+        require(debug.execute("step 1").ok, "Cannot step the arena-music developer clock");
+        tick();
+        require(debug.level_updates() == before_pause + 1 &&
+            bank->effect_state(music) == SoundState::paused && bank->effect_state(weapon) == SoundState::paused,
+            "One developer step failed to run once or leaked playing arena/fire loops");
+        record("debug-step");
+        require(debug.execute("pause off").ok && debug.execute("timescale 4").ok,
+            "Cannot restore and fast-forward the arena-music developer clock");
+        const int before_fast = debug.level_updates();
+        tick();
+        require(debug.level_updates() == before_fast + 4 &&
+            bank->effect_state(music) == SoundState::playing && bank->is_effect_looping(music),
+            "Developer fast-forward failed to run four simulation steps with the arena track playing");
+        require(debug.execute("timescale 1").ok, "Cannot reset the arena-music developer timescale");
+        record("debug-fast-forward");
+#endif
+        pause();
+        app.mouse()->on_button_up(MouseButton::left);
+        covered_focus("pause-focus-return", 3);
+#if COLOURWARS_DEV_TOOLS
+        developer_cover(true, 3, "pause-debug-menu-focus-return");
+#endif
+        tap(Key::down); tap(Key::down); tap(Key::enter); tick(0.0f);
+        require(stack.depth() == 4, "Arena-music fixture did not enter actual Controls / audio");
+        covered_focus("controls-focus-return", 4);
+#if COLOURWARS_DEV_TOOLS
+        developer_cover(false, 4, "controls-blocking-console-focus-return");
+#endif
+        tap(Key::enter); tick(0.0f);
+        require(stack.depth() == 5, "Arena-music fixture did not enter nested Pad sticks");
+        covered_focus("sticks-focus-return", 5);
+        tap(Key::escape); tick(0.0f);
+        require(stack.depth() == 4, "Arena-music fixture did not return from Pad sticks");
+        tap(Key::escape); tick(0.0f);
+        require(stack.depth() == 3, "Arena-music fixture did not return from Controls / audio");
+        // Back on the pause page delivers the ordinary Resume result, even
+        // though its selection remains on Controls / audio after the child.
+        tap(Key::escape);
+        require(stack.depth() == 2 && game->resume_remaining() == duration,
+            "Actual Resume did not begin the arena-music count-in");
+        quiet_music();
+        const auto frozen = resume_observation(game->level());
+        tick(duration * 0.25f);
+        require(frozen == resume_observation(game->level()),
+            "Arena-music count-in advanced simulation or cosmetics");
+        stack.notify_activation(false);
+        const float remaining = game->resume_remaining();
+        require(bank->effect_state(music) == SoundState::paused,
+            "Focus loss during the count-in left arena music playing");
+        tick(duration + 1.0f);
+        require(game->resume_remaining() == remaining && frozen == resume_observation(game->level()),
+            "Unfocused arena-music count-in advanced its clock or world");
+        stack.notify_activation(true);
+        require(game->resume_remaining() == duration, "Arena-music focus return did not restart the count-in");
+        quiet_music();
+        record("count-in-focus-return");
+        // A developer state covering the count-in is a hard suspension,
+        // unlike the match's ordinary pause/settings pages. Activation still
+        // reaches the covered GameLevel and must not wake its arena voice.
+        tick(duration * 0.25f);
+        const float covered_remaining = game->resume_remaining();
+        stack.push(std::make_unique<ResumeProbeRoot>());
+        require(stack.depth() == 3 && bank->effect_state(music) == SoundState::paused &&
+            bank->effect_state(weapon) == SoundState::paused,
+            "An unrelated state covering the count-in did not hard-pause arena/fire loops");
+        stack.notify_activation(false);
+        tick(duration + 1.0f);
+        stack.notify_activation(true);
+        tick(duration + 1.0f);
+        require(stack.depth() == 3 && game->resume_remaining() == covered_remaining &&
+            frozen == resume_observation(game->level()) &&
+            bank->effect_state(music) == SoundState::paused && bank->effect_state(weapon) == SoundState::paused,
+            "Focus return under an unrelated covering state woke arena music or advanced the count-in/world");
+        record("count-in-unrelated-cover-focus-return");
+        stack.pop();
+        require(stack.depth() == 2 && game->resume_remaining() == duration &&
+            frozen == resume_observation(game->level()),
+            "Uncovering the focus-interrupted arena did not restart a frozen full count-in");
+        quiet_music();
+        record("count-in-uncovered");
+        tick(duration + 1.0f);
+        require(game->resume_remaining() == 0.0f && frozen == resume_observation(game->level()) &&
+            bank->effect_state(music) == SoundState::playing && bank->is_effect_looping(music) &&
+            bank->effect_state(weapon) == SoundState::stopped,
+            "Count-in completion advanced the world, lost the stage loop or revived the old fire loop");
+        record("count-in-complete");
+        tick();
+        app.mouse()->on_button_down(MouseButton::left);
+        for (int step = 0; step < 12 && bank->effect_state(weapon) != SoundState::playing; ++step) { tick(); }
+        require(bank->effect_state(music) == SoundState::playing && bank->is_effect_looping(music) &&
+            bank->effect_state(weapon) == SoundState::playing,
+            "Fresh gameplay failed to keep the stage loop and restart deliberate fire");
+        record("restored-live-fire");
+        pause();
+        app.mouse()->on_button_up(MouseButton::left);
+        tap(Key::down); tap(Key::enter); tick(0.0f);
+        tap(Key::up); tap(Key::enter);
+        require(stack.depth() == 2 && bank->effect_state(music) == SoundState::stopped &&
+            bank->effect_state(weapon) == SoundState::stopped,
+            "Actual Restart retained the old arena track or fire-loop ownership");
+        record("restart");
+        enter_live();
+        pause();
+        tap(Key::down); tap(Key::down); tap(Key::down); tap(Key::enter); tick(0.0f);
+        tap(Key::up); tap(Key::enter);
+        require(ended && stack.depth() == 1 && bank->effect_state(music) == SoundState::stopped &&
+            bank->effect_state(weapon) == SoundState::stopped,
+            "Actual Quit retained arena music or fire-loop ownership");
+        record("quit");
+        std::cout << "PASS actual " << count
+            << "P arena music under pause/controls/sticks, focus, count-in, restart and quit\n";
+    }
+    require(evidence.good(), "Arena-music flow evidence write failed");
+}
+
 void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
@@ -218,7 +545,8 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
     auto& play = const_cast<PlaySettings&>(preferences.play_settings());
     play.music_volume = play.sfx_volume = 0;
     play.aim_marker = false;
-    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false } };
+    StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
+        { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
     GameData data;
     data.set_application(&app);
     data.set_save(&preferences);
@@ -473,6 +801,7 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
         require(ended && stack.depth() == 1, "Actual Quit did not leave the match immediately");
         std::cout << "PASS actual " << count << "P GameLevel pause/resume input, freeze, focus, restart and quit\n";
     }
+    arena_music_flow_matrix(app, data, tuning, presentation, output);
     results_music_flow_matrix(app, data, presentation, output);
     require(evidence.good(), "Resume evidence write failed");
 }

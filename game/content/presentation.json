@@ -23,6 +23,14 @@
     ]
   },
 
+  "music_mix": {
+    "fade_in": 0.5,
+    "fade_out": 0.6,
+    "pause_gain": 0.22,
+    "duck_time": 0.15,
+    "restore_time": 0.3
+  },
+
   "menu_style": {
     "_comment": [
       "The four menu families all drew themselves from an identical copy of",

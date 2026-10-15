@@ -396,7 +396,8 @@ detection logic is needed. Every new slot must be added to startup validation
 
 Two pieces of mix work have no wave of their own: crossfades and ending stings
 in place of `stop_effect(..., true)`, and music ducking under pause instead of
-the hard pause. Both need a client music director (`GAP#5.1`).
+the hard pause. The arena-mix increment below implements these for the match;
+menu/results music handoff still needs client ownership work (`GAP#5.1`).
 `set_effect_volume` (`sound_bank.h:136`) is enough to build one.
 
 ## 5. Sound direction: accepted
@@ -796,9 +797,10 @@ The shared pause/reconnect and focus-return count-in (`POL#18`, 2026-10-15)
 now owns an effect instance for the accepted `ui.count_in`. It sounds once per
 displayed positive second with current SFX gain/mute, without missed-beat
 catch-up or an added GO cue. Re-pause, focus loss, completion, rebuild and
-teardown cancel its voice. Music and player voices remain paused until live
-play returns; old fire loops are stopped before resumption because held fire
-requires release. The source wave and accepted bank bytes are unchanged.
+teardown cancel its voice. Player voices remain paused until live play returns;
+the later arena-mix increment retains quiet music. Old fire loops are stopped
+before resumption because held fire requires release. The source wave and
+accepted bank bytes are unchanged.
 Recording-backend checks cover beats, interruptions, gain edits/mute,
 destruction and the silent-bank fallback. Listening remains `ROAD#3`.
 
@@ -823,6 +825,31 @@ completed-series SFX retain their independent cues. The four new effect instance
 refer to already accepted bank waves; masters, production inventory and XWB bytes
 are unchanged. This increment does not establish listening balance or add fades.
 
+The arena-mix increment (2026-10-15) reads fade-in/out durations, pause gain,
+duck time and restore time from `presentation.json`'s `music_mix`. The arena
+loop starts at zero and fades in during countdown. Time-up leaves it playing
+while it fades to zero under the accepted ending sting. The overview boundary
+forces both voices off, including when glass-out is shorter than the fade.
+The picture stays silent while the person returns. Masters and bank bytes are
+unchanged; these authored gains and timings remain listening candidates.
+
+Normal pause/reconnect menus, their Controls and Pad sticks children, and the
+shared resume count-in retain the arena loop at the quieter pause gain. The
+return to live play restores its level smoothly. Gameplay, weapon, redraw and
+match-effect voices remain paused until the existing resume gate completes.
+Focus loss and developer suspension still pause voices immediately, preserving
+their positions and current ramp values. Focus return under a pause page resumes
+just the quiet music; a finished voice stays stopped. Applied music gain/mute
+multiplies the current ramp on the next active update.
+
+GameLevel and its top covering MenuPage drive the same borrowed music clock
+once per positive, active application update through MenuContext. Level's
+simulation steps and drawing do not advance it, so developer stepping and
+timescale do not multiply the ramp. Nonpositive/nonfinite updates and hard-paused
+voices leave it unchanged. Repeated duck targets keep their progress; interrupted
+ramps retarget continuously. Restart, quit, reload and destruction still cancel
+owned voices before the next opening. The Movement Course has no arena loop.
+
 **POL#23 remains open.** Putting an accepted wave into the bank does not create
 a gameplay trigger. Complete the required new cues from section 4, assess Tier
 3 detail individually and keep it off or nearly off by default:
@@ -830,7 +857,8 @@ a gameplay trigger. Complete the required new cues from section 4, assess Tier
 - Movement: optional bonk/drop/hit-confirm details.
 - Paint/tool detail: optional blocked/slosh/drip cues.
 - Room: optional footsteps/breath/waver/cheat.
-- Menus/music: transition fades/ducking (`GAP#5.1`); optional world ambience/detail.
+- Menus/music: smooth menu/results music entry and exit, including their ownership
+  across loading and rematch (`GAP#5.1`); optional world ambience/detail.
 - Mix: useful action cues above weapon voices, movement, music and decorative
   detail; limits on repeating impacts/steps; actual one-, two- and four-player
   audition with music/SFX gains, mute, focus, suspension and resumed loops.
@@ -975,3 +1003,34 @@ and `out/acceptance/`; the successful flow run IDs are
 `flow-release/x64-release/d6896daa9c7d4d8fa15e608e9bec6201`.
 These establish runtime ownership and requests, not listening/mix acceptance.
 Transition fades/ducking remain POL#23 and GAP#5.1; listening remains ROAD#3.
+
+Arena-mix validation (2026-10-15): Debug and Release build under `/W4 /WX`
+and pass all 23 consumer cases. Focused console/audio cases pass again after
+the developer-overlay fixes. The recorder checks exact fade and duck endpoints,
+continuous interrupted ramps, repeated targets, current gain/mute, long and
+nonpositive/nonfinite ticks, hard suspension, independent simulation/raw clocks,
+time-up overlap, stopped-voice guards and forced silence at a shortened overview
+boundary. Movement Course and the silent-bank substitute emit no music calls.
+All five new presentation values are read and range-checked at startup.
+
+The actual D3D11/XAudio2 GameLevel matrix passes in both builds on the RTX 5080
+at one/two/four seats, including Pause, Controls and Pad sticks, focus return,
+count-in freeze, held-fire suppression, restart and quit. Debug also covers
+single-step and 4x simulation, the live console remaining live, and the F10 menu
+or blocking console above an existing pause/settings page. Developer covers
+hard-pause music immediately; focus cannot revive it underneath them. Closing
+restores the underlying quiet music on its next positive update. An unrelated
+cover over a count-in stays silent, and the results coda recovers correctly
+after an F10 cover without restarting. The natural coda-finish check still passes.
+
+The six bank-publication checks pass. The final 53-file Release ZIP contains
+the exact revised mix data and unchanged accepted bank, with the existing
+provenance and development-file exclusions. Isolated Debug and extracted
+Release startup pass with the real bank and separately without it, using a
+system-only PATH and graceful close. Evidence is under
+`out/validation/arena-music-mix/` and `out/acceptance/`; successful hardware runs
+are `flow-debug/x64-debug/ca87923bb8894ae59606a749fa05efda` and
+`flow-release/x64-release/e203bc0df948488f91aec618c6a8b9d7`.
+These checks establish gain requests and lifecycle, not listening quality.
+Menu/results music transitions remain POL#23; screen cuts/loading remain GAP#5.1,
+and listening/multiplayer mix acceptance remains ROAD#3.

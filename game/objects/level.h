@@ -36,6 +36,7 @@
 #include "game/objects/player_badge.h"
 #include "game/objects/countdown_art.h"
 #include "game/objects/reveal_art.h"
+#include "game/objects/music_envelope.h"
 #include <string_view>
 
 enum class LevelState
@@ -85,12 +86,17 @@ public:
 	Level(const Level&) = delete;
 	Level& operator=(const Level&) = delete;
 
-	// Pause and resume level audio when a menu covers the match. Weapon loops
-	// retain their playback position while gameplay updates are suspended.
+	// Hard-pause level audio. GameLevel may resume just the ducked arena music
+	// under normal pause menus. Weapon loops retain their playback position.
 	// A suspend also resets every player's jump input, so a jump held across
 	// the menu is not taken as a new press.
 	void suspend() const;
-	void resume() const;
+	void resume();
+	// The top state supplies one active real-time tick, even under pause pages.
+	// Simulation, replay steps and drawing never advance these music ramps.
+	void update_music(float dt);
+	void set_music_ducked(bool ducked);
+	void resume_music() const;
 	// Complete the count-in without a simulation tick. Neutral jump input
 	// rearms the next press; old fire loops must not return before a new shot.
 	void prepare_resume(const std::vector<PlayerInputData>& inputs);
@@ -201,6 +207,9 @@ private:
 	float last_ten_second_ = 0.0f;
 	float music_volume_ = 0.0f;
 	float end_sting_volume_ = 0.0f;
+	MusicEnvelope music_fade_;
+	MusicEnvelope music_duck_{ 1.0f };
+	bool music_ending_ = false;
 
 	// Written during the main-thread update and read by render workers for dt/fps.
 	float frame_dt_ = 0.0f;

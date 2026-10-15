@@ -99,7 +99,8 @@ void DebugDirector::update_match(DebugMatchTarget& match,
 
 bool DebugDirector::match_audio_paused() const
 {
-	return this->impl_ != nullptr && this->impl_->clock().paused();
+	return this->impl_ != nullptr && (this->impl_->clock().paused() ||
+		this->impl_->debug_menu_open() || this->impl_->blocking_console_open());
 }
 
 void DebugDirector::match_suspended(DebugMatchTarget& match)

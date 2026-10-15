@@ -68,7 +68,7 @@ mix still belong here; a missing-bank silent fallback is not a defect.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#23` | OPEN | HIGH | L | Complete [transition fades/ducking](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration); assess optional detail and mix at 1/2/4 players. |
+| `POL#23` | OPEN | HIGH | L | Finish [menu/results music transitions](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration); assess optional detail and mix at 1/2/4 players. |
 | `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains, mute, suspension, resumed loops, the multiplayer mix; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
 
 ## Acceptance and release
@@ -102,7 +102,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
 | `GAP#3.2` | OPEN | LOW | M | Options: no restore-defaults, no revert after a resolution change, display and palette unreachable from pause, Back lands at the top, Exit quits unconfirmed. |
 | `GAP#4.2` | OPEN | MED | L | No action map or rebinding: bindings are constexprs in `player_input.h`/`menu_input.h`. The engine's `gamepad.h` waits on this client (Class 2 D6); `GAP#F2` waits on it. |
-| `GAP#5.1` | OPEN | MED | L | Hard cuts between screens; the level build blocks on the last menu frame; no music fades or ducking. |
+| `GAP#5.1` | OPEN | MED | L | Hard cuts between screens; the level build blocks on the last menu frame; menu/results music exits still cut. |
 | `GAP#5.4` | OPEN | LOW | S | The DebugText fps line is `1/dt` of a fixed step, a constant. |
 | `GAP#6.1` | OPEN | MED | M | The last match setup is not saved, so every launch walks the whole menu path again. |
 | `GAP#6.2` | OPEN | MED | M | Results are never kept: per-stage records, a NEW BEST line, best % on stage select; save sections and a version key go with it. |

@@ -111,9 +111,10 @@ private:
 	// (no-ops in Release).
 	void build_and_enter_level();
 
-	// Voices play only when nothing covers the match, the window is active
-	// and the debug clock is not paused.
+	// Gameplay voices play only when nothing covers the match, the window is
+	// active and the debug clock is not paused. Arena music may remain ducked.
 	bool audio_may_play() const;
+	void update_music(float dt);
 
 	// DebugMatchTarget, for the developer tools only.
 	const MenuLevelSettings& debug_settings() const override;

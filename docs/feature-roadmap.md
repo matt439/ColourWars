@@ -181,8 +181,9 @@ Implemented:
   Mouse cursor aim and fixed roller aim keep their existing behavior.
 - Separate music and SFX volume scale the authored mix from 0-100%, including
   menu clicks, results, paint, player and weapon sounds. Apply affects menu
-  music immediately; paused music and weapon loops pick up the new gain before
-  resuming, and subsequent sounds use the new gain when played.
+  music immediately. Quiet arena music under pause picks it up on the next
+  active update; hard-paused voices pick it up before resuming. Subsequent
+  sounds use the new gain when played.
 - Apply saves the shared preferences; the Pad sticks child applies its profiles
   separately without losing pending parent changes. Back discards unapplied
   changes. Older or malformed fields fall back independently. A live match reads

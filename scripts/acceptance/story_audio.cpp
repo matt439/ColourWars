@@ -21,6 +21,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <map>
 
 #include <rapidjson/document.h>
@@ -339,14 +340,21 @@ namespace
 		world.level->update(world.idle, 0.001f);
 		require(world.plays(match.countdown_sound.name) == 1 && world.plays(music) == 1,
 			"Zero-dt countdown updates repeated the initial beat or music start");
+		require(close_to(world.last_volume(music), 0.0f), "Arena music did not start at the silent fade boundary");
+		world.level->update_music(world.presentation.music_mix().fade_in);
+		require(close_to(world.last_volume(music), world.levels.get("close_quarters")->music_volume() *
+			world.preferences.music_gain()), "Raw audio time did not complete the opening music fade");
 		world.until([&] { return world.level->state() == LevelState::active; });
 		require(world.plays(match.countdown_sound.name) == static_cast<int>(std::ceil(match.countdown)) &&
 			world.plays(match.go_sound.name) == 1, "Countdown must play each number once and GO once");
 		world.volume_is(match.countdown_sound.name, match.countdown_sound.volume * 0.4f);
 		world.volume_is(match.go_sound.name, match.go_sound.volume * 0.4f);
 		world.until([&] { return world.level->state() == LevelState::zoom_out; });
-		require(world.plays(match.time_up_sound.name) == 1 && world.state(music) == SoundState::stopped,
-			"Time up must sound once and stop picture music before the person returns");
+		require(world.plays(match.time_up_sound.name) == 1 && world.state(music) == SoundState::playing,
+			"Time up must sound once and let the arena loop fade under its ending sting");
+		world.level->update_music(world.presentation.music_mix().fade_out);
+		require(world.state(music) == SoundState::stopped,
+			"Raw audio time did not finish the time-up music fade");
 		world.until([&] { return world.level->state() == LevelState::overview; });
 		world.level->update(world.idle, reveal.walk_in * 0.6f - 0.001f);
 		require(world.plays(match.chair_sound.name) == 1, "Reveal chair sounded before sitting");
@@ -1983,6 +1991,7 @@ namespace
 #include "scripts/acceptance/story_audio/redraw_checks.h"
 #include "scripts/acceptance/story_audio/match_checks.h"
 #include "scripts/acceptance/story_audio/results_music_checks.h"
+#include "scripts/acceptance/story_audio/music_mix_checks.h"
 
 int main(int argc, char** argv)
 {
@@ -2008,6 +2017,11 @@ int main(int argc, char** argv)
 		check_results_audio(world);
 		check_ending_sting_content(world, std::filesystem::path(argv[1]));
 		check_ending_stings(world);
+		check_music_mix_content(world, std::filesystem::path(argv[1]));
+		check_music_mix_clock_and_gain(world);
+		check_music_mix_duck_and_suspend(world);
+		check_music_mix_ending(world, std::filesystem::path(argv[1]));
+		check_music_mix_silence(world);
 		const ContentVariant content(std::filesystem::path(argv[1]) / "tuning.json");
 		check_match_content(world, content);
 		check_last_ten_boundaries(world);
@@ -2049,6 +2063,7 @@ int main(int argc, char** argv)
 		std::cout << "PASS story audio: menu cue content, connection edges/aggregation/gains/mute, "
 			"resume content/beats/cancellation/gains/mute and stale-fire loop cleanup, "
 			"results coda one-shot/focus/gains/mute/completed-state guard/teardown and arena ending-sting content/selection/lifecycle, "
+			"arena music raw-clock fades/ducking/restore/preferences/suspension/ending/silent fallback, "
 			"opening/reveal content, swatch/undo/colour/glass/skip edges, "
 			"winner/draw click/close and per-team reactions, long-step cue order, off/solo, "
 			"countdown/GO/last-ten/time up, room-tone loop boundaries, gains/mute, suspension, destruction, weapon feedback validation, "
