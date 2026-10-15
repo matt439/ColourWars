@@ -395,11 +395,11 @@ elseif ($MenuTextOnly) {
     $result.player_counts = @(1)
     $result.palettes = @()
     $result.weapons = @()
-    $result.actions = @('named-prompt-rebuild', 'arena-browse', 'arena-lock', 'arena-unlock', 'reopen', 'presentation-replacement')
+    $result.actions = @('named-prompt-rebuild', 'arena-browse', 'arena-lock', 'arena-unlock', 'home-options-credits-items', 'fitted-options-labels', 'focus-round-trip', 'credits-select-home', 'reopen', 'presentation-replacement')
     $result.input_slots = @(4)
-    $result.inputs = 'Public keyboard input through actual Stage Select plus a concrete MenuPage fixture using ordinary named text/prompt accessors.'
+    $result.inputs = 'Public keyboard input through actual Stage Select, Home, Options and Credits plus a concrete MenuPage fixture using ordinary named text/prompt accessors.'
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
-    $result.checks = 'Independent shipped brand, all 11 static headings and all 17 formatted legends compared through real MenuPage construction/prompt rebuild against native text/chrome fixtures at 720p/1080p/QHD. Actual arena lock/unlock, custom brand/heading/prompt/font/layout, old-page snapshots across full Presentation assignment and reversal, repeated prompt rebuilds when an old glyph is absent from the new valid font, reopen adoption, frozen redraw and draw RNG. Native text crops and CSV retained. No physical-controller, human readability, performance or listening acceptance.'
+    $result.checks = 'Independent shipped brand, all 11 static headings and all 17 formatted legends compared through real MenuPage construction/prompt rebuild against native text/chrome fixtures at 720p/1080p/QHD. Ten legacy static item roles compared on actual Home/Options/Credits at those sizes; long Options labels fit before their value columns, focus round trips and Credits Select retain routing. Actual arena lock/unlock, custom brand/heading/prompt/item/font/layout, old-page snapshots across full Presentation assignment and reversal, repeated prompt rebuilds and focus changes when an old glyph is absent from the new valid font, reopen adoption, frozen redraw and draw RNG. Native text crops and CSV retained. No physical-controller, human readability, performance or listening acceptance.'
 }
 elseif ($WeaponCatalogOnly) {
     $result.player_counts = @(1)
@@ -685,7 +685,7 @@ try {
         $result.diagnostic = 'Settings-menu-only hardware check passed: actual Options/Credits navigation, row edits, delayed Apply, persisted reload and failed-save warning, Controls/audio return, Back discard, disabled fullscreen resolution and retained windowed preset. Measured full copy/values/status, native paper/cards/arrows/contrast, frozen redraw, draw RNG, static Reduce effects and resize passed across six sizes/aspects. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'
     }
     elseif ($MenuTextOnly) {
-        $result.diagnostic = 'Menu-text-only hardware check passed: independent brand, 11 headings and 17 formatted legends at 720p/1080p/QHD; actual arena lock/unlock; custom text/font/layout, reopened adoption, snapshots across Presentation assignment/reversal and repeated prompt rebuilds with an old glyph absent from the new valid font; frozen redraw and draw RNG. Other painter matrices, physical controllers, human readability, performance and listening acceptance were not run.'
+        $result.diagnostic = 'Menu-text-only hardware check passed: independent brand, 11 headings, 17 formatted legends and ten static item roles at 720p/1080p/QHD; actual arena lock/unlock and Home/Options/Credits labels, long fitted Options labels, focus and Credits Select return; custom text/font/layout, reopened adoption, snapshots across Presentation assignment/reversal and repeated prompt rebuilds/focus changes with an old glyph absent from the new valid font; frozen redraw and draw RNG. Other painter matrices, physical controllers, human readability, performance and listening acceptance were not run.'
     }
     elseif ($WeaponCatalogOnly) {
         $result.diagnostic = 'Weapon-catalog-only hardware check passed: six historical labels and body/paint/full-supply rasters at 720p/1080p/QHD, both wraps, provisional browsing, fresh release confirmation, seeded Random primary, Stage/Mode Back preserving settings, custom layers and sparse alternate atlas/fill, reopen adoption and retained page snapshots, frozen redraw and draw RNG. Normal GamepadReader backend; other painter matrices, physical controllers, human readability, performance and listening acceptance were not run.'

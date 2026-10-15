@@ -384,7 +384,8 @@ documented in [menu presentation data](menu-presentation.md#weapon-selection-nam
 Names must fit the existing description-column gap when measured with their
 actual font and horizontal shadow; there is no character-count limit.
 
-Shared brand/headings and complete control legends are string settings under
+Shared brand/headings, Home/Options/Credits row labels and complete control
+legends are string settings under
 `presentation.menu_text`; they also require JSON edits and `reload`. A page
 captures the text and prompt presentation together, so an open page's
 controller/stage/pause legend updates keep that pair until the page is reopened.
@@ -393,6 +394,10 @@ not change input bindings. The real font measurement, shadow and design-space
 right margin determine whether a line fits; spaces are preserved and there is
 no character-count limit. See [shared menu text](menu-presentation.md#shared-headings-and-complete-control-legends)
 for the required keys and validation.
+`menu_text.items` labels use the actual item font. Plain actions must fit their
+paper/focus area; the first three Options labels keep their existing fitted
+column/row scaling, so long supported labels can remain valid. Editing a label
+does not change its action or row order, and reopening adopts the new text.
 
 Mist `spread_step` constructs the velocity fan when a shot is created. Roller
 `aim_tilt` and the shared projectile `wind_stop_factor` are read during updates,

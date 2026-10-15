@@ -49,7 +49,7 @@ void MainMenuCredits::init()
 	this->body_ = std::make_unique<UiText>("credits_body", look.credits_text,
 		look.credits_font, look.credits_position, this->render_resources(),
 		look.art.ink);
-	this->back_ = std::make_unique<UiText>("back", L"Back",
+	this->back_ = std::make_unique<UiText>("back", this->text().item(MenuItem::back),
 		style.item_font, look.credits_back_position, this->render_resources(),
 		look.art.focus_ink);
 	this->paper_ = std::make_unique<MenuPaperArtwork>(

@@ -161,7 +161,7 @@ void MainMenuOptions::init()
 
 	this->resolution_row_ = std::make_unique<OptionRow>(
 		"resolution",
-		L"Resolution",
+		this->text().item(MenuItem::resolution),
 		this->calculate_widget_position(0, 0),
 		value_position(0),
 		this->menu_style(),
@@ -174,7 +174,7 @@ void MainMenuOptions::init()
 
 	this->full_screen_row_ = std::make_unique<OptionRow>(
 		"full_screen",
-		L"Fullscreen",
+		this->text().item(MenuItem::fullscreen),
 		this->calculate_widget_position(0, 1),
 		value_position(1),
 		this->menu_style(),
@@ -191,7 +191,7 @@ void MainMenuOptions::init()
 
 	this->team_palette_row_ = std::make_unique<OptionRow>(
 		"team_palette",
-		L"Team palette",
+		this->text().item(MenuItem::team_palette),
 		this->calculate_widget_position(0, 2),
 		value_position(2),
 		this->menu_style(),
@@ -201,13 +201,13 @@ void MainMenuOptions::init()
 		&look.art, value_limit);
 	this->update_team_palette_selection_text();
 
-	this->controls_ = std::make_unique<UiText>("controls", L"Controls / audio",
+	this->controls_ = std::make_unique<UiText>("controls", this->text().item(MenuItem::controls_audio),
 		style.item_font, this->calculate_widget_position(0, 3),
 		this->render_resources(), look.art.ink);
 
 	this->apply_ = std::make_unique<UiText>(
 		"apply",
-		L"Apply",
+		this->text().item(MenuItem::apply),
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
@@ -215,7 +215,7 @@ void MainMenuOptions::init()
 
 	this->back_ = std::make_unique<UiText>(
 		"back",
-		L"Back",
+		this->text().item(MenuItem::back),
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),

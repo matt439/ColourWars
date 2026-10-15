@@ -222,13 +222,13 @@ void MainMenuHome::init()
 		style.heading_font, this->calculate_widget_position(0, 0), this->render_resources(), look.art.ink);
 	this->subtitle_ = std::make_unique<UiText>("subtitle", L"Paint the arena. Claim the win.",
 		style.detail_font, look.home_subtitle_position, this->render_resources(), look.art.ink);
-	this->play_ = std::make_unique<UiText>("play", L"Play", style.item_font,
+	this->play_ = std::make_unique<UiText>("play", this->text().item(MenuItem::play), style.item_font,
 		this->calculate_widget_position(0, 2), this->render_resources(), look.art.focus_ink);
-	this->options_ = std::make_unique<UiText>("options", L"Options", style.item_font,
+	this->options_ = std::make_unique<UiText>("options", this->text().item(MenuItem::options), style.item_font,
 		this->calculate_widget_position(0, 3), this->render_resources(), look.art.ink);
-	this->credits_ = std::make_unique<UiText>("credits", L"Credits", style.item_font,
+	this->credits_ = std::make_unique<UiText>("credits", this->text().item(MenuItem::credits), style.item_font,
 		this->calculate_widget_position(0, 4), this->render_resources(), look.art.ink);
-	this->exit_ = std::make_unique<UiText>("exit", L"Exit", style.item_font,
+	this->exit_ = std::make_unique<UiText>("exit", this->text().item(MenuItem::exit), style.item_font,
 		this->calculate_widget_position(0, 5), this->render_resources(), look.art.ink);
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f,

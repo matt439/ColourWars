@@ -59,14 +59,22 @@ enum class MenuPrompt
 	select, credits, count
 };
 
+enum class MenuItem
+{
+	play, options, credits, exit, resolution, fullscreen, team_palette,
+	controls_audio, apply, back, count
+};
+
 // Fixed roles select display text; navigation and accepted inputs remain code.
 struct MenuText
 {
 	std::wstring brand;
 	std::array<std::wstring, static_cast<size_t>(MenuHeading::count)> headings;
 	std::array<std::wstring, static_cast<size_t>(MenuPrompt::count)> prompts;
+	std::array<std::wstring, static_cast<size_t>(MenuItem::count)> items;
 	const std::wstring& heading(MenuHeading heading) const;
 	const std::wstring& prompt(MenuPrompt prompt) const;
+	const std::wstring& item(MenuItem item) const;
 };
 
 // Shared menu style, with screen-specific overrides in the records below.

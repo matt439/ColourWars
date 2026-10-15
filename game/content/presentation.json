@@ -117,6 +117,18 @@
       "pause_missing": " Reconnect pads to resume    A/Enter Select",
       "select": "A/Enter Select",
       "credits": "A/Enter Back    B/Esc Back"
+    },
+    "items": {
+      "play": "Play",
+      "options": "Options",
+      "credits": "Credits",
+      "exit": "Exit",
+      "resolution": "Resolution",
+      "fullscreen": "Fullscreen",
+      "team_palette": "Team palette",
+      "controls_audio": "Controls / audio",
+      "apply": "Apply",
+      "back": "Back"
     }
   },
 

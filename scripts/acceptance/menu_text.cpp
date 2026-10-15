@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/presentation.h"
+#include "game/states/option_row.h"
 #include "game/states/prompt_bar.h"
 #include "engine/assets/sprite_sheet_loader.h"
 #include "engine/audio/audio_resources.h"
@@ -47,6 +48,11 @@ namespace
         { "select", L"A/Enter Select" }, { "credits", L"A/Enter Back    B/Esc Back" }
     };
     constexpr wchar_t brand[] = L"C O L O U R W A R S   /   LOCAL PAINT BATTLES";
+    constexpr DefaultText items[]{
+        { "play", L"Play" }, { "options", L"Options" }, { "credits", L"Credits" }, { "exit", L"Exit" },
+        { "resolution", L"Resolution" }, { "fullscreen", L"Fullscreen" }, { "team_palette", L"Team palette" },
+        { "controls_audio", L"Controls / audio" }, { "apply", L"Apply" }, { "back", L"Back" }
+    };
 
     rapidjson::Document read_document(const std::filesystem::path& path)
     {
@@ -159,7 +165,8 @@ namespace
     {
         const MenuText& text = presentation.menu_text();
         require(text.brand == brand && text.headings.size() == std::size(headings) &&
-            text.prompts.size() == std::size(prompts), "Shared menu text changed its brand or fixed role count");
+            text.prompts.size() == std::size(prompts) && text.items.size() == std::size(items),
+            "Shared menu text changed its brand or fixed role count");
         for (size_t index = 0; index < std::size(headings); ++index)
         {
             const auto& actual = text.heading(static_cast<MenuHeading>(index));
@@ -186,13 +193,26 @@ namespace
             catch (const std::out_of_range&) { rejected = true; }
             require(rejected, "Unsupported shared prompt role resolved silently");
         }
+        for (size_t index = 0; index < std::size(items); ++index)
+        {
+            const auto& actual = text.item(static_cast<MenuItem>(index));
+            require(actual == items[index].text && &actual == &text.items[index],
+                std::string("Shared menu item default changed: ") + items[index].key);
+        }
+        for (const int invalid : { -1, static_cast<int>(MenuItem::count), 999 })
+        {
+            bool rejected = false;
+            try { text.item(static_cast<MenuItem>(invalid)); }
+            catch (const std::out_of_range&) { rejected = true; }
+            require(rejected, "Unsupported shared item role resolved silently");
+        }
     }
 
     void check_keyed_content(Variants& variants)
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
         {
-            for (const char* group : { "headings", "prompts" })
+            for (const char* group : { "headings", "prompts", "items" })
             {
                 auto& object = d["menu_text"][group];
                 rapidjson::Value reordered(rapidjson::kObjectType);
@@ -211,7 +231,7 @@ namespace
         });
         check_defaults(reversed);
         variants.rejects("", [](rapidjson::Document& d) { d.RemoveMember("menu_text"); });
-        for (const char* group : { "headings", "prompts" })
+        for (const char* group : { "headings", "prompts", "items" })
         {
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"].RemoveMember(group); });
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"][group].SetArray(); });
@@ -230,10 +250,11 @@ namespace
         required(nullptr, "brand");
         for (const auto& entry : headings) { required("headings", entry.key); }
         for (const auto& entry : prompts) { required("prompts", entry.key); }
+        for (const auto& entry : items) { required("items", entry.key); }
     }
 
     struct TextRole { const char* group; const char* key; };
-    constexpr TextRole categories[]{ {nullptr, "brand"}, {"headings", "home"}, {"prompts", "title"} };
+    constexpr TextRole categories[]{ {nullptr, "brand"}, {"headings", "home"}, {"prompts", "title"}, {"items", "play"} };
 
     void select_font(rapidjson::Document& d, const TextRole& role, const char* font)
     {
@@ -241,6 +262,10 @@ namespace
         else if (std::string(role.group) == "headings")
         {
             d["menu_style"]["fonts"]["heading"].SetString(font, d.GetAllocator());
+        }
+        else if (std::string(role.group) == "items")
+        {
+            d["menu_style"]["fonts"]["item"].SetString(font, d.GetAllocator());
         }
         else { d["prompt_bar"]["font"].SetString(font, d.GetAllocator()); }
     }
@@ -256,7 +281,7 @@ namespace
         });
         const std::wstring expected = L"  A \"B\"-C...  ";
         require(normalized.menu_text().brand == expected && normalized.menu_text().heading(MenuHeading::home) == expected &&
-            normalized.menu_text().prompt(MenuPrompt::title) == expected,
+            normalized.menu_text().prompt(MenuPrompt::title) == expected && normalized.menu_text().item(MenuItem::play) == expected,
             "Shared menu text did not normalize punctuation/NBSP while preserving authored outer spaces");
         normalized.validate_resources(world.render, world.audio);
         const SpriteFontFile font = read_sprite_font_file((content / "fonts/gill_sans_mt_bold_24.spritefont").string());
@@ -378,6 +403,128 @@ namespace
             }
         }
     }
+
+    UiText* row_text(OptionRow& row, const std::string& name)
+    {
+        for (const auto& child : row.children())
+        {
+            if (child.first == name) { return dynamic_cast<UiText*>(child.second); }
+        }
+        return nullptr;
+    }
+
+    void check_option_row_fitting(Variants& variants, World& world)
+    {
+        const std::string authored(200, 'W');
+        const auto look = variants.load([&](rapidjson::Document& d)
+        {
+            for (const char* key : { "resolution", "fullscreen", "team_palette" })
+            {
+                d["menu_text"]["items"][key].SetString(authored.c_str(), d.GetAllocator());
+            }
+        });
+        // These labels are not plain text actions. Resource validation checks
+        // their glyphs and fitted geometry, preserving the actual OptionRow's
+        // ability to fit a long, otherwise valid label.
+        look.validate_resources(world.render, world.audio);
+        for (const char* key : { "resolution", "fullscreen", "team_palette" })
+        {
+            variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
+            {
+                d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+                d["menu_text"]["items"][key].SetString("Glyph~");
+            }, &world);
+        }
+        const MenuStyle& style = look.menu();
+        const auto& art = look.main_menu().art;
+        const mattmath::Vector2F label_position(100.0f, 100.0f);
+        const mattmath::Vector2F value_position(420.0f, 100.0f);
+        const float label_column = value_position.x - label_position.x - art.focus_padding.x;
+        const auto font = world.render.resolve_sprite_font(style.item_font);
+        for (const MenuItem item : { MenuItem::resolution, MenuItem::fullscreen, MenuItem::team_palette })
+        {
+            int adjustments = 0;
+            const std::wstring& text = look.menu_text().item(item);
+            const auto original = world.render.measure_text(font, text);
+            require(original.x > label_column, "Long OptionRow fixture already fits without scaling");
+            OptionRow row("fitted", text, label_position, value_position, style, art.ink, &world.render,
+                [&](Direction direction) { adjustments += direction == Direction::right ? 1 : -1; },
+                &art, {160.0f, 1000.0f});
+            UiText* label = row_text(row, "fitted_label");
+            UiText* value = row_text(row, "fitted_value");
+            require(label != nullptr && value != nullptr && label->text() == text &&
+                std::isfinite(label->bounds().width) && label->bounds().width > 0.0f &&
+                label->bounds().width <= label_column + 0.01f && label->bounds().width < original.x,
+                "Actual OptionRow truncated or failed to fit its long authored label to its column");
+            const auto retained_label = label->bounds();
+            row.set_value(L"Current value");
+            require(value->text() == L"Current value" && value->bounds().width <= 160.01f &&
+                label->bounds() == retained_label && label->text() == text,
+                "OptionRow value updates changed its fitted label or escaped the supplied value width");
+            row.adjust(Direction::right);
+            require(adjustments == 1, "Fitted OptionRow lost its right adjustment action");
+            row.adjust(Direction::left);
+            require(adjustments == 0, "Fitting an authored OptionRow label changed its adjustment actions");
+        }
+
+        const std::wstring short_label = L"Height constrained";
+        const auto original = world.render.measure_text(font, short_label);
+        require(original.y > 10.0f, "OptionRow height fixture already fits without scaling");
+        OptionRow height_row("height", short_label, label_position, {10000.0f, 100.0f}, style,
+            art.ink, &world.render, {}, &art, {160.0f, 10.0f});
+        const UiText* fitted = row_text(height_row, "height_label");
+        require(fitted != nullptr && fitted->text() == short_label && fitted->bounds().height > 0.0f &&
+            fitted->bounds().height <= 10.01f && fitted->bounds().height < original.y &&
+            fitted->bounds().width < original.x,
+            "Actual OptionRow did not preserve and shrink a height-constrained authored label");
+    }
+
+    void check_item_bounds(Variants& variants, World& world)
+    {
+        for (const char* key : { "play", "options", "credits", "exit", "controls_audio", "apply", "back" })
+        {
+            variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
+                { d["menu_text"]["items"][key].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
+        }
+        const auto original = variants.load([](rapidjson::Document&) {});
+        const float row_height = 20.0f + original.main_menu().art.focus_padding.y * 2.0f;
+        const float paper_right = (1920.0f + original.main_menu().home_box_size.x) / 2.0f;
+        const float right_position = paper_right - 24.0f - original.main_menu().art.focus_padding.x;
+        const auto exact_items = [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_exact");
+            for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
+        };
+        const auto row_edge = [&](rapidjson::Document& d)
+        {
+            exact_items(d);
+            d["main_menu"]["home_spacing"]["y"].SetFloat(row_height);
+            d["main_menu"]["home_subtitle_position"]["y"].SetFloat(
+                original.main_menu().home_position.y + row_height / 2.0f);
+        };
+        const auto fits_row = variants.load(row_edge);
+        fits_row.validate_resources(world.render, world.audio);
+        variants.rejects("items.play", [&](rapidjson::Document& d)
+        {
+            row_edge(d);
+            d["main_menu"]["home_spacing"]["y"].SetFloat(row_height - 0.25f);
+        }, &world);
+
+        const auto paper_edge = [&](rapidjson::Document& d)
+        {
+            exact_items(d);
+            d["menu_style"]["fonts"]["heading"].SetString("menu_text_exact");
+            for (const auto& entry : headings) { d["menu_text"]["headings"][entry.key].SetString("Fit"); }
+            d["main_menu"]["home_position"]["x"].SetFloat(right_position);
+        };
+        const auto fits_paper = variants.load(paper_edge);
+        fits_paper.validate_resources(world.render, world.audio);
+        variants.rejects("items.play", [&](rapidjson::Document& d)
+        {
+            paper_edge(d);
+            d["main_menu"]["home_position"]["x"].SetFloat(right_position + 0.25f);
+        }, &world);
+    }
 }
 
 int main(int argc, char** argv)
@@ -394,9 +541,11 @@ int main(int argc, char** argv)
         check_keyed_content(variants);
         check_text_and_fonts(variants, world, content);
         check_inclusive_bounds(variants, world);
+        check_item_bounds(variants, world);
+        check_option_row_fitting(variants, world);
         check_prompt_bar(world, defaults);
-        std::cout << "PASS shared menu text: exact headings/complete legends, keyed and enum guards, normalization, "
-            "font/layout bounds and actual PromptBar copy/measurement compatibility.\n";
+        std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
+            "font/paper/row bounds, OptionRow fitting and actual PromptBar copy/measurement compatibility.\n";
         return 0;
     }
     catch (const std::exception& error)

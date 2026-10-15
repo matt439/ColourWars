@@ -107,14 +107,15 @@ random-primary selection, without changing selection order or RNG draws.
 
 ## Shared headings and complete control legends
 
-The required `menu_text` object stores the shared menu brand, eleven headings
-and seventeen complete prompt-bar legends:
+The required `menu_text` object stores the shared menu brand, eleven headings,
+seventeen complete prompt-bar legends and ten Home/Options/Credits row labels:
 
 | JSON path | Required keys |
 |---|---|
 | `menu_text.brand` | One brand-line string |
 | `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
 | `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits` |
+| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back` |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
 normalization, must contain printable nonblank text on one line, and must use
@@ -129,9 +130,10 @@ the actual drawing font and measured bounds in the menu's design coordinates.
 
 Home, Options and Credits use their existing authored heading positions, and
 Controls / audio and Pad sticks use `controls_settings.heading_position`. The
-other headings use `menu_style.layout.position`. All lines reserve a right
-margin equal to `menu_style.chrome.brand_position.x`: measured width plus the
-absolute horizontal shadow must be at most `1920 - position.x - right_margin`.
+other headings use `menu_style.layout.position`. Brand, heading and prompt lines
+reserve a right margin equal to `menu_style.chrome.brand_position.x`: measured
+width plus the absolute horizontal shadow must be at most
+`1920 - position.x - right_margin`.
 Measured height plus the absolute vertical shadow must be at most
 `lower_boundary - position.y`. Equality is accepted. Negative or nonfinite
 positions, shadows extending beyond the left/top edges, and overflowing text
@@ -160,14 +162,58 @@ constructor remains available for developer tools and tests.
 These strings are edited in JSON and remain outside numeric `tune`. The schema
 adds no locale axis, automatic wrapping or runtime formatting language.
 
+### Home, Options and Credits row labels
+
+`menu_text.items` uses fixed roles for the existing rows and actions:
+
+| Key | Shipped text | Use |
+|---|---|---|
+| `play` | `Play` | Home action |
+| `options` | `Options` | Home action |
+| `credits` | `Credits` | Home action |
+| `exit` | `Exit` | Home action |
+| `resolution` | `Resolution` | Options label |
+| `fullscreen` | `Fullscreen` | Options label |
+| `team_palette` | `Team palette` | Options label |
+| `controls_audio` | `Controls / audio` | Options action |
+| `apply` | `Apply` | Options action |
+| `back` | `Back` | Options and Credits action |
+
+All ten fields are required and follow the same nonblank, single-line and
+punctuation-normalization rules as the other shared text. Startup checks each
+against `menu_style.fonts.item` and requires finite, positive measured bounds.
+Plain actions retain their measured size. Their text bounds, expanded on each
+side by `main_menu.art.focus_padding`, must fit the page's paper rectangle.
+That rectangle uses the page's existing `home_box_size`, `options_box_size` or
+`credits_box_size`, centered within `(1920, menu_style.chrome.footer_y)`.
+Positive Home/Options row spacing also limits the padded text height; Credits
+Back has no row-spacing cap. Boundary equality is accepted. This checks the
+outer paper rectangle and adds no text-shadow allowance to plain item text.
+
+The first three Options labels keep the existing `OptionRow` fit. The available
+width is `main_menu.options_value_x - label_position.x - focus_padding.x` and
+the available height is `main_menu.options_spacing.y - 2 * focus_padding.y`.
+The scale starts at one, shrinks to fit width, then shrinks further for height
+if needed; it must remain finite and positive. The resulting bounds still
+undergo the paper/focus checks. Long supported labels therefore remain valid
+when their fitted bounds fit the row; there is no arbitrary character-count
+limit.
+
+The keys identify existing C++ actions and do not add or reorder rows. Labels
+come from the page's captured `MenuText`, so an open Home, Options or Credits
+page retains its current labels after presentation changes, and reopening
+adopts the edits. The names are string settings edited in JSON, outside numeric
+`tune`.
+
 ## Verification and boundary
 
 The `menu_presentation` consumer case checks layout limits, required identifiers,
 custom sparse atlases, resource errors and actual paper-art construction without
 a graphics or audio device. The `weapon_catalog` case checks the weapon catalog's
 required fields, display-text rules and resource/layer compatibility.
-The `menu_text` case checks required shared headings/legends, text normalization,
-font coverage and measured design bounds.
+The `menu_text` case checks required shared headings/legends/row labels, text
+normalization, font coverage and measured design/paper bounds, including fitted
+Options labels.
 Debug-console acceptance checks layout edit scopes, rollback and reset.
 
 The native painter checks exercise real page construction, copied geometry,
@@ -184,14 +230,16 @@ the focused `MainMenuOnly`, `SettingsMenuOnly`, `ControlsMenuOnly`, `PauseMenuOn
 uses its scripted input backend; the other checks retain the real backend.
 `WeaponCatalogOnly` checks the catalog on real weapon pages, including page
 snapshots across catalog replacement and reopening.
-`MenuTextOnly` checks authored headings and complete legends on real pages,
-including their captured text/look when a page updates its prompt or reopens.
+`MenuTextOnly` checks authored headings, complete legends and Home/Options/Credits
+row labels on real pages, including their captured text/look when a page updates
+its prompt or reopens.
 
 The non-menu primitive texel retains its own startup checks. Together with
 [gameplay tuning](gameplay-tuning.md), the shared layout and sheet choices define
 the data boundary implemented for gap-audit 8.5. The weapon catalog implements
-the name/artwork part of GAP#8.4, and `menu_text` implements shared headings and
-control legends. Row labels, status messages, dynamic match/results/pause/end
-titles, title-screen and home-hero copy, and other player-visible C++ text remain
-open under that item. Font regeneration, wrapping and locale selection remain
-separate work. The historical audit is unchanged.
+the name/artwork part of GAP#8.4, and `menu_text` implements shared headings,
+control legends and Home/Options/Credits row labels. Controls and stick-settings
+labels, status/value text, composed match/results/pause/end text, title-screen
+and home-hero copy, and other player-visible C++ text remain open under that
+item. Font regeneration, wrapping and locale selection remain separate work.
+The historical audit is unchanged.

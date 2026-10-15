@@ -29,6 +29,10 @@ namespace
 		"title", "select_back", "options", "controls", "sticks", "mode", "join", "team", "team_shuffle",
 		"weapon", "arena_browse", "arena_locked", "missing_player", "pause", "pause_missing", "select", "credits"
 	};
+	constexpr std::array<const char*, static_cast<size_t>(MenuItem::count)> menu_item_keys{
+		"play", "options", "credits", "exit", "resolution", "fullscreen", "team_palette",
+		"controls_audio", "apply", "back"
+	};
 
 	std::wstring read_menu_line(const JsonValue& json, const char* key)
 	{
@@ -55,6 +59,11 @@ namespace
 		for (size_t index = 0; index < text.prompts.size(); ++index)
 		{
 			text.prompts[index] = read_menu_line(prompts, menu_prompt_keys[index]);
+		}
+		const JsonValue items = json.object("items");
+		for (size_t index = 0; index < text.items.size(); ++index)
+		{
+			text.items[index] = read_menu_line(items, menu_item_keys[index]);
 		}
 		return text;
 	}
@@ -1569,6 +1578,11 @@ const std::wstring& MenuText::prompt(MenuPrompt prompt) const
 	return this->prompts.at(static_cast<size_t>(prompt));
 }
 
+const std::wstring& MenuText::item(MenuItem item) const
+{
+	return this->items.at(static_cast<size_t>(item));
+}
+
 const WeaponChoicePresentation& WeaponSelectArtworkPresentation::choice(WeaponType type) const
 {
 	const size_t index = static_cast<size_t>(type);
@@ -1883,6 +1897,63 @@ void Presentation::validate_resources(const RenderResources& render,
 			this->menu_text_.prompts[index], this->prompt_bar_.font, this->prompt_bar_.position,
 			1080.0f, this->prompt_bar_.shadow_offset);
 	}
+	const auto check_menu_item = [&](MenuItem item, const Vector2F& position,
+		const Vector2F& paper_size, float row_spacing, bool fitted_label)
+	{
+		const std::string where = this->source_path_ + ": menu_text.items." +
+			menu_item_keys[static_cast<size_t>(item)];
+		const std::wstring& text = this->menu_text_.item(item);
+		drawable_text::check_font_can_draw(&render, this->menu_.item_font, text, where);
+		Vector2F size = render.measure_text(render.resolve_sprite_font(this->menu_.item_font), text);
+		if (!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f)
+		{
+			throw std::runtime_error(where + " must have finite positive measured text bounds.");
+		}
+		const MainMenuPresentation& look = this->main_menu_;
+		const Vector2F padding = look.art.focus_padding;
+		if (fitted_label)
+		{
+			// Match OptionRow's existing width-then-height fit. Long supported
+			// labels remain valid; the display column, not a character limit, fits them.
+			const float width = look.options_value_x - position.x - padding.x;
+			const float height = row_spacing - padding.y * 2.0f;
+			float scale = 1.0f;
+			if (size.x > width) { scale = width / size.x; }
+			if (size.y * scale > height) { scale = height / size.y; }
+			if (!std::isfinite(scale) || scale <= 0.0f)
+			{
+				throw std::runtime_error(where + " must leave a positive fitted label column and row height.");
+			}
+			size *= scale;
+		}
+		const Vector2F top = (Vector2F(1920.0f, this->menu_.footer_y) - paper_size) / 2.0f;
+		const Vector2F bottom = top + paper_size;
+		if (!std::isfinite(position.x) || !std::isfinite(position.y) ||
+			position.x - padding.x < top.x || position.y - padding.y < top.y ||
+			position.x + size.x + padding.x > bottom.x ||
+			position.y + size.y + padding.y > bottom.y ||
+			(row_spacing > 0.0f && size.y + padding.y * 2.0f > row_spacing))
+		{
+			throw std::runtime_error(where + " must fit its paper and row including focus padding.");
+		}
+	};
+	const MainMenuPresentation& main = this->main_menu_;
+	const MenuItem home_items[]{ MenuItem::play, MenuItem::options, MenuItem::credits, MenuItem::exit };
+	for (size_t index = 0; index < std::size(home_items); ++index)
+	{
+		check_menu_item(home_items[index], main.home_position +
+			Vector2F(0.0f, main.home_spacing.y * static_cast<float>(index + 2)),
+			main.home_box_size, main.home_spacing.y, false);
+	}
+	const MenuItem options_items[]{ MenuItem::resolution, MenuItem::fullscreen, MenuItem::team_palette,
+		MenuItem::controls_audio, MenuItem::apply, MenuItem::back };
+	for (size_t index = 0; index < std::size(options_items); ++index)
+	{
+		check_menu_item(options_items[index], main.options_position +
+			Vector2F(0.0f, main.options_spacing.y * static_cast<float>(index)),
+			main.options_box_size, main.options_spacing.y, index < 3);
+	}
+	check_menu_item(MenuItem::back, main.credits_back_position, main.credits_box_size, 0.0f, false);
 	check.font("hud.meter_label_font", this->hud_.meter_label_font);
 	check.font("hud.player_identity.font", this->hud_.player_identity_font);
 	check.frame("hud.fill_frame", this->hud_.sprite_sheet, this->hud_.fill_frame);
