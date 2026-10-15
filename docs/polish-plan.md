@@ -505,7 +505,15 @@ The [implementation and evidence](polish-weapon-feedback.md) add distinct paid-s
 muzzle phrases to the four ranged tools, a rate-limited empty-paint response and
 a brief acknowledgement when a complete shot's paint regenerates. The roller
 keeps its contact swash. Aim, firing cadence and paint ownership are unchanged;
-optional view shake and menu focus motion remain `POL#10`.
+menu focus motion remains `POL#10`.
+
+**Optional local view shake implemented (2026-10-15, part of `POL#10`).** The
+[implementation and evidence](polish-view-shake.md) add a restrained, bounded
+world-camera accent on accepted damage, elimination and heavier landings.
+Each player's pane reacts only to that player; the base aiming camera, HUD,
+collision and scoring remain stable. Controls / audio exposes a saved View
+shake switch from the main menu and pause. The broader reduced-effects pass
+and repeated-sound variants remain `POL#13`.
 
 **Exit condition:** a complete match in the reference arena feels visually coherent
 and responsive. Jumping, landing and movement have visible, correctly timed feedback.

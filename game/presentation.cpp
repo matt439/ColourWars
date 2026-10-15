@@ -875,6 +875,25 @@ Presentation::Presentation(const char* path)
 	this->prompt_bar_ = read_prompt_bar(root);
 	this->hud_ = read_hud(root);
 	this->camera_.reference_height = read_positive(root.object("camera"), "reference_height");
+	const JsonValue shake = root.object("camera").object("shake");
+	ViewShakePresentation& kick = this->camera_.shake;
+	kick.hurt_amplitude = read_positive(shake, "hurt_amplitude");
+	kick.elimination_amplitude = read_positive(shake, "elimination_amplitude");
+	kick.landing_amplitude = read_positive(shake, "landing_amplitude");
+	kick.landing_min_speed = read_positive(shake, "landing_min_speed");
+	kick.landing_full_speed = read_positive(shake, "landing_full_speed");
+	kick.duration = read_positive(shake, "duration");
+	kick.cycles = read_positive(shake, "cycles");
+	kick.repeat_delay = read_positive(shake, "repeat_delay");
+	if (kick.hurt_amplitude > 8.0f || kick.elimination_amplitude > 8.0f ||
+		kick.landing_amplitude > 8.0f || kick.duration > 0.5f || kick.cycles > 3.0f ||
+		kick.repeat_delay < kick.duration || kick.repeat_delay > 2.0f ||
+		kick.landing_full_speed <= kick.landing_min_speed)
+	{
+		throw std::runtime_error(shake.where() + ": shake needs amplitudes <= 8 world units, "
+			"duration <= 0.5 seconds, cycles <= 3, duration <= repeat_delay <= 2 seconds "
+			"and landing_full_speed > landing_min_speed.");
+	}
 	const JsonValue movement = root.object("movement_feedback");
 	MovementFeedbackPresentation& feedback = this->movement_feedback_;
 	feedback.enabled = movement.boolean("enabled");

@@ -125,11 +125,25 @@ struct MatchPresentation
 	float controls_gap = 0.0f;
 };
 
+// World-camera accent sizes in world units, and their timing in seconds.
+struct ViewShakePresentation
+{
+	float hurt_amplitude = 0.0f;
+	float elimination_amplitude = 0.0f;
+	float landing_amplitude = 0.0f;
+	float landing_min_speed = 0.0f;
+	float landing_full_speed = 0.0f;
+	float duration = 0.0f;
+	float cycles = 0.0f;
+	float repeat_delay = 0.0f;
+};
+
 // World framing uses the full display height; split panes inherit their fraction.
 // This is independent of menu and HUD coordinates and of the physical resolution.
 struct CameraPresentation
 {
 	float reference_height = 0.0f;
+	ViewShakePresentation shake;
 };
 
 struct MainMenuPresentation

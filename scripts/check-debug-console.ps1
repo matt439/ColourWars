@@ -572,7 +572,7 @@ try {
     $narrowSaveDirectory = Join-Path $narrowProfile 'ColourWars'
     $null = New-Item -ItemType Directory -Path $narrowSaveDirectory -Force
     Set-Content -LiteralPath (Join-Path $narrowSaveDirectory 'save_data.json') -Encoding ASCII -Value `
-        '{"resolution":{"x":1280,"y":720},"fullscreen":false,"team_palette":"random","aim_sensitivity":3,"music_volume":100,"sfx_volume":100}'
+        '{"resolution":{"x":1280,"y":720},"fullscreen":false,"team_palette":"random","aim_sensitivity":3,"music_volume":100,"sfx_volume":100,"view_shake":true}'
     $narrowShot = Join-Path $narrowSaveDirectory 'screens/narrow.png'
     $transcript = Join-Path $output 'narrow.log'
     Remove-Item -LiteralPath $transcript -ErrorAction SilentlyContinue

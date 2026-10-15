@@ -59,20 +59,31 @@ void ControlsSettingsMenu::init()
 	this->aim_ = make_row("aim", L"Stick sensitivity", 0, this->selection_.aim_sensitivity, 1, 5, 1);
 	this->music_ = make_row("music", L"Music volume", 1, this->selection_.music_volume, 0, 100, 10);
 	this->sfx_ = make_row("sfx", L"SFX volume", 2, this->selection_.sfx_volume, 0, 100, 10);
-	for (OptionRow* row : { this->aim_.get(), this->music_.get(), this->sfx_.get() })
+	this->view_shake_ = std::make_unique<OptionRow>("view_shake", L"View shake",
+		this->calculate_widget_position(0, 3), this->calculate_widget_position(1, 3),
+		style, this->presentation().main_menu().options_value_colour, this->render_resources(),
+		[this](Direction direction)
+		{
+			this->selection_.view_shake = direction == Direction::right;
+			this->refresh_values();
+			this->status_->set_text(L"Apply to save changes for all players.");
+			this->status_->set_colour(this->menu_style().highlight);
+		});
+	for (OptionRow* row : { this->aim_.get(), this->music_.get(), this->sfx_.get(),
+		this->view_shake_.get() })
 	{
 		this->text_container_->add_child(row);
 		this->focus_.add(row);
 	}
 	this->refresh_values();
 	add_text("aim_help", L"Higher sensitivity needs less stick travel.\nMouse aim follows the cursor; roller aim is fixed.",
-		look.help_font, this->calculate_widget_position(0, 3), style.highlight);
+		look.help_font, this->calculate_widget_position(0, 4), style.highlight);
 	UiTextDropShadow* apply = add_text("apply", L"Apply", style.item_font,
-		this->calculate_widget_position(0, 4), style.unhighlight);
-	UiTextDropShadow* back = add_text("back", L"Back", style.item_font,
 		this->calculate_widget_position(0, 5), style.unhighlight);
+	UiTextDropShadow* back = add_text("back", L"Back", style.item_font,
+		this->calculate_widget_position(0, 6), style.unhighlight);
 	this->status_ = add_text("status", L"Apply to save changes for all players.",
-		look.help_font, this->calculate_widget_position(0, 6), style.highlight);
+		look.help_font, this->calculate_widget_position(0, 7), style.highlight);
 	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(back, [this] { this->close(); });
 	add_text("controls", L"CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc",
@@ -85,6 +96,7 @@ void ControlsSettingsMenu::refresh_values()
 	this->aim_->set_value(labels[this->selection_.aim_sensitivity - 1]);
 	this->music_->set_value(std::to_wstring(this->selection_.music_volume) + L"%");
 	this->sfx_->set_value(std::to_wstring(this->selection_.sfx_volume) + L"%");
+	this->view_shake_->set_value(this->selection_.view_shake ? L"On" : L"Off");
 }
 
 void ControlsSettingsMenu::apply_settings()

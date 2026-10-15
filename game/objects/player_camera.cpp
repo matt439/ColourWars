@@ -54,3 +54,17 @@ Vector2F PlayerCamera::mouse_direction(const Vector2F& player_center,
 	// second, potentially inconsistent inverse transform is needed.
 	return direction == Vector2F::ZERO ? Vector2F::ZERO : direction.normalized();
 }
+
+Camera PlayerCamera::displaced(const Camera& base, const Viewport& viewport,
+	const Vector2F& offset, const RectangleF& bounds)
+{
+	Camera result = base;
+	const Vector2F size = base.visible_rectangle(Viewport(viewport.pixel_rect())).size();
+	result.translation.x = size.x >= bounds.width ?
+		bounds.x + (bounds.width - size.x) / 2.0f :
+		std::clamp(base.translation.x + offset.x, bounds.left(), bounds.right() - size.x);
+	result.translation.y = size.y >= bounds.height ?
+		bounds.y + (bounds.height - size.y) / 2.0f :
+		std::clamp(base.translation.y + offset.y, bounds.top(), bounds.bottom() - size.y);
+	return result;
+}

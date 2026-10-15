@@ -53,7 +53,8 @@ Player::Player(const RectangleF& rectangle,
     float layer_depth,
     int sound_index,
     const FigurePresentation* figure,
-    int teammate_index) :
+    int teammate_index,
+    const ViewShakePresentation* view_shake) :
     MovingObject(velocity),
     AnimationObject(tuning->player().idle.sheet,
                     tuning->player().idle.strip,
@@ -70,6 +71,7 @@ Player::Player(const RectangleF& rectangle,
     quiet_character_(figure, sound_index >= 0 ? sound_index : std::max(player_num, 0)),
     movement_feedback_(movement_feedback, render_resources),
     combat_feedback_(combat_feedback, render_resources),
+    view_shake_(view_shake),
     movement_audio_(&tuning->player().movement_sounds,
         audio_resources->sound_bank(tuning->player().sound_bank), preferences,
         sound_index >= 0 ? sound_index : player_num),
@@ -452,6 +454,10 @@ void Player::end_contacts(std::span<const Contact> contacts)
             {
                 this->movement_feedback_.land(this->support_position_,
                     this->support_impact_speed_);
+                if (this->preferences_->view_shake)
+                {
+                    this->view_shake_.land(this->support_impact_speed_);
+                }
                 if (this->support_impact_speed_ >= this->movement_feedback_look_->landing_min_speed)
                 {
                     this->start_action(PlayerAnimationState::landing);
@@ -689,6 +695,7 @@ void Player::on_projectile_contact(CollisionObjectType other_type)
     {
         this->start_action(PlayerAnimationState::hurt);
         this->combat_feedback_.hurt();
+        if (this->preferences_->view_shake) { this->view_shake_.hurt(); }
     }
 
     this->health_regen_timer_ = 0.0f;
@@ -711,6 +718,7 @@ void Player::update(float dt)
     // on its actual tick at age zero, irrespective of the number of views.
     this->movement_feedback_.update(dt);
     this->combat_feedback_.update(dt);
+    this->view_shake_.update(dt, this->preferences_->view_shake);
     this->age_action(dt);
     if (this->state_ == PlayerState::alive && this->health_ <= 0.0f)
     {
@@ -726,6 +734,7 @@ void Player::update(float dt)
         this->set_move_state(PlayerMoveState::in_air);
         this->start_action(PlayerAnimationState::elimination);
         this->combat_feedback_.eliminate(this->rectangle_);
+        if (this->preferences_->view_shake) { this->view_shake_.eliminate(); }
         this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume * this->preferences_->sfx_gain());
     }
 
@@ -1089,6 +1098,10 @@ void Player::set_player_input(const PlayerInputData& input)
 	this->input_ = input;
 }
 
+const ViewShake& Player::view_shake() const { return this->view_shake_; }
+
+void Player::clear_view_shake() { this->view_shake_.clear(); }
+
 void Player::reset_jump_input()
 {
     this->jump_buffer_remaining_ = 0.0f;
@@ -1181,6 +1194,7 @@ const PlayerAnimationTuning& Player::animation_info(
 }
 void Player::place_at(const Vector2F& top_left)
 {
+    this->view_shake_.clear();
     this->quiet_character_.reset();
     this->combat_feedback_.clear();
     this->primary_->reset_motion();
@@ -1299,6 +1313,7 @@ void Player::stop_sounds() const
 }
 void Player::reset_tool_motion()
 {
+    this->view_shake_.clear();
     this->primary_->reset_motion();
     this->quiet_character_.reset();
 }

@@ -86,8 +86,53 @@ namespace
 		const PlaySettings& wanted = expected.play_settings();
 		require(actual.aim_sensitivity == wanted.aim_sensitivity &&
 			actual.music_volume == wanted.music_volume &&
-			actual.sfx_volume == wanted.sfx_volume,
+			actual.sfx_volume == wanted.sfx_volume &&
+			actual.view_shake == wanted.view_shake,
 			"Shared play preferences did not survive reloading");
+	}
+
+	void check_view_shake_loading(const IsolatedSaveDirectory& directory)
+	{
+		struct Fixture
+		{
+			const char* member;
+			bool expected;
+		};
+		const Fixture fixtures[] = {
+			{ "", true },
+			{ ",\"view_shake\":true", true },
+			{ ",\"view_shake\":false", false },
+			{ ",\"view_shake\":null", true },
+			{ ",\"view_shake\":0", true },
+			{ ",\"view_shake\":1", true },
+			{ ",\"view_shake\":\"false\"", true },
+			{ ",\"view_shake\":[]", true },
+			{ ",\"view_shake\":{}", true }
+		};
+		for (const Fixture& fixture : fixtures)
+		{
+			{
+				std::ofstream output(directory.save_path(), std::ios::binary | std::ios::trunc);
+				output << "{\"resolution\":{\"x\":1280,\"y\":720},\"fullscreen\":true,"
+					"\"team_palette\":\"blue_yellow\",\"aim_sensitivity\":4,"
+					"\"music_volume\":20,\"sfx_volume\":80" << fixture.member << '}';
+				require(output.good(), "Could not write the view-shake save fixture");
+			}
+			Save restored;
+			restored.load_save_file();
+			const PlaySettings& play = restored.play_settings();
+			require(play.view_shake == fixture.expected,
+				"Absent or invalid view shake did not use its enabled default");
+			require(restored.resolution() == labrador::ScreenResolution::s_1280_720 &&
+				restored.fullscreen() && restored.team_palette() == TeamColourPair::blue_yellow &&
+				play.aim_sensitivity == 4 && play.music_volume == 20 && play.sfx_volume == 80,
+				"View-shake recovery reset an unrelated saved preference");
+			require(restored.save_to_file(), "Could not canonicalize the view-shake save fixture");
+			const char* canonical = fixture.expected ? "\"view_shake\":true" : "\"view_shake\":false";
+			require(contents(directory.save_path()).find(canonical) != std::string::npos,
+				"Saving did not write the view-shake preference as a boolean");
+			check_round_trip(restored);
+		}
 	}
 }
 
@@ -101,6 +146,8 @@ int main()
 		play.aim_sensitivity = 5;
 		play.music_volume = 30;
 		play.sfx_volume = 70;
+		require(play.view_shake, "View shake is not enabled by default");
+		play.view_shake = false;
 		require(save.set_play_settings_and_save(play), "Initial play save failed");
 		require(save.set_display_settings_and_save(
 			labrador::ScreenResolution::s_2560_1440, true, TeamColourPair::blue_yellow),
@@ -131,13 +178,14 @@ int main()
 		const bool display_saved = save.set_display_settings_and_save(
 			labrador::ScreenResolution::s_1280_720, false, TeamColourPair::pink_green);
 		play.music_volume = 0;
+		play.view_shake = true;
 		const bool play_saved = save.set_play_settings_and_save(play);
 		CloseHandle(locked);
 		require(!display_saved && !play_saved,
 			"Persistence failure was reported as success");
 		require(save.resolution() == labrador::ScreenResolution::s_1280_720 &&
 			!save.fullscreen() && save.team_palette() == TeamColourPair::pink_green &&
-			save.play_settings().music_volume == 0,
+			save.play_settings().music_volume == 0 && save.play_settings().view_shake,
 			"Failed saves lost the active settings");
 		require(contents(directory.save_path()) == original,
 			"Failed replacement damaged the previous save");
@@ -145,7 +193,9 @@ int main()
 			"Failed replacement left a temporary save");
 		require(save.save_to_file(), "Save did not recover after the lock was released");
 		check_round_trip(save);
-		std::cout << "PASS settings: bulk apply, validation, persistence failure, recovery\n";
+		check_view_shake_loading(directory);
+		std::cout << "PASS settings: bulk apply, validation, persistence failure, recovery, "
+			"view-shake default/type recovery and boolean persistence\n";
 		return 0;
 	}
 	catch (const std::exception& error)

@@ -281,7 +281,17 @@
   },
 
   "camera": {
-    "reference_height": 1080.0
+    "reference_height": 1080.0,
+    "shake": {
+      "hurt_amplitude": 3,
+      "elimination_amplitude": 5,
+      "landing_amplitude": 2,
+      "landing_min_speed": 800,
+      "landing_full_speed": 1600,
+      "duration": 0.18,
+      "cycles": 1.5,
+      "repeat_delay": 0.24
+    }
   },
 
   "combat_feedback": {

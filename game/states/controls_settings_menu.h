@@ -27,5 +27,6 @@ private:
 	std::unique_ptr<OptionRow> aim_;
 	std::unique_ptr<OptionRow> music_;
 	std::unique_ptr<OptionRow> sfx_;
+	std::unique_ptr<OptionRow> view_shake_;
 	labrador::UiTextDropShadow* status_ = nullptr;
 };

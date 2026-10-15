@@ -314,7 +314,7 @@ try {
     }
     Write-ContactSheet -CaptureDirectory $captures
     $result.outcome = 'passed'
-    $result.diagnostic = 'Painter base/action, five-tool mechanism, weapon paid-shot/aim-follow and controlled muzzle/empty/recovered on/off, step/skid contact, and actual idle drip/quiet character matrices passed. Distinct pinned body/tool and quiet on/off/blink rasters, frozen motion/feedback/quiet timers/redraw, simulation fingerprint, separate player/drip raster culling bounds, elimination/redraw/respawn and idle whole-story poses passed. Human playing-size review remains separate.'
+    $result.diagnostic = 'Painter base/action, five-tool mechanism, weapon paid-shot/aim-follow and controlled muzzle/empty/recovered on/off, step/skid contact, and actual idle drip/quiet character matrices passed. Local view shake preserved other panes, opaque HUD ink, base camera/aim, frozen redraw and simulation fingerprint, including suspension and resume. Distinct pinned body/tool and quiet on/off/blink rasters, frozen motion/feedback/quiet timers/redraw, separate player/drip raster culling bounds, elimination/redraw/respawn and idle whole-story poses passed. Human playing-size review remains separate.'
 }
 catch {
     $failure = $_

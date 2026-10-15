@@ -20,6 +20,12 @@ public:
 		const mattmath::Vector2F& cursor, const labrador::Viewport& viewport,
 		const labrador::Camera& camera);
 
+	// Render-only offset. Never feed it back into follow or mouse_direction.
+	// Bound it to the arena; oversized axes retain their centred framing.
+	static labrador::Camera displaced(const labrador::Camera& base,
+		const labrador::Viewport& viewport, const mattmath::Vector2F& offset,
+		const mattmath::RectangleF& bounds);
+
 private:
 	labrador::CameraTools tools_;
 };

@@ -73,13 +73,16 @@ label the teams with A/B letters beside the percentages (and the bars, when
 shown).
 
 Options and Pause both offer **Controls / audio**, with a controls reference,
-five levels of controller stick sensitivity, and separate music and SFX volume.
+five levels of controller stick sensitivity, separate music and SFX volume,
+and an On/Off **View shake** setting (On by default).
 Higher sensitivity needs less aim-stick travel; level 3 preserves the original
 deadzone. Mouse aim follows the cursor and the roller keeps its fixed aim.
 Use Left/Right to adjust, then Apply to save for all players and future launches.
 Back discards unapplied changes. From Pause, Back returns to the pause menu;
 Resume uses the new settings in the current match. Volume is 0-100% of the
 authored mix, including menu sounds, and zero mutes that category.
+View shake adds a small local world-camera accent on hurt, elimination and heavy
+landings. The HUD and aim stay steady; Off applies to every player.
 
 **Credits** on the home menu acknowledges the engine, third-party code, content
 tools, fonts, artwork and accepted replacement audio sources. Full notices and

@@ -112,6 +112,8 @@ public:
 	// player's input slot (see players_).
 	int player_count() const;
 	const Player& player(int view) const;
+	// Cosmetic world camera; player(view).camera() remains the stable aim/follow camera.
+	labrador::Camera view_camera(int view) const;
 	// Null for tools without an idle drip. Index follows player(view).
 	const IdleDrip* idle_drip(int view) const;
 

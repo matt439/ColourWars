@@ -79,6 +79,14 @@ SaveData Save::load_from_json(const char* json_path) const
     read_preference("music_volume", 0, 100, data.play.music_volume);
     read_preference("sfx_volume", 0, 100, data.play.sfx_volume);
 
+    try
+    {
+        data.play.view_shake = root.boolean("view_shake");
+    }
+    catch (const std::runtime_error&)
+    {
+    }
+
     return data;
 }
 bool Save::file_exists(const std::string& path)
@@ -173,6 +181,7 @@ bool Save::write_save_file(const SaveData& data) const
     d.AddMember("aim_sensitivity", data.play.aim_sensitivity, d.GetAllocator());
     d.AddMember("music_volume", data.play.music_volume, d.GetAllocator());
     d.AddMember("sfx_volume", data.play.sfx_volume, d.GetAllocator());
+    d.AddMember("view_shake", data.play.view_shake, d.GetAllocator());
 
     // Writer flushes when the root object ends, before fclose below.
     Writer<FileWriteStream> writer(os);

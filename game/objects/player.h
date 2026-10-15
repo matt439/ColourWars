@@ -14,6 +14,7 @@
 #include "game/objects/figure_clothing.h"
 #include "game/objects/figure_attachments.h"
 #include "game/objects/quiet_character.h"
+#include "game/objects/view_shake.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/shape.h"
 #include "engine/math/vector2f.h"
@@ -111,7 +112,8 @@ public:
         float layer_depth = 0.0f,
         int sound_index = -1,
         const FigurePresentation* figure = nullptr,
-        int teammate_index = -1);
+        int teammate_index = -1,
+        const ViewShakePresentation* view_shake = nullptr);
 
     ~Player() override;
 
@@ -144,6 +146,8 @@ public:
     const MovementFeedback& movement_feedback() const;
     const CombatFeedback& combat_feedback() const;
     const QuietCharacter& quiet_character() const;
+    const ViewShake& view_shake() const;
+    void clear_view_shake();
 
     // The equipped tool, including its current gameplay aim.
     const Weapon& primary_weapon() const;
@@ -245,6 +249,7 @@ private:
     QuietCharacter quiet_character_;
     MovementFeedback movement_feedback_;
     CombatFeedback combat_feedback_;
+    ViewShake view_shake_;
     MovementAudio movement_audio_;
     float movement_audio_dt_ = 0.0f;
     float movement_start_x_ = 0.0f;

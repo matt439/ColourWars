@@ -95,7 +95,8 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 			viewport_manager->
 				player_viewport(view_index),
 			position, Vector2F::ZERO, 0.0f, Vector2F::ZERO,
-			SpriteFlip::none, 0.0f, view_index, &this->presentation_->figure(), teammate_index);
+			SpriteFlip::none, 0.0f, view_index, &this->presentation_->figure(), teammate_index,
+			&this->presentation_->camera().shake);
 
 		players.push_back(std::move(player));
 	}

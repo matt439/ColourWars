@@ -146,6 +146,7 @@ void Level::suspend() const
 	for (Player* player : this->players_)
 	{
 		player->reset_jump_input();
+		player->clear_view_shake();
 	}
 	this->pause_audio();
 }
@@ -591,6 +592,8 @@ void Level::refresh_layout()
 	const Vector2F size = this->resolution_manager_->resolution_vec();
 	if (size == this->layout_size_)
 	{
+		// Preferences can change while pause covers the same-sized match.
+		this->refresh_views();
 		return;
 	}
 
@@ -616,6 +619,16 @@ void Level::update_players_after_resolve()
 	}
 }
 
+Camera Level::view_camera(int view) const
+{
+	const Player& player = *this->players_.at(static_cast<size_t>(view));
+	if (this->state_ != LevelState::active || !this->preferences_->view_shake ||
+		player.view_shake().offset() == Vector2F::ZERO) { return player.camera(); }
+	return PlayerCamera::displaced(player.camera(),
+		this->viewport_manager_->player_viewport(view), player.view_shake().offset(),
+		this->camera_bounds_);
+}
+
 void Level::refresh_views()
 {
 	this->scene_->clear_views();
@@ -632,11 +645,10 @@ void Level::refresh_views()
 		// Pane order follows players_, not input slots, which may be sparse.
 		for (size_t i = 0; i < this->players_.size(); ++i)
 		{
-			const Player* player = this->players_[i];
 			this->scene_->add_view(
 				Viewport(this->viewport_manager_->player_viewport(
 					static_cast<int>(i)).pixel_rect()),
-				player->camera());
+				this->view_camera(static_cast<int>(i)));
 		}
 	}
 	else
