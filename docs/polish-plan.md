@@ -1,11 +1,11 @@
 # ColourWars polish and level-design plan
 
 Status: implementation started on 2026-10-08. Camera/movement foundations and a
-takeoff/landing feedback prototype are implemented. A workshop style candidate
-is retained and an editable native-pixel kit now has a reproducible atlas,
-renderer/camera study and selectable playable Movement Course comparison, now
-refined, with retained route trials on the authored course. The art,
-movement-feel and arena acceptance gates remain open.
+takeoff/landing feedback prototype are implemented. The superseded workshop
+kit and its runtime comparison were retired on 2026-10-15; the historical
+style studies and authored Movement Course route trials remain. The Paint.exe art
+rules are accepted as of 2026-10-15; production artwork, movement-feel and arena
+acceptance remain open.
 Direction agreed on 2026-10-08. Source baseline: game revision `13e9960`.
 
 First increment: resolution-independent camera framing, configurable jump buffering
@@ -21,27 +21,29 @@ Third increment: [editable workshop kit and framing evidence](polish-style-kit.m
 That increment retained the kit as a separate art study.
 
 Fourth increment: [playable workshop comparison and evidence](polish-playable-kit.md).
-Movement Course now offers original, rotating-tool and authored-tool presentation,
-with animated team masks, connected hands, player badges and native tiled terrain.
-Other arenas keep their existing artwork. Human input/motion review remains open.
+That historical increment offered original, rotating-tool and authored-tool
+presentation, animated team masks, hands, badges and native tiled terrain.
+Its runtime comparison was retired on 2026-10-15.
 
 Fifth increment: [workshop refinement and course trials](polish-refine.md).
-It changes the arms to fixed-length bones, adds hysteresis to posed-tool
+It changed the arms to fixed-length bones, added hysteresis to posed-tool
 direction changes, and moves larger light badges behind the head. It lifts
 dark-team masks to a luminance floor. It shows that standing contact is
 pixel-flush, retains the Movement Course route trials as CI acceptance, and
-captures feedback on and off while the camera moves. These are candidates
-awaiting human review.
+captured feedback on and off while the camera moved. Its workshop candidates
+have since been retired; movement-feel review remains open.
 
 Direction changed on 2026-10-09: the author chose **Paint.exe Maximalism**
 (crude, mouse-drawn box-head figures, embraced deliberately) over the workshop
 pixel-art kit, which the second to fifth increments above built and which is
-now superseded. Gameplay style comes first, UI after. The round-2 picks (Zoom
-400% values, Tool Props terrain, airbrush cast shadows, a black keyline under
-paint, figure variant E with a head accent for teammates) are panel consensus
-not yet confirmed by the author, so §1 is still to be redone for Paint.exe;
-where this plan says pixel art below, read that style. The kit stays in the
-Movement Course comparison until it is retired or kept.
+now superseded. On 2026-10-15 the author confirmed all five round-2 picks:
+Zoom 400% values, Tool Props terrain, airbrush cast shadows, a black keyline
+under paint, and figure variant E with a head accent for teammates. These are
+the accepted rules in §1. Gameplay style comes first, UI after; where this
+plan says pixel art below, read Paint.exe Maximalism. The author also chose to
+retire the workshop kit on 2026-10-15 (`POL#2`): its comparison modes, F8 binding,
+runtime/source atlas, build/check scripts and dedicated cases are removed.
+Historical images, clips and study records remain, with sources in Git history.
 
 The theme, picked on the same style board, is a grey, unsaved picture with one
 palette slot left and two team colours fighting for it. [The backstory](backstory.md)
@@ -145,32 +147,71 @@ Relevant implementation references:
 
 ## 1. Establish the art and display rules
 
-Produce a small style reference containing a character, two contrasting weapons,
-a painted platform, background materials, effects and a HUD example. Inspect it
-at actual gameplay sizes, especially four-player split-screen.
+**Art rules accepted by the author on 2026-10-15 (`POL#1`).** Use Paint.exe
+Maximalism: crude, mouse-drawn box-head figures, embraced deliberately. The
+confirmed round-2 choices are:
 
-Decide and record:
+| Element | Accepted treatment |
+|---|---|
+| Values | Zoom 400% |
+| Terrain | Tool Props |
+| Cast shadows | Airbrush |
+| Paint edge | Black keyline under paint |
+| Figures and teammate identity | Variant E with a head accent for teammates |
 
-- Native sprite grid, consistent world texel density, outline weight and shading.
-- Character proportions, weapon scale, team-colour regions and player markers.
+These names refer to the round-2 visual study. Retain that study, or a link to
+it, with the production sources; no copy or link is currently recorded in this
+repository. The names do not specify numeric colours, sprite dimensions or
+finished assets. The workshop kit and its pixel-grid choices remain historical
+comparison evidence, rather than the production art standard.
+
+Build the gameplay style first: a small reference containing a character, two
+contrasting weapons, a painted platform, background materials and effects.
+Inspect it at actual gameplay sizes, especially four-player split-screen. Carry
+the accepted treatment into the HUD and menus after the gameplay composition
+works.
+
+Record the production details as the reference is built:
+
+- Character proportions, weapon scale, team-colour regions and the head accent.
+  The in-world team cue must remain readable at four-player size.
 - Palette roles: quiet background, readable terrain, distinct characters and
   bright paint. Check every supported team palette.
+- Consistent world art scale, keyline weight, airbrush shading and truthful
+  collision silhouettes beneath the Tool Props terrain.
 - Authored world framing for each layout and behaviour at other aspect ratios.
-- Display scaling, camera alignment and weapon rotation policy. Evaluate aimed
-  poses or pixel-art rotation treatment while keeping simulation aim continuous.
-- Typography and UI scaling that remain readable at the smallest supported size.
+- Display scaling, camera alignment and weapon rotation treatment while keeping
+  simulation aim continuous.
+- Typography and UI scaling that remain readable at the smallest supported size,
+  once the gameplay style is established.
 
-Reauthor the newer weapons and menu artwork to this standard. Reducing an
-illustration's resolution alone does not supply deliberate pixel shapes or a
-distinctive design. Keep editable sources and reproducible atlas generation.
-
-The engine already exposes point filtering and a camera helper accepting world
-units. Inspect and use those seams first. Pixel stability also depends on sprite
-scale, fractional placement and rotation; filtering alone is not acceptance.
+Reauthor the newer weapons and, afterwards, menu artwork to this standard. Keep
+editable sources and reproducible atlas generation. The engine already exposes
+point filtering and a camera helper accepting world units; use those seams and
+review scale, fractional placement and rotation in motion.
 
 **Exit condition:** one gameplay composition looks coherent in single-player and
 four-player views. Slow camera movement and aim sweeps remain stable and readable
 at 720p, 1080p and QHD. Record the supported scaling behaviour and any letterboxing.
+
+**Workshop retirement validation (2026-10-15):** Debug and Release build and
+pass all 11 remaining consumer cases. Movement Course routes, movement feedback,
+story/redraw audio and replay determinism remain covered. The registry no longer
+offers `visual`, F8 has no default action, and replay v3 explicitly rejects the
+old v2 schema. Acceptance runners ignore object files whose retired source no
+longer exists, so an incremental build cannot link the old visual into a probe.
+
+The hidden D3D11 movement-feedback probe passes in one/four views at 720p,
+1080p and QHD, including camera pan, aim sweeps and frozen redraw. Both staged
+builds and the 49-file Release ZIP exclude the workshop atlas and player visual;
+the ZIP retains the unchanged accepted sound bank. Isolated Debug and extracted
+Release startup pass with the real bank and separately without it, using a
+system-only PATH and graceful close. The driven console phase-4 check passes
+the six-PNG feedback review, station tour, bots, binds/history across relaunch,
+live-console input and perf overlay. Evidence is under
+`out/validation/workshop-retirement/` and `out/acceptance/`. These checks retain
+the current presentation; they do not accept new Paint.exe production art or
+replace human movement/audio/pad review.
 
 ## 2. Establish movement and camera feel
 
@@ -433,7 +474,10 @@ The movement increment adds impact-scaled landing variants, distance-driven
 footsteps and reversal skids with per-player repetition limits. Respawn redraws
 now have separate pause-aware pen loops per player, and exposed painted support
 selects wet step/landing variants within the same movement budgets. Remaining
-hooks and the listening mix stay in POL#23.
+hooks and the listening mix stay in POL#23. The menu-feedback increment adds
+distinct unready and pending SFX-volume previews, shared match/pause pad
+lost/back cues, and a completed-series cue. Results music, ending stings,
+fades/ducking and the resume count-in remain open.
 
 - Inventory every source wave, bank entry, loop instance and runtime reference,
   including tuning, presentation, level music and any code-selected cues. Give

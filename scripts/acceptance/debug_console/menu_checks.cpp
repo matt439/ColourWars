@@ -105,7 +105,7 @@ namespace debug_console_acceptance
 		require(registry.categories() == std::vector<std::string>{
 			"match", "player", "view", "time", "tuning", "replay", "content", "console" },
 			"Categories come in the fixed order");
-		for (const char* name : { "stage", "players", "weapon", "visual" })
+		for (const char* name : { "stage", "players", "weapon" })
 		{
 			require(registry.find(name)->menu().staged, std::string(name) + " is staged");
 		}
@@ -171,7 +171,7 @@ namespace debug_console_acceptance
 		model.confirm(row_index(model.rows(), "match"));
 		require(model.title() == "DEBUG / match", "The title names the category");
 		require(labels(model.rows()) == std::vector<std::string>{
-			"intro", "menu", "players", "restart", "stage", "visual", "weapon" },
+			"intro", "menu", "players", "restart", "stage", "weapon" },
 			"A category lists its entries by name");
 		model.confirm(row_index(model.rows(), "stage"));
 		require(labels(model.rows()) == std::vector<std::string>{
@@ -192,7 +192,7 @@ namespace debug_console_acceptance
 		require(model.back() == DebugMenuModel::Result::stay, "Back from a category stays open");
 		const std::vector<DebugMenuRow> root = model.rows();
 		require(root[0].kind == DebugMenuRow::Kind::apply && root[0].enabled &&
-			root[0].label == "Apply: stage x, weapon all roller, visual original",
+			root[0].label == "Apply: stage x, weapon all roller",
 			"Apply names what is queued, got '" + root[0].label + "'");
 		require(root[1].kind == DebugMenuRow::Kind::discard, "Discard follows Apply");
 		require(model.focus_hint() == 0, "Back after staging lands on Apply");

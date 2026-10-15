@@ -35,14 +35,15 @@ namespace debug_console_acceptance
 		const DebugBinds& defaults = DebugBinds::defaults();
 		const std::vector<std::pair<Key, std::string>> expected = { { Key::f2, "overlay collision" },
 			{ Key::f3, "overlay camera" }, { Key::f4, "overlay paint" }, { Key::f5, "restart" },
-			{ Key::f6, "pause toggle" }, { Key::f7, "step 1" }, { Key::f8, "visual next" },
+			{ Key::f6, "pause toggle" }, { Key::f7, "step 1" },
 			{ Key::f9, "feedback toggle" } };
-		require(defaults.entries().size() == expected.size(), "Eight default binds");
+		require(defaults.entries().size() == expected.size(), "Seven default binds");
 		for (const auto& [key, line] : expected)
 		{
 			const std::string* found = defaults.find(KeyChord{ key });
-			require(found != nullptr && *found == line, "The default table is the old F2-F9 table");
+			require(found != nullptr && *found == line, "The active defaults retain their F2-F9 shortcuts");
 		}
+		require(defaults.find(KeyChord{ Key::f8 }) == nullptr, "F8 has no default bind");
 		bool shift_held = false;
 		const auto pressed_f5 = [](Key key) { return key == Key::f5; };
 		const auto held = [&shift_held](Key key) { return key == Key::shift && shift_held; };
@@ -51,7 +52,7 @@ namespace debug_console_acceptance
 		shift_held = true;
 		require(defaults.fired(pressed_f5, held).empty(), "Shift+F5 is not F5");
 		require(defaults.save_text() == "// ColourWars debug binds - written by the game (bind, unbind, "
-			"binds.reset).\n// Only the differences from the default F2-F9 table; this file is exec-able.\n",
+			"binds.reset).\n// Only the differences from the default binds; this file is exec-able.\n",
 			"The defaults save as the header alone");
 
 		ScratchFolder scratch(L"binds");
@@ -75,8 +76,8 @@ namespace debug_console_acceptance
 		const std::string saved = read_text(scratch.root / L"binds.cfg");
 		require(saved.substr(saved.find("exec-able.\n") + 11) == "unbind f4\nbind f12 \"overlay perf\"\n",
 			"binds.cfg holds exactly the two differences, got '" + saved + "'");
-		require(impl.execute("bind f8 visual posed").ok && impl.binds().find(KeyChord{ Key::f8 }) != nullptr &&
-			*impl.binds().find(KeyChord{ Key::f8 }) == "visual posed", "Several words join into one line");
+		require(impl.execute("bind f8 echo bound f8").ok && impl.binds().find(KeyChord{ Key::f8 }) != nullptr &&
+			*impl.binds().find(KeyChord{ Key::f8 }) == "echo bound f8", "Several words join into one line");
 
 		TestDirector reloaded(tuning, presentation);
 		reloaded.impl.set_user_directory(scratch.root);

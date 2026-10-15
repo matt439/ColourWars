@@ -44,9 +44,8 @@ namespace debug_console_acceptance
 
 		// Settings stored in the menus without `stage` never reach a match
 		// started another way.
-		require(impl.execute("players 4").ok && impl.execute("weapon all sniper").ok &&
-			impl.execute("visual posed").ok, "Menu-time settings are accepted");
-		require(!impl.request().visual, "visual in the menus is remembered, not queued");
+		require(impl.execute("players 4").ok && impl.execute("weapon all sniper").ok,
+			"Menu-time settings are accepted");
 		director.attach_match(match);
 		require(impl.request().empty(), "attach_match drops menu-time leftovers");
 		require(log_contains(impl.log(), "dropped queued players 4", DebugSeverity::warning),
@@ -146,6 +145,7 @@ namespace debug_console_acceptance
 
 		DebugDirectorImpl& impl = *director.impl();
 		impl.log().set_mirror_to_debugger(false);
+		require(impl.registry().find("visual") == nullptr, "The retired art-mode command is absent");
 		const bool before = presentation.movement_feedback().enabled;
 		require(impl.execute("feedback toggle").ok &&
 			presentation.movement_feedback().enabled != before,
@@ -164,8 +164,6 @@ namespace debug_console_acceptance
 
 		require(impl.execute("players 4").ok && impl.request().players == 4,
 			"players is stored as a request");
-		require(impl.execute("visual posed").ok && impl.status_strip().find("visual posed") !=
-			std::string::npos, "visual is stored for the next match and shown in the strip");
 		require(!impl.execute("weapon 5 roller").ok && !impl.execute("weapon all spoon").ok,
 			"weapon checks its seat and name");
 		require(impl.execute("weapon all random").ok && impl.request().weapons.size() == 1,

@@ -21,6 +21,7 @@ private:
 	void apply_settings();
 	void close();
 	PlaySettings selection_;
+	labrador::SoundBank::WaveHandle volume_preview_sound_;
 	std::unique_ptr<labrador::UiTexture> background_;
 	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> text_;
 	std::unique_ptr<OptionRow> aim_;

@@ -100,7 +100,14 @@ try {
     $gameDirectory = Join-Path $build 'game'
     $objectDirectory = Join-Path $gameDirectory 'CMakeFiles/ColourWars.dir'
     $objects = @(Get-ChildItem -LiteralPath $objectDirectory -Filter '*.obj' -File -Recurse |
-        Where-Object { $_.Name -ne 'main.cpp.obj' } |
+        Where-Object {
+            if ($_.Name -eq 'main.cpp.obj') { return $false }
+            if ($_.Name -eq 'cmake_pch.cxx.obj') { return $true }
+            # CMake may leave an old object behind after its source is retired.
+            $sourceRelative = $_.FullName.Substring($objectDirectory.Length + 1)
+            $sourceRelative = $sourceRelative.Substring(0, $sourceRelative.Length - '.obj'.Length)
+            Test-Path -LiteralPath (Join-Path (Join-Path $repo 'game') $sourceRelative) -PathType Leaf
+        } |
         Sort-Object FullName)
     if ($objects.Count -eq 0) {
         throw 'No game objects exist. Run without -SkipBuild first.'
@@ -144,7 +151,7 @@ try {
     # A case may own a same-named folder of extra .cpp sources.
     $env:PATH = "$gameDirectory;$previousPath"
     foreach ($case in 'ammo', 'settings', 'paint', 'camera_framing', 'movement', 'stage_selection', 'team_palette', 'menu_navigation',
-        'workshop_player', 'workshop_terrain', 'movement_course', 'debug_console', 'story_audio') {
+        'movement_course', 'debug_console', 'story_audio') {
         $sources = @(Join-Path $PSScriptRoot "acceptance/$case.cpp")
         if ($case -eq 'story_audio') {
             # The real game objects use the engine's audio seam unchanged.

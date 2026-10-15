@@ -1,5 +1,11 @@
 # Workshop native-pixel kit study
 
+Historical workshop study. The author retired its kit, runtime comparison modes,
+F8 binding and dedicated build/check scripts on 2026-10-15 (`POL#2`). Commands
+and source links below describe that earlier revision; use Git history to
+reproduce it. Retained images and clips remain evidence of the study. Current
+art rules are in [polish plan ?1](polish-plan.md#1-establish-the-art-and-display-rules).
+
 Third polish increment, begun on 2026-10-08 from `66787f2`, using the existing
 Labrador pin. It turns the [workshop reference](polish-style-reference.md) into
 an editable native-grid composition for section 1 of [the plan](polish-plan.md).

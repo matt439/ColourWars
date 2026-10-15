@@ -6,7 +6,6 @@
 #include "game/objects/weapon_type.h"
 #include "game/states/menu_player_settings.h"
 #include "engine/render/screen_layout.h"
-#include "game/workshop_visual_mode.h"
 
 // The roster is empty until a player count is chosen, then contains 1-4 seats.
 // Each seat is unclaimed (-1) or holds a unique valid device slot. Only the
@@ -28,9 +27,6 @@ public:
 	// Manifest key for the chosen level; empty until stage selection.
 	void set_stage(const std::string& stage);
 	const std::string& stage() const;
-	// An explicit Movement Course comparison; other stages ignore this choice.
-	PlayerVisualMode workshop_visual_mode() const;
-	void set_workshop_visual_mode(PlayerVisualMode mode);
 	labrador::ScreenLayout screen_layout() const;
 	void set_screen_layout(labrador::ScreenLayout screen_layout);
 
@@ -54,6 +50,5 @@ private:
 	int best_of_ = 1;
 	std::optional<float> duration_;
 	std::string stage_;
-	PlayerVisualMode workshop_visual_mode_ = PlayerVisualMode::original;
 	labrador::ScreenLayout screen_layout_ = labrador::ScreenLayout::one_player;
 };

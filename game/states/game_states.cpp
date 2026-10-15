@@ -177,6 +177,7 @@ void GameLevel::build_and_enter_level()
 	this->level_ = this->level_builder_->build_level(this->settings_,
 		this->data()->save()->team_palette(), opening);
 	this->data()->debug().after_level_build(*this);
+	this->menu_context_->reset_connection_audio();
 
 	// Discard loading time so fixed-step updates do not advance the new match
 	// to catch up with the time spent building it.
@@ -242,6 +243,10 @@ void GameLevel::update(float dt)
 	// A seat a Debug bot or replay drives never waits for its pad.
 	const int missing_slot = disconnected_player_slot(this->settings_,
 		*this->data()->gamepads(), this->data()->debug());
+	if (dt > 0.0f)
+	{
+		this->menu_context_->update_connection_audio();
+	}
 	if (missing_slot != -1)
 	{
 		this->open_pause_menu(missing_slot);

@@ -31,11 +31,10 @@ round. After the series, Play Series Again clears the wins. Quitting discards
 the session. For solo practice, choose Single Match and 1 Player. The experimental
 [Movement Course](docs/polish-movement-course.md) provides repeatable jump, landing
 and platform-drop trials; select it explicitly, as Random uses the three arenas.
-On that arena's selection page, Up/Down switches between original artwork and
-two [playable workshop art comparisons](docs/polish-playable-kit.md), with animated
-painters, player badges and tiled platforms. These are superseded studies:
-the chosen art direction is Paint.exe Maximalism, crude mouse-drawn box-heads,
-and its open decisions are in [TODO.md](TODO.md).
+The chosen art direction is Paint.exe Maximalism, crude mouse-drawn box-heads.
+Its five round-2 rules are accepted in [the polish plan](docs/polish-plan.md#1-establish-the-art-and-display-rules);
+the superseded workshop comparison was retired on 2026-10-15. Open work is in
+[TODO.md](TODO.md).
 
 Results show cumulative series wins and each player's **surface held** as a
 percentage of the arena. Capturing neutral or enemy paint earns its area;
@@ -164,11 +163,11 @@ Debug builds also take developer launch arguments and have a console, for
 reviewing without walking the menus:
 
 ```
-out/build/x64-debug/game/ColourWars.exe +stage movement_course +players 4 +visual posed
+out/build/x64-debug/game/ColourWars.exe +stage movement_course +players 4
 ```
 
 In a match, **`** opens the console, **F5** restarts, **F6** pauses, **F7**
-steps, **F8** cycles the Movement Course art and **F9** toggles movement
+steps, and **F9** toggles movement
 feedback. Release ignores `+` arguments and contains none of it. See
 [the developer console](docs/debug-console.md).
 
@@ -191,7 +190,7 @@ against its actual objects. They cover full-cost ammunition and held-fire
 recovery, exposed paint surfaces and ownership, settings persistence and
 write-failure recovery, camera framing and aiming, jump buffering and ledge grace,
 takeoff/landing feedback events and lifetime, stage eligibility for Random,
-workshop visual/simulation parity and exact tiled-terrain paint coverage.
+Movement Course routes, developer tools and audio cue content/lifecycle.
 They use no graphics device or speaker and isolate
 all save writes. Evidence stays under `out/acceptance/<preset>/`. CI runs the
 same checks; `-SkipBuild` is for an already-current build.

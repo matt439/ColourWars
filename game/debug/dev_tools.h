@@ -2,7 +2,7 @@
 
 // The developer-tools gate. Derived from the CRT's own _DEBUG, never from a
 // project /D flag: the consumer acceptance probes (scripts/run-acceptance.ps1,
-// scripts/check-movement-feedback.ps1, scripts/check-workshop-playable.ps1)
+// scripts/check-movement-feedback.ps1)
 // compile game headers with only /MDd or /MD /DNDEBUG and link the game's own
 // objects, so a project-only define could give the two sides different class
 // layouts. No existing class has a member that depends on this switch.

@@ -22,7 +22,6 @@ struct MatchRequest
 	std::optional<std::string> stage; // a stage key, or random/next/prev
 	std::optional<int> players;
 	std::vector<WeaponChoice> weapons;
-	std::optional<PlayerVisualMode> visual;
 	bool restart = false;
 
 	// Settings to build verbatim (`play`): the planner claims no device and
@@ -75,9 +74,6 @@ public:
 	static std::vector<std::string> weapon_names();
 	static bool weapon_from_name(const std::string& name, WeaponType& weapon);
 	static const char* weapon_name(WeaponType weapon);
-
-	// The console's names for PlayerVisualMode: original, rotating, posed.
-	static const char* visual_name(PlayerVisualMode mode);
 
 	// Validates a stage word now, so a typo fails when typed.
 	bool is_stage_word(const std::string& word) const;

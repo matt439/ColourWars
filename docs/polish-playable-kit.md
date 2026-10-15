@@ -1,5 +1,11 @@
 # Playable workshop comparison
 
+Historical workshop study. The author retired its kit, runtime comparison modes,
+F8 binding and dedicated build/check scripts on 2026-10-15 (`POL#2`). Commands
+and source links below describe that earlier revision; use Git history to
+reproduce it. Retained images and clips remain evidence of the study. Current
+art rules are in [polish plan ?1](polish-plan.md#1-establish-the-art-and-display-rules).
+
 Fourth polish increment, implemented on 2026-10-08 from `4409f1a`, using the
 unchanged Labrador pin. It advances the next task in [the polish plan](polish-plan.md):
 animated team masks, coordinated tool attachments and same-team identity in the

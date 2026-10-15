@@ -36,7 +36,7 @@ struct DebugMenuRow
 // so the log and transcript say what the menu did. Pure apart from that, so
 // the acceptance case drives it without a window.
 //
-// Staging: entries marked staged (stage, players, weapon, visual) only queue
+// Staging: entries marked staged (stage, players, weapon) only queue
 // into the director's match request, so the menu stays open and several can
 // be combined; the Apply row closes the menu and the request applies through
 // the normal path. Any other statement that asks the console to close (restart,

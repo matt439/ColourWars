@@ -10,8 +10,7 @@
 #include "engine/render/colour.h"
 
 // Attribute paint to one authored face through the tiles the surface scores.
-// Load its dependencies first so this does not change any other declaration,
-// as workshop_terrain.cpp does for Structure.
+// Load its dependencies first so this does not change any other declaration.
 #define private public
 #include "game/objects/structure_paintable.h"
 #undef private

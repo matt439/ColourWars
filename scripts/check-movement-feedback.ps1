@@ -8,7 +8,7 @@ param(
     [ValidateRange(0, 180)]
     [int] $SequenceFrames = 0,
     # Paired on/off route sequences are four-player only by default; this adds
-    # the one-player route (three more modes of two 720p frames per tick).
+    # the one-player route (two more 720p frames per tick).
     [switch] $OnePlayerRouteSequences,
     [string] $OutputDirectory
 )
@@ -79,7 +79,6 @@ $result = [ordered]@{
     audio = 'Muted; this check establishes no listening acceptance.'
     sequence_frames = $SequenceFrames
     route = [ordered]@{
-        modes = @('original', 'continuous', 'authored')
         player_counts = @(1, 4)
         movement = 'Team A runs from rest and holds a full jump over the 800-980 short gap; Team B runs left on its runway and jumps short of the return step. Aim sweeps 2pi per 90 ticks.'
         checks = 'Per tick: one update, feedback on/off redraw of the same state, simulation unchanged, differences inside culling bounds and under 1% of a pane. Takeoff on press, landing on the authored platform, horizontal camera pan in every view; takeoff/landing captured at 720p/1080p/QHD.'
@@ -120,8 +119,16 @@ try {
         throw 'The probe requires this checkout and the selected d3d11/xaudio2 x64-windows preset.'
     }
     $gameDirectory = Join-Path $build 'game'
-    $objects = @(Get-ChildItem -LiteralPath (Join-Path $gameDirectory 'CMakeFiles/ColourWars.dir') `
-        -Filter '*.obj' -File -Recurse | Where-Object { $_.Name -ne 'main.cpp.obj' } | Sort-Object FullName)
+    $objectDirectory = Join-Path $gameDirectory 'CMakeFiles/ColourWars.dir'
+    $objects = @(Get-ChildItem -LiteralPath $objectDirectory `
+        -Filter '*.obj' -File -Recurse | Where-Object {
+            if ($_.Name -eq 'main.cpp.obj') { return $false }
+            if ($_.Name -eq 'cmake_pch.cxx.obj') { return $true }
+            # CMake may leave an old object behind after its source is retired.
+            $sourceRelative = $_.FullName.Substring($objectDirectory.Length + 1)
+            $sourceRelative = $sourceRelative.Substring(0, $sourceRelative.Length - '.obj'.Length)
+            Test-Path -LiteralPath (Join-Path (Join-Path $repo 'game') $sourceRelative) -PathType Leaf
+        } | Sort-Object FullName)
     if ($objects.Count -eq 0) { throw 'Game objects are missing. Run without -SkipBuild first.' }
     $installed = Join-Path $cache.VCPKG_INSTALLED_DIR $cache.VCPKG_TARGET_TRIPLET
     $dependencyLibraries = if ($debug) { Join-Path $installed 'debug/lib' } else { Join-Path $installed 'lib' }
@@ -162,7 +169,7 @@ try {
         -LogPath (Join-Path $run 'compile.log')
 
     $result.staged_content_hashes = @(
-        'manifest.json', 'tuning.json', 'presentation.json', 'levels/movement_course.json', 'textures/workshop_kit.json', 'textures/workshop_kit.dds' |
+        'manifest.json', 'tuning.json', 'presentation.json', 'levels/movement_course.json' |
         ForEach-Object {
             [ordered]@{ path = $_; sha256 = (Get-FileHash -LiteralPath (Join-Path $gameDirectory $_)).Hash }
         }
@@ -198,7 +205,7 @@ try {
         throw 'The visual probe unexpectedly created a save.'
     }
     $result.outcome = 'passed'
-    $result.diagnostic = 'Matched feedback frames, resolution matrix, suspended redraw and the moving aim-swept route in three visual modes passed. Visual review remains separate.'
+    $result.diagnostic = 'Matched feedback frames, resolution matrix, suspended redraw and the moving aim-swept route passed. Visual review remains separate.'
 }
 catch {
     $failure = $_

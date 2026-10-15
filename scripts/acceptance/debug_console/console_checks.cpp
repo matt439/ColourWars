@@ -39,9 +39,9 @@ namespace debug_console_acceptance
 	void check_launch_arguments()
 	{
 		std::vector<std::string> statements = parse_launch_arguments(
-			{ L"+stage", L"movement_course", L"+players", L"4", L"+visual", L"posed" });
+			{ L"+stage", L"movement_course", L"+players", L"4", L"+feedback", L"off" });
 		require(statements == std::vector<std::string>{
-			"stage movement_course", "players 4", "visual posed" },
+			"stage movement_course", "players 4", "feedback off" },
 			"Each +name starts a statement with the arguments after it");
 
 		statements = parse_launch_arguments({ L"+timescale", L"+0.5" });
@@ -65,7 +65,7 @@ namespace debug_console_acceptance
 	struct FakeGame
 	{
 		bool feedback = true;
-		std::string visual = "original";
+		std::string difficulty = "easy";
 		int status_runs = 0;
 	};
 
@@ -74,12 +74,12 @@ namespace debug_console_acceptance
 		registry.add(std::make_unique<BoolVariable>("feedback", "bursts", true,
 			[&game] { return game.feedback; },
 			[&game](bool value) { game.feedback = value; return DebugStatus::success(); }));
-		registry.add(std::make_unique<ChoiceVariable>("visual", "art", "original",
-			std::vector<std::string>{ "original", "rotating", "posed" },
+		registry.add(std::make_unique<ChoiceVariable>("difficulty", "test choices", "easy",
+			std::vector<std::string>{ "easy", "normal", "hard" },
 			std::vector<std::pair<std::string, std::string>>{
-				{ "continuous", "rotating" }, { "authored", "posed" } },
-			[&game] { return game.visual; },
-			[&game](const std::string& value) { game.visual = value; return DebugStatus::success(); }));
+				{ "regular", "normal" }, { "expert", "hard" } },
+			[&game] { return game.difficulty; },
+			[&game](const std::string& value) { game.difficulty = value; return DebugStatus::success(); }));
 		registry.add(std::make_unique<LambdaCommand>("stage", "pick a stage",
 			std::vector<DebugArgSpec>{ { "name", false, [] {
 				return std::vector<std::string>{ "movement_course", "close_quarters",
@@ -120,16 +120,16 @@ namespace debug_console_acceptance
 			"Shorthand without a value reads it");
 		require(registry.execute("set feedback toggle", log).ok && game.feedback,
 			"set toggles a bool");
-		require(registry.execute("get visual", log).ok &&
-			log_contains(log, "visual = original  (choice, default original)", DebugSeverity::info),
+		require(registry.execute("get difficulty", log).ok &&
+			log_contains(log, "difficulty = easy  (choice, default easy)", DebugSeverity::info),
 			"get prints value, type and default");
-		require(registry.execute("visual authored", log).ok && game.visual == "posed",
+		require(registry.execute("difficulty expert", log).ok && game.difficulty == "hard",
 			"Aliases map onto their choice");
-		require(registry.execute("visual next", log).ok && game.visual == "original",
+		require(registry.execute("difficulty next", log).ok && game.difficulty == "easy",
 			"next wraps around the choices");
-		require(registry.execute("visual prev", log).ok && game.visual == "posed",
+		require(registry.execute("difficulty prev", log).ok && game.difficulty == "hard",
 			"prev wraps around the choices");
-		require(!registry.execute("visual sideways", log).ok && game.visual == "posed",
+		require(!registry.execute("difficulty sideways", log).ok && game.difficulty == "hard",
 			"An unknown choice fails and changes nothing");
 		require(!registry.execute("feedback maybe", log).ok, "A bad bool fails");
 
@@ -160,11 +160,11 @@ namespace debug_console_acceptance
 			"An ambiguous prefix lists candidates and keeps the common prefix");
 		require(registry.complete("stage mo").line == "stage movement_course ",
 			"A command argument completes from its choices");
-		require(registry.complete("visual p").line == "visual posed ",
+		require(registry.complete("difficulty h").line == "difficulty hard ",
 			"A choice variable completes its value");
 		require(registry.complete("set feed").line == "set feedback ",
 			"set completes a variable name");
-		require(registry.complete("set visual ro").line == "set visual rotating ",
+		require(registry.complete("set difficulty no").line == "set difficulty normal ",
 			"set completes the variable's value");
 		require(registry.complete("pause; sta").line == "pause; sta" &&
 			registry.complete("pause; stag").line == "pause; stage ",
@@ -236,7 +236,6 @@ namespace debug_console_acceptance
 		MatchRequest request;
 		request.stage = "movement_course";
 		request.players = 2;
-		request.visual = PlayerVisualMode::authored;
 		MatchPlan plan = planner.resolve(nullptr, request, no_pads, random);
 		require(plan.ok, "A stage and player count resolve: " + plan.error);
 		const std::vector<MenuPlayerSettings> seats = plan.settings.player_settings();
@@ -246,8 +245,6 @@ namespace debug_console_acceptance
 			"Teams alternate a, b");
 		require(plan.settings.screen_layout() == labrador::ScreenLayout::two_player,
 			"The layout follows the player count");
-		require(plan.settings.workshop_visual_mode() == PlayerVisualMode::authored,
-			"The visual round-trips through MenuLevelSettings");
 		require(plan.reset_session, "A new roster starts a new session");
 		for (const MenuPlayerSettings& seat : seats)
 		{

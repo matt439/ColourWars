@@ -11,7 +11,7 @@
 #include <cctype>
 
 // Phase 4 binds: bind, unbind, binds and binds.reset, and binds.cfg in the
-// debug user directory (only the differences from the default F2-F9 table).
+// debug user directory (only the differences from the default binds).
 
 namespace
 {
@@ -221,7 +221,7 @@ void DebugDirectorImpl::register_bind_commands()
 			return DebugStatus::success("bind " + name + " " + quote_word(line));
 		}, traits("console", Form::hidden), true);
 
-	add("unbind", "unbind <key|all>: all clears every key, the F2-F9 defaults too",
+	add("unbind", "unbind <key|all>: all clears every key, including the defaults",
 		{ { "key|all", false, key_words } },
 		[this](Args args, DebugLog&)
 		{
@@ -245,18 +245,18 @@ void DebugDirectorImpl::register_bind_commands()
 			return DebugStatus::success("unbind " + debug_keys::chord_name(*chord));
 		}, traits("console", Form::hidden));
 
-	add("binds", "list the key table (F2-F9 by default)", {},
+	add("binds", "list the key table (F2-F7 and F9 by default)", {},
 		[list_binds](Args, DebugLog& log) { return list_binds(log); },
 		traits("console", Form::run));
 
-	add("binds.reset", "the default F2-F9 keys again; deletes binds.cfg", {},
+	add("binds.reset", "restore the default keys; deletes binds.cfg", {},
 		[this](Args, DebugLog&)
 		{
 			this->binds_.reset();
 			// The defaults delete binds.cfg; never while binds.cfg is being read
 			// (a file that starts with binds.reset must not delete itself).
 			this->save_binds();
-			return DebugStatus::success("binds.reset: F2-F9 are the defaults again");
+			return DebugStatus::success("binds.reset: default keys restored");
 		}, traits("console", Form::run));
 }
 #endif

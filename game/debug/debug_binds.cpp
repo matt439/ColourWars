@@ -18,7 +18,6 @@ const DebugBinds& DebugBinds::defaults()
 			binds.bind({ Key::f5 }, "restart");
 			binds.bind({ Key::f6 }, "pause toggle");
 			binds.bind({ Key::f7 }, "step 1");
-			binds.bind({ Key::f8 }, "visual next");
 			binds.bind({ Key::f9 }, "feedback toggle");
 			return binds;
 		}();
@@ -101,7 +100,7 @@ std::string DebugBinds::save_text() const
 {
 	std::string text =
 		"// ColourWars debug binds - written by the game (bind, unbind, binds.reset).\n"
-		"// Only the differences from the default F2-F9 table; this file is exec-able.\n";
+		"// Only the differences from the default binds; this file is exec-able.\n";
 	for (const auto& [chord, line] : defaults().table_)
 	{
 		if (this->table_.count(chord) == 0)

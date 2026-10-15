@@ -65,13 +65,13 @@ compiles out the console, menu, registry, commands and binds (the unreachable
 `Level`/`Player` members remain, so no layout depends on `_DEBUG`). Full reference: [docs/debug-console.md](docs/debug-console.md).
 
 ```
-out/build/x64-debug/game/ColourWars.exe +stage movement_course +players 4 +visual posed
+out/build/x64-debug/game/ColourWars.exe +stage movement_course +players 4
 ```
 
 Each `+name` starts a statement; the match starts without menu navigation. In a
 match **`** opens the console (the match freezes while it is open; Escape
 closes), **F2**-**F4** collision, camera and paint overlays, **F5** restart,
-**F6** pause, **F7** step, **F8** cycle the Movement Course art, **F9** toggle
+**F6** pause, **F7** step, **F9** toggle
 movement feedback. Anywhere, **F10**/**F11** or holding pad **Back+Start** opens
 the debug menu (F10 is taken back from the system menu by a Debug-only message
 hook; see the doc). `help` lists the commands. The console also tunes

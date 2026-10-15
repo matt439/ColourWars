@@ -272,7 +272,7 @@ void MainMenuJoin::update_page(float /*dt*/)
 			if (settings->release_input_slot(slot))
 			{
 				roster_changed = true;
-				this->play_wave(this->cancel_sound_);
+				this->play_wave(this->unready_sound_, this->look().unready_sound.volume);
 			}
 		}
 		else if (inputs[slot].action == MenuInputAction::proceed)

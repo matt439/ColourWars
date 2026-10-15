@@ -6,8 +6,8 @@ order and status. The art direction is Paint.exe Maximalism (crude, mouse-drawn
 box-head figures), chosen on 2026-10-09 over the plan's original pixel art, and
 its fiction is the [backstory](backstory.md): a grey, unsaved picture with one
 palette slot left, which two team colours fight to fill. Gameplay style comes
-first, UI after; the round-2 picks still await the author's confirmation
-(`POL#1`). The rest of the direction is distinctive paint tools and redesigned
+first, UI after; the author accepted all five round-2 art choices on 2026-10-15
+(polish plan §1). The rest of the direction is distinctive paint tools and redesigned
 playable layouts, with a full replacement of all music and sound effects and
 expressive feedback for actions such as jumping and landing. The target is a
 good indie game's finish, including quiet details such as an occasional idle

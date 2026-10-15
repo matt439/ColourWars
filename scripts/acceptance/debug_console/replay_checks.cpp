@@ -112,7 +112,6 @@ namespace debug_console_acceptance
 		file.god = true;
 		file.settings = planned(3);
 		file.settings.set_duration(120.12345f);
-		file.settings.set_workshop_visual_mode(PlayerVisualMode::authored);
 		file.settings.set_player_weapon(1, WeaponType::roller);
 		file.updates = 120;
 		file.suspends = { 0, 61 };
@@ -135,19 +134,27 @@ namespace debug_console_acceptance
 		const std::vector<MenuPlayerSettings> seats = read.settings.player_settings();
 		require(seats.size() == 3 && seats[0].num == input_slots::keyboard_and_mouse && seats[1].num == -1 &&
 			seats[1].weapon == WeaponType::roller && seats[1].team == PlayerTeam::b &&
-			read.settings.stage() == "x" && read.settings.workshop_visual_mode() == PlayerVisualMode::authored &&
+			read.settings.stage() == "x" &&
 			read.settings.screen_layout() == labrador::ScreenLayout::three_player &&
 			read.settings.duration() == file.settings.duration(),
 			"The recorded settings rebuild verbatim");
 
-		std::string text = read_text(path);
-		text.replace(text.find("\"version\": 2"), 12, "\"version\": 3");
-		write_text(path, text);
+		std::string text;
 		std::string message;
-		try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
-		require(message.find("format version 3; this build reads 2") != std::string::npos,
-			"Another format version is refused: " + message);
-		write_text(path, "{ \"version\": 2, ");
+		for (const int rejected_version : { 2, 4 })
+		{
+			file.write(path);
+			text = read_text(path);
+			text.replace(text.find("\"version\": 3"), 12,
+				"\"version\": " + std::to_string(rejected_version));
+			write_text(path, text);
+			message.clear();
+			try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
+			require(message.find("format version " + std::to_string(rejected_version) +
+				"; this build reads 3") != std::string::npos,
+				"A previous workshop recording or another format is refused: " + message);
+		}
+		write_text(path, "{ \"version\": 3, ");
 		message.clear();
 		try { ReplayFile::read(path); } catch (const std::exception& error) { message = error.what(); }
 		require(message.find("not valid JSON") != std::string::npos, "A broken file is refused: " + message);
@@ -189,7 +196,7 @@ namespace debug_console_acceptance
 		CpuWorld(const std::filesystem::path& content, const GameTuning& tuning,
 			const Presentation& presentation)
 		{
-			for (const char* sheet : { "sprite_sheet_1", "menu_paint", "weapon_paint", "workshop_kit" })
+			for (const char* sheet : { "sprite_sheet_1", "menu_paint", "weapon_paint" })
 			{
 				this->render.add_sprite_sheet(sheet, labrador::read_sprite_sheet(
 					(content / "textures" / (std::string(sheet) + ".json")).string().c_str(),
@@ -391,7 +398,6 @@ namespace debug_console_acceptance
 		MatchRequest roster;
 		roster.stage = "movement_course";
 		roster.players = 4;
-		roster.visual = PlayerVisualMode::authored;
 		const MatchPlan plan = MatchPlanner(&world.stages).resolve(nullptr, roster,
 			MatchPlanner::ConnectedPads{}, [] { return 0u; });
 		require(plan.ok, "The CPU roster resolves");
@@ -579,8 +585,7 @@ namespace debug_console_acceptance
 		FakePage page;
 		page.start_result = true;
 		require(director.before_page_update(page, dt) && page.starts == 1 &&
-			page.started.player_count() == 4 && page.started.stage() == "movement_course" &&
-			page.started.workshop_visual_mode() == PlayerVisualMode::authored,
+			page.started.player_count() == 4 && page.started.stage() == "movement_course",
 			"and the main menu starts it with the recorded settings");
 		CpuMatch fresh(world, director);
 		fresh.settings = page.started;

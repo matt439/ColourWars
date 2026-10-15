@@ -656,10 +656,8 @@ void Level::draw_acting(DrawList& list, int /*view*/) const
 	{
 		const Player* player = this->players_[index];
 		const FigureAct act = this->acts_[index];
-		// The eyes are the original art's; the workshop figures have their own.
 		if (act == FigureAct::none ||
-			(player->state() == PlayerState::dead && !player->drawn_whole()) ||
-			player->workshop_visual() != nullptr)
+			(player->state() == PlayerState::dead && !player->drawn_whole()))
 		{
 			continue;
 		}

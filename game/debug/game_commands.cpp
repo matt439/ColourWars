@@ -30,14 +30,6 @@ namespace
 		return buffer;
 	}
 
-	bool visual_from_name(const std::string& name, PlayerVisualMode& mode)
-	{
-		if (name == "original") { mode = PlayerVisualMode::original; return true; }
-		if (name == "rotating") { mode = PlayerVisualMode::continuous; return true; }
-		if (name == "posed") { mode = PlayerVisualMode::authored; return true; }
-		return false;
-	}
-
 	// The directory reload reads: the source tree in a Debug build made from
 	// one, so edits apply without a rebuild; otherwise the staged copy.
 	std::filesystem::path reload_directory(bool& from_source)
@@ -54,8 +46,6 @@ namespace
 		const std::u8string text = path.generic_u8string();
 		return std::string(text.begin(), text.end());
 	}
-
-	constexpr const char* course_stage = "movement_course";
 
 	using Form = DebugMenuTraits::Form;
 
@@ -113,11 +103,6 @@ void DebugDirectorImpl::register_commands()
 				return DebugStatus::failure("unknown stage '" + word + "'; one of:" + known);
 			}
 			this->request_.stage = word;
-			// A stage chosen here uses the remembered Workshop comparison.
-			if (!this->request_.visual)
-			{
-				this->request_.visual = this->remembered_visual_;
-			}
 			return DebugStatus::success("stage " + word +
 				(this->match_ != nullptr ? this->rebuild_note() : ": starting a match"), true);
 		}, traits("match", Form::pick, true));
@@ -204,38 +189,6 @@ void DebugDirectorImpl::register_commands()
 			return DebugStatus::success("intro = " + choice + " (from the next build)");
 		}));
 	place(registry, "intro", "match");
-
-	registry.add(std::make_unique<ChoiceVariable>("visual",
-		"Movement Course art: original, rotating (continuous tool) or posed (authored)",
-		"original", std::vector<std::string>{ "original", "rotating", "posed" },
-		std::vector<std::pair<std::string, std::string>>{
-			{ "continuous", "rotating" }, { "authored", "posed" } },
-		[this] { return std::string(MatchPlanner::visual_name(this->planned_visual())); },
-		[this](const std::string& choice)
-		{
-			PlayerVisualMode mode = PlayerVisualMode::original;
-			visual_from_name(choice, mode);
-			if (this->match_ != nullptr && !this->request_.stage &&
-				this->match_->debug_settings().stage() != course_stage)
-			{
-				// Only the Movement Course has the comparison: do not rebuild.
-				this->remembered_visual_ = mode;
-				return DebugStatus::success("visual = " + choice + " (no effect on " +
-					this->match_->debug_settings().stage() + "; used on the Movement Course)");
-			}
-			if (this->match_ == nullptr && !this->request_.stage)
-			{
-				// Remembered, not queued: `stage` picks it up, and a match
-				// started from the menus keeps the page's own comparison.
-				this->remembered_visual_ = mode;
-				return DebugStatus::success("visual = " + choice +
-					" (for the next match 'stage <name>' starts)");
-			}
-			this->queue_visual(mode);
-			return DebugStatus::success("visual = " + choice + (this->match_ != nullptr ?
-				this->rebuild_note() : std::string(" (for the queued match)")), true);
-		}));
-	place(registry, "visual", "match", true);
 
 	add("restart", "rebuild the match with its current settings (keeps the session)", {},
 		[this](Args, DebugLog&)

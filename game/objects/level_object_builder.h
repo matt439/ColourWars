@@ -19,13 +19,9 @@ public:
 		const PlaySettings* preferences,
 		const PaintTuning* paint);
 
-	// A positive density enables the Movement Course's rectangular paintable
-	// material comparison. Zero keeps all authored visuals. Neither changes
-	// collision shapes, exposed paint faces, ramps or jump-through platforms.
 	std::vector<std::unique_ptr<labrador::CollisionObject>>
 		build_collision_objects(const labrador::JsonValue& json,
-			const TeamColour& team_colours,
-			float workshop_world_units_per_texel = 0.0f) const;
+			const TeamColour& team_colours) const;
 
 	std::vector<std::unique_ptr<labrador::GameObject>>
 		build_non_collision_objects(const labrador::JsonValue& json) const;
@@ -47,8 +43,7 @@ private:
 	std::unique_ptr<labrador::CollisionObject>
 		build_collision_object(const labrador::JsonValue& json,
 			const TeamColour& team_colours,
-			std::span<const mattmath::RectangleF> paint_obstacles = {},
-			float workshop_world_units_per_texel = 0.0f) const;
+			std::span<const mattmath::RectangleF> paint_obstacles = {}) const;
 
 	std::unique_ptr<labrador::GameObject>
 		build_non_collision_object(const labrador::JsonValue& json) const;

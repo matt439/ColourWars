@@ -1,5 +1,11 @@
 # Workshop refinement and course trials
 
+Historical workshop study. The author retired its kit, runtime comparison modes,
+F8 binding and dedicated build/check scripts on 2026-10-15 (`POL#2`). Commands
+and source links below describe that earlier revision; use Git history to
+reproduce it. Retained images and clips remain evidence of the study. Current
+art rules are in [polish plan ?1](polish-plan.md#1-establish-the-art-and-display-rules).
+
 Fifth polish increment, implemented on 2026-10-08 from `26314aa`, using the
 unchanged Labrador pin. It takes the next task in [the polish plan](polish-plan.md)
 as far as it can go without a person playing: it refines the

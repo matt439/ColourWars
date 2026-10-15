@@ -10,7 +10,6 @@
 #include "game/objects/movement_feedback.h"
 #include "game/objects/movement_audio.h"
 #include "game/objects/respawn_redraw.h"
-#include "game/objects/player_visual.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/shape.h"
 #include "engine/math/vector2f.h"
@@ -24,6 +23,7 @@
 #include "engine/render/colour.h"
 #include "engine/render/camera.h"
 #include "engine/render/viewport.h"
+#include <optional>
 
 enum class PlayerState
 {
@@ -129,15 +129,9 @@ public:
     void end_contacts(std::span<const labrador::Contact> contacts = {});
     const MovementFeedback& movement_feedback() const;
 
-    // A Movement Course presentation comparison. Construction and simulation
-    // remain identical; the builder enables this only for an explicit choice.
-    void enable_workshop_visual(const WorkshopPlayerPresentation* presentation,
-        labrador::RenderResources* render_resources, PlayerVisualMode mode,
-        int view_index);
-    const PlayerVisual* workshop_visual() const;
-    // The workshop attachment's geometry input, for consumer acceptance.
+    // The equipped tool, including its current gameplay aim.
     const Weapon& primary_weapon() const;
-    // Movement facing, which mirrors the body, shoulders and badge.
+    // Movement facing, which mirrors the figure.
     bool facing_right() const;
 
 	void set_player_input(const PlayerInputData& input);
@@ -232,7 +226,6 @@ private:
     RespawnRedraw respawn_redraw_;
     std::optional<labrador::Colour> grey_;
     FigurePose pose_;
-    std::unique_ptr<PlayerVisual> workshop_visual_;
     bool had_ground_support_ = false;
     bool landing_feedback_ready_ = false;
     float weapon_contact_dt_ = 0.0f;

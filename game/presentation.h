@@ -1,10 +1,10 @@
 #pragma once
 
 #include "engine/math/shape.h"
+#include "engine/math/rectanglef.h"
 #include "engine/math/vector2f.h"
 #include "engine/render/colour.h"
 #include "game/objects/weapon_type.h"
-#include "game/objects/player_visual.h"
 #include "game/objects/team_colour.h"
 
 #include <array>
@@ -99,6 +99,7 @@ struct ControlsSettingsPresentation
 	mattmath::Vector2F heading_position;
 	mattmath::Vector2F controls_position;
 	std::string help_font;
+	PresentationSound volume_preview_sound;
 };
 
 struct StageSelectPresentation
@@ -178,6 +179,7 @@ struct MainMenuPresentation
 	PresentationSound music;
 	std::string error_sound;
 	std::string ready_sound;
+	PresentationSound unready_sound;
 
 	// Weapon descriptions converted from UTF-8 to normalized wide text at load.
 	// Indexed by WeaponType, including the random-primary choice.
@@ -192,12 +194,15 @@ struct PauseMenuPresentation
 	labrador::Colour box_colour = labrador::Colour::black;
 	WidgetLayout layout;
 	std::string window_open_sound;
+	PresentationSound pad_lost_sound;
+	PresentationSound pad_back_sound;
 };
 
 struct EndMenuPresentation
 {
 	labrador::Colour box_colour = labrador::Colour::black;
 	WidgetLayout layout;
+	PresentationSound series_sound;
 };
 
 struct ResultsMenuPresentation
@@ -452,7 +457,6 @@ public:
 	const MovementFeedbackPresentation& movement_feedback() const;
 	const RespawnRedrawPresentation& respawn_redraw() const;
 	const OpeningPresentation& opening() const;
-	const WorkshopPlayerPresentation& workshop_player() const;
 	const DebugOverlayPresentation& debug_overlay() const;
 
 	// The developer console's live feedback toggle. The only mutator: only
@@ -476,6 +480,5 @@ private:
 	MovementFeedbackPresentation movement_feedback_;
 	RespawnRedrawPresentation respawn_redraw_;
 	OpeningPresentation opening_;
-	WorkshopPlayerPresentation workshop_player_;
 	DebugOverlayPresentation debug_overlay_;
 };

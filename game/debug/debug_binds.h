@@ -8,8 +8,8 @@
 #include <vector>
 
 // The match's debug key table: a key chord to a console line. Its defaults
-// are the F2-F9 keys every phase so far has documented; `bind` and `unbind`
-// change it and binds.cfg keeps the differences. Data, not code: which key
+// are F2-F7 and F9; `bind` and `unbind` change it and binds.cfg keeps the
+// differences. Data, not code: which key
 // runs which line. Debug-only bodies.
 class DebugBinds
 {
@@ -17,7 +17,7 @@ public:
 	using Table = std::map<KeyChord, std::string>;
 
 	// F2 overlay collision, F3 overlay camera, F4 overlay paint, F5 restart,
-	// F6 pause toggle, F7 step 1, F8 visual next, F9 feedback toggle.
+	// F6 pause toggle, F7 step 1, F9 feedback toggle.
 	static const DebugBinds& defaults();
 
 	void bind(const KeyChord& chord, std::string line);

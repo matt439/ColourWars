@@ -398,7 +398,7 @@ void DebugRegistry::add_builtins()
 			}
 			return DebugStatus::success("keys: ` console, F10/F11 or pad Back+Start debug menu, "
 				"F2 collision, F3 camera, F4 paint, F5 restart, F6 pause, F7 step, "
-				"F8 visual, F9 feedback (default binds: 'binds' lists them, 'bind' changes them)");
+				"F9 feedback (default binds: 'binds' lists them, 'bind' changes them)");
 		}));
 }
 #endif

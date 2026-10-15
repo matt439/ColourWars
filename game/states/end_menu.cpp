@@ -173,4 +173,8 @@ void EndMenuInitial::init()
 		[choose] { choose(EndMenuAction::restart, true); });
 	this->focus_.add(this->exit_.get(),
 		[choose] { choose(EndMenuAction::exit, false); });
+	if (this->session_.is_series() && this->session_.complete())
+	{
+		this->play_wave(this->resolve_wave(look.series_sound.name), look.series_sound.volume);
+	}
 }

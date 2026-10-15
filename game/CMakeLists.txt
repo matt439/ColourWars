@@ -77,7 +77,6 @@ add_executable(ColourWars WIN32
     objects/player_builder.cpp
     objects/player_camera.cpp
     objects/player_input.cpp
-    objects/player_visual.cpp
     objects/projectile.cpp
     objects/projectile_ball.cpp
     objects/projectile_builder.cpp
@@ -99,6 +98,7 @@ add_executable(ColourWars WIN32
     objects/weapon_roller.cpp
     objects/weapon_sniper.cpp
 
+    states/connection_audio.cpp
     states/controls_settings_menu.cpp
     states/end_menu.cpp
     states/game_states.cpp
@@ -179,6 +179,16 @@ target_include_directories(ColourWars PRIVATE "${PROJECT_BINARY_DIR}/generated")
 # Run every build so asset-only edits are copied without an executable relink;
 # if_different skips unchanged files.
 add_custom_target(colourwars_content ALL)
+
+# Retiring the comparison must also clean its old atlas from existing builds;
+# copying the remaining content alone would leave those staged files behind.
+add_custom_command(TARGET colourwars_content PRE_BUILD
+    COMMAND "${CMAKE_COMMAND}" -E rm -f
+        "$<TARGET_FILE_DIR:ColourWars>/textures/workshop_kit.dds"
+        "$<TARGET_FILE_DIR:ColourWars>/textures/workshop_kit.json"
+        "$<TARGET_FILE_DIR:ColourWars>/textures/workshop_kit.png"
+    VERBATIM
+)
 
 # Check the accepted, tracked bank before staging it. Reproduction/encoding is
 # an explicit authoring step; an ordinary game build needs no audio tools.

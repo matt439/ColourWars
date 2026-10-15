@@ -1,5 +1,11 @@
 # Workshop style candidate
 
+Historical workshop study. The author retired its kit, runtime comparison modes,
+F8 binding and dedicated build/check scripts on 2026-10-15 (`POL#2`). Commands
+and source links below describe that earlier revision; use Git history to
+reproduce it. Retained images and clips remain evidence of the study. Current
+art rules are in [polish plan ?1](polish-plan.md#1-establish-the-art-and-display-rules).
+
 First candidate created on 2026-10-08 for sections 1 and 4 of
 [the polish plan](polish-plan.md). This records a direction to test, not an
 accepted runtime art set or an arena blockout.

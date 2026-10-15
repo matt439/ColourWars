@@ -31,6 +31,10 @@ void MenuPage::update(float dt)
 	}
 	const MenuStyle& style = this->menu_style();
 	this->input()->update_directions(dt, style.repeat_delay, style.repeat_interval);
+	if (dt > 0.0f && this->context()->active())
+	{
+		this->menu_context()->update_connection_audio();
+	}
 	this->update_page(dt);
 }
 

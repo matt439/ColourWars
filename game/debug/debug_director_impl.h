@@ -101,14 +101,14 @@ public:
 	// over any state, so it borrows none of theirs.
 	MenuContext* menu_context();
 
-	// Short "x0.25 PAUSED posed feedback-off GOD" text, empty when all default.
+	// Short "x0.25 PAUSED feedback-off GOD" text, empty when all default.
 	std::string status_strip() const;
 
 	// "paint  A 23.4%  B 11.0%  free 65.6%" and a per-seat line, or empty
 	// when overlay.paint is off or no match is running.
 	std::vector<std::string> paint_lines() const;
 
-	// What `players`, `stage`, `visual` and `reload` read and queue.
+	// What `players`, `stage` and `reload` read and queue.
 	const MatchRequest& request() const { return this->request_; }
 	bool in_match() const { return this->match_ != nullptr; }
 
@@ -239,9 +239,6 @@ private:
 	// instead of the system menu (see engine-reports.md, report 11).
 	void* f10_hook_ = nullptr;
 
-	// The visual a fresh match uses when the request names none: the last one
-	// a debug plan applied.
-	PlayerVisualMode remembered_visual_ = PlayerVisualMode::original;
 	// `intro`: empty for the game's own choice, else full, quick or off.
 	std::string intro_;
 
@@ -290,9 +287,6 @@ private:
 	bool rebuild_queued() const;
 	std::string queued_rebuild_description() const;
 
-	// The visual the next plan would use: requested, current match, remembered.
-	PlayerVisualMode planned_visual() const;
-	void queue_visual(PlayerVisualMode mode);
 	void log_match(const MatchPlan& plan, const std::string& how);
 
 	void apply_overlays(bool player_text_changed);
@@ -412,7 +406,7 @@ private:
 	void save_binds();
 	void save_history();
 
-	// Binds: the F2-F9 defaults until `bind` changes them.
+	// Binds: the F2-F7 and F9 defaults until `bind` changes them.
 	DebugBinds binds_;
 	bool binds_loading_ = false;
 	// A history.txt write failed; said once a session.

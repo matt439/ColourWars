@@ -217,16 +217,6 @@ namespace
         std::cout << "PASS " << count << "p landing frozen across 12 suspended draws\n";
     }
 
-    const char* mode_name(PlayerVisualMode mode)
-    {
-        switch (mode)
-        {
-        case PlayerVisualMode::original: return "original";
-        case PlayerVisualMode::continuous: return "continuous";
-        default: return "authored";
-        }
-    }
-
     // Route targets are named authored objects, so a moved or renamed platform
     // fails here instead of silently walking the route off the course.
     RectangleF surface(const LevelLoadedInfo& info, const std::string& name)
@@ -244,13 +234,12 @@ namespace
     }
 
     std::unique_ptr<Level> build_course(Application& app, LevelBuilder& builder,
-        int count, PlayerVisualMode mode)
+        int count)
     {
         MenuLevelSettings settings;
         settings.set_player_count(count);
         settings.set_stage("movement_course");
         settings.set_screen_layout(count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
-        settings.set_workshop_visual_mode(mode);
         settings.begin_input_claims(0);
         for (int player = 1; player < count; ++player)
         {
@@ -294,7 +283,7 @@ namespace
 
     void route_phase(Application& app, LevelBuilder& builder, Presentation& presentation,
         const LevelLoadedInfo& course, const std::filesystem::path& output, int count,
-        PlayerVisualMode mode, int sequence_frames, bool save_sequence,
+        int sequence_frames, bool save_sequence,
         std::ofstream& records, std::ofstream& route_records)
     {
         auto& feedback = const_cast<MovementFeedbackPresentation&>(
@@ -303,7 +292,7 @@ namespace
         const RectangleF short_landing = surface(course, "short_landing_long_takeoff");
         const RectangleF runway_b = surface(course, "spawn_b_runway");
 
-        auto level = build_course(app, builder, count, mode);
+        auto level = build_course(app, builder, count);
         std::vector<PlayerInputData> inputs(input_slots::count);
         for (auto& input : inputs)
         {
@@ -331,7 +320,7 @@ namespace
             runners.push_back(runner);
         }
 
-        const std::string prefix = std::to_string(count) + "p-" + mode_name(mode) + "-route";
+        const std::string prefix = std::to_string(count) + "p-route";
         const std::filesystem::path on_directory = output / (prefix + "-60fps-on");
         const std::filesystem::path off_directory = output / (prefix + "-60fps-off");
         if (save_sequence && sequence_frames > 0)
@@ -352,7 +341,7 @@ namespace
                 RouteRunner& runner = runners[index];
                 const Player& player = *level->players_[index];
                 PlayerInputData& input = inputs.at(static_cast<size_t>(player.player_num()));
-                // The same 2pi-per-90-tick sweep as the workshop playable probe.
+                // Sweep aim through a full turn every 90 ticks.
                 input.shoot_angle = static_cast<float>(tick) * 2.0f * PI / 90.0f;
                 if (index % 2 != 0) { input.shoot_angle = PI - input.shoot_angle; }
                 input.shoot_angle = std::atan2(std::sin(input.shoot_angle), std::cos(input.shoot_angle));
@@ -435,7 +424,7 @@ namespace
                 require(changed * 100 < static_cast<size_t>(pane.width) * static_cast<size_t>(pane.height),
                     "route feedback changed more than one percent of a pane");
                 const Player& player = *level->players_[static_cast<size_t>(view)];
-                route_records << count << ',' << mode_name(mode) << ',' << tick << ',' << view + 1
+                route_records << count << ',' << tick << ',' << view + 1
                     << ',' << player.center().x << ',' << player.rectangle().bottom()
                     << ',' << player.camera().translation.x << ',' << player.camera().translation.y
                     << ',' << (grounded(player) ? 1 : 0) << ',' << changed << '\n';
@@ -449,7 +438,7 @@ namespace
                 save(disabled, off_directory / filename.str());
             }
 
-            const std::string phase = std::string(mode_name(mode)) + "-route-";
+            const std::string phase = "route-";
             if (!captured_takeoff && std::find(took_off.begin(), took_off.end(), true) != took_off.end())
             {
                 captured_takeoff = true;
@@ -500,13 +489,13 @@ int wmain(int argc, wchar_t** argv)
         require(sequence_frames >= 0 && sequence_frames <= 180,
             "sequence frame count must be between 0 and 180");
         // Paired route sequences are four-player only unless asked: each one is
-        // two 720p frames per tick for each of the three visual modes.
+        // two 720p frames per tick for each selected player count.
         const bool one_player_route_sequences = argc == 5 && std::wstring(argv[4]) == L"1";
         std::filesystem::create_directories(output);
         std::ofstream records(output / "phases.csv");
         records << "players,phase,tick,seconds,width,height,view,changed_pixels\n";
         std::ofstream route_records(output / "route.csv");
-        route_records << "players,mode,tick,view,centre_x,feet_y,camera_x,camera_y,grounded,changed_pixels\n";
+        route_records << "players,tick,view,centre_x,feet_y,camera_x,camera_y,grounded,changed_pixels\n";
 
         Registry<LevelLoadedInfo> levels("Level");
         GameTuning tuning((content / "tuning.json").string().c_str());
@@ -653,18 +642,14 @@ int wmain(int argc, wchar_t** argv)
         const LevelLoadedInfo& course = *levels.get("movement_course");
         for (int count : { 1, 4 })
         {
-            for (PlayerVisualMode mode : { PlayerVisualMode::original,
-                PlayerVisualMode::continuous, PlayerVisualMode::authored })
-            {
-                route_phase(app, builder, presentation, course, output, count, mode,
-                    sequence_frames, count == 4 || one_player_route_sequences,
-                    records, route_records);
-            }
+            route_phase(app, builder, presentation, course, output, count,
+                sequence_frames, count == 4 || one_player_route_sequences,
+                records, route_records);
         }
         require(records.good() && route_records.good(), "phase record write failed");
         std::cout << "PASS real LevelBuilder/Scene takeoff and landing; 1/4 views; "
             "720p/1080p/QHD; feedback on/off; paused redraw; moving aim-swept route in "
-            "original/continuous/authored with camera pan; scripted inputs, no physical-device claim\n";
+            "the runtime presentation with camera pan; scripted inputs, no physical-device claim\n";
         return 0;
     }
     catch (const std::exception& error)

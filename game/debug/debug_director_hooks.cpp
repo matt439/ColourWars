@@ -105,11 +105,6 @@ void DebugDirectorImpl::attach_match(DebugMatchTarget& match)
 	this->waiting_notice_shown_ = false;
 	// Perf times match frames: not the time spent in the menus before this.
 	this->perf_.break_interval();
-	if (match.debug_settings().stage() == "movement_course")
-	{
-		// A comparison chosen on the stage-select page carries into commands.
-		this->remembered_visual_ = match.debug_settings().workshop_visual_mode();
-	}
 	// A match started by the console was given its plan and the request was
 	// consumed; anything still queued was stored in the menus without `stage`
 	// (or left by a match that ended) and does not belong to this one.
@@ -153,8 +148,7 @@ void DebugDirectorImpl::detach_match(const DebugMatchTarget& match)
 void DebugDirectorImpl::log_match(const MatchPlan& plan, const std::string& how)
 {
 	this->log_.info("match: " + plan.settings.stage() + ", " +
-		std::to_string(plan.settings.player_count()) + " player(s), visual " +
-		MatchPlanner::visual_name(plan.settings.workshop_visual_mode()) +
+		std::to_string(plan.settings.player_count()) + " player(s)" +
 		(plan.reset_session ? " (new session)" : "") + how);
 }
 
@@ -189,7 +183,6 @@ void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 		}
 		else
 		{
-			this->remembered_visual_ = plan.settings.workshop_visual_mode();
 			match.debug_adopt(plan.settings, plan.reset_session);
 			this->log_match(plan, " (adopted by the menu's build)");
 		}
@@ -391,24 +384,6 @@ bool DebugDirectorImpl::can_apply() const
 		this->request_.stage.has_value();
 }
 
-PlayerVisualMode DebugDirectorImpl::planned_visual() const
-{
-	if (this->request_.visual)
-	{
-		return *this->request_.visual;
-	}
-	if (this->match_ != nullptr && this->match_->debug_settings().stage() == "movement_course")
-	{
-		return this->match_->debug_settings().workshop_visual_mode();
-	}
-	return this->remembered_visual_;
-}
-
-void DebugDirectorImpl::queue_visual(PlayerVisualMode mode)
-{
-	this->request_.visual = mode;
-}
-
 void DebugDirectorImpl::run_binds(DebugMatchTarget& match)
 {
 	if (this->application_ == nullptr || this->data_ == nullptr)
@@ -550,7 +525,6 @@ bool DebugDirectorImpl::before_match_update(DebugMatchTarget& match, float dt)
 		return false;
 	}
 
-	this->remembered_visual_ = plan.settings.workshop_visual_mode();
 	// The build runs before_level_build and after_level_build.
 	match.debug_rebuild(plan.settings, plan.reset_session);
 	this->log_match(plan, "");
@@ -680,11 +654,7 @@ bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt)
 	}
 
 	// Resolve now: the pads have been polled and random choices are fresh.
-	MatchRequest request = this->request_;
-	if (!request.visual)
-	{
-		request.visual = this->remembered_visual_;
-	}
+	const MatchRequest request = this->request_;
 	const MatchPlan plan = this->planner().resolve(nullptr, request,
 		this->connected_pads(), this->planner_random());
 	if (!plan.ok)
@@ -718,10 +688,8 @@ bool DebugDirectorImpl::before_page_update(DebugPageTarget& page, float dt)
 	}
 
 	this->waiting_notice_shown_ = false;
-	this->remembered_visual_ = plan.settings.workshop_visual_mode();
 	this->log_.info("match: starting " + plan.settings.stage() + ", " +
-		std::to_string(plan.settings.player_count()) + " player(s), visual " +
-		MatchPlanner::visual_name(plan.settings.workshop_visual_mode()));
+		std::to_string(plan.settings.player_count()) + " player(s)");
 	return true;
 }
 

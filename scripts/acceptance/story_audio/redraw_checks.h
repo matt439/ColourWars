@@ -165,18 +165,6 @@ namespace
         require(world.state(name) == SoundState::stopped, "Whole figure retained the hidden redraw pen");
         player->set_pose({});
         player->update(weapon_step);
-        player->enable_workshop_visual(&world.presentation.workshop_player(), &world.render,
-            PlayerVisualMode::authored, 0);
-        require(world.state(name) == SoundState::stopped, "Workshop art retained an invisible redraw pen");
-        player->force_respawn();
-        player->kill();
-        player->update(weapon_step);
-        player->update(weapon_step);
-        require(world.state(name) == SoundState::stopped, "Workshop death played an invisible redraw pen");
-        player->enable_workshop_visual(&world.presentation.workshop_player(), &world.render,
-            PlayerVisualMode::original, 0);
-        player->update(weapon_step);
-        require(world.state(name) == SoundState::playing, "Restored original art lost its active redraw pen");
         player.reset();
         require(world.state(name) == SoundState::stopped, "Player teardown left the redraw pen running");
     }

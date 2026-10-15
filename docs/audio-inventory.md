@@ -634,6 +634,7 @@ legacy names do not make them migration inputs.
 | Weapon feedback (2026-10-15) | Sprayer/roller/mister stop edges; all five tools' empty/recovered cues; sniper cooldown-ready cue; roller lift/settle on completed ground contacts |
 | Paint feedback (2026-10-15) | Six rotating splashes, all five tools' impacts, neutral/enemy capture and retiring bare-geometry duds, bounded per paint owner across all surfaces |
 | Menus and results | Direction, confirm, cancel, error, ready, pause-open, results fill, winner and distinct draw use their replacement cues |
+| Menu feedback (2026-10-15) | Distinct unready, pending SFX-volume preview, participating-pad lost/back and completed-series cues |
 | Match start/end | Repeated `match.count_beat` edges and one `match.go`; separate time-up and glass-out voices replace the whistle |
 | Closing clock and room (2026-10-15) | One `match.last_ten` per displayed positive second at ten or below; a quiet `room.tone` loop before the push and throughout the reveal |
 | Opening and reveal | Reveal hover/click use the replacement cues; the accepted sigh/chair cues have tuning slots and pause-aware phase-edge playback |
@@ -728,7 +729,7 @@ The redraw/painted-support increment uses four explicit `player.redraw_sounds`
 effect instances, selected by roster/view index rather than pad slot. Sparse
 pads, keyboard/mouse and device-less debug seats therefore retain independent
 voices. The pen loops only between the redraw presentation's `draw_from` and
-`fill_at` boundaries; hidden workshop redraws and whole-figure reveal poses stay
+`fill_at` boundaries; whole-figure reveal poses stay
 quiet. Fill, respawn, time-up and teardown stop the voice. Pause/resume preserves
 its position and refreshes the current SFX gain, including mute. A long tick
 that passes the whole drawing interval creates no catch-up loop.
@@ -766,6 +767,25 @@ positions, resume refreshes the current SFX gain without replay, and teardown
 stops them. Nonpositive updates emit nothing. The quiet room gain and clock
 gain remain listening candidates; accepted masters and bank bytes are unchanged.
 
+The menu-feedback increment uses distinct `ui.unready` on explicit seat release
+and team/tool/arena unconfirmation; leaving a page still uses cancel. The SFX
+volume row auditions `ui.volume_preview` only when its pending value changes,
+at that pending gain exactly once. It can audition an increase from applied
+mute; selecting zero is silent and adjusting a clamped endpoint emits nothing.
+Apply and discard retain their existing save behaviour.
+
+`ConnectionAudio` belongs to the match's shared menu context, which survives
+pause, confirmation and controls pages. It samples current presence of claimed,
+human-driven pad slots on active positive updates, including a pad already
+missing when the match starts. One `ui.pad_lost` or `ui.pad_back` sounds per
+kind per sample; partial returns remain audible while other pads are missing.
+Unclaimed devices, keyboard/mouse and bot/replay seats stay quiet. Page changes
+cannot repeat a warning, and a return never resumes play automatically. A new
+round resets the connection history. `end.series` sounds once when a completed
+best-of series reaches the end menu; single matches, drawn/ongoing series rounds
+and subsequent menu updates stay quiet. New choices and gains live in
+`presentation.json`, with startup name/range checks and current SFX gain/mute.
+
 **POL#23 remains open.** Putting an accepted wave into the bank does not create
 a gameplay trigger. Complete the required new cues from section 4, assess Tier
 3 detail individually and keep it off or nearly off by default:
@@ -773,8 +793,7 @@ a gameplay trigger. Complete the required new cues from section 4, assess Tier
 - Movement: optional bonk/drop/hit-confirm details.
 - Paint/tool detail: optional blocked/slosh/drip cues.
 - Room: optional footsteps/breath/waver/cheat.
-- Menus/music: pad lost/back, reconnect count-in (`POL#18`), distinct unready
-  and volume-preview hooks, series cue; results music, arena ending stings and
+- Menus/music: reconnect count-in (`POL#18`); results music, arena ending stings and
   transition fades/ducking (`GAP#5.1`); optional world ambience/detail.
 - Mix: useful action cues above weapon voices, movement, music and decorative
   detail; limits on repeating impacts/steps; actual one-, two- and four-player
@@ -881,4 +900,18 @@ with the real bank and, separately, without it, each with a system-only PATH
 and graceful close. Evidence is under `out/validation/match-room-audio/`, the
 adjacent build/acceptance logs and `out/acceptance/`. These checks establish cue
 requests and lifecycle behaviour; listening and multiplayer mix remain in
+POL#23 and ROAD#3.
+
+Menu-feedback validation (2026-10-15): Debug and Release builds and all 11
+consumer acceptance cases pass. The `story_audio` recorder covers sparse
+participating pads, simultaneous loss/return, partial reconnects, repeated
+samples, newly eligible and debug-driven seats, an initially absent pad,
+current gain/mute and a silent bank. Content variants check all five new cue
+names and volume boundaries. The six audio publication checks pass. Isolated
+Debug and Release startup pass with the real bank and, separately, without it,
+using a system-only PATH and graceful close. Logs are under `out/acceptance/`
+and `out/validation/menu-audio/`; the final workshop-retirement build is checked
+under `out/validation/workshop-retirement/`. The accepted bank and masters are unchanged.
+These checks establish construction, content and connection cue requests;
+physical-pad menu sessions and listening/multiplayer mix remain ROAD#2,
 POL#23 and ROAD#3.

@@ -31,8 +31,6 @@ namespace
 		}
 		return "idle";
 	}
-
-	constexpr const char* course_stage = "movement_course";
 }
 
 std::vector<std::string> DebugDirectorImpl::status_lines() const
@@ -46,8 +44,7 @@ std::vector<std::string> DebugDirectorImpl::status_lines() const
 	{
 		const MenuLevelSettings& settings = this->match_->debug_settings();
 		lines.push_back("match: stage " + settings.stage() + ", " +
-			std::to_string(settings.player_count()) + " player(s), visual " +
-			MatchPlanner::visual_name(settings.workshop_visual_mode()) +
+			std::to_string(settings.player_count()) + " player(s)" +
 			", best of " + std::to_string(settings.best_of()));
 		const std::vector<MenuPlayerSettings> players = settings.player_settings();
 		const std::vector<std::string> views = this->match_->debug_status();
@@ -76,8 +73,7 @@ std::vector<std::string> DebugDirectorImpl::status_lines() const
 		(this->clock_.paused() ? ", paused (" + std::to_string(this->clock_.pending_steps()) +
 			" step(s) pending)" : ", running"));
 	lines.push_back(std::string("feedback ") +
-		(this->presentation_->movement_feedback().enabled ? "on" : "off") +
-		", visual " + MatchPlanner::visual_name(this->planned_visual()));
+		(this->presentation_->movement_feedback().enabled ? "on" : "off"));
 	std::string overlays;
 	for (const auto& [name, on] : { std::pair<const char*, bool>{ "player", this->overlay_player_ },
 		{ "collision", this->overlay_collision_ }, { "camera", this->overlay_camera_ },
@@ -145,14 +141,6 @@ std::string DebugDirectorImpl::status_strip() const
 	if (this->clock_.paused())
 	{
 		add("PAUSED");
-	}
-	// The comparison exists only on the Movement Course.
-	const PlayerVisualMode visual = this->planned_visual();
-	const bool off_course = this->match_ != nullptr &&
-		this->match_->debug_settings().stage() != course_stage;
-	if (visual != PlayerVisualMode::original && !off_course)
-	{
-		add(std::string("visual ") + MatchPlanner::visual_name(visual));
 	}
 	if (!this->presentation_->movement_feedback().enabled)
 	{

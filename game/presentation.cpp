@@ -60,33 +60,6 @@ namespace
 		return value;
 	}
 
-	template<size_t N>
-	void read_frames(const JsonValue& parent, const char* key, std::array<std::string, N>& frames)
-	{
-		const JsonValue array = parent.array(key);
-		if (array.size() != N)
-		{
-			throw std::runtime_error(array.where() + ": wrong number of authored frames.");
-		}
-		for (size_t index = 0; index < N; ++index) { frames[index] = array.at(index).as_identifier(); }
-	}
-
-	WorkshopToolPresentation read_workshop_tool(const JsonValue& json)
-	{
-		WorkshopToolPresentation result;
-		result.frame = json.identifier("frame");
-		result.team_frame = json.identifier("team_frame");
-		result.size = read_positive_vector(json, "size");
-		result.muzzle_offset = read_finite_vector(json, "muzzle_offset");
-		result.support_grip_offset = read_finite_vector(json, "support_grip_offset");
-		result.aim_angle = json.number("aim_angle");
-		if (!std::isfinite(result.aim_angle))
-		{
-			throw std::runtime_error(json.where() + ": aim_angle must be finite.");
-		}
-		return result;
-	}
-
 	bool is_hex_colour(const std::string& text)
 	{
 		if (text.length() != 6 && text.length() != 8)
@@ -145,8 +118,16 @@ namespace
 		const JsonValue sound = parent.object(key);
 
 		PresentationSound result;
-		result.name = sound.string("name");
+		result.name = sound.identifier("name");
+		if (result.name.empty())
+		{
+			throw std::runtime_error(sound.where() + ": 'name' must not be empty.");
+		}
 		result.volume = sound.number("volume");
+		if (!std::isfinite(result.volume) || result.volume < 0.0f || result.volume > 1.0f)
+		{
+			throw std::runtime_error(sound.where() + ": 'volume' must be finite and from 0 to 1.");
+		}
 		return result;
 	}
 
@@ -356,6 +337,7 @@ namespace
 		const JsonValue sounds = json.object("sounds");
 		menu.error_sound = sounds.string("error");
 		menu.ready_sound = sounds.string("ready");
+		menu.unready_sound = read_sound(sounds, "unready");
 
 		// Resolve descriptions by weapon name so file order is independent of enum order.
 		const JsonValue descriptions = json.object("weapon_descriptions");
@@ -387,6 +369,9 @@ namespace
 		menu.box_colour = read_colour(json, "box_colour");
 		menu.layout = read_layout(json, "layout");
 		menu.window_open_sound = json.string("window_open_sound");
+		const JsonValue sounds = json.object("sounds");
+		menu.pad_lost_sound = read_sound(sounds, "pad_lost");
+		menu.pad_back_sound = read_sound(sounds, "pad_back");
 		return menu;
 	}
 
@@ -397,6 +382,7 @@ namespace
 		EndMenuPresentation menu;
 		menu.box_colour = read_colour(json, "box_colour");
 		menu.layout = read_layout(json, "layout");
+		menu.series_sound = read_sound(json.object("sounds"), "series");
 		return menu;
 	}
 
@@ -694,88 +680,13 @@ Presentation::Presentation(const char* path)
 	this->controls_settings_.heading_position = read_vector(controls, "heading_position");
 	this->controls_settings_.controls_position = read_vector(controls, "controls_position");
 	this->controls_settings_.help_font = controls.string("help_font");
+	this->controls_settings_.volume_preview_sound = read_sound(controls.object("sounds"), "volume_preview");
 	this->pause_menu_ = read_pause_menu(root);
 	this->end_menu_ = read_end_menu(root);
 	this->results_menu_ = read_results_menu(root);
 	this->prompt_bar_ = read_prompt_bar(root);
 	this->hud_ = read_hud(root);
 	this->camera_.reference_height = read_positive(root.object("camera"), "reference_height");
-	const JsonValue workshop = root.object("workshop_player");
-	WorkshopPlayerPresentation& art = this->workshop_player_;
-	art.sprite_sheet = workshop.identifier("sprite_sheet");
-	art.body_size = read_positive_vector(workshop, "body_size");
-	read_frames(workshop, "idle_frames", art.idle_frames);
-	read_frames(workshop, "run_frames", art.run_frames);
-	read_frames(workshop, "badge_frames", art.badge_frames);
-	art.air_frame = workshop.identifier("air_frame");
-	art.landing_frame = workshop.identifier("landing_frame");
-	art.idle_frame_time = read_positive(workshop, "idle_frame_time");
-	art.run_frame_time = read_positive(workshop, "run_frame_time");
-	art.landing_duration = read_positive(workshop, "landing_duration");
-	art.pixel_size = read_positive(workshop, "pixel_size");
-	art.pixel_frame = workshop.identifier("pixel_frame");
-	art.shoulder_offset = read_finite_vector(workshop, "shoulder_offset");
-	art.rear_shoulder_offset = read_finite_vector(workshop, "rear_shoulder_offset");
-	art.elbow_drop = read_positive(workshop, "elbow_drop");
-	art.arm_length = read_positive(workshop, "arm_length");
-	art.sleeve_width = read_positive(workshop, "sleeve_width");
-	art.arm_outline_width = read_positive(workshop, "arm_outline_width");
-	art.sleeve_colour = read_colour(workshop, "sleeve_colour");
-	art.arm_outline_colour = read_colour(workshop, "arm_outline_colour");
-	art.glove_frame = workshop.identifier("glove_frame");
-	art.glove_size = read_positive_vector(workshop, "glove_size");
-	art.badge_size = read_positive_vector(workshop, "badge_size");
-	art.badge_offset = read_finite_vector(workshop, "badge_offset");
-	art.sprayer = read_workshop_tool(workshop.object("sprayer"));
-	art.roller = read_workshop_tool(workshop.object("roller"));
-	const JsonValue poses = workshop.array("sprayer_poses");
-	if (poses.size() != art.sprayer_poses.size())
-	{
-		throw std::runtime_error(poses.where() + ": exactly five aim poses are required.");
-	}
-	for (size_t index = 0; index < art.sprayer_poses.size(); ++index)
-	{
-		art.sprayer_poses[index] = read_workshop_tool(poses.at(index));
-	}
-	if (art.sleeve_width < art.pixel_size)
-	{
-		throw std::runtime_error(workshop.where() + ": sleeve width must cover a native pixel.");
-	}
-	if (art.arm_length < art.pixel_size * 2.0f)
-	{
-		throw std::runtime_error(workshop.where() +
-			": arm_length must cover two native pixels, one per bone.");
-	}
-	const float hysteresis_degrees = workshop.number("pose_hysteresis_degrees");
-	// Array neighbours are aim neighbours only while the angles ascend; that
-	// is also what makes the narrowest array gap the narrowest real one.
-	float narrowest_gap = std::numeric_limits<float>::max();
-	for (size_t index = 1; index < art.sprayer_poses.size(); ++index)
-	{
-		const float gap = art.sprayer_poses[index].aim_angle -
-			art.sprayer_poses[index - 1].aim_angle;
-		if (!(gap > 0.0f))
-		{
-			throw std::runtime_error(poses.where() +
-				": sprayer pose aim_angle values must be strictly increasing.");
-		}
-		narrowest_gap = std::min(narrowest_gap, gap);
-	}
-	art.pose_hysteresis = hysteresis_degrees * PI / 180.0f;
-	// At half a gap or more the aim could never leave a pose for its neighbour.
-	if (!std::isfinite(hysteresis_degrees) || hysteresis_degrees < 0.0f ||
-		art.pose_hysteresis * 2.0f >= narrowest_gap)
-	{
-		throw std::runtime_error(workshop.where() + ": 'pose_hysteresis_degrees' must be "
-			"finite, not negative and under half the narrowest gap between sprayer poses.");
-	}
-	art.team_mask_minimum_luminance = workshop.number("team_mask_minimum_luminance");
-	if (!std::isfinite(art.team_mask_minimum_luminance) ||
-		art.team_mask_minimum_luminance < 0.0f || art.team_mask_minimum_luminance > 1.0f)
-	{
-		throw std::runtime_error(workshop.where() +
-			": 'team_mask_minimum_luminance' must be a relative luminance from 0 to 1.");
-	}
 	const JsonValue movement = root.object("movement_feedback");
 	MovementFeedbackPresentation& feedback = this->movement_feedback_;
 	feedback.enabled = movement.boolean("enabled");
@@ -853,11 +764,6 @@ const OpeningPresentation& Presentation::opening() const
 	return this->opening_;
 }
 
-const WorkshopPlayerPresentation& Presentation::workshop_player() const
-{
-	return this->workshop_player_;
-}
-
 void Presentation::validate_resources(const RenderResources& render,
 	const AudioResources& audio) const
 {
@@ -887,44 +793,6 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.frame("opening.fill_frame", this->opening_.sprite_sheet,
 		this->opening_.fill_frame);
 	check.font("opening.percent_font", this->opening_.percent_font);
-	const WorkshopPlayerPresentation& art = this->workshop_player_;
-	check.frame("workshop terrain", "workshop_kit", "platform");
-	const SpriteSheet* sheet = render.sprite_sheet(art.sprite_sheet);
-	const auto check_frame = [&](const std::string& name, const Vector2F& size)
-	{
-		check.frame("workshop_player", art.sprite_sheet, name);
-		const SpriteFrame& frame = sheet->sprite_frame(sheet->resolve_sprite_frame(name));
-		const Vector2F native_size(static_cast<float>(frame.source_rectangle().width),
-			static_cast<float>(frame.source_rectangle().height));
-		if ((native_size * art.pixel_size - size).length() > 0.001f)
-		{
-			throw std::runtime_error(this->source_path_ + ": workshop_player frame '" + name +
-				"' must use the authored native texel density.");
-		}
-	};
-	const auto check_pair = [&](const std::string& base, const std::string& team, const Vector2F& size)
-	{
-		check_frame(base, size);
-		check_frame(team, size);
-		if (sheet->sprite_frame(sheet->resolve_sprite_frame(base)).origin() !=
-			sheet->sprite_frame(sheet->resolve_sprite_frame(team)).origin())
-		{
-			throw std::runtime_error(this->source_path_ + ": workshop_player team mask pivot mismatch.");
-		}
-	};
-	for (const std::string& frame : art.idle_frames) { check_pair(frame, frame + "_team", art.body_size); }
-	for (const std::string& frame : art.run_frames) { check_pair(frame, frame + "_team", art.body_size); }
-	check_pair(art.air_frame, art.air_frame + "_team", art.body_size);
-	check_pair(art.landing_frame, art.landing_frame + "_team", art.body_size);
-	for (const std::string& frame : art.badge_frames) { check_frame(frame, art.badge_size); }
-	check_frame(art.glove_frame, art.glove_size);
-	check_frame(art.pixel_frame, Vector2F(art.pixel_size, art.pixel_size));
-	for (const WorkshopToolPresentation& pose : art.sprayer_poses)
-	{
-		check_pair(pose.frame, pose.team_frame, pose.size);
-	}
-	check_pair(art.sprayer.frame, art.sprayer.team_frame, art.sprayer.size);
-	check_pair(art.roller.frame, art.roller.team_frame, art.roller.size);
 	const Vector2F heading_size = render.measure_text(
 		render.resolve_sprite_font(this->menu_.detail_font), L"GET READY");
 	const float heading_scale = std::min(1.0f,
@@ -943,8 +811,13 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.wave("menu_style.sounds.cancel", bank, this->menu_.cancel_sound);
 	check.wave("main_menu.sounds.error", bank, this->main_menu_.error_sound);
 	check.wave("main_menu.sounds.ready", bank, this->main_menu_.ready_sound);
+	check.wave("main_menu.sounds.unready.name", bank, this->main_menu_.unready_sound.name);
+	check.wave("controls_settings.sounds.volume_preview.name", bank, this->controls_settings_.volume_preview_sound.name);
 	check.effect("main_menu.music.name", bank, this->main_menu_.music.name);
 	check.wave("pause_menu.window_open_sound", bank, this->pause_menu_.window_open_sound);
+	check.wave("pause_menu.sounds.pad_lost.name", bank, this->pause_menu_.pad_lost_sound.name);
+	check.wave("pause_menu.sounds.pad_back.name", bank, this->pause_menu_.pad_back_sound.name);
+	check.wave("end_menu.sounds.series.name", bank, this->end_menu_.series_sound.name);
 	check.wave("results_menu.sounds.winner.name", bank, this->results_menu_.winner_sound.name);
 	check.wave("results_menu.sounds.draw.name", bank, this->results_menu_.draw_sound.name);
 	check.effect("results_menu.sounds.fill.name", bank, this->results_menu_.fill_sound.name);

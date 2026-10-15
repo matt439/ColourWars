@@ -10,16 +10,14 @@ thread starts here: read **NOW**, then the owner of the row it picks up.
 results go in their owners, and `git log` is the changelog.
 
 **Aim (2026-10-15):** the [backstory](docs/backstory.md#building-it) build is complete, including
-its accepted sounds. Settle the [Paint.exe art rules](docs/polish-plan.md#1-establish-the-art-and-display-rules)
-that the characters, tools, environment and UI all wait on. The author's order is gameplay
-style first, UI after.
+its accepted sounds. Build gameplay artwork to the accepted
+[Paint.exe art rules](docs/polish-plan.md#1-establish-the-art-and-display-rules). The author's
+order is gameplay style first, UI after.
 
 The ordered actions are done (`STORY#3`, `ENG#PIN` with `ENG#LEDGER`, `DOC#1`–`DOC#4`, on
-2026-10-14). The aim now waits on the author below; pick the next actions from the OPEN rows.
+2026-10-14). Pick the next actions from the OPEN rows, preserving gameplay style before UI.
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
-- **Art:** confirm the Paint.exe round-2 picks (`POL#1`); this gates `POL#7`–`POL#9` and `POL#16`.
-  Then decide whether to retire the workshop kit (`POL#2`).
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 - **Calls:** `POL#4`, `POL#5`, `POL#15`, `GAP#1.2`, `GAP#1.3`, `GAP#1.5`, `GAP#8.6`,
@@ -28,17 +26,15 @@ The ordered actions are done (`STORY#3`, `ENG#PIN` with `ENG#LEDGER`, `DOC#1`–
 ## Art direction, characters and the UI
 
 **Owner:** [docs/polish-plan.md](docs/polish-plan.md) §1, §4 and §6. It records the 2026-10-09
-switch to Paint.exe Maximalism; the round-2 art choices still await confirmation. The pixel-kit
+switch to Paint.exe Maximalism and the accepted 2026-10-15 round-2 art rules. The pixel-kit
 questions in the polish sub-docs are superseded, not open.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#1` | DECISION | HIGH | L | Redo [§1](docs/polish-plan.md#1-establish-the-art-and-display-rules) for Paint.exe: confirm or replace the round-2 picks (Zoom 400% values, Tool Props terrain, airbrush shadows, black keyline, figure variant E with a head accent). Owns the in-world team channel (gap audit 2.3). |
-| `POL#2` | DECISION | LOW | S | Retire the superseded workshop kit (the three `PlayerVisualMode`s, F8 cycle, `game/art/polish/kit`, the `check-workshop-*` scripts and cases) or keep it as a frozen study. [Remaining decisions](docs/polish-playable-kit.md#visual-observations-and-remaining-decisions). |
-| `POL#7` | BLOCKED | HIGH | XL | Characters in the confirmed style: hands, grips, aim, idle, run, takeoff, air, land, firing, hurt, elimination, and a same-team cue readable at 4P. Waits on `POL#1`. [§4](docs/polish-plan.md#characters-and-distinctive-weapons). |
-| `POL#8` | BLOCKED | HIGH | XL | Distinct designs for all five tools, with the secondary-motion table (pressure kick, hose, drum, gauge, slosh, mist tail). Waits on `POL#1`. [§4](docs/polish-plan.md#characters-and-distinctive-weapons). |
-| `POL#9` | BLOCKED | HIGH | XL | Material and prop kit for the reference arena, background layers, landmarks, room life; collision silhouettes stay truthful. Waits on `POL#1` and `POL#17`. [§4](docs/polish-plan.md#environment-and-background). |
-| `POL#16` | BLOCKED | MED | XL | Carry the style through menus, cards, stage preview, HUD, countdown, pause and results; extend poses and feedback to every weapon and arena. After `POL#1`. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
+| `POL#7` | OPEN | HIGH | XL | Characters in the confirmed style: hands, grips, aim, idle, run, takeoff, air, land, firing, hurt, elimination, and a head accent for teammates readable at 4P. Owns the in-world team channel (gap audit 2.3). [§4](docs/polish-plan.md#characters-and-distinctive-weapons). |
+| `POL#8` | OPEN | HIGH | XL | Distinct designs for all five tools, with the secondary-motion table (pressure kick, hose, drum, gauge, slosh, mist tail). [§4](docs/polish-plan.md#characters-and-distinctive-weapons). |
+| `POL#9` | BLOCKED | HIGH | XL | Material and prop kit for the reference arena, background layers, landmarks, room life; collision silhouettes stay truthful. Waits on `POL#17`. [§4](docs/polish-plan.md#environment-and-background). |
+| `POL#16` | OPEN | MED | XL | Carry the style through menus, cards, stage preview, HUD, countdown, pause and results; extend poses and feedback to every weapon and arena. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback
 
@@ -82,7 +78,7 @@ mix still belong here; a missing-bank silent fallback is not a defect.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#23` | OPEN | HIGH | L | Wire the [remaining menu/music cues and transitions](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration); assess optional detail and mix at 1/2/4 players. |
+| `POL#23` | OPEN | HIGH | L | Wire [results music, ending stings and transitions](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration), plus the reconnect count-in after `POL#18`; assess optional detail and mix at 1/2/4 players. |
 | `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains, mute, suspension, resumed loops, the multiplayer mix; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
 
 ## Acceptance and release
@@ -192,7 +188,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `CI#1` | OPEN | LOW | M | CI runs none of the window-driven checks (`check-debug-console`, `check-movement-feedback`, `check-workshop-*`). |
+| `CI#1` | OPEN | LOW | M | CI runs neither window-driven check (`check-debug-console`, `check-movement-feedback`). |
 
 ## Areas with no open rows
 

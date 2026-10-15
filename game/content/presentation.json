@@ -135,7 +135,8 @@
     "music": { "name": "music.menu", "volume": 0.65 },
     "sounds": {
       "error": "ui.error",
-      "ready": "ui.ready"
+      "ready": "ui.ready",
+      "unready": { "name": "ui.unready", "volume": 0.7 }
     },
     "weapon_descriptions": {
       "sprayer": "Fires a powerful stream of paint in an arc pattern.\nGood for beginners.",
@@ -151,6 +152,9 @@
     "heading_position": { "x": 150.0, "y": 100.0 },
     "controls_position": { "x": 1050.0, "y": 220.0 },
     "help_font": "gill_sans_mt_bold_24",
+    "sounds": {
+      "volume_preview": { "name": "ui.volume_preview", "volume": 0.7 }
+    },
     "layout": {
       "position": { "x": 150.0, "y": 250.0 },
       "size": { "x": 300.0, "y": 60.0 },
@@ -166,11 +170,18 @@
       "size": { "x": 100.0, "y": 50.0 },
       "spacing": { "x": 200.0, "y": 130.0 }
     },
-    "window_open_sound": "ui.pause_open"
+    "window_open_sound": "ui.pause_open",
+    "sounds": {
+      "pad_lost": { "name": "ui.pad_lost", "volume": 0.65 },
+      "pad_back": { "name": "ui.pad_back", "volume": 0.65 }
+    }
   },
 
   "end_menu": {
     "box_colour": "182233",
+    "sounds": {
+      "series": { "name": "end.series", "volume": 0.7 }
+    },
     "layout": {
       "position": { "x": 700.0, "y": 250.0 },
       "size": { "x": 100.0, "y": 50.0 },
@@ -386,185 +397,5 @@
     "shadow_colour": "BLACK",
     "shadow_offset": { "x": 1.0, "y": 1.0 },
     "shadow_scale": 1.0
-  },
-    "workshop_player": {
-        "sprite_sheet": "workshop_kit",
-        "body_size": {
-            "x": 52,
-            "y": 120
-        },
-        "idle_frames": [
-            "painter_idle_0",
-            "painter_idle_1"
-        ],
-        "run_frames": [
-            "painter_run_0",
-            "painter_run_1",
-            "painter_run_2",
-            "painter_run_3"
-        ],
-        "air_frame": "painter_air",
-        "landing_frame": "painter_land",
-        "idle_frame_time": 1.5,
-        "run_frame_time": 0.1,
-        "landing_duration": 0.12,
-        "pixel_size": 4,
-        "pixel_frame": "pixel",
-        "shoulder_offset": {
-            "x": 8,
-            "y": -14
-        },
-        "rear_shoulder_offset": {
-            "x": -8,
-            "y": -14
-        },
-        "elbow_drop": 12,
-        "arm_length": 48,
-        "sleeve_width": 8,
-        "arm_outline_width": 4,
-        "sleeve_colour": "C6D0CC",
-        "arm_outline_colour": "18232E",
-        "glove_frame": "glove",
-        "glove_size": {
-            "x": 12,
-            "y": 12
-        },
-        "badge_frames": [
-            "badge_1",
-            "badge_2",
-            "badge_3",
-            "badge_4"
-        ],
-        "badge_size": {
-            "x": 36,
-            "y": 40
-        },
-        "badge_offset": {
-            "x": -24,
-            "y": -20
-        },
-        "sprayer": {
-            "frame": "sprayer_pose_0",
-            "team_frame": "sprayer_pose_0_team",
-            "size": {
-                "x": 88,
-                "y": 48
-            },
-            "muzzle_offset": {
-                "x": 77.5,
-                "y": 0
-            },
-            "support_grip_offset": {
-                "x": 32,
-                "y": 8
-            },
-            "aim_angle": 0
-        },
-        "sprayer_poses": [
-            {
-                "frame": "sprayer_pose_90up",
-                "team_frame": "sprayer_pose_90up_team",
-                "size": {
-                    "x": 48,
-                    "y": 96
-                },
-                "muzzle_offset": {
-                    "x": 0,
-                    "y": -77.5
-                },
-                "support_grip_offset": {
-                    "x": 8,
-                    "y": -32
-                },
-                "aim_angle": -1.5707963267948966
-            },
-            {
-                "frame": "sprayer_pose_45up",
-                "team_frame": "sprayer_pose_45up_team",
-                "size": {
-                    "x": 92,
-                    "y": 96
-                },
-                "muzzle_offset": {
-                    "x": 54.80077554195201,
-                    "y": -54.800775541952
-                },
-                "support_grip_offset": {
-                    "x": 28.284271247459998,
-                    "y": -16.970562748476
-                },
-                "aim_angle": -0.7853981633974483
-            },
-            {
-                "frame": "sprayer_pose_0",
-                "team_frame": "sprayer_pose_0_team",
-                "size": {
-                    "x": 88,
-                    "y": 48
-                },
-                "muzzle_offset": {
-                    "x": 77.5,
-                    "y": 0
-                },
-                "support_grip_offset": {
-                    "x": 32,
-                    "y": 8
-                },
-                "aim_angle": 0
-            },
-            {
-                "frame": "sprayer_pose_45down",
-                "team_frame": "sprayer_pose_45down_team",
-                "size": {
-                    "x": 92,
-                    "y": 96
-                },
-                "muzzle_offset": {
-                    "x": 54.80077554195201,
-                    "y": 54.80077554195201
-                },
-                "support_grip_offset": {
-                    "x": 16.970562748476,
-                    "y": 28.284271247459998
-                },
-                "aim_angle": 0.7853981633974483
-            },
-            {
-                "frame": "sprayer_pose_90down",
-                "team_frame": "sprayer_pose_90down_team",
-                "size": {
-                    "x": 48,
-                    "y": 96
-                },
-                "muzzle_offset": {
-                    "x": 0,
-                    "y": 77.5
-                },
-                "support_grip_offset": {
-                    "x": -8,
-                    "y": 32
-                },
-                "aim_angle": 1.5707963267948966
-            }
-        ],
-        "pose_hysteresis_degrees": 6,
-        "team_mask_minimum_luminance": 0.2,
-        "roller": {
-            "frame": "roller_grounded",
-            "team_frame": "roller_grounded_team",
-            "size": {
-                "x": 128,
-                "y": 88
-            },
-            "muzzle_offset": {
-                "x": 53.033008588992004,
-                "y": 53.033008588992004
-            },
-            "support_grip_offset": {
-                "x": 12.0,
-                "y": 12.0
-            },
-            "aim_angle": 0.7853981633974483
-        }
-    }
+  }
 }

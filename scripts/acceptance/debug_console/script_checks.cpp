@@ -31,14 +31,14 @@ namespace debug_console_acceptance
 			"a; b is two statements on one line");
 		require(parsed.statements[1].where() == "x.cfg:5", "where() is file:line");
 
-		parsed = parse_script("x.cfg", "visual $1\necho $$1 costs $2\n", { "posed", "t040" });
-		require(parsed.ok && parsed.statements[0].text == "visual posed" &&
+		parsed = parse_script("x.cfg", "feedback $1\necho $$1 costs $2\n", { "on", "t040" });
+		require(parsed.ok && parsed.statements[0].text == "feedback on" &&
 			parsed.statements[1].text == "echo $1 costs t040", "$n is substituted and $$ is a dollar");
 		parsed = parse_script("x.cfg", "echo a\necho b\nscreenshot $1-$2\n", { "only" });
 		require(!parsed.ok && parsed.error.find("x.cfg:3") != std::string::npos &&
 			parsed.error.find("$2 has no argument") != std::string::npos,
 			"A missing argument fails at its line: " + parsed.error);
-		parsed = parse_script("x.cfg", "visual $1\n", { "a;quit" });
+		parsed = parse_script("x.cfg", "feedback $1\n", { "a;quit" });
 		require(!parsed.ok && parsed.error.find("argument $1") != std::string::npos,
 			"An argument cannot add a statement: " + parsed.error);
 		parsed = parse_script("x.cfg", "echo ok\necho caf\xC3\xA9\n", {});
@@ -246,7 +246,7 @@ namespace debug_console_acceptance
 
 	// Every shipped script, followed from the top-level ones through their
 	// exec calls with the arguments they pass: every statement names an entry
-	// with an accepted word count, and every stage, visual, bot and station
+	// with an accepted word count, and every stage, bot and station
 	// exists. So names in scripts cannot drift.
 	void check_shipped_scripts(GameTuning& tuning, Presentation& presentation,
 		const std::filesystem::path& game_directory)
@@ -291,11 +291,6 @@ namespace debug_console_acceptance
 					{
 						require(std::filesystem::is_regular_file(game_directory / L"levels" /
 							(labrador::widen(word(1)) + L".json")), statement.where() + ": no stage " + word(1));
-					}
-					else if (w[0] == "visual")
-					{
-						require(word(1) == "original" || word(1) == "rotating" || word(1) == "posed",
-							statement.where() + ": no visual " + word(1));
 					}
 					else if (w[0] == "goto")
 					{

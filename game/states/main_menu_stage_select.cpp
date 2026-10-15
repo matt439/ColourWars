@@ -40,7 +40,7 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 			}
 			if (this->select_state_.state == ConfirmationState::confirmed)
 			{
-				this->play_wave(this->cancel_sound_);
+				this->play_wave(this->unready_sound_, this->look().unready_sound.volume);
 				this->select_state_.state =
 					ConfirmationState::unconfirmed;
 			}
@@ -85,19 +85,6 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 				this->play_wave(this->direction_sound_);
 				this->cycle_stages(labrador::Direction::right);
 			}
-			else if ((inputs[i].direction == labrador::Direction::up ||
-				inputs[i].direction == labrador::Direction::down) &&
-				this->select_state_.slot != this->random_slot() &&
-				this->data()->stages()->at(static_cast<size_t>(
-					this->select_state_.slot)).name == "movement_course")
-			{
-				const int change = inputs[i].direction == labrador::Direction::up ? 1 : 2;
-				const int mode = static_cast<int>(this->level_settings()->workshop_visual_mode());
-				this->level_settings()->set_workshop_visual_mode(
-					static_cast<PlayerVisualMode>((mode + change) % 3));
-				this->play_wave(this->direction_sound_);
-				break;
-			}
 		}
 	}
 	this->update_stage_select_visuals();
@@ -112,18 +99,12 @@ void MainMenuStageSelect::update_stage_select_visuals()
 {
 	const int slot = this->select_state_.slot;
 	const ConfirmationState state = this->select_state_.state;
-	const PlayerVisualMode visual_mode = this->level_settings()->workshop_visual_mode();
-	if (slot == this->displayed_slot_ && state == this->displayed_state_ &&
-		visual_mode == this->displayed_visual_mode_)
+	if (slot == this->displayed_slot_ && state == this->displayed_state_)
 	{
 		return;
 	}
 	const bool random = slot == this->random_slot();
 	const bool confirmed = state == ConfirmationState::confirmed;
-	const bool course = !random && this->data()->stages()->at(
-		static_cast<size_t>(slot)).name == "movement_course";
-	const std::wstring art_label = visual_mode == PlayerVisualMode::original ? L"Original art" :
-		visual_mode == PlayerVisualMode::continuous ? L"Workshop / rotating tool" : L"Workshop / posed tool";
 	const StageSelectPresentation& look = this->look().stage_select;
 	this->stage_preview_->set_stage(random ? std::string() :
 		this->data()->stages()->at(static_cast<size_t>(slot)).name);
@@ -146,13 +127,10 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->selection_status_->set_text(confirmed ? L"ARENA LOCKED" : L"FIND YOUR ARENA");
 	this->selection_status_->set_colour(confirmed ? look.selected :
 		this->menu_style().heading_colour);
-	this->selection_hint_->set_text(confirmed && course ?
-		art_label + L"\nConfirm again to start." : confirmed ?
+	this->selection_hint_->set_text(confirmed ?
 		L"Confirm again to start.\nBack to change your choice." : random ?
 		L"Random: " + std::to_wstring(random_stage_indices(*this->data()->stages()).size()) +
-		L" available arenas.\nConfirm to lock your choice." : course ?
-		L"Up/Down: " + art_label +
-		L"\nConfirm to lock your choice." :
+		L" available arenas.\nConfirm to lock your choice." :
 		L"Left/Right to browse.\nConfirm to lock your choice.");
 	const RectangleF hint_bounds = RectangleF::union_of(
 		this->selection_hint_->text_bounds_at(Vector2F::ZERO, 1.0f),
@@ -164,13 +142,10 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->selection_hint_->set_shadow_offset(this->menu_style().detail_shadow_offset * hint_scale);
 	this->set_player_prompts(confirmed ? std::vector<PromptBar::Prompt>{
 		{ L"A", L"Start match" }, { L"B", L"Unlock arena" } } :
-		course ? std::vector<PromptBar::Prompt>{ { L"Left/Right", L"Arena" },
-			{ L"Up/Down", L"Art" }, { L"A", L"Lock" }, { L"B", L"Back" } } :
 		std::vector<PromptBar::Prompt>{ { L"Left/Right", L"Browse arenas" },
 			{ L"A", L"Lock arena" }, { L"B", L"Back" } });
 	this->displayed_slot_ = slot;
 	this->displayed_state_ = state;
-	this->displayed_visual_mode_ = visual_mode;
 }
 int MainMenuStageSelect::slot_of(const std::string& stage_name) const
 {

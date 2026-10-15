@@ -80,7 +80,7 @@ DebugDirectorImpl::DebugDirectorImpl(GameTuning* tuning, Presentation* presentat
 	this->log_.info("ColourWars developer console - " + label);
 	this->log_.info("` toggles this console; type help. F10/F11 (or hold pad Back+Start) "
 		"opens the debug menu. F2-F4 overlays, F5 restart, F6 pause, F7 step, "
-		"F8 visual, F9 feedback; 'binds' lists the key table, 'exec.list' the scripts.");
+		"F9 feedback; 'binds' lists the key table, 'exec.list' the scripts.");
 	this->binds_.reset();
 	this->register_commands();
 	this->register_view_commands();

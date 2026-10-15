@@ -52,6 +52,7 @@ protected:
 	// Family-specific sounds; the looping music is stopped before entering a match.
 	labrador::SoundBank::WaveHandle error_sound_;
 	labrador::SoundBank::WaveHandle ready_sound_;
+	labrador::SoundBank::WaveHandle unready_sound_;
 	labrador::SoundBank::EffectHandle music_;
 private:
 	std::vector<PromptBar::Prompt> player_prompts_;
@@ -299,7 +300,6 @@ private:
 	SelectState select_state_ = SelectState();
 	int displayed_slot_ = -1;
 	ConfirmationState displayed_state_ = ConfirmationState::unconfirmed;
-	PlayerVisualMode displayed_visual_mode_ = PlayerVisualMode::original;
 	void update_stage_select_visuals();
 	// Returns the stage's slot, or the first slot for an empty or unknown name.
 	int slot_of(const std::string& stage_name) const;

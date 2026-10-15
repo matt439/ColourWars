@@ -52,7 +52,6 @@ namespace
 		{ "presentation.camera.**", TuneScope::live },
 		// Level::refresh_layout returns early unless the window size changed.
 		{ "presentation.match.**", TuneScope::rebuild },
-		{ "presentation.workshop_player.**", TuneScope::rebuild },
 		// Menu pages read their look when they are built.
 		{ "presentation.**", TuneScope::next_screen },
 	};

@@ -27,8 +27,8 @@ std::string quote_word(const std::string& word);
 // the current statement, so "+timescale +0.5" keeps "+0.5" as a number. Tokens
 // before the first statement are ignored (reserved for a future -flag grammar).
 //
-//     +stage movement_course +players 4 +visual posed
-//         -> { "stage movement_course", "players 4", "visual posed" }
+//     +stage movement_course +players 4 +feedback on
+//         -> { "stage movement_course", "players 4", "feedback on" }
 std::vector<std::string> parse_launch_arguments(
 	const std::vector<std::wstring>& arguments);
 

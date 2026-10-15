@@ -32,11 +32,11 @@ param(
 # itself is what is checked: the console (grave, typing, Enter, Escape), F1-F10,
 # the debug menu, Shift+F5 on a bind, the live console, Alt.
 #
-# Phase 1-2 (one launch, +stage movement_course +players 2 +visual posed +overlay all)
+# Phase 1-2 (one launch, +stage movement_course +players 2 +overlay all)
 #    1. ` status Enter                     (console over two panes, overlays on)
-#    2. F8 F9                              (default binds: visual A/B, feedback)
+#    2. F9                                 (default feedback bind)
 #    3. F10, view, overlay.collision Right (the debug menu steps a variable), Escape, F10
-#    4. F10, match, visual, rotating, Escape, Apply   (staged, then one rebuild)
+#    4. F10, match, players, 3, Escape, Apply   (staged, then one rebuild)
 #    5. ` overlay none, F1, then F2 F3 F4  (overlay keys; P1's own F1 text survives them)
 #    6. ` exec check_drive                 (goto, status, restart+goto, cheats, screenshot)
 #    7. Escape (pause menu), ` stage close_quarters   (the pause menu unwinds)
@@ -200,7 +200,7 @@ namespace ColourWars
 }
 
 $grave = 0xC0; $enter = 0x0D; $escape = 0x1B; $alt = 0x12; $shift = 0x10
-$f1 = 0x70; $f2 = 0x71; $f3 = 0x72; $f4 = 0x73; $f5 = 0x74; $f8 = 0x77; $f9 = 0x78; $f10 = 0x79
+$f1 = 0x70; $f2 = 0x71; $f3 = 0x72; $f4 = 0x73; $f5 = 0x74; $f9 = 0x78; $f10 = 0x79
 $down = 0x28; $right = 0x27; $up = 0x26
 $driver = [ColourWars.ConsoleDriver4]
 $transcript = Join-Path $output 'console.log'
@@ -391,21 +391,20 @@ try {
         'echo check-menus-done')
 
     $arguments = @('+logfile', ('"' + $transcript + '"'), '+stage', 'movement_course',
-        '+players', '2', '+visual', 'posed', '+overlay', 'all')
+        '+players', '2', '+overlay', 'all')
     $process = Start-Game $profileDirectory $arguments
     Start-Sleep -Seconds $StartupSeconds
     $window = Find-Window $process
     Confirm-Focus; Start-Sleep -Milliseconds 400
     Save-Shot '01-launch-overlays.png'
 
-    # 1-2: the console, F8 and F9. The first line is checked against the
+    # 1-2: the console and F9. The first line is checked against the
     # transcript: keys sent in the first moments after focusing can be lost.
     Invoke-Checked 'status' $false
     Save-Shot '02-console-status.png'
     Close-Console
-    $driver::Tap($f8, $false); Start-Sleep -Milliseconds 800
     $driver::Tap($f9, $false); Start-Sleep -Milliseconds 800
-    Save-Shot '03-after-f8-f9.png'
+    Save-Shot '03-after-f9.png'
 
     # 3: debug menu by F10. Root rows with nothing queued: match, player, view,
     # time, content, console. View, by name: feedback, overlay, overlay.camera,
@@ -422,21 +421,22 @@ try {
     Save-Shot '06-collision-off.png'
 
     # 4: staging. Match, by name: intro, menu, players, restart, stage,
-    # visual, weapon. The visual picker opens on the current value (original
-    # after F8), so one Down is rotating.
+    # weapon. The players picker opens on 1; two Down presses choose 3.
     $driver::Tap($f10, $false); Start-Sleep -Milliseconds 500
     $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
-    foreach ($i in 1..5) { $driver::Tap($down, $true) }
+    $driver::Tap($down, $true); $driver::Tap($down, $true)
     $driver::Tap($enter, $false); Start-Sleep -Milliseconds 300
-    $driver::Tap($down, $true)
+    $driver::Tap($down, $true); $driver::Tap($down, $true)
     $driver::Tap($enter, $false); Start-Sleep -Milliseconds 400
     $driver::Tap($escape, $false); Start-Sleep -Milliseconds 400
     Save-Shot '07-staged-apply.png'
     $staged = Get-Transcript
-    if ($staged.Contains('match: movement_course, 2 player(s), visual rotating')) {
-        throw 'The staged visual rebuilt the match before Apply.'
+    if ($staged.Contains('match: movement_course, 3 player(s)')) {
+        throw 'The staged roster rebuilt the match before Apply.'
     }
     $driver::Tap($enter, $false); Start-Sleep -Milliseconds 1500
+    # Restore the two-pane fixture after verifying the staged roster applies.
+    Invoke-Checked 'players 2' $false 1500
 
     # 5: overlay keys.
     # F1 turns on P1's own debug text first; F2-F4 must leave it showing.
@@ -514,20 +514,18 @@ try {
 
     $log = Get-Transcript
     Assert-Transcript @(
-        'match: starting movement_course, 2 player(s), visual posed',
-        'match: stage movement_course, 2 player(s), visual posed',
+        'match: starting movement_course, 2 player(s)',
+        'match: stage movement_course, 2 player(s)',
         'overlays: player collision camera paint',
-        '[F8] visual next',
-        'match: movement_course, 2 player(s), visual original',
         '[F9] feedback toggle',
         'feedback = off',
         'debug menu: open',
         '[menu] overlay.collision toggle',
         'overlay.collision = off',
         'debug menu: closed',
-        '[menu] visual rotating',
-        'visual = rotating: queued; rebuilds when the debug menu closes',
-        'match: movement_course, 2 player(s), visual rotating',
+        '[menu] players 3',
+        'players 3: queued; rebuilds when the debug menu closes',
+        'match: movement_course, 3 player(s)',
         '[F2] overlay collision',
         '[F3] overlay camera',
         '[F4] overlay paint',
@@ -550,11 +548,11 @@ try {
         'script check_menus.cfg done',
         '] quit') 'phase-1/2'
     # Staged, then applied once: the rebuild follows the menu closing.
-    $picked = $log.IndexOf('[menu] visual rotating')
-    $rebuilt = $log.IndexOf('match: movement_course, 2 player(s), visual rotating')
+    $picked = $log.IndexOf('[menu] players 3')
+    $rebuilt = $log.IndexOf('match: movement_course, 3 player(s)')
     $closed = $log.IndexOf('debug menu: closed', $picked)
     if (-not ($picked -lt $closed -and $closed -lt $rebuilt)) {
-        throw 'The staged visual did not wait for Apply.'
+        throw 'The staged roster did not wait for Apply.'
     }
     # The player settled on the high step: centre (4430, 600) on the ground.
     if (-not ($log -match 'P1 kbm team a \w+\s+at \(4430, (59[5-9]|600)\) on_ground')) {
@@ -594,7 +592,7 @@ try {
     Wait-Exit $process 15 'The narrow game'
     $transcript = Join-Path $output 'console.log'
 
-    Write-Host "PASS debug console driven: launch, status, F8-F10, debug menu, staging, overlays, check_drive.cfg (goto direct and behind a restart, cheats, screenshot), unwinding, check_menus.cfg, quit; narrow-window panels in narrow-panels.png. Screenshots: $output"
+    Write-Host "PASS debug console driven: launch, status, F9-F10, debug menu, staging, overlays, check_drive.cfg (goto direct and behind a restart, cheats, screenshot), unwinding, check_menus.cfg, quit; narrow-window panels in narrow-panels.png. Screenshots: $output"
 }
 finally {
     if ($process -ne $null -and -not $process.HasExited) { $process.Kill() }
@@ -609,7 +607,7 @@ finally {
 #       (tune tuning.player.max_velocity.x, twice the file's) with an in-game
 #       screenshot, tune.diff, tune.reset
 #   p3. two presentation edits startup's resource checks refuse
-#       (workshop_player.pixel_size, match.countdown_size.y) - launch
+#       (camera.reference_height, match.countdown_size.y) - launch
 #       statements, because a refused line would stop a script
 #   p4. (-SaveToSource) tune.save tuning on the source tree, git checks the
 #       diff is that one value; the bytes read before the save are written
@@ -657,7 +655,7 @@ Write-Script $phase3Profile 'check_p3_replay' @(
 try {
     $arguments = @('+logfile', ('"' + $transcript + '"'), '+seed', '7', '+stage', 'movement_course',
         '+players', '4', '+bot', 'all', 'paint', '+exec', 'check_p3_tune',
-        '+tune', 'presentation.workshop_player.pixel_size', 'next',
+        '+tune', 'presentation.camera.reference_height', '-1',
         '+tune', 'presentation.match.countdown_size.y', '61')
     if (-not $SaveToSource) { $arguments += @('+exec', 'check_p3_replay') }
     $process = Start-Game $phase3Profile $arguments
@@ -752,7 +750,7 @@ try {
         "tune: tuning.player.max_velocity.x $velocityToken -> $fastToken (live)",
         "tuning.player.max_velocity.x  $velocityToken -> $fastToken  [live]",
         'tune.reset: 1 value(s) back to the file''s',
-        'must use the authored native texel density',
+        "'reference_height' must be finite and greater than zero",
         'match.countdown_size must leave room below the GET READY heading',
         'record drive: restarting the match to record from its first update',
         'record drive: recording 600 updates',
@@ -782,11 +780,9 @@ finally {
 
 # ---------------------------------------------------------------- phase 4
 #   q1. +exec review_feedback_ab +quit, with an autoexec.cfg in the profile:
-#       autoexec runs before the launch statements; 18 PNGs, each -on pair
+#       autoexec runs before the launch statements; six PNGs, each -on pair
 #       differs from its -off (the strip is off, so only the world can);
-#       nine checksums, each with bursts on screen; at each of the three
-#       frames the three visuals print the same update and the same hash (the
-#       art does not touch the simulation).
+#       three checksums, each with bursts on screen at the expected spacing.
 #   q2. +exec station_tour +quit: ten PNGs.
 #   q3. +exec bots_4p +quit: one PNG.
 #   q4. one launch on an isolated profile and TEMP: bind shift+f5 at the
@@ -829,39 +825,34 @@ try {
     $folder = Start-ScriptRun 'review_feedback_ab' $reviewProfile 180
     $log = Get-Transcript
     Assert-Transcript @('autoexec-ran', 'launch: exec review_feedback_ab',
-        'review_feedback_ab: done (3 visuals x 3 frames x on/off)', 'script review_feedback_ab.cfg done',
+        'review_feedback_ab: done (3 frames x on/off)', 'script review_feedback_ab.cfg done',
         'launch: quit') 'review'
     if ($log.IndexOf('autoexec-ran') -gt $log.IndexOf('launch: ')) { throw 'autoexec.cfg did not run first.' }
     if ($log -match '(?m)^error: ') { throw 'The review logged an error.' }
     $shots = @(Get-ChildItem -LiteralPath $folder -Filter '*.png')
-    if ($shots.Count -ne 18) { throw "review_feedback_ab wrote $($shots.Count) PNGs, not 18." }
-    $agree = @{}
-    foreach ($visual in 'original', 'rotating', 'posed') {
-        foreach ($frame in 't040', 't096', 't156') {
-            $on = Join-Path $folder "$visual-$frame-on.png"; $off = Join-Path $folder "$visual-$frame-off.png"
-            if (-not (Test-Path $on) -or -not (Test-Path $off)) { throw "Missing $visual-$frame pair." }
-            if (Test-SameBytes $on $off) { throw "${visual}-${frame}: feedback on and off drew the same picture." }
-        }
+    if ($shots.Count -ne 6) { throw "review_feedback_ab wrote $($shots.Count) PNGs, not 6." }
+    foreach ($frame in 't040', 't096', 't156') {
+        $on = Join-Path $folder "$frame-on.png"; $off = Join-Path $folder "$frame-off.png"
+        if (-not (Test-Path $on) -or -not (Test-Path $off)) { throw "Missing $frame pair." }
+        if (Test-SameBytes $on $off) { throw "${frame}: feedback on and off drew the same picture." }
     }
     $checksums = @([regex]::Matches($log, 'checksum ([0-9a-f]{16}) at update (\d+), paint [^\r\n]*, bursts (\d+)'))
-    if ($checksums.Count -ne 9) { throw "The review logged $($checksums.Count) checksums, not 9." }
-    foreach ($sum in $checksums) {
-        if ([int]$sum.Groups[3].Value -lt 1) { throw "No burst on screen at update $($sum.Groups[2].Value)." }
-    }
+    if ($checksums.Count -ne 3) { throw "The review logged $($checksums.Count) checksums, not 3." }
+    # Checksums count from the build, including the countdown; the named
+    # t040/t096/t156 frames count from GO. Check their relative spacing.
+    $expectedOffsets = @(0, 56, 116)
+    $firstUpdate = [int]$checksums[0].Groups[2].Value
     $report = @()
-    $differ = @()
-    for ($frame = 0; $frame -lt 3; ++$frame) {
-        $passes = @($checksums[$frame], $checksums[3 + $frame], $checksums[6 + $frame])
-        $hashes = @($passes | ForEach-Object { $_.Groups[1].Value })
-        $updates = @($passes | ForEach-Object { $_.Groups[2].Value })
-        $same = (@($hashes | Select-Object -Unique).Count -eq 1) -and (@($updates | Select-Object -Unique).Count -eq 1)
-        $line = "update $($updates -join '/'): original $($hashes[0]) rotating $($hashes[1]) posed $($hashes[2]) -> $(if ($same) { 'agree' } else { 'DIFFER' })"
-        $report += $line
-        if (-not $same) { $differ += $line }
+    for ($frame = 0; $frame -lt $checksums.Count; ++$frame) {
+        $sum = $checksums[$frame]
+        if ([int]$sum.Groups[3].Value -lt 1) { throw "No burst on screen at update $($sum.Groups[2].Value)." }
+        if ([int]$sum.Groups[2].Value -ne $firstUpdate + $expectedOffsets[$frame]) {
+            throw "Review frame $frame is at update $($sum.Groups[2].Value), expected offset $($expectedOffsets[$frame]) from $firstUpdate."
+        }
+        $report += "update $($sum.Groups[2].Value): checksum $($sum.Groups[1].Value), bursts $($sum.Groups[3].Value)"
     }
     Set-Content -LiteralPath (Join-Path $output 'p4-review-checksums.txt') -Value $report
     $report | ForEach-Object { Write-Host "review checksums: $_" }
-    if ($differ.Count -gt 0) { throw "The three visuals' checksums differ (the art touched the simulation): $($differ -join '; ')" }
 
     # q2, q3
     $tourProfile = Join-Path $output 'p4-tour-profile'
@@ -967,7 +958,7 @@ try {
     Wait-Exit $process 15 'The relaunched game (history Up, Enter: quit)'
     Assert-Transcript @('] quit') 'relaunch'
 
-    Write-Host "PASS debug console driven, phase 4: +exec review_feedback_ab (18 PNGs, on/off differ, bursts on screen; autoexec first), station_tour (10), bots_4p (1); bind Shift+F5 and F5; TEMP sweep; live console (P1 still, match running, Escape without a pause menu); perf; binds.cfg and history.txt across a restart. Evidence: $output"
+    Write-Host "PASS debug console driven, phase 4: +exec review_feedback_ab (6 PNGs, on/off differ, bursts on screen; autoexec first), station_tour (10), bots_4p (1); bind Shift+F5 and F5; TEMP sweep; live console (P1 still, match running, Escape without a pause menu); perf; binds.cfg and history.txt across a restart. Evidence: $output"
 }
 finally {
     if ($process -ne $null -and -not $process.HasExited) { $process.Kill() }

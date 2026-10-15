@@ -93,13 +93,6 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 			position, Vector2F::ZERO, 0.0f, Vector2F::ZERO,
 			SpriteFlip::none, 0.0f, view_index);
 
-		if (settings.stage() == "movement_course" &&
-			settings.workshop_visual_mode() != PlayerVisualMode::original)
-		{
-			player->enable_workshop_visual(&this->presentation_->workshop_player(),
-				render_resources, settings.workshop_visual_mode(), view_index);
-		}
-
 		players.push_back(std::move(player));
 	}
 	return players;

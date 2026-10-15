@@ -19,7 +19,7 @@ labrador::ScreenLayout MatchPlanner::layout_for(int players)
 bool MatchRequest::empty() const
 {
 	return !this->stage && !this->players && this->weapons.empty() &&
-		!this->visual && !this->restart && !this->exact;
+		!this->restart && !this->exact;
 }
 
 std::string MatchRequest::describe() const
@@ -42,7 +42,6 @@ std::string MatchRequest::describe() const
 		add("weapon " + (choice.seat < 0 ? std::string("all") :
 			std::to_string(choice.seat + 1)) + " " + choice.weapon);
 	}
-	if (this->visual) { add(std::string("visual ") + MatchPlanner::visual_name(*this->visual)); }
 	if (this->restart) { add("restart"); }
 	return text.empty() ? "nothing" : text;
 }
@@ -106,17 +105,6 @@ const char* MatchPlanner::weapon_name(WeaponType weapon)
 	case WeaponType::mister: return "mister";
 	case WeaponType::bucket: return "bucket";
 	default: return "other";
-	}
-}
-
-const char* MatchPlanner::visual_name(PlayerVisualMode mode)
-{
-	switch (mode)
-	{
-	case PlayerVisualMode::continuous: return "rotating";
-	case PlayerVisualMode::authored: return "posed";
-	case PlayerVisualMode::original:
-	default: return "original";
 	}
 }
 
@@ -269,11 +257,6 @@ MatchPlan MatchPlanner::resolve(const MenuLevelSettings* current,
 			}
 			settings.set_player_weapon(seat, chosen);
 		}
-	}
-
-	if (request.visual)
-	{
-		settings.set_workshop_visual_mode(*request.visual);
 	}
 
 	plan.settings = settings;

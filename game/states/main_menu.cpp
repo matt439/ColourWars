@@ -15,6 +15,7 @@ MainMenuPage::MainMenuPage(MenuContext* context) :
 
 	this->error_sound_ = this->resolve_wave(look.error_sound);
 	this->ready_sound_ = this->resolve_wave(look.ready_sound);
+	this->unready_sound_ = this->resolve_wave(look.unready_sound.name);
 	this->music_ = this->resolve_effect(look.music.name);
 }
 

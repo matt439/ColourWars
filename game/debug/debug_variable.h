@@ -73,7 +73,7 @@ public:
 	DebugStatus assign(std::string_view text) override;
 	std::vector<std::string> accepted_words() const override;
 
-	// Completes to the choices only, so "visual p" is "posed", not "prev".
+	// Completes to choices only; "next" and "prev" remain assignment shortcuts.
 	std::vector<std::string> suggestions(std::size_t argument) const override;
 
 	// The canonical choice for a word (choice, alias, next or prev), or empty.

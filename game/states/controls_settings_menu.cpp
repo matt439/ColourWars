@@ -8,6 +8,8 @@ using namespace mattmath;
 ControlsSettingsMenu::ControlsSettingsMenu(MenuContext* context, int player) :
 	PauseMenuPage(context, player)
 {
+	this->volume_preview_sound_ = this->resolve_wave(
+		this->presentation().controls_settings().volume_preview_sound.name);
 }
 
 void ControlsSettingsMenu::init()
@@ -144,8 +146,23 @@ void ControlsSettingsMenu::update_page(float /*dt*/)
 			const OptionRow* row = dynamic_cast<const OptionRow*>(this->focus_.focused(0));
 			if (row != nullptr)
 			{
+				const int previous_sfx = this->selection_.sfx_volume;
 				row->adjust(input.direction);
-				this->play_wave(this->direction_sound_);
+				if (row == this->sfx_.get())
+				{
+					if (this->selection_.sfx_volume != previous_sfx)
+					{
+						// Audition the pending value even when the saved setting is mute.
+						// MenuPage::play_wave would multiply by the applied gain again.
+						SoundBankObject::play_wave(this->volume_preview_sound_,
+							this->presentation().controls_settings().volume_preview_sound.volume *
+							this->selection_.sfx_gain());
+					}
+				}
+				else
+				{
+					this->play_wave(this->direction_sound_);
+				}
 			}
 		}
 		else if (this->focus_.move(0, input.direction))

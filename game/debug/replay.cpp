@@ -64,19 +64,6 @@ namespace
 		return result + "\"";
 	}
 
-	const char* visual_word(PlayerVisualMode mode)
-	{
-		return MatchPlanner::visual_name(mode);
-	}
-
-	bool visual_from_word(const std::string& word, PlayerVisualMode& mode)
-	{
-		if (word == "original") { mode = PlayerVisualMode::original; return true; }
-		if (word == "rotating") { mode = PlayerVisualMode::continuous; return true; }
-		if (word == "posed") { mode = PlayerVisualMode::authored; return true; }
-		return false;
-	}
-
 	[[noreturn]] void fail(const std::filesystem::path& path, const std::string& what)
 	{
 		throw std::runtime_error("replay '" + labrador::path_to_utf8(path) + "': " + what);
@@ -273,7 +260,6 @@ void ReplayFile::write(const std::filesystem::path& path) const
 	const MenuLevelSettings& roster = this->settings;
 	out << "  \"settings\": {\n";
 	out << "    \"stage\": " << quoted(roster.stage()) << ",\n";
-	out << "    \"visual\": " << quoted(visual_word(roster.workshop_visual_mode())) << ",\n";
 	out << "    \"best_of\": " << roster.best_of() << ",\n";
 	if (roster.duration())
 	{
@@ -445,12 +431,6 @@ ReplayFile ReplayFile::read(const std::filesystem::path& path)
 		rebuilt.set_player_weapon(seat, weapon);
 	}
 	rebuilt.set_stage(setup.string("stage"));
-	PlayerVisualMode visual = PlayerVisualMode::original;
-	if (!visual_from_word(setup.string("visual"), visual))
-	{
-		fail(path, "unknown visual '" + setup.string("visual") + "'");
-	}
-	rebuilt.set_workshop_visual_mode(visual);
 	rebuilt.set_best_of(setup.integer("best_of"));
 	if (setup.has("duration")) { rebuilt.set_duration(setup.number("duration")); }
 	// The layout a plan derives from the seat count, and no other: a build

@@ -107,7 +107,7 @@ public:
 	bool before_page_update(DebugPageTarget& page, float dt);
 
 	// GameLevel::draw, last: the paint coverage overlay, and a small strip
-	// naming non-default debug state (timescale, pause, visual, feedback,
+	// naming non-default debug state (timescale, pause, feedback,
 	// overlays, cheats) while the console is closed.
 	void draw_status(labrador::Renderer& renderer) const;
 

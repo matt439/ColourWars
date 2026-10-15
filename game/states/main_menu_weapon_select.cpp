@@ -52,7 +52,7 @@ void MainMenuWeaponSelect::update_page(float /*dt*/)
 			if (this->select_states_[i].state ==
 				ConfirmationState::confirmed)
 			{
-				this->play_wave(this->cancel_sound_);
+				this->play_wave(this->unready_sound_, this->look().unready_sound.volume);
 				this->select_states_[i].state =
 					ConfirmationState::unconfirmed;
 			}

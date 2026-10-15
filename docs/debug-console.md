@@ -21,7 +21,7 @@ console, menu, registry, commands, binds, scripts, bots, recorder and tuner (see
 ## Start a review from the command line
 
 ```powershell
-out/build/x64-debug/game/ColourWars.exe +stage movement_course +players 4 +visual posed
+out/build/x64-debug/game/ColourWars.exe +stage movement_course +players 4
 ```
 
 Every argument that starts with `+` and a letter begins a statement; the words
@@ -36,11 +36,11 @@ done, so `+stage movement_course +wait match +screenshot start +quit` works.
 Useful combinations:
 
 ```powershell
-# Movement Course, one keyboard/mouse player, the posed workshop art
-ColourWars.exe +stage movement_course +visual posed
+# Movement Course, one keyboard/mouse player
+ColourWars.exe +stage movement_course
 
 # Four panes on a machine with no pad: seat 1 is keyboard/mouse, the rest idle
-ColourWars.exe +stage movement_course +players 4 +visual rotating
+ColourWars.exe +stage movement_course +players 4
 
 # Feedback off from the first frame, everyone on the roller
 ColourWars.exe +stage movement_course +players 2 +weapon all roller +feedback off
@@ -80,7 +80,6 @@ During a match, without opening the console - these are the default
 | **F5** | `restart` - rebuild the match with its current settings (keeps the session) |
 | **F6** | `pause` - pause or resume the match clock (a `PAUSED` strip shows bottom right) |
 | **F7** | `step` - pause, then advance exactly one update |
-| **F8** | `visual next` - cycle original -> rotating -> posed; rebuilds the Movement Course |
 | **F9** | `feedback toggle` - movement feedback bursts on/off, immediately |
 
 Anywhere (a match or any menu page):
@@ -93,7 +92,7 @@ Anywhere (a match or any menu page):
 
 F1 (per-player debug overlay), Escape (pause menu) and the gameplay keys are
 unchanged. A small strip in the bottom-right corner names any non-default state
-(`x0.25`, `PAUSED`, `visual posed`, `feedback off`, `GOD`, `AMMO INF`,
+(`x0.25`, `PAUSED`, `feedback off`, `GOD`, `AMMO INF`,
 `BOTS 3x paint`, `REC drive 240`, `PLAY drive 240/600`, `PLAY drive done
 (MATCH)`, `TUNED 2`, `ovl collision camera paint`, and `SCRIPT
 review.cfg:14 wait 30 updates (12 left)` while a script waits). It keeps clear
@@ -145,7 +144,6 @@ running.
 | `players <1-4> [bot]` | seats: connected pads in slot order, then keyboard/mouse, then idle dummies. With no pad, seat 1 is keyboard/mouse. A second word is `bot all <bot>` as well (`players 4 paint`). In a menu it is stored for `stage`; a match started from the menus instead drops it (logged), as does a match ending with it still queued |
 | `weapon <seat\|all> <sprayer\|sniper\|roller\|mister\|bucket\|random>` | a seat's weapon (seats are 1-4) |
 | `intro <auto\|full\|quick\|off>` | how the next match begins: `auto` is the game's choice (the whole intro on a match's first build, the quick one from the colour preview on a rematch), `off` starts at the split-screen countdown. `record` and `play`, and any one-player match, always build without one (variable) |
-| `visual <original\|rotating\|posed\|next\|prev>` | the Movement Course art comparison (variable; `continuous`/`authored` also accepted). Off the course it is remembered, not applied |
 | `feedback <on\|off\|toggle>` | movement feedback (variable; `1`/`0` too). Immediate |
 | `overlay [player\|collision\|camera\|paint\|perf\|all\|none]` | toggle one [overlay](#overlays), or all on/off (`all` leaves `perf` alone, `none` clears it); alone, list them |
 | `overlay.player`, `overlay.collision`, `overlay.camera`, `overlay.paint`, `overlay.perf` `<on\|off\|toggle>` | the overlays as variables |
@@ -178,7 +176,7 @@ running.
 | `clear` | clear the console output |
 | `quit` | close the game |
 
-Commands that rebuild (stage, players, weapon, visual, restart, reload in a
+Commands that rebuild (stage, players, weapon, restart, reload in a
 match) close the console and apply at the top of the match's next update, when
 no world update is running. Commands that act on the live match (goto,
 respawn, the overlays and cheats) apply at once, between world updates - except
@@ -231,7 +229,7 @@ registry as a menu page: the same entries as the console, grouped.
 
 | Category | Entries |
 |---|---|
-| match | intro, menu, players, restart, stage, visual, weapon |
+| match | intro, menu, players, restart, stage, weapon |
 | player | ammo, bot (picker: `bot all <behaviour>`), god, goto, kill, respawn |
 | view | feedback, overlay, overlay.camera, overlay.collision, overlay.paint, overlay.perf, overlay.player |
 | time | pause, step, timescale |
@@ -244,7 +242,7 @@ registry as a menu page: the same entries as the console, grouped.
   (picker -> entries -> categories) and closes at the top; **Left/Right** step a
   variable (`toggle` for a bool, `next`/`prev` otherwise).
 - A variable row shows `name  value`. Selecting a bool or a number steps it; a
-  choice (`visual`, `ammo`) opens a picker on its current value.
+  choice (`ammo`) opens a picker on its current value.
 - `stage`, `players`, `weapon` (for every seat), `overlay` and `goto` open a
   picker over their choices. Lists longer than twelve rows end with a note to
   use the console.
@@ -252,7 +250,7 @@ registry as a menu page: the same entries as the console, grouped.
   log and a `logfile` transcript say what the menu did. The last three log lines
   show at the bottom of the menu, so a refused `goto` says why.
 
-**Staging.** `stage`, `players`, `weapon` and `visual` only queue: the menu
+**Staging.** `stage`, `players` and `weapon` only queue: the menu
 stays open, so several can be combined, the queue shows beside the title, and
 each says `queued; rebuilds when the debug menu closes`.
 Backing out to the top lands on **Apply: ...**, which closes the menu; the
@@ -352,8 +350,8 @@ cross-field rule startup has applies, with startup's message (`tune: rejected:
 ... 'jump_buffer_time' is 2, which is outside [0, 1]`). A rejected edit changes
 nothing. In the running game every edit also runs the file's own startup checks
 against the loaded resources (`validate_resources`): for presentation, that
-each `workshop_player` size is its frame's native texels times `pixel_size`, and
-that `match.countdown_size` leaves room under the GET READY heading. Edits under
+its named fonts, frames and sounds exist, and `match.countdown_size` leaves
+room under the GET READY heading. Edits under
 `tuning.paint` also run the startup check that builds every stage's objects.
 Only then is the validated object copied over the live one: the
 records that weapons, projectiles, the HUD and movement feedback point at keep
@@ -366,7 +364,7 @@ their addresses, and only the edited number changes.
 |---|---|---|
 | live | `tuning.input.*`, `tuning.player.*` (not `size`), `tuning.match.sounds.*.volume`, `tuning.weapons.*`, `tuning.projectiles.*` (not sizes), `tuning.match.opening.*`, `tuning.match.reveal.*`, `presentation.movement_feedback/respawn_redraw/opening/debug_overlay/hud/camera.*` | at once |
 | new shots | `tuning.projectiles.*.size`, `*.collision_size` | the next projectile |
-| rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, `presentation.workshop_player.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
+| rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
 
 The `tuning.input` block controls the jump/shoot trigger thresholds, movement
@@ -476,7 +474,7 @@ Level updates (the 3 s countdown is 180 of them), at the end of the round, when
 the match is rebuilt or left, or on `record stop` (a bare `record` while
 recording stops too). The file is `%LOCALAPPDATA%\ColourWars\replays\<name>.json`
 (default name `replay-YYYYMMDD-HHMMSS`): the stage, roster (device slots, teams,
-weapons), visual and best-of, the seed, the cheats, hashes of both content files
+weapons), best-of, the seed, the cheats, hashes of both content files
 and the live tune edits, the step size, one run-length list of inputs per seat
 (floats as bit patterns), where the match was suspended, a state hash every 60
 updates and the final state.
@@ -622,8 +620,7 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 - **Not sandboxed.** A script changes the session like typing would. The
   shipped ones put back the bots, the seed, the screenshot folder and strip and
   the timescale as their last lines; each one's header says what it leaves
-  changed (`review_feedback_ab` leaves the overlays off and the posed visual on
-  four seats).
+  changed (`review_feedback_ab` leaves the overlays off on four seats).
 
 **Shipped scripts** (`scripts/debug/`, each with how to run it at the top):
 
@@ -636,7 +633,7 @@ A script is a file of console lines: `exec <name>` runs `<name>.cfg`.
 
 The acceptance case follows every shipped script from the top-level ones
 through each `exec` with the arguments it passes, and checks every statement's
-command and word count and every stage, visual, bot and station it names.
+command and word count and every stage, bot and station it names.
 
 ### Worked example: `review_feedback_ab`
 
@@ -651,21 +648,19 @@ One command, about five seconds, and the window closes. What it does:
    differ only in the world, and the same bots and palette on every build.
 2. `bot 1 jump` and `players 4 jump`: four panes, every seat a jump bot (the
    keyboard seat too), so nobody has to hold a key.
-3. `exec feedback_ab_pass original`, then `rotating`, then `posed`. Each pass
-   is `stage movement_course`, `visual $1`, `timescale 4`, `wait match`, then
-   three frames counted in updates after GO - `t040`, `t096`, `t156`, chosen
-   where the seeded jump bots' take-off and landing bursts are on screen.
-4. Each frame is `exec feedback_ab_shot <visual> <frame>`: `pause on`,
-   `checksum`, `feedback on`, `screenshot <visual>-<frame>-on`, `feedback off`,
-   `screenshot <visual>-<frame>-off`, `feedback on`, `pause off`. The second
-   shot waits for the first, and both are taken between the same two updates.
-5. It puts back the strip, the folder, the bots and the seed, and echoes
-   `review_feedback_ab: done (3 visuals x 3 frames x on/off)`; `+quit` closes
-   the game.
+3. `exec feedback_ab_pass`: `stage movement_course`, `timescale 4`, `wait
+   match`, then three frames counted in updates after GO: `t040`, `t096`,
+   `t156`, chosen where the seeded jump bots' bursts are on screen.
+4. Each frame is `exec feedback_ab_shot <frame>`: `pause on`, `checksum`,
+   `feedback on`, `screenshot <frame>-on`, `feedback off`,
+   `screenshot <frame>-off`, `feedback on`, `pause off`. Both shots are taken
+   between the same two updates.
+5. It puts back the strip, folder, bots and seed, and echoes
+   `review_feedback_ab: done (3 frames x on/off)`; `+quit` closes the game.
 
-The result: 18 PNGs in
+The result: six PNGs in
 `%LOCALAPPDATA%\ColourWars\screens\review-feedback-ab-<time>\`, named
-`<visual>-<frame>-on.png` / `-off.png`, and nine `checksum` lines in the log
+`<frame>-on.png` / `-off.png`, and three `checksum` lines in the log
 (add `+logfile <path>` before `+exec` to keep them):
 
 ```text
@@ -673,11 +668,9 @@ checksum 4f69583bfe85bb3e at update 221, paint A 0 B 0 of 194880, bursts 1
 ```
 
 `bursts` is how many feedback bursts are alive at that frame: above 0, so each
-on/off pair differs. The three visuals print the same hash at each frame, so
-the art does not touch the simulation. `scripts/check-debug-console.ps1` runs it
-and checks all of this. Note that with the bots aiming level, `rotating` and
-`posed` draw the same sprayer pose; this review compares the feedback, not the
-tool art.
+on/off pair differs. `scripts/check-debug-console.ps1` runs the review and
+checks those paired frames. The workshop art comparison and its F8 default
+binding were retired on 2026-10-15; the review now covers the current artwork.
 
 ## Binds
 
@@ -773,21 +766,19 @@ exposes no frame statistics and `Renderer` no timestamp queries (engine report
 ## Movement Course review recipes
 
 ```powershell
-# The feedback A/B on every visual, as screenshots, in one command
+# The feedback A/B, as screenshots, in one command
 ColourWars.exe +exec review_feedback_ab +quit
 
 # Every station, one screenshot each
 ColourWars.exe +exec station_tour +quit
 
 # By hand
-ColourWars.exe +stage movement_course +visual posed
+ColourWars.exe +stage movement_course
 ```
 
 - **Feedback on/off.** Run the route; press **F9** and run it again. The bursts
   stop immediately; nothing else in the simulation changes (the acceptance
   probes check that on/off simulations are identical).
-- **Visual A/B.** Press **F8** to rebuild with the next art (original ->
-  rotating -> posed). The rebuild resets the round, so compare the same route.
 - **One obstacle, many times.** `goto running_gap`, run, and `goto running_gap`
   again; or stage it from launch with `+goto`.
 - **Frame by frame.** **F6** to pause at the moment you care about, **F7** to
@@ -956,7 +947,7 @@ as the game. In Release:
   `scripts/check-debug-console.ps1` is an opt-in local check that drives the
   real Debug executable, mostly through scripts it writes into each launch's
   isolated profile (`exec`, `+exec`) and the transcript's `echo` markers, with
-  key events only where keys are the point: the console, F8/F9 and F1-F4, the
+  key events only where keys are the point: the console, F9 and F1-F4, the
   F10 debug menu, staging and Apply, Escape into the pause menu, Alt. In order:
   phases 1-2 (`check_drive.cfg`: goto, status, restart+goto, cheats, the
   screenshot command; `check_menus.cfg`; a 1280x720 launch paused in the
