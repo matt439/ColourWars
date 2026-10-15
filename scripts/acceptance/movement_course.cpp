@@ -32,6 +32,7 @@
 #include <functional>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <optional>
 #include <sstream>
 
@@ -579,32 +580,73 @@ namespace
             }
         }
 
-        for (const float raw : { 0.0f, 0.55f, 0.65f, 0.75f, 0.9f, 1.0f })
+        for (const float d : { 1.0f, -1.0f })
         {
-            Run run(s, standing_on(s, lane, 1000.0f), { max_speed, 0.0f });
-            run.settle(1, input(false, false, 1.0f));
-            require(run.player->velocity().x == max_speed, "braking fixture did not start at full speed");
-            const float movement = -pad_movement(raw, s.tuning);
-            const float start = run.player->center().x;
-            int ticks = 0;
-            for (; run.player->velocity().x > 0.0f && ticks < 300; ++ticks)
+            int release_ticks = 0;
+            float release_distance = 0.0f;
+            int previous_ticks = 300;
+            float previous_distance = std::numeric_limits<float>::max();
+            for (const float raw : { 0.0f, 0.55f, 0.65f, 0.75f, 0.9f, 1.0f })
             {
-                run.tick(input(false, false, movement));
-            }
-            require(run.player->velocity().x <= 0.0f, "braking never reached zero speed");
-            const float after = run.player->velocity().x;
-            if (movement == 0.0f)
-            {
-                for (int tick = 0; tick < 10; ++tick)
+                Run run(s, standing_on(s, lane, lane.rectangle.center().x), { d * max_speed, 0.0f });
+                run.settle(1, input(false, false, d));
+                require(d * run.player->velocity().x == max_speed,
+                    "braking fixture did not start at full speed");
+                const float movement = -d * pad_movement(raw, s.tuning);
+                const float start = run.player->center().x;
+                float previous_speed = max_speed;
+                int ticks = 0;
+                for (; d * run.player->velocity().x > 0.0f && ticks < 300; ++ticks)
                 {
-                    run.tick();
-                    require(run.player->velocity().x == 0.0f, "a released stick did not hold a stop");
+                    run.tick(input(false, false, movement));
+                    const float speed = d * run.player->velocity().x;
+                    require(speed <= previous_speed && std::fabs(speed) <= max_speed,
+                        "braking accelerated forward or exceeded the speed cap");
+                    previous_speed = speed;
                 }
+                require(d * run.player->velocity().x <= 0.0f, "braking never reached zero speed");
+                const float after = run.player->velocity().x;
+                const float distance = d * (run.player->center().x - start);
+                require(ticks <= previous_ticks && distance <= previous_distance + 0.01f,
+                    "a stronger opposite stick took longer or farther to stop");
+                previous_ticks = ticks;
+                previous_distance = distance;
+                if (movement == 0.0f)
+                {
+                    release_ticks = ticks;
+                    release_distance = distance;
+                    for (int tick = 0; tick < 10; ++tick)
+                    {
+                        run.tick();
+                        require(run.player->velocity().x == 0.0f, "a released stick did not hold a stop");
+                    }
+                }
+                else
+                {
+                    require(ticks <= release_ticks && distance <= release_distance + 0.01f,
+                        "opposite stick braking was weaker than release braking");
+                    require(std::fabs(after) <= s.tuning.player().x_acceleration *
+                        std::fabs(movement) * dt + 0.001f,
+                        "braking propelled the player past the available reverse acceleration");
+                    float reverse_speed = -d * after;
+                    const float crossing_speed = reverse_speed;
+                    for (int tick = 0; tick < 90; ++tick)
+                    {
+                        run.tick(input(false, false, movement));
+                        const float speed = -d * run.player->velocity().x;
+                        require(speed >= reverse_speed && speed <= max_speed,
+                            "held reversal oscillated, lost reverse speed or exceeded its cap");
+                        reverse_speed = speed;
+                    }
+                    require(reverse_speed > crossing_speed,
+                        "held opposite input did not build speed in the new direction");
+                }
+                std::cout << "MEASURE brake-from-800 dir=" << (d > 0.0f ? "right" : "left")
+                    << ' ' << (movement == 0.0f ? "release" : "reverse")
+                    << " raw=" << fixed(-d * raw, 2) << " x_movement=" << fixed(movement, 2)
+                    << " ticks_to_zero=" << ticks << " distance=" << fixed(distance)
+                    << " velocity_on_crossing=" << fixed(after) << '\n';
             }
-            std::cout << "MEASURE brake-from-800 " << (movement == 0.0f ? "release" : "reverse")
-                << " raw=" << fixed(-raw, 2) << " x_movement=" << fixed(movement, 2)
-                << " ticks_to_zero=" << ticks << " distance=" << fixed(run.player->center().x - start)
-                << " velocity_on_crossing=" << fixed(after) << '\n';
         }
 
         const Surface& platform = s.course.named("drop_through_platform");
@@ -636,7 +678,8 @@ namespace
             std::cout << "MEASURE analog-drop raw_y=" << fixed(raw, 2) << " threshold=" << fixed(threshold, 2)
                 << " dropped=" << dropped << " support=" << run.support() << '\n';
         }
-        std::cout << "PASS analog magnitudes: deadzone, monotonic speed, release stop, drop threshold\n";
+        std::cout << "PASS analog magnitudes: deadzone, monotonic speed, release stop, stronger opposite braking "
+            "and bounded reversal both ways, drop threshold\n";
     }
 
     struct Gap
@@ -757,6 +800,18 @@ namespace
                         else if (result.first == "drop_through_platform") { code = "D"; }
                         else { fail(std::string("a missed ") + gap.label + " jump landed on '" + result.first + "'"); }
                         require(result.takeoffs == 1, "a gap trial did not take off exactly once");
+                        if (gap.left->name == "spawn_a_runway")
+                        {
+                            // Holding a leftward jump reaches the platform above
+                            // the runway; shorter presses choose the runway itself.
+                            const bool upper_landing = d < 0.0f && (hold == 0 || hold >= 21);
+                            require(result.first == (upper_landing ? "drop_through_platform" : to.name),
+                                "a short-gap jump did not reach its chosen runway or drop-through landing");
+                        }
+                        else
+                        {
+                            require(code != "D", "a different gap reached the short-gap drop-through platform");
+                        }
                         row += " h" + (hold == 0 ? std::string("eld") : std::to_string(hold)) + "=" + code;
                         if (hold == 0 && start.kind == Takeoff::running)
                         {
@@ -835,8 +890,13 @@ namespace
                         fail(std::string("the ") + gap.label + " recovery pair climbed " + path[0] + " -> " +
                             path[1] + " -> " + path[2] + " -> " + path[3] + ", not low, high, " + platform);
                     }
-                    // Recorded only: steering through the whole held exit jump.
+                    // Continuous steering can carry through the short right
+                    // landing. Releasing early above still makes every exit safe.
                     const auto steered = climb_pair(s, gap, centre - approach * offset, exit, true);
+                    const bool short_slide = gap.left->name == "spawn_a_runway" && exit > 0.0f;
+                    require(steered[0] == gap.low->name && steered[1] == gap.high->name &&
+                        steered[2] == platform && steered[3] == (short_slide ? "recovery_floor" : platform),
+                        "a continuously steered recovery exit did not reach its accepted landing and support");
                     std::cout << "MEASURE recovery " << gap.label << " approach="
                         << (approach > 0.0f ? "from-left" : "from-right") << " exit="
                         << (exit > 0.0f ? "right" : "left") << ": " << path[0] << " -> " << path[1]
@@ -977,6 +1037,12 @@ namespace
                 require(clears(held), "a held jump did not clear a staircase rise");
                 require(clears(tap) == tap_station,
                     "a tap cleared a held-jump rise or failed the short step");
+                if (tap_station)
+                {
+                    const std::string& next = rise.direction > 0.0f ? held_step.name : high_return.name;
+                    require(tap == rise.upper->name && held == next,
+                        "tap and held jumps did not select the short rise and the next higher step");
+                }
             }
         }
 
@@ -1006,6 +1072,11 @@ namespace
                 "walking off a step did not land without a jump");
             const Surface& below = c.named(run.landings.front().surface);
             require(below.rectangle.top() > from->rectangle.top(), "walking off a step landed higher");
+            if (from == &high_return || from == &held_step)
+            {
+                require(below.name == (d > 0.0f ? runway_b.name : running.name),
+                    "walking off the middle step did not carry over the narrow lower step to the runway");
+            }
             brake(run);
             std::cout << "MEASURE stair-descent-from-rest " << from->name << " dir="
                 << (d > 0.0f ? "right" : "left") << ": landed=" << below.name
@@ -1401,37 +1472,93 @@ namespace
             std::cout << "MEASURE aim keyboard/mouse model: requested every tick, held through 160 ticks of "
                 "moving, reversing and firing; shots=" << run.shots << '\n';
         }
-        // Gamepad: the copied mapping requests aim only outside the radial
-        // deadzone. Record what the weapon does once the stick is released.
-        for (const WeaponType type : { WeaponType::sprayer, WeaponType::roller })
+        // Gamepad: once an aimed tool receives an explicit direction, the
+        // neutral/deadzoned stick must retain it independently of movement.
+        for (const WeaponType type : { WeaponType::sprayer, WeaponType::sniper,
+            WeaponType::mister, WeaponType::bucket })
         {
-            Run run(s, standing_on(s, lane, 1000.0f), Vector2F::ZERO, type);
+            Run run(s, standing_on(s, lane, lane.rectangle.center().x), Vector2F::ZERO, type);
             run.settle();
+            run.tick(input(false, false, 1.0f));
+            require(run.player->primary_weapon().rotation() == 0.0f,
+                "an unaimed weapon did not follow the initial right facing");
+            run.tick(input(false, false, -1.0f));
+            require(run.player->primary_weapon().rotation() == PI,
+                "an unaimed weapon did not follow the initial left facing");
             const Vector2F up_left(-0.7f, -0.7f);
+            const float wanted = up_left.angle();
+            const auto holds = [&run](float angle)
+                { return std::fabs(run.player->primary_weapon().rotation() - angle) < 0.0001f; };
             for (int tick = 0; tick < 30; ++tick)
             {
                 PlayerInputData actions = pad_aim(up_left, s.preferences, input(false, false, 1.0f));
                 actions.primary_shoot = true;
                 run.tick(actions);
+                require(holds(wanted), "a held pad aim was not applied while moving and firing");
             }
-            const float held = run.player->primary_weapon().rotation();
-            const float wanted = up_left.angle();
-            run.tick(pad_aim(Vector2F(-0.1f, -0.1f), s.preferences, input(false, false, 1.0f)));
-            const float released_moving = run.player->primary_weapon().rotation();
-            for (int tick = 0; tick < 30; ++tick) { run.tick(pad_aim(Vector2F::ZERO, s.preferences)); }
-            const float released_still = run.player->primary_weapon().rotation();
-            if (type == WeaponType::sprayer)
+            const int shots_before_release = run.shots;
+            for (int tick = 0; tick < 90; ++tick)
             {
-                require(std::fabs(held - wanted) < 0.0001f,
-                    "a held pad aim was not applied while moving and firing");
+                const Vector2F stick = tick < 30 ? Vector2F(-0.1f, -0.1f) : Vector2F::ZERO;
+                PlayerInputData actions = pad_aim(stick, s.preferences,
+                    input(false, false, tick < 30 ? 1.0f : -1.0f));
+                actions.primary_shoot = true;
+                run.tick(actions);
+                require(holds(wanted), "released or deadzoned pad aim changed during movement, reversal or firing");
             }
-            std::cout << "MEASURE aim pad model " << (type == WeaponType::sprayer ? "sprayer" : "roller")
-                << ": stick up-left angle=" << fixed(wanted, 3) << " weapon=" << fixed(held, 3)
-                << " | inside deadzone while moving right weapon=" << fixed(released_moving, 3)
-                << " | released, standing weapon=" << fixed(released_still, 3)
-                << " facing_right=" << run.player->facing_right() << '\n';
+            require(run.shots > shots_before_release && !run.player->facing_right() &&
+                run.player->velocity().x < 0.0f,
+                "the released-aim fixture did not fire and reverse movement");
+
+            const Vector2F replacement(0.8f, -0.3f);
+            const float replaced = replacement.angle();
+            run.tick(pad_aim(replacement, s.preferences));
+            require(holds(replaced), "a fresh pad aim did not replace the retained direction");
+            brake(run);
+            require(holds(replaced), "released pad aim changed while coming to rest");
+
+            // These are the player hooks used when Level suspends/resumes;
+            // no simulation time passes while the menu owns the match.
+            run.player->pause_sounds();
+            run.player->reset_jump_input();
+            run.player->resume_sounds();
+            run.tick();
+            require(holds(replaced), "pause and resume discarded retained pad aim");
+
+            run.kill();
+            run.tick();
+            require(run.player->state() == PlayerState::dead, "the aim fixture did not enter death");
+            for (int tick = 0; tick < 400 && run.player->state() == PlayerState::dead; ++tick)
+            {
+                run.tick();
+                require(holds(replaced), "death and respawn discarded retained pad aim");
+            }
+            require(run.player->state() == PlayerState::alive, "the aim fixture did not respawn");
+            run.tick();
+            require(holds(replaced), "released pad aim changed in the new life");
+            std::cout << "MEASURE aim pad model tool=" << static_cast<int>(type)
+                << ": retained=" << fixed(wanted, 3) << " during deadzone/release/movement/reversal/fire"
+                << " replaced=" << fixed(replaced, 3) << " after rest/pause/death+respawn"
+                << " shots=" << run.shots << '\n';
         }
-        std::cout << "PASS aim: requested aim holds while moving, reversing and firing (retention after release is recorded, not asserted)\n";
+        {
+            Run run(s, standing_on(s, lane, lane.rectangle.center().x), Vector2F::ZERO, WeaponType::roller);
+            run.settle();
+            for (int tick = 0; tick < 90; ++tick)
+            {
+                const bool right = tick < 30;
+                PlayerInputData actions = pad_aim(tick < 60 ? Vector2F(-0.7f, -0.7f) : Vector2F::ZERO,
+                    s.preferences, input(false, false, right ? 1.0f : -1.0f));
+                actions.primary_shoot = true;
+                run.tick(actions);
+                const float wanted = right ? PI / 4.0f : 3.0f * PI / 4.0f;
+                require(run.player->primary_weapon().rotation() == wanted,
+                    "the roller stopped using its fixed facing-down aim");
+            }
+            require(run.shots > 0, "the fixed-aim roller fixture never fired");
+        }
+        std::cout << "PASS aim: every aimed tool retains/replaces pad aim through deadzone, release, movement, reversal, "
+            "firing, pause and respawn; initial facing fallback and the roller's fixed aim remain\n";
     }
 
     float face_paint(const StructurePaintable& surface, bool underside, float thickness)

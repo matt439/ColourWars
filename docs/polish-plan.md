@@ -4,7 +4,9 @@ Status: implementation started on 2026-10-08. Camera/movement foundations and a
 takeoff/landing feedback prototype are implemented. The superseded workshop
 kit and its runtime comparison were retired on 2026-10-15; the historical
 style studies and authored Movement Course route trials remain. The Paint.exe art
-rules are accepted as of 2026-10-15; production artwork, movement-feel and arena
+rules are accepted as of 2026-10-15. Initial braking, released-aim and route
+policies (`POL#4`) and stronger takeoff/landing puffs (`POL#5`) are implemented;
+their values remain tunable. Production artwork, movement-feel and arena
 acceptance remain open.
 Direction agreed on 2026-10-08. Source baseline: game revision `13e9960`.
 
@@ -619,21 +621,17 @@ slice, record the client exhibit in [engine reports](review/engine-reports.md) a
 handle the engine change in Labrador. Balance numbers belong in tuning, presentation
 choices in presentation data, and arena layout and decoration in level data.
 
-The next task is human play of the [refined comparison](polish-refine.md). Use
-keyboard/mouse and physical controllers, with movement feedback enabled and
-disabled, and compare the original, rotating-tool and posed-tool presentations
-during camera motion and aim sweeps. From that review:
+Continue the gameplay artwork under the accepted Paint.exe rules. The workshop
+comparison is historical; its retired presentation choices do not gate production.
+On 2026-10-15 the author requested initial movement and puff decisions now,
+with further tuning as the game develops. The [movement decisions](
+polish-movement-course.md#initial-movement-decisions-2026-10-15) and
+[feedback values](polish-feedback.md#authored-prototype-values) record them.
 
-- Accept or revise the bent arms, the pose hysteresis, the light badges and the
-  lifted dark-team masks.
-- Choose the remaining visual policies: posed-tool residual rotation or more
-  authored directions, camera pixel snapping or integer texel scale, and the
-  background value band.
-- Decide whether the takeoff/landing feedback needs strengthening at four-player
-  size, and answer the movement questions the
-  [route trials](polish-movement-course.md#qualification-still-required) raised.
-
-Record those decisions before building the first Close Quarters blockout.
+Human movement review remains `POL#3`: use keyboard/mouse and physical
+controllers with feedback enabled and disabled, including camera motion and aim
+sweeps. Use that evidence for later tuning alongside the new character poses
+and audio; it does not block implementing the remaining game.
 Progress is gated by the exit conditions above, with each completed increment small
 enough to review, validate and commit independently.
 

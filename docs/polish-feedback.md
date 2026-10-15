@@ -1,10 +1,13 @@
-# Movement feedback prototype
+# Movement feedback
 
 Second polish increment, implemented on 2026-10-08 after the camera/movement
 foundation (`fbd45dc`), using the existing Labrador pin. It advances sections 1–2
 of [the plan](polish-plan.md) alongside a retained
-[workshop style candidate](polish-style-reference.md). Visual finish and physical
-controller feel remain open acceptance gates.
+[workshop style candidate](polish-style-reference.md). The author requested the
+timing/intensity decision be implemented now on 2026-10-15 (`POL#5`), with later
+tuning allowed. The current values below strengthen the existing cues at
+four-player 720p; their implementation no longer waits for final poses or audio.
+Physical controller feel and the complete art/audio composition still need review.
 
 ## Behaviour
 
@@ -35,7 +38,9 @@ of a view. Storage holds at most eight bursts per player, each drawing four smal
 quads; a ninth replaces the oldest. This is a storage/draw bound, not a frame-time
 or crowded-combat performance claim.
 
-## Authored prototype values
+<a id="authored-prototype-values"></a>
+
+## Authored values
 
 Values are under `movement_feedback` in
 [presentation.json](../game/content/presentation.json), separate from balance:
@@ -43,25 +48,35 @@ Values are under `movement_feedback` in
 | Choice | Current value |
 |---|---|
 | Enable/disable for comparison | `enabled: true` |
-| Takeoff lifetime / spread / rise / initial size | 0.22 s / 24 / 14 / 8 world units |
-| Landing lifetime / spread / rise / initial size | 0.30 s / 38 / 10 / 10 world units |
+| Takeoff lifetime / spread / rise / initial size | 0.24 s / 30 / 16 / 16 world units |
+| Landing lifetime / spread / rise / initial size | 0.32 s / 44 / 12 / 20 world units |
 | Minimum landing speed | 60 world units/s |
 | Full-strength impact | 1000 world units/s |
-| Minimum visible strength | 0.45 |
+| Minimum visible strength | 0.65 |
 | Effect grid | 2 world units |
-| Body / highlight | Neutral `B3BDC6` / `E5E9E8` |
+| Body / highlight | Neutral `D4D7DA` / `FFFFFF` |
 
-These are comparison candidates, not frozen game-feel decisions. The separate
-art study proposes a four-world-unit texel for a first sprite kit; this two-unit
-effect grid does not decide that kit's final density. Invalid non-positive or
-non-finite dimensions/timings, inconsistent impact speeds, strength above one
-and particles smaller than one effect pixel are rejected at startup. The fill
-frame is checked against loaded resources.
+The 2026-10-15 choice doubles the initial body sizes, raises the weakest landing
+to 65% strength and brightens the neutral greys. At 720p the takeoff body is
+roughly 11 screen pixels wide and the initial landing body about 9–13, depending
+on impact speed. The slightly longer lifetimes retain a readable recovery while
+the player moves away. Landing remains wider and heavier than takeoff; longer
+falls still strengthen it. Event emission is immediate on the successful jump
+or resolved contact tick, with the same ordering and suppression rules above.
+These are usable defaults that remain editable in presentation data.
+
+The two-unit effect grid keeps the existing fleck geometry stable; it does not
+set the production art density. The historical workshop kit is retired, and
+the accepted [Paint.exe art rules](polish-plan.md#1-establish-the-art-and-display-rules)
+govern later contact sprite production. Invalid non-positive or non-finite
+dimensions/timings, inconsistent impact speeds, strength above one and particles
+smaller than one effect pixel are rejected at startup. The fill frame is checked
+against loaded resources.
 
 The neutral colour avoids implying new paint ownership. Final contact sprite
-shapes, takeoff/landing character poses, painted-surface variation and replacement
-sounds still need coordinated production and review. This increment adds no
-audio and does not approve any legacy cue for the finished game.
+shapes, takeoff/landing character poses, painted-surface variation and the complete
+audio mix still need coordinated production and review. This intensity change
+adds no audio cue or gameplay effect.
 
 ## Reproduce the checks
 
@@ -85,16 +100,64 @@ window and isolated profile, loads the real Movement Course, settles the authore
 spawns and performs scripted jumps. It captures paired enabled/disabled frames
 at the same simulation state, for one/four players at 720p, 1080p and QHD. Five
 phases cover initial/mid takeoff, initial/mid landing and fully expired effects.
-Repeated suspended draws must produce identical pixels. Each run retains compiler
-and device diagnostics, source/content identities, PPM captures and phase data
-under `out/validation/movement-feedback/<preset>/<run>/` by default.
+Repeated suspended draws must produce identical pixels. In the settled
+four-player 720p fixture, every initial/mid takeoff and landing phase must change
+at least 128 pixels per pane, including at least 64 with a maximum RGB channel
+difference of 32 or more. This rejects the earlier tiny/faint recovery without
+treating a one-level pixel difference as readability. The existing upper bound
+remains below one percent of each pane, and expired phases change no pixels.
+These are bounded visibility checks for this fixture, not human acceptance of
+crowded combat. Each run retains compiler and device diagnostics, source/content
+identities, PPM captures and phase data (including `readable_pixels`) under
+`out/validation/movement-feedback/<preset>/<run>/` by default.
 
 `-SequenceFrames 90` also retains consecutive 720p frames for each player layout
 at a 60 Hz simulation step. It is optional because raw PPM sequences use substantial
 space. These scripted inputs do not exercise a physical controller or establish
 interactive frame pacing.
 
-## Evidence and next review
+## Current validation (2026-10-15)
+
+Debug and Release builds and all 11 consumer acceptance cases passed with the
+current values. Both visual probes passed on **NVIDIA GeForce RTX 5080, D3D11
+hardware**, covering one/four views at 720p, 1080p and QHD, feedback on/off at the
+same simulation state, 12 identical suspended redraws and the moving aim-swept
+course route with camera pan in every view. All changed pixels remained within
+the projected culling bounds and below one percent of each pane. Expired phases
+changed zero pixels; the settled jump landed at tick 60 and was checked expired
+at tick 81.
+
+The per-pane minima in the settled four-player 720p captures were identical in
+Debug and Release. `Readable` counts pixels whose maximum RGB channel difference
+was at least 32:
+
+| Phase | Changed pixels | Readable pixels |
+|---|---:|---:|
+| Takeoff | 432 | 402 |
+| Mid takeoff | 262 | 262 |
+| Landing | 580 | 430 |
+| Mid landing | 366 | 188 |
+
+Full-size PNG conversions of all four active Debug phases were inspected.
+Neutral bodies and flecks remain visible into recovery close to the feet/contact,
+with the HUD and platform edges readable in these empty-course stills. The light
+body initially meets the light floor before spreading away. This is the existing
+simple geometry; final Paint.exe contact sprites remain production work.
+
+Evidence, including `result.json`, diagnostics and `captures/phases.csv`, is
+retained under `out/validation/pol4-pol5/visual/`:
+
+- `x64-debug/126c02393cc74d6caa24c81da2d84141/`
+- `x64-release/4f8daf007137444f9507471fd79d223c/`
+
+These runs used scripted inputs and `-SequenceFrames 0`. They establish neither
+physical-pad feel, clip playback, listening acceptance nor readability in a
+crowded painted match. Those checks can tune the implemented defaults later.
+
+## Prototype evidence (2026-10-08)
+
+The following checks used the earlier 8/10-unit body sizes and 0.45 minimum
+strength. They establish the original mechanism, not the revised intensity.
 
 Debug and Release builds passed with the pinned engine and `/W4 /WX` on
 2026-10-08. All six retained consumer cases passed in both configurations;
@@ -136,10 +199,12 @@ staged content hashes. The earlier failed Debug probe compilation is also retain
 it exposed a test-harness rectangle/point API mismatch, fixed before both passing
 runs. It did not require a game or engine change.
 
-Next, compare these cues while playing the Movement Course with keyboard/mouse
+## Further tuning
+
+Compare the current cues while playing the Movement Course with keyboard/mouse
 and physical controllers, including running landings, busy paint, aim sweeps and
-camera motion. Decide timing and intensity together with the new character poses
-and audio. Reauthor the workshop candidate as an editable native-pixel kit under
-the actual camera before accepting the style or building the Close Quarters
-reference blockout. Recovery/staircase route trials, all-palette art review and
-clean-Windows release deployment remain open.
+camera motion. Adjust the authored values as the accepted Paint.exe character
+poses and audio mix come together. This is subsequent refinement, not an
+unanswered `POL#5` decision or a prerequisite for implementing the next slice.
+Movement-feel playtests, all-palette art review and clean-Windows release
+deployment remain open in their respective work items.

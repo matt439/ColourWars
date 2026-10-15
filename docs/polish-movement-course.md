@@ -138,9 +138,9 @@ past the far lip, the player stops 171–177 units beyond it.
   62 and 48 ticks; 0.45 does not move. Speed rises with magnitude at every tick.
   The trial copies `PlayerInput`'s private pad mapping, because the engine's
   gamepad reader cannot be fed raw values.
-- **Reversal:** a partial opposite stick brakes far more slowly than release.
-  From 800, −0.1 takes 142 ticks over 934 units and −1.0 takes 15 ticks over 87.
-  Reversal passes through zero without stopping.
+- **Reversal (superseded baseline):** a partial opposite stick used to brake far
+  more slowly than release. From 800, −0.1 took 142 ticks over 934 units and
+  −1.0 took 15 ticks over 87. The initial decisions below replace that behaviour.
 - **Analog drop:** a raw value of 0.79 stays on the platform and 0.81 drops.
 
 ### Recovery, staircases, ceiling and drop
@@ -172,13 +172,77 @@ past the far lip, the player stops 171–177 units beyond it.
 - **Spawns:** all eight authored spawns settle with feet at Y=1000 after three
   deaths each, with no carried input.
 - **Aim:** keyboard/mouse aim holds through moving, reversing and firing, because
-  the cursor direction is sent every tick. Released or deadzoned pad aim snaps to
-  the facing direction; this is recorded, not asserted.
+  the cursor direction is sent every tick. The baseline snapped released or
+  deadzoned pad aim to facing; the initial decisions below replace that behaviour.
 - **Paint:** every aimed tool paints the low ceiling's underside and a staircase
   wall face, each from range by flying projectiles. The roller paints the wall by
   contact and cannot reach the ceiling with its fixed aim. Bucket paint on the
   ceiling from range is small (48 units). The course's exposed paint area is
   fixed at 194,880.
+
+## Initial movement decisions (2026-10-15)
+
+`POL#4` is implemented at the author's request to get the behaviour in now and
+tune it as the rest of the game develops. These are the current defaults; a
+physical-controller session is not a prerequisite for using them.
+
+- **Braking:** opposite input applies the full release deceleration plus
+  acceleration scaled by stick magnitude. A slight reverse input therefore
+  stops at least as firmly as release. After reaching zero, the remainder of
+  that tick accelerates in the requested direction; braking cannot propel the
+  player backwards. Held input reverses continuously without a forced stop tick.
+  `player.x_deacceleration`, `player.x_acceleration` and `player.max_velocity.x`
+  in `tuning.json` remain the tuning controls.
+- **Released aim:** the four aimed tools retain their last explicit direction
+  through deadzoned/released aim, movement, facing changes, firing, pause and
+  respawn for the rest of the match. A new aim replaces it immediately. Until
+  the first explicit aim, they follow facing. The roller keeps its existing
+  forward/down contact angle and follows facing.
+- **Short recovery landing:** accept sliding off the 400-unit platform when
+  steering through the entire exit jump. Releasing direction over the platform
+  remains the way to stop there; the recovery floor catches an overshoot.
+- **120-wide step walk-off:** accept skipping the narrow intermediate step and
+  landing 180 units lower on the runway. Descending does not snap to each tread.
+- **60-unit rise overshoot:** accept a held jump reaching the next higher step;
+  a tap is the short-step input. Jump height and steering remain under the
+  player's control, with no automatic shortening at a step.
+- **Leftward short gap:** accept the jump-through platform as the landing for
+  longer holds. Shorter holds reach the runway; both are valid course routes.
+
+The retained route case now asserts these choices, including symmetric braking
+and aim retention for all five tools. The feedback timing/intensity decision
+(`POL#5`) is recorded in [movement feedback](polish-feedback.md).
+
+### Implementation checks
+
+Debug and Release builds and all eleven consumer acceptance cases passed on
+2026-10-15. The route logs match between configurations. From speed 800, both
+directions now give these stopping measurements (at the fixed timestep above):
+
+| Input after deadzone | Ticks to zero or reversal | Forward travel |
+|---|---:|---:|
+| Release | 20 | 121.4 |
+| Opposite 0.1 | 19 | 117.0 |
+| Opposite 0.3 | 18 | 108.9 |
+| Opposite 0.5 | 17 | 101.8 |
+| Opposite 0.8 | 15 | 92.7 |
+| Opposite 1.0 | 15 | 87.3 |
+
+The checks require stronger opposite input to stop no later or farther than
+weaker input or release. Reverse speed on the crossing tick is bounded by
+input-scaled acceleration; ninety further ticks must build reverse speed
+without oscillation or exceeding the cap. All four aimed tools retain and
+replace aim while firing after release and across an actual death/respawn.
+The roller retains its fixed angle. The four accepted course outcomes above
+are asserted. Tap/held jump rise remains 95/207.472 world units.
+
+The one/four-player feedback visual probes also passed in both configurations
+at 720p, 1080p and QHD, including moving cameras, aim sweeps and paused redraws.
+Debug startup and extracted Release startup passed with isolated saves and
+graceful shutdown. The 49-file Release ZIP contains the exact revised
+presentation data and the accepted audio bank. Evidence is under
+`out/acceptance/<preset>/` and `out/validation/pol4-pol5/`. These are scripted
+checks, with physical-controller feel still to be reviewed under `POL#3`.
 
 ## Qualification still required
 
@@ -192,12 +256,8 @@ The old movement note is not used as a specification.
   aim sweeps at the captured resolutions and player counts. The feedback on/off
   captures in [the refinement increment](polish-refine.md) are prepared for that
   review.
-- Decide the design questions the trials surfaced:
-  - Should a partial opposite stick brake more slowly than release, and pass
-    through zero?
-  - Should released pad aim snap to facing?
-  - Are the short-landing slide-off, the 120-wide step walk-off and the one-step
-    overshoot at the 60-unit rises acceptable?
-  - Should the leftward short-gap jump land on the drop-through platform?
+- Compare the initial decisions above in play and adjust the existing tuning
+  values if needed. These choices are implemented; later feel review does not
+  block further game implementation.
 - This course is not a balanced competitive arena. Paint area, combat pacing and
   spawn fairness have not been accepted.

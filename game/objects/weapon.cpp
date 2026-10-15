@@ -444,8 +444,9 @@ void Weapon::update_movement_and_rotation(PlayerInputData input,
     if (input.shoot_direction_requested)
     {
         this->set_rotation(input.shoot_angle);
+        this->aim_requested_ = true;
     }
-    else
+    else if (!this->aim_requested_)
     {
 		if (player_facing_right)
 		{

@@ -682,15 +682,27 @@ void Player::update_movement(float dt)
             MovingObject::set_velocity_x(-this->player_tuning().max_velocity.x);
         }
     }
-    else if (MovingObject::velocity_x() > 0.0f && x_input < 0.0f)
+    else if ((MovingObject::velocity_x() > 0.0f && x_input < 0.0f) ||
+        (MovingObject::velocity_x() < 0.0f && x_input > 0.0f))
     {
-        MovingObject::alter_velocity_x(this->player_tuning().x_deacceleration * dt * x_input);
-        MovingObject::alter_velocity_x(this->player_tuning().x_acceleration * dt * x_input);
-    }
-    else if (MovingObject::velocity_x() < 0.0f && x_input > 0.0f)
-    {
-        MovingObject::alter_velocity_x(this->player_tuning().x_deacceleration * dt * x_input);
-        MovingObject::alter_velocity_x(this->player_tuning().x_acceleration * dt * x_input);
+        // Opposing input always includes release braking. Small corrections
+        // must not make stopping weaker than letting go of the stick.
+        const PlayerTuning& tuning = this->player_tuning();
+        const float braking = tuning.x_deacceleration +
+            tuning.x_acceleration * std::fabs(x_input);
+        const float time_to_stop = std::fabs(MovingObject::velocity_x()) / braking;
+        if (dt <= time_to_stop)
+        {
+            MovingObject::alter_velocity_x(std::copysign(braking * dt, x_input));
+        }
+        else
+        {
+            // Spend only the remainder accelerating in the new direction;
+            // braking itself cannot propel the player past zero.
+            MovingObject::set_velocity_x(std::clamp(
+                tuning.x_acceleration * x_input * (dt - time_to_stop),
+                -tuning.max_velocity.x, tuning.max_velocity.x));
+        }
     }
     else if (MovingObject::velocity_x() > 0.0f && are_equal(x_input, 0.0f))
     {

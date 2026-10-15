@@ -199,6 +199,9 @@ private:
 	float shoot_timer_ = 0.0f;
 	float rotation_ = 0.0f;
 	bool invert_y_ = false;
+	// Until the first explicit aim, follow facing. Thereafter a released stick
+	// retains the last aim through movement, pauses and respawns in this match.
+	bool aim_requested_ = false;
 
 	float ammo_timer_ = 0.0f;
 	// stop_sounds() is const because it changes presentation, not gameplay.

@@ -20,7 +20,7 @@ The ordered actions are done (`STORY#3`, `ENG#PIN` with `ENG#LEDGER`, `DOC#1`–
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
-- **Calls:** `POL#4`, `POL#5`, `POL#15`, `GAP#1.2`, `GAP#1.3`, `GAP#1.5`, `GAP#8.6`,
+- **Calls:** `POL#15`, `GAP#1.2`, `GAP#1.3`, `GAP#1.5`, `GAP#8.6`,
   `ENG#CAMERA`.
 
 ## Art direction, characters and the UI
@@ -45,8 +45,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#3` | OPEN | HIGH | M | Movement-feel playtest (§2 exit): keyboard/mouse now, a physical pad later (with `ROAD#2`); feedback on and off, aim sweeps, before/after clips. Then freeze jump, acceleration and gravity. [§2](docs/polish-plan.md#2-establish-movement-and-camera-feel). |
-| `POL#4` | DECISION | MED | S | Route-trial answers: partial opposite stick braking, released pad aim snapping to facing; accept or fix the short-landing slide-off, 120-wide step walk-off, 60-unit overshoot, leftward drop-through landing. [Qualification](docs/polish-movement-course.md#qualification-still-required). |
-| `POL#5` | DECISION | MED | S | Takeoff/landing puff timing and intensity, decided with poses and audio; nearly invisible at 4P 720p. [Values](docs/polish-feedback.md#authored-prototype-values). |
 | `POL#10` | OPEN | HIGH | L | The rest of the feedback table: footsteps, skid, painted-surface flecks, hurt flash/flinch, elimination burst, muzzle flash, screen shake, empty-paint cue, menu focus motion. Sounds wait on `POL#23`; the cues are in [audio-inventory §4](docs/audio-inventory.md#4-the-new-cue-list). [§4](docs/polish-plan.md#movement-and-interaction-feedback). |
 | `POL#11` | OPEN | HIGH | L | Per-weapon projectile and impact (all five share `projectile_3`), liquid splat shapes, droplets, wet highlight, repaint impact with exact ownership. [§4](docs/polish-plan.md#paint-and-feedback). |
 | `POL#12` | OPEN | MED | M | Idle muzzle drip (its five rules), roller contact/settle, idle breathing, blinking and lean out of phase. [§4](docs/polish-plan.md#tool-personality-and-quiet-detail). |
@@ -63,7 +61,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#17` | BLOCKED | HIGH | XL | Close Quarters reference blockout against the §3 requirements table (routes, spawns, paint budget, weapon roles, pacing, side fairness, recovery pocket). Waits on `POL#3` and `POL#4`. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
+| `POL#17` | BLOCKED | HIGH | XL | Close Quarters reference blockout against the §3 requirements table (routes, spawns, paint budget, weapon roles, pacing, side fairness, recovery pocket). Waits on `POL#3`. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after CQ is accepted; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#3` | UNSCOPED | LOW | M | Resource names (sheet, frame, icon, colour, music) are checked only at game startup; the editor takes any non-empty name. |
 | `ED#4` | UNSCOPED | LOW | S | Registering a stage is manual (`manifest.json` and `cmake/release_assets.cmake`); the editor does not help. |

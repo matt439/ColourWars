@@ -66,7 +66,8 @@ namespace
     }
 
     size_t differences(const Frame& enabled, const Frame& disabled,
-        const Viewport& viewport, const Level& level, int view)
+        const Viewport& viewport, const Level& level, int view,
+        size_t* readable_pixels = nullptr)
     {
         require(enabled.width == disabled.width && enabled.height == disabled.height,
             "comparison frame sizes differ");
@@ -83,6 +84,7 @@ namespace
             effect_bounds.push_back(projected);
         }
         size_t changed = 0;
+        if (readable_pixels != nullptr) { *readable_pixels = 0; }
         for (int y = rectangle.y; y < rectangle.bottom(); ++y)
         {
             for (int x = rectangle.x; x < rectangle.right(); ++x)
@@ -94,6 +96,19 @@ namespace
                     enabled.pixels[offset + 2] != disabled.pixels[offset + 2])
                 {
                     ++changed;
+                    // A one-level RGB change proves rendering, but not a
+                    // useful movement cue at the smallest supported panes.
+                    if (readable_pixels != nullptr)
+                    {
+                        int contrast = 0;
+                        for (size_t channel = 0; channel < 3; ++channel)
+                        {
+                            contrast = std::max(contrast,
+                                std::abs(static_cast<int>(enabled.pixels[offset + channel]) -
+                                    static_cast<int>(disabled.pixels[offset + channel])));
+                        }
+                        if (contrast >= 32) { ++*readable_pixels; }
+                    }
                     const Vector2F pixel(static_cast<float>(x), static_cast<float>(y));
                     require(std::any_of(effect_bounds.begin(), effect_bounds.end(),
                         [&](const RectangleF& bounds) {
@@ -175,8 +190,10 @@ namespace
             save(disabled, output / (stem + "-off.ppm"));
             for (int view = 0; view < count; ++view)
             {
+                size_t readable_pixels = 0;
                 const size_t changed = differences(enabled, disabled,
-                    app.viewport_manager()->player_viewport(view), level, view);
+                    app.viewport_manager()->player_viewport(view), level, view,
+                    &readable_pixels);
                 if (required_views.empty())
                 {
                     require(expect_difference ? changed > 0 : changed == 0,
@@ -189,8 +206,19 @@ namespace
                 const auto pane = app.viewport_manager()->player_viewport(view).pixel_rect();
                 require(changed * 100 < static_cast<size_t>(pane.width) * static_cast<size_t>(pane.height),
                     "movement feedback changed more than one percent of a pane");
+                if (count == 4 && size == Vector2I(1280, 720) &&
+                    (phase == "takeoff" || phase == "takeoff-mid" ||
+                        phase == "landing" || phase == "landing-mid"))
+                {
+                    // This settled course fixture gives every pane nearby
+                    // takeoff/landing cues. Keep them visible into recovery;
+                    // the upper bound above still protects the play area.
+                    require(changed >= 128 && readable_pixels >= 64,
+                        "four-player 720p contact cues are too small or faint");
+                }
                 records << count << ',' << phase << ',' << tick << ',' << tick * dt << ','
-                    << size.x << ',' << size.y << ',' << view + 1 << ',' << changed << '\n';
+                    << size.x << ',' << size.y << ',' << view + 1 << ',' << changed
+                    << ',' << readable_pixels << '\n';
             }
             std::cout << "PASS " << stem << " matched feedback on/off\n";
         }
@@ -493,7 +521,7 @@ int wmain(int argc, wchar_t** argv)
         const bool one_player_route_sequences = argc == 5 && std::wstring(argv[4]) == L"1";
         std::filesystem::create_directories(output);
         std::ofstream records(output / "phases.csv");
-        records << "players,phase,tick,seconds,width,height,view,changed_pixels\n";
+        records << "players,phase,tick,seconds,width,height,view,changed_pixels,readable_pixels\n";
         std::ofstream route_records(output / "route.csv");
         route_records << "players,tick,view,centre_x,feet_y,camera_x,camera_y,grounded,changed_pixels\n";
 
