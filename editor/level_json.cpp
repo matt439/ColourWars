@@ -264,6 +264,16 @@ namespace colourwars_editor
             }
             if (named && string(sound, "music_name").empty()) { fail("The music name must not be empty."); }
             if (named && number(sound, "music_volume") < 0.0) { fail("Music volume must not be negative."); }
+            const bool sting = sound.HasMember("end_sting_name");
+            if (sting != sound.HasMember("end_sting_volume"))
+            {
+                fail("end_sting_name and end_sting_volume come together, or neither.");
+            }
+            if (sting && string(sound, "end_sting_name").empty()) { fail("end_sting_name must not be empty."); }
+            if (sting && (number(sound, "end_sting_volume") < 0.0 || number(sound, "end_sting_volume") > 1.0))
+            {
+                fail("end_sting_volume must be 0..1.");
+            }
             const Json& bounds = member(document, "level_bounds");
             for (const char* name : bounds_names) { plain_rectangle(member(bounds, name)); }
             const Rect arena = plain_rectangle(member(bounds, "out_of_bounds"));

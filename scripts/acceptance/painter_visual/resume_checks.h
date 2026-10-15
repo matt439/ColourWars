@@ -62,6 +62,154 @@ void resume_capture(Application& app, GameLevel& game, Presentation& presentatio
         "Resume drawing advanced simulation, cosmetics or its real-time clock");
 }
 
+void results_music_flow_matrix(Application& app, GameData& data, const Presentation& presentation,
+    const std::filesystem::path& output)
+{
+    StateContext& stack = app;
+    const SoundBank* bank = app.audio_resources()->sound_bank(presentation.menu().sound_bank);
+    require(bank->audible(), "Results-music hardware flow requires the accepted real sound bank");
+    const auto music = bank->resolve_effect(presentation.results_menu().music.name);
+    std::ofstream evidence(output / "results-music.csv");
+    evidence << "players,round,phase,depth,sound_state\n";
+    for (const int count : { 1, 2, 4 })
+    {
+        stack.clear();
+        stack.notify_activation(true);
+        stack.push(std::make_unique<ResumeProbeRoot>());
+        MenuLevelSettings settings;
+        settings.set_stage("movement_course");
+        settings.set_duration(0.25f);
+        settings.set_player_count(count);
+        settings.begin_input_claims(input_slots::keyboard_and_mouse);
+        settings.set_screen_layout(count == 1 ? ScreenLayout::one_player :
+            count == 2 ? ScreenLayout::two_player : ScreenLayout::four_player);
+        for (int view = 0; view < count; ++view)
+        {
+            settings.set_player_team(view, view == 0 ? PlayerTeam::a : PlayerTeam::b);
+            settings.set_player_weapon(view, WeaponType::sprayer);
+        }
+        auto owned = std::make_unique<GameLevel>(&data, settings);
+        GameLevel* game = owned.get();
+        const EndMenuAction exit_action = count == 2 ? EndMenuAction::change_teams : EndMenuAction::exit;
+        bool ended = false;
+        stack.push<EndMenuAction>(std::move(owned), [&](const EndMenuAction& action)
+        {
+            if (action != exit_action)
+            {
+                throw std::runtime_error("Results-music fixture returned action " +
+                    std::to_string(static_cast<int>(action)) + ", expected " +
+                    std::to_string(static_cast<int>(exit_action)) + " for " + std::to_string(count) + "P");
+            }
+            ended = true;
+        });
+        const auto tick = [&](float elapsed = dt)
+        {
+            app.keyboard()->poll();
+            app.mouse()->poll();
+            stack.update(elapsed);
+        };
+        const auto tap = [&](Key key)
+        {
+            app.keyboard()->on_key_down(key); tick(0.0f);
+            app.keyboard()->on_key_up(key); tick(0.0f);
+        };
+        const auto record = [&](int round, const char* phase)
+        {
+            evidence << count << ',' << round << ',' << phase << ',' << stack.depth() << ','
+                << static_cast<int>(bank->effect_state(music)) << '\n';
+        };
+        const auto reach_results = [&]
+        {
+            // Release uses the ordinary story-skip key; Debug already has
+            // intro off. Solo practice has no person at either end.
+            if (game->level().intro_playing()) { tap(Key::enter); }
+            for (int step = 0; step < 3000 && stack.depth() == 2; ++step) { tick(); }
+            require(stack.depth() == 3 && game->level().state() == LevelState::finished,
+                "Actual short GameLevel did not reach its results page");
+            require(bank->effect_state(music) == SoundState::playing && !bank->is_effect_looping(music),
+                "Actual results page did not begin the owned nonlooping coda");
+        };
+        const auto results_ready = [&]
+        {
+            const auto& look = presentation.results_menu();
+            const int steps = static_cast<int>((look.team_fill_delay + look.team_fill_time +
+                look.show_results_delay + 1.0f) / dt) + 4;
+            for (int step = 0; step < steps; ++step) { tick(); }
+        };
+        for (int round = 1; round <= 2; ++round)
+        {
+            reach_results();
+            record(round, "results");
+            stack.notify_activation(false);
+            require(bank->effect_state(music) == SoundState::paused,
+                "Focus loss under the actual results page did not pause the coda");
+            record(round, "results-unfocused");
+            stack.notify_activation(true);
+            require(bank->effect_state(music) == SoundState::playing,
+                "Focus return under the covering results page did not resume the coda");
+            results_ready();
+            // Keep the voice paused across the real continue callback. A
+            // page-owned replacement would start a new playing coda here,
+            // making a restart detectable without a production-only accessor.
+            stack.notify_activation(false);
+            require(bank->effect_state(music) == SoundState::paused,
+                "Results coda ended before the page-continuity check");
+            tap(Key::enter);
+            require(stack.depth() == 3 && bank->effect_state(music) == SoundState::paused,
+                "Results-to-End replaced, restarted or stopped its paused coda");
+            record(round, "end-unfocused");
+            stack.notify_activation(true);
+            require(bank->effect_state(music) == SoundState::playing,
+                "Focus return under the End page did not resume the same coda");
+            record(round, "end");
+            if (round == 1)
+            {
+                // Rematch is the initial action. Its real callback must stop
+                // the previous coda before the new round can create another.
+                tap(Key::enter);
+                require(stack.depth() == 2 && bank->effect_state(music) == SoundState::stopped &&
+                    game->level().state() != LevelState::finished,
+                    "Actual Rematch retained the old coda or failed to rebuild the round");
+                record(round, "rematch");
+            }
+            else
+            {
+                if (count == 4)
+                {
+                    // One bounded real-time check covers the asynchronous
+                    // buffer drain that the recording backend cannot model.
+                    const ULONGLONG deadline = GetTickCount64() + 8000;
+                    while (bank->effect_state(music) == SoundState::playing && GetTickCount64() < deadline)
+                    {
+                        Sleep(10);
+                    }
+                    require(bank->effect_state(music) == SoundState::stopped,
+                        "Accepted results coda did not finish naturally within eight seconds");
+                    stack.notify_activation(false);
+                    stack.notify_activation(true);
+                    require(bank->effect_state(music) == SoundState::stopped,
+                        "Focus return resurrected the naturally finished results coda");
+                    record(round, "natural-end-focus-return");
+                }
+                // Cover both destruction routes: Change Teams for 2P, and
+                // Exit to Main Menu for the solo and four-seat fixtures.
+                // End resets navigation when it is created. Observe a neutral
+                // sample before the first direction so the new page arms it.
+                tick(0.0f);
+                const int moves = count == 2 ? 1 : 4;
+                for (int move = 0; move < moves; ++move) { tap(Key::down); }
+                tap(Key::enter);
+                require(ended && stack.depth() == 1 && bank->effect_state(music) == SoundState::stopped,
+                    "Leaving the actual End page did not destroy and stop its owned coda");
+                record(round, count == 2 ? "change-teams" : "exit");
+            }
+        }
+        std::cout << "PASS actual " << count
+            << "P GameLevel results/end coda, covered focus, continuity, rematch and teardown\n";
+    }
+    require(evidence.good(), "Results-music flow evidence write failed");
+}
+
 void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
@@ -325,5 +473,6 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
         require(ended && stack.depth() == 1, "Actual Quit did not leave the match immediately");
         std::cout << "PASS actual " << count << "P GameLevel pause/resume input, freeze, focus, restart and quit\n";
     }
+    results_music_flow_matrix(app, data, presentation, output);
     require(evidence.good(), "Resume evidence write failed");
 }

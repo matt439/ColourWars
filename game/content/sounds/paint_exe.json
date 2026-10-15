@@ -140,6 +140,22 @@
       "wave": "music.turbulence"
     },
     {
+      "name": "music.results",
+      "wave": "music.results"
+    },
+    {
+      "name": "music.end_sting.close_quarters",
+      "wave": "music.end_sting.close_quarters"
+    },
+    {
+      "name": "music.end_sting.king_of_the_hill",
+      "wave": "music.end_sting.king_of_the_hill"
+    },
+    {
+      "name": "music.end_sting.turbulence",
+      "wave": "music.end_sting.turbulence"
+    },
+    {
       "name": "results.fill",
       "wave": "results.fill"
     },

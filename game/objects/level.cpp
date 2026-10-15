@@ -20,6 +20,8 @@ Level::Level(std::unique_ptr<Scene> scene,
 	const std::string& sound_bank_name,
 	const std::string& music_name,
 	float music_volume,
+	const std::string& end_sting_name,
+	float end_sting_volume,
 	const ResolutionManager* resolution_manager,
 	const ViewportManager* viewport_manager,
 	RenderResources* render_resources,
@@ -32,6 +34,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	players_(std::move(players)),
 	viewport_dividers_(std::move(viewport_dividers)),
 	music_volume_(music_volume),
+	end_sting_volume_(end_sting_volume),
 	resolution_manager_(resolution_manager),
 	viewport_manager_(viewport_manager),
 	mouse_(mouse),
@@ -93,6 +96,10 @@ Level::Level(std::unique_ptr<Scene> scene,
 	{
 		this->music_ = this->sound_bank_->resolve_effect(music_name);
 	}
+	if (!end_sting_name.empty())
+	{
+		this->end_sting_ = this->sound_bank_->resolve_effect(end_sting_name);
+	}
 	this->zoom_out_sound_ =
 		this->sound_bank_->resolve_effect(match.zoom_out_sound.name);
 	this->countdown_sound_ =
@@ -134,6 +141,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 
 Level::~Level()
 {
+	if (this->end_sting_.valid()) { this->sound_bank_->stop_effect(this->end_sting_, true); }
 	if (this->music_.valid())
 	{
 		this->sound_bank_->stop_effect(this->music_, true);
@@ -167,6 +175,7 @@ void Level::suspend() const
 
 void Level::pause_audio() const
 {
+	if (this->end_sting_.valid()) { this->sound_bank_->pause_effect(this->end_sting_); }
 	if (this->music_.valid())
 	{
 		this->sound_bank_->pause_effect(this->music_);
@@ -190,6 +199,12 @@ void Level::pause_audio() const
 
 void Level::resume() const
 {
+	if (this->end_sting_.valid())
+	{
+		this->sound_bank_->set_effect_volume(this->end_sting_,
+			this->end_sting_volume_ * this->preferences_->music_gain());
+		this->sound_bank_->resume_effect(this->end_sting_);
+	}
 	if (this->music_.valid())
 	{
 		this->sound_bank_->set_effect_volume(this->music_,
@@ -368,6 +383,11 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 			{
 				this->sound_bank_->stop_effect(this->music_, true);
 			}
+			if (this->end_sting_.valid())
+			{
+				this->sound_bank_->play_effect(this->end_sting_, false,
+					this->end_sting_volume_ * this->preferences_->music_gain());
+			}
 			this->stop_player_sounds();
 			for (Player* player : this->players_)
 			{
@@ -395,7 +415,9 @@ void Level::update_state(const std::vector<PlayerInputData>& player_inputs,
 		{
 			this->state_ = LevelState::overview;
 			this->zoom_out_timer_ = 0.0f;
-			// Let the transition tail finish naturally; destruction still owns it.
+			// Even a shortened glass transition leaves the returning person silent.
+			if (this->end_sting_.valid()) { this->sound_bank_->stop_effect(this->end_sting_, true); }
+			// Let the glass cue's tail finish naturally; destruction still owns it.
 		}
 
 		// refresh_layout refits the endpoints when the window changes size.

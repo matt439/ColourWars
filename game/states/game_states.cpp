@@ -158,6 +158,8 @@ void GameLevel::init()
 // LevelBuilder needs the match layout before it builds split-screen dividers.
 void GameLevel::build_and_enter_level()
 {
+	// Stop the old coda before a content reload can replace its bank.
+	this->results_audio_.reset();
 	this->resume_countdown_.cancel();
 	this->resume_audio_.reset();
 	this->focus_interrupted_ = false;
@@ -193,6 +195,8 @@ void GameLevel::build_and_enter_level()
 // leave the match's voices paused until the menu is also closed.
 void GameLevel::on_activated()
 {
+	// Results and End cover this state, but their shared coda follows focus.
+	if (this->results_audio_) { this->results_audio_->resume(); }
 	if (!this->covered_ && this->focus_interrupted_)
 	{
 		this->begin_resume_countdown();
@@ -213,6 +217,7 @@ bool GameLevel::audio_may_play() const
 }
 void GameLevel::on_deactivated()
 {
+	if (this->results_audio_) { this->results_audio_->suspend(); }
 	this->focus_interrupted_ = this->level_->state() == LevelState::active;
 	this->resume_audio_->stop();
 	this->level_->suspend();
@@ -388,6 +393,8 @@ void GameLevel::open_results_menu()
 {
 	const LevelEndInfo result = this->level_->level_end_info();
 	this->session_.finish_round(result);
+	this->results_audio_ = std::make_unique<ResultsAudio>(this->data()->audio_resources(),
+		&this->data()->save()->play_settings(), *this->data()->presentation());
 	this->menu_input_->reset_actions();
 	this->context()->push(
 		std::make_unique<ResultsMenuInitial>(this->menu_context_.get(),

@@ -69,6 +69,8 @@ public:
 		const std::string& sound_bank_name,
 		const std::string& music_name,
 		float music_volume,
+		const std::string& end_sting_name,
+		float end_sting_volume,
 		const labrador::ResolutionManager* resolution_manager,
 		const labrador::ViewportManager* viewport_manager,
 		labrador::RenderResources* render_resources,
@@ -189,6 +191,7 @@ private:
 
 	// Resolve the level's music and fixed match sounds once at construction.
 	labrador::SoundBank::EffectHandle music_;
+	labrador::SoundBank::EffectHandle end_sting_;
 	labrador::SoundBank::EffectHandle zoom_out_sound_;
 	labrador::SoundBank::EffectHandle countdown_sound_;
 	labrador::SoundBank::EffectHandle go_sound_;
@@ -197,6 +200,7 @@ private:
 	// The displayed positive second most recently sounded; zero means none yet.
 	float last_ten_second_ = 0.0f;
 	float music_volume_ = 0.0f;
+	float end_sting_volume_ = 0.0f;
 
 	// Written during the main-thread update and read by render workers for dt/fps.
 	float frame_dt_ = 0.0f;

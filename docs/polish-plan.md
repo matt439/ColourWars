@@ -588,8 +588,8 @@ selects wet step/landing variants within the same movement budgets. Remaining
 hooks and the listening mix stay in POL#23. The menu-feedback increment adds
 distinct unready and pending SFX-volume previews, shared match/pause pad
 lost/back cues, and a completed-series cue. The shared resume count-in now uses
-the accepted `ui.count_in` beat. Results music, ending stings and fades/ducking
-remain open.
+the accepted `ui.count_in` beat. The accepted results coda and each arena's
+ending sting are integrated; transition fades/ducking and listening remain open.
 
 - Inventory every source wave, bank entry, loop instance and runtime reference,
   including tuning, presentation, level music and any code-selected cues. Give

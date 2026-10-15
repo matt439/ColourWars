@@ -34,6 +34,8 @@ void LevelLoadedInfo::validate() const
 	this->sound_bank_name();
 	this->music_name();
 	this->music_volume();
+	this->end_sting_name();
+	this->end_sting_volume();
 
 	// Require enough spawn points for a full roster on either team.
 	const JsonValue root = this->json_doc_.root();
@@ -175,6 +177,10 @@ void LevelLoadedInfo::validate_content(const LevelObjectBuilder& builder,
 		{
 			bank->resolve_effect(this->music_name());
 		}
+		if (this->has_end_sting())
+		{
+			bank->resolve_effect(this->end_sting_name());
+		}
 	}
 	catch (const std::exception& error)
 	{
@@ -279,6 +285,36 @@ float LevelLoadedInfo::music_volume() const
 {
 	return this->has_music() ?
 		this->json_doc_.root().object("sound").number("music_volume") : 0.0f;
+}
+
+bool LevelLoadedInfo::has_end_sting() const
+{
+	const JsonValue sound = this->json_doc_.root().object("sound");
+	const bool named = sound.has("end_sting_name");
+	if (named != sound.has("end_sting_volume"))
+	{
+		throw std::runtime_error(sound.where() +
+			": end_sting_name and end_sting_volume come together, or neither.");
+	}
+	return named;
+}
+
+std::string LevelLoadedInfo::end_sting_name() const
+{
+	return this->has_end_sting() ?
+		this->json_doc_.root().object("sound").identifier("end_sting_name") : std::string();
+}
+
+float LevelLoadedInfo::end_sting_volume() const
+{
+	if (!this->has_end_sting()) { return 0.0f; }
+	const JsonValue sound = this->json_doc_.root().object("sound");
+	const float volume = sound.number("end_sting_volume");
+	if (!std::isfinite(volume) || volume < 0.0f || volume > 1.0f)
+	{
+		throw std::runtime_error(sound.where() + ": end_sting_volume must be 0..1.");
+	}
+	return volume;
 }
 
 std::vector<Vector2F>

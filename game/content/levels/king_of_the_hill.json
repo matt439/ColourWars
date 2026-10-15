@@ -5,7 +5,9 @@
     {
         "sound_bank_name": "paint_exe",
         "music_name": "music.king_of_the_hill",
-        "music_volume": 0.65
+        "music_volume": 0.65,
+        "end_sting_name": "music.end_sting.king_of_the_hill",
+        "end_sting_volume": 0.65
     },
     "spawn_locations":
     {

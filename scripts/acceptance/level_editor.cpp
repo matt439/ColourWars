@@ -180,6 +180,30 @@ namespace
         std::cout << "PASS shipped levels round trip and source preservation\n";
     }
 
+    void check_ending_audio(const fs::path& repo)
+    {
+        LevelDocument document;
+        document.load(repo / "game/content/levels/close_quarters.json");
+        const Entry level = entry(document, EntryKind::level);
+        for (const char* invalid : { "-0.01", "1.01", "1e100" })
+        {
+            reject_without_change(document, [&]
+            {
+                document.set_property(level, "/sound/end_sting_volume", invalid);
+            }, "The editor accepted an invalid ending-sting volume");
+        }
+        reject_without_change(document, [&]
+        {
+            document.set_property(level, "/sound/end_sting_name", "");
+        }, "The editor accepted an empty ending-sting name");
+        for (const char* valid : { "0", "1" })
+        {
+            document.set_property(level, "/sound/end_sting_volume", valid);
+            require(document.validate().empty(), "The editor rejected an ending-sting gain boundary");
+        }
+        std::cout << "PASS ending-sting editor validation and gain boundaries\n";
+    }
+
     void check_unknown_fields_and_rectangles(const fs::path& scratch)
     {
         LevelDocument seed;
@@ -474,6 +498,7 @@ int wmain(int argc, wchar_t* argv[])
         const fs::path scratch = fs::absolute(argv[2]);
         require(fs::is_directory(scratch), "Acceptance scratch directory must already exist");
         check_shipped_levels(repo, scratch);
+        check_ending_audio(repo);
         check_blockout_aids(repo, scratch);
         check_unknown_fields_and_rectangles(scratch);
         check_palette_and_ramps(scratch);

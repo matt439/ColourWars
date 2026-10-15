@@ -94,6 +94,8 @@ std::unique_ptr<Level>
 		load_info->sound_bank_name(),
 		load_info->music_name(),
 		load_info->music_volume(),
+		load_info->end_sting_name(),
+		load_info->end_sting_volume(),
 		this->resolution_manager_,
 		this->viewport_manager_,
 		this->render_resources_,

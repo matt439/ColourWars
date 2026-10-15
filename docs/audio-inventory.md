@@ -802,6 +802,27 @@ requires release. The source wave and accepted bank bytes are unchanged.
 Recording-backend checks cover beats, interruptions, gain edits/mute,
 destruction and the silent-bank fallback. Listening remains `ROAD#3`.
 
+The ending-music increment (2026-10-15) adds each arena's accepted
+`music.end_sting.<stage>` on entry to glass-out, once per match. The stage's
+optional `sound.end_sting_name` and `end_sting_volume` come as a pair and are
+validated at startup and by the editor; absent fields select no sting. New editor
+stages pair the default Close Quarters track with its sting. The Movement Course
+retains neither arena music nor a sting. These voices use music gain/mute,
+suspend/resume without restarting, and stop before the returning person's
+overview, even when the glass-out duration is shortened. Level teardown cancels
+them too. Time-up and glass cues remain separately routed through SFX gain.
+
+`results_menu.music` selects the accepted `music.results` coda and its gain.
+GameLevel starts one owned, nonlooping voice when results opens after the reveal
+(or at the ordinary score page for solo/intro-off play). It preserves the natural
+tail across the rematch menu, pauses on focus loss even while a page covers the
+match, and resumes at current music gain without replay. A finished coda stays
+finished. Rematch, setup/main-menu exit and destruction stop the old voice;
+reset happens before content reload can replace its bank. Winner/draw and
+completed-series SFX retain their independent cues. The four new effect instances
+refer to already accepted bank waves; masters, production inventory and XWB bytes
+are unchanged. This increment does not establish listening balance or add fades.
+
 **POL#23 remains open.** Putting an accepted wave into the bank does not create
 a gameplay trigger. Complete the required new cues from section 4, assess Tier
 3 detail individually and keep it off or nearly off by default:
@@ -809,8 +830,7 @@ a gameplay trigger. Complete the required new cues from section 4, assess Tier
 - Movement: optional bonk/drop/hit-confirm details.
 - Paint/tool detail: optional blocked/slosh/drip cues.
 - Room: optional footsteps/breath/waver/cheat.
-- Menus/music: results music, arena ending stings and
-  transition fades/ducking (`GAP#5.1`); optional world ambience/detail.
+- Menus/music: transition fades/ducking (`GAP#5.1`); optional world ambience/detail.
 - Mix: useful action cues above weapon voices, movement, music and decorative
   detail; limits on repeating impacts/steps; actual one-, two- and four-player
   audition with music/SFX gains, mute, focus, suspension and resumed loops.
@@ -931,3 +951,27 @@ under `out/validation/workshop-retirement/`. The accepted bank and masters are u
 These checks establish construction, content and connection cue requests;
 physical-pad menu sessions and listening/multiplayer mix remain ROAD#2,
 POL#23 and ROAD#3.
+
+Ending-music validation (2026-10-15): Debug and Release build under `/W4 /WX`
+and pass all 23 consumer cases. The expanded `story_audio` recorder checks
+results cue content, music gain/mute, focus without replay, completed-state
+guards and teardown, plus every arena's sting at one/two/four players,
+optional-field rejection, overview cancellation and Movement Course silence.
+Both editor suites pass document validation, unchanged source round trips,
+gain boundaries and hidden-window launch/close. The six bank-publication
+checks pass; no accepted master or bank bytes changed.
+
+The hidden D3D11/XAudio2 GameLevel flow passes in both builds on the RTX 5080
+with one/two/four seats: results-to-End preserves the same paused voice,
+covered focus resumes it, rematch cancels it and creates a fresh next-round
+coda, and setup/main-menu exits stop it. The real coda drains naturally and
+stays stopped after focus return. The 53-file Release ZIP contains the exact
+revised presentation, stages and sound definition, the accepted bank and
+provenance, and no development audio. Isolated Debug and extracted Release
+startup pass with the real bank and separately without it, using a system-only
+PATH and graceful close. Evidence is under `out/validation/results-music/`
+and `out/acceptance/`; the successful flow run IDs are
+`flow-debug/x64-debug/0d609441a7f4461d88738d3f081a08b4` and
+`flow-release/x64-release/d6896daa9c7d4d8fa15e608e9bec6201`.
+These establish runtime ownership and requests, not listening/mix acceptance.
+Transition fades/ducking remain POL#23 and GAP#5.1; listening remains ROAD#3.

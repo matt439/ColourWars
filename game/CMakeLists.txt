@@ -108,6 +108,7 @@ add_executable(ColourWars WIN32
 
     states/connection_audio.cpp
     states/resume_audio.cpp
+    states/results_audio.cpp
     states/resume_countdown.cpp
     states/controls_settings_menu.cpp
     states/stick_settings_menu.cpp

@@ -319,6 +319,7 @@ struct ResultsMenuPresentation
 	PresentationSound winner_sound;
 	PresentationSound draw_sound;
 	PresentationSound fill_sound;
+	PresentationSound music;
 };
 
 // Shared layout and style for page-specific button prompts.

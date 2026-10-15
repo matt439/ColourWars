@@ -816,6 +816,7 @@ namespace
 		menu.winner_sound = read_sound(sounds, "winner");
 		menu.draw_sound = read_sound(sounds, "draw");
 		menu.fill_sound = read_sound(sounds, "fill");
+		menu.music = read_sound(json, "music");
 
 		return menu;
 	}
@@ -1734,6 +1735,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.wave("results_menu.sounds.winner.name", bank, this->results_menu_.winner_sound.name);
 	check.wave("results_menu.sounds.draw.name", bank, this->results_menu_.draw_sound.name);
 	check.effect("results_menu.sounds.fill.name", bank, this->results_menu_.fill_sound.name);
+	check.effect("results_menu.music.name", bank, this->results_menu_.music.name);
 
 	// These menu pictures are chosen by the page code, so they have no JSON
 	// field to walk. Check them too before the player can reach those pages.

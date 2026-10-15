@@ -14,6 +14,7 @@
 #include "game/debug/debug_targets.h"
 #include "game/states/resume_countdown.h"
 #include "game/states/resume_audio.h"
+#include "game/states/results_audio.h"
 
 // Stack shapes during a session:
 //
@@ -91,6 +92,7 @@ private:
 	bool focus_interrupted_ = false;
 	ResumeCountdown resume_countdown_;
 	std::unique_ptr<ResumeAudio> resume_audio_;
+	std::unique_ptr<ResultsAudio> results_audio_;
 	void begin_resume_countdown();
 	// Per device slot: a Start or Escape press that began over the intro. Its
 	// release never opens pause, even when it comes after GO.

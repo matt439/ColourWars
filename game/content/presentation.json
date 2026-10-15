@@ -258,6 +258,7 @@
   },
 
   "results_menu": {
+    "music": { "name": "music.results", "volume": 0.5 },
     "box_size": { "x": 1300.0, "y": 860.0 },
     "heading_y": 125.0,
     "winner_y": 255.0,

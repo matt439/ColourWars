@@ -59,6 +59,10 @@ public:
 	// Empty and 0 for a silent stage.
 	std::string music_name() const;
 	float music_volume() const;
+	// Optional as a pair, independent of the looping arena music.
+	bool has_end_sting() const;
+	std::string end_sting_name() const;
+	float end_sting_volume() const;
 
 private:
 	// Checked JSON access reports the source file and key on failure.
