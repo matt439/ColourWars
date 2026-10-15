@@ -123,6 +123,10 @@
       "round_complete": "Round Complete",
       "series_complete": "Series Complete"
     },
+    "stage": {
+      "browse_status": "FIND YOUR ARENA",
+      "locked_status": "ARENA LOCKED"
+    },
     "headings": {
       "home": "Make your mark.",
       "options": "Options",

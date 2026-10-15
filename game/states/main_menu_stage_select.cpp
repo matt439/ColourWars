@@ -126,7 +126,8 @@ void MainMenuStageSelect::update_stage_select_visuals()
 		std::to_wstring(this->random_slot()) + L"   >");
 	this->preview_edge_->set_colour(confirmed ? look.selected :
 		this->menu_style().panel_edge_colour);
-	this->selection_status_->set_text(confirmed ? L"ARENA LOCKED" : L"FIND YOUR ARENA");
+	this->selection_status_->set_text(confirmed ?
+		this->text().stage.locked_status : this->text().stage.browse_status);
 	this->selection_status_->set_colour(confirmed ? look.selected :
 		this->menu_style().heading_colour);
 	this->selection_hint_->set_text(confirmed ?

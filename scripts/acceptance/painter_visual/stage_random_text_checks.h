@@ -5,6 +5,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
 {
     const Presentation original = presentation;
     const std::wstring legacy = L"Random";
+    const std::wstring legacy_browse_status = L"FIND YOUR ARENA", legacy_locked_status = L"ARENA LOCKED";
     StageList stages{ { "movement_course", "Movement Course", "stage_turbulence", false },
         { "close_quarters", "Close Quarters", "stage_close_quarters", true } };
     require(random_stage_indices(stages) == std::vector<size_t>{ 1 },
@@ -140,7 +141,69 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
             "Frozen Random stage drawing changed pixels or consumed RNG");
         return actual;
     };
-    Frame baseline{};
+    std::ofstream status_records(output / "menu-text-stage-status.csv");
+    status_records << "case,slot,locked,width,height,font,x,y,raw_width,raw_height,shadow_x,shadow_y,scale,fixture_matches\n";
+    const auto compare_status = [&](const std::string& name, const Presentation& snapshot,
+        const std::wstring& text, bool random, bool locked)
+    {
+        const auto& style = snapshot.menu(); const auto& built = snapshot.main_menu();
+        const auto& geometry = built.stage_select;
+        const Vector2F info = geometry.briefing.position + geometry.briefing_padding;
+        const Vector2F position = info + geometry.briefing.spacing * 6.0f;
+        const Vector2F shadow = style.detail_shadow_offset;
+        UiTextDropShadow expected("reference-stage-status", text, style.detail_font, position, app.render_resources(),
+            locked ? presentation.main_menu().stage_select.selected : presentation.menu().heading_colour,
+            style.shadow_colour, shadow);
+        const RectangleF bounds = expected.bounds();
+        const RectangleF panel(geometry.briefing.position, geometry.briefing.size);
+        require(panel.contains(bounds) && RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION).contains(bounds) &&
+            bounds.bottom() <= (info + geometry.briefing.spacing * 7.0f).y,
+            "Independent unscaled stage status/shadow escapes the full briefing or reaches its hint row");
+        const Frame actual = frame();
+        const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
+        const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
+        Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
+        DrawList list = renderer.view(0); list.set_viewport(viewport); list.set_camera(Camera::DEFAULT_CAMERA);
+        list.set_filter(TextureFilter::point);
+        canvas.draw(list, RectangleF(Vector2F::ZERO, app.resolution_manager()->resolution_vec()));
+        list.set_camera(camera);
+        const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
+        const auto solid = sheet->resolve_sprite_frame(style.fill_frame);
+        sheet->draw(list, solid, camera.visible_rectangle(viewport), style.scrim_colour);
+        const UiTexture background("reference-status-background", built.backdrop_sheet, built.backdrop_frame,
+            RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(),
+            built.play_background_colour);
+        background.draw(list);
+        const UiTexture briefing("reference-status-briefing", style.sprite_sheet, style.fill_frame, panel,
+            app.render_resources(), snapshot.hud().player_identity_background_colour);
+        briefing.draw(list);
+        list.set_filter(TextureFilter::linear); expected.draw(list);
+        const Frame reference = read(renderer);
+        RectangleF crop = bounds; crop.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(crop);
+        const RectangleI pixels = countdown_crop_bounds(crop);
+        const Frame observed = foreground_crop(actual, pixels, 0), wanted = foreground_crop(reference, pixels, 0);
+        const std::string stem = "menu-text-stage-status-" + name + '-' + (random ? "random-" : "real-") +
+            std::to_string(actual.width) + 'x' + std::to_string(actual.height);
+        if (observed.pixels != wanted.pixels)
+        {
+            save(observed, output / (stem + "-failure-actual.ppm"));
+            save(wanted, output / (stem + "-failure-expected.ppm"));
+            const RectangleI delta = foreground_delta_bounds(observed, wanted);
+            std::cerr << "Stage status case=" << name << " random=" << random << " locked=" << locked <<
+                " crop=(" << pixels.x << ',' << pixels.y << ',' << pixels.width << ',' << pixels.height <<
+                ") delta=(" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << ")\n";
+            throw std::runtime_error("Actual arena status differs from its independent unscaled full-shadow fixture");
+        }
+        save(observed, output / (stem + "-detail.ppm"));
+        status_records << name << ',' << (random ? "random" : "close_quarters") << ',' << locked << ',' <<
+            actual.width << ',' << actual.height << ',' << style.detail_font << ',' << position.x << ',' << position.y <<
+            ',' << bounds.width << ',' << bounds.height << ',' << shadow.x << ',' << shadow.y << ",1,true\n";
+        std::srand(5731); const int next_random = std::rand(); std::srand(5731);
+        require(actual.pixels == frame().pixels && std::rand() == next_random,
+            "Frozen stage status drawing changed pixels or consumed RNG");
+        return observed;
+    };
+    Frame baseline{}, status_baseline{};
     for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440),
         Vector2I(1600, 1200), Vector2I(1920, 1200), Vector2I(2560, 1080) })
     {
@@ -148,12 +211,19 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         std::ignore = app.renderer()->window_size_changed(size.x, size.y);
         open(); const MenuLevelSettings before = settings;
         compare("default-real", original, L"Close Quarters", false, false, 2);
+        const Frame browse_status = compare_status("default-browse", original, legacy_browse_status, false, false);
+        if (size.x == 1280) { status_baseline = browse_status; }
+        tap_without_random(Key::enter);
+        compare_status("default-locked", original, legacy_locked_status, false, true);
+        tap_without_random(Key::escape);
         cycle(Key::right); const Frame random = compare("default-random", original, legacy, true, false, 2);
+        compare_status("default-browse", original, legacy_browse_status, true, false);
         if (size.x == 1280) { baseline = random; }
         cycle(Key::left); compare("default-real-return", original, L"Close Quarters", false, false, 2);
         cycle(Key::right); require(compare("default-random-return", original, legacy, true, false, 2).pixels == random.pixels,
             "Cycling real/Random stages failed to restore the exact Random raster");
         tap_without_random(Key::enter); compare("default-locked", original, legacy, true, true, 2);
+        compare_status("default-locked", original, legacy_locked_status, true, true);
         require(same_plan(settings, before) && !context.music_exit_pending() && stack.depth() == 2,
             "The first Random confirmation committed or started its provisional match");
         tap_without_random(Key::escape);
@@ -242,9 +312,80 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     context.complete_music_exit(); context.complete_music_exit();
     require(stack.depth() == 1 && !context.music_exit_pending() && same_plan(settings, committed),
         "Completing Random start duplicated its pop or changed the selected plan");
+
+    // Status widgets keep constructor-owned font, position, shadow offset and
+    // shadow colour. Slot/state refreshes replace captured copy and live ink.
+    using StageStatus = decltype(MenuText{}.stage);
+    const StageStatus old_status{ L"BROWSE~", L"LOCKED~" }, new_status{ L"FIND A STAGE", L"READY TO START" };
+    Presentation status_old = original;
+    const_cast<MenuText&>(status_old.menu_text()).stage = old_status;
+    status_old.validate_resources(*app.render_resources(), *app.audio_resources());
+    const Font* status_source = app.render_resources()->font(
+        app.render_resources()->resolve_sprite_font(original.menu().detail_font));
+    std::vector<Glyph> status_glyphs;
+    for (char32_t character = U' '; character < U'~'; ++character)
+    {
+        const Glyph* glyph = status_source->find(character);
+        require(glyph != nullptr, "Stage status replacement detail font lacks a baseline printable glyph");
+        status_glyphs.push_back(*glyph);
+    }
+    const std::string status_font = "acceptance_stage_status_without_tilde";
+    app.render_resources()->add_font(status_font, std::make_unique<Font>(status_source->atlas(),
+        std::move(status_glyphs), status_source->line_spacing()));
+    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(status_font), L"~"),
+        "Stage status replacement detail font still contains the old status glyph");
+    Presentation status_next = original;
+    const_cast<MenuText&>(status_next.menu_text()).stage = new_status;
+    auto& next_style = const_cast<MenuStyle&>(status_next.menu());
+    next_style.detail_font = status_font; next_style.detail_shadow_offset = Vector2F(4.0f, 3.0f);
+    next_style.shadow_colour = Colour(0.65f, 0.15f, 0.8f); next_style.heading_colour = Colour::cyan;
+    auto& next_stage = const_cast<MainMenuPresentation&>(status_next.main_menu()).stage_select;
+    next_stage.briefing_padding += Vector2F(8.0f, 4.0f); next_stage.selected = Colour::yellow;
+    status_next.validate_resources(*app.render_resources(), *app.audio_resources());
+    presentation = status_old; open();
+    compare_status("custom-old-browse", status_old, old_status.browse_status, false, false);
+    const MenuLevelSettings status_plan = settings; const Frame status_before = frame();
+    presentation = status_next; tick(); require(frame().pixels == status_before.pixels,
+        "Live stage status text/font/geometry/shadow replacement changed an existing widget before refresh");
+    tap_without_random(Key::enter);
+    compare_status("old-locked-after-replacement", status_old, old_status.locked_status, false, true);
+    tap_without_random(Key::escape);
+    compare_status("old-browse-after-replacement", status_old, old_status.browse_status, false, false);
+    cycle(Key::right);
+    compare_status("old-random-browse-after-replacement", status_old, old_status.browse_status, true, false);
+    tap_without_random(Key::enter);
+    compare_status("old-random-locked-after-replacement", status_old, old_status.locked_status, true, true);
+    tap_without_random(Key::escape);
+    compare_status("old-random-unlocked-after-replacement", status_old, old_status.browse_status, true, false);
+    require(same_plan(settings, status_plan) && !context.music_exit_pending(),
+        "Captured stage status callbacks committed a provisional selection or changed the match plan");
+    open();
+    compare_status("reopened-new-browse", status_next, new_status.browse_status, false, false);
+    cycle(Key::right);
+    compare_status("reopened-new-random-browse", status_next, new_status.browse_status, true, false);
+    tap_without_random(Key::enter);
+    compare_status("reopened-new-random-locked", status_next, new_status.locked_status, true, true);
+    const Frame status_adopted = frame(); presentation = original; tick();
+    require(frame().pixels == status_adopted.pixels,
+        "Reversing source stage status text/font/geometry/shadow changed an already reopened widget");
+    tap_without_random(Key::escape);
+    compare_status("new-random-unlocked-after-reversal", status_next, new_status.browse_status, true, false);
+    cycle(Key::left);
+    compare_status("new-real-browse-after-reversal", status_next, new_status.browse_status, false, false);
+    tap_without_random(Key::enter);
+    compare_status("new-real-locked-after-reversal", status_next, new_status.locked_status, false, true);
+    tap_without_random(Key::escape);
+    require(same_plan(settings, status_plan) && !context.music_exit_pending(),
+        "Reopened/reversed stage status callbacks changed the provisional match plan");
+    open(); require(compare_status("restored-default", original, legacy_browse_status, false, false).pixels ==
+        status_baseline.pixels, "Reopened stage status did not restore the exact original text/shadow raster");
+    require(status_records.good(), "Stage status text evidence write failed");
     require(records.good(), "Stage Random text evidence write failed");
     std::cout << "PASS actual Random stage name: independent default/shadow rasters across six display sizes, "
         "eligible arena plus excluded Movement Course, real/Random cycles without RNG or plan commits, "
         "long width-only fit and short reset, retained/reopened/reversed text/item font, live fit geometry, "
         "lock/unlock, interrupted and deliberate two-release start, eligibility and pending music plan\n";
+    std::cout << "PASS actual arena status: independent FIND YOUR ARENA/ARENA LOCKED full-shadow rasters on real/Random "
+        "browse/locked pages across six display sizes, captured text/detail font/position/shadow through forced "
+        "cycles/lock/unlock and source replacement/reopen/reversal, live ink and unchanged provisional plan/RNG\n";
 }

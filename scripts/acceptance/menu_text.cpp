@@ -100,6 +100,11 @@ namespace
         { "round_complete", L"Round Complete", &MenuEndText::round_complete },
         { "series_complete", L"Series Complete", &MenuEndText::series_complete }
     };
+    struct StageText { const char* key; const wchar_t* text; std::wstring MenuStageText::* field; };
+    constexpr StageText stage_text[]{
+        { "browse_status", L"FIND YOUR ARENA", &MenuStageText::browse_status },
+        { "locked_status", L"ARENA LOCKED", &MenuStageText::locked_status }
+    };
     constexpr DefaultText items[]{
         { "play", L"Play" }, { "options", L"Options" }, { "credits", L"Credits" }, { "exit", L"Exit" },
         { "resolution", L"Resolution" }, { "fullscreen", L"Fullscreen" }, { "team_palette", L"Team palette" },
@@ -255,6 +260,10 @@ namespace
         {
             require(text.end.*entry.field == entry.text, std::string("End heading default changed: ") + entry.key);
         }
+        for (const auto& entry : stage_text)
+        {
+            require(text.stage.*entry.field == entry.text, std::string("Arena status default changed: ") + entry.key);
+        }
         for (size_t index = 0; index < std::size(headings); ++index)
         {
             const auto& actual = text.heading(static_cast<MenuHeading>(index));
@@ -300,7 +309,7 @@ namespace
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
         {
-            for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end" })
+            for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage" })
             {
                 auto& object = d["menu_text"][group];
                 rapidjson::Value reordered(rapidjson::kObjectType);
@@ -319,7 +328,7 @@ namespace
         });
         check_defaults(reversed);
         variants.rejects("", [](rapidjson::Document& d) { d.RemoveMember("menu_text"); });
-        for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end" })
+        for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage" })
         {
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"].RemoveMember(group); });
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"][group].SetArray(); });
@@ -344,6 +353,7 @@ namespace
         for (const auto& entry : value_text) { required("values", entry.key); }
         for (const auto& entry : confirmation_text) { required("confirmations", entry.key); }
         for (const auto& entry : end_text) { required("end", entry.key); }
+        for (const auto& entry : stage_text) { required("stage", entry.key); }
         for (const auto& entry : headings) { required("headings", entry.key); }
         for (const auto& entry : prompts) { required("prompts", entry.key); }
         for (const auto& entry : items) { required("items", entry.key); }
@@ -2302,6 +2312,247 @@ namespace
         for (const double width : { 0.0, -1.0, 1e100 }) { reject_preview_width(width); }
     }
 
+    void check_stage_status_text(Variants& variants, World& world)
+    {
+        for (const auto& entry : stage_text)
+        {
+            const std::string field = std::string("stage.") + entry.key;
+            const auto normalized = variants.load([&](rapidjson::Document& d)
+            {
+                d["menu_text"]["stage"][entry.key].SetString(
+                    "  A\xC2\xA0\xE2\x80\x9C" "B" "\xE2\x80\x9D\xE2\x80\x94" "C\xE2\x80\xA6  ");
+            });
+            normalized.validate_resources(world.render, world.audio);
+            require(normalized.menu_text().stage.*entry.field == L"  A \"B\"-C...  ",
+                std::string("Arena status lost normalized punctuation or authored spacing: ") + entry.key);
+            for (const char* invalid : { "   ", " \xC2\xA0 ", "line\nbreak", "line\rbreak", "line\r\nbreak",
+                "tab\ttext", "control\x01", "delete\x7F", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3" })
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    d["menu_text"]["stage"][entry.key].SetString(invalid, d.GetAllocator());
+                });
+            }
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                d["menu_style"]["fonts"]["detail"].SetString("menu_text_limited");
+                d["menu_text"]["stage"][entry.key].SetString("Glyph~");
+            }, &world);
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                d["menu_text"]["stage"][entry.key].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
+            }, &world);
+        }
+        const auto check_widgets = [&](const Presentation& look)
+        {
+            for (const auto& entry : stage_text)
+            {
+                MenuStyle style = look.menu();
+                StageSelectPresentation stage = look.main_menu().stage_select;
+                std::wstring source = look.menu_text().stage.*entry.field;
+                const auto retained = source;
+                const auto font = world.render.resolve_sprite_font(style.detail_font);
+                const auto measured = world.render.measure_text(font, source);
+                const auto point = stage.briefing.position + stage.briefing_padding + stage.briefing.spacing * 6.0f;
+                const auto shadow = style.detail_shadow_offset;
+                UiTextDropShadow status("arena_status", L"", style.detail_font, point, &world.render,
+                    style.heading_colour, style.shadow_colour, shadow);
+                status.set_text(source);
+                source = L"Changed after set_text";
+                const auto expected = mattmath::RectangleF::union_of(mattmath::RectangleF(point, measured),
+                    mattmath::RectangleF(point + shadow, measured));
+                style.detail_font = "gill_sans_mt_bold_24";
+                style.detail_shadow_offset = mattmath::Vector2F(10.0f, 10.0f);
+                stage.briefing.position += mattmath::Vector2F(40.0f, 40.0f);
+                status.set_text(retained);
+                status.set_colour(look.main_menu().stage_select.selected);
+                require(status.text() == retained && status.text_bounds() == mattmath::RectangleF(point, measured) &&
+                    status.bounds() == expected && status.shadow_offset() == shadow && status.shadow_scale() == 1.0f &&
+                    std::isfinite(expected.width) && std::isfinite(expected.height) && expected.width > 0.0f && expected.height > 0.0f,
+                    std::string("Actual arena status lost its copied text, captured font/position/shadow, or unscaled bounds: ") + entry.key);
+                status.set_hidden(true);
+                DrawList no_device;
+                status.draw(no_device);
+            }
+        };
+        check_widgets(variants.load([](rapidjson::Document&) {}));
+        for (const size_t length : { size_t(3), size_t(59) })
+        {
+            for (const bool negative : { false, true })
+            {
+                const auto authored = variants.load([&](rapidjson::Document& d)
+                {
+                    d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
+                    for (const auto& entry : stage_text)
+                    {
+                        d["menu_text"]["stage"][entry.key].SetString(std::string(length, 'F').c_str(), d.GetAllocator());
+                    }
+                    if (negative)
+                    {
+                        d["menu_style"]["shadow"]["detail_offset"]["x"].SetFloat(-1.5f);
+                        d["menu_style"]["shadow"]["detail_offset"]["y"].SetFloat(-1.5f);
+                    }
+                });
+                authored.validate_resources(world.render, world.audio);
+                check_widgets(authored);
+            }
+        }
+    }
+
+    void check_stage_status_bounds(Variants& variants, World& world)
+    {
+        const auto add_font = [&](const std::string& name, int width, int height,
+            float x_offset = 0.0f, float y_offset = 0.0f, float line_spacing = 16.0f)
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                const bool boundary = character == U'~';
+                glyphs.push_back({ character, mattmath::RectangleI(0, 0, boundary ? width : 8, boundary ? height : 16),
+                    boundary ? x_offset : 0.0f, boundary ? y_offset : 0.0f, 0.0f });
+            }
+            world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), line_spacing));
+        };
+        const auto use_font = [](rapidjson::Document& d, const std::string& name, const char* key)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString(name.c_str(), d.GetAllocator());
+            for (const auto& entry : stage_text) { d["menu_text"]["stage"][entry.key].SetString("Fit"); }
+            d["menu_text"]["stage"][key].SetString("~");
+        };
+        add_font("menu_stage_status_width_edge", 507, 20);
+        add_font("menu_stage_status_width_overflow", 508, 20);
+        add_font("menu_stage_status_hint_edge", 8, 74);
+        add_font("menu_stage_status_hint_overflow", 8, 75);
+        for (const auto& entry : stage_text)
+        {
+            const std::string field = std::string("stage.") + entry.key;
+            const auto width = variants.load([&](rapidjson::Document& d)
+            {
+                use_font(d, "menu_stage_status_width_edge", entry.key);
+            });
+            width.validate_resources(world.render, world.audio);
+            const auto& stage = width.main_menu().stage_select;
+            require(stage.briefing.position.x + stage.briefing_padding.x + 507.0f + width.menu().detail_shadow_offset.x ==
+                stage.briefing.position.x + stage.briefing.size.x,
+                "Arena status width fixture no longer touches the full briefing panel's right edge");
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                use_font(d, "menu_stage_status_width_overflow", entry.key);
+            }, &world);
+            const auto hint = variants.load([&](rapidjson::Document& d)
+            {
+                use_font(d, "menu_stage_status_hint_edge", entry.key);
+            });
+            hint.validate_resources(world.render, world.audio);
+            require(74.0f + hint.menu().detail_shadow_offset.y == hint.main_menu().stage_select.briefing.spacing.y,
+                "Arena status height fixture no longer reaches the authored hint row with its complete shadow");
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                use_font(d, "menu_stage_status_hint_overflow", entry.key);
+            }, &world);
+        }
+        const auto exact = [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
+            for (const auto& entry : stage_text) { d["menu_text"]["stage"][entry.key].SetString("Fit"); }
+        };
+        const auto left = [&](rapidjson::Document& d)
+        {
+            exact(d);
+            d["main_menu"]["stage_select"]["briefing_padding"]["x"].SetFloat(30.0f);
+            d["main_menu"]["stage_select"]["briefing"]["spacing"]["x"].SetFloat(-5.0f);
+        };
+        variants.load(left).validate_resources(world.render, world.audio);
+        variants.rejects("stage.browse_status", [&](rapidjson::Document& d)
+        {
+            left(d);
+            d["main_menu"]["stage_select"]["briefing"]["spacing"]["x"].SetFloat(-5.0625f);
+        }, &world);
+        const auto bottom = [&](rapidjson::Document& d)
+        {
+            exact(d);
+            // Status is at723, its unscaled text/shadow is21 high. The fixed
+            // status may touch panel bottom744 before the authored hint row798.
+            d["main_menu"]["stage_select"]["briefing"]["size"]["y"].SetFloat(499.0f);
+        };
+        variants.load(bottom).validate_resources(world.render, world.audio);
+        variants.rejects("stage.browse_status", [&](rapidjson::Document& d)
+        {
+            bottom(d);
+            d["main_menu"]["stage_select"]["briefing"]["size"]["y"].SetFloat(498.75f);
+        }, &world);
+        const auto negative = [&](rapidjson::Document& d)
+        {
+            exact(d);
+            d["main_menu"]["stage_select"]["briefing_padding"]["x"].SetFloat(1.5f);
+            d["menu_style"]["shadow"]["detail_offset"]["x"].SetFloat(-1.5f);
+            d["menu_style"]["shadow"]["detail_offset"]["y"].SetFloat(-1.5f);
+        };
+        variants.load(negative).validate_resources(world.render, world.audio);
+        variants.rejects("stage.browse_status", [&](rapidjson::Document& d)
+        {
+            negative(d);
+            d["menu_style"]["shadow"]["detail_offset"]["x"].SetFloat(-1.75f);
+        }, &world);
+        struct ScreenEdge { const char* axis; float position; float outside; };
+        // Shift the panel with the status: panel containment alone must not
+        // make an offscreen status valid. The complete shadow touches design
+        // edges even when the larger backing panel extends beyond them.
+        const ScreenEdge screen_edges[]{ { "x", -32.0f, -32.25f }, { "x", 1863.0f, 1863.25f },
+            { "y", -478.0f, -478.25f }, { "y", 581.0f, 581.25f } };
+        for (const auto& edge : screen_edges)
+        {
+            const auto contact = [&](rapidjson::Document& d)
+            {
+                exact(d);
+                d["main_menu"]["stage_select"]["briefing"]["position"][edge.axis].SetFloat(edge.position);
+            };
+            variants.load(contact).validate_resources(world.render, world.audio);
+            variants.rejects("stage.browse_status", [&](rapidjson::Document& d)
+            {
+                contact(d);
+                d["main_menu"]["stage_select"]["briefing"]["position"][edge.axis].SetFloat(edge.outside);
+            }, &world);
+        }
+        for (const char* axis : { "x", "y" })
+        {
+            for (const char* group : { "position", "spacing" })
+            {
+                variants.rejects("stage.browse_status", [&](rapidjson::Document& d)
+                {
+                    d["main_menu"]["stage_select"]["briefing"][group][axis].SetDouble(1e100);
+                }, &world);
+            }
+            variants.rejects("stage.browse_status", [&](rapidjson::Document& d)
+            {
+                d["menu_style"]["shadow"]["detail_offset"][axis].SetDouble(1e100);
+            }, &world);
+        }
+        const float infinity = std::numeric_limits<float>::infinity();
+        struct InvalidMeasure { const char* name; int width; int height; float x_offset; float y_offset; float line_spacing; };
+        const InvalidMeasure invalid_measures[]{
+            { "zero_width", 0, 20, 0.0f, 0.0f, 16.0f },
+            { "zero_height", 8, 0, 0.0f, 0.0f, 0.0f },
+            { "infinite_width", 8, 20, infinity, 0.0f, 16.0f },
+            { "infinite_height", 8, 20, 0.0f, infinity, 16.0f }
+        };
+        for (const auto& invalid : invalid_measures)
+        {
+            const std::string name = std::string("menu_stage_status_") + invalid.name;
+            add_font(name, invalid.width, invalid.height, invalid.x_offset, invalid.y_offset, invalid.line_spacing);
+            const auto size = world.render.measure_text(world.render.resolve_sprite_font(name), L"~");
+            require(!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f,
+                "Invalid arena status metrics fixture no longer measures a zero or nonfinite extent");
+            for (const auto& entry : stage_text)
+            {
+                variants.rejects(std::string("stage.") + entry.key, [&](rapidjson::Document& d)
+                {
+                    use_font(d, name, entry.key);
+                }, &world);
+            }
+        }
+    }
+
     void check_status_text(Variants& variants, World& world)
     {
         const auto normalized = variants.load([](rapidjson::Document& d)
@@ -2649,6 +2900,8 @@ int main(int argc, char** argv)
         check_value_fitting(variants, world);
         check_stage_random_fitting(variants, world);
         check_stage_random_bounds(variants, world);
+        check_stage_status_text(variants, world);
+        check_stage_status_bounds(variants, world);
         check_title_and_home_text(variants, world, defaults);
         check_title_and_home_bounds(variants, world);
         check_help_text(variants, world);
@@ -2661,7 +2914,7 @@ int main(int argc, char** argv)
         check_prompt_bar(world, defaults);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
-            "authored OptionRow value fitting, shadow-inclusive Random arena fitting and actual PromptBar copy/measurement compatibility.\n";
+            "authored OptionRow value fitting, shadow-inclusive Random arena fitting, unscaled arena statuses and actual PromptBar copy/measurement compatibility.\n";
         return 0;
     }
     catch (const std::exception& error)

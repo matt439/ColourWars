@@ -108,6 +108,9 @@ namespace
 		text.end.match_complete = read_menu_line(end, "match_complete");
 		text.end.round_complete = read_menu_line(end, "round_complete");
 		text.end.series_complete = read_menu_line(end, "series_complete");
+		const JsonValue stage = json.object("stage");
+		text.stage.browse_status = read_menu_line(stage, "browse_status");
+		text.stage.locked_status = read_menu_line(stage, "locked_status");
 		const JsonValue headings = json.object("headings");
 		for (size_t index = 0; index < text.headings.size(); ++index)
 		{
@@ -2265,6 +2268,34 @@ void Presentation::validate_resources(const RenderResources& render,
 		throw std::runtime_error(this->source_path_ + ": " + random_name_key +
 			" must fit its stage-name design area above the preview edge including its scaled shadow.");
 	}
+	const RectangleF stage_briefing(stage.briefing.position, stage.briefing.size);
+	const Vector2F stage_info = stage.briefing.position + stage.briefing_padding;
+	const Vector2F stage_status_position = stage_info + stage.briefing.spacing * 6.0f;
+	const float stage_hint_top = (stage_info + stage.briefing.spacing * 7.0f).y;
+	const auto check_stage_status = [&](const char* role, const std::wstring& text)
+	{
+		const std::string key = std::string("menu_text.stage.") + role;
+		const Vector2F size = fixed_menu_size(key, text, this->menu_.detail_font);
+		const Vector2F shadow = this->menu_.detail_shadow_offset;
+		const RectangleF bounds = RectangleF::union_of(RectangleF(stage_status_position, size),
+			RectangleF(stage_status_position + shadow, size));
+		// Status text keeps its unscaled font. Padding locates its origin;
+		// unlike the following hint, it has no inset-width fitting rule.
+		if (!std::isfinite(stage_briefing.x) || !std::isfinite(stage_briefing.y) ||
+			!std::isfinite(stage_briefing.width) || !std::isfinite(stage_briefing.height) ||
+			stage_briefing.width <= 0.0f || stage_briefing.height <= 0.0f ||
+			!std::isfinite(stage_hint_top) || !std::isfinite(shadow.x) || !std::isfinite(shadow.y) ||
+			!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
+			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
+			bounds.width <= 0.0f || bounds.height <= 0.0f || !stage_briefing.contains(bounds) ||
+			!RectangleF(0.0f, 0.0f, 1920.0f, 1080.0f).contains(bounds) || bounds.bottom() > stage_hint_top)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit unscaled inside the briefing panel and design area before the authored hint row origin, including its shadow.");
+		}
+	};
+	check_stage_status("browse_status", this->menu_text_.stage.browse_status);
+	check_stage_status("locked_status", this->menu_text_.stage.locked_status);
 	const Vector2F options_value_limit((1920.0f + main.options_box_size.x) / 2.0f -
 		main.art.shadow_offset - main.art.focus_padding.x - main.options_value_x,
 		main.options_spacing.y - main.art.focus_padding.y * 2.0f);

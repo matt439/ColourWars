@@ -111,7 +111,7 @@ The required `menu_text` object stores the shared menu brand, eleven headings,
 seventeen complete prompt-bar legends, thirty-six row labels, a solo-practice
 hint, five Title/Home strings, three Controls/Pad Sticks help strings, eight
 fixed save-status messages, three shared setting values, two Pause confirmation
-questions and three End completion headings:
+questions, three End completion headings and two Stage Select status messages:
 
 | JSON path | Required keys |
 |---|---|
@@ -127,6 +127,7 @@ questions and three End completion headings:
 | `menu_text.values` | `on`, `off`, `random` |
 | `menu_text.confirmations` | `restart`, `quit` |
 | `menu_text.end` | `match_complete`, `round_complete`, `series_complete` |
+| `menu_text.stage` | `browse_status`, `locked_status` |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
 normalization and the supported U+0020 to U+007E printable content range after
@@ -699,8 +700,8 @@ changes do not alter boolean choices, palette selection, cycling, disabled
 fullscreen resolution, Apply/Back behavior, save identifiers or persistence.
 Fixed palette labels remain in the existing palette data and are still read
 live. Resolution and
-numeric/percentage formatting, default-deadzone notation, remaining stage
-Random/briefing copy, connection/readout text, player-specific Pause titles,
+numeric/percentage formatting, default-deadzone notation, stage
+navigation/hint/briefing copy, connection/readout text, player-specific Pause titles,
 session continuation text and composed match/results copy remain separate work under GAP#8.4.
 
 ### Stage Select Random display name
@@ -739,8 +740,45 @@ preserving the existing behavior; fitted size and shadow offset are not page
 snapshots. Selection colours continue to read live presentation values. The
 string stays outside numeric `tune`. It does not change eligible stages, cycling, lock/unlock,
 confirm-again start, random selection or RNG draws. Navigation text such as
-`<   SURPRISE ME   >`, the Random availability count, lock/status hints and
+`<   SURPRISE ME   >`, the Random availability count, lock/unlock hints and
 composed briefing text remain separate C++ copy under GAP#8.4.
+
+### Stage Select status messages
+
+Two required `menu_text.stage` strings supply the existing selection status:
+
+| Key | Shipped text | Use |
+|---|---|---|
+| `browse_status` | `FIND YOUR ARENA` | Unconfirmed stage choice |
+| `locked_status` | `ARENA LOCKED` | Confirmed stage choice |
+
+The shared normalized, nonblank, single-line content rules apply. Status text
+uses `menu_style.fonts.detail`, shipped as `gill_sans_mt_bold_36`, with the
+existing `UiTextDropShadow` style and no fitting scale. Startup checks actual
+font glyphs and finite, positive measured text and union sizes. The text starts
+at `main_menu.stage_select.briefing.position` plus `briefing_padding` plus six
+times `briefing.spacing`; its shadow has the same size and starts at that
+position plus `menu_style.shadow.detail_offset`. The complete union includes
+negative shadow extents. The briefing panel and status union must have finite,
+positive sizes, and their positions and shadow offsets must be finite. The
+complete union must fit both the full briefing panel and the full 1920 by 1080
+design area. Its bottom must be at or above the authored hint row's y position:
+the briefing position plus padding plus seven times `briefing.spacing`.
+Equality is accepted. This uses the full panel rather than a padding inset,
+preserving the shipped status wording and layout. The status retains its
+unscaled bounds without wrapping, automatic shrinking or upscaling. The hint
+boundary is its authored row origin, rather than measured hint glyphs.
+
+Each page takes these messages from its captured `MenuText`. Its status widget
+retains the resolved detail font, position, shadow offset and shadow colour
+from construction. An open page keeps those values through presentation
+replacement, including when cycling or locking/unlocking refreshes its text;
+reopening adopts the edits. A refresh still reads the current selected or
+heading foreground colour, preserving the existing behavior. These complete
+strings remain outside numeric `tune`, introduce no placeholders and do not
+change eligible stages, random selection, RNG draws, navigation, confirmation,
+unlocking or confirm-again start. The navigation, hint and composed briefing
+strings remain separate C++ text under GAP#8.4.
 
 ## Verification and boundary
 
@@ -772,6 +810,9 @@ resetting the scale before shorter values, all nine contexts and actual
 paper/row/help-column/status boundaries.
 Stage Select's shared Random name adds actual item-font and text-plus-shadow
 checks with its distinct width-only fit.
+Its two fixed selection statuses add required-key, normalization, actual
+detail-font and unscaled signed-shadow checks inside the full briefing panel
+and design area, with the authored hint row as the lower boundary.
 Debug-console acceptance checks layout edit scopes, rollback and reset.
 
 The native painter checks exercise real page construction, copied geometry,
@@ -793,6 +834,9 @@ and Mode/Player Count row labels and hint on real pages, including their capture
 text/look when a page updates its prompt or reopens. It also checks the shared
 Random stage name with an eligible-stage fixture, including text/shadow fitting,
 cycling, lock/unlock, confirm-again start and presentation replacement/reopening.
+The same scope checks both authored Stage Select statuses, their retained
+text/font/position/shadow through source replacement, live foreground colour
+refresh and newly opened pages.
 `PauseMenuOnly` exercises the authored initial/confirmation labels and questions
 through repeated and interrupted pause, restart and quit flows, including safe
 No focus and question/detail-font snapshots across presentation replacement and
@@ -824,10 +868,10 @@ the name/artwork part of GAP#8.4, and `menu_text` implements shared headings,
 control legends, Home/Options/Credits, Mode/Player Count, Pause, static End and
 Controls/Pad Sticks row labels and help, the solo-practice hint, fixed
 Title/Home copy, fixed settings save-status messages, shared On/Off/Random
-setting values, Stage Select's shared Random display name, fixed Pause
-confirmation questions and End completion headings.
+setting values, Stage Select's shared Random display name and fixed selection
+statuses, fixed Pause confirmation questions and End completion headings.
 Other setting values,
-remaining stage Random/briefing copy, connection/readout text, player-specific Pause titles,
+stage navigation/hint/briefing copy, connection/readout text, player-specific Pause titles,
 session continuation text, composed match/results text and other
 player-visible C++ text remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical
