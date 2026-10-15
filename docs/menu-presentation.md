@@ -112,7 +112,8 @@ seventeen complete prompt-bar legends, thirty-six row labels, a solo-practice
 hint, five Title/Home strings, three Controls/Pad Sticks help strings, eight
 fixed save-status messages, three shared setting values, two Pause confirmation
 questions, three End completion headings, two Stage Select status messages,
-four fixed Stage Select briefing strings and three fixed Stage Select cues:
+four fixed Stage Select briefing strings, three fixed Stage Select cues and
+two fixed Stage Select mode labels:
 
 | JSON path | Required keys |
 |---|---|
@@ -128,7 +129,7 @@ four fixed Stage Select briefing strings and three fixed Stage Select cues:
 | `menu_text.values` | `on`, `off`, `random` |
 | `menu_text.confirmations` | `restart`, `quit` |
 | `menu_text.end` | `match_complete`, `round_complete`, `series_complete` |
-| `menu_text.stage` | `browse_status`, `locked_status`, `briefing_label`, `goal`, `solo_objective`, `versus_objective`, `random_navigation`, `locked_hint`, `browse_hint` |
+| `menu_text.stage` | `browse_status`, `locked_status`, `briefing_label`, `goal`, `solo_objective`, `versus_objective`, `random_navigation`, `locked_hint`, `browse_hint`, `solo_mode`, `single_match_mode` |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
 normalization and the supported U+0020 to U+007E printable content range after
@@ -702,7 +703,7 @@ fullscreen resolution, Apply/Back behavior, save identifiers or persistence.
 Fixed palette labels remain in the existing palette data and are still read
 live. Resolution and
 numeric/percentage formatting, default-deadzone notation, stage
-composed navigation/count hints and mode/roster copy, connection/readout text, player-specific Pause titles,
+composed navigation/count hints, best-of mode and roster copy, connection/readout text, player-specific Pause titles,
 session continuation text and composed match/results copy remain separate work under GAP#8.4.
 
 ### Stage Select Random display name
@@ -741,7 +742,7 @@ preserving the existing behavior; fitted size and shadow offset are not page
 snapshots. Selection colours continue to read live presentation values. The
 string stays outside numeric `tune`. It does not change eligible stages, cycling, lock/unlock,
 confirm-again start, random selection or RNG draws. Numbered Arena navigation,
-the Random availability count and composed mode/roster text remain separate
+the Random availability count and composed best-of mode/roster text remain separate
 C++ copy under GAP#8.4.
 
 ### Stage Select status messages
@@ -778,7 +779,7 @@ reopening adopts the edits. A refresh still reads the current selected or
 heading foreground colour, preserving the existing behavior. These complete
 strings remain outside numeric `tune`, introduce no placeholders and do not
 change eligible stages, random selection, RNG draws, navigation, confirmation,
-unlocking or confirm-again start. Composed navigation/count hints and mode/roster
+unlocking or confirm-again start. Composed navigation/count hints and best-of mode/roster
 strings remain separate C++ text under GAP#8.4.
 
 ### Fixed Stage Select briefing copy
@@ -837,8 +838,38 @@ and foreground ink through presentation replacement and selection refreshes;
 reopening adopts the edits. These strings stay outside numeric `tune` and
 introduce no placeholders or runtime formatting. They do not change match mode,
 roster, stage eligibility, navigation, locking, starting, random selection or
-RNG draws. Composed mode/roster copy and navigation/count hints remain C++ text
+RNG draws. Composed best-of mode/roster copy and navigation/count hints remain C++ text
 under GAP#8.4.
+
+### Fixed Stage Select mode labels
+
+Two more required `menu_text.stage` strings supply the fixed mode labels:
+
+| Key | Shipped text | Use |
+|---|---|---|
+| `solo_mode` | `SOLO PRACTICE` | One player, retaining precedence over the best-of value |
+| `single_match_mode` | `SINGLE MATCH` | Multiple players with best-of equal to one |
+
+Both use the normalized, nonblank, single-line rules. They retain the actual
+`menu_style.fonts.detail`, shipped as `gill_sans_mt_bold_36`, and the unscaled
+`UiTextDropShadow` style. The text starts at the briefing position plus padding
+plus `briefing.spacing`, and its shadow has the same size at that position plus
+`menu_style.shadow.detail_offset`. Startup checks the actual font glyphs and
+finite, positive measured text and signed-shadow union sizes, with finite
+positions and shadow offsets. The complete union must fit the full 1920 by
+1080 design area and stay within the briefing panel's vertical span. Its bottom
+must be at or above the authored row-two origin, calculated from the same
+briefing position plus padding plus twice `briefing.spacing`. Equality is
+accepted. The labels keep their unscaled bounds without wrapping, shrinking
+or upscaling.
+
+Each page takes these labels from its captured `MenuText` during construction
+and retains the chosen text, resolved detail font, position, foreground ink,
+shadow offset and shadow colour through presentation replacement and selection
+refreshes. Reopening adopts the edits. The labels stay outside numeric `tune`
+and introduce no placeholders. They preserve the existing solo-first branch,
+match settings and mode selection. The multiplayer series branch continues to
+compose `BEST OF ` with the best-of value in C++.
 
 ### Fixed Stage Select navigation and hints
 
@@ -949,6 +980,9 @@ and design area, with the authored hint row as the lower boundary.
 The four fixed briefing roles add required-key, normalized line/block, actual
 brand-font and unscaled signed-shadow checks within the design area, the
 briefing panel's vertical span and their authored lower row boundaries.
+The two fixed mode labels add required-key, normalized-line and actual
+detail-font checks using their unscaled signed-shadow bounds within the design
+area, panel vertical span and authored row-two boundary.
 Fixed cue coverage checks the navigation line and authored hint blocks against
 their actual detail/brand fonts and signed shadows, including the hints'
 distinct width-only fit. It also checks navigation's design/footer bounds and
@@ -986,6 +1020,9 @@ gamepad fixture supplies connected participants for the two-player briefing.
 The full painter without the scripted-pad test macro checks the one-player
 briefing and explicitly skips that two-player fixture. Physical-pad acceptance
 remains open.
+The focused scope also checks the two fixed mode labels, their retained
+text/font/geometry/shadow/ink and reopening, solo precedence and the unchanged
+best-of composition.
 The same focused scope checks the fixed Random navigation and locked/browse
 hints, retained text/font/position/ink/shadow properties, live hint fit geometry
 on actual selection refreshes, reopening and the unchanged composed navigation
@@ -1022,10 +1059,10 @@ control legends, Home/Options/Credits, Mode/Player Count, Pause, static End and
 Controls/Pad Sticks row labels and help, the solo-practice hint, fixed
 Title/Home copy, fixed settings save-status messages, shared On/Off/Random
 setting values, Stage Select's shared Random display name, fixed selection
-statuses, fixed briefing copy and fixed navigation/hints, fixed Pause confirmation questions and End
+statuses, fixed briefing copy, fixed mode labels and fixed navigation/hints, fixed Pause confirmation questions and End
 completion headings.
 Other setting values,
-composed stage navigation/count hints and mode/roster copy, connection/readout text, player-specific Pause titles,
+composed stage navigation/count hints, best-of mode and roster copy, connection/readout text, player-specific Pause titles,
 session continuation text, composed match/results text and other
 player-visible C++ text remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical

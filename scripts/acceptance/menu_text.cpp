@@ -107,6 +107,7 @@ namespace
     };
     struct StageBriefingText {
         const char* key; const wchar_t* text; std::wstring MenuStageText::* field; int row; int next_row; bool multiline;
+        bool detail = false;
     };
     constexpr StageBriefingText stage_briefing_text[]{
         { "briefing_label", L"MATCH SETUP", &MenuStageText::briefing_label, 0, 1, false },
@@ -114,8 +115,15 @@ namespace
         { "solo_objective", L"Make the arena your canvas.\nTry weapons. Cover more ground.",
             &MenuStageText::solo_objective, 4, 6, true },
         { "versus_objective", L"Cover the arena in your colour.\nMost painted surface wins.",
-            &MenuStageText::versus_objective, 4, 6, true }
+            &MenuStageText::versus_objective, 4, 6, true },
+        { "solo_mode", L"SOLO PRACTICE", &MenuStageText::solo_mode, 1, 2, false, true },
+        { "single_match_mode", L"SINGLE MATCH", &MenuStageText::single_match_mode, 1, 2, false, true }
     };
+    void select_stage_briefing_font(rapidjson::Document& d, const StageBriefingText& entry, const char* name)
+    {
+        if (entry.detail) { d["menu_style"]["fonts"]["detail"].SetString(name, d.GetAllocator()); }
+        else { d["menu_style"]["chrome"]["brand_font"].SetString(name, d.GetAllocator()); }
+    }
     struct StageCueText { const char* key; const wchar_t* text; std::wstring MenuStageText::* field; bool hint; };
     constexpr StageCueText stage_cue_text[]{
         { "random_navigation", L"<   SURPRISE ME   >", &MenuStageText::random_navigation, false },
@@ -2379,7 +2387,7 @@ namespace
             }
             variants.rejects(field, [&](rapidjson::Document& d)
             {
-                d["menu_style"]["chrome"]["brand_font"].SetString("menu_text_limited");
+                select_stage_briefing_font(d, entry, "menu_text_limited");
                 d["menu_text"]["stage"][entry.key].SetString("Glyph~");
             }, &world);
             variants.rejects(field, [&](rapidjson::Document& d)
@@ -2395,21 +2403,26 @@ namespace
                 StageSelectPresentation stage = look.main_menu().stage_select;
                 std::wstring source = look.menu_text().stage.*entry.field;
                 const auto retained = source;
-                const auto font = world.render.resolve_sprite_font(style.brand_font);
+                const auto font_name = entry.detail ? style.detail_font : style.brand_font;
+                const auto font = world.render.resolve_sprite_font(font_name);
                 const auto measured = world.render.measure_text(font, source);
                 const auto point = stage.briefing.position + stage.briefing_padding +
                     stage.briefing.spacing * static_cast<float>(entry.row);
                 const auto shadow = style.detail_shadow_offset;
-                UiTextDropShadow text(entry.key, source, style.brand_font, point, &world.render,
-                    style.highlight, style.shadow_colour, shadow);
+                const auto shadow_colour = style.shadow_colour;
+                UiTextDropShadow text(entry.key, source, font_name, point, &world.render,
+                    entry.detail ? style.heading_colour : style.highlight, shadow_colour, shadow);
                 source = L"Changed after construction";
                 style.brand_font = "gill_sans_mt_bold_48";
+                style.detail_font = "gill_sans_mt_bold_48";
                 style.detail_shadow_offset = mattmath::Vector2F(10.0f, 10.0f);
+                style.shadow_colour = style.warning;
                 stage.briefing.position += mattmath::Vector2F(40.0f, 40.0f);
                 const auto expected = mattmath::RectangleF::union_of(mattmath::RectangleF(point, measured),
                     mattmath::RectangleF(point + shadow, measured));
                 require(text.text() == retained && text.text_bounds() == mattmath::RectangleF(point, measured) &&
                     text.bounds() == expected && text.shadow_offset() == shadow && text.shadow_scale() == 1.0f &&
+                    text.shadow_color() == shadow_colour &&
                     std::isfinite(expected.width) && std::isfinite(expected.height) && expected.width > 0.0f && expected.height > 0.0f,
                     std::string("Actual arena briefing lost its copied text, captured font/position/shadow or unscaled bounds: ") + entry.key);
                 text.set_hidden(true);
@@ -2430,6 +2443,7 @@ namespace
             const auto authored = variants.load([&](rapidjson::Document& d)
             {
                 d["menu_style"]["chrome"]["brand_font"].SetString("menu_text_exact");
+                d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
                 for (const auto& entry : stage_briefing_text)
                 {
                     const std::string text = entry.multiline ? "Fit\nFit\nFit\nFit\nFit\nFit\nFit" : std::string(80, 'F');
@@ -2468,11 +2482,11 @@ namespace
             }
             world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), line_spacing));
         };
-        const auto use_font = [](rapidjson::Document& d, const std::string& name, const char* key)
+        const auto use_font = [](rapidjson::Document& d, const std::string& name, const StageBriefingText& entry)
         {
-            d["menu_style"]["chrome"]["brand_font"].SetString(name.c_str(), d.GetAllocator());
-            for (const auto& entry : stage_briefing_text) { d["menu_text"]["stage"][entry.key].SetString("Fit"); }
-            d["menu_text"]["stage"][key].SetString("~");
+            select_stage_briefing_font(d, entry, name.c_str());
+            for (const auto& other : stage_briefing_text) { d["menu_text"]["stage"][other.key].SetString("Fit"); }
+            d["menu_text"]["stage"][entry.key].SetString("~");
         };
         add_font("menu_stage_briefing_width_edge", 657, 20);
         add_font("menu_stage_briefing_width_overflow", 658, 20);
@@ -2481,7 +2495,7 @@ namespace
             const std::string field = std::string("stage.") + entry.key;
             const auto width = variants.load([&](rapidjson::Document& d)
             {
-                use_font(d, "menu_stage_briefing_width_edge", entry.key);
+                use_font(d, "menu_stage_briefing_width_edge", entry);
             });
             width.validate_resources(world.render, world.audio);
             const auto& stage = width.main_menu().stage_select;
@@ -2491,19 +2505,19 @@ namespace
                 "Arena briefing width fixture no longer touches the full design's inclusive right edge");
             variants.rejects(field, [&](rapidjson::Document& d)
             {
-                use_font(d, "menu_stage_briefing_width_overflow", entry.key);
+                use_font(d, "menu_stage_briefing_width_overflow", entry);
             }, &world);
             const int height = (entry.next_row - entry.row) * 75 - 1;
             const std::string font = std::string("menu_stage_briefing_next_") + entry.key;
             add_font(font, 8, height);
-            const auto next = variants.load([&](rapidjson::Document& d) { use_font(d, font, entry.key); });
+            const auto next = variants.load([&](rapidjson::Document& d) { use_font(d, font, entry); });
             next.validate_resources(world.render, world.audio);
             require(static_cast<float>(height) + next.menu().detail_shadow_offset.y ==
                 next.main_menu().stage_select.briefing.spacing.y * static_cast<float>(entry.next_row - entry.row),
                 "Arena briefing boundary no longer reaches the next authored row with its complete shadow");
             const std::string overflow = font + "_overflow";
             add_font(overflow, 8, height + 1);
-            variants.rejects(field, [&](rapidjson::Document& d) { use_font(d, overflow, entry.key); }, &world);
+            variants.rejects(field, [&](rapidjson::Document& d) { use_font(d, overflow, entry); }, &world);
         }
         const auto exact = [](rapidjson::Document& d)
         {
@@ -2565,7 +2579,7 @@ namespace
             {
                 variants.rejects(std::string("stage.") + entry.key, [&](rapidjson::Document& d)
                 {
-                    use_font(d, name, entry.key);
+                    use_font(d, name, entry);
                 }, &world);
             }
         }

@@ -127,6 +127,8 @@ struct MenuStageText
 	std::wstring random_navigation;
 	std::wstring locked_hint;
 	std::wstring browse_hint;
+	std::wstring solo_mode;
+	std::wstring single_match_mode;
 };
 
 // Fixed roles select display text; navigation and accepted inputs remain code.

@@ -118,6 +118,8 @@ namespace
 		text.stage.random_navigation = read_menu_line(stage, "random_navigation");
 		text.stage.locked_hint = read_menu_block(stage, "locked_hint");
 		text.stage.browse_hint = read_menu_block(stage, "browse_hint");
+		text.stage.solo_mode = read_menu_line(stage, "solo_mode");
+		text.stage.single_match_mode = read_menu_line(stage, "single_match_mode");
 		const JsonValue headings = json.object("headings");
 		for (size_t index = 0; index < text.headings.size(); ++index)
 		{
@@ -2303,10 +2305,11 @@ void Presentation::validate_resources(const RenderResources& render,
 	};
 	check_stage_status("browse_status", this->menu_text_.stage.browse_status);
 	check_stage_status("locked_status", this->menu_text_.stage.locked_status);
-	const auto check_stage_briefing = [&](const char* role, const std::wstring& text, float line, float next_line)
+	const auto check_stage_briefing = [&](const char* role, const std::wstring& text, const std::string& font,
+		float line, float next_line)
 	{
 		const std::string key = std::string("menu_text.stage.") + role;
-		const Vector2F size = fixed_menu_size(key, text, this->menu_.brand_font);
+		const Vector2F size = fixed_menu_size(key, text, font);
 		const Vector2F position = stage_info + stage.briefing.spacing * line;
 		const Vector2F shadow = this->menu_.detail_shadow_offset;
 		const RectangleF bounds = RectangleF::union_of(RectangleF(position, size), RectangleF(position + shadow, size));
@@ -2325,10 +2328,12 @@ void Presentation::validate_resources(const RenderResources& render,
 				" must fit unscaled inside the design area and briefing vertical span before the next authored row origin, including its shadow.");
 		}
 	};
-	check_stage_briefing("briefing_label", this->menu_text_.stage.briefing_label, 0.0f, 1.0f);
-	check_stage_briefing("goal", this->menu_text_.stage.goal, 3.0f, 4.0f);
-	check_stage_briefing("solo_objective", this->menu_text_.stage.solo_objective, 4.0f, 6.0f);
-	check_stage_briefing("versus_objective", this->menu_text_.stage.versus_objective, 4.0f, 6.0f);
+	check_stage_briefing("briefing_label", this->menu_text_.stage.briefing_label, this->menu_.brand_font, 0.0f, 1.0f);
+	check_stage_briefing("goal", this->menu_text_.stage.goal, this->menu_.brand_font, 3.0f, 4.0f);
+	check_stage_briefing("solo_objective", this->menu_text_.stage.solo_objective, this->menu_.brand_font, 4.0f, 6.0f);
+	check_stage_briefing("versus_objective", this->menu_text_.stage.versus_objective, this->menu_.brand_font, 4.0f, 6.0f);
+	check_stage_briefing("solo_mode", this->menu_text_.stage.solo_mode, this->menu_.detail_font, 1.0f, 2.0f);
+	check_stage_briefing("single_match_mode", this->menu_text_.stage.single_match_mode, this->menu_.detail_font, 1.0f, 2.0f);
 	const auto finite_stage_rectangle = [](const RectangleF& bounds)
 	{
 		return std::isfinite(bounds.x) && std::isfinite(bounds.y) &&

@@ -9,24 +9,27 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         std::wstring goal;
         std::wstring solo;
         std::wstring versus;
+        std::wstring solo_mode;
+        std::wstring single_match_mode;
     };
     const Words legacy{ L"MATCH SETUP", L"PAINT TO WIN",
         L"Make the arena your canvas.\nTry weapons. Cover more ground.",
-        L"Cover the arena in your colour.\nMost painted surface wins." };
+        L"Cover the arena in your colour.\nMost painted surface wins.", L"SOLO PRACTICE", L"SINGLE MATCH" };
     struct BriefingCase
     {
         int players;
         int best_of;
         const char* name;
-        const wchar_t* mode;
+        const wchar_t* composed_mode;
         const wchar_t* roster;
         std::wstring Words::* objective;
+        std::wstring Words::* fixed_mode;
     };
     const std::array<BriefingCase, 4> cases{ {
-        { 1, 1, "solo", L"SOLO PRACTICE", L"1 PLAYER", &Words::solo },
-        { 2, 1, "versus-single", L"SINGLE MATCH", L"2 PLAYERS / 2 TEAMS", &Words::versus },
-        { 2, 3, "versus-best-three", L"BEST OF 3", L"2 PLAYERS / 2 TEAMS", &Words::versus },
-        { 2, 5, "versus-best-five", L"BEST OF 5", L"2 PLAYERS / 2 TEAMS", &Words::versus } } };
+        { 1, 1, "solo", nullptr, L"1 PLAYER", &Words::solo, &Words::solo_mode },
+        { 2, 1, "versus-single", nullptr, L"2 PLAYERS / 2 TEAMS", &Words::versus, &Words::single_match_mode },
+        { 2, 3, "versus-best-three", L"BEST OF 3", L"2 PLAYERS / 2 TEAMS", &Words::versus, nullptr },
+        { 2, 5, "versus-best-five", L"BEST OF 5", L"2 PLAYERS / 2 TEAMS", &Words::versus, nullptr } } };
     const Presentation original = presentation;
     Save preferences; auto& play = const_cast<PlaySettings&>(preferences.play_settings());
     play.music_volume = play.sfx_volume = 0;
@@ -130,9 +133,11 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
             float following;
             Colour ink;
         };
+        const std::wstring mode = fixture.fixed_mode != nullptr ? words.*fixture.fixed_mode :
+            std::wstring(fixture.composed_mode);
         const std::array<ReferenceRow, 5> rows{ {
             { "briefing-label", words.label, style.brand_font, 0.0f, 1.0f, style.highlight },
-            { "mode", fixture.mode, style.detail_font, 1.0f, 2.0f, style.heading_colour },
+            { "mode", mode, style.detail_font, 1.0f, 2.0f, style.heading_colour },
             { "roster", fixture.roster, style.brand_font, 2.0f, 3.0f, style.unhighlight },
             { "goal", words.goal, style.brand_font, 3.0f, 4.0f, style.highlight },
             { "objective", words.*fixture.objective, style.brand_font, 4.0f, 6.0f, style.unhighlight } } };
@@ -221,14 +226,15 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         }
     }
     const Words old_words{ L"PLAN~", L"COVER~", L"Try~ tools.\nMark the floor.",
-        L"Paint~ the arena.\nMost surface wins." };
+        L"Paint~ the arena.\nMost surface wins.", L"SOLO~", L"MATCH~" };
     const Words new_words{ L"ROUND PLAN", L"PAINT THE FLOOR", L"Try the tools.\nCover the arena.",
-        L"Cover the arena.\nMore surface wins." };
+        L"Cover the arena.\nMore surface wins.", L"PRACTICE", L"ONE MATCH" };
     const auto with_words = [&](const Words& words)
     {
         Presentation result = original; auto& text = const_cast<MenuText&>(result.menu_text()).stage;
         text.briefing_label = words.label; text.goal = words.goal;
-        text.solo_objective = words.solo; text.versus_objective = words.versus; return result;
+        text.solo_objective = words.solo; text.versus_objective = words.versus;
+        text.solo_mode = words.solo_mode; text.single_match_mode = words.single_match_mode; return result;
     };
     Presentation old = with_words(old_words); old.validate_resources(*app.render_resources(), *app.audio_resources());
     const Font* source = app.render_resources()->font(
@@ -244,10 +250,25 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         std::make_unique<Font>(source->atlas(), std::move(glyphs), source->line_spacing()));
     require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(font_name), L"~"),
         "Briefing replacement brand font still contains the old copy glyph");
+    const Font* mode_source = app.render_resources()->font(
+        app.render_resources()->resolve_sprite_font(original.menu().detail_font));
+    std::vector<Glyph> mode_glyphs;
+    for (char32_t character = U' '; character < U'~'; ++character)
+    {
+        const Glyph* glyph = mode_source->find(character);
+        require(glyph != nullptr, "Briefing replacement detail font lacks a baseline printable glyph");
+        mode_glyphs.push_back(*glyph);
+    }
+    const std::string mode_font = "acceptance_stage_briefing_mode_without_tilde";
+    app.render_resources()->add_font(mode_font, std::make_unique<Font>(mode_source->atlas(),
+        std::move(mode_glyphs), mode_source->line_spacing()));
+    require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(mode_font), L"~"),
+        "Briefing replacement detail font still contains the old mode glyph");
     Presentation next = with_words(new_words); auto& next_style = const_cast<MenuStyle&>(next.menu());
-    next_style.brand_font = font_name; next_style.detail_shadow_offset = Vector2F(4.0f, 3.0f);
+    next_style.brand_font = font_name; next_style.detail_font = mode_font;
+    next_style.detail_shadow_offset = Vector2F(4.0f, 3.0f);
     next_style.shadow_colour = Colour(0.65f, 0.15f, 0.8f); next_style.highlight = Colour::cyan;
-    next_style.unhighlight = Colour::yellow;
+    next_style.unhighlight = Colour::yellow; next_style.heading_colour = Colour::magenta;
     const_cast<MainMenuPresentation&>(next.main_menu()).stage_select.briefing_padding += Vector2F(8.0f, 4.0f);
     next.validate_resources(*app.render_resources(), *app.audio_resources());
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
@@ -267,8 +288,8 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
             "Fixed briefing text checks changed their match context");
     }
     require(records.good(), "Stage briefing evidence write failed");
-    std::cout << "PASS actual fixed stage briefing: four independent legacy strings and adjacent mode/roster, "
+    std::cout << "PASS actual fixed stage briefing: six independent legacy strings, unchanged best-of mode and roster, "
         "solo and connected scripted versus single/best-three/best-five when enabled, six display sizes, "
-        "unscaled complete text/shadow bounds, captured text/brand font/position/shadow/ink through source "
+        "unscaled complete text/shadow bounds, captured text/brand and detail fonts/position/shadow/ink through source "
         "replacement/reopen/reversal and cycling/lock/unlock, unchanged plan and RNG; no physical pad claim\n";
 }

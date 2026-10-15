@@ -261,8 +261,8 @@ void MainMenuStageSelect::init()
 	const int best_of = this->level_settings()->best_of();
 	add_briefing("briefing_label", this->text().stage.briefing_label, style.brand_font, 0.0f,
 		style.highlight);
-	add_briefing("mode", solo ? L"SOLO PRACTICE" : best_of == 1 ?
-		L"SINGLE MATCH" : L"BEST OF " + std::to_wstring(best_of),
+	add_briefing("mode", solo ? this->text().stage.solo_mode : best_of == 1 ?
+		this->text().stage.single_match_mode : L"BEST OF " + std::to_wstring(best_of),
 		style.detail_font, 1.0f, style.heading_colour);
 	add_briefing("roster", std::to_wstring(this->player_count()) +
 		(solo ? L" PLAYER" : L" PLAYERS / 2 TEAMS"),
