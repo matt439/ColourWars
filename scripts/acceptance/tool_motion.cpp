@@ -267,7 +267,7 @@ namespace
                 world.tuning.player().size.x, world.tuning.player().size.y);
             auto weapon = world.weapon(WeaponType::roller);
             this->player = this->scene.add(std::make_unique<Player>(body, &world.tuning,
-                &world.presentation.movement_feedback(), &world.presentation.respawn_redraw(),
+                &world.presentation.movement_feedback(), &world.presentation.combat_feedback(), &world.presentation.respawn_redraw(),
                 &world.render, &world.audio, &world.preferences, 0, PlayerTeam::a,
                 WeaponType::roller, std::move(weapon), WeaponType::none, Colour::white,
                 Viewport{}, body.position()));

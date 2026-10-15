@@ -8,6 +8,7 @@
 #include "game/objects/player_input_data.h"
 #include "game/objects/weapon.h"
 #include "game/objects/movement_feedback.h"
+#include "game/objects/combat_feedback.h"
 #include "game/objects/movement_audio.h"
 #include "game/objects/respawn_redraw.h"
 #include "game/objects/figure_clothing.h"
@@ -89,6 +90,7 @@ public:
     Player(const mattmath::RectangleF& rectangle,
         const GameTuning* tuning,
         const MovementFeedbackPresentation* movement_feedback,
+        const CombatFeedbackPresentation* combat_feedback,
         const RespawnRedrawPresentation* respawn_redraw,
         labrador::RenderResources* render_resources,
         const labrador::AudioResources* audio_resources,
@@ -139,6 +141,7 @@ public:
     // support candidates whose callbacks an earlier separation made redundant.
     void end_contacts(std::span<const labrador::Contact> contacts = {});
     const MovementFeedback& movement_feedback() const;
+    const CombatFeedback& combat_feedback() const;
 
     // The equipped tool, including its current gameplay aim.
     const Weapon& primary_weapon() const;
@@ -238,6 +241,7 @@ private:
     FigureClothing clothing_;
     FigureAttachments attachments_;
     MovementFeedback movement_feedback_;
+    CombatFeedback combat_feedback_;
     MovementAudio movement_audio_;
     float movement_audio_dt_ = 0.0f;
     float movement_start_x_ = 0.0f;

@@ -329,6 +329,26 @@ struct MovementFeedbackPresentation
 	MovementBurstPresentation landing;
 };
 
+// Local, cosmetic contact accents and the fragments left where a figure pops.
+// These never change the player's collision, health, paint or respawn timing.
+struct CombatFeedbackPresentation
+{
+	bool enabled = true;
+	std::string sprite_sheet;
+	std::string fill_frame;
+	labrador::Colour highlight;
+	labrador::Colour keyline;
+	float hurt_duration = 0.0f;
+	float hurt_repeat_delay = 0.0f;
+	float hurt_width = 0.0f;
+	float hurt_reach = 0.0f;
+	float elimination_duration = 0.0f;
+	float elimination_spread = 0.0f;
+	float elimination_lift = 0.0f;
+	float particle_size = 0.0f;
+	float keyline_width = 0.0f;
+};
+
 struct FigureGripPresentation
 {
 	// World-space offsets from the weapon's actual draw pivot before rotation.
@@ -512,6 +532,7 @@ public:
 	const MatchPresentation& match() const;
 	const CameraPresentation& camera() const;
 	const MovementFeedbackPresentation& movement_feedback() const;
+	const CombatFeedbackPresentation& combat_feedback() const;
 	const FigurePresentation& figure() const;
 	const ToolMotionPresentation& tool_motion() const;
 	const RespawnRedrawPresentation& respawn_redraw() const;
@@ -537,6 +558,7 @@ private:
 	MatchPresentation match_;
 	CameraPresentation camera_;
 	MovementFeedbackPresentation movement_feedback_;
+	CombatFeedbackPresentation combat_feedback_;
 	FigurePresentation figure_;
 	ToolMotionPresentation tool_motion_;
 	RespawnRedrawPresentation respawn_redraw_;

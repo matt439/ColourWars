@@ -8,7 +8,7 @@ namespace
     {
         using namespace mattmath;
         return std::make_unique<Player>(RectangleF(Vector2F::ZERO, tuning.player().size),
-            &tuning, &world.presentation.movement_feedback(), &presentation,
+            &tuning, &world.presentation.movement_feedback(), &world.presentation.combat_feedback(), &presentation,
             &world.render, &world.audio, &world.preferences, device, PlayerTeam::a,
             WeaponType::sprayer, world.weapon(tuning, WeaponType::sprayer, index),
             WeaponType::none, Colour::blue, Viewport{}, Vector2F::ZERO,

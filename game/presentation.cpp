@@ -792,6 +792,28 @@ Presentation::Presentation(const char* path)
 			": strength must be at most one, full impact speed must cover minimum speed, "
 			"and particles must be at least one presentation pixel.");
 	}
+	const JsonValue combat = root.object("combat_feedback");
+	CombatFeedbackPresentation& contact = this->combat_feedback_;
+	contact.enabled = combat.boolean("enabled");
+	contact.sprite_sheet = combat.string("sprite_sheet");
+	contact.fill_frame = combat.string("fill_frame");
+	contact.highlight = read_colour(combat, "highlight");
+	contact.keyline = read_colour(combat, "keyline");
+	contact.hurt_duration = read_positive(combat, "hurt_duration");
+	contact.hurt_repeat_delay = read_positive(combat, "hurt_repeat_delay");
+	contact.hurt_width = read_positive(combat, "hurt_width");
+	contact.hurt_reach = read_positive(combat, "hurt_reach");
+	contact.elimination_duration = read_positive(combat, "elimination_duration");
+	contact.elimination_spread = read_positive(combat, "elimination_spread");
+	contact.elimination_lift = read_positive(combat, "elimination_lift");
+	contact.particle_size = read_positive(combat, "particle_size");
+	contact.keyline_width = read_positive(combat, "keyline_width");
+	if (contact.hurt_repeat_delay < contact.hurt_duration ||
+		contact.keyline_width * 2.0f >= std::min(contact.hurt_width, contact.particle_size))
+	{
+		throw std::runtime_error(combat.where() +
+			": repeat delay must cover the hurt duration and keylines must leave visible fill.");
+	}
 	this->figure_ = read_figure(root);
 	this->tool_motion_ = read_tool_motion(root);
 	this->respawn_redraw_ = read_respawn_redraw(root);
@@ -839,6 +861,11 @@ const MovementFeedbackPresentation& Presentation::movement_feedback() const
 	return this->movement_feedback_;
 }
 
+const CombatFeedbackPresentation& Presentation::combat_feedback() const
+{
+	return this->combat_feedback_;
+}
+
 const RespawnRedrawPresentation& Presentation::respawn_redraw() const
 {
 	return this->respawn_redraw_;
@@ -883,6 +910,8 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.frame("hud.fill_frame", this->hud_.sprite_sheet, this->hud_.fill_frame);
 	check.frame("movement_feedback.fill_frame", this->movement_feedback_.sprite_sheet,
 		this->movement_feedback_.fill_frame);
+	check.frame("combat_feedback.fill_frame", this->combat_feedback_.sprite_sheet,
+		this->combat_feedback_.fill_frame);
 	for (size_t index = 0; index < this->figure_.accent_frames.size(); ++index)
 	{
 		check.frame("figure.accent_frames[" + std::to_string(index) + "]", this->figure_.sprite_sheet,

@@ -61,6 +61,7 @@ namespace
         size_t emitted_projectiles = 0;
 
         Course(const GameTuning& tuning, const MovementFeedbackPresentation& feedback,
+            const CombatFeedbackPresentation& combat,
             const RespawnRedrawPresentation& redraw, RenderResources& resources,
             const AudioResources& audio, const PlaySettings& preferences,
             float bottom = 0.0f, const Vector2F& velocity = Vector2F::ZERO,
@@ -73,7 +74,7 @@ namespace
                 0, 0, Colour::white, tool, rectangle.center(),
                 &resources, &audio, &preferences);
             this->player = this->scene.add(std::make_unique<Player>(rectangle,
-                &tuning, &feedback, &redraw, &resources, &audio, &preferences, 0, PlayerTeam::a,
+                &tuning, &feedback, &combat, &redraw, &resources, &audio, &preferences, 0, PlayerTeam::a,
                 tool, std::move(weapon), WeaponType::none,
                 Colour::white, Viewport{}, spawn, velocity));
             this->scene.end_tick();
@@ -291,7 +292,7 @@ int main(int argc, char** argv)
         const auto course = [&](float bottom = 0.0f,
             const Vector2F& velocity = Vector2F::ZERO)
         {
-            return std::make_unique<Course>(tuning, feedback, presentation.respawn_redraw(),
+            return std::make_unique<Course>(tuning, feedback, presentation.combat_feedback(), presentation.respawn_redraw(),
                 render, audio, preferences,
                 bottom, velocity);
         };
@@ -510,7 +511,7 @@ int main(int argc, char** argv)
         for (const WeaponType tool : { WeaponType::sprayer, WeaponType::sniper,
             WeaponType::mister, WeaponType::bucket, WeaponType::roller })
         {
-            Course armed(tuning, feedback, redraw, render, audio, preferences,
+            Course armed(tuning, feedback, presentation.combat_feedback(), redraw, render, audio, preferences,
                 0.0f, Vector2F::ZERO, { 0, -120 }, tool);
             armed.floor();
             for (int tick = 0; tick < 65; ++tick) { armed.tick(); }
@@ -533,7 +534,7 @@ int main(int argc, char** argv)
             require(second_frame && armed.player->animation_state() == PlayerAnimationState::idle,
                 "firing skipped its recovery frame or failed to finish after release");
         }
-        Course cooldown(tuning, feedback, redraw, render, audio, preferences,
+        Course cooldown(tuning, feedback, presentation.combat_feedback(), redraw, render, audio, preferences,
             0.0f, Vector2F::ZERO, { 0, -120 }, WeaponType::sniper);
         cooldown.floor();
         for (int tick = 0; tick < 65; ++tick) { cooldown.tick(); }
@@ -554,7 +555,7 @@ int main(int argc, char** argv)
             "held input during a paid shot's cooldown restarted the firing clip");
         for (const WeaponType tool : { WeaponType::sprayer, WeaponType::roller })
         {
-            Course automatic(tuning, feedback, redraw, render, audio, preferences,
+            Course automatic(tuning, feedback, presentation.combat_feedback(), redraw, render, audio, preferences,
                 0.0f, Vector2F::ZERO, { 0, -120 }, tool);
             automatic.floor();
             automatic.tick();
@@ -580,7 +581,7 @@ int main(int argc, char** argv)
         for (const WeaponType tool : { WeaponType::sprayer, WeaponType::sniper,
             WeaponType::mister, WeaponType::bucket, WeaponType::roller })
         {
-            Course empty(empty_tank, feedback, redraw, render, audio, preferences,
+            Course empty(empty_tank, feedback, presentation.combat_feedback(), redraw, render, audio, preferences,
                 0.0f, Vector2F::ZERO, { 0, -120 }, tool);
             empty.floor();
             for (int tick = 0; tick < 90; ++tick)
@@ -629,8 +630,8 @@ int main(int argc, char** argv)
                 else { clip.AddMember("frame_time", 0.005f, json.GetAllocator()); }
             }
         });
-        Course normal_actions(tuning, feedback, redraw, render, audio, preferences);
-        Course brief_actions(brisk_actions, feedback, redraw, render, audio, preferences);
+        Course normal_actions(tuning, feedback, presentation.combat_feedback(), redraw, render, audio, preferences);
+        Course brief_actions(brisk_actions, feedback, presentation.combat_feedback(), redraw, render, audio, preferences);
         normal_actions.floor();
         brief_actions.floor();
         bool distinct_pose = false;
@@ -710,7 +711,7 @@ int main(int argc, char** argv)
 
         ContentVariant variant(content / "tuning.json");
         const GameTuning disabled = variant.tuning("0.0", "0.0");
-        Course unbuffered(disabled, feedback, presentation.respawn_redraw(), render, audio,
+        Course unbuffered(disabled, feedback, presentation.combat_feedback(), presentation.respawn_redraw(), render, audio,
             preferences, -4, { 0, 100 });
         unbuffered.floor();
         unbuffered.tick(input(true, true));
@@ -720,7 +721,7 @@ int main(int argc, char** argv)
         unbuffered.tick(input(true, true));
         require(unbuffered.player->velocity().y < 0,
             "zero buffer disabled ordinary grounded jumps");
-        Course ungraced(disabled, feedback, presentation.respawn_redraw(), render, audio,
+        Course ungraced(disabled, feedback, presentation.combat_feedback(), presentation.respawn_redraw(), render, audio,
             preferences, 0,
             { tuning.player().max_velocity.x, 0 });
         ungraced.leave_ledge();
@@ -957,10 +958,10 @@ int main(int argc, char** argv)
             require(rejected, "invalid movement presentation was accepted");
         }
         const Presentation without_feedback = presentation_variant.presentation("enabled", "false");
-        Course decorated(tuning, feedback, presentation.respawn_redraw(), render, audio,
+        Course decorated(tuning, feedback, presentation.combat_feedback(), presentation.respawn_redraw(), render, audio,
             preferences);
         Course undecorated(tuning, without_feedback.movement_feedback(),
-            without_feedback.respawn_redraw(), render, audio, preferences);
+            without_feedback.combat_feedback(), without_feedback.respawn_redraw(), render, audio, preferences);
         decorated.floor();
         undecorated.floor();
         for (int tick = 0; tick < 240; ++tick)

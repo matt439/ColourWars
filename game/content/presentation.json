@@ -284,6 +284,22 @@
     "reference_height": 1080.0
   },
 
+  "combat_feedback": {
+    "enabled": true,
+    "sprite_sheet": "sprite_sheet_1",
+    "fill_frame": "square_white_4",
+    "highlight": "FFFFFF",
+    "keyline": "000000",
+    "hurt_duration": 0.12,
+    "hurt_repeat_delay": 0.3,
+    "hurt_width": 6,
+    "hurt_reach": 16,
+    "elimination_duration": 0.32,
+    "elimination_spread": 48,
+    "elimination_lift": 48,
+    "particle_size": 12,
+    "keyline_width": 2
+  },
   "movement_feedback": {
     "_comment": "Neutral contact puffs sized for four-player 720p, in world units. Disable for comparisons. No scored paint or audio.",
     "enabled": true,

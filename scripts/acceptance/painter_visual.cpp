@@ -78,6 +78,8 @@ namespace
             const RectangleF body = player.rectangle();
             const Weapon& tool = player.primary_weapon();
             const ToolMotionState& mechanism = tool.motion_state();
+            const CombatFeedback& combat = player.combat_feedback();
+            const RectangleF death = combat.death_rectangle();
             values.insert(values.end(), { body.x, body.y, body.width, body.height,
                 player.velocity().x, player.velocity().y, player.health(), player.weapon_ammo(),
                 player.respawn_timer(), static_cast<float>(player.state()),
@@ -88,7 +90,8 @@ namespace
                 static_cast<float>(tool.visual_pose()), mechanism.pressure,
                 mechanism.valve, mechanism.travel_phase, mechanism.lift,
                 mechanism.compression, mechanism.bucket_swing, mechanism.hose_sway,
-                mechanism.mist_tail_remaining });
+                mechanism.mist_tail_remaining, combat.hurt_remaining(),
+                combat.elimination_remaining(), death.x, death.y, death.width, death.height });
             const auto effects = player.movement_feedback().effects();
             values.push_back(static_cast<float>(effects.size()));
             for (const auto& effect : effects)
@@ -232,7 +235,13 @@ namespace
                 << player.primary_weapon().motion_state().pressure << ','
                 << player.primary_weapon().motion_state().valve << ','
                 << player.primary_weapon().motion_state().travel_phase << ','
-                << player.primary_weapon().motion_state().mist_tail_remaining << '\n';
+                << player.primary_weapon().motion_state().mist_tail_remaining << ','
+                << player.combat_feedback().hurt_remaining() << ','
+                << player.combat_feedback().elimination_remaining() << ','
+                << player.combat_feedback().death_rectangle().x << ','
+                << player.combat_feedback().death_rectangle().y << ','
+                << player.combat_feedback().death_rectangle().width << ','
+                << player.combat_feedback().death_rectangle().height << '\n';
         }
         require(before == observation(level), "drawing changed public simulation state");
 #if COLOURWARS_DEV_TOOLS
@@ -297,12 +306,23 @@ namespace
         }
     }
 
+    struct RestoreFlag
+    {
+        bool& setting;
+        bool value;
+        ~RestoreFlag() { this->setting = this->value; }
+    };
+
     // Compare the two actual body rasters at the same location and camera,
     // without a rotating tool or movement effects supplying a false change.
     // The normal captures still include each real tool, viewport and cull box.
     Frame pinned_body(Player& player, const RectangleF& anchor, const Camera& camera,
-        const Viewport& viewport, Renderer& renderer, const Canvas& canvas)
+        const Viewport& viewport, Renderer& renderer, const Canvas& canvas,
+        Presentation& presentation)
     {
+        auto& look = const_cast<CombatFeedbackPresentation&>(presentation.combat_feedback());
+        const RestoreFlag restore{ look.enabled, look.enabled };
+        look.enabled = false;
         const Camera live_camera = player.camera();
         player.set_pose({ anchor.position() - player.rectangle().position(), 0, false, false });
         player.set_camera(camera);
@@ -312,10 +332,44 @@ namespace
         return result;
     }
 
+    // Compare only the draw switch at exactly the same simulation state, so
+    // action frames, camera following and the respawn pen cannot supply the
+    // visible difference. Restore the authored setting even on a failed check.
+    void compare_combat(Application& app, Level& level, const Canvas& canvas,
+        Presentation& presentation, bool expect_delta)
+    {
+        auto& look = const_cast<CombatFeedbackPresentation&>(presentation.combat_feedback());
+        const RestoreFlag restore{ look.enabled, look.enabled };
+        const auto before = observation(level);
+#if COLOURWARS_DEV_TOOLS
+        const MatchFingerprint fingerprint = MatchFingerprint::of(level, 0);
+#endif
+        for (int view = 0; view < level.player_count(); ++view)
+        {
+            const Player& player = level.player(view);
+            const Viewport& viewport = app.viewport_manager()->player_viewport(view);
+            look.enabled = true;
+            const Frame enabled = isolated(&player, player, viewport, *app.renderer(), canvas);
+            require(enabled.pixels == isolated(&player, player, viewport, *app.renderer(), canvas).pixels,
+                "frozen combat feedback changed during repeated drawing");
+            look.enabled = false;
+            const Frame disabled = isolated(&player, player, viewport, *app.renderer(), canvas);
+            require(disabled.pixels == isolated(&player, player, viewport, *app.renderer(), canvas).pixels,
+                "disabled combat feedback changed during repeated drawing");
+            require((enabled.pixels != disabled.pixels) == expect_delta,
+                "combat feedback draw switch did not match active/expired or whole-story state");
+        }
+        require(before == observation(level), "combat feedback drawing changed observed simulation/timers");
+#if COLOURWARS_DEV_TOOLS
+        require(MatchFingerprint::difference(fingerprint, MatchFingerprint::of(level, 0)).empty(),
+            "combat feedback drawing changed the replay fingerprint");
+#endif
+    }
+
     void action_frames(Application& app, Level& level, const Canvas& canvas,
         const std::filesystem::path& output, const std::string& stem,
         std::ofstream& records, const std::vector<PlayerInputData>& inputs,
-        PlayerAnimationState expected)
+        PlayerAnimationState expected, Presentation& presentation)
     {
         std::vector<RectangleF> anchors;
         std::vector<Camera> cameras;
@@ -328,9 +382,13 @@ namespace
             anchors.push_back(player.rectangle());
             cameras.push_back(player.camera());
             first.push_back(pinned_body(player, anchors.back(), cameras.back(),
-                app.viewport_manager()->player_viewport(view), *app.renderer(), canvas));
+                app.viewport_manager()->player_viewport(view), *app.renderer(), canvas, presentation));
         }
         capture(app, level, canvas, output, stem + "-frame0", records);
+        if (expected == PlayerAnimationState::hurt || expected == PlayerAnimationState::elimination)
+        {
+            compare_combat(app, level, canvas, presentation, true);
+        }
         for (int tick = 0; tick < 30 && level.player(0).animation_state() == expected &&
             level.player(0).action_frame() == 0; ++tick) { level.update(inputs, dt); }
         for (int view = 0; view < level.player_count(); ++view)
@@ -340,7 +398,7 @@ namespace
                 "action skipped its second frame");
             const Frame second = pinned_body(player, anchors[static_cast<size_t>(view)],
                 cameras[static_cast<size_t>(view)], app.viewport_manager()->player_viewport(view),
-                *app.renderer(), canvas);
+                *app.renderer(), canvas, presentation);
             require(second.pixels != first[static_cast<size_t>(view)].pixels,
                 "first and second action body frames produced identical playing-size raster output");
         }
@@ -348,7 +406,7 @@ namespace
     }
 
     void action_matrix(Application& app, LevelBuilder& builder, const Canvas& canvas,
-        const GameTuning& tuning, const std::filesystem::path& output,
+        const GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output,
         std::ofstream& records, int count, TeamColourPair palette, bool right)
     {
         auto level = build(app, builder, count, palette);
@@ -365,14 +423,14 @@ namespace
         level->update(inputs, dt);
         for (auto& input : inputs) { input.jump_pressed = false; }
         action_frames(app, *level, canvas, output, prefix + "takeoff", records, inputs,
-            PlayerAnimationState::taking_off);
+            PlayerAnimationState::taking_off, presentation);
         for (int tick = 0; tick < 150 &&
             level->player(0).animation_state() != PlayerAnimationState::landing; ++tick)
         {
             level->update(inputs, dt);
         }
         action_frames(app, *level, canvas, output, prefix + "land", records, inputs,
-            PlayerAnimationState::landing);
+            PlayerAnimationState::landing, presentation);
         for (int tick = 0; tick < 20; ++tick) { level->update(inputs, dt); }
         for (auto& input : inputs)
         {
@@ -383,7 +441,7 @@ namespace
         level->update(inputs, dt);
         for (auto& input : inputs) { input.primary_shoot = false; }
         action_frames(app, *level, canvas, output, prefix + "fire", records, inputs,
-            PlayerAnimationState::firing);
+            PlayerAnimationState::firing, presentation);
         for (int view = 0; view < count; ++view)
         {
             Player& player = const_cast<Player&>(level->player(view));
@@ -393,14 +451,78 @@ namespace
             player.on_contact(hit, Vector2F::ZERO, 0);
         }
         action_frames(app, *level, canvas, output, prefix + "hurt", records, inputs,
-            PlayerAnimationState::hurt);
+            PlayerAnimationState::hurt, presentation);
         for (int view = 0; view < count; ++view)
         {
             require(level->kill_player(view), "could not request action-matrix elimination");
         }
         level->update(inputs, dt);
         action_frames(app, *level, canvas, output, prefix + "elimination", records, inputs,
-            PlayerAnimationState::elimination);
+            PlayerAnimationState::elimination, presentation);
+    }
+
+    void combat_matrix(Application& app, LevelBuilder& builder, const Canvas& canvas,
+        const GameTuning& tuning, Presentation& presentation,
+        const std::filesystem::path& output, std::ofstream& records)
+    {
+        auto level = build(app, builder, 4, TeamColourPair::blue_orange);
+        const auto inputs = neutral_inputs();
+        settle(*level, inputs);
+        const auto phase = [&](const char* name, bool active)
+        {
+            for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440) })
+            {
+                resize(app, *level, size);
+                compare_combat(app, *level, canvas, presentation, active);
+                capture(app, *level, canvas, output, std::string("4p-combat-") + name + "-" +
+                    std::to_string(size.x), records,
+                    active || level->player(0).state() == PlayerState::alive);
+            }
+        };
+        for (int view = 0; view < level->player_count(); ++view)
+        {
+            Player& player = const_cast<Player&>(level->player(view));
+            const ProjectileSpray hit(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
+                player.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a,
+                0, Colour::white, app.render_resources(), &tuning.projectile(ProjectileType::spray));
+            player.on_contact(hit, Vector2F::ZERO, 0);
+        }
+        phase("hurt-initial", true);
+        while (level->player(0).combat_feedback().hurt_remaining() >
+            presentation.combat_feedback().hurt_duration * 0.5f) { level->update(inputs, dt); }
+        require(level->player(0).combat_feedback().hurt_remaining() > 0.0f,
+            "hurt recovery fixture expired before its comparison");
+        phase("hurt-recovery", true);
+        while (level->player(0).combat_feedback().hurt_remaining() > 0.0f) { level->update(inputs, dt); }
+        compare_combat(app, *level, canvas, presentation, false);
+
+        for (int view = 0; view < level->player_count(); ++view)
+        {
+            require(level->kill_player(view), "could not request combat-matrix elimination");
+        }
+        level->update(inputs, dt);
+        phase("elimination-initial", true);
+        for (int view = 0; view < level->player_count(); ++view)
+        {
+            const_cast<Player&>(level->player(view)).set_pose({ Vector2F::ZERO, 0, false, true });
+        }
+        compare_combat(app, *level, canvas, presentation, false);
+        for (int view = 0; view < level->player_count(); ++view)
+        {
+            const_cast<Player&>(level->player(view)).set_pose({});
+        }
+        while (level->player(0).combat_feedback().elimination_remaining() >
+            presentation.combat_feedback().elimination_duration * 0.5f) { level->update(inputs, dt); }
+        phase("elimination-middle", true);
+        while (level->player(0).combat_feedback().elimination_remaining() >
+            presentation.combat_feedback().elimination_duration * 0.15f) { level->update(inputs, dt); }
+        require(level->player(0).combat_feedback().elimination_remaining() > 0.0f,
+            "elimination late fixture expired before its comparison");
+        phase("elimination-late", true);
+        while (level->player(0).combat_feedback().elimination_remaining() > 0.0f) { level->update(inputs, dt); }
+        phase("elimination-expired", false);
+        std::cout << "PASS controlled 4P combat on/off rasters at 720p/1080p/QHD; "
+            "hurt initial/recovery and expiry; elimination initial/middle/late and expiry; whole-story suppression\n";
     }
 
     // Real paid shots and resolved movement select the tool poses. Capture the
@@ -504,7 +626,7 @@ int wmain(int argc, wchar_t** argv)
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
         std::filesystem::create_directories(output);
         std::ofstream records(output / "painter.csv");
-        records << "capture,view,input_slot,painter_pixels,facing_right,tool_angle,respawn_progress,animation_state,action_age,action_frame,tool_pose,pressure,valve,travel_phase,mist_tail_remaining\n";
+        records << "capture,view,input_slot,painter_pixels,facing_right,tool_angle,respawn_progress,animation_state,action_age,action_frame,tool_pose,pressure,valve,travel_phase,mist_tail_remaining,hurt_remaining,elimination_remaining,death_x,death_y,death_width,death_height\n";
         Registry<LevelLoadedInfo> levels("Level");
         GameTuning tuning((content / "tuning.json").string().c_str());
         Presentation presentation((content / "presentation.json").string().c_str());
@@ -563,15 +685,16 @@ int wmain(int argc, wchar_t** argv)
         }
         for (const bool right : { true, false })
         {
-            action_matrix(app, builder, canvas, tuning, output, records, 1,
+            action_matrix(app, builder, canvas, tuning, presentation, output, records, 1,
                 TeamColourPair::blue_orange, right);
         }
         for (const TeamColourPair palette : { TeamColourPair::blue_orange,
             TeamColourPair::pink_green, TeamColourPair::blue_yellow })
         {
-            action_matrix(app, builder, canvas, tuning, output, records, 4, palette,
+            action_matrix(app, builder, canvas, tuning, presentation, output, records, 4, palette,
                 palette != TeamColourPair::blue_orange);
         }
+        combat_matrix(app, builder, canvas, tuning, presentation, output, records);
         presentation.set_movement_feedback_enabled(true);
         for (int count : { 1, 4 })
         {
@@ -670,12 +793,14 @@ int wmain(int argc, wchar_t** argv)
         const Frame early_whole = isolated(&player, player,
             app.viewport_manager()->player_viewport(0), *app.renderer(), canvas);
         player.set_pose({});
-        for (int tick = 0; tick < 30 && player.animation_state() == PlayerAnimationState::elimination; ++tick)
+        for (int tick = 0; tick < 60 && (player.animation_state() == PlayerAnimationState::elimination ||
+            player.combat_feedback().elimination_remaining() > 0.0f); ++tick)
         {
             level->update(inputs, dt);
         }
-        require(player.animation_state() == PlayerAnimationState::idle,
-            "elimination did not finish before the outline redraw");
+        require(player.animation_state() == PlayerAnimationState::idle &&
+            player.combat_feedback().elimination_remaining() == 0.0f,
+            "elimination pose/burst did not finish before the outline redraw");
         const Camera live_camera = player.camera();
         player.set_camera(whole_camera);
         player.set_pose({ Vector2F::ZERO, 0, false, true });

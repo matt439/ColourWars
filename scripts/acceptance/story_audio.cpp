@@ -1078,7 +1078,7 @@ namespace
 			world.tuning.player().size.x, world.tuning.player().size.y);
 		Scene scene(nullptr, nullptr);
 		Player* player = scene.add(std::make_unique<Player>(rectangle, &world.tuning,
-			&world.presentation.movement_feedback(), &world.presentation.respawn_redraw(),
+			&world.presentation.movement_feedback(), &world.presentation.combat_feedback(), &world.presentation.respawn_redraw(),
 			&world.render, &world.audio, &world.preferences, 0, PlayerTeam::a,
 			WeaponType::roller, world.weapon(world.tuning, WeaponType::roller), WeaponType::none,
 			Colour::blue, Viewport{}, rectangle.top_left()));
@@ -1142,7 +1142,7 @@ namespace
 		world.preferences.sfx_volume = 40;
 		world.begin = recorded_sounds(world.device).size();
 		const RectangleF rectangle(Vector2F::ZERO, world.tuning.player().size);
-		Player player(rectangle, &world.tuning, &world.presentation.movement_feedback(),
+		Player player(rectangle, &world.tuning, &world.presentation.movement_feedback(), &world.presentation.combat_feedback(),
 			&world.presentation.respawn_redraw(), &world.render, &world.audio,
 			&world.preferences, 0, PlayerTeam::a, WeaponType::sniper,
 			world.weapon(world.tuning, WeaponType::sniper), WeaponType::none,
@@ -1270,7 +1270,7 @@ namespace
 			const RectangleF rectangle(x, bottom - this->tuning.player().size.y,
 				this->tuning.player().size.x, this->tuning.player().size.y);
 			Player* player = this->scene.add(std::make_unique<Player>(rectangle, &this->tuning,
-				&this->world.presentation.movement_feedback(), &this->world.presentation.respawn_redraw(),
+				&this->world.presentation.movement_feedback(), &this->world.presentation.combat_feedback(), &this->world.presentation.respawn_redraw(),
 				&this->world.render, &this->world.audio, &this->world.preferences, index, team,
 				WeaponType::sprayer, this->world.weapon(this->tuning, WeaponType::sprayer, index, team),
 				WeaponType::none, Colour::blue, Viewport{}, rectangle.top_left(), Vector2F(speed, 0.0f)));
@@ -1910,7 +1910,7 @@ namespace
 		// The actual Player launch path discards obstructed shots before returning
 		// them to Level. Their accumulated audio must be flushed before that erase.
 		const RectangleF player_rectangle(Vector2F::ZERO, world.tuning.player().size);
-		Player player(player_rectangle, &world.tuning, &world.presentation.movement_feedback(),
+		Player player(player_rectangle, &world.tuning, &world.presentation.movement_feedback(), &world.presentation.combat_feedback(),
 			&world.presentation.respawn_redraw(), &world.render, &world.audio, &world.preferences,
 			0, PlayerTeam::a, WeaponType::sniper, world.weapon(world.tuning, WeaponType::sniper),
 			WeaponType::none, Colour::blue, Viewport{}, Vector2F::ZERO);

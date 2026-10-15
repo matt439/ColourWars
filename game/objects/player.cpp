@@ -33,6 +33,7 @@ namespace
 Player::Player(const RectangleF& rectangle,
     const GameTuning* tuning,
     const MovementFeedbackPresentation* movement_feedback,
+    const CombatFeedbackPresentation* combat_feedback,
     const RespawnRedrawPresentation* respawn_redraw,
     RenderResources* render_resources,
     const AudioResources* audio_resources,
@@ -67,6 +68,7 @@ Player::Player(const RectangleF& rectangle,
         teammate_index >= 0 ? teammate_index :
             (sound_index >= 0 ? sound_index : std::max(player_num, 0) % 4)),
     movement_feedback_(movement_feedback, render_resources),
+    combat_feedback_(combat_feedback, render_resources),
     movement_audio_(&tuning->player().movement_sounds,
         audio_resources->sound_bank(tuning->player().sound_bank), preferences,
         sound_index >= 0 ? sound_index : player_num),
@@ -232,6 +234,8 @@ void Player::draw(DrawList& draw_list) const
             this->draw_figure(draw_list, this->posed_rectangle());
         }
         this->draw_respawn(draw_list);
+        this->combat_feedback_.draw(draw_list, this->posed_rectangle(),
+            this->grey_.value_or(this->team_colour_));
         return;
     }
 
@@ -245,6 +249,11 @@ void Player::draw(DrawList& draw_list) const
         this->attachments_.draw_hands(draw_list, this->posed_rectangle(), *this->primary_);
     }
     this->movement_feedback_.draw(draw_list);
+    if (!this->drawn_whole())
+    {
+        this->combat_feedback_.draw(draw_list, this->posed_rectangle(),
+            this->grey_.value_or(this->team_colour_));
+    }
 }
 
 RectangleF Player::posed_rectangle() const
@@ -648,6 +657,7 @@ void Player::on_projectile_contact(CollisionObjectType other_type)
     if (damage > 0.0f && this->health_ > 0.0f && this->state_ == PlayerState::alive)
     {
         this->start_action(PlayerAnimationState::hurt);
+        this->combat_feedback_.hurt();
     }
 
     this->health_regen_timer_ = 0.0f;
@@ -669,6 +679,7 @@ void Player::update(float dt)
     // Age old cues before movement can emit new ones; every new event is drawn
     // on its actual tick at age zero, irrespective of the number of views.
     this->movement_feedback_.update(dt);
+    this->combat_feedback_.update(dt);
     this->age_action(dt);
     if (this->state_ == PlayerState::alive && this->health_ <= 0.0f)
     {
@@ -683,6 +694,7 @@ void Player::update(float dt)
         this->reset_jump_input();
         this->set_move_state(PlayerMoveState::in_air);
         this->start_action(PlayerAnimationState::elimination);
+        this->combat_feedback_.eliminate(this->rectangle_);
         this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume * this->preferences_->sfx_gain());
     }
 
@@ -1002,7 +1014,9 @@ RectangleF Player::bounds() const
     {
         visual = RectangleF::union_of(visual, this->primary_->draw_bounds());
     }
-    return this->movement_feedback_.bounds(RectangleF::union_of(this->rectangle_, visual));
+    return RectangleF::union_of(
+        this->movement_feedback_.bounds(RectangleF::union_of(this->rectangle_, visual)),
+        this->combat_feedback_.bounds(this->posed_rectangle()));
 }
 
 RectangleF Player::cull_bounds(float /*units_per_pixel*/) const
@@ -1018,6 +1032,11 @@ RectangleF Player::cull_bounds(float /*units_per_pixel*/) const
 const MovementFeedback& Player::movement_feedback() const
 {
     return this->movement_feedback_;
+}
+
+const CombatFeedback& Player::combat_feedback() const
+{
+    return this->combat_feedback_;
 }
 
 const Weapon& Player::primary_weapon() const
@@ -1126,6 +1145,7 @@ const PlayerAnimationTuning& Player::animation_info(
 }
 void Player::place_at(const Vector2F& top_left)
 {
+    this->combat_feedback_.clear();
     this->primary_->reset_motion();
     this->action_.reset();
     this->action_age_ = 0.0f;

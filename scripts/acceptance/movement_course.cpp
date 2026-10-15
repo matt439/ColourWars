@@ -188,6 +188,7 @@ namespace
     {
         const GameTuning& tuning;
         const MovementFeedbackPresentation& feedback;
+        const CombatFeedbackPresentation& combat;
         const RespawnRedrawPresentation& redraw;
         RenderResources& render;
         const AudioResources& audio;
@@ -261,7 +262,7 @@ namespace
             auto primary = WeaponBuilder::build_weapon(&tuning, team, 0, 0, Colour::white,
                 weapon, body.center(), &with.render, &with.audio, &with.preferences);
             this->player = this->scene.add(std::make_unique<Player>(body, &tuning,
-                &with.feedback, &with.redraw, &with.render, &with.audio, &with.preferences, 0, team,
+                &with.feedback, &with.combat, &with.redraw, &with.render, &with.audio, &with.preferences, 0, team,
                 weapon, std::move(primary), WeaponType::none, Colour::white, Viewport{},
                 respawn.value_or(top_left), velocity));
             this->scene.end_tick();
@@ -1690,7 +1691,7 @@ int main(int argc, char** argv)
         const LevelObjectBuilder builder(&render, &audio, &preferences, &tuning.paint());
         const CourseData course(content / "levels" / "movement_course.json");
         const Services services{ tuning, presentation.movement_feedback(),
-            presentation.respawn_redraw(), render, audio,
+            presentation.combat_feedback(), presentation.respawn_redraw(), render, audio,
             preferences, builder, colours, course };
         std::cout << "NOTE dt=" << dt << "; every trial builds a fresh authored Scene and steps it in "
             "Level::update_level_logic order (no const_cast placement)\n";
