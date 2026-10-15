@@ -7,6 +7,19 @@ using namespace DirectX;
 using namespace mattmath;
 using namespace labrador;
 
+namespace
+{
+	RectangleF clipped(const RectangleF& rectangle, const RectangleF& limit)
+	{
+		const float x = std::max(rectangle.left(), limit.left());
+		const float y = std::max(rectangle.top(), limit.top());
+		const float right = std::min(rectangle.right(), limit.right());
+		const float bottom = std::min(rectangle.bottom(), limit.bottom());
+		if (!(right > x && bottom > y)) { return RectangleF::ZERO; }
+		return RectangleF(x, y, right - x, bottom - y);
+	}
+}
+
 StructurePaintable::StructurePaintable(
 	const std::string& sheet_name,
 	const std::string& frame_name,
@@ -31,13 +44,15 @@ StructurePaintable::StructurePaintable(
 		flip, layer_depth),
 		team_colours_(team_colours),
 		faces_(faces),
-		paint_(paint)
+		paint_(paint),
+		preferences_(preferences),
+		runoff_sheet_(render_resources->resolve_sprite_sheet(paint->sheet)),
+		runoff_frame_(render_resources->sprite_sheet(this->runoff_sheet_)->resolve_sprite_frame(paint->frame))
 {
 	this->paint_tiles_ = this->generate_paint_tiles(paint_obstacles);
 	// Preview construction shares this path. Cue names are validated at startup;
 	// match playback is owned by Level's PaintAudio across every surface.
 	(void)audio_resources;
-	(void)preferences;
 }
 
 void StructurePaintable::update(float dt)
@@ -45,6 +60,17 @@ void StructurePaintable::update(float dt)
 	for (auto& paint_tile : this->paint_tiles_)
 	{
 		paint_tile.update(dt);
+	}
+	if (!(dt > 0.0f)) { return; }
+	for (PaintStrip& strip : this->paint_strips_)
+	{
+		if (strip.runoff.team == PlayerTeam::none) { continue; }
+		strip.runoff.age += dt;
+		if (const auto visual = this->runoff_visual(strip))
+		{
+			strip.runoff.limit_y = visual->owned_band.bottom();
+		}
+		else { strip.runoff = {}; }
 	}
 }
 
@@ -58,6 +84,13 @@ void StructurePaintable::draw(DrawList& draw_list) const
 	for (const auto& paint_tile : this->paint_tiles_)
 	{
 		paint_tile.draw_surface(draw_list);
+	}
+	if (this->preferences_ == nullptr || !this->preferences_->reduce_effects)
+	{
+		for (const PaintStrip& strip : this->paint_strips_)
+		{
+			this->draw_runoff(draw_list, strip);
+		}
 	}
 }
 
@@ -95,7 +128,7 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 
 	// Each face is a strip of equal-size tiles. Use its origin and pitch to
 	// select nearby candidates instead of scanning the entire structure.
-	for (const PaintStrip& strip : this->paint_strips_)
+	for (PaintStrip& strip : this->paint_strips_)
 	{
 		const float low = strip.along_x ? splash.left() : splash.top();
 		const float high = strip.along_x ? splash.right() : splash.bottom();
@@ -110,6 +143,8 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 		first = std::max(first, 0);
 		last = std::min(last, strip.count - 1);
 
+		int first_painted = -1;
+		int last_painted = -1;
 		for (int i = first; i <= last; i++)
 		{
 			PaintTile& paint_tile = this->paint_tiles_[
@@ -124,9 +159,131 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 			tile_captured |= paint_tile.team() != team;
 			paint_tile.paint(team, projectile.player_num(), projectile.projectile_type());
 			tile_painted = true;
+			if (first_painted < 0) { first_painted = i; }
+			last_painted = i;
+		}
+		if (!strip.along_x && first_painted >= 0)
+		{
+			// Repainting the source retires the old colour immediately. Repeated
+			// friendly stream contacts leave a running phrase free to finish.
+			if (strip.runoff.team != PlayerTeam::none)
+			{
+				if (const auto visual = this->runoff_visual(strip))
+				{
+					strip.runoff.limit_y = visual->owned_band.bottom();
+				}
+				else { strip.runoff = {}; }
+			}
+			if (strip.runoff.team == PlayerTeam::none)
+			{
+				const int source = std::clamp(static_cast<int>(std::floor(
+					(splash.center().y - strip.origin) / strip.pitch)),
+					first_painted, last_painted);
+				const RectangleF source_bounds = this->paint_tiles_[
+					static_cast<size_t>(strip.begin + source)].bounds();
+				strip.runoff = Runoff{ team, source,
+					std::clamp(splash.center().y, source_bounds.top(), source_bounds.bottom()),
+					0.0f, strip.end };
+				if (const auto visual = this->runoff_visual(strip))
+				{
+					strip.runoff.limit_y = visual->owned_band.bottom();
+				}
+				else { strip.runoff = {}; }
+			}
 		}
 	}
 	projectile.note_paint_contact(tile_painted, tile_captured);
+}
+
+std::optional<PaintRunoffVisual> StructurePaintable::runoff_visual(
+	const PaintStrip& strip) const
+{
+	const Runoff& state = strip.runoff;
+	const PaintRunoffTuning& look = this->paint_->runoff;
+	if (strip.along_x || state.team == PlayerTeam::none ||
+		!(look.duration > 0.0f) || state.age >= look.delay + look.duration)
+	{
+		return std::nullopt;
+	}
+	const PaintTile& source = this->paint_tiles_[
+		static_cast<size_t>(strip.begin + state.source_tile)];
+	if (source.team() != state.team) { return std::nullopt; }
+
+	const RectangleF source_bounds = source.bounds();
+	// Only inspect tiles the bounded phrase can actually reach. Exposed strips
+	// already end at obstacles; current ownership may end the corridor sooner.
+	const float travel_end = std::min(state.limit_y, state.source_y + look.distance);
+	float bottom = std::min(source_bounds.bottom(), travel_end);
+	for (int index = state.source_tile + 1; index < strip.count && bottom < travel_end; ++index)
+	{
+		const PaintTile& tile = this->paint_tiles_[static_cast<size_t>(strip.begin + index)];
+		if (tile.team() != state.team) { break; }
+		bottom = std::min(tile.bounds().bottom(), travel_end);
+	}
+	const float colour_depth = std::max(0.0f, this->paint_->thickness - this->paint_->edge_width);
+	const RectangleF band(strip.leading ? source_bounds.left() :
+		source_bounds.right() - colour_depth, source_bounds.top(),
+		colour_depth, bottom - source_bounds.top());
+	const float progress = std::clamp((state.age - look.delay) / look.duration, 0.0f, 1.0f);
+	const float head = state.source_y + look.distance * progress * progress;
+	if (!(head < bottom && band.width > 0.0f && band.height > 0.0f))
+	{
+		return std::nullopt;
+	}
+	PaintRunoffVisual visual{ state.team, state.age, state.source_y, head, band };
+	if (state.age < look.delay) { return visual; }
+
+	const float x = strip.leading ? band.left() + look.face_inset :
+		band.right() - look.face_inset - look.width;
+	visual.bead = clipped(RectangleF(x, head - look.bead_height,
+		look.width, look.bead_height), band);
+	const float trail_top = std::max(state.source_y,
+		head - look.bead_height - look.trail_length);
+	visual.trail = clipped(RectangleF(x + (look.width - look.trail_width) / 2.0f,
+		trail_top, look.trail_width, std::max(0.0f, head - look.bead_height / 2.0f - trail_top)), band);
+	return visual;
+}
+
+std::vector<PaintRunoffVisual> StructurePaintable::runoff_visuals() const
+{
+	std::vector<PaintRunoffVisual> visuals;
+	for (const PaintStrip& strip : this->paint_strips_)
+	{
+		if (const auto visual = this->runoff_visual(strip)) { visuals.push_back(*visual); }
+	}
+	return visuals;
+}
+
+void StructurePaintable::draw_runoff(DrawList& draw_list, const PaintStrip& strip) const
+{
+	const auto visual = this->runoff_visual(strip);
+	if (!visual || !(visual->bead.width > 0.0f)) { return; }
+	const PaintRunoffTuning& look = this->paint_->runoff;
+	const Colour tint = this->team_colours_.team_colour(visual->team);
+	const Colour shade(tint.r * (1.0f - look.shade), tint.g * (1.0f - look.shade),
+		tint.b * (1.0f - look.shade), 1.0f);
+	const Colour highlight(tint.r + (1.0f - tint.r) * look.highlight,
+		tint.g + (1.0f - tint.g) * look.highlight,
+		tint.b + (1.0f - tint.b) * look.highlight, 1.0f);
+	const auto fill = [&](const RectangleF& rectangle, const Colour& colour)
+	{
+		const RectangleF box = clipped(rectangle, visual->owned_band);
+		if (!(box.width > 0.0f && box.height > 0.0f)) { return; }
+		this->render_resources()->sprite_sheet(this->runoff_sheet_)->draw(
+			draw_list, this->runoff_frame_, box, colour);
+	};
+	fill(visual->trail, shade);
+	const float x = visual->bead.x;
+	const float y = visual->head_y - look.bead_height;
+	const float pen = look.keyline_width;
+	// Two crossing rectangles leave the coarse corners open. Every piece is
+	// clipped before submission; neither this bead nor its trail places paint.
+	fill(RectangleF(x + pen, y, look.width - pen * 2.0f, look.bead_height), Colour::black);
+	fill(RectangleF(x, y + pen, look.width, look.bead_height - pen * 2.0f), Colour::black);
+	fill(RectangleF(x + pen, y + pen, look.width - pen * 2.0f,
+		look.bead_height - pen * 2.0f), shade);
+	fill(RectangleF(x + pen, y + pen, std::min(pen, look.width - pen * 2.0f), std::min(pen * 2.0f,
+		look.bead_height - pen * 2.0f)), highlight);
 }
 
 std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
@@ -163,7 +320,7 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
             const float pitch = length / count;
             this->paint_strips_.push_back(PaintStrip{
                 static_cast<int>(paint_tiles.size()), count, begin, pitch, end, along_x,
-                along_x && leading });
+                along_x && leading, leading, {} });
             for (int i = 0; i < count; ++i)
             {
                 // Fit even partial edge tiles to the exposed segment, so

@@ -5,7 +5,11 @@
 #include "engine/assets/sprite_sheet_loader.h"
 
 #include <filesystem>
+#include <fstream>
 #include <iostream>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 using namespace labrador;
 using namespace mattmath;
@@ -26,6 +30,9 @@ namespace
     }
 }
 
+#include "scripts/acceptance/paint/runoff_checks.h"
+#include "scripts/acceptance/paint/runoff_content_checks.h"
+
 int main(int argc, char** argv)
 {
     try
@@ -43,6 +50,8 @@ int main(int argc, char** argv)
         const PlaySettings preferences;
         const TeamColour colours;
         const float thickness = tuning.paint().thickness;
+        check_runoff_content(content);
+        check_runoff_surfaces(render, audio, tuning, colours);
         const RectangleF rectangle(0, 0, 100, 50);
         const PaintableFaces all{ true, true, true, true };
         const PaintableFaces top{ false, true, false, false };

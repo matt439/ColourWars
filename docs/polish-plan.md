@@ -700,6 +700,13 @@ Match clocks, sound cues, coverage, story timing and the solo overview keep thei
 existing behaviour. Menus, cards, stage preview, the remaining HUD, pause and
 results treatment remain open, as does reference-arena composition acceptance.
 
+**Fresh wall runoff implemented (2026-10-15, part of `POL#16`).** The
+[surface detail](polish-paint-effects.md#wall-runoff) adds a short, downward
+bead and wet trail within contiguous, already-owned wall paint. Each exposed
+vertical strip has one bounded slot; opposing/neutral paint and occluded edges
+stop it. Reduce effects hides it. Paint coverage, credit and collision remain
+exact. Remaining arena and interface work keeps its existing order.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

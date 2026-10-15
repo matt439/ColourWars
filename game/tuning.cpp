@@ -310,6 +310,45 @@ namespace
 			throw std::runtime_error(visual.where() +
 				": 'edge_width' must leave visible team paint inside the tile thickness.");
 		}
+		const JsonValue runoff = visual.object("runoff");
+		paint.runoff.delay = read_number_in(runoff, "delay", 0.0f, 1.0f);
+		const auto positive_runoff = [&](const char* key, float high)
+		{
+			const float value = read_number_in(runoff, key, 0.0f, high);
+			if (!(value > 0.0f))
+			{
+				throw std::runtime_error(runoff.where() + ": '" + key +
+					"' must be greater than zero.");
+			}
+			return value;
+		};
+		paint.runoff.duration = positive_runoff("duration", 2.0f);
+		paint.runoff.distance = positive_runoff("distance", 64.0f);
+		paint.runoff.width = positive_runoff("width", 16.0f);
+		paint.runoff.bead_height = positive_runoff("bead_height", 32.0f);
+		paint.runoff.trail_length = positive_runoff("trail_length", 64.0f);
+		paint.runoff.trail_width = positive_runoff("trail_width", 16.0f);
+		paint.runoff.keyline_width = positive_runoff("keyline_width", 8.0f);
+		paint.runoff.face_inset = read_number_in(runoff, "face_inset", 0.0f, 16.0f);
+		paint.runoff.shade = read_number_in(runoff, "shade", 0.0f, 1.0f);
+		paint.runoff.highlight = read_number_in(runoff, "highlight", 0.0f, 1.0f);
+		if (!(paint.runoff.width + paint.runoff.face_inset <=
+			paint.thickness - paint.edge_width))
+		{
+			throw std::runtime_error(runoff.where() +
+				": 'width' and 'face_inset' must fit inside thickness minus edge_width.");
+		}
+		if (!(paint.runoff.trail_width <= paint.runoff.width))
+		{
+			throw std::runtime_error(runoff.where() +
+				": 'trail_width' must not exceed width.");
+		}
+		if (!(paint.runoff.keyline_width * 2.0f < paint.runoff.width &&
+			paint.runoff.keyline_width * 2.0f < paint.runoff.bead_height))
+		{
+			throw std::runtime_error(runoff.where() +
+				": 'keyline_width' must leave visible paint inside width and bead_height.");
+		}
 
 		paint.sound_bank = json.string("sound_bank");
 		const JsonValue choices = json.array("splash_sounds");

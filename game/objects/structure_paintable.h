@@ -12,6 +12,7 @@
 #include "game/tuning.h"
 #include <span>
 #include <optional>
+#include <vector>
 
 
 // Faces on which the structure generates paint tiles.
@@ -21,6 +22,19 @@ struct PaintableFaces
 	bool top = false;
 	bool right = false;
 	bool bottom = false;
+};
+
+// Read-only geometry for the short cosmetic phrase, including its waiting phase.
+// The two drawn rectangles are clipped to owned_band, never scoring geometry.
+struct PaintRunoffVisual
+{
+	PlayerTeam team = PlayerTeam::none;
+	float age = 0.0f;
+	float source_y = 0.0f;
+	float head_y = 0.0f;
+	mattmath::RectangleF owned_band = mattmath::RectangleF::ZERO;
+	mattmath::RectangleF trail = mattmath::RectangleF::ZERO;
+	mattmath::RectangleF bead = mattmath::RectangleF::ZERO;
 };
 
 class StructurePaintable final : public Structure, public PaintableObject
@@ -59,6 +73,7 @@ public:
 	// are half open, so a seam has one answer; side/bottom paint never counts.
 	PlayerTeam top_paint_team(float x) const;
 	std::optional<labrador::Colour> top_paint_colour(float x) const;
+	std::vector<PaintRunoffVisual> runoff_visuals() const;
 
 private:
 	std::vector<PaintTile> paint_tiles_ = std::vector<PaintTile>();
@@ -66,6 +81,18 @@ private:
 	PaintableFaces faces_ = PaintableFaces();
 	// Borrowed, and outlives the level: main() owns it.
 	const PaintTuning* paint_ = nullptr;
+	const PlaySettings* preferences_ = nullptr;
+	labrador::RenderResources::SpriteSheetHandle runoff_sheet_;
+	labrador::SpriteSheet::frame_handle runoff_frame_;
+
+	struct Runoff
+	{
+		PlayerTeam team = PlayerTeam::none;
+		int source_tile = 0;
+		float source_y = 0.0f;
+		float age = 0.0f;
+		float limit_y = 0.0f;
+	};
 
 	// One contiguous strip of equal-size tiles. origin is the leading edge of
 	// tile begin; pitch is tile length along the strip. along_x selects x for
@@ -79,10 +106,14 @@ private:
 		float end = 0.0f;
 		bool along_x = true;
 		bool top = false;
+		bool leading = true;
+		Runoff runoff;
 	};
 
 	// A covered face can split into several exposed strips.
 	std::vector<PaintStrip> paint_strips_ = std::vector<PaintStrip>();
+	std::optional<PaintRunoffVisual> runoff_visual(const PaintStrip& strip) const;
+	void draw_runoff(labrador::DrawList& draw_list, const PaintStrip& strip) const;
 
 	// Build tiles and record the strips used by on_contact for candidate lookup.
 	std::vector<PaintTile> generate_paint_tiles(

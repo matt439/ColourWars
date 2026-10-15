@@ -102,7 +102,21 @@
       "wet_duration": 0.32,
       "wet_highlight": 0.45,
       "settle_depth": 2.0,
-      "splash_scale": 2.0
+      "splash_scale": 2.0,
+      "runoff": {
+        "_comment": "One short cosmetic drip per struck vertical face strip. World units/seconds; clipped to its current same-team owned run and kept outside the inward keyline. No paint, credit, collision or gameplay randomness.",
+        "delay": 0.12,
+        "duration": 0.65,
+        "distance": 28.0,
+        "width": 3.0,
+        "bead_height": 5.0,
+        "trail_length": 9.0,
+        "trail_width": 1.0,
+        "keyline_width": 0.75,
+        "face_inset": 1.0,
+        "shade": 0.30,
+        "highlight": 0.55
+      }
     },
     "sound_bank": "paint_exe",
     "splash_sounds": [

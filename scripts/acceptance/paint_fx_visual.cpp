@@ -4,6 +4,7 @@
 #include "game/input_slots.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/projectile_builder.h"
+#include "game/objects/projectile_spray.h"
 #include "game/objects/structure_paintable.h"
 
 #include <filesystem>
@@ -99,12 +100,12 @@ namespace
     // canvases retain the actual Level's camera scale, not a magnified art zoom.
     template<class Draw>
     Frame matrix(Application& app, const Canvas& canvas, const std::array<Camera, 4>& cameras,
-        Draw draw)
+        Draw draw, int view_count = 4)
     {
         Renderer& renderer = *app.renderer();
         renderer.begin_frame();
-        renderer.set_view_count(4);
-        for (int view = 0; view < 4; ++view)
+        renderer.set_view_count(view_count);
+        for (int view = 0; view < view_count; ++view)
         {
             const Viewport& viewport = app.viewport_manager()->player_viewport(view);
             DrawList list = renderer.view(view);
@@ -147,11 +148,11 @@ namespace
     }
 
     void crops(Application& app, const Frame& image, const std::filesystem::path& output,
-        const std::string& prefix, const std::array<std::string, 4>& suffixes)
+        const std::string& prefix, const std::array<std::string, 4>& suffixes, int view_count = 4)
     {
         // Fixed playing-size crops preserve comparisons, with ample room for
         // the 90x50 surface and its impact at the largest gameplay scale.
-        for (int view = 0; view < 4; ++view)
+        for (int view = 0; view < view_count; ++view)
         {
             const RectangleI pane = app.viewport_manager()->player_viewport(view).pixel_rect();
             const RectangleI area(pane.x + pane.width / 2 - 108,
@@ -415,6 +416,148 @@ namespace
         crops(app, mixed, output, prefix + "-impact-adjacent-friendly-enemy", suffixes);
     }
 
+    void runoffs(Application& app, const Canvas& canvas, const GameTuning& tuning,
+        PlaySettings& preferences, const TeamColour& colours, float scale,
+        const std::filesystem::path& output, const std::string& prefix, std::ofstream& records,
+        int view_count)
+    {
+        app.viewport_manager()->set_layout(view_count == 1 ? ScreenLayout::one_player : ScreenLayout::four_player);
+        const RectangleF wall(0, 0, 90, 128);
+        const PaintTuning& look = tuning.paint();
+        const auto& runoff = look.runoff;
+        Surfaces objects;
+        std::array<Camera, 4> cameras;
+        const std::array<std::string, 4> labels = { "left", "right-enemy-stop", "corner-occluded", "narrow-fragment" };
+        const auto touch = [&](StructurePaintable& object, RectangleF area, PlayerTeam team, int owner)
+        {
+            const Vector2F half = tuning.projectile(ProjectileType::spray).details.col_rect_size / 2;
+            area.offset(half.x, half.y);
+            const ProjectileSpray shot(area, Vector2F::ZERO, team, owner,
+                colours.team_colour(team), app.render_resources(), &tuning.projectile(ProjectileType::spray));
+            object.on_contact(shot, Vector2F::ZERO, 0);
+        };
+        const std::array<std::vector<RectangleF>, 4> obstacles = {{ {}, {},
+            {{-10, 63.5f, 10, 31.5f}}, {{-10, -1, 10, 46.25f}, {-10, 63.5f, 10, 100}} }};
+        const std::array<RectangleF, 4> allowed = {
+            RectangleF(0, 0, look.thickness - look.edge_width, 128),
+            RectangleF(90 - look.thickness + look.edge_width, 0, look.thickness - look.edge_width, 80),
+            RectangleF(0, 0, look.thickness - look.edge_width, 63.5f),
+            RectangleF(0, 45.25f, look.thickness - look.edge_width, 18.25f) };
+        const ProjectileBuilder builder(&tuning);
+        for (int view = 0; view < view_count; ++view)
+        {
+            const size_t index = static_cast<size_t>(view);
+            const PaintableFaces enabled = view == 1 ? PaintableFaces{false, false, true, false} :
+                PaintableFaces{true, view == 2, false, false};
+            objects[index] = std::make_unique<StructurePaintable>("sprite_sheet_1", "square_white_4",
+                wall, std::make_unique<RectangleF>(wall), app.render_resources(), app.audio_resources(),
+                &preferences, &look, CollisionObjectType::structure_paintable, colours, enabled,
+                obstacles[index], Colour(0.30f, 0.33f, 0.36f));
+            const PlayerTeam team = view % 2 == 0 ? PlayerTeam::a : PlayerTeam::b;
+            touch(*objects[index], wall, team, 0);
+            if (view == 1) touch(*objects[index], {90 - look.thickness, 80.1f, look.thickness, 47.8f}, PlayerTeam::a, 1);
+            objects[index]->update(10);
+            const Vector2F centre(view == 1 ? 90.0f : 0.0f,
+                view == 2 ? 0.0f : (view == 3 ? 48.0f : 32.0f));
+            const auto shots = builder.build_projectiles(centre, Vector2F::ZERO,
+                team, 2, colours.team_colour(team), ProjectileType::spray,
+                app.render_resources());
+            for (const auto& shot : shots)
+            {
+                const auto hit = narrow_phase(*objects[index]->shape(), *shot->shape());
+                require(hit.has_value(), "runoff builder projectile missed the actual wall");
+                objects[index]->on_contact(*shot, hit->normal, hit->penetration);
+            }
+            require(objects[index]->runoff_visuals().size() == 1,
+                "actual wall contact did not create one runoff on its exposed strip");
+            cameras[index] = centred(Vector2F(45, 36), app.viewport_manager()->player_viewport(view), scale);
+        }
+        const auto draw = [&](int view, DrawList& list) { objects[static_cast<size_t>(view)]->draw(list); };
+        const auto snapshot = [&]()
+        {
+            std::vector<float> state;
+            for (int view = 0; view < view_count; ++view)
+            {
+                const auto& object = objects[static_cast<size_t>(view)];
+                const PaintTotal total = object->paint_total();
+                state.insert(state.end(), {total.total, total.team_a, total.team_b});
+                state.insert(state.end(), total.player_areas.begin(), total.player_areas.end());
+                for (const auto& visual : object->runoff_visuals())
+                    state.insert(state.end(), {visual.age, visual.source_y, visual.head_y,
+                        visual.trail.x, visual.trail.y, visual.trail.width, visual.trail.height,
+                        visual.bead.x, visual.bead.y, visual.bead.width, visual.bead.height});
+            }
+            return state;
+        };
+        std::array<PaintTotal, 4> ownership;
+        for (int view = 0; view < view_count; ++view) ownership[static_cast<size_t>(view)] = objects[static_cast<size_t>(view)]->paint_total();
+        const std::string stem = prefix + "-runoff-" + std::to_string(view_count) + "p";
+        Frame early;
+        for (int phase = 0; phase < 2; ++phase)
+        {
+            const float elapsed = phase == 0 ? runoff.delay + runoff.duration * 0.35f : runoff.duration * 0.35f;
+            for (int view = 0; view < view_count; ++view) objects[static_cast<size_t>(view)]->update(elapsed);
+            preferences.reduce_effects = false;
+            const auto state = snapshot();
+            const Frame moving = matrix(app, canvas, cameras, draw, view_count);
+            require(moving.pixels == matrix(app, canvas, cameras, draw, view_count).pixels && state == snapshot(),
+                "const runoff redraw changed pixels or simulation state");
+            preferences.reduce_effects = true;
+            const Frame suppressed = matrix(app, canvas, cameras, draw, view_count);
+            require(state == snapshot(), "live Reduce effects changed runoff state during draw");
+            preferences.reduce_effects = false;
+            require(moving.pixels == matrix(app, canvas, cameras, draw, view_count).pixels,
+                "live Reduce effects did not restore the same moving runoff pixels");
+            for (int view = 0; view < view_count; ++view)
+            {
+                const size_t index = static_cast<size_t>(view);
+                const RectangleI pane = app.viewport_manager()->player_viewport(view).pixel_rect();
+                RectangleF permitted = cameras[index].calculate_view_rectangle(allowed[index]);
+                // Labrador quantizes each sprite edge toward zero before the
+                // viewport offset. Use the same raster convention on the
+                // independent ownership oracle, with no one-pixel padding.
+                const RectangleI raster(pane.x + static_cast<int>(permitted.left()),
+                    pane.y + static_cast<int>(permitted.top()),
+                    static_cast<int>(permitted.right()) - static_cast<int>(permitted.left()),
+                    static_cast<int>(permitted.bottom()) - static_cast<int>(permitted.top()));
+                size_t changed = 0;
+                for (int y = pane.y; y < pane.bottom(); ++y)
+                    for (int x = pane.x; x < pane.right(); ++x)
+                    {
+                        const size_t offset = (static_cast<size_t>(y) * static_cast<size_t>(moving.width) + static_cast<size_t>(x)) * 4;
+                        if (moving.pixels[offset] == suppressed.pixels[offset] &&
+                            moving.pixels[offset + 1] == suppressed.pixels[offset + 1] &&
+                            moving.pixels[offset + 2] == suppressed.pixels[offset + 2]) continue;
+                        // Test each raster sample against independently authored
+                        // owned rectangles, without the culling test's padding.
+                        require(x >= raster.left() && x < raster.right() &&
+                            y >= raster.top() && y < raster.bottom(),
+                            "runoff raster crossed neutral/enemy/occluded geometry or its inward keyline");
+                        ++changed;
+                    }
+                if (view < 3) require(changed > 0, "moving runoff has no visible pixels at native gameplay scale");
+                const PaintTotal total = objects[index]->paint_total();
+                require(total.total == ownership[index].total && total.team_a == ownership[index].team_a &&
+                    total.team_b == ownership[index].team_b && total.player_areas == ownership[index].player_areas,
+                    "moving runoff changed surface scoring or attribution");
+                records << stem << "-frame" << phase << ',' << labels[index] << ",runoff," << scale << ',' << changed << '\n';
+            }
+            const std::string phase_name = stem + (phase == 0 ? "-early" : "-late");
+            crops(app, moving, output, phase_name, labels, view_count);
+            crops(app, suppressed, output, phase_name + "-reduced", labels, view_count);
+            if (phase == 0) early = moving;
+            else require(early.pixels != moving.pixels, "runoff failed to move between real simulation frames");
+            if (phase == 1) save(moving, output / (stem + "-native.ppm"));
+        }
+        preferences.reduce_effects = true;
+        for (int view = 0; view < view_count; ++view) objects[static_cast<size_t>(view)]->update(10);
+        const Frame expired_hidden = matrix(app, canvas, cameras, draw, view_count);
+        preferences.reduce_effects = false;
+        require(expired_hidden.pixels == matrix(app, canvas, cameras, draw, view_count).pixels,
+            "runoff hidden by Reduce effects failed to age and retire");
+        app.viewport_manager()->set_layout(ScreenLayout::four_player);
+    }
+
     std::unique_ptr<Level> level(Application& app, LevelBuilder& builder, TeamColourPair palette)
     {
         MenuLevelSettings settings;
@@ -514,6 +657,8 @@ int wmain(int argc, wchar_t** argv)
                 const TeamColour colours = TeamColourTools::team_colours(palette, presentation.team_palette());
                 shots(app, canvas, tuning, colours, scale, output, prefix, records);
                 impacts(app, canvas, tuning, preferences, colours, scale, output, prefix, records);
+                runoffs(app, canvas, tuning, preferences, colours, scale, output, prefix, records, 4);
+                runoffs(app, canvas, tuning, preferences, colours, scale, output, prefix, records, 1);
                 std::cout << "PASS " << prefix << " real 4P scene, four flying types, five impact types, "
                     "four faces, immediate friendly/enemy repaint, frozen redraw and raster bounds\n";
             }

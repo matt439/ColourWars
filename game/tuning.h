@@ -132,6 +132,22 @@ struct PlayerAnimationTuning
 	std::optional<float> frame_time = std::nullopt;
 };
 
+// A short cosmetic phrase on an already-owned vertical face. It never paints.
+struct PaintRunoffTuning
+{
+	float delay = 0.0f;
+	float duration = 0.0f;
+	float distance = 0.0f;
+	float width = 0.0f;
+	float bead_height = 0.0f;
+	float trail_length = 0.0f;
+	float trail_width = 0.0f;
+	float keyline_width = 0.0f;
+	float face_inset = 0.0f;
+	float shade = 0.0f;
+	float highlight = 0.0f;
+};
+
 // Paint coverage granularity, thickness, visuals and sound.
 // Tile lengths affect scoring precision, so geometry belongs with balance data.
 struct PaintTuning
@@ -156,6 +172,7 @@ struct PaintTuning
 	float wet_highlight = 0.0f;
 	float settle_depth = 0.0f;
 	float splash_scale = 0.0f;
+	PaintRunoffTuning runoff;
 
 	std::string sound_bank;
 	std::vector<SoundTuning> splash_sounds;

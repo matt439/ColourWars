@@ -100,3 +100,72 @@ movement-feel, controller, listening or frame-pacing acceptance. The reference
 arena and its review remain in their existing TODO rows.
 [Idle nozzle drips](polish-plan.md#tool-personality-and-quiet-detail) and
 [player hit/elimination feedback](polish-combat-feedback.md) are implemented.
+
+## Wall runoff
+
+Implemented 2026-10-15 as a gameplay-style increment of `POL#16`: small cosmetic
+runs on fresh wall paint. A projectile contact starts at most one run on each
+exposed vertical strip. After a short delay, a stepped, black-outlined bead and thin wet trail
+accelerate down the existing team paint. Further friendly contacts let the
+current phrase finish instead of holding it at its first frame.
+
+The run stops at the first neutral or opposing tile, the exposed strip's end,
+its travel limit or its lifetime. Repainting its source for the other team
+cancels it. The bead and trail are clipped inside the current same-team colour
+band, preserving the inward black keyline, fractional tile edges and gaps where
+another structure covers the wall. They never add painted area or transfer
+credit. Horizontal faces retain their existing wet settling treatment.
+
+One slot is stored per vertical strip, independent of shot count and player
+views. Positive simulation updates advance it; pause and nonpositive updates
+freeze it. Reduce effects hides the runoff while its lifetime continues, so
+restoring the preference cannot replay an expired mark. Drawing stays const
+and consumes no random numbers. Collision, coverage, attribution, audio and
+culling extents keep their existing paths.
+
+The editable measurements, delay, lifetime and shading live in
+`tuning.json.paint.visual.runoff`. This uses the existing fill texel and needs
+no new atlas, authoring tool or runtime asset.
+
+The defaults wait 0.12 seconds, then accelerate over a 0.65-second phrase with
+at most 28 world units of travel. The bead is 3 by 5 units, with a 9-unit trail,
+a 0.75-unit keyline and restrained team-coloured shade/highlight. The available
+owned corridor can end the phrase sooner. Once a boundary shortens a run,
+reclaiming paint does not extend that old phrase through it.
+
+### Runoff validation
+
+Debug and Release build under `/W4 /WX` and each pass all 21 consumer cases.
+The expanded `paint` case checks delay, accelerated travel, expiry, nonpositive
+ticks, sustained contacts, source/enemy repaint, sticky ownership boundaries,
+different friendly capturing players, fractional occlusion and tiny exposed
+fragments. Coverage and player credit remain exact. Content variants reject
+missing/wrong-type fields, out-of-range values and incompatible
+width, inset, trail or keyline measurements with an owning-field diagnostic.
+
+Both D3D11 hardware probes pass on the NVIDIA GeForce RTX 5080. The existing
+projectile/impact matrix is retained; added one/four-view runoff fixtures use
+both team colours in all three palettes at native 720p, 1080p and QHD scales.
+They compare early/late motion with same-state Reduce effects suppression,
+check every changed pixel against independently authored owned-wall rectangles
+with the renderer's edge quantization, and preserve the inward keyline, enemy
+paint and fractional occlusion. Frozen redraws preserve pixels and observed
+effect/ownership state. Hidden runs continue to expire. Native-size inspection
+confirms the restrained moving bead/trail in the retained
+[blue/orange](images/polish-paint-effects/runoff-blue-orange-720p.png) and
+[pink/green](images/polish-paint-effects/runoff-pink-green-720p.png) contact sheets.
+These controlled fixtures do not establish reference-arena composition or human
+readability acceptance; those remain in `POL#7` and `POL#24`.
+
+The 53-file Release ZIP byte-matches all 26 reviewed runtime assets and the
+accepted sound bank, and excludes authoring/probe files. Isolated Debug and
+extracted Release startup pass with the bank, a system-only PATH and graceful
+close. A separate extracted copy passes the absent-bank fallback with its
+single expected diagnostic. The player's real save is never opened.
+
+Evidence is under `out/validation/runoff/`, `out/acceptance/<preset>/` and
+`out/validation/runoff-{build,acceptance,visual}-x64-{debug,release}.log`.
+Final renderer run IDs are Debug `59bf1b10d53e402fb11cf3296d0efd0a` and
+Release `13666037379046308b1bef2bdd8ffc4d`; receipts record baseline `3262636`
+plus the working changes and the unchanged engine pin. `POL#16` remains open
+for the remaining arena/interface treatment in the polish plan.

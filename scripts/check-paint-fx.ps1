@@ -86,7 +86,7 @@ public static class ColourWarsPaintFxPpm {
     foreach ($file in Get-ChildItem -LiteralPath $CaptureDirectory -Filter '*.ppm' -File | Sort-Object Name) {
         $png = [IO.Path]::ChangeExtension($file.FullName, '.png')
         [ColourWarsPaintFxPpm]::Convert($file.FullName, $png)
-        if ($file.BaseName -match '^(\d+x\d+-(?:blue_orange|pink_green|blue_yellow))-(shots|impact)-.*-crop$') {
+        if ($file.BaseName -match '^(\d+x\d+-(?:blue_orange|pink_green|blue_yellow))-(shots|impact|runoff)-.*-crop$') {
             $key = $Matches[1] + '-' + $Matches[2]
             if (-not $groups.ContainsKey($key)) { $groups[$key] = [Collections.Generic.List[object]]::new() }
             $groups[$key].Add([pscustomobject]@{
@@ -155,7 +155,7 @@ $result = [ordered]@{
     engine_revision = (& git -C external/labrador rev-parse HEAD)
     worktree_status = @(& git status --short)
     stage = 'movement_course'
-    player_counts = @(4)
+    player_counts = @(1, 4)
     resolutions = @('1280x720', '1920x1080', '2560x1440')
     camera_scales = @(0.6666667, 1.0, 1.3333333)
     palettes = @('blue_orange', 'pink_green', 'blue_yellow')
@@ -164,7 +164,7 @@ $result = [ordered]@{
     surface_faces = @('top', 'bottom', 'left', 'right')
     inputs = 'Scripted pad-slot inputs at the real 60 Hz simulation step; no physical-device claim.'
     audio = 'Muted; this check establishes no listening acceptance.'
-    checks = 'Actual four-player Level context at every resolution/palette; controlled matrices submit four render views at the actual gameplay camera scale. Four flying builder projectile kinds, both team colours, cardinal and diagonal velocities, birth and aged frame; raster bounds and repeated const draws. Five builder projectile kinds contact real StructurePaintable objects on all four faces. Friendly repaint restarts pixels without stealing credit; enemy repaint immediately equals fresh-team tint; wet impact settles; mixed adjacent friendly/enemy paint. Representative playing-size crops, full 4-view matrices and scene captures; roller only represented by surface contact.'
+    checks = 'Actual four-player Level context at every resolution/palette; controlled matrices submit four render views at the actual gameplay camera scale. Four flying builder projectile kinds, both team colours, cardinal and diagonal velocities, birth and aged frame; raster bounds and repeated const draws. Five builder projectile kinds contact real StructurePaintable objects on all four faces. Friendly repaint restarts pixels without stealing credit; enemy repaint immediately equals fresh-team tint; wet impact settles; mixed adjacent friendly/enemy paint. Wall runoff adds native-scale one/four-view matrices in all palettes/resolutions, early/late moving frames and live Reduce effects baseline subtraction. Every changed runoff raster sample is checked against independent same-team exposed wall rectangles excluding the inward keyline, neutral/enemy paint and fractional occlusion; bounded narrow fragments, corner contacts, const redraw, unchanged paint credit and hidden aging/retirement. Representative playing-size crops, full matrices and scene captures; roller only represented by surface contact.'
     profile = $profile
     diagnostic = ''
 }
@@ -288,7 +288,7 @@ try {
     }
     Write-ContactSheet -CaptureDirectory $captures
     $result.outcome = 'passed'
-    $result.diagnostic = 'Paint effect builder/contact matrices, immediate repaint tint, paint credit, frozen draws, settled impacts and raster culling bounds passed. Contact sheets preserve playing size. Human art review, physical devices and listening acceptance remain separate.'
+    $result.diagnostic = 'Paint effect builder/contact matrices, immediate repaint tint, paint credit, frozen draws, settled impacts and raster culling bounds passed. One/four-view wall runoff moves at native gameplay scale, obeys exact ownership/keyline/occlusion raster bounds, suppresses live with Reduce effects and retires while hidden. Contact sheets preserve playing size. Human art review, physical devices and listening acceptance remain separate.'
 }
 catch {
     $failure = $_

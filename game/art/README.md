@@ -85,6 +85,12 @@ Only `game/content/textures/paint_fx.{json,dds}` enters runtime content.
 The [implementation and validation record](../../docs/polish-paint-effects.md)
 describes exact surface ownership, paint keylines, wet settling and culling.
 
+Fresh wall runoff is also code-drawn from the existing fill texel in
+`game/objects/structure_paintable.cpp`, with authored measurements and timing in
+`tuning.json.paint.visual.runoff`. The [runoff record](
+../../docs/polish-paint-effects.md#wall-runoff) describes its clipping to current
+same-team ownership and its bounded lifetime. Normal builds reproduce it directly.
+
 Takeoff/landing puffs and step/skid flecks use the existing fill texel. Their
 editable shapes are in [`movement_feedback.cpp`](../objects/movement_feedback.cpp),
 with dimensions, timing and colours in `presentation.json.movement_feedback`.
