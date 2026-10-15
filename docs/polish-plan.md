@@ -664,6 +664,15 @@ attachment, size and quiet interval. This completes those two quiet-tool
 details from §4; stage-entry, opening/closing accents and the remaining match/UI
 treatment still belong here.
 
+**Monitor scene artwork implemented (2026-10-15, part of `POL#16`).** The
+[drawing and evidence](polish-monitor.md) give the physical computer around
+the opening and reveal a stepped black keyline, a pale upper edge, airbrush
+shade and small casing details. Notes and other bezel decorations draw over
+the picture, including previews, the countdown push, pullback and the
+closed-program ending. The story and picture layout keep their existing
+behaviour. The remaining opening/closing accents and match/UI treatment stay
+open; this does not establish reference-arena composition acceptance.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

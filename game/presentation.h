@@ -553,6 +553,22 @@ struct RespawnRedrawPresentation
 	std::vector<RespawnStroke> strokes;
 };
 
+// Static physical monitor artwork. Rectangles are fractions of the screen;
+// pen, corner and shadow widths are fractions of its height.
+struct MonitorArtPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour highlight;
+	labrador::Colour power_light;
+	float pen_width = 0.0f;
+	float corner_step = 0.0f;
+	float shadow_width = 0.0f;
+	mattmath::RectangleF vent_area;
+	int vent_count = 0;
+	mattmath::RectangleF power_button;
+	mattmath::RectangleF power_indicator;
+};
+
 // The monitor the picture is on, the person at it and the cursor they use:
 // the opening's look (docs/backstory.md, "Opening"). Rectangles are fractions
 // of the screen, sizes fractions of its height, colours are drawn as is.
@@ -563,6 +579,7 @@ struct OpeningPresentation
 	// Each match picks one; each is a different person's computer.
 	std::vector<labrador::Colour> bezel_shades;
 	labrador::Colour bezel_shadow;
+	MonitorArtPresentation monitor_art;
 	mattmath::RectangleF glass;
 	labrador::Colour glass_colour;
 	// Behind the picture, where it does not fill the glass.

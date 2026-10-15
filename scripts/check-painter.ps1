@@ -5,12 +5,15 @@ param(
     [switch] $SkipBuild,
     [switch] $IdentityOnly,
     [switch] $QuietOnly,
+    [switch] $MonitorOnly,
     [string] $OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if ($IdentityOnly -and $QuietOnly) { throw 'Choose only one focused painter matrix.' }
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent) -gt 1) {
+    throw 'Choose only one focused painter matrix.'
+}
 
 # Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
 if (-not $OutputDirectory) {
@@ -89,7 +92,10 @@ function Write-ContactSheet {
     try {
         $cellWidth = 320
         $cellHeight = 160
-        foreach ($file in Get-ChildItem -LiteralPath $CaptureDirectory -Filter '*-player*.ppm' -File | Sort-Object Name) {
+        $monitorCellWidth = 320
+        $monitorCellHeight = 160
+        foreach ($file in Get-ChildItem -LiteralPath $CaptureDirectory -Filter '*.ppm' -File |
+            Where-Object { $_.Name -like '*-player*.ppm' -or $_.Name -like 'monitor-*.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
             if ($header -notmatch '^P6\n(\d+) (\d+)\n255\n') { throw "Unsupported capture header: $($file.FullName)" }
@@ -115,11 +121,18 @@ function Write-ContactSheet {
             }
             finally { $bitmap.UnlockBits($data) }
             $bitmap.Save([IO.Path]::ChangeExtension($file.FullName, '.png'), [Drawing.Imaging.ImageFormat]::Png)
-            $cellWidth = [Math]::Max($cellWidth, $width + 16)
-            $cellHeight = [Math]::Max($cellHeight, $height + 48)
+            if ($file.BaseName -like 'monitor-*') {
+                $monitorCellWidth = [Math]::Max($monitorCellWidth, $width + 16)
+                $monitorCellHeight = [Math]::Max($monitorCellHeight, $height + 48)
+            }
+            else {
+                $cellWidth = [Math]::Max($cellWidth, $width + 16)
+                $cellHeight = [Math]::Max($cellHeight, $height + 48)
+            }
         }
-        if ($images.Count -eq 0) { throw 'No painter crops were captured.' }
-        Write-ContactSheetPages -Images $images.ToArray() -CellWidth $cellWidth -CellHeight $cellHeight `
+        if ($images.Count -eq 0) { throw 'No painter or monitor captures were produced.' }
+        $painters = @($images | Where-Object { $_.name -notlike 'monitor-*' })
+        Write-ContactSheetPages -Images $painters -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-contact'
         # Keep the complete matrix above, and compact action review pages
         # with one native-size figure per action/frame/facing or 4P palette.
@@ -159,6 +172,9 @@ function Write-ContactSheet {
         })
         Write-ContactSheetPages -Images $identity -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-player-identity-contact'
+        $monitors = @($images | Where-Object { $_.name -like 'monitor-*' })
+        Write-ContactSheetPages -Images $monitors -CellWidth $monitorCellWidth -CellHeight $monitorCellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-monitor-contact'
     }
     finally {
         foreach ($item in $images) { $item.bitmap.Dispose() }
@@ -196,7 +212,7 @@ $process = $null
 $failure = $null
 $result = [ordered]@{
     outcome = 'failed'
-    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } else { 'full-painter-matrix' }
+    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } else { 'full-painter-matrix' }
     preset = $Preset
     game_revision = (& git rev-parse HEAD)
     engine_revision = (& git -C external/labrador rev-parse HEAD)
@@ -215,6 +231,7 @@ $result = [ordered]@{
     aim_marker_checks = 'Isolated save loads aim_marker=false and remains byte-identical. Existing matrices disable markers. Actual four aimed weapons enter ready/recovering/empty through paid shots and strict cooldown, in all three palettes and four aim quadrants at 4P720; representative 4P1080/QHD. Marker fixture uses a silent bank while paying many shots without wall-clock audio updates. Same-state Level on/off raster changes lie only inside each owning pane marker bounds; all three shapes have distinct isolated native rasters. A mixed-angle/readiness roster checks independent owner panes. Repeated frozen draws, suspension, simulation state and replay fingerprint are checked. CPU acceptance separately verifies affordability boundaries, all lifecycle gates and gameplay equivalence.'
     blocked_shot_checks = 'Detached contacts in actual four-pane Level drawing; controlled opaque-cover/nozzle overlap and four outward normals at native 4P720 in every palette, plus representative 1080p/QHD. Initial/middle/expired, enabled/disabled pixels, projected cue and aggregate bounds, rebound/fade raster changes, repeated frozen redraws, cosmetic timers, simulation state and Debug replay fingerprint. CPU acceptance separately checks actual launch/flight contact classification and lifecycle.'
     player_identity_checks = 'Real same-team builder rosters with identical tools in all three 4P720 palettes; overlapping figures, actual scripted teammate crossing and sparse/reordered input slots. Quiet, requested emphasis and reduce-effects captures, representative 1080p/QHD extents, pause, dead/respawn and story suppression. Same-state zero-world-size comparison preserves pane HUD badges and constrains every changed pixel to the owning world badge bounds. Distinct shared P1-P4 native glyph rasters, native context and badge crops, frozen cosmetic state, repeated redraw and Debug replay fingerprint. CPU acceptance separately verifies lifecycle and gameplay equivalence; human reading acceptance remains separate.'
+    monitor_checks = 'Bounded 40-capture matrix: six authored body shades, adult with mug/ring/crack/notes and child with stickers; manual picture-edge note overlap at 720p/1080p/QHD and one bounded glass push. Foreground notes survive picture and preview, picture/palette interiors stay unchanged, saving fills the empty slot and closing replaces the picture with the desktop. Actual sparse-slot 2P/4P opening, both previews, countdown, glass push and reveal pullback; painted 2P winner preview/saved slot and unpainted 4P close; solo practice without a monitor. Frozen rasters, persona/public simulation state, draw RNG and Debug replay fingerprint remain unchanged. Captures establish no listening or physical-device acceptance.'
     checks = 'Real builder/Scene rosters, both movement facings and four aim quadrants at 720p; representative facings also at 1080p/QHD; three 4P palettes; all four same-team accents in both facings. Five body action clips on actual events, both frames and distinct pinned body rasters. All five tools at 1P720 in both facings: paid fire/hold/release/recovery, hose/bucket travel and roller travel/lift. Three 4P palettes: right-facing mixed aimed tools and left-facing roller, plus 1080p/QHD extent captures. Sampled non-idle pinned tools differ from idle at gameplay zoom, including released roller travel/lift. Frozen draws byte-equal, public simulation/action/tool motion state and Debug replay fingerprint unchanged. Isolated player/tool raster output stays inside projected cull bounds. Death, outline, fill, respawn, tool-free squash and whole-dead story poses; early elimination whole-dead raster equals later idle whole-dead raster. Combat on/off comparisons at identical simulation state: hurt and elimination across all three 4P palettes at 720p; controlled 4P hurt initial/recovery/expiry and elimination initial/middle/late/expiry at 720p/1080p/QHD. Combat timers/death snapshot stay unchanged during drawing; whole-dead story figures suppress the burst.'
     profile = $profile
     diagnostic = ''
@@ -223,7 +240,7 @@ if ($IdentityOnly) {
     $result.player_counts = @(2, 4)
     $result.weapons = @('sprayer', 'sniper')
     $result.actions = @()
-    foreach ($key in 'contact_checks', 'weapon_checks', 'quiet_checks', 'aim_marker_checks', 'blocked_shot_checks') {
+    foreach ($key in 'contact_checks', 'weapon_checks', 'quiet_checks', 'aim_marker_checks', 'blocked_shot_checks', 'monitor_checks') {
         $result.Remove($key)
     }
     $result.checks = $result.player_identity_checks
@@ -231,10 +248,20 @@ if ($IdentityOnly) {
 elseif ($QuietOnly) {
     $result.weapons = @('sprayer', 'sniper', 'bucket')
     $result.actions = @()
-    foreach ($key in 'contact_checks', 'weapon_checks', 'aim_marker_checks', 'blocked_shot_checks', 'player_identity_checks') {
+    foreach ($key in 'contact_checks', 'weapon_checks', 'aim_marker_checks', 'blocked_shot_checks', 'player_identity_checks', 'monitor_checks') {
         $result.Remove($key)
     }
     $result.checks = $result.quiet_checks
+}
+elseif ($MonitorOnly) {
+    $result.player_counts = @(1, 2, 4)
+    $result.palettes = @('blue_orange')
+    $result.weapons = @('roller')
+    $result.actions = @()
+    foreach ($key in 'contact_checks', 'weapon_checks', 'quiet_checks', 'aim_marker_checks', 'blocked_shot_checks', 'player_identity_checks') {
+        $result.Remove($key)
+    }
+    $result.checks = $result.monitor_checks
 }
 try {
     if (-not $SkipBuild) {
@@ -329,6 +356,7 @@ try {
     $probeArguments = @((Quote-Path $gameDirectory), (Quote-Path $captures))
     if ($IdentityOnly) { $probeArguments += 'identity' }
     elseif ($QuietOnly) { $probeArguments += 'quiet' }
+    elseif ($MonitorOnly) { $probeArguments += 'monitor' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -364,6 +392,9 @@ try {
     }
     elseif ($QuietOnly) {
         $result.diagnostic = 'Quiet-only visual check passed: sprayer quiet character matrix, sniper residual bead and bucket rim runoff; all 1P/4P720 palettes, continuous aim/flip attachment, representative 1080p/QHD, frozen redraw/state, raster bounds, per-tool enabled and reduced-effects suppression/restoration. Other painter matrices were not run.'
+    }
+    elseif ($MonitorOnly) {
+        $result.diagnostic = 'Monitor-only visual check passed: six body shades, adult/mug and child/stickers; native 720p/1080p/QHD and pushed framing, foreground notes survive scene/preview, untinted picture/palette interiors, saved empty slot and closed desktop. Actual 2P/4P story beats, winning reveal, no-paint close and solo practice passed frozen raster/persona/state/fingerprint and draw RNG checks. Other painter matrices were not run.'
     }
     else {
         $result.diagnostic = "Painter base/action, five-tool mechanism, weapon paid-shot/aim-follow and controlled muzzle/empty/recovered on/off, step/skid contact, and actual idle drip/quiet character matrices passed. Aim readiness markers passed actual ready/recovering/empty, all palette/quadrant own-pane on/off bounds, isolated marker raster, frozen redraw and pause checks; the disabled isolated-save fixture remained unchanged. Local view shake preserved other panes, opaque HUD ink, base camera/aim, frozen redraw and simulation fingerprint, including suspension and resume. Distinct pinned body/tool and quiet on/off/blink rasters, frozen motion/feedback/quiet timers/redraw, separate player/drip raster culling bounds, elimination/redraw/respawn and idle whole-story poses passed. $identityDiagnostic"

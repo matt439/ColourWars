@@ -288,6 +288,8 @@ void Level::draw_intro(Renderer& renderer) const
 	{
 		front.set_viewport(fullscreen);
 		front.set_camera(Camera::DEFAULT_CAMERA);
+		front.set_filter(TextureFilter::point);
+		this->monitor_->draw_front_details(front, screen);
 		this->draw_countdown_text(front);
 		return;
 	}
@@ -313,6 +315,7 @@ void Level::draw_intro(Renderer& renderer) const
 	front.set_viewport(fullscreen);
 	front.set_camera(Camera::DEFAULT_CAMERA);
 	front.set_filter(TextureFilter::point);
+	this->monitor_->draw_front_details(front, screen);
 	this->monitor_->draw_close_button(front, screen);
 	if (beat.picker)
 	{
@@ -478,6 +481,10 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 {
 	if (this->state_ == LevelState::zoom_out)
 	{
+		front.set_viewport(this->viewport_manager_->fullscreen_viewport());
+		front.set_camera(Camera::DEFAULT_CAMERA);
+		front.set_filter(TextureFilter::point);
+		this->monitor_->draw_front_details(front, screen);
 		return;
 	}
 	const RectangleF window(Vector2F::ZERO, this->resolution_manager_->resolution_vec());
@@ -512,7 +519,8 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 		{
 			this->monitor_->draw_closed(front, screen);
 		}
-		else
+		this->monitor_->draw_front_details(front, screen);
+		if (!beat.clicked)
 		{
 			this->monitor_->draw_close_button(front, screen);
 		}
@@ -521,6 +529,7 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 		return;
 	}
 
+	this->monitor_->draw_front_details(front, screen);
 	this->monitor_->draw_close_button(front, screen);
 	if (beat.picker)
 	{

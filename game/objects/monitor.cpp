@@ -25,6 +25,12 @@ namespace
             screen.y + fraction.y * screen.height);
     }
 
+    RectangleF on_screen(const RectangleF& screen, const RectangleF& fraction)
+    {
+        return RectangleF(on_screen(screen, fraction.position()),
+            Vector2F(fraction.width * screen.width, fraction.height * screen.height));
+    }
+
     // The bezel around the glass, as fractions of the screen, where a note can
     // be stuck so that it overlaps the glass's edge a little and no more.
     constexpr std::array<Vector2F, 6> note_spots = { {
@@ -167,6 +173,7 @@ void Monitor::draw(DrawList& draw_list, const RectangleF& screen) const
     const OpeningPresentation& look = *this->look_;
     const float height = screen.height;
     this->fill(draw_list, screen, look.bezel_shades[this->persona_.shade % look.bezel_shades.size()]);
+    this->draw_bezel_shading(draw_list, screen);
 
     // The bezel's inner lip, then the glass, then the program on it.
     const RectangleF glass = this->glass(screen);
@@ -185,6 +192,97 @@ void Monitor::draw(DrawList& draw_list, const RectangleF& screen) const
     }
     this->frame_rectangle(draw_list, this->empty_slot(screen),
         std::max(1.0f, palette.height * 0.06f), look.slot_outline);
+}
+
+void Monitor::draw_bezel_shading(DrawList& draw_list, const RectangleF& screen) const
+{
+    const OpeningPresentation& look = *this->look_;
+    const float width = look.monitor_art.shadow_width * screen.height;
+    const RectangleF glass = this->glass(screen);
+    // A few broad, square airbrush passes. Their overlap is fixed artwork,
+    // with no sampling, randomness or work proportional to the window size.
+    const Colour shade = premultiplied(Colour(look.bezel_shadow.r,
+        look.bezel_shadow.g, look.bezel_shadow.b, look.bezel_shadow.a / 4.0f));
+    for (int band = 4; band > 0; --band)
+    {
+        const float spread = width * static_cast<float>(band) / 4.0f;
+        this->fill(draw_list, RectangleF(glass.x - spread * 0.2f,
+            glass.y - spread * 0.2f, glass.width + spread * 1.2f,
+            glass.height + spread * 1.2f), shade);
+        this->fill(draw_list, RectangleF(screen.right() - spread, screen.y,
+            spread, screen.height), shade);
+        this->fill(draw_list, RectangleF(screen.x, screen.bottom() - spread,
+            screen.width, spread), shade);
+    }
+}
+
+void Monitor::draw_front_details(DrawList& draw_list, const RectangleF& screen) const
+{
+    const OpeningPresentation& look = *this->look_;
+    const MonitorArtPresentation& art = look.monitor_art;
+    const float pen = art.pen_width * screen.height;
+    const float step = art.corner_step * screen.height;
+    const RectangleF glass = this->glass(screen);
+
+    this->frame_rectangle(draw_list, screen, pen, art.ink);
+    // The highlight sits on the physical body, outside the glass. Square
+    // starts and stops keep the oversized pen visible at every display size.
+    this->fill(draw_list, RectangleF(screen.x + step, screen.y + pen * 2.0f,
+        screen.width - step * 2.0f, pen), art.highlight);
+    this->fill(draw_list, RectangleF(screen.x + pen * 2.0f, screen.y + step,
+        pen, screen.height - step * 2.0f), art.highlight);
+    this->frame_rectangle(draw_list, RectangleF(glass.x - pen, glass.y - pen,
+        glass.width + pen * 2.0f, glass.height + pen * 2.0f), pen, art.ink);
+    this->fill(draw_list, RectangleF(glass.x - pen * 2.0f, glass.bottom() + pen,
+        glass.width + pen * 3.0f, pen), art.highlight);
+    this->fill(draw_list, RectangleF(glass.right() + pen, glass.y,
+        pen, glass.height + pen), art.highlight);
+    // Stepped corner nicks stay outside the glass, clear of picture().
+    for (const Vector2F& corner : { glass.position(),
+        Vector2F(glass.right() - step, glass.y),
+        Vector2F(glass.x, glass.bottom() - step),
+        Vector2F(glass.right() - step, glass.bottom() - step) })
+    {
+        const bool right = corner.x > glass.x;
+        const bool bottom = corner.y > glass.y;
+        this->fill(draw_list, RectangleF(corner.x,
+            bottom ? glass.bottom() + pen : glass.y - pen * 2.0f, step, pen), art.ink);
+        this->fill(draw_list, RectangleF(right ? glass.right() + pen : glass.x - pen * 2.0f,
+            corner.y, pen, step), art.ink);
+    }
+
+    const RectangleF vents = on_screen(screen, art.vent_area);
+    const float pitch = vents.height / static_cast<float>(art.vent_count);
+    for (int index = 0; index < art.vent_count; ++index)
+    {
+        const float y = vents.y + pitch * (static_cast<float>(index) + 0.5f);
+        this->fill(draw_list, RectangleF(vents.x + pen, y + pen,
+            vents.width - pen * 2.0f, pen), art.highlight);
+        this->fill(draw_list, RectangleF(vents.x, y,
+            vents.width, pen), art.ink);
+    }
+    const RectangleF button = on_screen(screen, art.power_button);
+    this->fill(draw_list, button, art.ink);
+    this->fill(draw_list, RectangleF(button.x + pen, button.y + pen,
+        button.width - pen * 2.0f, button.height - pen * 2.0f),
+        look.bezel_shades[this->persona_.shade % look.bezel_shades.size()]);
+    this->fill(draw_list, RectangleF(button.x + pen * 2.0f, button.y + pen,
+        button.width - pen * 4.0f, pen), art.highlight);
+    // A crude power glyph is a U with a short straight switch stroke.
+    const float glyph = std::min(button.width, button.height) * 0.4f;
+    const Vector2F centre = button.center();
+    this->fill(draw_list, RectangleF(centre.x - glyph / 2.0f, centre.y,
+        pen, glyph / 2.0f), art.ink);
+    this->fill(draw_list, RectangleF(centre.x + glyph / 2.0f - pen, centre.y,
+        pen, glyph / 2.0f), art.ink);
+    this->fill(draw_list, RectangleF(centre.x - glyph / 2.0f,
+        centre.y + glyph / 2.0f - pen, glyph, pen), art.ink);
+    this->fill(draw_list, RectangleF(centre.x - pen / 2.0f,
+        centre.y - glyph / 2.0f, pen, glyph / 2.0f), art.ink);
+    const RectangleF indicator = on_screen(screen, art.power_indicator);
+    this->fill(draw_list, indicator, art.ink);
+    this->fill(draw_list, RectangleF(indicator.x + pen, indicator.y + pen,
+        indicator.width - pen * 2.0f, indicator.height - pen * 2.0f), art.power_light);
 
     this->draw_decorations(draw_list, screen);
 }
@@ -193,6 +291,7 @@ void Monitor::draw_decorations(DrawList& draw_list, const RectangleF& screen) co
 {
     const OpeningPresentation& look = *this->look_;
     const float height = screen.height;
+    const float pen = look.monitor_art.pen_width * height;
 
     if (this->persona_.mug)
     {
@@ -203,12 +302,16 @@ void Monitor::draw_decorations(DrawList& draw_list, const RectangleF& screen) co
     for (size_t index = 1; index < this->persona_.crack.size(); ++index)
     {
         this->line(draw_list, on_screen(screen, this->persona_.crack[index - 1]),
-            on_screen(screen, this->persona_.crack[index]), 0.004f * height, look.crack);
+            on_screen(screen, this->persona_.crack[index]), pen, look.monitor_art.ink);
+        this->line(draw_list, on_screen(screen, this->persona_.crack[index - 1]),
+            on_screen(screen, this->persona_.crack[index]), pen * 0.45f, look.crack);
     }
     for (const MonitorPersona::Decoration& sticker : this->persona_.stickers)
     {
         const float radius = sticker_size * height;
         this->blob(draw_list, on_screen(screen, sticker.at), Vector2F(radius),
+            radius / 3.0f, look.monitor_art.ink);
+        this->blob(draw_list, on_screen(screen, sticker.at), Vector2F(radius - pen),
             radius / 3.0f, look.stickers[sticker.colour % look.stickers.size()]);
     }
     for (const MonitorPersona::Decoration& note : this->persona_.sticky_notes)
@@ -218,9 +321,15 @@ void Monitor::draw_decorations(DrawList& draw_list, const RectangleF& screen) co
         const RectangleF paper(on_screen(screen, note.at), Vector2F(size));
         this->fill(draw_list, RectangleF(paper.position() + Vector2F(size * 0.06f),
             paper.size()), premultiplied(look.bezel_shadow));
-        this->fill(draw_list, paper, look.sticky_notes[note.colour % look.sticky_notes.size()]);
-        this->fill(draw_list, RectangleF(paper.x, paper.y, size, size * 0.14f),
+        this->fill(draw_list, paper, look.monitor_art.ink);
+        this->fill(draw_list, RectangleF(paper.x + pen, paper.y + pen,
+            size - pen * 2.0f, size - pen * 2.0f),
+            look.sticky_notes[note.colour % look.sticky_notes.size()]);
+        this->fill(draw_list, RectangleF(paper.x + pen, paper.y + pen,
+            size - pen * 2.0f, size * 0.14f),
             premultiplied(Colour(0.0f, 0.0f, 0.0f, 0.12f)));
+        this->fill(draw_list, RectangleF(paper.x + pen * 2.0f,
+            paper.bottom() - pen * 2.0f, size - pen * 4.0f, pen), look.monitor_art.highlight);
         for (int row = 0; row < 3; ++row)
         {
             const float y = paper.y + size * (0.32f + 0.2f * static_cast<float>(row));

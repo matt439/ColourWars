@@ -849,6 +849,39 @@ namespace
 		opening.fill_frame = json.identifier("fill_frame");
 		opening.bezel_shades = read_colours(json, "bezel_shades");
 		opening.bezel_shadow = read_colour(json, "bezel_shadow");
+		const JsonValue art = json.object("monitor_art");
+		MonitorArtPresentation& monitor = opening.monitor_art;
+		monitor.ink = read_colour(art, "ink");
+		monitor.highlight = read_colour(art, "highlight");
+		monitor.power_light = read_colour(art, "power_light");
+		monitor.pen_width = read_fraction(art, "pen_width");
+		monitor.corner_step = read_fraction(art, "corner_step");
+		monitor.shadow_width = read_fraction(art, "shadow_width");
+		monitor.vent_count = art.integer("vent_count");
+		if (monitor.pen_width <= 0.0f || monitor.pen_width > 0.02f ||
+			monitor.corner_step < monitor.pen_width || monitor.corner_step > 0.05f ||
+			monitor.shadow_width <= 0.0f || monitor.shadow_width > 0.1f ||
+			monitor.vent_count < 1 || monitor.vent_count > 12)
+		{
+			throw std::runtime_error(art.where() +
+				": monitor pen, corner and shadow widths must fit the bezel, "
+				"and 'vent_count' must be from 1 to 12.");
+		}
+		const auto read_monitor_rectangle = [&art](const char* key)
+		{
+			const JsonValue value = art.object(key);
+			const RectangleF rectangle(read_fraction(value, "x"), read_fraction(value, "y"),
+				read_fraction(value, "width"), read_fraction(value, "height"));
+			if (rectangle.width <= 0.0f || rectangle.height <= 0.0f ||
+				rectangle.right() > 1.0f || rectangle.bottom() > 1.0f)
+			{
+				throw std::runtime_error(value.where() + ": monitor artwork must be on the bezel.");
+			}
+			return rectangle;
+		};
+		monitor.vent_area = read_monitor_rectangle("vent_area");
+		monitor.power_button = read_monitor_rectangle("power_button");
+		monitor.power_indicator = read_monitor_rectangle("power_indicator");
 		const JsonValue glass = json.object("glass");
 		opening.glass = RectangleF(read_fraction(glass, "x"), read_fraction(glass, "y"),
 			read_fraction(glass, "width"), read_fraction(glass, "height"));
@@ -856,6 +889,15 @@ namespace
 			opening.glass.right() > 1.0f || opening.glass.bottom() > 1.0f)
 		{
 			throw std::runtime_error(glass.where() + ": the glass must be on the screen.");
+		}
+		for (const RectangleF& hardware : { monitor.vent_area, monitor.power_button,
+			monitor.power_indicator })
+		{
+			if (hardware.x < opening.glass.right() && opening.glass.x < hardware.right() &&
+				hardware.y < opening.glass.bottom() && opening.glass.y < hardware.bottom())
+			{
+				throw std::runtime_error(art.where() + ": monitor hardware must stay outside the glass.");
+			}
 		}
 		opening.glass_colour = read_colour(json, "glass_colour");
 		opening.program_colour = read_colour(json, "program_colour");

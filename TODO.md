@@ -30,7 +30,7 @@ questions in the polish sub-docs are superseded, not open.
 |---|---|---|---|---|
 | `POL#7` | BLOCKED | HIGH | M | Human review of character/team/tool readability in the reference composition; waits on the arena (`POL#17`). E figure, action poses, masks, accents, grips, redraw and all five tools are implemented. [Painter](docs/polish-painter.md), [tools](docs/polish-tools.md). |
 | `POL#9` | BLOCKED | HIGH | XL | Material and prop kit for the reference arena, background layers, landmarks, room life; collision silhouettes stay truthful. Waits on `POL#17`. [§4](docs/polish-plan.md#environment-and-background). |
-| `POL#16` | OPEN | MED | XL | Finish stage-entry and opening/closing match accents; carry the style through menus, cards, stage preview, HUD, countdown, pause and results, then accepted arenas. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
+| `POL#16` | OPEN | MED | XL | Finish opening/closing match accents; carry the style through menus, cards, stage preview, HUD, countdown, pause and results, then accepted arenas. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback
 

@@ -5,7 +5,7 @@
 
 #include <vector>
 
-// Whose computer this match is on: a beige, what is stuck to it, and the
+// Whose computer this match is on: its body shade, what is stuck to it, and the
 // person who uses it. One is rolled per match, so a rematch is somewhere else
 // (docs/backstory.md, "Rematch"). Positions are fractions of the screen.
 struct MonitorPersona
@@ -60,8 +60,12 @@ public:
     // The program's close button, in the top corner of the glass.
     mattmath::RectangleF close_button(const mattmath::RectangleF& screen) const;
 
-    // The bezel, the glass, the program and its palette, and what is stuck on.
+    // The bezel, the glass, the program and its palette, behind the world.
     void draw(labrador::DrawList& draw_list, const mattmath::RectangleF& screen) const;
+    // Physical keylines, controls and decorations, above the world/preview but
+    // below its cursor and the person. Notes may overlap the glass's edge.
+    void draw_front_details(labrador::DrawList& draw_list,
+        const mattmath::RectangleF& screen) const;
     void draw_picker(labrador::DrawList& draw_list, const mattmath::RectangleF& screen,
         const labrador::Colour& first, const labrador::Colour& second) const;
     // The empty slot, filled: the colour has been saved.
@@ -81,5 +85,7 @@ private:
     mattmath::RectangleF program(const mattmath::RectangleF& screen) const;
     mattmath::RectangleF palette(const mattmath::RectangleF& screen) const;
     mattmath::RectangleF palette_swatch(const mattmath::RectangleF& screen, size_t index) const;
+    void draw_bezel_shading(labrador::DrawList& draw_list,
+        const mattmath::RectangleF& screen) const;
     void draw_decorations(labrador::DrawList& draw_list, const mattmath::RectangleF& screen) const;
 };

@@ -92,6 +92,12 @@ The [production puff record](../../docs/polish-feedback.md#paintexe-production-p
 describes the distinct silhouettes, clean fading and renderer checks. Normal
 builds reproduce this code-drawn artwork without an atlas-generation step.
 
+The physical monitor at stage entry and in the reveal is also code-drawn from
+the existing fill texel. Its editable casing, keylines, airbrush shade and
+decorations are in `game/objects/monitor.cpp`; authored values live in
+`presentation.json.opening.monitor_art`. The [monitor scene record](
+../../docs/polish-monitor.md) describes the foreground layering and evidence.
+
 ## Runtime content separation (GAP#8.6)
 
 Implemented 2026-10-15. Tracked runtime content in `game/content/` is the reviewed set
