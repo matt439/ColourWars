@@ -64,6 +64,11 @@ Weapon::Weapon(const GameTuning* tuning,
     }
     this->paint_frame_ = this->sprite_sheet()->
         resolve_sprite_frame(details.frame_name + "_paint");
+    if (type == WeaponType::sprayer || type == WeaponType::mister)
+    {
+        this->supply_strip_ = this->sprite_sheet()->resolve_animation_strip(
+            details.frame_name + "_supply");
+    }
     this->nozzle_frame_ = this->sprite_sheet()->
         resolve_sprite_frame(nozzle_frame_name);
 }
@@ -95,6 +100,17 @@ void Weapon::draw(DrawList& draw_list, bool debug) const
         motion_enabled ? this->motion_paint_frames_[pose] : this->paint_frame_,
         this->paint_override_.value_or(this->paint_colour()),
         origin, flip, this->rotation());
+    if (this->supply_strip_)
+    {
+        const AnimationStrip& supply = this->sprite_sheet()->animation_strip(*this->supply_strip_);
+        const float remaining = std::clamp(this->ammo() / this->tuning_->starting_ammo(), 0.0f, 1.0f);
+        const int level = static_cast<int>(std::ceil(remaining * (supply.frame_count() - 1)));
+        // Keep all three layers on the identical full-canvas transform. A
+        // cropped destination would snap its edges independently at 720p,
+        // moving the liquid off its window during rotation or camera motion.
+        this->sprite_sheet()->draw(draw_list, supply.frame_rect(level), draw_rectangle,
+            this->paint_override_.value_or(this->paint_colour()), this->rotation(), origin, flip);
+    }
 
     this->draw_mist_tail(draw_list);
     if (this->feedback_ != nullptr)

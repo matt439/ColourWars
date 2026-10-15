@@ -25,12 +25,14 @@ public:
 		const labrador::Colour& colour, const MenuStyle* style,
 		const std::string& sheet_name = "sprite_sheet_1");
 	// An empty paint name is an icon with no team-coloured region.
-	void set_sprite_frame(const std::string& frame, const std::string& paint_frame = "");
+	void set_sprite_frame(const std::string& frame, const std::string& paint_frame = "",
+		const std::string& supply_strip = "");
 	void set_paint_colour(const labrador::Colour& colour);
 	void draw(labrador::DrawList& list) const override;
 private:
 	const MenuStyle* style_;
 	labrador::SpriteSheet::frame_handle pixel_;
 	labrador::SpriteSheet::frame_handle paint_frame_;
+	labrador::SpriteSheet::strip_handle supply_strip_;
 	labrador::Colour paint_colour_ = labrador::Colour::white;
 };

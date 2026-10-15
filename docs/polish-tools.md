@@ -11,8 +11,9 @@ blockout (`POL#17`). These captures retain the existing arena, projectiles and H
 The editable [vector source and recipe](../game/art/weapons/README.md) draw black
 outlines, neutral worn hardware and explicit team-paint materials. Each tool has
 four same-canvas poses, each split into complementary neutral and grayscale paint
-layers. The runtime atlas contains 44 frames: 20 pose pairs and four preserved
-utility frames. Its premultiplied RGBA8 DDS has one mip and four-texel frame gutters.
+layers. The runtime atlas contains 44 named frames: 20 pose pairs and four preserved
+utility frames, plus the two reservoir supply strips described below. Its
+premultiplied RGBA8 DDS has one mip and four-texel packed-rectangle gutters.
 Only the DDS and frame JSON enter staging and Release; sources, PNGs, preview and
 tools remain under `game/art/`.
 
@@ -28,7 +29,9 @@ The artwork retains every existing tool canvas, pivot, muzzle offset and grip.
 Hands stay attached while mechanisms move within the canvas. The roller's axle
 stays at local `(75,0)`, preserving its paint contact. Continuous aim, ammunition,
 cadence, projectile launch/ownership, movement, collisions and scored paint keep
-their existing simulation paths. Tanks and fill are ungraduated materials.
+their existing simulation paths. The [reservoir supply pass](#reservoir-paint-supply)
+now makes the sprayer and mister liquid follow ammunition; the bucket opening
+remains a wet material, and the sniper dial still depicts pressure.
 
 ## Motion and lifecycle
 
@@ -165,3 +168,76 @@ scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -QuietOnly
 
 Reference-arena composition and human readability review remain in `POL#7`
 and `POL#24`; remaining match and UI work stays in `POL#16`.
+
+## Reservoir paint supply
+
+Implemented 2026-10-15 as a gameplay-art increment of `POL#16`, following the
+visible-supply requirement in polish-plan §4. The sprayer and mister reservoirs
+now show actual remaining paint. The sprayer has six liquid rows, the mister
+seven visible rows after hardware occlusion. Empty space is opaque neutral
+grey; the nozzle remains wet and team-coloured. Other tools retain their
+existing material and mechanism drawings.
+
+Drawing selects `ceil(clamp(ammo / starting_ammo, 0, 1) * rows)` directly from
+the current ammunition. Positive reserves retain at least the bottom row;
+zero is empty. The coarse window is supplementary information: the existing
+readiness cue still reports whether the tool can afford a complete shot.
+Regeneration, infinite-ammo refill, respawn and live maximum-ammo edits need
+no separate visual timer. Pause freezes the underlying ammunition, and Reduce
+effects preserves the information. The opening's grey override also applies
+to the liquid. Selection previews use the full reservoir and clear that layer
+when switching to another tool or Random.
+
+The [editable source and recipe](../game/art/weapons/README.md) separate reservoir
+liquid from permanent wet paint. Each supply level occupies the full original
+tool canvas and shares its destination, origin, rotation and flip. This keeps
+the liquid registered with the base under camera-space edge rounding at 720p
+and through continuous aim. The recipe checks identical supply masks after
+every pose's hardware occlusion before sharing a strip. Startup rejects
+missing strips, fewer than two levels, different canvases and nonzero body
+origins. Drawing remains const and introduces no simulation state or randomness.
+
+The atlas grows from 2048x1280 to 2560x1280 (2.5 MiB additional uncompressed
+RGBA8 texture memory), retaining all original tool silhouettes, grips, muzzles
+and utility pixels. Only the reviewed DDS and JSON enter staging and Release.
+
+Run the focused renderer check from an x64 VS Developer shell:
+
+```powershell
+scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -SupplyOnly
+scripts/check-painter.ps1 -Preset x64-release -SkipBuild -SupplyOnly
+```
+
+Validation on 2026-10-15:
+
+- Debug and Release build under `/W4 /WX` and each pass all 21 consumer cases,
+  including ammunition/cadence, movement, paint ownership, tool motion and
+  Debug replay determinism.
+- Both focused D3D11 hardware matrices pass on the NVIDIA GeForce RTX 5080:
+  one/four-player 720p in every palette, four aim quadrants and all four poses,
+  with representative 4P1080p/QHD checks. Independently composed authored
+  layers match the full/half weapon raster; quantity changes stay inside the
+  existing opaque tool silhouette and leave hardware/permanent paint exact.
+  Checks include clamped quantities, paid depletion, natural regeneration,
+  reset, motion disabled, Reduce effects, full menu previews and switching
+  tools, frozen pixels/state/Debug fingerprint and unchanged draw RNG.
+- Two fresh-process regenerations are byte-identical for source PNG, atlas
+  JSON, DDS and lineup. Full assembled artwork matches the previous revision
+  pixel for pixel in every pose and all five hues; every supply frame contains
+  exactly its bottom row count. Other tools, utility pixels and silhouettes
+  are unchanged. DDS pixels match premultiplied RGBA8 with one mip.
+- The 53-file Release ZIP contains all 26 reviewed runtime assets byte for
+  byte and excludes authoring/debug files. Isolated Debug and extracted
+  Release startup pass with the bank and a system-only PATH. A separate
+  extracted no-bank copy starts with exactly the expected single fallback
+  diagnostic; every run closes gracefully without touching the player's save.
+
+Evidence is under `out/validation/tool-supply/` and
+`out/validation/weapon-supply-art/`. Successful visual runs are Debug
+`13f3e25ba6934188b64a3b43987f6cde` and Release
+`852709454c504f5ab607fef273706f98`. The retained
+[native four-player comparison](images/polish-tools/supply-720p.png) shows full,
+half and empty windows for both tools in all five hues without enlargement.
+These checks complete this supply increment, while `POL#16` remains open for
+the remaining presentation work. Human composition, movement, pad, listening
+and frame-pacing acceptance keep their existing TODO rows.

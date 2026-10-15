@@ -8,6 +8,7 @@
 #include "game/objects/player_badge.h"
 #include "game/objects/countdown_art.h"
 #include "game/objects/reveal_art.h"
+#include "game/states/menu_panel.h"
 #include "game/save.h"
 #include "game/debug/dev_tools.h"
 #if COLOURWARS_DEV_TOOLS
@@ -2482,6 +2483,7 @@ namespace
 #include "scripts/acceptance/painter_visual/monitor_checks.h"
 #include "scripts/acceptance/painter_visual/countdown_checks.h"
 #include "scripts/acceptance/painter_visual/reveal_checks.h"
+#include "scripts/acceptance/painter_visual/supply_checks.h"
 }
 
 int wmain(int argc, wchar_t** argv)
@@ -2490,13 +2492,15 @@ int wmain(int argc, wchar_t** argv)
     {
         require(argc == 3 || (argc == 4 && (std::wstring(argv[3]) == L"identity" ||
             std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"monitor" ||
-            std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"closing")),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing]");
+            std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"closing" ||
+            std::wstring(argv[3]) == L"supply")),
+            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
         const bool countdown_only = argc == 4 && std::wstring(argv[3]) == L"countdown";
         const bool closing_only = argc == 4 && std::wstring(argv[3]) == L"closing";
+        const bool supply_only = argc == 4 && std::wstring(argv[3]) == L"supply";
         std::cout << std::unitbuf;
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
@@ -2543,6 +2547,12 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         const Canvas canvas(app.render_resources());
+        if (supply_only)
+        {
+            supply_art_checks(app, builder, canvas, tuning, presentation, preferences, output);
+            std::cout << "PASS supply-only visual check; other painter matrices were not run\n";
+            return 0;
+        }
         if (closing_only)
         {
             closing_matrix(app, builder, canvas, tuning, presentation, preferences, output);
@@ -2624,6 +2634,7 @@ int wmain(int argc, wchar_t** argv)
         monitor_matrix(app, builder, canvas, tuning, presentation, preferences, output);
         countdown_matrix(app, builder, canvas, tuning, presentation, preferences, output);
         closing_matrix(app, builder, canvas, tuning, presentation, preferences, output);
+        supply_art_checks(app, builder, canvas, tuning, presentation, preferences, output);
         {
             // Depletion pays hundreds of shots without wall-clock audio
             // updates. A silent bank keeps this renderer check independent of

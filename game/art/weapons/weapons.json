@@ -1,6 +1,6 @@
 {
   "source_texels_per_world_unit": 4,
-  "atlas_width": 2048,
+  "atlas_width": 2560,
   "atlas_height": 1280,
   "palette": {
     "K": "000000",
@@ -9,9 +9,11 @@
     "D": "666666",
     "B": "99764C",
     "T": "FF00FF",
-    "H": "B000B0"
+    "H": "B000B0",
+    "U": "00FFFF",
+    "V": "00B0B0"
   },
-  "palette_note": "T and H are exact material IDs, output as grayscale paint only; all other colours are neutral body only. Integer world-coordinate vector strokes rasterise before exact 4x nearest expansion.",
+  "palette_note": "T/H are permanent wet paint; U/V are reservoir supply. Both pairs become grayscale tint masks. Supply pixels also produce a neutral D interior in the base. Integer world-coordinate vector strokes rasterise before exact 4x nearest expansion.",
   "pose_order": ["idle", "motion_1", "motion_2", "lift"],
   "tools": {
     "sprayer": {
@@ -39,8 +41,8 @@
       "body": [
         ["poly", "K", 8, 1, 28, 1, 32, 5, 32, 12, 27, 16, 10, 15, 6, 11],
         ["poly", "W", 11, 4, 26, 4, 28, 6, 28, 11, 25, 13, 11, 12, 9, 10],
-        ["rect", "T", 12, 5, 12, 6],
-        ["rect", "H", 12, 5, 3, 5],
+        ["rect", "U", 12, 5, 12, 6],
+        ["rect", "V", 12, 5, 3, 5],
         ["rect", "K", 14, 0, 12, 3],
         ["rect", "W", 18, 0, 4, 1],
         ["poly", "K", 0, 12, 47, 12, 51, 10, 62, 10, 62, 20, 46, 20, 27, 22, 0, 22],
@@ -228,8 +230,8 @@
       },
       "body": [
         ["poly", "K", 17, 17, 33, 17, 39, 21, 38, 27, 34, 30, 18, 30, 14, 26, 14, 21],
-        ["poly", "T", 19, 20, 31, 20, 35, 22, 34, 26, 31, 28, 20, 28, 18, 25, 18, 22],
-        ["rect", "H", 20, 21, 4, 5],
+        ["poly", "U", 19, 20, 31, 20, 35, 22, 34, 26, 31, 28, 20, 28, 18, 25, 18, 22],
+        ["rect", "V", 20, 21, 4, 5],
         ["rect", "K", 21, 16, 12, 4],
         ["rect", "K", 0, 11, 50, 10],
         ["rect", "W", 3, 14, 42, 4],

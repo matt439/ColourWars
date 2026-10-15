@@ -34,20 +34,55 @@ namespace ColourWars {
             }
         }
         public static bool Paint(Color c) { return c.A != 0 && c.G == 0 && c.R == c.B && c.R != 0; }
-        public static void Layer(Bitmap source, Bitmap atlas, Rectangle box, bool paint, int scale) {
+        public static bool Supply(Color c) { return c.A != 0 && c.R == 0 && c.G == c.B && c.G != 0; }
+        public static Rectangle SupplyBounds(Bitmap source) {
+            int left=source.Width,top=source.Height,right=0,bottom=0;
+            for (int y=0;y<source.Height;++y) for (int x=0;x<source.Width;++x) {
+                if (!Supply(source.GetPixel(x,y))) continue;
+                left=Math.Min(left,x);top=Math.Min(top,y);right=Math.Max(right,x+1);bottom=Math.Max(bottom,y+1);
+            }
+            return right>left ? Rectangle.FromLTRB(left,top,right,bottom) : Rectangle.Empty;
+        }
+        // 0 = neutral body with an opaque empty reservoir; 1 = permanent wet
+        // paint; 2 = reservoir liquid only. Material classification happens
+        // after all strokes, so later grips/hardware always occlude supply.
+        public static void Layer(Bitmap source, Bitmap atlas, Rectangle box,
+            int layer, int scale, Color empty, int supplyRows) {
+            Rectangle supply=SupplyBounds(source);
+            int cutoff=supply.Bottom-supplyRows;
             for (int y=0; y<source.Height; ++y) for (int x=0; x<source.Width; ++x) {
                 Color c = source.GetPixel(x,y);
-                if (c.A == 0 || Paint(c) != paint) continue;
-                if (paint) c = Color.FromArgb(c.A,c.R,c.R,c.R);
+                if (c.A == 0) continue;
+                if (Supply(c)) {
+                    if (layer==0) c=Color.FromArgb(c.A,empty.R,empty.G,empty.B);
+                    else if (layer==2 && y>=cutoff) c=Color.FromArgb(c.A,c.G,c.G,c.G);
+                    else continue;
+                } else if (Paint(c)) {
+                    if (layer!=1) continue;
+                    c=Color.FromArgb(c.A,c.R,c.R,c.R);
+                } else if (layer!=0) continue;
                 for (int dy=0;dy<scale;++dy) for (int dx=0;dx<scale;++dx)
                     atlas.SetPixel(box.X+x*scale+dx,box.Y+y*scale+dy,c);
             }
         }
-        public static Bitmap Combined(Bitmap source, Color team) {
+        public static bool SameSupply(Bitmap first, Bitmap other) {
+            if (first.Size!=other.Size) return false;
+            for (int y=0;y<first.Height;++y) for (int x=0;x<first.Width;++x) {
+                Color a=first.GetPixel(x,y),b=other.GetPixel(x,y);
+                bool sa=Supply(a),sb=Supply(b);
+                if (sa!=sb || (sa && a.ToArgb()!=b.ToArgb())) return false;
+            }
+            return true;
+        }
+        public static Bitmap Combined(Bitmap source, Color team, Color empty, float supply) {
             var result = new Bitmap(source.Width,source.Height,PixelFormat.Format32bppArgb);
+            Rectangle bounds=SupplyBounds(source);
+            int cutoff=bounds.Bottom-(int)Math.Ceiling(bounds.Height*Math.Max(0.0f,Math.Min(1.0f,supply)));
             for (int y=0;y<source.Height;++y) for (int x=0;x<source.Width;++x) {
                 Color c=source.GetPixel(x,y);
                 if (Paint(c)) c=Color.FromArgb(c.A,team.R*c.R/255,team.G*c.R/255,team.B*c.R/255);
+                else if (Supply(c)) c=y<cutoff ? Color.FromArgb(c.A,empty.R,empty.G,empty.B) :
+                    Color.FromArgb(c.A,team.R*c.G/255,team.G*c.G/255,team.B*c.G/255);
                 result.SetPixel(x,y,c);
             }
             return result;
@@ -131,6 +166,7 @@ function Draw-Shape {
 $drawings = [ordered]@{}
 $items = [Collections.Generic.List[object]]::new()
 $frames = [Collections.Generic.List[object]]::new()
+$strips = [Collections.Generic.List[object]]::new()
 $atlas = [Drawing.Bitmap]::new([int]$source.atlas_width,[int]$source.atlas_height,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $legacy = [Drawing.Bitmap]::FromFile((Join-Path $working 'sprite_sheet_1.png'))
 try {
@@ -166,18 +202,47 @@ try {
                 throw "$frame must retain the roller axle at local (75,0)."
             }
             $drawings.Add($frame,$drawing)
-            foreach ($paint in @($false,$true)) {
-                $items.Add(@{ name=$frame+$(if($paint){'_paint'}else{''}); drawing=$drawing;
-                    paint=$paint; width=[int]$tool.width*$scale; height=[int]$tool.height*$scale })
+            foreach ($layer in @(0,1)) {
+                $items.Add(@{ name=$frame+$(if($layer -eq 1){'_paint'}else{''}); drawing=$drawing;
+                    layer=$layer; width=[int]$tool.width*$scale; height=[int]$tool.height*$scale })
+            }
+            $supply = [ColourWars.ToolArt]::SupplyBounds($drawing)
+            if (($supply.Height -gt 0) -ne ($name -in @('sprayer','mister'))) {
+                throw "$frame must reserve liquid supply IDs for the sprayer and mister reservoirs only."
+            }
+            if ($supply.Height -gt 0) {
+                if (-not [ColourWars.ToolArt]::SameSupply($drawings[$name],$drawing)) {
+                    throw "$frame reservoir differs from idle; one shared supply strip cannot preserve all pose occlusions."
+                }
+                if ($pose -eq 'idle') {
+                    # One frame per remaining integer world row. Every frame
+                    # retains the full tool canvas so all layers share exactly
+                    # the same rounded world quad, pivot and vertical flip.
+                    $count = $supply.Height+1
+                    $items.Add(@{ name="${name}_supply"; drawing=$drawing; layer=2;
+                        count=$count; width=[int]$tool.width*$scale*$count; height=[int]$tool.height*$scale })
+                    Write-Output "$name supply: local bounds $($supply.X),$($supply.Y),$($supply.Width),$($supply.Height); $count full-canvas frames."
+                }
             }
         }
     }
     $packer = [ColourWars.ToolPacker]::new([int]$source.atlas_width,[int]$source.atlas_height)
-    foreach ($item in ($items | Sort-Object @{Expression={$_.width*$_.height};Descending=$true},name)) {
+    foreach ($item in ($items | Sort-Object @{Expression={$_.width*$_.height};Descending=$true},@{Expression={$_.name}})) {
         $allocated = $packer.Add(($item.width+8),($item.height+8))
         $box = [Drawing.Rectangle]::new(($allocated.X+4),($allocated.Y+4),$item.width,$item.height)
-        [ColourWars.ToolArt]::Layer($item.drawing,$atlas,$box,$item.paint,$scale)
-        $frames.Add([ordered]@{ name=$item.name;position=[ordered]@{x=$box.X;y=$box.Y};size=[ordered]@{w=$box.Width;h=$box.Height} })
+        if ($item.layer -eq 2) {
+            $width = [int]$item.drawing.Width*$scale
+            for ($row=0;$row -lt $item.count;++$row) {
+                $destination = [Drawing.Rectangle]::new(($box.X+$row*$width),$box.Y,$width,$box.Height)
+                [ColourWars.ToolArt]::Layer($item.drawing,$atlas,$destination,2,$scale,$colours.D,$row)
+            }
+            $strips.Add([ordered]@{ name=$item.name;
+                first_frame=[ordered]@{x=$box.X;y=$box.Y;w=$width;h=$box.Height};
+                frame_count=$item.count;frame_time=1.0;looping=$false })
+        } else {
+            [ColourWars.ToolArt]::Layer($item.drawing,$atlas,$box,$item.layer,$scale,$colours.D,0)
+            $frames.Add([ordered]@{ name=$item.name;position=[ordered]@{x=$box.X;y=$box.Y};size=[ordered]@{w=$box.Width;h=$box.Height} })
+        }
     }
     # Utility sprites remain exact copies of the same legacy rectangles.
     $utilities = [ordered]@{ random=@(0,350,64,64);error=@(36,0,32,32);pixel=@(32,0,4,4);nozzle=@(100,150,4,4) }
@@ -189,10 +254,11 @@ try {
         $frames.Add([ordered]@{name=$name;position=[ordered]@{x=$allocated.X+4;y=$allocated.Y+4};size=[ordered]@{w=$src[2];h=$src[3]}})
     }
     [ColourWars.ToolArt]::SavePng($atlas,(Join-Path $working 'weapon_paint.png'))
-    $definition=[ordered]@{animation_strips=@();sprite_frames=@($frames.ToArray()|Sort-Object name)}
+    $definition=[ordered]@{animation_strips=@($strips.ToArray()|Sort-Object @{Expression={$_.name}});
+        sprite_frames=@($frames.ToArray()|Sort-Object @{Expression={$_.name}})}
     [IO.File]::WriteAllText((Join-Path $textures 'weapon_paint.json'),(($definition|ConvertTo-Json -Depth 6)+[Environment]::NewLine),[Text.UTF8Encoding]::new($false))
 
-    $preview=[Drawing.Bitmap]::new(1420,2280,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
+    $preview=[Drawing.Bitmap]::new(1420,2540,[Drawing.Imaging.PixelFormat]::Format32bppArgb)
     $g=[Drawing.Graphics]::FromImage($preview)
     $font=[Drawing.Font]::new([Drawing.FontFamily]::GenericMonospace,10)
     $small=[Drawing.Font]::new([Drawing.FontFamily]::GenericMonospace,8)
@@ -213,7 +279,7 @@ try {
             $col=0
             foreach($pose in $source.pose_order){
                 $frame=if($pose -eq 'idle'){$name}else{"${name}_$pose"}
-                $combined=[ColourWars.ToolArt]::Combined($drawings[$frame],[Drawing.ColorTranslator]::FromHtml('#0634CC'))
+                $combined=[ColourWars.ToolArt]::Combined($drawings[$frame],[Drawing.ColorTranslator]::FromHtml('#0634CC'),$colours.D,1.0)
                 try{
                     $x=145+310*$col;$g.DrawString($pose,$small,$ink,$x,$top)
                     $g.DrawImage($combined,[Drawing.Rectangle]::new($x,($top+24),($combined.Width*2),($combined.Height*2)))
@@ -240,11 +306,36 @@ try {
                 try{$g.DrawImage($body,[Drawing.Rectangle]::new(($x+5),($y+28),[int][Math]::Round(52*$reviewScale),[int][Math]::Round(120*$reviewScale)))}finally{$body.Dispose()}
                 $sample=0
                 foreach($pose in $source.pose_order){
-                    $frame=if($pose -eq 'idle'){$name}else{"${name}_$pose"};$combined=[ColourWars.ToolArt]::Combined($drawings[$frame],$team)
+                    $frame=if($pose -eq 'idle'){$name}else{"${name}_$pose"};$combined=[ColourWars.ToolArt]::Combined($drawings[$frame],$team,$colours.D,1.0)
                     try{
                         $w=[Math]::Max(1,[int][Math]::Round($combined.Width*$reviewScale));$h=[Math]::Max(1,[int][Math]::Round($combined.Height*$reviewScale))
                         $g.DrawImage($combined,[Drawing.Rectangle]::new(($x+65+$sample*90),($y+68-[int]($h/2)),$w,$h))
                     }finally{$combined.Dispose()}
+                    ++$sample
+                }
+                ++$col
+            }
+            ++$row
+        }
+        $g.DrawString('Reservoir supply / native 720p scale / full, half, empty; hardware and wet nozzles stay unchanged',$font,$ink,12,2280)
+        $row=0
+        foreach($name in @('sprayer','mister')) {
+            $top=2310+$row*110
+            $g.DrawString($name,$font,$ink,12,$top)
+            $col=0
+            foreach($entry in $palettes.GetEnumerator()) {
+                $x=145+$col*205
+                $team=[Drawing.ColorTranslator]::FromHtml('#'+$entry.Value)
+                $g.DrawString($entry.Key,$small,$ink,$x,$top)
+                $g.FillRectangle($ground,$x,($top+20),190,65)
+                $sample=0
+                foreach($fraction in @(1.0,0.5,0.0)) {
+                    $combined=[ColourWars.ToolArt]::Combined($drawings[$name],$team,$colours.D,$fraction)
+                    try {
+                        $w=[Math]::Max(1,[int][Math]::Round($combined.Width*$reviewScale))
+                        $h=[Math]::Max(1,[int][Math]::Round($combined.Height*$reviewScale))
+                        $g.DrawImage($combined,[Drawing.Rectangle]::new(($x+5+$sample*62),($top+45),$w,$h))
+                    } finally {$combined.Dispose()}
                     ++$sample
                 }
                 ++$col
@@ -262,4 +353,4 @@ try {
 & (Join-Path $repo 'game/art/tools/texconv.exe') (Join-Path $working 'weapon_paint.png') `
     -pmalpha -m 1 -f R8G8B8A8_UNORM -y -o $textures
 if($LASTEXITCODE -ne 0){throw "texconv failed with exit code $LASTEXITCODE"}
-Write-Output 'Built 20 tool poses, complementary masks, retained utility frames, DDS and source lineup.'
+Write-Output 'Built 20 tool poses, complementary wet masks, two full-canvas supply strips, retained utility frames, DDS and source lineup.'

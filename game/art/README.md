@@ -63,6 +63,12 @@ team colour at draw time. The roller only colours its sleeve while firing;
 its arm and handle stay neutral. Fixed-palette menu previews use the same team
 colours, while Random stays neutral until the match chooses its palette.
 
+The sprayer and mister reservoirs additionally use full-canvas supply strips,
+with neutral empty interiors in the body. Bottom-filled liquid rows follow
+actual ammunition; permanent wet nozzles retain their team tint. The
+[supply record](../../docs/polish-tools.md#reservoir-paint-supply) describes
+their quantity levels, native-size evidence and reproduction checks.
+
 Complementary layer alpha preserves the authored silhouette. Nozzles, triggers,
 gauges and hardware stay neutral outside the explicit wet/team regions.
 The [tool implementation and review record](../../docs/polish-tools.md) describes

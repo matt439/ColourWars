@@ -707,6 +707,14 @@ vertical strip has one bounded slot; opposing/neutral paint and occluded edges
 stop it. Reduce effects hides it. Paint coverage, credit and collision remain
 exact. Remaining arena and interface work keeps its existing order.
 
+**Reservoir paint supply implemented (2026-10-15, part of `POL#16`).** The
+[sprayer and mister windows](polish-tools.md#reservoir-paint-supply) now lose
+and regain liquid rows from actual ammunition, retaining opaque neutral empty
+interiors and permanent wet nozzles. Full-canvas layers preserve registration
+through continuous aim, both facings and camera scaling. Reduce effects keeps
+this information; selection previews show full reservoirs. Gameplay and the
+remaining arena/interface work retain their existing behaviour and order.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

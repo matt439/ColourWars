@@ -234,6 +234,9 @@ private:
 
 	// Paint overlay and debug frame handles, resolved at construction.
 	labrador::SpriteSheet::frame_handle paint_frame_;
+	// Full-canvas row levels, sharing the body's transform in every view.
+	// The nozzle's wet paint stays in paint_frame_ as the reservoir empties.
+	std::optional<labrador::SpriteSheet::strip_handle> supply_strip_;
 	labrador::SpriteSheet::frame_handle nozzle_frame_;
 	std::array<labrador::SpriteSheet::frame_handle, 4> motion_frames_;
 	std::array<labrador::SpriteSheet::frame_handle, 4> motion_paint_frames_;

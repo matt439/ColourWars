@@ -22,15 +22,29 @@ Operations are `["rect", material, x, y, width, height]`, the same arguments for
 `["line", material, width, x0, y0, x1, y1, ...]`. Coordinates are inside the
 unchanged world canvas, measured from its top-left; the aim line is half its
 height. `K`, `W`, `G`, `D` and `B` are neutral black, white, grey, dark grey and
-wood. `T` and `H` are exact paint-material IDs, converted to white and darker
-grayscale texels respectively. Source magenta is never runtime colour.
+wood. `T` and `H` are exact permanent-paint material IDs, converted to white and
+darker grayscale texels. `U` and `V` identify reservoir liquid and become the
+same grayscale values. Source magenta and cyan never enter runtime colour.
 
 Every tool has `<tool>`, `<tool>_motion_1`, `<tool>_motion_2` and `<tool>_lift`,
 and every frame has a matching `<frame>_paint`. The base and paint layers have
 disjoint opaque texels: each material pixel belongs to exactly one layer.
-Runtime team tint therefore does not thicken edges or colour hardware. Tanks
-and wet openings are ungraduated paint materials; they do not claim an ammo
-quantity. The sniper dial represents pressure release and recovery.
+Runtime team tint therefore does not thicken edges or colour hardware. The
+sprayer and mister additionally have `<tool>_supply` strips. Their empty
+reservoir interiors are opaque neutral `D` in the base; liquid overlays the
+bottom rows according to actual ammunition. Permanent wet nozzles remain in
+`<frame>_paint`. The bucket's wet opening and roller coating remain materials;
+the sniper dial represents pressure release and recovery.
+
+The sprayer strip has seven frames (zero to six filled world rows), the mister
+eight (zero to seven visible rows after hardware occlusion). Frame zero is
+transparent; the last is full. Each frame retains the complete tool canvas,
+with no authored origin. Using the identical destination, grip origin, rotation
+and flip for all layers avoids independent camera-space edge rounding. These
+are manually selected quantity levels, not a timed animation. The recipe
+rejects any pose whose visible supply mask differs from idle, so shared liquid
+cannot cover moving hardware. The [runtime record](../../../docs/polish-tools.md#reservoir-paint-supply)
+describes selection and validation.
 
 | Tool | Source canvas | World canvas | Grip points, relative to left-centre pivot | Authored secondary motion |
 |---|---|---|---|---|
@@ -48,8 +62,9 @@ origin; compression never translates it. The grip regions remain opaque at
 the `presentation.figure.grips` points. No tuning, collisions, launch positions,
 coverage or ammunition values are part of the art recipe.
 
-The 2048x1280 atlas packs all 40 material frames with four transparent texels
-around each rectangle. The `random`, `error`, `pixel` and `nozzle` utility frames
+The 2560x1280 atlas packs all 40 material frames and both supply strips with
+four transparent texels around each packed rectangle. Supply frames retain
+the body's transparent canvas borders. The `random`, `error`, `pixel` and `nozzle` utility frames
 are exact copies from the historical player/projectile source. The DDS is
 premultiplied RGBA8, one mip; PNG colour-space metadata is omitted so texconv
 preserves authored UNORM bytes. Atlas packing and JSON frame ordering are stable.
@@ -61,3 +76,5 @@ the actual 720p gameplay scale, `720 / presentation.camera.reference_height`
 each set is therefore 80 pixels tall, rather than the painter source sheet's
 28-pixel stress samples. Runtime perspective, aiming, hand overlap, arena
 composition and human readability acceptance remain separate checks.
+The final rows also compare full, half and empty reservoirs in all five hues
+at the same native gameplay scale.

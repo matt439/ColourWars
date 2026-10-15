@@ -38,6 +38,26 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 				}
 			}
 		}
+		if (static_cast<WeaponType>(index) == WeaponType::sprayer ||
+			static_cast<WeaponType>(index) == WeaponType::mister)
+		{
+			const std::string name = details.frame_name + "_supply";
+			check.animation(name, details.sheet_name, name);
+			const AnimationStrip& supply = sheet->animation_strip(sheet->resolve_animation_strip(name));
+			if (supply.frame_count() < 2)
+			{
+				throw std::runtime_error("weapon supply " + name + ": needs empty and full levels.");
+			}
+			for (int level = 0; level < supply.frame_count(); ++level)
+			{
+				if (supply.frame_rect(level).size() != idle.source_rectangle().size() ||
+					idle.origin() != mattmath::Vector2F::ZERO)
+				{
+					throw std::runtime_error("weapon supply " + name +
+						": levels must retain the body canvas and zero authored origin.");
+				}
+			}
+		}
 	}
 
 	// Stage selection requires at least one level.

@@ -169,7 +169,7 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 		switch (this->select_states_[i].type)
 		{
 		case WeaponType::sprayer:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sprayer", "sprayer_paint");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("sprayer", "sprayer_paint", "sprayer_supply");
 			this->player_widgets_[i]->weapon_name->set_text(L"Sprayer");
 			break;
 		case WeaponType::sniper:
@@ -181,7 +181,7 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 			this->player_widgets_[i]->weapon_name->set_text(L"Roller");
 			break;
 		case WeaponType::mister:
-			this->player_widgets_[i]->weapon_icon->set_sprite_frame("mister", "mister_paint");
+			this->player_widgets_[i]->weapon_icon->set_sprite_frame("mister", "mister_paint", "mister_supply");
 			this->player_widgets_[i]->weapon_name->set_text(L"Mister");
 			break;
 		case WeaponType::bucket:

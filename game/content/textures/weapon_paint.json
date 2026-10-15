@@ -1,288 +1,36 @@
 {
     "animation_strips":  [
-
+                             {
+                                 "name":  "mister_supply",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  132,
+                                                     "w":  240,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  8,
+                                 "frame_time":  1,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "sprayer_supply",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  4,
+                                                     "w":  280,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  7,
+                                 "frame_time":  1,
+                                 "looping":  false
+                             }
                          ],
     "sprite_frames":  [
                           {
-                              "name":  "sprayer_motion_1",
-                              "position":  {
-                                               "x":  1228,
-                                               "y":  972
-                                           },
-                              "size":  {
-                                           "w":  280,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "sprayer_paint",
-                              "position":  {
-                                               "x":  1228,
-                                               "y":  844
-                                           },
-                              "size":  {
-                                           "w":  280,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "sprayer_motion_1_paint",
-                              "position":  {
-                                               "x":  1228,
-                                               "y":  1100
-                                           },
-                              "size":  {
-                                           "w":  280,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "mister_paint",
-                              "position":  {
-                                               "x":  1804,
-                                               "y":  252
-                                           },
-                              "size":  {
-                                           "w":  240,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "sprayer",
-                              "position":  {
-                                               "x":  1516,
-                                               "y":  252
-                                           },
-                              "size":  {
-                                           "w":  280,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "sprayer_motion_2",
-                              "position":  {
-                                               "x":  1068,
-                                               "y":  716
-                                           },
-                              "size":  {
-                                           "w":  280,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "sniper_motion_2_paint",
-                              "position":  {
-                                               "x":  820,
-                                               "y":  1100
-                                           },
-                              "size":  {
-                                           "w":  400,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "sniper_motion_2",
-                              "position":  {
-                                               "x":  820,
-                                               "y":  972
-                                           },
-                              "size":  {
-                                           "w":  400,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "sprayer_motion_2_paint",
-                              "position":  {
-                                               "x":  1068,
-                                               "y":  460
-                                           },
-                              "size":  {
-                                           "w":  280,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "sprayer_lift_paint",
-                              "position":  {
-                                               "x":  1068,
-                                               "y":  588
-                                           },
-                              "size":  {
-                                           "w":  280,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "sprayer_lift",
-                              "position":  {
-                                               "x":  1156,
-                                               "y":  252
-                                           },
-                              "size":  {
-                                           "w":  280,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "random",
-                              "position":  {
-                                               "x":  1444,
-                                               "y":  252
-                                           },
-                              "size":  {
-                                           "w":  64,
-                                           "h":  64
-                                       }
-                          },
-                          {
-                              "name":  "mister_motion_2",
-                              "position":  {
-                                               "x":  1516,
-                                               "y":  764
-                                           },
-                              "size":  {
-                                           "w":  240,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "error",
-                              "position":  {
-                                               "x":  1156,
-                                               "y":  212
-                                           },
-                              "size":  {
-                                           "w":  32,
-                                           "h":  32
-                                       }
-                          },
-                          {
-                              "name":  "nozzle",
-                              "position":  {
-                                               "x":  1208,
-                                               "y":  212
-                                           },
-                              "size":  {
-                                           "w":  4,
-                                           "h":  4
-                                       }
-                          },
-                          {
-                              "name":  "pixel",
-                              "position":  {
-                                               "x":  1196,
-                                               "y":  212
-                                           },
-                              "size":  {
-                                           "w":  4,
-                                           "h":  4
-                                       }
-                          },
-                          {
-                              "name":  "mister_lift_paint",
-                              "position":  {
-                                               "x":  1604,
-                                               "y":  636
-                                           },
-                              "size":  {
-                                           "w":  240,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "mister_motion_1_paint",
-                              "position":  {
-                                               "x":  1764,
-                                               "y":  380
-                                           },
-                              "size":  {
-                                           "w":  240,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "mister_motion_1",
-                              "position":  {
-                                               "x":  1516,
-                                               "y":  380
-                                           },
-                              "size":  {
-                                           "w":  240,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "mister",
-                              "position":  {
-                                               "x":  1356,
-                                               "y":  508
-                                           },
-                              "size":  {
-                                           "w":  240,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "mister_lift",
-                              "position":  {
-                                               "x":  1604,
-                                               "y":  508
-                                           },
-                              "size":  {
-                                           "w":  240,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "mister_motion_2_paint",
-                              "position":  {
-                                               "x":  1356,
-                                               "y":  636
-                                           },
-                              "size":  {
-                                           "w":  240,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "roller_motion_1_paint",
-                              "position":  {
-                                               "x":  820,
-                                               "y":  4
-                                           },
-                              "size":  {
-                                           "w":  400,
-                                           "h":  200
-                                       }
-                          },
-                          {
-                              "name":  "roller_motion_2",
-                              "position":  {
-                                               "x":  412,
-                                               "y":  4
-                                           },
-                              "size":  {
-                                           "w":  400,
-                                           "h":  200
-                                       }
-                          },
-                          {
-                              "name":  "bucket_lift_paint",
-                              "position":  {
-                                               "x":  1228,
-                                               "y":  4
-                                           },
-                              "size":  {
-                                           "w":  240,
-                                           "h":  240
-                                       }
-                          },
-                          {
                               "name":  "bucket",
                               "position":  {
-                                               "x":  1724,
-                                               "y":  4
+                                               "x":  412,
+                                               "y":  836
                                            },
                               "size":  {
                                            "w":  240,
@@ -292,8 +40,8 @@
                           {
                               "name":  "bucket_lift",
                               "position":  {
-                                               "x":  1476,
-                                               "y":  4
+                                               "x":  660,
+                                               "y":  836
                                            },
                               "size":  {
                                            "w":  240,
@@ -301,10 +49,219 @@
                                        }
                           },
                           {
-                              "name":  "roller_motion_1",
+                              "name":  "bucket_lift_paint",
+                              "position":  {
+                                               "x":  820,
+                                               "y":  420
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  240
+                                       }
+                          },
+                          {
+                              "name":  "bucket_motion_1",
+                              "position":  {
+                                               "x":  908,
+                                               "y":  668
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  240
+                                       }
+                          },
+                          {
+                              "name":  "bucket_motion_1_paint",
+                              "position":  {
+                                               "x":  1068,
+                                               "y":  420
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  240
+                                       }
+                          },
+                          {
+                              "name":  "bucket_motion_2",
+                              "position":  {
+                                               "x":  908,
+                                               "y":  916
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  240
+                                       }
+                          },
+                          {
+                              "name":  "bucket_motion_2_paint",
+                              "position":  {
+                                               "x":  1316,
+                                               "y":  260
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  240
+                                       }
+                          },
+                          {
+                              "name":  "bucket_paint",
+                              "position":  {
+                                               "x":  1564,
+                                               "y":  260
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  240
+                                       }
+                          },
+                          {
+                              "name":  "error",
+                              "position":  {
+                                               "x":  1932,
+                                               "y":  132
+                                           },
+                              "size":  {
+                                           "w":  32,
+                                           "h":  32
+                                       }
+                          },
+                          {
+                              "name":  "mister",
+                              "position":  {
+                                               "x":  1444,
+                                               "y":  1020
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "mister_lift",
+                              "position":  {
+                                               "x":  1444,
+                                               "y":  1148
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "mister_lift_paint",
+                              "position":  {
+                                               "x":  1692,
+                                               "y":  1020
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "mister_motion_1",
+                              "position":  {
+                                               "x":  1692,
+                                               "y":  1148
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "mister_motion_1_paint",
+                              "position":  {
+                                               "x":  1732,
+                                               "y":  676
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "mister_motion_2",
+                              "position":  {
+                                               "x":  1732,
+                                               "y":  804
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "mister_motion_2_paint",
+                              "position":  {
+                                               "x":  1940,
+                                               "y":  932
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "mister_paint",
+                              "position":  {
+                                               "x":  1940,
+                                               "y":  1060
+                                           },
+                              "size":  {
+                                           "w":  240,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "nozzle",
                               "position":  {
                                                "x":  4,
-                                               "y":  1044
+                                               "y":  1264
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "pixel",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  1252
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "random",
+                              "position":  {
+                                               "x":  412,
+                                               "y":  1212
+                                           },
+                              "size":  {
+                                           "w":  64,
+                                           "h":  64
+                                       }
+                          },
+                          {
+                              "name":  "roller",
+                              "position":  {
+                                               "x":  1972,
+                                               "y":  4
+                                           },
+                              "size":  {
+                                           "w":  400,
+                                           "h":  200
+                                       }
+                          },
+                          {
+                              "name":  "roller_lift",
+                              "position":  {
+                                               "x":  1932,
+                                               "y":  212
                                            },
                               "size":  {
                                            "w":  400,
@@ -315,28 +272,6 @@
                               "name":  "roller_lift_paint",
                               "position":  {
                                                "x":  4,
-                                               "y":  212
-                                           },
-                              "size":  {
-                                           "w":  400,
-                                           "h":  200
-                                       }
-                          },
-                          {
-                              "name":  "roller_lift",
-                              "position":  {
-                                               "x":  4,
-                                               "y":  4
-                                           },
-                              "size":  {
-                                           "w":  400,
-                                           "h":  200
-                                       }
-                          },
-                          {
-                              "name":  "roller",
-                              "position":  {
-                                               "x":  4,
                                                "y":  420
                                            },
                               "size":  {
@@ -345,18 +280,7 @@
                                        }
                           },
                           {
-                              "name":  "roller_paint",
-                              "position":  {
-                                               "x":  4,
-                                               "y":  836
-                                           },
-                              "size":  {
-                                           "w":  400,
-                                           "h":  200
-                                       }
-                          },
-                          {
-                              "name":  "roller_motion_2_paint",
+                              "name":  "roller_motion_1",
                               "position":  {
                                                "x":  4,
                                                "y":  628
@@ -367,21 +291,54 @@
                                        }
                           },
                           {
-                              "name":  "sniper",
+                              "name":  "roller_motion_1_paint",
                               "position":  {
-                                               "x":  660,
-                                               "y":  460
+                                               "x":  4,
+                                               "y":  836
                                            },
                               "size":  {
                                            "w":  400,
-                                           "h":  120
+                                           "h":  200
                                        }
                           },
                           {
-                              "name":  "sniper_motion_1_paint",
+                              "name":  "roller_motion_2",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  1044
+                                           },
+                              "size":  {
+                                           "w":  400,
+                                           "h":  200
+                                       }
+                          },
+                          {
+                              "name":  "roller_motion_2_paint",
                               "position":  {
                                                "x":  412,
-                                               "y":  1084
+                                               "y":  420
+                                           },
+                              "size":  {
+                                           "w":  400,
+                                           "h":  200
+                                       }
+                          },
+                          {
+                              "name":  "roller_paint",
+                              "position":  {
+                                               "x":  412,
+                                               "y":  628
+                                           },
+                              "size":  {
+                                           "w":  400,
+                                           "h":  200
+                                       }
+                          },
+                          {
+                              "name":  "sniper",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  260
                                            },
                               "size":  {
                                            "w":  400,
@@ -389,10 +346,10 @@
                                        }
                           },
                           {
-                              "name":  "sniper_paint",
+                              "name":  "sniper_lift",
                               "position":  {
-                                               "x":  660,
-                                               "y":  588
+                                               "x":  412,
+                                               "y":  260
                                            },
                               "size":  {
                                            "w":  400,
@@ -403,18 +360,7 @@
                               "name":  "sniper_lift_paint",
                               "position":  {
                                                "x":  820,
-                                               "y":  844
-                                           },
-                              "size":  {
-                                           "w":  400,
-                                           "h":  120
-                                       }
-                          },
-                          {
-                              "name":  "sniper_lift",
-                              "position":  {
-                                               "x":  660,
-                                               "y":  716
+                                               "y":  260
                                            },
                               "size":  {
                                            "w":  400,
@@ -425,7 +371,7 @@
                               "name":  "sniper_motion_1",
                               "position":  {
                                                "x":  412,
-                                               "y":  956
+                                               "y":  1084
                                            },
                               "size":  {
                                            "w":  400,
@@ -433,58 +379,135 @@
                                        }
                           },
                           {
-                              "name":  "bucket_motion_1",
+                              "name":  "sniper_motion_1_paint",
                               "position":  {
-                                               "x":  660,
-                                               "y":  212
+                                               "x":  1812,
+                                               "y":  420
                                            },
                               "size":  {
-                                           "w":  240,
-                                           "h":  240
+                                           "w":  400,
+                                           "h":  120
                                        }
                           },
                           {
-                              "name":  "bucket_motion_2_paint",
+                              "name":  "sniper_motion_2",
                               "position":  {
-                                               "x":  412,
-                                               "y":  212
+                                               "x":  1316,
+                                               "y":  508
                                            },
                               "size":  {
-                                           "w":  240,
-                                           "h":  240
+                                           "w":  400,
+                                           "h":  120
                                        }
                           },
                           {
-                              "name":  "bucket_paint",
+                              "name":  "sniper_motion_2_paint",
                               "position":  {
-                                               "x":  908,
-                                               "y":  212
+                                               "x":  1724,
+                                               "y":  548
                                            },
                               "size":  {
-                                           "w":  240,
-                                           "h":  240
+                                           "w":  400,
+                                           "h":  120
                                        }
                           },
                           {
-                              "name":  "bucket_motion_1_paint",
+                              "name":  "sniper_paint",
                               "position":  {
-                                               "x":  412,
-                                               "y":  708
+                                               "x":  1316,
+                                               "y":  636
                                            },
                               "size":  {
-                                           "w":  240,
-                                           "h":  240
+                                           "w":  400,
+                                           "h":  120
                                        }
                           },
                           {
-                              "name":  "bucket_motion_2",
+                              "name":  "sprayer",
                               "position":  {
-                                               "x":  412,
-                                               "y":  460
+                                               "x":  2220,
+                                               "y":  420
                                            },
                               "size":  {
-                                           "w":  240,
-                                           "h":  240
+                                           "w":  280,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "sprayer_lift",
+                              "position":  {
+                                               "x":  2132,
+                                               "y":  548
+                                           },
+                              "size":  {
+                                           "w":  280,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "sprayer_lift_paint",
+                              "position":  {
+                                               "x":  1156,
+                                               "y":  764
+                                           },
+                              "size":  {
+                                           "w":  280,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "sprayer_motion_1",
+                              "position":  {
+                                               "x":  1156,
+                                               "y":  892
+                                           },
+                              "size":  {
+                                           "w":  280,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "sprayer_motion_1_paint",
+                              "position":  {
+                                               "x":  1156,
+                                               "y":  1020
+                                           },
+                              "size":  {
+                                           "w":  280,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "sprayer_motion_2",
+                              "position":  {
+                                               "x":  1156,
+                                               "y":  1148
+                                           },
+                              "size":  {
+                                           "w":  280,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "sprayer_motion_2_paint",
+                              "position":  {
+                                               "x":  1444,
+                                               "y":  764
+                                           },
+                              "size":  {
+                                           "w":  280,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "sprayer_paint",
+                              "position":  {
+                                               "x":  1444,
+                                               "y":  892
+                                           },
+                              "size":  {
+                                           "w":  280,
+                                           "h":  120
                                        }
                           }
                       ]

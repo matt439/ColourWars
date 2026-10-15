@@ -38,11 +38,14 @@ MenuIcon::MenuIcon(const std::string& name, const std::string& frame,
 {
 }
 
-void MenuIcon::set_sprite_frame(const std::string& frame, const std::string& paint_frame)
+void MenuIcon::set_sprite_frame(const std::string& frame, const std::string& paint_frame,
+	const std::string& supply_strip)
 {
 	UiTexture::set_sprite_frame(frame);
 	this->paint_frame_ = paint_frame.empty() ? SpriteSheet::frame_handle{} :
 		this->sprite_sheet()->resolve_sprite_frame(paint_frame);
+	this->supply_strip_ = supply_strip.empty() ? SpriteSheet::strip_handle{} :
+		this->sprite_sheet()->resolve_animation_strip(supply_strip);
 }
 
 void MenuIcon::set_paint_colour(const Colour& colour)
@@ -78,5 +81,11 @@ void MenuIcon::draw(DrawList& list) const
 	{
 		TextureObject::draw_with(list, artwork, this->paint_frame_, this->paint_colour_,
 			this->origin(), this->flip(), this->draw_rotation());
+	}
+	if (this->supply_strip_.valid())
+	{
+		const AnimationStrip& supply = sheet->animation_strip(this->supply_strip_);
+		sheet->draw(list, supply.frame_rect(supply.frame_count() - 1), artwork,
+			this->paint_colour_, this->draw_rotation(), this->origin(), this->flip());
 	}
 }
