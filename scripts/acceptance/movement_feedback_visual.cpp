@@ -772,9 +772,9 @@ int wmain(int argc, wchar_t** argv)
 {
     try
     {
-        require(argc == 4 || argc == 5,
+        require(argc == 4 || argc == 5 || argc == 6,
             "usage: movement_feedback_visual <staged-content> <output> <sequence-frames> "
-            "[one-player-route-sequences 0|1]");
+            "[one-player-route-sequences 0|1] [allow-software-adapter 0|1]");
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
         const int sequence_frames = std::stoi(argv[3]);
@@ -782,7 +782,17 @@ int wmain(int argc, wchar_t** argv)
             "sequence frame count must be between 0 and 180");
         // Paired route sequences are four-player only unless asked: each one is
         // two 720p frames per tick for each selected player count.
-        const bool one_player_route_sequences = argc == 5 && std::wstring(argv[4]) == L"1";
+        const bool one_player_route_sequences = argc >= 5 && std::wstring(argv[4]) == L"1";
+        const bool allow_software_adapter = argc == 6 && std::wstring(argv[5]) == L"1";
+        if (argc == 6)
+        {
+            require(std::wstring(argv[5]) == L"0" || std::wstring(argv[5]) == L"1",
+                "allow-software-adapter must be 0 or 1");
+        }
+#if !defined(_DEBUG)
+        require(!allow_software_adapter,
+            "software-adapter opt-in is supported only by the Debug probe");
+#endif
         std::filesystem::create_directories(output);
         std::ofstream records(output / "phases.csv");
         records << "players,phase,tick,seconds,width,height,view,changed_pixels,readable_pixels\n";
@@ -807,11 +817,25 @@ int wmain(int argc, wchar_t** argv)
         Application app(options);
         app.initialize();
         const auto& device = app.renderer()->device_info();
-        std::cout << "DEVICE backend=" << device.backend << " api=" << device.api
+        const char* device_kind = "unknown";
+        switch (device.kind)
+        {
+        case RenderDeviceKind::hardware: device_kind = "hardware"; break;
+        case RenderDeviceKind::software: device_kind = "software"; break;
+        case RenderDeviceKind::null_device: device_kind = "null_device"; break;
+        default: break;
+        }
+        std::cout << "DEVICE backend=" << device.backend << " kind=" << device_kind
+            << " api=" << device.api
             << " name=" << device.device_name << " vendor=" << device.vendor_id
             << " device=" << device.device_id << '\n';
-        require(device.backend == "d3d11" && device.kind == RenderDeviceKind::hardware,
-            "visual evidence requires a D3D11 hardware device");
+        bool permitted_device = device.kind == RenderDeviceKind::hardware;
+#if defined(_DEBUG)
+        permitted_device = permitted_device ||
+            (allow_software_adapter && device.kind == RenderDeviceKind::software);
+#endif
+        require(device.backend == "d3d11" && permitted_device,
+            "visual evidence requires a D3D11 hardware device or explicit Debug software-adapter opt-in");
         app.resource_loader()->register_kind("level", {
             [&](const std::string& directory, const std::string& name, bool) {
                 auto info = std::make_unique<LevelLoadedInfo>((directory + name + ".json").c_str());

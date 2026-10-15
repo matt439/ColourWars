@@ -219,6 +219,12 @@ For paired GPU captures of the takeoff/landing prototype, run
 `./scripts/check-movement-feedback.ps1 -Preset x64-debug -SkipBuild`.
 It uses a hidden D3D11 hardware window, scripted jumps and isolated profile;
 see [feedback evidence and limitations](docs/polish-feedback.md).
+CI runs the same correctness matrix in Debug with `-AllowSoftwareAdapter`,
+which also accepts the engine's WARP fallback on runners without a GPU. That
+switch is Debug-only; the default probe still requires hardware. Evidence names
+the actual adapter, and CI uploads JSON/CSV results and logs rather than the
+large raw captures. This does not qualify hardware, movement feel or performance.
+The foreground-dependent `check-debug-console.ps1` remains a local check.
 
 Check runtime startup separately, preferably against the extracted Release ZIP:
 

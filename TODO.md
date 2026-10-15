@@ -175,7 +175,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `CI#1` | OPEN | LOW | M | CI runs neither window-driven check (`check-debug-console`, `check-movement-feedback`). |
+| `CI#1` | OPEN | LOW | M | The foreground-dependent `check-debug-console` remains local; CI has no reliable focus workflow for it. [.github/workflows/ci.yml](.github/workflows/ci.yml). |
 
 ## Areas with no open rows
 

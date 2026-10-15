@@ -10,11 +10,18 @@ param(
     # Paired on/off route sequences are four-player only by default; this adds
     # the one-player route (two more 720p frames per tick).
     [switch] $OnePlayerRouteSequences,
-    [string] $OutputDirectory
+    [string] $OutputDirectory,
+    # Debug CI may explicitly accept D3D11 software rendering. Such a run
+    # establishes neither hardware visual acceptance nor performance acceptance.
+    [switch] $AllowSoftwareAdapter
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
+
+if ($AllowSoftwareAdapter -and $Preset -eq 'x64-release') {
+    throw '-AllowSoftwareAdapter is supported only by the x64-debug probe.'
+}
 
 # Windows PowerShell 5.1 does not set PSScriptRoot during parameter defaults.
 if (-not $OutputDirectory) {
@@ -75,6 +82,10 @@ $result = [ordered]@{
     player_counts = @(1, 4)
     palette = 'blue_orange'
     weapons = @('sprayer', 'roller', 'sprayer', 'roller')
+    adapter_policy = if ($AllowSoftwareAdapter) { 'debug_hardware_or_software' } else { 'hardware_only' }
+    adapter_kind = 'unreported'
+    device_line = ''
+    rendering_scope = 'Scripted visual checks on the recorded adapter; software rendering establishes no hardware visual acceptance, and this probe establishes no performance acceptance.'
     inputs = 'Scripted pad-slot inputs at the real 60 Hz simulation step; no physical-device claim.'
     audio = 'Muted; this check establishes no listening acceptance.'
     isolated_bursts = 'Four controlled panes: takeoff, minimum landing, full landing, landing with takeoff numeric style. Birth/mid/late at real 4P camera scales, 720p/1080p/QHD; neutral fill and black keyline, distinct silhouettes, single-blend fade colours, enabled/disabled and frozen redraw, bounds including valid wide-keyline and tiny styles. Tiny style uses 16x inspection and no extra raster-bounds slack.'
@@ -180,7 +191,8 @@ try {
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList @((Quote-Path $gameDirectory),
             (Quote-Path $captures), $SequenceFrames.ToString(),
-            $(if ($OnePlayerRouteSequences) { '1' } else { '0' })) `
+            $(if ($OnePlayerRouteSequences) { '1' } else { '0' }),
+            $(if ($AllowSoftwareAdapter) { '1' } else { '0' })) `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
         -RedirectStandardError (Join-Path $run 'run.err')
     $null = $process.Handle
@@ -191,10 +203,23 @@ try {
         if ($timer.Elapsed.TotalSeconds -gt 600) { throw 'Visual probe exceeded its 600-second runtime limit.' }
     }
     $process.WaitForExit()
-    Get-Content -LiteralPath (Join-Path $run 'run.log') | ForEach-Object { Write-Host $_ }
+    $runOutput = @(Get-Content -LiteralPath (Join-Path $run 'run.log'))
+    $runOutput | ForEach-Object { Write-Host $_ }
+    $deviceLines = @($runOutput | Where-Object { $_ -match '^DEVICE ' })
+    if ($deviceLines.Count -eq 1) {
+        $result.device_line = $deviceLines[0]
+        if ($deviceLines[0] -match '(?:^| )kind=(hardware|software|null_device|unknown)(?: |$)') {
+            $result.adapter_kind = $Matches[1]
+        }
+    }
     if ($process.ExitCode -ne 0) {
         Get-Content -LiteralPath (Join-Path $run 'run.err') | ForEach-Object { Write-Host $_ }
         throw "Visual probe exited with $($process.ExitCode)."
+    }
+    if ($deviceLines.Count -ne 1 -or
+        $result.adapter_kind -notin @('hardware', 'software') -or
+        ($result.adapter_kind -eq 'software' -and -not $AllowSoftwareAdapter)) {
+        throw 'The probe did not report one adapter matching the requested policy.'
     }
     foreach ($line in Get-Content -LiteralPath (Join-Path $run 'run.err')) {
         if ($line.Trim() -ne '' -and
