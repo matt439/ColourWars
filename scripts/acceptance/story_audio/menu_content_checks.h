@@ -85,4 +85,50 @@ namespace
 			}
 		}
 	}
+
+	void check_foreground_art_content(const std::filesystem::path& content)
+	{
+		const MenuPresentationVariant variants(content);
+		struct Invalid { const char* section; const char* key; float value; };
+		for (const Invalid invalid : { Invalid{ "silhouette_art", "pen_width", 0.0f },
+			Invalid{ "silhouette_art", "pen_width", 0.0251f },
+			Invalid{ "silhouette_art", "shade_width", 0.007f },
+			Invalid{ "silhouette_art", "shade_width", 0.0801f },
+			Invalid{ "cursor_art", "shadow_offset", -0.01f },
+			Invalid{ "cursor_art", "shadow_offset", 0.201f },
+			Invalid{ "cursor_art", "click_duration", 0.0f },
+			Invalid{ "cursor_art", "click_duration", 0.501f },
+			Invalid{ "cursor_art", "click_reach", 0.0f },
+			Invalid{ "cursor_art", "click_reach", 0.601f } })
+		{
+			bool named = false;
+			try
+			{
+				std::ignore = variants.load([&](rapidjson::Document& json)
+					{ json["opening"][invalid.section][invalid.key].SetFloat(invalid.value); });
+			}
+			catch (const std::runtime_error& error)
+			{
+				const std::string message = error.what();
+				named = message.find("opening") != std::string::npos &&
+					message.find(invalid.section) != std::string::npos;
+			}
+			require(named, "Invalid foreground artwork did not fail with opening and its section named");
+		}
+
+		for (const float shade_width : { 0.025f, 0.08f })
+		{
+			const Presentation look = variants.load([&](rapidjson::Document& json)
+			{
+				auto& opening = json["opening"];
+				opening["silhouette_art"]["pen_width"].SetFloat(0.025f);
+				opening["silhouette_art"]["shade_width"].SetFloat(shade_width);
+				opening["cursor_art"]["shadow_offset"].SetFloat(shade_width == 0.025f ? 0.0f : 0.2f);
+				opening["cursor_art"]["click_duration"].SetFloat(0.5f);
+				opening["cursor_art"]["click_reach"].SetFloat(0.6f);
+			});
+			require(look.opening().silhouette_art.shade_width == shade_width,
+				"Valid foreground artwork boundary was not retained");
+		}
+	}
 }

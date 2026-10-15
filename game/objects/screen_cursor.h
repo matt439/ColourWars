@@ -11,9 +11,10 @@ public:
     // The presentation is borrowed and outlives the level.
     ScreenCursor(const OpeningPresentation* look, labrador::RenderResources* render_resources);
 
-    // The arrow's tip at `tip`, sized by the screen's height.
+    // The arrow's fixed tip at `tip`, sized by the screen's height. A negative
+    // click age is resting; the existing reveal timeline owns the click age.
     void draw(labrador::DrawList& draw_list, const mattmath::Vector2F& tip,
-        float screen_height) const;
+        float screen_height, float click_age = -1.0f, bool reduced_effects = false) const;
 
 private:
     const OpeningPresentation* look_;

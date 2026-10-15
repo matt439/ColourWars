@@ -97,6 +97,11 @@ the existing fill texel. Its editable casing, keylines, airbrush shade and
 decorations are in `game/objects/monitor.cpp`; authored values live in
 `presentation.json.opening.monitor_art`. The [monitor scene record](
 ../../docs/polish-monitor.md) describes the foreground layering and evidence.
+The anonymous rear person and fixed-tip cursor are code drawings in
+`silhouette.cpp` and `screen_cursor.cpp`, with their colours, edge widths and
+brief reveal-click response in `opening.silhouette_art` and `opening.cursor_art`.
+The [foreground record](../../docs/polish-monitor.md#person-and-cursor-foreground)
+retains their native-size review evidence.
 
 ## Runtime content separation (GAP#8.6)
 

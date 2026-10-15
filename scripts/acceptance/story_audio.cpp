@@ -1973,6 +1973,7 @@ int main(int argc, char** argv)
 		require(argc == 2, "Usage: story_audio.exe <content directory>");
 		World world{ std::filesystem::path(argv[1]) };
 		check_menu_audio_content(world, std::filesystem::path(argv[1]));
+		check_foreground_art_content(std::filesystem::path(argv[1]));
 		check_connection_audio(world);
 		const ContentVariant content(std::filesystem::path(argv[1]) / "tuning.json");
 		check_match_content(world, content);

@@ -569,6 +569,28 @@ struct MonitorArtPresentation
 	mattmath::RectangleF power_indicator;
 };
 
+// Low-value, anonymous rear silhouette. Widths use the person's seated height.
+struct SilhouetteArtPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour rim;
+	labrador::Colour shade;
+	float pen_width = 0.0f;
+	float shade_width = 0.0f;
+};
+
+// Coarse-cell pointer; offsets and click reach use its authored height.
+struct CursorArtPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour fill;
+	labrador::Colour shade;
+	labrador::Colour shadow;
+	float shadow_offset = 0.0f;
+	float click_duration = 0.0f;
+	float click_reach = 0.0f;
+};
+
 // The monitor the picture is on, the person at it and the cursor they use:
 // the opening's look (docs/backstory.md, "Opening"). Rectangles are fractions
 // of the screen, sizes fractions of its height, colours are drawn as is.
@@ -597,6 +619,8 @@ struct OpeningPresentation
 	labrador::Colour coffee;
 	labrador::Colour crack;
 	labrador::Colour silhouette;
+	SilhouetteArtPresentation silhouette_art;
+	CursorArtPresentation cursor_art;
 	// From the bottom of the screen to the top of the head, seated.
 	float adult_height = 0.0f;
 	float child_height = 0.0f;

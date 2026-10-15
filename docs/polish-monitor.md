@@ -79,6 +79,67 @@ Their `result.json` files record baseline `0480c18` plus working changes, the
 pinned engine, device, scope and staged content hashes. Full-frame monitor
 review sheets are separate from the painter's native-size crop sheets.
 
-Reference-arena composition, the remaining opening/closing accents, menus and
-HUD artwork remain under `POL#16`. This increment does not close movement-feel,
+Reference-arena composition, countdown and other match accents, menus and HUD
+artwork remain under `POL#16`. This increment does not close movement-feel,
 physical-pad, listening or clean-PC acceptance.
+
+## Person and cursor foreground
+
+Implemented 2026-10-15 as another part of `POL#16`. The person keeps the existing
+adult/child/mug silhouette and the same seated, sigh, stand and leave transforms.
+A square-ended black contour joins the head, neck and shoulders into one dark
+mass. A restrained neutral rim catches the monitor light on the left; layered
+shade follows the opposite edge. The child's hair bunches and adult's mug keep
+their existing persona role. No face or clothing detail is revealed.
+
+The cursor is an editable 14-by-20 coarse-cell drawing with a black keyline,
+pale fill, grey tail shade and a small offset shadow. Its top-left tip stays on
+the same swatch or close button throughout the click. Three detached pen ticks
+briefly respond to the existing winner/close click; their age is derived from
+the reveal timeline, so pausing or drawing again cannot advance them. Reduce
+effects suppresses the ticks while preserving the selected colour, saved slot,
+closed desktop and coverage reveal.
+
+The source drawings are `game/objects/silhouette.cpp` and `screen_cursor.cpp`.
+`presentation.json.opening.silhouette_art` owns the dark colours and pen/shade
+widths (fractions of person height). `opening.cursor_art` owns cursor colours,
+shadow offset, click reach (fractions of cursor height) and click duration in
+seconds. The loader bounds these values and names malformed content at startup.
+All new translucent drawing colours use the renderer's premultiplied blend.
+No atlas, simulation timer, persona draw or random-number draw was added.
+
+The focused check remains `scripts/check-painter.ps1 -MonitorOnly` in each
+preset. It extends the existing monitor fixtures and real two/four-player story
+paths; the same solo fixture continues to bypass the person and monitor.
+
+Debug and Release build under `/W4 /WX` and each pass all 21 consumer cases,
+including ten malformed foreground-content variants and accepted numeric limits.
+Both focused D3D11 renderer runs pass on the NVIDIA GeForce RTX 5080, retaining
+75 captures each:
+
+- Adult, child and mug personas in seated, sigh, standing and partial-leave
+  poses at 720p/1080p/QHD; full departure leaves no pixels. An offset window
+  translates the drawing exactly. Native crops preserve playing-size detail.
+- Resting, initial and mid-click cursor rasters keep the same hotspot and arrow
+  pixels; changes remain local. Negative/expired ages and reduced effects restore
+  the resting cursor.
+- Real painted two-player and unpainted four-player reveals bracket the save
+  and close clicks. Repeated draws preserve pixels, persona, pose, simulation
+  state, draw RNG and the Debug replay fingerprint.
+
+Inspected 720p evidence retains the [opening](images/polish-monitor/foreground-opening-720p.png),
+[winning click](images/polish-monitor/foreground-click-720p.png) and
+[native cursor crop](images/polish-monitor/foreground-cursor-720p.png).
+These establish drawing and event placement; human motion/readability review
+remains open.
+
+The 53-file Release ZIP byte-matches the revised presentation data and unchanged
+accepted sound bank. Isolated Debug and extracted Release startup pass with the
+bank and system-only PATH; extracted Release also passes the missing-bank
+silent fallback separately. All runs close gracefully and use isolated saves.
+
+Evidence is under `out/validation/foreground-scenes/`: visual Debug run
+`d397d94b4eba4e79bc8233f7f71a74e0`, Release run
+`1c181c8900344623b3368044deb44450`, startup records and `release/result.json`.
+The visual result files identify baseline `4bb35b3` plus working changes and
+the exact staged content. This increment keeps the remaining `POL#16` work open.

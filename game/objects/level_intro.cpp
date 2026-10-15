@@ -490,6 +490,9 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 	const RectangleF window(Vector2F::ZERO, this->resolution_manager_->resolution_vec());
 	const Viewport fullscreen = this->viewport_manager_->fullscreen_viewport();
 	const RevealBeat beat = this->reveal_beat();
+	const RevealTuning& timing = this->tuning_->match().reveal;
+	const float click_at = timing.walk_in + timing.hover + timing.hover + timing.decide;
+	const float click_age = beat.clicked ? this->reveal_time_ - click_at : -1.0f;
 	const Colour colour_a = this->team_colours_.team_colour(PlayerTeam::a);
 	const Colour colour_b = this->team_colours_.team_colour(PlayerTeam::b);
 	const RectangleF picture = this->monitor_->picture(screen);
@@ -524,7 +527,7 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 		{
 			this->monitor_->draw_close_button(front, screen);
 		}
-		this->cursor_->draw(front, cursor, window.height);
+		this->cursor_->draw(front, cursor, window.height, click_age, this->preferences_->reduce_effects);
 		this->silhouette_->draw(front, window, this->monitor_->persona(), beat.pose);
 		return;
 	}
@@ -578,7 +581,7 @@ void Level::draw_reveal(DrawList& front, const RectangleF& screen) const
 		front.set_filter(TextureFilter::point);
 	}
 
-	this->cursor_->draw(front, cursor, window.height);
+	this->cursor_->draw(front, cursor, window.height, click_age, this->preferences_->reduce_effects);
 	this->silhouette_->draw(front, window, this->monitor_->persona(), beat.pose);
 }
 

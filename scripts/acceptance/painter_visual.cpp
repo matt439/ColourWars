@@ -2538,7 +2538,7 @@ int wmain(int argc, wchar_t** argv)
         const Canvas canvas(app.render_resources());
         if (monitor_only)
         {
-            monitor_matrix(app, builder, canvas, tuning, presentation, output);
+            monitor_matrix(app, builder, canvas, tuning, presentation, preferences, output);
             require(records.good(), "Capture record write failed");
             std::cout << "PASS monitor-only visual check; other painter matrices were not run\n";
             return 0;
@@ -2600,7 +2600,7 @@ int wmain(int argc, wchar_t** argv)
         reduced_effects_matrix(app, builder, canvas, presentation, preferences, output, records);
         shake_matrix(app, builder, tuning, presentation, preferences, output);
         identity_matrix(app, builder, presentation, preferences, output);
-        monitor_matrix(app, builder, canvas, tuning, presentation, output);
+        monitor_matrix(app, builder, canvas, tuning, presentation, preferences, output);
         {
             // Depletion pays hundreds of shots without wall-clock audio
             // updates. A silent bank keeps this renderer check independent of

@@ -546,6 +546,24 @@
     "coffee": "6B4A2B",
     "crack": "3A3A3A",
     "silhouette": "0E0E0E",
+    "silhouette_art": {
+      "_comment": "Anonymous rear silhouette: coarse dark pen and a low-value monitor rim. Widths are fractions of seated person height; the figure keeps its existing story poses.",
+      "ink": "000000",
+      "rim": "343434",
+      "shade": "080808",
+      "pen_width": 0.008,
+      "shade_width": 0.025
+    },
+    "cursor_art": {
+      "_comment": "Coarse-cell arrow with a fixed tip. Shadow offset and click reach use cursor height. The brief click marks use the existing reveal click time and are suppressed by Reduce effects.",
+      "ink": "000000",
+      "fill": "F3F3F3",
+      "shade": "B4B4B4",
+      "shadow": "00000066",
+      "shadow_offset": 0.08,
+      "click_duration": 0.18,
+      "click_reach": 0.3
+    },
     "adult_height": 0.62,
     "child_height": 0.44,
     "cursor_size": 0.045,

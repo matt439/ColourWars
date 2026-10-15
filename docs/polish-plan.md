@@ -673,6 +673,15 @@ closed-program ending. The story and picture layout keep their existing
 behaviour. The remaining opening/closing accents and match/UI treatment stay
 open; this does not establish reference-arena composition acceptance.
 
+**Person and cursor artwork implemented (2026-10-15, part of `POL#16`).** The
+[foreground drawing and evidence](polish-monitor.md#person-and-cursor-foreground)
+complete the same monitor composition with a coarse dark silhouette contour,
+restrained neutral rim and edge shade. Adult, child and mug personas keep their
+existing poses. The shaded coarse-cell pointer keeps its tip on the selected
+swatch or close button; brief detached click ticks follow the existing reveal
+click and are suppressed by Reduce effects. Countdown and other match accents,
+then the remaining interface treatment, stay open.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

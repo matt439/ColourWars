@@ -919,6 +919,34 @@ namespace
 		opening.coffee = read_colour(json, "coffee");
 		opening.crack = read_colour(json, "crack");
 		opening.silhouette = read_colour(json, "silhouette");
+		const JsonValue person_art = json.object("silhouette_art");
+		SilhouetteArtPresentation& person = opening.silhouette_art;
+		person.ink = read_colour(person_art, "ink");
+		person.rim = read_colour(person_art, "rim");
+		person.shade = read_colour(person_art, "shade");
+		person.pen_width = read_fraction(person_art, "pen_width");
+		person.shade_width = read_fraction(person_art, "shade_width");
+		if (person.pen_width <= 0.0f || person.pen_width > 0.025f ||
+			person.shade_width < person.pen_width || person.shade_width > 0.08f)
+		{
+			throw std::runtime_error(person_art.where() +
+				": silhouette pen and shade widths must fit its coarse contour.");
+		}
+		const JsonValue cursor_art = json.object("cursor_art");
+		CursorArtPresentation& cursor = opening.cursor_art;
+		cursor.ink = read_colour(cursor_art, "ink");
+		cursor.fill = read_colour(cursor_art, "fill");
+		cursor.shade = read_colour(cursor_art, "shade");
+		cursor.shadow = read_colour(cursor_art, "shadow");
+		cursor.shadow_offset = read_fraction(cursor_art, "shadow_offset");
+		cursor.click_duration = read_positive(cursor_art, "click_duration");
+		cursor.click_reach = read_fraction(cursor_art, "click_reach");
+		if (cursor.shadow_offset > 0.2f || cursor.click_duration <= 0.0f ||
+			cursor.click_duration > 0.5f || cursor.click_reach <= 0.0f || cursor.click_reach > 0.6f)
+		{
+			throw std::runtime_error(cursor_art.where() +
+				": cursor shadow/click must stay local; 'click_duration' must be in (0, 0.5].");
+		}
 		opening.adult_height = read_fraction(json, "adult_height");
 		opening.child_height = read_fraction(json, "child_height");
 		opening.cursor_size = read_fraction(json, "cursor_size");
