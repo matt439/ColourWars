@@ -79,8 +79,9 @@ Their `result.json` files record baseline `0480c18` plus working changes, the
 pinned engine, device, scope and staged content hashes. Full-frame monitor
 review sheets are separate from the painter's native-size crop sheets.
 
-Reference-arena composition, countdown and other match accents, menus and HUD
-artwork remain under `POL#16`. This increment does not close movement-feel,
+The [countdown pass](polish-countdown.md) follows this scene. Reference-arena
+composition, closing/reveal accents, menus and HUD artwork remain under
+`POL#16`. This increment does not close movement-feel,
 physical-pad, listening or clean-PC acceptance.
 
 ## Person and cursor foreground

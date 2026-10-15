@@ -6,6 +6,7 @@
 #include "game/objects/weapon_feedback.h"
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/player_badge.h"
+#include "game/objects/countdown_art.h"
 #include "game/save.h"
 #include "game/debug/dev_tools.h"
 #if COLOURWARS_DEV_TOOLS
@@ -2478,6 +2479,7 @@ namespace
             "same-state on/off, frozen redraw, suspend/resume reset, expiry, stable follow camera/mouse aim and replay fingerprint\n";
     }
 #include "scripts/acceptance/painter_visual/monitor_checks.h"
+#include "scripts/acceptance/painter_visual/countdown_checks.h"
 }
 
 int wmain(int argc, wchar_t** argv)
@@ -2485,11 +2487,13 @@ int wmain(int argc, wchar_t** argv)
     try
     {
         require(argc == 3 || (argc == 4 && (std::wstring(argv[3]) == L"identity" ||
-            std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"monitor")),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor]");
+            std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"monitor" ||
+            std::wstring(argv[3]) == L"countdown")),
+            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
+        const bool countdown_only = argc == 4 && std::wstring(argv[3]) == L"countdown";
         std::cout << std::unitbuf;
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
@@ -2536,6 +2540,13 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         const Canvas canvas(app.render_resources());
+        if (countdown_only)
+        {
+            countdown_matrix(app, builder, canvas, tuning, presentation, preferences, output);
+            require(records.good(), "Capture record write failed");
+            std::cout << "PASS countdown-only visual check; other painter matrices were not run\n";
+            return 0;
+        }
         if (monitor_only)
         {
             monitor_matrix(app, builder, canvas, tuning, presentation, preferences, output);
@@ -2601,6 +2612,7 @@ int wmain(int argc, wchar_t** argv)
         shake_matrix(app, builder, tuning, presentation, preferences, output);
         identity_matrix(app, builder, presentation, preferences, output);
         monitor_matrix(app, builder, canvas, tuning, presentation, preferences, output);
+        countdown_matrix(app, builder, canvas, tuning, presentation, preferences, output);
         {
             // Depletion pays hundreds of shots without wall-clock audio
             // updates. A silent bank keeps this renderer check independent of

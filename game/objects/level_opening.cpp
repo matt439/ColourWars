@@ -40,20 +40,15 @@ void Level::build_opening_frame(RenderResources* render_resources)
 
 	// Use the configured countdown for the opening beat.
 	const MatchTuning& match = this->tuning_->match();
-	this->countdown_text_ = std::make_unique<TextDropShadow>(
-		std::to_wstring(static_cast<int>(match.countdown)),
-		match.countdown_font,
-		Vector2F::ZERO,
-		render_resources,
-		match.countdown_colour,
-		match.countdown_shadow_colour,
-		match.countdown_shadow_offset,
-		match.countdown_scale,
-		match.countdown_scale);
+	this->countdown_label_ = match.countdown > 0.0f ?
+		std::to_wstring(static_cast<int>(std::ceil(match.countdown))) : L"GO!";
+	this->countdown_art_ = std::make_unique<CountdownArt>(
+		&this->presentation_->match(), &this->presentation_->opening(), render_resources);
 	const MenuStyle& menu = this->presentation_->menu();
 	this->countdown_heading_ = std::make_unique<TextDropShadow>(
 		L"GET READY", menu.detail_font, Vector2F::ZERO,
-		render_resources, menu.highlight, menu.shadow_colour,
+		render_resources, this->presentation_->match().countdown_art.ink,
+		this->presentation_->match().countdown_art.paper,
 		menu.detail_shadow_offset);
 	this->centre_countdown_text();
 
@@ -108,16 +103,12 @@ void Level::build_opening_frame(RenderResources* render_resources)
 
 void Level::set_countdown_text(const std::wstring& text)
 {
-	this->countdown_text_->set_text(text);
-
-	// Re-centre after each beat because the text width changes.
-	this->centre_countdown_text();
+	this->countdown_label_ = text;
 }
 
 void Level::centre_countdown_text()
 {
 	const Vector2F resolution = this->resolution_manager_->resolution_vec();
-	const MatchTuning& match = this->tuning_->match();
 	const MatchPresentation& look = this->presentation_->match();
 	const MenuStyle& menu = this->presentation_->menu();
 	const float scale = this->opening_scale();
@@ -140,26 +131,10 @@ void Level::centre_countdown_text()
 		this->countdown_card_.y + padding.y) - heading_bounds.position() * heading_scale);
 	const float number_top = this->countdown_card_.y + padding.y * 2.0f +
 		heading_bounds.height * heading_scale;
-	const RectangleF number_box(
+	this->countdown_number_box_ = RectangleF(
 		this->countdown_card_.x + padding.x, number_top,
 		card_size.x - padding.x * 2.0f,
 		this->countdown_card_.bottom() - padding.y - number_top);
-	// Fit text and shadow together, including negative offsets. Start from authored
-	// scale each time so a larger window or narrower beat restores the intended size.
-	const RectangleF bounds = RectangleF::union_of(
-		this->countdown_text_->text_bounds_at(Vector2F::ZERO,
-			match.countdown_scale),
-		this->countdown_text_->text_bounds_at(match.countdown_shadow_offset,
-			match.countdown_scale));
-	const float fit = std::min({ scale,
-		number_box.width / bounds.width, number_box.height / bounds.height });
-
-	this->countdown_text_->set_scale(match.countdown_scale * fit);
-	this->countdown_text_->set_shadow_scale(match.countdown_scale * fit);
-	this->countdown_text_->set_shadow_offset(match.countdown_shadow_offset * fit);
-	this->countdown_text_->set_position(
-		number_box.position() + (number_box.size() - bounds.size() * fit) / 2.0f -
-		bounds.position() * fit);
 }
 
 void Level::centre_controls_text()
@@ -256,15 +231,20 @@ void Level::draw_countdown_text(DrawList& draw_list) const
 	{
 		const float scale = this->opening_scale();
 		draw_list.set_filter(TextureFilter::point);
-		this->draw_opening_card(draw_list, this->countdown_card_, scale);
+		this->countdown_art_->draw_card(draw_list, this->countdown_card_, scale);
 		for (const ControlsReminder& reminder : this->controls_reminders_)
 		{
 			this->draw_opening_card(draw_list, reminder.card, scale);
 		}
 	}
-	// Use linear filtering for countdown text, then restore point filtering.
+	const float beat_age = this->start_timer_ > 0.0f ?
+		std::min(this->tuning_->match().countdown - this->start_timer_,
+			std::ceil(this->start_timer_) - this->start_timer_) : -this->start_timer_;
+	draw_list.set_filter(TextureFilter::point);
+	this->countdown_art_->draw(draw_list, this->countdown_number_box_,
+		this->countdown_label_, beat_age, this->preferences_->reduce_effects);
+	// Keep the shared controls text on its existing font treatment.
 	draw_list.set_filter(TextureFilter::linear);
-	this->countdown_text_->draw(draw_list);
 
 	// Clear the cards when movement begins. GO! keeps its existing one-second beat.
 	if (getting_ready)

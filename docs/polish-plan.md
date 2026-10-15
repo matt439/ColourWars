@@ -639,7 +639,7 @@ mix; copyright provenance alone does not establish sound quality.
 
 ## 6. Finish the match presentation and extend the treatment
 
-Carry the pixel-art language through menu artwork, player/weapon cards, stage
+Carry the accepted Paint.exe language through menu artwork, player/weapon cards, stage
 preview, HUD, countdown, pause and results. Review typography at actual display
 sizes. Preserve the existing clear focus indicators, labels and controls reference.
 
@@ -679,8 +679,16 @@ complete the same monitor composition with a coarse dark silhouette contour,
 restrained neutral rim and edge shade. Adult, child and mug personas keep their
 existing poses. The shaded coarse-cell pointer keeps its tip on the selected
 swatch or close button; brief detached click ticks follow the existing reveal
-click and are suppressed by Reduce effects. Countdown and other match accents,
-then the remaining interface treatment, stay open.
+click and are suppressed by Reduce effects.
+
+**Countdown artwork implemented (2026-10-15, part of `POL#16`).** The
+[start-signal drawing and evidence](polish-countdown.md) replace the font-based
+number/GO signal with coarse, black-keylined strokes, a stepped paper card and
+quiet offset shade. A brief settling pulse and detached pen ticks follow the
+existing countdown clock; Reduce effects keeps the settled signal. The shared
+device reminders, story push, sound cues, control-release boundary and one-second
+GO beat retain their behaviour. Closing/reveal accents and the remaining
+interface treatment stay open.
 
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.

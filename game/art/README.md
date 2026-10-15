@@ -103,6 +103,13 @@ brief reveal-click response in `opening.silhouette_art` and `opening.cursor_art`
 The [foreground record](../../docs/polish-monitor.md#person-and-cursor-foreground)
 retains their native-size review evidence.
 
+The shared countdown and GO signal use editable coarse-cell strokes and stepped
+paper/shade drawings in `game/objects/countdown_art.cpp`, with authored colours,
+card pen widths and beat response in `presentation.json.match.countdown_art`.
+They use the existing solid texel; no atlas recipe is needed. The
+[start-signal record](../../docs/polish-countdown.md) retains native-size evidence
+and describes the unchanged gameplay and audio boundary.
+
 ## Runtime content separation (GAP#8.6)
 
 Implemented 2026-10-15. Tracked runtime content in `game/content/` is the reviewed set

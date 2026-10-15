@@ -1121,6 +1121,24 @@ Presentation::Presentation(const char* path)
 	this->match_.controls_margin = read_positive_vector(match, "controls_margin");
 	this->match_.controls_padding = read_positive_vector(match, "controls_padding");
 	this->match_.controls_gap = read_positive(match, "controls_gap");
+	const JsonValue countdown_art = match.object("countdown_art");
+	CountdownArtPresentation& signal = this->match_.countdown_art;
+	signal.ink = read_colour(countdown_art, "ink");
+	signal.paper = read_colour(countdown_art, "paper");
+	signal.shade = read_colour(countdown_art, "shade");
+	signal.number = read_colour(countdown_art, "number");
+	signal.go = read_colour(countdown_art, "go");
+	signal.keyline_width = read_positive(countdown_art, "keyline_width");
+	signal.shadow_offset = countdown_art.number("shadow_offset");
+	signal.beat_duration = read_positive(countdown_art, "beat_duration");
+	signal.pulse = read_fraction(countdown_art, "pulse");
+	if (signal.keyline_width > 8.0f || !std::isfinite(signal.shadow_offset) ||
+		signal.shadow_offset < 0.0f || signal.shadow_offset > 16.0f ||
+		signal.beat_duration > 0.5f || signal.pulse > 0.15f)
+	{
+		throw std::runtime_error(countdown_art.where() +
+			": keyline_width <= 8, shadow_offset <= 16, beat_duration <= 0.5 and pulse <= 0.15 required.");
+	}
 	const MatchPresentation& intro = this->match_;
 	if (intro.countdown_size.x <= intro.controls_padding.x * 2.0f ||
 		intro.countdown_size.y <= intro.controls_padding.y * 3.0f ||

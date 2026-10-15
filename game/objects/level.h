@@ -34,6 +34,7 @@
 #include "game/objects/idle_drip.h"
 #include "game/objects/blocked_shot_feedback.h"
 #include "game/objects/player_badge.h"
+#include "game/objects/countdown_art.h"
 
 enum class LevelState
 {
@@ -192,7 +193,9 @@ private:
 	// Cached once per tick for all debug overlays.
 	int projectile_count_ = 0;
 
-	std::unique_ptr<labrador::TextDropShadow> countdown_text_ = nullptr;
+	std::unique_ptr<CountdownArt> countdown_art_;
+	std::wstring countdown_label_;
+	mattmath::RectangleF countdown_number_box_;
 	std::unique_ptr<labrador::TextDropShadow> countdown_heading_ = nullptr;
 	mattmath::RectangleF countdown_card_;
 
@@ -378,7 +381,7 @@ private:
 		const mattmath::RectangleF& rectangle, float scale) const;
 	float opening_scale() const;
 
-	// Sets the beat, then re-centres on what it actually measures.
+	// Sets the displayed beat; drawing derives its age from the match clock.
 	void set_countdown_text(const std::wstring& text);
 	void centre_countdown_text();
 	void centre_controls_text();

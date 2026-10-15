@@ -131,4 +131,75 @@ namespace
 				"Valid foreground artwork boundary was not retained");
 		}
 	}
+
+	void check_countdown_art_content(const std::filesystem::path& content)
+	{
+		const MenuPresentationVariant variants(content);
+		const auto rejected = [&](auto edit, const char* key = "countdown_art")
+		{
+			bool named = false;
+			try
+			{
+				std::ignore = variants.load([&](rapidjson::Document& json)
+					{ edit(json["match"]["countdown_art"], json.GetAllocator()); });
+			}
+			catch (const std::runtime_error& error)
+			{
+				const std::string message = error.what();
+				named = message.find("match") != std::string::npos &&
+					message.find("countdown_art") != std::string::npos &&
+					message.find(key) != std::string::npos;
+			}
+			require(named, "Invalid countdown artwork did not fail with its match field named");
+		};
+		struct Invalid { const char* key; float value; };
+		for (const Invalid invalid : { Invalid{ "keyline_width", -0.01f },
+			Invalid{ "keyline_width", 0.0f }, Invalid{ "keyline_width", 8.001f },
+			Invalid{ "shadow_offset", -0.01f }, Invalid{ "shadow_offset", 16.001f },
+			Invalid{ "beat_duration", -0.01f }, Invalid{ "beat_duration", 0.0f },
+			Invalid{ "beat_duration", 0.501f },
+			Invalid{ "pulse", -0.01f }, Invalid{ "pulse", 0.151f } })
+		{
+			rejected([&](rapidjson::Value& art, auto&)
+				{ art[invalid.key].SetFloat(invalid.value); }, invalid.key);
+		}
+		for (const char* key : { "keyline_width", "shadow_offset", "beat_duration", "pulse" })
+		{
+			rejected([&](rapidjson::Value& art, auto& allocator)
+				{ art[key].SetString("not a number", allocator); }, key);
+			rejected([&](rapidjson::Value& art, auto&) { art.RemoveMember(key); }, key);
+		}
+		for (const char* key : { "ink", "paper", "shade", "number", "go" })
+		{
+			rejected([&](rapidjson::Value& art, auto& allocator)
+				{ art[key].SetString("not a colour", allocator); });
+			rejected([&](rapidjson::Value& art, auto&) { art[key].SetInt(0); }, key);
+			rejected([&](rapidjson::Value& art, auto&) { art.RemoveMember(key); }, key);
+		}
+		rejected([](rapidjson::Value& art, auto&) { art.SetNull(); });
+
+		for (const bool upper : { false, true })
+		{
+			const float keyline_width = upper ? 8.0f : 0.001f;
+			const float shadow_offset = upper ? 16.0f : 0.0f;
+			const float beat_duration = upper ? 0.5f : 0.001f;
+			const float pulse = upper ? 0.15f : 0.0f;
+			const Presentation look = variants.load([&](rapidjson::Document& json)
+			{
+				auto& art = json["match"]["countdown_art"];
+				art["keyline_width"].SetFloat(keyline_width);
+				art["shadow_offset"].SetFloat(shadow_offset);
+				art["beat_duration"].SetFloat(beat_duration);
+				art["pulse"].SetFloat(pulse);
+				for (const char* key : { "ink", "paper", "shade", "number", "go" })
+				{
+					art[key].SetString(upper ? "A0B1C280" : "WHITE", json.GetAllocator());
+				}
+			});
+			const auto& art = look.match().countdown_art;
+			require(art.keyline_width == keyline_width && art.shadow_offset == shadow_offset &&
+				art.beat_duration == beat_duration && art.pulse == pulse,
+				"Valid countdown artwork boundary was not retained");
+		}
+	}
 }

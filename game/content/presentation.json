@@ -588,7 +588,19 @@
     "countdown_center_y": 0.44,
     "controls_margin": { "x": 72.0, "y": 48.0 },
     "controls_padding": { "x": 28.0, "y": 20.0 },
-    "controls_gap": 32.0
+    "controls_gap": 32.0,
+    "countdown_art": {
+      "_comment": "Coarse start signal. Card widths/offsets use reference pixels; beat_duration is seconds; pulse is a fraction. Reduce effects suppresses pulse and detached ticks.",
+      "ink": "151515",
+      "paper": "EAE7D9",
+      "shade": "908E84",
+      "number": "FFFFFF",
+      "go": "FFDC53",
+      "keyline_width": 4.0,
+      "shadow_offset": 6.0,
+      "beat_duration": 0.18,
+      "pulse": 0.08
+    }
   },
 
   "debug_overlay": {

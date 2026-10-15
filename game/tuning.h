@@ -86,14 +86,8 @@ struct MatchTuning
 	float zoom_out = 0.0f;
 	float overview = 0.0f;
 
-	std::string countdown_font;
-	labrador::Colour countdown_colour = labrador::Colour::white;
-	labrador::Colour countdown_shadow_colour = labrador::Colour::black;
-	mattmath::Vector2F countdown_shadow_offset = { 0.0f, 0.0f };
-	float countdown_scale = 1.0f;
-
-	// Controls reminder shown during the countdown. Keep its presentation with
-	// the countdown, and keep its text in sync with the input mapping.
+	// Controls reminder shown during the countdown. Keep its text in sync with
+	// the input mapping; the drawn start signal lives in MatchPresentation.
 	std::string controls_font;
 	labrador::Colour controls_colour = labrador::Colour::white;
 	labrador::Colour controls_shadow_colour = labrador::Colour::black;

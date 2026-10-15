@@ -222,13 +222,6 @@ namespace
 		match.countdown = json.number("countdown");
 		match.overview = json.number("overview");
 
-		const JsonValue text = json.object("countdown_text");
-		match.countdown_font = text.string("font");
-		match.countdown_colour = read_colour(text, "colour");
-		match.countdown_shadow_colour = read_colour(text, "shadow_colour");
-		match.countdown_shadow_offset = read_vector(text, "shadow_offset");
-		match.countdown_scale = text.number("scale");
-
 		const JsonValue controls = json.object("controls_text");
 		match.controls_font = controls.string("font");
 		match.controls_colour = read_colour(controls, "colour");
@@ -611,7 +604,6 @@ void GameTuning::validate_resources(const RenderResources& render,
 	const AudioResources& audio) const
 {
 	const ResourceValidation check(this->source_path_, render, audio);
-	check.font("match.countdown_text.font", this->match_.countdown_font);
 	check.font("match.controls_text.font", this->match_.controls_font);
 	check.frame("paint.frame", this->paint_.sheet, this->paint_.frame);
 	const auto splash = [&](ProjectileType type, const char* key)

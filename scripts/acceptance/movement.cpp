@@ -250,7 +250,7 @@ int main(int argc, char** argv)
         audio.add_sound_bank("paint_exe", SoundBank::silent());
         const PlaySettings preferences;
         const GameTuning tuning((content / "tuning.json").string().c_str());
-        for (const auto& font : { tuning.match().countdown_font, tuning.match().controls_font })
+        for (const auto& font : { tuning.match().controls_font })
         {
             const SpriteFontFile file = read_sprite_font_file(
                 (content / "fonts" / (font + ".spritefont")).string());

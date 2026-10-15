@@ -114,6 +114,20 @@ struct StageSelectPresentation
 	labrador::Colour unselected;
 };
 
+// Countdown drawing dimensions use the match reference pixels; timing is seconds.
+struct CountdownArtPresentation
+{
+	labrador::Colour ink;
+	labrador::Colour paper;
+	labrador::Colour shade;
+	labrador::Colour number;
+	labrador::Colour go;
+	float keyline_width = 0.0f;
+	float shadow_offset = 0.0f;
+	float beat_duration = 0.0f;
+	float pulse = 0.0f;
+};
+
 // Screen-space layout for the start signal and device-specific reminders.
 struct MatchPresentation
 {
@@ -123,6 +137,7 @@ struct MatchPresentation
 	mattmath::Vector2F controls_margin;
 	mattmath::Vector2F controls_padding;
 	float controls_gap = 0.0f;
+	CountdownArtPresentation countdown_art;
 };
 
 // World-camera accent sizes in world units, and their timing in seconds.
