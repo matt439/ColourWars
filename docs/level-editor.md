@@ -1,8 +1,8 @@
 # Level editor
 
 `ColourWarsEditor.exe` is a separate Windows desktop application for editing
-the game's level JSON files. It opens existing levels without changing their
-format and preserves fields that the editor does not know about. The canvas
+the game's level JSON files. It preserves fields that the editor does not know
+about. The canvas
 shows schematic geometry, type colours, paintable edges, ramps, spawn points and
 bounds. It has no textures, audio or game simulation; test the saved level in
 the game to judge how it plays.
@@ -31,6 +31,15 @@ Open a level with **File > Open** or start with **File > New**. Save As lets
 you keep an existing arena while experimenting with a copy. The title marks
 unsaved changes, and opening another level, creating one or closing the editor
 asks what to do with those changes.
+
+New levels declare the top-level integer `"format": 1`. Files that omit
+`format` load as legacy version 1; opening them preserves the original document,
+and a successful save adds the version field. An explicit version must be the
+integer `1`: unsupported versions and other types, including `1.0` or `1e0`,
+are rejected before level fields are decoded. Version errors identify the file
+and `format`; a rejected load or failed save preserves the open document,
+its path and undo/redo history. Unknown fields survive the legacy upgrade.
+See [the level format reference](level-format.md) for the file contract.
 
 ## Editing
 
@@ -165,11 +174,15 @@ can be intentional boundary geometry and are allowed.
 
 These build and run a native document-model check followed by a hidden GUI
 launch/open/respond/close check. Neither creates a game graphics/audio device.
-They cover the shipped levels, unknown-field preservation, both rectangle
+They cover the shipped levels, the canonical template, unknown-field preservation, both rectangle
 encodings, ramps, the palette, undo/redo and save
 state, Unicode paths and failure recovery. Evidence and generated test levels
 remain in `out/acceptance/<preset>/level-editor/`. They also check the optional
 Random setting's default, insertion, validation, undo/redo and save/reopen.
+The document checks also cover the shared current version, legacy save upgrades,
+unknown-field preservation, strict format type/version rejection before other
+field decoding, filename diagnostics, failed-upgrade recovery and retained
+undo/redo branches across a successful upgrade.
 Use `-SkipBuild` only after
 building both `colourwars_editor_acceptance` and `ColourWarsEditor` for the
 current source.

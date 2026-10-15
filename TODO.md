@@ -118,7 +118,6 @@ the accepted `GAP#8.6` scope.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `GAP#8.2` | OPEN | LOW | M | Range checks are ad hoc: no shared content-value checks or cross-field checks; menu sounds unbounded. |
-| `GAP#8.3` | OPEN | LOW | M | The level format has no doc, schema or `format` key. |
 | `GAP#8.4` | OPEN | LOW | M | Player-visible text is C++ literals; weapon name and icon come from a switch with an `L"ERROR"` fallback (fold into weapon tuning). |
 | `GAP#8.5` | OPEN | LOW | S | The C++/JSON line is uneven: menu widget geometry, 16 `sprite_sheet_1` literals, the wind factor and tool angles in C++. |
 | `GAP#8.7` | OPEN | LOW | M | Fonts cannot be regenerated (no recipe for the 7 atlases); no text wrapping. |

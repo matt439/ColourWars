@@ -1,0 +1,68 @@
+{
+    "format": 1,
+    "_comment": [
+        "Authoring template, not a registered or staged game level. Copy it before editing.",
+        "Format reference: docs/level-format.md. This simple floor is not an accepted arena layout."
+    ],
+    "display_name": "New Stage",
+    "include_in_random": false,
+    "icon_frame": "stage_close_quarters",
+    "sound": {
+        "sound_bank_name": "paint_exe",
+        "music_name": "music.close_quarters",
+        "music_volume": 0.65,
+        "end_sting_name": "music.end_sting.close_quarters",
+        "end_sting_volume": 0.65
+    },
+    "spawn_locations": {
+        "team_a": [
+            { "x": 100, "y": 1075 }, { "x": 200, "y": 1075 },
+            { "x": 300, "y": 1075 }, { "x": 400, "y": 1075 }
+        ],
+        "team_b": [
+            { "x": 2548, "y": 1075 }, { "x": 2648, "y": 1075 },
+            { "x": 2748, "y": 1075 }, { "x": 2848, "y": 1075 }
+        ]
+    },
+    "stations": [{ "name": "centre", "x": 1474, "y": 1075 }],
+    "level_bounds": {
+        "out_of_bounds": { "x": -200, "y": -200, "width": 3400, "height": 1800 },
+        "camera_bounds": { "x": 0, "y": 0, "width": 3000, "height": 1400 },
+        "zoom_out_start_bounds": { "x": 540, "y": 320, "width": 1920, "height": 1080 },
+        "zoom_out_finish_bounds": { "x": 0, "y": 0, "width": 3000, "height": 1400 }
+    },
+    "collision_objects": [
+        {
+            "name": "left_wall", "type": "Structure",
+            "sheet_name": "sprite_sheet_1", "frame_name": "square_white_4", "colour": "808080",
+            "rectangle": { "x": -100, "y": 0, "width": 100, "height": 1300 },
+            "collision_type": "STRUCTURE"
+        },
+        {
+            "name": "right_wall", "type": "Structure",
+            "sheet_name": "sprite_sheet_1", "frame_name": "square_white_4", "colour": "808080",
+            "rectangle": { "x": 3000, "y": 0, "width": 100, "height": 1300 },
+            "collision_type": "STRUCTURE"
+        },
+        {
+            "name": "ceiling", "type": "Structure",
+            "sheet_name": "sprite_sheet_1", "frame_name": "square_white_4", "colour": "808080",
+            "rectangle": { "x": -100, "y": -100, "width": 3200, "height": 100 },
+            "collision_type": "STRUCTURE"
+        },
+        {
+            "name": "paintable_floor", "type": "StructurePaintable",
+            "sheet_name": "sprite_sheet_1", "frame_name": "square_white_4", "colour": "GAINSBORO",
+            "rectangle": { "x": 0, "y": 1200, "width": 3000, "height": 100 },
+            "collision_type": "STRUCTURE_PAINTABLE",
+            "paintable_faces": { "left": false, "top": true, "right": false, "bottom": false }
+        }
+    ],
+    "non_collision_objects": [
+        {
+            "name": "background", "type": "Visual",
+            "sheet_name": "sprite_sheet_1", "frame_name": "square_white_4", "colour": "404040",
+            "rectangle": { "x": -200, "y": -200, "width": 3400, "height": 1800 }
+        }
+    ]
+}

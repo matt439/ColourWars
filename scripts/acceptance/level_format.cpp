@@ -1,0 +1,345 @@
+#include "game/pch.h"
+#include "game/level_format.h"
+#include "game/objects/level_loaded_info.h"
+#include "game/objects/level_object_builder.h"
+#include "engine/assets/sprite_sheet_loader.h"
+
+#include <filesystem>
+#include <fstream>
+#include <iostream>
+#include <iterator>
+#include <rapidjson/document.h>
+#include <rapidjson/schema.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+#include <typeinfo>
+
+using namespace labrador;
+using namespace mattmath;
+
+namespace
+{
+    void require(bool condition, const std::string& message)
+    {
+        if (!condition) { throw std::runtime_error(message); }
+    }
+
+    rapidjson::Document read_document(const std::filesystem::path& path)
+    {
+        std::ifstream input(path, std::ios::binary);
+        require(input.good(), "Cannot read " + path.string());
+        const std::string source{ std::istreambuf_iterator<char>(input), {} };
+        rapidjson::Document document;
+        document.Parse(source.c_str());
+        require(!document.HasParseError(), "Cannot parse " + path.string());
+        return document;
+    }
+
+    rapidjson::Document copy_document(const rapidjson::Document& source)
+    {
+        rapidjson::Document result;
+        result.CopyFrom(source, result.GetAllocator());
+        return result;
+    }
+
+    void write_document(const std::filesystem::path& path, const rapidjson::Document& document)
+    {
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        require(document.Accept(writer), "Cannot encode " + path.string());
+        std::ofstream output(path, std::ios::binary | std::ios::trunc);
+        output.write(buffer.GetString(), static_cast<std::streamsize>(buffer.GetSize()));
+        output.close();
+        require(output.good(), "Cannot write " + path.string());
+    }
+
+    void schema_is(const rapidjson::SchemaDocument& schema,
+        const rapidjson::Document& document, bool expected, const std::string& name)
+    {
+        rapidjson::SchemaValidator validator(schema);
+        const bool accepted = document.Accept(validator);
+        if (accepted != expected)
+        {
+            rapidjson::StringBuffer pointer;
+            validator.GetInvalidDocumentPointer().StringifyUriFragment(pointer);
+            throw std::runtime_error(name + (expected ? " rejected by schema at " :
+                " unexpectedly accepted by schema at ") + pointer.GetString());
+        }
+    }
+
+    void compare_runtime(const LevelLoadedInfo& modern, const LevelLoadedInfo& legacy,
+        const LevelObjectBuilder& builder)
+    {
+        require(modern.display_name() == legacy.display_name() &&
+            modern.icon_frame() == legacy.icon_frame() &&
+            modern.include_in_random() == legacy.include_in_random() &&
+            modern.team_a_spawns() == legacy.team_a_spawns() &&
+            modern.team_b_spawns() == legacy.team_b_spawns() &&
+            modern.out_of_bounds_rectangle() == legacy.out_of_bounds_rectangle() &&
+            modern.camera_bounds_rectangle() == legacy.camera_bounds_rectangle() &&
+            modern.zoom_out_start_bounds_rectangle() == legacy.zoom_out_start_bounds_rectangle() &&
+            modern.zoom_out_finish_bounds_rectangle() == legacy.zoom_out_finish_bounds_rectangle() &&
+            modern.sound_bank_name() == legacy.sound_bank_name() &&
+            modern.has_music() == legacy.has_music() && modern.music_name() == legacy.music_name() &&
+            modern.music_volume() == legacy.music_volume() &&
+            modern.has_end_sting() == legacy.has_end_sting() &&
+            modern.end_sting_name() == legacy.end_sting_name() &&
+            modern.end_sting_volume() == legacy.end_sting_volume(),
+            "Format tag changed level metadata, spawns, bounds or sound bindings");
+        const auto modern_stations = modern.stations();
+        const auto legacy_stations = legacy.stations();
+        require(modern_stations.size() == legacy_stations.size(), "Format tag changed station count");
+        for (size_t index = 0; index < modern_stations.size(); ++index)
+        {
+            require(modern_stations[index].name == legacy_stations[index].name &&
+                modern_stations[index].position == legacy_stations[index].position,
+                "Format tag changed a named station or its order");
+        }
+
+        const TeamColour colours;
+        const auto modern_collision = builder.build_collision_objects(modern.collision_objects_json(), colours);
+        const auto legacy_collision = builder.build_collision_objects(legacy.collision_objects_json(), colours);
+        require(modern_collision.size() == legacy_collision.size(), "Format tag changed collision object count");
+        for (size_t index = 0; index < modern_collision.size(); ++index)
+        {
+            const CollisionObject& left = *modern_collision[index];
+            const CollisionObject& right = *legacy_collision[index];
+            require(typeid(left) == typeid(right) && left.bounds() == right.bounds() &&
+                left.tag() == right.tag() && left.layer() == right.layer() && left.mask() == right.mask(),
+                "Format tag changed a built object's type, bounds or collision classification");
+            const auto* left_paint = dynamic_cast<const PaintableObject*>(&left);
+            const auto* right_paint = dynamic_cast<const PaintableObject*>(&right);
+            require((left_paint == nullptr) == (right_paint == nullptr), "Format tag changed scoring participation");
+            if (left_paint != nullptr)
+            {
+                const PaintTotal a = left_paint->paint_total();
+                const PaintTotal b = right_paint->paint_total();
+                require(a.total == b.total && a.team_a == b.team_a && a.team_b == b.team_b &&
+                    a.player_areas == b.player_areas, "Format tag changed exposed paint coverage");
+            }
+        }
+        const auto modern_visual = builder.build_non_collision_objects(modern.non_collision_objects_json());
+        const auto legacy_visual = builder.build_non_collision_objects(legacy.non_collision_objects_json());
+        require(modern_visual.size() == legacy_visual.size(), "Format tag changed decorative object count");
+        for (size_t index = 0; index < modern_visual.size(); ++index)
+        {
+            require(typeid(*modern_visual[index]) == typeid(*legacy_visual[index]) &&
+                modern_visual[index]->bounds() == legacy_visual[index]->bounds(),
+                "Format tag changed a built decorative object's type or bounds");
+        }
+    }
+
+    void runtime_rejects(const std::filesystem::path& path, const char* field,
+        const LevelObjectBuilder& builder, const RenderResources& render, const AudioResources& audio)
+    {
+        bool named = false;
+        try
+        {
+            const LevelLoadedInfo info(path.string().c_str());
+            info.validate();
+            info.validate_content(builder, render, audio);
+        }
+        catch (const std::runtime_error& error)
+        {
+            const std::string message = error.what();
+            named = message.find(path.filename().string()) != std::string::npos &&
+                message.find(field) != std::string::npos;
+        }
+        require(named, path.filename().string() + " must fail with its file and owning field named");
+    }
+
+    void check_versions(const std::filesystem::path& scratch)
+    {
+        require(level_format::current == 1, "Update compatibility acceptance when the format policy changes");
+        size_t index = 0;
+        for (const char* value : { "-1", "0", "2", "1.0", "1e0", "true", "null", "\"1\"",
+            "[]", "{}", "2147483648", "18446744073709551616" })
+        {
+            const auto path = scratch / ("version-" + std::to_string(index++) + ".json");
+            {
+                std::ofstream output(path, std::ios::binary | std::ios::trunc);
+                output << "{\"format\":" << value << '}';
+                output.close();
+                require(output.good(), "Cannot write version rejection fixture");
+            }
+            bool named = false;
+            try { const LevelLoadedInfo invalid(path.string().c_str()); }
+            catch (const std::runtime_error& error)
+            {
+                const std::string message = error.what();
+                named = message.find(path.filename().string()) != std::string::npos &&
+                    message.find("format") != std::string::npos &&
+                    message.find("display_name") == std::string::npos;
+            }
+            require(named, std::string("Malformed/future format ") + value +
+                " must fail before any content field is interpreted");
+        }
+        // A valid or absent tag passes construction even if later validation
+        // will reject the incomplete content. The tag is the first boundary.
+        for (const char* source : { "{}", "{\"format\":1}" })
+        {
+            rapidjson::Document document;
+            document.Parse(source);
+            const auto path = scratch / "supported-version-only.json";
+            write_document(path, document);
+            const LevelLoadedInfo supported(path.string().c_str());
+        }
+    }
+
+    void check_schema_fixtures(const rapidjson::SchemaDocument& schema,
+        const rapidjson::Document& source, const std::filesystem::path& scratch,
+        const LevelObjectBuilder& builder, const RenderResources& render, const AudioResources& audio)
+    {
+        const auto variant = [&](const char* name, bool expected, auto edit)
+        {
+            auto document = copy_document(source);
+            edit(document);
+            schema_is(schema, document, expected, name);
+            const auto path = scratch / (std::string(name) + ".json");
+            write_document(path, document);
+            return path;
+        };
+        const auto unknown = variant("unknown-metadata", true, [](rapidjson::Document& d)
+        {
+            d.AddMember("future_author_note", 42, d.GetAllocator());
+            d["collision_objects"][0].AddMember("editor_selection", true, d.GetAllocator());
+            d["stations"][0].AddMember("route_note", "retained metadata", d.GetAllocator());
+        });
+        const LevelLoadedInfo baseline((scratch / "baseline.json").string().c_str());
+        const LevelLoadedInfo extras(unknown.string().c_str());
+        extras.validate();
+        extras.validate_content(builder, render, audio);
+        compare_runtime(baseline, extras, builder);
+
+        const auto alternate = variant("rectangle-tlbr", true, [](rapidjson::Document& d)
+        {
+            auto& object = d["collision_objects"][0];
+            const auto& rectangle = object["rectangle"];
+            rapidjson::Value tlbr(rapidjson::kObjectType);
+            tlbr.AddMember("left", rectangle["x"].GetDouble(), d.GetAllocator());
+            tlbr.AddMember("top", rectangle["y"].GetDouble(), d.GetAllocator());
+            tlbr.AddMember("right", rectangle["x"].GetDouble() + rectangle["width"].GetDouble(), d.GetAllocator());
+            tlbr.AddMember("bottom", rectangle["y"].GetDouble() + rectangle["height"].GetDouble(), d.GetAllocator());
+            object.AddMember("rectangle_tlbr", tlbr, d.GetAllocator());
+            object.RemoveMember("rectangle");
+        });
+        const LevelLoadedInfo alternate_info(alternate.string().c_str());
+        alternate_info.validate();
+        alternate_info.validate_content(builder, render, audio);
+        compare_runtime(baseline, alternate_info, builder);
+
+        const auto both = variant("rectangle-precedence", true, [](rapidjson::Document& d)
+        {
+            // The runtime deliberately ignores the alternative when rectangle
+            // exists; the schema must preserve that compatibility, too.
+            d["collision_objects"][0].AddMember("rectangle_tlbr", "ignored", d.GetAllocator());
+        });
+        const LevelLoadedInfo both_info(both.string().c_str());
+        both_info.validate();
+        both_info.validate_content(builder, render, audio);
+        compare_runtime(baseline, both_info, builder);
+
+        variant("unsupported-format", false, [](rapidjson::Document& d) { d["format"].SetInt(2); });
+        variant("string-format", false, [](rapidjson::Document& d) { d["format"].SetString("1"); });
+        variant("floating-format", false, [](rapidjson::Document& d) { d["format"].SetDouble(1.0); });
+        variant("missing-display-name", false, [](rapidjson::Document& d) { d.RemoveMember("display_name"); });
+        variant("short-team", false, [](rapidjson::Document& d) { d["spawn_locations"]["team_a"].PopBack(); });
+        variant("bad-bounds", false, [](rapidjson::Document& d) { d["level_bounds"]["camera_bounds"]["width"].SetInt(0); });
+        variant("bad-random", false, [](rapidjson::Document& d) { d["include_in_random"].SetString("false"); });
+        variant("bad-object-type", false, [](rapidjson::Document& d) { d["collision_objects"][0]["type"].SetString("Visual"); });
+        variant("bad-collision-tag", false, [](rapidjson::Document& d)
+            { d["collision_objects"][0]["collision_type"].SetString("STRUCTURE_PAINTABLE"); });
+        variant("missing-geometry", false, [](rapidjson::Document& d) { d["collision_objects"][0].RemoveMember("rectangle"); });
+        variant("bad-visual-type", false, [](rapidjson::Document& d) { d["non_collision_objects"][0]["type"].SetString("Structure"); });
+        variant("bad-paint-face", false, [](rapidjson::Document& d)
+            { d["collision_objects"][3]["paintable_faces"]["top"].SetInt(1); });
+        variant("missing-paint-face", false, [](rapidjson::Document& d)
+            { d["collision_objects"][3]["paintable_faces"].RemoveMember("bottom"); });
+        for (const char* field : { "music_name", "music_volume", "end_sting_name", "end_sting_volume" })
+        {
+            variant((std::string("unpaired-") + field).c_str(), false,
+                [field](rapidjson::Document& d) { d["sound"].RemoveMember(field); });
+        }
+        variant("bad-sting-volume", false, [](rapidjson::Document& d) { d["sound"]["end_sting_volume"].SetDouble(1.1); });
+        variant("reserved-station", false, [](rapidjson::Document& d) { d["stations"][0]["name"].SetString("spawn_a"); });
+
+        const auto outside = variant("outside-spawn", true, [](rapidjson::Document& d)
+            { d["spawn_locations"]["team_a"][0]["x"].SetInt(-100000); });
+        runtime_rejects(outside, "out_of_bounds", builder, render, audio);
+        const auto unknown_sheet = variant("unknown-sheet", true, [](rapidjson::Document& d)
+            { d["collision_objects"][0]["sheet_name"].SetString("not_a_loaded_sheet"); });
+        runtime_rejects(unknown_sheet, "collision_objects", builder, render, audio);
+        const auto chromatic = variant("chromatic-hex", true, [](rapidjson::Document& d)
+            { d["collision_objects"][0]["colour"].SetString("FF0000"); });
+        runtime_rejects(chromatic, "not a grey", builder, render, audio);
+    }
+}
+
+int main(int argc, char** argv)
+{
+    try
+    {
+        require(argc == 3, "Usage: level_format.exe <staged content directory> <repository directory>");
+        const std::filesystem::path content(argv[1]);
+        const std::filesystem::path repo(argv[2]);
+        const auto scratch = std::filesystem::absolute(argv[0]).parent_path() / "level-format-fixtures";
+        std::filesystem::create_directories(scratch);
+        const auto schema_json = read_document(repo / "docs/level.schema.json");
+        const rapidjson::SchemaDocument schema(schema_json);
+        RenderResources render;
+        render.add_sprite_sheet("sprite_sheet_1", read_sprite_sheet(
+            (content / "textures/sprite_sheet_1.json").string().c_str(), TextureHandle{}));
+        render.add_sprite_sheet("paint_fx", read_sprite_sheet(
+            (content / "textures/paint_fx.json").string().c_str(), TextureHandle{}));
+        AudioResources audio;
+        audio.add_sound_bank("paint_exe", SoundBank::silent());
+        const GameTuning tuning((content / "tuning.json").string().c_str());
+        const PlaySettings preferences;
+        const LevelObjectBuilder builder(&render, &audio, &preferences, &tuning.paint());
+
+        size_t checked = 0;
+        const auto check_compatible = [&](const std::filesystem::path& path)
+        {
+            auto document = read_document(path);
+            require(document.HasMember("format") && document["format"].IsInt() &&
+                document["format"].GetInt() == level_format::current,
+                path.string() + " needs an explicit current format tag");
+            schema_is(schema, document, true, path.string());
+            const LevelLoadedInfo modern(path.string().c_str());
+            modern.validate();
+            modern.validate_content(builder, render, audio);
+            document.RemoveMember("format");
+            schema_is(schema, document, true, path.string() + " untagged legacy clone");
+            const auto legacy_path = scratch / ("legacy-" + std::to_string(checked) + ".json");
+            write_document(legacy_path, document);
+            const LevelLoadedInfo legacy(legacy_path.string().c_str());
+            legacy.validate();
+            legacy.validate_content(builder, render, audio);
+            compare_runtime(modern, legacy, builder);
+            ++checked;
+        };
+        for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters", "movement_course" })
+        {
+            const std::string file = std::string(name) + ".json";
+            check_compatible(content / "levels" / file);
+            check_compatible(repo / "game/content/levels" / file);
+            const LevelLoadedInfo staged((content / "levels" / file).string().c_str());
+            const LevelLoadedInfo source((repo / "game/content/levels" / file).string().c_str());
+            compare_runtime(staged, source, builder);
+        }
+        const auto template_path = repo / "editor/template.json";
+        check_compatible(template_path);
+        const auto source = read_document(template_path);
+        write_document(scratch / "baseline.json", source);
+        check_versions(scratch);
+        check_schema_fixtures(schema, source, scratch, builder, render, audio);
+        std::cout << "PASS level format 1: " << checked << " staged/source/template files, legacy object/paint parity, "
+            "early version rejection, schema fixtures and runtime resource/geometry authority.\n";
+        return 0;
+    }
+    catch (const std::exception& error)
+    {
+        std::cerr << "FAIL level format: " << error.what() << '\n';
+        return 1;
+    }
+}

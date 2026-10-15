@@ -9,6 +9,7 @@
 #include <windows.h>
 
 #include "editor/level_json.h"
+#include "game/level_format.h"
 #include <rapidjson/pointer.h>
 
 #include <algorithm>
@@ -228,6 +229,7 @@ namespace colourwars_editor
                 "sheet_name":"sprite_sheet_1","frame_name":"square_white_4","colour":"404040",
                 "rectangle":{"x":-200,"y":-200,"width":3400,"height":1800}}]
         })");
+        document.AddMember("format", level_format::current, document.GetAllocator());
         validate_document(document);
         auto next = std::make_unique<Impl>();
         next->history.push_back(json_text(document));
@@ -237,12 +239,20 @@ namespace colourwars_editor
 
     void LevelDocument::load(const std::filesystem::path& path)
     {
+        const std::u8string filename = path.u8string();
+        const std::string source = "Level file '" +
+            std::string(reinterpret_cast<const char*>(filename.data()), filename.size()) + "': ";
         std::ifstream input(path, std::ios::binary);
-        if (!input) { fail("Could not open the level file."); }
+        if (!input) { fail(source + "Could not open the level file."); }
         const std::string text{ std::istreambuf_iterator<char>(input), std::istreambuf_iterator<char>() };
-        if (input.bad()) { fail("Could not read the complete level file."); }
-        Document document = parse(text);
-        validate_document(document);
+        if (input.bad()) { fail(source + "Could not read the complete level file."); }
+        Document document;
+        try
+        {
+            document = parse(text);
+            validate_document(document);
+        }
+        catch (const std::exception& error) { fail(source + error.what()); }
         auto next = std::make_unique<Impl>();
         next->path = path;
         next->saved = json_text(document);
@@ -260,8 +270,18 @@ namespace colourwars_editor
             fail("The save destination is not a regular file.");
         }
         // Allocate document-state updates before committing any filesystem change.
+        // Saving upgrades a legacy file, but a failed write must leave even
+        // its omitted format field and undo/redo history untouched.
+        Document saved_document;
+        saved_document.CopyFrom(impl_->document, saved_document.GetAllocator());
+        if (!saved_document.HasMember("format"))
+        {
+            saved_document.AddMember("format", level_format::current, saved_document.GetAllocator());
+        }
         std::filesystem::path saved_path = path;
-        std::string saved_text = serialize();
+        std::string saved_text = json_text(saved_document);
+        std::vector<std::string> saved_history = impl_->history;
+        saved_history[impl_->history_index] = saved_text;
         // A sibling temporary guarantees a same-volume rename. CREATE_NEW owns it
         // exclusively, including when two editor processes save simultaneously.
         const std::string suffix = ".editor-" + std::to_string(GetCurrentProcessId()) + "-" +
@@ -319,6 +339,8 @@ namespace colourwars_editor
             DeleteFileW(temporary.c_str());
             throw;
         }
+        impl_->document.Swap(saved_document);
+        impl_->history.swap(saved_history);
         impl_->path.swap(saved_path);
         impl_->saved.swap(saved_text);
     }

@@ -1,4 +1,5 @@
 #include "editor/level_json.h"
+#include "game/level_format.h"
 
 #include <rapidjson/error/en.h>
 #include <rapidjson/prettywriter.h>
@@ -248,6 +249,22 @@ namespace colourwars_editor
         void validate_document(const Document& document)
         {
             if (!document.IsObject()) { fail("A level must be a JSON object."); }
+            // Missing format is legacy version 1. Reject newer or malformed
+            // versions before interpreting any fields in their vocabulary.
+            if (document.HasMember("format"))
+            {
+                const Json& format = document["format"];
+                if (!format.IsInt())
+                {
+                    fail("format must be an integer; supported level format is " +
+                        std::to_string(level_format::current) + ".");
+                }
+                if (format.GetInt() != level_format::current)
+                {
+                    fail("Unsupported level format " + std::to_string(format.GetInt()) +
+                        "; supported format is " + std::to_string(level_format::current) + ".");
+                }
+            }
             validate_display_name(string(document, "display_name"));
             if (document.HasMember("include_in_random") && !document["include_in_random"].IsBool())
             {

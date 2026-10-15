@@ -1,0 +1,212 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "title": "ColourWars level format 1",
+    "description": "Structural checks for the runtime format. Unknown keys are retained by the editor and ignored by the runtime. Resource resolution, float conversion, geometry relationships and station-name uniqueness still require runtime validation; see level-format.md.",
+    "type": "object",
+    "required": [
+        "display_name", "icon_frame", "sound", "spawn_locations", "level_bounds",
+        "collision_objects", "non_collision_objects"
+    ],
+    "properties": {
+        "format": { "type": "integer", "enum": [1] },
+        "display_name": { "type": "string" },
+        "icon_frame": { "type": "string" },
+        "include_in_random": { "type": "boolean", "default": true },
+        "sound": { "$ref": "#/definitions/sound" },
+        "spawn_locations": {
+            "type": "object",
+            "required": ["team_a", "team_b"],
+            "properties": {
+                "team_a": { "$ref": "#/definitions/spawns" },
+                "team_b": { "$ref": "#/definitions/spawns" }
+            },
+            "additionalProperties": true
+        },
+        "stations": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": ["name", "x", "y"],
+                "properties": {
+                    "name": {
+                        "type": "string",
+                        "pattern": "^[a-z0-9_]+$",
+                        "not": { "enum": ["spawn_a", "spawn_b"] }
+                    },
+                    "x": { "type": "number" },
+                    "y": { "type": "number" }
+                },
+                "additionalProperties": true
+            }
+        },
+        "level_bounds": {
+            "type": "object",
+            "required": ["out_of_bounds", "camera_bounds", "zoom_out_start_bounds", "zoom_out_finish_bounds"],
+            "properties": {
+                "out_of_bounds": { "$ref": "#/definitions/rectangle" },
+                "camera_bounds": { "$ref": "#/definitions/rectangle" },
+                "zoom_out_start_bounds": { "$ref": "#/definitions/rectangle" },
+                "zoom_out_finish_bounds": { "$ref": "#/definitions/rectangle" }
+            },
+            "additionalProperties": true
+        },
+        "collision_objects": {
+            "type": "array",
+            "items": {
+                "oneOf": [
+                    { "$ref": "#/definitions/structure" },
+                    { "$ref": "#/definitions/paintable" },
+                    { "$ref": "#/definitions/ramp" }
+                ]
+            }
+        },
+        "non_collision_objects": {
+            "type": "array",
+            "items": { "$ref": "#/definitions/visual" }
+        }
+    },
+    "additionalProperties": true,
+    "definitions": {
+        "point": {
+            "type": "object",
+            "required": ["x", "y"],
+            "properties": { "x": { "type": "number" }, "y": { "type": "number" } },
+            "additionalProperties": true
+        },
+        "spawns": { "type": "array", "minItems": 4, "items": { "$ref": "#/definitions/point" } },
+        "rectangle": {
+            "type": "object",
+            "required": ["x", "y", "width", "height"],
+            "properties": {
+                "x": { "type": "number" },
+                "y": { "type": "number" },
+                "width": { "type": "number", "minimum": 0, "exclusiveMinimum": true },
+                "height": { "type": "number", "minimum": 0, "exclusiveMinimum": true }
+            },
+            "additionalProperties": true
+        },
+        "rectangle_tlbr": {
+            "type": "object",
+            "required": ["left", "top", "right", "bottom"],
+            "properties": {
+                "left": { "type": "number" },
+                "top": { "type": "number" },
+                "right": { "type": "number" },
+                "bottom": { "type": "number" }
+            },
+            "additionalProperties": true
+        },
+        "rectangle_geometry": {
+            "anyOf": [
+                {
+                    "required": ["rectangle"],
+                    "properties": { "rectangle": { "$ref": "#/definitions/rectangle" } }
+                },
+                {
+                    "not": { "required": ["rectangle"] },
+                    "required": ["rectangle_tlbr"],
+                    "properties": { "rectangle_tlbr": { "$ref": "#/definitions/rectangle_tlbr" } }
+                }
+            ]
+        },
+        "triangle": {
+            "type": "object",
+            "required": ["x1", "y1", "x2", "y2", "x3", "y3"],
+            "properties": {
+                "x1": { "type": "number" }, "y1": { "type": "number" },
+                "x2": { "type": "number" }, "y2": { "type": "number" },
+                "x3": { "type": "number" }, "y3": { "type": "number" }
+            },
+            "additionalProperties": true
+        },
+        "colour": {
+            "type": "string",
+            "anyOf": [
+                { "enum": ["BLACK", "DARK_GRAY", "DARK_GREY", "DIM_GRAY", "DIM_GREY", "GAINSBORO", "GRAY", "GREY", "LIGHT_GRAY", "LIGHT_GREY", "SILVER", "WHITE", "WHITE_SMOKE"] },
+                { "pattern": "^[0-9A-Fa-f]{6}$" }
+            ]
+        },
+        "object_common": {
+            "type": "object",
+            "required": ["type", "sheet_name", "frame_name", "colour"],
+            "properties": {
+                "type": { "type": "string" },
+                "sheet_name": { "type": "string" },
+                "frame_name": { "type": "string" },
+                "colour": { "$ref": "#/definitions/colour" }
+            },
+            "additionalProperties": true
+        },
+        "structure": {
+            "allOf": [
+                { "$ref": "#/definitions/object_common" },
+                { "$ref": "#/definitions/rectangle_geometry" },
+                {
+                    "required": ["collision_type"],
+                    "properties": {
+                        "type": { "enum": ["Structure"] },
+                        "collision_type": { "enum": ["STRUCTURE", "STRUCTURE_JUMP_THROUGH"] }
+                    }
+                }
+            ]
+        },
+        "paintable": {
+            "allOf": [
+                { "$ref": "#/definitions/object_common" },
+                { "$ref": "#/definitions/rectangle_geometry" },
+                {
+                    "required": ["collision_type", "paintable_faces"],
+                    "properties": {
+                        "type": { "enum": ["StructurePaintable"] },
+                        "collision_type": { "enum": ["STRUCTURE_PAINTABLE"] },
+                        "paintable_faces": {
+                            "type": "object",
+                            "required": ["left", "top", "right", "bottom"],
+                            "properties": {
+                                "left": { "type": "boolean" }, "top": { "type": "boolean" },
+                                "right": { "type": "boolean" }, "bottom": { "type": "boolean" }
+                            },
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            ]
+        },
+        "ramp": {
+            "allOf": [
+                { "$ref": "#/definitions/object_common" },
+                {
+                    "required": ["collision_type", "triangle"],
+                    "properties": {
+                        "type": { "enum": ["StructureRamp"] },
+                        "collision_type": { "enum": ["STRUCTURE_RAMP_RIGHT", "STRUCTURE_RAMP_LEFT"] },
+                        "triangle": { "$ref": "#/definitions/triangle" }
+                    }
+                }
+            ]
+        },
+        "visual": {
+            "allOf": [
+                { "$ref": "#/definitions/object_common" },
+                { "$ref": "#/definitions/rectangle_geometry" },
+                { "properties": { "type": { "enum": ["Visual"] } } }
+            ]
+        },
+        "sound": {
+            "type": "object",
+            "required": ["sound_bank_name"],
+            "properties": {
+                "sound_bank_name": { "type": "string" },
+                "music_name": { "type": "string" },
+                "music_volume": { "type": "number" },
+                "end_sting_name": { "type": "string" },
+                "end_sting_volume": { "type": "number", "minimum": 0, "maximum": 1 }
+            },
+            "dependencies": {
+                "music_name": ["music_volume"], "music_volume": ["music_name"],
+                "end_sting_name": ["end_sting_volume"], "end_sting_volume": ["end_sting_name"]
+            },
+            "additionalProperties": true
+        }
+    }
+}

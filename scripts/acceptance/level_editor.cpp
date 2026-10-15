@@ -1,7 +1,10 @@
 #include "editor/level_document.h"
 #include "editor/blockout_aids.h"
 #include "game/paint_face_geometry.h"
+#include "game/level_format.h"
 #include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 #include <Windows.h>
 
 #include <cmath>
@@ -45,6 +48,14 @@ namespace
         result.Parse(text.data(), text.size());
         require(!result.HasParseError() && result.IsObject(), "Output is not a JSON object");
         return result;
+    }
+
+    std::string encode(const rapidjson::Document& document)
+    {
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        require(document.Accept(writer), "Could not encode format-version fixture");
+        return std::string(buffer.GetString(), buffer.GetSize());
     }
 
     bool equal(const Rect& actual, const Rect& expected)
@@ -177,7 +188,137 @@ namespace
                 require(!reopened.properties(item).empty(), "A selectable entry has no properties");
             }
         }
-        std::cout << "PASS shipped levels round trip and source preservation\n";
+        const fs::path template_path = repo / "editor/template.json";
+        const std::string template_bytes = contents(template_path);
+        const rapidjson::Document template_json = parse(template_bytes);
+        require(template_json.HasMember("format") && template_json["format"].IsInt() &&
+            template_json["format"].GetInt() == level_format::current,
+            "Canonical editor template does not declare the shared current format");
+        LevelDocument example;
+        example.load(template_path);
+        require(example.validate().empty() && !example.dirty(), "Canonical template did not load cleanly in editor");
+        example.save(scratch / "template-roundtrip.json");
+        LevelDocument template_reopened;
+        template_reopened.load(example.path());
+        require(parse(template_reopened.serialize()) == template_json && !template_reopened.dirty() &&
+            contents(template_path) == template_bytes,
+            "Canonical template editor round trip changed level fields or the source");
+        std::cout << "PASS shipped levels and canonical editor template round trip and source preservation\n";
+    }
+
+    void check_format_versions(const fs::path& scratch)
+    {
+        LevelDocument document;
+        const rapidjson::Document created = parse(document.serialize());
+        require(created.HasMember("format") && created["format"].IsInt() &&
+            created["format"].GetInt() == level_format::current,
+            "New document did not declare the shared current level format");
+        std::string extended = document.serialize();
+        extended.insert(extended.find('{') + 1,
+            "\n\"author_extension\": {\"format\":\"keep me\",\"flags\":[1,true,null],\"nested\":{\"x\":2}},");
+        rapidjson::Document legacy = parse(extended);
+        legacy.RemoveMember("format");
+        const fs::path legacy_path = scratch / "legacy-format.json";
+        const std::string legacy_bytes = encode(legacy);
+        write(legacy_path, legacy_bytes);
+        document.load(legacy_path);
+        require(parse(document.serialize()) == legacy && !document.dirty() &&
+            !document.can_undo() && !document.can_redo(),
+            "Loading a legacy level changed its source or saved/history state");
+
+        // Reach the filesystem failure after preparing the upgrade candidate.
+        // Neither an omitted format nor unknown data may leak into live state.
+        const fs::path blocked = scratch / "format-read-only.json";
+        write(blocked, "retain existing destination");
+        const DWORD attributes = GetFileAttributesW(blocked.c_str());
+        require(attributes != INVALID_FILE_ATTRIBUTES &&
+            SetFileAttributesW(blocked.c_str(), attributes | FILE_ATTRIBUTE_READONLY) != 0,
+            "Could not create read-only format save fixture");
+        try
+        {
+            reject_without_change(document, [&] { document.save(blocked); },
+                "Legacy upgrade saved over a read-only destination");
+            require(contents(blocked) == "retain existing destination" && contents(legacy_path) == legacy_bytes,
+                "Failed legacy upgrade changed existing filesystem data");
+        }
+        catch (...)
+        {
+            SetFileAttributesW(blocked.c_str(), attributes);
+            throw;
+        }
+        require(SetFileAttributesW(blocked.c_str(), attributes) != 0,
+            "Could not restore format fixture attributes");
+        const fs::path upgraded_path = scratch / "upgraded-format.json";
+        document.save(upgraded_path);
+        legacy.AddMember("format", level_format::current, legacy.GetAllocator());
+        require(parse(contents(upgraded_path)) == legacy && parse(document.serialize()) == legacy &&
+            !document.dirty() && !document.can_undo() && !document.can_redo(),
+            "Successful legacy save did not upgrade just format and retain a clean history");
+        require(contents(legacy_path) == legacy_bytes, "Save As upgrade changed the legacy source");
+        LevelDocument reopened;
+        reopened.load(upgraded_path);
+        reopened.save(scratch / "current-format-roundtrip.json");
+        require(parse(reopened.serialize()) == legacy && parse(contents(reopened.path())) == legacy &&
+            !reopened.dirty(), "Explicit current format lost unknown fields on round trip");
+
+        // Retain both undo and redo branches while failed loads try malformed
+        // versions. Other required content is deliberately absent: the version
+        // error must win, and every failure must identify the file and format.
+        const Entry level = entry(reopened, EntryKind::level);
+        reopened.set_property(level, "/display_name", "Format history first");
+        const std::string first_edit = reopened.serialize();
+        reopened.set_property(level, "/display_name", "Format history second");
+        const std::string second_edit = reopened.serialize();
+        require(reopened.undo() && reopened.can_undo() && reopened.can_redo(),
+            "Version failure fixture needs both undo and redo history");
+        int index = 0;
+        for (const char* version : { "0", "2", "-1", "2147483647", "2147483648",
+            "18446744073709551615", "18446744073709551616", "1e100", "1.5", "1.0", "1e0",
+            "true", "false", "\"1\"", "null", "[]", "{}" })
+        {
+            const fs::path invalid = scratch / ("invalid-format-" + std::to_string(index++) + ".json");
+            write(invalid, std::string("{\"format\":") + version + ",\"display_name\":null}");
+            std::string diagnostic;
+            reject_without_change(reopened, [&]
+            {
+                try { reopened.load(invalid); }
+                catch (const std::exception& error) { diagnostic = error.what(); throw; }
+            }, "Editor accepted an unsupported or malformed level format");
+            require(diagnostic.find(invalid.filename().string()) != std::string::npos &&
+                diagnostic.find("format") != std::string::npos &&
+                diagnostic.find("display_name") == std::string::npos,
+                "Version rejection did not report its file and format before decoding other fields");
+        }
+        require(reopened.serialize() == first_edit && reopened.redo() && reopened.serialize() == second_edit &&
+            reopened.undo() && reopened.serialize() == first_edit,
+            "Rejected versions altered undo/redo snapshots");
+        for (const char* version : { "0", "2", "-1", "1.5", "1.0", "1e0", "2147483648" })
+        {
+            reject_without_change(reopened, [&] { reopened.set_property(level, "/format", version); },
+                "Inspector accepted a format that the loader rejects");
+        }
+
+        document.load(legacy_path);
+        const Entry legacy_level = entry(document, EntryKind::level);
+        document.set_property(legacy_level, "/display_name", "Legacy first");
+        const std::string legacy_first = document.serialize();
+        document.set_property(legacy_level, "/display_name", "Legacy second");
+        require(document.undo() && document.serialize() == legacy_first && document.can_redo(),
+            "Legacy history fixture could not retain an edit branch");
+        document.save(scratch / "legacy-history-upgrade.json");
+        const std::string saved_revision = document.serialize();
+        require(!document.dirty() && document.can_undo() && document.can_redo() &&
+            parse(saved_revision)["format"].GetInt() == level_format::current,
+            "Legacy save upgrade lost retained edit history");
+        require(document.undo() && document.dirty() && document.redo() &&
+            document.serialize() == saved_revision && !document.dirty(),
+            "Legacy upgrade failed to mark just the saved history revision clean");
+        require(document.redo() && document.dirty(), "Legacy upgrade discarded the redo branch");
+        document.save(document.path());
+        require(!document.dirty() && parse(document.serialize())["format"].GetInt() == level_format::current &&
+            parse(document.serialize())["author_extension"] == legacy["author_extension"],
+            "Legacy history save did not retain its upgraded version");
+        std::cout << "PASS shared current format, legacy save upgrade, unknown fields, strict version gate and transactional history\n";
     }
 
     void check_ending_audio(const fs::path& repo)
@@ -498,6 +639,7 @@ int wmain(int argc, wchar_t* argv[])
         const fs::path scratch = fs::absolute(argv[2]);
         require(fs::is_directory(scratch), "Acceptance scratch directory must already exist");
         check_shipped_levels(repo, scratch);
+        check_format_versions(scratch);
         check_ending_audio(repo);
         check_blockout_aids(repo, scratch);
         check_unknown_fields_and_rectangles(scratch);

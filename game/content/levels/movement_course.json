@@ -1,4 +1,5 @@
 {
+    "format": 1,
     "_comment": [
         "Experimental movement blockout; route and acceptance notes: docs/polish-movement-course.md.",
         "Spawn coordinates are character top-left, sized from tuning.player.size (52 by 120).",

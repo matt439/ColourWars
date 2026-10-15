@@ -1,0 +1,281 @@
+# Level format 1
+
+A level is one UTF-8 JSON object. Start from [editor/template.json](../editor/template.json)
+or **File > New** in the [level editor](level-editor.md). The template uses shipped
+resources and supplies a closed grey room, a paintable floor and four spawns per
+team. It is an authoring example, outside the runtime asset list and manifest;
+copy it before editing. Its geometry is not an accepted arena design.
+
+[level.schema.json](level.schema.json) is a JSON Schema Draft-04 structural check,
+compatible with the repository's bundled RapidJSON `SchemaValidator`. The runtime
+still validates through [LevelLoadedInfo](../game/objects/level_loaded_info.cpp),
+[LevelObjectBuilder](../game/objects/level_object_builder.cpp) and loaded assets.
+Passing the schema alone does not establish that a stage loads or plays correctly.
+
+## Version and compatibility
+
+Write `"format": 1` on new files. An absent `format` is accepted as legacy format
+1. An explicit version must be the JSON integer `1`; a string, boolean, null,
+decimal representation such as `1.0`, or another integer is rejected before the
+level is decoded. The four shipped levels and newly created editor documents write the
+version. Opening a legacy file does not require rewriting unrelated fields.
+
+Unknown keys are ignored by the runtime, including `_comment`, per-object `name`
+and metadata belonging to an authoring tool. The editor preserves unknown keys
+when loading, editing and saving. The schema consequently allows additional
+properties at every object. An ignored field does not become an extension point:
+for example, adding `rotation`, `velocity`, `layout` or `layer_depth` does not
+rotate, move, position or reorder a level object. Unsupported `type` and
+`collision_type` values are errors.
+
+The old JSON examples in [game/art/archive/levels](../game/art/archive/levels)
+are historical sources, retained unchanged. Some use `level_name` instead of the
+current metadata or unsupported object tags; `base.json` there is not a template
+for the current loader. The Publisher documents in
+[game/art/sources/levels](../game/art/sources/levels) are layout source material,
+not runtime assets.
+
+## Root fields
+
+| Key | Type | Meaning |
+|---|---|---|
+| `format` | Optional integer | `1`; omission selects legacy format 1. |
+| `display_name` | String | Authored stage label. Startup checks it against the game's drawable text rules and fonts. |
+| `icon_frame` | String | Existing frame in `sprite_sheet_1`. Required legacy icon metadata; stage selection now draws a live arena preview. |
+| `include_in_random` | Optional boolean | Defaults to `true`; `false` keeps an experimental stage out of Random without removing its explicit menu entry. |
+| `sound` | Object | Bank identifier and independent optional music/sting pairs, below. |
+| `spawn_locations` | Object | `team_a` and `team_b` arrays of points, at least four entries each. |
+| `level_bounds` | Object | All four named rectangles, below. |
+| `stations` | Optional array | Named developer-console destinations; defaults to no authored stations. |
+| `collision_objects` | Array | Structures, paintable structures and ramps; may be empty. |
+| `non_collision_objects` | Array | Decorative `Visual` entries; may be empty. |
+
+Keys and enum spellings are case sensitive. JSON numbers may be integral or
+fractional except `format`, which uses the integer representation. Coordinates
+become game `float` values. Use ordinary finite world coordinates: a JSON number
+can overflow or underflow a game float even though a schema accepts it. Required
+fields have no implicit default unless this document names one. Empty strings
+are not useful asset identifiers; loaded-resource lookup determines whether a
+sheet, frame, bank or effect actually exists.
+
+## Coordinates, bounds and spawns
+
+World coordinates increase rightward on X and downward on Y. They are game
+units, independent of display resolution and split-screen layout. Level files
+do not choose the match's player count, layout, weapons, palette, duration or
+series length; setup and tuning supply those values.
+
+Each `level_bounds` member uses the following encoding:
+
+```json
+{ "x": 0, "y": 0, "width": 3000, "height": 1400 }
+```
+
+| Bounds key | Purpose |
+|---|---|
+| `out_of_bounds` | Scene retirement boundary. Leaving it retires projectiles; players leaving it are an error. |
+| `camera_bounds` | Limits the player-follow camera. |
+| `zoom_out_start_bounds` | Authored start framing for the ending camera transition. |
+| `zoom_out_finish_bounds` | Authored end/overview framing; also the editor's initial arena view. |
+
+All four require finite coordinates and positive width/height. They are separate
+rectangles: the loader does not require them to nest or enforce an aspect ratio.
+Only object rectangles, not these bounds, accept `rectangle_tlbr`.
+
+Spawn entries are `{ "x": 100, "y": 1075 }`, the character's **top-left**, not its
+feet or centre. Character size comes from `tuning.player.size`; the template
+places the current 52-by-120 character five units above the floor. The loader
+checks each point is inside `out_of_bounds`, including its edges. This point
+test does not prove the whole character fits, has a supporting floor or avoids
+overlap with terrain or other players. Test those conditions in play.
+
+Team A spawn X coordinates must be strictly left of
+`out_of_bounds.x + out_of_bounds.width / 2`; Team B coordinates must be at or
+right of that midpoint. Each array needs at least four points even if the
+intended match has fewer players. Players consume their own team's points in
+roster order; the first player on Team B uses `team_b[0]`, regardless of their
+device slot or view index. The same position is retained for respawn.
+
+## Objects and geometry
+
+Every object needs `type`, `sheet_name`, `frame_name` and `colour`. Collision
+objects also need an allowed `collision_type`. A `name` is optional authoring
+metadata: the editor uses a string name as its list label, and the runtime
+does not use it for lookup, collision or uniqueness.
+
+| Array | `type` | Allowed `collision_type` | Geometry and extra fields |
+|---|---|---|---|
+| `collision_objects` | `Structure` | `STRUCTURE`, `STRUCTURE_JUMP_THROUGH` | Rectangle. Fixed solid or jump-through terrain; no scoring paint. |
+| `collision_objects` | `StructurePaintable` | `STRUCTURE_PAINTABLE` | Rectangle plus all four `paintable_faces` booleans. Fixed paint-scoring terrain. |
+| `collision_objects` | `StructureRamp` | `STRUCTURE_RAMP_RIGHT`, `STRUCTURE_RAMP_LEFT` | `triangle` with six coordinates. Fixed ramp collision; no scoring paint. |
+| `non_collision_objects` | `Visual` | None is read | Rectangle. Decorative art with no collision or score. |
+
+Flat terrain and visuals use either of these object members:
+
+```json
+"rectangle": { "x": 100, "y": 600, "width": 400, "height": 40 }
+```
+
+```json
+"rectangle_tlbr": { "left": 100, "top": 600, "right": 500, "bottom": 640 }
+```
+
+Width and height must be finite and positive; for TLBR, `right > left` and
+`bottom > top`. If both encodings are present, `rectangle` takes precedence and
+the runtime ignores `rectangle_tlbr`, even if that ignored field is malformed.
+The schema preserves that precedence. Neither encoding accepts anchor names,
+relative positions or a layout expression.
+
+A ramp reads `triangle` instead of either rectangle:
+
+```json
+"triangle": { "x1": 100, "y1": 600, "x2": 500, "y2": 600, "x3": 500, "y3": 400 }
+```
+
+This example is an upright right ramp: a horizontal bottom edge, with the high
+corner on the right, paired with `STRUCTURE_RAMP_RIGHT`. For a left ramp, put
+the high corner at the left and use `STRUCTURE_RAMP_LEFT`. The editor accepts
+the three distinct corners in any order and checks that they match the tag.
+The runtime constructs `TriangleRightAxisAligned` from the six numbers and
+uses its bounding box for the sprite; it does not perform the editor's full
+orientation/degeneracy check at construction. The schema checks the coordinate
+fields, not that geometric relationship. Author upright nondegenerate ramps.
+The loader mirrors the sprite horizontally for a left ramp, so its source
+`frame_name` should contain the right-facing artwork. Paint projectiles pass
+through ramps under the current collision masks.
+
+Paintable rectangles require every face explicitly:
+
+```json
+"paintable_faces": { "left": false, "top": true, "right": false, "bottom": false }
+```
+
+All-false is allowed. An authored true face creates scoring paint only where
+it remains exposed: other flat `Structure`/`StructurePaintable` rectangles,
+including jump-through terrain, clip buried face intervals during construction.
+Ramps and decorative visuals do not clip paintable faces. Tile granularity and
+paint-strip thickness come from tuning, not per-level fields. The editor's
+blockout aids show the same exposed-face calculation.
+
+Objects are created in array order, with non-collision objects before collision
+objects and players. Put backgrounds in `non_collision_objects`. A frame is
+stretched into the authored rectangle or ramp bounding box; its source texel
+size does not change collision dimensions.
+
+## Grey scenery and resource identifiers
+
+Scenery is grey until players add team paint. `colour` accepts six hex digits
+`RRGGBB` without `#`, case insensitive for hex digits, with equal red, green and
+blue values, such as `404040`, `808080` and `DCDCDC`. Named colours use the
+engine's exact uppercase spelling:
+
+`BLACK`, `DARK_GRAY`, `DARK_GREY`, `DIM_GRAY`, `DIM_GREY`, `GAINSBORO`, `GRAY`,
+`GREY`, `LIGHT_GRAY`, `LIGHT_GREY`, `SILVER`, `WHITE`, `WHITE_SMOKE`.
+
+The schema recognizes these names and six-digit hex syntax. Equality of the
+three hex channels is checked by the game/editor, so a coloured hex value can
+pass the schema and still fail content validation. Tinting art grey does not
+validate that every source texel follows the art direction.
+
+`sheet_name` is a sprite-sheet manifest identifier; `frame_name` names a frame
+inside that sheet, not an animation strip or a file path. The template uses
+`sprite_sheet_1` / `square_white_4`. `icon_frame` resolves in `sprite_sheet_1`
+independently. Runtime startup constructs the objects and resolves these names
+after the manifest has loaded. The editor checks nonempty names but does not
+load the resources. Registration still requires both the manifest and runtime
+asset list; follow [Play the level](level-editor.md#play-the-level).
+
+## Sound
+
+`sound_bank_name` is required; the current shipped bank is `paint_exe`. The
+optional pairs are independent:
+
+| Pair | Meaning |
+|---|---|
+| `music_name` and `music_volume` | Looping arena music. Omit both for an arena with no looping music. |
+| `end_sting_name` and `end_sting_volume` | One owned nonlooping sting at time-up. Omit both for no sting. |
+
+A half-present pair is rejected, including when its provided value is null.
+The gain is authored gain multiplied by the saved music preference; the shared
+presentation mix controls fades and ducking. Ending-sting gain must be finite
+and in `0..1`. The runtime currently type-checks looping `music_volume` without
+a numeric range; the editor requires it to be finite and nonnegative. Prefer
+normal `0..1` gains, as in the template, rather than depending on playback
+clamping. The schema retains the runtime's unbounded numeric music field.
+
+Names resolve as **effect instance** identifiers in the bank's JSON definition,
+not raw wave indices or audio paths. For example, the template uses
+`music.close_quarters` and `music.end_sting.close_quarters`; the other accepted
+arena suffixes are `king_of_the_hill` and `turbulence`. Movement Course omits
+both pairs. The optional missing-bank substitution remains supported: an absent
+bank becomes silent and cannot establish whether named cues exist in the real
+bank. See the [audio inventory](audio-inventory.md).
+
+## Stations and validation limits
+
+Optional stations are `{ "name": "centre", "x": 1474, "y": 1075 }` entries for
+Debug `goto`. Names must contain one or more lowercase ASCII letters, digits
+or underscores; `spawn_a` and `spawn_b` are reserved, and authored names must be
+unique. Points use the same top-left convention and inclusive out-of-bounds
+check as spawns. After authored stations, the game appends `spawn_a` and
+`spawn_b` for each team's first spawn. Stations do not create geometry or
+affect normal gameplay.
+
+The schema covers required keys, scalar/array types, positive rectangle sizes,
+spawn counts, type/collision combinations, paint-face booleans, sound-pair
+presence, sting gain and station-name syntax/reserved names. It leaves these
+checks to their owners:
+
+- Runtime: finite bounds/object rectangles after float conversion; TLBR ordering;
+  spawn/station containment and spawn halves; duplicate station names; grey
+  hex channel equality; assets and drawable text.
+- Editor: its additional nonempty-string, numeric and upright-ramp checks.
+  Unknown metadata and stations remain preserved even when not exposed as
+  dedicated editor controls.
+- Play/review: supported spawns, routes, weapon roles, fair side swaps, paint
+  budgets, readability, timing and frame pacing. Format validity supplies none
+  of those acceptance results.
+
+Schema ranges apply to JSON numbers before conversion to game floats; rounding
+near a numeric boundary can therefore differ from a runtime comparison. Keep
+runtime validation in the authoring workflow even after a schema pass.
+
+## Validation and authoring workflow
+
+Point a JSON editor at [level.schema.json](level.schema.json), then open the file
+in ColourWarsEditor and save a copy. Register an intended runtime stage using
+the manifest and asset-list steps in [Play the level](level-editor.md#play-the-level).
+Rebuild and run it in the game: the schema and editor do not resolve its assets
+or establish playability.
+
+From an x64 Visual Studio Developer shell at the repository root:
+
+```powershell
+./scripts/run-acceptance.ps1 -Preset x64-debug
+./scripts/check-level-editor.ps1 -Preset x64-debug
+```
+
+Repeat with `x64-release`. The `level_format` consumer case uses bundled
+RapidJSON Draft-04 validation and the actual `LevelLoadedInfo`/`LevelObjectBuilder`
+paths with CPU resource metadata; it checks source and staged copies of all
+four shipped levels plus the template, with an untagged legacy clone of each.
+Its fixtures also exercise invalid
+versions, structural failures, unknown metadata, rectangle precedence and
+runtime checks beyond the schema. Editor acceptance checks version compatibility,
+new-document versioning and template/unknown-field round trips.
+
+On 2026-10-15, Debug and Release production builds passed under `/W4 /WX`, all
+25 consumer cases passed on each preset, and both editor document suites and
+hidden editor launch/selection/toggle/close checks passed. Final focused checks
+also reject unsupported, string and decimal schema version tags. Real-bank game
+startup and graceful shutdown pass in both builds. The retained
+[validation evidence](../out/validation/level-format) accompanies the ordinary
+logs under `out/acceptance/x64-debug` and `out/acceptance/x64-release`. The
+[content comparison](../out/validation/level-format/content-compatibility.json)
+records that adding `format: 1` was the only data change in the four shipped
+levels.
+
+The schema is an authoring and acceptance artifact. Normal builds and runtime
+loading add no Python or external schema-package dependency. Manual editor and
+saved-stage play checks (`ED#5`), physical multiplayer sessions (`ROAD#2`) and
+visible uncontended frame-pacing/hardware qualification (`POL#25`) remain open.

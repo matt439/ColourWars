@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level_loaded_info.h"
+#include "game/level_format.h"
 #include "engine/math/intersects.h"
 #include "game/objects/level_object_builder.h"
 #include <cmath>
@@ -10,7 +11,14 @@ using namespace labrador;
 LevelLoadedInfo::LevelLoadedInfo(const char* json_path) :
 	json_doc_(read_json_file(json_path))
 {
-
+	// An untagged legacy level has exactly the format-1 meaning. Reject a
+	// future or malformed tag before interpreting any of its content fields.
+	const JsonValue root = this->json_doc_.root();
+	if (root.has("format") && root.integer("format") != level_format::current)
+	{
+		throw std::runtime_error(root.where() + ": unsupported 'format'; expected " +
+			std::to_string(level_format::current) + " (or an untagged legacy level).");
+	}
 }
 
 void LevelLoadedInfo::validate() const
