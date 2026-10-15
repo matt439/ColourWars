@@ -20,13 +20,14 @@ namespace menu_input_consts
 		MenuInputAction action;
 	};
 
-	constexpr int action_button_count = 3;
+	constexpr int action_button_count = 4;
 
 	constexpr ActionButton action_buttons[action_button_count] =
 	{
 		{ labrador::GamepadButton::a, MenuInputAction::proceed },
 		{ labrador::GamepadButton::b, MenuInputAction::back },
 		{ labrador::GamepadButton::start, MenuInputAction::pause },
+		{ labrador::GamepadButton::x, MenuInputAction::shuffle },
 	};
 
 	// Each action has primary and alternate keys and one shared arming flag.
@@ -38,7 +39,7 @@ namespace menu_input_consts
 		MenuInputAction action;
 	};
 
-	constexpr int action_key_count = 2;
+	constexpr int action_key_count = 3;
 
 	constexpr ActionKey action_keys[action_key_count] =
 	{
@@ -46,6 +47,7 @@ namespace menu_input_consts
 			MenuInputAction::proceed },
 		{ labrador::Key::escape, labrador::Key::backspace,
 			MenuInputAction::back },
+		{ labrador::Key::r, labrador::Key::r, MenuInputAction::shuffle },
 	};
 
 	// Menu navigation accepts arrows and WASD.

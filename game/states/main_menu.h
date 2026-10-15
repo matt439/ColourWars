@@ -235,6 +235,7 @@ private:
 
 	std::vector<std::unique_ptr<PlayerWidgets>> player_widgets_;
 	std::vector<TeamSelectState> select_states_;
+	void shuffle_teams();
 	void update_team_select_visuals();
 	void deselect_and_unconfirm_all_widgets();
 	bool all_players_confirmed() const;

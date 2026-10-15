@@ -30,6 +30,39 @@
 #include <iostream>
 #include <iterator>
 
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+// This focused probe supplies the concrete input backend at the link seam.
+// Normal painter binaries retain Labrador's XInput implementation.
+namespace painter_scripted_pads
+{
+    std::array<labrador::GamepadState, labrador::Gamepads::max_count> states{};
+}
+namespace labrador
+{
+    struct GamepadReader::Impl
+    {
+        std::array<GamepadState, Gamepads::max_count> states{};
+        bool suspended = false;
+    };
+    GamepadReader::GamepadReader() : impl_(std::make_unique<Impl>()) {}
+    GamepadReader::~GamepadReader() = default;
+    GamepadReader::GamepadReader(GamepadReader&&) noexcept = default;
+    GamepadReader& GamepadReader::operator=(GamepadReader&&) noexcept = default;
+    void GamepadReader::sample()
+    {
+        this->impl_->states = this->impl_->suspended ?
+            std::array<GamepadState, Gamepads::max_count>{} : painter_scripted_pads::states;
+    }
+    GamepadState GamepadReader::read(int slot) const
+    {
+        return slot >= 0 && slot < Gamepads::max_count ?
+            this->impl_->states[static_cast<size_t>(slot)] : GamepadState{};
+    }
+    void GamepadReader::suspend() { this->impl_->suspended = true; }
+    void GamepadReader::resume() { this->impl_->suspended = false; }
+}
+#endif
+
 using namespace labrador;
 using namespace mattmath;
 
@@ -2504,6 +2537,9 @@ namespace
 #include "scripts/acceptance/painter_visual/settings_menu_checks.h"
 #include "scripts/acceptance/painter_visual/controls_menu_checks.h"
 #include "scripts/acceptance/painter_visual/stick_settings_checks.h"
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+#include "scripts/acceptance/painter_visual/team_setup_checks.h"
+#endif
 }
 
 int wmain(int argc, wchar_t** argv)
@@ -2517,8 +2553,9 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"resume" || std::wstring(argv[3]) == L"end-menu" ||
             std::wstring(argv[3]) == L"pause-menu" || std::wstring(argv[3]) == L"results-menu" ||
             std::wstring(argv[3]) == L"main-menu" || std::wstring(argv[3]) == L"settings-menu" ||
-            std::wstring(argv[3]) == L"controls-menu" || std::wstring(argv[3]) == L"stick-settings")),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings]");
+            std::wstring(argv[3]) == L"controls-menu" || std::wstring(argv[3]) == L"stick-settings" ||
+            std::wstring(argv[3]) == L"team-setup")),
+            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -2534,6 +2571,13 @@ int wmain(int argc, wchar_t** argv)
         const bool settings_menu_only = argc == 4 && std::wstring(argv[3]) == L"settings-menu";
         const bool controls_menu_only = argc == 4 && std::wstring(argv[3]) == L"controls-menu";
         const bool stick_settings_only = argc == 4 && std::wstring(argv[3]) == L"stick-settings";
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+        require(argc == 4 && std::wstring(argv[3]) == L"team-setup",
+            "The scripted gamepad backend is restricted to team-setup-only acceptance");
+#else
+        require(argc != 4 || std::wstring(argv[3]) != L"team-setup",
+            "Use check-painter.ps1 -TeamSetupOnly to compile the scripted input seam");
+#endif
         std::cout << std::unitbuf;
         const std::filesystem::path content = std::filesystem::absolute(argv[1]);
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
@@ -2580,6 +2624,14 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         const Canvas canvas(app.render_resources());
+#if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+        if (argc == 4 && std::wstring(argv[3]) == L"team-setup")
+        {
+            team_setup_matrix(app, levels, tuning, presentation, output);
+            std::cout << "PASS team-setup-only actual menu hardware check; scripted backend, no physical-pad acceptance\n";
+            return 0;
+        }
+#endif
         if (stick_settings_only)
         {
             stick_settings_matrix(app, canvas, tuning, presentation, output);

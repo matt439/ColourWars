@@ -18,12 +18,13 @@ param(
     [switch] $SettingsMenuOnly,
     [switch] $ControlsMenuOnly,
     [switch] $StickSettingsOnly,
+    [switch] $TeamSetupOnly,
     [string] $OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -114,6 +115,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
+                $_.Name -like 'team-setup-*-detail.ppm' -or
                 $_.Name -eq 'controls-menu-pad-sticks-1280x720.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
@@ -252,7 +254,7 @@ $process = $null
 $failure = $null
 $result = [ordered]@{
     outcome = 'failed'
-    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } elseif ($ResultsMenuOnly) { 'results-menu-only' } elseif ($MainMenuOnly) { 'main-menu-only' } elseif ($SettingsMenuOnly) { 'settings-menu-only' } elseif ($ControlsMenuOnly) { 'controls-menu-only' } elseif ($StickSettingsOnly) { 'stick-settings-only' } else { 'full-painter-matrix' }
+    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } elseif ($ResultsMenuOnly) { 'results-menu-only' } elseif ($MainMenuOnly) { 'main-menu-only' } elseif ($SettingsMenuOnly) { 'settings-menu-only' } elseif ($ControlsMenuOnly) { 'controls-menu-only' } elseif ($StickSettingsOnly) { 'stick-settings-only' } elseif ($TeamSetupOnly) { 'team-setup-only' } else { 'full-painter-matrix' }
     preset = $Preset
     game_revision = (& git rev-parse HEAD)
     engine_revision = (& git -C external/labrador rev-parse HEAD)
@@ -335,6 +337,17 @@ elseif ($SupplyOnly) {
         $result.Remove($key)
     }
     $result.checks = $result.supply_checks
+}
+elseif ($TeamSetupOnly) {
+    $result.player_counts = @(2, 3, 4)
+    $result.palettes = @('runtime-save-default')
+    $result.weapons = @('sprayer', 'sniper', 'roller', 'bucket')
+    $result.actions = @('shuffle', 'concurrent-confirm', 'reconfirm', 'weapon-return', 'manual-team-edit', 'held-entry', 'conflicting-actions', 'disconnect', 'focus-return', 'solo-no-op', 'warning-clear', 'pause-restart', 'series-next-round')
+    $result.input_slots = @(4, 3, 0, 2)
+    $result.inputs = 'Real MainMenuTeamSelect/MainMenuWeaponSelect, StateContext and MenuInput; test-only concrete GamepadReader backend supplies connected states and armed button releases. Public keyboard messages supply R/Enter/Escape. No physical-controller or native-foreground acceptance.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.Remove('stage')
+    $result.checks = 'Actual 2/3/4-player seeded balanced shuffles, both three-player majority sides, requests from every joined seat, concurrent confirm discarded, all readiness cleared and every player required to reconfirm. Provisional teams match a fresh actual page raster and independently specified complete X/R legend; final confirmation commits just teams. Weapon return preserves teams, tools, sparse slots, stage, duration and best-of; manual edits, held entry, conflicting actions, missing pad, reconnect-held X and focus-return-held R are gated. Shuffle clears the empty-team warning; solo return hides Random teams and ignores R. Native 720p/1080p rows/footer captures and measured four-row/legend bounds, frozen page raster. One committed shuffled 2P roster retains actual Player teams, input slots and weapons through Pause Restart and two best-of-three rounds using ordinary Results/End continuation, with the ongoing-series primary card checked against its expected ledger. Physical pads, human readability and listening acceptance remain separate.'
 }
 elseif ($StickSettingsOnly) {
     $result.player_counts = @()
@@ -506,6 +519,7 @@ try {
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
+    if ($TeamSetupOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
     foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
         $arguments += '/I' + (Quote-Path $include)
     }
@@ -552,6 +566,7 @@ try {
     elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
     elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
     elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
+    elseif ($TeamSetupOnly) { $probeArguments += 'team-setup' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -625,6 +640,9 @@ try {
     }
     elseif ($SupplyOnly) {
         $result.diagnostic = 'Supply-only visual check passed: sprayer/mister full, half and empty native reservoirs; exact authored-layer registration, unchanged silhouette and permanent hardware, all 1P/4P720 palettes/aim quadrants/facing inputs/poses and representative 4P1080/QHD. Reduced effects, motion-disabled rendering, ammo clamps, paid depletion, natural regeneration/reset, menu previews and tool switching, frozen pixels/weapon state/draw RNG and unchanged match observation/Debug fingerprint passed. Other painter matrices were not run.'
+    }
+    elseif ($TeamSetupOnly) {
+        $result.diagnostic = 'Team-setup-only hardware check passed: actual 2/3/4-player pages, seeded balanced teams and both three-player majority sides, all joined requesters, readiness reset/reconfirmation, independent X/R footer raster, settings-preserving Weapon return, manual edits, held/conflict/disconnect/focus gates, warning clear, solo no-op and native 720p/1080p four-row/footer bounds. One committed shuffled 2P roster preserved actual teams, input slots and weapons through Pause Restart and two best-of-three rounds via ordinary Results/End continuation; ongoing-series primary card matched its expected ledger. This binary used only the scripted GamepadReader link seam; normal painter binaries retain the real backend. No physical-controller, human readability or listening acceptance.'
     }
     elseif ($StickSettingsOnly) {
         $result.diagnostic = 'Stick-settings-only hardware check passed: actual child navigation, initial/pausing slot selection, clamps, pending cutoff previews, Apply/reload/failure, Back/Escape discard and suspended parent Apply preserving profiles. Full measured response/association copy, five bounded focus cards/arrows, native linear ink/paper contrast, frozen redraw, draw RNG, static Reduce effects and resize passed at 720p/1080p/QHD. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'

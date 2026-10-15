@@ -2,6 +2,8 @@
 #include "game/states/menu_level_settings.h"
 #include "game/input_slots.h"
 #include "game/objects/player_badge.h"
+#include <array>
+#include <cstdlib>
 using namespace labrador;
 
 std::optional<float> MenuLevelSettings::duration() const
@@ -66,6 +68,28 @@ PlayerTeam MenuLevelSettings::player_team(int player_index) const
 {
 	return this->player_settings_.at(static_cast<size_t>(player_index)).team;
 }
+
+bool MenuLevelSettings::shuffle_teams()
+{
+	const int count = this->player_count();
+	if (count < 2 || !this->input_roster_complete()) { return false; }
+
+	std::array<int, input_slots::pad_count> seats{ 0, 1, 2, 3 };
+	for (int last = count - 1; last > 0; --last)
+	{
+		const int chosen = std::rand() % (last + 1);
+		std::swap(seats[static_cast<size_t>(last)], seats[static_cast<size_t>(chosen)]);
+	}
+	// With three players either side may have the extra seat.
+	const int team_a_count = count / 2 + (count % 2 != 0 ? std::rand() % 2 : 0);
+	for (int seat = 0; seat < count; ++seat)
+	{
+		this->player_settings_[static_cast<size_t>(seats[static_cast<size_t>(seat)])].team =
+			seat < team_a_count ? PlayerTeam::a : PlayerTeam::b;
+	}
+	return true;
+}
+
 void MenuLevelSettings::set_player_weapon(int player_index, WeaponType weapon)
 {
 	this->player_settings_.at(static_cast<size_t>(player_index)).weapon = weapon;

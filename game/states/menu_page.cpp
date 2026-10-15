@@ -81,6 +81,10 @@ void MenuPage::set_prompts(const std::vector<PromptBar::Prompt>& prompts)
 		{
 			button = L"B/Esc";
 		}
+		else if (button == L"X")
+		{
+			button = L"X/R";
+		}
 		else if (button == L"B/Start")
 		{
 			button = L"B/Start/Esc";

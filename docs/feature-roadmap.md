@@ -34,19 +34,41 @@ close the ruleset and shipped-AI questions raised by the frozen gap audit.
 
 ### Balanced random teams
 
-**GAP#1.5 — OPEN: planned, not implemented.** Add an optional, explicitly invoked
-action in team setup that shuffles the joined players into balanced teams: 1v1 for
-two players, 2v1 for three, and 2v2 for four. With three players, choose the
-larger side at random too. Keep manual team selection available, and preserve
-the roster, device assignments and weapon choices. A shuffle clears every
-player's prior confirmation; all must confirm the resulting teams before
-continuing. A series keeps its teams fixed between rounds; shuffling is a setup
-action, never a mid-series change.
+**GAP#1.5 - implemented (2026-10-15).** In team setup, any joined player may
+release **X** on a pad or **R** on the keyboard to choose Random teams. The
+shuffle assigns 1v1 for two players, 2v1 for three, and 2v2 for four; either
+side may receive the extra player in a three-player roster. A repeated random
+result is allowed. Manual Left/Right selection remains available.
 
-When implemented, acceptance must check team sizes and both three-player side
-assignments, preservation of players/devices/weapons, invalidation of prior
-confirmations and required reconfirmation, manual selection after a shuffle,
-and fixed teams through a series and its restarts.
+The shuffled choices remain provisional until everyone confirms. A shuffle
+clears every prior confirmation and discards simultaneous confirmation or
+cancellation; buttons held across the shuffle must be released before a new
+press can act. Missing controllers and inactive setup block the action, as
+they block ordinary selection. Solo practice has no shuffle action.
+
+Only team assignments change: players, device slots, weapons, stage, duration,
+session length and screen layout stay in place. A series keeps its committed
+teams through rounds and restarts; Random teams is available only in setup.
+
+Validation: Debug and Release builds and all 24 consumer acceptance cases pass.
+The new CPU case checks 128 seeds per multiplayer roster size, both three-player
+majority sides, refusal of incomplete/solo rosters, non-team settings and armed
+keyboard releases. The real-page probe checks every joined requester, discarded
+simultaneous confirmation, full readiness reset and required reconfirmation,
+manual choices, Weapon Select return, held actions, conflicting buttons, missing
+controllers and focus return. Native 720p/1080p captures verify that four player
+rows and the complete X/R legend fit; solo return omits the unavailable action.
+A committed shuffled two-player roster also survives ordinary Pause > Restart,
+Results/End and two best-of-three rounds (draw replays use the shared next-round
+path). Public player team/device/weapon observations remain fixed throughout.
+Isolated real-bank startup and graceful shutdown pass in both builds. The normal
+Debug `-MainMenuOnly` probe also passes with the real input backend.
+
+Run `scripts/check-painter.ps1 -Preset x64-debug -TeamSetupOnly` (or
+`x64-release`) from an x64 VS Developer shell. Only that probe binary substitutes
+a scripted `GamepadReader` backend; the game and other painter modes retain
+XInput. Evidence is under `out/validation/random-teams/`. These driven checks do
+not close the physical-pad session (`ROAD#2`) or human readability/listening gates.
 
 ### Handicaps
 

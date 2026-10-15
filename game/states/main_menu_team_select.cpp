@@ -22,6 +22,15 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 	{
 		return;
 	}
+	if (this->player_count() >= 2 && std::any_of(inputs.begin(), inputs.end(),
+		[](const ProcessedMenuInput& input) { return input.action == MenuInputAction::shuffle; }))
+	{
+		this->shuffle_teams();
+		// The resulting teams must be seen before anyone confirms them. Discard
+		// other actions in this frame, and presses held across this shuffle.
+		this->input()->reset_actions();
+		return;
+	}
 	const int num_inputs = static_cast<int>(inputs.size());
 	const int player_count = this->player_count();
 	// Back leaves only if the frame began with nobody ready. Simultaneous
@@ -108,6 +117,21 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 				this->menu_context()));
 		return;
 	}
+	this->update_team_select_visuals();
+}
+void MainMenuTeamSelect::shuffle_teams()
+{
+	// Like manual choices, a shuffle is provisional until everyone confirms.
+	// Only the final team commit writes the shared match settings.
+	MenuLevelSettings shuffled = *this->level_settings();
+	if (!shuffled.shuffle_teams()) { return; }
+	for (int i = 0; i < this->player_count(); ++i)
+	{
+		this->select_states_[i].team = shuffled.player_team(i);
+		this->select_states_[i].state = ConfirmationState::unconfirmed;
+	}
+	this->both_teams_needed_->set_hidden(true);
+	this->play_wave(this->direction_sound_);
 	this->update_team_select_visuals();
 }
 bool MainMenuTeamSelect::confirm_completes_roster(int player) const
@@ -236,10 +260,14 @@ void MainMenuTeamSelect::deselect_and_unconfirm_all_widgets()
 }
 void MainMenuTeamSelect::init()
 {
-	this->set_player_prompts({
+	// A button held on the preceding page cannot shuffle or confirm this one.
+	this->input()->reset_actions();
+	std::vector<PromptBar::Prompt> prompts{
 		{ L"Left/Right", L"Pick a team" },
 		{ L"A", L"Confirm" },
-		{ L"B", L"Cancel" } });
+		{ L"B", L"Cancel" } };
+	if (this->player_count() >= 2) { prompts.push_back({ L"X", L"Random teams" }); }
+	this->set_player_prompts(prompts);
 
 	this->set_widget_spacing(this->look().team_select.spacing);
 

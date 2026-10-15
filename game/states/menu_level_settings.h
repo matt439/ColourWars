@@ -33,6 +33,9 @@ public:
 	// Indexed access rejects seats outside the selected roster.
 	void set_player_team(int player_index, PlayerTeam team);
 	PlayerTeam player_team(int player_index) const;
+	// A complete multiplayer roster gets balanced random teams. Changes only
+	// team assignments; solo, empty and partly joined rosters are left alone.
+	bool shuffle_teams();
 	void set_player_weapon(int player_index, WeaponType weapon);
 	WeaponType player_weapon(int player_index) const;
 

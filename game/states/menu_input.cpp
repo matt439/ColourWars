@@ -122,10 +122,8 @@ ProcessedMenuInput MenuInput::menu_input(const Gamepads& gamepads, int slot)
 
 	// Accept a release only when exactly one action was down last frame,
 	// so releasing conflicting actions together does not choose between them.
-	const bool nothing_down =
-		!now.is_down(GamepadButton::a) &&
-		!now.is_down(GamepadButton::b) &&
-		!now.is_down(GamepadButton::start);
+	const bool nothing_down = std::none_of(std::begin(action_buttons), std::end(action_buttons),
+		[&now](const ActionButton& entry) { return now.is_down(entry.button); });
 
 	const auto only_one_was = [&before](GamepadButton wanted)
 	{
@@ -134,10 +132,9 @@ ProcessedMenuInput MenuInput::menu_input(const Gamepads& gamepads, int slot)
 			return false;
 		}
 		int down = 0;
-		for (const GamepadButton button : { GamepadButton::a,
-			GamepadButton::b, GamepadButton::start })
+		for (const ActionButton& entry : action_buttons)
 		{
-			if (before.is_down(button))
+			if (before.is_down(entry.button))
 			{
 				++down;
 			}
