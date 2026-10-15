@@ -120,6 +120,29 @@
             "jump": { "name": "player.jump", "volume": 1.0 },
             "respawn": { "name": "player.respawn", "volume": 1.0 }
         },
+        "movement_sounds": {
+            "land": [
+                { "name": "player.land.01", "volume": 0.25 },
+                { "name": "player.land.02", "volume": 0.25 },
+                { "name": "player.land.03", "volume": 0.25 },
+                { "name": "player.land.04", "volume": 0.25 }
+            ],
+            "step": [
+                { "name": "player.step.01", "volume": 0.12 },
+                { "name": "player.step.02", "volume": 0.12 },
+                { "name": "player.step.03", "volume": 0.12 },
+                { "name": "player.step.04", "volume": 0.12 },
+                { "name": "player.step.05", "volume": 0.12 },
+                { "name": "player.step.06", "volume": 0.12 }
+            ],
+            "skid": { "name": "player.skid", "volume": 0.18 },
+            "landing_full_speed": 1000.0,
+            "landing_min_gain": 0.25,
+            "stride_distance": 110.0,
+            "min_step_interval": 0.16,
+            "skid_min_speed": 350.0,
+            "skid_repeat_delay": 0.45
+        },
         "animations": {
             "sheet": "sprite_sheet_1",
             "uniform": "player_right_walk_uniform",

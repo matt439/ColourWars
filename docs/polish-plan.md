@@ -429,6 +429,9 @@ The 2026-10-15 [runtime migration](audio-inventory.md#9-runtime-migration-and-re
 replaces all existing audio bindings and includes the story cues and separate
 countdown beats/GO. POL#23 retains the new hooks listed there and the gameplay
 mix; ROAD#3 owns in-game audio acceptance.
+The movement increment adds impact-scaled landing variants, distance-driven
+footsteps and reversal skids with per-player repetition limits; redraw and
+painted-surface details remain in POL#23.
 
 - Inventory every source wave, bank entry, loop instance and runtime reference,
   including tuning, presentation, level music and any code-selected cues. Give

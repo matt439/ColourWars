@@ -146,6 +146,20 @@ struct PaintTuning
 	SoundTuning splash_sound;
 };
 
+// Movement cue choices and their distance, speed and repeat thresholds.
+struct PlayerMovementSounds
+{
+	std::vector<SoundTuning> land;
+	std::vector<SoundTuning> step;
+	SoundTuning skid;
+	float landing_full_speed = 0.0f;
+	float landing_min_gain = 0.0f;
+	float stride_distance = 0.0f;
+	float min_step_interval = 0.0f;
+	float skid_min_speed = 0.0f;
+	float skid_repeat_delay = 0.0f;
+};
+
 struct PlayerTuning
 {
 	mattmath::Vector2F size = { 0.0f, 0.0f };
@@ -179,6 +193,7 @@ struct PlayerTuning
 	SoundTuning death_sound;
 	SoundTuning jump_sound;
 	SoundTuning respawn_sound;
+	PlayerMovementSounds movement_sounds;
 
 	PlayerAnimationTuning idle;
 	PlayerAnimationTuning walk;

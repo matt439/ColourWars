@@ -628,6 +628,7 @@ legacy names do not make them migration inputs.
 |---|---|
 | Menu and arena music | `music.menu`, `music.close_quarters`, `music.king_of_the_hill`, `music.turbulence`; Movement Course has no music |
 | Player | `player.jump`, `player.hurt`, `player.pop` through the existing `death` slot, and `player.respawn` |
+| Movement (2026-10-15) | Four impact-scaled landing variants, six distance-driven footstep variants, and a latched high-speed reversal skid, all from completed contacts |
 | Weapons and paint | Sprayer, roller and mister start cues play once per held-fire edge, with independent per-player loop voices; `sniper.shot`, `bucket.throw`, and the first `paint.splash` variant |
 | Weapon feedback (2026-10-15) | Sprayer/roller/mister stop edges; all five tools' empty/recovered cues; sniper cooldown-ready cue; roller lift/settle on completed ground contacts |
 | Menus and results | Direction, confirm, cancel, error, ready, pause-open, results fill, winner and distinct draw use their replacement cues |
@@ -659,12 +660,31 @@ each wave resolves at construction and startup validation checks the authored
 names. Gains use the current SFX preference. These are integration candidates;
 their gains and the combined multiplayer mix still need listening acceptance.
 
+The movement increment uses `player.movement_sounds` for cue choices, gains,
+stride distance, minimum step interval, landing impact scale and skid limits.
+`MovementAudio`, owned by each player, observes completed contacts and never
+changes movement or consumes the gameplay RNG. Initial spawn/respawn settling
+and terrain seams stay quiet. Landing strength scales with resolved impact
+speed, clamped between the authored minimum gain and full strength. A buffered
+landing-and-jump can play its landing without inventing a footstep.
+
+Footsteps require consecutive supported ticks and actual horizontal travel,
+clipped to the requested displacement so collision separation cannot count as
+walking. Each player emits at most one step per update and one per authored
+minimum interval; idle, airborne, wall pressure and placement discard partial
+strides. Skids require a fresh opposing-input edge above the speed threshold,
+resolved grounded travel and an elapsed repeat delay. Each player's variants
+rotate independently, with a different initial offset for each seat. No new
+movement cue or audio timer advances on a nonpositive update. All gains use
+the current SFX preference, including mute; pause freezes the simulation and
+creates no catch-up cues. These quiet initial gains remain listening candidates.
+
 **POL#23 remains open.** Putting an accepted wave into the bank does not create
 a gameplay trigger. Complete the required new cues from section 4, assess Tier
 3 detail individually and keep it off or nearly off by default:
 
-- Movement: landing/steps/skid and their variants; redraw loop and painted-surface
-  contacts; optional bonk/drop/hit-confirm details.
+- Movement: redraw loop and painted-surface contacts; optional bonk/drop/hit-confirm
+  details.
 - Paint: splash variation and repetition limits, capture/dud and per-tool
   impacts; optional blocked/slosh/drip cues.
 - Match and room: glass-in, opening preview hover, close/celebrate/slump,
@@ -706,3 +726,15 @@ Debug and Release startup pass with the real bank and, separately, without it;
 each closes gracefully. Consumer logs are under `out/acceptance/`; startup
 evidence is under `out/validation/weapon-audio/`. These checks establish cue
 requests and lifecycle behaviour; ROAD#3 retains listening and multiplayer mix.
+
+Movement-audio validation (2026-10-15): Debug and Release builds and all 13
+consumer acceptance cases pass. The expanded `story_audio` recorder checks
+variant cycling, short/long-fall gains, strides and repetition limits, four
+independent players, mute, spawn/respawn settling, seams, walls, airborne motion,
+buffered landing-and-takeoff, drop-through platforms, both ramp directions,
+fatal contact ordering and nonpositive updates. Content variants reject empty
+arrays, every missing variant, invalid gains and nonpositive limits. Isolated
+Debug and Release startup pass with the real bank and, separately, without it;
+each closes gracefully. Evidence is under `out/validation/movement-audio/`
+and `out/acceptance/`. These checks establish cue requests and preserved gameplay;
+listening intensity and the multiplayer mix remain ROAD#3.

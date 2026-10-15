@@ -42,6 +42,8 @@ Player::Player(const RectangleF& rectangle,
                   render_resources, team_colour, rotation, origin, flip, layer_depth),
     tuning_(tuning),
     movement_feedback_(movement_feedback, render_resources),
+    movement_audio_(&tuning->player().movement_sounds,
+        audio_resources->sound_bank(tuning->player().sound_bank), preferences, player_num),
     respawn_redraw_(respawn_redraw, render_resources),
     primary_(std::move(primary_weapon)),
     player_num_(player_num),
@@ -334,6 +336,14 @@ void Player::end_contacts()
     // Ground-aware tool feedback sees the completed contact phase, including a
     // buffered jump. Fatal contacts and spawn settling silently reset history.
     const bool can_act = this->state_ == PlayerState::alive && this->health_ > 0.0f;
+    const float resolved_x = this->rectangle_.x - this->movement_start_x_;
+    // Separation from a wall or an overlapping spawn is not walked distance.
+    const float distance = resolved_x * this->movement_requested_x_ > 0.0f ?
+        std::min(std::abs(resolved_x), std::abs(this->movement_requested_x_)) : 0.0f;
+    this->movement_audio_.end_contacts(can_act, this->supported_this_tick_,
+        this->is_on_ground(), this->support_impact_speed_, distance, this->movement_previous_velocity_,
+        this->input_.x_movement, this->movement_audio_dt_);
+    this->movement_audio_dt_ = 0.0f;
     this->primary_->update_ground_contact(
         can_act && this->supported_this_tick_ && this->is_on_ground(),
         can_act && established_support, this->weapon_contact_dt_);
@@ -457,6 +467,10 @@ void Player::on_projectile_contact(CollisionObjectType other_type)
 
 void Player::update(float dt)
 {
+    this->movement_audio_dt_ = dt;
+    this->movement_start_x_ = this->rectangle_.x;
+    this->movement_previous_velocity_ = this->velocity().x;
+    this->movement_requested_x_ = 0.0f;
     // Age old cues before movement can emit new ones; every new event is drawn
     // on its actual tick at age zero, irrespective of the number of views.
     this->movement_feedback_.update(dt);
@@ -465,6 +479,7 @@ void Player::update(float dt)
         // Damage arrives during contacts, after update. Retire input before the
         // next movement tick so a fatal hit cannot produce a final jump.
         this->state_ = PlayerState::dead;
+        this->movement_audio_.reset();
         this->movement_feedback_.clear();
         this->had_ground_support_ = false;
         this->landing_feedback_ready_ = false;
@@ -673,6 +688,7 @@ void Player::update_movement(float dt)
 	}
 
     const Vector2F displacement = MovingObject::velocity() * dt;
+    this->movement_requested_x_ = displacement.x;
     this->rectangle_.offset(displacement.x, displacement.y);
 
     if (x_input > 0.0f)
@@ -899,6 +915,8 @@ const PlayerAnimationTuning& Player::animation_info(
 }
 void Player::place_at(const Vector2F& top_left)
 {
+    this->movement_audio_.reset();
+    this->movement_audio_dt_ = 0.0f;
     this->movement_feedback_.clear();
     if (this->workshop_visual_ != nullptr)
     {

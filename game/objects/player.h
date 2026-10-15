@@ -8,6 +8,7 @@
 #include "game/objects/player_input_data.h"
 #include "game/objects/weapon.h"
 #include "game/objects/movement_feedback.h"
+#include "game/objects/movement_audio.h"
 #include "game/objects/respawn_redraw.h"
 #include "game/objects/player_visual.h"
 #include "engine/math/rectanglef.h"
@@ -211,6 +212,11 @@ private:
     const GameTuning* tuning_ = nullptr;
 
     MovementFeedback movement_feedback_;
+    MovementAudio movement_audio_;
+    float movement_audio_dt_ = 0.0f;
+    float movement_start_x_ = 0.0f;
+    float movement_requested_x_ = 0.0f;
+    float movement_previous_velocity_ = 0.0f;
     RespawnRedraw respawn_redraw_;
     std::optional<labrador::Colour> grey_;
     FigurePose pose_;

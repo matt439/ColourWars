@@ -121,16 +121,19 @@ namespace
 		return value;
 	}
 
-	SoundTuning read_sound(const JsonValue& parent, const char* key)
+	SoundTuning read_sound(const JsonValue& sound)
 	{
-		const JsonValue sound = parent.object(key);
-
 		SoundTuning tuning;
 		tuning.name = sound.string("name");
 
 		// Reject authored volumes outside [0, 1] before SoundBank clamps them.
 		tuning.volume = read_number_in(sound, "volume", 0.0f, 1.0f);
 		return tuning;
+	}
+
+	SoundTuning read_sound(const JsonValue& parent, const char* key)
+	{
+		return read_sound(parent.object(key));
 	}
 
 	// Clips share the sheet and uniform texture declared on their parent.
@@ -283,6 +286,38 @@ namespace
 		return paint;
 	}
 
+	PlayerMovementSounds read_movement_sounds(const JsonValue& player)
+	{
+		const JsonValue json = player.object("movement_sounds");
+		PlayerMovementSounds sounds;
+		const auto read_choices = [&json](const char* key)
+		{
+			const JsonValue choices = json.array(key);
+			if (choices.size() == 0)
+			{
+				throw std::runtime_error(choices.where() +
+					": at least one movement sound is required.");
+			}
+			std::vector<SoundTuning> result;
+			result.reserve(choices.size());
+			for (size_t i = 0; i < choices.size(); ++i)
+			{
+				result.push_back(read_sound(choices.at(i)));
+			}
+			return result;
+		};
+		sounds.land = read_choices("land");
+		sounds.step = read_choices("step");
+		sounds.skid = read_sound(json, "skid");
+		sounds.landing_full_speed = read_positive(json, "landing_full_speed");
+		sounds.landing_min_gain = read_number_in(json, "landing_min_gain", 0.0f, 1.0f);
+		sounds.stride_distance = read_positive(json, "stride_distance");
+		sounds.min_step_interval = read_positive(json, "min_step_interval");
+		sounds.skid_min_speed = read_positive(json, "skid_min_speed");
+		sounds.skid_repeat_delay = read_positive(json, "skid_repeat_delay");
+		return sounds;
+	}
+
 	PlayerTuning read_player(const JsonValue& root)
 	{
 		const JsonValue json = root.object("player");
@@ -316,6 +351,7 @@ namespace
 		player.death_sound = read_sound(sounds, "death");
 		player.jump_sound = read_sound(sounds, "jump");
 		player.respawn_sound = read_sound(sounds, "respawn");
+		player.movement_sounds = read_movement_sounds(json);
 
 		const JsonValue animations = json.object("animations");
 		const std::string sheet = animations.string("sheet");
@@ -517,6 +553,19 @@ void GameTuning::validate_resources(const RenderResources& render,
 		this->player_.jump_sound.name);
 	check.wave("player.sounds.respawn.name", this->player_.sound_bank,
 		this->player_.respawn_sound.name);
+	const auto movement_choices = [&](const char* key,
+		const std::vector<SoundTuning>& choices)
+	{
+		for (size_t i = 0; i < choices.size(); ++i)
+		{
+			check.wave(std::string("player.movement_sounds.") + key + "[" +
+				std::to_string(i) + "].name", this->player_.sound_bank, choices[i].name);
+		}
+	};
+	movement_choices("land", this->player_.movement_sounds.land);
+	movement_choices("step", this->player_.movement_sounds.step);
+	check.wave("player.movement_sounds.skid.name", this->player_.sound_bank,
+		this->player_.movement_sounds.skid.name);
 
 	const auto weapon = [&](WeaponType type, const char* key)
 	{
