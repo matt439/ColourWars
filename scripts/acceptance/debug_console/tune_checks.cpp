@@ -22,6 +22,26 @@ namespace debug_console_acceptance
 		const std::size_t bracket = key.find('[');
 		return bracket == std::string::npos ? key : key.substr(0, bracket);
 	}
+
+	std::size_t paged_row_index(DebugMenuModel& model, const std::string& label)
+	{
+		const std::vector<std::string> first_page = labels(model.rows());
+		do
+		{
+			const std::vector<DebugMenuRow> rows = model.rows();
+			const auto found = std::find_if(rows.begin(), rows.end(), [&label](const DebugMenuRow& row)
+				{ return row.label == label; });
+			if (found != rows.end())
+			{
+				return static_cast<std::size_t>(found - rows.begin());
+			}
+			const auto more = std::find_if(rows.begin(), rows.end(), [](const DebugMenuRow& row)
+				{ return row.kind == DebugMenuRow::Kind::more; });
+			if (more == rows.end()) { break; }
+			model.confirm(static_cast<std::size_t>(more - rows.begin()));
+		} while (labels(model.rows()) != first_page);
+		throw std::runtime_error("The debug menu has no row '" + label + "' on any page");
+	}
 	}
 
 	void check_json_spans(const std::filesystem::path& game_directory)
@@ -105,6 +125,8 @@ namespace debug_console_acceptance
 			{ "tuning.projectiles.spray.size.x", TuneScope::new_objects },
 			{ "tuning.projectiles.spray.gravity", TuneScope::live },
 			{ "presentation.movement_feedback.minimum_strength", TuneScope::live },
+			{ "presentation.weapon_feedback.muzzle_duration", TuneScope::live },
+			{ "presentation.weapon_feedback.enabled", TuneScope::live },
 			{ "presentation.respawn_redraw.strokes[3].points[1].x", TuneScope::live },
 			{ "presentation.opening.glass.width", TuneScope::live },
 			{ "tuning.match.opening.leave", TuneScope::live },
@@ -432,11 +454,22 @@ namespace debug_console_acceptance
 		// The presentation boolean steps by toggle.
 		model.confirm(row_index(model.rows(), "tuning"));
 		model.confirm(row_index(model.rows(), "presentation"));
-		model.confirm(row_index(model.rows(), "movement_feedback"));
+		// Presentation gains authored sections over time; follow its actual
+		// pagination rather than assuming a particular section stays on page one.
+		model.confirm(paged_row_index(model, "movement_feedback"));
 		const bool enabled = presentation.movement_feedback().enabled;
 		model.step(row_index(model.rows(), "enabled"), -1);
 		require(presentation.movement_feedback().enabled != enabled,
 			"Left or Right on a boolean toggles it");
+		impl.execute("tune.reset");
+		model.back();
+		require(model.rows()[model.focus_hint()].label == "movement_feedback",
+			"Back restores the presentation page and row it left");
+		model.confirm(paged_row_index(model, "weapon_feedback"));
+		const bool weapon_enabled = presentation.weapon_feedback().enabled;
+		model.step(row_index(model.rows(), "enabled"), 1);
+		require(presentation.weapon_feedback().enabled != weapon_enabled,
+			"The weapon feedback group remains reachable and its boolean is tunable");
 		impl.execute("tune.reset");
 	}
 }

@@ -11,6 +11,7 @@
 #include "engine/render/colour.h"
 #include "engine/render/texture_object.h"
 #include "game/objects/projectile_builder.h"
+#include "game/objects/weapon_feedback.h"
 #include "engine/audio/sound_bank.h"
 #include "engine/audio/audio_resources.h"
 
@@ -92,6 +93,8 @@ public:
 	// Optional for direct CPU clients; the game builder supplies presentation.
 	// Switching the borrowed record resets visual history, never gameplay.
 	void set_motion_presentation(const ToolMotionPresentation* presentation);
+	void set_feedback_presentation(const WeaponFeedbackPresentation* presentation);
+	const WeaponFeedback* feedback() const;
 	void reset_motion();
 	const ToolMotionState& motion_state() const;
 	int visual_pose() const;
@@ -214,6 +217,7 @@ private:
 	void update_feedback_sounds(bool holding_shoot, bool shot,
 		bool affordable_before, float dt);
 	void update_motion(bool shot, float dt);
+	void reset_mechanism_motion();
 	void select_motion_pose();
 	void draw_mist_tail(labrador::DrawList& draw_list) const;
 
@@ -231,6 +235,7 @@ private:
 	std::array<labrador::SpriteSheet::frame_handle, 4> motion_paint_frames_;
 	const ToolMotionPresentation* motion_presentation_ = nullptr;
 	ToolMotionState motion_;
+	std::unique_ptr<WeaponFeedback> feedback_;
 	labrador::RenderResources::SpriteSheetHandle mist_sheet_;
 	labrador::SpriteSheet::frame_handle mist_frame_;
 	bool motion_firing_ = false;

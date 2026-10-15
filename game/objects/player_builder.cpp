@@ -88,7 +88,8 @@ std::vector<std::unique_ptr<Player>> PlayerBuilder::build_players(
 				setting.weapon,
 				rect.center(),
 				render_resources,
-				audio_resources, preferences, &this->presentation_->tool_motion()),
+				audio_resources, preferences, &this->presentation_->tool_motion(),
+				&this->presentation_->weapon_feedback()),
 			WeaponType::grenade_std,
 			team_colours.team_colour(setting.team),
 			viewport_manager->

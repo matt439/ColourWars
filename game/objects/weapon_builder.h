@@ -27,5 +27,6 @@ public:
 		labrador::RenderResources* render_resources,
 		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
-		const ToolMotionPresentation* motion = nullptr);
+		const ToolMotionPresentation* motion = nullptr,
+		const WeaponFeedbackPresentation* feedback = nullptr);
 };

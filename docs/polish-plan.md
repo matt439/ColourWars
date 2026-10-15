@@ -444,8 +444,14 @@ accent, and the existing spawn redraw remains the arrival treatment.
 [implementation and evidence](polish-movement-contact.md) add restrained,
 black-keylined step and reversal flecks on the existing audio stride. Painted
 support supplies its actual colour and contact point, including adjacent-floor
-seams and enemy paint. The effects remain cosmetic and bounded; muzzle accents,
-optional view shake, empty-paint visuals and menu focus motion remain `POL#10`.
+seams and enemy paint. The effects remain cosmetic and bounded.
+
+**Firing and paint-supply accents implemented (2026-10-15, part of `POL#10`).**
+The [implementation and evidence](polish-weapon-feedback.md) add distinct paid-shot
+muzzle phrases to the four ranged tools, a rate-limited empty-paint response and
+a brief acknowledgement when a complete shot's paint regenerates. The roller
+keeps its contact swash. Aim, firing cadence and paint ownership are unchanged;
+optional view shake and menu focus motion remain `POL#10`.
 
 **Exit condition:** a complete match in the reference arena feels visually coherent
 and responsive. Jumping, landing and movement have visible, correctly timed feedback.

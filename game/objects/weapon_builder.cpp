@@ -16,7 +16,8 @@ std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
     RenderResources* render_resources,
     const AudioResources* audio_resources,
     const PlaySettings* preferences,
-    const ToolMotionPresentation* motion)
+    const ToolMotionPresentation* motion,
+    const WeaponFeedbackPresentation* feedback)
 {
     std::unique_ptr<Weapon> weapon;
     switch (type)
@@ -49,5 +50,6 @@ std::unique_ptr<Weapon> WeaponBuilder::build_weapon(
             "pick, and this is not one of them.");
     }
     weapon->set_motion_presentation(motion);
+    weapon->set_feedback_presentation(feedback);
     return weapon;
 }

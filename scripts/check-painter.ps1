@@ -34,15 +34,55 @@ function Quote-Path {
     return '"' + [IO.Path]::GetFullPath($Path) + '"'
 }
 
-# Keep the probes' lossless PPMs, and provide playing-size PNG crops together
-# on one labelled sheet. Crops are never enlarged for the readability review.
+# Bound every page, including the complete matrix, before allocating a bitmap.
+# GDI+ cannot save an arbitrarily tall aggregate even when every crop is valid.
+function Write-ContactSheetPages {
+    param([object[]] $Images, [int] $CellWidth, [int] $CellHeight,
+        [string] $CaptureDirectory, [string] $Stem)
+    if ($Images.Count -eq 0) { return }
+    $pageWidth = $CellWidth * 4
+    $rows = [int][Math]::Min(16, [Math]::Floor(8192.0 / $CellHeight))
+    $rows = [int][Math]::Min($rows, [Math]::Floor(16777216.0 / ($pageWidth * $CellHeight)))
+    if ($pageWidth -gt 16384 -or $rows -lt 1) { throw 'A native-size painter crop exceeds the review page bounds.' }
+    $perPage = $rows * 4
+    $font = [Drawing.Font]::new('Arial', 9)
+    try {
+        for ($start = 0; $start -lt $Images.Count; $start += $perPage) {
+            $count = [Math]::Min($perPage, $Images.Count - $start)
+            $sheet = $null
+            $graphics = $null
+            try {
+                $sheet = [Drawing.Bitmap]::new($pageWidth, $CellHeight * [int][Math]::Ceiling($count / 4.0))
+                $graphics = [Drawing.Graphics]::FromImage($sheet)
+                $graphics.Clear([Drawing.Color]::FromArgb(238, 238, 238))
+                for ($index = 0; $index -lt $count; ++$index) {
+                    $x = ($index % 4) * $CellWidth + 8
+                    $y = [int][Math]::Floor($index / 4.0) * $CellHeight + 8
+                    $item = $Images[$start + $index]
+                    $graphics.DrawString($item.name, $font, [Drawing.Brushes]::Black,
+                        [Drawing.RectangleF]::new($x, $y, $CellWidth - 16, 34))
+                    $graphics.DrawImageUnscaled($item.bitmap, $x, $y + 36)
+                }
+                $page = [int]($start / $perPage) + 1
+                $name = if ($page -eq 1) { "$Stem.png" } else { '{0}-{1:D3}.png' -f $Stem, $page }
+                $sheet.Save((Join-Path $CaptureDirectory $name), [Drawing.Imaging.ImageFormat]::Png)
+                Write-Output $name
+            }
+            finally {
+                if ($null -ne $graphics) { $graphics.Dispose() }
+                if ($null -ne $sheet) { $sheet.Dispose() }
+            }
+        }
+    }
+    finally { $font.Dispose() }
+}
+
+# Keep the probes' lossless PPMs, and provide labelled playing-size PNG pages.
+# Crops are never enlarged for the readability review.
 function Write-ContactSheet {
     param([string] $CaptureDirectory)
     Add-Type -AssemblyName System.Drawing
     $images = [Collections.Generic.List[object]]::new()
-    $sheet = $null
-    $graphics = $null
-    $font = $null
     try {
         $cellWidth = 320
         $cellHeight = 160
@@ -76,63 +116,30 @@ function Write-ContactSheet {
             $cellHeight = [Math]::Max($cellHeight, $height + 48)
         }
         if ($images.Count -eq 0) { throw 'No painter crops were captured.' }
-        $sheet = [Drawing.Bitmap]::new($cellWidth * 4, $cellHeight * [int][Math]::Ceiling($images.Count / 4.0))
-        $graphics = [Drawing.Graphics]::FromImage($sheet)
-        $graphics.Clear([Drawing.Color]::FromArgb(238, 238, 238))
-        $font = [Drawing.Font]::new('Arial', 9)
-        for ($index = 0; $index -lt $images.Count; ++$index) {
-            $x = ($index % 4) * $cellWidth + 8
-            $y = [int][Math]::Floor($index / 4.0) * $cellHeight + 8
-            $graphics.DrawString($images[$index].name, $font, [Drawing.Brushes]::Black,
-                [Drawing.RectangleF]::new($x, $y, $cellWidth - 16, 34))
-            $graphics.DrawImageUnscaled($images[$index].bitmap, $x, $y + 36)
-        }
-        $sheet.Save((Join-Path $CaptureDirectory 'painter-contact.png'), [Drawing.Imaging.ImageFormat]::Png)
-        # Keep the complete sheet above, and a compact action review sheet
+        Write-ContactSheetPages -Images $images.ToArray() -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-contact'
+        # Keep the complete matrix above, and compact action review pages
         # with one native-size figure per action/frame/facing or 4P palette.
         # Selecting view 1 avoids repeating the four panes on this summary;
         # every player crop remains available beside it for teammate review.
         $actions = @($images | Where-Object { $_.name -match '^[14]p-action-.*-player1$' })
-        if ($actions.Count -gt 0) {
-            $graphics.Dispose()
-            $sheet.Dispose()
-            $sheet = [Drawing.Bitmap]::new($cellWidth * 4, $cellHeight * [int][Math]::Ceiling($actions.Count / 4.0))
-            $graphics = [Drawing.Graphics]::FromImage($sheet)
-            $graphics.Clear([Drawing.Color]::FromArgb(238, 238, 238))
-            for ($index = 0; $index -lt $actions.Count; ++$index) {
-                $x = ($index % 4) * $cellWidth + 8
-                $y = [int][Math]::Floor($index / 4.0) * $cellHeight + 8
-                $graphics.DrawString($actions[$index].name, $font, [Drawing.Brushes]::Black,
-                    [Drawing.RectangleF]::new($x, $y, $cellWidth - 16, 34))
-                $graphics.DrawImageUnscaled($actions[$index].bitmap, $x, $y + 36)
-            }
-            $sheet.Save((Join-Path $CaptureDirectory 'painter-actions-contact.png'), [Drawing.Imaging.ImageFormat]::Png)
-        }
+        Write-ContactSheetPages -Images $actions -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-actions-contact'
         $tools = @($images | Where-Object {
             $_.name -match '^1p-tool-.*-(idle|paid-shot|held-fire|release|recovery|travel|lift)-player1$' -or
             $_.name -match '^4p-tool-mixed-.*-(idle|held-fire|release)-player[1-4]$' -or
             $_.name -match '^4p-tool-roller-.*-(travel|lift)-player1$'
         })
-        if ($tools.Count -gt 0) {
-            $graphics.Dispose()
-            $sheet.Dispose()
-            $sheet = [Drawing.Bitmap]::new($cellWidth * 4, $cellHeight * [int][Math]::Ceiling($tools.Count / 4.0))
-            $graphics = [Drawing.Graphics]::FromImage($sheet)
-            $graphics.Clear([Drawing.Color]::FromArgb(238, 238, 238))
-            for ($index = 0; $index -lt $tools.Count; ++$index) {
-                $x = ($index % 4) * $cellWidth + 8
-                $y = [int][Math]::Floor($index / 4.0) * $cellHeight + 8
-                $graphics.DrawString($tools[$index].name, $font, [Drawing.Brushes]::Black,
-                    [Drawing.RectangleF]::new($x, $y, $cellWidth - 16, 34))
-                $graphics.DrawImageUnscaled($tools[$index].bitmap, $x, $y + 36)
-            }
-            $sheet.Save((Join-Path $CaptureDirectory 'painter-tools-contact.png'), [Drawing.Imaging.ImageFormat]::Png)
-        }
+        Write-ContactSheetPages -Images $tools -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-tools-contact'
+        $weapons = @($images | Where-Object {
+            $_.name -match '^1p-weapon-.*-player1$' -or
+            $_.name -match '^4p-weapon-(mixed|controlled)-.*-player1$'
+        })
+        Write-ContactSheetPages -Images $weapons -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-weapons-contact'
     }
     finally {
-        if ($null -ne $graphics) { $graphics.Dispose() }
-        if ($null -ne $font) { $font.Dispose() }
-        if ($null -ne $sheet) { $sheet.Dispose() }
         foreach ($item in $images) { $item.bitmap.Dispose() }
     }
 }
@@ -176,6 +183,7 @@ $result = [ordered]@{
     inputs = 'Scripted pad-slot inputs at the real 60 Hz simulation step; no physical-device claim.'
     audio = 'Muted; this check establishes no listening acceptance.'
     contact_checks = 'Real resolved 4P dry steps/reversals; controlled step/skid initial/middle/expired rasters in all palettes at 720p/1080p/QHD. Dry/painted and left/right raster differences, enabled/disabled comparisons, frozen direction/tint/timers and culling bounds.'
+    weapon_checks = 'Actual Weapon firing workflow with locally retained projectiles: 1P all five tools and 4P mixed tools in all three palettes, four aim quadrants, then live aim/flip changes while each paid-shot pulse remains active. Roller has no muzzle pulse. Controlled 4P muzzle/empty/recovered event triggers at initial/middle/expiry, enabled/disabled at the same simulation state, at 720p/1080p/QHD. Frozen redraw and observed feedback timers, current-nozzle attachment and raster culling bounds. Empty/recovery gameplay producers are covered by separate CPU acceptance checks. Mechanism raster comparisons suppress the new pulses.'
     checks = 'Real builder/Scene rosters, both movement facings and four aim quadrants at 720p; representative facings also at 1080p/QHD; three 4P palettes; all four same-team accents in both facings. Five body action clips on actual events, both frames and distinct pinned body rasters. All five tools at 1P720 in both facings: paid fire/hold/release/recovery, hose/bucket travel and roller travel/lift. Three 4P palettes: right-facing mixed aimed tools and left-facing roller, plus 1080p/QHD extent captures. Sampled non-idle pinned tools differ from idle at gameplay zoom, including released roller travel/lift. Frozen draws byte-equal, public simulation/action/tool motion state and Debug replay fingerprint unchanged. Isolated player/tool raster output stays inside projected cull bounds. Death, outline, fill, respawn, tool-free squash and whole-dead story poses; early elimination whole-dead raster equals later idle whole-dead raster. Combat on/off comparisons at identical simulation state: hurt and elimination across all three 4P palettes at 720p; controlled 4P hurt initial/recovery/expiry and elimination initial/middle/late/expiry at 720p/1080p/QHD. Combat timers/death snapshot stay unchanged during drawing; whole-dead story figures suppress the burst.'
     profile = $profile
     diagnostic = ''
@@ -299,7 +307,7 @@ try {
     }
     Write-ContactSheet -CaptureDirectory $captures
     $result.outcome = 'passed'
-    $result.diagnostic = 'Painter base/action, five-tool mechanism and step/skid contact matrices, distinct pinned body/tool rasters, frozen motion/redraw, simulation fingerprint, raster culling bounds, elimination/redraw/respawn and idle whole-story pose checks passed. Human playing-size review remains separate.'
+    $result.diagnostic = 'Painter base/action, five-tool mechanism, weapon paid-shot/aim-follow and controlled muzzle/empty/recovered on/off, and step/skid contact matrices passed. Distinct pinned body/tool rasters, frozen motion/feedback/redraw, simulation fingerprint, raster culling bounds, elimination/redraw/respawn and idle whole-story poses passed. Human playing-size review remains separate.'
 }
 catch {
     $failure = $_

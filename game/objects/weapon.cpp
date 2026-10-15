@@ -97,6 +97,11 @@ void Weapon::draw(DrawList& draw_list, bool debug) const
         origin, flip, this->rotation());
 
     this->draw_mist_tail(draw_list);
+    if (this->feedback_ != nullptr)
+    {
+        this->feedback_->draw(draw_list, this->nozzle_pos(), this->draw_pos(),
+            this->rotation(), this->type(), this->paint_override_.value_or(this->team_colour()));
+    }
 
     if (debug)
     {
@@ -122,7 +127,7 @@ void Weapon::set_paint_override(std::optional<Colour> colour)
 void Weapon::set_motion_presentation(const ToolMotionPresentation* presentation)
 {
     this->motion_presentation_ = presentation;
-    this->reset_motion();
+    this->reset_mechanism_motion();
     if (presentation == nullptr) { return; }
     const std::array<std::string, 4> suffixes = { "", "_motion_1", "_motion_2", "_lift" };
     for (size_t index = 0; index < suffixes.size(); ++index)
@@ -136,7 +141,21 @@ void Weapon::set_motion_presentation(const ToolMotionPresentation* presentation)
         resolve_sprite_frame(presentation->mist_frame);
 }
 
+void Weapon::set_feedback_presentation(const WeaponFeedbackPresentation* presentation)
+{
+    this->feedback_ = presentation == nullptr ? nullptr :
+        std::make_unique<WeaponFeedback>(presentation, this->render_resources());
+}
+
+const WeaponFeedback* Weapon::feedback() const { return this->feedback_.get(); }
+
 void Weapon::reset_motion()
+{
+    if (this->feedback_ != nullptr) { this->feedback_->clear(); }
+    this->reset_mechanism_motion();
+}
+
+void Weapon::reset_mechanism_motion()
 {
     this->motion_ = {};
     this->motion_firing_ = false;
@@ -160,7 +179,7 @@ void Weapon::update_motion(bool shot, float dt)
     if (dt <= 0.0f || this->motion_presentation_ == nullptr) { return; }
     if (!this->motion_presentation_->enabled)
     {
-        this->reset_motion();
+        this->reset_mechanism_motion();
         return;
     }
     const auto& look = *this->motion_presentation_;
@@ -369,6 +388,11 @@ RectangleF Weapon::draw_bounds() const
 			this->mist_release_position_ - Vector2F(tail_reach, tail_reach),
 			Vector2F(tail_reach * 2.0f, tail_reach * 2.0f)));
 	}
+	if (this->feedback_ != nullptr)
+	{
+		result = RectangleF::union_of(result,
+			this->feedback_->bounds(this->nozzle_pos(), this->draw_pos(), this->type()));
+	}
 	return result;
 }
 Vector2F Weapon::draw_pos() const
@@ -427,9 +451,15 @@ std::vector<std::unique_ptr<Projectile>>
     this->update_movement_and_rotation(input, player_center,
 		player_velocity, player_facing_right);
 
+    if (this->feedback_ != nullptr) { this->feedback_->update(dt); }
+
     const bool shot = this->check_if_shooting_and_ammo_update(input, player_center,
         player_velocity, dt);
     this->update_motion(shot, dt);
+    if (shot && dt > 0.0f && std::isfinite(dt) && this->feedback_ != nullptr)
+    {
+        this->feedback_->shot(this->type());
+    }
     if (shot)
     {
         return this->shoot(Vector2F::unit_vec_from_angle(this->rotation()),
@@ -512,7 +542,7 @@ void Weapon::update_feedback_sounds(bool holding_shoot, bool shot,
 {
     // Acceptance probes can pay a primed shot at zero delta. Keep that gameplay
     // behaviour, but frozen updates cannot advance or emit the new feedback.
-    if (dt <= 0.0f)
+    if (dt <= 0.0f || !std::isfinite(dt))
     {
         return;
     }
@@ -531,6 +561,7 @@ void Weapon::update_feedback_sounds(bool holding_shoot, bool shot,
             (!this->empty_warned_ || this->empty_repeat_remaining_ <= 0.0f))
         {
             this->play_feedback_sound(this->empty_sound_, feedback.empty);
+            if (this->feedback_ != nullptr) { this->feedback_->empty(); }
             this->empty_warned_ = true;
             // Retain the limit across brief recoveries while fire stays held.
             // A long update emits at most one warning, never a queued burst.
@@ -541,6 +572,7 @@ void Weapon::update_feedback_sounds(bool holding_shoot, bool shot,
     if (this->awaiting_recovery_ && this->can_afford_shot())
     {
         this->play_feedback_sound(this->recovered_sound_, feedback.recovered);
+        if (this->feedback_ != nullptr) { this->feedback_->recovered(); }
         this->awaiting_recovery_ = false;
     }
 

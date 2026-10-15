@@ -353,6 +353,24 @@ struct CombatFeedbackPresentation
 	float keyline_width = 0.0f;
 };
 
+// Brief, cosmetic paid-shot and paint-supply responses at the held tool.
+// Every size is in world units; these never change the firing workflow.
+struct WeaponFeedbackPresentation
+{
+	bool enabled = true;
+	std::string sprite_sheet;
+	std::string fill_frame;
+	labrador::Colour keyline;
+	labrador::Colour highlight;
+	float muzzle_duration = 0.0f;
+	float empty_duration = 0.0f;
+	float recovered_duration = 0.0f;
+	float keyline_width = 0.0f;
+	float status_size = 0.0f;
+	float status_offset = 0.0f;
+	std::array<mattmath::Vector2F, static_cast<size_t>(WeaponType::bucket) + 1> muzzle_sizes;
+};
+
 struct FigureGripPresentation
 {
 	// World-space offsets from the weapon's actual draw pivot before rotation.
@@ -537,6 +555,7 @@ public:
 	const CameraPresentation& camera() const;
 	const MovementFeedbackPresentation& movement_feedback() const;
 	const CombatFeedbackPresentation& combat_feedback() const;
+	const WeaponFeedbackPresentation& weapon_feedback() const;
 	const FigurePresentation& figure() const;
 	const ToolMotionPresentation& tool_motion() const;
 	const RespawnRedrawPresentation& respawn_redraw() const;
@@ -563,6 +582,7 @@ private:
 	CameraPresentation camera_;
 	MovementFeedbackPresentation movement_feedback_;
 	CombatFeedbackPresentation combat_feedback_;
+	WeaponFeedbackPresentation weapon_feedback_;
 	FigurePresentation figure_;
 	ToolMotionPresentation tool_motion_;
 	RespawnRedrawPresentation respawn_redraw_;

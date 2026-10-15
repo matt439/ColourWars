@@ -93,6 +93,7 @@ add_executable(ColourWars WIN32
     objects/structure_paintable.cpp
     objects/team_colour.cpp
     objects/weapon.cpp
+    objects/weapon_feedback.cpp
     objects/weapon_bucket.cpp
     objects/weapon_builder.cpp
     objects/weapon_details.cpp

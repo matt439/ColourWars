@@ -300,6 +300,27 @@
     "particle_size": 12,
     "keyline_width": 2
   },
+  "weapon_feedback": {
+    "_comment": "Cosmetic paid-shot muzzle accents and brief empty/recovered paint responses. The roller keeps its contact effect instead of emitting a muzzle accent.",
+    "enabled": true,
+    "sprite_sheet": "sprite_sheet_1",
+    "fill_frame": "square_white_4",
+    "keyline": "000000",
+    "highlight": "FFFFFF",
+    "muzzle_duration": 0.10,
+    "empty_duration": 0.18,
+    "recovered_duration": 0.24,
+    "keyline_width": 1,
+    "status_size": 12,
+    "status_offset": 84,
+    "muzzle_sizes": {
+      "sprayer": { "x": 18, "y": 8 },
+      "sniper": { "x": 26, "y": 10 },
+      "roller": { "x": 12, "y": 8 },
+      "mister": { "x": 20, "y": 18 },
+      "bucket": { "x": 20, "y": 16 }
+    }
+  },
   "movement_feedback": {
     "_comment": "Cosmetic contact puffs and keylined step/skid flecks in world units. Steps share the audio stride; wet flecks use the contacted paint colour. No scored paint or audio.",
     "enabled": true,

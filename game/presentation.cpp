@@ -488,6 +488,41 @@ namespace
 		return hud;
 	}
 
+	WeaponFeedbackPresentation read_weapon_feedback(const JsonValue& root)
+	{
+		const JsonValue json = root.object("weapon_feedback");
+		WeaponFeedbackPresentation feedback;
+		feedback.enabled = json.boolean("enabled");
+		feedback.sprite_sheet = json.identifier("sprite_sheet");
+		feedback.fill_frame = json.identifier("fill_frame");
+		feedback.keyline = read_colour(json, "keyline");
+		feedback.highlight = read_colour(json, "highlight");
+		feedback.muzzle_duration = read_positive(json, "muzzle_duration");
+		feedback.empty_duration = read_positive(json, "empty_duration");
+		feedback.recovered_duration = read_positive(json, "recovered_duration");
+		feedback.keyline_width = read_positive(json, "keyline_width");
+		feedback.status_size = read_positive(json, "status_size");
+		feedback.status_offset = read_positive(json, "status_offset");
+		if (feedback.keyline_width * 2.0f >= feedback.status_size)
+		{
+			throw std::runtime_error(json.where() +
+				": 'keyline_width' must leave visible fill inside 'status_size'.");
+		}
+		const JsonValue sizes = json.object("muzzle_sizes");
+		const std::array<const char*, 5> names = { "sprayer", "sniper", "roller", "mister", "bucket" };
+		for (size_t index = 0; index < names.size(); ++index)
+		{
+			const Vector2F size = read_positive_vector(sizes, names[index]);
+			if (feedback.keyline_width * 2.0f >= std::min(size.x, size.y))
+			{
+				throw std::runtime_error(sizes.object(names[index]).where() +
+					": 'keyline_width' must leave visible fill inside the muzzle size.");
+			}
+			feedback.muzzle_sizes[index] = size;
+		}
+		return feedback;
+	}
+
 	ToolMotionPresentation read_tool_motion(const JsonValue& root)
 	{
 		const JsonValue json = root.object("tool_motion");
@@ -823,6 +858,7 @@ Presentation::Presentation(const char* path)
 		throw std::runtime_error(combat.where() +
 			": repeat delay must cover the hurt duration and keylines must leave visible fill.");
 	}
+	this->weapon_feedback_ = read_weapon_feedback(root);
 	this->figure_ = read_figure(root);
 	this->tool_motion_ = read_tool_motion(root);
 	this->respawn_redraw_ = read_respawn_redraw(root);
@@ -875,6 +911,11 @@ const CombatFeedbackPresentation& Presentation::combat_feedback() const
 	return this->combat_feedback_;
 }
 
+const WeaponFeedbackPresentation& Presentation::weapon_feedback() const
+{
+	return this->weapon_feedback_;
+}
+
 const RespawnRedrawPresentation& Presentation::respawn_redraw() const
 {
 	return this->respawn_redraw_;
@@ -921,6 +962,8 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->movement_feedback_.fill_frame);
 	check.frame("combat_feedback.fill_frame", this->combat_feedback_.sprite_sheet,
 		this->combat_feedback_.fill_frame);
+	check.frame("weapon_feedback.fill_frame", this->weapon_feedback_.sprite_sheet,
+		this->weapon_feedback_.fill_frame);
 	for (size_t index = 0; index < this->figure_.accent_frames.size(); ++index)
 	{
 		check.frame("figure.accent_frames[" + std::to_string(index) + "]", this->figure_.sprite_sheet,
