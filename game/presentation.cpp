@@ -33,7 +33,8 @@ namespace
 		"play", "options", "credits", "exit", "resolution", "fullscreen", "team_palette",
 		"controls_audio", "apply", "back", "single_match", "best_of_three", "best_of_five",
 		"match_length", "one_player_practice", "two_players", "three_players", "four_players",
-		"resume", "restart", "quit", "yes", "no"
+		"resume", "restart", "quit", "yes", "no", "change_teams", "change_weapons", "change_level",
+		"exit_to_main_menu"
 	};
 
 	std::wstring read_menu_line(const JsonValue& json, const char* key)
@@ -1976,6 +1977,26 @@ void Presentation::validate_resources(const RenderResources& render,
 		false, pause.art, 1080.0f);
 	check_menu_item(MenuItem::no, pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
 		pause.box_size, pause.layout.spacing.y, false, pause.art, 1080.0f);
+	const EndMenuPresentation& end = this->end_menu_;
+	if (!std::isfinite(end.layout.spacing.y) || end.layout.spacing.y <= 0.0f)
+	{
+		throw std::runtime_error(this->source_path_ +
+			": menu_text.items.change_teams requires positive finite end_menu.layout.spacing.y.");
+	}
+	const MenuItem end_items[]{ MenuItem::change_teams, MenuItem::change_weapons, MenuItem::change_level };
+	for (size_t index = 0; index < std::size(end_items); ++index)
+	{
+		check_menu_item(end_items[index], end.layout.position +
+			Vector2F(0.0f, end.layout.spacing.y * static_cast<float>(index + 1)),
+			end.box_size, end.layout.spacing.y, false, end.art, 1080.0f);
+	}
+	// Exit moves up while a series is ongoing; both layouts share this text.
+	for (const int row : { 1, 4 })
+	{
+		check_menu_item(MenuItem::exit_to_main_menu, end.layout.position +
+			Vector2F(0.0f, end.layout.spacing.y * static_cast<float>(row)),
+			end.box_size, end.layout.spacing.y, false, end.art, 1080.0f);
+	}
 	const auto check_setup_item = [&](MenuItem item, const Vector2F& spacing, int row, bool duration_label)
 	{
 		const std::string key = std::string("menu_text.items.") + menu_item_keys[static_cast<size_t>(item)];

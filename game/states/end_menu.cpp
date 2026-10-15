@@ -84,7 +84,7 @@ void EndMenuInitial::init()
 
 	this->change_teams_ = std::make_unique<UiText>(
 		"change_teams",
-		L"Change Teams",
+		this->text().item(MenuItem::change_teams),
 		style.item_font,
 		this->calculate_widget_position(0, 1),
 		this->render_resources(),
@@ -92,7 +92,7 @@ void EndMenuInitial::init()
 
 	this->change_weapons_ = std::make_unique<UiText>(
 		"change_weapons",
-		L"Change Weapons",
+		this->text().item(MenuItem::change_weapons),
 		style.item_font,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
@@ -100,7 +100,7 @@ void EndMenuInitial::init()
 
 	this->change_level_ = std::make_unique<UiText>(
 		"change_level",
-		L"Change Level",
+		this->text().item(MenuItem::change_level),
 		style.item_font,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
@@ -116,7 +116,7 @@ void EndMenuInitial::init()
 
 	this->exit_ = std::make_unique<UiText>(
 		"exit",
-		L"Exit to Main Menu",
+		this->text().item(MenuItem::exit_to_main_menu),
 		style.item_font,
 		this->calculate_widget_position(0, ongoing ? 1 : 4),
 		this->render_resources(),

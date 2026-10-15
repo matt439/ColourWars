@@ -448,12 +448,12 @@ elseif ($EndMenuOnly) {
     $result.player_counts = @()
     $result.palettes = @()
     $result.weapons = @()
-    $result.actions = @('rematch', 'change-teams', 'change-weapons', 'change-stage', 'exit', 'next-round', 'replay-draw', 'play-series-again')
+    $result.actions = @('rematch', 'change-teams', 'change-weapons', 'change-stage', 'exit', 'next-round', 'replay-draw', 'play-series-again', 'custom-labels', 'font-snapshot', 'pending-music-exit', 'focus-return')
     $result.input_slots = @(4)
     $result.inputs = 'Public keyboard input through the actual EndMenuInitial and StateContext; no physical pad claim.'
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
     $result.Remove('stage')
-    $result.checks = 'End-menu paper, primary continuation and focus routes at native 720p/1080p/QHD and differing aspects; single match, tied/continuing/completed series, frozen redraw, Reduce effects and resize. No human readability or listening acceptance.'
+    $result.checks = 'End-menu paper, primary continuation and four independent legacy label rasters at native 720p/1080p/QHD, 4:3, 16:10 and ultrawide; single match, tied/continuing/completed series, both Exit rows and hidden setup choices. Custom labels and replacement item font missing an old glyph; retained/reopened/reversed snapshots through focus movement and repeated typed actions. Owner-controlled pending music exits reject further input and preserve their original action through focus interruption; interrupted Enter releases require fresh selection. Frozen redraw/RNG, Reduce effects and resize remain covered. No physical controllers, human readability or listening acceptance.'
 }
 elseif ($ResumeOnly) {
     $result.player_counts = @(1, 2, 4)
@@ -700,7 +700,7 @@ try {
         $result.diagnostic = 'Pause-menu-only hardware check passed: six independent legacy labels on actual Pause/Restart/Quit pages across six display sizes/aspects; custom labels/font, retained/reopened/reversed snapshots, Controls return, No/Back, repeated Resume/Restart/Quit, interrupted focus and missing-seat gate clearing without automatic Resume. Existing missing-controller recovery routes, native paper/enabled focus cards, static Reduce effects, frozen redraw/RNG and resize passed. Other painter matrices, physical controllers/reconnection, human readability and listening acceptance were not run.'
     }
     elseif ($EndMenuOnly) {
-        $result.diagnostic = 'End-menu-only hardware check passed: actual keyboard-driven continuation and secondary routes across single-match and series states; native paper and focus rendering, frozen redraw, Reduce effects and resize. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'
+        $result.diagnostic = 'End-menu-only hardware check passed: four independent historical action labels plus continuation on actual single/ongoing/draw/completed-series pages across six native display sizes/aspects; both Exit placements and hidden setup rows. Custom labels/font, retained/reopened/reversed snapshots, repeated typed actions, pending music-exit gating, focus interruption and held Enter rearming passed alongside native paper/focus rendering, frozen redraw/RNG, Reduce effects and resize. Other painter matrices, physical controllers, actual audio fade/listening and human readability acceptance were not run.'
     }
     elseif ($ResumeOnly) {
         $result.diagnostic = 'Resume-only actual GameLevel hardware check passed: 1P/2P/4P keyboard-driven pause/resume/re-pause, focus loss/return, full world/HUD raster and detailed player/projectile/cosmetic freeze, dead respawn, held-action rearming, long final count-in step, Restart and Quit. Native bounded RESUMING paper, repeated frozen drawing and exact 720p/1080p/QHD resize round-trip passed. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'

@@ -57,7 +57,9 @@ namespace
         { "match_length", L"Match length" }, { "one_player_practice", L"1 Player (practice)" },
         { "two_players", L"2 Players" }, { "three_players", L"3 Players" }, { "four_players", L"4 Players" },
         { "resume", L"Resume" }, { "restart", L"Restart" }, { "quit", L"Quit" },
-        { "yes", L"Yes" }, { "no", L"No" }
+        { "yes", L"Yes" }, { "no", L"No" },
+        { "change_teams", L"Change Teams" }, { "change_weapons", L"Change Weapons" },
+        { "change_level", L"Change Level" }, { "exit_to_main_menu", L"Exit to Main Menu" }
     };
 
     rapidjson::Document read_document(const std::filesystem::path& path)
@@ -496,7 +498,8 @@ namespace
     {
         for (const char* key : { "play", "options", "credits", "exit", "controls_audio", "apply", "back",
             "single_match", "best_of_three", "best_of_five", "match_length", "one_player_practice",
-            "two_players", "three_players", "four_players", "resume", "restart", "quit", "yes", "no" })
+            "two_players", "three_players", "four_players", "resume", "restart", "quit", "yes", "no",
+            "change_teams", "change_weapons", "change_level", "exit_to_main_menu" })
         {
             variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
                 { d["menu_text"]["items"][key].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
@@ -749,6 +752,113 @@ namespace
             d["menu_text"]["items"]["controls_audio"].SetString("FitFit");
         }, &world);
     }
+
+    void check_end_text(Variants& variants, World& world)
+    {
+        constexpr const char* end_keys[]{ "change_teams", "change_weapons", "change_level", "exit_to_main_menu" };
+        const auto normalized = variants.load([&](rapidjson::Document& d)
+        {
+            for (const char* key : end_keys)
+            {
+                d["menu_text"]["items"][key].SetString("A\xC2\xA0\xE2\x80\x94" "B");
+            }
+        });
+        normalized.validate_resources(world.render, world.audio);
+        for (size_t index = 0; index < std::size(end_keys); ++index)
+        {
+            require(normalized.menu_text().item(static_cast<MenuItem>(
+                static_cast<size_t>(MenuItem::change_teams) + index)) == L"A -B",
+                "End item did not normalize its authored punctuation and NBSP");
+        }
+        for (const char* key : end_keys)
+        {
+            variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
+            {
+                d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+                d["menu_text"]["items"][key].SetString("Glyph~");
+            }, &world);
+            for (const char* invalid : { "   ", "line\nbreak", "tab\ttext", "\xC3\xA9", "\xC3" })
+            {
+                variants.rejects(std::string("items.") + key, [key, invalid](rapidjson::Document& d)
+                {
+                    d["menu_text"]["items"][key].SetString(invalid, d.GetAllocator());
+                });
+            }
+        }
+
+        const auto exact_items = [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_exact");
+            for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
+        };
+        const auto original = variants.load([](rapidjson::Document&) {});
+        const auto& end = original.end_menu();
+        const auto top = (mattmath::Vector2F(1920.0f, 1080.0f) - end.box_size) / 2.0f;
+        const auto bottom = top + end.box_size;
+        const float left_position = top.x + end.art.focus_padding.x;
+        const float right_position = bottom.x - 24.0f - end.art.focus_padding.x;
+        // The first static label is row 1. Exit moves from row 1 during an
+        // ongoing series to row 4 after a completed match or series.
+        const float top_position = top.y + end.art.focus_padding.y - end.layout.spacing.y;
+        const float bottom_position = bottom.y - 4.0f * end.layout.spacing.y -
+            20.0f - end.art.focus_padding.y;
+        const auto paper_edge = [&](const char* axis, float position, const char* field, float outside)
+        {
+            const auto edit = [&](rapidjson::Document& d)
+            {
+                exact_items(d);
+                d["end_menu"]["layout"]["position"][axis].SetFloat(position);
+            };
+            const auto fits = variants.load(edit);
+            fits.validate_resources(world.render, world.audio);
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                edit(d);
+                d["end_menu"]["layout"]["position"][axis].SetFloat(outside);
+            }, &world);
+        };
+        paper_edge("x", left_position, "items.change_teams", left_position - 0.25f);
+        paper_edge("x", right_position, "items.change_teams", right_position + 0.25f);
+        paper_edge("y", top_position, "items.change_teams", top_position - 0.25f);
+        // Exact bottom contact is below the shared footer but within End's
+        // full-height paper. At the failing position, rows 1-3 still fit;
+        // only completed-match Exit on row 4 crosses that paper's boundary.
+        require(bottom_position + end.layout.spacing.y * 3.0f + 20.0f +
+            end.art.focus_padding.y + 0.25f < bottom.y,
+            "End row-4 overflow fixture also overflows its earlier static action rows");
+        paper_edge("y", bottom_position, "items.exit_to_main_menu", bottom_position + 0.25f);
+
+        const float row_height = 20.0f + 2.0f * end.art.focus_padding.y;
+        const auto row_edge = [&](rapidjson::Document& d)
+        {
+            exact_items(d);
+            d["end_menu"]["layout"]["spacing"]["y"].SetFloat(row_height);
+        };
+        const auto fits_row = variants.load(row_edge);
+        fits_row.validate_resources(world.render, world.audio);
+        variants.rejects("items.change_teams", [&](rapidjson::Document& d)
+        {
+            row_edge(d);
+            d["end_menu"]["layout"]["spacing"]["y"].SetFloat(std::nextafter(row_height, 0.0f));
+        }, &world);
+        for (const double invalid : { 0.0, -1.0, 1e100 })
+        {
+            variants.rejects("items.change_teams", [&](rapidjson::Document& d)
+            {
+                exact_items(d);
+                d["end_menu"]["layout"]["spacing"]["y"].SetDouble(invalid);
+            }, &world);
+        }
+
+        // A longer Exit can overflow independently while the three other
+        // static action labels retain their exact right-edge fit.
+        variants.rejects("items.exit_to_main_menu", [&](rapidjson::Document& d)
+        {
+            exact_items(d);
+            d["end_menu"]["layout"]["position"]["x"].SetFloat(right_position);
+            d["menu_text"]["items"]["exit_to_main_menu"].SetString("FitFit");
+        }, &world);
+    }
 }
 
 int main(int argc, char** argv)
@@ -768,6 +878,7 @@ int main(int argc, char** argv)
         check_item_bounds(variants, world);
         check_setup_text(variants, world);
         check_pause_text(variants, world);
+        check_end_text(variants, world);
         check_option_row_fitting(variants, world);
         check_prompt_bar(world, defaults);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "

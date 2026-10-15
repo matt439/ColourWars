@@ -142,7 +142,11 @@
       "restart": "Restart",
       "quit": "Quit",
       "yes": "Yes",
-      "no": "No"
+      "no": "No",
+      "change_teams": "Change Teams",
+      "change_weapons": "Change Weapons",
+      "change_level": "Change Level",
+      "exit_to_main_menu": "Exit to Main Menu"
     }
   },
 

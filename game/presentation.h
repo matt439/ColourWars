@@ -64,7 +64,8 @@ enum class MenuItem
 	play, options, credits, exit, resolution, fullscreen, team_palette,
 	controls_audio, apply, back, single_match, best_of_three, best_of_five,
 	match_length, one_player_practice, two_players, three_players, four_players,
-	resume, restart, quit, yes, no, count
+	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
+	exit_to_main_menu, count
 };
 
 // Fixed roles select display text; navigation and accepted inputs remain code.

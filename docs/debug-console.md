@@ -384,7 +384,7 @@ documented in [menu presentation data](menu-presentation.md#weapon-selection-nam
 Names must fit the existing description-column gap when measured with their
 actual font and horizontal shadow; there is no character-count limit.
 
-Shared brand/headings, Home/Options/Credits/Mode/Player Count/Pause labels, the
+Shared brand/headings, Home/Options/Credits/Mode/Player Count/Pause/End labels, the
 solo-practice hint and complete control
 legends are string settings under
 `presentation.menu_text`; they also require JSON edits and `reload`. A page
@@ -411,6 +411,14 @@ captured string settings. Their plain item text is validated against the
 full-design Pause paper and padded row height, retaining its measured size.
 Reopening adopts edits; confirmation still defaults to No. Dynamic Pause
 titles, status and questions remain outside this authored label set.
+
+End Change Teams/Change Weapons/Change Level/Exit to Main Menu are also captured
+string settings. Their plain item text and focus padding must fit the full-design
+End paper and positive row spacing, with Exit checked at its ongoing-series and
+completed-match positions. They retain their measured size and captured item font
+until reopening. Label edits leave action availability, continuation, navigation
+and music unchanged; session-dependent headings and continuation text remain in
+code. See [End Menu actions](menu-presentation.md#end-menu-actions).
 
 Mist `spread_step` constructs the velocity fan when a shot is created. Roller
 `aim_tilt` and the shared projectile `wind_stop_factor` are read during updates,
