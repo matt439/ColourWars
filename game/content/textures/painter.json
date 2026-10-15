@@ -95,6 +95,126 @@
                                  "frame_count":  1,
                                  "frame_time":  0.05,
                                  "looping":  true
+                             },
+                             {
+                                 "name":  "takeoff",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  1028,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  2,
+                                 "frame_time":  0.05,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "takeoff_paint",
+                                 "first_frame":  {
+                                                     "x":  116,
+                                                     "y":  1028,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  2,
+                                 "frame_time":  0.05,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "land",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  1156,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  2,
+                                 "frame_time":  0.05,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "land_paint",
+                                 "first_frame":  {
+                                                     "x":  116,
+                                                     "y":  1156,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  2,
+                                 "frame_time":  0.05,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "fire",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  1284,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  2,
+                                 "frame_time":  0.04,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "fire_paint",
+                                 "first_frame":  {
+                                                     "x":  116,
+                                                     "y":  1284,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  2,
+                                 "frame_time":  0.04,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "hurt",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  1412,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  2,
+                                 "frame_time":  0.06,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "hurt_paint",
+                                 "first_frame":  {
+                                                     "x":  116,
+                                                     "y":  1412,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  2,
+                                 "frame_time":  0.06,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "elimination",
+                                 "first_frame":  {
+                                                     "x":  4,
+                                                     "y":  1540,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  2,
+                                 "frame_time":  0.07,
+                                 "looping":  false
+                             },
+                             {
+                                 "name":  "elimination_paint",
+                                 "first_frame":  {
+                                                     "x":  116,
+                                                     "y":  1540,
+                                                     "w":  52,
+                                                     "h":  120
+                                                 },
+                                 "frame_count":  2,
+                                 "frame_time":  0.07,
+                                 "looping":  false
                              }
                          ],
     "sprite_frames":  [

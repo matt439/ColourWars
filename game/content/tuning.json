@@ -189,7 +189,12 @@
             "walk": { "strip": "run", "paint_strip": "run_paint" },
             "running": { "strip": "run", "paint_strip": "run_paint", "frame_time": 0.05 },
             "jumping": { "strip": "jump", "paint_strip": "jump_paint" },
-            "falling": { "strip": "fall", "paint_strip": "fall_paint" }
+            "falling": { "strip": "fall", "paint_strip": "fall_paint" },
+            "takeoff": { "strip": "takeoff", "paint_strip": "takeoff_paint" },
+            "land": { "strip": "land", "paint_strip": "land_paint" },
+            "fire": { "strip": "fire", "paint_strip": "fire_paint" },
+            "hurt": { "strip": "hurt", "paint_strip": "hurt_paint" },
+            "elimination": { "strip": "elimination", "paint_strip": "elimination_paint" }
         }
     },
 

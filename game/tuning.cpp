@@ -419,6 +419,11 @@ namespace
 		player.running = read_animation(animations, "running", sheet, uniform);
 		player.jumping = read_animation(animations, "jumping", sheet, uniform);
 		player.falling = read_animation(animations, "falling", sheet, uniform);
+		player.takeoff = read_animation(animations, "takeoff", sheet, uniform);
+		player.land = read_animation(animations, "land", sheet, uniform);
+		player.fire = read_animation(animations, "fire", sheet, uniform);
+		player.hurt = read_animation(animations, "hurt", sheet, uniform);
+		player.elimination = read_animation(animations, "elimination", sheet, uniform);
 
 		return player;
 	}
@@ -610,7 +615,8 @@ void GameTuning::validate_resources(const RenderResources& render,
 	impact(ProjectileType::mist, "mist");
 	impact(ProjectileType::ball, "ball");
 
-	const auto animation = [&](const char* key, const PlayerAnimationTuning& clip)
+	const auto animation = [&](const char* key, const PlayerAnimationTuning& clip,
+		bool action = false)
 	{
 		const std::string prefix = std::string("player.animations.") + key;
 		check.animation(prefix + ".strip", clip.sheet, clip.strip);
@@ -628,12 +634,24 @@ void GameTuning::validate_resources(const RenderResources& render,
 			throw std::runtime_error(this->source_path_ + ": " + prefix +
 				".paint_strip must match body frame count, time, looping and dimensions.");
 		}
+		const float frame_time = clip.frame_time.value_or(body.frame_time());
+		if (action && (body.looping() || !std::isfinite(frame_time) || frame_time <= 0.0f ||
+			!std::isfinite(frame_time * static_cast<float>(body.frame_count()))))
+		{
+			throw std::runtime_error(this->source_path_ + ": " + prefix +
+				".strip must be a non-looping clip with a finite positive duration.");
+		}
 	};
 	animation("idle", this->player_.idle);
 	animation("walk", this->player_.walk);
 	animation("running", this->player_.running);
 	animation("jumping", this->player_.jumping);
 	animation("falling", this->player_.falling);
+	animation("takeoff", this->player_.takeoff, true);
+	animation("land", this->player_.land, true);
+	animation("fire", this->player_.fire, true);
+	animation("hurt", this->player_.hurt, true);
+	animation("elimination", this->player_.elimination, true);
 	check.wave("player.sounds.damage.name", this->player_.sound_bank,
 		this->player_.damage_sound.name);
 	check.wave("player.sounds.death.name", this->player_.sound_bank,

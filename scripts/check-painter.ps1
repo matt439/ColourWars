@@ -88,6 +88,26 @@ function Write-ContactSheet {
             $graphics.DrawImageUnscaled($images[$index].bitmap, $x, $y + 36)
         }
         $sheet.Save((Join-Path $CaptureDirectory 'painter-contact.png'), [Drawing.Imaging.ImageFormat]::Png)
+        # Keep the complete sheet above, and a compact action review sheet
+        # with one native-size figure per action/frame/facing or 4P palette.
+        # Selecting view 1 avoids repeating the four panes on this summary;
+        # every player crop remains available beside it for teammate review.
+        $actions = @($images | Where-Object { $_.name -match '^[14]p-action-.*-player1$' })
+        if ($actions.Count -gt 0) {
+            $graphics.Dispose()
+            $sheet.Dispose()
+            $sheet = [Drawing.Bitmap]::new($cellWidth * 4, $cellHeight * [int][Math]::Ceiling($actions.Count / 4.0))
+            $graphics = [Drawing.Graphics]::FromImage($sheet)
+            $graphics.Clear([Drawing.Color]::FromArgb(238, 238, 238))
+            for ($index = 0; $index -lt $actions.Count; ++$index) {
+                $x = ($index % 4) * $cellWidth + 8
+                $y = [int][Math]::Floor($index / 4.0) * $cellHeight + 8
+                $graphics.DrawString($actions[$index].name, $font, [Drawing.Brushes]::Black,
+                    [Drawing.RectangleF]::new($x, $y, $cellWidth - 16, 34))
+                $graphics.DrawImageUnscaled($actions[$index].bitmap, $x, $y + 36)
+            }
+            $sheet.Save((Join-Path $CaptureDirectory 'painter-actions-contact.png'), [Drawing.Imaging.ImageFormat]::Png)
+        }
     }
     finally {
         if ($null -ne $graphics) { $graphics.Dispose() }
@@ -131,10 +151,11 @@ $result = [ordered]@{
     player_counts = @(1, 4)
     palettes = @('blue_orange', 'pink_green', 'blue_yellow')
     weapons = @('sprayer', 'sniper', 'mister', 'bucket', 'roller')
+    actions = @('takeoff', 'land', 'fire', 'hurt', 'elimination')
     input_slots = @(3, 1, 2, 0)
     inputs = 'Scripted pad-slot inputs at the real 60 Hz simulation step; no physical-device claim.'
     audio = 'Muted; this check establishes no listening acceptance.'
-    checks = 'Real builder/Scene rosters, both movement facings and four aim quadrants at 720p; representative facings also at 1080p/QHD; three 4P palettes; all four same-team accents in both facings. Frozen draws byte-equal, public simulation unchanged, Debug replay fingerprint unchanged. Isolated real player raster output stays inside projected cull bounds. Death, outline, fill, respawn, tool-free squash and whole-dead story poses.'
+    checks = 'Real builder/Scene rosters, both movement facings and four aim quadrants at 720p; representative facings also at 1080p/QHD; three 4P palettes; all four same-team accents in both facings. Five action clips on real jump/contact/paid-shot/damage/death events: first and second frames at both 1P facings and all three 4P palettes, with distinct fixed-position tool-free body rasters. Frozen draws byte-equal, public simulation and action state unchanged, Debug replay fingerprint unchanged. Isolated real player raster output stays inside projected cull bounds. Death, outline, fill, respawn, tool-free squash and whole-dead story poses; early elimination whole-dead raster equals later idle whole-dead raster.'
     profile = $profile
     diagnostic = ''
 }
@@ -256,7 +277,7 @@ try {
     }
     Write-ContactSheet -CaptureDirectory $captures
     $result.outcome = 'passed'
-    $result.diagnostic = 'Painter capture matrix, frozen redraw, simulation fingerprint, raster culling bounds, elimination/redraw/respawn and story pose checks passed. Human playing-size review remains separate.'
+    $result.diagnostic = 'Painter base/action capture matrix, distinct action body frames, frozen redraw, simulation fingerprint, raster culling bounds, elimination/redraw/respawn and idle whole-story pose checks passed. Human playing-size review remains separate.'
 }
 catch {
     $failure = $_

@@ -15,6 +15,19 @@ namespace
 {
     // The authored body is neutral; its matching clothing clip carries team colour.
     const Colour player_tint = Colour::white;
+
+    int action_priority(PlayerAnimationState state)
+    {
+        switch (state)
+        {
+        case PlayerAnimationState::firing: return 0;
+        case PlayerAnimationState::landing:
+        case PlayerAnimationState::taking_off: return 1;
+        case PlayerAnimationState::hurt: return 2;
+        case PlayerAnimationState::elimination: return 3;
+        default: throw std::runtime_error("Locomotion is not a player action.");
+        }
+    }
 }
 
 Player::Player(const RectangleF& rectangle,
@@ -69,7 +82,26 @@ Player::Player(const RectangleF& rectangle,
     respawn_position_(respawn_position)
 {
     this->preferences_ = preferences;
+    this->movement_feedback_look_ = movement_feedback;
     const PlayerTuning& player = tuning->player();
+    this->idle_sheet_ = render_resources->resolve_sprite_sheet(player.idle.sheet);
+    const SpriteSheet* idle_sheet = render_resources->sprite_sheet(this->idle_sheet_);
+    this->idle_body_ = idle_sheet->animation_strip(
+        idle_sheet->resolve_animation_strip(player.idle.strip)).frame_rect(0);
+    this->idle_paint_ = idle_sheet->animation_strip(
+        idle_sheet->resolve_animation_strip(player.idle.paint_strip)).frame_rect(0);
+    for (const PlayerAnimationState state : { PlayerAnimationState::taking_off,
+        PlayerAnimationState::landing, PlayerAnimationState::firing,
+        PlayerAnimationState::hurt, PlayerAnimationState::elimination })
+    {
+        const PlayerAnimationTuning& clip = this->animation_info(state);
+        const SpriteSheet* sheet = render_resources->sprite_sheet(clip.sheet);
+        const AnimationStrip& strip = sheet->animation_strip(
+            sheet->resolve_animation_strip(clip.strip));
+        this->action_clips_[static_cast<size_t>(state) -
+            static_cast<size_t>(PlayerAnimationState::taking_off)] =
+            { strip.frame_count(), strip.frame_time() };
+    }
     if (player.idle.frame_time.has_value())
     {
         AnimationObject::set_frame_time(*player.idle.frame_time);
@@ -105,12 +137,14 @@ Player::~Player()
 
 void Player::update_animation_state()
 {
-    this->set_animation_state(this->calculate_animation_state());
+    this->set_animation_state(this->action_.value_or(
+        this->state_ == PlayerState::dead ? PlayerAnimationState::idle :
+        this->calculate_animation_state()));
 }
 
-void Player::set_animation_state(PlayerAnimationState new_animation_state)
+void Player::set_animation_state(PlayerAnimationState new_animation_state, bool restart)
 {
-    if (this->animation_state_ == new_animation_state)
+    if (this->animation_state_ == new_animation_state && !restart)
     {
         return;
     }
@@ -133,15 +167,75 @@ void Player::set_animation_state(PlayerAnimationState new_animation_state)
     }
 }
 
+Player::ActionClip Player::action_clip(PlayerAnimationState state) const
+{
+    ActionClip clip = this->action_clips_.at(static_cast<size_t>(state) -
+        static_cast<size_t>(PlayerAnimationState::taking_off));
+    clip.frame_time = this->animation_info(state).frame_time.value_or(clip.frame_time);
+    return clip;
+}
+
+void Player::start_action(PlayerAnimationState state)
+{
+    if (this->action_.has_value())
+    {
+        // Automatic fire must reach its recovery frame instead of resetting on
+        // every shot. New contact/jump/hurt events can interrupt lower poses.
+        if ((state == PlayerAnimationState::firing && this->action_ == state) ||
+            action_priority(state) < action_priority(*this->action_))
+        {
+            return;
+        }
+    }
+    this->action_ = state;
+    this->action_age_ = 0.0f;
+    this->set_animation_state(state, true);
+    this->update_action_frame();
+}
+
+void Player::age_action(float dt)
+{
+    if (!this->action_.has_value()) { return; }
+    this->action_age_ += std::max(dt, 0.0f);
+    const ActionClip clip = this->action_clip(*this->action_);
+    if (this->action_age_ >= clip.frame_time * static_cast<float>(clip.frames))
+    {
+        this->action_.reset();
+        this->action_age_ = 0.0f;
+    }
+}
+
+void Player::update_action_frame()
+{
+    if (!this->action_.has_value()) { return; }
+    const int frame = this->action_frame();
+    AnimationObject::set_frame_index(frame);
+    this->clothing_.select_frame(frame);
+}
+
+PlayerAnimationState Player::animation_state() const { return this->animation_state_; }
+float Player::action_age() const { return this->action_age_; }
+int Player::action_frame() const
+{
+    if (!this->action_.has_value()) { return 0; }
+    const ActionClip clip = this->action_clip(*this->action_);
+    return static_cast<int>(std::min(this->action_age_ / clip.frame_time,
+        static_cast<float>(clip.frames - 1)));
+}
+
 void Player::draw(DrawList& draw_list) const
 {
     if (this->state_ == PlayerState::dead && !this->drawn_whole())
     {
+        if (this->action_ == PlayerAnimationState::elimination)
+        {
+            this->draw_figure(draw_list, this->posed_rectangle());
+        }
         this->draw_respawn(draw_list);
         return;
     }
 
-    this->draw_figure(draw_list, this->posed_rectangle());
+    this->draw_figure(draw_list, this->posed_rectangle(), this->pose_.whole);
     // A figure drawn whole after dying has its tool where it fell.
     if (this->pose_.tool && !this->drawn_whole())
     {
@@ -175,19 +269,33 @@ void Player::set_pose(const FigurePose& pose)
     }
 }
 
-void Player::draw_figure(DrawList& draw_list, const RectangleF& rectangle) const
+void Player::draw_figure(DrawList& draw_list, const RectangleF& rectangle, bool idle) const
 {
     // Use the clip selected by update_animation_state; draw must not mutate shared state.
     const SpriteFlip flip = this->facing_right()
         ? SpriteFlip::none
         : SpriteFlip::horizontal;
 
-    this->clothing_.draw(draw_list, rectangle,
-        this->grey_.value_or(this->TextureObject::colour()),
-        flip);
-
-    AnimationObject::draw_with(draw_list, rectangle,
-        this->AnimationObject::colour(), flip);
+    if (idle)
+    {
+        // Respawn's pen and the story whole figure always use the traced idle,
+        // even while the eliminated figure still acts at its death position.
+        const SpriteSheet* sheet = AnimationObject::render_resources()->sprite_sheet(this->idle_sheet_);
+        sheet->draw(draw_list, this->idle_paint_, rectangle,
+            this->grey_.value_or(this->TextureObject::colour()),
+            AnimationObject::draw_rotation(), AnimationObject::origin(), flip,
+            AnimationObject::layer_depth());
+        sheet->draw(draw_list, this->idle_body_, rectangle,
+            this->AnimationObject::colour(), AnimationObject::draw_rotation(),
+            AnimationObject::origin(), flip, AnimationObject::layer_depth());
+    }
+    else
+    {
+        this->clothing_.draw(draw_list, rectangle,
+            this->grey_.value_or(this->TextureObject::colour()), flip);
+        AnimationObject::draw_with(draw_list, rectangle,
+            this->AnimationObject::colour(), flip);
+    }
     this->attachments_.draw_accent(draw_list, rectangle, this->facing_right());
     if (!this->pose_.tool || this->state_ == PlayerState::dead)
     {
@@ -200,9 +308,7 @@ void Player::draw_respawn(DrawList& draw_list) const
     const float progress = this->respawn_progress();
     if (this->respawn_redraw_.filled(progress))
     {
-        // Death switched the clip to idle, the frame the strokes trace, so the
-        // fill lands exactly on the outline.
-        this->draw_figure(draw_list, this->spawn_rectangle());
+        this->draw_figure(draw_list, this->spawn_rectangle(), true);
         return;
     }
     this->respawn_redraw_.draw(draw_list, this->spawn_rectangle(),
@@ -329,6 +435,10 @@ void Player::end_contacts(std::span<const Contact> contacts)
             {
                 this->movement_feedback_.land(this->support_position_,
                     this->support_impact_speed_);
+                if (this->support_impact_speed_ >= this->movement_feedback_look_->landing_min_speed)
+                {
+                    this->start_action(PlayerAnimationState::landing);
+                }
             }
             this->landing_feedback_ready_ = true;
         }
@@ -521,8 +631,14 @@ void Player::on_projectile_contact(CollisionObjectType other_type)
     }
 
     // Damage belongs to the projectile's tuning record.
-    this->health_ -= this->tuning_->projectile(
+    const float damage = this->tuning_->projectile(
         to_projectile_type(other_type)).details.player_damage;
+    this->health_ -= damage;
+
+    if (damage > 0.0f && this->health_ > 0.0f && this->state_ == PlayerState::alive)
+    {
+        this->start_action(PlayerAnimationState::hurt);
+    }
 
     this->health_regen_timer_ = 0.0f;
 
@@ -543,6 +659,7 @@ void Player::update(float dt)
     // Age old cues before movement can emit new ones; every new event is drawn
     // on its actual tick at age zero, irrespective of the number of views.
     this->movement_feedback_.update(dt);
+    this->age_action(dt);
     if (this->state_ == PlayerState::alive && this->health_ <= 0.0f)
     {
         // Damage arrives during contacts, after update. Retire input before the
@@ -554,8 +671,7 @@ void Player::update(float dt)
         this->landing_feedback_ready_ = false;
         this->reset_jump_input();
         this->set_move_state(PlayerMoveState::in_air);
-        // The redraw fills in to the idle frame, so hold it until respawn.
-        this->set_animation_state(PlayerAnimationState::idle);
+        this->start_action(PlayerAnimationState::elimination);
         this->sound_bank_->play_wave(this->death_sound_, this->player_tuning().death_sound.volume * this->preferences_->sfx_gain());
     }
 
@@ -567,14 +683,23 @@ void Player::update(float dt)
         // concurrently for several views.
         this->update_animation_state();
 
-        AnimationObject::update(dt);
-        this->clothing_.advance(dt);
+        if (this->action_.has_value())
+        {
+            this->update_action_frame();
+        }
+        else
+        {
+            AnimationObject::update(dt);
+            this->clothing_.advance(dt);
+        }
 
         this->damage_sound_timer_ += dt;
     }
     else if (this->state_ == PlayerState::dead)
     {
         this->reset_jump_input();
+        this->update_animation_state();
+        this->update_action_frame();
         // Frozen/developer probes must not rewind the visible outline across
         // its audio boundary before a later pause/resume.
         this->respawn_timer_ -= std::max(dt, 0.0f);
@@ -632,6 +757,13 @@ std::vector<std::unique_ptr<Projectile>>
         MovingObject::velocity(),
         this->facing_right(),
         dt);
+    // A paid shot is still a shot when its muzzle immediately contacts cover.
+    // Check before launch obstruction retires it, never from held input or the
+    // weapon's looping presentation flag (which also spans the cooldown).
+    if (dt > 0.0f && !projectiles.empty())
+    {
+        this->start_action(PlayerAnimationState::firing);
+    }
     if (this->infinite_ammo_)
     {
         this->primary_->reset_ammo(false);
@@ -832,6 +964,7 @@ void Player::do_jump(float dt)
 
 void Player::start_jump()
 {
+    this->start_action(PlayerAnimationState::taking_off);
     // A grace jump occurs at the current airborne feet; it does not invent a
     // ground contact at the ledge. Buffered jumps use the resolved support.
     this->movement_feedback_.takeoff(this->had_ground_support_ ?
@@ -964,6 +1097,16 @@ const PlayerAnimationTuning& Player::animation_info(
         return this->player_tuning().jumping;
     case PlayerAnimationState::falling:
         return this->player_tuning().falling;
+    case PlayerAnimationState::taking_off:
+        return this->player_tuning().takeoff;
+    case PlayerAnimationState::landing:
+        return this->player_tuning().land;
+    case PlayerAnimationState::firing:
+        return this->player_tuning().fire;
+    case PlayerAnimationState::hurt:
+        return this->player_tuning().hurt;
+    case PlayerAnimationState::elimination:
+        return this->player_tuning().elimination;
     }
 
     throw std::runtime_error("Player animation state " +
@@ -971,6 +1114,9 @@ const PlayerAnimationTuning& Player::animation_info(
 }
 void Player::place_at(const Vector2F& top_left)
 {
+    this->action_.reset();
+    this->action_age_ = 0.0f;
+    this->set_animation_state(PlayerAnimationState::idle);
     this->paint_supports_.clear();
     this->movement_audio_.reset();
     this->movement_audio_dt_ = 0.0f;

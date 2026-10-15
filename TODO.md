@@ -29,7 +29,7 @@ questions in the polish sub-docs are superseded, not open.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#7` | OPEN | HIGH | XL | Dedicated takeoff, landing, firing, hurt and elimination poses; human review of character/team readability in the reference composition. E figure, gait masks, head accents, grips and redraw are implemented. [Painter](docs/polish-painter.md), [§4](docs/polish-plan.md#characters-and-distinctive-weapons). |
+| `POL#7` | BLOCKED | HIGH | M | Human review of character/team readability in the reference composition; waits on tools (`POL#8`) and the arena (`POL#17`). E figure, gait/action poses, masks, accents, grips and redraw are implemented. [Painter](docs/polish-painter.md), [§4](docs/polish-plan.md#characters-and-distinctive-weapons). |
 | `POL#8` | OPEN | HIGH | XL | Distinct designs for all five tools, with the secondary-motion table (pressure kick, hose, drum, gauge, slosh, mist tail). [§4](docs/polish-plan.md#characters-and-distinctive-weapons). |
 | `POL#9` | BLOCKED | HIGH | XL | Material and prop kit for the reference arena, background layers, landmarks, room life; collision silhouettes stay truthful. Waits on `POL#17`. [§4](docs/polish-plan.md#environment-and-background). |
 | `POL#16` | OPEN | MED | XL | Carry the style through menus, cards, stage preview, HUD, countdown, pause and results; extend poses and feedback to every weapon and arena. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
@@ -43,7 +43,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#3` | OPEN | HIGH | M | Movement-feel playtest (§2 exit): keyboard/mouse now, a physical pad later (with `ROAD#2`); feedback on and off, aim sweeps, before/after clips. Then freeze jump, acceleration and gravity. [§2](docs/polish-plan.md#2-establish-movement-and-camera-feel). |
-| `POL#10` | OPEN | HIGH | L | The rest of the feedback table: footsteps, skid, painted-surface flecks, hurt flash/flinch, elimination burst, muzzle flash, screen shake, empty-paint cue, menu focus motion. Sounds wait on `POL#23`; the cues are in [audio-inventory §4](docs/audio-inventory.md#4-the-new-cue-list). [§4](docs/polish-plan.md#movement-and-interaction-feedback). |
+| `POL#10` | OPEN | HIGH | L | The rest of the feedback table: footsteps, skid, painted-surface flecks, hurt flash, elimination burst, muzzle flash, screen shake, empty-paint cue, menu focus motion. Sounds wait on `POL#23`; the cues are in [audio-inventory §4](docs/audio-inventory.md#4-the-new-cue-list). [§4](docs/polish-plan.md#movement-and-interaction-feedback). |
 | `POL#11` | OPEN | HIGH | L | Per-weapon projectile and impact (all five share `projectile_3`), liquid splat shapes, droplets, wet highlight, repaint impact with exact ownership. [§4](docs/polish-plan.md#paint-and-feedback). |
 | `POL#12` | OPEN | MED | M | Idle muzzle drip (its five rules), roller contact/settle, idle breathing, blinking and lean out of phase. [§4](docs/polish-plan.md#tool-personality-and-quiet-detail). |
 | `POL#13` | OPEN | MED | M | A reduce-effects option that cuts optional shake, flashes and ambient detail but keeps useful cues; repeated-sound variants. [§4](docs/polish-plan.md#detail-across-the-world-interface-and-match). |

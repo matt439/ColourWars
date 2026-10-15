@@ -18,12 +18,32 @@ pen paths reproduce every black texel of idle plus rest arms exactly. A source
 edit that changes this outline must update the presentation recipe together;
 mismatch errors report missing and extra black texel counts.
 
-The 512x1024 atlas has exact 52x120 frames. Neutral strips start at (4,4),
+The 512x2048 atlas has exact 52x120 frames. Neutral strips start at (4,4),
 (4,132), (4,260), (4,388) for idle, eight-frame run, jump and fall. The paint
 strips have identical rectangles offset by 512 in y. Neutral and paint alpha
 are complementary: a `T` cell exists only in paint, all other opaque cells only
 in neutral. Run remains 0.2 seconds per frame by default; runtime can retain its
-existing 0.05-second override. Other strips use 0.05 seconds.
+existing 0.05-second override. Other locomotion strips use 0.05 seconds. All
+original locomotion and accessory rectangles and texels are unchanged.
+
+Five dedicated actions follow the original atlas area. Their neutral strips
+start at x=4 and paint strips at x=116, each with two contiguous frames. The
+eight-texel gap between neutral and paint keeps their visible art separate.
+The editable `actions` object contains full 13x30 drawings and frame timing;
+the build emits matching neutral and `_paint` strips with `looping: false`.
+Runtime expires an action after its two frames and returns to locomotion.
+
+| Strip | First y | Seconds per frame | Authored gesture |
+|---|---:|---:|---|
+| `takeoff` | 1028 | 0.05 | Flared bib and bent push-off knees, then tucked feet above the baseline; open mouth. |
+| `land` | 1156 | 0.05 | Wide contact squat and squeezed eyes, then straighter recovery legs. |
+| `fire` | 1284 | 0.04 | Leaning bib and asymmetric braced legs, then recoil recovery; clenched mouth. |
+| `hurt` | 1412 | 0.06 | Sideways lower-bib shift and one lifted foot, then an opposite wince/stumble. |
+| `elimination` | 1540 | 0.07 | Crossed eyes with a buckling leg, then both knees fold beneath the flared bib. |
+
+These are deliberately full-body phrases. Repeated accepted shots repeat the
+braced firing gesture while physics and the muzzle continue to use their existing
+positions. Action timing and moving-fire readability still need human review.
 
 Each body frame reserves four transparent texels on both horizontal edges,
 providing eight texels between visible art in contiguous animation frames.
@@ -38,8 +58,11 @@ The neutral white box head occupies x=8..44, y=16..48 with its face interior
 starting y=20. The flat black brim is y=12..20, cap crown y=0..12. The bib
 outline occupies x=8..40, y=52..88, with white shirt above the team fill and
 one white 4x4 fill miss. Its shoulders stay at (12,60) and (32,60) across all
-poses. Idle/run feet reach the y=120 baseline; jump tucks its feet eight pixels
-above it. Mirroring uses the full 52-pixel canvas. Arms are absent from body
+poses. The cap and head outline stay fixed across actions so above-head accents
+keep their root; expressions, lower bib and legs carry the gesture. The build
+checks those fixed rows and all horizontal transparent gutters. Idle/run feet
+reach the y=120 baseline; jump tucks its feet eight pixels above it. Mirroring
+uses the full 52-pixel canvas. Arms are absent from body
 strips so runtime connected aiming arms replace the separate rest arms cleanly.
 
 ## Respawn pen recipe
@@ -66,6 +89,7 @@ The runtime presentation owns drawing timing, colour and these data paths.
 | leg | (12,84), (12,116), (8,116), (20,116), (20,88) |
 | leg | (28,88), (28,116), (40,116), (36,116), (36,88) |
 
-`lineup.png` is an authoring check for all 11 poses in all five supported team
-hues, plus native and 28-pixel samples of all four accents. Runtime captures and human
+`lineup.png` is an authoring check for all 21 poses in all five supported team
+hues, plus native and 28-pixel samples of all four accents and 28-pixel samples
+of every action frame. Runtime captures and human
 acceptance at playing size remain separate evidence.

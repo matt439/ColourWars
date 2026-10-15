@@ -220,6 +220,11 @@ struct PlayerTuning
 	PlayerAnimationTuning running;
 	PlayerAnimationTuning jumping;
 	PlayerAnimationTuning falling;
+	PlayerAnimationTuning takeoff;
+	PlayerAnimationTuning land;
+	PlayerAnimationTuning fire;
+	PlayerAnimationTuning hurt;
+	PlayerAnimationTuning elimination;
 };
 
 // Shared ammunition feedback, with optional cues for a tool's mechanism.

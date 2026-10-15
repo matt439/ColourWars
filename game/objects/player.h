@@ -25,6 +25,7 @@
 #include "engine/render/colour.h"
 #include "engine/render/camera.h"
 #include "engine/render/viewport.h"
+#include <array>
 #include <optional>
 
 enum class PlayerState
@@ -54,6 +55,11 @@ enum class PlayerAnimationState
 	jumping,
 	falling,
     running,
+    taking_off,
+    landing,
+    firing,
+    hurt,
+    elimination,
 };
 
 
@@ -138,6 +144,11 @@ public:
     const Weapon& primary_weapon() const;
     // Movement facing, which mirrors the figure.
     bool facing_right() const;
+    // The selected presentation clip and its deterministic, simulation-aged
+    // action phase. Locomotion has no active action and reports frame/age zero.
+    PlayerAnimationState animation_state() const;
+    float action_age() const;
+    int action_frame() const;
 
 	void set_player_input(const PlayerInputData& input);
     // Context changes discard queued jumps and require a release before a new
@@ -237,6 +248,7 @@ private:
     bool landing_feedback_ready_ = false;
     float weapon_contact_dt_ = 0.0f;
     float support_impact_speed_ = 0.0f;
+    const MovementFeedbackPresentation* movement_feedback_look_ = nullptr;
     mattmath::Vector2F support_position_;
     // Borrowed only for this contact phase; query after every paint callback.
     std::vector<const StructurePaintable*> paint_supports_;
@@ -263,6 +275,17 @@ private:
     PlayerInputData input_ = PlayerInputData();
     PlayerMoveState move_state_ = PlayerMoveState::in_air;
     PlayerAnimationState animation_state_ = PlayerAnimationState::idle;
+    std::optional<PlayerAnimationState> action_;
+    float action_age_ = 0.0f;
+    struct ActionClip
+    {
+        int frames = 0;
+        float frame_time = 0.0f;
+    };
+    std::array<ActionClip, 5> action_clips_;
+    labrador::RenderResources::SpriteSheetHandle idle_sheet_;
+    mattmath::RectangleI idle_body_;
+    mattmath::RectangleI idle_paint_;
 
     int player_num_ = 0;
     PlayerTeam team_ = PlayerTeam::none;
@@ -321,9 +344,13 @@ private:
 
     // Select the clip during update; rendering may run concurrently for several views.
     void update_animation_state();
-    void set_animation_state(PlayerAnimationState state);
+    void set_animation_state(PlayerAnimationState state, bool restart = false);
+    void start_action(PlayerAnimationState state);
+    void age_action(float dt);
+    void update_action_frame();
+    ActionClip action_clip(PlayerAnimationState state) const;
     void draw_figure(labrador::DrawList& draw_list,
-        const mattmath::RectangleF& rectangle) const;
+        const mattmath::RectangleF& rectangle, bool idle = false) const;
     void draw_respawn(labrador::DrawList& draw_list) const;
 
     const PlayerAnimationTuning& animation_info(PlayerAnimationState state) const;

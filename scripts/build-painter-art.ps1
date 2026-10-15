@@ -89,6 +89,29 @@ foreach ($name in @('idle', 'run_0', 'run_1', 'run_2', 'run_3', 'run_4',
     $poses.Add($name, $rows)
 }
 Assert-Grid $source.rest_arms 13 30 'rest_arms'
+$actions = @('takeoff', 'land', 'fire', 'hurt', 'elimination')
+foreach ($name in $actions) {
+    $action = $source.actions.$name
+    if ($action.frames.Count -ne 2 -or $action.frame_time -le 0) {
+        throw "$name must author two full frames and a positive frame_time."
+    }
+    for ($frame = 0; $frame -lt $action.frames.Count; ++$frame) {
+        [string[]] $rows = $action.frames[$frame]
+        $pose = "${name}_$frame"
+        Assert-Grid $rows 13 30 $pose
+        if (@($rows | Where-Object { $_[0] -ne '.' -or $_[12] -ne '.' }).Count) {
+            throw "$pose must keep four transparent texels at both horizontal edges."
+        }
+        # The above-head accent and live grip arms use the same roots in every
+        # action. Expressions and the lower bib can move without moving either.
+        foreach ($row in @(0, 1, 2, 3, 4, 11, 12, 13, 14, 15)) {
+            if ($rows[$row] -ne $source.torso[$row]) {
+                throw "$pose must preserve the cap, head outline and shoulder roots."
+            }
+        }
+        $poses.Add($pose, $rows)
+    }
+}
 $accents = @('accent_bobble', 'accent_antenna', 'accent_fork', 'accent_flag')
 foreach ($accent in $accents) { Assert-Grid $source.$accent 3 3 $accent }
 
@@ -140,7 +163,7 @@ if (-not $expected.SetEquals($drawn)) {
 }
 Write-Output "Validated respawn pencil against $($expected.Count) authored black texels."
 
-$atlas = [Drawing.Bitmap]::new(512, 1024, [Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$atlas = [Drawing.Bitmap]::new(512, 2048, [Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $strips = [Collections.Generic.List[object]]::new()
 $frames = [Collections.Generic.List[object]]::new()
 
@@ -172,6 +195,26 @@ try {
         }
     }
 
+    # Keep every existing locomotion/accessory rectangle byte-for-byte. New
+    # action rows pair neutral and paint strips below the original 1024px atlas.
+    for ($row = 0; $row -lt $actions.Count; ++$row) {
+        $name = $actions[$row]
+        $action = $source.actions.$name
+        $y = 1028 + 128 * $row
+        foreach ($paint in @($false, $true)) {
+            $suffix = if ($paint) { '_paint' } else { '' }
+            $x = if ($paint) { 116 } else { 4 }
+            for ($frame = 0; $frame -lt $action.frames.Count; ++$frame) {
+                [ColourWars.PainterArt]::Grid($atlas, $poses["${name}_$frame"],
+                    ($x + 52 * $frame), $y, 4, $paint, [Drawing.Color]::White, $false)
+            }
+            $strips.Add([ordered]@{ name = $name + $suffix;
+                first_frame = [ordered]@{ x = $x; y = $y; w = 52; h = 120 };
+                frame_count = $action.frames.Count; frame_time = $action.frame_time;
+                looping = $false })
+        }
+    }
+
     [ColourWars.PainterArt]::Grid($atlas, $source.rest_arms, 68, 4, 4,
         $false, [Drawing.Color]::White, $false)
     Add-Frame 'rest_arms' 68 4 52 120
@@ -196,7 +239,7 @@ finally { $atlas.Dispose() }
 
 # Production source preview: every authored pose in each supported hue. The
 # footer shows all four above-head accents at native size and at 28 px tall.
-$preview = [Drawing.Bitmap]::new(1032, 984, [Drawing.Imaging.PixelFormat]::Format32bppArgb)
+$preview = [Drawing.Bitmap]::new(1032, 1852, [Drawing.Imaging.PixelFormat]::Format32bppArgb)
 $graphics = [Drawing.Graphics]::FromImage($preview)
 $font = [Drawing.Font]::new([Drawing.FontFamily]::GenericMonospace, 9)
 $brush = [Drawing.SolidBrush]::new([Drawing.Color]::Black)
@@ -208,12 +251,18 @@ try {
     $row = 0
     foreach ($entry in $palettes.GetEnumerator()) {
         $colour = [Drawing.ColorTranslator]::FromHtml('#' + $entry.Value)
-        $y = 52 + 156 * $row
-        $graphics.DrawString($entry.Key, $font, $brush, 8, $y + 50)
         $column = 0
         foreach ($name in $poses.Keys) {
-            $x = 92 + 84 * $column
-            $graphics.DrawString($name, $font, $brush, $x - 2, $y - 20)
+            # Eleven locomotion drawings followed by a row of ten action frames.
+            $poseRow = if ($column -lt 11) { 0 } else { 1 }
+            $poseColumn = if ($column -lt 11) { $column } else { $column - 11 }
+            $y = 52 + 312 * $row + 156 * $poseRow
+            $x = 92 + 84 * $poseColumn
+            if ($poseColumn -eq 0) {
+                $graphics.DrawString($entry.Key, $font, $brush, 8, $y + 50)
+            }
+            $label = $name.Replace('elimination', 'elim')
+            $graphics.DrawString($label, $font, $brush, $x - 2, $y - 20)
             $graphics.FillRectangle($ground, $x - 4, $y + 120, 60, 4)
             $graphics.Flush()
             [ColourWars.PainterArt]::Grid($preview, $source.rest_arms, $x, $y, 4,
@@ -224,16 +273,16 @@ try {
         }
         ++$row
     }
-    $graphics.DrawString('Teammate accents / 120 px and 28 px bodies (same source)', $font, $brush, 12, 824)
+    $graphics.DrawString('Teammate accents / 120 px and 28 px bodies (same source)', $font, $brush, 12, 1604)
     for ($index = 0; $index -lt $accents.Count; ++$index) {
         $accent = $accents[$index]
         $x = 40 + 240 * $index
         $graphics.Flush()
-        [ColourWars.PainterArt]::Grid($preview, $poses['idle'], $x, 860, 4,
+        [ColourWars.PainterArt]::Grid($preview, $poses['idle'], $x, 1640, 4,
             $false, [Drawing.ColorTranslator]::FromHtml('#0634CC'), $true)
-        [ColourWars.PainterArt]::Grid($preview, $source.$accent, $x + 16, 848, 4,
+        [ColourWars.PainterArt]::Grid($preview, $source.$accent, $x + 16, 1628, 4,
             $false, [Drawing.Color]::White, $true)
-        $graphics.DrawString($accent, $font, $brush, $x + 56, 884)
+        $graphics.DrawString($accent, $font, $brush, $x + 56, 1664)
     }
     $graphics.Flush()
     # DrawImage uses the same source sprite as the native preview; no resampling
@@ -242,8 +291,16 @@ try {
     $graphics.PixelOffsetMode = [Drawing.Drawing2D.PixelOffsetMode]::Half
     for ($index = 0; $index -lt $accents.Count; ++$index) {
         $x = 40 + 240 * $index
-        $graphics.DrawImage($preview, [Drawing.Rectangle]::new(($x + 96), 928, 12, 31),
-            $x, 848, 52, 132, [Drawing.GraphicsUnit]::Pixel)
+        $graphics.DrawImage($preview, [Drawing.Rectangle]::new(($x + 96), 1708, 12, 31),
+            $x, 1628, 52, 132, [Drawing.GraphicsUnit]::Pixel)
+    }
+    $graphics.DrawString('Action silhouettes / 28 px bodies (nearest-neighbour preview)', $font, $brush, 12, 1768)
+    for ($column = 0; $column -lt 10; ++$column) {
+        $x = 92 + 84 * $column
+        $graphics.DrawImage($preview, [Drawing.Rectangle]::new($x, 1792, 12, 28),
+            $x, 208, 52, 120, [Drawing.GraphicsUnit]::Pixel)
+        $name = @($poses.Keys)[$column + 11]
+        $graphics.DrawString($name.Replace('elimination', 'elim'), $font, $brush, $x - 2, 1828)
     }
     [ColourWars.PainterArt]::SavePng($preview, (Join-Path $sourceDir 'lineup.png'))
 }

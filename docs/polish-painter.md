@@ -1,9 +1,9 @@
-# Paint.exe painter: first production increment
+# Paint.exe painter: production artwork and action poses
 
 Implemented 2026-10-15, beginning `POL#7`. This carries the accepted
 [figure E and Zoom 400% rules](polish-plan.md#1-establish-the-art-and-display-rules)
-into the game. It is the character foundation for the gameplay composition;
-the complete action set and the reference arena remain open.
+into the game. The follow-up adds dedicated action poses to that foundation;
+the reference arena and the composition's human review remain open.
 
 ## Figure and attachments
 
@@ -46,7 +46,7 @@ Run `scripts/check-painter.ps1 -Preset x64-debug` from an x64 Visual Studio
 Developer shell for real renderer captures and frozen-draw/culling checks.
 The runner isolates its save and writes evidence under `out/validation/painter/`.
 
-Validation on 2026-10-15:
+Foundation validation on 2026-10-15:
 
 - Debug and Release build and pass all 11 consumer acceptance cases each.
   The movement case also rejects a mismatched body/paint strip and a zero
@@ -77,11 +77,68 @@ Retained gameplay captures show [one player at 1080p](images/polish-painter/one-
 These captures retain the current arena and weapon artwork; composition/style,
 movement feel, physical-pad and listening acceptance remain with their TODO owners.
 
+## Action poses
+
+The second production increment (2026-10-15, `POL#7`) adds takeoff, landing,
+firing, hurt and elimination clips, each with a matching team-paint mask.
+The source retains the four-texel cell grid, black outlines, neutral head and
+fixed head-accent and shoulder anchors. The poses change the drawing inside
+the existing canvas; collision rectangles and continuous tool aim stay exact.
+
+Takeoff responds to a successful jump, including a buffered landing jump.
+Landing uses the same genuine airborne-to-supported transition as the contact
+puff: spawn settling and ground seams stay quiet. A new takeoff interrupts
+landing or firing recovery. Every action leaves movement and firing responsive;
+no control waits for an animation to finish.
+Firing follows a paid shot before launch-obstruction retirement; an empty tank
+or a held button during cooldown cannot invent another shot. Automatic fire
+lets each short brace reach its recovery frame. The shared body phrase covers
+all five tools; their individual mechanisms and secondary motion remain `POL#8`.
+Hurt takes visual priority over the other live actions and follows accepted
+damage, independently of the rate-limited hurt sound.
+
+Elimination briefly draws the defeated figure where it fell, with its tool
+hidden, before the existing respawn pen takes over. The redraw and respawn
+schedule, camera hold, sounds and scoring are unchanged. The pen fill and a
+figure drawn whole in the story use the idle artwork the pen traces.
+Actions advance during simulation updates; drawing and additional player views
+cannot restart or age them. Pause freezes them with the match.
+
+Action validation on 2026-10-15:
+
+- Debug and Release build and pass all 11 consumer acceptance cases each.
+  The movement case covers both action frames, buffered takeoff, a rapid
+  low-ceiling landing, spawn/seam suppression, all five paid-shot paths,
+  sustained automatic fire, cooldown and empty tanks, accepted/ignored damage,
+  elimination and respawn. Changing only action durations leaves movement,
+  health, ammunition and projectile launch results identical through an
+  interrupted jump/fire/hurt/death/respawn sequence.
+- Both builds pass the real D3D11 painter probe on the NVIDIA GeForce RTX 5080.
+  The added action matrix captures both frames of all five actions at 720p,
+  with both single-player facings and all three four-player palettes. Pinned
+  tool-free body rasters distinguish the frames. Repeated frozen draws are
+  byte-identical, preserve observed simulation/action state and, in Debug,
+  preserve replay fingerprints. Rendered pixels stay inside culling bounds.
+  Early elimination and later idle produce identical whole-dead story figures.
+  The existing 720p/1080p/QHD aim, teammate, tool and redraw matrix also passes.
+- The art recipe reproduces PNG, JSON, DDS and lineup byte for byte. All
+  original atlas pixels and rectangles remain unchanged; the added strips
+  extend the atlas to 512x2048. The DDS remains premultiplied RGBA8 with one mip,
+  and the idle pen still matches all 2,336 authored black texels.
+- Isolated Debug and Release startup pass with the accepted bank, a system-only
+  PATH and graceful shutdown. These checks establish no listening acceptance.
+
+Evidence is under `out/validation/painter-actions/` and `out/acceptance/`.
+The retained [action contact sheet](images/polish-painter/actions-720p.png)
+contains native-size renderer crops; its labels identify pane count, palette,
+facing, action and frame. The source [lineup](../game/art/painter/lineup.png)
+also includes every action in all five hues and 28-pixel authoring samples.
+
 ## Remaining character work
 
-`POL#7` still owns dedicated takeoff, landing, firing, hurt and elimination
-poses and the final human review of character/teammate readability in a coherent
-single- and four-player gameplay composition. The legacy weapon artwork remains
+`POL#7` still owns the final human review of character/teammate readability in a coherent
+single- and four-player gameplay composition, after the tool (`POL#8`) and
+reference-arena (`POL#17`) passes provide that composition. The legacy weapon artwork remains
 until `POL#8`; this increment supplies its hand attachments. Quiet breathing,
 blinking and settling remain `POL#12`. Terrain, paint, effects and UI keep their
 existing owners and order.

@@ -58,21 +58,23 @@ namespace
         RenderResources* render;
         std::vector<FeedbackEvent> feedback_events;
         int tick_count = 0;
+        size_t emitted_projectiles = 0;
 
         Course(const GameTuning& tuning, const MovementFeedbackPresentation& feedback,
             const RespawnRedrawPresentation& redraw, RenderResources& resources,
             const AudioResources& audio, const PlaySettings& preferences,
             float bottom = 0.0f, const Vector2F& velocity = Vector2F::ZERO,
-            const Vector2F& spawn = { 0.0f, -120.0f }) : render(&resources)
+            const Vector2F& spawn = { 0.0f, -120.0f },
+            WeaponType tool = WeaponType::sprayer) : render(&resources)
         {
             const RectangleF rectangle(0.0f, bottom - tuning.player().size.y,
                 tuning.player().size.x, tuning.player().size.y);
             auto weapon = WeaponBuilder::build_weapon(&tuning, PlayerTeam::a,
-                0, 0, Colour::white, WeaponType::sprayer, rectangle.center(),
+                0, 0, Colour::white, tool, rectangle.center(),
                 &resources, &audio, &preferences);
             this->player = this->scene.add(std::make_unique<Player>(rectangle,
                 &tuning, &feedback, &redraw, &resources, &audio, &preferences, 0, PlayerTeam::a,
-                WeaponType::sprayer, std::move(weapon), WeaponType::none,
+                tool, std::move(weapon), WeaponType::none,
                 Colour::white, Viewport{}, spawn, velocity));
             this->scene.end_tick();
         }
@@ -91,8 +93,13 @@ namespace
             ++this->tick_count;
             this->player->set_player_input(actions);
             this->scene.update(dt);
+            // Exercise the real paid-shot path between movement and contacts,
+            // as Level does. The launch results are counted, then discarded so
+            // this movement fixture has no unrelated projectile collisions.
+            this->emitted_projectiles += this->player->update_weapon_and_get_projectiles(
+                dt, this->scene.collision_objects()).size();
             this->scene.resolve();
-            this->player->end_contacts();
+            this->player->end_contacts(this->scene.contacts());
             this->player->update_prev_rectangle();
             this->scene.end_tick();
             // Advancing and emitting happen in simulation, so a fresh effect is
@@ -276,6 +283,10 @@ int main(int argc, char** argv)
         {
             json["player"]["animations"]["running"]["frame_time"].SetFloat(0.0f);
         }, "frame_time");
+        reject_animation([](rapidjson::Document& json)
+        {
+            json["player"]["animations"]["fire"]["paint_strip"].SetString("run_paint", json.GetAllocator());
+        }, "player.animations.fire.paint_strip");
         std::cout << "PASS figure animation content: aligned body/paint strips and rejection of mismatched strips or zero frame time\n";
         const auto course = [&](float bottom = 0.0f,
             const Vector2F& velocity = Vector2F::ZERO)
@@ -293,10 +304,15 @@ int main(int argc, char** argv)
             buffered->tick(input(true, false)); // A tap released before landing.
             require(buffered->player->velocity().y > 0,
                 "airborne press launched without support");
+            require(buffered->player->animation_state() != PlayerAnimationState::taking_off,
+                "queued airborne jump displayed takeoff before launch");
             buffered->tick();
             require(buffered->player->move_state() == PlayerMoveState::jumping &&
                 buffered->player->velocity().y == tuning.player().jump_launch_velocity,
                 "landing did not consume buffered tap on its contact tick");
+            require(buffered->player->animation_state() == PlayerAnimationState::taking_off &&
+                buffered->player->action_age() == 0.0f && buffered->player->action_frame() == 0,
+                "buffered launch did not display its first takeoff frame on the contact tick");
 
             auto expired = course(-400);
             expired->floor(type);
@@ -318,6 +334,9 @@ int main(int argc, char** argv)
             "fresh ledge grace jump failed");
         require(grace->feedback_count(MovementFeedbackKind::takeoff) == 1,
             "successful grace jump did not produce exactly one takeoff cue");
+        require(grace->player->animation_state() == PlayerAnimationState::taking_off &&
+            grace->player->action_age() == 0.0f,
+            "successful grace jump did not display takeoff immediately");
         grace->tick(input(false, false, 1));
         grace->tick(input(true, false, 1));
         require(grace->player->velocity().y > tuning.player().jump_launch_velocity,
@@ -331,6 +350,8 @@ int main(int argc, char** argv)
         require(late->player->velocity().y > 0, "expired ledge grace allowed a jump");
         require(late->feedback_count(MovementFeedbackKind::takeoff) == 0,
             "failed grace jump produced a takeoff cue");
+        require(late->player->animation_state() != PlayerAnimationState::taking_off,
+            "failed grace jump displayed takeoff");
         std::cout << "PASS ledge grace: first jump, expiry, no midair second jump\n";
 
         auto paused = course(-4, { 0, 100 });
@@ -434,6 +455,9 @@ int main(int argc, char** argv)
         require(killed->player->state() == PlayerState::dead &&
             killed->player->rectangle().position() == death_position,
             "fatal damage allowed one final movement/jump tick");
+        require(killed->player->animation_state() == PlayerAnimationState::elimination &&
+            killed->player->action_age() == 0.0f && killed->player->action_frame() == 0,
+            "death update did not start the elimination clip at its first frame");
         // The redraw at the spawn: drawn there, culled with it, and watched.
         const RespawnRedrawPresentation& redraw = presentation.respawn_redraw();
         const RectangleF spawn = killed->player->spawn_rectangle();
@@ -447,6 +471,8 @@ int main(int argc, char** argv)
             "the camera left the fall before camera_hold");
         float previous_progress = killed->player->respawn_progress();
         bool watched_spawn = false;
+        bool elimination_second_frame = false;
+        bool dead_idle = false;
         for (int tick = 0; tick < 300 && killed->player->state() == PlayerState::dead; ++tick)
         {
             const float waited = tuning.player().respawn_delay - killed->player->respawn_timer();
@@ -455,6 +481,11 @@ int main(int argc, char** argv)
                 "the camera did not cut to the spawn at camera_hold");
             watched_spawn = watched_spawn || killed->player->camera_focus() == spawn.center();
             killed->tick(input(true, true));
+            elimination_second_frame = elimination_second_frame ||
+                (killed->player->animation_state() == PlayerAnimationState::elimination &&
+                    killed->player->action_frame() == 1);
+            dead_idle = dead_idle || (killed->player->state() == PlayerState::dead &&
+                killed->player->animation_state() == PlayerAnimationState::idle);
             const float progress = killed->player->respawn_progress();
             require(killed->player->state() == PlayerState::alive ||
                 (progress >= previous_progress && progress <= 1.0f),
@@ -462,6 +493,8 @@ int main(int argc, char** argv)
             previous_progress = progress;
         }
         require(watched_spawn, "the camera never watched the redraw");
+        require(elimination_second_frame && dead_idle,
+            "elimination skipped its second frame or remained active throughout the redraw");
         require(killed->player->state() == PlayerState::alive,
             "eliminated player did not respawn");
         for (int tick = 0; tick < 30; ++tick) { killed->tick(input(false, true)); }
@@ -471,6 +504,170 @@ int main(int argc, char** argv)
         killed->tick(input(true, true));
         require(killed->player->velocity().y < 0, "respawn failed to rearm after release");
         std::cout << "PASS lethal contact, death, respawn and held-jump isolation\n";
+
+        // Every tool enters the action through its actual paid-shot path. In
+        // particular a roller's contact presentation is not a shot event.
+        for (const WeaponType tool : { WeaponType::sprayer, WeaponType::sniper,
+            WeaponType::mister, WeaponType::bucket, WeaponType::roller })
+        {
+            Course armed(tuning, feedback, redraw, render, audio, preferences,
+                0.0f, Vector2F::ZERO, { 0, -120 }, tool);
+            armed.floor();
+            for (int tick = 0; tick < 65; ++tick) { armed.tick(); }
+            PlayerInputData fire = input();
+            fire.primary_shoot = true;
+            const float ammo_before = armed.player->weapon_ammo();
+            armed.tick(fire);
+            require(armed.emitted_projectiles > 0 && armed.player->weapon_ammo() < ammo_before &&
+                armed.player->animation_state() == PlayerAnimationState::firing &&
+                armed.player->action_age() == 0.0f && armed.player->action_frame() == 0,
+                "paid weapon shot did not display its immediate first firing frame");
+            bool second_frame = false;
+            for (int tick = 0; tick < 12; ++tick)
+            {
+                armed.tick();
+                second_frame = second_frame ||
+                    (armed.player->animation_state() == PlayerAnimationState::firing &&
+                        armed.player->action_frame() == 1);
+            }
+            require(second_frame && armed.player->animation_state() == PlayerAnimationState::idle,
+                "firing skipped its recovery frame or failed to finish after release");
+        }
+        Course cooldown(tuning, feedback, redraw, render, audio, preferences,
+            0.0f, Vector2F::ZERO, { 0, -120 }, WeaponType::sniper);
+        cooldown.floor();
+        for (int tick = 0; tick < 65; ++tick) { cooldown.tick(); }
+        PlayerInputData hold_fire = input();
+        hold_fire.primary_shoot = true;
+        cooldown.tick(hold_fire);
+        const size_t paid_projectiles = cooldown.emitted_projectiles;
+        bool cooldown_second_frame = false;
+        for (int tick = 0; tick < 20; ++tick)
+        {
+            cooldown.tick(hold_fire);
+            cooldown_second_frame = cooldown_second_frame ||
+                (cooldown.player->animation_state() == PlayerAnimationState::firing &&
+                    cooldown.player->action_frame() == 1);
+        }
+        require(cooldown_second_frame && cooldown.emitted_projectiles == paid_projectiles &&
+            cooldown.player->animation_state() == PlayerAnimationState::idle,
+            "held input during a paid shot's cooldown restarted the firing clip");
+        for (const WeaponType tool : { WeaponType::sprayer, WeaponType::roller })
+        {
+            Course automatic(tuning, feedback, redraw, render, audio, preferences,
+                0.0f, Vector2F::ZERO, { 0, -120 }, tool);
+            automatic.floor();
+            automatic.tick();
+            bool held_second_frame = false;
+            for (int tick = 0; tick < 30; ++tick)
+            {
+                automatic.tick(hold_fire);
+                held_second_frame = held_second_frame ||
+                    (automatic.player->animation_state() == PlayerAnimationState::firing &&
+                        automatic.player->action_frame() == 1);
+            }
+            require(automatic.emitted_projectiles > 1 && held_second_frame,
+                "sustained paid automatic fire reset the firing clip before its second frame");
+        }
+
+        ContentVariant action_variant(content / "tuning.json");
+        const GameTuning empty_tank = action_variant.tuning([](rapidjson::Document& json)
+        {
+            json["weapons"]["starting_ammo"].SetFloat(0.001f);
+            json["weapons"]["ammo_regen_delay"].SetFloat(1000.0f);
+            json["weapons"]["ammo_regen_rate"].SetFloat(0.0f);
+        });
+        for (const WeaponType tool : { WeaponType::sprayer, WeaponType::sniper,
+            WeaponType::mister, WeaponType::bucket, WeaponType::roller })
+        {
+            Course empty(empty_tank, feedback, redraw, render, audio, preferences,
+                0.0f, Vector2F::ZERO, { 0, -120 }, tool);
+            empty.floor();
+            for (int tick = 0; tick < 90; ++tick)
+            {
+                empty.tick(hold_fire);
+                require(empty.player->animation_state() != PlayerAnimationState::firing,
+                    "unaffordable held shot displayed a firing clip");
+            }
+            require(empty.emitted_projectiles == 0,
+                "empty-paint fixture unexpectedly emitted a projectile");
+        }
+        auto hurt = course();
+        hurt->floor();
+        hurt->tick();
+        const float health_before_hit = hurt->player->health();
+        hurt->player->on_contact(shot, Vector2F::ZERO, 0);
+        require(hurt->player->health() < health_before_hit && hurt->player->health() > 0 &&
+            hurt->player->animation_state() == PlayerAnimationState::hurt &&
+            hurt->player->action_age() == 0.0f && hurt->player->action_frame() == 0,
+            "accepted nonfatal paint damage did not display immediate hurt");
+        bool hurt_second_frame = false;
+        for (int tick = 0; tick < 15; ++tick)
+        {
+            hurt->tick();
+            hurt_second_frame = hurt_second_frame ||
+                (hurt->player->animation_state() == PlayerAnimationState::hurt &&
+                    hurt->player->action_frame() == 1);
+        }
+        require(hurt_second_frame && hurt->player->animation_state() == PlayerAnimationState::idle,
+            "hurt skipped recovery or failed to finish");
+        hurt->player->set_damage_immune(true);
+        hurt->player->on_contact(shot, Vector2F::ZERO, 0);
+        require(hurt->player->animation_state() == PlayerAnimationState::idle,
+            "ignored paint damage displayed hurt");
+        std::cout << "PASS action events: five paid tools and releases, held cooldown, empty tanks, accepted/ignored hurt\n";
+
+        // Change only action durations, then run the same interrupted match.
+        // Different visible clips must leave physics, resources and launch
+        // results identical through jumps, shots, damage, death and respawn.
+        const GameTuning brisk_actions = action_variant.tuning([](rapidjson::Document& json)
+        {
+            for (const char* key : { "takeoff", "land", "fire", "hurt", "elimination" })
+            {
+                auto& clip = json["player"]["animations"][key];
+                if (clip.HasMember("frame_time")) { clip["frame_time"].SetFloat(0.005f); }
+                else { clip.AddMember("frame_time", 0.005f, json.GetAllocator()); }
+            }
+        });
+        Course normal_actions(tuning, feedback, redraw, render, audio, preferences);
+        Course brief_actions(brisk_actions, feedback, redraw, render, audio, preferences);
+        normal_actions.floor();
+        brief_actions.floor();
+        bool distinct_pose = false;
+        for (int tick = 0; tick < 330; ++tick)
+        {
+            if (tick == 11)
+            {
+                normal_actions.player->on_contact(shot, Vector2F::ZERO, 0);
+                brief_actions.player->on_contact(shot, Vector2F::ZERO, 0);
+            }
+            if (tick == 70)
+            {
+                normal_actions.player->kill();
+                brief_actions.player->kill();
+            }
+            PlayerInputData actions = input(tick == 10 || tick == 290, tick >= 10 && tick < 35,
+                tick < 45 ? 1.0f : -1.0f);
+            actions.primary_shoot = tick >= 2 && tick < 80;
+            actions.shoot_direction_requested = true;
+            actions.shoot_direction = Vector2F(1, 0);
+            normal_actions.tick(actions);
+            brief_actions.tick(actions);
+            const Player& a = *normal_actions.player;
+            const Player& b = *brief_actions.player;
+            distinct_pose = distinct_pose || a.animation_state() != b.animation_state();
+            require(a.rectangle() == b.rectangle() && a.velocity() == b.velocity() &&
+                a.move_state() == b.move_state() && a.state() == b.state() &&
+                a.health() == b.health() && a.weapon_ammo() == b.weapon_ammo() &&
+                a.respawn_timer() == b.respawn_timer() && a.facing_right() == b.facing_right() &&
+                a.primary_weapon().rotation() == b.primary_weapon().rotation() &&
+                a.primary_weapon().nozzle_pos() == b.primary_weapon().nozzle_pos() &&
+                normal_actions.emitted_projectiles == brief_actions.emitted_projectiles,
+                "action duration or interruption changed movement, weapon, damage or respawn");
+        }
+        require(distinct_pose && normal_actions.emitted_projectiles > 0,
+            "action equivalence route failed to exercise different visible clips and paid shots");
+        std::cout << "PASS cosmetic action equivalence through takeoff/fire/hurt interruption, death and respawn\n";
 
         auto ceiling = course();
         ceiling->floor();
@@ -490,6 +687,26 @@ int main(int argc, char** argv)
         require(ceiling->feedback_count(MovementFeedbackKind::takeoff) == 1 &&
             ceiling->feedback_count(MovementFeedbackKind::landing) == 1,
             "ceiling contact emitted a landing or duplicated the return-to-floor cue");
+
+        auto short_return = course();
+        short_return->floor();
+        short_return->surface({ -1000, -145, 2000, 20 });
+        short_return->tick();
+        short_return->tick(input(true, false));
+        bool rapid_landing = false;
+        for (int tick = 0; tick < 15; ++tick)
+        {
+            short_return->tick();
+            if (short_return->feedback_count(MovementFeedbackKind::landing) == 1)
+            {
+                require(short_return->player->animation_state() == PlayerAnimationState::landing &&
+                    short_return->player->action_age() == 0.0f,
+                    "rapid low-ceiling return retained takeoff instead of its genuine landing");
+                rapid_landing = true;
+                break;
+            }
+        }
+        require(rapid_landing, "low-ceiling fixture did not return to its floor");
 
         ContentVariant variant(content / "tuning.json");
         const GameTuning disabled = variant.tuning("0.0", "0.0");
@@ -526,16 +743,25 @@ int main(int argc, char** argv)
         for (int tick = 0; tick < 30; ++tick) { pulses->tick(); }
         require(pulses->feedback_events.empty(),
             "initial settling or sustained support emitted a movement cue");
+        require(pulses->player->animation_state() == PlayerAnimationState::idle,
+            "initial settling or sustained support displayed a landing clip");
         const Vector2F launch_anchor(pulses->player->center().x,
             pulses->player->rectangle().bottom());
         pulses->tick(input(true, false));
         require(pulses->feedback_count(MovementFeedbackKind::takeoff) == 1 &&
             pulses->feedback_events.front().effect.position == launch_anchor,
             "grounded takeoff was not emitted once at its launch contact");
+        require(pulses->player->animation_state() == PlayerAnimationState::taking_off &&
+            pulses->player->action_age() == 0.0f && pulses->player->action_frame() == 0,
+            "grounded takeoff did not display its first frame on the launch tick");
         bool pulse_landed = false;
+        bool takeoff_second_frame = false;
         for (int tick = 0; tick < 150; ++tick)
         {
             pulses->tick();
+            takeoff_second_frame = takeoff_second_frame ||
+                (pulses->player->animation_state() == PlayerAnimationState::taking_off &&
+                    pulses->player->action_frame() == 1);
             if (pulses->player->move_state() == PlayerMoveState::on_ground)
             {
                 pulse_landed = true;
@@ -544,15 +770,27 @@ int main(int argc, char** argv)
         }
         require(pulse_landed && pulses->feedback_count(MovementFeedbackKind::landing) == 1,
             "small hop did not emit exactly one landing");
+        require(takeoff_second_frame && pulses->player->animation_state() == PlayerAnimationState::landing &&
+            pulses->player->action_age() == 0.0f && pulses->player->action_frame() == 0,
+            "hop skipped the second takeoff frame or actual landing's immediate first frame");
         require(std::fabs(pulses->feedback_events.back().effect.position.y) < 0.01f,
             "landing cue was not attached to the resolved floor");
         const float longest_duration = std::max(feedback.takeoff.duration,
             feedback.landing.duration);
         const int expiry_ticks = static_cast<int>(std::ceil(longest_duration / dt)) + 1;
-        for (int tick = 0; tick < expiry_ticks; ++tick) { pulses->tick(); }
+        bool landing_second_frame = false;
+        for (int tick = 0; tick < expiry_ticks; ++tick)
+        {
+            pulses->tick();
+            landing_second_frame = landing_second_frame ||
+                (pulses->player->animation_state() == PlayerAnimationState::landing &&
+                    pulses->player->action_frame() == 1);
+        }
         require(pulses->player->movement_feedback().effects().empty() &&
             pulses->feedback_events.size() == 2,
             "movement cues leaked past expiry or repeated while standing");
+        require(landing_second_frame && pulses->player->animation_state() == PlayerAnimationState::idle,
+            "landing skipped its second frame or failed to return to idle");
 
         auto long_fall = course(0, { tuning.player().max_velocity.x, 0 });
         long_fall->leave_ledge();
@@ -605,6 +843,8 @@ int main(int argc, char** argv)
         for (int tick = 0; tick < 20; ++tick) { seam->tick(input(false, false, 1)); }
         require(seam->feedback_count(MovementFeedbackKind::landing) == 1,
             "walking across a platform seam retriggered landing feedback");
+        require(seam->player->animation_state() != PlayerAnimationState::landing,
+            "walking across a platform seam retriggered the landing clip");
 
         auto edge = course();
         edge->surface({ -1000, 0, 1020, 100 });

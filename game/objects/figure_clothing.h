@@ -26,6 +26,7 @@ public:
     }
 
     void advance(float dt) { AnimationObject::update(dt); }
+    void select_frame(int frame) { this->set_frame_index(frame); }
 
     void draw(labrador::DrawList& list, const mattmath::RectangleF& rectangle,
         const labrador::Colour& colour, labrador::SpriteFlip flip) const

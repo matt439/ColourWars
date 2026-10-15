@@ -2,6 +2,7 @@
 #include "engine/app/application.h"
 #include "game/input_slots.h"
 #include "game/objects/level_builder.h"
+#include "game/objects/projectile_spray.h"
 #include "game/debug/dev_tools.h"
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
@@ -80,7 +81,9 @@ namespace
                 player.velocity().x, player.velocity().y, player.health(), player.weapon_ammo(),
                 player.respawn_timer(), static_cast<float>(player.state()),
                 static_cast<float>(player.move_state()), player.facing_right() ? 1.0f : 0.0f,
-                tool.rotation(), tool.nozzle_pos().x, tool.nozzle_pos().y });
+                tool.rotation(), tool.nozzle_pos().x, tool.nozzle_pos().y,
+                static_cast<float>(player.animation_state()), player.action_age(),
+                static_cast<float>(player.action_frame()) });
             const auto effects = player.movement_feedback().effects();
             values.push_back(static_cast<float>(effects.size()));
             for (const auto& effect : effects)
@@ -195,7 +198,8 @@ namespace
             if (changed > 0) { save(crop, output / (stem + "-player" + std::to_string(view + 1) + ".ppm")); }
             records << stem << ',' << view + 1 << ',' << player.player_num() << ',' << changed << ','
                 << player.facing_right() << ',' << player.primary_weapon().rotation() << ','
-                << player.respawn_progress() << '\n';
+                << player.respawn_progress() << ',' << static_cast<int>(player.animation_state()) << ','
+                << player.action_age() << ',' << player.action_frame() << '\n';
         }
         require(before == observation(level), "drawing changed public simulation state");
 #if COLOURWARS_DEV_TOOLS
@@ -257,6 +261,112 @@ namespace
             require(level.player(view).state() == PlayerState::alive, "authored spawn did not settle alive");
         }
     }
+
+    // Compare the two actual body rasters at the same location and camera,
+    // without a rotating tool or movement effects supplying a false change.
+    // The normal captures still include each real tool, viewport and cull box.
+    Frame pinned_body(Player& player, const RectangleF& anchor, const Camera& camera,
+        const Viewport& viewport, Renderer& renderer, const Canvas& canvas)
+    {
+        const Camera live_camera = player.camera();
+        player.set_pose({ anchor.position() - player.rectangle().position(), 0, false, false });
+        player.set_camera(camera);
+        const Frame result = isolated(&player, player, viewport, renderer, canvas);
+        player.set_camera(live_camera);
+        player.set_pose({});
+        return result;
+    }
+
+    void action_frames(Application& app, Level& level, const Canvas& canvas,
+        const std::filesystem::path& output, const std::string& stem,
+        std::ofstream& records, const std::vector<PlayerInputData>& inputs,
+        PlayerAnimationState expected)
+    {
+        std::vector<RectangleF> anchors;
+        std::vector<Camera> cameras;
+        std::vector<Frame> first;
+        for (int view = 0; view < level.player_count(); ++view)
+        {
+            Player& player = const_cast<Player&>(level.player(view));
+            require(player.animation_state() == expected && player.action_frame() == 0 &&
+                player.action_age() == 0.0f, "action did not begin at its first frame on the event tick");
+            anchors.push_back(player.rectangle());
+            cameras.push_back(player.camera());
+            first.push_back(pinned_body(player, anchors.back(), cameras.back(),
+                app.viewport_manager()->player_viewport(view), *app.renderer(), canvas));
+        }
+        capture(app, level, canvas, output, stem + "-frame0", records);
+        for (int tick = 0; tick < 30 && level.player(0).animation_state() == expected &&
+            level.player(0).action_frame() == 0; ++tick) { level.update(inputs, dt); }
+        for (int view = 0; view < level.player_count(); ++view)
+        {
+            Player& player = const_cast<Player&>(level.player(view));
+            require(player.animation_state() == expected && player.action_frame() == 1,
+                "action skipped its second frame");
+            const Frame second = pinned_body(player, anchors[static_cast<size_t>(view)],
+                cameras[static_cast<size_t>(view)], app.viewport_manager()->player_viewport(view),
+                *app.renderer(), canvas);
+            require(second.pixels != first[static_cast<size_t>(view)].pixels,
+                "first and second action body frames produced identical playing-size raster output");
+        }
+        capture(app, level, canvas, output, stem + "-frame1", records);
+    }
+
+    void action_matrix(Application& app, LevelBuilder& builder, const Canvas& canvas,
+        const GameTuning& tuning, const std::filesystem::path& output,
+        std::ofstream& records, int count, TeamColourPair palette, bool right)
+    {
+        auto level = build(app, builder, count, palette);
+        auto inputs = neutral_inputs();
+        settle(*level, inputs);
+        resize(app, *level, { 1280, 720 });
+        for (auto& input : inputs) { input.x_movement = right ? 1.0f : -1.0f; }
+        level->update(inputs, dt);
+        for (auto& input : inputs) { input.x_movement = 0.0f; }
+        for (int tick = 0; tick < 20; ++tick) { level->update(inputs, dt); }
+        const std::string prefix = std::to_string(count) + "p-action-" +
+            TeamColourTools::palette_key(palette) + (right ? "-right-" : "-left-");
+        for (auto& input : inputs) { input.jump_pressed = true; }
+        level->update(inputs, dt);
+        for (auto& input : inputs) { input.jump_pressed = false; }
+        action_frames(app, *level, canvas, output, prefix + "takeoff", records, inputs,
+            PlayerAnimationState::taking_off);
+        for (int tick = 0; tick < 150 &&
+            level->player(0).animation_state() != PlayerAnimationState::landing; ++tick)
+        {
+            level->update(inputs, dt);
+        }
+        action_frames(app, *level, canvas, output, prefix + "land", records, inputs,
+            PlayerAnimationState::landing);
+        for (int tick = 0; tick < 20; ++tick) { level->update(inputs, dt); }
+        for (auto& input : inputs)
+        {
+            input.primary_shoot = true;
+            input.shoot_angle = -PI / 2.0f;
+            input.shoot_direction = Vector2F::unit_vec_from_angle(input.shoot_angle);
+        }
+        level->update(inputs, dt);
+        for (auto& input : inputs) { input.primary_shoot = false; }
+        action_frames(app, *level, canvas, output, prefix + "fire", records, inputs,
+            PlayerAnimationState::firing);
+        for (int view = 0; view < count; ++view)
+        {
+            Player& player = const_cast<Player&>(level->player(view));
+            const ProjectileSpray hit(RectangleF(0, 0, 10, 10), Vector2F::ZERO,
+                player.team() == PlayerTeam::a ? PlayerTeam::b : PlayerTeam::a,
+                0, Colour::white, app.render_resources(), &tuning.projectile(ProjectileType::spray));
+            player.on_contact(hit, Vector2F::ZERO, 0);
+        }
+        action_frames(app, *level, canvas, output, prefix + "hurt", records, inputs,
+            PlayerAnimationState::hurt);
+        for (int view = 0; view < count; ++view)
+        {
+            require(level->kill_player(view), "could not request action-matrix elimination");
+        }
+        level->update(inputs, dt);
+        action_frames(app, *level, canvas, output, prefix + "elimination", records, inputs,
+            PlayerAnimationState::elimination);
+    }
 }
 
 int wmain(int argc, wchar_t** argv)
@@ -268,7 +378,7 @@ int wmain(int argc, wchar_t** argv)
         const std::filesystem::path output = std::filesystem::absolute(argv[2]);
         std::filesystem::create_directories(output);
         std::ofstream records(output / "painter.csv");
-        records << "capture,view,input_slot,painter_pixels,facing_right,tool_angle,respawn_progress\n";
+        records << "capture,view,input_slot,painter_pixels,facing_right,tool_angle,respawn_progress,animation_state,action_age,action_frame\n";
         Registry<LevelLoadedInfo> levels("Level");
         GameTuning tuning((content / "tuning.json").string().c_str());
         Presentation presentation((content / "presentation.json").string().c_str());
@@ -303,6 +413,21 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         const Canvas canvas(app.render_resources());
+        // Base captures below keep their normal movement effects. Disable them
+        // only while checking action-body frame differences in this matrix.
+        presentation.set_movement_feedback_enabled(false);
+        for (const bool right : { true, false })
+        {
+            action_matrix(app, builder, canvas, tuning, output, records, 1,
+                TeamColourPair::blue_orange, right);
+        }
+        for (const TeamColourPair palette : { TeamColourPair::blue_orange,
+            TeamColourPair::pink_green, TeamColourPair::blue_yellow })
+        {
+            action_matrix(app, builder, canvas, tuning, output, records, 4, palette,
+                palette != TeamColourPair::blue_orange);
+        }
+        presentation.set_movement_feedback_enabled(true);
         for (int count : { 1, 4 })
         {
             auto level = build(app, builder, count, TeamColourPair::blue_orange);
@@ -395,6 +520,26 @@ int wmain(int argc, wchar_t** argv)
         require(level->kill_player(0), "could not request elimination");
         level->update(inputs, dt);
         require(player.state() == PlayerState::dead, "elimination did not enter death");
+        const Camera whole_camera = player.camera();
+        player.set_pose({ Vector2F::ZERO, 0, false, true });
+        const Frame early_whole = isolated(&player, player,
+            app.viewport_manager()->player_viewport(0), *app.renderer(), canvas);
+        player.set_pose({});
+        for (int tick = 0; tick < 30 && player.animation_state() == PlayerAnimationState::elimination; ++tick)
+        {
+            level->update(inputs, dt);
+        }
+        require(player.animation_state() == PlayerAnimationState::idle,
+            "elimination did not finish before the outline redraw");
+        const Camera live_camera = player.camera();
+        player.set_camera(whole_camera);
+        player.set_pose({ Vector2F::ZERO, 0, false, true });
+        const Frame settled_whole = isolated(&player, player,
+            app.viewport_manager()->player_viewport(0), *app.renderer(), canvas);
+        require(early_whole.pixels == settled_whole.pixels,
+            "whole-dead story figure inherited an elimination frame instead of its idle figure");
+        player.set_pose({});
+        player.set_camera(live_camera);
         capture(app, *level, canvas, output, "1p-death", records, false);
         const float outline_at = (presentation.respawn_redraw().draw_from +
             presentation.respawn_redraw().fill_at) * 0.5f;
@@ -415,6 +560,7 @@ int wmain(int argc, wchar_t** argv)
         capture(app, *level, canvas, output, "1p-respawn", records);
         require(records.good(), "capture record write failed");
         std::cout << "PASS real builder roster; 1P/4P 720p/1080p/QHD; three palettes; "
+            "five action clips, both frames with distinct pinned body rasters, both 1P facings and three 4P palettes; "
             "moving aim quadrants and both facings; four same-team accents; five tools; frozen redraw; "
             "raster culling bounds; death/outline/fill/respawn; tool-free and whole story poses\n";
         return 0;
