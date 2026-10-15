@@ -181,7 +181,7 @@ engine master before filing, not the pin. Gap-audit Class 3 items not yet in the
 | `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `GAP#F2` | BLOCKED | LOW | S | The action-map/Gamepads report (per-slot lookup, trigger threshold, "what did this pad press"). Waits on `GAP#4.2`. |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half is report 14. |
-| `GAP#F8` | OPEN | MED | S | Draft a ledger report: no install/export/package config or content-staging helper; exhibits are the staging exclude list and `cmake/release_package.cmake`. |
+| `ENG#15` | OPEN | MED | S | File report 15: repeated runtime packaging and content staging; game asset/release policy stays here. [Report](docs/review/engine-reports.md#15-runtime-packaging-and-content-staging-are-repeated-in-the-client--draft-with-release-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console

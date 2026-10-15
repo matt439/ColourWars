@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Seven are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14). Seven are closed** and kept below as one paragraph
+> **Eight are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15). Seven are closed** and kept below as one paragraph
 > each — what was asked, what shipped, and what this repository spent the
 > answer on.
 >
@@ -49,6 +49,14 @@ and are corrected below, and the camera entry under
 been answered by this repository. See
 [What the 2026-10-14 bump changed](#what-the-2026-10-14-bump-changed).
 
+**Packaging draft added 2026-10-15 against published master `52e809a`.**
+`git ls-remote origin refs/heads/master` in the engine confirmed that revision;
+its CMake files still have no install/export rules or content-staging helper.
+[Report 15](#15-runtime-packaging-and-content-staging-are-repeated-in-the-client--draft-with-release-exhibit)
+updates gap-audit F8 against the release machinery this game has since built.
+The engine's PI-09/PI-10 already reserve filing and a decision; PI-11 is a
+conditional implementation story, not an implemented answer.
+
 ## The rule that governs this file
 
 **Check the engine's master before filing, not the pin.** `external/labrador`
@@ -87,8 +95,9 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 12 | JSON is read-only, path-only and opaque | the `%TEMP%` candidate file in `tune_commands.cpp`, `json_spans.cpp`, `check_tune_consumed` | draft — exhibit present; recheck upstream before filing |
 | 13 | `Key` has no names | the key table in `game/debug/debug_keys.cpp` | draft — low priority; exhibit present |
 | 14 | No frame statistics or GPU timing | `DebugDirector::begin_match_draw` and the QPC timing in `update_match`; `debug_perf.*` | draft — exhibit present; recheck upstream before filing |
+| 15 | Runtime packaging and content staging are repeated in the client | `game/CMakeLists.txt`, `cmake/release_package.cmake`, `cmake/release_assets.cmake`, `cmake/stage_wave_bank.cmake` | draft — exhibit present; checked against published master 2026-10-15 |
 
-Nothing else is outstanding, on either side, beyond reports 6 and 9-14 below. The fullscreen workaround the
+Nothing else is outstanding, on either side, beyond reports 6 and 9-15 below. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
@@ -399,6 +408,84 @@ overlay show the whole frame.
 The engine defers a frame-time overlay of its own (its `TODO.md` REV#10, "waits
 for a client that needs it"). This exhibit is that client; cite REV#10 when
 filing, and ask for the accessor rather than an engine-drawn overlay.
+
+---
+
+## 15. Runtime packaging and content staging are repeated in the client — **draft with release exhibit**
+
+**Exhibit: a working release, not a proposed packaging system.**
+[game/CMakeLists.txt](../../game/CMakeLists.txt) defines `colourwars_content`,
+an always-run target that mirrors assets beside the executable even when only
+content changes. It enumerates entries to exclude source waves and tools,
+and calls [stage_wave_bank.cmake](../../cmake/stage_wave_bank.cmake) separately
+so a newly generated bank is copied and a removed bank disappears from the
+runtime mirror. [release_package.cmake](../../cmake/release_package.cmake)
+then owns install rules and CPack ZIP generation;
+[release_assets.cmake](../../cmake/release_assets.cmake) owns the reviewed
+redistributable file list and checks it against the manifest.
+
+### What happens
+
+The game's development mirror and release tree have different contents. The
+mirror can contain the local legacy wave bank; the release list includes its
+JSON definition for the silent fallback but excludes the bank, source audio
+and tools. The release script follows `TARGET_RUNTIME_DLLS:ColourWars`, adds
+the MSVC runtime with `InstallRequiredSystemLibraries`, copies third-party
+notices, and refuses configurations outside this game's supported Release
+x64 D3D11/XAudio2 build. CI's **Extract and inspect Release package** step in
+[ci.yml](../../.github/workflows/ci.yml) checks required DLLs and rejects audio
+and development-file leaks. A clean-PC run remains `ROAD#1`; a package that
+passes this inspection is not evidence of that run.
+
+This already works. The remaining cost is that a game building on Labrador
+must discover and encode the engine's runtime dependencies and content-root
+layout itself, alongside the game's own shipping choices. A dependency or
+loader-layout change at a pin bump makes the client recheck those rules. The
+minimal sample independently spells its development copies in
+`samples/minimal/CMakeLists.txt`; it explicitly says it has no install rules.
+
+Checked against published engine master `52e809a` on 2026-10-15: the tracked
+`CMakeLists.txt` and `*.cmake` files have no `install(...)`, `export(...)`,
+CPack setup, package-config generation, or shared content-staging helper.
+`engine/app/content_root.h` owns executable-relative resolution; the game
+owns the matching build layout. Engine product stories
+[PI-09](../../external/labrador/docs/product/STORIES.md#pi-09),
+[PI-10](../../external/labrador/docs/product/STORIES.md#pi-10) and
+[PI-11](../../external/labrador/docs/product/STORIES.md#pi-11) already describe
+filing this demand, deciding it, and conditionally supplying runtime install
+support. Those stories do not close the implementation gap.
+
+The frozen gap audit's F8 is broader than this evidence now supports. This
+game has a supported shipping mechanism: its own install/CPack rules. Missing
+engine install/export/package-config support also means it supplies no CMake
+package for a `find_package(Labrador)` consumer, but ColourWars uses
+`add_subdirectory` and has no prebuilt-package workaround to delete. That is
+context, not a second demand from this caller.
+
+### The ask, when it goes
+
+Give a consuming target a documented CMake helper for the runtime files the
+engine makes it need and for placing a **caller-supplied** content list where
+the loader expects it. On the current Windows build that means following the
+runtime DLL targets, adding the redistributable MSVC runtime and refusing a
+debug CRT. A development-staging helper should run on asset-only builds and
+handle explicitly named generated optional files, including removing their
+stale staged copies. It must work when Labrador is a subdirectory without
+adding sample/test targets or unrelated install entries to the consumer.
+The spelling and whether development and install use one function are open;
+PI-11's narrower runtime-install scope can be answered separately.
+
+An answer would let this game replace the runtime dependency/CRT plumbing in
+`release_package.cmake` and, if staging is supplied, the generic copy mechanics
+in `colourwars_content` and `stage_wave_bank.cmake`. The game keeps its asset
+allowlist and manifest check, optional-bank recipe and shipping exclusion,
+Release/backend restrictions, ZIP name, build stamp, notices selection and
+CI assertions. The helper must preserve those choices; copying the content
+or development output directory wholesale would not answer this report.
+
+**Status:** unfiled draft. Recheck engine master before filing; record an
+implemented answer or a decline with its trade-off here, as for the other
+live reports.
 
 ---
 
