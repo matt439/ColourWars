@@ -437,12 +437,12 @@ elseif ($PauseMenuOnly) {
     $result.player_counts = @(1, 2, 4)
     $result.palettes = @()
     $result.weapons = @()
-    $result.actions = @('resume', 'restart', 'controls-audio', 'quit', 'confirm-yes', 'confirm-no', 'missing-controllers')
+    $result.actions = @('resume', 'restart', 'controls-audio', 'quit', 'confirm-yes', 'confirm-no', 'missing-controllers', 'custom-labels', 'font-snapshot', 'focus-return', 'missing-seat-gate-clear')
     $result.input_slots = @(4, 0, 1, 2, 3)
     $result.inputs = 'Public keyboard input through actual pause/confirmation pages and StateContext; absent pad slots are roster fixtures, with no physical pad claim.'
     foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
     $result.Remove('stage')
-    $result.checks = 'Pause and confirmation paper at native 720p/1080p/QHD, 4:3, 16:10 and ultrawide; actual initial Resume, safe No, deliberate Restart/Quit and Controls/audio return. Missing-participant Resume/Restart refusal, enabled focus navigation, keyboard rescue when all participants are absent, frozen redraw, Reduce effects and resize. No physical reconnection, human readability or listening acceptance.'
+    $result.checks = 'Pause and confirmation paper plus six independent legacy label rasters at native 720p/1080p/QHD, 4:3, 16:10 and ultrawide; actual initial Resume, safe No, deliberate Restart/Quit and Controls/audio return. Custom labels and a replacement item font missing an old glyph; retained/reopened/reversed snapshots through focus movement, Controls return, No/Back and repeated typed actions. Focus interruption and missing-seat gate clearing require fresh Resume, alongside missing-participant refusal, enabled navigation, all-absent keyboard rescue, frozen redraw/RNG, Reduce effects and resize. No physical reconnection, human readability or listening acceptance.'
 }
 elseif ($EndMenuOnly) {
     $result.player_counts = @()
@@ -697,7 +697,7 @@ try {
         $result.diagnostic = 'Results-menu-only hardware check passed: actual results page timing and keyboard continuation, paper and score rendering, solo/absent-team and revealed/draw/series states, sparse-slot contributions, native display/aspect matrix, frozen redraw, Reduce effects and resize. Other painter matrices, human readability and listening acceptance were not run.'
     }
     elseif ($PauseMenuOnly) {
-        $result.diagnostic = 'Pause-menu-only hardware check passed: actual keyboard-driven Resume, safe confirmation defaults, Restart/Quit, Controls/audio return and missing-controller recovery routes. Native paper and enabled focus cards, static Reduce effects, repeated drawing and resize passed across six display sizes/aspects. Other painter matrices, physical controllers/reconnection, human readability and listening acceptance were not run.'
+        $result.diagnostic = 'Pause-menu-only hardware check passed: six independent legacy labels on actual Pause/Restart/Quit pages across six display sizes/aspects; custom labels/font, retained/reopened/reversed snapshots, Controls return, No/Back, repeated Resume/Restart/Quit, interrupted focus and missing-seat gate clearing without automatic Resume. Existing missing-controller recovery routes, native paper/enabled focus cards, static Reduce effects, frozen redraw/RNG and resize passed. Other painter matrices, physical controllers/reconnection, human readability and listening acceptance were not run.'
     }
     elseif ($EndMenuOnly) {
         $result.diagnostic = 'End-menu-only hardware check passed: actual keyboard-driven continuation and secondary routes across single-match and series states; native paper and focus rendering, frozen redraw, Reduce effects and resize. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'

@@ -117,7 +117,7 @@ the accepted `GAP#8.6` scope.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `GAP#8.2` | OPEN | LOW | M | Range checks are ad hoc: no shared content-value checks or cross-field checks; menu sounds unbounded. |
-| `GAP#8.4` | OPEN | LOW | M | Controls/sticks and other remaining row labels, setting values/status messages, composed match/results/pause/end text and title/hero copy remain C++ literals. [Boundary](docs/menu-presentation.md#shared-headings-and-complete-control-legends). |
+| `GAP#8.4` | OPEN | LOW | M | Controls/sticks, end-menu actions and other remaining labels, setting values/status messages, composed match/results/pause/end text and title/hero copy remain C++ literals. [Boundary](docs/menu-presentation.md#shared-headings-and-complete-control-legends). |
 | `GAP#8.7` | OPEN | LOW | M | Fonts cannot be regenerated (no recipe for the 7 atlases); no text wrapping. |
 
 ## Engine demonstration

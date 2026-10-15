@@ -212,7 +212,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
     require(!app.render_resources()->can_render(app.render_resources()->resolve_sprite_font(narrow_name), L"~"),
         "Static-item replacement font still contains the old labels' glyph");
     const std::array<const wchar_t*, 10> new_prefix{ L"Start", L"Settings", L"Thanks", L"Leave", L"Display size",
-        L"Fill display", L"Team colours", L"Input and sound", L"Commit", L"Return" };
+        L"Fill display", L"Team colours", L"Audio and controls", L"Commit", L"Return" };
     ItemLabels new_labels = defaults;
     for (size_t index = 0; index < new_prefix.size(); ++index) { new_labels[index] = new_prefix[index]; }
     Presentation next = original;
@@ -265,7 +265,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     const Words legacy{ { L"Single Match", L"Best of 3", L"Best of 5", L"Match length",
         L"1 Player (practice)", L"2 Players", L"3 Players", L"4 Players" }, L"Back",
         L"Solo practice: choose Single Match" };
-    static_assert(static_cast<size_t>(MenuItem::count) - static_cast<size_t>(MenuItem::single_match) == 8);
+    static_assert(static_cast<size_t>(MenuItem::resume) - static_cast<size_t>(MenuItem::single_match) == 8);
     const Presentation original = presentation;
     Save preferences;
     auto& play = const_cast<PlaySettings&>(preferences.play_settings());

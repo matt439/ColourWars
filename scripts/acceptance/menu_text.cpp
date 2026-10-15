@@ -55,7 +55,9 @@ namespace
         { "controls_audio", L"Controls / audio" }, { "apply", L"Apply" }, { "back", L"Back" },
         { "single_match", L"Single Match" }, { "best_of_three", L"Best of 3" }, { "best_of_five", L"Best of 5" },
         { "match_length", L"Match length" }, { "one_player_practice", L"1 Player (practice)" },
-        { "two_players", L"2 Players" }, { "three_players", L"3 Players" }, { "four_players", L"4 Players" }
+        { "two_players", L"2 Players" }, { "three_players", L"3 Players" }, { "four_players", L"4 Players" },
+        { "resume", L"Resume" }, { "restart", L"Restart" }, { "quit", L"Quit" },
+        { "yes", L"Yes" }, { "no", L"No" }
     };
 
     rapidjson::Document read_document(const std::filesystem::path& path)
@@ -494,7 +496,7 @@ namespace
     {
         for (const char* key : { "play", "options", "credits", "exit", "controls_audio", "apply", "back",
             "single_match", "best_of_three", "best_of_five", "match_length", "one_player_practice",
-            "two_players", "three_players", "four_players" })
+            "two_players", "three_players", "four_players", "resume", "restart", "quit", "yes", "no" })
         {
             variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
                 { d["menu_text"]["items"][key].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
@@ -551,9 +553,10 @@ namespace
             }
         });
         normalized.validate_resources(world.render, world.audio);
-        for (size_t index = 10; index < std::size(items); ++index)
+        for (size_t index = 0; index < std::size(setup_keys); ++index)
         {
-            require(normalized.menu_text().item(static_cast<MenuItem>(index)) == L"A -B",
+            require(normalized.menu_text().item(static_cast<MenuItem>(
+                static_cast<size_t>(MenuItem::single_match) + index)) == L"A -B",
                 "Mode/player item did not normalize its authored punctuation and NBSP");
         }
         for (const char* key : setup_keys)
@@ -648,6 +651,104 @@ namespace
             d["menu_style"]["layout"]["position"]["x"].SetFloat(1.25f);
         }, &world);
     }
+
+    void check_pause_text(Variants& variants, World& world)
+    {
+        constexpr const char* pause_keys[]{ "resume", "restart", "quit", "yes", "no" };
+        const auto normalized = variants.load([&](rapidjson::Document& d)
+        {
+            for (const char* key : pause_keys)
+            {
+                d["menu_text"]["items"][key].SetString("A\xC2\xA0\xE2\x80\x94" "B");
+            }
+        });
+        normalized.validate_resources(world.render, world.audio);
+        for (size_t index = 0; index < std::size(pause_keys); ++index)
+        {
+            require(normalized.menu_text().item(static_cast<MenuItem>(
+                static_cast<size_t>(MenuItem::resume) + index)) == L"A -B",
+                "Pause item did not normalize its authored punctuation and NBSP");
+        }
+        for (const char* key : pause_keys)
+        {
+            variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
+            {
+                d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+                d["menu_text"]["items"][key].SetString("Glyph~");
+            }, &world);
+            for (const char* invalid : { "   ", "line\nbreak", "tab\ttext", "\xC3\xA9", "\xC3" })
+            {
+                variants.rejects(std::string("items.") + key, [key, invalid](rapidjson::Document& d)
+                {
+                    d["menu_text"]["items"][key].SetString(invalid, d.GetAllocator());
+                });
+            }
+        }
+
+        const auto exact_items = [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_exact");
+            for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
+        };
+        const auto original = variants.load([](rapidjson::Document&) {});
+        const auto& pause = original.pause_menu();
+        const auto top = (mattmath::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f;
+        const auto bottom = top + pause.box_size;
+        const float left_position = top.x + pause.art.focus_padding.x;
+        const float right_position = bottom.x - 24.0f - pause.art.focus_padding.x;
+        const float top_position = top.y + pause.art.focus_padding.y;
+        const float bottom_position = bottom.y - 3.0f * pause.layout.spacing.y -
+            20.0f - pause.art.focus_padding.y;
+        const auto paper_edge = [&](const char* axis, float position, const char* field, float outside)
+        {
+            const auto edit = [&](rapidjson::Document& d)
+            {
+                exact_items(d);
+                d["pause_menu"]["layout"]["position"][axis].SetFloat(position);
+            };
+            const auto fits = variants.load(edit);
+            fits.validate_resources(world.render, world.audio);
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                edit(d);
+                d["pause_menu"]["layout"]["position"][axis].SetFloat(outside);
+            }, &world);
+        };
+        paper_edge("x", left_position, "items.resume", left_position - 0.25f);
+        paper_edge("x", right_position, "items.resume", right_position + 0.25f);
+        paper_edge("y", top_position, "items.resume", top_position - 0.25f);
+        // Quit's last row reaches the full-height Pause paper, below the menu footer.
+        paper_edge("y", bottom_position, "items.quit", bottom_position + 0.25f);
+
+        const float row_height = 20.0f + 2.0f * pause.art.focus_padding.y;
+        const auto row_edge = [&](rapidjson::Document& d)
+        {
+            exact_items(d);
+            d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(row_height);
+        };
+        const auto fits_row = variants.load(row_edge);
+        fits_row.validate_resources(world.render, world.audio);
+        variants.rejects("items.resume", [&](rapidjson::Document& d)
+        {
+            row_edge(d);
+            d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(std::nextafter(row_height, 0.0f));
+        }, &world);
+        for (const double invalid : { 0.0, -1.0, 1e100 })
+        {
+            variants.rejects("items.resume", [&](rapidjson::Document& d)
+            {
+                exact_items(d);
+                d["pause_menu"]["layout"]["spacing"]["y"].SetDouble(invalid);
+            }, &world);
+        }
+        // The same short label fits Options; only its independent Pause placement overflows.
+        variants.rejects("items.controls_audio", [&](rapidjson::Document& d)
+        {
+            exact_items(d);
+            d["pause_menu"]["layout"]["position"]["x"].SetFloat(right_position);
+            d["menu_text"]["items"]["controls_audio"].SetString("FitFit");
+        }, &world);
+    }
 }
 
 int main(int argc, char** argv)
@@ -666,6 +767,7 @@ int main(int argc, char** argv)
         check_inclusive_bounds(variants, world);
         check_item_bounds(variants, world);
         check_setup_text(variants, world);
+        check_pause_text(variants, world);
         check_option_row_fitting(variants, world);
         check_prompt_bar(world, defaults);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "

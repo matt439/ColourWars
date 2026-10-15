@@ -137,7 +137,12 @@
       "one_player_practice": "1 Player (practice)",
       "two_players": "2 Players",
       "three_players": "3 Players",
-      "four_players": "4 Players"
+      "four_players": "4 Players",
+      "resume": "Resume",
+      "restart": "Restart",
+      "quit": "Quit",
+      "yes": "Yes",
+      "no": "No"
     }
   },
 

@@ -262,7 +262,7 @@ void PauseMenuInitial::init()
 
 	this->resume_ = std::make_unique<UiText>(
 		"resume",
-		L"Resume",
+		this->text().item(MenuItem::resume),
 		style.item_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -274,19 +274,19 @@ void PauseMenuInitial::init()
 
 	this->restart_ = std::make_unique<UiText>(
 		"restart",
-		L"Restart",
+		this->text().item(MenuItem::restart),
 		style.item_font,
 		this->calculate_widget_position(0, 1),
 		this->render_resources(),
 		look.art.ink);
 
-	this->controls_ = std::make_unique<UiText>("controls", L"Controls / audio",
+	this->controls_ = std::make_unique<UiText>("controls", this->text().item(MenuItem::controls_audio),
 		style.item_font, this->calculate_widget_position(0, 2), this->render_resources(),
 		look.art.ink);
 
 	this->quit_ = std::make_unique<UiText>(
 		"quit",
-		L"Quit",
+		this->text().item(MenuItem::quit),
 		style.item_font,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
@@ -424,7 +424,7 @@ void PauseMenuConfirmation::init()
 
 	this->yes_ = std::make_unique<UiText>(
 		"yes",
-		L"Yes",
+		this->text().item(MenuItem::yes),
 		style.item_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
@@ -432,7 +432,7 @@ void PauseMenuConfirmation::init()
 
 	this->no_ = std::make_unique<UiText>(
 		"no",
-		L"No",
+		this->text().item(MenuItem::no),
 		style.item_font,
 		this->calculate_widget_position(0, 1),
 		this->render_resources(),

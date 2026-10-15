@@ -108,7 +108,7 @@ random-primary selection, without changing selection order or RNG draws.
 ## Shared headings and complete control legends
 
 The required `menu_text` object stores the shared menu brand, eleven headings,
-seventeen complete prompt-bar legends, eighteen row labels and a solo-practice
+seventeen complete prompt-bar legends, twenty-three row labels and a solo-practice
 hint:
 
 | JSON path | Required keys |
@@ -116,7 +116,7 @@ hint:
 | `menu_text.brand` | One brand-line string |
 | `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
 | `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits` |
-| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players` |
+| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no` |
 | `menu_text.solo_practice_hint` | One Mode Select hint string |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
@@ -177,7 +177,7 @@ adds no locale axis, automatic wrapping or runtime formatting language.
 | `resolution` | `Resolution` | Options label |
 | `fullscreen` | `Fullscreen` | Options label |
 | `team_palette` | `Team palette` | Options label |
-| `controls_audio` | `Controls / audio` | Options action |
+| `controls_audio` | `Controls / audio` | Options and Pause action |
 | `apply` | `Apply` | Options action |
 | `back` | `Back` | Options, Credits, Mode and Player Count action |
 
@@ -209,7 +209,7 @@ adopts the edits. The names are string settings edited in JSON, outside numeric
 
 ### Mode and Player Count labels
 
-The remaining eight required `menu_text.items` roles preserve the existing
+Eight required `menu_text.items` roles preserve the existing
 mode-selection and player-count choices:
 
 | Key | Shipped text | Use |
@@ -260,6 +260,39 @@ without placeholders or runtime formatting, and changes no practice-mode
 behavior. The existing duration values remain separate from the authored
 `match_length` label.
 
+### Pause actions and confirmation labels
+
+Five more required `menu_text.items` roles supply the plain Pause labels:
+
+| Key | Shipped text | Use |
+|---|---|---|
+| `resume` | `Resume` | Initial Pause row 0 |
+| `restart` | `Restart` | Initial Pause row 1 |
+| `quit` | `Quit` | Initial Pause row 3 |
+| `yes` | `Yes` | Confirmation row 0 |
+| `no` | `No` | Confirmation row 1 |
+
+Initial Pause row 2 reuses `controls_audio`, whose shipped text remains
+`Controls / audio`. That shared label is checked in both its Options and Pause
+contexts. Confirmation retains its existing default focus on No, and the labels
+do not change resume, restart, quit or confirmation behavior.
+
+The existing normalized, nonblank, single-line rules apply. Startup checks the
+actual `menu_style.fonts.item` glyphs and finite, positive measured bounds.
+Pause labels retain their measured font size and plain drawing style. Their
+bounds expanded by `pause_menu.art.focus_padding` must fit the outer Pause
+paper rectangle: `pause_menu.box_size`, centered in the full 1920 by 1080 design
+area. The row-height rule is
+`measured_height + 2 * pause_menu.art.focus_padding.y <= pause_menu.layout.spacing.y`.
+Rows begin at `pause_menu.layout.position` and use its authored spacing.
+Equality is accepted; no item-text shadow or fitting scale is added.
+
+Each Pause page uses its captured `MenuText` and resolves the item font when it
+opens. An open initial or confirmation page keeps its current labels through
+presentation edits; reopening adopts the new text. These strings remain outside
+numeric `tune`. Player-specific titles, connection status and confirmation
+questions remain separate C++ text.
+
 ## Verification and boundary
 
 The `menu_presentation` consumer case checks layout limits, required identifiers,
@@ -268,7 +301,8 @@ a graphics or audio device. The `weapon_catalog` case checks the weapon catalog'
 required fields, display-text rules and resource/layer compatibility.
 The `menu_text` case checks required shared headings/legends/row labels, text
 normalization, font coverage and measured design/paper bounds, including fitted
-Options labels and shadowed Mode/Player Count rows and solo hint.
+Options labels, shadowed Mode/Player Count rows and solo hint, and plain Pause
+actions/confirmation labels.
 Debug-console acceptance checks layout edit scopes, rollback and reset.
 
 The native painter checks exercise real page construction, copied geometry,
@@ -288,13 +322,15 @@ snapshots across catalog replacement and reopening.
 `MenuTextOnly` checks authored headings, complete legends and Home/Options/Credits
 and Mode/Player Count row labels and hint on real pages, including their captured
 text/look when a page updates its prompt or reopens.
+`PauseMenuOnly` exercises the authored initial/confirmation labels through
+repeated and interrupted pause, restart and quit flows.
 
 The non-menu primitive texel retains its own startup checks. Together with
 [gameplay tuning](gameplay-tuning.md), the shared layout and sheet choices define
 the data boundary implemented for gap-audit 8.5. The weapon catalog implements
 the name/artwork part of GAP#8.4, and `menu_text` implements shared headings,
-control legends, Home/Options/Credits and Mode/Player Count row labels, and the
-solo-practice hint. Controls and stick-settings labels, status/value text,
+control legends, Home/Options/Credits, Mode/Player Count and Pause row labels,
+and the solo-practice hint. Controls and stick-settings labels, status/value text,
 composed match/results/pause/end text, title-screen and home-hero copy, and other
 player-visible C++ text remain open under that item. Font regeneration, wrapping
 and locale selection remain separate work. The historical audit is unchanged.

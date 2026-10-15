@@ -32,7 +32,8 @@ namespace
 	constexpr std::array<const char*, static_cast<size_t>(MenuItem::count)> menu_item_keys{
 		"play", "options", "credits", "exit", "resolution", "fullscreen", "team_palette",
 		"controls_audio", "apply", "back", "single_match", "best_of_three", "best_of_five",
-		"match_length", "one_player_practice", "two_players", "three_players", "four_players"
+		"match_length", "one_player_practice", "two_players", "three_players", "four_players",
+		"resume", "restart", "quit", "yes", "no"
 	};
 
 	std::wstring read_menu_line(const JsonValue& json, const char* key)
@@ -1900,7 +1901,8 @@ void Presentation::validate_resources(const RenderResources& render,
 			1080.0f, this->prompt_bar_.shadow_offset);
 	}
 	const auto check_menu_item = [&](MenuItem item, const Vector2F& position,
-		const Vector2F& paper_size, float row_spacing, bool fitted_label)
+		const Vector2F& paper_size, float row_spacing, bool fitted_label,
+		const MenuPaperArtPresentation& art, float content_height)
 	{
 		const std::string where = this->source_path_ + ": menu_text.items." +
 			menu_item_keys[static_cast<size_t>(item)];
@@ -1912,7 +1914,7 @@ void Presentation::validate_resources(const RenderResources& render,
 			throw std::runtime_error(where + " must have finite positive measured text bounds.");
 		}
 		const MainMenuPresentation& look = this->main_menu_;
-		const Vector2F padding = look.art.focus_padding;
+		const Vector2F padding = art.focus_padding;
 		if (fitted_label)
 		{
 			// Match OptionRow's existing width-then-height fit. Long supported
@@ -1928,7 +1930,7 @@ void Presentation::validate_resources(const RenderResources& render,
 			}
 			size *= scale;
 		}
-		const Vector2F top = (Vector2F(1920.0f, this->menu_.footer_y) - paper_size) / 2.0f;
+		const Vector2F top = (Vector2F(1920.0f, content_height) - paper_size) / 2.0f;
 		const Vector2F bottom = top + paper_size;
 		if (!std::isfinite(position.x) || !std::isfinite(position.y) ||
 			position.x - padding.x < top.x || position.y - padding.y < top.y ||
@@ -1945,7 +1947,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		check_menu_item(home_items[index], main.home_position +
 			Vector2F(0.0f, main.home_spacing.y * static_cast<float>(index + 2)),
-			main.home_box_size, main.home_spacing.y, false);
+			main.home_box_size, main.home_spacing.y, false, main.art, this->menu_.footer_y);
 	}
 	const MenuItem options_items[]{ MenuItem::resolution, MenuItem::fullscreen, MenuItem::team_palette,
 		MenuItem::controls_audio, MenuItem::apply, MenuItem::back };
@@ -1953,9 +1955,27 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		check_menu_item(options_items[index], main.options_position +
 			Vector2F(0.0f, main.options_spacing.y * static_cast<float>(index)),
-			main.options_box_size, main.options_spacing.y, index < 3);
+			main.options_box_size, main.options_spacing.y, index < 3, main.art, this->menu_.footer_y);
 	}
-	check_menu_item(MenuItem::back, main.credits_back_position, main.credits_box_size, 0.0f, false);
+	check_menu_item(MenuItem::back, main.credits_back_position, main.credits_box_size, 0.0f, false,
+		main.art, this->menu_.footer_y);
+	const PauseMenuPresentation& pause = this->pause_menu_;
+	if (!std::isfinite(pause.layout.spacing.y) || pause.layout.spacing.y <= 0.0f)
+	{
+		throw std::runtime_error(this->source_path_ +
+			": menu_text.items.resume requires positive finite pause_menu.layout.spacing.y.");
+	}
+	const MenuItem pause_items[]{ MenuItem::resume, MenuItem::restart, MenuItem::controls_audio, MenuItem::quit };
+	for (size_t index = 0; index < std::size(pause_items); ++index)
+	{
+		check_menu_item(pause_items[index], pause.layout.position +
+			Vector2F(0.0f, pause.layout.spacing.y * static_cast<float>(index)),
+			pause.box_size, pause.layout.spacing.y, false, pause.art, 1080.0f);
+	}
+	check_menu_item(MenuItem::yes, pause.layout.position, pause.box_size, pause.layout.spacing.y,
+		false, pause.art, 1080.0f);
+	check_menu_item(MenuItem::no, pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
+		pause.box_size, pause.layout.spacing.y, false, pause.art, 1080.0f);
 	const auto check_setup_item = [&](MenuItem item, const Vector2F& spacing, int row, bool duration_label)
 	{
 		const std::string key = std::string("menu_text.items.") + menu_item_keys[static_cast<size_t>(item)];
