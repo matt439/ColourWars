@@ -114,6 +114,10 @@
       "off": "Off",
       "random": "Random"
     },
+    "confirmations": {
+      "restart": "Are you sure you want to restart?",
+      "quit": "Are you sure you want to quit?"
+    },
     "headings": {
       "home": "Make your mark.",
       "options": "Options",

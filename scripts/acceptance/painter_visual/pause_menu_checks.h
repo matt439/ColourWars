@@ -329,6 +329,9 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
         "focus interruption, missing-seat gate clearing without automatic Resume and frozen draw RNG\n";
 }
 
+void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
+    Presentation& presentation, const std::filesystem::path& output);
+
 void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
@@ -675,6 +678,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
     }
     require(records.good(), "Pause-menu evidence write failed");
     pause_menu_item_checks(app, canvas, tuning, presentation, output);
+    pause_question_checks(app, canvas, tuning, presentation, output);
     std::cout << "PASS actual pause/confirmations: initial Resume, safe No, deliberate Restart/Quit, "
         "Controls return, missing-device recovery, enabled focus cards, frozen/reduced redraw, "
         "resize and 720p/1080p/QHD/4:3/16:10/ultrawide paper bounds\n";

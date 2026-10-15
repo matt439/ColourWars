@@ -110,7 +110,8 @@ random-primary selection, without changing selection order or RNG draws.
 The required `menu_text` object stores the shared menu brand, eleven headings,
 seventeen complete prompt-bar legends, thirty-six row labels, a solo-practice
 hint, five Title/Home strings, three Controls/Pad Sticks help strings, eight
-fixed save-status messages and three shared setting values:
+fixed save-status messages, three shared setting values and two Pause confirmation
+questions:
 
 | JSON path | Required keys |
 |---|---|
@@ -124,6 +125,7 @@ fixed save-status messages and three shared setting values:
 | `menu_text.help` | `controls`, `pad_association`, `aim_cutoff` |
 | `menu_text.status` | `options_pending`, `options_saved`, `options_save_failed`, `controls_pending`, `controls_saved`, `active_save_failed`, `sticks_pending`, `sticks_saved` |
 | `menu_text.values` | `on`, `off`, `random` |
+| `menu_text.confirmations` | `restart`, `quit` |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
 normalization and the supported U+0020 to U+007E printable content range after
@@ -343,8 +345,38 @@ Equality is accepted; no item-text shadow or fitting scale is added.
 Each Pause page uses its captured `MenuText` and resolves the item font when it
 opens. An open initial or confirmation page keeps its current labels through
 presentation edits; reopening adopts the new text. These strings remain outside
-numeric `tune`. Player-specific titles, connection status and confirmation
-questions remain separate C++ text.
+numeric `tune`. Player-specific titles and connection status remain separate C++
+text.
+
+### Pause confirmation questions
+
+Two required `menu_text.confirmations` strings supply the existing questions:
+
+| Key | Shipped text |
+|---|---|
+| `restart` | `Are you sure you want to restart?` |
+| `quit` | `Are you sure you want to quit?` |
+
+They use the same normalized, nonblank, single-line content rules as the other
+plain menu strings. Startup checks the actual `menu_style.fonts.detail` glyphs
+and requires finite, positive measured bounds. The shipped font remains
+`gill_sans_mt_bold_36`.
+
+Questions keep their plain, unscaled drawing style. Their actual glyph rectangle
+is centered horizontally within the full 1920 by 1080 design area at
+`pause_menu.status_y`. It must fit the outer Pause paper, whose
+`pause_menu.box_size` is centered in that same full design area. Its bottom
+edge must be at or above the top of the first action expanded by
+`pause_menu.art.focus_padding`. Equality is accepted. These checks use actual
+unscaled bounds, with no shadow, wrapping, automatic shrinking or upscaling.
+
+Each confirmation page takes its question from its captured `MenuText` and
+resolves the detail font when it opens. An open confirmation keeps its question,
+font, measured bounds and centered position through presentation replacement;
+a newly opened confirmation adopts the edits. The complete strings stay outside
+numeric `tune` and introduce no placeholders or runtime formatting. No remains
+the first registered action and the safe default focus. Question edits do not
+change navigation, Back/cancel, restart or quit actions, or interruption handling.
 
 ### End Menu actions
 
@@ -647,7 +679,9 @@ required fields, display-text rules and resource/layer compatibility.
 The `menu_text` case checks required shared headings/legends/row labels, text
 normalization, font coverage and measured design/paper bounds, including fitted
 Options and Controls/Pad Sticks labels, shadowed Mode/Player Count rows and solo
-hint, and plain Pause actions/confirmation and End action labels. Controls
+hint, and plain Pause actions/confirmation and End action labels. Pause questions
+add required-key, normalization, detail-font, centered-paper and action-clearance
+checks without a fitting scale. Controls
 labels use their separate item font, including shared Apply/Back checks and
 width-then-height fitting. Title/Home copy adds required-key, authored-line,
 actual-font, paper and vertical-order checks while preserving generated build
@@ -681,8 +715,11 @@ snapshots across catalog replacement and reopening.
 `MenuTextOnly` checks authored headings, complete legends and Home/Options/Credits
 and Mode/Player Count row labels and hint on real pages, including their captured
 text/look when a page updates its prompt or reopens.
-`PauseMenuOnly` exercises the authored initial/confirmation labels through
-repeated and interrupted pause, restart and quit flows.
+`PauseMenuOnly` exercises the authored initial/confirmation labels and questions
+through repeated and interrupted pause, restart and quit flows, including safe
+No focus and question/detail-font snapshots across presentation replacement and
+newly opened confirmations. `ResumeOnly` retains the match-resume transition
+checks.
 `EndMenuOnly` checks the four authored actions, both Exit positions and page
 text/font snapshots through repeated and interrupted end-page flows.
 Use `ControlsMenuOnly` for the authored Controls / audio and Pad Sticks labels,
@@ -705,9 +742,10 @@ the data boundary implemented for gap-audit 8.5. The weapon catalog implements
 the name/artwork part of GAP#8.4, and `menu_text` implements shared headings,
 control legends, Home/Options/Credits, Mode/Player Count, Pause, static End and
 Controls/Pad Sticks row labels and help, the solo-practice hint, fixed
-Title/Home copy, fixed settings save-status messages and shared On/Off/Random
-setting values. Other setting values, stage Random copy, connection/readout
-text, composed match/results/pause/end text and other
+Title/Home copy, fixed settings save-status messages, shared On/Off/Random
+setting values and fixed Pause confirmation questions. Other setting values,
+stage Random copy, connection/readout text, player-specific Pause titles,
+composed match/results/end text and other
 player-visible C++ text remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical
 audit is unchanged.

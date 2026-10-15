@@ -101,6 +101,9 @@ namespace
 		text.values.on = read_menu_line(values, "on");
 		text.values.off = read_menu_line(values, "off");
 		text.values.random = read_menu_line(values, "random");
+		const JsonValue confirmations = json.object("confirmations");
+		text.confirmations.restart = read_menu_line(confirmations, "restart");
+		text.confirmations.quit = read_menu_line(confirmations, "quit");
 		const JsonValue headings = json.object("headings");
 		for (size_t index = 0; index < text.headings.size(); ++index)
 		{
@@ -2136,6 +2139,26 @@ void Presentation::validate_resources(const RenderResources& render,
 		}
 		return size;
 	};
+	const RectangleF confirmation_paper((Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f, pause.box_size);
+	RectangleF first_confirmation_action(pause.layout.position,
+		fixed_menu_size("menu_text.items.yes", this->menu_text_.item(MenuItem::yes), this->menu_.item_font));
+	first_confirmation_action.inflate(pause.art.focus_padding);
+	const auto check_confirmation = [&](const char* role, const std::wstring& text)
+	{
+		const std::string key = std::string("menu_text.confirmations.") + role;
+		const Vector2F size = fixed_menu_size(key, text, this->menu_.detail_font);
+		// Confirmation questions remain plain, unscaled and centered on the
+		// full-design Pause paper rather than the footer-centered menu paper.
+		const RectangleF bounds((1920.0f - size.x) / 2.0f, pause.status_y, size.x, size.y);
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !confirmation_paper.contains(bounds) ||
+			bounds.bottom() > first_confirmation_action.y)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit unscaled inside the Pause paper before the first action's focus padding.");
+		}
+	};
+	check_confirmation("restart", this->menu_text_.confirmations.restart);
+	check_confirmation("quit", this->menu_text_.confirmations.quit);
 	const auto check_fixed_paper = [&](const std::string& key, RectangleF bounds,
 		const Vector2F& paper_size, const Vector2F& padding)
 	{

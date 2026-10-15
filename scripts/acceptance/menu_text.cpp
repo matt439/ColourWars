@@ -9,6 +9,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -87,6 +88,11 @@ namespace
     constexpr ValueText value_text[]{
         { "on", L"On", &MenuValueText::on }, { "off", L"Off", &MenuValueText::off },
         { "random", L"Random", &MenuValueText::random }
+    };
+    struct ConfirmationText { const char* key; const wchar_t* text; std::wstring MenuConfirmationText::* field; };
+    constexpr ConfirmationText confirmation_text[]{
+        { "restart", L"Are you sure you want to restart?", &MenuConfirmationText::restart },
+        { "quit", L"Are you sure you want to quit?", &MenuConfirmationText::quit }
     };
     constexpr DefaultText items[]{
         { "play", L"Play" }, { "options", L"Options" }, { "credits", L"Credits" }, { "exit", L"Exit" },
@@ -234,6 +240,11 @@ namespace
         {
             require(text.values.*entry.field == entry.text, std::string("Fixed setting value default changed: ") + entry.key);
         }
+        for (const auto& entry : confirmation_text)
+        {
+            require(text.confirmations.*entry.field == entry.text,
+                std::string("Pause confirmation default changed: ") + entry.key);
+        }
         for (size_t index = 0; index < std::size(headings); ++index)
         {
             const auto& actual = text.heading(static_cast<MenuHeading>(index));
@@ -279,7 +290,7 @@ namespace
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
         {
-            for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values" })
+            for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations" })
             {
                 auto& object = d["menu_text"][group];
                 rapidjson::Value reordered(rapidjson::kObjectType);
@@ -298,7 +309,7 @@ namespace
         });
         check_defaults(reversed);
         variants.rejects("", [](rapidjson::Document& d) { d.RemoveMember("menu_text"); });
-        for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values" })
+        for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations" })
         {
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"].RemoveMember(group); });
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"][group].SetArray(); });
@@ -321,6 +332,7 @@ namespace
         for (const auto& entry : help_text) { required("help", entry.key); }
         for (const auto& entry : status_text) { required("status", entry.key); }
         for (const auto& entry : value_text) { required("values", entry.key); }
+        for (const auto& entry : confirmation_text) { required("confirmations", entry.key); }
         for (const auto& entry : headings) { required("headings", entry.key); }
         for (const auto& entry : prompts) { required("prompts", entry.key); }
         for (const auto& entry : items) { required("items", entry.key); }
@@ -767,7 +779,6 @@ namespace
         const auto bottom = top + pause.box_size;
         const float left_position = top.x + pause.art.focus_padding.x;
         const float right_position = bottom.x - 24.0f - pause.art.focus_padding.x;
-        const float top_position = top.y + pause.art.focus_padding.y;
         const float bottom_position = bottom.y - 3.0f * pause.layout.spacing.y -
             20.0f - pause.art.focus_padding.y;
         const auto paper_edge = [&](const char* axis, float position, const char* field, float outside)
@@ -787,7 +798,9 @@ namespace
         };
         paper_edge("x", left_position, "items.resume", left_position - 0.25f);
         paper_edge("x", right_position, "items.resume", right_position + 0.25f);
-        paper_edge("y", top_position, "items.resume", top_position - 0.25f);
+        // A positive-height confirmation question must fit above the first
+        // padded action, so that action cannot also touch the paper's top.
+        // Question paper-top and action contact are checked independently below.
         // Quit's last row reaches the full-height Pause paper, below the menu footer.
         paper_edge("y", bottom_position, "items.quit", bottom_position + 0.25f);
 
@@ -819,6 +832,207 @@ namespace
             d["pause_menu"]["layout"]["position"]["x"].SetFloat(right_position);
             d["menu_text"]["items"]["controls_audio"].SetString("FitFit");
         }, &world);
+    }
+
+    void check_confirmation_text(Variants& variants, World& world)
+    {
+        for (const auto& entry : confirmation_text)
+        {
+            const auto normalized = variants.load([&](rapidjson::Document& d)
+            {
+                d["menu_text"]["confirmations"][entry.key].SetString(
+                    "  A\xC2\xA0\xE2\x80\x9C" "B" "\xE2\x80\x9D\xE2\x80\x94" "C\xE2\x80\xA6  ");
+            });
+            normalized.validate_resources(world.render, world.audio);
+            require(normalized.menu_text().confirmations.*entry.field == L"  A \"B\"-C...  ",
+                std::string("Pause confirmation lost normalized punctuation or authored spaces: ") + entry.key);
+            const std::string field = std::string("confirmations.") + entry.key;
+            for (const char* invalid : { "   ", " \xC2\xA0 ", "line\nbreak", "line\rbreak", "line\r\nbreak",
+                "tab\ttext", "control\x01", "delete\x7F", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3" })
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                {
+                    d["menu_text"]["confirmations"][entry.key].SetString(invalid, d.GetAllocator());
+                });
+            }
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                // All other menu fonts retain '~'. The actual question's
+                // detail font must support it without relying on a stand-in.
+                d["menu_style"]["fonts"]["detail"].SetString("menu_text_limited");
+                d["menu_text"]["confirmations"][entry.key].SetString("Glyph~");
+            }, &world);
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                d["menu_text"]["confirmations"][entry.key].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
+            }, &world);
+        }
+
+        const auto check_widgets = [&](const Presentation& look)
+        {
+            const auto& pause = look.pause_menu();
+            const auto& style = look.menu();
+            const auto font = world.render.resolve_sprite_font(style.detail_font);
+            for (const auto& entry : confirmation_text)
+            {
+                std::wstring source = look.menu_text().confirmations.*entry.field;
+                const auto measured = world.render.measure_text(font, source);
+                const auto retained = source;
+                UiText question(entry.key, source, style.detail_font,
+                    mattmath::Vector2F(0.0f, pause.status_y), &world.render, pause.art.ink);
+                source = L"Changed after construction";
+                question.set_position(mattmath::Vector2F((1920.0f - question.bounds().width) / 2.0f, pause.status_y));
+                const mattmath::RectangleF expected((1920.0f - measured.x) / 2.0f, pause.status_y, measured.x, measured.y);
+                require(std::isfinite(measured.x) && std::isfinite(measured.y) && measured.x > 0.0f && measured.y > 0.0f &&
+                    question.text() == retained && question.bounds() == expected,
+                    std::string("Actual confirmation UiText borrowed text, scaled, wrapped or changed centering: ") + entry.key);
+                question.set_hidden(true);
+                DrawList no_device;
+                question.draw(no_device);
+            }
+        };
+        const auto original = variants.load([](rapidjson::Document&) {});
+        check_widgets(original);
+        for (const size_t length : { size_t(3), size_t(100) })
+        {
+            const auto authored = variants.load([&](rapidjson::Document& d)
+            {
+                d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
+                for (const auto& entry : confirmation_text)
+                {
+                    d["menu_text"]["confirmations"][entry.key].SetString(std::string(length, 'F').c_str(), d.GetAllocator());
+                }
+            });
+            authored.validate_resources(world.render, world.audio);
+            check_widgets(authored);
+        }
+    }
+
+    void check_confirmation_bounds(Variants& variants, World& world)
+    {
+        const auto add_font = [&](const std::string& name, int width, int height,
+            float x_offset = 0.0f, float y_offset = 0.0f, float line_spacing = 16.0f)
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                const bool boundary = character == U'~';
+                glyphs.push_back({ character, mattmath::RectangleI(0, 0, boundary ? width : 8, boundary ? height : 16),
+                    boundary ? x_offset : 0.0f, boundary ? y_offset : 0.0f, 0.0f });
+            }
+            world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), line_spacing));
+        };
+        const auto use_font = [](rapidjson::Document& d, const std::string& name, const char* key)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString(name.c_str(), d.GetAllocator());
+            for (const auto& entry : confirmation_text) { d["menu_text"]["confirmations"][entry.key].SetString("Fit"); }
+            d["menu_text"]["confirmations"][key].SetString("~");
+        };
+        const auto original = variants.load([](rapidjson::Document&) {});
+        const auto& pause = original.pause_menu();
+        require(pause.box_size.x == 1050.0f && pause.box_size.y == 900.0f,
+            "Confirmation paper fixtures no longer exercise the shipped full-height Pause paper");
+        add_font("menu_confirmation_width_edge", 1050, 20);
+        add_font("menu_confirmation_width_overflow", 1051, 20);
+        add_font("menu_confirmation_action_edge", 8, 20);
+        for (const auto& entry : confirmation_text)
+        {
+            const std::string field = std::string("confirmations.") + entry.key;
+            const auto width_edge = variants.load([&](rapidjson::Document& d)
+            {
+                use_font(d, "menu_confirmation_width_edge", entry.key);
+            });
+            width_edge.validate_resources(world.render, world.audio);
+            const auto size = world.render.measure_text(world.render.resolve_sprite_font(width_edge.menu().detail_font), L"~");
+            const mattmath::RectangleF paper((mattmath::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f, pause.box_size);
+            const mattmath::RectangleF bounds((1920.0f - size.x) / 2.0f, pause.status_y, size.x, size.y);
+            require(bounds.x == paper.x && bounds.right() == paper.right() && paper.contains(bounds),
+                "Confirmation's unpadded centered text no longer touches both inclusive paper edges");
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                use_font(d, "menu_confirmation_width_overflow", entry.key);
+            }, &world);
+            const auto action_edge = [&](rapidjson::Document& d)
+            {
+                use_font(d, "menu_confirmation_action_edge", entry.key);
+                d["pause_menu"]["layout"]["position"]["y"].SetFloat(pause.status_y + 20.0f + pause.art.focus_padding.y);
+            };
+            const auto touches_action = variants.load(action_edge);
+            touches_action.validate_resources(world.render, world.audio);
+            require(touches_action.pause_menu().status_y + 20.0f == touches_action.pause_menu().layout.position.y -
+                touches_action.pause_menu().art.focus_padding.y,
+                "Confirmation action fixture lost exact unscaled bottom-to-padding contact");
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                action_edge(d);
+                d["pause_menu"]["layout"]["position"]["y"].SetFloat(pause.status_y + 19.75f + pause.art.focus_padding.y);
+            }, &world);
+        }
+        const auto paper_top = [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
+            for (const auto& entry : confirmation_text) { d["menu_text"]["confirmations"][entry.key].SetString("Fit"); }
+            d["pause_menu"]["heading_y"].SetFloat(40.0f);
+            d["pause_menu"]["status_y"].SetFloat(90.0f);
+        };
+        const auto touches_top = variants.load(paper_top);
+        touches_top.validate_resources(world.render, world.audio);
+        variants.rejects("confirmations.restart", [&](rapidjson::Document& d)
+        {
+            paper_top(d);
+            d["pause_menu"]["status_y"].SetFloat(89.75f);
+        }, &world);
+
+        // Compact legal actions leave a question below the footer-centered
+        // paper's bottom (930), but inside the actual full-height paper (990).
+        std::vector<Glyph> small_glyphs;
+        for (char32_t character = U' '; character <= U'~'; ++character)
+        {
+            small_glyphs.push_back({ character, mattmath::RectangleI(0, 0, 1, 2), 0.0f, 0.0f, 0.0f });
+        }
+        world.render.add_font("menu_confirmation_small_actions",
+            std::make_unique<Font>(TextureHandle{}, std::move(small_glyphs), 2.0f));
+        add_font("menu_confirmation_full_height", 8, 40);
+        const auto full_height = variants.load([&](rapidjson::Document& d)
+        {
+            use_font(d, "menu_confirmation_full_height", "restart");
+            d["menu_text"]["confirmations"]["quit"].SetString("~");
+            d["menu_style"]["fonts"]["item"].SetString("menu_confirmation_small_actions");
+            d["pause_menu"]["status_y"].SetFloat(900.0f);
+            d["pause_menu"]["layout"]["position"]["y"].SetFloat(940.5f);
+            d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(3.0f);
+            d["pause_menu"]["art"]["focus_padding"]["y"].SetFloat(0.5f);
+            d["pause_menu"]["art"]["keyline_width"].SetFloat(0.125f);
+            d["pause_menu"]["art"]["shadow_offset"].SetFloat(0.125f);
+        });
+        full_height.validate_resources(world.render, world.audio);
+        require(full_height.pause_menu().status_y + 40.0f >
+            (full_height.menu().footer_y + full_height.pause_menu().box_size.y) / 2.0f,
+            "Confirmation full-height fixture no longer distinguishes Pause's actual paper from a footer-centered paper");
+
+        struct InvalidMeasure { const char* name; int width; int height; float x_offset; float y_offset; float line_spacing; };
+        const float infinity = std::numeric_limits<float>::infinity();
+        const InvalidMeasure invalid_measures[]{
+            { "zero_width", 0, 20, 0.0f, 0.0f, 16.0f },
+            { "zero_height", 8, 0, 0.0f, 0.0f, 0.0f },
+            { "infinite_width", 8, 20, infinity, 0.0f, 16.0f },
+            { "infinite_height", 8, 20, 0.0f, infinity, 16.0f }
+        };
+        for (const auto& invalid : invalid_measures)
+        {
+            const std::string name = std::string("menu_confirmation_") + invalid.name;
+            add_font(name, invalid.width, invalid.height, invalid.x_offset, invalid.y_offset, invalid.line_spacing);
+            const auto size = world.render.measure_text(world.render.resolve_sprite_font(name), L"~");
+            require(!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f,
+                "Invalid confirmation metrics fixture no longer measures a zero or nonfinite extent");
+            for (const auto& entry : confirmation_text)
+            {
+                variants.rejects(std::string("confirmations.") + entry.key, [&](rapidjson::Document& d)
+                {
+                    use_font(d, name, entry.key);
+                }, &world);
+            }
+        }
     }
 
     void check_end_text(Variants& variants, World& world)
@@ -1992,6 +2206,8 @@ int main(int argc, char** argv)
         check_item_bounds(variants, world);
         check_setup_text(variants, world);
         check_pause_text(variants, world);
+        check_confirmation_text(variants, world);
+        check_confirmation_bounds(variants, world);
         check_end_text(variants, world);
         check_controls_text(variants, world);
         check_controls_option_rows(variants, world);
@@ -2008,7 +2224,8 @@ int main(int argc, char** argv)
         check_option_row_fitting(variants, world);
         check_prompt_bar(world, defaults);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
-            "font/paper/row/status bounds, width-only save-status fitting, authored OptionRow value fitting and actual PromptBar copy/measurement compatibility.\n";
+            "font/paper/row/status/confirmation bounds, unscaled centered confirmation copy, width-only save-status fitting, "
+            "authored OptionRow value fitting and actual PromptBar copy/measurement compatibility.\n";
         return 0;
     }
     catch (const std::exception& error)

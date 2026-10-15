@@ -106,5 +106,5 @@ private:
 	std::unique_ptr<labrador::UiText> yes_ = nullptr;
 	std::unique_ptr<labrador::UiText> no_ = nullptr;
 	ConfirmationType type_ = ConfirmationType::restart;
-	static std::wstring question_text(ConfirmationType type);
+	std::wstring question_text(ConfirmationType type) const;
 };

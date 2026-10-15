@@ -413,7 +413,7 @@ void PauseMenuConfirmation::init()
 
 	this->question_ = std::make_unique<UiText>(
 		"question",
-		question_text(this->type_),
+		this->question_text(this->type_),
 		style.detail_font,
 		Vector2F(0.0f, look.status_y),
 		this->render_resources(),
@@ -475,14 +475,14 @@ void PauseMenuConfirmation::init()
 
 
 std::wstring PauseMenuConfirmation::question_text(
-	ConfirmationType type)
+	ConfirmationType type) const
 {
 	switch (type)
 	{
 	case ConfirmationType::restart:
-		return L"Are you sure you want to restart?";
+		return this->text().confirmations.restart;
 	case ConfirmationType::quit:
-		return L"Are you sure you want to quit?";
+		return this->text().confirmations.quit;
 	default:
 		return L"Error";
 	}
