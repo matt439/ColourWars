@@ -82,7 +82,7 @@ mix still belong here; a missing-bank silent fallback is not a defect.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#23` | OPEN | HIGH | L | Wire the [remaining cues](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration) (redraw/painted steps, paint variants/limits, last-ten/room tone, menu/music transitions); mix at 1/2/4 players. |
+| `POL#23` | OPEN | HIGH | L | Wire the [remaining cues](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration) (redraw/painted steps, last-ten/room tone, menu/music transitions); assess optional detail and mix at 1/2/4 players. |
 | `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains, mute, suspension, resumed loops, the multiplayer mix; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
 
 ## Acceptance and release

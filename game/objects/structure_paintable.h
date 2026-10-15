@@ -79,11 +79,6 @@ private:
 	// Build tiles and record the strips used by on_contact for candidate lookup.
 	std::vector<PaintTile> generate_paint_tiles(
 		std::span<const mattmath::RectangleF> paint_obstacles);
-	labrador::SoundBank* sound_bank_ = nullptr;
-	const PlaySettings* preferences_ = nullptr;
-
-	// Resolved at construction; played once per contact that paints any tile.
-	labrador::SoundBank::WaveHandle paint_sound_;
 
 
 };

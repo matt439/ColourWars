@@ -30,6 +30,7 @@
 #include "game/objects/silhouette.h"
 #include "game/objects/screen_cursor.h"
 #include "game/objects/figure_acting.h"
+#include "game/objects/paint_audio.h"
 
 enum class LevelState
 {
@@ -136,6 +137,7 @@ public:
 	int collision_object_count() const;
 
 private:
+	std::unique_ptr<PaintAudio> paint_audio_;
 	std::unique_ptr<labrador::Scene> scene_ = nullptr;
 
 	// Borrowed from scene_. Players are never retired: death leads to respawn,

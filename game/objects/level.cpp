@@ -43,6 +43,11 @@ Level::Level(std::unique_ptr<Scene> scene,
 	this->preferences_ = preferences;
 	this->presentation_ = presentation;
 	this->render_resources_ = render_resources;
+	this->paint_audio_ = std::make_unique<PaintAudio>(&tuning->paint(), audio_resources, preferences);
+	for (Player* player : this->players_)
+	{
+		player->set_paint_audio(this->paint_audio_.get());
+	}
 	this->overlay_sheet_ = render_resources->resolve_sprite_sheet(
 		presentation->hud().sprite_sheet);
 	this->overlay_fill_ = render_resources->sprite_sheet(this->overlay_sheet_)
@@ -363,6 +368,7 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	float dt, SeatInputFilter* seats)
 {
 	// Run the scene phases in order, with game-specific work between them.
+	this->paint_audio_->update(dt);
 	this->apply_player_inputs(player_inputs, seats);
 
 	this->scene_->update(dt);
@@ -371,6 +377,13 @@ void Level::update_level_logic(const std::vector<PlayerInputData>& player_inputs
 	this->update_players(dt);
 
 	this->scene_->resolve();
+	for (CollisionObject* object : this->scene_->collision_objects())
+	{
+		if (is_projectile(to_collision_type(object->tag())))
+		{
+			dynamic_cast<Projectile&>(*object).flush_paint_audio(*this->paint_audio_);
+		}
+	}
 
 	// Loss of ground support is known only after all contacts have been dispatched.
 	for (Player* player : this->players_)

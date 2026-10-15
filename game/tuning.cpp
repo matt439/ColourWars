@@ -289,7 +289,31 @@ namespace
 		paint.splash_animation = splash.string("animation");
 
 		paint.sound_bank = json.string("sound_bank");
-		paint.splash_sound = read_sound(json, "splash_sound");
+		const JsonValue choices = json.array("splash_sounds");
+		if (choices.size() == 0)
+		{
+			throw std::runtime_error(choices.where() +
+				": at least one splash sound is required.");
+		}
+		paint.splash_sounds.reserve(choices.size());
+		for (size_t i = 0; i < choices.size(); ++i)
+		{
+			paint.splash_sounds.push_back(read_sound(choices.at(i)));
+		}
+		paint.capture_sound = read_sound(json, "capture_sound");
+		paint.dud_sound = read_sound(json, "dud_sound");
+		const JsonValue impacts = json.object("impact_sounds");
+		const auto impact = [&](ProjectileType type, const char* key)
+		{
+			paint.impact_sounds[static_cast<size_t>(type)] = read_sound(impacts, key);
+		};
+		impact(ProjectileType::spray, "spray");
+		impact(ProjectileType::jet, "jet");
+		impact(ProjectileType::rolling, "rolling");
+		impact(ProjectileType::mist, "mist");
+		impact(ProjectileType::ball, "ball");
+		paint.min_impact_interval = read_positive(json, "min_impact_interval");
+		paint.min_capture_interval = read_positive(json, "min_capture_interval");
 		return paint;
 	}
 
@@ -538,8 +562,26 @@ void GameTuning::validate_resources(const RenderResources& render,
 	check.frame("paint.frame", this->paint_.sheet, this->paint_.frame);
 	check.animation("paint.splash.animation", this->paint_.splash_sheet,
 		this->paint_.splash_animation);
-	check.wave("paint.splash_sound.name", this->paint_.sound_bank,
-		this->paint_.splash_sound.name);
+	for (size_t i = 0; i < this->paint_.splash_sounds.size(); ++i)
+	{
+		check.wave("paint.splash_sounds[" + std::to_string(i) + "].name",
+			this->paint_.sound_bank, this->paint_.splash_sounds[i].name);
+	}
+	check.wave("paint.capture_sound.name", this->paint_.sound_bank,
+		this->paint_.capture_sound.name);
+	check.wave("paint.dud_sound.name", this->paint_.sound_bank,
+		this->paint_.dud_sound.name);
+	const auto impact = [&](ProjectileType type, const char* key)
+	{
+		check.wave(std::string("paint.impact_sounds.") + key + ".name",
+			this->paint_.sound_bank,
+			this->paint_.impact_sounds[static_cast<size_t>(type)].name);
+	};
+	impact(ProjectileType::spray, "spray");
+	impact(ProjectileType::jet, "jet");
+	impact(ProjectileType::rolling, "rolling");
+	impact(ProjectileType::mist, "mist");
+	impact(ProjectileType::ball, "ball");
 
 	const auto animation = [&](const char* key, const PlayerAnimationTuning& clip)
 	{

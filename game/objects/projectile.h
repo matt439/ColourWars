@@ -10,6 +10,8 @@
 #include "engine/render/colour.h"
 #include <span>
 
+class PaintAudio;
+
 // Abstract paint projectile: shared lifetime, team filtering and swept contacts;
 // concrete subclasses supply their shape, movement update and drawing.
 class Projectile : public labrador::MovingObject,
@@ -57,6 +59,10 @@ public:
 	// Rollers keep their one-step, multiple-contact behaviour.
 	void resolve_movement_contacts(
 		std::span<labrador::CollisionObject* const> objects);
+	// Cosmetic results accumulate across both contact callbacks and all surfaces
+	// touched by a roller. Flush only after that contact batch is complete.
+	void note_paint_contact(bool painted, bool captured) const;
+	void flush_paint_audio(PaintAudio& audio);
 protected:
 	virtual void set_rectangle(const mattmath::RectangleF& rectangle) = 0;
 
@@ -89,6 +95,9 @@ private:
 
 	// Allow one update before lifetime retirement so every spawn receives a collision sweep.
 	bool first_update_done_ = false;
+	mutable bool geometry_contact_ = false;
+	mutable bool painted_contact_ = false;
+	mutable bool captured_contact_ = false;
 	mattmath::RectangleF previous_rectangle_ = mattmath::RectangleF::ZERO;
 
 	void resolve_sweep(const mattmath::RectangleF& start,

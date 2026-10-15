@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/projectile.h"
+#include "game/objects/paint_audio.h"
 #include "engine/collision/narrow_phase.h"
 
 using namespace DirectX;
@@ -263,12 +264,35 @@ void Projectile::resolve_sweep(const RectangleF& start,
     }
 }
 
-void Projectile::on_contact(const CollisionObject& /*other*/,
+void Projectile::on_contact(const CollisionObject& other,
     const Vector2F& /*normal*/, float /*penetration*/)
 {
+    this->geometry_contact_ |= other.layer() == collision_layers::STRUCTURE;
     // Flying projectiles die on contact with flat geometry or enemy players.
     // Rollers override this to process every contact in their one-step volume.
     this->set_for_deletion(true);
+}
+
+void Projectile::note_paint_contact(bool painted, bool captured) const
+{
+    this->geometry_contact_ = true;
+    this->painted_contact_ |= painted;
+    this->captured_contact_ |= captured;
+}
+
+void Projectile::flush_paint_audio(PaintAudio& audio)
+{
+    // A roller touching bare geometry is still active and can reach exposed
+    // paint in its ordinary sweep. Only retiring flying paint makes a dud.
+    if (this->painted_contact_ ||
+        (this->geometry_contact_ && this->for_deletion() && this->type_ != ProjectileType::rolling))
+    {
+        audio.contact(this->type_, this->player_num_,
+            this->painted_contact_, this->captured_contact_);
+    }
+    this->geometry_contact_ = false;
+    this->painted_contact_ = false;
+    this->captured_contact_ = false;
 }
 CollisionLayer Projectile::layer() const
 {

@@ -49,7 +49,7 @@ The principal ownership chain is:
 ```text
 Application owns the state stack
   GameLevel owns Level
-    Level owns Scene
+    Level owns PaintAudio and Scene
       Scene owns Players, Structures and Projectiles
         Player owns Weapon
         StructurePaintable owns PaintTiles
@@ -113,6 +113,11 @@ belong in a subclass.
    [PaintTile::paint](../game/objects/paint_tile.cpp). A capture changes team and
    player ownership; friendly repaint retains the original player's credit.
    The splash is a tile-owned animation, not a separate Scene object.
+   The projectile accumulates cosmetic contact results; Level-owned
+   [PaintAudio](../game/objects/paint_audio.h) plays the completed batch with
+   limits per paint owner across every surface. Player flushes launch hits
+   before discarding blocked shots, and Level flushes Scene contacts before
+   retirement. This feedback does not alter paint credit or collision response.
 7. [Level::level_end_info](../game/objects/level.cpp) requests `PaintTotal` from
    scored objects and builds [LevelEndInfo](../game/objects/level_end_info.h).
    [ResultsMenu](../game/states/results_menu.cpp) displays it, while
@@ -212,7 +217,9 @@ If the weapon introduces a new projectile kind, also update
 snake_case scoped enumerators), its concrete class and
 [ProjectileBuilder](../game/objects/projectile_builder.cpp), the projectile
 count/loading/validation in GameTuning (`PROJECTILE_COUNT` currently ends at
-`ProjectileType::ball + 1`), and the projectile entry in tuning.json.
+`ProjectileType::ball + 1`), and the projectile entry in tuning.json. Also
+extend PaintTuning/PaintAudio's impact arrays and the `paint.impact_sounds`
+loading/validation for the new kind's authored impact cue.
 Follow the existing team-tag mappings and contact handling in
 [collision_object_type.h](../game/objects/collision_object_type.h),
 [collision_object_type.cpp](../game/objects/collision_object_type.cpp),

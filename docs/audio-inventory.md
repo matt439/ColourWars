@@ -170,7 +170,7 @@ editor default.
 | `tuning.json` | `match.sounds.countdown` (:27) | effect, in **the level's** bank (since 2026-10-15) | `level.cpp` | `tuning.cpp:534`, once per stage (`content_validation.cpp:33-34`) |
 | | `match.sounds.zoom_out` (:28) | effect | `level.cpp:65-66` | `tuning.cpp:535` |
 | | `match.sounds.hover` (:29), `click` (:30) | wave | `level.cpp:80-81`, only when the opening runs | `tuning.cpp:536-537` |
-| | `paint.sound_bank` (:74), `paint.splash_sound` (:75) | wave | `structure_paintable.cpp:38-40` | `tuning.cpp:454` |
+| | `paint.sound_bank`, `paint.splash_sounds`, `capture_sound`, `dud_sound`, `impact_sounds` (2026-10-15) | waves | Level-owned `PaintAudio`; surfaces report contact results | `GameTuning::validate_resources`, every variant and projectile kind |
 | | `player.sound_bank` (:98), `player.sounds.*` (:100-103) | wave | `player.cpp:62-71` | `tuning.cpp:468-475` |
 | | `weapons.<w>.sound_bank` (:131, :151, :165, :183, :203) | bank | `weapon.cpp:49` | |
 | | `weapons.<w>.shoot_sound` (:132, :152, :166, :184, :204) | wave | `weapon.cpp:52-53` | `tuning.cpp:498` |
@@ -191,7 +191,7 @@ above:
 | Site | What it does with audio | What the replacement must keep in mind |
 |---|---|---|
 | `game/debug/debug_menu_page.cpp:103, 246, 251, 256, 264` | The Debug-only debug menu (`DebugMenuPage : MenuPage`, `debug_menu_page.h:22`) plays `menu_style` direction, confirm and cancel | `ui.move`, `ui.confirm` and `ui.cancel` are heard here too; nothing to change unless the debug menu wants its own cues |
-| `game/states/stage_preview.cpp:32-34` and `level_object_builder.cpp:156-161, 212` | The stage-select preview builds real `StructurePaintable`s, so every preview resolves `paint.splash_sound` (`structure_paintable.cpp:38-40`) without ever playing it | A missing `paint.splash` fails here on stage change as well as at startup |
+| `game/states/stage_preview.cpp` and `level_object_builder.cpp` | Stage previews build real `StructurePaintable`s. Since 2026-10-15 surfaces report contact results; Level owns paint audio, so previews resolve no paint voices and play none | Every paint cue is checked at startup; match construction resolves the same choices in `PaintAudio` |
 | `game/debug/tune_scope.cpp:26`; `tune_target.cpp:31, 56, 90` | `tuning.match.sounds.*.volume` is live-tunable; a tuned candidate is re-validated against the loaded banks | New `match.sounds.*` slots inherit live tuning. `tune_checks.cpp` (section 3.2) pins the list |
 | `game/play_settings.h:8-12`; `save.cpp:79-80, 174-175, 309-310`; `controls_settings_menu.cpp:58-59, 84-97`; `menu_page.cpp:280-298`; every `* preferences_->sfx_gain()` / `music_gain()` in the play calls above | The player's 0-100 music and SFX volumes. Every wave and effect is multiplied by one of the two; Apply re-sets the menu music's volume by name (`controls_settings_menu.cpp:91-96`) | Every new cue must be routed through the right gain (music or SFX). Room tone and stings need a deliberate choice of which. `scripts/acceptance/settings.cpp:88-140` pins the stored values |
 | `game/states/game_states.cpp:159-160, 186-203, 270-284, 305, 422-440`; `game/debug/debug_director_hooks.cpp:291, 432, 600-601`; `game_commands.cpp:292`; `replay_commands.cpp:242, 335` | The match's audio lifecycle: the old level is destroyed before the new one is built because its destructor stops music in the shared bank; suspend on cover or focus loss, resume on return; the debug clock's `debug_sync_audio` | Any new looping or stoppable cue (`player.redraw`, `room.tone`, weapon `start`/`stop`) must join `Level::suspend`/`resume`/`pause_audio` (`level.h:72-86`, `level.cpp:91-122`). `scripts/acceptance/debug_console/director_checks.cpp:97-106` counts the syncs |
@@ -631,6 +631,7 @@ legacy names do not make them migration inputs.
 | Movement (2026-10-15) | Four impact-scaled landing variants, six distance-driven footstep variants, and a latched high-speed reversal skid, all from completed contacts |
 | Weapons and paint | Sprayer, roller and mister start cues play once per held-fire edge, with independent per-player loop voices; `sniper.shot`, `bucket.throw`, and the first `paint.splash` variant |
 | Weapon feedback (2026-10-15) | Sprayer/roller/mister stop edges; all five tools' empty/recovered cues; sniper cooldown-ready cue; roller lift/settle on completed ground contacts |
+| Paint feedback (2026-10-15) | Six rotating splashes, all five tools' impacts, neutral/enemy capture and retiring bare-geometry duds, bounded per paint owner across all surfaces |
 | Menus and results | Direction, confirm, cancel, error, ready, pause-open, results fill, winner and distinct draw use their replacement cues |
 | Match start/end | Repeated `match.count_beat` edges and one `match.go`; separate time-up and glass-out voices replace the whistle |
 | Opening and reveal | Reveal hover/click use the replacement cues; the accepted sigh/chair cues have tuning slots and pause-aware phase-edge playback |
@@ -697,14 +698,37 @@ them, and teardown stops them. Solo and intro-off matches have none of these
 story cues. Nonpositive updates refresh views without advancing the match or
 emitting new cues. The quiet authored gains remain listening candidates.
 
+The paint increment collects each projectile's result across both collision
+callbacks before requesting sound. A contact that reaches a paint tile plays
+the tool's impact and one splash variant. A tile changing from neutral or enemy
+paint also requests capture feedback; friendly repaint keeps the original
+player's scoring credit and emits no capture. Rollers aggregate all surfaces
+in their contact batch without losing their multi-contact painting or damage.
+A flying projectile retired on flat geometry without touching an exposed paint
+tile requests a dud. Enemy-player hits, lifetime/out-of-bounds retirement and
+rollers resting on bare geometry do not invent duds. Launch obstructions are
+flushed before the player's existing discarded-shot cleanup.
+
+`paint.splash_sounds`, `impact_sounds`, `capture_sound` and `dud_sound` own all
+choices and gains. Startup validation checks every entry. Level owns the
+limiter, which advances once before simulation contacts even if a shot's owner
+has died. Each paint owner shares one `min_impact_interval` (0.10 seconds) across
+all tools, splashes and duds on every surface, plus an independent
+`min_capture_interval` (0.25 seconds). Suppressed contacts are discarded; long
+updates create no sound backlog. Splash variants rotate independently, starting
+at a different offset per owner, without consuming the gameplay RNG. Pause and
+nonpositive updates create no cues or cooldown progress. All requests use the
+current SFX gain, including mute; the short waves have the same fire-and-forget
+lifecycle as movement cues. The quiet gains are listening candidates, not a
+qualified multiplayer mix.
+
 **POL#23 remains open.** Putting an accepted wave into the bank does not create
 a gameplay trigger. Complete the required new cues from section 4, assess Tier
 3 detail individually and keep it off or nearly off by default:
 
 - Movement: redraw loop and painted-surface contacts; optional bonk/drop/hit-confirm
   details.
-- Paint: splash variation and repetition limits, capture/dud and per-tool
-  impacts; optional blocked/slosh/drip cues.
+- Paint/tool detail: optional blocked/slosh/drip cues.
 - Match and room: last-ten; room tone and optional footsteps/breath/waver/cheat.
 - Menus/music: pad lost/back, reconnect count-in (`POL#18`), distinct unready
   and volume-preview hooks, series cue; results music, arena ending stings and
@@ -768,3 +792,16 @@ with the real bank and, separately, without it; each closes gracefully.
 Evidence is under `out/validation/opening-audio/`, the adjacent build/acceptance
 logs and `out/acceptance/`. These checks establish cue requests and lifecycle
 behaviour; ROAD#3 retains listening and multiplayer mix acceptance.
+
+Paint-audio validation (2026-10-15): Debug and Release builds and all 13
+consumer acceptance cases pass. The expanded `story_audio` recorder checks
+every cue and authored gain/limit, all five factory projectile kinds, both
+callback orders, neutral/enemy capture versus friendly credit, roller
+aggregation, swept/launch duds and quiet lifetime retirement. It checks six
+variant rotation, four paint-owner budgets, device-less/fallback owners,
+current gains/mute, independent capture limits, long and nonpositive updates,
+the real Player's discarded launch shot and a Level hit after its owner dies.
+Isolated Debug and Release startup pass with the real bank and, separately,
+without it, each with a system-only PATH and graceful close. Evidence is under
+`out/validation/paint-audio/` and `out/acceptance/`. These checks establish cue
+requests and preserved gameplay; ROAD#3 retains listening and multiplayer mix.

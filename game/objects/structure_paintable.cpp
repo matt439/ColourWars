@@ -34,11 +34,11 @@ StructurePaintable::StructurePaintable(
 		faces_(faces),
 		paint_(paint)
 {
-	this->preferences_ = preferences;
 	this->paint_tiles_ = this->generate_paint_tiles(paint_obstacles);
-	this->sound_bank_ = audio_resources->sound_bank(paint->sound_bank);
-	this->paint_sound_ =
-		this->sound_bank_->resolve_wave(paint->splash_sound.name);
+	// Preview construction shares this path. Cue names are validated at startup;
+	// match playback is owned by Level's PaintAudio across every surface.
+	(void)audio_resources;
+	(void)preferences;
 }
 
 void StructurePaintable::update(float dt)
@@ -76,6 +76,7 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 	const RectangleF splash = other.shape()->bounding_box();
 
 	bool tile_painted = false;
+	bool tile_captured = false;
 
 	// Each face is a strip of equal-size tiles. Use its origin and pitch to
 	// select nearby candidates instead of scanning the entire structure.
@@ -105,16 +106,12 @@ void StructurePaintable::on_contact(const CollisionObject& other,
 				continue;
 			}
 
+			tile_captured |= paint_tile.team() != team;
 			paint_tile.paint(team, projectile.player_num());
-
-			if (!tile_painted)
-			{
-				this->sound_bank_->play_wave(this->paint_sound_,
-					this->paint_->splash_sound.volume * this->preferences_->sfx_gain());
-			}
 			tile_painted = true;
 		}
 	}
+	projectile.note_paint_contact(tile_painted, tile_captured);
 }
 
 std::vector<PaintTile> StructurePaintable::generate_paint_tiles(

@@ -71,6 +71,7 @@ add_executable(ColourWars WIN32
     objects/monitor.cpp
     objects/movement_audio.cpp
     objects/movement_feedback.cpp
+    objects/paint_audio.cpp
     objects/paint_tile.cpp
     objects/player.cpp
     objects/player_builder.cpp

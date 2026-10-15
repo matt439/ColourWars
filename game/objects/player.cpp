@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/player.h"
+#include "game/objects/paint_audio.h"
 
 #include "engine/collision/resolve.h"
 
@@ -576,10 +577,18 @@ std::vector<std::unique_ptr<Projectile>>
     for (const auto& projectile : projectiles)
     {
         projectile->resolve_launch_obstruction(this->center(), objects);
+        if (this->paint_audio_ != nullptr)
+        {
+            projectile->flush_paint_audio(*this->paint_audio_);
+        }
     }
     std::erase_if(projectiles, [](const auto& projectile)
         { return projectile->for_deletion(); });
     return projectiles;
+}
+void Player::set_paint_audio(PaintAudio* audio)
+{
+    this->paint_audio_ = audio;
 }
 void Player::update_prev_rectangle()
 {

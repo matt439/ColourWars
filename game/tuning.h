@@ -2,6 +2,7 @@
 
 #include "game/objects/player_team.h"
 #include "game/objects/projectile_details.h"
+#include "game/objects/projectile_type.h"
 #include "game/objects/weapon_details.h"
 #include "game/objects/weapon_type.h"
 #include "engine/math/shape.h"
@@ -150,7 +151,12 @@ struct PaintTuning
 	std::string splash_animation;
 
 	std::string sound_bank;
-	SoundTuning splash_sound;
+	std::vector<SoundTuning> splash_sounds;
+	SoundTuning capture_sound;
+	SoundTuning dud_sound;
+	std::array<SoundTuning, static_cast<size_t>(ProjectileType::ball) + 1> impact_sounds;
+	float min_impact_interval = 0.0f;
+	float min_capture_interval = 0.0f;
 };
 
 // Movement cue choices and their distance, speed and repeat thresholds.

@@ -97,7 +97,25 @@
       "animation": "splash_1"
     },
     "sound_bank": "paint_exe",
-    "splash_sound": { "name": "paint.splash.01", "volume": 1.0 }
+    "splash_sounds": [
+      { "name": "paint.splash.01", "volume": 0.20 },
+      { "name": "paint.splash.02", "volume": 0.20 },
+      { "name": "paint.splash.03", "volume": 0.20 },
+      { "name": "paint.splash.04", "volume": 0.20 },
+      { "name": "paint.splash.05", "volume": 0.20 },
+      { "name": "paint.splash.06", "volume": 0.20 }
+    ],
+    "capture_sound": { "name": "paint.capture", "volume": 0.12 },
+    "dud_sound": { "name": "paint.dud", "volume": 0.12 },
+    "impact_sounds": {
+      "spray": { "name": "paint.impact.sprayer", "volume": 0.15 },
+      "jet": { "name": "paint.impact.sniper", "volume": 0.15 },
+      "rolling": { "name": "paint.impact.roller", "volume": 0.15 },
+      "mist": { "name": "paint.impact.mister", "volume": 0.10 },
+      "ball": { "name": "paint.impact.bucket", "volume": 0.15 }
+    },
+    "min_impact_interval": 0.10,
+    "min_capture_interval": 0.25
   },
 
   "player": {
