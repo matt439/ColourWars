@@ -741,6 +741,15 @@ Rematch first; series keep their round-specific continuation. Remaining menus,
 cards, stage preview, pause and results retain their existing owners, along
 with the arena and human-review gates.
 
+**Pause and confirmation artwork implemented (2026-10-15, part of `POL#16`).**
+The [pause-page drawing and evidence](polish-pause-menu.md) carry the stepped
+paper, dark ink, soft shade and detached focus arrow through ordinary pause,
+controller loss and the Restart/Quit questions. Disabled Resume/Restart rows
+have separate readable ink; only enabled focus gets a selection card.
+The opening device, fallback navigation, safe No default and shared resume
+count-in retain their existing rules. Remaining menus, selection cards, stage
+preview and results stay open, along with arena production and human review.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

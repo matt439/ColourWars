@@ -164,12 +164,24 @@
 
   "pause_menu": {
     "resume_countdown": 2.0,
-    "box_size": { "x": 900.0, "y": 800.0 },
-    "box_colour": "182233",
+    "box_size": { "x": 1050.0, "y": 900.0 },
+    "heading_y": 180.0,
+    "status_y": 315.0,
+    "art": {
+      "ink": "1B1C20",
+      "paper": "F0F0ED",
+      "shade": "00000035",
+      "focus_fill": "D5D5CF",
+      "focus_ink": "111216",
+      "disabled_ink": "62635F",
+      "keyline_width": 4.0,
+      "shadow_offset": 8.0,
+      "focus_padding": { "x": 28.0, "y": 18.0 }
+    },
     "layout": {
-      "position": { "x": 610.0, "y": 180.0 },
+      "position": { "x": 750.0, "y": 455.0 },
       "size": { "x": 100.0, "y": 50.0 },
-      "spacing": { "x": 200.0, "y": 130.0 }
+      "spacing": { "x": 0.0, "y": 115.0 }
     },
     "window_open_sound": "ui.pause_open",
     "sounds": {

@@ -210,6 +210,12 @@ void PauseMenuInitial::refresh_connections()
 		L"All players connected.");
 	this->player_num_->set_text(this->waiting_for_players_ ?
 		L"Controller lost" : this->player_number_text());
+	this->connection_status_->set_position(Vector2F(
+		this->calculate_center_position(this->connection_status_->bounds().width,
+			DESIGN_RESOLUTION.x), this->look().status_y));
+	this->player_num_->set_position(Vector2F(
+		this->calculate_center_position(this->player_num_->bounds().width,
+			DESIGN_RESOLUTION.x), this->look().heading_y));
 	this->focus_.set_enabled(this->resume_.get(), !this->waiting_for_players_);
 	this->focus_.set_enabled(this->restart_.get(), !this->waiting_for_players_);
 	if (was_waiting != this->waiting_for_players_)
@@ -237,74 +243,66 @@ void PauseMenuInitial::init()
 	const MenuStyle& style = this->menu_style();
 	const PauseMenuPresentation& look = this->look();
 
-	this->focus_.set_style({ style.highlight, style.unhighlight, style.disabled });
+	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
-	this->box_ = std::make_unique<MenuPanel>(
-		"box",
+	this->box_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
-		look.box_colour, &style);
+		&look.art, &this->focus_);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(look.layout.position);
 	this->set_widget_size(look.layout.size);
 	this->set_widget_spacing(look.layout.spacing);
 
-	this->player_num_ = std::make_unique<UiTextDropShadow>(
+	this->player_num_ = std::make_unique<UiText>(
 		"player_num",
 		this->player_number_text(),
 		style.heading_font,
-		this->calculate_widget_position(0, 0),
+		Vector2F(0.0f, look.heading_y),
 		this->render_resources(),
-		style.heading_colour,
-		style.shadow_colour,
-		style.heading_shadow_offset);
+		look.art.ink);
 
-	this->resume_ = std::make_unique<UiTextDropShadow>(
+	this->resume_ = std::make_unique<UiText>(
 		"resume",
 		L"Resume",
 		style.item_font,
-		this->calculate_widget_position(1, 2),
+		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		style.highlight,
-		style.shadow_colour,
-		style.item_shadow_offset);
+		look.art.focus_ink);
 
-	this->connection_status_ = std::make_unique<UiTextDropShadow>(
+	this->connection_status_ = std::make_unique<UiText>(
 		"connection_status", L"", style.detail_font,
-		this->calculate_widget_position(0, 1), this->render_resources(),
-		style.warning, style.shadow_colour, style.detail_shadow_offset);
+		Vector2F(0.0f, look.status_y), this->render_resources(), look.art.ink);
 
-	this->restart_ = std::make_unique<UiTextDropShadow>(
+	this->restart_ = std::make_unique<UiText>(
 		"restart",
 		L"Restart",
 		style.item_font,
-		this->calculate_widget_position(1, 3),
+		this->calculate_widget_position(0, 1),
 		this->render_resources(),
-		style.unhighlight,
-		style.shadow_colour,
-		style.item_shadow_offset);
+		look.art.ink);
 
-	this->controls_ = std::make_unique<UiTextDropShadow>("controls", L"Controls / audio",
-		style.item_font, this->calculate_widget_position(1, 4), this->render_resources(),
-		style.unhighlight, style.shadow_colour, style.item_shadow_offset);
+	this->controls_ = std::make_unique<UiText>("controls", L"Controls / audio",
+		style.item_font, this->calculate_widget_position(0, 2), this->render_resources(),
+		look.art.ink);
 
-	this->quit_ = std::make_unique<UiTextDropShadow>(
+	this->quit_ = std::make_unique<UiText>(
 		"quit",
 		L"Quit",
 		style.item_font,
-		this->calculate_widget_position(1, 5),
+		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		style.unhighlight,
-		style.shadow_colour,
-		style.item_shadow_offset);
+		look.art.ink);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
-	this->texture_container_->add_child(this->box_.get());
 
 	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
+	// The opaque paper covers the shared chrome's focus backing before
+	// drawing its own selection card and the labels above it.
+	this->text_container_->add_child(this->box_.get());
 	this->text_container_->add_child(this->player_num_.get());
 	this->text_container_->add_child(this->connection_status_.get());
 	this->text_container_->add_child(this->resume_.get());
@@ -395,66 +393,63 @@ void PauseMenuConfirmation::init()
 	const MenuStyle& style = this->menu_style();
 	const PauseMenuPresentation& look = this->look();
 
-	this->focus_.set_style({ style.highlight, style.unhighlight });
+	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
-	this->box_ = std::make_unique<MenuPanel>(
-		"box",
+	this->box_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
-		look.box_colour, &style);
+		&look.art, &this->focus_);
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(look.layout.position);
 	this->set_widget_size(look.layout.size);
 	this->set_widget_spacing(look.layout.spacing);
 
-	this->player_num_ = std::make_unique<UiTextDropShadow>(
+	this->player_num_ = std::make_unique<UiText>(
 		"player_num",
 		this->player_number_text(),
 		style.heading_font,
-		this->calculate_widget_position(0, 0),
+		Vector2F(0.0f, look.heading_y),
 		this->render_resources(),
-		style.heading_colour,
-		style.shadow_colour,
-		style.heading_shadow_offset);
+		look.art.ink);
+	this->player_num_->set_position(Vector2F(
+		this->calculate_center_position(this->player_num_->bounds().width,
+			DESIGN_RESOLUTION.x), look.heading_y));
 
-	this->question_ = std::make_unique<UiTextDropShadow>(
+	this->question_ = std::make_unique<UiText>(
 		"question",
 		question_text(this->type_),
 		style.detail_font,
-		this->calculate_widget_position(0, 2),
+		Vector2F(0.0f, look.status_y),
 		this->render_resources(),
-		style.heading_colour,
-		style.shadow_colour,
-		style.detail_shadow_offset);
+		look.art.ink);
+	this->question_->set_position(Vector2F(
+		this->calculate_center_position(this->question_->bounds().width,
+			DESIGN_RESOLUTION.x), look.status_y));
 
-	this->yes_ = std::make_unique<UiTextDropShadow>(
+	this->yes_ = std::make_unique<UiText>(
 		"yes",
 		L"Yes",
 		style.item_font,
-		this->calculate_widget_position(1, 3),
+		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		style.unhighlight,
-		style.shadow_colour,
-		style.item_shadow_offset);
+		look.art.ink);
 
-	this->no_ = std::make_unique<UiTextDropShadow>(
+	this->no_ = std::make_unique<UiText>(
 		"no",
 		L"No",
 		style.item_font,
-		this->calculate_widget_position(1, 4),
+		this->calculate_widget_position(0, 1),
 		this->render_resources(),
-		style.highlight,
-		style.shadow_colour,
-		style.item_shadow_offset);
+		look.art.focus_ink);
 
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
-	this->texture_container_->add_child(this->box_.get());
 
 	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
+	this->text_container_->add_child(this->box_.get());
 	this->text_container_->add_child(this->player_num_.get());
 	this->text_container_->add_child(this->question_.get());
 	this->text_container_->add_child(this->yes_.get());

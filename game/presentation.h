@@ -219,35 +219,39 @@ struct MainMenuPresentation
 	std::array<std::wstring, DESCRIBED_WEAPONS> weapon_descriptions;
 };
 
-struct PauseMenuPresentation
-{
-	// A shared wall-clock count-in; the match itself stays frozen throughout.
-	float resume_countdown = 0.0f;
-	PresentationSound resume_sound;
-	mattmath::Vector2F box_size;
-	labrador::Colour box_colour = labrador::Colour::black;
-	WidgetLayout layout;
-	std::string window_open_sound;
-	PresentationSound pad_lost_sound;
-	PresentationSound pad_back_sound;
-};
-
-// End-of-round paper and action cards, in menu design coordinates.
-struct EndMenuArtPresentation
+// Stepped paper and action cards, in menu design coordinates.
+struct MenuPaperArtPresentation
 {
 	labrador::Colour ink;
 	labrador::Colour paper;
 	labrador::Colour shade;
 	labrador::Colour focus_fill;
 	labrador::Colour focus_ink;
+	// Pause uses a separate readable ink for actions awaiting controllers.
+	labrador::Colour disabled_ink;
 	float keyline_width = 0.0f;
 	float shadow_offset = 0.0f;
 	mattmath::Vector2F focus_padding;
 };
 
+struct PauseMenuPresentation
+{
+	// A shared wall-clock count-in; the match itself stays frozen throughout.
+	float resume_countdown = 0.0f;
+	PresentationSound resume_sound;
+	MenuPaperArtPresentation art;
+	mattmath::Vector2F box_size;
+	float heading_y = 0.0f;
+	float status_y = 0.0f;
+	WidgetLayout layout;
+	std::string window_open_sound;
+	PresentationSound pad_lost_sound;
+	PresentationSound pad_back_sound;
+};
+
 struct EndMenuPresentation
 {
-	EndMenuArtPresentation art;
+	MenuPaperArtPresentation art;
 	mattmath::Vector2F box_size;
 	float heading_y = 0.0f;
 	// The first action, independent of the centered heading above it.

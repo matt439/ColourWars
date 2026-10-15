@@ -1,107 +1,10 @@
 #include "game/pch.h"
 #include "game/states/end_menu.h"
-#include "game/objects/crude_drawing.h"
+#include "game/states/menu_panel.h"
 
 using namespace mattmath;
 using namespace menu_consts;
 using namespace labrador;
-
-namespace
-{
-	// This page owns its paper treatment. Other menus retain their existing
-	// panels and chrome, and focus remains the engine's shared-cursor workflow.
-	class EndMenuArtwork final : public UiTexture
-	{
-	public:
-		EndMenuArtwork(const RectangleF& rectangle, RenderResources* resources,
-			const EndMenuArtPresentation* art, const FocusGroup* focus,
-			const UiWidget* primary) :
-			UiTexture("box", "sprite_sheet_1", "pixel", rectangle, resources),
-			art_(art), focus_(focus), primary_(primary)
-		{
-		}
-
-		void draw(DrawList& list) const override
-		{
-			if (this->hidden()) { return; }
-			list.set_filter(TextureFilter::point);
-			this->draw_card(list, this->rectangle(), this->art_->paper);
-
-			// The continuation is recognisable even after navigating away. Its
-			// card is part of the page rather than a colour-only focus change.
-			RectangleF primary = this->primary_->bounds();
-			primary.inflate(this->art_->focus_padding);
-			this->draw_card(list, primary, this->art_->focus_fill);
-
-			const UiWidget* focused = this->focus_->focused(0);
-			if (focused != nullptr && !focused->hidden())
-			{
-				RectangleF row = focused->bounds();
-				row.inflate(this->art_->focus_padding);
-				if (focused != this->primary_)
-				{
-					this->draw_card(list, row, this->art_->focus_fill);
-				}
-				// A detached, stepped arrow identifies the shared cursor without
-				// relying on text colour, including on the always-present card.
-				const float pen = this->art_->keyline_width;
-				const Vector2F tip(row.x - pen * 3.0f, row.center().y);
-				this->fill(list, RectangleF(tip.x - pen * 4.0f, tip.y - pen,
-					pen * 4.0f, pen * 2.0f), this->art_->ink);
-				for (int step = 0; step < 3; ++step)
-				{
-					const float reach = static_cast<float>(step);
-					this->fill(list, RectangleF(tip.x - reach * pen,
-						tip.y - (reach + 1.0f) * pen, pen,
-						(reach + 1.0f) * pen * 2.0f), this->art_->ink);
-				}
-			}
-			list.set_filter(TextureFilter::linear);
-		}
-
-	private:
-		void fill(DrawList& list, const RectangleF& rectangle, const Colour& colour) const
-		{
-			this->sprite_sheet()->draw(list, this->frame(), rectangle,
-				CrudeDrawing::premultiplied(colour));
-		}
-
-		void draw_card(DrawList& list, const RectangleF& bounds, const Colour& colour) const
-		{
-			const float pen = this->art_->keyline_width;
-			const float step = pen * 2.0f;
-			const float shadow = this->art_->shadow_offset;
-			const RectangleF face(bounds.x, bounds.y,
-				bounds.width - shadow, bounds.height - shadow);
-			const auto paper = [&](const RectangleF& box, const Colour& tint)
-			{
-				this->fill(list, RectangleF(box.x + step, box.y,
-					box.width - step * 2.0f, box.height), tint);
-				this->fill(list, RectangleF(box.x, box.y + step,
-					box.width, box.height - step * 2.0f), tint);
-			};
-			paper(RectangleF(face.position() + Vector2F(shadow), face.size()), this->art_->shade);
-			paper(face, this->art_->ink);
-			const RectangleF inside(face.x + pen, face.y + pen,
-				face.width - pen * 2.0f, face.height - pen * 2.0f);
-			paper(inside, colour);
-			for (int pass = 3; pass > 0; --pass)
-			{
-				Colour shade = this->art_->shade;
-				shade.a *= 0.12f;
-				const float width = pen * static_cast<float>(pass);
-				this->fill(list, RectangleF(inside.x + step, inside.bottom() - width,
-					inside.width - step * 2.0f, width), shade);
-				this->fill(list, RectangleF(inside.right() - width, inside.y + step,
-					width, inside.height - step * 2.0f), shade);
-			}
-		}
-
-		const EndMenuArtPresentation* art_;
-		const FocusGroup* focus_;
-		const UiWidget* primary_;
-	};
-}
 
 EndMenuPage::EndMenuPage(MenuContext* context) :
 	MenuPage(context)
@@ -216,7 +119,7 @@ void EndMenuInitial::init()
 		this->render_resources(),
 		look.art.ink);
 
-	this->box_ = std::make_unique<EndMenuArtwork>(
+	this->box_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF(Vector2F::ZERO, look.box_size), this->render_resources(),
 		&look.art, &this->focus_, this->restart_.get());
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);

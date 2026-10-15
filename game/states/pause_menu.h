@@ -41,6 +41,7 @@ public:
 	void init() override = 0;
 	void update_page(float dt) override = 0;
 protected:
+	bool shows_brand() const override { return false; }
 	const PauseMenuPresentation& look() const;
 
 	std::wstring player_number_text() const;
@@ -81,13 +82,13 @@ private:
 	bool opening_ = true;
 	void refresh_connections();
 	bool waiting_for_players_ = false;
-	std::unique_ptr<labrador::UiTextDropShadow> connection_status_ = nullptr;
+	std::unique_ptr<labrador::UiText> connection_status_ = nullptr;
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> player_num_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> resume_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> restart_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> quit_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> controls_ = nullptr;
+	std::unique_ptr<labrador::UiText> player_num_ = nullptr;
+	std::unique_ptr<labrador::UiText> resume_ = nullptr;
+	std::unique_ptr<labrador::UiText> restart_ = nullptr;
+	std::unique_ptr<labrador::UiText> quit_ = nullptr;
+	std::unique_ptr<labrador::UiText> controls_ = nullptr;
 };
 
 class PauseMenuConfirmation final : public PauseMenuPage
@@ -100,10 +101,10 @@ public:
 	bool debug_dismiss(bool leaving_match) override;
 private:
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> player_num_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> question_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> yes_ = nullptr;
-	std::unique_ptr<labrador::UiTextDropShadow> no_ = nullptr;
+	std::unique_ptr<labrador::UiText> player_num_ = nullptr;
+	std::unique_ptr<labrador::UiText> question_ = nullptr;
+	std::unique_ptr<labrador::UiText> yes_ = nullptr;
+	std::unique_ptr<labrador::UiText> no_ = nullptr;
 	ConfirmationType type_ = ConfirmationType::restart;
 	static std::wstring question_text(ConfirmationType type);
 };

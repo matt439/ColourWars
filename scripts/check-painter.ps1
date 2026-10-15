@@ -12,12 +12,13 @@ param(
     [switch] $HudOnly,
     [switch] $ResumeOnly,
     [switch] $EndMenuOnly,
+    [switch] $PauseMenuOnly,
     [string] $OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -104,7 +105,8 @@ function Write-ContactSheet {
             Where-Object { $_.Name -like '*-player*.ppm' -or $_.Name -like 'monitor-*.ppm' -or
                 $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or
                 $_.Name -like 'supply-*-detail.ppm' -or $_.Name -like 'hud-*-detail.ppm' -or
-                $_.Name -like 'resume-*-detail.ppm' -or $_.Name -like 'end-menu-*-detail.ppm' } | Sort-Object Name) {
+                $_.Name -like 'resume-*-detail.ppm' -or $_.Name -like 'end-menu-*-detail.ppm' -or
+                $_.Name -like 'pause-menu-*-detail.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
             if ($header -notmatch '^P6\n(\d+) (\d+)\n255\n') { throw "Unsupported capture header: $($file.FullName)" }
@@ -233,7 +235,7 @@ $process = $null
 $failure = $null
 $result = [ordered]@{
     outcome = 'failed'
-    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } else { 'full-painter-matrix' }
+    scope = if ($IdentityOnly) { 'player-identity-only' } elseif ($QuietOnly) { 'quiet-only' } elseif ($MonitorOnly) { 'monitor-only' } elseif ($CountdownOnly) { 'countdown-only' } elseif ($ClosingOnly) { 'closing-only' } elseif ($SupplyOnly) { 'supply-only' } elseif ($HudOnly) { 'gameplay-hud-only' } elseif ($ResumeOnly) { 'resume-only' } elseif ($EndMenuOnly) { 'end-menu-only' } elseif ($PauseMenuOnly) { 'pause-menu-only' } else { 'full-painter-matrix' }
     preset = $Preset
     game_revision = (& git rev-parse HEAD)
     engine_revision = (& git -C external/labrador rev-parse HEAD)
@@ -316,6 +318,17 @@ elseif ($SupplyOnly) {
         $result.Remove($key)
     }
     $result.checks = $result.supply_checks
+}
+elseif ($PauseMenuOnly) {
+    $result.player_counts = @(1, 2, 4)
+    $result.palettes = @()
+    $result.weapons = @()
+    $result.actions = @('resume', 'restart', 'controls-audio', 'quit', 'confirm-yes', 'confirm-no', 'missing-controllers')
+    $result.input_slots = @(4, 0, 1, 2, 3)
+    $result.inputs = 'Public keyboard input through actual pause/confirmation pages and StateContext; absent pad slots are roster fixtures, with no physical pad claim.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.Remove('stage')
+    $result.checks = 'Pause and confirmation paper at native 720p/1080p/QHD, 4:3, 16:10 and ultrawide; actual initial Resume, safe No, deliberate Restart/Quit and Controls/audio return. Missing-participant Resume/Restart refusal, enabled focus navigation, keyboard rescue when all participants are absent, frozen redraw, Reduce effects and resize. No physical reconnection, human readability or listening acceptance.'
 }
 elseif ($EndMenuOnly) {
     $result.player_counts = @()
@@ -461,6 +474,7 @@ try {
     elseif ($HudOnly) { $probeArguments += 'hud' }
     elseif ($ResumeOnly) { $probeArguments += 'resume' }
     elseif ($EndMenuOnly) { $probeArguments += 'end-menu' }
+    elseif ($PauseMenuOnly) { $probeArguments += 'pause-menu' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -509,6 +523,9 @@ try {
     }
     elseif ($SupplyOnly) {
         $result.diagnostic = 'Supply-only visual check passed: sprayer/mister full, half and empty native reservoirs; exact authored-layer registration, unchanged silhouette and permanent hardware, all 1P/4P720 palettes/aim quadrants/facing inputs/poses and representative 4P1080/QHD. Reduced effects, motion-disabled rendering, ammo clamps, paid depletion, natural regeneration/reset, menu previews and tool switching, frozen pixels/weapon state/draw RNG and unchanged match observation/Debug fingerprint passed. Other painter matrices were not run.'
+    }
+    elseif ($PauseMenuOnly) {
+        $result.diagnostic = 'Pause-menu-only hardware check passed: actual keyboard-driven Resume, safe confirmation defaults, Restart/Quit, Controls/audio return and missing-controller recovery routes. Native paper and enabled focus cards, static Reduce effects, repeated drawing and resize passed across six display sizes/aspects. Other painter matrices, physical controllers/reconnection, human readability and listening acceptance were not run.'
     }
     elseif ($EndMenuOnly) {
         $result.diagnostic = 'End-menu-only hardware check passed: actual keyboard-driven continuation and secondary routes across single-match and series states; native paper and focus rendering, frozen redraw, Reduce effects and resize. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'

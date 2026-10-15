@@ -1967,6 +1967,7 @@ namespace
 #include "scripts/acceptance/story_audio/closing_content_checks.h"
 #include "scripts/acceptance/story_audio/hud_content_checks.h"
 #include "scripts/acceptance/story_audio/end_menu_content_checks.h"
+#include "scripts/acceptance/story_audio/pause_menu_content_checks.h"
 }
 
 #include "scripts/acceptance/story_audio/redraw_checks.h"
@@ -1985,6 +1986,7 @@ int main(int argc, char** argv)
 		check_closing_art_content(std::filesystem::path(argv[1]));
 		check_hud_paper_content(std::filesystem::path(argv[1]));
 		check_end_menu_art_content(std::filesystem::path(argv[1]));
+		check_pause_menu_art_content(std::filesystem::path(argv[1]));
 		check_connection_audio(world);
 		check_resume_audio(world);
 		check_resume_weapon_audio(world);

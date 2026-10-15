@@ -360,6 +360,50 @@ namespace
 		return menu;
 	}
 
+	MenuPaperArtPresentation read_menu_paper(const JsonValue& json, const Vector2F& box_size)
+	{
+		MenuPaperArtPresentation drawing;
+		const JsonValue art = json.object("art");
+		drawing.ink = read_colour(art, "ink");
+		drawing.paper = read_colour(art, "paper");
+		drawing.shade = read_colour(art, "shade");
+		drawing.focus_fill = read_colour(art, "focus_fill");
+		drawing.focus_ink = read_colour(art, "focus_ink");
+		drawing.keyline_width = read_positive(art, "keyline_width");
+		drawing.shadow_offset = art.number("shadow_offset");
+		drawing.focus_padding = read_positive_vector(art, "focus_padding");
+		if (drawing.keyline_width > 8.0f ||
+			!std::isfinite(drawing.shadow_offset) || drawing.shadow_offset < 0.0f ||
+			drawing.shadow_offset > 24.0f || drawing.focus_padding.x > 48.0f ||
+			drawing.focus_padding.y > 24.0f)
+		{
+			throw std::runtime_error(art.where() +
+				": keyline_width <= 8, shadow_offset 0..24 and focus_padding <= (48,24) required.");
+		}
+		if (drawing.focus_padding.x <= drawing.shadow_offset + drawing.keyline_width ||
+			drawing.focus_padding.y <= drawing.shadow_offset + drawing.keyline_width)
+		{
+			throw std::runtime_error(art.where() +
+				": focus_padding must exceed shadow_offset + keyline_width on both axes.");
+		}
+		if (box_size.x <= drawing.shadow_offset + drawing.keyline_width * 6.0f ||
+			box_size.y <= drawing.shadow_offset + drawing.keyline_width * 6.0f)
+		{
+			throw std::runtime_error(json.where() +
+				": box_size must exceed art.shadow_offset + art.keyline_width * 6 on both axes.");
+		}
+		if (drawing.ink.a != 1.0f || drawing.paper.a != 1.0f ||
+			drawing.focus_fill.a != 1.0f || drawing.focus_ink.a != 1.0f ||
+			drawing.shade.a <= 0.0f || drawing.ink == drawing.paper ||
+			drawing.focus_ink == drawing.focus_fill || drawing.ink == drawing.focus_fill ||
+			drawing.focus_fill == drawing.paper)
+		{
+			throw std::runtime_error(art.where() +
+				": opaque distinct paper/ink and focus colours, and visible shade required.");
+		}
+		return drawing;
+	}
+
 	PauseMenuPresentation read_pause_menu(const JsonValue& root)
 	{
 		const JsonValue json = root.object("pause_menu");
@@ -370,8 +414,26 @@ namespace
 		{
 			throw std::runtime_error(json.where() + ": 'resume_countdown' must be at most 3 seconds.");
 		}
-		menu.box_size = read_vector(json, "box_size");
-		menu.box_colour = read_colour(json, "box_colour");
+		menu.box_size = read_positive_vector(json, "box_size");
+		if (menu.box_size.x > 1600.0f || menu.box_size.y > 900.0f)
+		{
+			throw std::runtime_error(json.where() + ": box_size must be at most (1600,900).");
+		}
+		menu.art = read_menu_paper(json, menu.box_size);
+		const JsonValue art = json.object("art");
+		menu.art.disabled_ink = read_colour(art, "disabled_ink");
+		if (menu.art.disabled_ink.a != 1.0f || menu.art.disabled_ink == menu.art.paper ||
+			menu.art.disabled_ink == menu.art.focus_fill || menu.art.disabled_ink == menu.art.ink ||
+			menu.art.disabled_ink == menu.art.focus_ink)
+		{
+			throw std::runtime_error(art.where() + ": disabled_ink must be opaque and distinct from paper and active ink.");
+		}
+		menu.heading_y = read_positive(json, "heading_y");
+		menu.status_y = read_positive(json, "status_y");
+		if (menu.heading_y > 900.0f || menu.status_y > 900.0f || menu.status_y <= menu.heading_y)
+		{
+			throw std::runtime_error(json.where() + ": heading_y < status_y <= 900 required.");
+		}
 		menu.layout = read_layout(json, "layout");
 		menu.window_open_sound = json.string("window_open_sound");
 		const JsonValue sounds = json.object("sounds");
@@ -396,44 +458,7 @@ namespace
 		{
 			throw std::runtime_error(json.where() + ": box_size must be at most (1600,900).");
 		}
-		const JsonValue art = json.object("art");
-		menu.art.ink = read_colour(art, "ink");
-		menu.art.paper = read_colour(art, "paper");
-		menu.art.shade = read_colour(art, "shade");
-		menu.art.focus_fill = read_colour(art, "focus_fill");
-		menu.art.focus_ink = read_colour(art, "focus_ink");
-		menu.art.keyline_width = read_positive(art, "keyline_width");
-		menu.art.shadow_offset = art.number("shadow_offset");
-		menu.art.focus_padding = read_positive_vector(art, "focus_padding");
-		if (menu.art.keyline_width > 8.0f ||
-			!std::isfinite(menu.art.shadow_offset) || menu.art.shadow_offset < 0.0f ||
-			menu.art.shadow_offset > 24.0f || menu.art.focus_padding.x > 48.0f ||
-			menu.art.focus_padding.y > 24.0f)
-		{
-			throw std::runtime_error(art.where() +
-				": keyline_width <= 8, shadow_offset 0..24 and focus_padding <= (48,24) required.");
-		}
-		if (menu.art.focus_padding.x <= menu.art.shadow_offset + menu.art.keyline_width ||
-			menu.art.focus_padding.y <= menu.art.shadow_offset + menu.art.keyline_width)
-		{
-			throw std::runtime_error(art.where() +
-				": focus_padding must exceed shadow_offset + keyline_width on both axes.");
-		}
-		if (menu.box_size.x <= menu.art.shadow_offset + menu.art.keyline_width * 6.0f ||
-			menu.box_size.y <= menu.art.shadow_offset + menu.art.keyline_width * 6.0f)
-		{
-			throw std::runtime_error(json.where() +
-				": box_size must exceed art.shadow_offset + art.keyline_width * 6 on both axes.");
-		}
-		if (menu.art.ink.a != 1.0f || menu.art.paper.a != 1.0f ||
-			menu.art.focus_fill.a != 1.0f || menu.art.focus_ink.a != 1.0f ||
-			menu.art.shade.a <= 0.0f || menu.art.ink == menu.art.paper ||
-			menu.art.focus_ink == menu.art.focus_fill || menu.art.ink == menu.art.focus_fill ||
-			menu.art.focus_fill == menu.art.paper)
-		{
-			throw std::runtime_error(art.where() +
-				": opaque distinct paper/ink and focus colours, and visible shade required.");
-		}
+		menu.art = read_menu_paper(json, menu.box_size);
 		menu.layout = read_layout(json, "layout");
 		menu.series_sound = read_sound(json.object("sounds"), "series");
 		return menu;

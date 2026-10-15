@@ -1,9 +1,10 @@
 #pragma once
 
 #include "engine/ui/widget.h"
+#include "engine/ui/focus.h"
 #include "game/presentation.h"
 
-// The game's modal frame, shared by pause, confirmation and results.
+// The results page's existing modal frame.
 // Geometry remains a normal UiTexture so pages can center and size it.
 class MenuPanel final : public labrador::UiTexture
 {
@@ -35,4 +36,23 @@ private:
 	labrador::SpriteSheet::frame_handle paint_frame_;
 	labrador::SpriteSheet::strip_handle supply_strip_;
 	labrador::Colour paint_colour_ = labrador::Colour::white;
+};
+
+// Shared Paint.exe modal artwork. The focus group and widgets are borrowed
+// from the page; an optional primary card stays visible when focus moves away.
+class MenuPaperArtwork final : public labrador::UiTexture
+{
+public:
+	MenuPaperArtwork(const mattmath::RectangleF& rectangle,
+		labrador::RenderResources* resources, const MenuPaperArtPresentation* art,
+		const labrador::FocusGroup* focus, const labrador::UiWidget* primary = nullptr);
+	void draw(labrador::DrawList& list) const override;
+private:
+	void fill(labrador::DrawList& list, const mattmath::RectangleF& rectangle,
+		const labrador::Colour& colour) const;
+	void draw_card(labrador::DrawList& list, const mattmath::RectangleF& bounds,
+		const labrador::Colour& colour) const;
+	const MenuPaperArtPresentation* art_;
+	const labrador::FocusGroup* focus_;
+	const labrador::UiWidget* primary_;
 };

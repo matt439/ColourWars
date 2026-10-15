@@ -82,11 +82,11 @@ void end_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning,
 
     const MenuStyle& style = presentation.menu();
     const EndMenuPresentation& look = presentation.end_menu();
-    auto& art = const_cast<EndMenuArtPresentation&>(look.art);
+    auto& art = const_cast<MenuPaperArtPresentation&>(look.art);
     struct RestoreEndArt
     {
-        EndMenuArtPresentation& art;
-        EndMenuArtPresentation original;
+        MenuPaperArtPresentation& art;
+        MenuPaperArtPresentation original;
         ~RestoreEndArt() { this->art = this->original; }
     } restore_art{ art, art };
     const RectangleF panel((menu_consts::DESIGN_RESOLUTION - look.box_size) / 2.0f,
