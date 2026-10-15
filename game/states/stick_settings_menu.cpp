@@ -145,13 +145,13 @@ void StickSettingsMenu::init()
 	const Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
 		look.art.shadow_offset - this->calculate_widget_position(1, 0).x,
 		look.layout.spacing.y - look.art.focus_padding.y * 2.0f);
-	const auto row = [&](const char* name, const wchar_t* label, int index, OptionRow::Adjust adjust)
+	const auto row = [&](const char* name, const std::wstring& label, int index, OptionRow::Adjust adjust)
 	{
 		return std::make_unique<OptionRow>(name, label, this->calculate_widget_position(0, index),
 			this->calculate_widget_position(1, index), style, look.art.ink, this->render_resources(),
 			std::move(adjust), &look.art, value_limit);
 	};
-	this->pad_ = row("pad", L"Pad", 0, [this](Direction direction)
+	this->pad_ = row("pad", this->text().item(MenuItem::pad), 0, [this](Direction direction)
 	{
 		this->slot_ = std::clamp(this->slot_ + (direction == Direction::right ? 1 : -1),
 			0, input_slots::pad_count - 1);
@@ -168,18 +168,18 @@ void StickSettingsMenu::init()
 		this->refresh_values();
 		this->set_status(L"Apply to save pad deadzones.");
 	};
-	this->movement_ = row("movement", L"Move deadzone", 1,
+	this->movement_ = row("movement", this->text().item(MenuItem::move_deadzone), 1,
 		[adjust_deadzone](Direction direction) { adjust_deadzone(true, direction); });
-	this->aim_ = row("aim", L"Aim deadzone", 2,
+	this->aim_ = row("aim", this->text().item(MenuItem::aim_deadzone), 2,
 		[adjust_deadzone](Direction direction) { adjust_deadzone(false, direction); });
 	for (OptionRow* option : { this->pad_.get(), this->movement_.get(), this->aim_.get() })
 	{
 		this->text_container_->add_child(option);
 		this->focus_.add(option);
 	}
-	this->focus_.add(add_text("apply", L"Apply", style.item_font,
+	this->focus_.add(add_text("apply", this->text().item(MenuItem::apply), style.item_font,
 		this->calculate_widget_position(0, 3)), [this] { this->apply_settings(); });
-	this->focus_.add(add_text("back", L"Back", style.item_font,
+	this->focus_.add(add_text("back", this->text().item(MenuItem::back), style.item_font,
 		this->calculate_widget_position(0, 4)), [this] { this->close(); });
 	this->status_ = add_text("status", L"", look.help_font, look.status_position);
 	this->connection_ = add_text("connection", L"", look.help_font, look.controls_position);

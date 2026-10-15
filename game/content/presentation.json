@@ -146,7 +146,16 @@
       "change_teams": "Change Teams",
       "change_weapons": "Change Weapons",
       "change_level": "Change Level",
-      "exit_to_main_menu": "Exit to Main Menu"
+      "exit_to_main_menu": "Exit to Main Menu",
+      "pad_sticks": "Pad sticks",
+      "music_volume": "Music volume",
+      "sfx_volume": "SFX volume",
+      "view_shake": "View shake",
+      "aim_marker": "Aim marker",
+      "reduce_effects": "Reduce effects",
+      "pad": "Pad",
+      "move_deadzone": "Move deadzone",
+      "aim_deadzone": "Aim deadzone"
     }
   },
 

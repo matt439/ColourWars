@@ -65,7 +65,8 @@ enum class MenuItem
 	controls_audio, apply, back, single_match, best_of_three, best_of_five,
 	match_length, one_player_practice, two_players, three_players, four_players,
 	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
-	exit_to_main_menu, count
+	exit_to_main_menu, pad_sticks, music_volume, sfx_volume, view_shake, aim_marker,
+	reduce_effects, pad, move_deadzone, aim_deadzone, count
 };
 
 // Fixed roles select display text; navigation and accepted inputs remain code.

@@ -50,7 +50,7 @@ void ControlsSettingsMenu::init()
 	};
 	add_text("heading", this->text().heading(MenuHeading::controls_audio), style.heading_font,
 		look.heading_position, look.art.ink);
-	const auto make_row = [this, &style, &look, &value_limit](const char* name, const wchar_t* label,
+	const auto make_row = [this, &style, &look, &value_limit](const char* name, const std::wstring& label,
 		int row, int& value, int minimum, int maximum, int step)
 	{
 		return std::make_unique<OptionRow>(name, label,
@@ -65,7 +65,7 @@ void ControlsSettingsMenu::init()
 					this->presentation().controls_settings().art.focus_ink);
 			}, &look.art, value_limit);
 	};
-	UiText* sticks = add_text("sticks", L"Pad sticks", style.item_font,
+	UiText* sticks = add_text("sticks", this->text().item(MenuItem::pad_sticks), style.item_font,
 		this->calculate_widget_position(0, 0), look.art.ink);
 	this->focus_.add(sticks, [this]
 	{
@@ -73,9 +73,11 @@ void ControlsSettingsMenu::init()
 		this->input()->reset_actions();
 		this->context()->push(std::make_unique<StickSettingsMenu>(this->menu_context(), this->pausing_player()));
 	});
-	this->music_ = make_row("music", L"Music volume", 1, this->selection_.music_volume, 0, 100, 10);
-	this->sfx_ = make_row("sfx", L"SFX volume", 2, this->selection_.sfx_volume, 0, 100, 10);
-	this->view_shake_ = std::make_unique<OptionRow>("view_shake", L"View shake",
+	this->music_ = make_row("music", this->text().item(MenuItem::music_volume),
+		1, this->selection_.music_volume, 0, 100, 10);
+	this->sfx_ = make_row("sfx", this->text().item(MenuItem::sfx_volume),
+		2, this->selection_.sfx_volume, 0, 100, 10);
+	this->view_shake_ = std::make_unique<OptionRow>("view_shake", this->text().item(MenuItem::view_shake),
 		this->calculate_widget_position(0, 3), this->calculate_widget_position(1, 3),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
@@ -85,7 +87,7 @@ void ControlsSettingsMenu::init()
 			this->set_status(L"Apply to save changes for all players.",
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
-	this->aim_marker_ = std::make_unique<OptionRow>("aim_marker", L"Aim marker",
+	this->aim_marker_ = std::make_unique<OptionRow>("aim_marker", this->text().item(MenuItem::aim_marker),
 		this->calculate_widget_position(0, 4), this->calculate_widget_position(1, 4),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
@@ -95,7 +97,7 @@ void ControlsSettingsMenu::init()
 			this->set_status(L"Apply to save changes for all players.",
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
-	this->reduce_effects_ = std::make_unique<OptionRow>("reduce_effects", L"Reduce effects",
+	this->reduce_effects_ = std::make_unique<OptionRow>("reduce_effects", this->text().item(MenuItem::reduce_effects),
 		this->calculate_widget_position(0, 5), this->calculate_widget_position(1, 5),
 		style, look.art.ink, this->render_resources(),
 		[this](Direction direction)
@@ -112,9 +114,9 @@ void ControlsSettingsMenu::init()
 		this->focus_.add(row);
 	}
 	this->refresh_values();
-	UiText* apply = add_text("apply", L"Apply", style.item_font,
+	UiText* apply = add_text("apply", this->text().item(MenuItem::apply), style.item_font,
 		this->calculate_widget_position(0, 6), look.art.ink);
-	UiText* back = add_text("back", L"Back", style.item_font,
+	UiText* back = add_text("back", this->text().item(MenuItem::back), style.item_font,
 		this->calculate_widget_position(0, 7), look.art.ink);
 	this->status_ = add_text("status", L"", look.help_font, look.status_position, look.art.focus_ink);
 	this->set_status(L"Apply to save changes for all players.", look.art.focus_ink);

@@ -59,7 +59,10 @@ namespace
         { "resume", L"Resume" }, { "restart", L"Restart" }, { "quit", L"Quit" },
         { "yes", L"Yes" }, { "no", L"No" },
         { "change_teams", L"Change Teams" }, { "change_weapons", L"Change Weapons" },
-        { "change_level", L"Change Level" }, { "exit_to_main_menu", L"Exit to Main Menu" }
+        { "change_level", L"Change Level" }, { "exit_to_main_menu", L"Exit to Main Menu" },
+        { "pad_sticks", L"Pad sticks" }, { "music_volume", L"Music volume" }, { "sfx_volume", L"SFX volume" },
+        { "view_shake", L"View shake" }, { "aim_marker", L"Aim marker" }, { "reduce_effects", L"Reduce effects" },
+        { "pad", L"Pad" }, { "move_deadzone", L"Move deadzone" }, { "aim_deadzone", L"Aim deadzone" }
     };
 
     rapidjson::Document read_document(const std::filesystem::path& path)
@@ -859,6 +862,191 @@ namespace
             d["menu_text"]["items"]["exit_to_main_menu"].SetString("FitFit");
         }, &world);
     }
+
+    constexpr MenuItem controls_fitted_items[]{ MenuItem::music_volume, MenuItem::sfx_volume, MenuItem::view_shake,
+        MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::pad, MenuItem::move_deadzone, MenuItem::aim_deadzone };
+
+    void check_controls_text(Variants& variants, World& world)
+    {
+        constexpr const char* controls_keys[]{ "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
+            "reduce_effects", "pad", "move_deadzone", "aim_deadzone" };
+        const auto normalized = variants.load([&](rapidjson::Document& d)
+        {
+            for (const char* key : controls_keys)
+            {
+                d["menu_text"]["items"][key].SetString("A\xC2\xA0\xE2\x80\x94" "B");
+            }
+        });
+        normalized.validate_resources(world.render, world.audio);
+        for (size_t index = 0; index < std::size(controls_keys); ++index)
+        {
+            require(normalized.menu_text().item(static_cast<MenuItem>(
+                static_cast<size_t>(MenuItem::pad_sticks) + index)) == L"A -B",
+                "Controls/pad-sticks item did not normalize its authored punctuation and NBSP");
+        }
+        for (const char* key : controls_keys)
+        {
+            for (const char* invalid : { "   ", "line\nbreak", "tab\ttext", "\xC3\xA9", "\xC3" })
+            {
+                variants.rejects(std::string("items.") + key, [key, invalid](rapidjson::Document& d)
+                {
+                    d["menu_text"]["items"][key].SetString(invalid, d.GetAllocator());
+                });
+            }
+        }
+        for (const char* key : { "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
+            "reduce_effects", "pad", "move_deadzone", "aim_deadzone", "apply", "back" })
+        {
+            // The main-menu font can draw this glyph. Controls' independently
+            // selected item font must also support shared Apply and Back.
+            variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
+            {
+                d["controls_settings"]["item_font"].SetString("menu_text_limited");
+                d["menu_text"]["items"][key].SetString("Glyph~");
+            }, &world);
+        }
+        std::vector<Glyph> glyphs;
+        for (char32_t character = U' '; character <= U'~'; ++character)
+        {
+            // The F alone exactly fills the Controls action column. The same
+            // one-character string still fits its other uses in the main font.
+            glyphs.push_back({ character, mattmath::RectangleI(0, 0, character == U'F' ? 872 : 8, 16),
+                0.0f, 0.0f, 0.0f });
+        }
+        world.render.add_font("menu_controls_exact", std::make_unique<Font>(TextureHandle{}, glyphs, 20.0f));
+        world.render.add_font("menu_controls_row_exact", std::make_unique<Font>(TextureHandle{}, glyphs, 68.0f));
+        world.render.add_font("menu_controls_row_overflow", std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 68.25f));
+        const auto exact_controls = [](rapidjson::Document& d)
+        {
+            d["controls_settings"]["item_font"].SetString("menu_controls_exact");
+            for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("i"); }
+        };
+        for (const char* key : { "pad_sticks", "apply", "back" })
+        {
+            const auto edge = [&](rapidjson::Document& d)
+            {
+                exact_controls(d);
+                d["menu_text"]["items"][key].SetString("F");
+            };
+            const auto fits = variants.load(edge);
+            fits.validate_resources(world.render, world.audio);
+            for (const char* overflow : { "Fi", "FF" })
+            {
+                variants.rejects(std::string("items.") + key, [&](rapidjson::Document& d)
+                {
+                    edge(d);
+                    d["menu_text"]["items"][key].SetString(overflow, d.GetAllocator());
+                }, &world);
+            }
+        }
+        variants.rejects("items.pad_sticks", [](rapidjson::Document& d)
+        {
+            d["controls_settings"]["item_font"].SetString("menu_text_tall");
+        }, &world);
+        const auto row_edge = [&](rapidjson::Document& d)
+        {
+            exact_controls(d);
+            d["controls_settings"]["item_font"].SetString("menu_controls_row_exact");
+        };
+        const auto fits_row = variants.load(row_edge);
+        fits_row.validate_resources(world.render, world.audio);
+        variants.rejects("items.pad_sticks", [&](rapidjson::Document& d)
+        {
+            row_edge(d);
+            d["controls_settings"]["item_font"].SetString("menu_controls_row_overflow");
+        }, &world);
+        const auto status_edge = [&](rapidjson::Document& d)
+        {
+            row_edge(d);
+            // Nominal 60-high rows plus their shadow end at 868. The actual
+            // 68-high text plus focus padding reaches 874 and must stay clear
+            // of the status even when that nominal layout still parses.
+            d["controls_settings"]["status_position"]["y"].SetFloat(874.0f);
+        };
+        const auto fits_status = variants.load(status_edge);
+        fits_status.validate_resources(world.render, world.audio);
+        variants.rejects("items.back", [&](rapidjson::Document& d)
+        {
+            status_edge(d);
+            d["controls_settings"]["status_position"]["y"].SetFloat(873.75f);
+        }, &world);
+    }
+
+    void check_controls_option_rows(Variants& variants, World& world)
+    {
+        const std::string authored(200, 'W');
+        const auto look = variants.load([&](rapidjson::Document& d)
+        {
+            for (const MenuItem item : controls_fitted_items)
+            {
+                d["menu_text"]["items"][items[static_cast<size_t>(item)].key].SetString(authored.c_str(), d.GetAllocator());
+            }
+        });
+        look.validate_resources(world.render, world.audio);
+        const auto& controls = look.controls_settings();
+        MenuStyle style = look.menu();
+        require(controls.item_font != style.item_font,
+            "Controls font coverage must exercise its separate item font from ordinary menu actions");
+        style.item_font = controls.item_font;
+        const auto font = world.render.resolve_sprite_font(style.item_font);
+        const float label_width = controls.layout.spacing.x - controls.art.focus_padding.x;
+        const mattmath::Vector2F value_limit(
+            controls.controls_position.x - controls.art.focus_padding.x * 2.0f - controls.art.shadow_offset -
+                controls.layout.position.x - controls.layout.spacing.x,
+            controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
+        require(label_width == 482.0f && value_limit == mattmath::Vector2F(332.0f, 68.0f),
+            "Controls fitted-row fixture no longer exercises the shipped column and height limits");
+        for (size_t index = 0; index < std::size(controls_fitted_items); ++index)
+        {
+            const int row_index = index < 5 ? static_cast<int>(index) + 1 : static_cast<int>(index) - 5;
+            const auto position = controls.layout.position + mattmath::Vector2F(0.0f,
+                controls.layout.spacing.y * static_cast<float>(row_index));
+            const std::wstring& text = look.menu_text().item(controls_fitted_items[index]);
+            const auto original = world.render.measure_text(font, text);
+            require(original.x > label_width, "Long Controls label already fits without scaling");
+            int adjustments = 0;
+            OptionRow row("controls_fit", text, position,
+                position + mattmath::Vector2F(controls.layout.spacing.x, 0.0f), style,
+                controls.art.ink, &world.render,
+                [&](Direction direction) { adjustments += direction == Direction::right ? 1 : -1; },
+                &controls.art, value_limit);
+            UiText* label = row_text(row, "controls_fit_label");
+            UiText* value = row_text(row, "controls_fit_value");
+            require(label != nullptr && value != nullptr && label->text() == text &&
+                std::isfinite(label->bounds().width) && label->bounds().width > 0.0f &&
+                label->bounds().width <= label_width + 0.01f && label->bounds().width < original.x &&
+                label->bounds().height > 0.0f && label->bounds().height <= value_limit.y + 0.01f,
+                "Actual Controls OptionRow truncated or failed to fit its authored label");
+            const auto retained_label = label->bounds();
+            row.set_value(std::wstring(100, L'W'));
+            require(value->bounds().width > 0.0f && value->bounds().width <= value_limit.x + 0.01f &&
+                value->bounds().height <= value_limit.y + 0.01f && label->bounds() == retained_label &&
+                label->text() == text,
+                "Controls value fitting changed its authored label or escaped the actual value limits");
+            row.set_value(L"5%");
+            require(value->text() == L"5%" && value->bounds().width > 0.0f &&
+                value->bounds().width <= value_limit.x + 0.01f && label->bounds() == retained_label,
+                "Shorter Controls values did not refit independently of the authored label");
+            row.adjust(Direction::right);
+            require(adjustments == 1, "Authored Controls label lost its right adjustment callback");
+            row.adjust(Direction::left);
+            require(adjustments == 0, "Authored Controls labels changed their adjustment callback");
+            row.set_hidden(true);
+            DrawList no_device;
+            row.draw(no_device);
+        }
+        // Exercise the second fit step independently: this short label needs
+        // no width reduction, while its font is just taller than Controls' 68.
+        style.item_font = "menu_controls_row_overflow";
+        OptionRow height_row("controls_height", L"i", controls.layout.position,
+            controls.layout.position + mattmath::Vector2F(controls.layout.spacing.x, 0.0f),
+            style, controls.art.ink, &world.render, {}, &controls.art, value_limit);
+        const UiText* fitted = row_text(height_row, "controls_height_label");
+        require(fitted != nullptr && fitted->text() == L"i" && fitted->bounds().height > 0.0f &&
+            fitted->bounds().height <= 68.01f && fitted->bounds().height < 68.25f &&
+            fitted->bounds().width > 0.0f && fitted->bounds().width < 8.0f,
+            "Controls OptionRow did not preserve and shrink a height-constrained authored label");
+    }
 }
 
 int main(int argc, char** argv)
@@ -879,6 +1067,8 @@ int main(int argc, char** argv)
         check_setup_text(variants, world);
         check_pause_text(variants, world);
         check_end_text(variants, world);
+        check_controls_text(variants, world);
+        check_controls_option_rows(variants, world);
         check_option_row_fitting(variants, world);
         check_prompt_bar(world, defaults);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "

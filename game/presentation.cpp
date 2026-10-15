@@ -34,7 +34,8 @@ namespace
 		"controls_audio", "apply", "back", "single_match", "best_of_three", "best_of_five",
 		"match_length", "one_player_practice", "two_players", "three_players", "four_players",
 		"resume", "restart", "quit", "yes", "no", "change_teams", "change_weapons", "change_level",
-		"exit_to_main_menu"
+		"exit_to_main_menu", "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
+		"reduce_effects", "pad", "move_deadzone", "aim_deadzone"
 	};
 
 	std::wstring read_menu_line(const JsonValue& json, const char* key)
@@ -1901,27 +1902,30 @@ void Presentation::validate_resources(const RenderResources& render,
 			this->menu_text_.prompts[index], this->prompt_bar_.font, this->prompt_bar_.position,
 			1080.0f, this->prompt_bar_.shadow_offset);
 	}
-	const auto check_menu_item = [&](MenuItem item, const Vector2F& position,
-		const Vector2F& paper_size, float row_spacing, bool fitted_label,
+	const auto check_menu_item = [&](MenuItem item, const std::string& font, const Vector2F& position,
+		const Vector2F& paper_size, float row_spacing, const std::optional<float>& label_width,
 		const MenuPaperArtPresentation& art, float content_height)
 	{
 		const std::string where = this->source_path_ + ": menu_text.items." +
 			menu_item_keys[static_cast<size_t>(item)];
 		const std::wstring& text = this->menu_text_.item(item);
-		drawable_text::check_font_can_draw(&render, this->menu_.item_font, text, where);
-		Vector2F size = render.measure_text(render.resolve_sprite_font(this->menu_.item_font), text);
+		drawable_text::check_font_can_draw(&render, font, text, where);
+		Vector2F size = render.measure_text(render.resolve_sprite_font(font), text);
 		if (!std::isfinite(size.x) || !std::isfinite(size.y) || size.x <= 0.0f || size.y <= 0.0f)
 		{
 			throw std::runtime_error(where + " must have finite positive measured text bounds.");
 		}
-		const MainMenuPresentation& look = this->main_menu_;
 		const Vector2F padding = art.focus_padding;
-		if (fitted_label)
+		if (label_width.has_value())
 		{
 			// Match OptionRow's existing width-then-height fit. Long supported
 			// labels remain valid; the display column, not a character limit, fits them.
-			const float width = look.options_value_x - position.x - padding.x;
+			const float width = *label_width;
 			const float height = row_spacing - padding.y * 2.0f;
+			if (!std::isfinite(width) || !std::isfinite(height) || width <= 0.0f || height <= 0.0f)
+			{
+				throw std::runtime_error(where + " must leave a positive finite fitted label column and row height.");
+			}
 			float scale = 1.0f;
 			if (size.x > width) { scale = width / size.x; }
 			if (size.y * scale > height) { scale = height / size.y; }
@@ -1941,24 +1945,28 @@ void Presentation::validate_resources(const RenderResources& render,
 		{
 			throw std::runtime_error(where + " must fit its paper and row including focus padding.");
 		}
+		return size;
 	};
 	const MainMenuPresentation& main = this->main_menu_;
 	const MenuItem home_items[]{ MenuItem::play, MenuItem::options, MenuItem::credits, MenuItem::exit };
 	for (size_t index = 0; index < std::size(home_items); ++index)
 	{
-		check_menu_item(home_items[index], main.home_position +
+		check_menu_item(home_items[index], this->menu_.item_font, main.home_position +
 			Vector2F(0.0f, main.home_spacing.y * static_cast<float>(index + 2)),
-			main.home_box_size, main.home_spacing.y, false, main.art, this->menu_.footer_y);
+			main.home_box_size, main.home_spacing.y, std::nullopt, main.art, this->menu_.footer_y);
 	}
 	const MenuItem options_items[]{ MenuItem::resolution, MenuItem::fullscreen, MenuItem::team_palette,
 		MenuItem::controls_audio, MenuItem::apply, MenuItem::back };
 	for (size_t index = 0; index < std::size(options_items); ++index)
 	{
-		check_menu_item(options_items[index], main.options_position +
-			Vector2F(0.0f, main.options_spacing.y * static_cast<float>(index)),
-			main.options_box_size, main.options_spacing.y, index < 3, main.art, this->menu_.footer_y);
+		const Vector2F position = main.options_position +
+			Vector2F(0.0f, main.options_spacing.y * static_cast<float>(index));
+		const std::optional<float> label_width = index < 3 ?
+			std::optional<float>(main.options_value_x - position.x - main.art.focus_padding.x) : std::nullopt;
+		check_menu_item(options_items[index], this->menu_.item_font, position,
+			main.options_box_size, main.options_spacing.y, label_width, main.art, this->menu_.footer_y);
 	}
-	check_menu_item(MenuItem::back, main.credits_back_position, main.credits_box_size, 0.0f, false,
+	check_menu_item(MenuItem::back, this->menu_.item_font, main.credits_back_position, main.credits_box_size, 0.0f, std::nullopt,
 		main.art, this->menu_.footer_y);
 	const PauseMenuPresentation& pause = this->pause_menu_;
 	if (!std::isfinite(pause.layout.spacing.y) || pause.layout.spacing.y <= 0.0f)
@@ -1969,14 +1977,14 @@ void Presentation::validate_resources(const RenderResources& render,
 	const MenuItem pause_items[]{ MenuItem::resume, MenuItem::restart, MenuItem::controls_audio, MenuItem::quit };
 	for (size_t index = 0; index < std::size(pause_items); ++index)
 	{
-		check_menu_item(pause_items[index], pause.layout.position +
+		check_menu_item(pause_items[index], this->menu_.item_font, pause.layout.position +
 			Vector2F(0.0f, pause.layout.spacing.y * static_cast<float>(index)),
-			pause.box_size, pause.layout.spacing.y, false, pause.art, 1080.0f);
+			pause.box_size, pause.layout.spacing.y, std::nullopt, pause.art, 1080.0f);
 	}
-	check_menu_item(MenuItem::yes, pause.layout.position, pause.box_size, pause.layout.spacing.y,
-		false, pause.art, 1080.0f);
-	check_menu_item(MenuItem::no, pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
-		pause.box_size, pause.layout.spacing.y, false, pause.art, 1080.0f);
+	check_menu_item(MenuItem::yes, this->menu_.item_font, pause.layout.position, pause.box_size, pause.layout.spacing.y,
+		std::nullopt, pause.art, 1080.0f);
+	check_menu_item(MenuItem::no, this->menu_.item_font, pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
+		pause.box_size, pause.layout.spacing.y, std::nullopt, pause.art, 1080.0f);
 	const EndMenuPresentation& end = this->end_menu_;
 	if (!std::isfinite(end.layout.spacing.y) || end.layout.spacing.y <= 0.0f)
 	{
@@ -1986,16 +1994,48 @@ void Presentation::validate_resources(const RenderResources& render,
 	const MenuItem end_items[]{ MenuItem::change_teams, MenuItem::change_weapons, MenuItem::change_level };
 	for (size_t index = 0; index < std::size(end_items); ++index)
 	{
-		check_menu_item(end_items[index], end.layout.position +
+		check_menu_item(end_items[index], this->menu_.item_font, end.layout.position +
 			Vector2F(0.0f, end.layout.spacing.y * static_cast<float>(index + 1)),
-			end.box_size, end.layout.spacing.y, false, end.art, 1080.0f);
+			end.box_size, end.layout.spacing.y, std::nullopt, end.art, 1080.0f);
 	}
 	// Exit moves up while a series is ongoing; both layouts share this text.
 	for (const int row : { 1, 4 })
 	{
-		check_menu_item(MenuItem::exit_to_main_menu, end.layout.position +
+		check_menu_item(MenuItem::exit_to_main_menu, this->menu_.item_font, end.layout.position +
 			Vector2F(0.0f, end.layout.spacing.y * static_cast<float>(row)),
-			end.box_size, end.layout.spacing.y, false, end.art, 1080.0f);
+			end.box_size, end.layout.spacing.y, std::nullopt, end.art, 1080.0f);
+	}
+	const ControlsSettingsPresentation& controls = this->controls_settings_;
+	const auto check_controls_item = [&](MenuItem item, int row, bool fitted_label)
+	{
+		const Vector2F position = controls.layout.position +
+			Vector2F(0.0f, controls.layout.spacing.y * static_cast<float>(row));
+		const std::optional<float> label_width = fitted_label ?
+			std::optional<float>(controls.layout.spacing.x - controls.art.focus_padding.x) : std::nullopt;
+		const Vector2F size = check_menu_item(item, controls.item_font, position,
+			controls.box_size, controls.layout.spacing.y, label_width, controls.art, this->menu_.footer_y);
+		if (position.x + size.x + controls.art.focus_padding.x > controls.controls_position.x)
+		{
+			throw std::runtime_error(this->source_path_ + ": menu_text.items." +
+				menu_item_keys[static_cast<size_t>(item)] + " must fit before the controls help column including focus padding.");
+		}
+		if (position.y + size.y + controls.art.focus_padding.y > controls.status_position.y)
+		{
+			throw std::runtime_error(this->source_path_ + ": menu_text.items." +
+				menu_item_keys[static_cast<size_t>(item)] + " must fit above the controls status line including focus padding.");
+		}
+	};
+	const MenuItem controls_items[]{ MenuItem::pad_sticks, MenuItem::music_volume, MenuItem::sfx_volume,
+		MenuItem::view_shake, MenuItem::aim_marker, MenuItem::reduce_effects, MenuItem::apply, MenuItem::back };
+	for (size_t index = 0; index < std::size(controls_items); ++index)
+	{
+		check_controls_item(controls_items[index], static_cast<int>(index), index >= 1 && index <= 5);
+	}
+	const MenuItem sticks_items[]{ MenuItem::pad, MenuItem::move_deadzone, MenuItem::aim_deadzone,
+		MenuItem::apply, MenuItem::back };
+	for (size_t index = 0; index < std::size(sticks_items); ++index)
+	{
+		check_controls_item(sticks_items[index], static_cast<int>(index), index < 3);
 	}
 	const auto check_setup_item = [&](MenuItem item, const Vector2F& spacing, int row, bool duration_label)
 	{

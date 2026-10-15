@@ -108,7 +108,7 @@ random-primary selection, without changing selection order or RNG draws.
 ## Shared headings and complete control legends
 
 The required `menu_text` object stores the shared menu brand, eleven headings,
-seventeen complete prompt-bar legends, twenty-seven row labels and a solo-practice
+seventeen complete prompt-bar legends, thirty-six row labels and a solo-practice
 hint:
 
 | JSON path | Required keys |
@@ -116,7 +116,7 @@ hint:
 | `menu_text.brand` | One brand-line string |
 | `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
 | `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits` |
-| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu` |
+| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone` |
 | `menu_text.solo_practice_hint` | One Mode Select hint string |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
@@ -328,6 +328,60 @@ presentation changes; reopening adopts the edits. The strings are edited in
 JSON, outside numeric `tune`. Session-dependent continuation and heading text,
 and other composed End copy, remain separate C++ text.
 
+### Controls / audio and Pad Sticks row labels
+
+Nine required `menu_text.items` roles supply the existing settings labels:
+
+| Key | Shipped text | Use |
+|---|---|---|
+| `pad_sticks` | `Pad sticks` | Controls / audio action, row 0 |
+| `music_volume` | `Music volume` | Controls / audio fitted label, row 1 |
+| `sfx_volume` | `SFX volume` | Controls / audio fitted label, row 2 |
+| `view_shake` | `View shake` | Controls / audio fitted label, row 3 |
+| `aim_marker` | `Aim marker` | Controls / audio fitted label, row 4 |
+| `reduce_effects` | `Reduce effects` | Controls / audio fitted label, row 5 |
+| `pad` | `Pad` | Pad Sticks fitted label, row 0 |
+| `move_deadzone` | `Move deadzone` | Pad Sticks fitted label, row 1 |
+| `aim_deadzone` | `Aim deadzone` | Pad Sticks fitted label, row 2 |
+
+Both pages reuse `menu_text.items.apply` and `menu_text.items.back`, at Controls
+rows 6/7 and Pad Sticks rows 3/4. All thirteen uses draw plain text with
+`controls_settings.item_font`, shipped as `gill_sans_mt_bold_36`. This is a
+separate context from `menu_style.fonts.item` (`gill_sans_mt_bold_48`) and from
+the shared heading font (`gill_sans_mt_bold_72`). Shared Apply/Back labels are
+checked in each font and page where they appear.
+
+The normalized, nonblank, single-line rules apply. Startup checks actual font
+glyphs and finite, positive measured text bounds. All eight setting labels keep
+the existing `OptionRow` fit: starting at scale one, shrink to the label-column
+width if needed, then shrink further to the available row height. The width is
+`controls_settings.layout.spacing.x - controls_settings.art.focus_padding.x`;
+the height is
+`controls_settings.layout.spacing.y - 2 * controls_settings.art.focus_padding.y`.
+The fitted scale must remain finite and positive. Long supported labels remain
+valid when their fitted bounds fit, without a character-count limit.
+
+The Pad sticks action and both pages' Apply/Back actions retain their measured
+font size. Text bounds expanded by `controls_settings.art.focus_padding` must
+fit the Controls paper, centered in
+`(1920, menu_style.chrome.footer_y)` using `controls_settings.box_size`, and
+their row height. For all thirteen uses, the padded right edge must be at most
+`controls_settings.controls_position.x`, where the help and preview area
+begins, and the padded bottom edge must be at most
+`controls_settings.status_position.y`. These checks use the actual measured
+label size after any fitting, rather than the nominal widget size. Paper,
+row, help-column and status-line boundaries accept equality. Rows start at
+`controls_settings.layout.position` and use its authored spacing. These labels
+add no item-text shadow.
+
+Each page takes its labels from captured `MenuText` and resolves its item font
+on opening. Presentation changes leave an open page's text, font and fitted
+label sizes intact; reopening adopts the edits. They remain JSON string
+settings outside numeric `tune`. Labels do not change navigation, adjustment
+steps, Apply/Back behavior, saved preferences or stick previews. Multiline
+controls help, pad association text, the aim-preview caption and dynamic
+status/value/readout strings remain separate C++ text.
+
 ## Verification and boundary
 
 The `menu_presentation` consumer case checks layout limits, required identifiers,
@@ -336,8 +390,10 @@ a graphics or audio device. The `weapon_catalog` case checks the weapon catalog'
 required fields, display-text rules and resource/layer compatibility.
 The `menu_text` case checks required shared headings/legends/row labels, text
 normalization, font coverage and measured design/paper bounds, including fitted
-Options labels, shadowed Mode/Player Count rows and solo hint, and plain Pause
-actions/confirmation and End action labels.
+Options and Controls/Pad Sticks labels, shadowed Mode/Player Count rows and solo
+hint, and plain Pause actions/confirmation and End action labels. Controls
+labels use their separate item font, including shared Apply/Back checks and
+width-then-height fitting.
 Debug-console acceptance checks layout edit scopes, rollback and reset.
 
 The native painter checks exercise real page construction, copied geometry,
@@ -361,14 +417,17 @@ text/look when a page updates its prompt or reopens.
 repeated and interrupted pause, restart and quit flows.
 `EndMenuOnly` checks the four authored actions, both Exit positions and page
 text/font snapshots through repeated and interrupted end-page flows.
+Use `ControlsMenuOnly` for the authored Controls / audio and Pad Sticks labels,
+their fitted columns and retained text/font across presentation replacement,
+returning from the child page and reopening.
 
 The non-menu primitive texel retains its own startup checks. Together with
 [gameplay tuning](gameplay-tuning.md), the shared layout and sheet choices define
 the data boundary implemented for gap-audit 8.5. The weapon catalog implements
 the name/artwork part of GAP#8.4, and `menu_text` implements shared headings,
-control legends, Home/Options/Credits, Mode/Player Count, Pause and static End
-row labels, and the solo-practice hint. Controls and stick-settings labels,
-status/value text, composed match/results/pause/end text, title-screen and
-home-hero copy, and other
+control legends, Home/Options/Credits, Mode/Player Count, Pause, static End and
+Controls/Pad Sticks row labels, and the solo-practice hint. Multiline controls
+help, pad association and aim-preview captions, status/value/readout text,
+composed match/results/pause/end text, title-screen and home-hero copy, and other
 player-visible C++ text remain open under that item. Font regeneration, wrapping
 and locale selection remain separate work. The historical audit is unchanged.
