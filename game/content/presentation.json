@@ -99,6 +99,16 @@
       "pad_association": "Profiles follow Pad 1-4 slots,\nnot the player number or device.\nAfter reconnecting, check the slot.\nKeyboard/mouse is unchanged.",
       "aim_cutoff": "Right stick: radial cutoff"
     },
+    "status": {
+      "options_pending": "Apply to save changes.",
+      "options_saved": "Settings applied and saved.",
+      "options_save_failed": "Settings active for this run. Could not save for next time.",
+      "controls_pending": "Apply to save changes for all players.",
+      "controls_saved": "Applied and saved for all players.",
+      "active_save_failed": "Active for this run. Could not save.",
+      "sticks_pending": "Apply to save pad deadzones.",
+      "sticks_saved": "Pad deadzones applied and saved."
+    },
     "headings": {
       "home": "Make your mark.",
       "options": "Options",

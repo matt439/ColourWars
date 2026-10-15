@@ -764,4 +764,5 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         "values/focus and actual GameLevel Pause return remain intact; frozen/reduced/random/resize\n";
     controls_menu_item_checks(app, canvas, tuning, presentation, output, save_path);
     controls_menu_help_checks(app, canvas, tuning, presentation, output, save_path);
+    save_status_checks(app, canvas, tuning, presentation, output, true);
 }

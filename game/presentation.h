@@ -84,6 +84,18 @@ struct MenuHelpText
 	std::wstring aim_cutoff;
 };
 
+struct MenuStatusText
+{
+	std::wstring options_pending;
+	std::wstring options_saved;
+	std::wstring options_save_failed;
+	std::wstring controls_pending;
+	std::wstring controls_saved;
+	std::wstring active_save_failed;
+	std::wstring sticks_pending;
+	std::wstring sticks_saved;
+};
+
 // Fixed roles select display text; navigation and accepted inputs remain code.
 struct MenuText
 {
@@ -92,6 +104,7 @@ struct MenuText
 	MenuTitleText title;
 	std::wstring home_subtitle;
 	MenuHelpText help;
+	MenuStatusText status;
 	std::array<std::wstring, static_cast<size_t>(MenuHeading::count)> headings;
 	std::array<std::wstring, static_cast<size_t>(MenuPrompt::count)> prompts;
 	std::array<std::wstring, static_cast<size_t>(MenuItem::count)> items;

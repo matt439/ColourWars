@@ -109,7 +109,8 @@ random-primary selection, without changing selection order or RNG draws.
 
 The required `menu_text` object stores the shared menu brand, eleven headings,
 seventeen complete prompt-bar legends, thirty-six row labels, a solo-practice
-hint, five Title/Home strings and three Controls/Pad Sticks help strings:
+hint, five Title/Home strings, three Controls/Pad Sticks help strings and eight
+fixed save-status messages:
 
 | JSON path | Required keys |
 |---|---|
@@ -121,6 +122,7 @@ hint, five Title/Home strings and three Controls/Pad Sticks help strings:
 | `menu_text.title` | `wordmark`, `subtitle`, `start`, `no_controller` |
 | `menu_text.home_subtitle` | One Home subtitle string |
 | `menu_text.help` | `controls`, `pad_association`, `aim_cutoff` |
+| `menu_text.status` | `options_pending`, `options_saved`, `options_save_failed`, `controls_pending`, `controls_saved`, `active_save_failed`, `sticks_pending`, `sticks_saved` |
 
 Every field is required. Each string uses the existing UTF-8 punctuation
 normalization and the supported U+0020 to U+007E printable content range after
@@ -429,7 +431,7 @@ on opening. Presentation changes leave an open page's text, font and fitted
 label sizes intact; reopening adopts the edits. They remain JSON string
 settings outside numeric `tune`. Labels do not change navigation, adjustment
 steps, Apply/Back behavior, saved preferences or stick previews. Dynamic
-status/value/readout strings remain separate C++ text.
+connection, setting-value and readout strings remain separate C++ text.
 
 ### Controls / audio and Pad Sticks help
 
@@ -517,6 +519,63 @@ adopts the edits. These strings remain JSON settings outside numeric `tune`.
 Changing the instructions does not remap input, alter profile association,
 change saved settings or modify stick-response behavior.
 
+### Fixed settings save-status messages
+
+The required `menu_text.status` object supplies eight complete messages for the
+existing Options, Controls / audio and Pad Sticks status lines:
+
+| Key | Shipped text | Use |
+|---|---|---|
+| `options_pending` | `Apply to save changes.` | Options value adjusted |
+| `options_saved` | `Settings applied and saved.` | Options Apply succeeds |
+| `options_save_failed` | `Settings active for this run. Could not save for next time.` | Options Apply cannot persist settings |
+| `controls_pending` | `Apply to save changes for all players.` | Controls opens or a value is adjusted |
+| `controls_saved` | `Applied and saved for all players.` | Controls Apply succeeds |
+| `active_save_failed` | `Active for this run. Could not save.` | Controls or Pad Sticks Apply cannot persist settings |
+| `sticks_pending` | `Apply to save pad deadzones.` | Pad Sticks opens or a deadzone is adjusted |
+| `sticks_saved` | `Pad deadzones applied and saved.` | Pad Sticks Apply succeeds |
+
+Each field follows the shared normalized, nonblank, single-line text rules.
+These are complete display messages, with no placeholders or runtime
+formatting. Options uses `prompt_bar.font`; Controls and Pad Sticks use
+`controls_settings.help_font`. Both fonts ship as `gill_sans_mt_bold_24` but
+remain separate contexts. Controls and Pad Sticks share the font and placement
+of `active_save_failed`.
+
+Startup checks actual font glyphs and finite, positive measured bounds. Status
+text keeps its existing width-only fit: the scale starts at one and shrinks
+only when the measured width exceeds the available width. That width is the
+page paper's right edge minus its art shadow offset, horizontal focus padding
+and status x position. Options uses `main_menu.options_status_position` and its
+Options paper/art; Controls and Pad Sticks use
+`controls_settings.status_position` and their shared paper/art. The available
+width and fitted scale must be finite and positive. Long supported messages
+remain valid when the fitted bounds fit; there is no character-count limit,
+minimum scale, automatic wrapping, height-driven shrink or upscaling.
+
+The actual fitted status rectangle, without focus padding or text shadow, must
+fit the outer paper centered within `(1920, menu_style.chrome.footer_y)`. It
+must not intersect the page's actual Back text rectangle expanded by that
+page's focus padding. This is a two-dimensional rectangle check: Options'
+shipped Back row and status line overlap vertically but remain horizontally
+separate. Controls status must also avoid its actual fitted help block. Pad
+Sticks status must avoid the actual fitted association block, the three preview
+rectangles and the unscaled aim caption. Touching edges are accepted. These
+checks use actual rectangles rather than an unconditional help-column width
+cap; a long fitted message is valid when neighboring content ends above it.
+
+Messages come from the page's captured `MenuText`, and the status font is
+resolved when the page opens. An open page retains its text and font after
+presentation edits, including messages set by later pending, successful or
+failed Apply callbacks and returning from a child page. Reopening adopts the
+edits. These strings remain JSON settings outside numeric `tune`. Wording does
+not change success/warning colours, which preferences are applied, persistence,
+failure handling, navigation or input reset behavior. Options still opens with
+an empty status line until its first value adjustment or Apply. Status callbacks
+continue to read live presentation geometry for their width fit, preserving the
+existing behavior if that geometry changes while a page is open; fitted sizes
+are not a geometry snapshot.
+
 ## Verification and boundary
 
 The `menu_presentation` consumer case checks layout limits, required identifiers,
@@ -534,6 +593,9 @@ identity. The fixed Controls/Pad Sticks help adds required-key, normalized-line,
 actual help-font and fitted-region checks. The unscaled aim caption uses its
 actual bounds and existing probe-based position, with clearance between the
 movement-response and aim previews; association text stays below the aim box.
+Fixed save-status coverage checks required messages, normalization, actual
+context fonts, width-only fitting, paper containment and separation from the
+actual Back/help/preview rectangles.
 Debug-console acceptance checks layout edit scopes, rollback and reset.
 
 The native painter checks exercise real page construction, copied geometry,
@@ -561,6 +623,10 @@ Use `ControlsMenuOnly` for the authored Controls / audio and Pad Sticks labels,
 their fitted columns and retained text/font across presentation replacement,
 returning from the child page and reopening. The same scope covers the authored
 help blocks' fitting and the aim caption's retained text/font and placement.
+`SettingsMenuOnly` and `ControlsMenuOnly` exercise authored status messages
+through pending edits, successful and failed isolated saves, interrupted
+preferences flows, presentation replacement, child-page return and reopening.
+They check the retained text/font without treating live geometry as captured.
 Use `MainMenuOnly` for Title/Home wording, centering, focus and navigation,
 including retained text/font across presentation replacement and reopening.
 
@@ -569,8 +635,9 @@ The non-menu primitive texel retains its own startup checks. Together with
 the data boundary implemented for gap-audit 8.5. The weapon catalog implements
 the name/artwork part of GAP#8.4, and `menu_text` implements shared headings,
 control legends, Home/Options/Credits, Mode/Player Count, Pause, static End and
-Controls/Pad Sticks row labels and help, the solo-practice hint and fixed
-Title/Home copy. Status/value/readout text, composed match/results/pause/end text
-and other player-visible C++ text remain open under that item. Font
+Controls/Pad Sticks row labels and help, the solo-practice hint, fixed
+Title/Home copy and fixed settings save-status messages. Setting values,
+connection/readout text, composed match/results/pause/end text and other
+player-visible C++ text remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical
 audit is unchanged.

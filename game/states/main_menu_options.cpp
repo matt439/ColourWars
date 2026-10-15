@@ -69,7 +69,7 @@ void MainMenuOptions::adjust_focused_value(labrador::Direction direction)
 
 	this->play_wave(this->direction_sound_);
 	row->adjust(direction);
-	this->set_status(L"Apply to save changes.", this->look().art.focus_ink);
+	this->set_status(this->text().status.options_pending, this->look().art.focus_ink);
 }
 
 void MainMenuOptions::set_status(const std::wstring& text, const Colour& colour)
@@ -107,8 +107,8 @@ void MainMenuOptions::apply_settings()
 
 	// Refresh from the applied display state.
 	this->refresh_resolution_row();
-	this->set_status(saved ? L"Settings applied and saved." :
-		L"Settings active for this run. Could not save for next time.",
+	this->set_status(saved ? this->text().status.options_saved :
+		this->text().status.options_save_failed,
 		saved ? this->look().art.focus_ink : this->look().options_warning_colour);
 }
 

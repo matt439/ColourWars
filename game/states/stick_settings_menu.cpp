@@ -166,7 +166,7 @@ void StickSettingsMenu::init()
 		value = std::clamp(static_cast<int>(std::lround(effective * 100.0f)) +
 			(direction == Direction::right ? 5 : -5), 0, 90);
 		this->refresh_values();
-		this->set_status(L"Apply to save pad deadzones.");
+		this->set_status(this->text().status.sticks_pending);
 	};
 	this->movement_ = row("movement", this->text().item(MenuItem::move_deadzone), 1,
 		[adjust_deadzone](Direction direction) { adjust_deadzone(true, direction); });
@@ -198,7 +198,7 @@ void StickSettingsMenu::init()
 	const Vector2F available = look.controls_position + look.controls_size - look.stick_preview.association_position;
 	association->set_scale(std::min({ 1.0f, available.x / association->bounds().width,
 		available.y / association->bounds().height }));
-	this->set_status(L"Apply to save pad deadzones.");
+	this->set_status(this->text().status.sticks_pending);
 	this->refresh_values();
 }
 
@@ -249,7 +249,7 @@ void StickSettingsMenu::apply_settings()
 	applied.sticks = this->selection_.sticks;
 	const bool saved = this->save()->set_play_settings_and_save(applied);
 	this->play_wave(this->confirm_sound_);
-	this->set_status(saved ? L"Pad deadzones applied and saved." : L"Active for this run. Could not save.", !saved);
+	this->set_status(saved ? this->text().status.sticks_saved : this->text().status.active_save_failed, !saved);
 }
 
 void StickSettingsMenu::close()

@@ -88,6 +88,15 @@ namespace
 		text.help.controls = read_menu_block(help, "controls");
 		text.help.pad_association = read_menu_block(help, "pad_association");
 		text.help.aim_cutoff = read_menu_line(help, "aim_cutoff");
+		const JsonValue status = json.object("status");
+		text.status.options_pending = read_menu_line(status, "options_pending");
+		text.status.options_saved = read_menu_line(status, "options_saved");
+		text.status.options_save_failed = read_menu_line(status, "options_save_failed");
+		text.status.controls_pending = read_menu_line(status, "controls_pending");
+		text.status.controls_saved = read_menu_line(status, "controls_saved");
+		text.status.active_save_failed = read_menu_line(status, "active_save_failed");
+		text.status.sticks_pending = read_menu_line(status, "sticks_pending");
+		text.status.sticks_saved = read_menu_line(status, "sticks_saved");
 		const JsonValue headings = json.object("headings");
 		for (size_t index = 0; index < text.headings.size(); ++index)
 		{
@@ -2201,11 +2210,12 @@ void Presentation::validate_resources(const RenderResources& render,
 			throw std::runtime_error(this->source_path_ + ": " + key +
 				" must retain finite positive text bounds after fitting.");
 		}
+		return RectangleF(position, fitted);
 	};
-	check_help_fit("menu_text.help.controls", this->menu_text_.help.controls,
+	const RectangleF controls_help = check_help_fit("menu_text.help.controls", this->menu_text_.help.controls,
 		controls.controls_position, controls.controls_size);
 	const StickPreviewPresentation& preview = controls.stick_preview;
-	check_help_fit("menu_text.help.pad_association", this->menu_text_.help.pad_association,
+	const RectangleF pad_association = check_help_fit("menu_text.help.pad_association", this->menu_text_.help.pad_association,
 		preview.association_position, help_area.bottom_right() - preview.association_position);
 	if (preview.association_position.y < preview.aim.bottom())
 	{
@@ -2222,6 +2232,76 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		throw std::runtime_error(this->source_path_ +
 			": menu_text.help.aim_cutoff must fit unscaled inside the controls help region between the movement and aim previews.");
+	}
+	const auto padded_back = [&](const Vector2F& position, const std::string& font,
+		const MenuPaperArtPresentation& art)
+	{
+		RectangleF bounds(position, fixed_menu_size("menu_text.items.back", this->menu_text_.item(MenuItem::back), font));
+		bounds.inflate(art.focus_padding);
+		return bounds;
+	};
+	const RectangleF options_back = padded_back(main.options_position + Vector2F(0.0f, main.options_spacing.y * 5.0f),
+		this->menu_.item_font, main.art);
+	const RectangleF controls_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 7.0f),
+		controls.item_font, controls.art);
+	const RectangleF sticks_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 4.0f),
+		controls.item_font, controls.art);
+	struct StatusMessage { const char* key; const std::wstring& text; };
+	const auto check_status = [&](const StatusMessage& message, const std::string& font,
+		const Vector2F& position, const Vector2F& paper_size, const MenuPaperArtPresentation& art,
+		std::initializer_list<RectangleF> obstacles)
+	{
+		const std::string key = std::string("menu_text.status.") + message.key;
+		const Vector2F raw = fixed_menu_size(key, message.text, font);
+		const float available = (1920.0f + paper_size.x) / 2.0f - art.shadow_offset -
+			art.focus_padding.x - position.x;
+		if (!std::isfinite(available) || available <= 0.0f)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key + " must leave finite positive status width.");
+		}
+		// All three pages reset to the authored font size, then fit width only.
+		const float scale = std::min(1.0f, available / raw.x);
+		const Vector2F fitted = raw * scale;
+		if (!std::isfinite(scale) || scale <= 0.0f || !std::isfinite(fitted.x) || !std::isfinite(fitted.y) ||
+			fitted.x <= 0.0f || fitted.y <= 0.0f)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key + " must retain finite positive fitted status bounds.");
+		}
+		const RectangleF bounds(position, fitted);
+		check_fixed_paper(key, bounds, paper_size, Vector2F::ZERO);
+		for (const RectangleF& obstacle : obstacles)
+		{
+			// Touching edges are allowed. Options' status and Back deliberately
+			// share vertical space while remaining horizontally separate.
+			if (bounds.x < obstacle.right() && bounds.right() > obstacle.x &&
+				bounds.y < obstacle.bottom() && bounds.bottom() > obstacle.y)
+			{
+				throw std::runtime_error(this->source_path_ + ": " + key +
+					" must not overlap the Back card, help text or stick previews.");
+			}
+		}
+	};
+	const MenuStatusText& status_text = this->menu_text_.status;
+	const StatusMessage options_statuses[]{ { "options_pending", status_text.options_pending },
+		{ "options_saved", status_text.options_saved }, { "options_save_failed", status_text.options_save_failed } };
+	for (const StatusMessage& message : options_statuses)
+	{
+		check_status(message, this->prompt_bar_.font, main.options_status_position, main.options_box_size,
+			main.art, { options_back });
+	}
+	const StatusMessage controls_statuses[]{ { "controls_pending", status_text.controls_pending },
+		{ "controls_saved", status_text.controls_saved }, { "active_save_failed", status_text.active_save_failed } };
+	for (const StatusMessage& message : controls_statuses)
+	{
+		check_status(message, controls.help_font, controls.status_position, controls.box_size,
+			controls.art, { controls_back, controls_help });
+	}
+	const StatusMessage sticks_statuses[]{ { "sticks_pending", status_text.sticks_pending },
+		{ "sticks_saved", status_text.sticks_saved }, { "active_save_failed", status_text.active_save_failed } };
+	for (const StatusMessage& message : sticks_statuses)
+	{
+		check_status(message, controls.help_font, controls.status_position, controls.box_size,
+			controls.art, { sticks_back, pad_association, preview.raw_movement, preview.movement_response, preview.aim, caption });
 	}
 	check.font("hud.meter_label_font", this->hud_.meter_label_font);
 	check.font("hud.player_identity.font", this->hud_.player_identity_font);

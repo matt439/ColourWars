@@ -61,7 +61,7 @@ void ControlsSettingsMenu::init()
 				value = std::clamp(value + (direction == Direction::right ? step : -step),
 					minimum, maximum);
 				this->refresh_values();
-				this->set_status(L"Apply to save changes for all players.",
+				this->set_status(this->text().status.controls_pending,
 					this->presentation().controls_settings().art.focus_ink);
 			}, &look.art, value_limit);
 	};
@@ -84,7 +84,7 @@ void ControlsSettingsMenu::init()
 		{
 			this->selection_.view_shake = direction == Direction::right;
 			this->refresh_values();
-			this->set_status(L"Apply to save changes for all players.",
+			this->set_status(this->text().status.controls_pending,
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
 	this->aim_marker_ = std::make_unique<OptionRow>("aim_marker", this->text().item(MenuItem::aim_marker),
@@ -94,7 +94,7 @@ void ControlsSettingsMenu::init()
 		{
 			this->selection_.aim_marker = direction == Direction::right;
 			this->refresh_values();
-			this->set_status(L"Apply to save changes for all players.",
+			this->set_status(this->text().status.controls_pending,
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
 	this->reduce_effects_ = std::make_unique<OptionRow>("reduce_effects", this->text().item(MenuItem::reduce_effects),
@@ -104,7 +104,7 @@ void ControlsSettingsMenu::init()
 		{
 			this->selection_.reduce_effects = direction == Direction::right;
 			this->refresh_values();
-			this->set_status(L"Apply to save changes for all players.",
+			this->set_status(this->text().status.controls_pending,
 				this->presentation().controls_settings().art.focus_ink);
 		}, &look.art, value_limit);
 	for (OptionRow* row : { this->music_.get(), this->sfx_.get(),
@@ -119,7 +119,7 @@ void ControlsSettingsMenu::init()
 	UiText* back = add_text("back", this->text().item(MenuItem::back), style.item_font,
 		this->calculate_widget_position(0, 7), look.art.ink);
 	this->status_ = add_text("status", L"", look.help_font, look.status_position, look.art.focus_ink);
-	this->set_status(L"Apply to save changes for all players.", look.art.focus_ink);
+	this->set_status(this->text().status.controls_pending, look.art.focus_ink);
 	this->focus_.add(apply, [this] { this->apply_settings(); });
 	this->focus_.add(back, [this] { this->close(); });
 	UiText* controls = add_text("controls", this->text().help.controls,
@@ -160,8 +160,8 @@ void ControlsSettingsMenu::apply_settings()
 	// Apply the saved gain through the owner so an in-progress fade survives.
 	this->menu_context()->update_music(0.0f);
 	this->play_wave(this->confirm_sound_);
-	this->set_status(saved ? L"Applied and saved for all players." :
-		L"Active for this run. Could not save.",
+	this->set_status(saved ? this->text().status.controls_saved :
+		this->text().status.active_save_failed,
 		saved ? this->presentation().controls_settings().art.focus_ink :
 		this->presentation().main_menu().options_warning_colour);
 }

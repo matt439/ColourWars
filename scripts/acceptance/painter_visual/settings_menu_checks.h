@@ -166,6 +166,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         // Win32 leave_fullscreen shows even an initially hidden window. Keep
         // that real Apply path off the desktop, then hide and rearm the probe.
         const HWND window = static_cast<HWND>(app.window());
+        const SettingsProbeActivationGuard activation(window);
         require(SetWindowPos(window, nullptr, -32000, -32000, 0, 0,
             SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) != FALSE,
             "Could not keep the settings Apply probe off the desktop");
@@ -173,8 +174,8 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         ShowWindow(window, SW_HIDE);
         app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         stack.notify_activation(true); tick();
-        require(IsWindowVisible(window) == FALSE && !app.fullscreen(),
-            "Settings Apply left its probe visible or entered fullscreen");
+        require(IsWindowVisible(window) == FALSE && !app.fullscreen() && GetForegroundWindow() != window,
+            "Settings Apply left its probe visible, activated it or entered fullscreen");
     };
     const auto open = [&](std::unique_ptr<State> page)
     {
@@ -476,4 +477,5 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         "six native sizes/aspects, paper/cards/arrows and contrast; actual row edits, delayed Apply, "
         "saved reload/failure, Controls/audio return and Back discard, disabled fullscreen resolution "
         "and windowed preset retention; frozen/reduced/random/resize and Credits Select/Back\n";
+    save_status_checks(app, canvas, tuning, presentation, output, false);
 }
