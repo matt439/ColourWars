@@ -112,6 +112,9 @@ public:
 	// Refresh size-dependent presentation before rendering, even when a menu
 	// covers the match. Called on the main thread, before render workers start.
 	void refresh_layout();
+	// Snapshot the shell's measured interval on the main thread, before view
+	// workers start. Drawing reads this value and never advances its clock.
+	void set_debug_frame_time(double frame_ms);
 
 	// Read-only rendering; scene objects and overlays may be drawn concurrently.
 	void draw(labrador::Renderer& renderer) const;
@@ -211,8 +214,10 @@ private:
 	MusicEnvelope music_duck_{ 1.0f };
 	bool music_ending_ = false;
 
-	// Written during the main-thread update and read by render workers for dt/fps.
-	float frame_dt_ = 0.0f;
+	// Simulation and rendering have independent clocks; both snapshots have
+	// identical layout in Debug and Release and are read-only during fan-out.
+	float simulation_dt_ = 0.0f;
+	double debug_frame_ms_ = 0.0;
 
 	// Cached once per tick for all debug overlays.
 	int projectile_count_ = 0;

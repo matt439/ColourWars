@@ -1,5 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/debug_text.h"
+#include <cmath>
+#include <cstdio>
 
 using namespace DirectX;
 using namespace mattmath;
@@ -22,8 +24,18 @@ RenderResources* DebugText::render_resources() const
 }
 
 
+std::wstring DebugText::frame_rate_text(double frame_ms)
+{
+    if (!(frame_ms > 0.0) || !std::isfinite(frame_ms)) { return L"render fps: n/a"; }
+    const double fps = 1000.0 / frame_ms;
+    if (!std::isfinite(fps)) { return L"render fps: n/a"; }
+    char text[64]{};
+    const int size = std::snprintf(text, sizeof(text), "render fps: %.1f", fps);
+    return size > 0 && size < static_cast<int>(sizeof(text)) ? widen(text) : L"render fps: n/a";
+}
+
 void DebugText::draw_debug_info(DrawList& draw_list,
-    const Player* player, int num_projectiles, float dt) const
+    const Player* player, int num_projectiles, float simulation_dt, double frame_ms) const
 {
     const DebugOverlayPresentation& look = *this->look_;
 
@@ -86,8 +98,8 @@ void DebugText::draw_debug_info(DrawList& draw_list,
     }
     lines.push_back(primary_shooting_string);
 
-    lines.push_back(L"dt: " + std::to_wstring(dt));
-    lines.push_back(L"fps: " + std::to_wstring(1.0f / dt));
+    lines.push_back(L"sim dt: " + std::to_wstring(simulation_dt));
+    lines.push_back(this->frame_rate_text(frame_ms));
     lines.push_back(L"proj_count: " + std::to_wstring(num_projectiles));
     lines.push_back(L"jump_pressed: " + std::to_wstring(jump_pressed));
     lines.push_back(L"jump_held: " + std::to_wstring(jump_held));

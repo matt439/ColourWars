@@ -357,6 +357,7 @@ void GameLevel::draw(Renderer& renderer) const
 	// A covered match does not update, but its window can still resize. Prepare
 	// its presentation on this thread before Scene::draw starts any workers.
 	this->level_->refresh_layout();
+	this->level_->set_debug_frame_time(this->data()->debug().frame_time_ms());
 	this->level_->draw(renderer);
 	if (this->resume_countdown_.active())
 	{

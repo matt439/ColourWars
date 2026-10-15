@@ -17,7 +17,8 @@ public:
 		const DebugOverlayPresentation* look);
 
 	void draw_debug_info(labrador::DrawList& draw_list,
-		const Player* player, int num_projectiles, float dt) const;
+		const Player* player, int num_projectiles, float simulation_dt, double frame_ms) const;
+	static std::wstring frame_rate_text(double frame_ms);
 
 private:
 	labrador::RenderResources* render_resources() const;

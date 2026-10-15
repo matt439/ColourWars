@@ -24,6 +24,12 @@ void DebugPerf::begin_draw(double now_ms)
 	this->draw_begin_ = now_ms;
 }
 
+double DebugPerf::current_frame_ms() const
+{
+	return this->last_begin_ >= 0.0 && this->draw_begin_ > this->last_begin_ ?
+		this->draw_begin_ - this->last_begin_ : 0.0;
+}
+
 void DebugPerf::end_draw(double now_ms)
 {
 	if (this->draw_begin_ < 0.0)

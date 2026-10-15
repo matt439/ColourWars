@@ -142,6 +142,11 @@ void DebugDirector::begin_match_draw() const
 	}
 }
 
+double DebugDirector::frame_time_ms() const
+{
+	return this->impl_ != nullptr ? this->impl_->perf().current_frame_ms() : 0.0;
+}
+
 #else
 
 #include <cstdio>

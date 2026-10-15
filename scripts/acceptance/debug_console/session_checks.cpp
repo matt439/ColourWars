@@ -9,7 +9,9 @@
 #include "game/debug/debug_perf.h"
 #include "game/debug/debug_text_field.h"
 #include "game/debug/tune_document.h"
+#include "game/objects/debug_text.h"
 #include "game/session.h"
+#include <cmath>
 #include <limits>
 #include <optional>
 
@@ -211,8 +213,66 @@ namespace debug_console_acceptance
 		impl.execute("console.live 0");
 	}
 
+	void check_perf_frame_rate()
+	{
+		DebugPerf perf;
+		require(perf.current_frame_ms() == 0.0, "No render interval exists before the first draw");
+		perf.begin_draw(1000.0);
+		require(perf.current_frame_ms() == 0.0, "The first draw cannot invent a render interval");
+		perf.end_draw(1002.0);
+		require(perf.current_frame_ms() == 0.0, "A completed priming draw has no current snapshot");
+		double begin = 1000.0;
+		for (const auto& [fps, updates] : { std::pair{ 30, 0 }, std::pair{ 60, 1 }, std::pair{ 120, 4 } })
+		{
+			for (int update = 0; update < updates; ++update) { perf.add_update(0.25); }
+			const double interval = 1000.0 / fps;
+			begin += interval;
+			perf.begin_draw(begin);
+			const double snapshot = perf.current_frame_ms();
+			require(std::abs(snapshot - interval) < 1.0e-9 && perf.current_frame_ms() == snapshot &&
+				DebugText::frame_rate_text(snapshot) == L"render fps: " + std::to_wstring(fps) + L".0",
+				"Render FPS follows measured draw cadence independently of zero, one or four fixed simulation updates");
+			perf.end_draw(begin + 0.5);
+			require(perf.current_frame_ms() == 0.0 && perf.at(0).updates == updates,
+				"Ending a draw clears its current snapshot without changing the simulation update count");
+		}
+		const std::size_t samples = perf.size();
+		perf.break_interval();
+		require(samples == 3 && perf.size() == samples && perf.current_frame_ms() == 0.0,
+			"A timing break clears the current FPS without reading stale samples from the retained ring");
+		perf.begin_draw(9000.0);
+		require(perf.current_frame_ms() == 0.0,
+			"The first draw after a timing gap shows unavailable instead of a pre-gap average");
+		perf.end_draw(9002.0);
+		perf.begin_draw(9016.0);
+		require(perf.current_frame_ms() == 16.0, "A second post-gap draw restores its fresh interval");
+		perf.begin_draw(8999.0);
+		require(perf.current_frame_ms() == 0.0, "A backwards timestamp invalidates the current FPS snapshot");
+		perf.begin_draw(10000.0);
+		perf.end_draw(10001.0);
+		perf.begin_draw(10016.0);
+		perf.end_draw((std::numeric_limits<double>::quiet_NaN)());
+		require(perf.current_frame_ms() == 0.0, "An invalid draw end clears its FPS snapshot");
+		perf.reset();
+		require(perf.current_frame_ms() == 0.0, "Reset leaves no current FPS snapshot");
+
+		for (const double invalid : { 0.0, -1.0, (std::numeric_limits<double>::quiet_NaN)(),
+			(std::numeric_limits<double>::infinity)(), -(std::numeric_limits<double>::infinity)(),
+			(std::numeric_limits<double>::denorm_min)() })
+		{
+			require(DebugText::frame_rate_text(invalid) == L"render fps: n/a",
+				"Missing, invalid or reciprocally overflowing timing never formats a false FPS");
+		}
+		require(DebugText::frame_rate_text(1000.0 / 30.0) == L"render fps: 30.0" &&
+			DebugText::frame_rate_text(1000.0 / 60.0) == L"render fps: 60.0" &&
+			DebugText::frame_rate_text(1000.0 / 120.0) == L"render fps: 120.0" &&
+			DebugText::frame_rate_text((std::numeric_limits<double>::max)()) == L"render fps: 0.0",
+			"The readout formats measured FPS, including an extreme finite interval, to one decimal place");
+	}
+
 	void check_perf()
 	{
+		check_perf_frame_rate();
 		DebugPerf perf;
 		require(perf.size() == 0 && perf.frame().max == 0.0, "Empty");
 		for (int i = 0; i < 300; ++i)

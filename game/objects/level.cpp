@@ -298,7 +298,7 @@ void Level::update(const std::vector<PlayerInputData>& player_inputs, float dt,
 	SeatInputFilter* seats)
 {
 	this->refresh_layout();
-	this->frame_dt_ = dt;
+	this->simulation_dt_ = dt;
 	if (dt > 0.0f)
 	{
 		this->update_state(player_inputs, dt, seats);
@@ -686,6 +686,11 @@ void Level::refresh_player_cameras()
 	}
 }
 
+void Level::set_debug_frame_time(double frame_ms)
+{
+	this->debug_frame_ms_ = frame_ms;
+}
+
 void Level::refresh_layout()
 {
 	const Vector2F size = this->resolution_manager_->resolution_vec();
@@ -875,7 +880,7 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	if (player->showing_debug())
 	{
 		this->debug_text_->draw_debug_info(list, player,
-			this->projectile_count_, this->frame_dt_);
+			this->projectile_count_, this->simulation_dt_, this->debug_frame_ms_);
 	}
 }
 

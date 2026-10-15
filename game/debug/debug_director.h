@@ -114,6 +114,8 @@ public:
 	// GameLevel::draw, first: the perf overlay times the match draw from here
 	// to draw_status.
 	void begin_match_draw() const;
+	// Current draw-to-draw CPU wall interval; unavailable is zero.
+	double frame_time_ms() const;
 
 	DebugDirectorImpl* impl() const { return this->impl_.get(); }
 
@@ -142,4 +144,5 @@ inline OpeningMode DebugDirector::opening_mode(OpeningMode chosen) const { retur
 inline bool DebugDirector::before_page_update(DebugPageTarget&, float) { return false; }
 inline void DebugDirector::draw_status(labrador::Renderer&) const {}
 inline void DebugDirector::begin_match_draw() const {}
+inline double DebugDirector::frame_time_ms() const { return 0.0; }
 #endif

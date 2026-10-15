@@ -40,6 +40,9 @@ public:
 	// The top of the match draw: the interval since the previous begin is
 	// that frame's frame_ms.
 	void begin_draw(double now_ms);
+	// The current draw's interval, frozen at begin_draw for per-view readers.
+	// Zero until two consecutive eligible draws, and outside an open draw.
+	double current_frame_ms() const;
 	// The end of the match draw: commits the frame. A draw with no previous
 	// begin (the first, or the first after break_interval) has no interval:
 	// it only starts the next one, and commits nothing.

@@ -765,6 +765,16 @@ Frame intervals include intervening submit/Present wall time indirectly.
 exposes no frame statistics and `Renderer` no timestamp queries (engine report
 14). The panel says CPU for that reason.
 
+The per-player F1/Back text also uses the current measured draw-to-draw interval:
+`render fps: 30.0` means a 33.33 ms rendered interval even when `sim dt` remains
+1/60. The main thread snapshots it once before view workers start; every pane
+reads the same value and drawing advances no clock. The first draw, focus/menu
+gaps, screenshot redraws and other unavailable timing show `render fps: n/a`.
+Release has no developer timing service, so its legacy F1/Back text also shows
+`n/a`, without inferring a frame rate from the simulation step. This closes
+`GAP#5.4`; visible, uncontended qualification and the hardware baseline remain
+`POL#25`.
+
 `perf.capture <1-36000> <label>` records chronological raw intervals independently
 of the ring, then writes CSV and completion JSON under `debug/perf/` in the user
 profile. Labels use 1–64 letters, digits, `_` or `-`. Sampling starts with a fresh

@@ -26,6 +26,23 @@ frame counts, and observed intervals above 1000/60, 1000/30 and 50 ms. Threshold
 counts are observations, not a strict pass/fail test at 59.94/60 Hz. Aggregate
 draws per second is sample count divided by summed intervals, never `1 / fixed dt`.
 
+The per-player F1/Back readout (`GAP#5.4`, 2026-10-15) now labels simulation
+`dt` separately and displays the current rendered interval's reciprocal. It
+uses one main-thread snapshot shared by every pane, with no clock read or
+mutation in worker drawing. Unavailable timing is `render fps: n/a`, including
+Release's inert developer timing service. This diagnostic fix does not qualify
+the visible, uncontended baseline retained by POL#25.
+
+Validation (2026-10-15): Debug and Release builds and both full consumer suites
+pass. Deterministic checks cover 30/60/120 FPS with zero, one and four simulation
+updates, priming, timing gaps, reset and invalid values. The hidden D3D11 fixture
+feeds 30/60 FPS snapshots into the real Level overlays in both builds and compares
+the rendered timing text in all 1/2/4 panes; only the FPS pixels change while
+simulation `dt`, repeated draws, replay state and RNG stay fixed. This injected
+fixture does not enable developer timing in Release. Isolated real-bank startup
+and graceful shutdown also pass in both builds. Evidence is under
+`out/validation/debug-fps/`, including `verified-debug/` and `verified-release/`.
+
 Sampling needs a live match at normal speed. Pause, resume count-in, focus loss,
 covering pages, a changed clock, resize, rebuild and screenshot capture cannot
 silently become part of a continuous recording. Interruptions retain a partial

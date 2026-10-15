@@ -103,7 +103,6 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `GAP#3.2` | OPEN | LOW | M | Options: no restore-defaults, no revert after a resolution change, display and palette unreachable from pause, Back lands at the top, Exit quits unconfirmed. |
 | `GAP#4.2` | OPEN | MED | L | No action map or rebinding: bindings are constexprs in `player_input.h`/`menu_input.h`. The engine's `gamepad.h` waits on this client (Class 2 D6); `GAP#F2` waits on it. |
 | `GAP#5.1` | OPEN | MED | L | Visual hard cuts between screens; the level build blocks on the last menu frame. |
-| `GAP#5.4` | OPEN | LOW | S | The DebugText fps line is `1/dt` of a fixed step, a constant. |
 | `GAP#6.1` | OPEN | MED | M | The last match setup is not saved, so every launch walks the whole menu path again. |
 | `GAP#6.2` | OPEN | MED | M | Results are never kept: per-stage records, a NEW BEST line, best % on stage select; save sections and a version key go with it. |
 | `GAP#7.3` | OPEN | MED | M | One catch in `wWinMain`, captioned "startup failure", catches in-match throws too (`Player out of bounds` among them); no crash log. |
