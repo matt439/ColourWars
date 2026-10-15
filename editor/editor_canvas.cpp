@@ -93,9 +93,9 @@ namespace colourwars_editor
         }
         else if (is_spawn(item.entry))
         {
-            screen = screen_rect(Rect{rectangle.x, rectangle.y, 52.0, 120.0});
-            screen.right = std::max(screen.right, screen.left + 18);
-            screen.bottom = std::max(screen.bottom, screen.top + 24);
+            screen = screen_rect(Rect{rectangle.x, rectangle.y,
+                blockout_tuning_ ? blockout_tuning_->player_width : 0.0,
+                blockout_tuning_ ? blockout_tuning_->player_height : 0.0});
             const COLORREF colour = item.entry.kind == EntryKind::spawn_a ? RGB(70, 163, 250) : RGB(255, 158, 75);
             outline(dc, screen, colour, 2);
             line(dc, screen.left - 5, screen.top, screen.left + 5, screen.top, colour, 2);
@@ -127,7 +127,7 @@ namespace colourwars_editor
             {
                 fill(dc, screen, colour);
                 outline(dc, screen, RGB(40, 49, 60));
-                if (paintable)
+                if (paintable && !show_blockout_)
                 {
                     const COLORREF edge = RGB(87, 230, 204);
                     if (value("paintable_faces/left") == "true") line(dc, screen.left, screen.top, screen.left, screen.bottom, edge, 2);
@@ -143,6 +143,74 @@ namespace colourwars_editor
             if (!is_spawn(item.entry))
                 fill(dc, RECT{screen.right - 5, screen.bottom - 5, screen.right + 6, screen.bottom + 6}, RGB(255, 255, 255));
         }
+    }
+
+    void Editor::draw_blockout(HDC dc)
+    {
+        if (!blockout_error_.empty())
+        {
+            SetTextColor(dc, RGB(255, 190, 120));
+            const std::wstring text = L"Blockout aids unavailable: " + blockout_error_;
+            TextOutW(dc, 16, 43, text.c_str(), static_cast<int>(text.size()));
+            return;
+        }
+        for (const ScoringFace& face : scoring_faces_)
+        {
+            // Drag previews have not committed to the document; hide old edge
+            // measurements until the geometry and diagnostics agree again.
+            if (dragging_) break;
+            const Rect& strip = face.strip;
+            const double x = strip.x + (!face.along_x && !face.leading ? strip.width : 0.0);
+            const double y = strip.y + (face.along_x && !face.leading ? strip.height : 0.0);
+            const POINT a = screen_point(x, y);
+            const POINT b = screen_point(x + (face.along_x ? strip.width : 0.0),
+                y + (face.along_x ? 0.0 : strip.height));
+            line(dc, a.x, a.y, b.x, b.y, RGB(87, 230, 204), 2);
+        }
+        std::optional<Rect> region;
+        if (selection_ && selection_->kind != EntryKind::level)
+            region = dragging_ ? drag_preview_ : document_.rectangle(*selection_);
+        if (region && selection_ && is_spawn(*selection_) && blockout_tuning_)
+        {
+            region->width = blockout_tuning_->player_width;
+            region->height = blockout_tuning_->player_height;
+        }
+        const bool measured = blockout_tuning_ && blockout_tuning_->measured_movement_matches;
+        if (region && measured)
+        {
+            // A bounding guide, not a simulated ballistic curve or route promise.
+            // Spawn origin is top-left; other selections launch from the top centre.
+            const double x = region->x + region->width / 2.0;
+            const double feet = region->y + (is_spawn(*selection_) ? region->height : 0.0);
+            outline(dc, screen_rect({x - blockout_tuning_->held_travel, feet - blockout_tuning_->held_rise,
+                2.0 * blockout_tuning_->held_travel, blockout_tuning_->held_rise}), RGB(240, 197, 95), 1, PS_DASH);
+            outline(dc, screen_rect({x - blockout_tuning_->tap_travel, feet - blockout_tuning_->tap_rise,
+                2.0 * blockout_tuning_->tap_travel, blockout_tuning_->tap_rise}), RGB(204, 151, 246), 1, PS_DOT);
+        }
+        std::wostringstream summary;
+        summary << std::fixed; summary.precision(1);
+        summary << L"Scoring area " << scoring_area(scoring_faces_) << L" units squared";
+        if (region) summary << L"  |  In selection " << scoring_area(scoring_faces_, region);
+        std::wostringstream tap_label, held_label;
+        if (measured)
+        {
+            tap_label << L"Measured at " << blockout_tuning_->measured_speed << L" units/s: tap rise "
+                << blockout_tuning_->tap_rise << L" / travel " << blockout_tuning_->tap_travel << L" (purple)";
+            held_label << L"Held rise " << blockout_tuning_->held_rise << L" / travel " << blockout_tuning_->held_travel
+                << L" (gold). Free flight, same-height landing.";
+        }
+        const std::wstring lines[] = {
+            dragging_ ? L"Scoring measurements update on drop" : summary.str(),
+            measured ? tap_label.str()
+                : L"Movement tuning changed: remeasure before using the jump guide",
+            measured ? held_label.str()
+                : L"Spawn sizes and scoring area still follow current source tuning.",
+            L"Guide boxes start at selection; no collision test or guaranteed route. Source tuning.json."};
+        RECT client{}; GetClientRect(canvas_, &client);
+        fill(dc, RECT{8, 38, client.right - 8, 128}, RGB(28, 36, 46));
+        SetTextColor(dc, RGB(181, 197, 213));
+        for (int index = 0; index < 4; ++index)
+            TextOutW(dc, 16, 43 + index * 21, lines[index].c_str(), static_cast<int>(lines[index].size()));
     }
 
     void Editor::paint(HDC dc, const RECT& client)
@@ -174,6 +242,7 @@ namespace colourwars_editor
             for (const DrawItem& item : draw_items_) if (item.entry.kind == kind) draw_item(dc, item);
         if (selection_)
             for (const DrawItem& item : draw_items_) if (same_entry(item.entry, *selection_)) draw_item(dc, item);
+        if (show_blockout_) draw_blockout(dc);
         const std::wstring legend = L"GEOMETRY VIEW    " + std::to_wstring(static_cast<int>(std::round(zoom_ * 100.0)))
             + L"%    |    Grid " + std::to_wstring(static_cast<int>(spacing));
         fill(dc, RECT{8, 8, 370, 35}, RGB(28, 36, 46));
@@ -191,7 +260,9 @@ namespace colourwars_editor
                 RECT rectangle = screen_rect(item->rectangle);
                 if (is_spawn(item->entry))
                 {
-                    rectangle = screen_rect(Rect{item->rectangle.x, item->rectangle.y, 52.0, 120.0});
+                    rectangle = screen_rect(Rect{item->rectangle.x, item->rectangle.y,
+                        blockout_tuning_ ? blockout_tuning_->player_width : 0.0,
+                        blockout_tuning_ ? blockout_tuning_->player_height : 0.0});
                     rectangle.right = std::max(rectangle.right, rectangle.left + 18);
                     rectangle.bottom = std::max(rectangle.bottom, rectangle.top + 24);
                 }

@@ -659,12 +659,14 @@ uniformly shrinking a map also changes jump and weapon relationships. Record tim
 to encounters and useful painting choices. Keep a separate duel variant only if
 one layout cannot satisfactorily serve both 1v1 and 2v2.
 
-Extend the editor's existing spawn rectangles to follow player tuning, and add a
-guide based on the measured movement envelope. Extend its paintable-edge view to
-show exposed scoring faces and area by selected region. Match collision classes
-and runtime buried-face rules rather than treating every overlapping rectangle as
-a solid obstruction or every authored edge as score. A diagnostic export is enough
-initially. These aids explain a blockout; they do not replace playing it.
+Implemented 2026-10-15 (`ED#1`): the editor's spawn rectangles follow player
+tuning, its tap/held guide uses the recorded movement envelope (hidden when its
+tuning snapshot changes), and its cyan edges and area-by-selection diagnostics
+use exposed scoring faces. The editor shares the runtime buried-face interval
+calculation, including its flat-structure/jump-through blockers and exclusion of
+ramps and decorations. See [Blockout aids](level-editor.md#blockout-aids) for the
+controls, measurement source, acceptance and limits. These aids explain a
+blockout; they do not replace playing it.
 
 ### Let players learn by making a mess
 

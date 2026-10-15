@@ -54,6 +54,40 @@ namespace ColourWars
         [DllImport("user32.dll")]
         private static extern IntPtr SendMessageTimeout(IntPtr window, uint message,
             IntPtr wParam, IntPtr lParam, uint flags, uint timeout, out IntPtr result);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern IntPtr FindWindowEx(IntPtr parent, IntPtr after, string name, string title);
+        [DllImport("user32.dll")]
+        private static extern int GetDlgCtrlID(IntPtr window);
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetMenu(IntPtr window);
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetSubMenu(IntPtr menu, int position);
+        [DllImport("user32.dll")]
+        private static extern uint GetMenuItemID(IntPtr menu, int position);
+        private static void Send(IntPtr window, uint message, IntPtr wparam, IntPtr lparam)
+        {
+            IntPtr result;
+            if (SendMessageTimeout(window, message, wparam, lparam, 2, 2000, out result) == IntPtr.Zero)
+                throw new InvalidOperationException("Editor UI command timed out");
+        }
+
+        public static void CheckBlockoutControls(IntPtr window)
+        {
+            IntPtr list = FindWindowEx(window, IntPtr.Zero, "ListBox", null);
+            IntPtr canvas = FindWindowEx(window, IntPtr.Zero, "ColourWarsEditorCanvas", null);
+            if (list == IntPtr.Zero || canvas == IntPtr.Zero)
+                throw new InvalidOperationException("Editor controls missing");
+            // Entry order is level, four bounds, then team A spawns. Select
+            // the first spawn through the same notification as a list click.
+            Send(list, 0x0186, new IntPtr(5), IntPtr.Zero); // LB_SETCURSEL
+            Send(window, 0x0111, new IntPtr(GetDlgCtrlID(list) | (1 << 16)), list);
+            IntPtr view = GetSubMenu(GetMenu(window), 2);
+            // Toggle off/on (the latter reloads source tuning), then frame it.
+            uint aids = GetMenuItemID(view, 4);
+            Send(window, 0x0111, new IntPtr(aids), IntPtr.Zero);
+            Send(window, 0x0111, new IntPtr(aids), IntPtr.Zero);
+            Send(window, 0x0111, new IntPtr(GetMenuItemID(view, 1)), IntPtr.Zero);
+        }
 
         public static IntPtr Find(int processId)
         {
@@ -129,6 +163,7 @@ namespace ColourWars
         if (-not $result.window_title.Contains([System.IO.Path]::GetFileName($Level))) {
             throw "The editor title does not identify the requested file: $($result.window_title)"
         }
+        [ColourWars.EditorWindowProbe]::CheckBlockoutControls($window)
         [ColourWars.EditorWindowProbe]::Close($process.Id)
         if (-not $process.WaitForExit(10000)) { throw 'The editor did not close gracefully after WM_CLOSE.' }
         $process.WaitForExit()
@@ -140,7 +175,7 @@ namespace ColourWars
         $diagnostics = [string](Get-Content -LiteralPath (Join-Path $RunDirectory 'gui.err') -Raw)
         if (-not [string]::IsNullOrWhiteSpace($diagnostics)) { throw "Unexpected editor diagnostic: $diagnostics" }
         $result.outcome = 'passed'
-        Write-Host 'PASS hidden editor launch, explicit level, responsive window and graceful close'
+        Write-Host 'PASS hidden editor launch, explicit level, blockout toggle/selection and graceful close'
     }
     finally {
         if ($null -ne $process -and -not $process.HasExited) {

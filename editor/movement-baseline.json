@@ -1,0 +1,22 @@
+{
+    "record": "Actual Player/Scene acceptance, 2026-10-08; docs/polish-movement-course.md. Free flight at maximum horizontal speed, landing at launch height; not guaranteed gaps.",
+    "timestep": 0.0166666,
+    "speed": 800.0,
+    "tap": { "rise": 95.0, "travel": 506.665 },
+    "held": { "rise": 207.472, "travel": 813.33 },
+    "player": {
+        "size": { "x": 52.0, "y": 120.0 },
+        "max_velocity": { "x": 800.0, "y": 1900.0 },
+        "x_initial_velocity": 100.0,
+        "x_acceleration": 900.0,
+        "x_deacceleration": 2500.0,
+        "gravity": 2000.0,
+        "ramp_gravity_multiplier": 20.0,
+        "jump_launch_velocity": -600.0,
+        "jump_acceleration": -1300.0,
+        "jump_max_time": 0.35,
+        "jump_buffer_time": 0.12,
+        "ledge_grace_time": 0.10,
+        "drop_down_velocity": 100.0
+    }
+}

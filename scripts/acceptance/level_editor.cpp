@@ -1,4 +1,6 @@
 #include "editor/level_document.h"
+#include "editor/blockout_aids.h"
+#include "game/paint_face_geometry.h"
 #include <rapidjson/document.h>
 #include <Windows.h>
 
@@ -8,6 +10,7 @@
 #include <iostream>
 #include <iterator>
 #include <limits>
+#include <map>
 #include <stdexcept>
 #include <string>
 
@@ -81,6 +84,54 @@ namespace
             document.can_redo() == redo, "Failed operation changed document or history");
     }
 
+    void check_blockout_aids(const fs::path& repo, const fs::path& scratch)
+    {
+        const BlockoutTuning tuning = load_blockout_tuning(repo / "game/content/tuning.json", repo / "editor/movement-baseline.json");
+        require(tuning.player_width == 52.0 && tuning.player_height == 120.0 &&
+            tuning.measured_movement_matches, "Source tuning no longer matches recorded movement baseline; remeasure guide");
+        std::string changed = contents(repo / "game/content/tuning.json");
+        const std::size_t size = changed.find("\"size\": { \"x\": 52.0, \"y\": 120.0 }");
+        require(size != std::string::npos, "Missing player size fixture");
+        changed.replace(size, std::string("\"size\": { \"x\": 52.0, \"y\": 120.0 }").size(),
+            "\"size\": { \"x\": 70.0, \"y\": 135.0 }");
+        write(scratch / "different-tuning.json", changed);
+        const BlockoutTuning different = load_blockout_tuning(scratch / "different-tuning.json", repo / "editor/movement-baseline.json");
+        require(different.player_width == 70.0 && different.player_height == 135.0 &&
+            !different.measured_movement_matches, "Changed tuning must resize spawns and invalidate measured guide");
+
+        LevelDocument document;
+        const std::vector<Entry> initial = document.entries();
+        for (std::vector<Entry>::const_reverse_iterator item = initial.rbegin(); item != initial.rend(); ++item)
+            if (item->kind == EntryKind::collision || item->kind == EntryKind::decoration) document.erase(*item);
+        const Entry platform = document.add_object("StructurePaintable", {100, 100, 100, 100});
+        for (const char* face : {"left", "bottom", "right"})
+            document.set_property(platform, std::string("/paintable_faces/") + face, "false");
+        document.set_property(platform, "/paintable_faces/top", "true");
+        require(scoring_area(scoring_faces(document, tuning)) == 100.0 * tuning.paint_thickness,
+            "Self geometry must not hide an authored scoring face");
+        document.add_object("Structure", {120, 50, 20, 50});
+        document.add_object("Structure", {130, 50, 30, 50});
+        document.add_object("StructureJumpThrough", {170, 50, 10, 50});
+        document.add_object("StructureRampRight", {100, 50, 100, 100});
+        document.add_object("Visual", {100, 50, 100, 100});
+        const std::vector<ScoringFace> faces = scoring_faces(document, tuning);
+        require(faces.size() == 3 && scoring_area(faces) == 50.0 * tuning.paint_thickness,
+            "Merge flat blockers, include jump-through, exclude ramps and decorations");
+        require(scoring_area(faces, Rect{100, 100, 25, 6}) == 120.0,
+            "Region area must clip scoring strips in both dimensions");
+        require(scoring_area(faces, Rect{0, 0, 50, 50}) == 0.0, "Disjoint region has scoring area");
+        document.set_property(platform, "/paintable_faces/top", "false");
+        require(scoring_faces(document, tuning).empty(), "Disabled faces still score");
+        document.undo();
+        require(scoring_area(scoring_faces(document, tuning)) == scoring_area(faces), "Undo left scoring diagnostics stale");
+        const std::vector<PaintFaceRectangle> blockers{{0, 0, 100, 100}, {0, 100, 100, 150}};
+        require(exposed_paint_intervals(0, 100, 100, true, false, blockers).empty(),
+            "A touching outward blocker must bury the bottom face");
+        require(exposed_paint_intervals(0, 100, 0, true, true, blockers).size() == 1,
+            "A blocker behind a leading face must leave it exposed");
+        std::cout << "PASS tuned spawns, measured-guide invalidation and runtime scoring regions\n";
+    }
+
     void check_shipped_levels(const fs::path& repo, const fs::path& scratch)
     {
         for (const char* name : { "king_of_the_hill", "turbulence", "close_quarters",
@@ -93,6 +144,13 @@ namespace
             require(!document.dirty() && !document.can_undo() && !document.can_redo(),
                 "Loading must start a clean document history");
             require(document.validate().empty(), "Shipped level did not validate");
+            const std::map<std::string, double> runtime_areas = {
+                {"king_of_the_hill", 205920.0}, {"turbulence", 249000.0},
+                {"close_quarters", 91200.0}, {"movement_course", 194880.0}};
+            const BlockoutTuning tuning = load_blockout_tuning(repo / "game/content/tuning.json",
+                repo / "editor/movement-baseline.json");
+            require(std::abs(scoring_area(scoring_faces(document, tuning)) - runtime_areas.at(name)) < 0.1,
+                "Editor exposed scoring area differs from actual runtime stage measurements");
             require(parse(original) == parse(document.serialize()),
                 "Loading changed source level data");
             const std::string before_no_op = document.serialize();
@@ -416,6 +474,7 @@ int wmain(int argc, wchar_t* argv[])
         const fs::path scratch = fs::absolute(argv[2]);
         require(fs::is_directory(scratch), "Acceptance scratch directory must already exist");
         check_shipped_levels(repo, scratch);
+        check_blockout_aids(repo, scratch);
         check_unknown_fields_and_rectangles(scratch);
         check_palette_and_ramps(scratch);
         check_random_setting(scratch);

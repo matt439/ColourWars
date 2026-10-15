@@ -1,6 +1,7 @@
 #pragma once
 
 #include "editor/level_document.h"
+#include "editor/blockout_aids.h"
 
 #include <windows.h>
 
@@ -18,7 +19,7 @@ namespace colourwars_editor
     {
         file_new = 100, file_open, file_save, file_save_as, file_exit,
         edit_undo, edit_redo, edit_duplicate, edit_delete,
-        view_fit, view_selection, view_match, view_bounds, help_controls,
+        view_fit, view_selection, view_match, view_bounds, view_blockout, help_controls,
         add_object, apply_property, revert_property, objects_list,
         properties_list, property_value, palette, grid_size
     };
@@ -69,6 +70,10 @@ namespace colourwars_editor
         int property_index_ = -1;
         bool refreshing_ = false;
         bool show_bounds_ = false;
+        bool show_blockout_ = true;
+        std::optional<BlockoutTuning> blockout_tuning_;
+        std::vector<ScoringFace> scoring_faces_;
+        std::wstring blockout_error_;
         bool dragging_ = false;
         bool resizing_ = false;
         bool panning_ = false;
@@ -102,6 +107,7 @@ namespace colourwars_editor
         void error(const std::exception&);
         void paint(HDC, const RECT&);
         void draw_item(HDC, const DrawItem&);
+        void draw_blockout(HDC);
         void fit(const Rect&);
         RECT screen_rect(const Rect&) const;
         POINT screen_point(double, double) const;

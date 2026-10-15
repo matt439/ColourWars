@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/structure_paintable.h"
 #include "game/objects/projectile.h"
+#include "game/paint_face_geometry.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -123,6 +124,9 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
     this->paint_strips_.clear();
     const RectangleF rectangle = this->rectangle();
     const PaintTuning& paint = *this->paint_;
+    std::vector<PaintFaceRectangle> obstacles;
+    for (const RectangleF& obstacle : paint_obstacles)
+        obstacles.push_back({obstacle.left(), obstacle.top(), obstacle.right(), obstacle.bottom()});
 
     const auto append_face = [&](bool enabled, bool along_x, bool leading)
     {
@@ -135,27 +139,6 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
         const float edge = along_x
             ? (leading ? rectangle.top() : rectangle.bottom())
             : (leading ? rectangle.left() : rectangle.right());
-        std::vector<std::pair<float, float>> covered;
-        for (const RectangleF& obstacle : paint_obstacles)
-        {
-            const float near_edge = along_x ? obstacle.top() : obstacle.left();
-            const float far_edge = along_x ? obstacle.bottom() : obstacle.right();
-            // A blocker must reach the face from its outward side. This also
-            // ensures the structure's own rectangle never covers its faces.
-            const bool covers = leading
-                ? near_edge < edge && far_edge >= edge
-                : near_edge <= edge && far_edge > edge;
-            const float begin = std::max(low,
-                along_x ? obstacle.left() : obstacle.top());
-            const float end = std::min(high,
-                along_x ? obstacle.right() : obstacle.bottom());
-            if (covers && begin < end)
-            {
-                covered.emplace_back(begin, end);
-            }
-        }
-        std::sort(covered.begin(), covered.end());
-
         const auto append_strip = [&](float begin, float end)
         {
             if (begin >= end)
@@ -183,13 +166,9 @@ std::vector<PaintTile> StructurePaintable::generate_paint_tiles(
             }
         };
 
-        float cursor = low;
-        for (const std::pair<float, float>& interval : covered)
-        {
-            append_strip(cursor, interval.first);
-            cursor = std::max(cursor, interval.second);
-        }
-        append_strip(cursor, high);
+        for (const std::pair<float, float>& interval :
+            exposed_paint_intervals(low, high, edge, along_x, leading, obstacles))
+            append_strip(interval.first, interval.second);
     };
 
     append_face(this->faces_.top, true, true);

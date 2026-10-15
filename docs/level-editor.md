@@ -37,7 +37,7 @@ asks what to do with those changes.
 Select an object in the list or click it on the canvas. Drag its body to move
 it, or drag the handle at the bottom-right corner to resize it. Ramp editing
 moves or scales all three vertices together. Spawn markers can be moved;
-their displayed marker size is not a player-tuning setting.
+their boxes use `player.size` from source `game/content/tuning.json`.
 
 Use the palette to add paintable platforms, solid structures, jump-through
 platforms, left/right ramps and decorative visuals. Team spawns and the four
@@ -78,6 +78,44 @@ current revision as saved; undoing back to that revision clears the unsaved
 indicator. Failed loads and saves keep the current document and its history.
 Saves replace the destination only after writing the complete new JSON.
 The initial view uses the level's zoom-out finish bounds.
+
+## Blockout aids
+
+**View > Blockout aids (reload tuning)** toggles the guides. They start enabled;
+turn them off and on to reload source tuning after editing it outside the editor.
+Document edits also refresh tuning and diagnostics. These reads do not edit the
+level or the player's save. A missing or invalid aid file displays a diagnostic.
+
+- **Cyan edges** show exposed scoring faces. Flat structures, including
+  jump-through platforms, bury faces reached from their outward side. Ramps and
+  decorations do not. The editor and game share the interval calculation in
+  `game/paint_face_geometry.h`. With aids off, cyan shows authored faces instead.
+- **Scoring area** shows the whole level and the part inside the selected
+  rectangle. Select an object or one of the bounds rectangles to choose a
+  region; selecting the level shows only the total. Area clips the inward paint
+  strips using current `paint.thickness`, in world units squared. Corners and
+  overlapping strips contribute separately, as in runtime scoring. It measures
+  available scoring surface, without assigning teams or predicting reachability.
+  During a drag, measurements and scoring edges wait for the committed drop.
+- **Purple/gold boxes** show the recorded tap/held jump envelope in both
+  directions from the top centre of the selected geometry, or the feet of a
+  selected spawn. They bound maximum rise and same-height horizontal travel;
+  the top corners are not a trajectory. The data and matching movement-tuning
+  snapshot live in `editor/movement-baseline.json`, from the actual Player/Scene
+  [measurements](polish-movement-course.md#measured-baseline-and-current-evidence).
+  These assume full running speed and a fixed timestep, exclude collisions and
+  acceleration from rest, and do not guarantee a gap or landing. A changed
+  movement snapshot hides the boxes and asks for new measurements; spawn sizes
+  and scoring diagnostics still follow current tuning. After changing movement
+  code, rerun the movement acceptance measurement before updating the baseline.
+
+`ED#1` implemented on 2026-10-15. Debug and Release editor document checks cover
+overlapping blockers, buried/touching faces, ramps versus flat collision classes,
+disabled faces, clipped region area, undo and changed-tuning invalidation. Hidden
+GUI checks select a spawn, toggle/reload the aids and frame the selection. Both
+game consumer acceptance suites also pass with the shared geometry, reproducing
+the baseline jump measurements. These checks do not close the manual canvas or
+saved-stage play checks in `ED#5`.
 
 ## Play the level
 

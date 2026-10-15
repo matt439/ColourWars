@@ -46,6 +46,7 @@ namespace colourwars_editor
         AppendMenuW(view, MF_STRING, view_selection, L"Frame &selection\tF");
         AppendMenuW(view, MF_STRING, view_match, L"&Match view");
         AppendMenuW(view, MF_STRING, view_bounds, L"Show all &bounds");
+        AppendMenuW(view, MF_STRING | MF_CHECKED, view_blockout, L"&Blockout aids (reload tuning)");
         AppendMenuW(menu_, MF_POPUP, reinterpret_cast<UINT_PTR>(view), L"&View");
         AppendMenuW(menu_, MF_STRING, help_controls, L"&Help");
         SetMenu(window_, menu_);
@@ -98,7 +99,7 @@ namespace colourwars_editor
         SendMessageW(value_edit_, EM_SETLIMITTEXT, 32767, 0);
         apply_ = control(L"BUTTON", L"Apply", WS_TABSTOP, apply_property);
         revert_ = control(L"BUTTON", L"Revert", WS_TABSTOP, revert_property);
-        hint_ = control(L"STATIC", L"Drag to move. Drag the white corner to resize.\r\n\r\nWheel: zoom   Middle drag: pan\r\nF: frame selection   Home: fit arena\r\nShift: bypass snap   Arrows: nudge\r\n\r\nCyan edges are paintable.\r\nPreview shows geometry, not textures.", SS_LEFT, 0);
+        hint_ = control(L"STATIC", L"Drag to move. Drag the white corner to resize.\r\n\r\nWheel: zoom   Middle drag: pan\r\nF: frame selection   Home: fit arena\r\nShift: bypass snap   Arrows: nudge\r\n\r\nCyan: exposed scoring faces.\r\nView > Blockout aids: reach and area.\r\nPreview shows geometry, not textures.", SS_LEFT, 0);
         status_ = control(L"STATIC", L"", SS_LEFT, 0);
         canvas_ = CreateWindowExW(0, L"ColourWarsEditorCanvas", L"Level canvas",
             WS_CHILD | WS_VISIBLE | WS_TABSTOP, 0, 0, 1, 1, window_, nullptr, instance_, this);
@@ -153,6 +154,16 @@ namespace colourwars_editor
         refreshing_ = true;
         entries_ = document_.entries();
         draw_items_.clear();
+        blockout_tuning_.reset();
+        scoring_faces_.clear();
+        try
+        {
+            blockout_tuning_ = load_blockout_tuning(std::filesystem::path(COLOURWARS_CONTENT_DIR) / "tuning.json",
+                std::filesystem::path(COLOURWARS_EDITOR_DIR) / "movement-baseline.json");
+            scoring_faces_ = scoring_faces(document_, *blockout_tuning_);
+            blockout_error_.clear();
+        }
+        catch (const std::exception& exception) { blockout_error_ = wide(exception.what()); }
         SendMessageW(object_list_, WM_SETREDRAW, FALSE, 0);
         SendMessageW(object_list_, LB_RESETCONTENT, 0, 0);
         int selected_index = -1;
@@ -170,6 +181,11 @@ namespace colourwars_editor
                 DrawItem item{entry, document_.rectangle(entry), {}};
                 for (const Property& property : document_.properties(entry))
                     item.values[property.path.starts_with('/') ? property.path.substr(1) : property.path] = property.value;
+                if (blockout_tuning_ && (entry.kind == EntryKind::spawn_a || entry.kind == EntryKind::spawn_b))
+                {
+                    item.rectangle.width = blockout_tuning_->player_width;
+                    item.rectangle.height = blockout_tuning_->player_height;
+                }
                 draw_items_.push_back(std::move(item));
             }
         }
@@ -338,7 +354,7 @@ namespace colourwars_editor
                 L"Wheel zooms around the pointer. Middle drag pans. F frames selection; Home fits the arena. "
                 L"Arrows nudge by the snap amount; Shift bypasses snap. Ctrl+D duplicates, Delete removes, Ctrl+Z/Y undo/redo. "
                 L"New objects appear in the centre of the current view.\n\n"
-                L"Cyan edges mark paintable faces. Spawn markers show player top-left positions. "
+                L"Cyan edges mark exposed scoring faces (authored edges when aids are off). Spawn boxes follow source tuning. "
                 L"Bounds are selectable in the list. View > Show all bounds shows every rectangle. This is a geometry preview, without textures or gameplay.\n\n"
                 L"Save to SOURCE content and rebuild the game. A NEW filename also needs its stem in game/content/manifest.json "
                 L"and its relative path in cmake/release_assets.cmake. Existing registered levels need no registration. "
@@ -358,7 +374,17 @@ namespace colourwars_editor
             if (selection_) { document_.erase(*selection_); selection_.reset(); refresh(); } break;
         case view_fit: fit(document_.rectangle(Entry{EntryKind::bounds, 0, ""})); break;
         case view_match: fit(document_.rectangle(Entry{EntryKind::bounds, 3, ""})); break;
-        case view_selection: if (selection_) fit(document_.rectangle(*selection_)); break;
+        case view_selection:
+            if (selection_)
+            {
+                for (const DrawItem& item : draw_items_)
+                    if (same_entry(item.entry, *selection_)) { fit(item.rectangle); break; }
+            }
+            break;
+        case view_blockout:
+            show_blockout_ = !show_blockout_;
+            CheckMenuItem(menu_, view_blockout, MF_BYCOMMAND | (show_blockout_ ? MF_CHECKED : MF_UNCHECKED));
+            refresh(true); break;
         case view_bounds:
             show_bounds_ = !show_bounds_; CheckMenuItem(menu_, view_bounds, MF_BYCOMMAND | (show_bounds_ ? MF_CHECKED : MF_UNCHECKED));
             InvalidateRect(canvas_, nullptr, FALSE); break;
