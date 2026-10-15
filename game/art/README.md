@@ -47,3 +47,28 @@ straight-alpha DDS. The packer omits colour-space metadata from the runtime PNG
 so the bundled texconv preserves its channel values while premultiplying for
 the engine's UNORM pipeline. Runtime packaging includes only the DDS and frame
 JSON.
+
+## Runtime content separation (GAP#8.6)
+
+Decision accepted 2026-10-15; the moves and development staging changes remain
+unimplemented. Move unused and historical assets, including old textures,
+unused fonts and levels, into `game/art/`, with the archive separate from active
+working sources. Move editable sources here too, preserving authoring inputs
+and updating their recipes together. In particular,
+[`build-weapon-art.ps1`](../../scripts/build-weapon-art.ps1) still reads
+`game/content/textures/sprite_sheet_1.png`; that input must remain available
+after its move. Preserve the required authoring tools and update references to
+any that move.
+
+Release packaging already uses the reviewed allow-list in
+[`release_assets.cmake`](../../cmake/release_assets.cmake). Share that runtime
+list with development staging, replacing its broad directory copies. Remove
+stale staged extras only within the build's owned content directories. Preserve
+the optional sound-bank fallback and its removal of a stale staged bank when
+the source bank is absent.
+
+Implementation validation must cover weapon-art reproduction, Debug and Release
+builds, clean and existing staging trees containing only the allowed runtime
+assets, Release package inspection, and startup with the accepted bank and with
+the optional bank absent. Recording this decision does not complete those
+checks or close the implementation work.

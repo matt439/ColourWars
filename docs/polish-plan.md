@@ -764,24 +764,23 @@ the aiming thumb off the stick.
 
 ### Make the finished paint job worth looking at
 
-The [final arena overview](../game/objects/level.cpp) already exists and advances
-on a timer. After the winner reveal, try an optional **View arena** action that
-temporarily clears the results panel and lets the group inspect the frozen paint
-job before returning to the next-match choices. Use the actual final surface
-ownership; an optional unpainted-face highlight could explain an overlooked wall
-or ceiling. Keep this after the reveal and easy to skip on repeated matches.
+Decided with the author on 2026-10-15 (`POL#15`): keep the existing
+[backstory reveal](backstory.md#the-reveal-full-screen) as the view of the finished
+picture. It already shows the whole paint job. Do not add a separate **View arena**
+action or unpainted-face highlight; repeated rounds should reach the next-match
+choices without another inspection step. Solo practice keeps its plain overview
+and full results, as recorded in the backstory's [building rules](backstory.md#building-it).
 
-Frame the result as the team's finished work: a workshop job card or pinboard
-treatment could carry the arena, final colours, player badges and series standing
-without inventing a new reward economy. Label personal contribution as surface
-still held at the finish, which is what the game measures. It is not total effort,
-shots fired or a judgement of the teammate who made space for others to paint.
+Carry the accepted Paint.exe presentation through the existing reveal and results
+under §6. Label personal contribution as surface still held at the finish, which
+is what the game measures. It is not total effort, shots fired or a judgement of
+the teammate who made space for others to paint.
 
 ### Order the experiments by what they can teach
 
 First try readiness/identity cues with movement polish, and recovery pockets and
 painting choices in the Close Quarters blockout. Next try resume/rematch handling
-and final-arena inspection during the complete-match pass. Build the optional
+during the complete-match pass. Build the optional
 workshop and individual input settings once fresh-player observations identify
 the most useful lessons and comfort changes. Use before/after sessions to decide
 what earns its place; these candidates do not displace the agreed art, audio,

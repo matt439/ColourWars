@@ -672,10 +672,16 @@ changed none of the facts.
   added `PlayerCamera::follow` (`game/objects/player_camera.cpp`), which sets
   `scale` from the screen height over `presentation.json`'s
   `camera.reference_height` of 1080 and passes the visible rectangle in world
-  units, as `camera_tools.h:13-24` asks. What is left is a question, not a
-  defect: whether the engine's camera should own that reference height, which
-  `PlayerCamera` now re-derives along with centring an axis wider than the
-  arena. `PlayerCamera` is the exhibit if it is ever asked.
+  units, as `camera_tools.h:13-24` asks. `PlayerCamera` also centres an axis
+  wider than the arena.
+
+  **Decision 2026-10-15 (`ENG#CAMERA`): keep this policy in ColourWars; no
+  engine request.** The reference height belongs to the full display, and
+  the game's split-screen layout determines each pane's visible world extent.
+  At 16:9 these are 1920×1080 for one player, 1920×540 for two, and 960×540
+  for three or four. Labrador's camera and world-space follow helper already
+  provide the operations this policy needs. See the
+  [display baseline](../polish-foundation.md#display-baseline).
 
 - **`Renderer::window_size_changed` returns a signal `Application` ignores**
   (`application.cpp:436,463`, both `std::ignore =`), and **nothing reports the

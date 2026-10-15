@@ -19,6 +19,44 @@ Existing live audio bindings now use the accepted replacement set; further cue
 hooks and the gameplay mix remain open. The sections below record implemented
 increments and their remaining acceptance checks.
 
+## Match scope decisions (2026-10-15)
+
+The author chose timed painting as the sole ruleset (`GAP#1.2`). Single Match,
+Best of 3 and Best of 5 remain session formats for that ruleset. No further
+mode or speculative `MatchRules` seam is planned; a future ruleset would need
+its own product decision.
+
+Solo remains practice (`GAP#1.3`), with coverage results and no opponent. The
+Debug bots remain developer tools; shipping AI opponents is outside the chosen
+scope. The accepted solo story treatment is unchanged: no person, opening or
+reveal, as recorded in the [backstory](backstory.md#building-it). These decisions
+close the ruleset and shipped-AI questions raised by the frozen gap audit.
+
+### Balanced random teams
+
+**GAP#1.5 — OPEN: planned, not implemented.** Add an optional, explicitly invoked
+action in team setup that shuffles the joined players into balanced teams: 1v1 for
+two players, 2v1 for three, and 2v2 for four. With three players, choose the
+larger side at random too. Keep manual team selection available, and preserve
+the roster, device assignments and weapon choices. A shuffle clears every
+player's prior confirmation; all must confirm the resulting teams before
+continuing. A series keeps its teams fixed between rounds; shuffling is a setup
+action, never a mid-series change.
+
+When implemented, acceptance must check team sizes and both three-player side
+assignments, preservation of players/devices/weapons, invalidation of prior
+confirmations and required reconfirmation, manual selection after a shuffle,
+and fixed teams through a series and its restarts.
+
+### Handicaps
+
+**ROAD#5 — DEFERRED**, split from the remaining `GAP#1.5` scope, until the
+physical multiplayer sessions (`ROAD#2`) identify a skill imbalance that needs
+a handicap. Those observations must establish the
+need and the mechanic before implementation is scoped. No per-player paint or
+score multiplier has been chosen; the current score remains painted surface.
+`ROAD#5` tracks this deferred work separately from the random-team action.
+
 ## First increment: explicit joining and reconnect pause
 
 Implemented:

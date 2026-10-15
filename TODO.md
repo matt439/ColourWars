@@ -20,8 +20,6 @@ The ordered actions are done (`STORY#3`, `ENG#PIN` with `ENG#LEDGER`, `DOC#1`–
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
-- **Calls:** `POL#15`, `GAP#1.2`, `GAP#1.3`, `GAP#1.5`, `GAP#8.6`,
-  `ENG#CAMERA`.
 
 ## Art direction, characters and the UI
 
@@ -50,7 +48,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#12` | OPEN | MED | M | Idle muzzle drip (its five rules), roller contact/settle, idle breathing, blinking and lean out of phase. [§4](docs/polish-plan.md#tool-personality-and-quiet-detail). |
 | `POL#13` | OPEN | MED | M | A reduce-effects option that cuts optional shake, flashes and ambient detail but keeps useful cues; repeated-sound variants. [§4](docs/polish-plan.md#detail-across-the-world-interface-and-match). |
 | `POL#14` | OPEN | MED | M | Read the tool and the fight: a readiness cue that tells cooldown from no paint, optional aim marker, a readable blocked-shot contact; one player-identity badge across card, figure, pane and results. [§8](docs/polish-plan.md#help-players-read-the-tool-and-the-fight). |
-| `POL#15` | DECISION | LOW | M | An optional View arena step after the reveal (unpainted-face highlight, job-card framing): reconcile with the backstory reveal, which already shows the whole picture. [§8](docs/polish-plan.md#make-the-finished-paint-job-worth-looking-at). |
 | `POL#18` | OPEN | MED | M | Couch play: a shared count-in after pause or reconnect that freezes every timer and eats stale edges; per-player stick deadzones with a preview; a prominent Rematch on the end menu. [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 
@@ -100,13 +97,14 @@ here.
 **Owner:** [docs/review/gap-audit.md](docs/review/gap-audit.md), Class 1, by its section numbers.
 The audit is **frozen** (2026-08-11): it owns each finding and its suggested shape, not its
 status, so these rows were checked against the code on 2026-10-13. The no-live-score and
-random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed.
+random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The live
+[match scope decisions](docs/feature-roadmap.md#match-scope-decisions-2026-10-15) own the
+2026-10-15 calls on rulesets, solo practice, random teams and handicaps.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `GAP#1.3` | DECISION | MED | L | Solo has no opponent in Release: bots exist only in the Debug console. Ship a bot controller, or keep solo as practice. |
-| `GAP#1.2` | DECISION | LOW | L | Only paint-timed rules exist, with no MatchRules seam; decide whether any further mode is wanted. |
-| `GAP#1.5` | DECISION | LOW | S | No Random-teams row, no per-player handicap; the one-sided-roster refusal is done. |
+| `GAP#1.5` | OPEN | LOW | S | Optional balanced Random teams, retaining manual choice and requiring confirmation after a shuffle. [Scope](docs/feature-roadmap.md#balanced-random-teams). |
+| `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
 | `GAP#3.2` | OPEN | LOW | M | Options: no restore-defaults, no revert after a resolution change, display and palette unreachable from pause, Back lands at the top, Exit quits unconfirmed. |
 | `GAP#4.2` | OPEN | MED | L | No action map or rebinding: bindings are constexprs in `player_input.h`/`menu_input.h`. The engine's `gamepad.h` waits on this client (Class 2 D6); `GAP#F2` waits on it. |
 | `GAP#5.1` | OPEN | MED | L | Hard cuts between screens; the level build blocks on the last menu frame; no music fades or ducking, and results and end screens have no track. |
@@ -121,10 +119,12 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed.
 ## Content pipeline
 
 **Owner:** [docs/review/gap-audit.md](docs/review/gap-audit.md) Theme 8, frozen as above.
+The live [art/content policy](game/art/README.md#runtime-content-separation-gap86) owns
+the accepted `GAP#8.6` scope.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `GAP#8.6` | DECISION | LOW | S | Dead content is mirrored beside the exe (old textures, unused fonts, `levels/unused`, `.pub`/`.xcf` sources, misspelled `turebulence.pub`, `sounds/unused`). Keep, move to `art/`, or delete; then make staging an allow-list. |
+| `GAP#8.6` | OPEN | LOW | S | Move unused assets and editable sources to `game/art/`; share the reviewed runtime allow-list with development staging and remove stale staged extras. [Scope](game/art/README.md#runtime-content-separation-gap86). |
 | `GAP#8.2` | OPEN | LOW | M | Range checks are ad hoc: no shared content-value checks or cross-field checks; menu sounds unbounded. |
 | `GAP#8.3` | OPEN | LOW | M | The level format has no doc, schema or `format` key. |
 | `GAP#8.4` | OPEN | LOW | M | Player-visible text is C++ literals; weapon name and icon come from a switch with an `L"ERROR"` fallback (fold into weapon tuning). |
@@ -159,7 +159,6 @@ engine master before filing, not the pin. Gap-audit Class 3 items not yet in the
 | `ENG#12` | OPEN | MED | S | File report 12: JSON is read-only, path-only, with no keys or source spans. [Report](docs/review/engine-reports.md#12-json-is-read-only-path-only-and-opaque--draft-with-live-tuning-exhibit). |
 | `ENG#13` | OPEN | LOW | S | File report 13: `Key` has no names. [Report](docs/review/engine-reports.md#13-key-has-no-names--draft-low-priority). |
 | `ENG#14` | OPEN | LOW | S | File report 14: no frame statistics or GPU timing (`DBG#5` waits on it). [Report](docs/review/engine-reports.md#14-no-frame-statistics-or-gpu-timing--draft-with-perf-exhibit). |
-| `ENG#CAMERA` | DECISION | LOW | S | Should the engine camera own the resolution-independent world height that `PlayerCamera` already fixes at 1080 units here? Only an ask, not a defect. [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `GAP#F2` | BLOCKED | LOW | S | The action-map/Gamepads report (per-slot lookup, trigger threshold, "what did this pad press"). Waits on `GAP#4.2`. |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half is report 14. |
