@@ -12,7 +12,8 @@ MainMenuCredits::MainMenuCredits(MenuContext* context) : MainMenuPage(context)
 void MainMenuCredits::return_home()
 {
 	this->play_wave(this->cancel_sound_);
-	this->context()->transition_to(std::make_unique<MainMenuHome>(this->menu_context()));
+	this->context()->transition_to(std::make_unique<MainMenuHome>(
+		this->menu_context(), MainMenuHome::InitialFocus::credits));
 }
 
 void MainMenuCredits::update_page(float /*dt*/)

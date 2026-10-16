@@ -148,6 +148,31 @@ files; fullscreen metadata exercises disabled-resolution navigation while only
 Off is applied to the offscreen windowed probe. Physical-pad, human readability,
 movement-feel and listening acceptance remain with their TODO owners.
 
+### Home return focus
+
+Implemented on 2026-10-16, the return-focus part of `GAP#3.2`. Both Back routes
+from Options return to Home with Options focused; Credits returns with Credits
+focused. The Back row and B/Escape take the same route for each page.
+
+Home accepts one local initial-focus choice: Play, Options or Credits. It selects
+that widget once at the end of initialization, after all actions are registered.
+Play remains the default for Title, both Mode Select return paths and the
+developer page factory. This is a bounded choice for the newly opened Home page;
+it adds no saved navigation history, presentation field or artwork change.
+The existing input rearming, navigation and immediate transitions remain in
+effect. Returning from Controls/audio still preserves the existing Options page,
+including its pending display/palette choices and focus.
+
+The hidden `-HomeReturnFocusOnly` native matrix passes both presets: 108
+independent complete Home references and 72 matching Debug/Release captures per
+preset. It covers six keyboard sizes/aspects and sparse scripted pad slot 3 at
+720p, including repeated returns, fresh confirmation, held-input interruption,
+quiet entry, lifecycle resets, Reduce effects, resize and frozen draw/RNG.
+
+The remaining `GAP#3.2` work is restore-defaults, resolution-change revert,
+display/palette access from pause and Exit confirmation. Human and hardware
+acceptance retain their existing gates.
+
 ## Controls/audio
 
 Implemented on 2026-10-15, part of `POL#16`. The page shared by Options and

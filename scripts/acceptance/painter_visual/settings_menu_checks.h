@@ -469,11 +469,19 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     tap(Key::up); tap(Key::up); tap(Key::up); tap(Key::up);
     std::ignore = assert_focus(main_menu_frame(app), row_bounds(0, L"1920x1080"));
     tap(Key::escape);
-    const Frame home = main_menu_frame(app);
+    const Frame options_home = main_menu_frame(app);
+    open(std::make_unique<MainMenuHome>(&context));
+    tap(Key::down);
+    require(options_home.pixels == main_menu_frame(app).pixels,
+        "Options Back did not restore the Home Options row");
+    tap(Key::down);
+    const Frame credits_home = main_menu_frame(app);
     open(std::make_unique<MainMenuCredits>(&context)); tap(Key::enter);
-    require(home.pixels == main_menu_frame(app).pixels, "Credits Select did not return to Home");
+    require(credits_home.pixels == main_menu_frame(app).pixels,
+        "Credits Select did not restore the Home Credits row");
     open(std::make_unique<MainMenuCredits>(&context)); tap(Key::escape);
-    require(home.pixels == main_menu_frame(app).pixels, "Credits Back did not return to Home");
+    require(credits_home.pixels == main_menu_frame(app).pixels,
+        "Credits Back did not restore the Home Credits row");
     require(records.good(), "Settings menu capture record write failed");
     std::cout << "PASS Options/Credits: measured labels, all palettes, long save status and authored credits; "
         "six native sizes/aspects, paper/cards/arrows and contrast; actual row edits, delayed Apply, "

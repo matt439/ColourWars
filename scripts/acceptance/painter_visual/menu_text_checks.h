@@ -59,7 +59,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
     std::ofstream records(output / "menu-items.csv");
     records << "case,page,item,width,height,label_scale,label_right,value_left,fixture_matches\n";
     const auto compare = [&](const std::string& name, int page, const Presentation& snapshot,
-        const ItemLabels& labels, bool require_fitting = false)
+        const ItemLabels& labels, bool require_fitting = false, int focused_home_row = 0)
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.main_menu();
         const auto& art = look.art;
@@ -75,7 +75,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
                 Vector2F(0.0f, look.home_spacing.y * static_cast<float>(row + 2)) :
                 page == 1 ? look.options_position + Vector2F(0.0f, look.options_spacing.y * static_cast<float>(row)) :
                 look.credits_back_position;
-            const bool focused = row == 0;
+            const bool focused = row == (page == 0 ? focused_home_row : 0);
             UiText expected("reference-item", labels[item], style.item_font, position, app.render_resources(),
                 focused ? art.focus_ink : art.ink);
             float scale = 1.0f;
@@ -133,7 +133,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
             const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) -
                 panel_size) / 2.0f, panel_size);
             card(panel, art.paper);
-            if (focused)
+            if (focused || (page == 0 && row == 0))
             {
                 RectangleF focus_bounds = expected.bounds();
                 if (page == 1)
@@ -183,6 +183,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
         return actual;
     };
     std::array<Frame, 3> baseline{};
+    Frame credits_home;
     for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440) })
     {
         app.resolution_manager()->set_resolution_exactly(size);
@@ -191,6 +192,11 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
         {
             open(page); const Frame actual = compare("default", page, original, defaults);
             if (size.x == 1280) { baseline[static_cast<size_t>(page)] = actual; }
+            if (page == 0 && size.x == 1280)
+            {
+                tap(Key::down); tap(Key::down);
+                credits_home = compare("default-home-credits", 0, original, defaults, false, 2);
+            }
         }
     }
     const std::array<const wchar_t*, 10> old_prefix{ L"Play~", L"Options~", L"Credits~", L"Exit~",
@@ -247,8 +253,9 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
             "Reopened static page did not restore the exact default raster");
         if (page == 2)
         {
-            tap(Key::enter); compare("credits-select-home", 0, original, defaults);
-            require(frame().pixels == baseline[0].pixels, "Credits Select changed its ordinary return to Home");
+            tap(Key::enter); compare("credits-select-home", 0, original, defaults, false, 2);
+            require(frame().pixels == credits_home.pixels,
+                "Credits Select did not restore the exact Home Credits row");
         }
     }
     require(records.good(), "Static menu item evidence write failed");

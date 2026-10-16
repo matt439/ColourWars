@@ -176,8 +176,8 @@ void MainMenuTitle::init()
 
 #pragma region MainMenuHome
 
-MainMenuHome::MainMenuHome(MenuContext* context) :
-	MainMenuPage(context)
+MainMenuHome::MainMenuHome(MenuContext* context, InitialFocus initial_focus) :
+	MainMenuPage(context), initial_focus_(initial_focus)
 {
 
 }
@@ -277,6 +277,18 @@ void MainMenuHome::init()
 			});
 		});
 
+	// Child pages return to their entry row; fresh entry and Mode return use Play.
+	switch (this->initial_focus_)
+	{
+	case InitialFocus::options:
+		this->focus_.set_focused(0, this->options_.get());
+		break;
+	case InitialFocus::credits:
+		this->focus_.set_focused(0, this->credits_.get());
+		break;
+	case InitialFocus::play:
+		break;
+	}
 }
 
 #pragma endregion MainMenuHome

@@ -644,8 +644,8 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
         require(stack.depth() == 2 && expected.pixels == actual.pixels,
             "Home Play/Options/Credits reached the wrong actual page");
         tap(Key::escape);
-        require(assert_focus(main_menu_frame(app), home_rows[0], true) > 30,
-            "Returning from Play/Options/Credits did not restore Home Play focus");
+        require(assert_focus(main_menu_frame(app), home_rows[static_cast<size_t>(destination)], true) > 30,
+            "Returning from Play/Options/Credits did not restore its corresponding Home action");
     }
 
     std::ofstream records(output / "main-menu.csv");

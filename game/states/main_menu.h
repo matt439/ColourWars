@@ -82,12 +82,14 @@ private:
 class MainMenuHome final : public MainMenuPage
 {
 public:
-	explicit MainMenuHome(MenuContext* context);
+	enum class InitialFocus { play, options, credits };
+	explicit MainMenuHome(MenuContext* context, InitialFocus initial_focus = InitialFocus::play);
 	void update_page(float dt) override;
 	void init() override;
 	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
+	InitialFocus initial_focus_;
 	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<labrador::UiText> subtitle_;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;

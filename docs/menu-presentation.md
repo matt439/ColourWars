@@ -28,6 +28,17 @@ preview/briefing shapes, results bars and stick-response previews. Their
 identifiers must be nonempty, and startup validates the named frame against the
 named atlas. An art replacement must supply an appropriate solid fill.
 
+## Home return focus
+
+Home's initial focus is a bounded C++ choice among Play, Options and Credits,
+selected once after its actions are registered. Both Options Back routes request
+Options; Credits requests Credits. Title, both Mode Select return paths and the
+developer page factory retain the default Play focus. The Back row and B/Escape
+share each page's return choice. Existing page-entry input rearming still
+applies, and Controls/audio continues to return to its retained parent page.
+No presentation field, saved navigation history, artwork or geometry is added.
+The remaining Options gaps stay open under `GAP#3.2`.
+
 ## Mode and Player Count paper
 
 The required `main_menu.setup_box_size` supplies the common paper panel for Mode

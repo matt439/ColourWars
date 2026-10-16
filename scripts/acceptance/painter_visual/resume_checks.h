@@ -204,9 +204,10 @@ void menu_music_flow_matrix(Application& app, GameData& data, const Presentation
 #endif
     page("options-return", Key::escape, 2);
     page("home-return", Key::escape, 2);
-    tap(Key::down); tap(Key::down);
+    tap(Key::down);
     page("credits", Key::enter, 2);
     page("credits-home-return", Key::escape, 2);
+    tap(Key::up); tap(Key::up);
     page("mode", Key::enter, 2);
     page("player-count", Key::enter, 2);
     page("join", Key::enter, 2);

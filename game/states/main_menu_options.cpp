@@ -23,7 +23,7 @@ void MainMenuOptions::update_page(float /*dt*/)
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(std::make_unique<MainMenuHome>(
-				this->menu_context()));
+				this->menu_context(), MainMenuHome::InitialFocus::options));
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)
@@ -260,7 +260,7 @@ void MainMenuOptions::init()
 		{
 			this->play_wave(this->cancel_sound_);
 			this->context()->transition_to(
-				std::make_unique<MainMenuHome>(this->menu_context()));
+				std::make_unique<MainMenuHome>(this->menu_context(), MainMenuHome::InitialFocus::options));
 		});
 
 	// Refresh after registration so fullscreen disables the row before first draw.
