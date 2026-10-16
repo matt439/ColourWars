@@ -60,16 +60,20 @@ public:
 		const mattmath::RectangleF& rectangle, labrador::RenderResources* resources,
 		const labrador::Colour& colour, const MenuStyle* style,
 		const std::string& sheet_name, const std::string& fill_frame,
-		const MenuFocusMotion* motion = nullptr, const PlaySettings* settings = nullptr);
+		const MenuFocusMotion* motion = nullptr, const PlaySettings* settings = nullptr,
+		const MenuPaperArtPresentation* paper_art = nullptr);
 	// An empty paint name is an icon with no team-coloured region.
 	void set_sprite_frame(const std::string& frame, const std::string& paint_frame = "",
 		const std::string& supply_strip = "");
 	void set_paint_colour(const labrador::Colour& colour);
+	// Resting tile and border include the complete optional paper envelope.
+	mattmath::RectangleF artwork_bounds() const;
 	void draw(labrador::DrawList& list) const override;
 private:
 	const MenuStyle* style_;
 	const MenuFocusMotion* motion_;
 	const PlaySettings* settings_;
+	const MenuPaperArtPresentation* paper_art_;
 	labrador::SpriteSheet::frame_handle fill_frame_;
 	labrador::SpriteSheet::frame_handle paint_frame_;
 	labrador::SpriteSheet::strip_handle supply_strip_;

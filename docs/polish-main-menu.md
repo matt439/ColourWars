@@ -76,8 +76,8 @@ scripts/run-acceptance.ps1 -Preset x64-debug
 scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -MainMenuOnly
 ```
 
-Use `x64-release` for the Release checks. Weapon selection cards and stage
-preview remain under `POL#16`. Reference-arena
+Use `x64-release` for the Release checks. Stage preview remains under `POL#16`.
+Reference-arena
 composition, movement feel, physical controllers and listening acceptance
 retain their TODO owners.
 
@@ -214,8 +214,8 @@ Rerun from an x64 Visual Studio Developer shell:
 scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -ControlsMenuOnly
 ```
 
-Use `x64-release` for Release. Weapon selection cards and stage
-preview remain under `POL#16`. Physical-pad, movement-feel, human readability
+Use `x64-release` for Release. Stage preview remains under `POL#16`.
+Physical-pad, movement-feel, human readability
 and listening acceptance retain their existing TODO owners.
 
 ## Mode and Player Count
@@ -299,8 +299,8 @@ The retained native 720p views show [Mode](images/polish-main-menu/mode-720p.png
 the [focused duration row](images/polish-main-menu/mode-duration-720p.png) and
 [series Player Count with solo practice disabled](images/polish-main-menu/player-count-series-720p.png).
 
-Human menu/readability review remains open. Weapon selection cards,
-stage preview and accepted arenas remain `POL#16`; movement-feel (`POL#3`),
+Human menu/readability review remains open. Stage preview and accepted arenas
+remain `POL#16`; movement-feel (`POL#3`),
 physical-controller and listening acceptance retain their existing gates.
 
 ## Join
@@ -365,8 +365,8 @@ The retained native 720p views show [waiting for players](images/polish-main-men
 the [complete roster](images/polish-main-menu/join-ready-720p.png) and
 [a reserved controller needing reconnection](images/polish-main-menu/join-reconnect-720p.png).
 
-Human menu/readability review remains open. Weapon selection cards, stage
-preview and accepted arenas remain `POL#16`; movement-feel (`POL#3`), physical-pad
+Human menu/readability review remains open. Stage preview and accepted arenas
+remain `POL#16`; movement-feel (`POL#3`), physical-pad
 and listening acceptance retain their existing gates.
 
 ## Team Select
@@ -434,6 +434,86 @@ The retained native 720p views show [team choices](images/polish-main-menu/team-
 [a ready player](images/polish-main-menu/team-ready-720p.png) and the
 [both-teams warning below the cards](images/polish-main-menu/team-warning-720p.png).
 
-Human menu/readability review remains open. Weapon selection cards, stage
-preview and accepted arenas remain `POL#16`; movement-feel (`POL#3`), physical-pad
+Human menu/readability review remains open. Stage preview and accepted arenas
+remain `POL#16`; movement-feel (`POL#3`), physical-pad
 and listening acceptance retain their existing gates.
+
+## Weapon Select
+
+Implemented on 2026-10-16, part of `POL#16`. Weapon Select uses the shared
+stepped paper, dark ink and neutral Home surround. The required
+`main_menu.weapon_box_size` ships as `(1840, 920)`, centered above the controls
+footer, preserving the existing player-badge position. The page captures
+`main_menu.art` with the setup focus-padding and shadow-offset overrides. It
+has no shared focus cursor or detached arrow and suppresses the legacy brand.
+The controls footer remains visible.
+
+The existing icon border envelope, shipped as 136 by 80 design units, becomes
+a stepped paper tile. This keeps the existing 125-unit row stride without
+adding an enclosing row card. The tile uses the captured weapon catalog's
+sheet and fill frame, including authored replacements; the shared paper
+primitive preserves its layer order and premultiplied colours. Its pen uses
+the existing `menu_style.chrome.rule_height` (`2`), and its shadow uses the
+captured setup shadow offset (`2`). The face retains the existing live white
+unready and mint ready tints.
+
+The readiness surround stays outside a fixed cream canvas using the existing
+menu heading colour. This canvas covers the original icon rectangle with a
+bounded keyline bleed inside its existing padding: the smaller of the rule
+width and minimum padding, shipped as `2`. It keeps the protected preview
+pixels unchanged through motion without moving the tool, paint or supply art.
+
+Only the tile/border contracts during the existing independent choice and
+ready/unready response. Base tool art, paint masks and final supply-strip frame
+retain their source fitting and positions. Player labels, badges, heading,
+weapon names and descriptions keep every font, anchor, scale and logical
+bound. Heading, player and name text use captured dark ink; confirmed names
+use captured focus ink. Description text retains its authored
+`main_menu.weapon_description.colour`, now shipped as `1B1C20`. All text
+shadows have zero alpha while retaining their previous offsets, including the
+player label's default `(2, 2)` shadow.
+
+Catalog names, descriptions, fonts and artwork roles remain paired through
+presentation changes; reopening adopts new content. Random palette preview
+stays neutral and final Random weapon resolution retains its existing RNG
+draws. Choice order, readiness, simultaneous actions, Back, missing-device
+recovery, final commit, transitions, audio and Reduce effects keep their
+existing behavior.
+
+Startup requires positive, finite panel dimensions, Weapon spacing and icon
+size. The panel is at most 1840 wide and leaves 20 design units clear above and
+below within the footer area. Heading containment is checked after existing
+resource validations, preserving diagnostic priority. Page checks use actual
+text/shadow, badge, maximum tile-envelope, name and description bounds to
+require paper containment, ordered rows, separate columns and positive paper
+faces throughout the existing motion envelope. No fitting or scaling path is
+added. The existing fill assets reproduce the drawing with no new runtime
+asset or atlas recipe; textures remain point-filtered and lettering linear.
+
+The focused native scope is `WeaponPaperOnly`, using the scripted reader.
+Batch evidence is under
+`out/validation/2026-10-16-weapon-paper/verification.json`.
+
+Debug and Release build under `/W4 /WX` and each pass all 31 consumer cases.
+The focused `WeaponPaperOnly` pair passes 482 independent full-frame references
+per preset. Motion checks cover fifteen moving cases and twenty-one moving row
+instances.
+All 148 retained PPM captures and CSV evidence match byte for byte between
+Debug and Release; the existing outer profile is preserved.
+
+The related `TeamPaperOnly`, `JoinPaperOnly`, `JoinStageMotionOnly`,
+`SetupPaperOnly`, `MenuTextOnly`, `SetupMotionOnly`, `TeamSetupOnly`,
+`WeaponCatalogOnly` and `ResumeOnly` scopes also pass in both presets, bringing
+the batch to twenty passing native runs. Four isolated startup checks pass,
+including extracted Release with the published bank and optional-bank silent
+fallback under a system-only PATH. The 53-file Release ZIP contains all 26
+reviewed runtime assets byte for byte and excludes source, debug and private
+audio.
+
+The retained native 720p views show [weapon choices](images/polish-main-menu/weapon-choices-720p.png),
+the [partly ready roster](images/polish-main-menu/weapon-ready-720p.png) and
+[all Random choices](images/polish-main-menu/weapon-random-720p.png).
+
+Stage preview, accepted arenas and human readability review remain `POL#16`;
+menu-motion review (`POL#10`), movement-feel (`POL#3`), physical-pad and listening
+acceptance retain their existing gates.

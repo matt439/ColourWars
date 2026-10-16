@@ -924,7 +924,7 @@ The 53-file Release ZIP contains all 26 reviewed runtime assets byte for byte,
 excluding source, debug and private audio; package evidence is in
 `out/validation/2026-10-16-setup-paper/package-verification.json`.
 
-Weapon selection cards, stage preview, accepted arenas and human
+Stage preview, accepted arenas and human
 review remain `POL#16`. Reference-arena, movement-feel, physical-controller
 and listening acceptance retain their existing gates.
 
@@ -956,7 +956,7 @@ ZIP contains all 26 reviewed runtime assets byte for byte and excludes source,
 debug and private audio; package evidence is in
 `out/validation/2026-10-16-join-paper/package-verification.json`.
 
-Weapon selection cards, stage preview, accepted arenas and human review
+Stage preview, accepted arenas and human review
 remain `POL#16`; reference-arena, movement-feel (`POL#3`), physical-controller and
 listening acceptance retain their existing gates.
 
@@ -990,9 +990,43 @@ the published bank and optional-bank fallback under a system-only PATH. Its
 53-file ZIP contains all 26 reviewed runtime assets byte for byte and excludes
 source, debug and private audio.
 
-Weapon selection cards, stage preview, accepted arenas and human review remain
+Stage preview, accepted arenas and human review remain
 `POL#16`; movement-feel (`POL#3`), reference-arena, physical-controller and
 listening acceptance retain their existing gates.
+
+**Weapon Select paper and tiles implemented (2026-10-16, part of `POL#16`).**
+The [Weapon Select page](polish-main-menu.md#weapon-select) uses a wider paper
+panel and stepped paper within the existing icon-border envelopes. The required
+`main_menu.weapon_box_size` (`1840, 920`) preserves player-badge positions.
+Captured setup art supplies the ink and shade; the tile retains its catalog's
+sheet/fill, existing rule-width pen and live white/mint readiness face tint.
+The original tile/border contraction remains cosmetic; tool, paint and supply
+layers, lettering and input geometry stay fixed. No enclosing row card is added.
+A fixed cream canvas preserves the preview's protected pixels beneath the
+animated readiness surround, with bounded keyline bleed inside existing padding.
+
+Dark lettering has zero-alpha shadows with its existing offsets and logical
+extents. The authored description colour now ships as dark ink. Catalog/name,
+description/font and artwork snapshots, neutral Random palette preview, final
+Random RNG, readiness, recovery and transitions retain their existing rules.
+Actual full-row bounds and maximum tile envelopes must fit the paper with
+ordered rows, separate columns and positive moving faces. The drawing needs no
+new runtime asset.
+
+The focused `WeaponPaperOnly` scripted-reader scope has batch evidence at
+`out/validation/2026-10-16-weapon-paper/verification.json`.
+Both builds, all 31 consumer cases per preset and twenty native runs pass.
+The focused pair passes 482 independent full-frame references per preset;
+motion checks cover fifteen moving cases and twenty-one moving row instances. All 148
+PPM captures and CSV evidence match byte for byte between Debug and Release,
+with the outer profile preserved. Four isolated startup checks pass, including
+extracted Release with the published bank and optional-bank fallback under a
+system-only PATH. The 53-file Release ZIP contains all 26 reviewed runtime
+assets byte for byte and excludes source, debug and private audio.
+
+Stage preview, accepted arenas and human review remain `POL#16`; menu-motion
+review (`POL#10`), movement-feel (`POL#3`), physical-controller and listening
+acceptance retain their existing gates.
 
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.

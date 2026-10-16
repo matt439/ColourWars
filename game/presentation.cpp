@@ -462,11 +462,14 @@ namespace
 		menu.credits_box_size = panel_size("credits_box_size");
 		menu.setup_box_size = panel_size("setup_box_size");
 		menu.team_box_size = panel_size("team_box_size", 1840.0f);
+		menu.weapon_box_size = panel_size("weapon_box_size", 1840.0f);
 		menu.art = read_menu_paper(json, Vector2F(
 			std::min({ menu.title_box_size.x, menu.home_box_size.x,
-				menu.options_box_size.x, menu.credits_box_size.x, menu.setup_box_size.x, menu.team_box_size.x }),
+				menu.options_box_size.x, menu.credits_box_size.x, menu.setup_box_size.x, menu.team_box_size.x,
+				menu.weapon_box_size.x }),
 			std::min({ menu.title_box_size.y, menu.home_box_size.y,
-				menu.options_box_size.y, menu.credits_box_size.y, menu.setup_box_size.y, menu.team_box_size.y })));
+				menu.options_box_size.y, menu.credits_box_size.y, menu.setup_box_size.y, menu.team_box_size.y,
+				menu.weapon_box_size.y })));
 		const JsonValue art = json.object("art");
 		menu.art.disabled_ink = read_colour(art, "disabled_ink");
 		menu.setup_focus_padding = read_positive_vector(json, "setup_focus_padding");
@@ -661,6 +664,8 @@ namespace
 		}
 		menu.weapon_select = read_select(json, "weapon_select");
 		const JsonValue weapon_select = json.object("weapon_select");
+		menu.weapon_select.spacing = read_positive_vector(weapon_select, "spacing");
+		menu.weapon_select.size = read_positive_vector(weapon_select, "size");
 		WeaponSelectArtworkPresentation& artwork = menu.weapon_select_art;
 		artwork.sheet = weapon_select.identifier("sheet");
 		artwork.fill_frame = weapon_select.identifier("fill_frame");
@@ -2848,6 +2853,22 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		throw std::runtime_error(this->source_path_ +
 			": main_menu.team_select.warning_position must follow the Team Select heading.");
+	}
+	const RectangleF weapon_paper((Vector2F(1920.0f, this->menu_.footer_y) - main.weapon_box_size) / 2.0f,
+		main.weapon_box_size);
+	const RectangleF weapon_inside(weapon_paper.position() + Vector2F(setup_edge),
+		weapon_paper.size() - Vector2F(setup_edge * 2.0f + main.setup_shadow_offset));
+	const Vector2F weapon_heading_size = render.measure_text(render.resolve_sprite_font(this->menu_.heading_font),
+		this->menu_text_.heading(MenuHeading::weapons));
+	const RectangleF weapon_heading = RectangleF::union_of(
+		RectangleF(this->menu_.layout.position, weapon_heading_size),
+		RectangleF(this->menu_.layout.position + this->menu_.heading_shadow_offset, weapon_heading_size));
+	if (!std::isfinite(weapon_heading.x) || !std::isfinite(weapon_heading.y) ||
+		!std::isfinite(weapon_heading.width) || !std::isfinite(weapon_heading.height) ||
+		weapon_heading.width <= 0.0f || weapon_heading.height <= 0.0f || !weapon_inside.contains(weapon_heading))
+	{
+		throw std::runtime_error(this->source_path_ +
+			": menu_text.headings.weapons must fit main_menu.weapon_box_size including its retained shadow bounds.");
 	}
 }
 

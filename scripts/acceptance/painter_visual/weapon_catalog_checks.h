@@ -1,3 +1,37 @@
+// Independent paper tile and fixed artwork layers. No MenuIcon draw helper is
+// used, so the authored canvas, optional masks and final supply frame are pinned.
+void weapon_paper_icon_reference(DrawList& list, RenderResources& resources,
+    const MenuStyle& style, const MainMenuPresentation& look,
+    const WeaponSelectArtworkPresentation& catalog, const WeaponChoicePresentation& choice,
+    const RectangleF& box, const Colour& readiness, const Colour& paint, float response = 0.0f)
+{
+    RectangleF tile = box; tile.inflate(style.icon_padding + Vector2F(style.rule_height));
+    const float inset = std::clamp(std::min(box.width, box.height) * response,
+        0.0f, std::max(0.0f, std::min(style.icon_padding.x, style.icon_padding.y)));
+    tile.inflate(-inset);
+    auto art = look.art; art.shadow_offset = look.setup_shadow_offset;
+    art.keyline_width = style.rule_height; art.paper = readiness;
+    auto tile_style = style; tile_style.sprite_sheet = catalog.sheet; tile_style.fill_frame = catalog.fill_frame;
+    setup_paper_reference(list, resources, tile_style, art, tile, RectangleF());
+    const SpriteSheet* sheet = resources.sprite_sheet(catalog.sheet);
+    // The bounded padding guard also covers the native raster's truncated
+    // rectangle edge. Tool/paint/supply artwork still uses the original box.
+    RectangleF canvas = box; canvas.inflate(std::min(style.rule_height, std::min(style.icon_padding.x, style.icon_padding.y)));
+    sheet->draw(list, sheet->resolve_sprite_frame(catalog.fill_frame), canvas, style.heading_colour);
+    const auto frame = sheet->resolve_sprite_frame(choice.frame);
+    const RectangleI source = sheet->sprite_frame(frame).source_rectangle();
+    const Vector2F source_size(static_cast<float>(source.width), static_cast<float>(source.height));
+    const Vector2F fitted = source_size * std::min(box.width / source_size.x, box.height / source_size.y);
+    const RectangleF artwork(box.center() - fitted / 2.0f, fitted);
+    list.set_filter(TextureFilter::point); sheet->draw(list, frame, artwork, Colour::white);
+    if (!choice.paint_frame.empty()) { sheet->draw(list, sheet->resolve_sprite_frame(choice.paint_frame), artwork, paint); }
+    if (!choice.supply_strip.empty())
+    {
+        const auto& strip = sheet->animation_strip(sheet->resolve_animation_strip(choice.supply_strip));
+        sheet->draw(list, strip.frame_rect(strip.frame_count() - 1), artwork, paint);
+    }
+}
+
 // Real Weapon Select input and raster coverage. Expected names and bindings
 // below are independent of the authored catalog so shipped-default drift fails.
 void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
@@ -97,16 +131,14 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         const RectangleF icon_box(position, look.weapon_select.size);
         const Vector2F name_position = position + Vector2F(0.0f, look.weapon_select.size.y +
             style.icon_padding.y + style.rule_height);
-        MenuIcon icon("expected-weapon-icon", expected.frame, icon_box, app.render_resources(),
-            look.weapon_select.unselected, &style, sheet, fill);
-        icon.set_sprite_frame(expected.frame, expected.paint_frame, expected.supply_strip);
-        icon.set_paint_colour(Colour::white);
+        WeaponSelectArtworkPresentation expected_catalog;
+        expected_catalog.sheet = sheet; expected_catalog.fill_frame = fill;
         const UiTextDropShadow name("expected-weapon-name", expected.name, look.weapon_description_font,
-            name_position, app.render_resources(), look.weapon_select.unselected,
-            style.shadow_colour, style.detail_shadow_offset);
-        const UiTexture background("expected-weapon-background", look.backdrop_sheet, look.backdrop_frame,
+            name_position, app.render_resources(), look.art.ink,
+            Colour{}, style.detail_shadow_offset);
+        const UiTexture background("expected-weapon-background", style.sprite_sheet, style.fill_frame,
             RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(),
-            look.play_background_colour);
+            look.home_background_colour);
         RectangleF icon_bounds = icon_box;
         icon_bounds.inflate(style.icon_padding + Vector2F(style.rule_height + 3.0f));
         RectangleF name_bounds = name.bounds(); name_bounds.inflate(Vector2F(3.0f));
@@ -118,7 +150,12 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         app.renderer()->begin_frame(); app.renderer()->set_view_count(1);
         DrawList list = app.renderer()->view(0);
         list.set_viewport(app.viewport_manager()->fullscreen_viewport()); list.set_camera(camera);
-        list.set_filter(TextureFilter::point); background.draw(list); icon.draw(list);
+        list.set_filter(TextureFilter::point); background.draw(list);
+        auto art = look.art; art.shadow_offset = look.setup_shadow_offset;
+        const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.weapon_box_size) / 2.0f, look.weapon_box_size);
+        setup_paper_reference(list, *app.render_resources(), style, art, paper, RectangleF());
+        weapon_paper_icon_reference(list, *app.render_resources(), style, look, expected_catalog,
+            expected, icon_box, look.weapon_select.unselected, Colour::white);
         list.set_filter(TextureFilter::linear); name.draw(list);
         const Frame expected_frame = read(*app.renderer());
         require(foreground_crop(actual, pixels(icon_bounds), 0).pixels ==

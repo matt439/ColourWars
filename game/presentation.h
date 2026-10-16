@@ -357,6 +357,7 @@ struct MainMenuPresentation
 	mattmath::Vector2F credits_box_size;
 	mattmath::Vector2F setup_box_size;
 	mattmath::Vector2F team_box_size;
+	mattmath::Vector2F weapon_box_size;
 	mattmath::Vector2F setup_focus_padding;
 	float setup_shadow_offset = 0.0f;
 	// Title text is centered using its measured width; y positions are authored.

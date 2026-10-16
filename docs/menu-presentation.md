@@ -256,10 +256,55 @@ Debug `tune` reports shared layout numbers as **next screen**. Rejected values
 leave the live records and pending edits intact; strings remain outside the
 numeric tuner. See [live tuning](debug-console.md#live-tuning).
 
+## Weapon paper and tiles
+
+The required `main_menu.weapon_box_size` supplies Weapon Select's outer panel,
+shipped as `(1840, 920)` and centered in
+`(1920, menu_style.chrome.footer_y)`. Dimensions must be finite and positive,
+at most 1840 wide and at most `footer_y - 40` high. The wider panel preserves
+the player badges at their existing anchors. It captures `main_menu.art` with
+the setup focus-padding and shadow-offset overrides on the neutral Home
+surround. The controls footer remains visible, with the legacy brand and shared
+focus cursor/arrow suppressed.
+
+The existing icon-border envelope becomes a stepped paper tile, shipped as
+136 by 80 design units, preserving the 125-unit row stride without an enclosing
+row card. The tile uses the captured catalog's sheet and fill frame, including
+custom replacements, and the shared paper primitive's existing layers and
+premultiplied colours. Its pen uses `menu_style.chrome.rule_height` (`2`), its
+shadow uses the captured setup shadow offset (`2`), and its face retains the
+live unready/ready white/mint tint. Existing choice/ready/unready motion
+contracts only this tile and border; source-fitted tool, paint and final
+supply-strip layers stay fixed.
+
+A fixed cream canvas uses the existing menu heading colour beneath the preview.
+It covers the original icon rectangle plus keyline bleed bounded by the smaller
+of the rule width and minimum icon padding (`2` shipped), within existing
+padding. The animated readiness surround stays outside this fixed canvas,
+preserving protected inner pixels and all artwork/input geometry during motion.
+
+Heading, player labels and weapon names use captured dark ink, with focus ink
+for confirmed names. Descriptions retain the authored
+`main_menu.weapon_description.colour`, now shipped as `1B1C20`. All text-shadow
+alphas are zero, retaining their original offsets and logical bounds, including
+the player label's default `(2, 2)`. Fonts, anchors, scales and captured
+catalog/name/description/artwork relationships remain unchanged through refresh;
+reopening adopts edits. Random palette preview remains neutral and the final
+Random choice preserves its existing RNG draws.
+
+Weapon spacing and icon size must be finite and positive. Resource validation
+adds heading containment after the existing checks, preserving their diagnostic
+priority. Runtime checks use actual text/shadow, badge, maximum tile-envelope,
+name and description bounds to require paper containment, ordered rows and
+separate columns. The complete contraction envelope must retain positive paper
+faces. No new fitting path or runtime asset is introduced. Texture artwork
+remains point-filtered and lettering linear-filtered.
+
 ## Weapon-selection names and artwork
 
 `main_menu.weapon_select.sheet` selects the weapon-choice atlas and
-`main_menu.weapon_select.fill_frame` names its solid tile frame. Both identifiers
+`main_menu.weapon_select.fill_frame` names the fill used for its stepped tile.
+Both identifiers
 are required and nonempty. Their shipped values are `weapon_paint` and `pixel`;
 they are independent of the shared menu fill.
 
@@ -1207,11 +1252,11 @@ Run `scripts/run-acceptance.ps1 -Preset x64-debug` (and `x64-release`), then use
 the focused `MainMenuOnly`, `SettingsMenuOnly`, `ControlsMenuOnly`, `PauseMenuOnly`,
 `ResultsMenuOnly`, `EndMenuOnly`, `TeamSetupOnly` and `MenuTextOnly` switches of
 `scripts/check-painter.ps1` for the affected pages. `TeamSetupOnly`,
-`MenuTextOnly`, `SetupMotionOnly`, `JoinStageMotionOnly`, `JoinPaperOnly` and
-`TeamPaperOnly` use a scripted gamepad backend, including deterministic claims,
-releases, connections
-and multiplayer stage input in the Join/Stage scope. The other scopes retain the real gamepad
-backend. `MenuTextOnly` retains its public keyboard checks as well.
+`MenuTextOnly`, `SetupMotionOnly`, `JoinStageMotionOnly`, `JoinPaperOnly`,
+`TeamPaperOnly` and `WeaponPaperOnly` use a scripted gamepad backend, including
+deterministic claims, releases, connections and multiplayer stage input in the
+Join/Stage scope. The other scopes retain the real gamepad backend.
+`MenuTextOnly` retains its public keyboard checks as well.
 `WeaponCatalogOnly` checks the catalog on real weapon pages, including page
 snapshots across catalog replacement and reopening.
 `MenuTextOnly` checks authored headings, complete legends and Home/Options/Credits
@@ -1284,6 +1329,11 @@ to four players. It checks complete paper/card composition, readiness, warning
 placement, unchanged choice motion and the existing team/shuffle/recovery
 behavior. Scripted devices provide implementation evidence; physical-pad and
 human readability acceptance remain open.
+
+`WeaponPaperOnly` uses the scripted reader for actual Weapon Select pages. It
+checks the paper/tile composition and the retained catalog, preview, readiness,
+motion and selection behavior without establishing physical-pad or human
+readability acceptance.
 
 The non-menu primitive texel retains its own startup checks. Together with
 [gameplay tuning](gameplay-tuning.md), the shared layout and sheet choices define

@@ -188,12 +188,13 @@ void MainMenuWeaponSelect::update_weapon_select_visuals()
 			this->player_widgets_[i]->weapon_icon->
 				set_colour(this->look().weapon_select.selected);
 			this->player_widgets_[i]->weapon_name->
-				set_colour(this->look().weapon_select.selected);
+				set_colour(this->paper_art_.focus_ink);
 		}
 
 		this->player_widgets_[i]->weapon_description->set_text(
 			this->weapon_description(this->select_states_[i].type));
 	}
+	this->check_paper_geometry();
 }
 void MainMenuWeaponSelect::unconfirm_all_widgets()
 {
@@ -202,13 +203,21 @@ void MainMenuWeaponSelect::unconfirm_all_widgets()
 		this->player_widgets_[i]->weapon_icon->set_colour(
 			this->look().weapon_select.unselected);
 		this->player_widgets_[i]->weapon_name->set_colour(
-			this->look().weapon_select.unselected);
+			this->paper_art_.ink);
 	}
 }
 void MainMenuWeaponSelect::init()
 {
 	this->weapon_select_art_ = this->look().weapon_select_art;
 	this->weapon_descriptions_ = this->look().weapon_descriptions;
+	const MainMenuPresentation& look = this->look();
+	const MenuStyle& style = this->menu_style();
+	this->paper_art_ = look.art;
+	this->paper_art_.focus_padding = look.setup_focus_padding;
+	this->paper_art_.shadow_offset = look.setup_shadow_offset;
+	this->icon_art_ = this->paper_art_;
+	this->icon_art_.keyline_width = style.rule_height;
+	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
 
 	this->set_player_prompts(MenuPrompt::weapon);
 
@@ -228,13 +237,18 @@ void MainMenuWeaponSelect::init()
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		this->look().backdrop_sheet,
-		this->look().backdrop_frame,
+		style.sprite_sheet,
+		style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		this->look().play_background_colour);
+		look.home_background_colour);
+	this->paper_ = std::make_unique<MenuPaperArtwork>(
+		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.weapon_box_size) / 2.0f,
+			look.weapon_box_size),
+		this->render_resources(), &style, &this->paper_art_, &this->focus_);
 
 	this->texture_container_->add_child(this->background_.get());
+	this->texture_container_->add_child(this->paper_.get());
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
@@ -242,8 +256,8 @@ void MainMenuWeaponSelect::init()
 		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		this->menu_style().heading_colour,
-		this->menu_style().shadow_colour,
+		this->paper_art_.ink,
+		clear_shadow,
 		this->menu_style().heading_shadow_offset);
 
 	this->text_container_->add_child(this->heading_.get());
@@ -269,7 +283,8 @@ void MainMenuWeaponSelect::init()
 			this->menu_style().detail_font,
 			this->calculate_widget_position(0, i + 2),
 			this->render_resources(),
-			this->look().weapon_select.unselected);
+			this->paper_art_.ink,
+			clear_shadow);
 		widgets->badge = std::make_unique<UiPlayerBadge>(name + "_badge",
 			UiPlayerBadge::before(widgets->player->bounds(), this->presentation().player_identity()),
 			i, &this->presentation().player_identity(), this->render_resources());
@@ -281,7 +296,7 @@ void MainMenuWeaponSelect::init()
 			this->render_resources(),
 			this->look().weapon_select.unselected, &this->menu_style(),
 			this->weapon_select_art_.sheet, this->weapon_select_art_.fill_frame,
-			&widgets->motion, &this->save()->play_settings());
+			&widgets->motion, &this->save()->play_settings(), &this->icon_art_);
 		widgets->weapon_icon->set_sprite_frame(
 			choice.frame, choice.paint_frame, choice.supply_strip);
 		widgets->weapon_icon->set_paint_colour(preview_colours.team_colour(
@@ -296,8 +311,8 @@ void MainMenuWeaponSelect::init()
 				Vector2F(0.0f, this->look().weapon_select.size.y +
 					this->menu_style().icon_padding.y + this->menu_style().rule_height),
 			this->render_resources(),
-			this->look().weapon_select.unselected,
-			this->menu_style().shadow_colour,
+			this->paper_art_.ink,
+			clear_shadow,
 			this->menu_style().detail_shadow_offset);
 
 		widgets->weapon_description = std::make_unique<UiTextDropShadow>(
@@ -308,7 +323,7 @@ void MainMenuWeaponSelect::init()
 				Vector2F(this->look().weapon_description_x_offset, 0.0f),
 			this->render_resources(),
 			this->look().weapon_description_colour,
-			this->menu_style().shadow_colour,
+			clear_shadow,
 			this->look().weapon_description_shadow_offset);
 
 		this->texture_container_->add_child(widgets->weapon_icon.get());
@@ -326,6 +341,56 @@ std::wstring MainMenuWeaponSelect::weapon_description(WeaponType type) const
 {
 	const size_t index = static_cast<size_t>(type);
 	return this->weapon_descriptions_.at(index);
+}
+
+void MainMenuWeaponSelect::check_paper_geometry() const
+{
+	const RectangleF panel = this->paper_->rectangle();
+	const float edge = this->paper_art_.keyline_width * 3.0f;
+	const RectangleF inside(panel.position() + Vector2F(edge),
+		panel.size() - Vector2F(edge * 2.0f + this->paper_art_.shadow_offset));
+	const auto check = [&](const RectangleF& bounds, const char* role)
+	{
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
+			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
+			bounds.width <= 0.0f || bounds.height <= 0.0f || !inside.contains(bounds))
+		{
+			throw std::runtime_error(std::string("main_menu.weapon_box_size: Weapon Select ") + role +
+				" must fit the paper including its retained text, badge and tile bounds.");
+		}
+	};
+	check(this->heading_->bounds(), "heading");
+	float previous_bottom = this->heading_->bounds().bottom();
+	for (const auto& widgets : this->player_widgets_)
+	{
+		const RectangleF tile = widgets->weapon_icon->artwork_bounds();
+		check(widgets->player->bounds(), "player label");
+		check(widgets->badge->bounds(), "player badge");
+		check(tile, "weapon tile");
+		check(widgets->weapon_name->bounds(), "weapon name");
+		check(widgets->weapon_description->bounds(), "weapon description");
+		const float inset_limit = std::max(0.0f,
+			std::min(this->menu_style().icon_padding.x, this->menu_style().icon_padding.y));
+		if (std::min(tile.width, tile.height) - inset_limit * 2.0f <=
+			this->icon_art_.keyline_width * 6.0f + this->icon_art_.shadow_offset)
+		{
+			throw std::runtime_error("main_menu.weapon_select.size: Weapon Select tiles must leave positive paper faces within their motion envelope.");
+		}
+		RectangleF row = RectangleF::union_of(widgets->player->bounds(), widgets->badge->bounds());
+		row = RectangleF::union_of(row, tile);
+		row = RectangleF::union_of(row, widgets->weapon_name->bounds());
+		row = RectangleF::union_of(row, widgets->weapon_description->bounds());
+		if (row.y < previous_bottom)
+		{
+			throw std::runtime_error("main_menu.weapon_select.spacing: Weapon Select rows must follow the heading without overlap.");
+		}
+		if (widgets->player->bounds().right() > tile.x ||
+			widgets->weapon_name->bounds().right() > widgets->weapon_description->bounds().x)
+		{
+			throw std::runtime_error("main_menu.weapon_select.spacing: Weapon Select labels, tiles and descriptions must retain separate columns.");
+		}
+		previous_bottom = row.bottom();
+	}
 }
 
 #pragma endregion MainMenuWeaponSelect

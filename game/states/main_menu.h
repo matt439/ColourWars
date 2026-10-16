@@ -299,7 +299,12 @@ public:
 	explicit MainMenuWeaponSelect(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
+protected:
+	bool shows_brand() const override { return false; }
+	bool shows_focus_backing() const override { return false; }
 private:
+	MenuPaperArtPresentation paper_art_;
+	MenuPaperArtPresentation icon_art_;
 	struct SelectState
 	{
 		WeaponType type = WeaponType::sprayer;
@@ -316,6 +321,7 @@ private:
 		std::unique_ptr<labrador::UiTextDropShadow> weapon_description = nullptr;
 	};
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
+	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 	std::vector<std::unique_ptr<Widgets>> player_widgets_;
 	std::vector<SelectState> select_states_;
@@ -330,6 +336,7 @@ private:
 	void set_level_settings() const;
 	void cycle_weapons(labrador::Direction direction, int player_index);
 	std::wstring weapon_description(WeaponType type) const;
+	void check_paper_geometry() const;
 };
 
 class MainMenuStageSelect final : public MainMenuPage

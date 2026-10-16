@@ -7,6 +7,49 @@
 using namespace labrador;
 using namespace mattmath;
 
+namespace
+{
+	void draw_paper_card(DrawList& list, const SpriteSheet* sheet,
+		SpriteSheet::frame_handle frame, const MenuPaperArtPresentation& art,
+		const RectangleF& bounds, const Colour& colour, float press_fraction)
+	{
+		const auto fill = [&](const RectangleF& rectangle, const Colour& tint)
+		{
+			sheet->draw(list, frame, rectangle, CrudeDrawing::premultiplied(tint));
+		};
+		const float pen = art.keyline_width;
+		const float step = pen * 2.0f;
+		const float shadow = art.shadow_offset;
+		const RectangleF rest(bounds.x, bounds.y,
+			bounds.width - shadow, bounds.height - shadow);
+		// Depress only the paper face into its existing shadow. The complete
+		// artwork envelope, labels and navigation bounds stay fixed.
+		const RectangleF face(rest.position() + Vector2F(shadow * press_fraction), rest.size());
+		const auto paper = [&](const RectangleF& box, const Colour& tint)
+		{
+			fill(RectangleF(box.x + step, box.y,
+				box.width - step * 2.0f, box.height), tint);
+			fill(RectangleF(box.x, box.y + step,
+				box.width, box.height - step * 2.0f), tint);
+		};
+		paper(RectangleF(rest.position() + Vector2F(shadow), rest.size()), art.shade);
+		paper(face, art.ink);
+		const RectangleF inside(face.x + pen, face.y + pen,
+			face.width - pen * 2.0f, face.height - pen * 2.0f);
+		paper(inside, colour);
+		for (int pass = 3; pass > 0; --pass)
+		{
+			Colour shade = art.shade;
+			shade.a *= 0.12f;
+			const float width = pen * static_cast<float>(pass);
+			fill(RectangleF(inside.x + step, inside.bottom() - width,
+				inside.width - step * 2.0f, width), shade);
+			fill(RectangleF(inside.right() - width, inside.y + step,
+				width, inside.height - step * 2.0f), shade);
+		}
+	}
+}
+
 MenuJoinAccent::MenuJoinAccent(const std::string& name, const RectangleF& rectangle,
 	RenderResources* resources, const MenuStyle* style, const MenuFocusMotion* motion,
 	const PlaySettings* settings) :
@@ -80,9 +123,10 @@ void MenuChoiceIcon::draw(DrawList& list) const
 MenuIcon::MenuIcon(const std::string& name, const std::string& frame,
 	const RectangleF& rectangle, RenderResources* resources,
 	const Colour& colour, const MenuStyle* style, const std::string& sheet_name,
-	const std::string& fill_frame, const MenuFocusMotion* motion, const PlaySettings* settings) :
+	const std::string& fill_frame, const MenuFocusMotion* motion, const PlaySettings* settings,
+	const MenuPaperArtPresentation* paper_art) :
 	UiTexture(name, sheet_name, frame, rectangle, resources, colour),
-	style_(style), motion_(motion), settings_(settings),
+	style_(style), motion_(motion), settings_(settings), paper_art_(paper_art),
 	fill_frame_(this->sprite_sheet()->resolve_sprite_frame(fill_frame))
 {
 }
@@ -100,6 +144,14 @@ void MenuIcon::set_sprite_frame(const std::string& frame, const std::string& pai
 void MenuIcon::set_paint_colour(const Colour& colour)
 {
 	this->paint_colour_ = colour;
+}
+
+RectangleF MenuIcon::artwork_bounds() const
+{
+	RectangleF bounds = this->rectangle();
+	bounds.inflate(this->style_->icon_padding);
+	bounds.inflate(this->style_->rule_height);
+	return bounds;
 }
 
 void MenuIcon::draw(DrawList& list) const
@@ -124,8 +176,22 @@ void MenuIcon::draw(DrawList& list) const
 		border.inflate(-inset);
 	}
 	const SpriteSheet* sheet = this->sprite_sheet();
-	sheet->draw(list, this->fill_frame_, border, this->colour());
-	sheet->draw(list, this->fill_frame_, tile, this->style_->heading_colour);
+	if (this->paper_art_ != nullptr)
+	{
+		draw_paper_card(list, sheet, this->fill_frame_, *this->paper_art_, border, this->colour(), 0.0f);
+		// Keep the original tool canvas independent of the moving paper edge
+		// and readiness tint. A fixed keyline of bleed stays within the icon
+		// padding and covers edge truncation at fractional render scales.
+		RectangleF canvas = this->rectangle();
+		canvas.inflate(std::min(this->style_->rule_height,
+			std::min(this->style_->icon_padding.x, this->style_->icon_padding.y)));
+		sheet->draw(list, this->fill_frame_, canvas, this->style_->heading_colour);
+	}
+	else
+	{
+		sheet->draw(list, this->fill_frame_, border, this->colour());
+		sheet->draw(list, this->fill_frame_, tile, this->style_->heading_colour);
+	}
 
 	const RectangleI& source = sheet->sprite_frame(this->frame()).source_rectangle();
 	const Vector2F source_size(static_cast<float>(source.width),
@@ -216,34 +282,5 @@ void MenuPaperArtwork::fill(DrawList& list, const RectangleF& rectangle, const C
 void MenuPaperArtwork::draw_card(DrawList& list, const RectangleF& bounds, const Colour& colour,
 	float press_fraction) const
 {
-	const float pen = this->art_->keyline_width;
-	const float step = pen * 2.0f;
-	const float shadow = this->art_->shadow_offset;
-	const RectangleF rest(bounds.x, bounds.y,
-		bounds.width - shadow, bounds.height - shadow);
-	// Depress only the paper face into its existing shadow. The complete
-	// artwork envelope, labels and navigation bounds stay fixed.
-	const RectangleF face(rest.position() + Vector2F(shadow * press_fraction), rest.size());
-	const auto paper = [&](const RectangleF& box, const Colour& tint)
-	{
-		this->fill(list, RectangleF(box.x + step, box.y,
-			box.width - step * 2.0f, box.height), tint);
-		this->fill(list, RectangleF(box.x, box.y + step,
-			box.width, box.height - step * 2.0f), tint);
-	};
-	paper(RectangleF(rest.position() + Vector2F(shadow), rest.size()), this->art_->shade);
-	paper(face, this->art_->ink);
-	const RectangleF inside(face.x + pen, face.y + pen,
-		face.width - pen * 2.0f, face.height - pen * 2.0f);
-	paper(inside, colour);
-	for (int pass = 3; pass > 0; --pass)
-	{
-		Colour shade = this->art_->shade;
-		shade.a *= 0.12f;
-		const float width = pen * static_cast<float>(pass);
-		this->fill(list, RectangleF(inside.x + step, inside.bottom() - width,
-			inside.width - step * 2.0f, width), shade);
-		this->fill(list, RectangleF(inside.right() - width, inside.y + step,
-			width, inside.height - step * 2.0f), shade);
-	}
+	draw_paper_card(list, this->sprite_sheet(), this->frame(), *this->art_, bounds, colour, press_fraction);
 }

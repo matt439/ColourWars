@@ -224,6 +224,7 @@
     "credits_box_size": { "x": 1760.0, "y": 920.0 },
     "setup_box_size": { "x": 1760.0, "y": 920.0 },
     "team_box_size": { "x": 1840.0, "y": 920.0 },
+    "weapon_box_size": { "x": 1840.0, "y": 920.0 },
     "setup_focus_padding": { "x": 28.0, "y": 7.0 },
     "setup_shadow_offset": 2.0,
     "art": {
@@ -271,7 +272,7 @@
     "options_warning_colour": "8A301C",
     "options_spacing": { "x": 540.0, "y": 120.0 },
     "weapon_description": {
-      "colour": "WHITE_SMOKE",
+      "colour": "1B1C20",
       "shadow_offset": { "x": 1.0, "y": 1.0 },
       "x_offset": 250.0
     },

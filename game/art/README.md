@@ -200,6 +200,19 @@ warning below the roster. The paper uses the existing solid texel, with no
 new asset or atlas recipe. Choice frames, readiness colours and independent
 icon motion retain their existing rules.
 
+The [Weapon Select page](../../docs/polish-main-menu.md#weapon-select) uses
+`main_menu.weapon_box_size` for its outer paper and draws stepped paper inside
+the existing icon border envelope. The shared paper primitive retains its
+layers and premultiplied colours; each icon still uses the captured catalog's
+sheet/fill frame. Its pen uses the existing rule width, its shade uses the setup
+shadow offset, and its live white/mint face indicates readiness. The existing
+tile contraction leaves fitted tool, paint and supply layers fixed. Captured
+dark lettering has transparent retained shadows. Normal builds reproduce the
+drawing from existing assets without a new atlas recipe.
+A fixed cream canvas using the existing heading colour preserves the preview
+inside the animated readiness surround. Its bounded keyline bleed stays within
+existing padding; tool/paint/supply and input geometry do not move.
+
 The [Options and Credits pages](../../docs/polish-main-menu.md#options-and-credits)
 extend the same drawing, with authored panel sizes and text positions in
 `main_menu`, readable disabled-row ink and a separate dark save-warning ink.

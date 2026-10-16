@@ -182,6 +182,13 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         for (int player = 0; player < settings.player_count(); ++player)
         {
             const RectangleI box = project(weapon_box(player, false));
+            if (foreground_crop(moving, box, 0).pixels != foreground_crop(resting, box, 0).pixels)
+            {
+                save(moving, output / "setup-motion-weapon-art-failure-moving.ppm");
+                save(resting, output / "setup-motion-weapon-art-failure-rest.ppm");
+                std::cerr << "SETUP WEAPON ART player=" << player << " crop=" << box.x << ',' <<
+                    box.y << ',' << box.width << ',' << box.height << '\n';
+            }
             require(foreground_crop(moving, box, 0).pixels == foreground_crop(resting, box, 0).pixels,
                 "Weapon motion shifted its inner artwork, paint or supply mask");
         }
