@@ -34,13 +34,18 @@ void MenuPage::update(float dt)
 	if (this->data()->debug().before_page_update(*this, dt))
 	{
 		this->menu_context()->suspend_music();
-		this->focus_motion_.reset();
+		this->reset_menu_motion();
 		return;
 	}
 	this->focus_motion_.observe(this->motion_focus());
 	this->focus_motion_.update(this->context()->active() ? dt : 0.0f,
 		this->save()->play_settings().reduce_effects);
-	if (!this->context()->active()) { this->focus_motion_.reset(); }
+	for (MenuFocusMotion* motion : this->selection_motion_)
+	{
+		motion->update(this->context()->active() ? dt : 0.0f,
+			this->save()->play_settings().reduce_effects);
+	}
+	if (!this->context()->active()) { this->reset_menu_motion(); }
 	const bool leaving = this->menu_context()->music_exit_pending();
 	const MenuStyle& style = this->menu_style();
 	this->input()->update_directions(dt, style.repeat_delay, style.repeat_interval,
@@ -55,23 +60,34 @@ void MenuPage::update(float dt)
 	// StateContext defers page destruction until update returns. Observe the
 	// final cursor after every input, including programmatic focus changes.
 	this->focus_motion_.observe(this->motion_focus());
-	if (!this->context()->active()) { this->focus_motion_.reset(); }
+	if (!this->context()->active()) { this->reset_menu_motion(); }
 }
 
 void MenuPage::on_suspend()
 {
-	this->focus_motion_.reset();
+	this->reset_menu_motion();
 }
 
 void MenuPage::on_resume()
 {
 	this->input()->reset_directions();
-	this->focus_motion_.reset();
+	this->reset_menu_motion();
 }
 
 void MenuPage::on_deactivated()
 {
+	this->reset_menu_motion();
+}
+
+void MenuPage::register_selection_motion(MenuFocusMotion* motion)
+{
+	this->selection_motion_.push_back(motion);
+}
+
+void MenuPage::reset_menu_motion()
+{
 	this->focus_motion_.reset();
+	for (MenuFocusMotion* motion : this->selection_motion_) { motion->reset(); }
 }
 
 const UiWidget* MenuPage::motion_focus() const
@@ -113,7 +129,7 @@ bool MenuPage::debug_dismiss(bool /*leaving_match*/)
 void MenuPage::debug_reset_input(int pad_slot)
 {
 	this->input()->reset_pad_actions(pad_slot);
-	this->focus_motion_.reset();
+	this->reset_menu_motion();
 }
 
 // Add keyboard equivalents to the shared pad labels. Keep these mappings
@@ -335,7 +351,14 @@ void MenuPage::draw_chrome(DrawList& list) const
 		RectangleF panel = focused->bounds();
 		panel.inflate(style.focus_padding);
 		sheet->draw(list, this->chrome_pixel_, panel, style.focus_panel_colour);
-		sheet->draw(list, this->chrome_pixel_, RectangleF(panel.x, panel.y,
+		// Move only the accent within its existing padding. Text, panel bounds
+		// and the focus group's navigation geometry keep their resting layout.
+		const bool animate = this->animates_focus_backing() &&
+			this->focus_.enabled(focused) && !this->save()->play_settings().reduce_effects;
+		const float inward = animate ? std::min(
+			style.accent_width * (this->focus_motion_.arrow_offset() + this->focus_motion_.press_fraction()),
+			std::max(0.0f, style.focus_padding.x - style.accent_width)) : 0.0f;
+		sheet->draw(list, this->chrome_pixel_, RectangleF(panel.x + inward, panel.y,
 			style.accent_width, panel.height),
 			this->focus_.enabled(focused) ? style.highlight : style.disabled);
 	}

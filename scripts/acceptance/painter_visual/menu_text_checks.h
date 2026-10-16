@@ -290,6 +290,8 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     const auto tap = [&](Key key)
     {
         app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
+        // Mode/Count text fixtures compare settled focus accents.
+        app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
     };
     const auto frame = [&]
     {

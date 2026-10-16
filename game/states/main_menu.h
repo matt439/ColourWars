@@ -160,6 +160,8 @@ public:
 	explicit MainMenuModeSelect(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
+protected:
+	bool animates_focus_backing() const override { return true; }
 private:
 	void cycle_duration(labrador::Direction direction);
 	void refresh_duration();
@@ -179,6 +181,8 @@ public:
 	explicit MainMenuPlayerCount(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
+protected:
+	bool animates_focus_backing() const override { return true; }
 private:
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
@@ -221,11 +225,13 @@ private:
 	};
 	struct PlayerWidgets
 	{
+		explicit PlayerWidgets(const MenuFocusMotionPresentation& look) : motion(look) {}
+		MenuFocusMotion motion;
 		std::unique_ptr<labrador::UiTextDropShadow> player = nullptr;
 		std::unique_ptr<UiPlayerBadge> badge;
-		std::unique_ptr<labrador::UiTexture> player_a = nullptr;
-		std::unique_ptr<labrador::UiTexture> player_center = nullptr;
-		std::unique_ptr<labrador::UiTexture> player_b = nullptr;
+		std::unique_ptr<MenuChoiceIcon> player_a = nullptr;
+		std::unique_ptr<MenuChoiceIcon> player_center = nullptr;
+		std::unique_ptr<MenuChoiceIcon> player_b = nullptr;
 	};
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
@@ -271,6 +277,8 @@ private:
 	};
 	struct Widgets
 	{
+		explicit Widgets(const MenuFocusMotionPresentation& look) : motion(look) {}
+		MenuFocusMotion motion;
 		std::unique_ptr<labrador::UiTextDropShadow> player = nullptr;
 		std::unique_ptr<UiPlayerBadge> badge;
 		std::unique_ptr<MenuIcon> weapon_icon = nullptr;

@@ -7,12 +7,40 @@
 using namespace labrador;
 using namespace mattmath;
 
+MenuChoiceIcon::MenuChoiceIcon(const std::string& name, const std::string& sheet,
+	const std::string& frame, const RectangleF& rectangle, RenderResources* resources,
+	const MenuFocusMotion* motion, const PlaySettings* settings) :
+	UiTexture(name, sheet, frame, rectangle, resources), motion_(motion), settings_(settings)
+{
+}
+
+void MenuChoiceIcon::set_motion_selected(bool selected)
+{
+	this->motion_selected_ = selected;
+}
+
+void MenuChoiceIcon::draw(DrawList& list) const
+{
+	if (this->hidden()) { return; }
+	RectangleF artwork = this->rectangle();
+	if (this->motion_selected_ && this->motion_ != nullptr &&
+		(this->settings_ == nullptr || !this->settings_->reduce_effects))
+	{
+		const float inset = std::max(0.0f, std::min(artwork.width, artwork.height)) *
+			this->motion_->selection_inset();
+		artwork.inflate(-inset);
+	}
+	TextureObject::draw_with(list, artwork, this->frame(), this->colour(),
+		this->origin(), this->flip(), this->draw_rotation());
+}
+
 MenuIcon::MenuIcon(const std::string& name, const std::string& frame,
 	const RectangleF& rectangle, RenderResources* resources,
 	const Colour& colour, const MenuStyle* style, const std::string& sheet_name,
-	const std::string& fill_frame) :
+	const std::string& fill_frame, const MenuFocusMotion* motion, const PlaySettings* settings) :
 	UiTexture(name, sheet_name, frame, rectangle, resources, colour),
-	style_(style), fill_frame_(this->sprite_sheet()->resolve_sprite_frame(fill_frame))
+	style_(style), motion_(motion), settings_(settings),
+	fill_frame_(this->sprite_sheet()->resolve_sprite_frame(fill_frame))
 {
 }
 
@@ -41,6 +69,17 @@ void MenuIcon::draw(DrawList& list) const
 	tile.inflate(this->style_->icon_padding);
 	RectangleF border = tile;
 	border.inflate(this->style_->rule_height);
+	if (this->motion_ != nullptr && (this->settings_ == nullptr || !this->settings_->reduce_effects))
+	{
+		// The selected tool and its paint masks remain fixed. Only the tile
+		// contracts, and never far enough to cross the authored icon canvas.
+		const float limit = std::max(0.0f, std::min(this->style_->icon_padding.x,
+			this->style_->icon_padding.y));
+		const float inset = std::clamp(std::min(this->rectangle().width, this->rectangle().height) *
+			this->motion_->selection_inset(), 0.0f, limit);
+		tile.inflate(-inset);
+		border.inflate(-inset);
+	}
 	const SpriteSheet* sheet = this->sprite_sheet();
 	sheet->draw(list, this->fill_frame_, border, this->colour());
 	sheet->draw(list, this->fill_frame_, tile, this->style_->heading_colour);

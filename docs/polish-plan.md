@@ -539,9 +539,38 @@ with evidence under `out/validation/2026-10-16-menu-motion/verification.json`.
 Both builds, all 31 consumer cases per preset, ten relevant native menu/resume
 scopes per preset and both published-bank startup checks pass. The 60 native
 motion PPM captures match between Debug and Release.
-Match-setup and per-player selection surfaces, and human review of the shared
-paper motion, remain `POL#10`. Reference-arena, movement-feel, controller and
-listening acceptance retain their existing gates.
+Human review of the shared paper motion remains `POL#10`.
+
+**Setup choice motion implemented (2026-10-16, part of `POL#10`).** Mode and
+Player count settle their focus accent inward within the existing padding and
+acknowledge accepted value changes with the same bounded press clock. Team
+selection contracts the chosen team icon inside its existing canvas; weapon
+selection contracts only the tile and border within existing icon padding.
+Each player row owns one response for actual choice changes and successful
+ready/unready changes. A successful team shuffle acknowledges every row,
+including an unchanged team. Initial choices are settled, repeated input
+restarts one response, and rejected actions and endpoints do not fake success.
+
+The [shared presentation controls](menu-presentation.md#setup-selection-motion)
+capture durations and the new `selection_inset_fraction` (`0.04`, accepted
+range `0` to `0.08`) when the page opens. Tool art, paint masks, supply art,
+lettering, badges and input geometry retain their positions. Applied Reduce
+effects immediately preserves the settled drawing. Active-time updates advance
+the clocks; missing-player and inactive gates, suspension/resume, deactivation,
+developer interception and input reset clear interrupted responses. Input
+callbacks, readiness, shuffle/random resolution and transitions retain their
+existing timing, including the final confirmation's immediate advance.
+
+Verification extends the existing `menu_focus_motion` consumer case and adds
+`scripts/check-painter.ps1 -Preset x64-debug -SetupMotionOnly` (or
+`x64-release`); the batch evidence is
+`out/validation/2026-10-16-setup-motion/verification.json`.
+Both builds, all 31 consumer cases per preset, seven relevant native menu/resume
+scopes per preset and both published-bank startup checks pass. The 96 native
+setup-motion PPM captures match between Debug and Release.
+Join and arena-stage selection motion, and human review of the shared paper
+and setup/per-player motion, remain `POL#10`. Reference-arena, movement-feel,
+controller and listening acceptance retain their existing gates.
 
 **Exit condition:** a complete match in the reference arena feels visually coherent
 and responsive. Jumping, landing and movement have visible, correctly timed feedback.

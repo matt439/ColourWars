@@ -63,6 +63,7 @@ bool MainMenuPage::wait_for_players(
 	// Focus loss can temporarily hide every pad. It does not change the roster.
 	if (!this->context()->active())
 	{
+		this->reset_menu_motion();
 		return true;
 	}
 	const bool missing = std::any_of(inputs.begin(), inputs.end(),
@@ -81,6 +82,7 @@ bool MainMenuPage::wait_for_players(
 	}
 	if (missing)
 	{
+		this->reset_menu_motion();
 		// Any available device may recover a setup whose owner disconnected.
 		for (const ProcessedMenuInput& input : this->menu_inputs())
 		{
@@ -325,7 +327,7 @@ void MainMenuModeSelect::update_page(float /*dt*/)
 		}
 		if (input.action == MenuInputAction::proceed)
 		{
-			if (this->focus_.activate(0) == Activation::ran)
+			if (this->activate_focus() == Activation::ran)
 			{
 				return;
 			}
@@ -339,6 +341,7 @@ void MainMenuModeSelect::update_page(float /*dt*/)
 		{
 			this->play_wave(this->direction_sound_);
 			this->duration_row_->adjust(input.direction);
+			this->press_focus();
 		}
 	}
 }

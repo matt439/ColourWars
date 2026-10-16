@@ -373,6 +373,7 @@ namespace
 		style.motion.press_duration = read_positive(motion, "press_duration");
 		style.motion.arrow_travel = motion.number("arrow_travel");
 		style.motion.press_fraction = motion.number("press_fraction");
+		style.motion.selection_inset_fraction = motion.number("selection_inset_fraction");
 		if (style.motion.focus_duration > 0.5f || style.motion.press_duration > 0.5f)
 		{
 			throw std::runtime_error(motion.where() + ": focus_duration and press_duration must be at most 0.5 seconds.");
@@ -384,6 +385,11 @@ namespace
 		if (!std::isfinite(style.motion.press_fraction) || style.motion.press_fraction < 0.0f || style.motion.press_fraction > 1.0f)
 		{
 			throw std::runtime_error(motion.where() + ": press_fraction must be finite and in [0,1].");
+		}
+		if (!std::isfinite(style.motion.selection_inset_fraction) || style.motion.selection_inset_fraction < 0.0f ||
+			style.motion.selection_inset_fraction > 0.08f)
+		{
+			throw std::runtime_error(motion.where() + ": selection_inset_fraction must be finite and in [0,0.08].");
 		}
 
 		const JsonValue fonts = json.object("fonts");

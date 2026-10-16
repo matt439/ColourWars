@@ -51,6 +51,8 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto tap = [&](int player, GamepadButton button)
     {
         hold(player, button, true); tick(); hold(player, button, false); tick();
+        // This existing setup fixture observes settled choices/readiness.
+        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
     };
     const auto frame = [&]
     {
@@ -112,6 +114,7 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     };
     const auto verify_team_page = [&](const MenuLevelSettings& plan, const char* reason)
     {
+        app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
         require(frame().pixels == reference(plan).pixels, reason);
     };
     const auto open = [&](int count)

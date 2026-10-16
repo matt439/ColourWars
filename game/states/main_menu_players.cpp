@@ -33,7 +33,7 @@ void MainMenuPlayerCount::update_page(float /*dt*/)
 		if (input.action == MenuInputAction::proceed)
 		{
 			this->activating_slot_ = slot;
-			if (this->focus_.activate(0) == Activation::ran)
+			if (this->activate_focus() == Activation::ran)
 			{
 				return;
 			}

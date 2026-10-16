@@ -38,6 +38,8 @@ void weapon_catalog_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     const auto tap = [&](Key key)
     {
         app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
+        // Catalog fixtures compare the authored resting artwork and tile.
+        app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
     };
     const auto frame = [&]
     {

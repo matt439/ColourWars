@@ -55,12 +55,17 @@ void MainMenuWeaponSelect::update_page(float /*dt*/)
 				this->play_wave(this->unready_sound_, this->look().unready_sound.volume);
 				this->select_states_[i].state =
 					ConfirmationState::unconfirmed;
+				this->player_widgets_[i]->motion.press();
 			}
 			// Continue so other players can act in the same frame.
 		}
 		else if (inputs[i].action == MenuInputAction::proceed)
 		{
 			this->play_wave(this->confirm_sound_);
+			if (this->select_states_[i].state != ConfirmationState::confirmed)
+			{
+				this->player_widgets_[i]->motion.press();
+			}
 			this->select_states_[i].state = ConfirmationState::confirmed;
 		}
 		else if (this->select_states_[i].state ==
@@ -111,8 +116,9 @@ void MainMenuWeaponSelect::cycle_weapons(
 	labrador::Direction direction, int player_index)
 {
 	int enum_max = static_cast<int>(WeaponType::max_prim_wep);
+	const WeaponType previous = this->select_states_[player_index].type;
 	int enum_pos =
-		static_cast<int>(this->select_states_[player_index].type);
+		static_cast<int>(previous);
 	if (direction == labrador::Direction::left)
 	{
 		if (enum_pos == 0)
@@ -137,6 +143,11 @@ void MainMenuWeaponSelect::cycle_weapons(
 	}
 	this->select_states_[player_index].type =
 		static_cast<WeaponType>(enum_pos);
+	if (this->select_states_[player_index].type != previous)
+	{
+		// The icon is reused for every tool, so its enum is the selection identity.
+		this->player_widgets_[player_index]->motion.selection_changed();
+	}
 }
 bool MainMenuWeaponSelect::all_players_confirmed() const
 {
@@ -247,7 +258,7 @@ void MainMenuWeaponSelect::init()
 			this->weapon_select_art_.choice(state.type);
 		this->select_states_.push_back(state);
 
-		auto widgets = std::make_unique<Widgets>();
+		auto widgets = std::make_unique<Widgets>(this->menu_style().motion);
 
 		std::string name = "player_" + std::to_string(i + 1);
 		std::wstring label_text = this->level_settings()->player_label(i);
@@ -269,11 +280,13 @@ void MainMenuWeaponSelect::init()
 			RectangleF(this->calculate_widget_position(2, i + 2), this->look().weapon_select.size),
 			this->render_resources(),
 			this->look().weapon_select.unselected, &this->menu_style(),
-			this->weapon_select_art_.sheet, this->weapon_select_art_.fill_frame);
+			this->weapon_select_art_.sheet, this->weapon_select_art_.fill_frame,
+			&widgets->motion, &this->save()->play_settings());
 		widgets->weapon_icon->set_sprite_frame(
 			choice.frame, choice.paint_frame, choice.supply_strip);
 		widgets->weapon_icon->set_paint_colour(preview_colours.team_colour(
 			this->level_settings()->player_team(i)));
+		widgets->motion.observe(widgets->weapon_icon.get());
 
 		widgets->weapon_name = std::make_unique<UiTextDropShadow>(
 			name + "_wep_name",
@@ -304,6 +317,7 @@ void MainMenuWeaponSelect::init()
 		this->text_container_->add_child(widgets->player.get());
 		this->text_container_->add_child(widgets->weapon_description.get());
 
+		this->register_selection_motion(&widgets->motion);
 		this->player_widgets_.push_back(std::move(widgets));
 	}
 	this->update_weapon_select_visuals();

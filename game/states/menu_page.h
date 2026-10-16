@@ -60,6 +60,7 @@ protected:
 	virtual bool shows_brand() const { return true; }
 	// Pages with their own paper cards draw focus in their texture layer.
 	virtual bool shows_focus_backing() const { return true; }
+	virtual bool animates_focus_backing() const { return false; }
 	// Calibration pages reserve analogue sticks for their live response preview.
 	virtual bool accepts_stick_navigation() const { return true; }
 
@@ -108,6 +109,9 @@ protected:
 	MenuFocusMotion focus_motion_;
 	labrador::Activation activate_focus();
 	void press_focus();
+	// Per-player clocks are owned by the derived page's stable widget rows.
+	void register_selection_motion(MenuFocusMotion* motion);
+	void reset_menu_motion();
 
 	// Pages own their widgets and attach them to these texture and text trees.
 	std::unique_ptr<labrador::UiContainer> texture_container_ = nullptr;
@@ -136,6 +140,7 @@ protected:
 	labrador::Camera ui_camera() const;
 private:
 	const labrador::UiWidget* motion_focus() const;
+	std::vector<MenuFocusMotion*> selection_motion_;
 	void draw_chrome(labrador::DrawList& list) const;
 	labrador::RenderResources::SpriteSheetHandle chrome_sheet_;
 	labrador::SpriteSheet::frame_handle chrome_pixel_;

@@ -54,6 +54,7 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 				this->play_wave(this->unready_sound_, this->look().unready_sound.volume);
 				this->select_states_[i].state =
 					ConfirmationState::unconfirmed;
+				this->player_widgets_[i]->motion.press();
 			}
 			// Continue so other players can act in the same frame.
 		}
@@ -71,6 +72,10 @@ void MainMenuTeamSelect::update_page(float /*dt*/)
 			else
 			{
 				this->play_wave(this->confirm_sound_);
+				if (this->select_states_[i].state != ConfirmationState::confirmed)
+				{
+					this->player_widgets_[i]->motion.press();
+				}
 				this->select_states_[i].state = ConfirmationState::confirmed;
 			}
 		}
@@ -127,12 +132,16 @@ void MainMenuTeamSelect::shuffle_teams()
 	if (!shuffled.shuffle_teams()) { return; }
 	for (int i = 0; i < this->player_count(); ++i)
 	{
+		this->player_widgets_[i]->motion.reset();
 		this->select_states_[i].team = shuffled.player_team(i);
 		this->select_states_[i].state = ConfirmationState::unconfirmed;
 	}
 	this->both_teams_needed_->set_hidden(true);
 	this->play_wave(this->direction_sound_);
 	this->update_team_select_visuals();
+	// A successful shuffle is visible even when a row keeps the same team.
+	// Each row retains one bounded response rather than accumulating presses.
+	for (const auto& widgets : this->player_widgets_) { widgets->motion.press(); }
 }
 bool MainMenuTeamSelect::confirm_completes_roster(int player) const
 {
@@ -213,7 +222,7 @@ void MainMenuTeamSelect::update_team_select_visuals()
 
 	for (int i = 0; i < this->player_count(); i++)
 	{
-		UiWidget* selected_widget = nullptr;
+		MenuChoiceIcon* selected_widget = nullptr;
 		switch (this->select_states_[i].team)
 		{
 		case PlayerTeam::a:
@@ -232,6 +241,8 @@ void MainMenuTeamSelect::update_team_select_visuals()
 			selected_widget = this->player_widgets_[i]->player_b.get();
 			break;
 		}
+		this->player_widgets_[i]->motion.observe(selected_widget);
+		selected_widget->set_motion_selected(true);
 		if (this->select_states_[i].state ==
 			ConfirmationState::confirmed)
 		{
@@ -245,6 +256,9 @@ void MainMenuTeamSelect::deselect_and_unconfirm_all_widgets()
 	const auto& frames = this->team_select_frames_;
 	for (int i = 0; i < this->player_count(); i++)
 	{
+		this->player_widgets_[i]->player_a->set_motion_selected(false);
+		this->player_widgets_[i]->player_center->set_motion_selected(false);
+		this->player_widgets_[i]->player_b->set_motion_selected(false);
 		this->player_widgets_[i]->player_a->set_sprite_frame(
 			frames[0]);
 		this->player_widgets_[i]->player_center->set_sprite_frame(
@@ -323,7 +337,7 @@ void MainMenuTeamSelect::init()
 			player_team(i);
 		this->select_states_.push_back(state);
 
-		auto widgets = std::make_unique<PlayerWidgets>();
+		auto widgets = std::make_unique<PlayerWidgets>(this->menu_style().motion);
 
 		std::string name = "player_" + std::to_string(i + 1);
 		std::wstring label_text = this->level_settings()->player_label(i);
@@ -341,30 +355,30 @@ void MainMenuTeamSelect::init()
 			UiPlayerBadge::before(widgets->player->bounds(), this->presentation().player_identity()),
 			i, &this->presentation().player_identity(), this->render_resources());
 
-		widgets->player_a = std::make_unique<UiTexture>(
+		widgets->player_a = std::make_unique<MenuChoiceIcon>(
 			name + "_a",
 			look.team_select_sheet,
 			this->team_select_frames_[0],
 			RectangleF(this->calculate_widget_position(2, i + 2), this->look().team_select.size),
-			this->render_resources());
+			this->render_resources(), &widgets->motion, &this->save()->play_settings());
 
 		auto move = Vector2F(this->look().team_select.size.x, 0.0f);
 
-		widgets->player_center = std::make_unique<UiTexture>(
+		widgets->player_center = std::make_unique<MenuChoiceIcon>(
 			name + "_center",
 			look.team_select_sheet,
 			this->team_select_frames_[1],
 			RectangleF(widgets->player_a->rectangle().position() + move,
 				this->look().team_select.size),
-			this->render_resources());
+			this->render_resources(), &widgets->motion, &this->save()->play_settings());
 
-		widgets->player_b = std::make_unique<UiTexture>(
+		widgets->player_b = std::make_unique<MenuChoiceIcon>(
 			name + "_b",
 			look.team_select_sheet,
 			this->team_select_frames_[2],
 			RectangleF(widgets->player_center->rectangle().position() + move,
 				this->look().team_select.size),
-			this->render_resources());
+			this->render_resources(), &widgets->motion, &this->save()->play_settings());
 
 		this->texture_container_->add_child(widgets->player_a.get());
 		this->texture_container_->add_child(widgets->player_center.get());
@@ -373,9 +387,10 @@ void MainMenuTeamSelect::init()
 
 		this->text_container_->add_child(widgets->player.get());
 
+		this->register_selection_motion(&widgets->motion);
 		this->player_widgets_.push_back(std::move(widgets));
 	}
-
+	this->update_team_select_visuals();
 }
 
 #pragma endregion MainMenuTeamSelect

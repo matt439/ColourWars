@@ -47,7 +47,8 @@ namespace
         MenuFocusMotion motion(look);
         const auto settled = [&]
         {
-            require(motion.arrow_offset() == 0.0f && motion.press_fraction() == 0.0f,
+            require(motion.arrow_offset() == 0.0f && motion.press_fraction() == 0.0f &&
+                motion.selection_inset() == 0.0f,
                 "Interrupted or completed menu motion retained an ornament offset");
         };
         motion.press(); settled();
@@ -57,18 +58,21 @@ namespace
         require_near(motion.arrow_offset(), look.arrow_travel, "New focus did not start its bounded inward settle");
         motion.press();
         require_near(motion.press_fraction(), look.press_fraction, "Accepted press did not start its bounded response");
-        const float arrow = motion.arrow_offset(), pressed = motion.press_fraction();
+        const float arrow = motion.arrow_offset(), pressed = motion.press_fraction(),
+            inset = motion.selection_inset();
         for (const float invalid : { 0.0f, -1.0f, std::numeric_limits<float>::infinity(),
             -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN() })
         {
             motion.update(invalid, false);
-            require(motion.arrow_offset() == arrow && motion.press_fraction() == pressed,
+            require(motion.arrow_offset() == arrow && motion.press_fraction() == pressed &&
+                motion.selection_inset() == inset,
                 "Nonpositive or nonfinite time advanced menu focus motion");
         }
         for (int redraw = 0; redraw < 100; ++redraw)
         {
             const MenuFocusMotion& sample = motion;
-            require(sample.arrow_offset() == arrow && sample.press_fraction() == pressed,
+            require(sample.arrow_offset() == arrow && sample.press_fraction() == pressed &&
+                sample.selection_inset() == inset,
                 "Repeated const menu motion sampling advanced its clock");
         }
         motion.update(look.focus_duration * 0.5f, false);
@@ -86,6 +90,7 @@ namespace
         split_steps.update(elapsed * 0.25f, false); split_steps.update(elapsed * 0.75f, false);
         require_near(one_step.arrow_offset(), split_steps.arrow_offset(), "Focus motion changed with update partitioning");
         require_near(one_step.press_fraction(), split_steps.press_fraction(), "Press release changed with update partitioning");
+        require_near(one_step.selection_inset(), split_steps.selection_inset(), "Selection contraction changed with update partitioning");
 
         motion.press(); motion.update(look.press_duration * 0.5f, false);
         require_near(motion.press_fraction(), look.press_fraction * 0.5f, "Press release did not advance on active time");
@@ -144,12 +149,15 @@ namespace
 
         MenuFocusMotionPresentation changed = look;
         MenuFocusMotion captured(changed);
-        changed.arrow_travel = 0.0f; changed.press_fraction = 0.0f;
+        changed.arrow_travel = 0.0f; changed.press_fraction = 0.0f; changed.selection_inset_fraction = 0.0f;
         MenuFocusMotion reopened(changed);
         for (MenuFocusMotion* state : { &captured, &reopened }) { state->observe(&a); state->observe(&b); state->press(); }
         require_near(captured.arrow_offset(), look.arrow_travel, "Live presentation replacement changed a captured motion configuration");
         require_near(captured.press_fraction(), look.press_fraction, "Captured press configuration changed after replacement");
-        require(reopened.arrow_offset() == 0.0f && reopened.press_fraction() == 0.0f,
+        require_near(captured.selection_inset(), look.selection_inset_fraction,
+            "Captured selection contraction changed after replacement");
+        require(reopened.arrow_offset() == 0.0f && reopened.press_fraction() == 0.0f &&
+            reopened.selection_inset() == 0.0f,
             "A reopened motion model ignored its new zero-amplitude configuration");
 
         std::srand(415);
@@ -157,7 +165,91 @@ namespace
         std::srand(415);
         motion.observe(&a); motion.press(); motion.update(0.01f, false);
         static_cast<void>(motion.arrow_offset()); static_cast<void>(motion.press_fraction());
+        motion.selection_changed(); static_cast<void>(motion.selection_inset());
         require(std::rand() == expected_random, "Cosmetic menu motion consumed gameplay randomness");
+    }
+
+    void check_selection_motion(const MenuFocusMotionPresentation& look)
+    {
+        ProbeWidget first(40.0f), second(140.0f);
+        const RectangleF first_bounds = first.bounds(), second_bounds = second.bounds();
+        MenuFocusMotion motion(look), other_player(look);
+        motion.selection_changed();
+        require(motion.selection_inset() == 0.0f,
+            "A semantic selection without an eligible widget started a response");
+        motion.observe(&first); other_player.observe(&second);
+        require(motion.selection_inset() == 0.0f && other_player.selection_inset() == 0.0f,
+            "Initial roster selection did not stay still");
+        motion.selection_changed();
+        require_near(motion.selection_inset(), look.selection_inset_fraction,
+            "A new choice using the same icon did not start selection motion");
+        require(other_player.selection_inset() == 0.0f,
+            "One player's selection started another player's response");
+        const float starting_inset = motion.selection_inset();
+        for (const float invalid : { 0.0f, -1.0f, std::numeric_limits<float>::infinity(),
+            -std::numeric_limits<float>::infinity(), std::numeric_limits<float>::quiet_NaN() })
+        {
+            motion.update(invalid, false);
+            require(motion.selection_inset() == starting_inset,
+                "Nonpositive or nonfinite time advanced a semantic selection");
+        }
+        motion.update(look.focus_duration * 0.5f, false);
+        require_near(motion.selection_inset(), look.selection_inset_fraction * 0.25f,
+            "Selection contraction did not settle with focus easing");
+        motion.press();
+        require_near(motion.selection_inset(), look.selection_inset_fraction *
+            std::max(0.25f, look.press_fraction), "Ready feedback did not share the bounded selection response");
+        motion.selection_changed();
+        require(motion.press_fraction() == 0.0f,
+            "A changed semantic choice retained its previous ready press");
+        for (int repeat = 0; repeat < 20; ++repeat)
+        {
+            motion.press(); motion.selection_changed();
+            require_near(motion.selection_inset(), look.selection_inset_fraction,
+                "Repeated choice changes accumulated or lost their bounded response");
+        }
+        other_player.press();
+        const float other_inset = other_player.selection_inset();
+        motion.update(std::numeric_limits<float>::max(), false);
+        require(motion.selection_inset() == 0.0f && other_player.selection_inset() == other_inset,
+            "Settling one player's selection advanced another player's clock");
+        motion.press();
+        require_near(motion.selection_inset(), look.selection_inset_fraction * look.press_fraction,
+            "Ready/unready feedback on a settled icon did not start a contraction");
+        motion.selection_changed(); motion.observe(nullptr); motion.press(); motion.selection_changed();
+        require(motion.selection_inset() == 0.0f,
+            "A hidden or unavailable selection retained or restarted motion");
+        motion.observe(&first); motion.selection_changed(); motion.update(0.0f, true);
+        motion.selection_changed(); motion.press();
+        require(motion.selection_inset() == 0.0f,
+            "Reduce effects allowed a semantic selection or ready response");
+        motion.update(0.0f, false);
+        require(motion.selection_inset() == 0.0f,
+            "Restoring effects replayed a suppressed semantic selection");
+        motion.selection_changed(); motion.reset();
+        require(motion.selection_inset() == 0.0f, "An interrupted selection did not settle immediately");
+        motion.observe(&first);
+        require(motion.selection_inset() == 0.0f, "Resuming the same selection restarted interrupted motion");
+        motion.selection_changed();
+        require_near(motion.selection_inset(), look.selection_inset_fraction,
+            "A fresh event after reset did not restore selection motion");
+        require(first.bounds() == first_bounds && second.bounds() == second_bounds,
+            "Selection contraction changed its actual widget geometry");
+
+        auto quiet = look; quiet.selection_inset_fraction = 0.0f;
+        MenuFocusMotion disabled(quiet);
+        disabled.observe(&first); disabled.selection_changed(); disabled.press();
+        require(disabled.selection_inset() == 0.0f,
+            "Zero authored selection amplitude still moved a selected icon");
+        auto boundary = look; boundary.selection_inset_fraction = 0.08f; boundary.press_fraction = 1.0f;
+        MenuFocusMotion limited(boundary);
+        limited.observe(&first);
+        for (int repeat = 0; repeat < 20; ++repeat)
+        {
+            limited.selection_changed(); limited.press();
+            require_near(limited.selection_inset(), 0.08f,
+                "Simultaneous focus and ready responses escaped the authored selection limit");
+        }
     }
 
     void check_direct_configuration(const MenuFocusMotionPresentation& defaults)
@@ -184,6 +276,11 @@ namespace
             std::numeric_limits<float>::quiet_NaN() })
         {
             auto invalid = defaults; invalid.press_fraction = value; rejects(invalid);
+        }
+        for (const float value : { -0.01f, 0.0801f, std::numeric_limits<float>::infinity(),
+            std::numeric_limits<float>::quiet_NaN() })
+        {
+            auto invalid = defaults; invalid.selection_inset_fraction = value; rejects(invalid);
         }
     }
 
@@ -237,7 +334,8 @@ namespace
     {
         variants.rejects("motion", [](rapidjson::Document& d) { d["menu_style"].RemoveMember("motion"); });
         variants.rejects("motion", [](rapidjson::Document& d) { d["menu_style"]["motion"].SetArray(); });
-        for (const char* key : { "focus_duration", "press_duration", "arrow_travel", "press_fraction" })
+        for (const char* key : { "focus_duration", "press_duration", "arrow_travel", "press_fraction",
+            "selection_inset_fraction" })
         {
             variants.rejects(key, [key](rapidjson::Document& d) { d["menu_style"]["motion"].RemoveMember(key); });
             variants.rejects(key, [key](rapidjson::Document& d) { d["menu_style"]["motion"][key].SetString("fast"); });
@@ -252,24 +350,30 @@ namespace
         }
         variants.rejects("arrow_travel", [](rapidjson::Document& d) { d["menu_style"]["motion"]["arrow_travel"].SetDouble(2.001); });
         variants.rejects("press_fraction", [](rapidjson::Document& d) { d["menu_style"]["motion"]["press_fraction"].SetDouble(1.001); });
+        variants.rejects("selection_inset_fraction", [](rapidjson::Document& d)
+            { d["menu_style"]["motion"]["selection_inset_fraction"].SetDouble(0.0801); });
         const auto path = variants.write([](rapidjson::Document& d)
         {
             auto& motion = d["menu_style"]["motion"];
             motion["focus_duration"].SetDouble(0.5); motion["press_duration"].SetDouble(0.5);
             motion["arrow_travel"].SetInt(2); motion["press_fraction"].SetInt(1);
+            motion["selection_inset_fraction"].SetDouble(0.08);
         });
         const Presentation boundary(path.string().c_str());
         const auto& motion = boundary.menu().motion;
         require(motion.focus_duration == 0.5f && motion.press_duration == 0.5f &&
-            motion.arrow_travel == 2.0f && motion.press_fraction == 1.0f,
+            motion.arrow_travel == 2.0f && motion.press_fraction == 1.0f &&
+            motion.selection_inset_fraction == 0.08f,
             "Inclusive menu motion parser bounds rejected or changed valid authored values");
         const auto quiet_path = variants.write([](rapidjson::Document& d)
         {
             d["menu_style"]["motion"]["arrow_travel"].SetInt(0);
             d["menu_style"]["motion"]["press_fraction"].SetInt(0);
+            d["menu_style"]["motion"]["selection_inset_fraction"].SetInt(0);
         });
         const Presentation quiet(quiet_path.string().c_str());
-        require(quiet.menu().motion.arrow_travel == 0.0f && quiet.menu().motion.press_fraction == 0.0f,
+        require(quiet.menu().motion.arrow_travel == 0.0f && quiet.menu().motion.press_fraction == 0.0f &&
+            quiet.menu().motion.selection_inset_fraction == 0.0f,
             "Zero-amplitude menu motion authoring must remain valid");
     }
 }
@@ -283,12 +387,14 @@ int main(int argc, char** argv)
         const Presentation presentation((content / "presentation.json").string().c_str());
         const auto& look = presentation.menu().motion;
         require(look.focus_duration == 0.14f && look.press_duration == 0.12f &&
-            look.arrow_travel == 1.5f && look.press_fraction == 0.65f, "Authored menu motion defaults changed");
-        check_motion(look); check_direct_configuration(look);
+            look.arrow_travel == 1.5f && look.press_fraction == 0.65f &&
+            look.selection_inset_fraction == 0.04f, "Authored menu motion defaults changed");
+        check_motion(look); check_selection_motion(look); check_direct_configuration(look);
         Variants variants(content, std::filesystem::absolute(argv[0]).parent_path() / "menu-focus-motion-fixtures");
         check_parser(variants);
         std::cout << "PASS menu focus motion: real focus/activation composition, unchanged navigation bounds, "
-            "bounded interrupted/repeated events, invalid/hitch time, const samples, reduced/reset/reopen, "
+            "bounded interrupted/repeated events, independent roster selections and ready responses, "
+            "invalid/hitch time, const samples, reduced/reset/reopen, "
             "unchanged RNG and contextual presentation limits.\n";
         return 0;
     }

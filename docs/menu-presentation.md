@@ -30,8 +30,8 @@ named atlas. An art replacement must supply an appropriate solid fill.
 
 ## Shared paper focus and press motion
 
-The required `menu_style.motion` object controls the shared paper focus arrow
-and accepted-press response:
+The required `menu_style.motion` object controls the shared paper focus arrow,
+accepted-press response and setup-choice accents:
 
 | JSON path | Shipped value | Use and accepted range |
 |---|---|---|
@@ -39,12 +39,13 @@ and accepted-press response:
 | `menu_style.motion.press_duration` | `0.12` seconds | Card release time, greater than zero and at most `0.5` seconds |
 | `menu_style.motion.arrow_travel` | `1.5` keyline widths | Initial inward arrow offset, from `0` to `2` |
 | `menu_style.motion.press_fraction` | `0.65` | Initial card depression as a fraction of its existing shadow offset, from `0` to `1` |
+| `menu_style.motion.selection_inset_fraction` | `0.04` | Setup-choice inset on each side as a fraction of the icon's shorter side, from `0` to `0.08` |
 
-Every value must be finite. A zero travel or press fraction disables that part
-of the drawing. Each page captures these values when constructed, so reloading
-presentation does not change an in-flight response; reopening uses the new
-values. Paper colours, keyline width, focus padding and shadow offset retain
-their page-specific art records.
+Every value must be finite. A zero travel, press or selection-inset fraction
+disables that part of the drawing. Each page captures these values when
+constructed, so reloading presentation does not change an in-flight response;
+reopening uses the new values. Paper colours, keyline width, focus padding and
+shadow offset retain their page-specific art records.
 
 The arrow responds to an actual change between visible, enabled focused widgets;
 initial focus is settled. On retained pages, successful activation such as Apply
@@ -61,8 +62,39 @@ effect on Apply through the existing preference policy. Turning Reduce effects
 off starts settled; the next ordinary event can animate. Title/Home,
 Options/Credits, Controls / audio, Pad sticks, Pause/confirmation and End use
 this shared drawing. Results has no shared focus cursor and stays static.
-Match-setup and per-player selection motion remain in
-[`POL#10`](polish-plan.md#movement-and-interaction-feedback).
+
+## Setup selection motion
+
+Mode and Player count use the shared focus and press clocks to move their
+accent stripe inward within the existing focus padding. Their panel, lettering
+and navigation rectangles stay fixed. Accepted value changes briefly depress
+the accent; endpoints and rejected actions do not create an acknowledgement.
+
+Team selection owns one motion clock per player row. An actual team-choice
+change briefly contracts the chosen team icon inside its unchanged canvas.
+Successful ready/unready changes acknowledge that row; a successful team
+shuffle restarts one bounded response per row, including rows whose team does
+not change. The existing selected frame, confirmation tint and team rules
+still determine the visible choice.
+
+Weapon selection uses the same per-row response on actual choice changes and
+successful ready/unready changes. Only the tile and border contract, clamped
+to their existing icon padding. The tool, paint mask, supply art, lettering and
+player badge retain their positions. Initial choices start settled; repeated
+navigation replaces the current response rather than stacking it. Confirmation
+of the final player advances immediately with the existing random-choice
+resolution and transition timing.
+
+The setup clocks share `focus_duration` and `press_duration`; their maximum
+inset uses `selection_inset_fraction`. Only finite positive active updates
+advance them, and drawing samples the same state. Applied Reduce effects
+immediately draws the settled selection. Inactive or missing-player gating,
+suspension, resume, deactivation, developer interception and input reset clear
+interrupted responses. Input callbacks, readiness, navigation and widget bounds
+do not depend on the drawing.
+
+Join and arena-stage selection motion, plus human review of the paper and setup
+motion, remain in [`POL#10`](polish-plan.md#movement-and-interaction-feedback).
 
 ## Team-selection pictures
 

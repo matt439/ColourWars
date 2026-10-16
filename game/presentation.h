@@ -159,6 +159,7 @@ struct MenuFocusMotionPresentation
 	float press_duration = 0.0f;
 	float arrow_travel = 0.0f;
 	float press_fraction = 0.0f;
+	float selection_inset_fraction = 0.0f;
 };
 
 // Shared menu style, with screen-specific overrides in the records below.

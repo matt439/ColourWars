@@ -41,7 +41,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#3` | OPEN | HIGH | M | Movement-feel playtest (§2 exit): keyboard/mouse now, a physical pad later (with `ROAD#2`); feedback on and off, aim sweeps, before/after clips. Then freeze jump, acceleration and gravity. [§2](docs/polish-plan.md#2-establish-movement-and-camera-feel). |
-| `POL#10` | OPEN | HIGH | L | Match-setup and per-player selection motion; human review of shared paper focus/press motion. [§4](docs/polish-plan.md#movement-and-interaction-feedback). |
+| `POL#10` | OPEN | HIGH | L | Join and arena-stage selection motion; human review of shared paper and setup/per-player motion. [§4](docs/polish-plan.md#movement-and-interaction-feedback). |
 | `POL#14` | BLOCKED | MED | M | Human review of the implemented player badges, aim/readiness and blocked-shot cues in the reference composition; waits on the arena (`POL#17`). [§8](docs/polish-plan.md#help-players-read-the-tool-and-the-fight). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |

@@ -10,9 +10,11 @@ MenuFocusMotion::MenuFocusMotion(const MenuFocusMotionPresentation& look) : look
 	if (!std::isfinite(look.focus_duration) || look.focus_duration <= 0.0f || look.focus_duration > 0.5f ||
 		!std::isfinite(look.press_duration) || look.press_duration <= 0.0f || look.press_duration > 0.5f ||
 		!std::isfinite(look.arrow_travel) || look.arrow_travel < 0.0f || look.arrow_travel > 2.0f ||
-		!std::isfinite(look.press_fraction) || look.press_fraction < 0.0f || look.press_fraction > 1.0f)
+		!std::isfinite(look.press_fraction) || look.press_fraction < 0.0f || look.press_fraction > 1.0f ||
+		!std::isfinite(look.selection_inset_fraction) || look.selection_inset_fraction < 0.0f ||
+		look.selection_inset_fraction > 0.08f)
 	{
-		throw std::invalid_argument("Menu focus motion requires durations in (0,0.5], arrow travel in [0,2] and press fraction in [0,1].");
+		throw std::invalid_argument("Menu focus motion requires durations in (0,0.5], arrow travel in [0,2], press fraction in [0,1] and selection inset fraction in [0,0.08].");
 	}
 }
 
@@ -23,6 +25,15 @@ void MenuFocusMotion::observe(const labrador::UiWidget* eligible_focus)
 	this->focus_ = eligible_focus;
 	this->reset();
 	if (moved && !this->reduced_) { this->focus_remaining_ = this->look_.focus_duration; }
+}
+
+void MenuFocusMotion::selection_changed()
+{
+	this->reset();
+	if (this->focus_ != nullptr && !this->reduced_)
+	{
+		this->focus_remaining_ = this->look_.focus_duration;
+	}
 }
 
 void MenuFocusMotion::update(float dt, bool reduce_effects)
@@ -62,4 +73,11 @@ float MenuFocusMotion::arrow_offset() const
 float MenuFocusMotion::press_fraction() const
 {
 	return this->look_.press_fraction * static_cast<float>(this->press_remaining_ / this->look_.press_duration);
+}
+
+float MenuFocusMotion::selection_inset() const
+{
+	const float focus = static_cast<float>(this->focus_remaining_ / this->look_.focus_duration);
+	return this->look_.selection_inset_fraction *
+		std::clamp(std::max(focus * focus, this->press_fraction()), 0.0f, 1.0f);
 }

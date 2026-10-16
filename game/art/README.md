@@ -151,6 +151,15 @@ inside its existing shadow. `presentation.json.menu_style.motion` supplies its
 captured durations and travel; applied Reduce effects keeps the settled artwork.
 Labels and widget/navigation bounds keep their authored positions.
 
+The [setup selection accents](../../docs/menu-presentation.md#setup-selection-motion)
+also reuse the existing runtime art: Mode/Player count move only the focus
+stripe within its padding, Team contracts the chosen team icon inside its existing
+canvas, and Weapon contracts only its tile and border within icon padding.
+The required `menu_style.motion.selection_inset_fraction` captures the maximum
+per-side inset when a page opens. Per-player response clocks share the existing
+focus/press durations and reset when interrupted; Reduce effects draws the
+settled selection. Tool layers, labels, badges and input rectangles stay fixed.
+
 The [title and home pages](../../docs/polish-main-menu.md) use the same paper
 drawing in the texture layer, with linear-filtered lettering above it. Their
 editable palette and pen widths are in `main_menu.art`; panel sizes and text
