@@ -355,6 +355,41 @@ edits do not rename save or command identifiers. `random` is a display choice,
 not a weapon-tuning record: confirmation still resolves it through the existing
 random-primary selection, without changing selection order or RNG draws.
 
+## Stage Select paper and briefing
+
+The required `main_menu.stage_box_size` supplies Stage Select's outer panel,
+shipped as `(1840, 920)` and centered in
+`(1920, menu_style.chrome.footer_y)`. Dimensions must be finite and positive,
+at most 1840 wide and at most `footer_y - 40` high. The page captures
+`main_menu.art` with the existing setup padding and shadow overrides on the
+neutral Home surround. The legacy brand and shared focus backing are suppressed;
+the controls footer remains visible.
+
+The `focus_fill` briefing artwork encloses the authored briefing rectangle and
+the actual five briefing rows, status and hint bounds expanded by
+`3 * keyline_width + shadow_offset`. This card is recomputed after actual
+selection refreshes, so the live hint fit remains covered. Its logical layout,
+540-by-665 fitting budget, fonts, anchors and widget bounds stay unchanged.
+Runtime checks require complete outer-paper/card containment and separation
+from the preview. The heading resource guard follows the existing guards to
+preserve diagnostic priority.
+
+The required `main_menu.stage_select.selected_ink`, shipped as `111216`, supplies
+the live confirmed stage-name/status colour. Their unconfirmed colour remains
+the live `unselected`, now shipped as `1B1C20`. The preview edge retains the live
+mint `selected` colour. The briefing label and goal use captured focus ink;
+the remaining static paper labels use captured art ink. Paper shadows have zero
+alpha, retaining the authored shadow offsets and text extents. The Random
+question mark retains its existing light colour and visible shadow on the
+unchanged dark preview.
+
+Name/hint fitting, captured text/fonts, eligibility, browse/lock/unlock,
+reconnect, the existing final Random draw and latched outgoing view, input,
+stripe motion/Reduce effects and music handoff keep their existing behavior.
+StagePreview rendering and arena content are unchanged. The existing fill
+supplies the new paper without runtime assets or an atlas recipe; textures
+remain point-filtered and lettering linear-filtered.
+
 ## Shared headings and complete control legends
 
 The required `menu_text` object stores the shared menu brand, eleven headings,
@@ -990,7 +1025,8 @@ retains the resolved item font, position and shadow colour. An open page keeps
 those values through presentation replacement; reopening adopts the edits.
 A visual refresh still uses live preview width and item-shadow offset,
 preserving the existing behavior; fitted size and shadow offset are not page
-snapshots. Selection colours continue to read live presentation values. The
+snapshots. Name colours use live `stage_select.selected_ink` or `unselected`.
+The
 string stays outside numeric `tune`. It does not change eligible stages, cycling, lock/unlock,
 confirm-again start, random selection or RNG draws. Numbered Arena navigation,
 the Random availability count and composed best-of mode/roster text remain separate
@@ -1026,8 +1062,8 @@ Each page takes these messages from its captured `MenuText`. Its status widget
 retains the resolved detail font, position, shadow offset and shadow colour
 from construction. An open page keeps those values through presentation
 replacement, including when cycling or locking/unlocking refreshes its text;
-reopening adopts the edits. A refresh still reads the current selected or
-heading foreground colour, preserving the existing behavior. These complete
+reopening adopts the edits. A refresh reads the live
+`stage_select.selected_ink` or `unselected` foreground colour. These complete
 strings remain outside numeric `tune`, introduce no placeholders and do not
 change eligible stages, random selection, RNG draws, navigation, confirmation,
 unlocking or confirm-again start. Composed navigation/count hints and best-of mode/roster
@@ -1081,6 +1117,9 @@ The shipped solo objective measures 524 pixels wide including its shadow, from
 x = 1262 to 1786. It extends 16 pixels beyond the briefing panel's right edge at
 1770. The horizontal design-area boundary preserves this existing wording and
 layout.
+
+The paper artwork above encloses this overhang with pen/shadow clearance while
+retaining the logical briefing rectangle and existing fitting budget.
 
 Each page takes the four roles from its captured `MenuText` and chooses the
 same solo or multiplayer objective during construction. The briefing widgets
@@ -1253,7 +1292,7 @@ the focused `MainMenuOnly`, `SettingsMenuOnly`, `ControlsMenuOnly`, `PauseMenuOn
 `ResultsMenuOnly`, `EndMenuOnly`, `TeamSetupOnly` and `MenuTextOnly` switches of
 `scripts/check-painter.ps1` for the affected pages. `TeamSetupOnly`,
 `MenuTextOnly`, `SetupMotionOnly`, `JoinStageMotionOnly`, `JoinPaperOnly`,
-`TeamPaperOnly` and `WeaponPaperOnly` use a scripted gamepad backend, including
+`TeamPaperOnly`, `WeaponPaperOnly` and `StagePaperOnly` use a scripted gamepad backend, including
 deterministic claims, releases, connections and multiplayer stage input in the
 Join/Stage scope. The other scopes retain the real gamepad backend.
 `MenuTextOnly` retains its public keyboard checks as well.
@@ -1334,6 +1373,13 @@ human readability acceptance remain open.
 checks the paper/tile composition and the retained catalog, preview, readiness,
 motion and selection behavior without establishing physical-pad or human
 readability acceptance.
+
+`StagePaperOnly` uses the scripted reader for real Stage Select pages. It
+compares full frames and exact StagePreview output across shipped arenas,
+eligible Random and solo/multiplayer setups, retaining browsing, confirmation,
+live ink/fit refresh, captured content, accent motion and latched music-exit
+behavior. These checks do not establish human readability, physical-pad,
+listening or performance acceptance.
 
 The non-menu primitive texel retains its own startup checks. Together with
 [gameplay tuning](gameplay-tuning.md), the shared layout and sheet choices define

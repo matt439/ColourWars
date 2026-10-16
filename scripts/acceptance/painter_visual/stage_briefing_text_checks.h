@@ -121,7 +121,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
     std::ofstream records(output / "menu-text-stage-briefing.csv");
     records << "case,session,role,width,height,font,x,y,raw_width,raw_height,shadow_x,shadow_y,scale,fixture_matches\n";
     const auto compare = [&](const std::string& name, const BriefingCase& fixture,
-        const Presentation& snapshot, const Words& words)
+        const Presentation& snapshot, const Words& words, const Presentation* fitted = nullptr)
     {
         const auto& style = snapshot.menu(); const auto& built = snapshot.main_menu();
         const auto& geometry = built.stage_select;
@@ -140,17 +140,17 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         const std::wstring mode = fixture.fixed_mode != nullptr ? words.*fixture.fixed_mode :
             std::wstring(fixture.composed_mode);
         const std::array<ReferenceRow, 5> rows{ {
-            { "briefing-label", words.label, style.brand_font, 0.0f, 1.0f, style.highlight },
-            { "mode", mode, style.detail_font, 1.0f, 2.0f, style.heading_colour },
-            { "roster", fixture.roster, style.brand_font, 2.0f, 3.0f, style.unhighlight },
-            { "goal", words.goal, style.brand_font, 3.0f, 4.0f, style.highlight },
-            { "objective", words.*fixture.objective, style.brand_font, 4.0f, 6.0f, style.unhighlight } } };
+            { "briefing-label", words.label, style.brand_font, 0.0f, 1.0f, built.art.focus_ink },
+            { "mode", mode, style.detail_font, 1.0f, 2.0f, built.art.ink },
+            { "roster", fixture.roster, style.brand_font, 2.0f, 3.0f, built.art.ink },
+            { "goal", words.goal, style.brand_font, 3.0f, 4.0f, built.art.focus_ink },
+            { "objective", words.*fixture.objective, style.brand_font, 4.0f, 6.0f, built.art.ink } } };
         std::array<std::unique_ptr<UiTextDropShadow>, 5> expected{};
         for (size_t index = 0; index < rows.size(); ++index)
         {
             const auto& reference = rows[index];
             expected[index] = std::make_unique<UiTextDropShadow>("reference-briefing", reference.text, reference.font,
-                info + row * reference.row, app.render_resources(), reference.ink, style.shadow_colour,
+                info + row * reference.row, app.render_resources(), reference.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f),
                 style.detail_shadow_offset);
             const RectangleF bounds = expected[index]->bounds();
             require(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION).contains(bounds) &&
@@ -169,15 +169,8 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
         const auto solid = sheet->resolve_sprite_frame(style.fill_frame);
         sheet->draw(list, solid, camera.visible_rectangle(viewport), style.scrim_colour);
-        const UiTexture background("reference-briefing-background", built.backdrop_sheet, built.backdrop_frame,
-            RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(), built.play_background_colour);
-        background.draw(list);
-        const UiTexture briefing("reference-briefing-panel", style.sprite_sheet, style.fill_frame, panel,
-            app.render_resources(), snapshot.hud().player_identity_background_colour);
-        briefing.draw(list);
-        const UiTexture accent("reference-briefing-accent", style.sprite_sheet, style.fill_frame,
-            RectangleF(panel.position(), Vector2F(panel.width, style.accent_width)), app.render_resources(), style.highlight);
-        accent.draw(list);
+        stage_paper_surface_reference(list, *app.render_resources(), snapshot,
+            fitted == nullptr ? snapshot : *fitted, settings, false, false);
         list.set_filter(TextureFilter::linear);
         for (const auto& text : expected) { text->draw(list); }
         const Frame reference = read(renderer);
@@ -217,7 +210,7 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
         tap(Key::right); tap(Key::enter); tap(Key::escape); tap(Key::left);
         require(std::rand() == next_random && same_plan(settings, before) && stack.depth() == 2 &&
             !context.music_exit_pending(), "Briefing refresh fixture consumed RNG or committed the provisional match");
-        compare(name, fixture, snapshot, words);
+        compare(name, fixture, snapshot, words, &presentation);
     };
     for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440),
         Vector2I(1600, 1200), Vector2I(1920, 1200), Vector2I(2560, 1080) })

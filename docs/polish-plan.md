@@ -924,7 +924,7 @@ The 53-file Release ZIP contains all 26 reviewed runtime assets byte for byte,
 excluding source, debug and private audio; package evidence is in
 `out/validation/2026-10-16-setup-paper/package-verification.json`.
 
-Stage preview, accepted arenas and human
+Accepted arenas and human
 review remain `POL#16`. Reference-arena, movement-feel, physical-controller
 and listening acceptance retain their existing gates.
 
@@ -956,7 +956,7 @@ ZIP contains all 26 reviewed runtime assets byte for byte and excludes source,
 debug and private audio; package evidence is in
 `out/validation/2026-10-16-join-paper/package-verification.json`.
 
-Stage preview, accepted arenas and human review
+Accepted arenas and human review
 remain `POL#16`; reference-arena, movement-feel (`POL#3`), physical-controller and
 listening acceptance retain their existing gates.
 
@@ -990,7 +990,7 @@ the published bank and optional-bank fallback under a system-only PATH. Its
 53-file ZIP contains all 26 reviewed runtime assets byte for byte and excludes
 source, debug and private audio.
 
-Stage preview, accepted arenas and human review remain
+Accepted arenas and human review remain
 `POL#16`; movement-feel (`POL#3`), reference-arena, physical-controller and
 listening acceptance retain their existing gates.
 
@@ -1024,9 +1024,44 @@ extracted Release with the published bank and optional-bank fallback under a
 system-only PATH. The 53-file Release ZIP contains all 26 reviewed runtime
 assets byte for byte and excludes source, debug and private audio.
 
-Stage preview, accepted arenas and human review remain `POL#16`; menu-motion
+Accepted arenas and human review remain `POL#16`; menu-motion
 review (`POL#10`), movement-feel (`POL#3`), physical-controller and listening
 acceptance retain their existing gates.
+
+**Stage Select paper and briefing implemented (2026-10-16, part of `POL#16`).**
+The [Stage Select page](polish-main-menu.md#stage-select) uses a shared-style
+outer panel and a `focus_fill` briefing card, with the required
+`main_menu.stage_box_size` (`1840, 920`). The briefing artwork encloses the
+authored rectangle and actual text/status/hint bounds with pen/shadow clearance,
+and follows actual refreshes without changing the authored layout or fit budget.
+The new required `stage_select.selected_ink` supplies dark confirmed name/status
+ink; the preview edge retains its live mint selection tint. The briefing label
+and goal use captured focus ink; other static labels use captured ordinary ink.
+Paper text has transparent retained shadows. Random's light question mark
+and shadow remain on the existing dark preview.
+
+StagePreview rendering, text/font snapshots, fitting, eligibility, browsing,
+lock/unlock, recovery, final Random draw/outgoing view, stripe motion, input and
+music handoff retain their existing behavior. Actual card containment and
+preview separation are checked, without new arena content or runtime assets.
+
+Batch evidence is at
+`out/validation/2026-10-16-stage-paper/verification.json`.
+Both builds and all 31 consumer cases per preset pass. The focused
+`StagePaperOnly` scripted-reader pair passes 711 full-frame and 711 exact
+preview references per preset, with fifteen moving cases, 123 pending-fade rows
+and the immutable outer profile retained. All 246 PPM captures and CSV evidence
+match byte for byte between Debug and Release. Ten related menu/resume scopes
+also pass in both presets, bringing the batch to twenty-two passing native runs;
+the [owner](polish-main-menu.md#stage-select) lists them. Four isolated startup checks
+pass, including extracted Release with its published bank and optional-bank
+fallback under a system-only PATH. The 53-file ZIP contains all 26 reviewed
+runtime assets byte for byte and excludes source, debug and private audio.
+
+Accepted-arena artwork and human presentation/readability review remain
+`POL#16`. Movement-feel (`POL#3`) still gates `POL#17`'s reference blockout,
+which gates `POL#9`'s material/prop work. Menu-motion review (`POL#10`),
+physical-controller and listening acceptance retain their existing gates.
 
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.

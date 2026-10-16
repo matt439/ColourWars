@@ -1,3 +1,69 @@
+// Independent construction of the Stage papers and moving briefing stripe.
+// Text and preview renderers remain separate so every old crop keeps its scope.
+RectangleF stage_paper_surface_reference(DrawList& list, RenderResources& resources,
+    const Presentation& captured, const Presentation& fitted, const MenuLevelSettings& settings,
+    bool random, bool locked, size_t eligible_count = 1, float accent_offset = 0.0f)
+{
+    const auto& style = captured.menu(); const auto& main = captured.main_menu();
+    const auto& geometry = main.stage_select; const auto& words = captured.menu_text().stage;
+    auto art = main.art; art.focus_padding = main.setup_focus_padding; art.shadow_offset = main.setup_shadow_offset;
+    const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
+    const RectangleF authored(geometry.briefing.position, geometry.briefing.size);
+    RectangleF card = authored;
+    const Vector2F info = authored.position() + geometry.briefing_padding;
+    const Vector2F row = geometry.briefing.spacing;
+    const float inset = art.keyline_width * 3.0f + art.shadow_offset;
+    const auto include = [&](const UiTextDropShadow& text)
+    {
+        RectangleF bounds = text.bounds(); bounds.inflate(inset);
+        card = RectangleF::union_of(card, bounds);
+    };
+    const bool solo = settings.player_count() == 1;
+    const std::wstring mode = solo ? words.solo_mode : settings.best_of() == 1 ? words.single_match_mode :
+        L"BEST OF " + std::to_wstring(settings.best_of());
+    const std::wstring roster = std::to_wstring(settings.player_count()) +
+        (solo ? L" PLAYER" : L" PLAYERS / 2 TEAMS");
+    struct Row { std::wstring text; std::string font; float line; };
+    const std::array<Row, 6> fixed{ {
+        { words.briefing_label, style.brand_font, 0.0f }, { mode, style.detail_font, 1.0f },
+        { roster, style.brand_font, 2.0f }, { words.goal, style.brand_font, 3.0f },
+        { solo ? words.solo_objective : words.versus_objective, style.brand_font, 4.0f },
+        { locked ? words.locked_status : words.browse_status, style.detail_font, 6.0f } } };
+    for (const auto& reference : fixed)
+    {
+        const UiTextDropShadow text("independent-stage-paper-bound", reference.text, reference.font,
+            info + row * reference.line, &resources, art.ink, clear_shadow, style.detail_shadow_offset);
+        include(text);
+    }
+    const std::wstring hint = locked ? words.locked_hint : random ?
+        L"Random: " + std::to_wstring(eligible_count) + L" available arenas.\nConfirm to lock your choice." :
+        words.browse_hint;
+    const Vector2F shadow = fitted.menu().detail_shadow_offset;
+    UiTextDropShadow hint_text("independent-stage-paper-hint", hint, style.brand_font,
+        info + row * 7.0f, &resources, art.ink, clear_shadow, shadow);
+    const RectangleF raw = RectangleF::union_of(hint_text.text_bounds_at(Vector2F::ZERO, 1.0f),
+        hint_text.text_bounds_at(shadow, 1.0f));
+    const auto& live = fitted.main_menu().stage_select;
+    const float scale = std::min(1.0f, (live.briefing.size.x - live.briefing_padding.x * 2.0f) / raw.width);
+    hint_text.set_scale(scale); hint_text.set_shadow_scale(scale); hint_text.set_shadow_offset(shadow * scale);
+    include(hint_text);
+
+    list.set_filter(TextureFilter::point);
+    const UiTexture background("independent-stage-paper-background", style.sprite_sheet, style.fill_frame,
+        RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), &resources, main.home_background_colour);
+    background.draw(list);
+    const RectangleF panel((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - main.stage_box_size) / 2.0f,
+        main.stage_box_size);
+    setup_paper_reference(list, resources, style, art, panel, RectangleF());
+    auto briefing_art = art; briefing_art.paper = art.focus_fill;
+    setup_paper_reference(list, resources, style, briefing_art, card, RectangleF());
+    const UiTexture accent("independent-stage-paper-accent", style.sprite_sheet, style.fill_frame,
+        RectangleF(authored.position() + Vector2F(0.0f, accent_offset), Vector2F(authored.width, style.accent_width)),
+        &resources, art.ink);
+    accent.draw(list);
+    return card;
+}
+
 // Movement Course remains explicitly selectable but is excluded from Random.
 // Include a real eligible arena so this fixture actually reaches Random.
 void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
@@ -79,7 +145,8 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         const auto& geometry = built.stage_select; const auto& live = presentation.main_menu().stage_select;
         const Vector2F shadow = presentation.menu().item_shadow_offset;
         UiTextDropShadow expected("reference-stage-name", text, style.item_font, geometry.name_position,
-            app.render_resources(), locked ? live.selected : live.unselected, style.shadow_colour, shadow);
+            app.render_resources(), locked ? live.selected_ink : live.unselected,
+            Colour(0.0f, 0.0f, 0.0f, 0.0f), shadow);
         const RectangleF raw = RectangleF::union_of(expected.text_bounds_at(Vector2F::ZERO, 1.0f),
             expected.text_bounds_at(shadow, 1.0f));
         const float scale = std::min(1.0f, live.preview_size.x / raw.width);
@@ -100,10 +167,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
         const auto solid = sheet->resolve_sprite_frame(style.fill_frame);
         sheet->draw(list, solid, camera.visible_rectangle(viewport), style.scrim_colour);
-        const UiTexture background("reference-stage-background", built.backdrop_sheet, built.backdrop_frame,
-            RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(),
-            built.play_background_colour);
-        background.draw(list);
+        stage_paper_surface_reference(list, *app.render_resources(), snapshot, presentation, settings, random, locked);
         const RectangleF preview(geometry.preview_position, geometry.preview_size);
         RectangleF edge = preview; edge.inflate(style.rule_height);
         UiTexture preview_edge("reference-preview-edge", style.sprite_sheet, style.fill_frame, edge,
@@ -117,8 +181,8 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         // The preceding heading reaches into the top of the complete name
         // crop. Render it too, rather than shortening the name/shadow bounds.
         UiTextDropShadow heading("reference-stage-heading", snapshot.menu_text().heading(MenuHeading::arena),
-            style.heading_font, style.layout.position, app.render_resources(), style.heading_colour,
-            style.shadow_colour, style.heading_shadow_offset);
+            style.heading_font, style.layout.position, app.render_resources(), built.art.ink,
+            Colour(0.0f, 0.0f, 0.0f, 0.0f), style.heading_shadow_offset);
         list.set_filter(TextureFilter::linear); heading.draw(list); expected.draw(list);
         const Frame reference = read(renderer);
         RectangleF bounds = expected_bounds; bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds);
@@ -156,8 +220,8 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         const Vector2F position = info + geometry.briefing.spacing * 6.0f;
         const Vector2F shadow = style.detail_shadow_offset;
         UiTextDropShadow expected("reference-stage-status", text, style.detail_font, position, app.render_resources(),
-            locked ? presentation.main_menu().stage_select.selected : presentation.menu().heading_colour,
-            style.shadow_colour, shadow);
+            locked ? presentation.main_menu().stage_select.selected_ink :
+                presentation.main_menu().stage_select.unselected, Colour(0.0f, 0.0f, 0.0f, 0.0f), shadow);
         const RectangleF bounds = expected.bounds();
         const RectangleF panel(geometry.briefing.position, geometry.briefing.size);
         require(panel.contains(bounds) && RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION).contains(bounds) &&
@@ -174,13 +238,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
         const auto solid = sheet->resolve_sprite_frame(style.fill_frame);
         sheet->draw(list, solid, camera.visible_rectangle(viewport), style.scrim_colour);
-        const UiTexture background("reference-status-background", built.backdrop_sheet, built.backdrop_frame,
-            RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(),
-            built.play_background_colour);
-        background.draw(list);
-        const UiTexture briefing("reference-status-briefing", style.sprite_sheet, style.fill_frame, panel,
-            app.render_resources(), snapshot.hud().player_identity_background_colour);
-        briefing.draw(list);
+        stage_paper_surface_reference(list, *app.render_resources(), snapshot, presentation, settings, random, locked);
         list.set_filter(TextureFilter::linear); expected.draw(list);
         const Frame reference = read(renderer);
         RectangleF crop = bounds; crop.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(crop);
@@ -348,6 +406,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     next_style.shadow_colour = Colour(0.65f, 0.15f, 0.8f); next_style.heading_colour = Colour::cyan;
     auto& next_stage = const_cast<MainMenuPresentation&>(status_next.main_menu()).stage_select;
     next_stage.briefing_padding += Vector2F(8.0f, 4.0f); next_stage.selected = Colour::yellow;
+    next_stage.unselected = Colour::cyan; next_stage.selected_ink = Colour::yellow;
     status_next.validate_resources(*app.render_resources(), *app.audio_resources());
     presentation = status_old; open();
     compare_status("custom-old-browse", status_old, old_status.browse_status, false, false);

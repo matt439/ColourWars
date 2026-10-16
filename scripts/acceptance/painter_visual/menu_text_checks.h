@@ -1,3 +1,7 @@
+RectangleF stage_paper_surface_reference(DrawList& list, RenderResources& resources,
+    const Presentation& captured, const Presentation& fitted, const MenuLevelSettings& settings,
+    bool random, bool locked, size_t eligible_count, float accent_offset);
+
 // Compare the real paper-page labels with separately rendered legacy/custom
 // text, including the stepped paper and focus-card bevel beneath each crop.
 void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
@@ -730,7 +734,8 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         const UiText brand_text("reference-brand", expected_brand, style.brand_font, style.brand_position,
             app.render_resources(), style.unhighlight);
         const UiTextDropShadow heading_text("reference-heading", heading, style.heading_font,
-            style.layout.position, app.render_resources(), style.heading_colour, style.shadow_colour,
+            style.layout.position, app.render_resources(), stage ? snapshot.main_menu().art.ink : style.heading_colour,
+            stage ? Colour(0.0f, 0.0f, 0.0f, 0.0f) : style.shadow_colour,
             style.heading_shadow_offset);
         const UiTextDropShadow prompt_text("reference-prompt", prompt, footer.font, footer.position,
             app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
@@ -744,11 +749,8 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
         sheet->draw(list, fill, camera.visible_rectangle(viewport), style.scrim_colour);
         if (stage)
         {
-            const auto& look = snapshot.main_menu();
-            const UiTexture background("reference-stage-background", look.backdrop_sheet, look.backdrop_frame,
-                RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(),
-                look.play_background_colour);
-            background.draw(list);
+            stage_paper_surface_reference(list, *app.render_resources(), snapshot, snapshot, settings,
+                false, locked, 1, 0.0f);
         }
         sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::DESIGN_RESOLUTION.x,
             menu_consts::DESIGN_RESOLUTION.y - style.footer_y), style.scrim_colour);
@@ -756,15 +758,17 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
             menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height),
             style.panel_edge_colour);
         list.set_filter(TextureFilter::linear);
-        brand_text.draw(list); heading_text.draw(list);
+        if (!stage) { brand_text.draw(list); }
+        heading_text.draw(list);
         if (stage)
         {
             // The measured heading box reaches into the next row. Its crop
             // includes the beginning of the real stage name, drawn after it.
             const auto& look = snapshot.main_menu().stage_select;
             UiTextDropShadow stage_name("reference-stage-name", L"Movement Course", style.item_font,
-                look.name_position, app.render_resources(), locked ? look.selected : look.unselected,
-                style.shadow_colour, style.item_shadow_offset);
+                look.name_position, app.render_resources(), locked ? presentation.main_menu().stage_select.selected_ink :
+                    presentation.main_menu().stage_select.unselected,
+                Colour(0.0f, 0.0f, 0.0f, 0.0f), style.item_shadow_offset);
             const RectangleF bounds = RectangleF::union_of(stage_name.text_bounds_at(Vector2F::ZERO, 1.0f),
                 stage_name.text_bounds_at(style.item_shadow_offset, 1.0f));
             const float scale = std::min(1.0f, look.preview_size.x / bounds.width);

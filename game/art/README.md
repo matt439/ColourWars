@@ -213,6 +213,18 @@ A fixed cream canvas using the existing heading colour preserves the preview
 inside the animated readiness surround. Its bounded keyline bleed stays within
 existing padding; tool/paint/supply and input geometry do not move.
 
+The [Stage Select page](../../docs/polish-main-menu.md#stage-select) uses
+`main_menu.stage_box_size` for its outer paper and a captured `focus_fill`
+briefing card enclosing the authored panel and actual text with pen/shadow
+clearance. The card follows actual refreshes without changing layout or fit
+budgets. Dark name/status ink uses `stage_select.selected_ink` and `unselected`;
+the preview edge retains its mint selection tint. Other paper text has
+captured ink, with focus ink for the briefing label and goal, and transparent
+retained shadows. Random's light question mark and visible
+shadow stay on the dark preview. StagePreview rendering and arena art are
+unchanged; the existing fill reproduces the new paper without assets or an
+atlas recipe.
+
 The [Options and Credits pages](../../docs/polish-main-menu.md#options-and-credits)
 extend the same drawing, with authored panel sizes and text positions in
 `main_menu`, readable disabled-row ink and a separate dark save-warning ink.

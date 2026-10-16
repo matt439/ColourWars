@@ -24,6 +24,7 @@ param(
     [switch] $JoinPaperOnly,
     [switch] $TeamPaperOnly,
     [switch] $WeaponPaperOnly,
+    [switch] $StagePaperOnly,
     [switch] $SettingsMenuOnly,
     [switch] $ControlsMenuOnly,
     [switch] $StickSettingsOnly,
@@ -33,7 +34,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -133,6 +134,7 @@ function Write-ContactSheet {
                 $_.Name -like 'join-paper-*-detail.ppm' -or
                 $_.Name -like 'team-paper-*-detail.ppm' -or
                 $_.Name -like 'weapon-paper-*-detail.ppm' -or
+                $_.Name -like 'stage-paper-*-detail.ppm' -or
                 $_.Name -eq 'controls-menu-pad-sticks-1280x720.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
@@ -255,6 +257,9 @@ function Write-ContactSheet {
         $weaponPaper = @($images | Where-Object { $_.name -like 'weapon-paper-*-1280x720-detail' })
         Write-ContactSheetPages -Images $weaponPaper -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-weapon-paper-contact'
+        $stagePaper = @($images | Where-Object { $_.name -like 'stage-paper-*-1280x720-detail' })
+        Write-ContactSheetPages -Images $stagePaper -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-stage-paper-contact'
         $controlsMenu = @($images | Where-Object { $_.name -like 'controls-menu-*-1280x720-detail' })
         Write-ContactSheetPages -Images $controlsMenu -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-controls-menu-contact'
@@ -429,6 +434,18 @@ elseif ($SettingsMenuOnly) {
     $result.Remove('stage')
     $result.checks = 'Options/Credits paper, all enabled focus cards/arrows, native ink/paper contrast, measured labels, all palette values, long failure status and complete authored credits at 720p/1080p/QHD, 4:3, 16:10 and ultrawide. Actual row edits, staged Apply, persisted reload and failed-write warning, Controls/audio return preserving pending edits/focus, Back discard, disabled fullscreen resolution and retained windowed preset, Credits Select/Back, frozen redraw, draw RNG, static Reduce effects and resize. Independent Options pending/saved/failure rasters pass across six sizes/aspects; authored width fitting and scale reset, missing-old-glyph status font, retained/reopened/reversed callbacks, interrupted/repeated Apply, controlled failure/recovery, isolated reload and both discard routes pass at 720p. No physical-controller, human readability or listening acceptance.'
     $result.checks += ' Independent Options On/Off/Random defaults pass across six sizes/aspects. An Options item-font fixture exercises width and tall-glyph height fitting, complete value/focus-card unions, Random-to-short-fixed-palette scale reset and replacement without an old glyph. Retained/reopened/reversed callbacks, both fullscreen toggle directions and Random palette cycles, one Controls child On/Off pair and return, interrupted/repeated windowed-Off Apply, controlled failure/recovery, isolated reload and discard pass at 720p.'
+}
+elseif ($StagePaperOnly) {
+    $result.scope = 'stage-paper-only'
+    $result.player_counts = @(1, 2, 4)
+    $result.palettes = @('runtime-save-default')
+    $result.weapons = @('sprayer', 'sniper', 'roller', 'bucket')
+    $result.stage = @('king_of_the_hill', 'turbulence', 'close_quarters', 'movement_course', 'eligible-random')
+    $result.actions = @('all-arenas', 'eligible-random', 'both-wraps', 'solo-single-series-roster', 'lock-unlock', 'locked-arrows-refused', 'start-real-random', 'latched-music-exit', 'back-weapon', 'missing-reconnect', 'missing-back-count', 'accent-motion', 'reduce-effects', 'lifecycle-resets', 'captured-art-font-copy', 'live-name-status-ink-fit', 'overflow-navigation', 'preview-separation', 'no-eligible-random', 'resize')
+    $result.input_slots = @(4, 3, 0, 2)
+    $result.inputs = 'Actual Stage Select and ordinary Weapon/Count destinations in StateContext; local keyboard messages and the existing scripted GamepadReader link seam provide solo and sparse connected seats. The existing music-exit callback holds outgoing pages for exact raster checks. Hidden no-activate window.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Independent complete outer paper, dynamically measured briefing paper, unscaled/fitted dark lettering and unchanged actual StagePreview raster at its original physical pane/camera. Every shipped arena and eligible Random across six sizes/aspects in solo, two-player single/best-of-three and four-player best-of-five contexts. Both wraps, lock/unlock, refused locked arrows, immediate real/Random start with zero/one exact RNG draw, latched outgoing Random during pending music exit, one state pop, ordinary Weapon Back, missing/reconnect/held rearming and Count rescue. Native720p/1080p/QHD accent initial/middle/rest, rapid final lock/start, nonpositive time, immediate Reduce effects, activation/cover/developer resets, interrupted confirmation, fixed text/preview and resize. Captured art/font/copy survives source replacement, refresh/reopen/reversal while live name/status ink and name/hint fit remain explicit. Empty eligible set omits Random, a single excluded stage is stable, and resource-valid navigation overflow/text-padded preview overlap fail precise runtime geometry guards. Frozen pixels/plan/RNG; scripted reader only, no physical-pad, human readability, listening or performance acceptance.'
 }
 elseif ($WeaponPaperOnly) {
     $result.scope = 'weapon-paper-only'
@@ -678,7 +695,7 @@ try {
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
-    if ($TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
+    if ($TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
     foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
         $arguments += '/I' + (Quote-Path $include)
     }
@@ -731,6 +748,7 @@ try {
     elseif ($JoinPaperOnly) { $probeArguments += 'join-paper' }
     elseif ($TeamPaperOnly) { $probeArguments += 'team-paper' }
     elseif ($WeaponPaperOnly) { $probeArguments += 'weapon-paper' }
+    elseif ($StagePaperOnly) { $probeArguments += 'stage-paper' }
     elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
     elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
     elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
@@ -830,6 +848,9 @@ try {
     elseif ($SettingsMenuOnly) {
         $result.diagnostic = 'Settings-menu-only hardware check passed: actual Options/Credits navigation, row edits, delayed Apply, persisted reload and failed-save warning, Controls/audio return, Back discard, disabled fullscreen resolution and retained windowed preset. Measured full copy/values/status, native paper/cards/arrows/contrast, frozen redraw, draw RNG, static Reduce effects and resize passed across six sizes/aspects. Independent Options pending/saved/failure rasters at six sizes/aspects, authored width fitting and short-copy scale reset, missing-old-glyph font, retained/reopened/reversed callbacks, interrupted/repeated Apply, controlled failure/recovery, isolated reload and both discard routes passed. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'
         $result.diagnostic += ' Options On/Off/Random defaults at six sizes/aspects, width/height fitting, complete focus unions, Random-to-short-fixed-palette scale reset, an Options font missing an old glyph, retained/reopened/reversed callbacks, both fullscreen toggle directions/Random cycles, one Controls child On/Off pair and return, interrupted/repeated windowed-Off Apply, failure/recovery, isolated reload and discard passed.'
+    }
+    elseif ($StagePaperOnly) {
+        $result.diagnostic = 'Stage-paper-only native check passed: independent outer/dynamic briefing paper and complete dark copy plus unchanged actual StagePreview pane/camera at six sizes/aspects; all shipped arenas and eligible Random, solo/2P/4P modes/rosters, lock/unlock/refused arrows, exact real/Random start RNG and latched music exit, recovery/ordinary destinations, native local accent motion, reduction/lifecycle/interrupted rearming/resize, captured art/font/copy with explicit live ink/fit refresh, no-eligible Random and resource-valid navigation-overflow/text-padded preview-separation guards. Scripted reader seam; no physical-pad, human readability, listening or performance acceptance.'
     }
     elseif ($WeaponPaperOnly) {
         $result.diagnostic = 'Weapon-paper-only native check passed: independent outer/tile paper, unscaled dark lettering, original fixed tools/paint/final-supply masks and P1-P4 badge cells across six sizes/aspects and one-to-four sparse seats. Every choice, both wraps, all palettes, readiness/refusal, ordered Random RNG/commit, missing/reconnect and ordinary Mode/Team/Stage/Count routes; native local tile motion with fixed art/text/badges, reduction/lifecycle/resize, captured art/font/catalog/description/palette refresh/reopen/reversal including sparse fill, live icon readiness fill and name/description overflow guards passed. Scripted reader seam; no physical-pad, human readability, listening or performance acceptance.'

@@ -225,6 +225,7 @@
     "setup_box_size": { "x": 1760.0, "y": 920.0 },
     "team_box_size": { "x": 1840.0, "y": 920.0 },
     "weapon_box_size": { "x": 1840.0, "y": 920.0 },
+    "stage_box_size": { "x": 1840.0, "y": 920.0 },
     "setup_focus_padding": { "x": 28.0, "y": 7.0 },
     "setup_shadow_offset": 2.0,
     "art": {
@@ -316,7 +317,8 @@
       },
       "briefing_padding": { "x": 32.0, "y": 28.0 },
       "selected": "75EDD7",
-      "unselected": "WHITE"
+      "unselected": "1B1C20",
+      "selected_ink": "111216"
     },
     "music": { "name": "music.menu", "volume": 0.65 },
     "sounds": {

@@ -345,7 +345,14 @@ public:
 	explicit MainMenuStageSelect(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
+protected:
+	bool shows_brand() const override { return false; }
+	bool shows_focus_backing() const override { return false; }
 private:
+	MenuPaperArtPresentation paper_art_;
+	MenuPaperArtPresentation briefing_art_;
+	mattmath::RectangleF briefing_layout_bounds_;
+	float briefing_accent_motion_height_ = 0.0f;
 	MenuFocusMotion stage_motion_;
 	// Stage slots are followed by Random, which is not a stage-list entry.
 	struct SelectState
@@ -354,11 +361,12 @@ private:
 		ConfirmationState state = ConfirmationState::unconfirmed;
 	};
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
+	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<StagePreview> stage_preview_;
 	std::unique_ptr<labrador::UiTexture> preview_edge_;
 	std::unique_ptr<labrador::UiTexture> preview_background_;
-	std::unique_ptr<labrador::UiTexture> briefing_background_;
+	std::unique_ptr<MenuPaperArtwork> briefing_background_;
 	std::unique_ptr<labrador::UiTexture> briefing_accent_;
 	std::unique_ptr<labrador::UiTextDropShadow> stage_name_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> navigation_;
@@ -370,6 +378,8 @@ private:
 	int displayed_slot_ = -1;
 	ConfirmationState displayed_state_ = ConfirmationState::unconfirmed;
 	void update_stage_select_visuals();
+	void refresh_briefing_paper();
+	void check_paper_geometry() const;
 	// Returns the stage's slot, or the first slot for an empty or unknown name.
 	int slot_of(const std::string& stage_name) const;
 	// One past the final stage.

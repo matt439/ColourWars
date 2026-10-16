@@ -463,13 +463,14 @@ namespace
 		menu.setup_box_size = panel_size("setup_box_size");
 		menu.team_box_size = panel_size("team_box_size", 1840.0f);
 		menu.weapon_box_size = panel_size("weapon_box_size", 1840.0f);
+		menu.stage_box_size = panel_size("stage_box_size", 1840.0f);
 		menu.art = read_menu_paper(json, Vector2F(
 			std::min({ menu.title_box_size.x, menu.home_box_size.x,
 				menu.options_box_size.x, menu.credits_box_size.x, menu.setup_box_size.x, menu.team_box_size.x,
-				menu.weapon_box_size.x }),
+				menu.weapon_box_size.x, menu.stage_box_size.x }),
 			std::min({ menu.title_box_size.y, menu.home_box_size.y,
 				menu.options_box_size.y, menu.credits_box_size.y, menu.setup_box_size.y, menu.team_box_size.y,
-				menu.weapon_box_size.y })));
+				menu.weapon_box_size.y, menu.stage_box_size.y })));
 		const JsonValue art = json.object("art");
 		menu.art.disabled_ink = read_colour(art, "disabled_ink");
 		menu.setup_focus_padding = read_positive_vector(json, "setup_focus_padding");
@@ -702,6 +703,7 @@ namespace
 		menu.stage_select.briefing_padding = read_positive_vector(stage, "briefing_padding");
 		menu.stage_select.selected = read_colour(stage, "selected");
 		menu.stage_select.unselected = read_colour(stage, "unselected");
+		menu.stage_select.selected_ink = read_colour(stage, "selected_ink");
 
 		menu.music = read_sound(json, "music");
 
@@ -2869,6 +2871,22 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		throw std::runtime_error(this->source_path_ +
 			": menu_text.headings.weapons must fit main_menu.weapon_box_size including its retained shadow bounds.");
+	}
+	const RectangleF stage_paper((Vector2F(1920.0f, this->menu_.footer_y) - main.stage_box_size) / 2.0f,
+		main.stage_box_size);
+	const RectangleF stage_inside(stage_paper.position() + Vector2F(setup_edge),
+		stage_paper.size() - Vector2F(setup_edge * 2.0f + main.setup_shadow_offset));
+	const Vector2F stage_heading_size = render.measure_text(render.resolve_sprite_font(this->menu_.heading_font),
+		this->menu_text_.heading(MenuHeading::arena));
+	const RectangleF stage_heading = RectangleF::union_of(
+		RectangleF(this->menu_.layout.position, stage_heading_size),
+		RectangleF(this->menu_.layout.position + this->menu_.heading_shadow_offset, stage_heading_size));
+	if (!std::isfinite(stage_heading.x) || !std::isfinite(stage_heading.y) ||
+		!std::isfinite(stage_heading.width) || !std::isfinite(stage_heading.height) ||
+		stage_heading.width <= 0.0f || stage_heading.height <= 0.0f || !stage_inside.contains(stage_heading))
+	{
+		throw std::runtime_error(this->source_path_ +
+			": menu_text.headings.arena must fit main_menu.stage_box_size including its retained shadow bounds.");
 	}
 }
 

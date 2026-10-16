@@ -145,6 +145,10 @@ namespace
             main.weapon_select.spacing == Vector2F(250.0f, 125.0f) && main.weapon_select.size == Vector2F(120.0f, 64.0f) &&
             main.weapon_description_colour == main.art.ink,
             "Authored Weapon paper changed its reviewed ink or existing selection geometry");
+        require(main.stage_box_size == Vector2F(1840.0f, 920.0f) &&
+            main.stage_select.selected_ink == main.art.focus_ink && main.stage_select.unselected == main.art.ink &&
+            main.stage_select.selected == menu.highlight,
+            "Authored Stage paper changed its reviewed ink or selected preview accent");
         require(main.team_select_sheet == "sprite_sheet_1" &&
             main.team_select_frames == std::array<std::string, 3>{ "team_select_a", "team_select_center", "team_select_b" } &&
             main.team_select_selected_frames == std::array<std::string, 3>{ "team_select_a_selected",
@@ -626,6 +630,68 @@ namespace
         }, &world);
     }
 
+    void check_stage_paper(Variants& variants, World& world)
+    {
+        check_vector_definition(variants, "main_menu", "stage_box_size", [](rapidjson::Document& d) -> rapidjson::Value&
+            { return d["main_menu"]; }, true);
+        for (const char* axis : { "x", "y" })
+        {
+            const float maximum = std::string(axis) == "x" ? 1840.0f : 920.0f;
+            variants.rejects("main_menu", "stage_box_size", [axis, maximum](rapidjson::Document& d)
+                { d["main_menu"]["stage_box_size"][axis].SetFloat(maximum + 0.25f); });
+        }
+        variants.rejects("main_menu.stage_select", "selected_ink", [](rapidjson::Document& d)
+            { d["main_menu"]["stage_select"].RemoveMember("selected_ink"); });
+        variants.rejects("main_menu.stage_select", "selected_ink", [](rapidjson::Document& d)
+            { d["main_menu"]["stage_select"]["selected_ink"].SetBool(true); });
+        variants.rejects("main_menu.stage_select", "selected_ink", [](rapidjson::Document& d)
+            { d["main_menu"]["stage_select"]["selected_ink"].SetNull(); });
+        const auto footer_boundary = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_style"]["chrome"]["footer_y"].SetFloat(1000.0f);
+            d["main_menu"]["stage_box_size"]["y"].SetFloat(960.0f);
+        });
+        footer_boundary.validate_resources(world.render, world.audio);
+        require(footer_boundary.main_menu().stage_box_size == Vector2F(1840.0f, 960.0f),
+            "Stage paper height did not follow its authored footer boundary");
+        variants.rejects("main_menu", "stage_box_size", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["chrome"]["footer_y"].SetFloat(999.75f);
+            d["main_menu"]["stage_box_size"]["y"].SetFloat(960.0f);
+        });
+        const auto exact = [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["heading"].SetString("setup_exact");
+            for (auto member = d["menu_text"]["headings"].MemberBegin(); member != d["menu_text"]["headings"].MemberEnd(); ++member)
+            {
+                member->value.SetString("Fit");
+            }
+        };
+        const auto width_edge = [&](rapidjson::Document& d)
+        {
+            exact(d);
+            d["main_menu"]["stage_box_size"]["x"].SetFloat(1200.0f);
+            d["menu_style"]["layout"]["position"]["x"].SetFloat(500.0f);
+            d["menu_style"]["shadow"]["heading_offset"]["x"].SetFloat(6.0f);
+            d["menu_text"]["headings"]["arena"].SetString(std::string(130, 'F').c_str(), d.GetAllocator());
+        };
+        const auto width = variants.load(width_edge);
+        width.validate_resources(world.render, world.audio);
+        // These headings fit every prior design-area and paper check. Stage's
+        // own paper owns this exact shadow edge and the tall-glyph rejection.
+        variants.rejects("menu_text.headings", "arena", [&](rapidjson::Document& d)
+        {
+            width_edge(d);
+            d["menu_text"]["headings"]["arena"].SetString(std::string(131, 'F').c_str(), d.GetAllocator());
+        }, &world);
+        variants.rejects("menu_text.headings", "arena", [&](rapidjson::Document& d)
+        {
+            exact(d);
+            d["menu_style"]["fonts"]["heading"].SetString("join_heading_tall");
+            d["menu_text"]["headings"]["arena"].SetString("~");
+        }, &world);
+    }
+
     std::unique_ptr<SpriteSheet> sparse_sheet(std::initializer_list<const char*> names)
     {
         NameTable<SpriteFrame> frames("sprite frame");
@@ -769,6 +835,7 @@ int main(int argc, char** argv)
         check_setup_geometry(variants, world);
         check_team_paper(variants, world);
         check_weapon_paper(variants, world);
+        check_stage_paper(variants, world);
         check_assets(variants, world);
         check_required_primitive(variants, world, content);
         std::cout << "PASS menu presentation: unchanged defaults, authored base layout/artwork, contextual rejection, "

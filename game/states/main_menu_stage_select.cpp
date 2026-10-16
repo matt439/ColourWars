@@ -125,7 +125,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->stage_name_->set_scale(name_scale);
 	this->stage_name_->set_shadow_scale(name_scale);
 	this->stage_name_->set_shadow_offset(this->menu_style().item_shadow_offset * name_scale);
-	this->stage_name_->set_colour(confirmed ? look.selected : look.unselected);
+	this->stage_name_->set_colour(confirmed ? look.selected_ink : look.unselected);
 	this->random_mark_->set_hidden(!random);
 	this->navigation_->set_text(random ? this->text().stage.random_navigation :
 		L"<   ARENA " + std::to_wstring(slot + 1) + L" / " +
@@ -134,8 +134,7 @@ void MainMenuStageSelect::update_stage_select_visuals()
 		this->menu_style().panel_edge_colour);
 	this->selection_status_->set_text(confirmed ?
 		this->text().stage.locked_status : this->text().stage.browse_status);
-	this->selection_status_->set_colour(confirmed ? look.selected :
-		this->menu_style().heading_colour);
+	this->selection_status_->set_colour(confirmed ? look.selected_ink : look.unselected);
 	this->selection_hint_->set_text(confirmed ?
 		this->text().stage.locked_hint : random ?
 		L"Random: " + std::to_wstring(random_stage_indices(*this->data()->stages()).size()) +
@@ -150,6 +149,8 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->selection_hint_->set_shadow_scale(hint_scale);
 	this->selection_hint_->set_shadow_offset(this->menu_style().detail_shadow_offset * hint_scale);
 	this->set_player_prompts(confirmed ? MenuPrompt::arena_locked : MenuPrompt::arena_browse);
+	this->refresh_briefing_paper();
+	this->check_paper_geometry();
 	this->displayed_slot_ = slot;
 	this->displayed_state_ = state;
 }
@@ -194,17 +195,27 @@ void MainMenuStageSelect::init()
 {
 	this->select_state_.slot = this->slot_of(this->level_settings()->stage());
 	const MenuStyle& style = this->menu_style();
+	const MainMenuPresentation& main = this->look();
 	const StageSelectPresentation& look = this->look().stage_select;
 	RenderResources* resources = this->render_resources();
+	this->paper_art_ = main.art;
+	this->paper_art_.focus_padding = main.setup_focus_padding;
+	this->paper_art_.shadow_offset = main.setup_shadow_offset;
+	this->briefing_art_ = this->paper_art_;
+	this->briefing_art_.paper = this->paper_art_.focus_fill;
+	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
 
 	this->background_ = std::make_unique<UiTexture>("background",
-		this->look().backdrop_sheet, this->look().backdrop_frame,
+		style.sprite_sheet, style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION), resources,
-		this->look().play_background_colour);
+		main.home_background_colour);
+	this->paper_ = std::make_unique<MenuPaperArtwork>(
+		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - main.stage_box_size) / 2.0f,
+			main.stage_box_size), resources, &style, &this->paper_art_, &this->focus_);
 	this->heading_ = std::make_unique<UiTextDropShadow>("heading",
 		this->text().heading(MenuHeading::arena), style.heading_font,
 		this->calculate_widget_position(0, 0), resources,
-		style.heading_colour, style.shadow_colour, style.heading_shadow_offset);
+		this->paper_art_.ink, clear_shadow, style.heading_shadow_offset);
 
 	const RectangleF preview(look.preview_position, look.preview_size);
 	RectangleF edge = preview;
@@ -218,10 +229,10 @@ void MainMenuStageSelect::init()
 		preview, this->data());
 	this->stage_name_ = std::make_unique<UiTextDropShadow>("stage_name",
 		L"", style.item_font, look.name_position, resources,
-		look.unselected, style.shadow_colour, style.item_shadow_offset);
+		look.unselected, clear_shadow, style.item_shadow_offset);
 	this->navigation_ = std::make_unique<UiTextDropShadow>("navigation",
 		L"", style.detail_font, look.navigation_position, resources,
-		style.highlight, style.shadow_colour, style.detail_shadow_offset);
+		this->paper_art_.ink, clear_shadow, style.detail_shadow_offset);
 	this->random_mark_ = std::make_unique<UiTextDropShadow>("random_mark",
 		L"?", this->look().announcement_font, Vector2F::ZERO, resources,
 		style.highlight, style.shadow_colour, style.title_shadow_offset);
@@ -229,13 +240,15 @@ void MainMenuStageSelect::init()
 		this->random_mark_->bounds().center());
 
 	const RectangleF briefing(look.briefing.position, look.briefing.size);
-	this->briefing_background_ = std::make_unique<UiTexture>("briefing_background",
-		style.sprite_sheet, style.fill_frame, briefing, resources,
-		this->presentation().hud().player_identity_background_colour);
+	this->briefing_layout_bounds_ = briefing;
+	this->briefing_accent_motion_height_ = std::max(style.accent_width, look.briefing_padding.y);
+	this->briefing_background_ = std::make_unique<MenuPaperArtwork>(briefing,
+		resources, &style, &this->briefing_art_, &this->focus_);
 	this->briefing_accent_ = std::make_unique<MenuStageAccent>("briefing_accent",
 		RectangleF(briefing.position(), Vector2F(briefing.width, style.accent_width)),
 		resources, &style, &this->stage_motion_, &this->save()->play_settings(),
 		std::max(0.0f, look.briefing_padding.y - style.accent_width));
+	this->briefing_accent_->set_colour(this->paper_art_.ink);
 	this->stage_motion_.observe(this->briefing_accent_.get());
 	this->register_selection_motion(&this->stage_motion_);
 	const Vector2F info = briefing.position() + look.briefing_padding;
@@ -243,6 +256,7 @@ void MainMenuStageSelect::init()
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	for (UiObject* widget : std::initializer_list<UiObject*>{ this->background_.get(),
+		this->paper_.get(),
 		this->preview_edge_.get(), this->preview_background_.get(),
 		this->stage_preview_.get(), this->briefing_background_.get(),
 		this->briefing_accent_.get() })
@@ -256,12 +270,12 @@ void MainMenuStageSelect::init()
 		this->text_container_->add_child(widget);
 	}
 
-	const auto add_briefing = [this, resources, &style, &info, &row](
+	const auto add_briefing = [this, resources, &style, &info, &row, &clear_shadow](
 		const std::string& name, const std::wstring& text,
 		const std::string& font, float line, const Colour& colour)
 	{
 		auto label = std::make_unique<UiTextDropShadow>(name, text, font,
-			info + row * line, resources, colour, style.shadow_colour,
+			info + row * line, resources, colour, clear_shadow,
 			style.detail_shadow_offset);
 		this->text_container_->add_child(label.get());
 		this->briefing_text_.push_back(std::move(label));
@@ -269,27 +283,109 @@ void MainMenuStageSelect::init()
 	const bool solo = this->player_count() == 1;
 	const int best_of = this->level_settings()->best_of();
 	add_briefing("briefing_label", this->text().stage.briefing_label, style.brand_font, 0.0f,
-		style.highlight);
+		this->paper_art_.focus_ink);
 	add_briefing("mode", solo ? this->text().stage.solo_mode : best_of == 1 ?
 		this->text().stage.single_match_mode : L"BEST OF " + std::to_wstring(best_of),
-		style.detail_font, 1.0f, style.heading_colour);
+		style.detail_font, 1.0f, this->paper_art_.ink);
 	add_briefing("roster", std::to_wstring(this->player_count()) +
 		(solo ? L" PLAYER" : L" PLAYERS / 2 TEAMS"),
-		style.brand_font, 2.0f, style.unhighlight);
-	add_briefing("goal", this->text().stage.goal, style.brand_font, 3.0f, style.highlight);
+		style.brand_font, 2.0f, this->paper_art_.ink);
+	add_briefing("goal", this->text().stage.goal, style.brand_font, 3.0f, this->paper_art_.focus_ink);
 	add_briefing("objective", solo ?
 		this->text().stage.solo_objective : this->text().stage.versus_objective,
-		style.brand_font, 4.0f, style.unhighlight);
+		style.brand_font, 4.0f, this->paper_art_.ink);
 
 	this->selection_status_ = std::make_unique<UiTextDropShadow>("selection_status",
 		L"", style.detail_font, info + row * 6.0f, resources,
-		style.heading_colour, style.shadow_colour, style.detail_shadow_offset);
+		look.unselected, clear_shadow, style.detail_shadow_offset);
 	this->selection_hint_ = std::make_unique<UiTextDropShadow>("selection_hint",
 		L"", style.brand_font, info + row * 7.0f, resources,
-		style.unhighlight, style.shadow_colour, style.detail_shadow_offset);
+		this->paper_art_.ink, clear_shadow, style.detail_shadow_offset);
 	this->text_container_->add_child(this->selection_status_.get());
 	this->text_container_->add_child(this->selection_hint_.get());
 	this->update_stage_select_visuals();
+}
+void MainMenuStageSelect::refresh_briefing_paper()
+{
+	// The authored rectangle remains the text layout and live hint-fit budget.
+	// Extend only its artwork to enclose complete unscaled briefing copy.
+	RectangleF paper = this->briefing_layout_bounds_;
+	const float inset = this->briefing_art_.keyline_width * 3.0f +
+		this->briefing_art_.shadow_offset;
+	const auto include = [&](const UiWidget& widget)
+	{
+		RectangleF bounds = widget.bounds();
+		bounds.inflate(inset);
+		paper = RectangleF::union_of(paper, bounds);
+	};
+	for (const auto& text : this->briefing_text_) { include(*text); }
+	include(*this->selection_status_);
+	include(*this->selection_hint_);
+	this->briefing_background_->set_position(paper.position());
+	this->briefing_background_->set_size(paper.size());
+}
+void MainMenuStageSelect::check_paper_geometry() const
+{
+	const auto inside_paper = [](const RectangleF& paper, const MenuPaperArtPresentation& art)
+	{
+		const float edge = art.keyline_width * 3.0f;
+		return RectangleF(paper.position() + Vector2F(edge),
+			paper.size() - Vector2F(edge * 2.0f + art.shadow_offset));
+	};
+	const RectangleF inside = inside_paper(this->paper_->rectangle(), this->paper_art_);
+	const auto check = [](const RectangleF& bounds, const RectangleF& container,
+		const char* role, const char* key)
+	{
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
+			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
+			!std::isfinite(bounds.right()) || !std::isfinite(bounds.bottom()) ||
+			bounds.width <= 0.0f || bounds.height <= 0.0f || !container.contains(bounds))
+		{
+			throw std::runtime_error(std::string(key) + ": Stage Select " + role +
+				" must fit its paper including the retained text, shadow and artwork bounds.");
+		}
+	};
+	const auto check_outer = [&](const RectangleF& bounds, const char* role)
+	{
+		check(bounds, inside, role, "main_menu.stage_box_size");
+	};
+	check_outer(this->heading_->bounds(), "heading");
+	check_outer(this->stage_name_->bounds(), "arena name");
+	check_outer(this->navigation_->bounds(), "navigation");
+	check_outer(this->preview_edge_->bounds(), "preview edge");
+	check_outer(this->preview_background_->bounds(), "preview background");
+	check_outer(this->stage_preview_->bounds(), "arena preview");
+	const RectangleF briefing = this->briefing_background_->rectangle();
+	check_outer(briefing, "briefing card");
+	const RectangleF preview = this->preview_edge_->bounds();
+	if (briefing.x < preview.right() && briefing.right() > preview.x &&
+		briefing.y < preview.bottom() && briefing.bottom() > preview.y)
+	{
+		throw std::runtime_error("main_menu.stage_select.briefing: Stage Select paper must remain separate from the preview edge.");
+	}
+	if (!this->random_mark_->hidden())
+	{
+		check(this->random_mark_->bounds(), this->preview_background_->rectangle(),
+			"Random mark", "main_menu.stage_select.preview_size");
+	}
+	const RectangleF briefing_inside = inside_paper(briefing, this->briefing_art_);
+	const auto check_briefing = [&](const UiWidget& widget, const char* role)
+	{
+		check_outer(widget.bounds(), role);
+		check(widget.bounds(), briefing_inside, role, "main_menu.stage_select.briefing");
+	};
+	for (const auto& text : this->briefing_text_) { check_briefing(*text, "briefing copy"); }
+	check_briefing(*this->selection_status_, "selection status");
+	check_briefing(*this->selection_hint_, "selection hint");
+	// The moving stripe keeps the original authored gutter even when the
+	// surrounding paper grows to fit a longer objective or a live fitted hint.
+	RectangleF accent = this->briefing_accent_->bounds();
+	accent.height = this->briefing_accent_motion_height_;
+	check_outer(accent, "briefing accent motion");
+	if (!briefing.contains(accent))
+	{
+		throw std::runtime_error("main_menu.stage_select.briefing: Stage Select accent motion must stay inside its paper card.");
+	}
 }
 void MainMenuStageSelect::cycle_stages(labrador::Direction direction)
 {

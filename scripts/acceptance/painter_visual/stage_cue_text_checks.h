@@ -91,10 +91,10 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         const Vector2F hint_position = geometry.briefing.position + geometry.briefing_padding +
             geometry.briefing.spacing * 7.0f;
         UiTextDropShadow expected_navigation("reference-stage-navigation", navigation, style.detail_font,
-            geometry.navigation_position, app.render_resources(), style.highlight, style.shadow_colour,
+            geometry.navigation_position, app.render_resources(), built.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f),
             style.detail_shadow_offset);
         UiTextDropShadow expected_hint("reference-stage-hint", hint, style.brand_font, hint_position,
-            app.render_resources(), style.unhighlight, style.shadow_colour, fitted.menu().detail_shadow_offset);
+            app.render_resources(), built.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f), fitted.menu().detail_shadow_offset);
         const Vector2F shadow = fitted.menu().detail_shadow_offset;
         const RectangleF raw = RectangleF::union_of(expected_hint.text_bounds_at(Vector2F::ZERO, 1.0f),
             expected_hint.text_bounds_at(shadow, 1.0f));
@@ -104,7 +104,6 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
             (fit_kind != 2 || scale == 1.0f), "Stage cue fixture failed to exercise width-only hint fit/reset");
         expected_hint.set_scale(scale); expected_hint.set_shadow_scale(scale); expected_hint.set_shadow_offset(shadow * scale);
         const RectangleF design(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION);
-        const RectangleF panel(geometry.briefing.position, geometry.briefing.size);
         require(design.contains(expected_navigation.bounds()) && design.contains(expected_hint.bounds()) &&
             expected_navigation.bounds().bottom() <= style.footer_y && expected_hint.bounds().bottom() <= style.footer_y &&
             expected_hint.bounds().width <= budget + 0.01f,
@@ -120,12 +119,8 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
         const auto solid = sheet->resolve_sprite_frame(style.fill_frame);
         sheet->draw(list, solid, camera.visible_rectangle(viewport), style.scrim_colour);
-        const UiTexture background("reference-cue-background", built.backdrop_sheet, built.backdrop_frame,
-            design, app.render_resources(), built.play_background_colour);
-        background.draw(list);
-        const UiTexture briefing("reference-cue-briefing", style.sprite_sheet, style.fill_frame, panel,
-            app.render_resources(), snapshot.hud().player_identity_background_colour);
-        briefing.draw(list);
+        stage_paper_surface_reference(list, *app.render_resources(), snapshot, fitted, settings,
+            navigation == snapshot.menu_text().stage.random_navigation, hint == snapshot.menu_text().stage.locked_hint);
         list.set_filter(TextureFilter::linear); expected_navigation.draw(list); expected_hint.draw(list);
         const Frame reference = read(renderer);
         const std::array<const UiTextDropShadow*, 2> texts{ &expected_navigation, &expected_hint };
@@ -211,7 +206,7 @@ void stage_cue_text_checks(Application& app, Registry<LevelLoadedInfo>& levels, 
     next_style.unhighlight = Colour::yellow;
     auto& next_stage = const_cast<MainMenuPresentation&>(next.main_menu()).stage_select;
     next_stage.briefing.size.x = 620.0f; next_stage.briefing_padding += Vector2F(8.0f, 4.0f);
-    next_stage.navigation_position += Vector2F(18.0f, 6.0f);
+    next_stage.navigation_position += Vector2F(18.0f, 2.0f);
     next.validate_resources(*app.render_resources(), *app.audio_resources());
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);

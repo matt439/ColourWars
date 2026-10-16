@@ -234,6 +234,7 @@ struct StageSelectPresentation
 	mattmath::Vector2F briefing_padding;
 	labrador::Colour selected;
 	labrador::Colour unselected;
+	labrador::Colour selected_ink;
 };
 
 // Countdown drawing dimensions use the match reference pixels; timing is seconds.
@@ -358,6 +359,7 @@ struct MainMenuPresentation
 	mattmath::Vector2F setup_box_size;
 	mattmath::Vector2F team_box_size;
 	mattmath::Vector2F weapon_box_size;
+	mattmath::Vector2F stage_box_size;
 	mattmath::Vector2F setup_focus_padding;
 	float setup_shadow_offset = 0.0f;
 	// Title text is centered using its measured width; y positions are authored.

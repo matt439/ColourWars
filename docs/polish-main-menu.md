@@ -76,7 +76,7 @@ scripts/run-acceptance.ps1 -Preset x64-debug
 scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -MainMenuOnly
 ```
 
-Use `x64-release` for the Release checks. Stage preview remains under `POL#16`.
+Use `x64-release` for the Release checks.
 Reference-arena
 composition, movement feel, physical controllers and listening acceptance
 retain their TODO owners.
@@ -214,7 +214,7 @@ Rerun from an x64 Visual Studio Developer shell:
 scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -ControlsMenuOnly
 ```
 
-Use `x64-release` for Release. Stage preview remains under `POL#16`.
+Use `x64-release` for Release.
 Physical-pad, movement-feel, human readability
 and listening acceptance retain their existing TODO owners.
 
@@ -299,7 +299,7 @@ The retained native 720p views show [Mode](images/polish-main-menu/mode-720p.png
 the [focused duration row](images/polish-main-menu/mode-duration-720p.png) and
 [series Player Count with solo practice disabled](images/polish-main-menu/player-count-series-720p.png).
 
-Human menu/readability review remains open. Stage preview and accepted arenas
+Human menu/readability review remains open. Accepted arenas
 remain `POL#16`; movement-feel (`POL#3`),
 physical-controller and listening acceptance retain their existing gates.
 
@@ -365,7 +365,7 @@ The retained native 720p views show [waiting for players](images/polish-main-men
 the [complete roster](images/polish-main-menu/join-ready-720p.png) and
 [a reserved controller needing reconnection](images/polish-main-menu/join-reconnect-720p.png).
 
-Human menu/readability review remains open. Stage preview and accepted arenas
+Human menu/readability review remains open. Accepted arenas
 remain `POL#16`; movement-feel (`POL#3`), physical-pad
 and listening acceptance retain their existing gates.
 
@@ -434,7 +434,7 @@ The retained native 720p views show [team choices](images/polish-main-menu/team-
 [a ready player](images/polish-main-menu/team-ready-720p.png) and the
 [both-teams warning below the cards](images/polish-main-menu/team-warning-720p.png).
 
-Human menu/readability review remains open. Stage preview and accepted arenas
+Human menu/readability review remains open. Accepted arenas
 remain `POL#16`; movement-feel (`POL#3`), physical-pad
 and listening acceptance retain their existing gates.
 
@@ -514,6 +514,76 @@ The retained native 720p views show [weapon choices](images/polish-main-menu/wea
 the [partly ready roster](images/polish-main-menu/weapon-ready-720p.png) and
 [all Random choices](images/polish-main-menu/weapon-random-720p.png).
 
-Stage preview, accepted arenas and human readability review remain `POL#16`;
+Accepted arenas and human readability review remain `POL#16`;
 menu-motion review (`POL#10`), movement-feel (`POL#3`), physical-pad and listening
 acceptance retain their existing gates.
+
+## Stage Select
+
+Implemented on 2026-10-16, part of `POL#16`. Stage Select uses the shared stepped
+paper, dark ink and neutral Home surround. The required
+`main_menu.stage_box_size` ships as `(1840, 920)`, centered above the controls
+footer, and is limited to 1840 wide and `footer_y - 40` high. The page captures
+`main_menu.art` with the existing setup padding and shadow overrides. The
+legacy brand and shared focus backing are suppressed; the controls footer
+remains visible.
+
+The briefing has a `focus_fill` paper card enclosing its authored rectangle
+and the actual five briefing rows, status and hint. Text bounds are expanded
+by three keyline widths plus the shadow offset before being included in that
+union. The card is recomputed after actual selection refreshes, covering the
+existing live hint fit. The authored 540-by-665 layout and fitting budget,
+anchors, fonts and logical widget bounds remain unchanged. This includes the
+existing solo-objective text that extends beyond the logical briefing edge.
+
+Stage name and selection status retain live state colours:
+`main_menu.stage_select.selected_ink` (required, shipped as `111216`) when
+confirmed and the existing `unselected` (now `1B1C20`) otherwise. The preview
+edge keeps the live mint `selected` colour. The briefing label and goal use
+captured focus ink; the remaining static paper labels use captured art ink.
+Paper text shadows have zero alpha while retaining authored offsets
+and measured extents. The Random question mark keeps its existing light ink
+and visible shadow on the unchanged dark preview.
+
+`StagePreview` rendering is unchanged. Name and hint width fitting, captured
+text/font/artwork roles, stage eligibility, browsing, lock/unlock, missing-device
+recovery, final Random selection draw and latched outgoing view, music fade,
+input and transition timing retain their existing behavior. The briefing stripe
+keeps its existing bounded motion and Reduce effects policy. No arena artwork,
+stage definition, runtime asset or atlas recipe is added.
+
+Page checks require actual outer-paper and briefing-card containment and
+separation from the preview. The heading resource guard is appended after the
+existing text/resource checks, preserving diagnostic priority. Paper textures
+remain point-filtered and lettering linear-filtered.
+
+Batch evidence is under
+`out/validation/2026-10-16-stage-paper/verification.json`.
+
+Debug and Release build under `/W4 /WX` and each pass all 31 consumer cases.
+The focused `StagePaperOnly` scripted-reader pair passes 711 independent
+full-frame references and 711 exact StagePreview references per preset. It
+covers all shipped arenas and eligible Random with solo, two- and four-player
+setups across six display sizes. Fifteen moving cases and 123 pending-fade rows
+retain the original motion envelope, latched view and immutable outer profile.
+All 246 retained PPM captures and CSV evidence match byte for byte between
+Debug and Release.
+
+The related `MenuTextOnly`, `JoinStageMotionOnly`, `WeaponPaperOnly`,
+`TeamPaperOnly`, `JoinPaperOnly`, `SetupPaperOnly`, `SetupMotionOnly`,
+`TeamSetupOnly`, `WeaponCatalogOnly` and `ResumeOnly` scopes also pass in both
+presets, bringing the batch to twenty-two passing native runs.
+
+Four isolated startup checks pass, including extracted Release with the
+published bank and optional-bank silent fallback under a system-only PATH.
+The 53-file Release ZIP contains all 26 reviewed runtime assets byte for byte
+and excludes source, debug and private audio.
+
+The retained native 720p views show [four-player best-of-five browsing](images/polish-main-menu/stage-browse-720p.png),
+the [locked arena](images/polish-main-menu/stage-locked-720p.png) and
+[solo Random with the complete objective](images/polish-main-menu/stage-solo-random-720p.png).
+
+Accepted-arena artwork and human presentation/readability review remain
+`POL#16`. Movement-feel (`POL#3`) still gates the reference blockout (`POL#17`),
+which gates the arena material/prop kit (`POL#9`). Menu-motion review
+(`POL#10`), physical-pad and listening acceptance remain open.
