@@ -394,6 +394,9 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
                 frozen == resume_observation(game->level()),
                 "Repeated input or nonpositive time changed the latched End action");
             stack.notify_activation(false);
+            // Focus loss clears the cosmetic paper press immediately. The
+            // latched action, its page and the finished world remain frozen.
+            const Frame interrupted = resume_stack_frame(app);
             tick(presentation.music_mix().fade_out + 1.0f);
             require(stack.depth() == 3 && !ended && bank->effect_state(music) == SoundState::paused &&
                 frozen == resume_observation(game->level()),
@@ -401,7 +404,7 @@ void results_music_flow_matrix(Application& app, GameData& data, const Presentat
             stack.notify_activation(true);
             tick(presentation.music_mix().fade_out * 0.25f);
             require(stack.depth() == 3 && !ended && bank->effect_state(music) == SoundState::playing &&
-                pending.pixels == resume_stack_frame(app).pixels && frozen == resume_observation(game->level()),
+                interrupted.pixels == resume_stack_frame(app).pixels && frozen == resume_observation(game->level()),
                 "A partial End fade dispatched early or changed its pending page/world");
             record(round, "end-exit-partial");
             tick(presentation.music_mix().fade_out + dt);

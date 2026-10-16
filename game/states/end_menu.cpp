@@ -44,7 +44,7 @@ void EndMenuInitial::update_page(float /*dt*/)
 	{
 		if (input.action == MenuInputAction::proceed)
 		{
-			if (this->focus_.activate(0) == Activation::ran)
+			if (this->activate_focus() == Activation::ran)
 			{
 				return;
 			}
@@ -125,7 +125,8 @@ void EndMenuInitial::init()
 
 	this->box_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF(Vector2F::ZERO, look.box_size), this->render_resources(),
-		&style, &look.art, &this->focus_, this->restart_.get());
+		&style, &look.art, &this->focus_, this->restart_.get(),
+		&this->focus_motion_, &this->save()->play_settings());
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->texture_container_ = std::make_unique<UiContainer>(

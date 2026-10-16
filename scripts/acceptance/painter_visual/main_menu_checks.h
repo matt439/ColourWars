@@ -120,6 +120,9 @@ void title_home_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     const auto tap = [&](Key key)
     {
         app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
+        // This text-snapshot fixture observes the settled focus artwork.
+        if (key == Key::up || key == Key::down || key == Key::left || key == Key::right)
+            { app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f); }
     };
     const auto open = [&](int page)
     {
@@ -446,6 +449,10 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
     {
         app.keyboard()->on_key_down(key); tick();
         app.keyboard()->on_key_up(key); tick();
+        // Focus motion has its own moving-raster matrix. These historical
+        // lettering/paper comparisons intentionally observe its resting pose.
+        if (key == Key::up || key == Key::down || key == Key::left || key == Key::right)
+            { tick(0.51f); }
     };
     const auto open = [&](std::unique_ptr<State> page)
     {

@@ -160,6 +160,8 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     {
         app.keyboard()->on_key_down(key); tick();
         app.keyboard()->on_key_up(key); tick();
+        // This historical raster fixture samples the settled ornament pose.
+        app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
     };
     const auto apply = [&]
     {

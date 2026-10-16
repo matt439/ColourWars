@@ -10,6 +10,7 @@ using namespace labrador;
 MenuPage::MenuPage(MenuContext* context) :
 	SoundBankObject(context->data()->presentation()->menu().sound_bank,
 		context->data()->audio_resources()),
+	focus_motion_(context->data()->presentation()->menu().motion),
 	context_(context)
 {
 	this->input()->reset_directions();
@@ -33,8 +34,13 @@ void MenuPage::update(float dt)
 	if (this->data()->debug().before_page_update(*this, dt))
 	{
 		this->menu_context()->suspend_music();
+		this->focus_motion_.reset();
 		return;
 	}
+	this->focus_motion_.observe(this->motion_focus());
+	this->focus_motion_.update(this->context()->active() ? dt : 0.0f,
+		this->save()->play_settings().reduce_effects);
+	if (!this->context()->active()) { this->focus_motion_.reset(); }
 	const bool leaving = this->menu_context()->music_exit_pending();
 	const MenuStyle& style = this->menu_style();
 	this->input()->update_directions(dt, style.repeat_delay, style.repeat_interval,
@@ -46,11 +52,52 @@ void MenuPage::update(float dt)
 	}
 	if (leaving || this->menu_context()->music_exit_pending()) { return; }
 	this->update_page(dt);
+	// StateContext defers page destruction until update returns. Observe the
+	// final cursor after every input, including programmatic focus changes.
+	this->focus_motion_.observe(this->motion_focus());
+	if (!this->context()->active()) { this->focus_motion_.reset(); }
+}
+
+void MenuPage::on_suspend()
+{
+	this->focus_motion_.reset();
 }
 
 void MenuPage::on_resume()
 {
 	this->input()->reset_directions();
+	this->focus_motion_.reset();
+}
+
+void MenuPage::on_deactivated()
+{
+	this->focus_motion_.reset();
+}
+
+const UiWidget* MenuPage::motion_focus() const
+{
+	const UiWidget* focused = this->focus_.focused(0);
+	return focused != nullptr && !focused->hidden() && this->focus_.enabled(focused) ?
+		focused : nullptr;
+}
+
+Activation MenuPage::activate_focus()
+{
+	const Activation result = this->focus_.activate(0);
+	if (result == Activation::ran) { this->press_focus(); }
+	return result;
+}
+
+void MenuPage::press_focus()
+{
+	if (!this->context()->active() || this->save()->play_settings().reduce_effects)
+	{
+		this->focus_motion_.reset();
+		return;
+	}
+	const UiWidget* focused = this->motion_focus();
+	this->focus_motion_.observe(focused);
+	if (focused != nullptr) { this->focus_motion_.press(); }
 }
 
 bool MenuPage::debug_start_match(const MenuLevelSettings& /*plan*/)
@@ -66,6 +113,7 @@ bool MenuPage::debug_dismiss(bool /*leaving_match*/)
 void MenuPage::debug_reset_input(int pad_slot)
 {
 	this->input()->reset_pad_actions(pad_slot);
+	this->focus_motion_.reset();
 }
 
 // Add keyboard equivalents to the shared pad labels. Keep these mappings

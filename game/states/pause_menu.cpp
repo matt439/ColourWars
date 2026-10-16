@@ -178,7 +178,7 @@ void PauseMenuInitial::update_page(float /*dt*/)
 	}
 	else if (input.action == MenuInputAction::proceed)
 	{
-		this->focus_.activate(0);
+		this->activate_focus();
 	}
 	else if (this->focus_.move(0, input.direction))
 	{
@@ -245,7 +245,8 @@ void PauseMenuInitial::init()
 	this->box_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
-		&style, &look.art, &this->focus_);
+		&style, &look.art, &this->focus_, nullptr,
+		&this->focus_motion_, &this->save()->play_settings());
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(look.layout.position);
@@ -373,7 +374,7 @@ void PauseMenuConfirmation::update_page(float /*dt*/)
 	}
 	if (input.action == MenuInputAction::proceed)
 	{
-		this->focus_.activate(0);
+		this->activate_focus();
 	}
 	else if (this->focus_.move(0, input.direction))
 	{
@@ -393,7 +394,8 @@ void PauseMenuConfirmation::init()
 	this->box_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF(Vector2F::ZERO, look.box_size),
 		this->render_resources(),
-		&style, &look.art, &this->focus_);
+		&style, &look.art, &this->focus_, nullptr,
+		&this->focus_motion_, &this->save()->play_settings());
 	this->box_->set_position_at_center(DESIGN_RESOLUTION / 2.0f);
 
 	this->set_widget_position(look.layout.position);

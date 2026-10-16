@@ -504,8 +504,7 @@ seams and enemy paint. The effects remain cosmetic and bounded.
 The [implementation and evidence](polish-weapon-feedback.md) add distinct paid-shot
 muzzle phrases to the four ranged tools, a rate-limited empty-paint response and
 a brief acknowledgement when a complete shot's paint regenerates. The roller
-keeps its contact swash. Aim, firing cadence and paint ownership are unchanged;
-menu focus motion remains `POL#10`.
+keeps its contact swash. Aim, firing cadence and paint ownership are unchanged.
 
 **Optional local view shake implemented (2026-10-15, part of `POL#10`).** The
 [implementation and evidence](polish-view-shake.md) add a restrained, bounded
@@ -514,6 +513,35 @@ Each player's pane reacts only to that player; the base aiming camera, HUD,
 collision and scoring remain stable. Controls / audio exposes a saved View
 shake switch from the main menu and pause. The combined
 [reduced-effects preference](polish-reduced-effects.md) is implemented under `POL#13`.
+
+**Shared paper focus and press motion implemented (2026-10-16, part of
+`POL#10`).** Title/Home, Options/Credits, Controls / audio, Pad sticks,
+Pause/confirmation and End use bounded ornament motion in `MenuFocusMotion`
+and `MenuPaperArtwork`. Moving to another visible, enabled focused widget
+briefly offsets the detached arrow inward before it settles; initial focus
+starts settled. On retained pages, a successful activation such as Apply or a
+permitted value adjustment depresses the focused paper face into its existing
+shadow, then releases. Repeated accepted presses restart one response rather
+than stacking effects.
+
+Labels, the complete card envelope and widget/navigation bounds retain their
+coordinates. Actions, transitions and the existing navigation, confirm and cancel
+sounds remain immediate. Title proceed, transitions and pops take effect before
+an outgoing-card press can be shown. [Shared presentation controls](menu-presentation.md#shared-paper-focus-and-press-motion)
+set the durations, arrow travel and press fraction when a page is constructed.
+Applied Reduce effects retains the settled drawing immediately. Suspension,
+deactivation, resuming and developer input reset clear interrupted motion;
+drawing does not advance it. Results has no shared cursor and stays static.
+
+Verification uses the `menu_focus_motion` consumer case and
+`scripts/check-painter.ps1 -Preset x64-debug -MenuMotionOnly` (or `x64-release`),
+with evidence under `out/validation/2026-10-16-menu-motion/verification.json`.
+Both builds, all 31 consumer cases per preset, ten relevant native menu/resume
+scopes per preset and both published-bank startup checks pass. The 60 native
+motion PPM captures match between Debug and Release.
+Match-setup and per-player selection surfaces, and human review of the shared
+paper motion, remain `POL#10`. Reference-arena, movement-feel, controller and
+listening acceptance retain their existing gates.
 
 **Exit condition:** a complete match in the reference arena feels visually coherent
 and responsive. Jumping, landing and movement have visible, correctly timed feedback.

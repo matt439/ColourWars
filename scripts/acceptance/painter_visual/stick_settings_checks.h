@@ -125,6 +125,8 @@ void stick_settings_matrix(Application& app, const Canvas& canvas, GameTuning& t
     const auto tap = [&](Key key)
     {
         app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
+        // This historical raster fixture samples the settled ornament pose.
+        app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
     };
     const auto resize_page = [&](Vector2I size)
     {

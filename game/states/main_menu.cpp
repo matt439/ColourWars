@@ -156,7 +156,8 @@ void MainMenuTitle::init()
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.title_box_size) / 2.0f,
 			look.title_box_size),
-		this->render_resources(), &style, &look.art, &this->focus_, this->start_.get());
+		this->render_resources(), &style, &look.art, &this->focus_, this->start_.get(),
+		&this->focus_motion_, &this->save()->play_settings());
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
@@ -195,7 +196,7 @@ void MainMenuHome::update_page(float /*dt*/)
 		if (input.action == MenuInputAction::proceed)
 		{
 			// Stop after one activation: every action here leaves the page.
-			if (this->focus_.activate(0) == Activation::ran)
+			if (this->activate_focus() == Activation::ran)
 			{
 				return;
 			}
@@ -233,7 +234,8 @@ void MainMenuHome::init()
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.home_box_size) / 2.0f,
 			look.home_box_size),
-		this->render_resources(), &style, &look.art, &this->focus_, this->play_.get());
+		this->render_resources(), &style, &look.art, &this->focus_, this->play_.get(),
+		&this->focus_motion_, &this->save()->play_settings());
 
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());

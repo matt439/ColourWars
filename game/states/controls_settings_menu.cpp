@@ -31,7 +31,8 @@ void ControlsSettingsMenu::init()
 		(Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
 		look.box_size);
 	this->paper_ = std::make_unique<MenuPaperArtwork>(paper_bounds,
-		this->render_resources(), &style, &look.art, &this->focus_);
+		this->render_resources(), &style, &look.art, &this->focus_, nullptr,
+		&this->focus_motion_, &this->save()->play_settings());
 	const Vector2F value_limit(look.controls_position.x - look.art.focus_padding.x * 2.0f -
 		look.art.shadow_offset - this->calculate_widget_position(1, 0).x,
 		look.layout.spacing.y - look.art.focus_padding.y * 2.0f);
@@ -199,7 +200,7 @@ void ControlsSettingsMenu::update_page(float /*dt*/)
 		}
 		if (input.action == MenuInputAction::proceed)
 		{
-			if (this->focus_.activate(0) == Activation::ran)
+			if (this->activate_focus() == Activation::ran)
 			{
 				return;
 			}
@@ -207,10 +208,11 @@ void ControlsSettingsMenu::update_page(float /*dt*/)
 		else if (input.direction == Direction::left || input.direction == Direction::right)
 		{
 			const OptionRow* row = dynamic_cast<const OptionRow*>(this->focus_.focused(0));
-			if (row != nullptr)
+			if (row != nullptr && this->focus_.enabled(row))
 			{
 				const int previous_sfx = this->selection_.sfx_volume;
 				row->adjust(input.direction);
+				this->press_focus();
 				if (row == this->sfx_.get())
 				{
 					if (this->selection_.sfx_volume != previous_sfx)

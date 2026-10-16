@@ -1,5 +1,7 @@
 #include "game/pch.h"
 #include "game/states/menu_panel.h"
+#include "game/states/menu_focus_motion.h"
+#include "game/play_settings.h"
 #include "game/objects/crude_drawing.h"
 
 using namespace labrador;
@@ -67,9 +69,10 @@ void MenuIcon::draw(DrawList& list) const
 }
 
 MenuPaperArtwork::MenuPaperArtwork(const RectangleF& rectangle, RenderResources* resources,
-	const MenuStyle* style, const MenuPaperArtPresentation* art, const FocusGroup* focus, const UiWidget* primary) :
+	const MenuStyle* style, const MenuPaperArtPresentation* art, const FocusGroup* focus,
+	const UiWidget* primary, const MenuFocusMotion* motion, const PlaySettings* settings) :
 	UiTexture("box", style->sprite_sheet, style->fill_frame, rectangle, resources),
-	art_(art), focus_(focus), primary_(primary)
+	art_(art), focus_(focus), primary_(primary), motion_(motion), settings_(settings)
 {
 }
 
@@ -78,6 +81,11 @@ void MenuPaperArtwork::draw(DrawList& list) const
 	if (this->hidden()) { return; }
 	list.set_filter(TextureFilter::point);
 	this->draw_card(list, this->rectangle(), this->art_->paper);
+	const UiWidget* focused = this->focus_->focused(0);
+	const bool eligible = focused != nullptr && !focused->hidden() && this->focus_->enabled(focused);
+	const bool animate = this->motion_ != nullptr &&
+		(this->settings_ == nullptr || !this->settings_->reduce_effects);
+	const float press = animate && eligible ? this->motion_->press_fraction() : 0.0f;
 
 	// The continuation is recognisable even after navigating away. Its
 	// card is part of the page rather than a colour-only focus change.
@@ -85,22 +93,23 @@ void MenuPaperArtwork::draw(DrawList& list) const
 	{
 		RectangleF primary = this->primary_->bounds();
 		primary.inflate(this->art_->focus_padding);
-		this->draw_card(list, primary, this->art_->focus_fill);
+		this->draw_card(list, primary, this->art_->focus_fill,
+			focused == this->primary_ ? press : 0.0f);
 	}
 
-	const UiWidget* focused = this->focus_->focused(0);
-	if (focused != nullptr && !focused->hidden() && this->focus_->enabled(focused))
+	if (eligible)
 	{
 		RectangleF row = focused->bounds();
 		row.inflate(this->art_->focus_padding);
 		if (focused != this->primary_)
 		{
-			this->draw_card(list, row, this->art_->focus_fill);
+			this->draw_card(list, row, this->art_->focus_fill, press);
 		}
 		// A detached, stepped arrow identifies the shared cursor without
 		// relying on text colour, including on the always-present card.
 		const float pen = this->art_->keyline_width;
-		const Vector2F tip(row.x - pen * 3.0f, row.center().y);
+		const float inward = animate ? this->motion_->arrow_offset() * pen : 0.0f;
+		const Vector2F tip(row.x - pen * 3.0f + inward, row.center().y);
 		this->fill(list, RectangleF(tip.x - pen * 4.0f, tip.y - pen,
 			pen * 4.0f, pen * 2.0f), this->art_->ink);
 		for (int step = 0; step < 3; ++step)
@@ -122,13 +131,17 @@ void MenuPaperArtwork::fill(DrawList& list, const RectangleF& rectangle, const C
 		CrudeDrawing::premultiplied(colour));
 }
 
-void MenuPaperArtwork::draw_card(DrawList& list, const RectangleF& bounds, const Colour& colour) const
+void MenuPaperArtwork::draw_card(DrawList& list, const RectangleF& bounds, const Colour& colour,
+	float press_fraction) const
 {
 	const float pen = this->art_->keyline_width;
 	const float step = pen * 2.0f;
 	const float shadow = this->art_->shadow_offset;
-	const RectangleF face(bounds.x, bounds.y,
+	const RectangleF rest(bounds.x, bounds.y,
 		bounds.width - shadow, bounds.height - shadow);
+	// Depress only the paper face into its existing shadow. The complete
+	// artwork envelope, labels and navigation bounds stay fixed.
+	const RectangleF face(rest.position() + Vector2F(shadow * press_fraction), rest.size());
 	const auto paper = [&](const RectangleF& box, const Colour& tint)
 	{
 		this->fill(list, RectangleF(box.x + step, box.y,
@@ -136,7 +149,7 @@ void MenuPaperArtwork::draw_card(DrawList& list, const RectangleF& bounds, const
 		this->fill(list, RectangleF(box.x, box.y + step,
 			box.width, box.height - step * 2.0f), tint);
 	};
-	paper(RectangleF(face.position() + Vector2F(shadow), face.size()), this->art_->shade);
+	paper(RectangleF(rest.position() + Vector2F(shadow), rest.size()), this->art_->shade);
 	paper(face, this->art_->ink);
 	const RectangleF inside(face.x + pen, face.y + pen,
 		face.width - pen * 2.0f, face.height - pen * 2.0f);

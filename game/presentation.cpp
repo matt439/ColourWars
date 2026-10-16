@@ -368,6 +368,23 @@ namespace
 		const JsonValue navigation = json.object("navigation");
 		style.repeat_delay = read_positive(navigation, "repeat_delay");
 		style.repeat_interval = read_positive(navigation, "repeat_interval");
+		const JsonValue motion = json.object("motion");
+		style.motion.focus_duration = read_positive(motion, "focus_duration");
+		style.motion.press_duration = read_positive(motion, "press_duration");
+		style.motion.arrow_travel = motion.number("arrow_travel");
+		style.motion.press_fraction = motion.number("press_fraction");
+		if (style.motion.focus_duration > 0.5f || style.motion.press_duration > 0.5f)
+		{
+			throw std::runtime_error(motion.where() + ": focus_duration and press_duration must be at most 0.5 seconds.");
+		}
+		if (!std::isfinite(style.motion.arrow_travel) || style.motion.arrow_travel < 0.0f || style.motion.arrow_travel > 2.0f)
+		{
+			throw std::runtime_error(motion.where() + ": arrow_travel must be finite and in [0,2] keyline units.");
+		}
+		if (!std::isfinite(style.motion.press_fraction) || style.motion.press_fraction < 0.0f || style.motion.press_fraction > 1.0f)
+		{
+			throw std::runtime_error(motion.where() + ": press_fraction must be finite and in [0,1].");
+		}
 
 		const JsonValue fonts = json.object("fonts");
 		style.heading_font = fonts.string("heading");

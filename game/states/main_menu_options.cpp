@@ -28,7 +28,7 @@ void MainMenuOptions::update_page(float /*dt*/)
 		}
 		if (input.action == MenuInputAction::proceed)
 		{
-			if (this->focus_.activate(0) == Activation::ran)
+			if (this->activate_focus() == Activation::ran)
 			{
 				return;
 			}
@@ -69,6 +69,7 @@ void MainMenuOptions::adjust_focused_value(labrador::Direction direction)
 
 	this->play_wave(this->direction_sound_);
 	row->adjust(direction);
+	this->press_focus();
 	this->set_status(this->text().status.options_pending, this->look().art.focus_ink);
 }
 
@@ -226,7 +227,8 @@ void MainMenuOptions::init()
 		look.options_status_position, this->render_resources(), look.art.focus_ink);
 
 	this->paper_ = std::make_unique<MenuPaperArtwork>(paper_bounds,
-		this->render_resources(), &style, &look.art, &this->focus_);
+		this->render_resources(), &style, &look.art, &this->focus_, nullptr,
+		&this->focus_motion_, &this->save()->play_settings());
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");

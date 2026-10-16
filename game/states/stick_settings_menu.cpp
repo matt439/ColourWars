@@ -123,7 +123,8 @@ void StickSettingsMenu::init()
 		this->presentation().main_menu().home_background_colour);
 	this->paper_ = std::make_unique<MenuPaperArtwork>(RectangleF(
 		(Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.box_size) / 2.0f,
-		look.box_size), this->render_resources(), &style, &look.art, &this->focus_);
+		look.box_size), this->render_resources(), &style, &look.art, &this->focus_, nullptr,
+		&this->focus_motion_, &this->save()->play_settings());
 	this->preview_ = std::make_unique<StickResponsePreview>(this->render_resources(), &style, &look);
 	this->texture_container_ = std::make_unique<UiContainer>("textures");
 	for (UiObject* object : { static_cast<UiObject*>(this->background_.get()),
@@ -272,12 +273,17 @@ void StickSettingsMenu::update_page(float /*dt*/)
 		if (input.action == MenuInputAction::back) { this->close(); return; }
 		if (input.action == MenuInputAction::proceed)
 		{
-			if (this->focus_.activate(0) == Activation::ran) { return; }
+			if (this->activate_focus() == Activation::ran) { return; }
 		}
 		else if (input.direction == Direction::left || input.direction == Direction::right)
 		{
 			const OptionRow* option = dynamic_cast<const OptionRow*>(this->focus_.focused(0));
-			if (option != nullptr) { option->adjust(input.direction); this->play_wave(this->direction_sound_); }
+			if (option != nullptr && this->focus_.enabled(option))
+			{
+				option->adjust(input.direction);
+				this->press_focus();
+				this->play_wave(this->direction_sound_);
+			}
 		}
 		else if (this->focus_.move(0, input.direction)) { this->play_wave(this->direction_sound_); }
 	}

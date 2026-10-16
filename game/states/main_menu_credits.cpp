@@ -25,7 +25,7 @@ void MainMenuCredits::update_page(float /*dt*/)
 			return;
 		}
 		if (input.action == MenuInputAction::proceed &&
-			this->focus_.activate(0) == Activation::ran)
+			this->activate_focus() == Activation::ran)
 		{
 			return;
 		}
@@ -54,7 +54,8 @@ void MainMenuCredits::init()
 		look.art.focus_ink);
 	this->paper_ = std::make_unique<MenuPaperArtwork>(
 		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.credits_box_size) / 2.0f,
-			look.credits_box_size), this->render_resources(), &style, &look.art, &this->focus_);
+			look.credits_box_size), this->render_resources(), &style, &look.art, &this->focus_, nullptr,
+		&this->focus_motion_, &this->save()->play_settings());
 
 	// Keep every authored credit visible above Back and inside the paper face.
 	const RectangleF body = this->body_->bounds();

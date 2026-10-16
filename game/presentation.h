@@ -152,10 +152,20 @@ struct MenuText
 	const std::wstring& item(MenuItem item) const;
 };
 
+// Optional focus ornaments, captured when a menu page is constructed.
+struct MenuFocusMotionPresentation
+{
+	float focus_duration = 0.0f;
+	float press_duration = 0.0f;
+	float arrow_travel = 0.0f;
+	float press_fraction = 0.0f;
+};
+
 // Shared menu style, with screen-specific overrides in the records below.
 struct MenuStyle
 {
 	WidgetLayout layout;
+	MenuFocusMotionPresentation motion;
 	// Solid fills shared by menu backgrounds, chrome, paper and previews.
 	std::string sprite_sheet;
 	std::string fill_frame;

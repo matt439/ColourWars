@@ -4,6 +4,9 @@
 #include "engine/ui/focus.h"
 #include "game/presentation.h"
 
+class MenuFocusMotion;
+struct PlaySettings;
+
 // Fit weapon artwork inside a light tile; readiness colours the border.
 class MenuIcon final : public labrador::UiTexture
 {
@@ -25,21 +28,24 @@ private:
 	labrador::Colour paint_colour_ = labrador::Colour::white;
 };
 
-// Shared Paint.exe modal artwork. The focus group and widgets are borrowed
-// from the page; an optional primary card stays visible when focus moves away.
+// Shared Paint.exe modal artwork. Focus, widgets and motion are borrowed from
+// the page, preferences from Save. The primary card stays visible off focus.
 class MenuPaperArtwork final : public labrador::UiTexture
 {
 public:
 	MenuPaperArtwork(const mattmath::RectangleF& rectangle,
 		labrador::RenderResources* resources, const MenuStyle* style, const MenuPaperArtPresentation* art,
-		const labrador::FocusGroup* focus, const labrador::UiWidget* primary = nullptr);
+		const labrador::FocusGroup* focus, const labrador::UiWidget* primary = nullptr,
+		const MenuFocusMotion* motion = nullptr, const PlaySettings* settings = nullptr);
 	void draw(labrador::DrawList& list) const override;
 private:
 	void fill(labrador::DrawList& list, const mattmath::RectangleF& rectangle,
 		const labrador::Colour& colour) const;
 	void draw_card(labrador::DrawList& list, const mattmath::RectangleF& bounds,
-		const labrador::Colour& colour) const;
+		const labrador::Colour& colour, float press_fraction = 0.0f) const;
 	const MenuPaperArtPresentation* art_;
 	const labrador::FocusGroup* focus_;
 	const labrador::UiWidget* primary_;
+	const MenuFocusMotion* motion_;
+	const PlaySettings* settings_;
 };

@@ -145,6 +145,12 @@ existing solid texel. End and pause pages also use its detached focus arrow.
 The texture layer retains point sampling so the solid score bar cannot sample
 neighbouring atlas art; the separate text layer uses linear filtering.
 
+The [shared paper motion](../../docs/menu-presentation.md#shared-paper-focus-and-press-motion)
+uses the same code drawing: a short inward arrow settle and a pressed card face
+inside its existing shadow. `presentation.json.menu_style.motion` supplies its
+captured durations and travel; applied Reduce effects keeps the settled artwork.
+Labels and widget/navigation bounds keep their authored positions.
+
 The [title and home pages](../../docs/polish-main-menu.md) use the same paper
 drawing in the texture layer, with linear-filtered lettering above it. Their
 editable palette and pen widths are in `main_menu.art`; panel sizes and text

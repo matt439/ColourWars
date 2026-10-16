@@ -88,7 +88,11 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     } restore{ stack, presentation, original, blocked };
     const auto tick = [&] { app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
     const auto tap = [&](Key key)
-        { app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick(); };
+    {
+        app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
+        // This historical raster fixture samples the settled ornament pose.
+        app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
+    };
     const auto resize = [&](Vector2I size)
     {
         app.resolution_manager()->set_resolution_exactly(size);

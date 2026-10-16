@@ -28,6 +28,42 @@ preview/briefing shapes, results bars and stick-response previews. Their
 identifiers must be nonempty, and startup validates the named frame against the
 named atlas. An art replacement must supply an appropriate solid fill.
 
+## Shared paper focus and press motion
+
+The required `menu_style.motion` object controls the shared paper focus arrow
+and accepted-press response:
+
+| JSON path | Shipped value | Use and accepted range |
+|---|---|---|
+| `menu_style.motion.focus_duration` | `0.14` seconds | Arrow settling time, greater than zero and at most `0.5` seconds |
+| `menu_style.motion.press_duration` | `0.12` seconds | Card release time, greater than zero and at most `0.5` seconds |
+| `menu_style.motion.arrow_travel` | `1.5` keyline widths | Initial inward arrow offset, from `0` to `2` |
+| `menu_style.motion.press_fraction` | `0.65` | Initial card depression as a fraction of its existing shadow offset, from `0` to `1` |
+
+Every value must be finite. A zero travel or press fraction disables that part
+of the drawing. Each page captures these values when constructed, so reloading
+presentation does not change an in-flight response; reopening uses the new
+values. Paper colours, keyline width, focus padding and shadow offset retain
+their page-specific art records.
+
+The arrow responds to an actual change between visible, enabled focused widgets;
+initial focus is settled. On retained pages, successful activation such as Apply
+and permitted left/right value adjustment restart one visible press response.
+The paper face moves within the existing card envelope, leaving labels and
+widget/navigation bounds fixed. Title proceed, transitions and pops run
+immediately, before an outgoing-card press can be shown. Repeated draws sample the same state; only
+positive, finite active updates advance the timers. Suspension, deactivation,
+resume and developer input reset clear interrupted responses.
+
+The applied Reduce effects preference suppresses both ornaments immediately
+and retains the settled arrow and card. Pending Controls / audio edits take
+effect on Apply through the existing preference policy. Turning Reduce effects
+off starts settled; the next ordinary event can animate. Title/Home,
+Options/Credits, Controls / audio, Pad sticks, Pause/confirmation and End use
+this shared drawing. Results has no shared focus cursor and stays static.
+Match-setup and per-player selection motion remain in
+[`POL#10`](polish-plan.md#movement-and-interaction-feedback).
+
 ## Team-selection pictures
 
 `main_menu.team_select.sheet` selects the team-choice atlas. The `frames` and

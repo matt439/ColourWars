@@ -20,7 +20,12 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
     } restore{ stack, presentation, original };
     const auto tick = [&] { app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
     const auto tap = [&](Key key)
-        { app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick(); };
+    {
+        app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
+        // This historical raster fixture samples the settled ornament pose.
+        if (key == Key::up || key == Key::down || key == Key::left || key == Key::right)
+        { app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f); }
+    };
     std::optional<PauseMenuAction> choice;
     const auto open = [&]
     {

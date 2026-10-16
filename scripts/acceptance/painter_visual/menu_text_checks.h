@@ -31,6 +31,8 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
     const auto tap = [&](Key key)
     {
         app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
+        // This static paper/text snapshot fixture observes resting ornaments.
+        app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
     };
     const auto frame = [&]
     {

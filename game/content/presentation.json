@@ -45,6 +45,13 @@
     "sprite_sheet": "sprite_sheet_1",
     "fill_frame": "pixel",
     "navigation": { "repeat_delay": 0.4, "repeat_interval": 0.1 },
+    "motion": {
+      "_comment": "Optional focus-arrow settle and accepted-press card depression. Durations are seconds; arrow_travel is inward keyline units and press_fraction stays inside the existing card shadow. Reduce effects keeps the settled ornament.",
+      "focus_duration": 0.14,
+      "press_duration": 0.12,
+      "arrow_travel": 1.5,
+      "press_fraction": 0.65
+    },
     "fonts": {
       "heading": "gill_sans_mt_bold_72",
       "item": "gill_sans_mt_bold_48",

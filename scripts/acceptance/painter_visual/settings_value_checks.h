@@ -50,7 +50,11 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     } restore{ stack, presentation, original, blocked };
     const auto tick = [&] { app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
     const auto tap = [&](Key key)
-        { app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick(); };
+    {
+        app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
+        // This historical raster fixture samples the settled ornament pose.
+        app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
+    };
     const auto resize = [&](Vector2I size)
     {
         app.resolution_manager()->set_resolution_exactly(size);
@@ -198,7 +202,9 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         require(saved_bytes() == before, "Setting value toggle or palette cycle saved before Apply");
         apply(); resize(size); compare_pending("legacy-applied", original, legacy);
     }
-    const Values old_words{ L"On~", L"Off~", L"Random~" }, next_words{ L"Enabled", L"Disabled", L"Any colours" };
+    // Random is also a Stage caption. This short replacement stays inside
+    // that independently validated line while exercising the Options value.
+    const Values old_words{ L"On~", L"Off~", L"Random~" }, next_words{ L"Enabled", L"Disabled", L"All colours" };
     Values long_words = old_words;
     for (int repeat = 0; repeat < 36; ++repeat) { long_words.off += L" previous value"; long_words.random += L" previous palette"; }
     const std::string source_name = controls ? original.controls_settings().item_font : original.menu().item_font;

@@ -4,6 +4,7 @@
 #include "engine/ui/focus.h"
 #include "engine/ui/widget.h"
 #include "game/states/menu_context.h"
+#include "game/states/menu_focus_motion.h"
 #include "game/states/prompt_bar.h"
 #include "engine/core/state.h"
 #include "engine/math/shape.h"
@@ -34,7 +35,9 @@ public:
 	// the console or launch arguments), then runs the page's own update_page.
 	void update(float dt) final;
 	void init() override = 0;
+	void on_suspend() override;
 	void on_resume() override;
+	void on_deactivated() override;
 
 	// Debug hooks (DebugPageTarget). Only main-menu pages, whose frame starts
 	// a match on close, start one; only the pause, controls, results and end
@@ -101,6 +104,10 @@ protected:
 
 	// Unused by pages with their own per-player selection state.
 	labrador::FocusGroup focus_;
+	// Cosmetic state only: widgets keep their layout and input geometry.
+	MenuFocusMotion focus_motion_;
+	labrador::Activation activate_focus();
+	void press_focus();
 
 	// Pages own their widgets and attach them to these texture and text trees.
 	std::unique_ptr<labrador::UiContainer> texture_container_ = nullptr;
@@ -128,6 +135,7 @@ protected:
 	// Maps unchanged design-space geometry into the current window.
 	labrador::Camera ui_camera() const;
 private:
+	const labrador::UiWidget* motion_focus() const;
 	void draw_chrome(labrador::DrawList& list) const;
 	labrador::RenderResources::SpriteSheetHandle chrome_sheet_;
 	labrador::SpriteSheet::frame_handle chrome_pixel_;

@@ -2547,6 +2547,7 @@ namespace
 #include "scripts/acceptance/painter_visual/controls_help_checks.h"
 #include "scripts/acceptance/painter_visual/controls_menu_checks.h"
 #include "scripts/acceptance/painter_visual/stick_settings_checks.h"
+#include "scripts/acceptance/painter_visual/menu_motion_checks.h"
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 #include "scripts/acceptance/painter_visual/team_setup_checks.h"
 #endif
@@ -2565,8 +2566,8 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"main-menu" || std::wstring(argv[3]) == L"settings-menu" ||
             std::wstring(argv[3]) == L"controls-menu" || std::wstring(argv[3]) == L"stick-settings" ||
             std::wstring(argv[3]) == L"team-setup" || std::wstring(argv[3]) == L"weapon-catalog" ||
-            std::wstring(argv[3]) == L"menu-text")),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|weapon-catalog|menu-text]");
+            std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion")),
+            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|weapon-catalog|menu-text|menu-motion]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -2581,6 +2582,7 @@ int wmain(int argc, wchar_t** argv)
         const bool main_menu_only = argc == 4 && std::wstring(argv[3]) == L"main-menu";
         const bool weapon_catalog_only = argc == 4 && std::wstring(argv[3]) == L"weapon-catalog";
         const bool menu_text_only = argc == 4 && std::wstring(argv[3]) == L"menu-text";
+        const bool menu_motion_only = argc == 4 && std::wstring(argv[3]) == L"menu-motion";
         const bool settings_menu_only = argc == 4 && std::wstring(argv[3]) == L"settings-menu";
         const bool controls_menu_only = argc == 4 && std::wstring(argv[3]) == L"controls-menu";
         const bool stick_settings_only = argc == 4 && std::wstring(argv[3]) == L"stick-settings";
@@ -2645,6 +2647,12 @@ int wmain(int argc, wchar_t** argv)
             return 0;
         }
 #endif
+        if (menu_motion_only)
+        {
+            menu_motion_matrix(app, canvas, tuning, presentation, output);
+            std::cout << "PASS menu-motion-only hardware check; other painter matrices were not run\n";
+            return 0;
+        }
         if (menu_text_only)
         {
             menu_text_matrix(app, levels, canvas, tuning, presentation, output);
@@ -2954,6 +2962,7 @@ int wmain(int argc, wchar_t** argv)
         stick_settings_matrix(app, canvas, tuning, presentation, output);
         menu_text_matrix(app, levels, canvas, tuning, presentation, output);
         weapon_catalog_matrix(app, levels, tuning, presentation, output);
+        menu_motion_matrix(app, canvas, tuning, presentation, output);
         main_menu_matrix(app, canvas, tuning, presentation, output);
         require(records.good(), "capture record write failed");
         std::cout << "PASS real builder roster; 1P/4P 720p/1080p/QHD; three palettes; "

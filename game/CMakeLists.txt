@@ -124,6 +124,7 @@ add_executable(ColourWars WIN32
     states/main_menu_team_select.cpp
     states/main_menu_weapon_select.cpp
     states/menu_context.cpp
+    states/menu_focus_motion.cpp
     states/menu_input.cpp
     states/menu_level_settings.cpp
     states/menu_page.cpp
