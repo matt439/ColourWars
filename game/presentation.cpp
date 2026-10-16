@@ -36,7 +36,7 @@ namespace
 		"match_length", "one_player_practice", "two_players", "three_players", "four_players",
 		"resume", "restart", "quit", "yes", "no", "change_teams", "change_weapons", "change_level",
 		"exit_to_main_menu", "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
-		"reduce_effects", "pad", "move_deadzone", "aim_deadzone", "restore_defaults"
+		"reduce_effects", "pad", "move_deadzone", "aim_deadzone", "restore_defaults", "keep", "revert"
 	};
 
 	std::wstring read_menu_line(const JsonValue& json, const char* key)
@@ -78,6 +78,16 @@ namespace
 		MenuText text;
 		text.brand = read_menu_line(json, "brand");
 		text.solo_practice_hint = read_menu_line(json, "solo_practice_hint");
+		text.display_trial_countdown = read_menu_line(json, "display_trial_countdown");
+		const std::wstring countdown_token = L"{seconds}";
+		const size_t countdown_at = text.display_trial_countdown.find(countdown_token);
+		std::wstring countdown_literals = text.display_trial_countdown;
+		if (countdown_at != std::wstring::npos) { countdown_literals.erase(countdown_at, countdown_token.size()); }
+		if (countdown_at == std::wstring::npos || countdown_literals.find_first_of(L"{}") != std::wstring::npos)
+		{
+			throw std::runtime_error(json.where() +
+				": display_trial_countdown must contain exactly one {seconds} token and no other braces.");
+		}
 		const JsonValue title = json.object("title");
 		text.title.wordmark = read_menu_block(title, "wordmark");
 		text.title.subtitle = read_menu_line(title, "subtitle");
@@ -97,6 +107,9 @@ namespace
 		text.status.active_save_failed = read_menu_line(status, "active_save_failed");
 		text.status.sticks_pending = read_menu_line(status, "sticks_pending");
 		text.status.sticks_saved = read_menu_line(status, "sticks_saved");
+		text.status.options_reverted = read_menu_line(status, "options_reverted");
+		text.status.options_display_failed = read_menu_line(status, "options_display_failed");
+		text.status.options_rollback_failed = read_menu_line(status, "options_rollback_failed");
 		const JsonValue values = json.object("values");
 		text.values.on = read_menu_line(values, "on");
 		text.values.off = read_menu_line(values, "off");
@@ -105,6 +118,7 @@ namespace
 		text.confirmations.restart = read_menu_line(confirmations, "restart");
 		text.confirmations.quit = read_menu_line(confirmations, "quit");
 		text.confirmations.exit = read_menu_line(confirmations, "exit");
+		text.confirmations.display = read_menu_line(confirmations, "display");
 		const JsonValue end = json.object("end");
 		text.end.match_complete = read_menu_line(end, "match_complete");
 		text.end.round_complete = read_menu_line(end, "round_complete");
@@ -547,6 +561,11 @@ namespace
 		menu.options_status_position = position("options_status_position");
 		menu.options_value_x = json.number("options_value_x");
 		menu.options_spacing = read_positive_vector(json, "options_spacing");
+		menu.display_trial_seconds = json.number("display_trial_seconds");
+		if (!std::isfinite(menu.display_trial_seconds) || menu.display_trial_seconds < 1.0f || menu.display_trial_seconds > 60.0f)
+		{
+			throw std::runtime_error(json.where() + ": display_trial_seconds must be finite and 1..60.");
+		}
 		menu.home_spacing = read_positive_vector(json, "home_spacing");
 		MenuPaperArtPresentation options_art = menu.art;
 		options_art.focus_padding = menu.setup_focus_padding;
@@ -1711,6 +1730,17 @@ const std::wstring& MenuText::item(MenuItem item) const
 	return this->items.at(static_cast<size_t>(item));
 }
 
+std::wstring MenuText::display_countdown(int seconds) const
+{
+	if (seconds < 0) { throw std::out_of_range("Display countdown seconds must be nonnegative."); }
+	std::wstring result = this->display_trial_countdown;
+	const std::wstring token = L"{seconds}";
+	const size_t at = result.find(token);
+	if (at == std::wstring::npos) { throw std::invalid_argument("display_trial_countdown requires {seconds}."); }
+	result.replace(at, token.size(), std::to_wstring(seconds));
+	return result;
+}
+
 const WeaponChoicePresentation& WeaponSelectArtworkPresentation::choice(WeaponType type) const
 {
 	const size_t index = static_cast<size_t>(type);
@@ -2095,6 +2125,9 @@ void Presentation::validate_resources(const RenderResources& render,
 	check_menu_item(MenuItem::back, this->menu_.item_font, main.credits_back_position, main.credits_box_size, 0.0f, std::nullopt,
 		main.art, this->menu_.footer_y);
 	const PauseMenuPresentation& pause = this->pause_menu_;
+	MenuPaperArtPresentation display_art = pause.art;
+	display_art.focus_padding = main.setup_focus_padding;
+	display_art.shadow_offset = main.setup_shadow_offset;
 	if (!std::isfinite(pause.layout.spacing.y) || pause.layout.spacing.y <= 0.0f)
 	{
 		throw std::runtime_error(this->source_path_ +
@@ -2111,6 +2144,10 @@ void Presentation::validate_resources(const RenderResources& render,
 		std::nullopt, pause.art, 1080.0f);
 	check_menu_item(MenuItem::no, this->menu_.item_font, pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
 		pause.box_size, pause.layout.spacing.y, std::nullopt, pause.art, 1080.0f);
+	check_menu_item(MenuItem::keep, this->menu_.item_font, pause.layout.position, pause.box_size, pause.layout.spacing.y,
+		std::nullopt, display_art, 1080.0f);
+	check_menu_item(MenuItem::revert, this->menu_.item_font, pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
+		pause.box_size, pause.layout.spacing.y, std::nullopt, display_art, 1080.0f);
 	const EndMenuPresentation& end = this->end_menu_;
 	if (!std::isfinite(end.layout.spacing.y) || end.layout.spacing.y <= 0.0f)
 	{
@@ -2292,7 +2329,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	RectangleF first_confirmation_action(pause.layout.position,
 		fixed_menu_size("menu_text.items.yes", this->menu_text_.item(MenuItem::yes), this->menu_.item_font));
 	first_confirmation_action.inflate(pause.art.focus_padding);
-	const auto check_confirmation = [&](const char* role, const std::wstring& text)
+	const auto check_confirmation = [&](const char* role, const std::wstring& text, float action_top)
 	{
 		const std::string key = std::string("menu_text.confirmations.") + role;
 		const Vector2F size = fixed_menu_size(key, text, this->menu_.detail_font);
@@ -2300,15 +2337,16 @@ void Presentation::validate_resources(const RenderResources& render,
 		// full-design Pause paper rather than the footer-centered menu paper.
 		const RectangleF bounds((1920.0f - size.x) / 2.0f, pause.status_y, size.x, size.y);
 		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !confirmation_paper.contains(bounds) ||
-			bounds.bottom() > first_confirmation_action.y)
+			bounds.bottom() > action_top)
 		{
 			throw std::runtime_error(this->source_path_ + ": " + key +
 				" must fit unscaled inside the Pause paper before the first action's focus padding.");
 		}
 	};
-	check_confirmation("restart", this->menu_text_.confirmations.restart);
-	check_confirmation("quit", this->menu_text_.confirmations.quit);
-	check_confirmation("exit", this->menu_text_.confirmations.exit);
+	check_confirmation("restart", this->menu_text_.confirmations.restart, first_confirmation_action.y);
+	check_confirmation("quit", this->menu_text_.confirmations.quit, first_confirmation_action.y);
+	check_confirmation("exit", this->menu_text_.confirmations.exit, first_confirmation_action.y);
+	check_confirmation("display", this->menu_text_.confirmations.display, pause.layout.position.y - display_art.focus_padding.y);
 	const RectangleF end_paper((Vector2F(1920.0f, 1080.0f) - end.box_size) / 2.0f, end.box_size);
 	// The first continuation row starts here regardless of its Session label.
 	const float first_end_action_top = end.layout.position.y - end.art.focus_padding.y;
@@ -2692,7 +2730,9 @@ void Presentation::validate_resources(const RenderResources& render,
 	};
 	const MenuStatusText& status_text = this->menu_text_.status;
 	const StatusMessage options_statuses[]{ { "options_pending", status_text.options_pending },
-		{ "options_saved", status_text.options_saved }, { "options_save_failed", status_text.options_save_failed } };
+		{ "options_saved", status_text.options_saved }, { "options_save_failed", status_text.options_save_failed },
+		{ "options_reverted", status_text.options_reverted }, { "options_display_failed", status_text.options_display_failed },
+		{ "options_rollback_failed", status_text.options_rollback_failed } };
 	for (const StatusMessage& message : options_statuses)
 	{
 		check_status(message, this->prompt_bar_.font, main.options_status_position, main.options_box_size,
@@ -2907,6 +2947,41 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		throw std::runtime_error(this->source_path_ +
 			": menu_text.items.exit must fit unscaled inside the Pause paper before the Exit confirmation question.");
+	}
+	const Vector2F display_heading_size = fixed_menu_size("menu_text.headings.options",
+		this->menu_text_.heading(MenuHeading::options), this->menu_.heading_font);
+	const RectangleF display_heading((1920.0f - display_heading_size.x) / 2.0f, pause.heading_y,
+		display_heading_size.x, display_heading_size.y);
+	if (!std::isfinite(display_heading.x) || !std::isfinite(display_heading.y) ||
+		!confirmation_paper.contains(display_heading) || display_heading.bottom() > pause.status_y)
+	{
+		throw std::runtime_error(this->source_path_ +
+			": menu_text.headings.options must fit unscaled inside the Pause paper before the display confirmation question.");
+	}
+	RectangleF revert_card(pause.layout.position + Vector2F(0.0f, pause.layout.spacing.y),
+		fixed_menu_size("menu_text.items.revert", this->menu_text_.item(MenuItem::revert), this->menu_.item_font));
+	revert_card.inflate(display_art.focus_padding);
+	const float countdown_y = pause.layout.position.y + pause.layout.spacing.y * 2.0f;
+	for (int seconds = 0; seconds <= static_cast<int>(std::ceil(main.display_trial_seconds)); ++seconds)
+	{
+		const std::string key = "menu_text.display_trial_countdown";
+		const Vector2F size = fixed_menu_size(key, this->menu_text_.display_countdown(seconds), this->menu_.detail_font);
+		const RectangleF bounds((1920.0f - size.x) / 2.0f, countdown_y, size.x, size.y);
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !confirmation_paper.contains(bounds) ||
+			bounds.y < revert_card.bottom())
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit unscaled inside the Pause paper after the Revert focus card for every countdown value.");
+		}
+	}
+	// Display combines compact Main geometry with Pause's retained keyline.
+	// Keep the same text-to-face clearance that each authored paper requires.
+	if (display_art.focus_padding.x <= display_art.shadow_offset + display_art.keyline_width ||
+		display_art.focus_padding.y <= display_art.shadow_offset + display_art.keyline_width)
+	{
+		throw std::runtime_error(this->source_path_ +
+			": main_menu.setup_focus_padding must exceed main_menu.setup_shadow_offset + "
+			"pause_menu.art.keyline_width on both axes for the Display confirmation paper.");
 	}
 }
 

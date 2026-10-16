@@ -102,6 +102,7 @@
       "no_controller": "Connect a controller"
     },
     "home_subtitle": "Paint the arena. Claim the win.",
+    "display_trial_countdown": "Reverting in {seconds}s",
     "help": {
       "controls": "CONTROLLER\nMove / drop: left stick\nAim: right stick    Shoot: RT\nJump: A / LT (hold for height)\nPause: Start    Debug: Back / View\nKEYBOARD + MOUSE\nMove: A / D    Drop: S / Down\nAim: mouse cursor    Shoot: left click\nJump: Space (hold for height)\nPause: Esc    Debug: F1\nMENUS\nNavigate: stick / D-pad / arrows\nSelect: A / Enter    Back: B / Esc\nAIM / READINESS\nDirection only; roller aim is fixed.\nReady: chevron / Cooldown: bars\nNo paint: cross\nPad sticks: movement / aim deadzones.\nREDUCE EFFECTS\nLess shake, flashes and idle detail.",
       "pad_association": "Profiles follow Pad 1-4 slots,\nnot the player number or device.\nAfter reconnecting, check the slot.\nKeyboard/mouse is unchanged.",
@@ -115,7 +116,10 @@
       "controls_saved": "Applied and saved for all players.",
       "active_save_failed": "Active for this run. Could not save.",
       "sticks_pending": "Apply to save pad deadzones.",
-      "sticks_saved": "Pad deadzones applied and saved."
+      "sticks_saved": "Pad deadzones applied and saved.",
+      "options_reverted": "Display settings reverted.",
+      "options_display_failed": "Could not change display settings. Previous settings restored.",
+      "options_rollback_failed": "Could not restore display settings. Try Apply again."
     },
     "values": {
       "on": "On",
@@ -125,7 +129,8 @@
     "confirmations": {
       "restart": "Are you sure you want to restart?",
       "quit": "Are you sure you want to quit?",
-      "exit": "Exit ColourWars?"
+      "exit": "Exit ColourWars?",
+      "display": "Keep these display settings?"
     },
     "end": {
       "match_complete": "Match Complete",
@@ -214,7 +219,9 @@
       "pad": "Pad",
       "move_deadzone": "Move deadzone",
       "aim_deadzone": "Aim deadzone",
-      "restore_defaults": "Restore defaults"
+      "restore_defaults": "Restore defaults",
+      "keep": "Keep",
+      "revert": "Revert"
     }
   },
 
@@ -274,6 +281,7 @@
     "options_value_colour": "FFB77A",
     "options_warning_colour": "8A301C",
     "options_spacing": { "x": 540.0, "y": 100.0 },
+    "display_trial_seconds": 15.0,
     "weapon_description": {
       "colour": "1B1C20",
       "shadow_offset": { "x": 1.0, "y": 1.0 },

@@ -108,6 +108,8 @@ add_executable(ColourWars WIN32
     objects/weapon_sniper.cpp
 
     states/connection_audio.cpp
+    states/display_confirmation.cpp
+    states/display_settings_trial.cpp
     states/resume_audio.cpp
     states/screen_music.cpp
     states/results_audio.cpp

@@ -124,7 +124,19 @@ void options_defaults_matrix(Application& app, const Canvas& canvas, GameTuning&
     {
         go(5); const HWND window = static_cast<HWND>(app.window()); const SettingsProbeActivationGuard guard(window);
         require(SetWindowPos(window, nullptr, -32000, -32000, 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) != FALSE, "Cannot keep defaults Apply offscreen");
+        const auto before = bytes(); const auto resolution = preferences.resolution();
+        const bool fullscreen = preferences.fullscreen(); const auto palette = preferences.team_palette();
+        const bool display_trial = resolution != ScreenResolution::s_1920_1080 || fullscreen || app.fullscreen();
         tap(GamepadButton::a); ShowWindow(window, SW_HIDE); app.keyboard()->set_focused(true); app.mouse()->set_focused(true); stack.notify_activation(true); tick();
+        require(stack.depth() == (display_trial ? 3 : 2), "Options defaults Apply did not use the expected trial or direct-save route");
+        if (stack.depth() == 3)
+        {
+            require(bytes() == before && preferences.resolution() == resolution && preferences.fullscreen() == fullscreen &&
+                preferences.team_palette() == palette, "Display defaults trial committed preferences before Keep");
+            tap(GamepadButton::dpad_up); tap(GamepadButton::a);
+            ShowWindow(window, SW_HIDE); app.keyboard()->set_focused(true); app.mouse()->set_focused(true); stack.notify_activation(true); tick();
+            require(stack.depth() == 2, "Display defaults Keep did not return to the existing Options page");
+        }
         require(IsWindowVisible(window) == FALSE && GetForegroundWindow() != window && !app.fullscreen(), "Options defaults Apply showed, activated or fullscreened its private window");
         applied(); saved_fullscreen = false; status = success ? 2 : 3; resize(size);
     };

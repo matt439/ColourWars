@@ -35,12 +35,20 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     Presentation& presentation, const std::filesystem::path& output, bool controls_pages)
 {
     using Status = decltype(MenuText{}.status);
-    const Status legacy{ L"Apply to save changes.", L"Settings applied and saved.",
-        L"Settings active for this run. Could not save for next time.",
-        L"Apply to save changes for all players.", L"Applied and saved for all players.",
-        L"Active for this run. Could not save.", L"Apply to save pad deadzones.",
-        L"Pad deadzones applied and saved." };
     const Presentation original = presentation;
+    const Status legacy = [&]
+    {
+        Status words = original.menu_text().status;
+        words.options_pending = L"Apply to save changes.";
+        words.options_saved = L"Settings applied and saved.";
+        words.options_save_failed = L"Settings active for this run. Could not save for next time.";
+        words.controls_pending = L"Apply to save changes for all players.";
+        words.controls_saved = L"Applied and saved for all players.";
+        words.active_save_failed = L"Active for this run. Could not save.";
+        words.sticks_pending = L"Apply to save pad deadzones.";
+        words.sticks_saved = L"Pad deadzones applied and saved.";
+        return words;
+    }();
     const auto profile = output / (controls_pages ? "status-controls-profile" : "status-options-profile");
     struct StatusProfile
     {

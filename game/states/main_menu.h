@@ -12,6 +12,7 @@
 #include "engine/core/state_context.h"
 #include "engine/render/colour.h"
 
+enum class DisplayTrialResult;
 
 enum class MainMenuScreen
 {
@@ -171,6 +172,7 @@ private:
 	void adjust_focused_value(labrador::Direction direction);
 	void set_status(const std::wstring& text, const labrador::Colour& colour);
 	void apply_settings();
+	void finish_display_trial(DisplayTrialResult result);
 	void restore_defaults();
 	void update_resolution_selection_text();
 
@@ -178,7 +180,6 @@ private:
 	// while fullscreen.
 	void refresh_resolution_row();
 	void update_full_screen_selection_text() const;
-	void apply_fullscreen_setting(bool fullscreen);
 };
 
 class MainMenuModeSelect final : public MainMenuPage

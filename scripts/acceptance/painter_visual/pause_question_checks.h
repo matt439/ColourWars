@@ -5,7 +5,7 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
 {
     using Questions = decltype(MenuText{}.confirmations);
     const Questions legacy{ L"Are you sure you want to restart?", L"Are you sure you want to quit?",
-        L"Exit ColourWars?" };
+        L"Exit ColourWars?", L"Keep these display settings?" };
     const Presentation original = presentation;
     Save preferences;
     auto& play = const_cast<PlaySettings&>(preferences.play_settings());
@@ -137,8 +137,8 @@ void pause_question_checks(Application& app, const Canvas& canvas, GameTuning& t
             require(stack.depth() == 2 && !choice, "Default No on a confirmation completed a Pause action");
         }
     }
-    const Questions old_words{ L"Reset this match~?", L"Leave the match~?", L"Exit ColourWars?" };
-    const Questions new_words{ L"Restart the current paint round?", L"Return to the menu?", L"Exit ColourWars?" };
+    const Questions old_words{ L"Reset this match~?", L"Leave the match~?", L"Exit ColourWars?", L"Keep these display settings?" };
+    const Questions new_words{ L"Restart the current paint round?", L"Return to the menu?", L"Exit ColourWars?", L"Keep these display settings?" };
     const auto with_words = [&](const Questions& words)
     {
         Presentation result = original; const_cast<MenuText&>(result.menu_text()).confirmations = words;

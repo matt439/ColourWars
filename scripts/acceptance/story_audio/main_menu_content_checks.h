@@ -13,6 +13,7 @@ namespace
 		options_art.focus_padding = menu.setup_focus_padding;
 		options_art.shadow_offset = menu.setup_shadow_offset;
 		const float content_height = shipped.menu().footer_y;
+		require(menu.display_trial_seconds == 15.0f, "Display trial timeout changed from the reviewed fifteen seconds");
 		const auto rejected = [&](const char* key, auto edit)
 		{
 			std::string diagnostic = "Presentation accepted the variant";
@@ -30,6 +31,20 @@ namespace
 					"' was accepted or lost its key: " + diagnostic);
 			}
 		};
+		rejected("display_trial_seconds", [](rapidjson::Document& json) { json["main_menu"].RemoveMember("display_trial_seconds"); });
+		rejected("display_trial_seconds", [](rapidjson::Document& json) { json["main_menu"]["display_trial_seconds"].SetNull(); });
+		rejected("display_trial_seconds", [](rapidjson::Document& json) { json["main_menu"]["display_trial_seconds"].SetBool(true); });
+		for (const double value : { -1.0, 0.0, 0.999, 60.001, 1.0e100 })
+		{
+			rejected("display_trial_seconds", [value](rapidjson::Document& json)
+				{ json["main_menu"]["display_trial_seconds"].SetDouble(value); });
+		}
+		for (const float value : { 1.0f, 1.5f, 60.0f })
+		{
+			const Presentation valid_timeout = variants.load([value](rapidjson::Document& json)
+				{ json["main_menu"]["display_trial_seconds"].SetFloat(value); });
+			require(valid_timeout.main_menu().display_trial_seconds == value, "Inclusive or fractional display trial timeout was rejected");
+		}
 		rejected("art", [](rapidjson::Document& json) { json["main_menu"].RemoveMember("art"); });
 		rejected("art", [](rapidjson::Document& json) { json["main_menu"]["art"].SetArray(); });
 		rejected("focus_ink", [](rapidjson::Document& json)

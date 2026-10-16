@@ -66,7 +66,7 @@ enum class MenuItem
 	match_length, one_player_practice, two_players, three_players, four_players,
 	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
 	exit_to_main_menu, pad_sticks, music_volume, sfx_volume, view_shake, aim_marker,
-	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, count
+	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, keep, revert, count
 };
 
 struct MenuTitleText
@@ -94,6 +94,9 @@ struct MenuStatusText
 	std::wstring active_save_failed;
 	std::wstring sticks_pending;
 	std::wstring sticks_saved;
+	std::wstring options_reverted;
+	std::wstring options_display_failed;
+	std::wstring options_rollback_failed;
 };
 
 struct MenuValueText
@@ -108,6 +111,7 @@ struct MenuConfirmationText
 	std::wstring restart;
 	std::wstring quit;
 	std::wstring exit;
+	std::wstring display;
 };
 
 struct MenuEndText
@@ -139,6 +143,7 @@ struct MenuText
 	std::wstring solo_practice_hint;
 	MenuTitleText title;
 	std::wstring home_subtitle;
+	std::wstring display_trial_countdown;
 	MenuHelpText help;
 	MenuStatusText status;
 	MenuValueText values;
@@ -151,6 +156,7 @@ struct MenuText
 	const std::wstring& heading(MenuHeading heading) const;
 	const std::wstring& prompt(MenuPrompt prompt) const;
 	const std::wstring& item(MenuItem item) const;
+	std::wstring display_countdown(int seconds) const;
 };
 
 // Optional focus ornaments, captured when a menu page is constructed.
@@ -363,6 +369,7 @@ struct MainMenuPresentation
 	mattmath::Vector2F stage_box_size;
 	mattmath::Vector2F setup_focus_padding;
 	float setup_shadow_offset = 0.0f;
+	float display_trial_seconds = 0.0f;
 	// Title text is centered using its measured width; y positions are authored.
 	float title_y = 0.0f;
 	float title_subtitle_y = 0.0f;

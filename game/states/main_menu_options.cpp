@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/controls_settings_menu.h"
+#include "game/states/display_confirmation.h"
 #include "game/states/main_menu.h"
 
 using namespace DirectX;
@@ -94,25 +95,43 @@ void MainMenuOptions::apply_settings()
 	this->play_wave(this->confirm_sound_);
 
 	const bool fs = this->full_screen_selection_;
-
-	// Always save the windowed preset, including when entering fullscreen.
-	// Apply it only when returning to or staying windowed, before setting
-	// fullscreen, so entering fullscreen does not trigger an intermediate resize.
-	const bool saved = this->save()->set_display_settings_and_save(
-		this->resolution_selection_, fs, this->team_palette_selection_);
-
-	if (!fs)
+	if (this->resolution_selection_ != this->save()->resolution() ||
+		fs != this->save()->fullscreen() || fs != this->data()->application()->fullscreen())
 	{
-		this->data()->application()->set_resolution(this->resolution_selection_);
+		this->input()->reset_actions();
+		this->context()->push<DisplayTrialResult>(
+			std::make_unique<MainMenuDisplayConfirmation>(this->menu_context(),
+				DisplaySettingsChoice{ this->resolution_selection_, fs, this->team_palette_selection_ }),
+			[this](const DisplayTrialResult& result) { this->finish_display_trial(result); });
+		return;
 	}
 
-	this->apply_fullscreen_setting(fs);
-
-	// Refresh from the applied display state.
+	// Palette-only and unchanged Apply do not resize a manually sized window.
+	const bool saved = this->save()->set_display_settings_and_save(
+		this->resolution_selection_, fs, this->team_palette_selection_);
 	this->refresh_resolution_row();
 	this->set_status(saved ? this->text().status.options_saved :
 		this->text().status.options_save_failed,
 		saved ? this->look().art.focus_ink : this->look().options_warning_colour);
+}
+
+void MainMenuOptions::finish_display_trial(DisplayTrialResult result)
+{
+	this->input()->reset_actions();
+	this->reset_menu_motion();
+	this->refresh_resolution_row();
+	const MenuStatusText& status = this->text().status;
+	const std::wstring* message = &status.options_reverted;
+	bool warning = false;
+	switch (result)
+	{
+	case DisplayTrialResult::kept: message = &status.options_saved; break;
+	case DisplayTrialResult::save_failed: message = &status.options_save_failed; warning = true; break;
+	case DisplayTrialResult::apply_failed: message = &status.options_display_failed; warning = true; break;
+	case DisplayTrialResult::rollback_failed: message = &status.options_rollback_failed; warning = true; break;
+	case DisplayTrialResult::reverted: break;
+	}
+	this->set_status(*message, warning ? this->look().options_warning_colour : this->look().art.focus_ink);
 }
 
 void MainMenuOptions::restore_defaults()
@@ -128,11 +147,6 @@ void MainMenuOptions::restore_defaults()
 	this->refresh_resolution_row();
 	this->play_wave(this->confirm_sound_);
 	this->set_status(this->text().status.options_pending, this->look().art.focus_ink);
-}
-
-void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
-{
-	this->data()->application()->set_fullscreen(fullscreen);
 }
 
 void MainMenuOptions::init()

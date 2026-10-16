@@ -168,7 +168,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         // This historical raster fixture samples the settled ornament pose.
         app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
     };
-    const auto apply = [&]
+    const auto apply = [&](bool display_trial = false)
     {
         // Win32 leave_fullscreen shows even an initially hidden window. Keep
         // that real Apply path off the desktop, then hide and rearm the probe.
@@ -177,10 +177,29 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         require(SetWindowPos(window, nullptr, -32000, -32000, 0, 0,
             SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE) != FALSE,
             "Could not keep the settings Apply probe off the desktop");
+        const auto before = saved_bytes();
+        const auto resolution = preferences.resolution();
+        const bool fullscreen = preferences.fullscreen();
+        const auto palette = preferences.team_palette();
         tap(Key::enter);
         ShowWindow(window, SW_HIDE);
         app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
         stack.notify_activation(true); tick();
+        require(stack.depth() == (display_trial ? 3 : 2),
+            "Settings Apply did not use its expected display-trial or direct-save route");
+        if (stack.depth() == 3)
+        {
+            require(saved_bytes() == before && preferences.resolution() == resolution &&
+                preferences.fullscreen() == fullscreen && preferences.team_palette() == palette,
+                "Display trial committed the staged settings before Keep");
+            // The real child begins on Revert. Its first direction follows
+            // the neutral tick above, then a fresh confirmation chooses Keep.
+            tap(Key::up); tap(Key::enter);
+            ShowWindow(window, SW_HIDE);
+            app.keyboard()->set_focused(true); app.mouse()->set_focused(true);
+            stack.notify_activation(true); tick();
+            require(stack.depth() == 2, "Display Keep did not resume the existing Options page");
+        }
         require(IsWindowVisible(window) == FALSE && !app.fullscreen() && GetForegroundWindow() != window,
             "Settings Apply left its probe visible, activated it or entered fullscreen");
     };
@@ -431,7 +450,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     open(std::make_unique<MainMenuOptions>(&context));
     tap(Key::left); tap(Key::down); tap(Key::down); tap(Key::right);
     for (size_t row = 2; row < apply_row; ++row) { tap(Key::down); }
-    apply();
+    apply(true);
     resize_page({ 1280, 720 });
     require(preferences.resolution() == ScreenResolution::s_1280_720 &&
         preferences.team_palette() == TeamColourPair::random && !preferences.fullscreen() && !app.fullscreen(),
@@ -475,7 +494,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     tap(Key::right);
     std::ignore = assert_focus(main_menu_frame(app), row_bounds(1, L"Off"));
     for (size_t row = 1; row < apply_row; ++row) { tap(Key::down); }
-    apply();
+    apply(true);
     require(!preferences.fullscreen() && !app.fullscreen() &&
         preferences.resolution() == ScreenResolution::s_1920_1080,
         "Leaving fullscreen lost the retained windowed resolution preset");

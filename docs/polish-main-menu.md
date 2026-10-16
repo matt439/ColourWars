@@ -154,8 +154,9 @@ Implemented on 2026-10-16, the restore-defaults part of `GAP#3.2`. Restore
 defaults stages the canonical `SaveData{}` display and palette values: 1920x1080,
 windowed and Random. It changes only the Options page's pending choices. Save
 data, the application display, play preferences and pad profiles are unchanged
-by the action. Apply uses the existing display/palette save path; either Back
-route discards the pending defaults. Returning from Controls/audio retains them.
+by the action. Display-changing Apply uses the Keep/Revert trial below;
+palette-only or unchanged-display Apply retains the direct save path. Either
+Back route discards the pending defaults. Returning from Controls/audio retains them.
 
 Resolution availability still follows the applied fullscreen state. Restoring
 pending windowed defaults while fullscreen keeps the resolution row disabled
@@ -185,7 +186,7 @@ reload, focus loss/held reconnect, Reduce effects, lifecycle resets and frozen
 draw/RNG. These checks do not establish human, physical-pad, listening or
 performance acceptance.
 
-Resolution-change revert and display/palette access from pause remain open under `GAP#3.2`;
+Display/palette access from pause remains open under `GAP#3.2`;
 human and hardware acceptance retain their existing gates.
 
 ### Home return focus
@@ -209,8 +210,7 @@ preset. It covers six keyboard sizes/aspects and sparse scripted pad slot 3 at
 720p, including repeated returns, fresh confirmation, held-input interruption,
 quiet entry, lifecycle resets, Reduce effects, resize and frozen draw/RNG.
 
-The remaining `GAP#3.2` work is resolution-change revert and display/palette
-access from pause. Human and hardware
+The remaining `GAP#3.2` work is display/palette access from pause. Human and hardware
 acceptance retain their existing gates.
 
 ### Home Exit confirmation
@@ -243,9 +243,74 @@ No/Back returns, repeated entry, interrupted/reconnected and simultaneous input,
 motion/reduction/lifecycle resets, frozen redraw/RNG, one pending music exit
 and deliberate closure of the probe's own hidden window.
 
-Resolution-change revert and display/palette access from
-pause remain open under `GAP#3.2`. Human and hardware acceptance retain their
+Display/palette access from pause remains open under `GAP#3.2`. Human and hardware acceptance retain their
 existing gates.
+
+### Options display Keep/Revert
+
+Implemented on 2026-10-16, the resolution-revert part of `GAP#3.2`. Applying a
+changed resolution/fullscreen preference or application-reported fullscreen state starts a
+pushed display-trial child above the retained Options page. Palette-only or
+unchanged-display Apply retains the direct path. The child owns the three
+candidate display/palette values and snapshots the prior configured Save
+resolution preset plus the prior application-reported fullscreen state from
+`Application::fullscreen()`.
+
+Revert is initially focused. Revert, B/Escape, timeout, focus loss, coverage,
+developer reset or owner unwind cancels the trial. Save display/palette values
+and file bytes remain unchanged until
+Keep. A covered child resolves rollback but stays terminal until uncovered,
+then closes only its own frame. Options can retain pending choices for retry.
+Rollback reissues the prior configured preset and `Application::fullscreen()`
+state. On Win32 that value is the last requested application state and fullscreen
+uses borderless window styling, without an independent OS success/readback
+guarantee. Rollback does not promise an arbitrary dragged window's exact size,
+position or maximized state.
+
+Keep uses the existing display/palette Save path, preserving current play
+preferences and pad profiles. If writing fails, the accepted new preferences
+remain active for the run and the old file remains intact. The existing save
+failure status reports that result. Separate authored statuses report revert,
+display-application failure and rollback failure; these failures are not
+reported as successful persistence or guaranteed rollback.
+
+The dialog uses captured Pause paper/fonts and the existing Options heading.
+Only this display dialog overrides focus padding and shadow with the existing
+`main_menu.setup_focus_padding` (`28, 7`) and `setup_shadow_offset` (`2`), keeping
+the Pause palette and keyline (`4`). This fits Keep's descenders and pressed-face
+clearance within the existing row spacing without changing Pause geometry or
+adding a numeric layout field.
+Startup rejects incompatible combinations unless each
+`main_menu.setup_focus_padding` component is strictly greater than
+`main_menu.setup_shadow_offset + pause_menu.art.keyline_width`.
+Keep is row 0, Revert row 1, with the centered countdown at the layout origin
+plus two row spacings. The appended Keep/Revert items bring the menu item count
+to 39. Required text is `menu_text.confirmations.display` (`Keep these display
+settings?`) and `menu_text.display_trial_countdown` (`Reverting in {seconds}s`),
+with exactly one validated `{seconds}` token. The finite
+`main_menu.display_trial_seconds` ships as `15`, allowed from `1` to `60`.
+The timeout accounts for elapsed updates and steady-clock time on the next
+update. A stopped process cannot roll back until it runs again, so this is not
+an unconditional wall-clock guarantee. Reduce effects retains the countdown.
+
+The hidden native trial matrix passes both presets: 35 independent complete
+frames per preset (31 keyboard and four scripted pad-slot-3 references) across
+six native sizes/aspects, with 42 byte-identical capture pairs and CSV evidence.
+A configured 60-second fixture provides stable countdown references at 50, 27
+and 1; a separate shipped 15-second fixture displays 12 after 3.25 simulated
+seconds. A one-second real deadline also expires on a zero-dt update after a
+1.1-second wait.
+
+Checks cover one controlled failed Keep write and recovery per preset, unchanged
+file bytes before Keep, preserved play preferences and all four pad profiles,
+focus-loss/coverage/developer/teardown cancellation without orphan pops, and
+frozen redraw/RNG. The private fixture applies windowed Off only; it does not
+qualify actual fullscreen or system-wide display changes, physical controllers,
+human readability, listening or performance.
+
+Display/palette access from pause remains `GAP#3.2`. Actual fullscreen/monitor,
+physical-controller and other human/hardware acceptance retain their existing
+gates; hidden checks do not qualify a system-wide display configuration change.
 
 ## Controls/audio
 

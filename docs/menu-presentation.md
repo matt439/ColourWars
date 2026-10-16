@@ -73,12 +73,49 @@ and does not change other pages. No numeric field, font or asset is added.
 
 Restore defaults stages only the canonical `SaveData{}` resolution, fullscreen
 and palette values: 1920x1080, windowed and Random. It does not write Save,
-change the application display or reset play/pad settings. Apply retains its
-existing display/palette persistence behavior; Back discards the pending
+change the application display or reset play/pad settings. Display-changing
+Apply uses the trial below; palette-only or unchanged-display Apply retains
+direct persistence. Back discards the pending
 values, and returning from Controls/audio retains them. Applied fullscreen
 still disables resolution and shows its live dimensions until Apply, even when
-the restored pending fullscreen value is Off. Resolution revert and pause
-access remain open under `GAP#3.2`.
+the restored pending fullscreen value is Off. Pause access remains open under
+`GAP#3.2`.
+
+## Options display trial
+
+Changed resolution/fullscreen preferences or application-reported fullscreen state open a
+display-trial child above the retained Options page. It owns the three candidate
+display/palette fields and the prior configured Save preset plus the prior
+application-reported fullscreen state from `Application::fullscreen()`. Save and
+file bytes remain unchanged until Keep.
+Palette-only and unchanged-display Apply retain the direct path. Keep preserves
+current play/pad settings; a failed write leaves the new active display/palette
+preferences and prior file intact, with the existing save-failure status.
+
+The appended required `menu_text.items.keep` and `revert` bring the item count
+to 39. The question is `menu_text.confirmations.display`, shipped as
+`Keep these display settings?`. Required `menu_text.display_trial_countdown`
+ships as `Reverting in {seconds}s` and must contain exactly one `{seconds}`
+token. This is a bounded countdown substitution, not a general formatting
+language. `main_menu.display_trial_seconds` is finite, from `1` to `60`, shipped
+as `15`. The page captures Pause art/fonts, overriding focus padding and shadow
+with the existing `main_menu.setup_focus_padding` (`28, 7`) and
+`setup_shadow_offset` (`2`). It retains the Pause palette and keyline (`4`), with
+no change to existing Pause pages or new numeric layout field. It uses the existing Options heading, Keep row 0,
+safe initial Revert row 1 and a centered countdown below the two rows.
+Countdown information remains visible with Reduce effects.
+
+Revert, B/Escape, expiry, deactivation, coverage, developer reset and owner unwind
+cancel the trial. A covered terminal child closes only itself when uncovered.
+Rollback reissues the prior configured preset and `Application::fullscreen()`
+state. On Win32 this is the last requested application state and fullscreen uses
+borderless window styling, without an independent OS success/readback guarantee.
+It does not restore arbitrary dragged size, placement or maximized state. Options can retain its
+candidate for retry. Time accounts for elapsed updates and steady-clock time on
+the next update; no rollback can run while the process is stopped. The status
+roles `options_reverted`, `options_display_failed` and `options_rollback_failed`
+report revert and display/rollback exceptions. Pause access and human/hardware
+qualification remain open under their existing owners.
 
 ## Mode and Player Count paper
 
@@ -445,10 +482,11 @@ remain point-filtered and lettering linear-filtered.
 ## Shared headings and complete control legends
 
 The required `menu_text` object stores the shared menu brand, eleven headings,
-seventeen complete prompt-bar legends, thirty-seven row labels, a solo-practice
-hint, five Title/Home strings, three Controls/Pad Sticks help strings, eight
+seventeen complete prompt-bar legends, thirty-nine row labels, a solo-practice
+hint, five Title/Home strings, three Controls/Pad Sticks help strings, eleven
 fixed save-status messages, three shared setting values, two Pause confirmation
-questions, one Home Exit question, three End completion headings, two Stage Select status messages,
+questions, one Home Exit question, one display-trial question and countdown,
+three End completion headings, two Stage Select status messages,
 four fixed Stage Select briefing strings, three fixed Stage Select cues and
 two fixed Stage Select mode labels:
 
@@ -457,14 +495,15 @@ two fixed Stage Select mode labels:
 | `menu_text.brand` | One brand-line string |
 | `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
 | `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits` |
-| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults` |
+| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert` |
 | `menu_text.solo_practice_hint` | One Mode Select hint string |
 | `menu_text.title` | `wordmark`, `subtitle`, `start`, `no_controller` |
 | `menu_text.home_subtitle` | One Home subtitle string |
 | `menu_text.help` | `controls`, `pad_association`, `aim_cutoff` |
-| `menu_text.status` | `options_pending`, `options_saved`, `options_save_failed`, `controls_pending`, `controls_saved`, `active_save_failed`, `sticks_pending`, `sticks_saved` |
+| `menu_text.status` | `options_pending`, `options_saved`, `options_save_failed`, `controls_pending`, `controls_saved`, `active_save_failed`, `sticks_pending`, `sticks_saved`, `options_reverted`, `options_display_failed`, `options_rollback_failed` |
 | `menu_text.values` | `on`, `off`, `random` |
-| `menu_text.confirmations` | `restart`, `quit`, `exit` |
+| `menu_text.confirmations` | `restart`, `quit`, `exit`, `display` |
+| `menu_text.display_trial_countdown` | One countdown string with exactly one `{seconds}` token |
 | `menu_text.end` | `match_complete`, `round_complete`, `series_complete` |
 | `menu_text.stage` | `browse_status`, `locked_status`, `briefing_label`, `goal`, `solo_objective`, `versus_objective`, `random_navigation`, `locked_hint`, `browse_hint`, `solo_mode`, `single_match_mode` |
 
@@ -930,7 +969,7 @@ change saved settings or modify stick-response behavior.
 
 ### Fixed settings save-status messages
 
-The required `menu_text.status` object supplies eight complete messages for the
+The required `menu_text.status` object supplies eleven complete messages for the
 existing Options, Controls / audio and Pad Sticks status lines:
 
 | Key | Shipped text | Use |
@@ -943,6 +982,15 @@ existing Options, Controls / audio and Pad Sticks status lines:
 | `active_save_failed` | `Active for this run. Could not save.` | Controls or Pad Sticks Apply cannot persist settings |
 | `sticks_pending` | `Apply to save pad deadzones.` | Pad Sticks opens or a deadzone is adjusted |
 | `sticks_saved` | `Pad deadzones applied and saved.` | Pad Sticks Apply succeeds |
+
+The three additional Options trial statuses are required complete authored
+messages:
+
+| Key | Use |
+|---|---|
+| `options_reverted` | Display trial reverted without committing the candidate |
+| `options_display_failed` | Applying the display trial failed |
+| `options_rollback_failed` | Restoring the previous configured display failed |
 
 Each field follows the shared normalized, nonblank, single-line text rules.
 These are complete display messages, with no placeholders or runtime

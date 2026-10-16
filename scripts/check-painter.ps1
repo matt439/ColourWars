@@ -28,6 +28,7 @@ param(
     [switch] $HomeReturnFocusOnly,
     [switch] $HomeExitOnly,
     [switch] $OptionsDefaultsOnly,
+    [switch] $DisplayTrialOnly,
     [switch] $SettingsMenuOnly,
     [switch] $ControlsMenuOnly,
     [switch] $StickSettingsOnly,
@@ -37,7 +38,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -141,6 +142,7 @@ function Write-ContactSheet {
                 $_.Name -like 'home-return-focus-*-detail.ppm' -or
                 $_.Name -like 'home-exit-*-detail.ppm' -or
                 $_.Name -like 'options-defaults-*-detail.ppm' -or
+                $_.Name -like 'display-trial-*-detail.ppm' -or
                 $_.Name -eq 'controls-menu-pad-sticks-1280x720.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
@@ -275,6 +277,9 @@ function Write-ContactSheet {
         $optionsDefaults = @($images | Where-Object { $_.name -like 'options-defaults-*-1280x720-detail' })
         Write-ContactSheetPages -Images $optionsDefaults -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-options-defaults-contact'
+        $displayTrial = @($images | Where-Object { $_.name -like 'display-trial-*-1280x720-detail' })
+        Write-ContactSheetPages -Images $displayTrial -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-display-trial-contact'
         $controlsMenu = @($images | Where-Object { $_.name -like 'controls-menu-*-1280x720-detail' })
         Write-ContactSheetPages -Images $controlsMenu -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-controls-menu-contact'
@@ -449,6 +454,18 @@ elseif ($SettingsMenuOnly) {
     $result.Remove('stage')
     $result.checks = 'Options/Credits paper, all enabled focus cards/arrows, native ink/paper contrast, measured labels, all palette values, long failure status and complete authored credits at 720p/1080p/QHD, 4:3, 16:10 and ultrawide. Actual row edits, staged Apply, persisted reload and failed-write warning, Controls/audio return preserving pending edits/focus, Back discard, disabled fullscreen resolution and retained windowed preset, Credits Select/Back, frozen redraw, draw RNG, static Reduce effects and resize. Independent Options pending/saved/failure rasters pass across six sizes/aspects; authored width fitting and scale reset, missing-old-glyph status font, retained/reopened/reversed callbacks, interrupted/repeated Apply, controlled failure/recovery, isolated reload and both discard routes pass at 720p. No physical-controller, human readability or listening acceptance.'
     $result.checks += ' Independent Options On/Off/Random defaults pass across six sizes/aspects. An Options item-font fixture exercises width and tall-glyph height fitting, complete value/focus-card unions, Random-to-short-fixed-palette scale reset and replacement without an old glyph. Retained/reopened/reversed callbacks, both fullscreen toggle directions and Random palette cycles, one Controls child On/Off pair and return, interrupted/repeated windowed-Off Apply, controlled failure/recovery, isolated reload and discard pass at 720p.'
+}
+elseif ($DisplayTrialOnly) {
+    $result.scope = 'display-trial-only'
+    $result.player_counts = @()
+    $result.palettes = @('blue_yellow', 'random')
+    $result.weapons = @()
+    $result.actions = @('actual-options-apply', 'default-revert', 'keep', 'escape', 'controlled-timeout', 'wall-clock-timeout', 'focus-loss', 'cover-rollback', 'developer-dismiss-reset', 'clear-rollback', 'held-entry', 'pad-reconnect', 'conflicting-input', 'move-confirm-separation', 'back-priority', 'keep-failed-write', 'recovery', 'metadata-fullscreen-keep-off', 'reduce-effects', 'nonpositive-time', 'frozen-rng')
+    $result.input_slots = @(4, 3)
+    $result.inputs = 'Actual Options changed-resolution Apply and its pushed trial child; local keyboard and sparse scripted pad slot3. Separate nested profile with nondefault controls and four distinct pad profiles. One nonnested activation guard covers all private-window changes and rollbacks, including destruction. Actual tests stay windowed Off; fullscreen is saved metadata only.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.Remove('stage')
+    $result.checks = 'Independent complete trial background, compact card geometry with captured Pause palette, centered Options/question, Keep/Revert card/arrow, countdown and footer at six native sizes/aspects. Explicit finite simulation time leads wall capture time under a configured60-second bound; the shipped15-second timeout is separately sampled after3.25 simulated seconds, and a1-second trial proves zero-dt wall expiry. Real Options Apply first changes only its private window to1920x1080; Save/file remain unchanged until fresh Keep. Default Revert/Escape, simulated exact deadline, wall deadline, focus loss, cover, developer dismiss/reset and clear restore the old configured1280 preset/prior actual windowed mode without preference/file writes. Cover remains present until explicitly popped and delivers one typed result afterward. Keep/reload, repeated unchanged Apply, one controlled failed Keep preserving old JSON and recovery preserve every shared preference and all four profiles. Keyboard/pad conflicts, held reconnect/entry, move-confirm separation, Back priority, immediate reduction and frozen pixels/RNG pass; nonpositive updates preserve nonclock geometry while the wall countdown may advance. Native backbuffer resizing for the six-aspect references does not replace configured rollback targets. No user-save, hardware-fullscreen, global input, physical-pad, human readability, listening or performance acceptance.'
 }
 elseif ($OptionsDefaultsOnly) {
     $result.scope = 'options-defaults-only'
@@ -746,7 +763,7 @@ try {
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
-    if ($TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
+    if ($TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
     foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
         $arguments += '/I' + (Quote-Path $include)
     }
@@ -803,6 +820,7 @@ try {
     elseif ($HomeReturnFocusOnly) { $probeArguments += 'home-return-focus' }
     elseif ($HomeExitOnly) { $probeArguments += 'home-exit' }
     elseif ($OptionsDefaultsOnly) { $probeArguments += 'options-defaults' }
+    elseif ($DisplayTrialOnly) { $probeArguments += 'display-trial' }
     elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
     elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
     elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
@@ -825,6 +843,10 @@ try {
         throw "Visual probe exited with $($process.ExitCode)."
     }
     $expectedSaveFailures = @{}
+    if ($DisplayTrialOnly) {
+        $line = 'save failure: Could not write ' + (Join-Path $captures 'display-trial-profile/ColourWars/save_data.json') + '.'
+        $expectedSaveFailures[$line] = 1
+    }
     if ($OptionsDefaultsOnly) {
         $line = 'save failure: Could not write ' + (Join-Path $captures 'options-defaults-profile/ColourWars/save_data.json') + '.'
         $expectedSaveFailures[$line] = 6
@@ -906,6 +928,9 @@ try {
     elseif ($SettingsMenuOnly) {
         $result.diagnostic = 'Settings-menu-only hardware check passed: actual Options/Credits navigation, row edits, delayed Apply, persisted reload and failed-save warning, Controls/audio return, Back discard, disabled fullscreen resolution and retained windowed preset. Measured full copy/values/status, native paper/cards/arrows/contrast, frozen redraw, draw RNG, static Reduce effects and resize passed across six sizes/aspects. Independent Options pending/saved/failure rasters at six sizes/aspects, authored width fitting and short-copy scale reset, missing-old-glyph font, retained/reopened/reversed callbacks, interrupted/repeated Apply, controlled failure/recovery, isolated reload and both discard routes passed. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'
         $result.diagnostic += ' Options On/Off/Random defaults at six sizes/aspects, width/height fitting, complete focus unions, Random-to-short-fixed-palette scale reset, an Options font missing an old glyph, retained/reopened/reversed callbacks, both fullscreen toggle directions/Random cycles, one Controls child On/Off pair and return, interrupted/repeated windowed-Off Apply, failure/recovery, isolated reload and discard passed.'
+    }
+    elseif ($DisplayTrialOnly) {
+        $result.diagnostic = 'Display-trial-only native check passed: actual Options temporary private-window change with no pre-Keep save, independent complete trial paper/choices/countdown/footer across six native sizes/aspects, safe Revert/Keep, elapsed and wall deadlines, all lifecycle/destructor rollback paths, cover ownership and typed result, unchanged preferences/files on rollback, Keep reload/failure/recovery, keyboard/pad rearming/conflicts/priority, metadata fullscreen kept Off, reduction/nonpositive/frozen RNG. Whole-fixture guard; actual windowed Off only, no user-save/global-input/hardware-fullscreen/physical-pad or human acceptance.'
     }
     elseif ($OptionsDefaultsOnly) {
         $result.diagnostic = 'Options-defaults-only native check passed: independent complete seven-row Options across six sizes/aspects, staged/repeated restore without active/file/window changes, hidden windowed Apply/repeat/reload, six exact controlled failed writes and recovery, all unrelated play fields/four slot profiles preserved, both discard paths, Controls pending return and saved-preference merge, keyboard/pad rearming, fullscreen metadata without hardware fullscreen, reduction/lifecycle and frozen draw RNG. Scripted reader seam; no user-save, physical-pad, human readability, listening or performance acceptance.'

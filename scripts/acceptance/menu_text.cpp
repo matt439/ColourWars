@@ -82,7 +82,12 @@ namespace
         { "controls_saved", L"Applied and saved for all players.", &MenuStatusText::controls_saved, false },
         { "active_save_failed", L"Active for this run. Could not save.", &MenuStatusText::active_save_failed, false },
         { "sticks_pending", L"Apply to save pad deadzones.", &MenuStatusText::sticks_pending, false },
-        { "sticks_saved", L"Pad deadzones applied and saved.", &MenuStatusText::sticks_saved, false }
+        { "sticks_saved", L"Pad deadzones applied and saved.", &MenuStatusText::sticks_saved, false },
+        { "options_reverted", L"Display settings reverted.", &MenuStatusText::options_reverted, true },
+        { "options_display_failed", L"Could not change display settings. Previous settings restored.",
+            &MenuStatusText::options_display_failed, true },
+        { "options_rollback_failed", L"Could not restore display settings. Try Apply again.",
+            &MenuStatusText::options_rollback_failed, true }
     };
     struct ValueText { const char* key; const wchar_t* text; std::wstring MenuValueText::* field; };
     constexpr ValueText value_text[]{
@@ -93,7 +98,8 @@ namespace
     constexpr ConfirmationText confirmation_text[]{
         { "restart", L"Are you sure you want to restart?", &MenuConfirmationText::restart },
         { "quit", L"Are you sure you want to quit?", &MenuConfirmationText::quit },
-        { "exit", L"Exit ColourWars?", &MenuConfirmationText::exit }
+        { "exit", L"Exit ColourWars?", &MenuConfirmationText::exit },
+        { "display", L"Keep these display settings?", &MenuConfirmationText::display }
     };
     struct EndText { const char* key; const wchar_t* text; std::wstring MenuEndText::* field; };
     constexpr EndText end_text[]{
@@ -145,7 +151,7 @@ namespace
         { "pad_sticks", L"Pad sticks" }, { "music_volume", L"Music volume" }, { "sfx_volume", L"SFX volume" },
         { "view_shake", L"View shake" }, { "aim_marker", L"Aim marker" }, { "reduce_effects", L"Reduce effects" },
         { "pad", L"Pad" }, { "move_deadzone", L"Move deadzone" }, { "aim_deadzone", L"Aim deadzone" },
-        { "restore_defaults", L"Restore defaults" }
+        { "restore_defaults", L"Restore defaults" }, { "keep", L"Keep" }, { "revert", L"Revert" }
     };
 
     rapidjson::Document read_document(const std::filesystem::path& path)
@@ -259,6 +265,7 @@ namespace
     {
         const MenuText& text = presentation.menu_text();
         require(text.brand == brand && text.solo_practice_hint == practice_hint && text.home_subtitle == home_subtitle &&
+            text.display_trial_countdown == L"Reverting in {seconds}s" &&
             text.headings.size() == std::size(headings) &&
             text.prompts.size() == std::size(prompts) && text.items.size() == std::size(items),
             "Shared menu text changed its brand or fixed role count");
@@ -382,6 +389,7 @@ namespace
         required(nullptr, "brand");
         required(nullptr, "solo_practice_hint");
         required(nullptr, "home_subtitle");
+        required(nullptr, "display_trial_countdown");
         for (const auto& entry : title_text) { required("title", entry.key); }
         for (const auto& entry : help_text) { required("help", entry.key); }
         for (const auto& entry : status_text) { required("status", entry.key); }
@@ -641,7 +649,7 @@ namespace
         for (const char* key : { "play", "options", "credits", "exit", "controls_audio", "apply", "back",
             "single_match", "best_of_three", "best_of_five", "match_length", "one_player_practice",
             "two_players", "three_players", "four_players", "resume", "restart", "quit", "yes", "no",
-            "change_teams", "change_weapons", "change_level", "exit_to_main_menu", "restore_defaults" })
+            "change_teams", "change_weapons", "change_level", "exit_to_main_menu", "restore_defaults", "keep", "revert" })
         {
             variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
                 { d["menu_text"]["items"][key].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
@@ -1080,6 +1088,7 @@ namespace
         add_font("menu_confirmation_width_edge", 1050, 20);
         add_font("menu_confirmation_width_overflow", 1051, 20);
         add_font("menu_confirmation_action_edge", 8, 20);
+        add_font("menu_confirmation_display_action_edge", 8, 40);
         for (const auto& entry : confirmation_text)
         {
             const std::string field = std::string("confirmations.") + entry.key;
@@ -1099,18 +1108,22 @@ namespace
             }, &world);
             const auto action_edge = [&](rapidjson::Document& d)
             {
-                use_font(d, "menu_confirmation_action_edge", entry.key);
-                d["pause_menu"]["layout"]["position"]["y"].SetFloat(pause.status_y + 20.0f + pause.art.focus_padding.y);
+                const bool display = std::string(entry.key) == "display";
+                use_font(d, display ? "menu_confirmation_display_action_edge" : "menu_confirmation_action_edge", entry.key);
+                d["pause_menu"]["layout"]["position"]["y"].SetFloat(pause.status_y + (display ? 40.0f : 20.0f) +
+                    (display ? original.main_menu().setup_focus_padding.y : pause.art.focus_padding.y));
             };
             const auto touches_action = variants.load(action_edge);
             touches_action.validate_resources(world.render, world.audio);
-            require(touches_action.pause_menu().status_y + 20.0f == touches_action.pause_menu().layout.position.y -
-                touches_action.pause_menu().art.focus_padding.y,
+            const bool display = std::string(entry.key) == "display";
+            const float question_height = display ? 40.0f : 20.0f;
+            const float padding = display ? original.main_menu().setup_focus_padding.y : pause.art.focus_padding.y;
+            require(touches_action.pause_menu().status_y + question_height == touches_action.pause_menu().layout.position.y - padding,
                 "Confirmation action fixture lost exact unscaled bottom-to-padding contact");
             variants.rejects(field, [&](rapidjson::Document& d)
             {
                 action_edge(d);
-                d["pause_menu"]["layout"]["position"]["y"].SetFloat(pause.status_y + 19.75f + pause.art.focus_padding.y);
+                d["pause_menu"]["layout"]["position"]["y"].SetFloat(pause.status_y + question_height - 0.25f + padding);
             }, &world);
         }
 
@@ -1201,6 +1214,10 @@ namespace
             d["pause_menu"]["art"]["focus_padding"]["y"].SetFloat(0.5f);
             d["pause_menu"]["art"]["keyline_width"].SetFloat(0.125f);
             d["pause_menu"]["art"]["shadow_offset"].SetFloat(0.125f);
+            d["main_menu"]["setup_focus_padding"]["x"].SetFloat(0.5f);
+            d["main_menu"]["setup_focus_padding"]["y"].SetFloat(0.5f);
+            d["main_menu"]["setup_shadow_offset"].SetFloat(0.125f);
+            d["main_menu"]["art"]["keyline_width"].SetFloat(0.125f);
         });
         full_height.validate_resources(world.render, world.audio);
         require(full_height.pause_menu().status_y + 40.0f >
@@ -1234,6 +1251,147 @@ namespace
                 heading_font(d, name.c_str());
             }, &world);
         }
+    }
+
+    void check_display_trial_text(Variants& variants, World& world)
+    {
+        const auto original = variants.load([](rapidjson::Document&) {});
+        const auto keep_size = world.render.measure_text(world.render.resolve_sprite_font(original.menu().item_font),
+            original.menu_text().item(MenuItem::keep));
+        require(keep_size.y == 82.0f && keep_size.y + original.pause_menu().art.focus_padding.y * 2.0f >
+            original.pause_menu().layout.spacing.y && keep_size.y + original.main_menu().setup_focus_padding.y * 2.0f <=
+            original.pause_menu().layout.spacing.y,
+            "Keep's real descender no longer distinguishes compact Display padding from ordinary Pause padding");
+        const auto distinct_pause_keyline = [](rapidjson::Document& d)
+        {
+            // Isolate card clearance from stock descenders in the setup rows
+            // that share the compact padding. Ordinary Pause art remains valid.
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_exact");
+            d["pause_menu"]["art"]["keyline_width"].SetFloat(5.0f);
+            d["main_menu"]["setup_focus_padding"]["y"].SetFloat(8.0f);
+        };
+        const auto clear_display_card = variants.load(distinct_pause_keyline);
+        clear_display_card.validate_resources(world.render, world.audio);
+        require(clear_display_card.pause_menu().art.keyline_width == 5.0f &&
+            clear_display_card.main_menu().art.keyline_width == 4.0f &&
+            clear_display_card.main_menu().setup_focus_padding.y == 8.0f,
+            "Display paper lost Pause's distinct keyline or rejected padding above the combined clearance threshold");
+        for (const char* axis : { "y", "x" })
+        {
+            const auto path = variants.write([&](rapidjson::Document& d)
+            {
+                distinct_pause_keyline(d);
+                d["main_menu"]["setup_focus_padding"][axis].SetFloat(7.0f);
+            });
+            bool contextual = false;
+            std::string diagnostic = "accepted without exception";
+            try
+            {
+                const Presentation invalid(path.string().c_str());
+                invalid.validate_resources(world.render, world.audio);
+            }
+            catch (const std::runtime_error& error)
+            {
+                diagnostic = error.what();
+                contextual = diagnostic.find(path.string()) != std::string::npos &&
+                    diagnostic.find("main_menu.setup_focus_padding") != std::string::npos &&
+                    diagnostic.find("main_menu.setup_shadow_offset") != std::string::npos &&
+                    diagnostic.find("pause_menu.art.keyline_width") != std::string::npos;
+            }
+            require(contextual, std::string("Display paper clearance on ") + axis +
+                " lost source or composed-art context: " + diagnostic);
+        }
+        require(original.menu_text().display_countdown(0) == L"Reverting in 0s" &&
+            original.menu_text().display_countdown(15) == L"Reverting in 15s" &&
+            original.menu_text().display_countdown(60) == L"Reverting in 60s",
+            "Display countdown lost its complete numeric substitution");
+        bool negative = false;
+        try { std::ignore = original.menu_text().display_countdown(-1); }
+        catch (const std::out_of_range&) { negative = true; }
+        require(negative, "Display countdown accepted a negative remaining time");
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_text"]["display_trial_countdown"].SetString("  Revert\xC2\xA0{seconds}\xE2\x80\xA6  ");
+        });
+        normalized.validate_resources(world.render, world.audio);
+        require(normalized.menu_text().display_countdown(9) == L"  Revert 9...  ",
+            "Display countdown lost normalization, its token or authored outer spaces");
+        for (const char* invalid : { "Missing seconds", "{seconds}{seconds}", "{seconds} {other}", "{{seconds}}",
+            "{Seconds}", "{seconds", "seconds}", "{seconds}\nline", "{seconds}\ttext", "{seconds}\xC3\xA9" })
+        {
+            variants.rejects("display_trial_countdown", [invalid](rapidjson::Document& d)
+            {
+                d["menu_text"]["display_trial_countdown"].SetString(invalid, d.GetAllocator());
+            });
+        }
+        for (const char* key : { "keep", "revert" })
+        {
+            const auto label = variants.load([key](rapidjson::Document& d)
+                { d["menu_text"]["items"][key].SetString("A\xC2\xA0\xE2\x80\x94" "B"); });
+            label.validate_resources(world.render, world.audio);
+            require(label.menu_text().item(std::string(key) == "keep" ? MenuItem::keep : MenuItem::revert) == L"A -B",
+                "Display confirmation action lost normalized authored copy");
+            variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
+            {
+                d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+                d["menu_text"]["items"][key].SetString("Glyph~");
+            }, &world);
+        }
+        std::vector<Glyph> missing_digit;
+        for (char32_t character = U' '; character <= U'~'; ++character)
+        {
+            if (character != U'9') { missing_digit.push_back({ character, mattmath::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f }); }
+        }
+        auto limited = std::make_unique<Font>(TextureHandle{}, std::move(missing_digit), 20.0f);
+        limited->set_stand_in(U'?');
+        world.render.add_font("display_countdown_missing_nine", std::move(limited));
+        variants.rejects("display_trial_countdown", [](rapidjson::Document& d)
+            { d["menu_style"]["fonts"]["detail"].SetString("display_countdown_missing_nine"); }, &world);
+        const auto add_font = [&](const char* name, int width, int height)
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                glyphs.push_back({ character, mattmath::RectangleI(0, 0, character == U'~' ? width : 8,
+                    character == U'~' ? height : 16), 0.0f, 0.0f, 0.0f });
+            }
+            world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
+        };
+        const auto countdown_font = [](rapidjson::Document& d, const char* name)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString(name, d.GetAllocator());
+            d["menu_text"]["display_trial_countdown"].SetString("~{seconds}");
+        };
+        add_font("display_countdown_width_edge", 1034, 20);
+        add_font("display_countdown_width_overflow", 1035, 20);
+        add_font("display_countdown_height_edge", 8, 305);
+        add_font("display_countdown_height_overflow", 8, 306);
+        for (const char* font : { "display_countdown_width_edge", "display_countdown_height_edge" })
+        {
+            const auto edge = variants.load([&](rapidjson::Document& d) { countdown_font(d, font); });
+            edge.validate_resources(world.render, world.audio);
+            MenuText copy = edge.menu_text();
+            const std::wstring text = copy.display_countdown(15);
+            const auto& pause = edge.pause_menu();
+            UiText countdown("countdown", text, font, { 0.0f, pause.layout.position.y + pause.layout.spacing.y * 2.0f },
+                &world.render, pause.art.ink);
+            copy.display_trial_countdown = L"Changed {seconds}";
+            countdown.set_position({ (1920.0f - countdown.bounds().width) / 2.0f, countdown.bounds().y });
+            const mattmath::RectangleF paper((mattmath::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f, pause.box_size);
+            require(countdown.text() == L"~15" && paper.contains(countdown.bounds()) &&
+                (std::string(font) == "display_countdown_width_edge" ? countdown.bounds().width == 1050.0f : countdown.bounds().bottom() == 990.0f),
+                "Display countdown borrowed copy, fitted its text, used line spacing instead of tall glyphs or missed inclusive paper edges");
+            countdown.set_hidden(true); DrawList no_device; countdown.draw(no_device);
+        }
+        for (const char* font : { "display_countdown_width_overflow", "display_countdown_height_overflow" })
+        {
+            variants.rejects("display_trial_countdown", [&](rapidjson::Document& d) { countdown_font(d, font); }, &world);
+        }
+        variants.rejects("headings.options", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["heading"].SetString("menu_confirmation_width_overflow");
+            d["menu_text"]["headings"]["options"].SetString("~");
+        }, &world);
     }
 
     void check_end_text(Variants& variants, World& world)
@@ -3612,6 +3770,7 @@ int main(int argc, char** argv)
         check_pause_text(variants, world);
         check_confirmation_text(variants, world);
         check_confirmation_bounds(variants, world);
+        check_display_trial_text(variants, world);
         check_end_text(variants, world);
         check_end_headings(variants, world);
         check_end_heading_bounds(variants, world);
