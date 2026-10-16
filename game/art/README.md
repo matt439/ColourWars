@@ -191,6 +191,15 @@ original fonts, anchors and logical extents. The existing fill reproduces the
 paper and gutter artwork directly; no new fields, assets or atlas recipe are
 needed.
 
+The [Team Select page](../../docs/polish-main-menu.md#team-select) uses
+`main_menu.team_box_size` for its wider outer paper and the existing setup-art
+overrides for static row cards. Each `focus_fill` card encloses its actual
+label, badge and three unchanged choice icons. Dark lettering has transparent
+retained shadows; `main_menu.team_select.warning_position` puts the existing
+warning below the roster. The paper uses the existing solid texel, with no
+new asset or atlas recipe. Choice frames, readiness colours and independent
+icon motion retain their existing rules.
+
 The [Options and Credits pages](../../docs/polish-main-menu.md#options-and-credits)
 extend the same drawing, with authored panel sizes and text positions in
 `main_menu`, readable disabled-row ink and a separate dark save-warning ink.

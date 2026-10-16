@@ -199,6 +199,40 @@ All planned menu-motion surfaces are implemented; human review of focus and
 selection motion remains in
 [`POL#10`](polish-plan.md#movement-and-interaction-feedback).
 
+## Team paper and cards
+
+The required `main_menu.team_box_size` supplies Team Select's outer paper panel,
+shipped as `(1840, 920)` and centered in
+`(1920, menu_style.chrome.footer_y)`. This wider panel preserves the player
+badges and card padding at their existing positions. Dimensions must be finite
+and positive, at most 1840 wide and at most `footer_y - 40` high. The page
+captures `main_menu.art` with the existing `setup_focus_padding` and
+`setup_shadow_offset` overrides; row cards copy this art with their paper fill
+set to `focus_fill`. The solid surround uses `home_background_colour`. There
+is no shared focus cursor, focused-row card or detached arrow. The controls
+footer remains visible and the legacy brand is suppressed.
+
+Each static row card is the union of its actual player label, retained
+transparent text-shadow extents, player badge and three choice-icon rectangles,
+inflated by setup focus padding. Fonts, player/icon anchors and logical bounds
+are unchanged. Heading, label and warning text use captured dark ink. Their
+shadows have zero alpha, while the original shadow offsets still participate
+in bounds. The required
+`main_menu.team_select.warning_position`, shipped as `(150, 860)`, places the
+existing warning below the roster. It must be finite, nonnegative and within
+the design area above the footer. The generated player labels and warning
+remain C++ text under `GAP#8.4`.
+
+Team spacing and icon size must be finite and positive. Startup resource checks
+validate actual heading/warning glyphs and retained shadow bounds. Runtime
+checks require complete row cards inside the usable paper interior, rows after
+the heading without overlap, labels ending before choice icons and the warning
+following the complete cards. No new fitting or scaling path is introduced.
+The existing icon motion and readiness tints remain independent of the static
+paper; Reduce effects retains the settled choices. Texture artwork uses point
+sampling and lettering stays linear. The shared solid texel reproduces the new
+paper without a new runtime asset.
+
 ## Team-selection pictures
 
 `main_menu.team_select.sheet` selects the team-choice atlas. The `frames` and
@@ -1173,8 +1207,9 @@ Run `scripts/run-acceptance.ps1 -Preset x64-debug` (and `x64-release`), then use
 the focused `MainMenuOnly`, `SettingsMenuOnly`, `ControlsMenuOnly`, `PauseMenuOnly`,
 `ResultsMenuOnly`, `EndMenuOnly`, `TeamSetupOnly` and `MenuTextOnly` switches of
 `scripts/check-painter.ps1` for the affected pages. `TeamSetupOnly`,
-`MenuTextOnly`, `SetupMotionOnly`, `JoinStageMotionOnly` and `JoinPaperOnly` use a
-scripted gamepad backend, including deterministic claims, releases, connections
+`MenuTextOnly`, `SetupMotionOnly`, `JoinStageMotionOnly`, `JoinPaperOnly` and
+`TeamPaperOnly` use a scripted gamepad backend, including deterministic claims,
+releases, connections
 and multiplayer stage input in the Join/Stage scope. The other scopes retain the real gamepad
 backend. `MenuTextOnly` retains its public keyboard checks as well.
 `WeaponCatalogOnly` checks the catalog on real weapon pages, including page
@@ -1243,6 +1278,12 @@ with deterministic devices, claims, releases and reconnections. Its raster and
 layout checks retain the generated text, original gutter geometry and existing
 roster/readiness/transition behavior. It does not establish physical-pad or
 human readability acceptance.
+
+`TeamPaperOnly` uses the scripted reader for actual Team Select pages with one
+to four players. It checks complete paper/card composition, readiness, warning
+placement, unchanged choice motion and the existing team/shuffle/recovery
+behavior. Scripted devices provide implementation evidence; physical-pad and
+human readability acceptance remain open.
 
 The non-menu primitive texel retains its own startup checks. Together with
 [gameplay tuning](gameplay-tuning.md), the shared layout and sheet choices define

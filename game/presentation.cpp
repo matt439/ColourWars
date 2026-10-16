@@ -445,13 +445,14 @@ namespace
 		}
 
 		MainMenuPresentation menu;
-		const auto panel_size = [&](const char* key)
+		const auto panel_size = [&](const char* key, float max_width = 1760.0f)
 		{
 			const Vector2F size = read_positive_vector(json, key);
-			if (size.x > 1760.0f || size.y > content_height - 40.0f)
+			if (size.x > max_width || size.y > content_height - 40.0f)
 			{
 				throw std::runtime_error(json.where() + ": '" + key +
-					"' must be at most 1760 wide and leave 20 pixels above and below within menu_style.chrome.footer_y.");
+					"' must be at most " + std::to_string(static_cast<int>(max_width)) +
+					" wide and leave 20 pixels above and below within menu_style.chrome.footer_y.");
 			}
 			return size;
 		};
@@ -460,11 +461,12 @@ namespace
 		menu.options_box_size = panel_size("options_box_size");
 		menu.credits_box_size = panel_size("credits_box_size");
 		menu.setup_box_size = panel_size("setup_box_size");
+		menu.team_box_size = panel_size("team_box_size", 1840.0f);
 		menu.art = read_menu_paper(json, Vector2F(
 			std::min({ menu.title_box_size.x, menu.home_box_size.x,
-				menu.options_box_size.x, menu.credits_box_size.x, menu.setup_box_size.x }),
+				menu.options_box_size.x, menu.credits_box_size.x, menu.setup_box_size.x, menu.team_box_size.x }),
 			std::min({ menu.title_box_size.y, menu.home_box_size.y,
-				menu.options_box_size.y, menu.credits_box_size.y, menu.setup_box_size.y })));
+				menu.options_box_size.y, menu.credits_box_size.y, menu.setup_box_size.y, menu.team_box_size.y })));
 		const JsonValue art = json.object("art");
 		menu.art.disabled_ink = read_colour(art, "disabled_ink");
 		menu.setup_focus_padding = read_positive_vector(json, "setup_focus_padding");
@@ -630,6 +632,15 @@ namespace
 
 		menu.team_select = read_select(json, "team_select");
 		const JsonValue team_select = json.object("team_select");
+		menu.team_select.spacing = read_positive_vector(team_select, "spacing");
+		menu.team_select.size = read_positive_vector(team_select, "size");
+		menu.team_warning_position = read_finite_vector(team_select, "warning_position");
+		if (menu.team_warning_position.x < 0.0f || menu.team_warning_position.x > 1920.0f ||
+			menu.team_warning_position.y < 0.0f || menu.team_warning_position.y > content_height)
+		{
+			throw std::runtime_error(team_select.where() +
+				": warning_position must be nonnegative and inside the menu design above menu_style.chrome.footer_y.");
+		}
 		menu.team_select_sheet = team_select.identifier("sheet");
 		if (menu.team_select_sheet.empty())
 		{
@@ -2805,6 +2816,38 @@ void Presentation::validate_resources(const RenderResources& render,
 				}
 			}
 		}
+	}
+	// Preserve the existing diagnostics when a shared font or shadow also
+	// invalidates an earlier page, then check Team's additional paper bounds.
+	const RectangleF team_paper((Vector2F(1920.0f, this->menu_.footer_y) - main.team_box_size) / 2.0f,
+		main.team_box_size);
+	const RectangleF team_inside(team_paper.position() + Vector2F(setup_edge),
+		team_paper.size() - Vector2F(setup_edge * 2.0f + main.setup_shadow_offset));
+	const auto check_team_text = [&](const char* key, const std::wstring& words, const std::string& font,
+		const Vector2F& position, const Vector2F& shadow)
+	{
+		drawable_text::check_font_can_draw(&render, font, words, this->source_path_ + ": " + key);
+		const Vector2F size = render.measure_text(render.resolve_sprite_font(font), words);
+		const RectangleF bounds = RectangleF::union_of(RectangleF(position, size), RectangleF(position + shadow, size));
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
+			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
+			bounds.width <= 0.0f || bounds.height <= 0.0f || !team_inside.contains(bounds))
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit main_menu.team_box_size including its retained shadow bounds.");
+		}
+		return bounds;
+	};
+	const RectangleF team_heading = check_team_text("menu_text.headings.teams",
+		this->menu_text_.heading(MenuHeading::teams), this->menu_.heading_font,
+		this->menu_.layout.position, this->menu_.heading_shadow_offset);
+	const RectangleF team_warning = check_team_text("main_menu.team_select.warning_position",
+		L"Both teams need a player", this->menu_.detail_font,
+		main.team_warning_position, this->menu_.detail_shadow_offset);
+	if (team_warning.y < team_heading.bottom())
+	{
+		throw std::runtime_error(this->source_path_ +
+			": main_menu.team_select.warning_position must follow the Team Select heading.");
 	}
 }
 

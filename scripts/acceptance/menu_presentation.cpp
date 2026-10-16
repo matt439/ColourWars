@@ -137,6 +137,10 @@ namespace
             main.setup_shadow_offset == 2.0f &&
             (Vector2F(1920.0f, menu.footer_y) - main.setup_box_size) / 2.0f == Vector2F(80.0f, 20.0f),
             "Authored setup paper changed its reviewed size or placement above the shared footer");
+        require(main.team_box_size == Vector2F(1840.0f, 920.0f) &&
+            main.team_warning_position == Vector2F(150.0f, 860.0f) &&
+            main.team_select.spacing == Vector2F(250.0f, 125.0f) && main.team_select.size == Vector2F(50.0f, 50.0f),
+            "Authored Team paper changed its reviewed warning or existing selection geometry");
         require(main.team_select_sheet == "sprite_sheet_1" &&
             main.team_select_frames == std::array<std::string, 3>{ "team_select_a", "team_select_center", "team_select_b" } &&
             main.team_select_selected_frames == std::array<std::string, 3>{ "team_select_a_selected",
@@ -415,6 +419,146 @@ namespace
         }, &world);
     }
 
+    void check_team_paper(Variants& variants, World& world)
+    {
+        const auto vector_field = [&](const char* owner, const char* key, auto container, bool positive)
+        {
+            variants.rejects(owner, key, [&](rapidjson::Document& d) { container(d).RemoveMember(key); });
+            variants.rejects(owner, key, [&](rapidjson::Document& d) { container(d)[key].SetNull(); });
+            variants.rejects(owner, key, [&](rapidjson::Document& d) { container(d)[key].SetArray(); });
+            for (const char* axis : { "x", "y" })
+            {
+                variants.rejects(owner, key, [&](rapidjson::Document& d) { container(d)[key].RemoveMember(axis); });
+                variants.rejects(owner, key, [&](rapidjson::Document& d) { container(d)[key][axis].SetBool(false); });
+                for (const double invalid : { -0.25, 1e100 })
+                {
+                    variants.rejects(owner, key, [&](rapidjson::Document& d) { container(d)[key][axis].SetDouble(invalid); });
+                }
+                if (positive)
+                {
+                    variants.rejects(owner, key, [&](rapidjson::Document& d) { container(d)[key][axis].SetInt(0); });
+                }
+            }
+        };
+        vector_field("main_menu", "team_box_size", [](rapidjson::Document& d) -> rapidjson::Value&
+            { return d["main_menu"]; }, true);
+        for (const char* key : { "warning_position", "spacing", "size" })
+        {
+            vector_field("main_menu.team_select", key, [](rapidjson::Document& d) -> rapidjson::Value&
+                { return d["main_menu"]["team_select"]; }, std::string(key) != "warning_position");
+        }
+        for (const char* axis : { "x", "y" })
+        {
+            const float panel_limit = std::string(axis) == "x" ? 1840.0f : 920.0f;
+            variants.rejects("main_menu", "team_box_size", [axis, panel_limit](rapidjson::Document& d)
+                { d["main_menu"]["team_box_size"][axis].SetFloat(panel_limit + 0.25f); });
+            const float position_limit = std::string(axis) == "x" ? 1920.0f : 960.0f;
+            variants.rejects("main_menu.team_select", "warning_position", [axis, position_limit](rapidjson::Document& d)
+                { d["main_menu"]["team_select"]["warning_position"][axis].SetFloat(position_limit + 0.25f); });
+        }
+        const auto warning_definition_edges = variants.load([](rapidjson::Document& d)
+        {
+            d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(1920.0f);
+            d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(960.0f);
+        });
+        require(warning_definition_edges.main_menu().team_warning_position == Vector2F(1920.0f, 960.0f),
+            "Inclusive Team warning position definition limits were rejected");
+        const auto warning_definition_origin = variants.load([](rapidjson::Document& d)
+        {
+            d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(0.0f);
+            d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(0.0f);
+        });
+        require(warning_definition_origin.main_menu().team_warning_position == Vector2F::ZERO,
+            "Nonnegative Team warning position definitions rejected zero before resource bounds were checked");
+        const auto footer_boundary = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_style"]["chrome"]["footer_y"].SetFloat(1000.0f);
+            d["main_menu"]["team_box_size"]["y"].SetFloat(960.0f);
+        });
+        footer_boundary.validate_resources(world.render, world.audio);
+        require(footer_boundary.main_menu().team_box_size == Vector2F(1840.0f, 960.0f),
+            "Team panel height did not follow its authored footer boundary");
+        variants.rejects("main_menu", "team_box_size", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["chrome"]["footer_y"].SetFloat(999.75f);
+            d["main_menu"]["team_box_size"]["y"].SetFloat(960.0f);
+        });
+
+        const auto exact = [](rapidjson::Document& d)
+        {
+            for (const char* font : { "heading", "item", "detail" })
+            {
+                d["menu_style"]["fonts"][font].SetString("setup_exact");
+            }
+            for (const char* group : { "headings", "items" })
+            {
+                for (auto member = d["menu_text"][group].MemberBegin(); member != d["menu_text"][group].MemberEnd(); ++member)
+                {
+                    member->value.SetString("Fit");
+                }
+            }
+            d["menu_text"]["solo_practice_hint"].SetString("Fit");
+        };
+        const auto check_edge = [&](const char* owner, const char* field, auto edge, auto outside)
+        {
+            const auto fits = variants.load([&](rapidjson::Document& d) { exact(d); edge(d); });
+            fits.validate_resources(world.render, world.audio);
+            variants.rejects(owner, field, [&](rapidjson::Document& d)
+            {
+                exact(d);
+                edge(d);
+                outside(d);
+            }, &world);
+        };
+        // The complete fixed warning is 192x20 in this font; its retained
+        // one-pixel shadow must stay inside Team's (52,32)..(1866,926) interior.
+        require(world.render.measure_text(world.render.resolve_sprite_font("setup_exact"), L"Both teams need a player") ==
+            Vector2F(192.0f, 20.0f), "Team warning fixture no longer measures the complete shipped wording");
+        check_edge("main_menu.team_select", "warning_position", [](rapidjson::Document& d)
+            { d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(52.0f); },
+            [](rapidjson::Document& d) { d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(51.75f); });
+        check_edge("main_menu.team_select", "warning_position", [](rapidjson::Document& d)
+            { d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(1673.0f); },
+            [](rapidjson::Document& d) { d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(1673.25f); });
+        check_edge("main_menu.team_select", "warning_position", [](rapidjson::Document& d)
+            { d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(905.0f); },
+            [](rapidjson::Document& d) { d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(905.25f); });
+        check_edge("main_menu.team_select", "warning_position", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["shadow"]["detail_offset"]["x"].SetFloat(-1.0f);
+            d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(53.0f);
+        }, [](rapidjson::Document& d) { d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(52.75f); });
+        variants.rejects("main_menu.team_select", "warning_position", [&](rapidjson::Document& d)
+        {
+            exact(d);
+            d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(100.0f);
+        }, &world);
+        check_edge("menu_text.headings", "teams", [](rapidjson::Document& d)
+        {
+            d["main_menu"]["team_box_size"]["x"].SetFloat(1200.0f);
+            d["menu_style"]["layout"]["position"]["x"].SetFloat(500.0f);
+            d["menu_style"]["shadow"]["heading_offset"]["x"].SetFloat(6.0f);
+            d["main_menu"]["team_select"]["warning_position"]["x"].SetFloat(500.0f);
+            d["menu_text"]["headings"]["teams"].SetString(std::string(130, 'F').c_str(), d.GetAllocator());
+        }, [](rapidjson::Document& d)
+        {
+            d["menu_text"]["headings"]["teams"].SetString(std::string(131, 'F').c_str(), d.GetAllocator());
+        });
+        std::vector<Glyph> glyphs;
+        for (char32_t character = U' '; character <= U'~'; ++character)
+        {
+            glyphs.push_back({ character, RectangleI(0, 0, 8, character == U'y' ? 70 : 16), 0.0f, 0.0f, 0.0f });
+        }
+        world.render.add_font("team_warning_descender", std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
+        require(world.render.measure_text(world.render.resolve_sprite_font("team_warning_descender"), L"Both teams need a player") ==
+            Vector2F(192.0f, 70.0f), "Team warning did not measure its descender beyond the font's line spacing");
+        check_edge("main_menu.team_select", "warning_position", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString("team_warning_descender");
+            d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(855.0f);
+        }, [](rapidjson::Document& d) { d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(855.25f); });
+    }
+
     std::unique_ptr<SpriteSheet> sparse_sheet(std::initializer_list<const char*> names)
     {
         NameTable<SpriteFrame> frames("sprite frame");
@@ -556,6 +700,7 @@ int main(int argc, char** argv)
         check_layout(variants, world);
         check_setup_panel(variants, world);
         check_setup_geometry(variants, world);
+        check_team_paper(variants, world);
         check_assets(variants, world);
         check_required_primitive(variants, world, content);
         std::cout << "PASS menu presentation: unchanged defaults, authored base layout/artwork, contextual rejection, "

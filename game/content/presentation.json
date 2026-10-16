@@ -223,6 +223,7 @@
     "options_box_size": { "x": 1640.0, "y": 920.0 },
     "credits_box_size": { "x": 1760.0, "y": 920.0 },
     "setup_box_size": { "x": 1760.0, "y": 920.0 },
+    "team_box_size": { "x": 1840.0, "y": 920.0 },
     "setup_focus_padding": { "x": 28.0, "y": 7.0 },
     "setup_shadow_offset": 2.0,
     "art": {
@@ -277,6 +278,7 @@
     "mode_select_spacing": { "x": 250.0, "y": 100.0 },
     "player_count_spacing": { "x": 250.0, "y": 100.0 },
     "team_select": {
+      "warning_position": { "x": 150.0, "y": 860.0 },
       "sheet": "sprite_sheet_1",
       "frames": { "a": "team_select_a", "center": "team_select_center", "b": "team_select_b" },
       "selected_frames": { "a": "team_select_a_selected", "center": "team_select_center_selected", "b": "team_select_b_selected" },

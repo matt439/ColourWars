@@ -279,6 +279,13 @@ void MainMenuTeamSelect::init()
 	// A button held on the preceding page cannot shuffle or confirm this one.
 	this->input()->reset_actions();
 	const MainMenuPresentation& look = this->look();
+	const MenuStyle& style = this->menu_style();
+	this->setup_art_ = look.art;
+	this->setup_art_.focus_padding = look.setup_focus_padding;
+	this->setup_art_.shadow_offset = look.setup_shadow_offset;
+	this->row_art_ = this->setup_art_;
+	this->row_art_.paper = this->setup_art_.focus_fill;
+	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
 	this->team_select_frames_ = look.team_select_frames;
 	this->team_select_selected_frames_ = look.team_select_selected_frames;
 	this->set_player_prompts(this->player_count() >= 2 ?
@@ -294,13 +301,18 @@ void MainMenuTeamSelect::init()
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		this->look().backdrop_sheet,
-		this->look().backdrop_frame,
+		style.sprite_sheet,
+		style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		this->look().play_background_colour);
+		look.home_background_colour);
+	this->paper_ = std::make_unique<MenuPaperArtwork>(
+		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.team_box_size) / 2.0f,
+			look.team_box_size),
+		this->render_resources(), &style, &this->setup_art_, &this->focus_);
 
 	this->texture_container_->add_child(this->background_.get());
+	this->texture_container_->add_child(this->paper_.get());
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
@@ -308,21 +320,21 @@ void MainMenuTeamSelect::init()
 		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		this->menu_style().heading_colour,
-		this->menu_style().shadow_colour,
+		this->setup_art_.ink,
+		clear_shadow,
 		this->menu_style().heading_shadow_offset);
 
 	this->text_container_->add_child(this->heading_.get());
 
-	// Keep the warning below the four player rows and inside the design bounds.
+	// Keep the warning below the four player cards and inside the paper.
 	this->both_teams_needed_ = std::make_unique<UiTextDropShadow>(
 		"both_teams_needed",
 		L"Both teams need a player",
 		this->menu_style().detail_font,
-		this->calculate_widget_position(0, 6),
+		look.team_warning_position,
 		this->render_resources(),
-		this->menu_style().warning,
-		this->menu_style().shadow_colour,
+		this->setup_art_.ink,
+		clear_shadow,
 		this->menu_style().detail_shadow_offset,
 		true);
 
@@ -348,8 +360,8 @@ void MainMenuTeamSelect::init()
 			this->menu_style().detail_font,
 			this->calculate_widget_position(0, i + 2),
 			this->render_resources(),
-			this->look().team_select.unselected,
-			this->menu_style().shadow_colour,
+			this->setup_art_.ink,
+			clear_shadow,
 			this->menu_style().item_shadow_offset);
 		widgets->badge = std::make_unique<UiPlayerBadge>(name + "_badge",
 			UiPlayerBadge::before(widgets->player->bounds(), this->presentation().player_identity()),
@@ -379,7 +391,15 @@ void MainMenuTeamSelect::init()
 			RectangleF(widgets->player_center->rectangle().position() + move,
 				this->look().team_select.size),
 			this->render_resources(), &widgets->motion, &this->save()->play_settings());
+		RectangleF row = RectangleF::union_of(widgets->player->bounds(), widgets->badge->bounds());
+		row = RectangleF::union_of(row, widgets->player_a->bounds());
+		row = RectangleF::union_of(row, widgets->player_center->bounds());
+		row = RectangleF::union_of(row, widgets->player_b->bounds());
+		row.inflate(this->setup_art_.focus_padding);
+		widgets->paper = std::make_unique<MenuPaperArtwork>(row,
+			this->render_resources(), &style, &this->row_art_, &this->focus_);
 
+		this->texture_container_->add_child(widgets->paper.get());
 		this->texture_container_->add_child(widgets->player_a.get());
 		this->texture_container_->add_child(widgets->player_center.get());
 		this->texture_container_->add_child(widgets->player_b.get());
@@ -391,6 +411,46 @@ void MainMenuTeamSelect::init()
 		this->player_widgets_.push_back(std::move(widgets));
 	}
 	this->update_team_select_visuals();
+	this->check_paper_geometry();
+}
+
+void MainMenuTeamSelect::check_paper_geometry() const
+{
+	const RectangleF panel = this->paper_->rectangle();
+	const float edge = this->setup_art_.keyline_width * 3.0f;
+	const RectangleF inside(panel.position() + Vector2F(edge),
+		panel.size() - Vector2F(edge * 2.0f + this->setup_art_.shadow_offset));
+	const auto check = [&](const RectangleF& bounds, const char* role)
+	{
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
+			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
+			bounds.width <= 0.0f || bounds.height <= 0.0f || !inside.contains(bounds))
+		{
+			throw std::runtime_error(std::string("main_menu.team_box_size: Team Select ") + role +
+				" must fit the paper including its retained text, badge and card bounds.");
+		}
+	};
+	check(this->heading_->bounds(), "heading");
+	float previous_bottom = this->heading_->bounds().bottom();
+	for (const auto& widgets : this->player_widgets_)
+	{
+		const RectangleF card = widgets->paper->rectangle();
+		check(card, "player row");
+		if (card.y < previous_bottom)
+		{
+			throw std::runtime_error("main_menu.team_select.spacing: Team Select cards must follow the heading without overlap.");
+		}
+		if (widgets->player->bounds().right() > widgets->player_a->bounds().x)
+		{
+			throw std::runtime_error("main_menu.team_select.spacing: Team Select player labels must end before the choice icons.");
+		}
+		previous_bottom = card.bottom();
+	}
+	check(this->both_teams_needed_->bounds(), "warning");
+	if (this->both_teams_needed_->bounds().y < previous_bottom)
+	{
+		throw std::runtime_error("main_menu.team_select.warning_position: Team Select warning must follow the complete player cards.");
+	}
 }
 
 #pragma endregion MainMenuTeamSelect

@@ -239,7 +239,12 @@ public:
 	explicit MainMenuTeamSelect(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
+protected:
+	bool shows_brand() const override { return false; }
+	bool shows_focus_backing() const override { return false; }
 private:
+	MenuPaperArtPresentation setup_art_;
+	MenuPaperArtPresentation row_art_;
 	struct TeamSelectState
 	{
 		PlayerTeam team = PlayerTeam::none;
@@ -249,6 +254,7 @@ private:
 	{
 		explicit PlayerWidgets(const MenuFocusMotionPresentation& look) : motion(look) {}
 		MenuFocusMotion motion;
+		std::unique_ptr<MenuPaperArtwork> paper;
 		std::unique_ptr<labrador::UiTextDropShadow> player = nullptr;
 		std::unique_ptr<UiPlayerBadge> badge;
 		std::unique_ptr<MenuChoiceIcon> player_a = nullptr;
@@ -256,6 +262,7 @@ private:
 		std::unique_ptr<MenuChoiceIcon> player_b = nullptr;
 	};
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
+	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 
 	// Shown when completing a multiplayer roster would leave a team empty.
@@ -283,6 +290,7 @@ private:
 	bool both_teams_chosen() const;
 
 	void set_level_settings() const;
+	void check_paper_geometry() const;
 };
 
 class MainMenuWeaponSelect final : public MainMenuPage

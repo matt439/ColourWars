@@ -349,13 +349,14 @@ struct MainMenuPresentation
 {
 	std::string backdrop_sheet;
 	std::string backdrop_frame;
-	// Entry, settings, mode and player-count pages share the paper treatment.
+	// Entry, settings and setup pages share the paper treatment.
 	MenuPaperArtPresentation art;
 	mattmath::Vector2F title_box_size;
 	mattmath::Vector2F home_box_size;
 	mattmath::Vector2F options_box_size;
 	mattmath::Vector2F credits_box_size;
 	mattmath::Vector2F setup_box_size;
+	mattmath::Vector2F team_box_size;
 	mattmath::Vector2F setup_focus_padding;
 	float setup_shadow_offset = 0.0f;
 	// Title text is centered using its measured width; y positions are authored.
@@ -393,6 +394,7 @@ struct MainMenuPresentation
 	mattmath::Vector2F player_count_spacing = { 0.0f, 0.0f };
 
 	SelectPresentation team_select;
+	mattmath::Vector2F team_warning_position;
 	// Three fixed roles: Team A, unassigned, Team B. The current choice selects a frame.
 	std::string team_select_sheet;
 	std::array<std::string, 3> team_select_frames;

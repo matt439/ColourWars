@@ -76,7 +76,7 @@ scripts/run-acceptance.ps1 -Preset x64-debug
 scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -MainMenuOnly
 ```
 
-Use `x64-release` for the Release checks. Team/Weapon selection cards and stage
+Use `x64-release` for the Release checks. Weapon selection cards and stage
 preview remain under `POL#16`. Reference-arena
 composition, movement feel, physical controllers and listening acceptance
 retain their TODO owners.
@@ -214,7 +214,7 @@ Rerun from an x64 Visual Studio Developer shell:
 scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -ControlsMenuOnly
 ```
 
-Use `x64-release` for Release. Team/Weapon selection cards and stage
+Use `x64-release` for Release. Weapon selection cards and stage
 preview remain under `POL#16`. Physical-pad, movement-feel, human readability
 and listening acceptance retain their existing TODO owners.
 
@@ -299,7 +299,7 @@ The retained native 720p views show [Mode](images/polish-main-menu/mode-720p.png
 the [focused duration row](images/polish-main-menu/mode-duration-720p.png) and
 [series Player Count with solo practice disabled](images/polish-main-menu/player-count-series-720p.png).
 
-Human menu/readability review remains open. Team/Weapon selection cards,
+Human menu/readability review remains open. Weapon selection cards,
 stage preview and accepted arenas remain `POL#16`; movement-feel (`POL#3`),
 physical-controller and listening acceptance retain their existing gates.
 
@@ -365,6 +365,75 @@ The retained native 720p views show [waiting for players](images/polish-main-men
 the [complete roster](images/polish-main-menu/join-ready-720p.png) and
 [a reserved controller needing reconnection](images/polish-main-menu/join-reconnect-720p.png).
 
-Human menu/readability review remains open. Team/Weapon selection cards, stage
+Human menu/readability review remains open. Weapon selection cards, stage
+preview and accepted arenas remain `POL#16`; movement-feel (`POL#3`), physical-pad
+and listening acceptance retain their existing gates.
+
+## Team Select
+
+Implemented on 2026-10-16, part of `POL#16`. Team Select uses the shared stepped
+paper, dark ink, quiet shade and neutral Home surround. The required
+`main_menu.team_box_size` ships as `(1840, 920)`, centered above the controls
+footer. Its wider panel preserves the existing player-badge position and row
+padding. A captured `main_menu.art` copy uses the existing setup focus-padding
+and shadow-offset overrides. Each player row has a static paper card filled
+with `focus_fill`; the outer panel has ordinary paper fill. The page has no
+shared focus cursor, focused-row card or detached arrow. It suppresses the
+legacy brand and retains the controls footer.
+
+Each row card encloses the union of the actual unscaled player label, retained
+transparent-shadow extents, player badge and three choice-icon rectangles,
+inflated by the setup focus padding. Player labels, badges, heading and icons
+retain their fonts, anchors and logical bounds. The required
+`main_menu.team_select.warning_position` places the existing both-teams warning
+at `(150, 860)`, below all four cards and above the footer. Heading, player
+labels and warning use captured dark ink with zero-alpha text shadows; their
+shadow offsets and logical extents remain intact. Generated labels and the
+warning remain C++ copy under `GAP#8.4`.
+
+The existing atlas and frame pairs still identify Team A, unassigned and Team B.
+Readiness colours remain live, and each row keeps its existing independent
+choice/ready/unready/shuffle motion and Reduce effects policy. Only the chosen
+icon contracts; its card and identity stay fixed. Provisional team choices,
+both-teams validation, simultaneous actions, Back, missing-device recovery,
+shuffle, final commit, transitions, RNG and audio keep their existing behavior.
+
+Startup requires positive, finite panel dimensions, Team spacing and icon size.
+The panel is at most 1840 wide and leaves 20 design units above and below within
+the footer area. The warning position must be finite, nonnegative and above the
+footer. Resource checks validate the actual heading/warning fonts and retained
+shadow bounds. Page checks require the actual row cards to fit the usable paper
+interior in order after the heading, player labels to end before the icons, and
+the complete warning to follow the cards. No text fitting or scaling is added.
+Point sampling reproduces the paper and existing icons; lettering remains
+linear-filtered. The existing solid texel supplies all new artwork, with no new
+runtime asset or atlas recipe.
+
+Batch evidence is under
+`out/validation/2026-10-16-team-paper/verification.json`.
+
+Debug and Release build under `/W4 /WX` and each pass all 31 consumer cases.
+The `TeamPaperOnly` pair uses the
+scripted reader for one to four players at 1280×720, 1920×1080, 2560×1440,
+1600×1200, 1920×1200 and 2560×1080. Each preset passes 273 independent full-frame
+comparisons. Motion coverage includes fifteen moving cases and thirty moving
+row instances; all 132 retained PPM captures and the CSV evidence match byte
+for byte between Debug and Release.
+
+The related `JoinPaperOnly`, `JoinStageMotionOnly`, `SetupPaperOnly`,
+`MenuTextOnly`, `SetupMotionOnly`, `TeamSetupOnly`, `WeaponCatalogOnly` and
+`ResumeOnly` scopes also pass in both presets, bringing the batch to eighteen
+passing native runs.
+
+Four startup checks pass, including extracted Release with its published bank
+and optional-bank silent fallback under a system-only PATH. The 53-file Release
+ZIP contains all 26 reviewed runtime assets byte for byte and excludes source,
+debug and private audio.
+
+The retained native 720p views show [team choices](images/polish-main-menu/team-choices-720p.png),
+[a ready player](images/polish-main-menu/team-ready-720p.png) and the
+[both-teams warning below the cards](images/polish-main-menu/team-warning-720p.png).
+
+Human menu/readability review remains open. Weapon selection cards, stage
 preview and accepted arenas remain `POL#16`; movement-feel (`POL#3`), physical-pad
 and listening acceptance retain their existing gates.

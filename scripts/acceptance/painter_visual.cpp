@@ -2554,6 +2554,7 @@ namespace
 #include "scripts/acceptance/painter_visual/setup_motion_checks.h"
 #include "scripts/acceptance/painter_visual/join_stage_motion_checks.h"
 #include "scripts/acceptance/painter_visual/join_paper_checks.h"
+#include "scripts/acceptance/painter_visual/team_paper_checks.h"
 #endif
 }
 
@@ -2572,8 +2573,8 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"team-setup" || std::wstring(argv[3]) == L"weapon-catalog" ||
             std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion" ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" ||
-            std::wstring(argv[3]) == L"setup-paper" || std::wstring(argv[3]) == L"join-paper")),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper]");
+            std::wstring(argv[3]) == L"setup-paper" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper")),
+            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -2594,11 +2595,11 @@ int wmain(int argc, wchar_t** argv)
         const bool stick_settings_only = argc == 4 && std::wstring(argv[3]) == L"stick-settings";
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
         require(argc == 4 && (std::wstring(argv[3]) == L"team-setup" || menu_text_only ||
-            std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" || std::wstring(argv[3]) == L"join-paper"),
-            "The scripted gamepad backend is restricted to focused team-setup, menu-text, setup-motion, join-stage-motion or join-paper acceptance");
+            std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper"),
+            "The scripted gamepad backend is restricted to focused team/setup/menu-text acceptance");
 #else
         require(argc != 4 || (std::wstring(argv[3]) != L"team-setup" &&
-            std::wstring(argv[3]) != L"setup-motion" && std::wstring(argv[3]) != L"join-stage-motion" && std::wstring(argv[3]) != L"join-paper"),
+            std::wstring(argv[3]) != L"setup-motion" && std::wstring(argv[3]) != L"join-stage-motion" && std::wstring(argv[3]) != L"join-paper" && std::wstring(argv[3]) != L"team-paper"),
             "Use check-painter.ps1 focused scripted input switches to compile the scripted input seam");
 #endif
         std::cout << std::unitbuf;
@@ -2654,6 +2655,12 @@ int wmain(int argc, wchar_t** argv)
             return 0;
         }
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+        if (argc == 4 && std::wstring(argv[3]) == L"team-paper")
+        {
+            team_paper_matrix(app, levels, canvas, tuning, presentation, output);
+            std::cout << "PASS team-paper-only actual pages; scripted reader, no physical-pad acceptance\n";
+            return 0;
+        }
         if (argc == 4 && std::wstring(argv[3]) == L"join-paper")
         {
             join_paper_matrix(app, levels, canvas, tuning, presentation, output);

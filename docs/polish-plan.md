@@ -924,7 +924,7 @@ The 53-file Release ZIP contains all 26 reviewed runtime assets byte for byte,
 excluding source, debug and private audio; package evidence is in
 `out/validation/2026-10-16-setup-paper/package-verification.json`.
 
-Team/Weapon selection cards, stage preview, accepted arenas and human
+Weapon selection cards, stage preview, accepted arenas and human
 review remain `POL#16`. Reference-arena, movement-feel, physical-controller
 and listening acceptance retain their existing gates.
 
@@ -956,8 +956,42 @@ ZIP contains all 26 reviewed runtime assets byte for byte and excludes source,
 debug and private audio; package evidence is in
 `out/validation/2026-10-16-join-paper/package-verification.json`.
 
-Team/Weapon selection cards, stage preview, accepted arenas and human review
+Weapon selection cards, stage preview, accepted arenas and human review
 remain `POL#16`; reference-arena, movement-feel (`POL#3`), physical-controller and
+listening acceptance retain their existing gates.
+
+**Team Select paper and cards implemented (2026-10-16, part of `POL#16`).**
+The [Team Select page](polish-main-menu.md#team-select) uses a wider shared-style
+paper panel and static `focus_fill` cards enclosing each existing player label,
+badge and three choice icons. The required `main_menu.team_box_size`
+(`1840, 920`) preserves badge/card geometry, while
+`main_menu.team_select.warning_position` (`150, 860`) places the existing
+both-teams warning below the complete roster. Captured dark ink and transparent
+text shadows retain the other fonts, anchors and logical extents. The controls
+footer stays visible; there is no shared cursor or arrow.
+
+The page reuses the setup art overrides and existing fill, with no new runtime
+asset. Actual card bounds, row order, label/icon separation and warning placement
+are checked against the usable paper interior. Atlas/frame choices, live
+readiness colours, independent icon motion, Reduce effects, team rules,
+shuffle/RNG, recovery and transitions retain their existing behavior.
+
+Batch evidence is at
+`out/validation/2026-10-16-team-paper/verification.json`.
+Both builds, all 31 consumer cases per preset and the focused `TeamPaperOnly`
+native pair pass. Each preset
+passes 273 independent full-frame comparisons across six display sizes and
+one-to-four-player rosters; fifteen moving cases cover thirty moving row
+instances. The 132 PPM captures and CSV evidence match byte for byte between
+Debug and Release. Eight related menu/resume scopes also pass in both presets,
+bringing the batch to eighteen passing native runs; the
+[owner](polish-main-menu.md#team-select) lists them. Four startup checks pass, including extracted Release with
+the published bank and optional-bank fallback under a system-only PATH. Its
+53-file ZIP contains all 26 reviewed runtime assets byte for byte and excludes
+source, debug and private audio.
+
+Weapon selection cards, stage preview, accepted arenas and human review remain
+`POL#16`; movement-feel (`POL#3`), reference-arena, physical-controller and
 listening acceptance retain their existing gates.
 
 Once the reference match meets its exit conditions, extend the approved character
