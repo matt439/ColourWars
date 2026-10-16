@@ -7,6 +7,49 @@
 using namespace labrador;
 using namespace mattmath;
 
+MenuJoinAccent::MenuJoinAccent(const std::string& name, const RectangleF& rectangle,
+	RenderResources* resources, const MenuStyle* style, const MenuFocusMotion* motion,
+	const PlaySettings* settings) :
+	UiTexture(name, style->sprite_sheet, style->fill_frame, rectangle, resources, style->highlight),
+	style_(style), motion_(motion), settings_(settings)
+{
+}
+
+void MenuJoinAccent::draw(DrawList& list) const
+{
+	if (this->hidden() || this->settings_->reduce_effects) { return; }
+	const float press = this->motion_->press_fraction();
+	const RectangleF gutter = this->rectangle();
+	if (press <= 0.0f || gutter.width <= 0.0f || gutter.height <= 0.0f) { return; }
+	const float width = std::min(this->style_->accent_width, gutter.width);
+	const float height = gutter.height * press;
+	const RectangleF mark(gutter.x + (gutter.width - width) * press,
+		gutter.center().y - height / 2.0f, width, height);
+	TextureObject::draw_with(list, mark, this->frame(), this->colour(),
+		this->origin(), this->flip(), this->draw_rotation());
+}
+
+MenuStageAccent::MenuStageAccent(const std::string& name, const RectangleF& rectangle,
+	RenderResources* resources, const MenuStyle* style, const MenuFocusMotion* motion,
+	const PlaySettings* settings, float max_inward) :
+	UiTexture(name, style->sprite_sheet, style->fill_frame, rectangle, resources, style->highlight),
+	motion_(motion), settings_(settings), max_inward_(std::max(0.0f, max_inward))
+{
+}
+
+void MenuStageAccent::draw(DrawList& list) const
+{
+	if (this->hidden()) { return; }
+	RectangleF stripe = this->rectangle();
+	if (!this->settings_->reduce_effects)
+	{
+		stripe.y += std::min(stripe.height *
+			(this->motion_->arrow_offset() + this->motion_->press_fraction()), this->max_inward_);
+	}
+	TextureObject::draw_with(list, stripe, this->frame(), this->colour(),
+		this->origin(), this->flip(), this->draw_rotation());
+}
+
 MenuChoiceIcon::MenuChoiceIcon(const std::string& name, const std::string& sheet,
 	const std::string& frame, const RectangleF& rectangle, RenderResources* resources,
 	const MenuFocusMotion* motion, const PlaySettings* settings) :

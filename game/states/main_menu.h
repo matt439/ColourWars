@@ -204,11 +204,20 @@ public:
 	void update_page(float dt) override;
 	void init() override;
 private:
+	struct JoinMotionRow
+	{
+		explicit JoinMotionRow(const MenuFocusMotionPresentation& look) : motion(look) {}
+		MenuFocusMotion motion;
+		int slot = -1;
+		bool connected = false;
+		std::unique_ptr<MenuJoinAccent> accent;
+	};
 	void refresh_players(const std::vector<ProcessedMenuInput>& inputs);
 	std::unique_ptr<labrador::UiTexture> background_;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_;
 	std::unique_ptr<labrador::UiTextDropShadow> status_;
 	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> players_;
+	std::vector<std::unique_ptr<JoinMotionRow>> join_motion_;
 };
 
 class MainMenuTeamSelect final : public MainMenuPage
@@ -309,6 +318,7 @@ public:
 	void update_page(float dt) override;
 	void init() override;
 private:
+	MenuFocusMotion stage_motion_;
 	// Stage slots are followed by Random, which is not a stage-list entry.
 	struct SelectState
 	{

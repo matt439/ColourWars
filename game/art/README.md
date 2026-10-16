@@ -160,6 +160,14 @@ per-side inset when a page opens. Per-player response clocks share the existing
 focus/press durations and reset when interrupted; Reduce effects draws the
 settled selection. Tool layers, labels, badges and input rectangles stay fixed.
 
+The [Join and arena-stage accents](../../docs/menu-presentation.md#join-and-arena-stage-motion)
+reuse the same fill and clocks. An accepted Join claim/release briefly slides
+and shrinks a thin stripe in the player row's existing left focus padding;
+it is absent when settled or with Reduce effects. Arena browsing and lock/unlock
+move only the existing briefing stripe within its upper padding. Existing accent
+width and captured focus/press durations supply the response; no new JSON fields
+or art assets are required. Text, preview, roster and input rectangles stay fixed.
+
 The [title and home pages](../../docs/polish-main-menu.md) use the same paper
 drawing in the texture layer, with linear-filtered lettering above it. Their
 editable palette and pen widths are in `main_menu.art`; panel sizes and text

@@ -568,9 +568,52 @@ Verification extends the existing `menu_focus_motion` consumer case and adds
 Both builds, all 31 consumer cases per preset, seven relevant native menu/resume
 scopes per preset and both published-bank startup checks pass. The 96 native
 setup-motion PPM captures match between Debug and Release.
-Join and arena-stage selection motion, and human review of the shared paper
-and setup/per-player motion, remain `POL#10`. Reference-arena, movement-feel,
-controller and listening acceptance retain their existing gates.
+Human review of the shared paper and setup/per-player motion remains `POL#10`.
+Reference-arena, movement-feel, controller and listening acceptance retain their
+existing gates.
+
+**Join and arena-stage motion implemented (2026-10-16, part of `POL#10`).**
+Join retains one clock and gutter accent per stable player row. An accepted
+claim or release briefly slides and shrinks a thin stripe within the row's
+existing left focus padding. Responses start after the final roster refresh;
+a release and replacement in the same row produces one bounded response.
+Empty rows retain their positions. Connection and input-slot changes clear
+interrupted responses quietly, without acknowledging a join that did not occur.
+The stripe is absent at rest and with applied Reduce effects.
+
+Arena browsing settles only the existing briefing stripe inward; successful
+lock and unlock briefly press that stripe. Captured focus/press clocks and the
+existing accent width set the response, clamped within the padding above the
+briefing text. Repeated events replace one bounded response. The final Random
+confirmation retains its outgoing Random view and music exit; resolving the
+stage adds no motion response or visual refresh and preserves the existing
+single Random selection draw. Accepted final Start settles any unfinished lock
+or browse response before the outgoing fade, without refreshing the displayed
+Random text/preview or adding a new pulse.
+
+The [Join and arena-stage presentation boundary](menu-presentation.md#join-and-arena-stage-motion)
+uses no new JSON fields or artwork assets. Lettering, status, heading, roster,
+preview and widget/input rectangles retain their positions. The existing
+readiness snapshot, final-claim barrier, Player 1 Back behavior, confirmation
+and transition timing remain unchanged. Both pages use the shared registered
+interruption policy for inactive/missing-player gates, suspension/resume,
+deactivation, developer interception and input reset. Drawing never advances
+the clocks; applied Reduce effects immediately retains the settled result.
+
+Verification adds
+`scripts/check-painter.ps1 -Preset x64-debug -JoinStageMotionOnly` (or
+`x64-release`), with batch evidence at
+`out/validation/2026-10-16-join-stage-motion/verification.json`.
+Both builds, all 31 consumer cases per preset, seven relevant native menu/resume
+scopes per preset and both published-bank startup checks pass. The 78 native
+Join/Stage PPM captures match between Debug and Release; 45 moving-envelope
+comparisons per preset keep every changed pixel inside the authored padding.
+The unchanged resume check also verifies rapid final confirmation followed by
+focus loss during the outgoing music fade.
+All planned menu-focus and selection-motion surfaces are implemented. Human
+review across the shared paper, setup/per-player choices, Join and arena-stage
+selection remains `POL#10`; reference-arena, movement-feel, physical-controller
+and listening acceptance retain their existing gates.
 
 **Exit condition:** a complete match in the reference arena feels visually coherent
 and responsive. Jumping, landing and movement have visible, correctly timed feedback.

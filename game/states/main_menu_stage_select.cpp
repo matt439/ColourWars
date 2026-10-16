@@ -10,7 +10,8 @@ using namespace labrador;
 #pragma region MainMenuStageSelect
 
 MainMenuStageSelect::MainMenuStageSelect(MenuContext* context) :
-	MainMenuPage(context)
+	MainMenuPage(context),
+	stage_motion_(context->data()->presentation()->menu().motion)
 {
 
 }
@@ -43,6 +44,7 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 				this->play_wave(this->unready_sound_, this->look().unready_sound.volume);
 				this->select_state_.state =
 					ConfirmationState::unconfirmed;
+				this->stage_motion_.press();
 			}
 			// This selection is shared. Show its new state before another
 			// action can leave the page, even if two players pressed together.
@@ -58,6 +60,9 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 					this->select_state_.slot = this->pick_random_stage();
 				}
 				this->set_level_settings();
+				// The outgoing page is latched during its music fade. Settle an
+				// unfinished lock response without refreshing Random's visuals.
+				this->stage_motion_.reset();
 
 				// Settings are already in GameMenu's context. Pop once and return so
 				// simultaneous inputs cannot also pop the state underneath.
@@ -71,6 +76,7 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 			{
 				this->play_wave(this->ready_sound_);
 				this->select_state_.state = ConfirmationState::confirmed;
+				this->stage_motion_.press();
 			}
 			// READY must be visible before a later press starts the match.
 			break;
@@ -226,9 +232,12 @@ void MainMenuStageSelect::init()
 	this->briefing_background_ = std::make_unique<UiTexture>("briefing_background",
 		style.sprite_sheet, style.fill_frame, briefing, resources,
 		this->presentation().hud().player_identity_background_colour);
-	this->briefing_accent_ = std::make_unique<UiTexture>("briefing_accent",
-		style.sprite_sheet, style.fill_frame, RectangleF(briefing.position(),
-			Vector2F(briefing.width, style.accent_width)), resources, style.highlight);
+	this->briefing_accent_ = std::make_unique<MenuStageAccent>("briefing_accent",
+		RectangleF(briefing.position(), Vector2F(briefing.width, style.accent_width)),
+		resources, &style, &this->stage_motion_, &this->save()->play_settings(),
+		std::max(0.0f, look.briefing_padding.y - style.accent_width));
+	this->stage_motion_.observe(this->briefing_accent_.get());
+	this->register_selection_motion(&this->stage_motion_);
 	const Vector2F info = briefing.position() + look.briefing_padding;
 	const Vector2F row = look.briefing.spacing;
 
@@ -296,7 +305,11 @@ void MainMenuStageSelect::cycle_stages(labrador::Direction direction)
 	{
 		slot = (slot == last) ? 0 : slot + 1;
 	}
-	this->select_state_.slot = slot;
+	if (slot != this->select_state_.slot)
+	{
+		this->select_state_.slot = slot;
+		this->stage_motion_.selection_changed();
+	}
 }
 
 #pragma endregion MainMenuStageSelect

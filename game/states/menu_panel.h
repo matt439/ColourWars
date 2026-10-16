@@ -7,6 +7,34 @@
 class MenuFocusMotion;
 struct PlaySettings;
 
+// Accepted joins/leaves briefly mark the unused gutter beside a player row.
+class MenuJoinAccent final : public labrador::UiTexture
+{
+public:
+	MenuJoinAccent(const std::string& name, const mattmath::RectangleF& rectangle,
+		labrador::RenderResources* resources, const MenuStyle* style,
+		const MenuFocusMotion* motion, const PlaySettings* settings);
+	void draw(labrador::DrawList& list) const override;
+private:
+	const MenuStyle* style_;
+	const MenuFocusMotion* motion_;
+	const PlaySettings* settings_;
+};
+
+// The briefing stripe settles inside the padding above its unchanged text.
+class MenuStageAccent final : public labrador::UiTexture
+{
+public:
+	MenuStageAccent(const std::string& name, const mattmath::RectangleF& rectangle,
+		labrador::RenderResources* resources, const MenuStyle* style,
+		const MenuFocusMotion* motion, const PlaySettings* settings, float max_inward);
+	void draw(labrador::DrawList& list) const override;
+private:
+	const MenuFocusMotion* motion_;
+	const PlaySettings* settings_;
+	float max_inward_;
+};
+
 // Selected team artwork contracts inside its authored canvas. Logical bounds
 // and all neighbouring identity/readiness widgets retain their geometry.
 class MenuChoiceIcon final : public labrador::UiTexture

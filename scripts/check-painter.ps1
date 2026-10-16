@@ -19,6 +19,7 @@ param(
     [switch] $MenuTextOnly,
     [switch] $MenuMotionOnly,
     [switch] $SetupMotionOnly,
+    [switch] $JoinStageMotionOnly,
     [switch] $SettingsMenuOnly,
     [switch] $ControlsMenuOnly,
     [switch] $StickSettingsOnly,
@@ -28,7 +29,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -123,6 +124,7 @@ function Write-ContactSheet {
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
                 $_.Name -like 'setup-motion-*-detail.ppm' -or
+                $_.Name -like 'join-stage-motion-*-detail.ppm' -or
                 $_.Name -eq 'controls-menu-pad-sticks-1280x720.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
@@ -230,6 +232,9 @@ function Write-ContactSheet {
         $setupMotion = @($images | Where-Object { $_.name -like 'setup-motion-*-1280x720-detail' })
         Write-ContactSheetPages -Images $setupMotion -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-setup-motion-contact'
+        $joinStageMotion = @($images | Where-Object { $_.name -like 'join-stage-motion-*-1280x720-detail' })
+        Write-ContactSheetPages -Images $joinStageMotion -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-join-stage-motion-contact'
         $controlsMenu = @($images | Where-Object { $_.name -like 'controls-menu-*-1280x720-detail' })
         Write-ContactSheetPages -Images $controlsMenu -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-controls-menu-contact'
@@ -404,6 +409,18 @@ elseif ($SettingsMenuOnly) {
     $result.Remove('stage')
     $result.checks = 'Options/Credits paper, all enabled focus cards/arrows, native ink/paper contrast, measured labels, all palette values, long failure status and complete authored credits at 720p/1080p/QHD, 4:3, 16:10 and ultrawide. Actual row edits, staged Apply, persisted reload and failed-write warning, Controls/audio return preserving pending edits/focus, Back discard, disabled fullscreen resolution and retained windowed preset, Credits Select/Back, frozen redraw, draw RNG, static Reduce effects and resize. Independent Options pending/saved/failure rasters pass across six sizes/aspects; authored width fitting and scale reset, missing-old-glyph status font, retained/reopened/reversed callbacks, interrupted/repeated Apply, controlled failure/recovery, isolated reload and both discard routes pass at 720p. No physical-controller, human readability or listening acceptance.'
     $result.checks += ' Independent Options On/Off/Random defaults pass across six sizes/aspects. An Options item-font fixture exercises width and tall-glyph height fitting, complete value/focus-card unions, Random-to-short-fixed-palette scale reset and replacement without an old glyph. Retained/reopened/reversed callbacks, both fullscreen toggle directions and Random palette cycles, one Controls child On/Off pair and return, interrupted/repeated windowed-Off Apply, controlled failure/recovery, isolated reload and discard pass at 720p.'
+}
+elseif ($JoinStageMotionOnly) {
+    $result.scope = 'join-stage-motion-only'
+    $result.stage = @('movement_course', 'close_quarters', 'random')
+    $result.player_counts = @(4)
+    $result.palettes = @('runtime-save-default')
+    $result.weapons = @('bucket', 'sprayer')
+    $result.actions = @('join', 'release', 'stable-hole', 'simultaneous-claims', 'same-update-replacement', 'rapid-row-restart', 'duplicate-full-refusal', 'final-claim-barrier', 'missing-p1-rescue', 'browse', 'real-random-wrap', 'lock', 'unlock', 'locked-arrow-refusal', 'final-random-start', 'rapid-final-start', 'pending-fade', 'single-excluded-stage', 'reduce-effects', 'interruption-resets', 'held-reconnect', 'resize')
+    $result.input_slots = @(4, 3, 0, 2, 1)
+    $result.inputs = 'Real Join Players and Arena Stage Select pages in StateContext. Local keyboard messages and the existing scripted GamepadReader link seam provide sparse seats, claims, disconnects and held reconnects. Hidden no-activate window.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Native initial/middle/rest Join gutter acknowledgements and Stage briefing stripe at 720p/1080p/QHD; each changed pixel stays inside independent row-gutter or briefing-padding envelopes, preserving all text, previews, camera, edges and other rows. Stable release holes, simultaneous claims, same-update release/replacement, rapid row restart, duplicate/full refusal, final-claim snapshot barrier and independent missing-P1 Back destination; real/Random wrapping, lock/unlock, refused locked arrows, no eligible Random and deliberate settled/rapid final eligible Random commits with exactly one RNG choice, settled outgoing Random raster and gated pending fade through focus interruption and repeated input. Immediate applied Reduce effects, nonpositive time, activation/covering-page/developer-input resets, missing/reconnect rearming, frozen redraw/plan/RNG and resize round-trip. Scripted reader only; no physical-controller, human readability, listening or performance acceptance.'
 }
 elseif ($SetupMotionOnly) {
     $result.scope = 'setup-motion-only'
@@ -593,7 +610,7 @@ try {
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
-    if ($TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
+    if ($TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
     foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
         $arguments += '/I' + (Quote-Path $include)
     }
@@ -641,6 +658,7 @@ try {
     elseif ($MenuTextOnly) { $probeArguments += 'menu-text' }
     elseif ($MenuMotionOnly) { $probeArguments += 'menu-motion' }
     elseif ($SetupMotionOnly) { $probeArguments += 'setup-motion' }
+    elseif ($JoinStageMotionOnly) { $probeArguments += 'join-stage-motion' }
     elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
     elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
     elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
@@ -740,6 +758,9 @@ try {
     elseif ($SettingsMenuOnly) {
         $result.diagnostic = 'Settings-menu-only hardware check passed: actual Options/Credits navigation, row edits, delayed Apply, persisted reload and failed-save warning, Controls/audio return, Back discard, disabled fullscreen resolution and retained windowed preset. Measured full copy/values/status, native paper/cards/arrows/contrast, frozen redraw, draw RNG, static Reduce effects and resize passed across six sizes/aspects. Independent Options pending/saved/failure rasters at six sizes/aspects, authored width fitting and short-copy scale reset, missing-old-glyph font, retained/reopened/reversed callbacks, interrupted/repeated Apply, controlled failure/recovery, isolated reload and both discard routes passed. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'
         $result.diagnostic += ' Options On/Off/Random defaults at six sizes/aspects, width/height fitting, complete focus unions, Random-to-short-fixed-palette scale reset, an Options font missing an old glyph, retained/reopened/reversed callbacks, both fullscreen toggle directions/Random cycles, one Controls child On/Off pair and return, interrupted/repeated windowed-Off Apply, failure/recovery, isolated reload and discard passed.'
+    }
+    elseif ($JoinStageMotionOnly) {
+        $result.diagnostic = 'Join/Stage-motion-only native check passed: actual Join row-gutter initial/middle/rest responses, stable holes, simultaneous and refused claims, final snapshot barrier and missing-P1 rescue; Stage briefing accent with fixed text/preview/edge/camera, real/Random wraps, lock/unlock and locked refusal, deliberate one-choice eligible Random start with its outgoing Random raster latched through pending fade, and single excluded-stage no-op. Native 720p/1080p/QHD, applied Reduce effects, nonpositive time, lifecycle/device/cover/developer resets, frozen pixels/plan/RNG and resize passed. Scripted reader seam; no physical-pad, human readability, listening or performance acceptance.'
     }
     elseif ($SetupMotionOnly) {
         $result.diagnostic = 'Setup-motion-only native check passed: real Mode/Count focus accent and duration press, independent Team selected-icon and Weapon tile motion at 720p/1080p/QHD; fixed weapon art/paint/supply, names/descriptions and badges, local envelopes, simultaneous/rapid input, readiness, shuffle, rejected actions, lifecycle resets, immediate applied Reduce effects, frozen redraw/RNG and resize. Scripted reader seam; no physical-pad, human readability, listening or performance acceptance.'

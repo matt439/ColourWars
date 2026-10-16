@@ -202,10 +202,21 @@ void MainMenuJoin::init()
 	for (int player = 0; player < this->player_count(); ++player)
 	{
 		this->players_.push_back(std::make_unique<UiTextDropShadow>(
-			"player_" + std::to_string(player), L"", style.item_font,
+			"player_" + std::to_string(player), this->level_settings()->player_label(player), style.item_font,
 			this->calculate_widget_position(0, player + 2), this->render_resources(),
 			style.unhighlight, style.shadow_colour, style.item_shadow_offset));
 		this->text_container_->add_child(this->players_.back().get());
+		auto motion = std::make_unique<JoinMotionRow>(style.motion);
+		motion->motion.observe(this->players_.back().get());
+		this->register_selection_motion(&motion->motion);
+		const RectangleF row = this->players_.back()->bounds();
+		motion->accent = std::make_unique<MenuJoinAccent>(
+			"join_accent_" + std::to_string(player),
+			RectangleF(row.x - style.focus_padding.x, row.y,
+				std::max(0.0f, style.focus_padding.x), row.height),
+			this->render_resources(), &style, &motion->motion, &this->save()->play_settings());
+		this->texture_container_->add_child(motion->accent.get());
+		this->join_motion_.push_back(std::move(motion));
 	}
 	this->status_ = std::make_unique<UiTextDropShadow>("status", L"",
 		style.detail_font, this->calculate_widget_position(0, 7),
@@ -222,6 +233,15 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 	for (int player = 0; player < this->player_count(); ++player)
 	{
 		const bool connected = inputs[player].connected;
+		JoinMotionRow& motion = *this->join_motion_[player];
+		if (motion.slot != players[player].num || motion.connected != connected)
+		{
+			// Device changes settle quietly; only accepted join/leave actions
+			// below may respond, after the final roster has been refreshed.
+			motion.motion.reset();
+		}
+		motion.slot = players[player].num;
+		motion.connected = connected;
 		ready = ready && connected;
 		std::wstring label = this->level_settings()->player_label(player);
 		if (!connected && players[player].num >= 0)
@@ -252,6 +272,7 @@ void MainMenuJoin::update_page(float /*dt*/)
 			[](const ProcessedMenuInput& input) { return input.connected; });
 	bool continue_requested = false;
 	bool roster_changed = false;
+	std::vector<bool> changed_rows(static_cast<size_t>(this->player_count()), false);
 	for (int slot = 0; slot < static_cast<int>(inputs.size()); ++slot)
 	{
 		const int player = settings->player_index_for_slot(slot);
@@ -267,6 +288,7 @@ void MainMenuJoin::update_page(float /*dt*/)
 			if (settings->release_input_slot(slot))
 			{
 				roster_changed = true;
+				changed_rows[static_cast<size_t>(player)] = true;
 				this->play_wave(this->unready_sound_, this->look().unready_sound.volume);
 			}
 		}
@@ -279,6 +301,7 @@ void MainMenuJoin::update_page(float /*dt*/)
 			if (settings->claim_input_slot(slot))
 			{
 				roster_changed = true;
+				changed_rows[static_cast<size_t>(settings->player_index_for_slot(slot))] = true;
 				this->play_wave(this->ready_sound_);
 			}
 		}
@@ -299,5 +322,14 @@ void MainMenuJoin::update_page(float /*dt*/)
 		return;
 	}
 	this->refresh_players(this->input()->player_inputs(*settings));
+	for (size_t player = 0; player < changed_rows.size(); ++player)
+	{
+		if (changed_rows[player])
+		{
+			// A release and replacement in the same row produce one response.
+			this->join_motion_[player]->motion.reset();
+			this->join_motion_[player]->motion.press();
+		}
+	}
 }
 #pragma endregion MainMenuJoin

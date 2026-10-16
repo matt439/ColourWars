@@ -28,7 +28,11 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     const auto tick = [&](float elapsed = 0.0f)
         { app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto tap = [&](Key key)
-        { app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick(); };
+    {
+        app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
+        // Static text fixtures observe the settled briefing ornament.
+        if (!context.music_exit_pending()) { tick(0.51f); }
+    };
     const auto tap_without_random = [&](Key key)
     {
         std::srand(9341); const int next_random = std::rand(); std::srand(9341); tap(key);
@@ -288,6 +292,7 @@ void stage_random_text_checks(Application& app, Registry<LevelLoadedInfo>& level
     require(frame().pixels == before_lock.pixels && same_plan(settings, before),
         "Random locked or committed on key-down before a deliberate release");
     app.keyboard()->on_key_up(Key::enter); tick(); tick();
+    tick(0.51f);
     const Frame locked = compare("deliberate-first-release-locked", original, legacy, true, true, 2);
     require(same_plan(settings, before) && stack.depth() == 2 && !context.music_exit_pending(),
         "Random did not retain the provisional plan after its first release");

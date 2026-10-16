@@ -93,8 +93,38 @@ suspension, resume, deactivation, developer interception and input reset clear
 interrupted responses. Input callbacks, readiness, navigation and widget bounds
 do not depend on the drawing.
 
-Join and arena-stage selection motion, plus human review of the paper and setup
-motion, remain in [`POL#10`](polish-plan.md#movement-and-interaction-feedback).
+### Join and arena-stage motion
+
+Join retains one response clock for each player row. An accepted claim or release
+briefly draws a thin stripe in that row's existing left focus padding; it slides
+and shrinks away using the captured press clock and existing accent width. The
+final roster is refreshed before the response starts. Releasing and replacing a
+seat in the same update restarts one response for that row. Empty rows retain
+their positions, so another player's response does not move when a seat leaves.
+Row lettering, connection status, heading, roster and widget bounds remain fixed.
+
+The stripe is absent at rest and with applied Reduce effects. A connection or
+input-slot change quietly clears the old response; reconnecting does not pretend
+that a new join was accepted. The existing readiness snapshot, final-claim
+barrier and Player 1 Back behavior remain unchanged.
+
+Arena selection moves only the existing briefing stripe inward within the
+padding above its text. An actual browsed-slot change uses the captured focus
+clock; successful lock and unlock use its press clock. Repeated events replace
+one bounded response. The travel uses the existing accent width and is clamped
+inside the briefing padding. Initial and reduced-effects stripes are settled.
+Preview, briefing text, status, navigation, selection geometry and input timing
+remain fixed. The final Random confirmation keeps its outgoing Random view and
+music-exit behavior. Resolving the stage adds no motion response or visual
+refresh and preserves the existing single Random selection draw. Accepted final
+Start settles any unfinished lock or browse response before the outgoing fade,
+without refreshing the displayed Random text/preview or adding a new pulse.
+
+Both pages register these clocks with the shared interruption and Reduce effects
+policy described above. No new presentation fields or artwork assets are needed.
+All planned menu-motion surfaces are implemented; human review of focus and
+selection motion remains in
+[`POL#10`](polish-plan.md#movement-and-interaction-feedback).
 
 ## Team-selection pictures
 
@@ -1068,9 +1098,11 @@ comfort and performance acceptance remain separate TODO items.
 Run `scripts/run-acceptance.ps1 -Preset x64-debug` (and `x64-release`), then use
 the focused `MainMenuOnly`, `SettingsMenuOnly`, `ControlsMenuOnly`, `PauseMenuOnly`,
 `ResultsMenuOnly`, `EndMenuOnly`, `TeamSetupOnly` and `MenuTextOnly` switches of
-`scripts/check-painter.ps1` for the affected pages. `TeamSetupOnly` and
-`MenuTextOnly` use a scripted gamepad backend; the other scopes retain the real
-gamepad backend. `MenuTextOnly` retains its public keyboard checks as well.
+`scripts/check-painter.ps1` for the affected pages. `TeamSetupOnly`,
+`MenuTextOnly`, `SetupMotionOnly` and `JoinStageMotionOnly` use a scripted gamepad
+backend, including deterministic claims, releases, connections and multiplayer
+stage input in the Join/Stage scope. The other scopes retain the real gamepad
+backend. `MenuTextOnly` retains its public keyboard checks as well.
 `WeaponCatalogOnly` checks the catalog on real weapon pages, including page
 snapshots across catalog replacement and reopening.
 `MenuTextOnly` checks authored headings, complete legends and Home/Options/Credits
@@ -1118,6 +1150,14 @@ retained callback text/font/limits, reopening, cycling and isolated save/discard
 flows.
 Use `MainMenuOnly` for Title/Home wording, centering, focus and navigation,
 including retained text/font across presentation replacement and reopening.
+
+`JoinStageMotionOnly` checks real Join and Arena pages with deterministic input,
+including accepted and repeated claims/releases, retained row positions,
+connection changes, browse and lock/unlock responses, interrupted and reduced
+motion, stable redraw and unchanged geometry. It also checks that final Random
+confirmation keeps the outgoing view and the existing RNG/transition behavior.
+The focused motion checks provide implementation evidence; human motion review,
+physical-pad comfort and reference-match acceptance remain open.
 
 The non-menu primitive texel retains its own startup checks. Together with
 [gameplay tuning](gameplay-tuning.md), the shared layout and sheet choices define

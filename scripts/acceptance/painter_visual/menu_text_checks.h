@@ -639,6 +639,8 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     const auto tap = [&](Key key)
     {
         app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
+        // Static Stage text/chrome comparisons observe the settled accent.
+        app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.51f);
     };
     const auto frame = [&]
     {

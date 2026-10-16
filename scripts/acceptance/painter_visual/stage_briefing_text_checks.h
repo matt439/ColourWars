@@ -65,10 +65,14 @@ void stage_briefing_text_checks(Application& app, Registry<LevelLoadedInfo>& lev
             this->stack.clear(); this->presentation = this->original;
         }
     } restore{ stack, context, presentation, original };
-    const auto tick = [&]
-        { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(0.0f); };
+    const auto tick = [&](float elapsed = 0.0f)
+        { app.gamepads()->poll(); app.keyboard()->poll(); app.mouse()->poll(); stack.update(elapsed); };
     const auto tap = [&](Key key)
-        { app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick(); };
+    {
+        app.keyboard()->on_key_down(key); tick(); app.keyboard()->on_key_up(key); tick();
+        // Static text fixtures observe the settled briefing ornament.
+        tick(0.51f);
+    };
     const auto frame = [&]
         { app.renderer()->begin_frame(); stack.draw(*app.renderer()); return read(*app.renderer()); };
     const auto same_plan = [](const MenuLevelSettings& a, const MenuLevelSettings& b)
