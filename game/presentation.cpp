@@ -2184,6 +2184,8 @@ void Presentation::validate_resources(const RenderResources& render,
 			this->menu_.heading_shadow_offset, false, 0.0f);
 		setup_heading_bottom = std::max(setup_heading_bottom, heading.bottom());
 	}
+	check_setup_paper("menu_text.headings.join_players", this->menu_text_.heading(MenuHeading::join_players),
+		this->menu_.heading_font, this->menu_.layout.position, this->menu_.heading_shadow_offset, false, 0.0f);
 	const auto check_setup_item = [&](MenuItem item, const Vector2F& spacing, int row, bool duration_label)
 	{
 		const std::string key = std::string("menu_text.items.") + menu_item_keys[static_cast<size_t>(item)];

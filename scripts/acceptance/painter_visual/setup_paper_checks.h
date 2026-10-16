@@ -36,6 +36,7 @@ void setup_paper_reference(DrawList& list, RenderResources& resources,
         }
     };
     list.set_filter(TextureFilter::point); card(panel, art.paper);
+    if (focused.width <= 0.0f || focused.height <= 0.0f) { return; }
     RectangleF row = focused; row.inflate(art.focus_padding); card(row, art.focus_fill);
     const float pen = art.keyline_width;
     const Vector2F tip(row.x - pen * 3.0f, row.center().y);

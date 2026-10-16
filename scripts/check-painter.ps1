@@ -21,6 +21,7 @@ param(
     [switch] $SetupMotionOnly,
     [switch] $JoinStageMotionOnly,
     [switch] $SetupPaperOnly,
+    [switch] $JoinPaperOnly,
     [switch] $SettingsMenuOnly,
     [switch] $ControlsMenuOnly,
     [switch] $StickSettingsOnly,
@@ -30,7 +31,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -127,6 +128,7 @@ function Write-ContactSheet {
                 $_.Name -like 'setup-motion-*-detail.ppm' -or
                 $_.Name -like 'join-stage-motion-*-detail.ppm' -or
                 $_.Name -like 'setup-paper-*-detail.ppm' -or
+                $_.Name -like 'join-paper-*-detail.ppm' -or
                 $_.Name -eq 'controls-menu-pad-sticks-1280x720.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
@@ -240,6 +242,9 @@ function Write-ContactSheet {
         $setupPaper = @($images | Where-Object { $_.name -like 'setup-paper-*-1280x720-detail' })
         Write-ContactSheetPages -Images $setupPaper -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-setup-paper-contact'
+        $joinPaper = @($images | Where-Object { $_.name -like 'join-paper-*-1280x720-detail' })
+        Write-ContactSheetPages -Images $joinPaper -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-join-paper-contact'
         $controlsMenu = @($images | Where-Object { $_.name -like 'controls-menu-*-1280x720-detail' })
         Write-ContactSheetPages -Images $controlsMenu -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-controls-menu-contact'
@@ -414,6 +419,18 @@ elseif ($SettingsMenuOnly) {
     $result.Remove('stage')
     $result.checks = 'Options/Credits paper, all enabled focus cards/arrows, native ink/paper contrast, measured labels, all palette values, long failure status and complete authored credits at 720p/1080p/QHD, 4:3, 16:10 and ultrawide. Actual row edits, staged Apply, persisted reload and failed-write warning, Controls/audio return preserving pending edits/focus, Back discard, disabled fullscreen resolution and retained windowed preset, Credits Select/Back, frozen redraw, draw RNG, static Reduce effects and resize. Independent Options pending/saved/failure rasters pass across six sizes/aspects; authored width fitting and scale reset, missing-old-glyph status font, retained/reopened/reversed callbacks, interrupted/repeated Apply, controlled failure/recovery, isolated reload and both discard routes pass at 720p. No physical-controller, human readability or listening acceptance.'
     $result.checks += ' Independent Options On/Off/Random defaults pass across six sizes/aspects. An Options item-font fixture exercises width and tall-glyph height fitting, complete value/focus-card unions, Random-to-short-fixed-palette scale reset and replacement without an old glyph. Retained/reopened/reversed callbacks, both fullscreen toggle directions and Random palette cycles, one Controls child On/Off pair and return, interrupted/repeated windowed-Off Apply, controlled failure/recovery, isolated reload and discard pass at 720p.'
+}
+elseif ($JoinPaperOnly) {
+    $result.scope = 'join-paper-only'
+    $result.player_counts = @(1, 2, 3, 4)
+    $result.palettes = @('runtime-save-default')
+    $result.weapons = @('sprayer')
+    $result.actions = @('reserved-p1', 'join-claims', 'complete-roster', 'reserved-reconnect', 'reconnected', 'solo-weapon-route', 'multiplayer-team-route', 'p1-back', 'missing-p1-rescue', 'claim-acknowledgement', 'reduce-effects', 'lifecycle-resets', 'captured-copy-font-art', 'invalid-status-font', 'resize')
+    $result.input_slots = @(4, 3, 0, 2)
+    $result.inputs = 'Actual Join Players and ordinary Count/Team/Weapon destinations in StateContext. Local keyboard messages and the existing scripted GamepadReader link seam supply keyboard or pad P1 and sparse claims/reconnects. Hidden no-activate window.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.Remove('stage')
+    $result.checks = 'Independent complete paper, unscaled transparent-shadow heading/roster/status and dark acknowledgement-gutter rasters. One-to-four-player rosters with keyboard or pad P1 cover neutral reserved P1, all joined, missing reserved pads and reconnects at720p/1080p/QHD,4:3,16:10 and ultrawide; native paper containment, ordering, lettering contrast, frozen plan/pixels/RNG and immediate ordinary continuation. Native720p/1080p/QHD gutter initial/middle/rest, nonpositive time, applied Reduce effects, activation/cover/developer resets and resize. Heading/item/detail fonts and captured paper inks survive source replacement, refresh/reconnect, reopen and reversal. Fresh destination rasters verify owner Back, missing-P1 rescue and solo/multiplayer continuation; interrupted owner confirmation requires fresh input. An actual Join page rejects overflowing status-font bounds with its specific diagnostic. Scripted reader only; no physical-pad, human readability, listening or performance acceptance.'
 }
 elseif ($SetupPaperOnly) {
     $result.scope = 'setup-paper-only'
@@ -627,7 +644,7 @@ try {
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
-    if ($TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
+    if ($TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
     foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
         $arguments += '/I' + (Quote-Path $include)
     }
@@ -677,6 +694,7 @@ try {
     elseif ($SetupMotionOnly) { $probeArguments += 'setup-motion' }
     elseif ($JoinStageMotionOnly) { $probeArguments += 'join-stage-motion' }
     elseif ($SetupPaperOnly) { $probeArguments += 'setup-paper' }
+    elseif ($JoinPaperOnly) { $probeArguments += 'join-paper' }
     elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
     elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
     elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
@@ -776,6 +794,9 @@ try {
     elseif ($SettingsMenuOnly) {
         $result.diagnostic = 'Settings-menu-only hardware check passed: actual Options/Credits navigation, row edits, delayed Apply, persisted reload and failed-save warning, Controls/audio return, Back discard, disabled fullscreen resolution and retained windowed preset. Measured full copy/values/status, native paper/cards/arrows/contrast, frozen redraw, draw RNG, static Reduce effects and resize passed across six sizes/aspects. Independent Options pending/saved/failure rasters at six sizes/aspects, authored width fitting and short-copy scale reset, missing-old-glyph font, retained/reopened/reversed callbacks, interrupted/repeated Apply, controlled failure/recovery, isolated reload and both discard routes passed. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'
         $result.diagnostic += ' Options On/Off/Random defaults at six sizes/aspects, width/height fitting, complete focus unions, Random-to-short-fixed-palette scale reset, an Options font missing an old glyph, retained/reopened/reversed callbacks, both fullscreen toggle directions/Random cycles, one Controls child On/Off pair and return, interrupted/repeated windowed-Off Apply, failure/recovery, isolated reload and discard passed.'
+    }
+    elseif ($JoinPaperOnly) {
+        $result.diagnostic = 'Join-paper-only native check passed: independent complete paper/text/status/gutter rasters for one-to-four seats with keyboard/pad P1 across six sizes/aspects; neutral, ready, reserved reconnect and restored states, unscaled shadow-union geometry, containment/order/contrast, native acknowledgement progression, reduction/lifecycle, captured copy/font/art refresh/reopen/reversal, ordinary continuation/recovery destinations, interrupted-owner rearming, overflow rejection, frozen plan/pixels/RNG and resize. Scripted reader seam; no physical-pad, human readability, listening or performance acceptance.'
     }
     elseif ($SetupPaperOnly) {
         $result.diagnostic = 'Setup-paper-only native check passed: every Mode/Count focus and disabled-solo series at six sizes/aspects matched independent complete paper, card, arrow and fixed-text fixtures, measured containment and ink/paper contrast. Duration cycles, all mode/count/layout/keyboard claim and ordinary routes, copy/font snapshots, native arrow and duration press motion, fixed lettering, reduction/lifecycle reset, frozen redraw/RNG and resize passed. Normal reader, keyboard-driven only; no physical-pad, human readability, listening or performance acceptance.'

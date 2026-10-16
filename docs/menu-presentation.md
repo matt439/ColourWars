@@ -73,6 +73,31 @@ The paper uses the existing shared solid texel with point sampling; the text
 layer remains linear-filtered. Each page captures its setup-art copy when it
 opens; reopening adopts edited values.
 
+## Join paper
+
+Join reuses `main_menu.setup_box_size` and the captured setup-art copy described
+above, including the focus-padding and shadow-offset overrides. Its solid
+surround uses `main_menu.home_background_colour`. There are no new data fields
+or artwork assets. Join has no shared focus cursor, so `MenuPaperArtwork` draws
+the outer panel without a focused-row card or detached arrow. The controls
+footer remains visible and the legacy brand is suppressed.
+
+Connected player rows and the existing claim/release gutter stripe use captured
+`focus_ink`; unclaimed rows and reserved missing devices use `disabled_ink`.
+Heading and status use ordinary `ink`. Heading, item and status shadows have
+zero alpha but retain their authored offsets, fonts, anchors and logical
+bounds. Generated device labels, reconnect suffix and status copy remain
+unscaled C++ text under `GAP#8.4`.
+
+Page checks use the actual generated row labels and captured gutter rectangles,
+plus heading and status bounds, to require containment in the usable paper
+interior. They also preserve the heading, player rows and status in that
+vertical order. These checks retain text-shadow extents and add no fitting or
+wrapping. The paper and gutter use point sampling; lettering stays linear.
+Roster claims, stable empty rows, readiness, reconnect, Back/rescue,
+destinations, RNG and audio retain their existing behavior. The bounded gutter
+motion and its Reduce effects/interruption policy are unchanged.
+
 ## Shared paper focus and press motion
 
 The required `menu_style.motion` object controls the shared paper focus arrow,
@@ -148,6 +173,8 @@ final roster is refreshed before the response starts. Releasing and replacing a
 seat in the same update restarts one response for that row. Empty rows retain
 their positions, so another player's response does not move when a seat leaves.
 Row lettering, connection status, heading, roster and widget bounds remain fixed.
+The paper treatment above changes the stripe to captured focus ink without
+changing its gutter rectangle or clocks.
 
 The stripe is absent at rest and with applied Reduce effects. A connection or
 input-slot change quietly clears the old response; reconnecting does not pretend
@@ -1146,9 +1173,9 @@ Run `scripts/run-acceptance.ps1 -Preset x64-debug` (and `x64-release`), then use
 the focused `MainMenuOnly`, `SettingsMenuOnly`, `ControlsMenuOnly`, `PauseMenuOnly`,
 `ResultsMenuOnly`, `EndMenuOnly`, `TeamSetupOnly` and `MenuTextOnly` switches of
 `scripts/check-painter.ps1` for the affected pages. `TeamSetupOnly`,
-`MenuTextOnly`, `SetupMotionOnly` and `JoinStageMotionOnly` use a scripted gamepad
-backend, including deterministic claims, releases, connections and multiplayer
-stage input in the Join/Stage scope. The other scopes retain the real gamepad
+`MenuTextOnly`, `SetupMotionOnly`, `JoinStageMotionOnly` and `JoinPaperOnly` use a
+scripted gamepad backend, including deterministic claims, releases, connections
+and multiplayer stage input in the Join/Stage scope. The other scopes retain the real gamepad
 backend. `MenuTextOnly` retains its public keyboard checks as well.
 `WeaponCatalogOnly` checks the catalog on real weapon pages, including page
 snapshots across catalog replacement and reopening.
@@ -1210,6 +1237,12 @@ physical-pad comfort and reference-match acceptance remain open.
 the actual Mode and Player Count paper pages. The existing `MenuTextOnly` and
 `SetupMotionOnly` scopes retain their scripted reader for text snapshots and
 setup motion; their Mode/Player Count checks use the shared paper card/arrow.
+
+`JoinPaperOnly` uses the scripted reader to exercise the actual Join paper page
+with deterministic devices, claims, releases and reconnections. Its raster and
+layout checks retain the generated text, original gutter geometry and existing
+roster/readiness/transition behavior. It does not establish physical-pad or
+human readability acceptance.
 
 The non-menu primitive texel retains its own startup checks. Together with
 [gameplay tuning](gameplay-tuning.md), the shared layout and sheet choices define

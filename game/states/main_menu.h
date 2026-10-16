@@ -209,7 +209,11 @@ public:
 	explicit MainMenuJoin(MenuContext* context);
 	void update_page(float dt) override;
 	void init() override;
+protected:
+	bool shows_brand() const override { return false; }
+	bool shows_focus_backing() const override { return false; }
 private:
+	MenuPaperArtPresentation setup_art_;
 	struct JoinMotionRow
 	{
 		explicit JoinMotionRow(const MenuFocusMotionPresentation& look) : motion(look) {}
@@ -219,7 +223,10 @@ private:
 		std::unique_ptr<MenuJoinAccent> accent;
 	};
 	void refresh_players(const std::vector<ProcessedMenuInput>& inputs);
+	mattmath::RectangleF check_paper_bounds(const labrador::UiWidget& widget,
+		const char* role, const labrador::UiWidget* accent = nullptr) const;
 	std::unique_ptr<labrador::UiTexture> background_;
+	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_;
 	std::unique_ptr<labrador::UiTextDropShadow> status_;
 	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> players_;

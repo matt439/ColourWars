@@ -76,8 +76,8 @@ scripts/run-acceptance.ps1 -Preset x64-debug
 scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -MainMenuOnly
 ```
 
-Use `x64-release` for the Release checks. Join,
-Team/Weapon selection cards and stage preview remain under `POL#16`. Reference-arena
+Use `x64-release` for the Release checks. Team/Weapon selection cards and stage
+preview remain under `POL#16`. Reference-arena
 composition, movement feel, physical controllers and listening acceptance
 retain their TODO owners.
 
@@ -214,7 +214,7 @@ Rerun from an x64 Visual Studio Developer shell:
 scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -ControlsMenuOnly
 ```
 
-Use `x64-release` for Release. Join, Team/Weapon selection cards and stage
+Use `x64-release` for Release. Team/Weapon selection cards and stage
 preview remain under `POL#16`. Physical-pad, movement-feel, human readability
 and listening acceptance retain their existing TODO owners.
 
@@ -299,6 +299,72 @@ The retained native 720p views show [Mode](images/polish-main-menu/mode-720p.png
 the [focused duration row](images/polish-main-menu/mode-duration-720p.png) and
 [series Player Count with solo practice disabled](images/polish-main-menu/player-count-series-720p.png).
 
-Human menu/readability review remains open. Join, Team/Weapon selection cards,
+Human menu/readability review remains open. Team/Weapon selection cards,
 stage preview and accepted arenas remain `POL#16`; movement-feel (`POL#3`),
 physical-controller and listening acceptance retain their existing gates.
+
+## Join
+
+Implemented on 2026-10-16, part of `POL#16`. Join uses the same stepped pale
+paper, dark keyline, quiet shade and neutral Home surround as Mode and Player
+Count. It reuses `main_menu.setup_box_size` and a captured copy of
+`main_menu.art` with `setup_focus_padding` and `setup_shadow_offset` overrides;
+there are no new presentation fields or artwork assets. Join has no shared
+focus cursor, so its paper has no focused-row card or detached arrow. The
+legacy brand line is suppressed and the controls footer remains visible.
+
+Connected rows use the paper's focus ink; reserved missing devices and unclaimed
+rows use its disabled ink. The heading and status use ordinary paper ink. Text
+shadows have zero alpha while retaining all font measurements, authored offsets,
+anchors and logical bounds. The generated device labels, reconnect suffix and
+status copy stay unchanged and unscaled. They remain C++ copy under `GAP#8.4`.
+Paper and gutter artwork retain point sampling; the lettering remains
+linear-filtered.
+
+An accepted claim or release keeps the existing bounded gutter stripe and clocks,
+now drawn in focus ink. Its rectangle and travel remain within the original
+left gutter. Stable empty rows, simultaneous claims, a same-update replacement,
+quiet disconnect/reconnect, final-claim readiness barrier, Player 1 Back and
+missing-Player-1 rescue retain their existing rules. Solo continues to Weapon
+Select; multiplayer continues to Team Select. The drawing changes no input,
+readiness, transition, RNG, music or sound behavior. Reduce effects suppresses
+the acknowledgement; inactive updates and the existing interruption/reset policy
+settle unfinished responses.
+
+Page checks use the actual generated row labels, heading and
+status bounds, including retained transparent-shadow extents and the captured
+gutter. They require containment within the usable paper interior and preserve
+heading, player rows and status in that vertical order. No new fitting or
+wrapping path is added.
+
+The focused native check is
+`scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -JoinPaperOnly` (or
+`x64-release`), using the scripted reader for deterministic devices and claims.
+Batch evidence is under
+`out/validation/2026-10-16-join-paper/verification.json`.
+
+Debug and Release build under `/W4 /WX` and each pass all 31 consumer cases.
+The `JoinPaperOnly` pair passes at 1280×720, 1600×1200, 1920×1080, 1920×1200,
+2560×1080 and 2560×1440. Each preset passes 216 independent full-frame
+comparisons: 180 roster/state, 27 motion/reduction/lifecycle and nine
+snapshot/recovery checks. All 162 retained PPM captures match byte for byte
+between Debug and Release.
+
+The related `JoinStageMotionOnly`, `SetupPaperOnly`, `MenuTextOnly`,
+`SetupMotionOnly`, `TeamSetupOnly`, `WeaponCatalogOnly` and `ResumeOnly` scopes
+also pass in both presets, bringing the batch to sixteen passing native runs.
+
+Four startup checks pass: the normal published-bank Debug/Release pair and
+extracted Release with the published bank and separately with the optional-bank
+silent fallback under a system-only PATH. The 53-file Release ZIP contains all
+26 reviewed runtime assets byte for byte and excludes source, debug and private
+audio. Package evidence is in
+`out/validation/2026-10-16-join-paper/package-verification.json`.
+
+The retained native 720p views show [waiting for players](images/polish-main-menu/join-waiting-720p.png),
+the [complete roster](images/polish-main-menu/join-ready-720p.png) and
+[a reserved controller needing reconnection](images/polish-main-menu/join-reconnect-720p.png).
+
+Human menu/readability review remains open. Team/Weapon selection cards, stage
+preview and accepted arenas remain `POL#16`; movement-feel (`POL#3`), physical-pad
+and listening acceptance retain their existing gates.

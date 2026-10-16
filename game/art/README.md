@@ -183,6 +183,14 @@ Transparent text shadows retain the existing offsets and logical
 geometry while leaving plain dark lettering. Normal builds reproduce the
 panel, focused card and detached arrow without new assets or an atlas recipe.
 
+The [Join page](../../docs/polish-main-menu.md#join) reuses the setup paper and
+captured art overrides without a shared focus card or arrow. Connected rows and
+the existing claim/release gutter stripe use focus ink; missing/unclaimed rows
+use disabled ink, with dark heading/status text. Transparent shadows retain the
+original fonts, anchors and logical extents. The existing fill reproduces the
+paper and gutter artwork directly; no new fields, assets or atlas recipe are
+needed.
+
 The [Options and Credits pages](../../docs/polish-main-menu.md#options-and-credits)
 extend the same drawing, with authored panel sizes and text positions in
 `main_menu`, readable disabled-row ink and a separate dark save-warning ink.

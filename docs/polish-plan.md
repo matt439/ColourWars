@@ -924,9 +924,41 @@ The 53-file Release ZIP contains all 26 reviewed runtime assets byte for byte,
 excluding source, debug and private audio; package evidence is in
 `out/validation/2026-10-16-setup-paper/package-verification.json`.
 
-Join, Team/Weapon selection cards, stage preview, accepted arenas and human
+Team/Weapon selection cards, stage preview, accepted arenas and human
 review remain `POL#16`. Reference-arena, movement-feel, physical-controller
 and listening acceptance retain their existing gates.
+
+**Join artwork implemented (2026-10-16, part of `POL#16`).** The
+[Join page](polish-main-menu.md#join) reuses the shared setup paper and captured
+art overrides on the neutral Home surround, without new data fields or assets.
+Its connected rows and bounded gutter acknowledgements use focus ink; reserved
+missing and unclaimed rows use disabled ink. Heading and status use ordinary
+dark ink. Join has no shared focus cursor, card or arrow. The controls footer
+remains visible and the legacy brand is suppressed.
+
+Transparent text shadows preserve fonts, offsets, anchors and logical bounds.
+Actual generated row, heading, status and captured-gutter bounds must fit the
+paper interior and retain their vertical order. Stable roster holes, claim and
+release behavior, readiness barrier, Back/rescue, destinations, RNG and audio
+retain their existing rules. Reduce effects and interrupted responses keep the
+existing gutter-motion policy.
+
+Verification uses the focused `JoinPaperOnly` scripted-reader scope, with evidence
+at `out/validation/2026-10-16-join-paper/verification.json`.
+Both builds and all 31 consumer cases per preset pass. The focused native pair
+passes across six display sizes, with 216 independent full-frame comparisons
+per preset and 162 PPM captures matching byte for byte between Debug and Release.
+Seven related menu/resume scopes also pass in both presets, bringing the batch
+to sixteen passing native runs; the [owner](polish-main-menu.md#join) lists them.
+The four startup checks pass, including extracted Release with its published
+bank and optional-bank fallback under a system-only PATH. The 53-file Release
+ZIP contains all 26 reviewed runtime assets byte for byte and excludes source,
+debug and private audio; package evidence is in
+`out/validation/2026-10-16-join-paper/package-verification.json`.
+
+Team/Weapon selection cards, stage preview, accepted arenas and human review
+remain `POL#16`; reference-arena, movement-feel (`POL#3`), physical-controller and
+listening acceptance retain their existing gates.
 
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.

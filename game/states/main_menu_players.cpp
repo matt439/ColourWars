@@ -198,25 +198,36 @@ void MainMenuJoin::init()
 {
 	this->set_prompts(MenuPrompt::join);
 	this->set_widget_spacing(this->look().player_count_spacing);
+	const MainMenuPresentation& look = this->look();
 	const MenuStyle& style = this->menu_style();
+	this->setup_art_ = look.art;
+	this->setup_art_.focus_padding = look.setup_focus_padding;
+	this->setup_art_.shadow_offset = look.setup_shadow_offset;
+	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
 	this->background_ = std::make_unique<UiTexture>("background",
-		this->look().backdrop_sheet,
-		this->look().backdrop_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
-		this->render_resources(), this->look().play_background_colour);
+		style.sprite_sheet, style.fill_frame, RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
+		this->render_resources(), look.home_background_colour);
+	this->paper_ = std::make_unique<MenuPaperArtwork>(
+		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
+			look.setup_box_size),
+		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
+		&this->focus_motion_, &this->save()->play_settings());
 	this->texture_container_ = std::make_unique<UiContainer>("texture_container");
 	this->texture_container_->add_child(this->background_.get());
+	this->texture_container_->add_child(this->paper_.get());
 	this->text_container_ = std::make_unique<UiContainer>("text_container");
 	this->heading_ = std::make_unique<UiTextDropShadow>("heading", this->text().heading(MenuHeading::join_players),
 		style.heading_font, this->calculate_widget_position(0, 0),
-		this->render_resources(), style.heading_colour, style.shadow_colour,
+		this->render_resources(), this->setup_art_.ink, clear_shadow,
 		style.heading_shadow_offset);
 	this->text_container_->add_child(this->heading_.get());
+	std::ignore = this->check_paper_bounds(*this->heading_, "heading");
 	for (int player = 0; player < this->player_count(); ++player)
 	{
 		this->players_.push_back(std::make_unique<UiTextDropShadow>(
 			"player_" + std::to_string(player), this->level_settings()->player_label(player), style.item_font,
 			this->calculate_widget_position(0, player + 2), this->render_resources(),
-			style.unhighlight, style.shadow_colour, style.item_shadow_offset));
+			this->setup_art_.ink, clear_shadow, style.item_shadow_offset));
 		this->text_container_->add_child(this->players_.back().get());
 		auto motion = std::make_unique<JoinMotionRow>(style.motion);
 		motion->motion.observe(this->players_.back().get());
@@ -227,21 +238,42 @@ void MainMenuJoin::init()
 			RectangleF(row.x - style.focus_padding.x, row.y,
 				std::max(0.0f, style.focus_padding.x), row.height),
 			this->render_resources(), &style, &motion->motion, &this->save()->play_settings());
+		motion->accent->set_colour(this->setup_art_.focus_ink);
 		this->texture_container_->add_child(motion->accent.get());
 		this->join_motion_.push_back(std::move(motion));
 	}
 	this->status_ = std::make_unique<UiTextDropShadow>("status", L"",
 		style.detail_font, this->calculate_widget_position(0, 7),
-		this->render_resources(), style.warning, style.shadow_colour,
+		this->render_resources(), this->setup_art_.ink, clear_shadow,
 		style.detail_shadow_offset);
 	this->text_container_->add_child(this->status_.get());
 	this->refresh_players(this->input()->player_inputs(*this->level_settings()));
+}
+
+RectangleF MainMenuJoin::check_paper_bounds(const UiWidget& widget, const char* role,
+	const UiWidget* accent) const
+{
+	const RectangleF panel = this->paper_->rectangle();
+	const float edge = this->setup_art_.keyline_width * 3.0f;
+	const RectangleF inside(panel.position() + Vector2F(edge),
+		panel.size() - Vector2F(edge * 2.0f + this->setup_art_.shadow_offset));
+	const RectangleF bounds = accent == nullptr ? widget.bounds() :
+		RectangleF::union_of(widget.bounds(), accent->bounds());
+	if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
+		!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
+		bounds.width <= 0.0f || bounds.height <= 0.0f || !inside.contains(bounds))
+	{
+		throw std::runtime_error(std::string("main_menu.setup_box_size: Join ") + role +
+			" must fit the paper including its retained text and acknowledgement bounds.");
+	}
+	return bounds;
 }
 
 void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs)
 {
 	bool ready = this->level_settings()->input_roster_complete();
 	const std::vector<MenuPlayerSettings> players = this->level_settings()->player_settings();
+	float previous_bottom = this->heading_->bounds().bottom();
 	for (int player = 0; player < this->player_count(); ++player)
 	{
 		const bool connected = inputs[player].connected;
@@ -262,10 +294,20 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 		}
 		this->players_[player]->set_text(label);
 		this->players_[player]->set_colour(connected ?
-			this->menu_style().highlight : this->menu_style().disabled);
+			this->setup_art_.focus_ink : this->setup_art_.disabled_ink);
+		const RectangleF row = this->check_paper_bounds(*this->players_[player], "player row", motion.accent.get());
+		if (row.y < previous_bottom)
+		{
+			throw std::runtime_error("main_menu.player_count_spacing: Join rows must follow the heading without overlap.");
+		}
+		previous_bottom = row.bottom();
 	}
 	this->status_->set_text(ready ? L"Everyone joined. Player 1 can continue." :
 		L"Press A / Enter on each device to join. Reconnect reserved pads.");
+	if (this->check_paper_bounds(*this->status_, "status").y < previous_bottom)
+	{
+		throw std::runtime_error("main_menu.player_count_spacing: Join status must follow the player rows without overlap.");
+	}
 }
 
 void MainMenuJoin::update_page(float /*dt*/)

@@ -375,6 +375,44 @@ namespace
             exact(d);
             d["main_menu"]["mode_select_spacing"]["x"].SetFloat(900.0f);
         }, &world);
+
+        // Keep Mode/Count and their detached arrows comfortably inside this
+        // narrower shared paper. Only Join's authored heading reaches its edge;
+        // both widths still fit the old generic design-area/right-margin check.
+        check_edge("menu_text.headings", "join_players", [](rapidjson::Document& d)
+        {
+            d["main_menu"]["setup_box_size"]["x"].SetFloat(1200.0f);
+            d["menu_style"]["layout"]["position"]["x"].SetFloat(500.0f);
+            d["menu_style"]["shadow"]["heading_offset"]["x"].SetFloat(6.0f);
+            d["menu_text"]["headings"]["join_players"].SetString(std::string(130, 'F').c_str(), d.GetAllocator());
+        }, [](rapidjson::Document& d)
+        {
+            d["menu_text"]["headings"]["join_players"].SetString(std::string(131, 'F').c_str(), d.GetAllocator());
+        });
+
+        std::vector<Glyph> join_glyphs;
+        for (char32_t character = U' '; character <= U'~'; ++character)
+        {
+            join_glyphs.push_back({ character, RectangleI(0, 0, 8, character == U'~' ? 780 : 16),
+                0.0f, 0.0f, 0.0f });
+        }
+        world.render.add_font("join_heading_tall", std::make_unique<Font>(TextureHandle{}, std::move(join_glyphs), 20.0f));
+        require(world.render.measure_text(world.render.resolve_sprite_font("join_heading_tall"), L"~") ==
+            Vector2F(8.0f, 780.0f), "Join paper fixture did not retain its tall glyph beyond the font's line spacing");
+        const auto ordinary_join = variants.load([&](rapidjson::Document& d)
+        {
+            exact(d);
+            d["menu_style"]["fonts"]["heading"].SetString("join_heading_tall");
+        });
+        ordinary_join.validate_resources(world.render, world.audio);
+        // A glyph taller than line spacing still fits the generic footer area,
+        // but its complete shadow bounds cross Join's paper at y=926.
+        variants.rejects("menu_text.headings", "join_players", [&](rapidjson::Document& d)
+        {
+            exact(d);
+            d["menu_style"]["fonts"]["heading"].SetString("join_heading_tall");
+            d["menu_text"]["headings"]["join_players"].SetString("~");
+        }, &world);
     }
 
     std::unique_ptr<SpriteSheet> sparse_sheet(std::initializer_list<const char*> names)
