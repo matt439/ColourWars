@@ -26,6 +26,7 @@ param(
     [switch] $WeaponPaperOnly,
     [switch] $StagePaperOnly,
     [switch] $HomeReturnFocusOnly,
+    [switch] $HomeExitOnly,
     [switch] $SettingsMenuOnly,
     [switch] $ControlsMenuOnly,
     [switch] $StickSettingsOnly,
@@ -35,7 +36,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -137,6 +138,7 @@ function Write-ContactSheet {
                 $_.Name -like 'weapon-paper-*-detail.ppm' -or
                 $_.Name -like 'stage-paper-*-detail.ppm' -or
                 $_.Name -like 'home-return-focus-*-detail.ppm' -or
+                $_.Name -like 'home-exit-*-detail.ppm' -or
                 $_.Name -eq 'controls-menu-pad-sticks-1280x720.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
@@ -265,6 +267,9 @@ function Write-ContactSheet {
         $homeReturnFocus = @($images | Where-Object { $_.name -like 'home-return-focus-*-1280x720-detail' })
         Write-ContactSheetPages -Images $homeReturnFocus -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-home-return-focus-contact'
+        $homeExit = @($images | Where-Object { $_.name -like 'home-exit-*-1280x720-detail' })
+        Write-ContactSheetPages -Images $homeExit -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-home-exit-contact'
         $controlsMenu = @($images | Where-Object { $_.name -like 'controls-menu-*-1280x720-detail' })
         Write-ContactSheetPages -Images $controlsMenu -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-controls-menu-contact'
@@ -439,6 +444,18 @@ elseif ($SettingsMenuOnly) {
     $result.Remove('stage')
     $result.checks = 'Options/Credits paper, all enabled focus cards/arrows, native ink/paper contrast, measured labels, all palette values, long failure status and complete authored credits at 720p/1080p/QHD, 4:3, 16:10 and ultrawide. Actual row edits, staged Apply, persisted reload and failed-write warning, Controls/audio return preserving pending edits/focus, Back discard, disabled fullscreen resolution and retained windowed preset, Credits Select/Back, frozen redraw, draw RNG, static Reduce effects and resize. Independent Options pending/saved/failure rasters pass across six sizes/aspects; authored width fitting and scale reset, missing-old-glyph status font, retained/reopened/reversed callbacks, interrupted/repeated Apply, controlled failure/recovery, isolated reload and both discard routes pass at 720p. No physical-controller, human readability or listening acceptance.'
     $result.checks += ' Independent Options On/Off/Random defaults pass across six sizes/aspects. An Options item-font fixture exercises width and tall-glyph height fitting, complete value/focus-card unions, Random-to-short-fixed-palette scale reset and replacement without an old glyph. Retained/reopened/reversed callbacks, both fullscreen toggle directions and Random palette cycles, one Controls child On/Off pair and return, interrupted/repeated windowed-Off Apply, controlled failure/recovery, isolated reload and discard pass at 720p.'
+}
+elseif ($HomeExitOnly) {
+    $result.scope = 'home-exit-only'
+    $result.player_counts = @()
+    $result.palettes = @()
+    $result.weapons = @()
+    $result.actions = @('home-exit-push', 'safe-no', 'back-no-yes', 'same-home-resume', 'fresh-reopen', 'held-entry', 'interrupted-enter', 'held-pad-reconnect', 'conflicting-actions', 'simultaneous-devices', 'back-priority', 'reduce-effects', 'nonpositive-time', 'cover-developer-reset', 'pending-music-latch', 'muted-immediate-quit', 'frozen-rng', 'resize')
+    $result.input_slots = @(4, 3)
+    $result.inputs = 'Actual Home Exit pushed child in StateContext, public local keyboard messages across six sizes/aspects and sparse scripted pad slot3 at720p. Hidden no-activate window; final deliberate Yes closes only this probe window. Intermediate Yes is held at the existing music callback seam. No save writes.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.Remove('stage')
+    $result.checks = 'Independent complete Home Exit neutral background, stepped confirmation paper, unscaled centered Exit/question, Yes/No cards/arrow and footer across six native sizes/aspects. Safe No, Back from either answer and repeated fresh reopen resume the exact retained Home Exit frame; source-copy replacement verifies retained parent text. At720p keyboard deactivation and sparse-pad held reconnect reject stale Yes, same-device conflicting actions remain inert, simultaneous confirmations push/pop once, cross-device held entry is disarmed, navigation cannot confirm Yes in the same update and Back has priority. Ordinary motion, immediate reduction, nonpositive time, cover/activation/developer resets, safe developer dismissal, resize and frozen pixels/empty plan/draw RNG pass. Deliberate Yes starts one pending music exit, keeps outgoing pixels fixed and suppresses repeated input; developer dismissal cancels that pending exit. Final no-update/muted Yes closes only the hidden probe window. Scripted input establishes no physical-pad, human readability, listening or performance acceptance.'
 }
 elseif ($HomeReturnFocusOnly) {
     $result.scope = 'home-return-focus-only'
@@ -712,7 +729,7 @@ try {
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
-    if ($TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
+    if ($TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly -or $HomeExitOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
     foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
         $arguments += '/I' + (Quote-Path $include)
     }
@@ -767,6 +784,7 @@ try {
     elseif ($WeaponPaperOnly) { $probeArguments += 'weapon-paper' }
     elseif ($StagePaperOnly) { $probeArguments += 'stage-paper' }
     elseif ($HomeReturnFocusOnly) { $probeArguments += 'home-return-focus' }
+    elseif ($HomeExitOnly) { $probeArguments += 'home-exit' }
     elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
     elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
     elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
@@ -866,6 +884,9 @@ try {
     elseif ($SettingsMenuOnly) {
         $result.diagnostic = 'Settings-menu-only hardware check passed: actual Options/Credits navigation, row edits, delayed Apply, persisted reload and failed-save warning, Controls/audio return, Back discard, disabled fullscreen resolution and retained windowed preset. Measured full copy/values/status, native paper/cards/arrows/contrast, frozen redraw, draw RNG, static Reduce effects and resize passed across six sizes/aspects. Independent Options pending/saved/failure rasters at six sizes/aspects, authored width fitting and short-copy scale reset, missing-old-glyph font, retained/reopened/reversed callbacks, interrupted/repeated Apply, controlled failure/recovery, isolated reload and both discard routes passed. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'
         $result.diagnostic += ' Options On/Off/Random defaults at six sizes/aspects, width/height fitting, complete focus unions, Random-to-short-fixed-palette scale reset, an Options font missing an old glyph, retained/reopened/reversed callbacks, both fullscreen toggle directions/Random cycles, one Controls child On/Off pair and return, interrupted/repeated windowed-Off Apply, failure/recovery, isolated reload and discard passed.'
+    }
+    elseif ($HomeExitOnly) {
+        $result.diagnostic = 'Home-exit-only native check passed: independent complete confirmation paper/question/answers/footer at six sizes/aspects; safe No/Back, exact retained Home Exit return/reopen, interruption/held reconnect/conflicts/simultaneous-device safety, reduction/lifecycle/developer reset and dismissal, resize and frozen pixels/empty plan/draw RNG. One pending music-exit begin latched outgoing pixels and suppressed repeated input until safe developer cancellation; final deliberate no-update/muted Yes closed only this hidden window. Scripted reader seam; no physical-pad, human readability, listening or performance acceptance.'
     }
     elseif ($HomeReturnFocusOnly) {
         $result.diagnostic = 'Home-return-focus-only native check passed: independent complete Home paper/cards/arrow/text/footer at six sizes/aspects; default/Title/Mode Play and both Options/Credits returns, repeated fresh-input exact child destinations, explicit initial-focus API, keyboard/sparse-pad held-action rearming, lifecycle/cover/developer resets, immediate reduction, nonpositive time, no phantom entry animation, resize and frozen pixels/empty plan/draw RNG. Scripted reader seam; no physical-pad, human readability, listening or performance acceptance.'

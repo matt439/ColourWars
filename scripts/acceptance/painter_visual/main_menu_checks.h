@@ -718,15 +718,38 @@ void main_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tuning
 
     require(records.good(), "Main-menu evidence write failed");
     title_home_text_checks(app, canvas, tuning, presentation, output, false);
-    // Last: Exit destroys this probe's own hidden window, never a user session.
+    // Last: only a deliberate Yes destroys this probe's own hidden window.
     open_title(); tap(Key::enter); tick();
     for (int move = 0; move < 3; ++move) { tap(Key::down); }
     const HWND window = static_cast<HWND>(app.window());
     require(IsWindow(window) != FALSE, "Main-menu probe lost its hidden window before Exit");
+    const Frame exit_home = main_menu_frame(app);
     tap(Key::enter);
-    require(IsWindow(window) == FALSE, "Actual Home Exit did not close its isolated window");
+    require(stack.depth() == 3 && IsWindow(window) != FALSE,
+        "Home Exit did not push its confirmation above the retained Home page");
+    const Frame question = main_menu_frame(app);
+    require(question.pixels != exit_home.pixels, "Home Exit confirmation was not visible");
+    tap(Key::enter);
+    require(stack.depth() == 2 && IsWindow(window) != FALSE && exit_home.pixels == main_menu_frame(app).pixels,
+        "Initial No did not retain the window and exact Home Exit focus");
+    tap(Key::enter);
+    require(stack.depth() == 3 && question.pixels == main_menu_frame(app).pixels,
+        "Reopened Home Exit confirmation did not restore its initial No focus");
+    tap(Key::escape);
+    require(stack.depth() == 2 && IsWindow(window) != FALSE && exit_home.pixels == main_menu_frame(app).pixels,
+        "Exit confirmation Back did not retain the window and exact Home Exit focus");
+    tap(Key::enter);
+    require(stack.depth() == 3 && question.pixels == main_menu_frame(app).pixels,
+        "Final Home Exit confirmation did not reopen on safe No");
+    // A new page requires neutral direction input before its first move.
+    tick();
+    tap(Key::up);
+    require(stack.depth() == 3 && IsWindow(window) != FALSE && question.pixels != main_menu_frame(app).pixels,
+        "Choosing Exit Yes did not move focus while retaining the hidden window");
+    tap(Key::enter);
+    require(IsWindow(window) == FALSE, "Deliberate Home Exit Yes did not close its isolated window");
     std::cout << "PASS actual menu widget geometry: shipped/custom constructor snapshots, reopened edits, "
         "page overrides and row/column placement; title/home: centered measured lettering, native ink/paper contrast, "
-        "all focus cards/arrows, Start/Back/Play/Options/Credits/Exit, frozen/reduced redraw, draw RNG, "
+        "all focus cards/arrows, Start/Back/Play/Options/Credits/Exit No/Back/Yes, frozen/reduced redraw, draw RNG, "
         "resize and 720p/1080p/QHD/4:3/16:10/ultrawide paper bounds\n";
 }

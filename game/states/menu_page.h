@@ -40,8 +40,8 @@ public:
 	void on_deactivated() override;
 
 	// Debug hooks (DebugPageTarget). Only main-menu pages, whose frame starts
-	// a match on close, start one; only the pause, controls, results and end
-	// pages dismiss themselves; every page forgets armed presses on request.
+	// a match on close, start one; child and match-overlay pages dismiss
+	// themselves; every page forgets armed presses on request.
 	bool debug_start_match(const MenuLevelSettings& plan) override;
 	bool debug_dismiss(bool leaving_match) override;
 	void debug_reset_input(int pad_slot) override;

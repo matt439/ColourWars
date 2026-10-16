@@ -169,9 +169,43 @@ preset. It covers six keyboard sizes/aspects and sparse scripted pad slot 3 at
 720p, including repeated returns, fresh confirmation, held-input interruption,
 quiet entry, lifecycle resets, Reduce effects, resize and frozen draw/RNG.
 
-The remaining `GAP#3.2` work is restore-defaults, resolution-change revert,
-display/palette access from pause and Exit confirmation. Human and hardware
+The remaining `GAP#3.2` work is restore-defaults, resolution-change revert and
+display/palette access from pause. Human and hardware
 acceptance retain their existing gates.
+
+### Home Exit confirmation
+
+Implemented on 2026-10-16, the Exit-confirmation part of `GAP#3.2`. Home's Exit
+action pushes a `MainMenuExitConfirmation` child page, with No registered first
+and initially focused. No or B/Escape resets actions and pops back to the same
+Home page with Exit still focused. Back takes priority, and each update permits
+one focus move before accepting a later confirmation, so simultaneous navigation
+and confirmation cannot bypass the safe initial choice.
+
+Yes alone starts the existing `finish_with_music` fade and application quit.
+While exit is pending, the dialog suppresses ordinary input and freezes its
+motion. Dismissing it through developer page control cancels the queued quit
+callback before popping. The retained Home page, menu music ownership and
+ordinary input rearming keep their existing behavior. Pause and End flows are
+unchanged.
+
+The dialog uses the neutral Home surround and existing `pause_menu.art`,
+`box_size`, `layout`, `heading_y` and `status_y`, with the shared heading, item
+and detail fonts. The heading reuses `menu_text.items.exit`; Yes and No reuse
+their existing item labels. The new required `menu_text.confirmations.exit`
+ships as `Exit ColourWars?`. No numeric presentation fields or artwork assets
+are added. The shared paper motion and Reduce effects policy apply.
+
+The hidden `-HomeExitOnly` native matrix passes both presets: 48 independent
+complete confirmation references and 30 matching Debug/Release captures per
+preset. Six keyboard sizes/aspects and sparse scripted pad slot 3 cover safe
+No/Back returns, repeated entry, interrupted/reconnected and simultaneous input,
+motion/reduction/lifecycle resets, frozen redraw/RNG, one pending music exit
+and deliberate closure of the probe's own hidden window.
+
+Restore-defaults, resolution-change revert and display/palette access from
+pause remain open under `GAP#3.2`. Human and hardware acceptance retain their
+existing gates.
 
 ## Controls/audio
 

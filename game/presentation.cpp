@@ -104,6 +104,7 @@ namespace
 		const JsonValue confirmations = json.object("confirmations");
 		text.confirmations.restart = read_menu_line(confirmations, "restart");
 		text.confirmations.quit = read_menu_line(confirmations, "quit");
+		text.confirmations.exit = read_menu_line(confirmations, "exit");
 		const JsonValue end = json.object("end");
 		text.end.match_complete = read_menu_line(end, "match_complete");
 		text.end.round_complete = read_menu_line(end, "round_complete");
@@ -2301,6 +2302,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	};
 	check_confirmation("restart", this->menu_text_.confirmations.restart);
 	check_confirmation("quit", this->menu_text_.confirmations.quit);
+	check_confirmation("exit", this->menu_text_.confirmations.exit);
 	const RectangleF end_paper((Vector2F(1920.0f, 1080.0f) - end.box_size) / 2.0f, end.box_size);
 	// The first continuation row starts here regardless of its Session label.
 	const float first_end_action_top = end.layout.position.y - end.art.focus_padding.y;
@@ -2887,6 +2889,18 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		throw std::runtime_error(this->source_path_ +
 			": menu_text.headings.arena must fit main_menu.stage_box_size including its retained shadow bounds.");
+	}
+	// Home's Exit confirmation reuses Pause paper/layout, with the existing
+	// Exit label rendered once more in the actual heading font.
+	const Vector2F exit_heading_size = fixed_menu_size("menu_text.items.exit",
+		this->menu_text_.item(MenuItem::exit), this->menu_.heading_font);
+	const RectangleF exit_heading((1920.0f - exit_heading_size.x) / 2.0f, pause.heading_y,
+		exit_heading_size.x, exit_heading_size.y);
+	if (!std::isfinite(exit_heading.x) || !std::isfinite(exit_heading.y) ||
+		!confirmation_paper.contains(exit_heading) || exit_heading.bottom() > pause.status_y)
+	{
+		throw std::runtime_error(this->source_path_ +
+			": menu_text.items.exit must fit unscaled inside the Pause paper before the Exit confirmation question.");
 	}
 }
 

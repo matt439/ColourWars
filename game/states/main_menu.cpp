@@ -271,10 +271,8 @@ void MainMenuHome::init()
 		});
 	this->focus_.add(this->exit_.get(), [this]
 		{
-			this->menu_context()->finish_with_music([application = this->data()->application()]
-			{
-				application->quit();
-			});
+			this->play_wave(this->confirm_sound_);
+			this->context()->push(std::make_unique<MainMenuExitConfirmation>(this->menu_context()));
 		});
 
 	// Child pages return to their entry row; fresh entry and Mode return use Play.

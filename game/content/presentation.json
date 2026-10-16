@@ -124,7 +124,8 @@
     },
     "confirmations": {
       "restart": "Are you sure you want to restart?",
-      "quit": "Are you sure you want to quit?"
+      "quit": "Are you sure you want to quit?",
+      "exit": "Exit ColourWars?"
     },
     "end": {
       "match_complete": "Match Complete",

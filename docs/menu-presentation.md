@@ -39,6 +39,25 @@ applies, and Controls/audio continues to return to its retained parent page.
 No presentation field, saved navigation history, artwork or geometry is added.
 The remaining Options gaps stay open under `GAP#3.2`.
 
+## Home Exit confirmation
+
+Home's Exit action pushes a confirmation child with No initially focused. No
+or B/Escape resets actions and pops the child, returning to the same Home page
+with Exit focused. Back has priority and an update can make only one focus move;
+confirmation requires a later accepted action. Yes alone uses the existing
+music fade and application quit. Pending exit suppresses ordinary input and
+freezes motion; developer dismissal cancels the queued callback before popping.
+Pause and End behavior is unchanged.
+
+The new required `menu_text.confirmations.exit` ships as `Exit ColourWars?`.
+It follows the existing normalized, nonblank, single-line text rules. The
+heading uses `menu_text.items.exit`, with existing Yes/No labels. Fonts and
+paper geometry reuse the shared heading/item/detail fonts and `pause_menu.art`,
+`box_size`, `layout`, `heading_y` and `status_y`; the surround uses Home's neutral
+fill. No numeric field or artwork asset is added. The page captures its text
+and uses the existing input rearming, shared motion and Reduce effects policy.
+Other Options work remains open under `GAP#3.2`.
+
 ## Mode and Player Count paper
 
 The required `main_menu.setup_box_size` supplies the common paper panel for Mode
@@ -407,7 +426,7 @@ The required `menu_text` object stores the shared menu brand, eleven headings,
 seventeen complete prompt-bar legends, thirty-six row labels, a solo-practice
 hint, five Title/Home strings, three Controls/Pad Sticks help strings, eight
 fixed save-status messages, three shared setting values, two Pause confirmation
-questions, three End completion headings, two Stage Select status messages,
+questions, one Home Exit question, three End completion headings, two Stage Select status messages,
 four fixed Stage Select briefing strings, three fixed Stage Select cues and
 two fixed Stage Select mode labels:
 
@@ -423,7 +442,7 @@ two fixed Stage Select mode labels:
 | `menu_text.help` | `controls`, `pad_association`, `aim_cutoff` |
 | `menu_text.status` | `options_pending`, `options_saved`, `options_save_failed`, `controls_pending`, `controls_saved`, `active_save_failed`, `sticks_pending`, `sticks_saved` |
 | `menu_text.values` | `on`, `off`, `random` |
-| `menu_text.confirmations` | `restart`, `quit` |
+| `menu_text.confirmations` | `restart`, `quit`, `exit` |
 | `menu_text.end` | `match_complete`, `round_complete`, `series_complete` |
 | `menu_text.stage` | `browse_status`, `locked_status`, `briefing_label`, `goal`, `solo_objective`, `versus_objective`, `random_navigation`, `locked_hint`, `browse_hint`, `solo_mode`, `single_match_mode` |
 

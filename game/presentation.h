@@ -107,6 +107,7 @@ struct MenuConfirmationText
 {
 	std::wstring restart;
 	std::wstring quit;
+	std::wstring exit;
 };
 
 struct MenuEndText

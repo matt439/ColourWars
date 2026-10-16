@@ -92,7 +92,8 @@ namespace
     struct ConfirmationText { const char* key; const wchar_t* text; std::wstring MenuConfirmationText::* field; };
     constexpr ConfirmationText confirmation_text[]{
         { "restart", L"Are you sure you want to restart?", &MenuConfirmationText::restart },
-        { "quit", L"Are you sure you want to quit?", &MenuConfirmationText::quit }
+        { "quit", L"Are you sure you want to quit?", &MenuConfirmationText::quit },
+        { "exit", L"Exit ColourWars?", &MenuConfirmationText::exit }
     };
     struct EndText { const char* key; const wchar_t* text; std::wstring MenuEndText::* field; };
     constexpr EndText end_text[]{
@@ -279,7 +280,7 @@ namespace
         for (const auto& entry : confirmation_text)
         {
             require(text.confirmations.*entry.field == entry.text,
-                std::string("Pause confirmation default changed: ") + entry.key);
+                std::string("Confirmation default changed: ") + entry.key);
         }
         for (const auto& entry : end_text)
         {
@@ -860,7 +861,7 @@ namespace
         paper_edge("x", right_position, "items.resume", right_position + 0.25f);
         // A positive-height confirmation question must fit above the first
         // padded action, so that action cannot also touch the paper's top.
-        // Question paper-top and action contact are checked independently below.
+        // Exit heading paper-top and question/action contact are checked below.
         // Quit's last row reaches the full-height Pause paper, below the menu footer.
         paper_edge("y", bottom_position, "items.quit", bottom_position + 0.25f);
 
@@ -905,7 +906,7 @@ namespace
             });
             normalized.validate_resources(world.render, world.audio);
             require(normalized.menu_text().confirmations.*entry.field == L"  A \"B\"-C...  ",
-                std::string("Pause confirmation lost normalized punctuation or authored spaces: ") + entry.key);
+                std::string("Confirmation lost normalized punctuation or authored spaces: ") + entry.key);
             const std::string field = std::string("confirmations.") + entry.key;
             for (const char* invalid : { "   ", " \xC2\xA0 ", "line\nbreak", "line\rbreak", "line\r\nbreak",
                 "tab\ttext", "control\x01", "delete\x7F", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3" })
@@ -1028,21 +1029,72 @@ namespace
                 d["pause_menu"]["layout"]["position"]["y"].SetFloat(pause.status_y + 19.75f + pause.art.focus_padding.y);
             }, &world);
         }
-        const auto paper_top = [](rapidjson::Document& d)
+
+        // Exit is a Home item and a confirmation heading. Its second context
+        // must use the heading font while preserving the existing item font.
+        const auto heading_font = [](rapidjson::Document& d, const char* name)
         {
-            d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
-            for (const auto& entry : confirmation_text) { d["menu_text"]["confirmations"][entry.key].SetString("Fit"); }
-            d["pause_menu"]["heading_y"].SetFloat(40.0f);
-            d["pause_menu"]["status_y"].SetFloat(90.0f);
+            d["menu_style"]["fonts"]["heading"].SetString(name, d.GetAllocator());
+            d["menu_text"]["items"]["exit"].SetString("~");
         };
-        const auto touches_top = variants.load(paper_top);
-        touches_top.validate_resources(world.render, world.audio);
-        variants.rejects("confirmations.restart", [&](rapidjson::Document& d)
+        variants.rejects("items.exit", [&](rapidjson::Document& d)
         {
-            paper_top(d);
-            d["pause_menu"]["status_y"].SetFloat(89.75f);
+            heading_font(d, "menu_text_limited");
+        }, &world);
+        const auto heading_width = variants.load([&](rapidjson::Document& d)
+        {
+            heading_font(d, "menu_confirmation_width_edge");
+        });
+        heading_width.validate_resources(world.render, world.audio);
+        std::wstring heading_source = heading_width.menu_text().item(MenuItem::exit);
+        const std::string retained_font = heading_width.menu().heading_font;
+        UiText heading("exit-heading", heading_source, retained_font,
+            mattmath::Vector2F(0.0f, pause.heading_y), &world.render, pause.art.ink);
+        heading_source = L"Changed after construction";
+        heading.set_position(mattmath::Vector2F((1920.0f - heading.bounds().width) / 2.0f, pause.heading_y));
+        require(heading.text() == L"~" && heading.bounds() ==
+            mattmath::RectangleF((1920.0f - pause.box_size.x) / 2.0f, pause.heading_y, pause.box_size.x, 20.0f),
+            "Exit heading borrowed its copy, scaled, used the item font or missed the inclusive paper edges");
+        heading.set_hidden(true);
+        DrawList no_device;
+        heading.draw(no_device);
+        variants.rejects("items.exit", [&](rapidjson::Document& d)
+        {
+            heading_font(d, "menu_confirmation_width_overflow");
         }, &world);
 
+        const auto heading_top = [&](rapidjson::Document& d)
+        {
+            heading_font(d, "menu_confirmation_action_edge");
+            d["pause_menu"]["heading_y"].SetFloat(90.0f);
+            d["pause_menu"]["status_y"].SetFloat(110.0f);
+        };
+        const auto touches_top_and_question = variants.load(heading_top);
+        touches_top_and_question.validate_resources(world.render, world.audio);
+        variants.rejects("items.exit", [&](rapidjson::Document& d)
+        {
+            heading_top(d);
+            d["pause_menu"]["heading_y"].SetFloat(89.75f);
+        }, &world);
+        variants.rejects("items.exit", [&](rapidjson::Document& d)
+        {
+            heading_top(d);
+            d["pause_menu"]["status_y"].SetFloat(109.75f);
+        }, &world);
+        add_font("menu_exit_heading_height_edge", 8, 135);
+        add_font("menu_exit_heading_height_overflow", 8, 136);
+        const auto tall_heading = variants.load([&](rapidjson::Document& d)
+        {
+            heading_font(d, "menu_exit_heading_height_edge");
+        });
+        tall_heading.validate_resources(world.render, world.audio);
+        require(world.render.measure_text(world.render.resolve_sprite_font(tall_heading.menu().heading_font), L"~").y ==
+            pause.status_y - pause.heading_y,
+            "Exit heading fixture no longer exercises actual tall glyphs beyond the font line spacing");
+        variants.rejects("items.exit", [&](rapidjson::Document& d)
+        {
+            heading_font(d, "menu_exit_heading_height_overflow");
+        }, &world);
         // Compact legal actions leave a question below the footer-centered
         // paper's bottom (930), but inside the actual full-height paper (990).
         std::vector<Glyph> small_glyphs;
@@ -1057,6 +1109,7 @@ namespace
         {
             use_font(d, "menu_confirmation_full_height", "restart");
             d["menu_text"]["confirmations"]["quit"].SetString("~");
+            d["menu_text"]["confirmations"]["exit"].SetString("~");
             d["menu_style"]["fonts"]["item"].SetString("menu_confirmation_small_actions");
             d["pause_menu"]["status_y"].SetFloat(900.0f);
             d["pause_menu"]["layout"]["position"]["y"].SetFloat(940.5f);
@@ -1092,6 +1145,10 @@ namespace
                     use_font(d, name, entry.key);
                 }, &world);
             }
+            variants.rejects("items.exit", [&](rapidjson::Document& d)
+            {
+                heading_font(d, name.c_str());
+            }, &world);
         }
     }
 

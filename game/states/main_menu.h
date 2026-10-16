@@ -100,6 +100,28 @@ private:
 	std::unique_ptr<labrador::UiText> exit_ = nullptr;
 };
 
+// A separate pushed frame keeps cancellation on the same Home page.
+class MainMenuExitConfirmation final : public MenuPage
+{
+public:
+	explicit MainMenuExitConfirmation(MenuContext* context);
+	void init() override;
+	void update_page(float dt) override;
+	bool debug_dismiss(bool leaving_match) override;
+protected:
+	bool shows_brand() const override { return false; }
+	bool shows_focus_backing() const override { return false; }
+private:
+	void cancel();
+	PauseMenuPresentation look_;
+	std::unique_ptr<labrador::UiTexture> background_;
+	std::unique_ptr<MenuPaperArtwork> paper_;
+	std::unique_ptr<labrador::UiText> heading_;
+	std::unique_ptr<labrador::UiText> question_;
+	std::unique_ptr<labrador::UiText> yes_;
+	std::unique_ptr<labrador::UiText> no_;
+};
+
 class MainMenuCredits final : public MainMenuPage
 {
 public:
