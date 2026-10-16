@@ -36,7 +36,7 @@ namespace
 		"match_length", "one_player_practice", "two_players", "three_players", "four_players",
 		"resume", "restart", "quit", "yes", "no", "change_teams", "change_weapons", "change_level",
 		"exit_to_main_menu", "pad_sticks", "music_volume", "sfx_volume", "view_shake", "aim_marker",
-		"reduce_effects", "pad", "move_deadzone", "aim_deadzone"
+		"reduce_effects", "pad", "move_deadzone", "aim_deadzone", "restore_defaults"
 	};
 
 	std::wstring read_menu_line(const JsonValue& json, const char* key)
@@ -548,6 +548,9 @@ namespace
 		menu.options_value_x = json.number("options_value_x");
 		menu.options_spacing = read_positive_vector(json, "options_spacing");
 		menu.home_spacing = read_positive_vector(json, "home_spacing");
+		MenuPaperArtPresentation options_art = menu.art;
+		options_art.focus_padding = menu.setup_focus_padding;
+		options_art.shadow_offset = menu.setup_shadow_offset;
 		const float edge = menu.art.keyline_width * 3.0f;
 		const float title_top = (content_height - menu.title_box_size.y) / 2.0f + edge;
 		const float title_bottom = (content_height + menu.title_box_size.y) / 2.0f -
@@ -589,37 +592,37 @@ namespace
 			credits.where() + ": text");
 
 		const auto inside_panel = [&](const Vector2F& point, const Vector2F& size,
-			const char* key, const JsonValue& owner)
+			const char* key, const JsonValue& owner, float shadow_offset)
 		{
 			const Vector2F top = (Vector2F(1920.0f, content_height) - size) / 2.0f + Vector2F(edge);
 			const Vector2F bottom = (Vector2F(1920.0f, content_height) + size) / 2.0f -
-				Vector2F(menu.art.shadow_offset + edge);
+				Vector2F(shadow_offset + edge);
 			if (point.x <= top.x || point.x >= bottom.x || point.y <= top.y || point.y >= bottom.y)
 			{
 				throw std::runtime_error(owner.where() + ": '" + key + "' must fit inside its box_size.");
 			}
 		};
-		inside_panel(menu.options_heading_position, menu.options_box_size, "options_heading_position", json);
-		inside_panel(menu.options_position, menu.options_box_size, "options_position", json);
-		inside_panel(menu.options_status_position, menu.options_box_size, "options_status_position", json);
+		inside_panel(menu.options_heading_position, menu.options_box_size, "options_heading_position", json, options_art.shadow_offset);
+		inside_panel(menu.options_position, menu.options_box_size, "options_position", json, options_art.shadow_offset);
+		inside_panel(menu.options_status_position, menu.options_box_size, "options_status_position", json, options_art.shadow_offset);
 		if (!std::isfinite(menu.options_value_x) ||
-			menu.options_value_x <= menu.options_position.x + menu.art.focus_padding.x ||
+			menu.options_value_x <= menu.options_position.x + options_art.focus_padding.x ||
 			menu.options_value_x >= (1920.0f + menu.options_box_size.x) / 2.0f -
-				menu.art.shadow_offset - menu.art.focus_padding.x)
+				options_art.shadow_offset - options_art.focus_padding.x)
 		{
 			throw std::runtime_error(json.where() + ": options_value_x must follow the label inside options_box_size.");
 		}
 		if (menu.options_heading_position.y >= menu.options_position.y ||
-			menu.options_position.y + menu.options_spacing.y * 5.0f >= menu.options_status_position.y ||
-			menu.options_spacing.y <= menu.art.focus_padding.y * 2.0f ||
+			menu.options_position.y + menu.options_spacing.y * 6.0f >= menu.options_status_position.y ||
+			menu.options_spacing.y <= options_art.focus_padding.y * 2.0f ||
 			menu.options_spacing.x > 1920.0f)
 		{
 			throw std::runtime_error(json.where() + ": options_heading_position, options_position, options_spacing and "
-				"options_status_position must order the heading, six rows and status inside options_box_size.");
+				"options_status_position must order the heading, seven rows and status inside options_box_size.");
 		}
-		inside_panel(menu.credits_heading_position, menu.credits_box_size, "heading_position", credits);
-		inside_panel(menu.credits_position, menu.credits_box_size, "position", credits);
-		inside_panel(menu.credits_back_position, menu.credits_box_size, "back_position", credits);
+		inside_panel(menu.credits_heading_position, menu.credits_box_size, "heading_position", credits, menu.art.shadow_offset);
+		inside_panel(menu.credits_position, menu.credits_box_size, "position", credits, menu.art.shadow_offset);
+		inside_panel(menu.credits_back_position, menu.credits_box_size, "back_position", credits, menu.art.shadow_offset);
 		if (menu.credits_heading_position.y >= menu.credits_position.y ||
 			menu.credits_position.y >= menu.credits_back_position.y)
 		{
@@ -2068,6 +2071,9 @@ void Presentation::validate_resources(const RenderResources& render,
 		return size;
 	};
 	const MainMenuPresentation& main = this->main_menu_;
+	MenuPaperArtPresentation options_art = main.art;
+	options_art.focus_padding = main.setup_focus_padding;
+	options_art.shadow_offset = main.setup_shadow_offset;
 	const MenuItem home_items[]{ MenuItem::play, MenuItem::options, MenuItem::credits, MenuItem::exit };
 	for (size_t index = 0; index < std::size(home_items); ++index)
 	{
@@ -2076,15 +2082,15 @@ void Presentation::validate_resources(const RenderResources& render,
 			main.home_box_size, main.home_spacing.y, std::nullopt, main.art, this->menu_.footer_y);
 	}
 	const MenuItem options_items[]{ MenuItem::resolution, MenuItem::fullscreen, MenuItem::team_palette,
-		MenuItem::controls_audio, MenuItem::apply, MenuItem::back };
+		MenuItem::controls_audio, MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
 	for (size_t index = 0; index < std::size(options_items); ++index)
 	{
 		const Vector2F position = main.options_position +
 			Vector2F(0.0f, main.options_spacing.y * static_cast<float>(index));
 		const std::optional<float> label_width = index < 3 ?
-			std::optional<float>(main.options_value_x - position.x - main.art.focus_padding.x) : std::nullopt;
+			std::optional<float>(main.options_value_x - position.x - options_art.focus_padding.x) : std::nullopt;
 		check_menu_item(options_items[index], this->menu_.item_font, position,
-			main.options_box_size, main.options_spacing.y, label_width, main.art, this->menu_.footer_y);
+			main.options_box_size, main.options_spacing.y, label_width, options_art, this->menu_.footer_y);
 	}
 	check_menu_item(MenuItem::back, this->menu_.item_font, main.credits_back_position, main.credits_box_size, 0.0f, std::nullopt,
 		main.art, this->menu_.footer_y);
@@ -2522,18 +2528,18 @@ void Presentation::validate_resources(const RenderResources& render,
 	check_stage_hint("locked_hint", this->menu_text_.stage.locked_hint);
 	check_stage_hint("browse_hint", this->menu_text_.stage.browse_hint);
 	const Vector2F options_value_limit((1920.0f + main.options_box_size.x) / 2.0f -
-		main.art.shadow_offset - main.art.focus_padding.x - main.options_value_x,
-		main.options_spacing.y - main.art.focus_padding.y * 2.0f);
+		options_art.shadow_offset - options_art.focus_padding.x - main.options_value_x,
+		main.options_spacing.y - options_art.focus_padding.y * 2.0f);
 	const auto options_value_position = [&](int row)
 	{
 		return Vector2F(main.options_value_x, main.options_position.y + main.options_spacing.y * static_cast<float>(row));
 	};
 	check_value("on", values.on, this->menu_.item_font, options_value_position(1), options_value_limit,
-		main.options_box_size, main.art, main.options_spacing.y, false);
+		main.options_box_size, options_art, main.options_spacing.y, false);
 	check_value("off", values.off, this->menu_.item_font, options_value_position(1), options_value_limit,
-		main.options_box_size, main.art, main.options_spacing.y, false);
+		main.options_box_size, options_art, main.options_spacing.y, false);
 	check_value("random", values.random, this->menu_.item_font, options_value_position(2), options_value_limit,
-		main.options_box_size, main.art, main.options_spacing.y, false);
+		main.options_box_size, options_art, main.options_spacing.y, false);
 	const Vector2F controls_value_limit(controls.controls_position.x - controls.art.focus_padding.x * 2.0f -
 		controls.art.shadow_offset - controls.layout.position.x - controls.layout.spacing.x,
 		controls.layout.spacing.y - controls.art.focus_padding.y * 2.0f);
@@ -2643,8 +2649,8 @@ void Presentation::validate_resources(const RenderResources& render,
 		bounds.inflate(art.focus_padding);
 		return bounds;
 	};
-	const RectangleF options_back = padded_back(main.options_position + Vector2F(0.0f, main.options_spacing.y * 5.0f),
-		this->menu_.item_font, main.art);
+	const RectangleF options_back = padded_back(main.options_position + Vector2F(0.0f, main.options_spacing.y * 6.0f),
+		this->menu_.item_font, options_art);
 	const RectangleF controls_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 7.0f),
 		controls.item_font, controls.art);
 	const RectangleF sticks_back = padded_back(controls.layout.position + Vector2F(0.0f, controls.layout.spacing.y * 4.0f),
@@ -2690,7 +2696,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	for (const StatusMessage& message : options_statuses)
 	{
 		check_status(message, this->prompt_bar_.font, main.options_status_position, main.options_box_size,
-			main.art, { options_back });
+			options_art, { options_back });
 	}
 	const StatusMessage controls_statuses[]{ { "controls_pending", status_text.controls_pending },
 		{ "controls_saved", status_text.controls_saved }, { "active_save_failed", status_text.active_save_failed } };

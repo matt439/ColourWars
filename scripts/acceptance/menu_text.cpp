@@ -144,7 +144,8 @@ namespace
         { "change_level", L"Change Level" }, { "exit_to_main_menu", L"Exit to Main Menu" },
         { "pad_sticks", L"Pad sticks" }, { "music_volume", L"Music volume" }, { "sfx_volume", L"SFX volume" },
         { "view_shake", L"View shake" }, { "aim_marker", L"Aim marker" }, { "reduce_effects", L"Reduce effects" },
-        { "pad", L"Pad" }, { "move_deadzone", L"Move deadzone" }, { "aim_deadzone", L"Aim deadzone" }
+        { "pad", L"Pad" }, { "move_deadzone", L"Move deadzone" }, { "aim_deadzone", L"Aim deadzone" },
+        { "restore_defaults", L"Restore defaults" }
     };
 
     rapidjson::Document read_document(const std::filesystem::path& path)
@@ -561,6 +562,14 @@ namespace
         return nullptr;
     }
 
+    MenuPaperArtPresentation options_art(const MainMenuPresentation& main)
+    {
+        MenuPaperArtPresentation art = main.art;
+        art.focus_padding = main.setup_focus_padding;
+        art.shadow_offset = main.setup_shadow_offset;
+        return art;
+    }
+
     void check_option_row_fitting(Variants& variants, World& world)
     {
         const std::string authored(200, 'W');
@@ -584,7 +593,7 @@ namespace
             }, &world);
         }
         const MenuStyle& style = look.menu();
-        const auto& art = look.main_menu().art;
+        const auto art = options_art(look.main_menu());
         const mattmath::Vector2F label_position(100.0f, 100.0f);
         const mattmath::Vector2F value_position(420.0f, 100.0f);
         const float label_column = value_position.x - label_position.x - art.focus_padding.x;
@@ -632,7 +641,7 @@ namespace
         for (const char* key : { "play", "options", "credits", "exit", "controls_audio", "apply", "back",
             "single_match", "best_of_three", "best_of_five", "match_length", "one_player_practice",
             "two_players", "three_players", "four_players", "resume", "restart", "quit", "yes", "no",
-            "change_teams", "change_weapons", "change_level", "exit_to_main_menu" })
+            "change_teams", "change_weapons", "change_level", "exit_to_main_menu", "restore_defaults" })
         {
             variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
                 { d["menu_text"]["items"][key].SetString(std::string(200, 'W').c_str(), d.GetAllocator()); }, &world);
@@ -678,6 +687,81 @@ namespace
         {
             paper_edge(d);
             d["main_menu"]["home_position"]["x"].SetFloat(right_position + 0.25f);
+        }, &world);
+    }
+
+    void check_restore_defaults_text(Variants& variants, World& world)
+    {
+        const auto original = variants.load([](rapidjson::Document&) {});
+        const auto& main = original.main_menu();
+        const auto art = options_art(main);
+        require(main.options_spacing == mattmath::Vector2F(540.0f, 100.0f) &&
+            art.focus_padding == mattmath::Vector2F(28.0f, 7.0f) && art.shadow_offset == 2.0f &&
+            original.menu().item_font == "gill_sans_mt_bold_48",
+            "Seven-row Options changed its reviewed compact geometry or existing item font");
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_text"]["items"]["restore_defaults"].SetString("  A\xC2\xA0\xE2\x80\x9C" "B" "\xE2\x80\x9D\xE2\x80\x94" "C\xE2\x80\xA6  ");
+        });
+        normalized.validate_resources(world.render, world.audio);
+        require(normalized.menu_text().item(MenuItem::restore_defaults) == L"  A \"B\"-C...  ",
+            "Restore defaults lost normalized punctuation or authored spaces");
+        for (const char* invalid : { " \xC2\xA0 ", "line\nbreak", "line\rbreak", "tab\ttext", "control\x01", "caf\xC3\xA9" })
+        {
+            variants.rejects("items.restore_defaults", [invalid](rapidjson::Document& d)
+            {
+                d["menu_text"]["items"]["restore_defaults"].SetString(invalid, d.GetAllocator());
+            });
+        }
+        variants.rejects("items.restore_defaults", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
+            d["menu_text"]["items"]["restore_defaults"].SetString("Glyph~");
+        }, &world);
+        for (const int width : { 1472, 1473 })
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                glyphs.push_back({ character, mattmath::RectangleI(0, 0, character == U'~' ? width : 8, 16),
+                    0.0f, 0.0f, 0.0f });
+            }
+            const std::string name = "restore_defaults_width_" + std::to_string(width);
+            world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
+            const auto edit = [&](rapidjson::Document& d)
+            {
+                d["menu_style"]["fonts"]["item"].SetString(name.c_str(), d.GetAllocator());
+                d["menu_text"]["items"]["restore_defaults"].SetString("~");
+            };
+            if (width == 1473) { variants.rejects("items.restore_defaults", edit, &world); continue; }
+            const auto edge = variants.load(edit);
+            edge.validate_resources(world.render, world.audio);
+            std::wstring source = edge.menu_text().item(MenuItem::restore_defaults);
+            UiText text("restore_defaults", source, name,
+                main.options_position + mattmath::Vector2F(0.0f, main.options_spacing.y * 4.0f), &world.render, art.ink);
+            source = L"Changed after construction";
+            auto card = text.bounds(); card.inflate(art.focus_padding);
+            require(text.text() == L"~" && text.bounds().width == 1472.0f && text.bounds().y == 620.0f &&
+                card.right() == (1920.0f + main.options_box_size.x) / 2.0f,
+                "Plain Restore defaults borrowed its copy, fitted its width or missed row4's inclusive card/shade edge");
+            text.set_hidden(true); DrawList no_device; text.draw(no_device);
+        }
+        // Only row6 Back reaches the paper bottom; a stale six-row mapping
+        // would accept the overflow variant below.
+        const auto back_bottom = [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["item"].SetString("menu_text_exact");
+            d["prompt_bar"]["font"].SetString("menu_text_exact");
+            for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
+            for (const auto& entry : status_text) { d["menu_text"]["status"][entry.key].SetString("Fit"); }
+            d["main_menu"]["options_position"]["y"].SetFloat(313.0f);
+            d["main_menu"]["options_status_position"]["y"].SetFloat(914.0f);
+        };
+        variants.load(back_bottom).validate_resources(world.render, world.audio);
+        variants.rejects("items.back", [&](rapidjson::Document& d)
+        {
+            back_bottom(d);
+            d["main_menu"]["options_position"]["y"].SetFloat(313.25f);
         }, &world);
     }
 
@@ -2079,7 +2163,7 @@ namespace
                 const auto& controls = look.controls_settings();
                 MenuStyle style = look.menu();
                 if (!use.options) { style.item_font = controls.item_font; }
-                const auto& art = use.options ? main.art : controls.art;
+                const auto art = use.options ? options_art(main) : controls.art;
                 const auto box_size = use.options ? main.options_box_size : controls.box_size;
                 const auto spacing = use.options ? main.options_spacing : controls.layout.spacing;
                 const auto label_position = (use.options ? main.options_position : controls.layout.position) +
@@ -2091,7 +2175,7 @@ namespace
                     paper.right() - art.shadow_offset - art.focus_padding.x - value_position.x :
                     controls.controls_position.x - art.focus_padding.x * 2.0f - art.shadow_offset - value_position.x,
                     spacing.y - art.focus_padding.y * 2.0f);
-                require(limit == (use.options ? mattmath::Vector2F(924.0f, 84.0f) : mattmath::Vector2F(332.0f, 68.0f)),
+                require(limit == (use.options ? mattmath::Vector2F(930.0f, 86.0f) : mattmath::Vector2F(332.0f, 68.0f)),
                     "Authored value fixture no longer exercises the shipped Options/Controls fitting limits");
                 const auto font = world.render.resolve_sprite_font(style.item_font);
                 std::wstring authored = look.menu_text().values.*use.field;
@@ -3232,12 +3316,12 @@ namespace
                 const auto& controls = look.controls_settings();
                 const auto position = entry.options ? main.options_status_position : controls.status_position;
                 const auto box_size = entry.options ? main.options_box_size : controls.box_size;
-                const auto& art = entry.options ? main.art : controls.art;
+                const auto art = entry.options ? options_art(main) : controls.art;
                 const auto& font_name = entry.options ? look.prompt_bar().font : controls.help_font;
                 const auto font = world.render.resolve_sprite_font(font_name);
                 const float available = (1920.0f + box_size.x) / 2.0f -
                     art.shadow_offset - art.focus_padding.x - position.x;
-                require(available == (entry.options ? 924.0f : 1590.0f),
+                require(available == (entry.options ? 930.0f : 1590.0f),
                     "Save-status fixture no longer exercises the shipped page widths");
                 std::wstring authored = look.menu_text().status.*entry.field;
                 const auto measured = world.render.measure_text(font, authored);
@@ -3353,9 +3437,10 @@ namespace
         }
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& main = original.main_menu();
+        const auto art = options_art(main);
         const auto back_size = world.render.measure_text(world.render.resolve_sprite_font(original.menu().item_font),
             original.menu_text().item(MenuItem::back));
-        const float back_right = main.options_position.x + back_size.x + main.art.focus_padding.x;
+        const float back_right = main.options_position.x + back_size.x + art.focus_padding.x;
         const auto back_edge = [&](rapidjson::Document& d)
         {
             // The shipped status already overlaps Back vertically. Exact
@@ -3365,8 +3450,8 @@ namespace
         };
         const auto beside_back = variants.load(back_edge);
         beside_back.validate_resources(world.render, world.audio);
-        require(main.options_status_position.y < main.options_position.y + main.options_spacing.y * 5.0f +
-            back_size.y + main.art.focus_padding.y,
+        require(main.options_status_position.y < main.options_position.y + main.options_spacing.y * 6.0f +
+            back_size.y + art.focus_padding.y,
             "Options status fixture no longer intersects the padded Back row vertically");
         variants.rejects("status.options_pending", [&](rapidjson::Document& d)
         {
@@ -3377,7 +3462,7 @@ namespace
         {
             // This point passes the nominal inset parser but leaves zero
             // width after the status's existing shadow and right padding.
-            d["main_menu"]["options_status_position"]["x"].SetFloat(1744.0f);
+            d["main_menu"]["options_status_position"]["x"].SetFloat(1750.0f);
         }, &world);
 
         const auto preview_page = [](rapidjson::Document& d)
@@ -3522,6 +3607,7 @@ int main(int argc, char** argv)
         check_text_and_fonts(variants, world, content);
         check_inclusive_bounds(variants, world);
         check_item_bounds(variants, world);
+        check_restore_defaults_text(variants, world);
         check_setup_text(variants, world);
         check_pause_text(variants, world);
         check_confirmation_text(variants, world);

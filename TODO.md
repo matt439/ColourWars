@@ -99,7 +99,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
-| `GAP#3.2` | OPEN | LOW | M | Options: no restore-defaults, no revert after a resolution change, display and palette unreachable from pause. |
+| `GAP#3.2` | OPEN | LOW | M | Options: no revert after a resolution change, display and palette unreachable from pause. |
 | `GAP#4.2` | OPEN | MED | L | No action map or rebinding: bindings are constexprs in `player_input.h`/`menu_input.h`. The engine's `gamepad.h` waits on this client (Class 2 D6); `GAP#F2` waits on it. |
 | `GAP#5.1` | OPEN | MED | L | Visual hard cuts between screens; the level build blocks on the last menu frame. |
 | `GAP#6.1` | OPEN | MED | M | The last match setup is not saved, so every launch walks the whole menu path again. |

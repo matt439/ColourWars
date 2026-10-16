@@ -148,6 +148,46 @@ files; fullscreen metadata exercises disabled-resolution navigation while only
 Off is applied to the offscreen windowed probe. Physical-pad, human readability,
 movement-feel and listening acceptance remain with their TODO owners.
 
+### Options Restore defaults
+
+Implemented on 2026-10-16, the restore-defaults part of `GAP#3.2`. Restore
+defaults stages the canonical `SaveData{}` display and palette values: 1920x1080,
+windowed and Random. It changes only the Options page's pending choices. Save
+data, the application display, play preferences and pad profiles are unchanged
+by the action. Apply uses the existing display/palette save path; either Back
+route discards the pending defaults. Returning from Controls/audio retains them.
+
+Resolution availability still follows the applied fullscreen state. Restoring
+pending windowed defaults while fullscreen keeps the resolution row disabled
+and showing the live dimensions until Apply changes the display.
+
+The page has seven rows: resolution, fullscreen, palette, Controls/audio,
+Restore defaults, Apply and Back. Their existing first-row anchor is unchanged;
+`options_spacing.y` is now `100`, and the status remains at y = `885`. Options
+captures compact geometry from `setup_focus_padding` (`28, 7`) and
+`setup_shadow_offset` (`2`), while its paper colours remain live in
+`main_menu.art`. This local geometry override preserves the existing item font
+and leaves the other pages' artwork unchanged. No numeric field, font or asset
+is added.
+
+The appended thirty-seventh menu item is the required
+`menu_text.items.restore_defaults`, shipped as `Restore defaults`. It uses the
+existing captured menu-text and plain-action bounds rules.
+
+The focused native defaults matrix passes both presets: 104 independent
+complete-frame references per preset (92 keyboard and 12 scripted pad-slot-3
+references) across six native sizes/aspects, with 60 byte-identical
+Debug/Release capture pairs. It checks canonical three-field staging without
+changing the save file, window, play preferences or four pad profiles;
+both discard routes; Controls/audio return and shared-preference merge;
+repeated Restore/Apply; six controlled failed writes and recovery per preset;
+reload, focus loss/held reconnect, Reduce effects, lifecycle resets and frozen
+draw/RNG. These checks do not establish human, physical-pad, listening or
+performance acceptance.
+
+Resolution-change revert and display/palette access from pause remain open under `GAP#3.2`;
+human and hardware acceptance retain their existing gates.
+
 ### Home return focus
 
 Implemented on 2026-10-16, the return-focus part of `GAP#3.2`. Both Back routes
@@ -169,8 +209,8 @@ preset. It covers six keyboard sizes/aspects and sparse scripted pad slot 3 at
 720p, including repeated returns, fresh confirmation, held-input interruption,
 quiet entry, lifecycle resets, Reduce effects, resize and frozen draw/RNG.
 
-The remaining `GAP#3.2` work is restore-defaults, resolution-change revert and
-display/palette access from pause. Human and hardware
+The remaining `GAP#3.2` work is resolution-change revert and display/palette
+access from pause. Human and hardware
 acceptance retain their existing gates.
 
 ### Home Exit confirmation
@@ -203,7 +243,7 @@ No/Back returns, repeated entry, interrupted/reconnected and simultaneous input,
 motion/reduction/lifecycle resets, frozen redraw/RNG, one pending music exit
 and deliberate closure of the probe's own hidden window.
 
-Restore-defaults, resolution-change revert and display/palette access from
+Resolution-change revert and display/palette access from
 pause remain open under `GAP#3.2`. Human and hardware acceptance retain their
 existing gates.
 

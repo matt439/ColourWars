@@ -10,9 +10,11 @@ using namespace labrador;
 #pragma region MainMenuOptions
 
 MainMenuOptions::MainMenuOptions(MenuContext* context) :
-	MainMenuPage(context)
+	MainMenuPage(context), options_art_(context->data()->presentation()->main_menu().art)
 {
-
+	const MainMenuPresentation& look = this->look();
+	this->options_art_.focus_padding = look.setup_focus_padding;
+	this->options_art_.shadow_offset = look.setup_shadow_offset;
 }
 
 void MainMenuOptions::update_page(float /*dt*/)
@@ -78,8 +80,8 @@ void MainMenuOptions::set_status(const std::wstring& text, const Colour& colour)
 	this->status_->set_text(text);
 	this->status_->set_colour(colour);
 	this->status_->set_scale(1.0f);
-	const float right = this->paper_->rectangle().right() - this->look().art.shadow_offset -
-		this->look().art.focus_padding.x;
+	const float right = this->paper_->rectangle().right() - this->options_art_.shadow_offset -
+		this->options_art_.focus_padding.x;
 	const float available = right - this->look().options_status_position.x;
 	if (available > 0.0f && this->status_->bounds().width > available)
 	{
@@ -113,6 +115,21 @@ void MainMenuOptions::apply_settings()
 		saved ? this->look().art.focus_ink : this->look().options_warning_colour);
 }
 
+void MainMenuOptions::restore_defaults()
+{
+	// Reset this page's pending choices. Apply owns all active/save mutations;
+	// controls and per-pad preferences remain outside this page's transaction.
+	const SaveData defaults{};
+	this->resolution_selection_ = defaults.resolution;
+	this->full_screen_selection_ = defaults.fullscreen;
+	this->team_palette_selection_ = defaults.team_palette;
+	this->update_full_screen_selection_text();
+	this->update_team_palette_selection_text();
+	this->refresh_resolution_row();
+	this->play_wave(this->confirm_sound_);
+	this->set_status(this->text().status.options_pending, this->look().art.focus_ink);
+}
+
 void MainMenuOptions::apply_fullscreen_setting(bool fullscreen)
 {
 	this->data()->application()->set_fullscreen(fullscreen);
@@ -132,8 +149,8 @@ void MainMenuOptions::init()
 		(Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.options_box_size) / 2.0f,
 		look.options_box_size);
 	const Vector2F value_limit(
-		paper_bounds.right() - look.art.shadow_offset - look.art.focus_padding.x - look.options_value_x,
-		look.options_spacing.y - look.art.focus_padding.y * 2.0f);
+		paper_bounds.right() - this->options_art_.shadow_offset - this->options_art_.focus_padding.x - look.options_value_x,
+		look.options_spacing.y - this->options_art_.focus_padding.y * 2.0f);
 	const auto value_position = [&](int row)
 	{
 		return Vector2F(look.options_value_x, this->calculate_widget_position(0, row).y);
@@ -169,7 +186,7 @@ void MainMenuOptions::init()
 		look.art.ink,
 		this->render_resources(),
 		[this](Direction direction) { this->cycle_resolution(direction); },
-		&look.art, value_limit);
+		&this->options_art_, value_limit);
 
 	this->update_resolution_selection_text();
 
@@ -186,7 +203,7 @@ void MainMenuOptions::init()
 			// Two states, so either direction is the same toggle.
 			this->full_screen_selection_ = !this->full_screen_selection_;
 			this->update_full_screen_selection_text();
-		}, &look.art, value_limit);
+		}, &this->options_art_, value_limit);
 
 	this->update_full_screen_selection_text();
 
@@ -199,18 +216,21 @@ void MainMenuOptions::init()
 		look.art.ink,
 		this->render_resources(),
 		[this](Direction direction) { this->cycle_team_palette(direction); },
-		&look.art, value_limit);
+		&this->options_art_, value_limit);
 	this->update_team_palette_selection_text();
 
 	this->controls_ = std::make_unique<UiText>("controls", this->text().item(MenuItem::controls_audio),
 		style.item_font, this->calculate_widget_position(0, 3),
 		this->render_resources(), look.art.ink);
+	this->restore_defaults_ = std::make_unique<UiText>("restore_defaults",
+		this->text().item(MenuItem::restore_defaults), style.item_font,
+		this->calculate_widget_position(0, 4), this->render_resources(), look.art.ink);
 
 	this->apply_ = std::make_unique<UiText>(
 		"apply",
 		this->text().item(MenuItem::apply),
 		this->menu_style().item_font,
-		this->calculate_widget_position(0, 4),
+		this->calculate_widget_position(0, 5),
 		this->render_resources(),
 		look.art.ink);
 
@@ -218,7 +238,7 @@ void MainMenuOptions::init()
 		"back",
 		this->text().item(MenuItem::back),
 		this->menu_style().item_font,
-		this->calculate_widget_position(0, 5),
+		this->calculate_widget_position(0, 6),
 		this->render_resources(),
 		look.art.ink);
 
@@ -228,7 +248,7 @@ void MainMenuOptions::init()
 
 	this->paper_ = std::make_unique<MenuPaperArtwork>(paper_bounds,
 		this->render_resources(), &style, &look.art, &this->focus_, nullptr,
-		&this->focus_motion_, &this->save()->play_settings());
+		&this->focus_motion_, &this->save()->play_settings(), &this->options_art_);
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
@@ -242,6 +262,7 @@ void MainMenuOptions::init()
 	this->text_container_->add_child(this->full_screen_row_.get());
 	this->text_container_->add_child(this->team_palette_row_.get());
 	this->text_container_->add_child(this->controls_.get());
+	this->text_container_->add_child(this->restore_defaults_.get());
 	this->text_container_->add_child(this->apply_.get());
 	this->text_container_->add_child(this->back_.get());
 	this->text_container_->add_child(this->status_.get());
@@ -255,6 +276,7 @@ void MainMenuOptions::init()
 			this->play_wave(this->confirm_sound_);
 			this->context()->push(std::make_unique<ControlsSettingsMenu>(this->menu_context()));
 		});
+	this->focus_.add(this->restore_defaults_.get(), [this] { this->restore_defaults(); });
 	this->focus_.add(this->apply_.get(), [this] { this->apply_settings(); });
 	this->focus_.add(this->back_.get(), [this]
 		{

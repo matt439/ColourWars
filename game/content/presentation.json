@@ -213,7 +213,8 @@
       "reduce_effects": "Reduce effects",
       "pad": "Pad",
       "move_deadzone": "Move deadzone",
-      "aim_deadzone": "Aim deadzone"
+      "aim_deadzone": "Aim deadzone",
+      "restore_defaults": "Restore defaults"
     }
   },
 
@@ -272,7 +273,7 @@
     },
     "options_value_colour": "FFB77A",
     "options_warning_colour": "8A301C",
-    "options_spacing": { "x": 540.0, "y": 120.0 },
+    "options_spacing": { "x": 540.0, "y": 100.0 },
     "weapon_description": {
       "colour": "1B1C20",
       "shadow_offset": { "x": 1.0, "y": 1.0 },

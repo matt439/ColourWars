@@ -58,6 +58,28 @@ fill. No numeric field or artwork asset is added. The page captures its text
 and uses the existing input rearming, shared motion and Reduce effects policy.
 Other Options work remains open under `GAP#3.2`.
 
+## Options Restore defaults
+
+The required `menu_text.items.restore_defaults`, shipped as `Restore defaults`,
+is appended as the thirty-seventh menu item. Options places it at row 4 after
+Controls/audio (row 3); Apply and Back are rows 5 and 6. The existing first-row
+anchor and status y = `885` remain, with `main_menu.options_spacing.y` changed
+to `100` for the seven rows.
+
+Options captures geometry from `main_menu.setup_focus_padding` (`28, 7`) and
+`setup_shadow_offset` (`2`) while its paper colours remain live in
+`main_menu.art`. The local paper-geometry override keeps the existing item font
+and does not change other pages. No numeric field, font or asset is added.
+
+Restore defaults stages only the canonical `SaveData{}` resolution, fullscreen
+and palette values: 1920x1080, windowed and Random. It does not write Save,
+change the application display or reset play/pad settings. Apply retains its
+existing display/palette persistence behavior; Back discards the pending
+values, and returning from Controls/audio retains them. Applied fullscreen
+still disables resolution and shows its live dimensions until Apply, even when
+the restored pending fullscreen value is Off. Resolution revert and pause
+access remain open under `GAP#3.2`.
+
 ## Mode and Player Count paper
 
 The required `main_menu.setup_box_size` supplies the common paper panel for Mode
@@ -423,7 +445,7 @@ remain point-filtered and lettering linear-filtered.
 ## Shared headings and complete control legends
 
 The required `menu_text` object stores the shared menu brand, eleven headings,
-seventeen complete prompt-bar legends, thirty-six row labels, a solo-practice
+seventeen complete prompt-bar legends, thirty-seven row labels, a solo-practice
 hint, five Title/Home strings, three Controls/Pad Sticks help strings, eight
 fixed save-status messages, three shared setting values, two Pause confirmation
 questions, one Home Exit question, three End completion headings, two Stage Select status messages,
@@ -435,7 +457,7 @@ two fixed Stage Select mode labels:
 | `menu_text.brand` | One brand-line string |
 | `menu_text.headings` | `home`, `options`, `credits`, `controls_audio`, `pad_sticks`, `players`, `join_players`, `mode`, `teams`, `weapons`, `arena` |
 | `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits` |
-| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone` |
+| `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults` |
 | `menu_text.solo_practice_hint` | One Mode Select hint string |
 | `menu_text.title` | `wordmark`, `subtitle`, `start`, `no_controller` |
 | `menu_text.home_subtitle` | One Home subtitle string |
@@ -552,14 +574,16 @@ actions. The strings remain JSON settings outside numeric `tune`.
 | `fullscreen` | `Fullscreen` | Options label |
 | `team_palette` | `Team palette` | Options label |
 | `controls_audio` | `Controls / audio` | Options and Pause action |
-| `apply` | `Apply` | Options action |
-| `back` | `Back` | Options, Credits, Mode and Player Count action |
+| `restore_defaults` | `Restore defaults` | Options action, row 4 |
+| `apply` | `Apply` | Options action, row 5 |
+| `back` | `Back` | Options row 6; Credits, Mode and Player Count action |
 
-These ten roles are required and follow the same nonblank, single-line and
+These eleven roles are required and follow the same nonblank, single-line and
 punctuation-normalization rules as the other shared text. Startup checks each
 against `menu_style.fonts.item` and requires finite, positive measured bounds.
 Plain actions retain their measured size. Their text bounds, expanded on each
-side by `main_menu.art.focus_padding`, must fit the page's paper rectangle.
+side by the page's focus padding, must fit its paper rectangle. Home and Credits
+use `main_menu.art.focus_padding`; Options uses captured `setup_focus_padding`.
 That rectangle uses the page's existing `home_box_size`, `options_box_size` or
 `credits_box_size`, centered within `(1920, menu_style.chrome.footer_y)`.
 Positive Home/Options row spacing also limits the padded text height; Credits
@@ -932,7 +956,7 @@ text keeps its existing width-only fit: the scale starts at one and shrinks
 only when the measured width exceeds the available width. That width is the
 page paper's right edge minus its art shadow offset, horizontal focus padding
 and status x position. Options uses `main_menu.options_status_position` and its
-Options paper/art; Controls and Pad Sticks use
+Options paper with compact setup geometry; Controls and Pad Sticks use
 `controls_settings.status_position` and their shared paper/art. The available
 width and fitted scale must be finite and positive. Long supported messages
 remain valid when the fitted bounds fit; there is no character-count limit,
@@ -986,10 +1010,10 @@ remain finite and positive; there is no unscaled-width rejection,
 character-count cap, minimum
 scale or upscaling. Long supported values remain valid when their fitted bounds
 fit. Options' available width runs from `main_menu.options_value_x` to the
-Options paper's right edge minus `main_menu.art.shadow_offset` and horizontal
-focus padding; its available height is
-`main_menu.options_spacing.y - 2 * main_menu.art.focus_padding.y`.
-The shipped limits are `(924, 84)`.
+Options paper's right edge minus the captured `setup_shadow_offset` and
+horizontal `setup_focus_padding`; its available height is
+`main_menu.options_spacing.y - 2 * main_menu.setup_focus_padding.y`.
+The shipped limits are `(930, 86)`.
 
 Controls values start in the second layout column. Their available width is
 `controls_settings.controls_position.x - 2 * controls_settings.art.focus_padding.x -

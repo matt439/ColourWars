@@ -10,10 +10,13 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
     constexpr std::array<const wchar_t*, 10> legacy{ L"Play", L"Options", L"Credits", L"Exit",
         L"Resolution", L"Fullscreen", L"Team palette", L"Controls / audio", L"Apply", L"Back" };
     static_assert(legacy.size() == static_cast<size_t>(MenuItem::single_match));
+    constexpr std::array<MenuItem, 7> options_items{ MenuItem::resolution, MenuItem::fullscreen,
+        MenuItem::team_palette, MenuItem::controls_audio, MenuItem::restore_defaults, MenuItem::apply, MenuItem::back };
     using ItemLabels = std::array<std::wstring, static_cast<size_t>(MenuItem::count)>;
     const Presentation original = presentation;
     ItemLabels defaults = original.menu_text().items;
     for (size_t index = 0; index < legacy.size(); ++index) { defaults[index] = legacy[index]; }
+    defaults[static_cast<size_t>(MenuItem::restore_defaults)] = L"Restore defaults";
     Save preferences;
     auto& play = const_cast<PlaySettings&>(preferences.play_settings());
     play.music_volume = play.sfx_volume = 0;
@@ -62,15 +65,20 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
         const ItemLabels& labels, bool require_fitting = false, int focused_home_row = 0)
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.main_menu();
-        const auto& art = look.art;
+        MenuPaperArtPresentation art = look.art;
+        if (page == 1)
+        {
+            art.focus_padding = look.setup_focus_padding;
+            art.shadow_offset = look.setup_shadow_offset;
+        }
         const Frame actual = frame();
-        const int rows = page == 0 ? 4 : page == 1 ? 6 : 1;
+        const int rows = page == 0 ? 4 : page == 1 ? static_cast<int>(options_items.size()) : 1;
         const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
         for (int row = 0; row < rows; ++row)
         {
             const size_t item = page == 0 ? static_cast<size_t>(row) :
-                page == 1 ? static_cast<size_t>(row + 4) : static_cast<size_t>(MenuItem::back);
+                page == 1 ? static_cast<size_t>(options_items[static_cast<size_t>(row)]) : static_cast<size_t>(MenuItem::back);
             const Vector2F position = page == 0 ? look.home_position +
                 Vector2F(0.0f, look.home_spacing.y * static_cast<float>(row + 2)) :
                 page == 1 ? look.options_position + Vector2F(0.0f, look.options_spacing.y * static_cast<float>(row)) :
@@ -206,6 +214,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
         L"Controls~", L"Apply~", L"Back~" };
     ItemLabels old_labels = defaults;
     for (size_t index = 0; index < old_prefix.size(); ++index) { old_labels[index] = old_prefix[index]; }
+    old_labels[static_cast<size_t>(MenuItem::restore_defaults)] = L"Restore~ defaults";
     Presentation old = original;
     const_cast<MenuText&>(old.menu_text()).items = old_labels;
     old.validate_resources(*app.render_resources(), *app.audio_resources());
@@ -227,6 +236,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
         L"Fill display", L"Team colours", L"Audio and controls", L"Commit", L"Return" };
     ItemLabels new_labels = defaults;
     for (size_t index = 0; index < new_prefix.size(); ++index) { new_labels[index] = new_prefix[index]; }
+    new_labels[static_cast<size_t>(MenuItem::restore_defaults)] = L"Reset choices";
     Presentation next = original;
     const_cast<MenuText&>(next.menu_text()).items = new_labels;
     const_cast<MenuStyle&>(next.menu()).item_font = narrow_name;
@@ -259,7 +269,7 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
         }
     }
     require(records.good(), "Static menu item evidence write failed");
-    std::cout << "PASS actual Home/Options/Credits: ten independent legacy item roles at 720p/1080p/QHD, "
+    std::cout << "PASS actual Home/Options/Credits: eleven independent item roles at 720p/1080p/QHD, "
         "long fitted Options labels, custom item/font reopen and exact retained/reversed snapshots, focus, "
         "Credits Select return and frozen draw RNG\n";
 }

@@ -117,7 +117,7 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
         tap(Key::down);
         if (page == 0) { tap(Key::down); }
         tap(Key::right);
-        const int remaining = page == 0 ? 2 : page == 1 ? 5 : 2;
+        const int remaining = page == 0 ? 3 : page == 1 ? 5 : 2;
         for (int row = 0; row < remaining; ++row) { tap(Key::down); }
     };
     const auto apply = [&](int page)
@@ -150,7 +150,12 @@ void save_status_checks(Application& app, const Canvas& canvas, GameTuning& tuni
     const auto compare = [&](const std::string& name, int page, int state, const Presentation& snapshot,
         const Status& words, bool must_fit = false)
     {
-        const auto& art = page == 0 ? snapshot.main_menu().art : snapshot.controls_settings().art;
+        MenuPaperArtPresentation art = page == 0 ? snapshot.main_menu().art : snapshot.controls_settings().art;
+        if (page == 0)
+        {
+            art.focus_padding = snapshot.main_menu().setup_focus_padding;
+            art.shadow_offset = snapshot.main_menu().setup_shadow_offset;
+        }
         const auto position = page == 0 ? snapshot.main_menu().options_status_position : snapshot.controls_settings().status_position;
         const auto paper_size = page == 0 ? snapshot.main_menu().options_box_size : snapshot.controls_settings().box_size;
         const RectangleF paper((Vector2F(1920.0f, snapshot.menu().footer_y) - paper_size) / 2.0f, paper_size);

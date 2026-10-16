@@ -66,7 +66,7 @@ enum class MenuItem
 	match_length, one_player_practice, two_players, three_players, four_players,
 	resume, restart, quit, yes, no, change_teams, change_weapons, change_level,
 	exit_to_main_menu, pad_sticks, music_volume, sfx_volume, view_shake, aim_marker,
-	reduce_effects, pad, move_deadzone, aim_deadzone, count
+	reduce_effects, pad, move_deadzone, aim_deadzone, restore_defaults, count
 };
 
 struct MenuTitleText

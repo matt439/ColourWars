@@ -9,6 +9,9 @@ namespace
 		const MenuPresentationVariant variants(content);
 		const Presentation shipped = variants.load([](rapidjson::Document&) {});
 		const auto& menu = shipped.main_menu();
+		MenuPaperArtPresentation options_art = menu.art;
+		options_art.focus_padding = menu.setup_focus_padding;
+		options_art.shadow_offset = menu.setup_shadow_offset;
 		const float content_height = shipped.menu().footer_y;
 		const auto rejected = [&](const char* key, auto edit)
 		{
@@ -143,8 +146,9 @@ namespace
 				const float extent = axis[0] == 'x' ? 1920.0f : content_height;
 				const float length = axis[0] == 'x' ? size.x : size.y;
 				const float edge = menu.art.keyline_width * 3.0f;
+				const float shadow = anchor.credits ? menu.art.shadow_offset : options_art.shadow_offset;
 				for (const double value : { 1.0e100, static_cast<double>((extent - length) / 2.0f + edge),
-					static_cast<double>((extent + length) / 2.0f - menu.art.shadow_offset - edge) })
+					static_cast<double>((extent + length) / 2.0f - shadow - edge) })
 				{
 					rejected(anchor.key, [&](rapidjson::Document& json)
 						{ owner(json)[anchor.key][axis].SetDouble(value); });
@@ -157,11 +161,11 @@ namespace
 			rejected(key, [&](rapidjson::Document& json) { json["main_menu"][key].SetNull(); });
 		}
 		for (const double value : { 1.0e100, static_cast<double>(menu.options_position.x),
-			static_cast<double>(menu.options_position.x + menu.art.focus_padding.x),
+			static_cast<double>(menu.options_position.x + options_art.focus_padding.x),
 			static_cast<double>((1920.0f + menu.options_box_size.x) / 2.0f -
-				menu.art.shadow_offset - menu.art.focus_padding.x),
+				options_art.shadow_offset - options_art.focus_padding.x),
 			static_cast<double>((1920.0f + menu.options_box_size.x) / 2.0f -
-				menu.art.shadow_offset - menu.art.keyline_width * 3.0f) })
+				options_art.shadow_offset - options_art.keyline_width * 3.0f) })
 		{
 			rejected("options_value_x", [&](rapidjson::Document& json)
 				{ json["main_menu"]["options_value_x"].SetDouble(value); });
@@ -177,11 +181,23 @@ namespace
 		rejected("options_spacing", [&](rapidjson::Document& json)
 			{ json["main_menu"]["options_spacing"]["x"].SetDouble(1920.001); });
 		rejected("options_spacing", [&](rapidjson::Document& json)
-			{ json["main_menu"]["options_spacing"]["y"].SetFloat(menu.art.focus_padding.y * 2.0f); });
+			{ json["main_menu"]["options_spacing"]["y"].SetFloat(options_art.focus_padding.y * 2.0f); });
 		rejected("options_heading_position", [&](rapidjson::Document& json)
 			{ json["main_menu"]["options_heading_position"]["y"].SetFloat(menu.options_position.y); });
 		rejected("options_status_position", [&](rapidjson::Document& json)
-			{ json["main_menu"]["options_status_position"]["y"].SetFloat(menu.options_position.y + menu.options_spacing.y * 5.0f); });
+			{ json["main_menu"]["options_status_position"]["y"].SetFloat(menu.options_position.y + menu.options_spacing.y * 6.0f); });
+		// Compact Options geometry makes the old shared-art right edges legal
+		// reader anchors. Font-sized paper containment is checked separately.
+		const Presentation compact_boundary = variants.load([&](rapidjson::Document& json)
+		{
+			json["main_menu"]["options_heading_position"]["x"].SetFloat(
+				(1920.0f + menu.options_box_size.x) / 2.0f - menu.art.shadow_offset - menu.art.keyline_width * 3.0f);
+			json["main_menu"]["options_value_x"].SetFloat(
+				(1920.0f + menu.options_box_size.x) / 2.0f - menu.art.shadow_offset - menu.art.focus_padding.x);
+		});
+		require(compact_boundary.main_menu().options_heading_position.x == 1760.0f &&
+			compact_boundary.main_menu().options_value_x == 1744.0f,
+			"Compact Options reader rejected the former shared-art right boundaries");
 		for (const Anchors pair : { Anchors{ "heading_position", "position" },
 			Anchors{ "position", "back_position" } })
 		{

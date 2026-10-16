@@ -27,6 +27,7 @@ param(
     [switch] $StagePaperOnly,
     [switch] $HomeReturnFocusOnly,
     [switch] $HomeExitOnly,
+    [switch] $OptionsDefaultsOnly,
     [switch] $SettingsMenuOnly,
     [switch] $ControlsMenuOnly,
     [switch] $StickSettingsOnly,
@@ -36,7 +37,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -139,6 +140,7 @@ function Write-ContactSheet {
                 $_.Name -like 'stage-paper-*-detail.ppm' -or
                 $_.Name -like 'home-return-focus-*-detail.ppm' -or
                 $_.Name -like 'home-exit-*-detail.ppm' -or
+                $_.Name -like 'options-defaults-*-detail.ppm' -or
                 $_.Name -eq 'controls-menu-pad-sticks-1280x720.ppm' } | Sort-Object Name) {
             $bytes = [IO.File]::ReadAllBytes($file.FullName)
             $header = [Text.Encoding]::ASCII.GetString($bytes, 0, [Math]::Min(64, $bytes.Length))
@@ -270,6 +272,9 @@ function Write-ContactSheet {
         $homeExit = @($images | Where-Object { $_.name -like 'home-exit-*-1280x720-detail' })
         Write-ContactSheetPages -Images $homeExit -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-home-exit-contact'
+        $optionsDefaults = @($images | Where-Object { $_.name -like 'options-defaults-*-1280x720-detail' })
+        Write-ContactSheetPages -Images $optionsDefaults -CellWidth $cellWidth -CellHeight $cellHeight `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-options-defaults-contact'
         $controlsMenu = @($images | Where-Object { $_.name -like 'controls-menu-*-1280x720-detail' })
         Write-ContactSheetPages -Images $controlsMenu -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-controls-menu-contact'
@@ -444,6 +449,18 @@ elseif ($SettingsMenuOnly) {
     $result.Remove('stage')
     $result.checks = 'Options/Credits paper, all enabled focus cards/arrows, native ink/paper contrast, measured labels, all palette values, long failure status and complete authored credits at 720p/1080p/QHD, 4:3, 16:10 and ultrawide. Actual row edits, staged Apply, persisted reload and failed-write warning, Controls/audio return preserving pending edits/focus, Back discard, disabled fullscreen resolution and retained windowed preset, Credits Select/Back, frozen redraw, draw RNG, static Reduce effects and resize. Independent Options pending/saved/failure rasters pass across six sizes/aspects; authored width fitting and scale reset, missing-old-glyph status font, retained/reopened/reversed callbacks, interrupted/repeated Apply, controlled failure/recovery, isolated reload and both discard routes pass at 720p. No physical-controller, human readability or listening acceptance.'
     $result.checks += ' Independent Options On/Off/Random defaults pass across six sizes/aspects. An Options item-font fixture exercises width and tall-glyph height fitting, complete value/focus-card unions, Random-to-short-fixed-palette scale reset and replacement without an old glyph. Retained/reopened/reversed callbacks, both fullscreen toggle directions and Random palette cycles, one Controls child On/Off pair and return, interrupted/repeated windowed-Off Apply, controlled failure/recovery, isolated reload and discard pass at 720p.'
+}
+elseif ($OptionsDefaultsOnly) {
+    $result.scope = 'options-defaults-only'
+    $result.player_counts = @()
+    $result.palettes = @('blue_yellow', 'random')
+    $result.weapons = @()
+    $result.actions = @('all-seven-rows', 'staged-restore', 'repeat-restore', 'back-discard', 'escape-discard', 'controls-return', 'controls-save-merge', 'windowed-apply', 'repeat-apply', 'reload', 'failed-write', 'recovery', 'held-confirm-rearm', 'pad-reconnect', 'fullscreen-metadata-off', 'reduce-effects', 'lifecycle-reset', 'frozen-rng')
+    $result.input_slots = @(4, 3)
+    $result.inputs = 'Actual Options and Controls child in StateContext; public local keyboard messages and sparse scripted pad slot3. Nested isolated save profile with nondefault display/play settings and four distinct pad profiles. Windowed Apply uses the existing narrow CBT activation guard and offscreen hidden probe; fullscreen is metadata only.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.Remove('stage')
+    $result.checks = 'Independent complete seven-row Options paper/cards/arrow, fitted labels/values, plain text, pending/saved/failure status and footer at six sizes/aspects. Canonical display/palette defaults remain staged with active/window/file/play/profile state unchanged until Apply; repeated restore, both discard routes and Controls return retain intended values/focus. Hidden windowed Apply/repeated Apply/reload and six controlled temporary-file write refusals/recovery preserve every unrelated play field and all four slot profiles. At720p keyboard deactivation and held pad reconnect require fresh Restore, reduced effects/lifecycle/developer reset remain bounded, applied-fullscreen metadata keeps the original disabled/live-resolution policy until Off Apply, and a Controls-saved preference merges into the pending display Apply. Frozen pixels and draw RNG; no user-save, hardware-fullscreen, physical-pad, human readability, listening or performance acceptance.'
 }
 elseif ($HomeExitOnly) {
     $result.scope = 'home-exit-only'
@@ -729,7 +746,7 @@ try {
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
-    if ($TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly -or $HomeExitOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
+    if ($TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
     foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
         $arguments += '/I' + (Quote-Path $include)
     }
@@ -785,6 +802,7 @@ try {
     elseif ($StagePaperOnly) { $probeArguments += 'stage-paper' }
     elseif ($HomeReturnFocusOnly) { $probeArguments += 'home-return-focus' }
     elseif ($HomeExitOnly) { $probeArguments += 'home-exit' }
+    elseif ($OptionsDefaultsOnly) { $probeArguments += 'options-defaults' }
     elseif ($SettingsMenuOnly) { $probeArguments += 'settings-menu' }
     elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
     elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
@@ -807,6 +825,10 @@ try {
         throw "Visual probe exited with $($process.ExitCode)."
     }
     $expectedSaveFailures = @{}
+    if ($OptionsDefaultsOnly) {
+        $line = 'save failure: Could not write ' + (Join-Path $captures 'options-defaults-profile/ColourWars/save_data.json') + '.'
+        $expectedSaveFailures[$line] = 6
+    }
     if ($SettingsMenuOnly -or $result.scope -eq 'full-painter-matrix') {
         $line = 'save failure: Could not write ' + (Join-Path $captures 'settings-profile/ColourWars/save_data.json') + '.'
         $expectedSaveFailures[$line] = 1
@@ -885,6 +907,9 @@ try {
         $result.diagnostic = 'Settings-menu-only hardware check passed: actual Options/Credits navigation, row edits, delayed Apply, persisted reload and failed-save warning, Controls/audio return, Back discard, disabled fullscreen resolution and retained windowed preset. Measured full copy/values/status, native paper/cards/arrows/contrast, frozen redraw, draw RNG, static Reduce effects and resize passed across six sizes/aspects. Independent Options pending/saved/failure rasters at six sizes/aspects, authored width fitting and short-copy scale reset, missing-old-glyph font, retained/reopened/reversed callbacks, interrupted/repeated Apply, controlled failure/recovery, isolated reload and both discard routes passed. Other painter matrices, physical controllers, human readability and listening acceptance were not run.'
         $result.diagnostic += ' Options On/Off/Random defaults at six sizes/aspects, width/height fitting, complete focus unions, Random-to-short-fixed-palette scale reset, an Options font missing an old glyph, retained/reopened/reversed callbacks, both fullscreen toggle directions/Random cycles, one Controls child On/Off pair and return, interrupted/repeated windowed-Off Apply, failure/recovery, isolated reload and discard passed.'
     }
+    elseif ($OptionsDefaultsOnly) {
+        $result.diagnostic = 'Options-defaults-only native check passed: independent complete seven-row Options across six sizes/aspects, staged/repeated restore without active/file/window changes, hidden windowed Apply/repeat/reload, six exact controlled failed writes and recovery, all unrelated play fields/four slot profiles preserved, both discard paths, Controls pending return and saved-preference merge, keyboard/pad rearming, fullscreen metadata without hardware fullscreen, reduction/lifecycle and frozen draw RNG. Scripted reader seam; no user-save, physical-pad, human readability, listening or performance acceptance.'
+    }
     elseif ($HomeExitOnly) {
         $result.diagnostic = 'Home-exit-only native check passed: independent complete confirmation paper/question/answers/footer at six sizes/aspects; safe No/Back, exact retained Home Exit return/reopen, interruption/held reconnect/conflicts/simultaneous-device safety, reduction/lifecycle/developer reset and dismissal, resize and frozen pixels/empty plan/draw RNG. One pending music-exit begin latched outgoing pixels and suppressed repeated input until safe developer cancellation; final deliberate no-update/muted Yes closed only this hidden window. Scripted reader seam; no physical-pad, human readability, listening or performance acceptance.'
     }
@@ -916,7 +941,7 @@ try {
         $result.diagnostic = 'Menu-motion-only hardware check passed: actual Home changed-focus arrows and Controls OptionRow paper initial/middle/rest, plus Apply pressed/rest native rasters at 720p/1080p/QHD, unchanged label/value lettering and local ornament bounds; first focus stays still, nonpositive time, rapid navigation, immediate applied Reduce effects, actual Controls Apply/reload/reversal, deactivation, nested Sticks return, frozen redraw/RNG and resize. Normal GamepadReader backend; other painter matrices, physical pads, human readability, listening and performance acceptance were not run.'
     }
     elseif ($MenuTextOnly) {
-        $result.diagnostic = 'Menu-text-only hardware check passed: independent brand, 11 headings, 17 legends and ten static item roles at 720p/1080p/QHD; eight Mode/Count labels and solo hint at six sizes/aspects; reachable Random-stage full text/shadow rasters, width-only long/short fitting, real/Random cycles without RNG or plan commits, captured copy/item font across replacement/reopen/reversal, live fit geometry and deliberate eligible Random start with pending music-exit plan. Actual arena lock/unlock, fitted Options labels, duration cycle/wrap/confirm, all modes/counts/layouts/keyboard claims, solo-disabled series, Join/Mode/Home Back and Credits return passed. Title/Home wordmark and fixed copy, complete Start card, separate title/item/detail fonts, retained/reopened/reversed snapshots, repeated Title/Home/Back, Mode return and interrupted Enter rearming passed at 720p. The no-controller hint remained hidden under the keyboard policy and matched its full independently measured paper crop. Custom text/font snapshots through prompt rebuilds, focus, duration and child return, frozen redraw and draw RNG passed. Other painter matrices, visible controller-loss, physical controllers, human readability, performance and listening acceptance were not run.'
+        $result.diagnostic = 'Menu-text-only hardware check passed: independent brand, 11 headings, 17 legends and eleven static item roles at 720p/1080p/QHD; eight Mode/Count labels and solo hint at six sizes/aspects; reachable Random-stage full text/shadow rasters, width-only long/short fitting, real/Random cycles without RNG or plan commits, captured copy/item font across replacement/reopen/reversal, live fit geometry and deliberate eligible Random start with pending music-exit plan. Actual arena lock/unlock, fitted Options labels, duration cycle/wrap/confirm, all modes/counts/layouts/keyboard claims, solo-disabled series, Join/Mode/Home Back and Credits return passed. Title/Home wordmark and fixed copy, complete Start card, separate title/item/detail fonts, retained/reopened/reversed snapshots, repeated Title/Home/Back, Mode return and interrupted Enter rearming passed at 720p. The no-controller hint remained hidden under the keyboard policy and matched its full independently measured paper crop. Custom text/font snapshots through prompt rebuilds, focus, duration and child return, frozen redraw and draw RNG passed. Other painter matrices, visible controller-loss, physical controllers, human readability, performance and listening acceptance were not run.'
         $result.diagnostic += ' Both arena status messages passed independent full-shadow raster checks across real/Random browse/locked states at six sizes, with captured detail font/position/shadow retained through forced refresh/reopen/reversal and live ink updates; provisional plan and RNG remained unchanged.'
         $result.diagnostic += ' Four fixed briefing strings plus adjacent mode/roster passed independent complete-shadow crops for solo and connected scripted 2P single/best-three/best-five at six sizes. Captured brand font/text/position/shadow/ink survived replacement/reopen/reversal and selection refresh, including the full solo overhang. This focused binary used the scripted reader seam, with neutral pads outside the briefing fixture; no physical pad acceptance.'
         $result.diagnostic += ' Fixed Random navigation and both fixed hints passed full-shadow rasters across real/Random browse/locked states at six sizes, including unchanged numbered arenas/Random count. Unscaled navigation, width-only hint fit/short reset, separate detail/brand font snapshots, cached versus live fit refresh/reopen/reversal and ignored locked arrows preserved the provisional plan and RNG.'

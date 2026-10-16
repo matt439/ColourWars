@@ -218,9 +218,11 @@ void MenuIcon::draw(DrawList& list) const
 
 MenuPaperArtwork::MenuPaperArtwork(const RectangleF& rectangle, RenderResources* resources,
 	const MenuStyle* style, const MenuPaperArtPresentation* art, const FocusGroup* focus,
-	const UiWidget* primary, const MenuFocusMotion* motion, const PlaySettings* settings) :
+	const UiWidget* primary, const MenuFocusMotion* motion, const PlaySettings* settings,
+	const MenuPaperArtPresentation* geometry) :
 	UiTexture("box", style->sprite_sheet, style->fill_frame, rectangle, resources),
-	art_(art), focus_(focus), primary_(primary), motion_(motion), settings_(settings)
+	art_(art), geometry_(geometry != nullptr ? geometry : art), focus_(focus),
+	primary_(primary), motion_(motion), settings_(settings)
 {
 }
 
@@ -240,7 +242,7 @@ void MenuPaperArtwork::draw(DrawList& list) const
 	if (this->primary_ != nullptr && !this->primary_->hidden())
 	{
 		RectangleF primary = this->primary_->bounds();
-		primary.inflate(this->art_->focus_padding);
+		primary.inflate(this->geometry_->focus_padding);
 		this->draw_card(list, primary, this->art_->focus_fill,
 			focused == this->primary_ ? press : 0.0f);
 	}
@@ -248,7 +250,7 @@ void MenuPaperArtwork::draw(DrawList& list) const
 	if (eligible)
 	{
 		RectangleF row = focused->bounds();
-		row.inflate(this->art_->focus_padding);
+		row.inflate(this->geometry_->focus_padding);
 		if (focused != this->primary_)
 		{
 			this->draw_card(list, row, this->art_->focus_fill, press);
@@ -282,5 +284,7 @@ void MenuPaperArtwork::fill(DrawList& list, const RectangleF& rectangle, const C
 void MenuPaperArtwork::draw_card(DrawList& list, const RectangleF& bounds, const Colour& colour,
 	float press_fraction) const
 {
-	draw_paper_card(list, this->sprite_sheet(), this->frame(), *this->art_, bounds, colour, press_fraction);
+	MenuPaperArtPresentation art = *this->art_;
+	art.shadow_offset = this->geometry_->shadow_offset;
+	draw_paper_card(list, this->sprite_sheet(), this->frame(), art, bounds, colour, press_fraction);
 }

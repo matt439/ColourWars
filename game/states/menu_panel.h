@@ -82,13 +82,15 @@ private:
 
 // Shared Paint.exe modal artwork. Focus, widgets and motion are borrowed from
 // the page, preferences from Save. The primary card stays visible off focus.
+// Optional geometry supplies padding and shadow while art colours stay live.
 class MenuPaperArtwork final : public labrador::UiTexture
 {
 public:
 	MenuPaperArtwork(const mattmath::RectangleF& rectangle,
 		labrador::RenderResources* resources, const MenuStyle* style, const MenuPaperArtPresentation* art,
 		const labrador::FocusGroup* focus, const labrador::UiWidget* primary = nullptr,
-		const MenuFocusMotion* motion = nullptr, const PlaySettings* settings = nullptr);
+		const MenuFocusMotion* motion = nullptr, const PlaySettings* settings = nullptr,
+		const MenuPaperArtPresentation* geometry = nullptr);
 	void draw(labrador::DrawList& list) const override;
 private:
 	void fill(labrador::DrawList& list, const mattmath::RectangleF& rectangle,
@@ -96,6 +98,7 @@ private:
 	void draw_card(labrador::DrawList& list, const mattmath::RectangleF& bounds,
 		const labrador::Colour& colour, float press_fraction = 0.0f) const;
 	const MenuPaperArtPresentation* art_;
+	const MenuPaperArtPresentation* geometry_;
 	const labrador::FocusGroup* focus_;
 	const labrador::UiWidget* primary_;
 	const MenuFocusMotion* motion_;

@@ -88,7 +88,13 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
         const Presentation& snapshot, bool focused, int fit_kind = 0)
     {
         const auto& look = snapshot.main_menu(); const auto& control = snapshot.controls_settings();
-        const auto& art = controls_page ? control.art : look.art; const auto& style = snapshot.menu();
+        MenuPaperArtPresentation art = controls_page ? control.art : look.art;
+        if (!controls_page)
+        {
+            art.focus_padding = look.setup_focus_padding;
+            art.shadow_offset = look.setup_shadow_offset;
+        }
+        const auto& style = snapshot.menu();
         const auto& font = controls_page ? control.item_font : style.item_font;
         const Vector2F position = controls_page ? control.layout.position : look.options_position;
         const Vector2F spacing = controls_page ? control.layout.spacing : look.options_spacing;
@@ -179,7 +185,7 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
                 snapshot.team_palette().fixed_pair(TeamColourPair::blue_yellow).label, snapshot, true, custom ? 3 : 0);
             tap(Key::right);
             compare(name + "-palette-random-cycle", false, 2, words.random, snapshot, true, custom ? (short_values ? 3 : 1) : 0);
-            tap(Key::down); tap(Key::down);
+            tap(Key::down); tap(Key::down); tap(Key::down);
         }
     };
     const auto compare_pending = [&](const std::string& name, const Presentation& snapshot, const Values& words)
@@ -289,12 +295,12 @@ void settings_value_checks(Application& app, const Canvas& canvas, GameTuning& t
     }
     else
     {
-        tap(Key::up); presentation = next; tap(Key::enter); tick(); require(stack.depth() == 3, "Options value parent failed to open Controls");
+        tap(Key::up); tap(Key::up); presentation = next; tap(Key::enter); tick(); require(stack.depth() == 3, "Options value parent failed to open Controls");
         tap(Key::down); tap(Key::down); tap(Key::down);
         compare("new-child-on", true, 3, next_words.on, next, true); tap(Key::left);
         compare("new-child-off", true, 3, next_words.off, next, true); tap(Key::escape); tick();
         require(stack.depth() == 2, "Controls child Back lost its Options value parent");
-        compare_pending("old-parent-after-child", old, long_words); tap(Key::down); apply();
+        compare_pending("old-parent-after-child", old, long_words); tap(Key::down); tap(Key::down); apply();
         Save reloaded; reloaded.load_save_file(); require(!reloaded.fullscreen() && reloaded.team_palette() == TeamColourPair::random,
             "Value parent Apply lost the retained windowed or Random choice");
     }

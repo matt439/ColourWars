@@ -54,6 +54,9 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         MenuPaperArtPresentation original;
         ~RestoreSettingsArt() { this->art = this->original; }
     } restore_art{ art, art };
+    MenuPaperArtPresentation options_art = art;
+    options_art.focus_padding = look.setup_focus_padding;
+    options_art.shadow_offset = look.setup_shadow_offset;
     const Vector2F area(menu_consts::DESIGN_RESOLUTION.x, style.footer_y);
     const RectangleF options_panel((area - look.options_box_size) / 2.0f, look.options_box_size);
     const RectangleF credits_panel((area - look.credits_box_size) / 2.0f, look.credits_box_size);
@@ -65,13 +68,15 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     {
         return RectangleF(position, measure(font, text));
     };
-    const auto card = [&](RectangleF bounds)
+    const auto card = [&](RectangleF bounds, bool options = true)
     {
-        bounds.inflate(art.focus_padding + Vector2F(art.keyline_width + 2.0f));
+        const auto& page_art = options ? options_art : art;
+        bounds.inflate(page_art.focus_padding + Vector2F(page_art.keyline_width + 2.0f));
         return bounds;
     };
-    const std::array<const wchar_t*, 6> labels{
-        L"Resolution", L"Fullscreen", L"Team palette", L"Controls / audio", L"Apply", L"Back" };
+    const std::array<const wchar_t*, 7> labels{
+        L"Resolution", L"Fullscreen", L"Team palette", L"Controls / audio", L"Restore defaults", L"Apply", L"Back" };
+    constexpr size_t apply_row = 5, back_row = 6;
     const auto row_label = [&](size_t index)
     {
         return text_bounds(style.item_font, labels[index], look.options_position +
@@ -97,12 +102,12 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const RectangleF credits_heading = text_bounds(style.heading_font, L"Credits", look.credits_heading_position);
     const RectangleF credits_body = text_bounds(look.credits_font, look.credits_text, look.credits_position);
     const RectangleF credits_back = text_bounds(style.item_font, L"Back", look.credits_back_position);
-    require(options_panel.bottom() + art.shadow_offset < style.footer_y &&
+    require(options_panel.bottom() + options_art.shadow_offset < style.footer_y &&
         credits_panel.bottom() + art.shadow_offset < style.footer_y,
         "Options/Credits paper overlaps the shared controls footer");
     std::cout << "OPTIONS heading=" << options_heading.x << ',' << options_heading.y << ',' <<
         options_heading.width << ',' << options_heading.height << " first-card-y=" << card(row_label(0)).y << '\n';
-    for (const wchar_t* label : { L"Resolution", L"Fullscreen", L"Team palette", L"Controls / audio", L"Apply", L"Back", L"A: Blue / B: Yellow", L"3840x2160" })
+    for (const wchar_t* label : { L"Resolution", L"Fullscreen", L"Team palette", L"Controls / audio", L"Restore defaults", L"Apply", L"Back", L"A: Blue / B: Yellow", L"3840x2160" })
     {
         const Vector2F size = measure(style.item_font, label);
         std::wcout << L"MEASURE " << label << L"=" << size.x << L',' << size.y << L'\n';
@@ -116,7 +121,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     {
         require(options_panel.contains(card(row_label(index))),
             "Measured Options action/card escapes its paper");
-        require(look.options_spacing.y > row_label(index).height + art.focus_padding.y * 2.0f,
+        require(look.options_spacing.y > row_label(index).height + options_art.focus_padding.y * 2.0f,
             "Options cards overlap at actual font height");
     }
     for (const std::wstring& value : { std::wstring(L"3840x2160"), std::wstring(L"Off"),
@@ -125,7 +130,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         presentation.team_palette().fixed_pair(TeamColourPair::blue_yellow).label, std::wstring(L"Random") })
     {
         const size_t index = value.find(L'x') != std::wstring::npos ? 0 : value == L"Off" ? 1 : 2;
-        require(row_label(index).right() + art.focus_padding.x < look.options_value_x &&
+        require(row_label(index).right() + options_art.focus_padding.x < look.options_value_x &&
             options_panel.contains(card(row_bounds(index, value))),
             "Measured Options value overlaps its label or escapes its paper/card");
     }
@@ -133,15 +138,15 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         L"Settings active for this run. Could not save for next time." })
     {
         const RectangleF bounds = text_bounds(presentation.prompt_bar().font, status, look.options_status_position);
-        const RectangleF back = card(row_label(5));
+        const RectangleF back = card(row_label(back_row));
         const bool separate = bounds.right() <= back.x || bounds.x >= back.right() ||
             bounds.bottom() <= back.y || bounds.y >= back.bottom();
         require(options_panel.contains(bounds) && separate,
             "Measured Options save status escapes its paper or overlaps Back");
     }
     require(credits_panel.contains(credits_heading) && credits_panel.contains(credits_body) &&
-        credits_panel.contains(card(credits_back)) && credits_heading.bottom() < credits_body.y &&
-        credits_body.bottom() < card(credits_back).y,
+        credits_panel.contains(card(credits_back, false)) && credits_heading.bottom() < credits_body.y &&
+        credits_body.bottom() < card(credits_back, false).y,
         "Measured Credits copy/Back overlap or escape their paper");
 
     app.keyboard()->set_focused(true);
@@ -231,8 +236,9 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
             focused.value_or(RectangleF::ZERO), app.render_resources());
         FocusGroup focus;
         if (focused.has_value()) { focus.add(&focus_widget); }
+        const auto& page_art = focused.has_value() ? options_art : art;
         const MenuPaperArtwork artwork(focused.has_value() ? options_panel : credits_panel,
-            app.render_resources(), &style, &art, &focus);
+            app.render_resources(), &style, &page_art, &focus);
         const auto fixture = [&](TextureFilter filter)
         {
             Renderer& renderer = *app.renderer();
@@ -263,21 +269,22 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
                 "720p settings lettering negative control failed to distinguish point sampling");
         }
     };
-    const auto assert_focus = [&](const Frame& normal, const RectangleF& bounds)
+    const auto assert_focus = [&](const Frame& normal, const RectangleF& bounds, bool options = true)
     {
         const Colour original = art.focus_fill;
         art.focus_fill = Colour(0.0f, 1.0f, 1.0f);
         const Frame tinted = main_menu_frame(app);
         art.focus_fill = original;
         const RectangleI delta = foreground_delta_bounds(normal, tinted);
-        const RectangleI expected = project(card(bounds));
+        const RectangleI expected = project(card(bounds, options));
         require(delta.width > 0 && delta.height > 0 && expected.contains(delta),
             "Actual Options/Credits focus did not follow its enabled row");
         const size_t fill_pixels = foreground_local_delta(normal, tinted,
             RectangleF(Vector2F(expected.position()), Vector2F(expected.size())));
         require(fill_pixels > 30, "Actual settings focus has no substantial paper fill");
-        RectangleF padded = bounds; padded.inflate(art.focus_padding);
-        const float pen = art.keyline_width;
+        const auto& page_art = options ? options_art : art;
+        RectangleF padded = bounds; padded.inflate(page_art.focus_padding);
+        const float pen = page_art.keyline_width;
         const RectangleI arrow = project(RectangleF(padded.x - pen * 8.0f,
             padded.center().y - pen * 4.0f, pen * 7.0f, pen * 8.0f));
         const Colour ink = art.ink;
@@ -313,7 +320,9 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     {
         const Frame normal = main_menu_frame(app);
         stable(normal);
-        RectangleF expanded = panel; expanded.inflate(Vector2F(art.keyline_width + art.shadow_offset + 4.0f));
+        const bool options = std::string(page) != "credits";
+        const auto& page_art = options ? options_art : art;
+        RectangleF expanded = panel; expanded.inflate(Vector2F(page_art.keyline_width + page_art.shadow_offset + 4.0f));
         const RectangleI pixels = project(expanded);
         require(pixels.x >= 0 && pixels.y >= 0 && pixels.right() <= normal.width && pixels.bottom() <= normal.height,
             "Options/Credits paper escaped a supported aspect ratio");
@@ -325,7 +334,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         const size_t paper_pixels = foreground_local_delta(normal, tinted,
             RectangleF(Vector2F(pixels.position()), Vector2F(pixels.size())));
         require(paper_pixels > 100, "Actual settings paper lost its visible fill");
-        const size_t focus_pixels = assert_focus(normal, focus_bounds);
+        const size_t focus_pixels = assert_focus(normal, focus_bounds, options);
         contrast(normal, focus_bounds);
         const std::string stem = std::string("settings-menu-") + page + '-' + focus + '-' +
             std::to_string(normal.width) + 'x' + std::to_string(normal.height);
@@ -349,8 +358,8 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
         {
             const std::wstring value = row == 0 ? L"1920x1080" : row == 1 ? L"Off" : row == 2 ?
                 presentation.team_palette().fixed_pair(TeamColourPair::blue_yellow).label : L"";
-            const Frame frame = capture("options", std::array<const char*, 6>{
-                "resolution", "fullscreen", "palette", "controls", "apply", "back" }[row],
+            const Frame frame = capture("options", std::array<const char*, 7>{
+                "resolution", "fullscreen", "palette", "controls", "restore-defaults", "apply", "back" }[row],
                 options_panel, row_bounds(row, value));
             contrast(frame, options_heading);
             linear_lettering(frame, style.heading_font, L"Options", options_heading);
@@ -363,7 +372,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
             if (row + 1 < labels.size()) { tap(Key::down); }
         }
         tap(Key::up);
-        std::ignore = assert_focus(main_menu_frame(app), row_label(4));
+        std::ignore = assert_focus(main_menu_frame(app), row_label(apply_row));
         open(std::make_unique<MainMenuCredits>(&context));
         const Frame credits = capture("credits", "back", credits_panel, credits_back);
         contrast(credits, credits_heading); contrast(credits, credits_body);
@@ -421,7 +430,8 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     // Apply through the real page, then load a fresh Save to check persistence.
     open(std::make_unique<MainMenuOptions>(&context));
     tap(Key::left); tap(Key::down); tap(Key::down); tap(Key::right);
-    tap(Key::down); tap(Key::down); apply();
+    for (size_t row = 2; row < apply_row; ++row) { tap(Key::down); }
+    apply();
     resize_page({ 1280, 720 });
     require(preferences.resolution() == ScreenResolution::s_1280_720 &&
         preferences.team_palette() == TeamColourPair::random && !preferences.fullscreen() && !app.fullscreen(),
@@ -430,7 +440,7 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     require(restored.resolution() == preferences.resolution() && restored.team_palette() == preferences.team_palette() &&
         restored.fullscreen() == preferences.fullscreen() && restored.play_settings().music_volume == 0,
         "Actual Options Apply failed to preserve the isolated settings after reload");
-    const Frame applied = capture("options", "applied", options_panel, row_label(4));
+    const Frame applied = capture("options", "applied", options_panel, row_label(apply_row));
     contrast(applied, text_bounds(presentation.prompt_bar().font,
         L"Settings applied and saved.", look.options_status_position));
 
@@ -439,10 +449,13 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const std::string last_saved = saved_bytes();
     const std::filesystem::path blocked = save_path.wstring() + L".tmp";
     require(std::filesystem::create_directory(blocked), "Cannot block the isolated save's temporary file");
-    tap(Key::up); tap(Key::up); tap(Key::right); tap(Key::down); tap(Key::down); apply();
+    for (size_t row = 2; row < apply_row; ++row) { tap(Key::up); }
+    tap(Key::right);
+    for (size_t row = 2; row < apply_row; ++row) { tap(Key::down); }
+    apply();
     require(preferences.team_palette() == TeamColourPair::blue_orange && saved_bytes() == last_saved,
         "Failed settings save lost its active choice or replaced the previous JSON");
-    const Frame failed = capture("options", "save-failed", options_panel, row_label(4));
+    const Frame failed = capture("options", "save-failed", options_panel, row_label(apply_row));
     contrast(failed, text_bounds(presentation.prompt_bar().font,
         L"Settings active for this run. Could not save for next time.", look.options_status_position));
     require(std::filesystem::remove(blocked), "Could not remove the isolated write refusal fixture");
@@ -456,17 +469,18 @@ void settings_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tu
     const Frame fullscreen = capture("options", "disabled-resolution", options_panel, row_bounds(1, L"On"));
     contrast(fullscreen, row_label(0)); contrast(fullscreen, value_bounds(0, L"1280x720"));
     tap(Key::up);
-    std::ignore = assert_focus(main_menu_frame(app), row_label(5));
+    std::ignore = assert_focus(main_menu_frame(app), row_label(back_row));
     tap(Key::down);
     std::ignore = assert_focus(main_menu_frame(app), row_bounds(1, L"On"));
     tap(Key::right);
     std::ignore = assert_focus(main_menu_frame(app), row_bounds(1, L"Off"));
-    tap(Key::down); tap(Key::down); tap(Key::down); apply();
+    for (size_t row = 1; row < apply_row; ++row) { tap(Key::down); }
+    apply();
     require(!preferences.fullscreen() && !app.fullscreen() &&
         preferences.resolution() == ScreenResolution::s_1920_1080,
         "Leaving fullscreen lost the retained windowed resolution preset");
     resize_page({ 1280, 720 });
-    tap(Key::up); tap(Key::up); tap(Key::up); tap(Key::up);
+    for (size_t row = 0; row < apply_row; ++row) { tap(Key::up); }
     std::ignore = assert_focus(main_menu_frame(app), row_bounds(0, L"1920x1080"));
     tap(Key::escape);
     const Frame options_home = main_menu_frame(app);

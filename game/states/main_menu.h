@@ -148,6 +148,7 @@ public:
 	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
+	MenuPaperArtPresentation options_art_;
 	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiText> heading_ = nullptr;
@@ -156,6 +157,7 @@ private:
 	std::unique_ptr<OptionRow> full_screen_row_ = nullptr;
 	std::unique_ptr<OptionRow> team_palette_row_ = nullptr;
 	std::unique_ptr<labrador::UiText> controls_ = nullptr;
+	std::unique_ptr<labrador::UiText> restore_defaults_ = nullptr;
 
 	std::unique_ptr<labrador::UiText> apply_ = nullptr;
 	std::unique_ptr<labrador::UiText> back_ = nullptr;
@@ -169,6 +171,7 @@ private:
 	void adjust_focused_value(labrador::Direction direction);
 	void set_status(const std::wstring& text, const labrador::Colour& colour);
 	void apply_settings();
+	void restore_defaults();
 	void update_resolution_selection_text();
 
 	// Shows the selected preset when windowed, or the live size in a disabled row

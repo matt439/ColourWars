@@ -184,7 +184,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
             tap(GamepadButton::b); still("back-action-" + std::to_string(selected), selected, true);
             // No direction is sent: the newly restored cursor must reopen its origin.
             tap(GamepadButton::a); child_matches(children[static_cast<size_t>(selected)]); tick();
-            if (selected == 1) { for (int row = 0; row < 5; ++row) { tap(GamepadButton::dpad_down); } }
+            if (selected == 1) { for (int row = 0; row < 6; ++row) { tap(GamepadButton::dpad_down); } }
             tap(GamepadButton::a); still("back-row-" + std::to_string(selected), selected, true);
             tap(GamepadButton::a); child_matches(children[static_cast<size_t>(selected)]);
             tap(GamepadButton::b); still("repeat-back-" + std::to_string(selected), selected);
@@ -213,7 +213,7 @@ void home_return_focus_matrix(Application& app, const Canvas& canvas, GameTuning
             if (selected != 0)
             {
                 tap(GamepadButton::a); child_matches(children[static_cast<size_t>(selected)]); tick();
-                if (selected == 1) { for (int row = 0; row < 5; ++row) { tap(GamepadButton::dpad_down); } }
+                if (selected == 1) { for (int row = 0; row < 6; ++row) { tap(GamepadButton::dpad_down); } }
                 tap(GamepadButton::a); still("repeat-back-row-" + std::to_string(selected), selected);
             }
         }
