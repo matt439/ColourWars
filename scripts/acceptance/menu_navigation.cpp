@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/menu_input.h"
+#include "game/states/menu_level_settings.h"
 #include "game/presentation.h"
 #include <cstdlib>
 #include <filesystem>
@@ -50,6 +51,69 @@ namespace
     {
         return static_cast<uint16_t>(1u << static_cast<unsigned>(value));
     }
+
+    void check_owner_routing()
+    {
+        MenuLevelSettings roster;
+        roster.set_player_count(2);
+        roster.begin_input_claims(3);
+        require(roster.claim_input_slot(0), "Owner-routing fixture must retain sparse pad slots 3 and 0");
+        std::vector<ProcessedMenuInput> inputs(input_slots::count);
+        const auto same = [](const ProcessedMenuInput& left, const ProcessedMenuInput& right)
+        {
+            return left.connected == right.connected && left.direction == right.direction && left.action == right.action;
+        };
+        const auto neutral = [&](const ProcessedMenuInput& result) { return same(result, ProcessedMenuInput()); };
+        inputs[0] = { Direction::down, MenuInputAction::shuffle, true };
+        inputs[1] = { Direction::left, MenuInputAction::proceed, true };
+        inputs[3] = { Direction::right, MenuInputAction::back, true };
+        inputs[input_slots::keyboard_and_mouse] = { Direction::up, MenuInputAction::pause, true };
+        require(same(menu_input_for_owner(inputs, 3, roster), inputs[3]),
+            "A connected owner must retain action and direction despite other participants and nonparticipants");
+        inputs[3] = { Direction::none, MenuInputAction::none, true };
+        require(same(menu_input_for_owner(inputs, 3, roster), inputs[3]),
+            "A connected neutral owner must keep exclusive control");
+        inputs[2] = { Direction::up, MenuInputAction::pause, true };
+        require(roster.player_index_for_slot(2) == -1 && same(menu_input_for_owner(inputs, 2, roster), inputs[2]),
+            "The shared owner helper must preserve a connected opening device even outside the roster");
+        inputs[2].connected = false;
+        inputs[3] = { Direction::right, MenuInputAction::back, true };
+        require(same(menu_input_for_owner(inputs, 2, roster), inputs[0]),
+            "A missing owner must fall back to an active participant in device-slot order, not roster order");
+        inputs[0] = { Direction::none, MenuInputAction::none, true };
+        require(same(menu_input_for_owner(inputs, 2, roster), inputs[3]),
+            "A neutral earlier participant must allow a later participant's action and direction");
+        inputs[3] = { Direction::right, MenuInputAction::none, true };
+        require(same(menu_input_for_owner(inputs, 2, roster), inputs[3]),
+            "Participant fallback must preserve navigation without an action");
+        inputs[3] = { Direction::none, MenuInputAction::back, true };
+        require(same(menu_input_for_owner(inputs, 2, roster), inputs[3]),
+            "Participant fallback must preserve an action without navigation");
+        inputs[3] = { Direction::none, MenuInputAction::none, true };
+        inputs[0].connected = false;
+        require(neutral(menu_input_for_owner(inputs, 2, roster)),
+            "One connected neutral participant must block rescue by an active nonparticipant or keyboard");
+        inputs[0] = { Direction::down, MenuInputAction::shuffle, false };
+        inputs[3] = { Direction::right, MenuInputAction::back, false };
+        require(same(menu_input_for_owner(inputs, 2, roster), inputs[1]),
+            "When every participant is missing, the first active connected device must rescue the menu");
+        inputs[1] = { Direction::none, MenuInputAction::none, true };
+        require(same(menu_input_for_owner(inputs, 2, roster), inputs[input_slots::keyboard_and_mouse]),
+            "Neutral nonparticipants must not block keyboard rescue when every participant is missing");
+        inputs[input_slots::keyboard_and_mouse] = { Direction::none, MenuInputAction::none, true };
+        require(neutral(menu_input_for_owner(inputs, 2, roster)),
+            "All missing or neutral devices must leave owner routing neutral");
+        inputs[1] = { Direction::left, MenuInputAction::proceed, true };
+        for (const int invalid : { -1, input_slots::count, input_slots::count + 7 })
+        {
+            require(neutral(menu_input_for_owner(inputs, invalid, roster)),
+                "An invalid opening slot must not route another device's activity");
+        }
+        const std::vector<ProcessedMenuInput> short_inputs(inputs.begin(), inputs.begin() + 2);
+        require(neutral(menu_input_for_owner(short_inputs, 3, roster)) &&
+            neutral(menu_input_for_owner({}, 0, roster)),
+            "An owner outside the supplied input vector must stay neutral");
+    }
 }
 
 int main(int argc, char** argv)
@@ -61,6 +125,7 @@ int main(int argc, char** argv)
         const GameTuning tuning((std::filesystem::path(argv[1]) / "tuning.json").string().c_str());
         const float delay = look.menu().repeat_delay;
         const float interval = look.menu().repeat_interval;
+        check_owner_routing();
         require(delay > interval && interval > 0, "Authored repeat must have a longer first delay");
         MenuDirectionRepeat navigation;
         GamepadState pad;
@@ -220,7 +285,7 @@ int main(int argc, char** argv)
         input.reset_pad_actions(0);
         require(input.menu_inputs()[input_slots::keyboard_and_mouse].direction == before_reset,
             "Resetting one pad must preserve other device results");
-        std::cout << "PASS menu navigation: press, repeat, hysteresis, page arming, focus and stable reads\n";
+        std::cout << "PASS menu navigation: press, repeat, hysteresis, page arming, focus, stable reads and owner routing\n";
         return EXIT_SUCCESS;
     }
     catch (const std::exception& error)

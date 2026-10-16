@@ -5,6 +5,7 @@
 #include <cmath>
 #include <exception>
 #include <optional>
+#include <stdexcept>
 #include <utility>
 
 using namespace labrador;
@@ -28,11 +29,17 @@ namespace
 }
 
 MainMenuDisplayConfirmation::MainMenuDisplayConfirmation(MenuContext* context,
-	DisplaySettingsChoice candidate) :
-	MenuPage(context), candidate_(candidate),
+	DisplaySettingsChoice candidate, std::optional<int> pausing_slot) :
+	MenuPage(context), candidate_(candidate), pausing_slot_(pausing_slot),
 	look_(context->data()->presentation()->pause_menu()),
 	timeout_(context->data()->presentation()->main_menu().display_trial_seconds)
 {
+	if (this->pausing_slot_ &&
+		((!input_slots::is_pad(*this->pausing_slot_) && !input_slots::is_keyboard_and_mouse(*this->pausing_slot_)) ||
+			this->level_settings()->player_index_for_slot(*this->pausing_slot_) < 0))
+	{
+		throw std::invalid_argument("Display confirmation owner must be a valid roster input slot.");
+	}
 	this->look_.art.focus_padding =
 		context->data()->presentation()->main_menu().setup_focus_padding;
 	this->look_.art.shadow_offset =
@@ -183,7 +190,11 @@ void MainMenuDisplayConfirmation::update_page(float dt)
 	}
 	if (this->close_if_finished()) { return; }
 	this->refresh_countdown();
-	const std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
+	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
+	if (this->pausing_slot_)
+	{
+		inputs = { menu_input_for_owner(inputs, *this->pausing_slot_, *this->level_settings()) };
+	}
 	for (const ProcessedMenuInput& input : inputs)
 	{
 		if (input.action == MenuInputAction::back)

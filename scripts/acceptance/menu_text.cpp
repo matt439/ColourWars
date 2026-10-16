@@ -51,6 +51,7 @@ namespace
     constexpr wchar_t brand[] = L"C O L O U R W A R S   /   LOCAL PAINT BATTLES";
     constexpr wchar_t practice_hint[] = L"Solo practice: choose Single Match";
     constexpr wchar_t home_subtitle[] = L"Paint the arena. Claim the win.";
+    constexpr wchar_t palette_timing[] = L"Palette applies next round or restart.";
     struct TitleText { const char* key; const wchar_t* text; std::wstring MenuTitleText::* field; };
     constexpr TitleText title_text[]{
         { "wordmark", L"COLOUR\nWARS", &MenuTitleText::wordmark },
@@ -265,6 +266,7 @@ namespace
     {
         const MenuText& text = presentation.menu_text();
         require(text.brand == brand && text.solo_practice_hint == practice_hint && text.home_subtitle == home_subtitle &&
+            text.options_palette_timing == palette_timing &&
             text.display_trial_countdown == L"Reverting in {seconds}s" &&
             text.headings.size() == std::size(headings) &&
             text.prompts.size() == std::size(prompts) && text.items.size() == std::size(items),
@@ -390,6 +392,7 @@ namespace
         required(nullptr, "solo_practice_hint");
         required(nullptr, "home_subtitle");
         required(nullptr, "display_trial_countdown");
+        required(nullptr, "options_palette_timing");
         for (const auto& entry : title_text) { required("title", entry.key); }
         for (const auto& entry : help_text) { required("help", entry.key); }
         for (const auto& entry : status_text) { required("status", entry.key); }
@@ -888,25 +891,110 @@ namespace
         }, &world);
     }
 
+    void check_options_palette_timing(Variants& variants, World& world)
+    {
+        const auto original = variants.load([](rapidjson::Document&) {});
+        const auto& main = original.main_menu();
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_text"]["options_palette_timing"].SetString("  A\xC2\xA0\xE2\x80\x94" "B\xE2\x80\xA6  ");
+        });
+        normalized.validate_resources(world.render, world.audio);
+        require(normalized.menu_text().options_palette_timing == L"  A -B...  ",
+            "Paused Options caption lost normalized punctuation or authored outer spaces");
+        for (const char* invalid : { " \xC2\xA0 ", "line\nbreak", "line\rbreak", "tab\ttext", "control\x01", "caf\xC3\xA9", "\xC3" })
+        {
+            variants.rejects("options_palette_timing", [invalid](rapidjson::Document& d)
+                { d["menu_text"]["options_palette_timing"].SetString(invalid, d.GetAllocator()); });
+        }
+        variants.rejects("options_palette_timing", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["fonts"]["detail"].SetString("menu_text_limited");
+            d["menu_text"]["options_palette_timing"].SetString("Glyph~");
+        }, &world);
+        variants.rejects("options_palette_timing", [](rapidjson::Document& d)
+        {
+            d["menu_text"]["options_palette_timing"].SetString(std::string(200, 'W').c_str(), d.GetAllocator());
+        }, &world);
+
+        const float right = (1920.0f + main.options_box_size.x) / 2.0f;
+        const float row_top = main.options_position.y - options_art(main).focus_padding.y;
+        const float width = right - main.options_value_x;
+        const float height = row_top - main.options_heading_position.y;
+        const auto add_font = [&](const std::string& name, int glyph_width, int glyph_height)
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                const bool edge = character == U'~';
+                glyphs.push_back({ character, mattmath::RectangleI(0, 0, edge ? glyph_width : 8,
+                    edge ? glyph_height : 16), 0.0f, 0.0f, 0.0f });
+            }
+            world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
+        };
+        for (const bool width_edge : { true, false })
+        {
+            const std::string name = width_edge ? "palette_timing_width_edge" : "palette_timing_height_edge";
+            add_font(name, width_edge ? static_cast<int>(width) : 8, width_edge ? 20 : static_cast<int>(height));
+            add_font(name + "_overflow", width_edge ? static_cast<int>(width) + 1 : 8,
+                width_edge ? 20 : static_cast<int>(height) + 1);
+            const auto edit = [&](rapidjson::Document& d, const std::string& font)
+            {
+                d["menu_style"]["fonts"]["detail"].SetString(font.c_str(), d.GetAllocator());
+                d["menu_text"]["options_palette_timing"].SetString("~");
+            };
+            const auto edge = variants.load([&](rapidjson::Document& d) { edit(d, name); });
+            edge.validate_resources(world.render, world.audio);
+            std::wstring source = edge.menu_text().options_palette_timing;
+            UiText caption("palette_timing", source, edge.menu().detail_font,
+                { main.options_value_x, main.options_heading_position.y }, &world.render, main.art.ink);
+            source = L"Changed after construction";
+            require(caption.text() == L"~" && caption.bounds().x == main.options_value_x &&
+                caption.bounds().y == main.options_heading_position.y &&
+                (width_edge ? caption.bounds().right() == right : caption.bounds().bottom() == row_top),
+                "Paused Options caption borrowed its copy, fitted its text or missed inclusive paper/card contact");
+            caption.set_hidden(true); DrawList no_device; caption.draw(no_device);
+            variants.rejects("options_palette_timing", [&](rapidjson::Document& d) { edit(d, name + "_overflow"); }, &world);
+        }
+        const int heading_width = static_cast<int>(main.options_value_x - main.options_heading_position.x);
+        add_font("palette_timing_heading_edge", heading_width, 20);
+        add_font("palette_timing_heading_overflow", heading_width + 1, 20);
+        const auto heading = [](rapidjson::Document& d, const char* font)
+        {
+            d["menu_style"]["fonts"]["heading"].SetString(font, d.GetAllocator());
+            d["menu_text"]["headings"]["options"].SetString("~");
+            d["menu_text"]["options_palette_timing"].SetString("Fit");
+        };
+        const auto heading_edge = variants.load([&](rapidjson::Document& d) { heading(d, "palette_timing_heading_edge"); });
+        heading_edge.validate_resources(world.render, world.audio);
+        require(world.render.measure_text(world.render.resolve_sprite_font(heading_edge.menu().heading_font), L"~").x ==
+            main.options_value_x - main.options_heading_position.x,
+            "Paused Options heading fixture lost exact contact with the caption anchor");
+        variants.rejects("options_palette_timing", [&](rapidjson::Document& d)
+            { heading(d, "palette_timing_heading_overflow"); }, &world);
+    }
+
     void check_pause_text(Variants& variants, World& world)
     {
-        constexpr const char* pause_keys[]{ "resume", "restart", "quit", "yes", "no" };
+        struct PauseRole { const char* key; MenuItem item; };
+        constexpr PauseRole pause_roles[]{ { "resume", MenuItem::resume }, { "restart", MenuItem::restart },
+            { "options", MenuItem::options }, { "quit", MenuItem::quit }, { "yes", MenuItem::yes }, { "no", MenuItem::no } };
         const auto normalized = variants.load([&](rapidjson::Document& d)
         {
-            for (const char* key : pause_keys)
+            for (const auto& role : pause_roles)
             {
-                d["menu_text"]["items"][key].SetString("A\xC2\xA0\xE2\x80\x94" "B");
+                d["menu_text"]["items"][role.key].SetString("A\xC2\xA0\xE2\x80\x94" "B");
             }
         });
         normalized.validate_resources(world.render, world.audio);
-        for (size_t index = 0; index < std::size(pause_keys); ++index)
+        for (const auto& role : pause_roles)
         {
-            require(normalized.menu_text().item(static_cast<MenuItem>(
-                static_cast<size_t>(MenuItem::resume) + index)) == L"A -B",
+            require(normalized.menu_text().item(role.item) == L"A -B",
                 "Pause item did not normalize its authored punctuation and NBSP");
         }
-        for (const char* key : pause_keys)
+        for (const auto& role : pause_roles)
         {
+            const char* key = role.key;
             variants.rejects(std::string("items.") + key, [key](rapidjson::Document& d)
             {
                 d["menu_style"]["fonts"]["item"].SetString("menu_text_limited");
@@ -928,6 +1016,18 @@ namespace
         };
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto& pause = original.pause_menu();
+        const auto options_size = world.render.measure_text(world.render.resolve_sprite_font(original.menu().item_font),
+            original.menu_text().item(MenuItem::options));
+        const float options_height = options_size.y + pause.art.focus_padding.y * 2.0f;
+        require(pause.layout.spacing.y == 120.0f && options_size.y == 82.0f && options_height == 118.0f,
+            "Pause Options lost its actual descender height or the authored two-pixel row clearance");
+        const auto tight_options = variants.load([&](rapidjson::Document& d)
+            { d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(options_height); });
+        tight_options.validate_resources(world.render, world.audio);
+        variants.rejects("items.options", [&](rapidjson::Document& d)
+        {
+            d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(std::nextafter(options_height, 0.0f));
+        }, &world);
         const auto top = (mattmath::Vector2F(1920.0f, 1080.0f) - pause.box_size) / 2.0f;
         const auto bottom = top + pause.box_size;
         const float left_position = top.x + pause.art.focus_padding.x;
@@ -979,11 +1079,11 @@ namespace
             }, &world);
         }
         // The same short label fits Options; only its independent Pause placement overflows.
-        variants.rejects("items.controls_audio", [&](rapidjson::Document& d)
+        variants.rejects("items.options", [&](rapidjson::Document& d)
         {
             exact_items(d);
             d["pause_menu"]["layout"]["position"]["x"].SetFloat(right_position);
-            d["menu_text"]["items"]["controls_audio"].SetString("FitFit");
+            d["menu_text"]["items"]["options"].SetString("FitFit");
         }, &world);
     }
 
@@ -1258,10 +1358,16 @@ namespace
         const auto original = variants.load([](rapidjson::Document&) {});
         const auto keep_size = world.render.measure_text(world.render.resolve_sprite_font(original.menu().item_font),
             original.menu_text().item(MenuItem::keep));
-        require(keep_size.y == 82.0f && keep_size.y + original.pause_menu().art.focus_padding.y * 2.0f >
-            original.pause_menu().layout.spacing.y && keep_size.y + original.main_menu().setup_focus_padding.y * 2.0f <=
-            original.pause_menu().layout.spacing.y,
-            "Keep's real descender no longer distinguishes compact Display padding from ordinary Pause padding");
+        const auto tight_display = variants.load([](rapidjson::Document& d)
+        {
+            d["pause_menu"]["layout"]["spacing"]["y"].SetFloat(115.0f);
+            d["menu_text"]["items"]["options"].SetString("Fit");
+        });
+        tight_display.validate_resources(world.render, world.audio);
+        require(keep_size.y == 82.0f && keep_size.y + tight_display.pause_menu().art.focus_padding.y * 2.0f >
+            tight_display.pause_menu().layout.spacing.y && keep_size.y + tight_display.main_menu().setup_focus_padding.y * 2.0f <=
+            tight_display.pause_menu().layout.spacing.y,
+            "Keep's real descender no longer distinguishes compact Display padding from ordinary Pause padding in a tight row");
         const auto distinct_pause_keyline = [](rapidjson::Document& d)
         {
             // Isolate card clearance from stock descenders in the setup rows
@@ -1364,8 +1470,10 @@ namespace
         };
         add_font("display_countdown_width_edge", 1034, 20);
         add_font("display_countdown_width_overflow", 1035, 20);
-        add_font("display_countdown_height_edge", 8, 305);
-        add_font("display_countdown_height_overflow", 8, 306);
+        const int countdown_height = static_cast<int>((1080.0f + original.pause_menu().box_size.y) / 2.0f -
+            original.pause_menu().layout.position.y - original.pause_menu().layout.spacing.y * 2.0f);
+        add_font("display_countdown_height_edge", 8, countdown_height);
+        add_font("display_countdown_height_overflow", 8, countdown_height + 1);
         for (const char* font : { "display_countdown_width_edge", "display_countdown_height_edge" })
         {
             const auto edge = variants.load([&](rapidjson::Document& d) { countdown_font(d, font); });
@@ -3766,6 +3874,7 @@ int main(int argc, char** argv)
         check_inclusive_bounds(variants, world);
         check_item_bounds(variants, world);
         check_restore_defaults_text(variants, world);
+        check_options_palette_timing(variants, world);
         check_setup_text(variants, world);
         check_pause_text(variants, world);
         check_confirmation_text(variants, world);

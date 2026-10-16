@@ -37,7 +37,6 @@ developer page factory retain the default Play focus. The Back row and B/Escape
 share each page's return choice. Existing page-entry input rearming still
 applies, and Controls/audio continues to return to its retained parent page.
 No presentation field, saved navigation history, artwork or geometry is added.
-The remaining Options gaps stay open under `GAP#3.2`.
 
 ## Home Exit confirmation
 
@@ -56,7 +55,6 @@ paper geometry reuse the shared heading/item/detail fonts and `pause_menu.art`,
 `box_size`, `layout`, `heading_y` and `status_y`; the surround uses Home's neutral
 fill. No numeric field or artwork asset is added. The page captures its text
 and uses the existing input rearming, shared motion and Reduce effects policy.
-Other Options work remains open under `GAP#3.2`.
 
 ## Options Restore defaults
 
@@ -78,8 +76,7 @@ Apply uses the trial below; palette-only or unchanged-display Apply retains
 direct persistence. Back discards the pending
 values, and returning from Controls/audio retains them. Applied fullscreen
 still disables resolution and shows its live dimensions until Apply, even when
-the restored pending fullscreen value is Off. Pause access remains open under
-`GAP#3.2`.
+the restored pending fullscreen value is Off.
 
 ## Options display trial
 
@@ -100,8 +97,9 @@ token. This is a bounded countdown substitution, not a general formatting
 language. `main_menu.display_trial_seconds` is finite, from `1` to `60`, shipped
 as `15`. The page captures Pause art/fonts, overriding focus padding and shadow
 with the existing `main_menu.setup_focus_padding` (`28, 7`) and
-`setup_shadow_offset` (`2`). It retains the Pause palette and keyline (`4`), with
-no change to existing Pause pages or new numeric layout field. It uses the existing Options heading, Keep row 0,
+`setup_shadow_offset` (`2`). It retains the Pause palette and keyline (`4`).
+This display-only padding/shadow recipe leaves Pause art unchanged and adds no
+numeric layout field. It uses the existing Options heading, Keep row 0,
 safe initial Revert row 1 and a centered countdown below the two rows.
 Countdown information remains visible with Reduce effects.
 
@@ -114,8 +112,38 @@ It does not restore arbitrary dragged size, placement or maximized state. Option
 candidate for retry. Time accounts for elapsed updates and steady-clock time on
 the next update; no rollback can run while the process is stopped. The status
 roles `options_reverted`, `options_display_failed` and `options_rollback_failed`
-report revert and display/rollback exceptions. Pause access and human/hardware
-qualification remain open under their existing owners.
+report revert and display/rollback exceptions. Human/hardware qualification
+remains open under its existing owners.
+
+## Paused Options
+
+Pause's four rows are Resume, Restart, Options and Quit. Options is a pushed
+child of the retained Pause page. Both Back routes return to that same Pause
+with Options focused, without resuming the match or starting its resume count-in.
+Main-menu Options retains its existing Home return. Paused Options, its display
+trial and the nested Controls/audio and Pad Sticks pages share the opening-device
+and disconnected-device fallback policy. A paused Options page cannot use the
+developer match-start route.
+
+The existing `pause_menu.layout.spacing.y` is now `120` rather than `115`.
+Options' measured item-font height (`82`) and two 18-unit focus pads require
+`118`, leaving two design units of row-envelope clearance. The final row moves
+15 units lower, and Pause-derived confirmations reuse the same spacing. No new
+field, font or art asset is introduced.
+
+The required `menu_text.options_palette_timing` ships as
+`Palette applies next round or restart.` It is persistently shown only in paused
+Options, using the existing detail font without scaling at
+`(main_menu.options_value_x, main_menu.options_heading_position.y)`. Text and font
+are captured when the page opens; the shipped detail-36 caption measures 834 by
+62 design units. No numeric geometry field is added. Applying
+the saved palette affects the next round/restart, preserving the running match's
+player, paint and HUD colours. Display/palette save and trial behavior retain
+their existing limits, including configured-preset/application-state rollback
+without independent OS success/readback or arbitrary-window-placement guarantees.
+Human and hardware qualification remains separate.
+The implemented defaults, return focus, Exit confirmation, display trial and
+paused access complete `GAP#3.2`.
 
 ## Mode and Player Count paper
 
@@ -483,7 +511,8 @@ remain point-filtered and lettering linear-filtered.
 
 The required `menu_text` object stores the shared menu brand, eleven headings,
 seventeen complete prompt-bar legends, thirty-nine row labels, a solo-practice
-hint, five Title/Home strings, three Controls/Pad Sticks help strings, eleven
+hint, a paused-Options palette-timing caption, five Title/Home strings,
+three Controls/Pad Sticks help strings, eleven
 fixed save-status messages, three shared setting values, two Pause confirmation
 questions, one Home Exit question, one display-trial question and countdown,
 three End completion headings, two Stage Select status messages,
@@ -497,6 +526,7 @@ two fixed Stage Select mode labels:
 | `menu_text.prompts` | `title`, `select_back`, `options`, `controls`, `sticks`, `mode`, `join`, `team`, `team_shuffle`, `weapon`, `arena_browse`, `arena_locked`, `missing_player`, `pause`, `pause_missing`, `select`, `credits` |
 | `menu_text.items` | `play`, `options`, `credits`, `exit`, `resolution`, `fullscreen`, `team_palette`, `controls_audio`, `apply`, `back`, `single_match`, `best_of_three`, `best_of_five`, `match_length`, `one_player_practice`, `two_players`, `three_players`, `four_players`, `resume`, `restart`, `quit`, `yes`, `no`, `change_teams`, `change_weapons`, `change_level`, `exit_to_main_menu`, `pad_sticks`, `music_volume`, `sfx_volume`, `view_shake`, `aim_marker`, `reduce_effects`, `pad`, `move_deadzone`, `aim_deadzone`, `restore_defaults`, `keep`, `revert` |
 | `menu_text.solo_practice_hint` | One Mode Select hint string |
+| `menu_text.options_palette_timing` | One persistent paused-Options palette-timing caption |
 | `menu_text.title` | `wordmark`, `subtitle`, `start`, `no_controller` |
 | `menu_text.home_subtitle` | One Home subtitle string |
 | `menu_text.help` | `controls`, `pad_association`, `aim_cutoff` |
@@ -606,13 +636,13 @@ actions. The strings remain JSON settings outside numeric `tune`.
 | Key | Shipped text | Use |
 |---|---|---|
 | `play` | `Play` | Home action |
-| `options` | `Options` | Home action |
+| `options` | `Options` | Home action and Pause row 2 |
 | `credits` | `Credits` | Home action |
 | `exit` | `Exit` | Home action |
 | `resolution` | `Resolution` | Options label |
 | `fullscreen` | `Fullscreen` | Options label |
 | `team_palette` | `Team palette` | Options label |
-| `controls_audio` | `Controls / audio` | Options and Pause action |
+| `controls_audio` | `Controls / audio` | Home/paused Options action, row 3 |
 | `restore_defaults` | `Restore defaults` | Options action, row 4 |
 | `apply` | `Apply` | Options action, row 5 |
 | `back` | `Back` | Options row 6; Credits, Mode and Player Count action |
@@ -710,9 +740,10 @@ Five more required `menu_text.items` roles supply the plain Pause labels:
 | `yes` | `Yes` | Confirmation row 0 |
 | `no` | `No` | Confirmation row 1 |
 
-Initial Pause row 2 reuses `controls_audio`, whose shipped text remains
-`Controls / audio`. That shared label is checked in both its Options and Pause
-contexts. Confirmation retains its existing default focus on No, and the labels
+Initial Pause row 2 reuses `options`, whose shipped text remains `Options`.
+Controls/audio is nested inside that Options page. The shared Options label is
+checked in its Home and Pause contexts. Confirmation retains its existing
+default focus on No, and the labels
 do not change resume, restart, quit or confirmation behavior.
 
 The existing normalized, nonblank, single-line rules apply. Startup checks the

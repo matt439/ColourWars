@@ -90,6 +90,13 @@ struct ProcessedMenuInput
 	bool connected = false;
 };
 
+// Retain the opening device while connected. Otherwise accept another match
+// participant, or any device if all participants are missing. Invalid owners
+// return neutral input.
+ProcessedMenuInput menu_input_for_owner(
+	const std::vector<ProcessedMenuInput>& inputs, int opening_slot,
+	const MenuLevelSettings& settings);
+
 // Maps engine device state to menu navigation and armed action releases.
 class MenuInput
 {

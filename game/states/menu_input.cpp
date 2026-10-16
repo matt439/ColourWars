@@ -6,6 +6,53 @@ using namespace mattmath;
 using namespace menu_input_consts;
 using namespace labrador;
 
+ProcessedMenuInput menu_input_for_owner(
+	const std::vector<ProcessedMenuInput>& inputs, int opening_slot,
+	const MenuLevelSettings& settings)
+{
+	if (opening_slot < 0 || opening_slot >= input_slots::count ||
+		static_cast<size_t>(opening_slot) >= inputs.size())
+	{
+		return ProcessedMenuInput();
+	}
+
+	const ProcessedMenuInput& opening = inputs[static_cast<size_t>(opening_slot)];
+	if (opening.connected)
+	{
+		return opening;
+	}
+
+	// The opening device is disconnected. Other participants may navigate;
+	// if none are connected, any device may reach the recovery actions.
+	bool participant_connected = false;
+	for (size_t slot = 0; slot < inputs.size(); slot++)
+	{
+		const ProcessedMenuInput& input = inputs[slot];
+		if (input.connected &&
+			settings.player_index_for_slot(static_cast<int>(slot)) != -1)
+		{
+			participant_connected = true;
+			if (input.action != MenuInputAction::none ||
+				input.direction != Direction::none)
+			{
+				return input;
+			}
+		}
+	}
+	if (!participant_connected)
+	{
+		for (const ProcessedMenuInput& input : inputs)
+		{
+			if (input.connected && (input.action != MenuInputAction::none ||
+				input.direction != Direction::none))
+			{
+				return input;
+			}
+		}
+	}
+	return ProcessedMenuInput();
+}
+
 Direction MenuDirectionRepeat::update(const std::array<bool, 4>& held,
 	float dt, float delay, float interval)
 {

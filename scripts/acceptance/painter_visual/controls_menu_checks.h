@@ -724,8 +724,8 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         saved_bytes() == last_saved && play.aim_sensitivity == 3,
         "Controls/audio return lost pending Options values/focus or saved its own edits");
 
-    // Actual GameLevel owns the Pause frame: returning from Controls/audio
-    // must keep both the match simulation and the Resume count-in stopped.
+    // Actual GameLevel owns the Pause frame: returning through Controls/audio
+    // and Options must keep simulation and the Resume count-in stopped.
     stack.clear(); stack.notify_activation(true); input.reset_actions();
     settings.set_stage("movement_course"); settings.set_duration(60.0f); settings.set_player_count(1);
     settings.begin_input_claims(input_slots::keyboard_and_mouse);
@@ -746,11 +746,14 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     tap(Key::down); tap(Key::down);
     const auto frozen = resume_observation(game->level());
     const Frame paused = main_menu_frame(app);
-    tap(Key::enter); tick(); require(stack.depth() == 4, "Pause did not push actual Controls/audio");
+    tap(Key::enter); tick(); require(stack.depth() == 4, "Pause did not push actual Options");
+    for (int row = preferences.fullscreen() ? 1 : 0; row < 3; ++row) { tap(Key::down); }
+    const Frame options_from_pause = main_menu_frame(app);
+    tap(Key::enter); tick(); require(stack.depth() == 5, "Paused Options did not push actual Controls/audio");
     const Frame controls_from_pause = main_menu_frame(app);
-    tap(Key::enter); tick(); require(stack.depth() == 5, "Paused Controls/audio did not push Pad sticks");
+    tap(Key::enter); tick(); require(stack.depth() == 6, "Paused Controls/audio did not push Pad sticks");
     tap(Key::down); tap(Key::right); tick(0.75f); tap(Key::escape); tick(0.75f);
-    require(stack.depth() == 4 && game->resume_remaining() == 0.0f &&
+    require(stack.depth() == 5 && game->resume_remaining() == 0.0f &&
         frozen == resume_observation(game->level()) && controls_from_pause.pixels == main_menu_frame(app).pixels &&
         saved_bytes() == last_saved,
         "Pad sticks return changed/resumed the paused match, lost parent focus or saved a pending edit");
@@ -758,10 +761,15 @@ void controls_menu_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     require(controls_from_pause.pixels != main_menu_frame(app).pixels,
         "Controls/audio Pause-return fixture did not stage its discardable edit");
     tick(0.75f); tap(Key::escape); tick(0.75f);
+    require(stack.depth() == 4 && game->resume_remaining() == 0.0f &&
+        frozen == resume_observation(game->level()) && options_from_pause.pixels == main_menu_frame(app).pixels &&
+        saved_bytes() == last_saved && play.aim_sensitivity == 3,
+        "Controls/audio return resumed/changed the paused match, lost Options focus or saved pending edits");
+    tap(Key::escape); tick(0.75f);
     require(stack.depth() == 3 && game->resume_remaining() == 0.0f &&
         frozen == resume_observation(game->level()) && paused.pixels == main_menu_frame(app).pixels &&
         saved_bytes() == last_saved && play.aim_sensitivity == 3,
-        "Controls/audio return resumed/changed the paused match, lost focus or saved pending edits");
+        "Options return resumed/changed the paused match, lost Pause focus or saved pending edits");
     require(records.good(), "Controls/audio capture record write failed");
     std::cout << "PASS Controls/audio: complete fitted help, labels/values/status in linear ink; all eight cards/arrows, "
         "six native sizes/aspects; clamps, delayed Apply, reload/failure and Back discard; pending Options "

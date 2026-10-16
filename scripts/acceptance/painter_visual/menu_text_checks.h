@@ -862,6 +862,26 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
 
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
+    const auto place_fixture_options_caption = [&](Presentation& fixture)
+    {
+        auto& main = const_cast<MainMenuPresentation&>(fixture.main_menu());
+        auto& words = const_cast<MenuText&>(fixture.menu_text());
+        const auto& style = fixture.menu();
+        // These custom headings also replace Options. Keep its unscaled
+        // caption beside the longer title without changing the Stage fixture.
+        const UiText heading("fixture-options-heading", words.heading(MenuHeading::options),
+            style.heading_font, main.options_heading_position, app.render_resources(), main.art.ink);
+        main.options_value_x = std::max(main.options_value_x,
+            heading.bounds().right() + main.setup_focus_padding.x);
+        words.options_palette_timing = L"Next round.";
+        const UiText caption("fixture-options-caption", words.options_palette_timing, style.detail_font,
+            Vector2F(main.options_value_x, main.options_heading_position.y), app.render_resources(), main.art.ink);
+        const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) -
+            main.options_box_size) / 2.0f, main.options_box_size);
+        require(paper.contains(caption.bounds()) && caption.bounds().x >= heading.bounds().right() &&
+            caption.bounds().bottom() <= main.options_position.y - main.setup_focus_padding.y,
+            "Custom heading fixture lost unscaled Options caption clearance inside its paper and above row zero");
+    };
     Presentation old = original;
     auto& old_text = const_cast<MenuText&>(old.menu_text());
     old_text.brand = L"OLD~ BRAND";
@@ -871,6 +891,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     old_text.prompts[static_cast<size_t>(MenuPrompt::arena_locked)] = L"OLD~ LOCKED";
     auto& old_footer = const_cast<PromptBarPresentation&>(old.prompt_bar());
     old_footer.position += Vector2F(36.0f, 8.0f); old_footer.colour = Colour::cyan;
+    place_fixture_options_caption(old);
     old.validate_resources(*app.render_resources(), *app.audio_resources());
     presentation = old; open_stage();
     const Frame old_browse = compare("custom-open", old, L"OLD~ BRAND", L"OLD~ HEADING", L"OLD~ BROWSE", true);
@@ -904,6 +925,7 @@ void menu_text_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const
     next_footer.font = narrow_name; next_footer.position += Vector2F(60.0f, 12.0f);
     next_footer.colour = Colour::yellow;
     const_cast<MenuStyle&>(next.menu()).brand_font = narrow_name;
+    place_fixture_options_caption(next);
     next.validate_resources(resources, *app.audio_resources());
     presentation = next; tick();
     require(frame().pixels == old_browse.pixels, "Presentation assignment rebased an already-open page's text or font");

@@ -701,20 +701,26 @@ void arena_music_flow_matrix(Application& app, GameData& data, const GameTuning&
         developer_cover(true, 3, "pause-debug-menu-focus-return");
 #endif
         tap(Key::down); tap(Key::down); tap(Key::enter); tick(0.0f);
-        require(stack.depth() == 4, "Arena-music fixture did not enter actual Controls / audio");
-        covered_focus("controls-focus-return", 4);
+        require(stack.depth() == 4, "Arena-music fixture did not enter actual Options");
+        covered_focus("options-focus-return", 4);
+        for (int row = data.save()->fullscreen() ? 1 : 0; row < 3; ++row) { tap(Key::down); }
+        tap(Key::enter); tick(0.0f);
+        require(stack.depth() == 5, "Arena-music fixture did not enter actual Controls / audio");
+        covered_focus("controls-focus-return", 5);
 #if COLOURWARS_DEV_TOOLS
-        developer_cover(false, 4, "controls-blocking-console-focus-return");
+        developer_cover(false, 5, "controls-blocking-console-focus-return");
 #endif
         tap(Key::enter); tick(0.0f);
-        require(stack.depth() == 5, "Arena-music fixture did not enter nested Pad sticks");
-        covered_focus("sticks-focus-return", 5);
+        require(stack.depth() == 6, "Arena-music fixture did not enter nested Pad sticks");
+        covered_focus("sticks-focus-return", 6);
         tap(Key::escape); tick(0.0f);
-        require(stack.depth() == 4, "Arena-music fixture did not return from Pad sticks");
+        require(stack.depth() == 5, "Arena-music fixture did not return from Pad sticks");
         tap(Key::escape); tick(0.0f);
-        require(stack.depth() == 3, "Arena-music fixture did not return from Controls / audio");
+        require(stack.depth() == 4, "Arena-music fixture did not return from Controls / audio");
+        tap(Key::escape); tick(0.0f);
+        require(stack.depth() == 3, "Arena-music fixture did not return from Options");
         // Back on the pause page delivers the ordinary Resume result, even
-        // though its selection remains on Controls / audio after the child.
+        // though its selection remains on Options after its children.
         tap(Key::escape);
         require(stack.depth() == 2 && game->resume_remaining() == duration,
             "Actual Resume did not begin the arena-music count-in");
@@ -788,7 +794,7 @@ void arena_music_flow_matrix(Application& app, GameData& data, const GameTuning&
             "Actual Quit retained arena music or fire-loop ownership");
         record("quit");
         std::cout << "PASS actual " << count
-            << "P arena music under pause/controls/sticks, focus, count-in, restart and quit\n";
+            << "P arena music under pause/options/controls/sticks, focus, count-in, restart and quit\n";
     }
     require(evidence.good(), "Arena-music flow evidence write failed");
 }
@@ -1226,7 +1232,7 @@ void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuni
         resume();
         tick(duration + 1.0f);
         pause();
-        // Resume, Restart, Controls, Quit: Restart is the next row. The
+        // Resume, Restart, Options, Quit: Restart is the next row. The
         // confirmation defaults to No, so Up deliberately selects Yes.
         tap(Key::down); tap(Key::enter); tick(0.0f);
         tap(Key::up); tap(Key::enter);

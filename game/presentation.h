@@ -144,6 +144,7 @@ struct MenuText
 	MenuTitleText title;
 	std::wstring home_subtitle;
 	std::wstring display_trial_countdown;
+	std::wstring options_palette_timing;
 	MenuHelpText help;
 	MenuStatusText status;
 	MenuValueText values;

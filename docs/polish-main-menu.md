@@ -186,8 +186,7 @@ reload, focus loss/held reconnect, Reduce effects, lifecycle resets and frozen
 draw/RNG. These checks do not establish human, physical-pad, listening or
 performance acceptance.
 
-Display/palette access from pause remains open under `GAP#3.2`;
-human and hardware acceptance retain their existing gates.
+Human and hardware acceptance retain their existing gates.
 
 ### Home return focus
 
@@ -210,8 +209,7 @@ preset. It covers six keyboard sizes/aspects and sparse scripted pad slot 3 at
 720p, including repeated returns, fresh confirmation, held-input interruption,
 quiet entry, lifecycle resets, Reduce effects, resize and frozen draw/RNG.
 
-The remaining `GAP#3.2` work is display/palette access from pause. Human and hardware
-acceptance retain their existing gates.
+Human and hardware acceptance retain their existing gates.
 
 ### Home Exit confirmation
 
@@ -243,8 +241,7 @@ No/Back returns, repeated entry, interrupted/reconnected and simultaneous input,
 motion/reduction/lifecycle resets, frozen redraw/RNG, one pending music exit
 and deliberate closure of the probe's own hidden window.
 
-Display/palette access from pause remains open under `GAP#3.2`. Human and hardware acceptance retain their
-existing gates.
+Human and hardware acceptance retain their existing gates.
 
 ### Options display Keep/Revert
 
@@ -278,8 +275,8 @@ The dialog uses captured Pause paper/fonts and the existing Options heading.
 Only this display dialog overrides focus padding and shadow with the existing
 `main_menu.setup_focus_padding` (`28, 7`) and `setup_shadow_offset` (`2`), keeping
 the Pause palette and keyline (`4`). This fits Keep's descenders and pressed-face
-clearance within the existing row spacing without changing Pause geometry or
-adding a numeric layout field.
+clearance within the authored row spacing. This display-only padding/shadow
+recipe leaves Pause art unchanged and adds no numeric layout field.
 Startup rejects incompatible combinations unless each
 `main_menu.setup_focus_padding` component is strictly greater than
 `main_menu.setup_shadow_offset + pause_menu.art.keyline_width`.
@@ -308,14 +305,70 @@ frozen redraw/RNG. The private fixture applies windowed Off only; it does not
 qualify actual fullscreen or system-wide display changes, physical controllers,
 human readability, listening or performance.
 
-Display/palette access from pause remains `GAP#3.2`. Actual fullscreen/monitor,
-physical-controller and other human/hardware acceptance retain their existing
+Actual fullscreen/monitor, physical-controller and other human/hardware acceptance retain their existing
 gates; hidden checks do not qualify a system-wide display configuration change.
+
+### Options from Pause
+
+Implemented on 2026-10-16, the paused-access part of `GAP#3.2`. Pause now offers
+Resume, Restart, Options and Quit. Options is pushed above the same retained
+Pause page; both its Back row and B/Escape pop only Options, leaving Pause
+focused on Options. Closing settings does not resume the match or begin the
+resume count-in. Home's Options entry still returns to Home with Options focused.
+
+The existing `pause_menu.layout.spacing.y` changes from `115` to `120`:
+Options' actual item-font height (`82`) plus both 18-unit focus pads occupies
+`118`, leaving two design units between row envelopes. Quit moves 15 design
+units lower; shared Pause-derived confirmations follow the same authored
+spacing. No field, font or art asset is added.
+
+Paused Options inherits the opening device and disconnected-device fallback
+policy. Its display trial, Controls/audio and Pad Sticks children carry that
+ownership through their returns. Controls/audio is nested inside Options for
+both Home and Pause entry. Restore defaults, Apply, failed persistence and
+Keep/Revert retain their existing transaction boundaries. Paused Options rejects
+the developer match-start route, so that settings child cannot start a new match.
+
+Applying a palette preference affects the next round or restart; it does not
+recolour the running match's players, paint or HUD. Paused Options displays the
+required captured `menu_text.options_palette_timing` throughout its own view:
+`Palette applies next round or restart.` It uses the existing detail font at
+`(main_menu.options_value_x, main_menu.options_heading_position.y)`, unscaled,
+without a new numeric geometry field. The shipped detail-36 text measures
+834 by 62 design units.
+
+The hidden `-PausedOptionsOnly` matrix passes both presets: 81 independent
+complete-frame comparisons and sixteen retained-world checkpoints per preset,
+with 32 matching PPM pairs and both CSV outputs byte-identical across Debug
+and Release. Actual one-, two- and four-player sparse-roster matches start with
+positive paint. Checks retain the Level/HUD pixels, observable player physics,
+roster, layout, GameLevel/Level identity and zero resume count-in; Debug adds a
+deterministic fingerprint check. The fixture also covers nested ownership and
+fallback, preference merge, saving a palette without changing the current world
+then applying it on Restart, private windowed trial rollback, one controlled
+Keep-write failure per preset, recovery and developer behavior.
+Evidence is in `out/validation/2026-10-16-paused-options/paused-options-parity.json`
+and `visual-qa.json` under that batch directory.
+
+Final Debug and Release builds and all 32 consumer cases per preset pass. The
+batch passes twenty-four native runs across twelve scopes in each preset,
+including the 81-reference paused Options pair and the existing 35-reference,
+42-capture-pair display-trial checks. Four isolated startup checks pass,
+including extracted Release with the published bank and optional-bank silent
+fallback under a system-only PATH. The 53-file Release ZIP contains all 26
+reviewed runtime assets byte for byte and excludes source, debug and private
+audio. This completes the implementation recorded as `GAP#3.2`.
+
+Display rollback still reissues the configured preset and prior
+`Application::fullscreen()` state. Win32's borderless styling provides no
+independent OS success/readback guarantee, and arbitrary dragged window size or
+placement is outside that contract. Human readability, physical-pad, actual
+fullscreen/monitor, listening and performance acceptance remain open.
 
 ## Controls/audio
 
-Implemented on 2026-10-15, part of `POL#16`. The page shared by Options and
-Pause now uses the same pale stepped paper, dark ink and solid neutral surround.
+Implemented on 2026-10-15, part of `POL#16`. The page shared by Home's Options
+and paused Options uses the same pale stepped paper, dark ink and solid neutral surround.
 Each setting's focus card contains its label and value, with a detached ink
 arrow; Apply and Back use the same focus treatment. The complete existing
 controller, keyboard, menu, readiness and reduced-effects legend remains
@@ -334,7 +387,7 @@ values and status can fit narrower authored spaces. No new atlas is needed.
 The six existing settings retain their ranges and staged Apply behavior.
 SFX audition still uses the pending volume, including when the saved volume
 is mute. Back discards unapplied changes. Returning to Options preserves its
-pending display choices and focus; returning to Pause leaves the match paused.
+pending display choices and focus; returning to paused Options leaves the match paused.
 The opening device and disconnected-device fallback retain their existing
 rules. Reduce effects keeps the drawing static.
 

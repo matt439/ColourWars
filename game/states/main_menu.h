@@ -12,6 +12,8 @@
 #include "engine/core/state_context.h"
 #include "engine/render/colour.h"
 
+#include <optional>
+
 enum class DisplayTrialResult;
 
 enum class MainMenuScreen
@@ -34,8 +36,8 @@ public:
 	~MainMenuPage() override = default;
 	void init() override = 0;
 
-	// Every main-menu page is inside GameMenu's frame, which starts a match
-	// with the shared settings when it pops: write the plan there and pop.
+	// Main-menu frames start a match with the shared plan when they pop.
+	// Options also serves as a paused child and guards that route separately.
 	bool debug_start_match(const MenuLevelSettings& plan) override;
 protected:
 	void update_page(float dt) override = 0;
@@ -143,16 +145,22 @@ private:
 class MainMenuOptions final : public MainMenuPage
 {
 public:
-	explicit MainMenuOptions(MenuContext* context);
+	explicit MainMenuOptions(MenuContext* context,
+		std::optional<int> pausing_slot = std::nullopt);
 	void update_page(float dt) override;
 	void init() override;
+	bool covers_screen() const override { return this->pausing_slot_.has_value(); }
+	bool debug_start_match(const MenuLevelSettings& plan) override;
+	bool debug_dismiss(bool leaving_match) override;
 	bool shows_brand() const override { return false; }
 	bool shows_focus_backing() const override { return false; }
 private:
+	std::optional<int> pausing_slot_;
 	MenuPaperArtPresentation options_art_;
 	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<labrador::UiText> heading_ = nullptr;
+	std::unique_ptr<labrador::UiText> palette_timing_;
 
 	std::unique_ptr<OptionRow> resolution_row_ = nullptr;
 	std::unique_ptr<OptionRow> full_screen_row_ = nullptr;
@@ -174,6 +182,7 @@ private:
 	void apply_settings();
 	void finish_display_trial(DisplayTrialResult result);
 	void restore_defaults();
+	void close();
 	void update_resolution_selection_text();
 
 	// Shows the selected preset when windowed, or the live size in a disabled row

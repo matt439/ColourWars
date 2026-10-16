@@ -78,6 +78,7 @@ namespace
 		MenuText text;
 		text.brand = read_menu_line(json, "brand");
 		text.solo_practice_hint = read_menu_line(json, "solo_practice_hint");
+		text.options_palette_timing = read_menu_line(json, "options_palette_timing");
 		text.display_trial_countdown = read_menu_line(json, "display_trial_countdown");
 		const std::wstring countdown_token = L"{seconds}";
 		const size_t countdown_at = text.display_trial_countdown.find(countdown_token);
@@ -2133,7 +2134,7 @@ void Presentation::validate_resources(const RenderResources& render,
 		throw std::runtime_error(this->source_path_ +
 			": menu_text.items.resume requires positive finite pause_menu.layout.spacing.y.");
 	}
-	const MenuItem pause_items[]{ MenuItem::resume, MenuItem::restart, MenuItem::controls_audio, MenuItem::quit };
+	const MenuItem pause_items[]{ MenuItem::resume, MenuItem::restart, MenuItem::options, MenuItem::quit };
 	for (size_t index = 0; index < std::size(pause_items); ++index)
 	{
 		check_menu_item(pause_items[index], this->menu_.item_font, pause.layout.position +
@@ -2982,6 +2983,19 @@ void Presentation::validate_resources(const RenderResources& render,
 		throw std::runtime_error(this->source_path_ +
 			": main_menu.setup_focus_padding must exceed main_menu.setup_shadow_offset + "
 			"pause_menu.art.keyline_width on both axes for the Display confirmation paper.");
+	}
+	const std::string palette_timing_key = "menu_text.options_palette_timing";
+	const Vector2F palette_timing_size = fixed_menu_size(palette_timing_key,
+		this->menu_text_.options_palette_timing, this->menu_.detail_font);
+	const RectangleF palette_timing(Vector2F(main.options_value_x, main.options_heading_position.y), palette_timing_size);
+	check_fixed_paper(palette_timing_key, palette_timing, main.options_box_size, Vector2F::ZERO);
+	const RectangleF options_heading(main.options_heading_position,
+		fixed_menu_size("menu_text.headings.options", this->menu_text_.heading(MenuHeading::options), this->menu_.heading_font));
+	if (palette_timing.x < options_heading.right() ||
+		palette_timing.bottom() > main.options_position.y - options_art.focus_padding.y)
+	{
+		throw std::runtime_error(this->source_path_ + ": " + palette_timing_key +
+			" must fit unscaled beside the Options heading and above the first action's focus padding.");
 	}
 }
 

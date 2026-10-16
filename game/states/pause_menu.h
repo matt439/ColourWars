@@ -88,7 +88,7 @@ private:
 	std::unique_ptr<labrador::UiText> resume_ = nullptr;
 	std::unique_ptr<labrador::UiText> restart_ = nullptr;
 	std::unique_ptr<labrador::UiText> quit_ = nullptr;
-	std::unique_ptr<labrador::UiText> controls_ = nullptr;
+	std::unique_ptr<labrador::UiText> options_ = nullptr;
 };
 
 class PauseMenuConfirmation final : public PauseMenuPage

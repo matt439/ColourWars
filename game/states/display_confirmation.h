@@ -6,13 +6,15 @@
 
 #include <chrono>
 #include <memory>
+#include <optional>
 
 // A separate child frame owns a temporary display change and returns its result
 // to Options. Interruptions roll back immediately; only the top frame closes.
 class MainMenuDisplayConfirmation final : public MenuPage
 {
 public:
-	MainMenuDisplayConfirmation(MenuContext* context, DisplaySettingsChoice candidate);
+	MainMenuDisplayConfirmation(MenuContext* context, DisplaySettingsChoice candidate,
+		std::optional<int> pausing_slot = std::nullopt);
 	~MainMenuDisplayConfirmation() override;
 	void init() override;
 	void update_page(float dt) override;
@@ -29,6 +31,7 @@ private:
 	bool close_if_finished();
 	void refresh_countdown();
 	DisplaySettingsChoice candidate_;
+	std::optional<int> pausing_slot_;
 	PauseMenuPresentation look_;
 	float timeout_;
 	std::chrono::steady_clock::time_point started_at_;

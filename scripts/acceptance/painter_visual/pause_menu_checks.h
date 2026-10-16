@@ -1,5 +1,5 @@
 // Real pause and confirmation pages, with public keyboard input through the
-// state stack. Preferences remain in memory; Controls is closed without Apply.
+// state stack. Preferences remain in memory; settings close without Apply.
 class PauseMenuProbeRoot final : public State
 {
 public:
@@ -34,9 +34,9 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
     Presentation& presentation, const std::filesystem::path& output)
 {
     using Labels = std::array<std::wstring, 6>;
-    const Labels legacy{ L"Resume", L"Restart", L"Controls / audio", L"Quit", L"Yes", L"No" };
+    const Labels legacy{ L"Resume", L"Restart", L"Options", L"Quit", L"Yes", L"No" };
     constexpr std::array<MenuItem, 6> roles{ MenuItem::resume, MenuItem::restart,
-        MenuItem::controls_audio, MenuItem::quit, MenuItem::yes, MenuItem::no };
+        MenuItem::options, MenuItem::quit, MenuItem::yes, MenuItem::no };
     const Presentation original = presentation;
     Save preferences;
     auto& play = const_cast<PlaySettings&>(preferences.play_settings());
@@ -194,8 +194,8 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
             if (size.x == 1280) { baseline[static_cast<size_t>(phase)] = actual; }
         }
     }
-    const Labels old_labels{ L"Resume~", L"Restart~", L"Audio~", L"Quit~", L"Yes~", L"No~" };
-    const Labels new_labels{ L"Continue", L"Reset", L"Audio", L"Leave", L"OK", L"Return" };
+    const Labels old_labels{ L"Resume~", L"Restart~", L"Options~", L"Quit~", L"Yes~", L"No~" };
+    const Labels new_labels{ L"Continue", L"Reset", L"Settings", L"Leave", L"OK", L"Return" };
     const auto with_labels = [&](const Labels& labels)
     {
         Presentation result = original;
@@ -241,13 +241,20 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
         if (phase == 0)
         {
             tap(Key::down); tap(Key::down);
-            const Frame controls = compare("old-controls", 0, 2, old, old_labels);
+            const Frame options = compare("old-options", 0, 2, old, old_labels);
             tap(Key::enter); tick();
-            require(stack.depth() == 3 && !choice, "Custom Pause Controls did not open a child page");
+            require(stack.depth() == 3 && !choice, "Custom Pause Options did not open a child page");
+            for (int row = preferences.fullscreen() ? 1 : 0; row < 3; ++row) { tap(Key::down); }
+            const Frame controls_parent = pause_menu_frame(app);
+            tap(Key::enter); tick();
+            require(stack.depth() == 4 && !choice, "Paused Options did not open Controls/audio");
             tap(Key::escape); tick();
-            require(stack.depth() == 2 && !choice && controls.pixels == pause_menu_frame(app).pixels,
-                "Controls return changed cached Pause labels, font or focus");
-            compare("old-controls-return", 0, 2, old, old_labels);
+            require(stack.depth() == 3 && !choice && controls_parent.pixels == pause_menu_frame(app).pixels,
+                "Controls return changed retained Options labels, font or focus");
+            tap(Key::escape); tick();
+            require(stack.depth() == 2 && !choice && options.pixels == pause_menu_frame(app).pixels,
+                "Options return changed cached Pause labels, font or focus");
+            compare("old-options-return", 0, 2, old, old_labels);
             tap(Key::down); tap(Key::enter); tick();
         }
         else
@@ -328,7 +335,7 @@ void pause_menu_item_checks(Application& app, const Canvas& canvas, GameTuning& 
         "Pause item regression did not restore the original exact raster");
     require(records.good(), "Pause item evidence write failed");
     std::cout << "PASS actual Pause/Restart/Quit labels: six independent legacy roles across six display sizes, "
-        "custom labels/font, retained and reversed snapshots, Controls return, No/Back, deliberate actions, "
+        "custom labels/font, retained and reversed snapshots, Options/Controls return, No/Back, deliberate actions, "
         "focus interruption, missing-seat gate clearing without automatic Resume and frozen draw RNG\n";
 }
 
@@ -378,7 +385,7 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         return bounds;
     };
     for (const auto& row : std::array<std::pair<const wchar_t*, int>, 6>{ {
-        { L"Resume", 0 }, { L"Restart", 1 }, { L"Controls / audio", 2 },
+        { L"Resume", 0 }, { L"Restart", 1 }, { L"Options", 2 },
         { L"Quit", 3 }, { L"Yes", 0 }, { L"No", 1 } } })
     {
         require(panel.contains(row_bounds(row.first, row.second)),
@@ -631,11 +638,19 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         "Pause Down did not visibly focus Restart");
     tap(Key::down); tap(Key::enter); tick();
     require(stack.depth() == 3 && !choice.has_value(),
-        "Pause Controls/audio did not push a covering settings page");
+        "Pause Options did not push a covering settings page");
+    for (int row = preferences.fullscreen() ? 1 : 0; row < 3; ++row) { tap(Key::down); }
+    const Frame options = pause_menu_frame(app);
+    tap(Key::enter); tick();
+    require(stack.depth() == 4 && !choice.has_value(),
+        "Paused Options did not push actual Controls/audio");
+    tap(Key::escape); tick();
+    require(stack.depth() == 3 && !choice.has_value() && options.pixels == pause_menu_frame(app).pixels,
+        "Closing Controls/audio did not preserve retained Options focus");
     tap(Key::escape); tick();
     require(stack.depth() == 2 && !choice.has_value() &&
-        assert_focus(pause_menu_frame(app), row_bounds(L"Controls / audio", 2)) > 30,
-        "Closing Controls/audio did not preserve the pause cursor");
+        assert_focus(pause_menu_frame(app), row_bounds(L"Options", 2)) > 30,
+        "Closing Options did not preserve the pause cursor");
     tap(Key::escape);
     require(choice == PauseMenuAction::resume, "Escape from actual initial pause did not Resume");
 
@@ -664,13 +679,23 @@ void pause_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tunin
         require(!choice.has_value() && stack.depth() == 2,
             "Escape bypassed the missing-controller pause");
         tap(Key::down);
-        const Frame controls = pause_menu_frame(app);
-        require(assert_focus(controls, row_bounds(L"Controls / audio", 2)) > 30,
+        const Frame options_focus = pause_menu_frame(app);
+        require(assert_focus(options_focus, row_bounds(L"Options", 2)) > 30,
             "Missing-controller navigation did not skip disabled Resume/Restart");
         tap(Key::enter); tick();
         require(stack.depth() == 3 && !choice.has_value(),
-            "Missing-controller pause could not reach Controls/audio");
+            "Missing-controller pause could not reach Options");
+        for (int row = preferences.fullscreen() ? 1 : 0; row < 3; ++row) { tap(Key::down); }
+        const Frame missing_options = pause_menu_frame(app);
+        tap(Key::enter); tick();
+        require(stack.depth() == 4 && !choice.has_value(),
+            "Missing-controller Options could not reach Controls/audio");
         tap(Key::escape); tick();
+        require(stack.depth() == 3 && !choice.has_value() && missing_options.pixels == pause_menu_frame(app).pixels,
+            "Missing-controller Controls return changed retained Options focus");
+        tap(Key::escape); tick();
+        require(stack.depth() == 2 && !choice.has_value() && options_focus.pixels == pause_menu_frame(app).pixels,
+            "Missing-controller Options return changed retained Pause focus");
         tap(Key::down);
         const Frame quit = pause_menu_frame(app);
         require(assert_focus(quit, row_bounds(L"Quit", 3)) > 30,

@@ -1,6 +1,6 @@
 #include "game/pch.h"
 #include "game/states/menu_panel.h"
-#include "game/states/controls_settings_menu.h"
+#include "game/states/main_menu.h"
 #include "game/states/pause_menu.h"
 #include "game/debug/debug_director.h"
 
@@ -106,49 +106,7 @@ bool PauseMenuConfirmation::debug_dismiss(bool leaving_match)
 ProcessedMenuInput PauseMenuPage::pausing_player_input(
 	const std::vector<ProcessedMenuInput>& inputs) const
 {
-	if (this->pausing_player_ < 0 ||
-		static_cast<size_t>(this->pausing_player_) >= inputs.size())
-	{
-		return ProcessedMenuInput();
-	}
-
-	const ProcessedMenuInput& pausing =
-		inputs[static_cast<size_t>(this->pausing_player_)];
-	if (pausing.connected)
-	{
-		return pausing;
-	}
-
-	// The opening device is disconnected. Other participants may navigate;
-	// if none are connected, any device may reach Quit.
-	const MenuLevelSettings& settings = *this->level_settings();
-	bool participant_connected = false;
-	for (size_t slot = 0; slot < inputs.size(); slot++)
-	{
-		const ProcessedMenuInput& input = inputs[slot];
-		if (input.connected &&
-			match_owns_pad_slot(settings, static_cast<int>(slot)))
-		{
-			participant_connected = true;
-			if (input.action != MenuInputAction::none ||
-				input.direction != labrador::Direction::none)
-			{
-				return input;
-			}
-		}
-	}
-	if (!participant_connected)
-	{
-		for (const ProcessedMenuInput& input : inputs)
-		{
-			if (input.connected && (input.action != MenuInputAction::none ||
-				input.direction != labrador::Direction::none))
-			{
-				return input;
-			}
-		}
-	}
-	return ProcessedMenuInput();
+	return menu_input_for_owner(inputs, this->pausing_player_, *this->level_settings());
 }
 
 PauseMenuInitial::PauseMenuInitial(MenuContext* context, int player_num, bool opening) :
@@ -281,7 +239,7 @@ void PauseMenuInitial::init()
 		this->render_resources(),
 		look.art.ink);
 
-	this->controls_ = std::make_unique<UiText>("controls", this->text().item(MenuItem::controls_audio),
+	this->options_ = std::make_unique<UiText>("options", this->text().item(MenuItem::options),
 		style.item_font, this->calculate_widget_position(0, 2), this->render_resources(),
 		look.art.ink);
 
@@ -305,7 +263,7 @@ void PauseMenuInitial::init()
 	this->text_container_->add_child(this->connection_status_.get());
 	this->text_container_->add_child(this->resume_.get());
 	this->text_container_->add_child(this->restart_.get());
-	this->text_container_->add_child(this->controls_.get());
+	this->text_container_->add_child(this->options_.get());
 	this->text_container_->add_child(this->quit_.get());
 
 	this->focus_.add(this->resume_.get(), [this]
@@ -320,10 +278,10 @@ void PauseMenuInitial::init()
 				this->menu_context(), this->pausing_player(),
 				ConfirmationType::restart));
 		});
-	this->focus_.add(this->controls_.get(), [this]
+	this->focus_.add(this->options_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
-			this->context()->push(std::make_unique<ControlsSettingsMenu>(
+			this->context()->push(std::make_unique<MainMenuOptions>(
 				this->menu_context(), this->pausing_player()));
 		});
 	this->focus_.add(this->quit_.get(), [this]

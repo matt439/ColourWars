@@ -2,6 +2,9 @@
 #include "game/states/controls_settings_menu.h"
 #include "game/states/display_confirmation.h"
 #include "game/states/main_menu.h"
+#include "game/input_slots.h"
+
+#include <stdexcept>
 
 using namespace DirectX;
 using namespace mattmath;
@@ -10,9 +13,15 @@ using namespace labrador;
 
 #pragma region MainMenuOptions
 
-MainMenuOptions::MainMenuOptions(MenuContext* context) :
-	MainMenuPage(context), options_art_(context->data()->presentation()->main_menu().art)
+MainMenuOptions::MainMenuOptions(MenuContext* context, std::optional<int> pausing_slot) :
+	MainMenuPage(context), pausing_slot_(pausing_slot),
+	options_art_(context->data()->presentation()->main_menu().art)
 {
+	if (pausing_slot && (*pausing_slot < 0 || *pausing_slot >= input_slots::count ||
+		this->level_settings()->player_index_for_slot(*pausing_slot) < 0))
+	{
+		throw std::invalid_argument("Paused Options requires a device in the match roster.");
+	}
 	const MainMenuPresentation& look = this->look();
 	this->options_art_.focus_padding = look.setup_focus_padding;
 	this->options_art_.shadow_offset = look.setup_shadow_offset;
@@ -20,13 +29,17 @@ MainMenuOptions::MainMenuOptions(MenuContext* context) :
 
 void MainMenuOptions::update_page(float /*dt*/)
 {
-	for (const ProcessedMenuInput& input : this->menu_inputs())
+	if (!this->context()->active()) { return; }
+	std::vector<ProcessedMenuInput> inputs = this->menu_inputs();
+	if (this->pausing_slot_)
+	{
+		inputs = { menu_input_for_owner(inputs, *this->pausing_slot_, *this->level_settings()) };
+	}
+	for (const ProcessedMenuInput& input : inputs)
 	{
 		if (input.action == MenuInputAction::back)
 		{
-			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(std::make_unique<MainMenuHome>(
-				this->menu_context(), MainMenuHome::InitialFocus::options));
+			this->close();
 			return;
 		}
 		if (input.action == MenuInputAction::proceed)
@@ -47,6 +60,34 @@ void MainMenuOptions::update_page(float /*dt*/)
 		// Let the focused value row handle that input instead.
 		this->adjust_focused_value(input.direction);
 	}
+}
+
+void MainMenuOptions::close()
+{
+	this->play_wave(this->cancel_sound_);
+	this->input()->reset_actions();
+	this->reset_menu_motion();
+	if (this->pausing_slot_)
+	{
+		this->context()->pop();
+	}
+	else
+	{
+		this->context()->transition_to(std::make_unique<MainMenuHome>(
+			this->menu_context(), MainMenuHome::InitialFocus::options));
+	}
+}
+
+bool MainMenuOptions::debug_start_match(const MenuLevelSettings& plan)
+{
+	return !this->pausing_slot_ && MainMenuPage::debug_start_match(plan);
+}
+
+bool MainMenuOptions::debug_dismiss(bool leaving_match)
+{
+	if (!this->pausing_slot_) { return MainMenuPage::debug_dismiss(leaving_match); }
+	this->close();
+	return true;
 }
 
 void MainMenuOptions::adjust_focused_value(labrador::Direction direction)
@@ -101,7 +142,8 @@ void MainMenuOptions::apply_settings()
 		this->input()->reset_actions();
 		this->context()->push<DisplayTrialResult>(
 			std::make_unique<MainMenuDisplayConfirmation>(this->menu_context(),
-				DisplaySettingsChoice{ this->resolution_selection_, fs, this->team_palette_selection_ }),
+				DisplaySettingsChoice{ this->resolution_selection_, fs, this->team_palette_selection_ },
+				this->pausing_slot_),
 			[this](const DisplayTrialResult& result) { this->finish_display_trial(result); });
 		return;
 	}
@@ -151,6 +193,7 @@ void MainMenuOptions::restore_defaults()
 
 void MainMenuOptions::init()
 {
+	this->input()->reset_actions();
 	const MainMenuPresentation& look = this->look();
 	const MenuStyle& style = this->menu_style();
 	this->set_widget_position(look.options_position);
@@ -190,6 +233,13 @@ void MainMenuOptions::init()
 		look.options_heading_position,
 		this->render_resources(),
 		look.art.ink);
+	if (this->pausing_slot_)
+	{
+		this->palette_timing_ = std::make_unique<UiText>("palette_timing",
+			this->text().options_palette_timing, style.detail_font,
+			Vector2F(look.options_value_x, look.options_heading_position.y),
+			this->render_resources(), look.art.ink);
+	}
 
 	this->resolution_row_ = std::make_unique<OptionRow>(
 		"resolution",
@@ -272,6 +322,7 @@ void MainMenuOptions::init()
 	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");
 	this->text_container_->add_child(this->heading_.get());
+	if (this->palette_timing_) { this->text_container_->add_child(this->palette_timing_.get()); }
 	this->text_container_->add_child(this->resolution_row_.get());
 	this->text_container_->add_child(this->full_screen_row_.get());
 	this->text_container_->add_child(this->team_palette_row_.get());
@@ -288,16 +339,13 @@ void MainMenuOptions::init()
 	this->focus_.add(this->controls_.get(), [this]
 		{
 			this->play_wave(this->confirm_sound_);
-			this->context()->push(std::make_unique<ControlsSettingsMenu>(this->menu_context()));
+			this->input()->reset_actions();
+			this->context()->push(std::make_unique<ControlsSettingsMenu>(
+				this->menu_context(), this->pausing_slot_.value_or(-1)));
 		});
 	this->focus_.add(this->restore_defaults_.get(), [this] { this->restore_defaults(); });
 	this->focus_.add(this->apply_.get(), [this] { this->apply_settings(); });
-	this->focus_.add(this->back_.get(), [this]
-		{
-			this->play_wave(this->cancel_sound_);
-			this->context()->transition_to(
-				std::make_unique<MainMenuHome>(this->menu_context(), MainMenuHome::InitialFocus::options));
-		});
+	this->focus_.add(this->back_.get(), [this] { this->close(); });
 
 	// Refresh after registration so fullscreen disables the row before first draw.
 	this->refresh_resolution_row();
