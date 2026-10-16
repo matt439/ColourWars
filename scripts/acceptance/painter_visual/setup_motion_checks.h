@@ -90,16 +90,31 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
             app.viewport_manager()->fullscreen_viewport());
         camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds);
     };
-    const auto measure = [&](const std::wstring& words)
-        { return app.render_resources()->measure_text(app.render_resources()->resolve_sprite_font(style.item_font), words); };
-    const auto stripe = [&](Vector2F spacing, int row, const std::wstring& words)
+    const auto setup_bounds = [&](Vector2F spacing, int row, const std::wstring& words)
     {
         const Vector2F origin = style.layout.position + Vector2F(0.0f, spacing.y * static_cast<float>(row));
-        const Vector2F size = measure(words);
-        // Only the accent moves. A two-design-unit guard covers native edge rounding.
-        return RectangleF(origin.x - style.focus_padding.x - 2.0f,
-            origin.y - style.focus_padding.y - 2.0f, style.focus_padding.x + 4.0f,
-            size.y + style.focus_padding.y * 2.0f + 4.0f);
+        const UiTextDropShadow text("independent-setup-motion-text", words, style.item_font, origin,
+            app.render_resources(), look.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.item_shadow_offset);
+        return text.bounds();
+    };
+    const auto focus_arrow = [&](Vector2F spacing, int row, const std::wstring& words)
+    {
+        RectangleF bounds = setup_bounds(spacing, row, words); bounds.inflate(look.setup_focus_padding);
+        const float pen = look.art.keyline_width;
+        return RectangleF(bounds.x - pen * 8.0f - 2.0f, bounds.center().y - pen * 4.0f - 2.0f,
+            pen * 10.0f + 4.0f, pen * 8.0f + 4.0f);
+    };
+    const auto duration_card = [&]
+    {
+        const Vector2F spacing = look.mode_select_spacing;
+        std::wostringstream words; words << settings.duration().value_or(tuning.match().duration) / 60.0f << L" min";
+        const std::wstring value = settings.duration() ? words.str() : L"Default (" + words.str() + L")";
+        const UiTextDropShadow text("independent-setup-motion-value", value, style.item_font,
+            style.layout.position + Vector2F(spacing.x * 2.0f, spacing.y * 5.0f), app.render_resources(),
+            look.art.ink, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.item_shadow_offset);
+        RectangleF bounds = RectangleF::union_of(setup_bounds(spacing, 5,
+            presentation.menu_text().item(MenuItem::match_length)), text.bounds());
+        bounds.inflate(look.setup_focus_padding + Vector2F(2.0f)); return bounds;
     };
     const auto team_box = [&](int player, PlayerTeam team)
     {
@@ -274,7 +289,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         require(mode_arrival.pixels == frame().pixels, "Nonpositive setup time advanced focus motion");
         tick(motion.focus_duration * 0.4f); const Frame mode_middle = frame(); tick(settle_time);
         const Frame mode_rest = frame();
-        const RectangleF mode_stripe = stripe(look.mode_select_spacing, 3, presentation.menu_text().item(MenuItem::best_of_three));
+        const RectangleF mode_stripe = focus_arrow(look.mode_select_spacing, 3, presentation.menu_text().item(MenuItem::best_of_three));
         changed("mode-arrival", mode_arrival, mode_rest, { mode_stripe });
         changed("mode-middle", mode_middle, mode_rest, { mode_stripe });
         require(mode_arrival.pixels != mode_middle.pixels, "Mode focus did not progress with positive time");
@@ -283,7 +298,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         tap(0, GamepadButton::dpad_down); tap(0, GamepadButton::dpad_down); tick(settle_time);
         tap(0, GamepadButton::dpad_right); const Frame duration_press = frame(); frozen(duration_press);
         tick(settle_time); const Frame duration_rest = frame();
-        const RectangleF duration_stripe = stripe(look.mode_select_spacing, 5, presentation.menu_text().item(MenuItem::match_length));
+        const RectangleF duration_stripe = duration_card();
         changed("duration-press", duration_press, duration_rest, { duration_stripe });
         tap(0, GamepadButton::a); const Frame duration_confirm = frame(); tick(settle_time);
         changed("duration-confirm", duration_confirm, frame(), { duration_stripe });
@@ -294,7 +309,7 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         open(1); tap(0, GamepadButton::dpad_down); const Frame count_arrival = frame();
         tick(motion.focus_duration * 0.4f); const Frame count_middle = frame(); tick(settle_time);
         const Frame count_rest = frame();
-        const RectangleF count_stripe = stripe(look.player_count_spacing, 3, presentation.menu_text().item(MenuItem::two_players));
+        const RectangleF count_stripe = focus_arrow(look.player_count_spacing, 3, presentation.menu_text().item(MenuItem::two_players));
         changed("count-arrival", count_arrival, count_rest, { count_stripe });
         changed("count-middle", count_middle, count_rest, { count_stripe });
         tap(0, GamepadButton::dpad_down); tap(0, GamepadButton::dpad_up); const Frame rapid_count = frame();

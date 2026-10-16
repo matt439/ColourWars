@@ -8,6 +8,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -132,6 +133,10 @@ namespace
             menu.sprite_sheet == "sprite_sheet_1" && menu.fill_frame == "pixel",
             "Authored menu defaults changed the previous base layout or fill artwork");
         const auto& main = look.main_menu();
+        require(main.setup_box_size == Vector2F(1760.0f, 920.0f) && main.setup_focus_padding == Vector2F(28.0f, 7.0f) &&
+            main.setup_shadow_offset == 2.0f &&
+            (Vector2F(1920.0f, menu.footer_y) - main.setup_box_size) / 2.0f == Vector2F(80.0f, 20.0f),
+            "Authored setup paper changed its reviewed size or placement above the shared footer");
         require(main.team_select_sheet == "sprite_sheet_1" &&
             main.team_select_frames == std::array<std::string, 3>{ "team_select_a", "team_select_center", "team_select_b" } &&
             main.team_select_selected_frames == std::array<std::string, 3>{ "team_select_a_selected",
@@ -144,12 +149,12 @@ namespace
         const auto custom = variants.load([](rapidjson::Document& d)
         {
             auto& layout = d["menu_style"]["layout"];
-            layout["position"]["x"].SetInt(90); layout["position"]["y"].SetInt(120);
+            layout["position"]["x"].SetInt(150); layout["position"]["y"].SetInt(120);
             layout["size"]["x"].SetInt(450); layout["size"]["y"].SetInt(90);
             layout["spacing"]["x"].SetInt(510); layout["spacing"]["y"].SetInt(180);
         });
         custom.validate_resources(world.render, world.audio);
-        require(custom.menu().layout.position == Vector2F(90.0f, 120.0f) &&
+        require(custom.menu().layout.position == Vector2F(150.0f, 120.0f) &&
             custom.menu().layout.size == Vector2F(450.0f, 90.0f) &&
             custom.menu().layout.spacing == Vector2F(510.0f, 180.0f), "Custom base menu layout was not loaded exactly");
         const auto boundary = variants.load([](rapidjson::Document& d)
@@ -196,6 +201,180 @@ namespace
             variants.rejects("menu_style", "spacing", [axis, limit](rapidjson::Document& d)
                 { d["menu_style"]["layout"]["spacing"][axis].SetInt(limit + 1); });
         }
+    }
+
+    void check_setup_panel(Variants& variants, World& world)
+    {
+        variants.rejects("main_menu", "setup_box_size", [](rapidjson::Document& d)
+            { d["main_menu"].RemoveMember("setup_box_size"); });
+        variants.rejects("main_menu", "setup_box_size", [](rapidjson::Document& d)
+            { d["main_menu"]["setup_box_size"].SetArray(); });
+        variants.rejects("main_menu", "setup_box_size", [](rapidjson::Document& d)
+            { d["main_menu"]["setup_box_size"].SetNull(); });
+        for (const char* axis : { "x", "y" })
+        {
+            variants.rejects("main_menu", "setup_box_size", [axis](rapidjson::Document& d)
+                { d["main_menu"]["setup_box_size"].RemoveMember(axis); });
+            variants.rejects("main_menu", "setup_box_size", [axis](rapidjson::Document& d)
+                { d["main_menu"]["setup_box_size"][axis].SetBool(true); });
+            variants.rejects("main_menu", "setup_box_size", [axis](rapidjson::Document& d)
+                { d["main_menu"]["setup_box_size"][axis].SetString("920"); });
+            for (const double invalid : { 0.0, -1.0, 1e100 })
+            {
+                variants.rejects("main_menu", "setup_box_size", [axis, invalid](rapidjson::Document& d)
+                    { d["main_menu"]["setup_box_size"][axis].SetDouble(invalid); });
+            }
+            const float maximum = std::string(axis) == "x" ? 1760.0f : 920.0f;
+            variants.rejects("main_menu", "setup_box_size", [axis, maximum](rapidjson::Document& d)
+            {
+                d["main_menu"]["setup_box_size"][axis].SetFloat(std::nextafter(maximum,
+                    std::numeric_limits<float>::infinity()));
+            });
+        }
+        const auto custom = variants.load([](rapidjson::Document& d)
+        {
+            d["main_menu"]["setup_box_size"]["x"].SetInt(1720);
+            d["main_menu"]["setup_box_size"]["y"].SetInt(900);
+            d["menu_style"]["layout"]["position"]["x"].SetInt(170);
+        });
+        custom.validate_resources(world.render, world.audio);
+        require(custom.main_menu().setup_box_size == Vector2F(1720.0f, 900.0f),
+            "Custom setup paper size was not loaded exactly");
+        const auto footer_boundary = variants.load([](rapidjson::Document& d)
+        {
+            d["menu_style"]["chrome"]["footer_y"].SetInt(1000);
+            d["main_menu"]["setup_box_size"]["y"].SetInt(960);
+        });
+        footer_boundary.validate_resources(world.render, world.audio);
+        require((Vector2F(1920.0f, footer_boundary.menu().footer_y) -
+            footer_boundary.main_menu().setup_box_size) / 2.0f == Vector2F(80.0f, 20.0f),
+            "Setup paper no longer derives its vertical center from the authored footer");
+        variants.rejects("main_menu", "setup_box_size", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["chrome"]["footer_y"].SetFloat(999.75f);
+            d["main_menu"]["setup_box_size"]["y"].SetInt(960);
+        });
+        variants.rejects("main_menu", "setup_focus_padding", [](rapidjson::Document& d)
+            { d["main_menu"].RemoveMember("setup_focus_padding"); });
+        variants.rejects("main_menu", "setup_focus_padding", [](rapidjson::Document& d)
+            { d["main_menu"]["setup_focus_padding"].SetArray(); });
+        for (const char* axis : { "x", "y" })
+        {
+            variants.rejects("main_menu", "setup_focus_padding", [axis](rapidjson::Document& d)
+                { d["main_menu"]["setup_focus_padding"].RemoveMember(axis); });
+            variants.rejects("main_menu", "setup_focus_padding", [axis](rapidjson::Document& d)
+                { d["main_menu"]["setup_focus_padding"][axis].SetBool(false); });
+            for (const double invalid : { 0.0, -1.0, 6.0, 1e100 })
+            {
+                variants.rejects("main_menu", "setup_focus_padding", [axis, invalid](rapidjson::Document& d)
+                    { d["main_menu"]["setup_focus_padding"][axis].SetDouble(invalid); });
+            }
+            const float limit = std::string(axis) == "x" ? 48.0f : 24.0f;
+            variants.rejects("main_menu", "setup_focus_padding", [axis, limit](rapidjson::Document& d)
+                { d["main_menu"]["setup_focus_padding"][axis].SetFloat(limit + 0.25f); });
+        }
+        const auto padding_boundary = variants.load([](rapidjson::Document& d)
+        {
+            d["main_menu"]["setup_focus_padding"]["x"].SetInt(48);
+            d["main_menu"]["setup_focus_padding"]["y"].SetInt(24);
+        });
+        require(padding_boundary.main_menu().setup_focus_padding == Vector2F(48.0f, 24.0f),
+            "Inclusive setup focus-padding definition limits were rejected");
+        const auto padding_minimum = variants.load([](rapidjson::Document& d)
+        {
+            d["main_menu"]["setup_focus_padding"]["x"].SetFloat(6.25f);
+            d["main_menu"]["setup_focus_padding"]["y"].SetFloat(6.25f);
+        });
+        require(padding_minimum.main_menu().setup_focus_padding == Vector2F(6.25f, 6.25f),
+            "Setup focus padding just above the shade-plus-keyline threshold was rejected");
+        variants.rejects("main_menu", "setup_shadow_offset", [](rapidjson::Document& d)
+            { d["main_menu"].RemoveMember("setup_shadow_offset"); });
+        variants.rejects("main_menu", "setup_shadow_offset", [](rapidjson::Document& d)
+            { d["main_menu"]["setup_shadow_offset"].SetBool(false); });
+        for (const double invalid : { -0.25, 24.25, 1e100 })
+        {
+            variants.rejects("main_menu", "setup_shadow_offset", [invalid](rapidjson::Document& d)
+                { d["main_menu"]["setup_shadow_offset"].SetDouble(invalid); });
+        }
+        const auto no_shade = variants.load([](rapidjson::Document& d)
+            { d["main_menu"]["setup_shadow_offset"].SetFloat(0.0f); });
+        no_shade.validate_resources(world.render, world.audio);
+        require(no_shade.main_menu().setup_shadow_offset == 0.0f,
+            "Inclusive zero setup-shadow limit was rejected");
+    }
+
+    void check_setup_geometry(Variants& variants, World& world)
+    {
+        std::vector<Glyph> glyphs;
+        for (char32_t character = U' '; character <= U'~'; ++character)
+        {
+            glyphs.push_back({ character, RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f });
+        }
+        world.render.add_font("setup_exact", std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
+        const auto exact = [](rapidjson::Document& d)
+        {
+            for (const char* font : { "heading", "item", "detail" })
+            {
+                d["menu_style"]["fonts"][font].SetString("setup_exact");
+            }
+            for (auto member = d["menu_text"]["items"].MemberBegin(); member != d["menu_text"]["items"].MemberEnd(); ++member)
+            {
+                member->value.SetString("Fit");
+            }
+            for (auto member = d["menu_text"]["headings"].MemberBegin(); member != d["menu_text"]["headings"].MemberEnd(); ++member)
+            {
+                member->value.SetString("Fit");
+            }
+            d["menu_text"]["solo_practice_hint"].SetString("Fit");
+        };
+        const auto check_edge = [&](const char* owner, const char* field, auto edge, auto outside)
+        {
+            const auto fits = variants.load([&](rapidjson::Document& d) { exact(d); edge(d); });
+            fits.validate_resources(world.render, world.audio);
+            variants.rejects(owner, field, [&](rapidjson::Document& d)
+            {
+                exact(d);
+                edge(d);
+                outside(d);
+            }, &world);
+        };
+        check_edge("menu_text.items", "single_match", [](rapidjson::Document& d)
+            { d["main_menu"]["setup_box_size"]["x"].SetFloat(1756.0f); },
+            [](rapidjson::Document& d) { d["main_menu"]["setup_box_size"]["x"].SetFloat(1755.75f); });
+        check_edge("menu_text.items", "single_match", [](rapidjson::Document& d)
+            { d["menu_style"]["layout"]["position"]["x"].SetFloat(148.0f); },
+            [](rapidjson::Document& d) { d["menu_style"]["layout"]["position"]["x"].SetFloat(147.75f); });
+        check_edge("menu_text.items", "single_match", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["layout"]["position"]["x"].SetFloat(149.5f);
+            d["menu_style"]["shadow"]["item_offset"]["x"].SetFloat(-1.5f);
+        }, [](rapidjson::Document& d) { d["menu_style"]["layout"]["position"]["x"].SetFloat(149.25f); });
+        check_edge("menu_text.headings", "mode", [](rapidjson::Document& d)
+            { d["menu_style"]["layout"]["position"]["y"].SetFloat(32.0f); },
+            [](rapidjson::Document& d) { d["menu_style"]["layout"]["position"]["y"].SetFloat(31.75f); });
+        check_edge("menu_text.items", "single_match", [](rapidjson::Document& d)
+            { d["menu_style"]["shadow"]["heading_offset"]["y"].SetFloat(173.0f); },
+            [](rapidjson::Document& d) { d["menu_style"]["shadow"]["heading_offset"]["y"].SetFloat(173.25f); });
+        check_edge("menu_text", "solo_practice_hint", [](rapidjson::Document& d)
+            { d["menu_style"]["layout"]["position"]["y"].SetFloat(204.5f); },
+            [](rapidjson::Document& d) { d["menu_style"]["layout"]["position"]["y"].SetFloat(204.75f); });
+        check_edge("menu_text.items", "back", [](rapidjson::Document& d)
+        {
+            d["menu_style"]["layout"]["position"]["y"].SetFloat(175.5f);
+            d["main_menu"]["player_count_spacing"]["y"].SetFloat(120.0f);
+        }, [](rapidjson::Document& d) { d["main_menu"]["player_count_spacing"]["y"].SetFloat(120.25f); });
+        for (const char* spacing : { "mode_select_spacing", "player_count_spacing" })
+        {
+            const char* field = std::string(spacing) == "mode_select_spacing" ? "single_match" : "one_player_practice";
+            check_edge("menu_text.items", field, [spacing](rapidjson::Document& d)
+                { d["main_menu"][spacing]["y"].SetFloat(37.5f); },
+                [spacing](rapidjson::Document& d) { d["main_menu"][spacing]["y"].SetFloat(37.25f); });
+        }
+        variants.rejects("menu_text.items", "match_length", [&](rapidjson::Document& d)
+        {
+            exact(d);
+            d["main_menu"]["mode_select_spacing"]["x"].SetFloat(900.0f);
+        }, &world);
     }
 
     std::unique_ptr<SpriteSheet> sparse_sheet(std::initializer_list<const char*> names)
@@ -337,6 +516,8 @@ int main(int argc, char** argv)
         check_defaults(defaults);
         defaults.validate_resources(world.render, world.audio);
         check_layout(variants, world);
+        check_setup_panel(variants, world);
+        check_setup_geometry(variants, world);
         check_assets(variants, world);
         check_required_primitive(variants, world, content);
         std::cout << "PASS menu presentation: unchanged defaults, authored base layout/artwork, contextual rejection, "

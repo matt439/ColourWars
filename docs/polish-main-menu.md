@@ -11,7 +11,8 @@ Play has a persistent paper card, and a detached ink arrow follows focus.
 solid texel. The paper belongs to the texture layer, with point sampling;
 lettering retains the text layer's linear sampling. These pages suppress the
 shared brand line and legacy focus backing while retaining the common controls
-footer. Other main-menu pages keep their existing artwork until their own pass.
+footer. The remaining setup pages keep their existing artwork until their own
+pass; the Mode/Player Count increment is recorded below.
 
 Editable colours, pen width, shade and card padding live in
 `presentation.json.main_menu.art`. `title_box_size` and `home_box_size` set the
@@ -22,7 +23,10 @@ Startup rejects malformed paper, unbounded geometry and anchors outside their
 panels. Actual font and card fitting is checked with the renderer. Normal
 builds reproduce the drawing without an atlas-generation step.
 
-The drawing is static, including under Reduce effects. Existing copy,
+The panel and lettering stay fixed. The later
+[shared focus and press motion](menu-presentation.md#shared-paper-focus-and-press-motion)
+settles the detached arrow and pressed card face; Reduce effects retains the
+settled artwork. Existing copy,
 keyboard/pad prompts, title Start, Home Back, Play, Options, Credits and Exit
 retain their behavior, as do music and effects bindings and gains. The keyboard
 seat continues to make the title's controller hint unnecessary; its authored
@@ -72,8 +76,8 @@ scripts/run-acceptance.ps1 -Preset x64-debug
 scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -MainMenuOnly
 ```
 
-Use `x64-release` for the Release checks. Match setup,
-selection cards and stage preview remain under `POL#16`. Reference-arena
+Use `x64-release` for the Release checks. Join,
+Team/Weapon selection cards and stage preview remain under `POL#16`. Reference-arena
 composition, movement feel, physical controllers and listening acceptance
 retain their TODO owners.
 
@@ -210,6 +214,91 @@ Rerun from an x64 Visual Studio Developer shell:
 scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -ControlsMenuOnly
 ```
 
-Use `x64-release` for Release. Match setup, selection cards and stage preview
-remain under `POL#16`. Physical-pad, movement-feel, human readability and
-listening acceptance retain their existing TODO owners.
+Use `x64-release` for Release. Join, Team/Weapon selection cards and stage
+preview remain under `POL#16`. Physical-pad, movement-feel, human readability
+and listening acceptance retain their existing TODO owners.
+
+## Mode and Player Count
+
+Implemented on 2026-10-16, part of `POL#16`. Both setup pages use the same
+stepped pale paper, dark ink, quiet edge shade and neutral Home surround.
+`MenuPaperArtwork` draws the panel and the enabled focused row's card, with a
+detached ink arrow. There is no persistent primary-action card. The shared
+controls footer remains visible; these two pages suppress the old brand line
+and focus stripe. Texture artwork uses point sampling and lettering remains
+linear-filtered.
+
+The required `presentation.json.main_menu.setup_box_size` is shared by these
+two pages and ships as `(1760, 920)`, centered in
+`(1920, menu_style.chrome.footer_y)`. A copy of `main_menu.art` supplies the
+colours, keyline and shade colour, with its card padding and shadow offset
+replaced by the required `main_menu.setup_focus_padding` (`28, 7`) and
+`main_menu.setup_shadow_offset` (`2`). The surround reuses
+`main_menu.home_background_colour`.
+The existing shared widget origin, `mode_select_spacing` and
+`player_count_spacing` continue to place every row. Normal builds reproduce
+the drawing from the existing solid texel without a new atlas or asset recipe.
+
+Startup requires positive, finite panel dimensions, at most 1760 wide and with
+20 design units clear above and below the panel within the footer area. Actual
+heading, row and hint bounds must fit the usable paper interior, including
+retained transparent-shadow extents and the focused card's padding, shade and
+detached arrow. Each padded action card with extra shade clearance must fit its
+row spacing. The drawing includes its shade inside the card; validation reserves
+extra clearance. The tallest shipped glyph bounds, retained text-shadow extent,
+compact setup padding and extra shade clearance total `99.5` design units within
+the unchanged 100-unit row spacing. Padding must be positive and at most
+`(48, 24)`, with each component greater than the
+setup shadow offset plus the keyline width; the shadow offset must be in
+`[0, 24]`. These checks preserve pressed-face, keyline and shadow clearance.
+
+Existing heading/item/detail fonts, text, anchors, scales and widget bounds are
+retained. Text shadows draw with zero alpha, preserving their authored offsets
+and logical extents while making the lettering appear as plain ink. The Mode
+duration `OptionRow` uses a local style copy with the same transparent shadow
+and paper inks; its label/value positions and existing fitting path remain
+unchanged. Startup requires positive value-column space within the paper
+interior, and duration refreshes check the complete label/value bounds with
+their card and arrow reserve. Disabled one-player practice has the shared
+readable disabled ink.
+
+The pages use the existing captured focus and press clocks: navigation briefly
+settles the arrow and accepted duration changes depress the focused card face
+inside its existing shadow. Repeated events restart one bounded response;
+applied Reduce effects draws the settled artwork. The existing interruption
+policy clears unfinished responses on inactive updates,
+suspension/resume, deactivation, developer interception and input reset. Labels
+and navigation geometry stay fixed, and drawing does not advance the clocks.
+
+Single Match, series choices, duration cycling, solo-practice availability,
+initial focus, Back, input-device claiming and immediate transitions retain
+their behavior. The drawing changes no RNG, music or sound bindings.
+
+The focused native check is
+`scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -SetupPaperOnly` (or
+`x64-release`), with batch evidence under
+`out/validation/2026-10-16-setup-paper/verification.json`.
+
+Debug and Release build under `/W4 /WX` and each pass all 31 consumer cases.
+Eight native scopes pass per preset: `SetupPaperOnly`, `MenuTextOnly`,
+`SetupMotionOnly`, `JoinStageMotionOnly`, `MenuMotionOnly`, `MainMenuOnly`,
+`WeaponCatalogOnly` and `ResumeOnly`, for sixteen native runs. Each preset
+passes 117 independent full-frame checks and 24 motion-envelope checks;
+all 174 retained native PPM captures match byte for byte between Debug and
+Release.
+
+Both normal published-bank startup checks pass. The 53-file Release ZIP
+contains all 26 reviewed runtime assets byte for byte and excludes source,
+debug and private-audio content. Extracted Release startup passes with the
+published bank and separately without the optional bank, using a system-only
+PATH; the latter reports the expected silent fallback. These complete four
+startup checks. Package and extracted-startup evidence is in
+`out/validation/2026-10-16-setup-paper/package-verification.json`.
+
+The retained native 720p views show [Mode](images/polish-main-menu/mode-720p.png),
+the [focused duration row](images/polish-main-menu/mode-duration-720p.png) and
+[series Player Count with solo practice disabled](images/polish-main-menu/player-count-series-720p.png).
+
+Human menu/readability review remains open. Join, Team/Weapon selection cards,
+stage preview and accepted arenas remain `POL#16`; movement-feel (`POL#3`),
+physical-controller and listening acceptance retain their existing gates.

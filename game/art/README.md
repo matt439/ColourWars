@@ -152,8 +152,8 @@ captured durations and travel; applied Reduce effects keeps the settled artwork.
 Labels and widget/navigation bounds keep their authored positions.
 
 The [setup selection accents](../../docs/menu-presentation.md#setup-selection-motion)
-also reuse the existing runtime art: Mode/Player count move only the focus
-stripe within its padding, Team contracts the chosen team icon inside its existing
+also reuse the existing runtime art: Mode/Player Count use the shared paper
+arrow and card response, Team contracts the chosen team icon inside its existing
 canvas, and Weapon contracts only its tile and border within icon padding.
 The required `menu_style.motion.selection_inset_fraction` captures the maximum
 per-side inset when a page opens. Per-player response clocks share the existing
@@ -172,6 +172,16 @@ The [title and home pages](../../docs/polish-main-menu.md) use the same paper
 drawing in the texture layer, with linear-filtered lettering above it. Their
 editable palette and pen widths are in `main_menu.art`; panel sizes and text
 anchors live beside it. The neutral surround uses the existing solid texel.
+
+The [Mode and Player Count pages](../../docs/polish-main-menu.md#mode-and-player-count)
+reuse that paper and neutral surround with `main_menu.setup_box_size`, centered
+above the controls footer. `main_menu.art` supplies the same inks, pen
+and shade colour, with card padding and shadow offset overridden by
+`main_menu.setup_focus_padding` (`28, 7`) and `main_menu.setup_shadow_offset`
+(`2`) to retain pressed-face clearance within the existing row stride.
+Transparent text shadows retain the existing offsets and logical
+geometry while leaving plain dark lettering. Normal builds reproduce the
+panel, focused card and detached arrow without new assets or an atlas recipe.
 
 The [Options and Credits pages](../../docs/polish-main-menu.md#options-and-credits)
 extend the same drawing, with authored panel sizes and text positions in

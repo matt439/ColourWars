@@ -892,6 +892,42 @@ SFX audition, Apply, Back discard and the paused match retain their existing
 rules. Match setup, selection cards and stage preview remain open, alongside
 the existing arena and human-review gates.
 
+**Mode and Player Count artwork implemented (2026-10-16, part of `POL#16`).**
+The [setup-page drawing](polish-main-menu.md#mode-and-player-count) extends the
+shared stepped paper, dark ink, neutral surround and detached focus arrow to
+the two shared-choice pages. `main_menu.setup_box_size` supplies their common
+footer-centered paper. A copy of `main_menu.art` supplies its colours and keyline;
+the required `main_menu.setup_focus_padding` (`28, 7`) and
+`main_menu.setup_shadow_offset` (`2`) override the card padding and shadow offset.
+They preserve pressed-face/keyline clearance while the card with extra shade
+clearance fits the existing 100-unit row spacing. The enabled focused row gets the shared card
+and existing focus/press motion, with no persistent primary card. Reduce effects
+retains the settled artwork. The legacy brand and stripe are suppressed on these two
+pages while the controls footer remains visible.
+
+Every existing text anchor, font, scale and logical widget bound is retained.
+Text-shadow alpha is zero, preserving the offsets and measured extents while
+drawing plain dark lettering. The duration row retains its label/value
+positions and fitting path. Choice order, duration cycling, series/solo rules,
+Back, device claiming, transitions, RNG and sound/music bindings are unchanged.
+The drawing uses the existing solid texel and needs no new artwork asset.
+
+Verification uses the focused `SetupPaperOnly` native scope, with evidence at
+`out/validation/2026-10-16-setup-paper/verification.json`.
+Both builds and all 31 consumer cases per preset pass, along with sixteen
+native runs across eight relevant menu/resume scopes per preset. Each preset
+passes 117 independent full-frame checks and 24 motion-envelope checks;
+all 174 native PPM captures match between Debug and Release. Four startup
+checks pass: the normal published-bank Debug/Release pair and extracted Release
+with the published bank and optional-bank fallback under a system-only PATH.
+The 53-file Release ZIP contains all 26 reviewed runtime assets byte for byte,
+excluding source, debug and private audio; package evidence is in
+`out/validation/2026-10-16-setup-paper/package-verification.json`.
+
+Join, Team/Weapon selection cards, stage preview, accepted arenas and human
+review remain `POL#16`. Reference-arena, movement-feel, physical-controller
+and listening acceptance retain their existing gates.
+
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.
 Give each arena its own material palette, landmarks and background composition.

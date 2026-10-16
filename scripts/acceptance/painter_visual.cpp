@@ -2536,6 +2536,7 @@ namespace
 #include "scripts/acceptance/painter_visual/pause_question_checks.h"
 #include "scripts/acceptance/painter_visual/results_menu_checks.h"
 #include "scripts/acceptance/painter_visual/main_menu_checks.h"
+#include "scripts/acceptance/painter_visual/setup_paper_checks.h"
 #include "scripts/acceptance/painter_visual/weapon_catalog_checks.h"
 #include "scripts/acceptance/painter_visual/menu_text_checks.h"
 #include "scripts/acceptance/painter_visual/stage_random_text_checks.h"
@@ -2569,8 +2570,9 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"controls-menu" || std::wstring(argv[3]) == L"stick-settings" ||
             std::wstring(argv[3]) == L"team-setup" || std::wstring(argv[3]) == L"weapon-catalog" ||
             std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion" ||
-            std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion")),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion]");
+            std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" ||
+            std::wstring(argv[3]) == L"setup-paper")),
+            "usage: painter_visual <staged-content> <output> [identity|quiet|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -2644,6 +2646,12 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         const Canvas canvas(app.render_resources());
+        if (argc == 4 && std::wstring(argv[3]) == L"setup-paper")
+        {
+            setup_paper_matrix(app, canvas, tuning, presentation, output);
+            std::cout << "PASS setup-paper-only actual pages; normal reader, keyboard-driven only\n";
+            return 0;
+        }
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
         if (argc == 4 && std::wstring(argv[3]) == L"join-stage-motion")
         {

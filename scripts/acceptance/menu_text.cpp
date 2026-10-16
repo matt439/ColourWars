@@ -710,12 +710,16 @@ namespace
         {
             d["menu_style"]["fonts"]["item"].SetString("menu_text_exact");
             d["menu_style"]["fonts"]["detail"].SetString("menu_text_exact");
+            d["menu_style"]["fonts"]["heading"].SetString("menu_text_exact");
             for (const auto& entry : items) { d["menu_text"]["items"][entry.key].SetString("Fit"); }
+            for (const auto& entry : headings) { d["menu_text"]["headings"][entry.key].SetString("Fit"); }
             d["menu_text"]["solo_practice_hint"].SetString("Fit");
             d["menu_style"]["shadow"]["item_offset"]["x"].SetFloat(1.5f);
             d["menu_style"]["shadow"]["item_offset"]["y"].SetFloat(1.5f);
         };
-        const float row_height = 20.0f + 1.5f;
+        const auto original = variants.load([](rapidjson::Document&) {});
+        const auto& look = original.main_menu();
+        const float row_height = 20.0f + 1.5f + look.setup_focus_padding.y * 2.0f + look.setup_shadow_offset;
         for (const char* spacing : { "mode_select_spacing", "player_count_spacing" })
         {
             const auto row_edge = [&](rapidjson::Document& d)
@@ -765,7 +769,7 @@ namespace
         const auto hint_edge = [&](rapidjson::Document& d)
         {
             exact_setup(d);
-            d["menu_style"]["layout"]["position"]["y"].SetFloat(238.5f);
+            d["menu_style"]["layout"]["position"]["y"].SetFloat(204.5f);
             d["main_menu"]["mode_select_spacing"]["y"].SetInt(100);
         };
         const auto fits_hint = variants.load(hint_edge);
@@ -773,13 +777,13 @@ namespace
         variants.rejects("solo_practice_hint", [&](rapidjson::Document& d)
         {
             hint_edge(d);
-            d["menu_style"]["layout"]["position"]["y"].SetFloat(238.75f);
+            d["menu_style"]["layout"]["position"]["y"].SetFloat(204.75f);
         }, &world);
 
         const auto left_edge = [&](rapidjson::Document& d)
         {
             exact_setup(d);
-            d["menu_style"]["layout"]["position"]["x"].SetFloat(1.5f);
+            d["menu_style"]["layout"]["position"]["x"].SetFloat(149.5f);
             d["menu_style"]["shadow"]["item_offset"]["x"].SetFloat(-1.5f);
         };
         const auto touches_left = variants.load(left_edge);
@@ -787,7 +791,7 @@ namespace
         variants.rejects("items.single_match", [&](rapidjson::Document& d)
         {
             left_edge(d);
-            d["menu_style"]["layout"]["position"]["x"].SetFloat(1.25f);
+            d["menu_style"]["layout"]["position"]["x"].SetFloat(149.25f);
         }, &world);
     }
 

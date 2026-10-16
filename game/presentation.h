@@ -349,13 +349,15 @@ struct MainMenuPresentation
 {
 	std::string backdrop_sheet;
 	std::string backdrop_frame;
-	// Entry and settings pages use the accepted paper treatment; setup pages retain
-	// their own presentation until their artwork increments.
+	// Entry, settings, mode and player-count pages share the paper treatment.
 	MenuPaperArtPresentation art;
 	mattmath::Vector2F title_box_size;
 	mattmath::Vector2F home_box_size;
 	mattmath::Vector2F options_box_size;
 	mattmath::Vector2F credits_box_size;
+	mattmath::Vector2F setup_box_size;
+	mattmath::Vector2F setup_focus_padding;
+	float setup_shadow_offset = 0.0f;
 	// Title text is centered using its measured width; y positions are authored.
 	float title_y = 0.0f;
 	float title_subtitle_y = 0.0f;

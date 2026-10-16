@@ -296,6 +296,23 @@ void MainMenuModeSelect::refresh_duration()
 	label << seconds.value_or(this->data()->tuning()->match().duration) / 60.0f << L" min";
 	const std::wstring time = label.str();
 	this->duration_row_->set_value(seconds ? time : L"Default (" + time + L")");
+	// Numeric copy comes from tuning. Check the actual compound row after each
+	// refresh, keeping its authored font size and navigation geometry unchanged.
+	const RectangleF panel = this->paper_->rectangle();
+	const float pen = this->setup_art_.keyline_width;
+	const float shade = this->setup_art_.shadow_offset;
+	const RectangleF inside(panel.position() + Vector2F(pen * 3.0f),
+		panel.size() - Vector2F(pen * 6.0f + shade));
+	RectangleF row = this->duration_row_->bounds();
+	row.inflate(this->setup_art_.focus_padding);
+	const RectangleF arrow(row.x - pen * 7.0f, row.center().y - pen * 3.0f,
+		pen * 5.0f, pen * 6.0f);
+	const RectangleF ornament = RectangleF::union_of(arrow, RectangleF::union_of(row,
+		RectangleF(row.position() + Vector2F(shade), row.size())));
+	if (!inside.contains(ornament))
+	{
+		throw std::runtime_error("main_menu.mode_select_spacing: the complete duration row must fit main_menu.setup_box_size.");
+	}
 }
 
 void MainMenuModeSelect::cycle_duration(Direction direction)
@@ -347,92 +364,108 @@ void MainMenuModeSelect::update_page(float /*dt*/)
 }
 void MainMenuModeSelect::init()
 {
+	const MainMenuPresentation& look = this->look();
+	const MenuStyle& style = this->menu_style();
+	this->setup_art_ = look.art;
+	this->setup_art_.focus_padding = look.setup_focus_padding;
+	this->setup_art_.shadow_offset = look.setup_shadow_offset;
 	this->set_prompts(MenuPrompt::mode);
 
 	// Every mode uses the same player setup and paint scoring.
-	this->focus_.set_style({ this->menu_style().highlight,
-		this->menu_style().unhighlight,
-		this->menu_style().disabled });
+	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
-	this->set_widget_spacing(this->look().mode_select_spacing);
+	this->set_widget_spacing(look.mode_select_spacing);
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		this->look().backdrop_sheet,
-		this->look().backdrop_frame,
+		style.sprite_sheet,
+		style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		this->look().play_background_colour);
+		look.home_background_colour);
 
+	// Invisible shadows retain the existing font extents and navigation
+	// geometry while the paper's lettering uses plain, readable ink.
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
 		this->text().heading(MenuHeading::mode),
-		this->menu_style().heading_font,
+		style.heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		this->menu_style().heading_colour,
-		this->menu_style().shadow_colour,
-		this->menu_style().heading_shadow_offset);
+		look.art.ink,
+		Colour{},
+		style.heading_shadow_offset);
 
 	this->standard_ = std::make_unique<UiTextDropShadow>(
 		"standard",
 		this->text().item(MenuItem::single_match),
-		this->menu_style().item_font,
+		style.item_font,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
-		this->menu_style().highlight,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
+		look.art.focus_ink,
+		Colour{},
+		style.item_shadow_offset);
 
 	this->best_of_three_ = std::make_unique<UiTextDropShadow>(
 		"best_of_three",
 		this->text().item(MenuItem::best_of_three),
-		this->menu_style().item_font,
+		style.item_font,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		this->menu_style().unhighlight,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
+		look.art.ink,
+		Colour{},
+		style.item_shadow_offset);
 
 	this->best_of_five_ = std::make_unique<UiTextDropShadow>(
 		"best_of_five",
 		this->text().item(MenuItem::best_of_five),
-		this->menu_style().item_font,
+		style.item_font,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		this->menu_style().unhighlight,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
+		look.art.ink,
+		Colour{},
+		style.item_shadow_offset);
 
 	this->practice_ = std::make_unique<UiTextDropShadow>(
 		"practice",
 		this->text().solo_practice_hint,
-		this->menu_style().detail_font,
+		style.detail_font,
 		this->calculate_widget_position(0, 7),
 		this->render_resources(),
-		this->menu_style().heading_colour,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
+		look.art.ink,
+		Colour{},
+		style.item_shadow_offset);
 
 	this->back_ = std::make_unique<UiTextDropShadow>(
 		"back",
 		this->text().item(MenuItem::back),
-		this->menu_style().item_font,
+		style.item_font,
 		this->calculate_widget_position(0, 6),
 		this->render_resources(),
-		this->menu_style().unhighlight,
-		this->menu_style().shadow_colour,
-		this->menu_style().item_shadow_offset);
+		look.art.ink,
+		Colour{},
+		style.item_shadow_offset);
 
+	MenuStyle row_style = style;
+	row_style.highlight = look.art.focus_ink;
+	row_style.unhighlight = look.art.ink;
+	row_style.disabled = look.art.disabled_ink;
+	row_style.shadow_colour = Colour{};
 	this->duration_row_ = std::make_unique<OptionRow>("duration", this->text().item(MenuItem::match_length),
 		this->calculate_widget_position(0, 5), this->calculate_widget_position(2, 5),
-		this->menu_style(), this->look().options_value_colour, this->render_resources(),
+		row_style, look.art.ink, this->render_resources(),
 		[this](Direction direction) { this->cycle_duration(direction); });
+	this->paper_ = std::make_unique<MenuPaperArtwork>(
+		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
+			look.setup_box_size),
+		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
+		&this->focus_motion_, &this->save()->play_settings());
 	this->refresh_duration();
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->background_.get());
+	this->texture_container_->add_child(this->paper_.get());
 
 	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");

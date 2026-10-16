@@ -222,6 +222,9 @@
     "home_box_size": { "x": 1320.0, "y": 920.0 },
     "options_box_size": { "x": 1640.0, "y": 920.0 },
     "credits_box_size": { "x": 1760.0, "y": 920.0 },
+    "setup_box_size": { "x": 1760.0, "y": 920.0 },
+    "setup_focus_padding": { "x": 28.0, "y": 7.0 },
+    "setup_shadow_offset": 2.0,
     "art": {
       "ink": "1B1C20",
       "paper": "F0F0ED",

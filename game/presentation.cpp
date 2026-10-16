@@ -459,13 +459,26 @@ namespace
 		menu.home_box_size = panel_size("home_box_size");
 		menu.options_box_size = panel_size("options_box_size");
 		menu.credits_box_size = panel_size("credits_box_size");
+		menu.setup_box_size = panel_size("setup_box_size");
 		menu.art = read_menu_paper(json, Vector2F(
 			std::min({ menu.title_box_size.x, menu.home_box_size.x,
-				menu.options_box_size.x, menu.credits_box_size.x }),
+				menu.options_box_size.x, menu.credits_box_size.x, menu.setup_box_size.x }),
 			std::min({ menu.title_box_size.y, menu.home_box_size.y,
-				menu.options_box_size.y, menu.credits_box_size.y })));
+				menu.options_box_size.y, menu.credits_box_size.y, menu.setup_box_size.y })));
 		const JsonValue art = json.object("art");
 		menu.art.disabled_ink = read_colour(art, "disabled_ink");
+		menu.setup_focus_padding = read_positive_vector(json, "setup_focus_padding");
+		menu.setup_shadow_offset = json.number("setup_shadow_offset");
+		if (!std::isfinite(menu.setup_shadow_offset) || menu.setup_shadow_offset < 0.0f ||
+			menu.setup_shadow_offset > 24.0f || menu.setup_focus_padding.x > 48.0f ||
+			menu.setup_focus_padding.y > 24.0f ||
+			menu.setup_focus_padding.x <= menu.setup_shadow_offset + menu.art.keyline_width ||
+			menu.setup_focus_padding.y <= menu.setup_shadow_offset + menu.art.keyline_width)
+		{
+			throw std::runtime_error(json.where() +
+				": setup_shadow_offset must be 0..24; setup_focus_padding must be at most (48,24) "
+				"and exceed setup_shadow_offset + art.keyline_width on both axes.");
+		}
 		if (menu.art.disabled_ink.a != 1.0f || menu.art.disabled_ink == menu.art.paper ||
 			menu.art.disabled_ink == menu.art.focus_fill || menu.art.disabled_ink == menu.art.ink ||
 			menu.art.disabled_ink == menu.art.focus_ink)
@@ -2125,6 +2138,52 @@ void Presentation::validate_resources(const RenderResources& render,
 	{
 		check_controls_item(sticks_items[index], static_cast<int>(index), index < 3);
 	}
+	const RectangleF setup_paper((Vector2F(1920.0f, this->menu_.footer_y) - main.setup_box_size) / 2.0f,
+		main.setup_box_size);
+	const float setup_edge = main.art.keyline_width * 3.0f;
+	const RectangleF setup_inside(setup_paper.position() + Vector2F(setup_edge),
+		setup_paper.size() - Vector2F(setup_edge * 2.0f + main.setup_shadow_offset));
+	const auto check_setup_paper = [&](const std::string& key, const std::wstring& words,
+		const std::string& font, const Vector2F& position, const Vector2F& shadow,
+		bool action, float row_spacing)
+	{
+		const Vector2F size = render.measure_text(render.resolve_sprite_font(font), words);
+		RectangleF bounds = RectangleF::union_of(RectangleF(position, size), RectangleF(position + shadow, size));
+		if (action)
+		{
+			// Transparent text shadows retain their original navigation extents.
+			// Include the entire paper card, its shade and the detached arrow.
+			bounds.inflate(main.setup_focus_padding);
+			if (std::max(bounds.height + main.setup_shadow_offset,
+				main.art.keyline_width * 6.0f) > row_spacing)
+			{
+				throw std::runtime_error(this->source_path_ + ": " + key +
+					" must fit its setup row including paper padding and shade.");
+			}
+			const RectangleF arrow(bounds.x - main.art.keyline_width * 7.0f,
+				bounds.center().y - main.art.keyline_width * 3.0f,
+				main.art.keyline_width * 5.0f, main.art.keyline_width * 6.0f);
+			bounds = RectangleF::union_of(arrow, RectangleF::union_of(bounds,
+				RectangleF(bounds.position() + Vector2F(main.setup_shadow_offset), bounds.size())));
+		}
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
+			!std::isfinite(bounds.width) || !std::isfinite(bounds.height) ||
+			bounds.width <= 0.0f || bounds.height <= 0.0f || !setup_inside.contains(bounds))
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit main_menu.setup_box_size including its retained shadow bounds and paper ornaments.");
+		}
+		return bounds;
+	};
+	float setup_heading_bottom = 0.0f;
+	for (const MenuHeading role : { MenuHeading::mode, MenuHeading::players })
+	{
+		const RectangleF heading = check_setup_paper(
+			std::string("menu_text.headings.") + menu_heading_keys[static_cast<size_t>(role)],
+			this->menu_text_.heading(role), this->menu_.heading_font, this->menu_.layout.position,
+			this->menu_.heading_shadow_offset, false, 0.0f);
+		setup_heading_bottom = std::max(setup_heading_bottom, heading.bottom());
+	}
 	const auto check_setup_item = [&](MenuItem item, const Vector2F& spacing, int row, bool duration_label)
 	{
 		const std::string key = std::string("menu_text.items.") + menu_item_keys[static_cast<size_t>(item)];
@@ -2148,13 +2207,28 @@ void Presentation::validate_resources(const RenderResources& render,
 			// The existing, unfitted OptionRow puts its value two columns later.
 			throw std::runtime_error(where + " must end before its duration value column including its item shadow.");
 		}
+		const float value_x = position.x + spacing.x * 2.0f;
+		if (duration_label && (!std::isfinite(value_x) ||
+			value_x + main.setup_focus_padding.x + main.setup_shadow_offset >= setup_inside.right()))
+		{
+			throw std::runtime_error(where +
+				" must leave positive duration value space inside main_menu.setup_box_size.");
+		}
+		const RectangleF card = check_setup_paper(key, text, this->menu_.item_font, position, shadow, true, spacing.y);
+		if (row == 2 && card.y < setup_heading_bottom)
+		{
+			throw std::runtime_error(where + " must leave its setup heading clear of the first focus card.");
+		}
+		return card;
 	};
 	const MenuItem mode_items[]{ MenuItem::single_match, MenuItem::best_of_three, MenuItem::best_of_five,
 		MenuItem::match_length, MenuItem::back };
+	float mode_back_bottom = 0.0f;
 	for (size_t index = 0; index < std::size(mode_items); ++index)
 	{
-		check_setup_item(mode_items[index], main.mode_select_spacing, static_cast<int>(index) + 2,
+		const RectangleF card = check_setup_item(mode_items[index], main.mode_select_spacing, static_cast<int>(index) + 2,
 			mode_items[index] == MenuItem::match_length);
+		if (mode_items[index] == MenuItem::back) { mode_back_bottom = card.bottom(); }
 	}
 	const MenuItem player_items[]{ MenuItem::one_player_practice, MenuItem::two_players,
 		MenuItem::three_players, MenuItem::four_players, MenuItem::back };
@@ -2167,6 +2241,15 @@ void Presentation::validate_resources(const RenderResources& render,
 	check_menu_line("menu_text.solo_practice_hint", this->menu_text_.solo_practice_hint, this->menu_.detail_font,
 		this->menu_.layout.position + Vector2F(0.0f, main.mode_select_spacing.y * 7.0f),
 		this->menu_.footer_y, this->menu_.item_shadow_offset);
+	const RectangleF practice_hint = check_setup_paper(
+		"menu_text.solo_practice_hint", this->menu_text_.solo_practice_hint, this->menu_.detail_font,
+		this->menu_.layout.position + Vector2F(0.0f, main.mode_select_spacing.y * 7.0f),
+		this->menu_.item_shadow_offset, false, 0.0f);
+	if (practice_hint.y < mode_back_bottom)
+	{
+		throw std::runtime_error(this->source_path_ +
+			": menu_text.solo_practice_hint must follow the complete Back focus card and shade.");
+	}
 	const auto fixed_menu_size = [&](const std::string& key, const std::wstring& text, const std::string& font)
 	{
 		const std::string where = this->source_path_ + ": " + key;

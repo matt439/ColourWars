@@ -161,12 +161,15 @@ public:
 	void update_page(float dt) override;
 	void init() override;
 protected:
-	bool animates_focus_backing() const override { return true; }
+	bool shows_brand() const override { return false; }
+	bool shows_focus_backing() const override { return false; }
 private:
+	MenuPaperArtPresentation setup_art_;
 	void cycle_duration(labrador::Direction direction);
 	void refresh_duration();
 	std::unique_ptr<OptionRow> duration_row_;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
+	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> standard_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> best_of_three_ = nullptr;
@@ -182,9 +185,12 @@ public:
 	void update_page(float dt) override;
 	void init() override;
 protected:
-	bool animates_focus_backing() const override { return true; }
+	bool shows_brand() const override { return false; }
+	bool shows_focus_backing() const override { return false; }
 private:
+	MenuPaperArtPresentation setup_art_;
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
+	std::unique_ptr<MenuPaperArtwork> paper_;
 	std::unique_ptr<labrador::UiTextDropShadow> heading_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> _1_player = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> _2_players = nullptr;

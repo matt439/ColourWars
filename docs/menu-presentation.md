@@ -28,6 +28,51 @@ preview/briefing shapes, results bars and stick-response previews. Their
 identifiers must be nonempty, and startup validates the named frame against the
 named atlas. An art replacement must supply an appropriate solid fill.
 
+## Mode and Player Count paper
+
+The required `main_menu.setup_box_size` supplies the common paper panel for Mode
+and Player Count. Its shipped value is `(1760, 920)`, centered in
+`(1920, menu_style.chrome.footer_y)`. The pages copy `main_menu.art` for paper,
+ink, shade colour and pen width, replacing its card padding and shadow offset
+with the required `main_menu.setup_focus_padding` (`28, 7`) and
+`main_menu.setup_shadow_offset` (`2`). The solid surround uses
+`main_menu.home_background_colour`. `MenuPaperArtwork` draws only the enabled
+focused row's card and detached arrow; neither page has a persistent
+primary-action card.
+The legacy brand and focus stripe are suppressed on these two pages. The
+controls footer remains visible.
+
+The panel dimensions must be finite and positive, at most `1760` wide and at
+most `menu_style.chrome.footer_y - 40` high, leaving at least 20 design units
+above and below. Shared paper-art validation includes this panel's size. Startup
+requires positive, finite setup padding no greater than `(48, 24)`, with each
+component greater than `setup_shadow_offset + main_menu.art.keyline_width`.
+The setup shadow offset must be finite and between `0` and `24`. This leaves
+clearance for the pressed face, its keyline and its shadow. Startup also checks
+each actual heading, row and solo hint against the usable paper
+interior, retaining the transparent text-shadow extents. Focused rows reserve
+their card padding, detached arrow and extra shade clearance; this reserved
+height must fit the authored row spacing. The drawing includes its shade inside
+the card, while validation conservatively reserves the extra clearance. The
+setup-specific vertical padding preserves the existing 100-unit row stride:
+the tallest shipped glyph bounds (`82`) plus retained shadow extent (`1.5`),
+both 7-unit pads and 2-unit shade clearance total `99.5` design units. These
+checks reject content that would cross the paper edge or another row, without
+adding a new fitting path.
+
+Every existing widget anchor, font, scale and logical bound is retained. Heading,
+item and hint shadows have zero alpha, while their existing authored offsets
+still participate in layout bounds. The duration `OptionRow` retains its label
+and value positions and existing fitting path, using a local style copy with
+transparent shadows and the paper inks. Startup requires positive value-column
+space within the usable paper interior; each duration refresh checks the actual
+compound label/value bounds with the full card and arrow reserve. This changes
+visible artwork without moving controls, changing text, introducing new choices
+or adding RNG draws.
+The paper uses the existing shared solid texel with point sampling; the text
+layer remains linear-filtered. Each page captures its setup-art copy when it
+opens; reopening adopts edited values.
+
 ## Shared paper focus and press motion
 
 The required `menu_style.motion` object controls the shared paper focus arrow,
@@ -60,15 +105,16 @@ The applied Reduce effects preference suppresses both ornaments immediately
 and retains the settled arrow and card. Pending Controls / audio edits take
 effect on Apply through the existing preference policy. Turning Reduce effects
 off starts settled; the next ordinary event can animate. Title/Home,
-Options/Credits, Controls / audio, Pad sticks, Pause/confirmation and End use
-this shared drawing. Results has no shared focus cursor and stays static.
+Options/Credits, Mode/Player Count, Controls / audio, Pad sticks,
+Pause/confirmation and End use this shared drawing. Results has no shared focus
+cursor and stays static.
 
 ## Setup selection motion
 
-Mode and Player count use the shared focus and press clocks to move their
-accent stripe inward within the existing focus padding. Their panel, lettering
-and navigation rectangles stay fixed. Accepted value changes briefly depress
-the accent; endpoints and rejected actions do not create an acknowledgement.
+Mode and Player Count use the shared paper focus arrow and press response above.
+Their panel, lettering and navigation rectangles stay fixed. Accepted duration
+changes briefly depress the focused card face; rejected actions do not create
+an acknowledgement.
 
 Team selection owns one motion clock per player row. An actual team-choice
 change briefly contracts the chosen team icon inside its unchanged canvas.
@@ -387,9 +433,10 @@ spacing; these are display roles, with the existing choice order, actions and
 input handling retained.
 
 The same normalized, nonblank, single-line text rules apply. Mode and Player
-Count labels use `menu_style.fonts.item` and
+Count labels use `menu_style.fonts.item` and retain
 `menu_style.shadow.item_offset`. The solo hint uses `menu_style.fonts.detail`
-with that same **item** shadow offset, preserving its existing drawing style.
+with that same **item** shadow offset. The shadows now have zero alpha for the
+paper treatment; their offsets and logical extents remain in layout checks.
 Startup checks the actual font glyphs and the union of the measured text and
 its item shadow using the design-line rule above: reserve the shared right
 margin, stay above the footer, and keep the shadow inside the left/top design
@@ -398,8 +445,8 @@ edges. These rows retain their measured font size.
 For each focusable Mode/Player Count row, the measured text height plus the
 absolute item-shadow y offset must be at most the page's vertical spacing
 (`main_menu.mode_select_spacing.y` or `main_menu.player_count_spacing.y`). This
-retains the existing overlap of focus backings while keeping the text and its
-shadow within one row's stride.
+retains the existing text and shadow extents within one row's stride. The
+additional paper/card checks above include art padding, shade and arrow space.
 `match_length` must additionally satisfy
 `measured_width + abs(item_shadow.x) <= 2 * main_menu.mode_select_spacing.x`
 to fit before its existing duration-value column. That is one complete
@@ -1050,7 +1097,7 @@ a graphics or audio device. The `weapon_catalog` case checks the weapon catalog'
 required fields, display-text rules and resource/layer compatibility.
 The `menu_text` case checks required shared headings/legends/row labels, text
 normalization, font coverage and measured design/paper bounds, including fitted
-Options and Controls/Pad Sticks labels, shadowed Mode/Player Count rows and solo
+Options and Controls/Pad Sticks labels, Mode/Player Count rows and solo
 hint, and plain Pause actions/confirmation and End action labels. Pause questions
 add required-key, normalization, detail-font, centered-paper and action-clearance
 checks without a fitting scale. End completion headings add their required-key,
@@ -1158,6 +1205,11 @@ motion, stable redraw and unchanged geometry. It also checks that final Random
 confirmation keeps the outgoing view and the existing RNG/transition behavior.
 The focused motion checks provide implementation evidence; human motion review,
 physical-pad comfort and reference-match acceptance remain open.
+
+`SetupPaperOnly` uses the normal gamepad backend and public keyboard input for
+the actual Mode and Player Count paper pages. The existing `MenuTextOnly` and
+`SetupMotionOnly` scopes retain their scripted reader for text snapshots and
+setup motion; their Mode/Player Count checks use the shared paper card/arrow.
 
 The non-menu primitive texel retains its own startup checks. Together with
 [gameplay tuning](gameplay-tuning.md), the shared layout and sheet choices define

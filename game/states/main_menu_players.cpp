@@ -47,21 +47,27 @@ void MainMenuPlayerCount::update_page(float /*dt*/)
 void MainMenuPlayerCount::init()
 {
 	this->set_prompts(MenuPrompt::select_back);
+	const MainMenuPresentation& look = this->look();
+	const MenuStyle& style = this->menu_style();
+	this->setup_art_ = look.art;
+	this->setup_art_.focus_padding = look.setup_focus_padding;
+	this->setup_art_.shadow_offset = look.setup_shadow_offset;
+	// Keep the existing measured/navigation extents, including their offsets,
+	// while lettering uses the paper pages' plain dark ink.
+	const Colour clear_shadow(0.0f, 0.0f, 0.0f, 0.0f);
 
 	// Devices can be connected and claimed on the next page.
-	this->focus_.set_style({ this->menu_style().highlight,
-		this->menu_style().unhighlight,
-		this->menu_style().disabled });
+	this->focus_.set_style({ look.art.focus_ink, look.art.ink, look.art.disabled_ink });
 
 	this->set_widget_spacing(this->look().player_count_spacing);
 
 	this->background_ = std::make_unique<UiTexture>(
 		"background",
-		this->look().backdrop_sheet,
-		this->look().backdrop_frame,
+		style.sprite_sheet,
+		style.fill_frame,
 		RectangleF(Vector2F::ZERO, DESIGN_RESOLUTION),
 		this->render_resources(),
-		this->look().play_background_colour);
+		look.home_background_colour);
 
 	this->heading_ = std::make_unique<UiTextDropShadow>(
 		"heading",
@@ -69,8 +75,8 @@ void MainMenuPlayerCount::init()
 		this->menu_style().heading_font,
 		this->calculate_widget_position(0, 0),
 		this->render_resources(),
-		this->menu_style().heading_colour,
-		this->menu_style().shadow_colour,
+		look.art.ink,
+		clear_shadow,
 		this->menu_style().heading_shadow_offset);
 
 	this->_1_player = std::make_unique<UiTextDropShadow>(
@@ -79,8 +85,8 @@ void MainMenuPlayerCount::init()
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 2),
 		this->render_resources(),
-		this->menu_style().highlight,
-		this->menu_style().shadow_colour,
+		look.art.focus_ink,
+		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
 	this->_2_players = std::make_unique<UiTextDropShadow>(
@@ -89,8 +95,8 @@ void MainMenuPlayerCount::init()
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 3),
 		this->render_resources(),
-		this->menu_style().unhighlight,
-		this->menu_style().shadow_colour,
+		look.art.ink,
+		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
 	this->_3_players = std::make_unique<UiTextDropShadow>(
@@ -99,8 +105,8 @@ void MainMenuPlayerCount::init()
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 4),
 		this->render_resources(),
-		this->menu_style().unhighlight,
-		this->menu_style().shadow_colour,
+		look.art.ink,
+		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
 	this->_4_players = std::make_unique<UiTextDropShadow>(
@@ -109,8 +115,8 @@ void MainMenuPlayerCount::init()
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 5),
 		this->render_resources(),
-		this->menu_style().unhighlight,
-		this->menu_style().shadow_colour,
+		look.art.ink,
+		clear_shadow,
 		this->menu_style().item_shadow_offset);
 
 	this->back_ = std::make_unique<UiTextDropShadow>(
@@ -119,13 +125,19 @@ void MainMenuPlayerCount::init()
 		this->menu_style().item_font,
 		this->calculate_widget_position(0, 6),
 		this->render_resources(),
-		this->menu_style().unhighlight,
-		this->menu_style().shadow_colour,
+		look.art.ink,
+		clear_shadow,
 		this->menu_style().item_shadow_offset);
+	this->paper_ = std::make_unique<MenuPaperArtwork>(
+		RectangleF((Vector2F(DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
+			look.setup_box_size),
+		this->render_resources(), &style, &this->setup_art_, &this->focus_, nullptr,
+		&this->focus_motion_, &this->save()->play_settings());
 
 	this->texture_container_ = std::make_unique<UiContainer>(
 		"texture_container");
 	this->texture_container_->add_child(this->background_.get());
+	this->texture_container_->add_child(this->paper_.get());
 
 	this->text_container_ = std::make_unique<UiContainer>(
 		"text_container");

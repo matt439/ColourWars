@@ -253,8 +253,8 @@ void menu_item_page_checks(Application& app, const Canvas& canvas, GameTuning& t
         "Credits Select return and frozen draw RNG\n";
 }
 
-// Setup pages retain their shadow/chrome treatment. Render the entire known
-// page independently so focus bounds and the duration value remain observable.
+// Setup pages retain their original shadow-union navigation bounds. Invisible
+// shadows give paper lettering; the independent fixture pins complete artwork.
 void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& output)
 {
@@ -322,9 +322,11 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         else { reference_stack.push(std::make_unique<MainMenuHome>(&reference_context)); }
         app.renderer()->begin_frame(); reference_stack.draw(*app.renderer()); return read(*app.renderer());
     };
+    std::vector<RectangleF> text_bounds;
     const auto reference = [&](bool count, int focus, const Presentation& snapshot, const Words& words)
     {
         const auto& style = snapshot.menu(); const auto& look = snapshot.main_menu();
+        auto art = look.art; art.focus_padding = look.setup_focus_padding; art.shadow_offset = look.setup_shadow_offset;
         const Vector2F spacing = count ? look.player_count_spacing : look.mode_select_spacing;
         const auto position = [&](int column, int row)
         {
@@ -336,43 +338,46 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             const Vector2F& where, const Colour& colour, const Vector2F& shadow)
         {
             auto widget = std::make_unique<UiTextDropShadow>("reference-setup-text", text, font, where,
-                app.render_resources(), colour, style.shadow_colour, shadow);
+                app.render_resources(), colour, Colour(0.0f, 0.0f, 0.0f, 0.0f), shadow);
             UiTextDropShadow* result = widget.get(); widgets.push_back(std::move(widget)); return result;
         };
         add(snapshot.menu_text().heading(count ? MenuHeading::players : MenuHeading::mode),
-            style.heading_font, position(0, 0), style.heading_colour, style.heading_shadow_offset);
+            style.heading_font, position(0, 0), art.ink, style.heading_shadow_offset);
         RectangleF focused;
+        std::vector<RectangleF> actions;
         const int choices = count ? 4 : 3;
         for (int row = 0; row < choices; ++row)
         {
             const bool disabled = count && row == 0 && settings.best_of() > 1;
-            const Colour colour = disabled ? style.disabled : row == focus ? style.highlight : style.unhighlight;
+            const Colour colour = disabled ? art.disabled_ink : row == focus ? art.focus_ink : art.ink;
             const auto* label = add(words.items[static_cast<size_t>(row + (count ? 4 : 0))], style.item_font,
                 position(0, row + 2), colour, style.item_shadow_offset);
+            actions.push_back(label->bounds());
             if (row == focus) { focused = label->bounds(); }
         }
         if (!count)
         {
             const auto* label = add(words.items[3], style.item_font, position(0, 5),
-                focus == 3 ? style.highlight : style.unhighlight, style.item_shadow_offset);
+                focus == 3 ? art.focus_ink : art.ink, style.item_shadow_offset);
             std::wostringstream duration;
             duration << settings.duration().value_or(tuning.match().duration) / 60.0f << L" min";
             const std::wstring value = settings.duration() ? duration.str() : L"Default (" + duration.str() + L")";
-            const auto* time = add(value, style.item_font, position(2, 5), look.options_value_colour,
+            const auto* time = add(value, style.item_font, position(2, 5), art.ink,
                 style.item_shadow_offset);
-            if (focus == 3) { focused = RectangleF::union_of(label->bounds(), time->bounds()); }
-            add(words.hint, style.detail_font, position(0, 7), style.heading_colour,
+            const RectangleF duration_bounds = RectangleF::union_of(label->bounds(), time->bounds());
+            actions.push_back(duration_bounds);
+            if (focus == 3) { focused = duration_bounds; }
+            add(words.hint, style.detail_font, position(0, 7), art.ink,
                 style.item_shadow_offset);
         }
         const auto* back = add(words.back, style.item_font, position(0, 6),
-            focus == 4 ? style.highlight : style.unhighlight, style.item_shadow_offset);
+            focus == 4 ? art.focus_ink : art.ink, style.item_shadow_offset);
+        actions.push_back(back->bounds());
         if (focus == 4) { focused = back->bounds(); }
         const auto& footer = snapshot.prompt_bar();
         const UiTextDropShadow prompt("reference-setup-prompt", snapshot.menu_text().prompt(
             count ? MenuPrompt::select_back : MenuPrompt::mode), footer.font, footer.position,
             app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset);
-        const UiText brand("reference-setup-brand", snapshot.menu_text().brand, style.brand_font,
-            style.brand_position, app.render_resources(), style.unhighlight);
         Renderer& renderer = *app.renderer(); renderer.begin_frame(); renderer.set_view_count(1);
         const Viewport viewport = app.viewport_manager()->fullscreen_viewport();
         const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), viewport);
@@ -383,21 +388,27 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         const SpriteSheet* sheet = app.render_resources()->sprite_sheet(style.sprite_sheet);
         const auto fill = sheet->resolve_sprite_frame(style.fill_frame);
         sheet->draw(list, fill, camera.visible_rectangle(viewport), style.scrim_colour);
-        const UiTexture background("reference-setup-background", look.backdrop_sheet, look.backdrop_frame,
+        const UiTexture background("reference-setup-background", style.sprite_sheet, style.fill_frame,
             RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.render_resources(),
-            look.play_background_colour);
+            look.home_background_colour);
         background.draw(list);
+        const RectangleF paper((Vector2F(menu_consts::DESIGN_RESOLUTION.x, style.footer_y) - look.setup_box_size) / 2.0f,
+            look.setup_box_size);
+        for (RectangleF bounds : actions)
+        {
+            bounds.inflate(art.focus_padding);
+            require(paper.contains(bounds), "Independent setup action/card escapes the paper rectangle");
+        }
+        for (const auto& widget : widgets)
+            { require(paper.contains(widget->bounds()), "Independent setup text escapes its paper rectangle"); }
+        setup_paper_reference(list, *app.render_resources(), style, art, paper, focused);
         sheet->draw(list, fill, RectangleF(0.0f, style.footer_y, menu_consts::DESIGN_RESOLUTION.x,
             menu_consts::DESIGN_RESOLUTION.y - style.footer_y), style.scrim_colour);
         sheet->draw(list, fill, RectangleF(style.brand_position.x, style.footer_y,
             menu_consts::DESIGN_RESOLUTION.x - style.brand_position.x * 2.0f, style.rule_height),
             style.panel_edge_colour);
-        list.set_filter(TextureFilter::linear); brand.draw(list);
-        focused.inflate(style.focus_padding); list.set_filter(TextureFilter::point);
-        sheet->draw(list, fill, focused, style.focus_panel_colour);
-        sheet->draw(list, fill, RectangleF(focused.x, focused.y, style.accent_width, focused.height), style.highlight);
-        list.set_filter(TextureFilter::linear);
-        for (const auto& widget : widgets) { widget->draw(list); }
+        list.set_filter(TextureFilter::linear); text_bounds.clear();
+        for (const auto& widget : widgets) { widget->draw(list); text_bounds.push_back(widget->bounds()); }
         prompt.draw(list); return read(renderer);
     };
     std::ofstream records(output / "menu-setup-text.csv");
@@ -420,9 +431,33 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         }
         const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION),
             app.viewport_manager()->fullscreen_viewport());
-        const RectangleF crop(snapshot.menu().layout.position - Vector2F(30.0f), Vector2F(1450.0f, 800.0f));
+        for (RectangleF bounds : text_bounds)
+        {
+            camera.calculate_view_rectangle(bounds); const RectangleI pixels = countdown_crop_bounds(bounds);
+            float darkest = 1.0f, lightest = 0.0f; size_t ink = 0, pale = 0;
+            for (int y = pixels.y; y < pixels.bottom(); ++y)
+            {
+                for (int x = pixels.x; x < pixels.right(); ++x)
+                {
+                    const float luminance = hud_luminance(actual, hud_pixel_offset(actual, x, y));
+                    darkest = std::min(darkest, luminance); lightest = std::max(lightest, luminance);
+                    if (luminance < 0.2f) { ++ink; } if (luminance > 0.5f) { ++pale; }
+                }
+            }
+            require(ink > 2 && pale > 2 && (lightest + 0.05f) / (darkest + 0.05f) >= 4.5f,
+                "Actual setup text lost dark ink, pale paper or native raster contrast");
+        }
+        const auto& look = snapshot.main_menu();
+        const RectangleF crop((Vector2F(menu_consts::DESIGN_RESOLUTION.x, snapshot.menu().footer_y) -
+            look.setup_box_size) / 2.0f, look.setup_box_size);
         save(foreground_crop(actual, countdown_crop_bounds(camera.calculate_view_rectangle(crop)), 0),
             output / (stem + "-detail.ppm"));
+        if (actual.width == 1280 && actual.height == 720)
+        {
+            if (!count && name == "default-focus-0") { save(actual, output / "setup-paper-mode-overview-1280x720.ppm"); }
+            if (!count && name == "duration-focused") { save(actual, output / "setup-paper-duration-overview-1280x720.ppm"); }
+            if (count && name == "series-solo-disabled-1") { save(actual, output / "setup-paper-series-count-overview-1280x720.ppm"); }
+        }
         std::srand(7109); const int next_random = std::rand(); std::srand(7109);
         require(actual.pixels == frame().pixels && std::rand() == next_random,
             "Frozen setup-page drawing changed pixels or consumed random numbers");
@@ -435,9 +470,21 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     {
         app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y);
-        open(false); compare("default", false, 0, original, legacy);
-        open(true); compare("default", true, 0, original, legacy);
-        open(true, 3); compare("series-solo-disabled", true, 1, original, legacy);
+        for (bool count : { false, true })
+        {
+            open(count);
+            for (int focus = 0; focus < 5; ++focus)
+            {
+                if (focus > 0) { tap(Key::down); }
+                compare("default-focus-" + std::to_string(focus), count, focus, original, legacy);
+            }
+        }
+        open(true, 3);
+        for (int focus = 1; focus < 5; ++focus)
+        {
+            if (focus > 1) { tap(Key::down); }
+            compare("series-solo-disabled-" + std::to_string(focus), true, focus, original, legacy);
+        }
     }
     app.resolution_manager()->set_resolution_exactly({ 1280, 720 });
     std::ignore = app.renderer()->window_size_changed(1280, 720);
@@ -494,6 +541,8 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
     tick(); require(frame().pixels == returned_mode.pixels, "Neutral Count Back changed initial Mode focus");
     for (int move = 0; move < 4; ++move) { tap(Key::down); }
     tap(Key::enter); require(frame().pixels == destination(false).pixels, "Mode Back button did not reach actual Home");
+    open(false); tap(Key::escape);
+    require(frame().pixels == destination(false).pixels, "Mode Escape did not reach actual Home");
 
     const Words old_words{ { L"Single~", L"Three~", L"Five~", L"Length~", L"Solo~",
         L"Pair~", L"Trio~", L"Four~" }, L"Back~", L"Solo~ choose the first mode" };
