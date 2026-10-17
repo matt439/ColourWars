@@ -5,7 +5,11 @@ param(
     [switch] $Update,
     # Regenerate only these recipe entries (file names), for example
     # -Only courier_new_bold_16.spritefont.
-    [string[]] $Only = @()
+    [string[]] $Only = @(),
+    # The most BC2 blocks (4x4 texels, 16 bytes each) a regenerated texture
+    # may differ in and still be 'equivalent'. The noise seen so far is two
+    # blocks; one redrawn glyph at the smallest size is about a dozen.
+    [int] $MaxTextureBlocks = 8
 )
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
@@ -21,9 +25,11 @@ Add-Type -AssemblyName System.Drawing
 # Each atlas reports one of:
 #   identical   - byte for byte the tracked file;
 #   equivalent  - the same glyph table, region, texture size and format, with
-#                 a line spacing within 1e-5 or a few texture bytes different,
-#                 which is font-version or rasteriser noise (see the README);
-#   DIFFERENT   - anything structural differs. The run fails.
+#                 a line spacing within 1e-5 and at most -MaxTextureBlocks BC2
+#                 blocks of texture different, which is font-version or
+#                 rasteriser noise (see the README);
+#   DIFFERENT   - anything structural differs, or more texture blocks than
+#                 that. The run fails.
 $repo = Split-Path -Parent $PSScriptRoot
 $recipePath = Join-Path $repo 'game/art/sources/fonts/fonts.json'
 $recipe = Get-Content -LiteralPath $recipePath -Raw | ConvertFrom-Json
@@ -48,6 +54,7 @@ function Read-SpriteFont([string] $Path) {
         Table = [byte[]]$bytes[12..($tableEnd - 1)]
         LineSpacing = [BitConverter]::ToSingle($bytes, $tableEnd)
         Layout = [byte[]]$bytes[($tableEnd + 4)..($tableEnd + 27)]
+        Format = [BitConverter]::ToUInt32($bytes, $tableEnd + 16)
         Texture = $tableEnd + 28
     }
 }
@@ -95,13 +102,29 @@ try {
                 } elseif ($spacing -ne 0) {
                     $notes += ('line spacing {0:R} vs tracked {1:R}' -f $built.LineSpacing, $tracked.LineSpacing)
                 }
-                if ($status -ne 'DIFFERENT' -and $built.Bytes.Length -eq $tracked.Bytes.Length) {
+                if ($status -ne 'DIFFERENT' -and $built.Bytes.Length -ne $tracked.Bytes.Length) {
+                    $status = 'DIFFERENT'; $notes += 'file size differs'
+                }
+                if ($status -ne 'DIFFERENT' -and $built.Format -ne 74) {
+                    # Blocks are counted as BC2 (DXGI_FORMAT_BC2_UNORM), the
+                    # recipe's format; anything else cannot be judged as noise.
+                    $status = 'DIFFERENT'; $notes += "texture format DXGI $($built.Format) is not BC2"
+                }
+                if ($status -ne 'DIFFERENT') {
                     $differing = 0
+                    $blocks = @{}
                     for ($i = $built.Texture; $i -lt $built.Bytes.Length; ++$i) {
-                        if ($built.Bytes[$i] -ne $tracked.Bytes[$i]) { ++$differing }
+                        if ($built.Bytes[$i] -ne $tracked.Bytes[$i]) {
+                            ++$differing
+                            $blocks[[math]::Floor(($i - $built.Texture) / 16)] = $true
+                        }
                     }
                     if ($differing -gt 0) {
-                        $notes += "$differing of $($built.Bytes.Length - $built.Texture) texture bytes differ"
+                        $notes += ('{0} of {1} texture bytes differ, in {2} BC2 blocks' -f
+                            $differing, ($built.Bytes.Length - $built.Texture), $blocks.Count)
+                    }
+                    if ($blocks.Count -gt $MaxTextureBlocks) {
+                        $status = 'DIFFERENT'; $notes += "more than $MaxTextureBlocks texture blocks differ"
                     }
                 }
             }
@@ -124,5 +147,5 @@ finally {
     Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
 }
 if ($failed.Count -gt 0 -and -not $Update) {
-    throw "Regenerated atlases differ structurally from the tracked ones: $($failed -join ', '). Check the recipe and installed face versions; -Update writes them over if the change is intended."
+    throw "Regenerated atlases differ from the tracked ones beyond noise: $($failed -join ', '). Check the recipe and installed face versions; -Update writes them over if the change is intended."
 }

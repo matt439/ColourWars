@@ -316,8 +316,9 @@ scripts/build-fonts.ps1 -Update    # also write any that differ over game/conten
 
 It runs `tools/MakeSpriteFont.exe` with an explicit region and format and
 compares each result with the tracked file: `identical`, `equivalent` (same
-glyph table, region, texture size and format; line spacing within 1e-5 or a
-few texture bytes apart) or `DIFFERENT`, which fails the run. A face that is not
+glyph table, region, texture size and format; line spacing within 1e-5 and at
+most `-MaxTextureBlocks` BC2 blocks of texture apart, 8 by default) or
+`DIFFERENT`, which fails the run. A face that is not
 installed stops it with the face's name rather than letting GDI+ substitute
 another. On 2026-10-17, on this machine, five atlases regenerate byte for byte.
 `courier_new_bold_16` differs only in its line spacing's last float bit
