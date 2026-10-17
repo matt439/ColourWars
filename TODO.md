@@ -17,6 +17,8 @@ order is gameplay style first, UI after.
 Pick the next actions from the OPEN rows, preserving gameplay style before UI.
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
+- **Jump feel (`POL#3`):** try `exec jump_mid`, `jump_low`, `jump_snappy` on the Movement Course
+  and keep one; it gates the Close Quarters blockout.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 

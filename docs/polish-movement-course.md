@@ -213,6 +213,33 @@ The retained route case now asserts these choices, including symmetric braking
 and aim retention for all five tools. The feedback timing/intensity decision
 (`POL#5`) is recorded in [movement feedback](polish-feedback.md).
 
+## Keyboard/mouse playtest (2026-10-17)
+
+The author's first `POL#3` session, on keyboard and mouse: **the jump is a bit too
+floaty, and it goes too high.** Braking, aim and the other initial decisions above
+drew no comment. Jump height is the measurement every layout is built on, so it
+is settled before the Close Quarters blockout (`POL#17`). The current arenas are
+redesigned in that blockout anyway (§3 of the polish plan), so they are not a
+reason to keep the old height.
+
+Four scripts in `scripts/debug/` put a candidate on the course live, for
+comparison: `exec jump_baseline`, `jump_mid`, `jump_low` and `jump_snappy`.
+`tune.save tuning` keeps whichever is chosen. The envelopes below are a
+same-height jump from the real integrator at 60 Hz; the horizontal figure is
+airtime at 800 units per second.
+
+| Script | gravity | launch | hold accel | hold time | Held apex | Airborne | Tap apex | Run travel |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| `jump_baseline` | 2000 | −600 | −1300 | 0.35 | 207 | 1.02 s | 95 | 813 |
+| `jump_mid` | 3000 | −700 | −1800 | 0.22 | 166 | 0.72 s | 88 | 573 |
+| `jump_low` | 3200 | −650 | −2200 | 0.20 | 152 | 0.68 s | 72 | 547 |
+| `jump_snappy` | 3600 | −750 | −2400 | 0.18 | 163 | 0.65 s | 85 | 520 |
+
+Whichever is kept, the course moves with it: the 560-unit running gap and the
+140-unit recovery-step rises were sized for the old envelope, so the
+`movement_course` acceptance case and this page's route trials are re-measured,
+and the course re-authored where a required route stops being reliable.
+
 ### Implementation checks
 
 Debug and Release builds and all eleven consumer acceptance cases passed on
