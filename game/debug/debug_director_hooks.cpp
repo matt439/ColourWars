@@ -211,6 +211,9 @@ void DebugDirectorImpl::before_level_build(DebugMatchTarget& match)
 	{
 		std::srand(*this->seed_);
 	}
+	// The build proper - layout and LevelBuilder::build_level - is what
+	// blocks on the last menu frame; `perf` reports it (GAP#5.1).
+	this->build_began_ms_ = perf_now_ms();
 }
 
 OpeningMode DebugDirectorImpl::opening_mode(OpeningMode chosen) const
@@ -229,6 +232,13 @@ OpeningMode DebugDirectorImpl::opening_mode(OpeningMode chosen) const
 
 void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 {
+	if (this->build_began_ms_ >= 0.0)
+	{
+		const MenuLevelSettings& built = match.debug_settings();
+		this->last_build_ = LevelBuildTime{ perf_now_ms() - this->build_began_ms_,
+			built.stage(), built.player_count() };
+		this->build_began_ms_ = -1.0;
+	}
 	match.debug_set_overlays(this->level_overlays());
 	// New players start with their text off; only overlay.player turns it on.
 	if (this->overlay_player_)

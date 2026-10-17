@@ -873,7 +873,8 @@ leave immediately, retaining existing script/reload behaviour. Results created
 under a paused developer clock start suspended; ordinary End choices can leave
 that silent coda immediately, including after a replay holds its final frame.
 Native window close and teardown stop the owned voice immediately. These are audio transitions;
-visual screen cuts and loading presentation remain `GAP#5.1`.
+visual screen cuts remain `GAP#5.1` (the level build was
+[measured](polish-plan.md#level-build-pause-measured-2026-10-17) too short to need a loading card).
 
 **POL#23 remains open.** Putting an accepted wave into the bank does not create
 a gameplay trigger. Complete the required new cues from section 4, assess Tier

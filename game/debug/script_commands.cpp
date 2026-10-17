@@ -15,6 +15,7 @@
 #include "game/source_paths.h"
 #include <bit>
 #include <cmath>
+#include <cstdio>
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -695,9 +696,16 @@ void DebugDirectorImpl::register_script_commands()
 
 	// Perf ------------------------------------------------------------------
 
-	add("perf", "frame, update and draw time (CPU, min / avg / max) and object counts", {},
+	add("perf", "frame, update and draw time (CPU, min / avg / max), object counts and the last level build", {},
 		[this](Args, DebugLog& log)
 		{
+			if (this->last_build_)
+			{
+				char ms[32];
+				std::snprintf(ms, sizeof(ms), "%.1f", this->last_build_->ms);
+				log.info(std::string("build ") + ms + " ms  " + this->last_build_->stage + "  " +
+					std::to_string(this->last_build_->players) + "P");
+			}
 			if (this->perf_.size() == 0)
 			{
 				return DebugStatus::success("perf: no match frame measured yet");

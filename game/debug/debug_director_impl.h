@@ -436,6 +436,16 @@ private:
 	// The perf overlay.
 	DebugPerf perf_;
 	bool overlay_perf_ = false;
+	// The last level build's wall time, from the end of before_level_build
+	// to the top of after_level_build, and what was built.
+	struct LevelBuildTime
+	{
+		double ms = 0.0;
+		std::string stage;
+		int players = 0;
+	};
+	double build_began_ms_ = -1.0;
+	std::optional<LevelBuildTime> last_build_;
 	std::optional<std::filesystem::path> perf_capture_path_;
 	int perf_width_ = 0;
 	int perf_height_ = 0;

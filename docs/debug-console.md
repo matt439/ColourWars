@@ -164,7 +164,7 @@ running.
 | `wait <n>\|<x>s\|match\|frames <n>\|replay\|record`, `echo <text>` | in a script: wait for updates, match seconds, the match, hook frames, a replay or a recording; print a line |
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
-| `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers or export a bounded rendered-frame capture |
+| `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
 | `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number or boolean in `tuning.json` / `presentation.json` (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
@@ -819,10 +819,15 @@ bots, record, play - included; `x` is updates per frame, so x4 shows 4.00),
 **draw** the match's draw from the top of `GameLevel::draw` to the debug panels
 (refreshing the layout and recording the draw lists, with the scene's workers
 joined). **objects** counts the scene's collision objects. `perf` prints the
-lines; `perf.reset` starts again. It is measured whenever a match runs, overlay
-or not, and only while the match is on top: a build, the menus, a page over the
-match (pause, results) or a screenshot's capture is a gap, not a frame - the
-first draw after one starts a new interval and records nothing (so does the
+lines, headed once a match has been built by `build 6.7 ms  movement_course  4P`:
+the last level build's wall time, from the end of the director's
+`before_level_build` to the top of `after_level_build` (the layout and
+`LevelBuilder::build_level`, the stall the last menu frame sits through;
+[measured](polish-plan.md#level-build-pause-measured-2026-10-17) for `GAP#5.1`).
+`perf.reset` starts the frame numbers again (the build line stays). They are
+measured whenever a match runs, overlay or not, and only while the match is on
+top: a build, the menus, a page over the match (pause, results) or a
+screenshot's capture is a gap, not a frame - the first draw after one starts a new interval and records nothing (so does the
 very first). Focus loss and covering pages now break the interval immediately,
 including draws that occur before another simulation update.
 Frame intervals include intervening submit/Present wall time indirectly.

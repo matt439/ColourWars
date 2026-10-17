@@ -793,6 +793,39 @@ Show player contributions clearly and make the rematch route easy to follow.
 Measure loading pauses before choosing transition behaviour. Preserve the deliberate
 withholding of live coverage percentages so the ending remains a reveal.
 
+<a id="level-build-pause-measured-2026-10-17"></a>
+**Level build pause measured (2026-10-17, `GAP#5.1` step 0).** The audit's freeze
+(no frame between stage select's last draw and the match's first,
+[gap-audit 5.1](review/gap-audit.md#51-every-screen-change-is-a-hard-cut-and-the-level-build-freezes-on-the-last-menu-frame))
+is now timed. Debug's [`perf`](debug-console.md#perf) prints `build <ms>  <stage>  <n>P`:
+wall time from the end of the director's `before_level_build` to the top of
+`after_level_build`, which is the layout plus `LevelBuilder::build_level`. Release
+has no console, so its figures come from a one-off harness (not kept). It links the
+Release game objects and times `build_level` on the device-free content the
+acceptance cases build with: 7 builds per stage and count, 3 runs. The same harness
+in Debug reads about 10% under the in-game Debug figures, so building without a
+device leaves nothing material out. Milliseconds, Ryzen 9 9950X3D:
+
+| stage | Debug in game, 1P | Debug in game, 4P | Release, 1P | Release, 4P |
+|---|---|---|---|---|
+| `movement_course` | 6.6-7.2 | 6.7-6.8 | 1.5-1.8 | 1.4-1.8 |
+| `close_quarters` | 3.6-3.7 | 3.6-4.0 | 0.8-0.9 | 0.7-1.0 |
+| `king_of_the_hill` | 7.7-7.8 | 8.1-15.0 | 1.5-2.0 | 1.5-1.9 |
+| `turbulence` | 8.6-8.8 | 8.7 | 1.7-2.4 | 1.7-2.2 |
+
+Debug is the first build and two `restart`s
+(`+stage <s> +players <n> +wait frames 3 +perf +restart ...`); the 15.0 is a first
+build. Release is min-max over 21 builds. Every Release build fits well inside one
+60 Hz frame, even on a machine several times slower, and Debug drops at most one
+frame. The "many frames" freeze is not there, so no loading card is needed. Not
+in these numbers is the match's first draw after the build, which `perf` treats as
+an interval start. What remains of `GAP#5.1` is the hard cut itself: a transition
+look in the Paint.exe language (a fade, a wipe, a redraw or a deliberate cut) is UI
+art and follows the gameplay style lock. Separately, the startup window shows a
+blank client area during the asset walk, which needs an engine show-after-load.
+Re-measure with `perf` when the blockouts (`POL#17`, `POL#21`) add geometry: the
+build makes paint tiles for every paintable face.
+
 **Takeoff/landing production puffs implemented (2026-10-15, part of `POL#16`).**
 The [drawing and evidence](polish-feedback.md#paintexe-production-puffs-2026-10-15)
 replace the prototype squares with neutral, stepped, black-keylined silhouettes:
