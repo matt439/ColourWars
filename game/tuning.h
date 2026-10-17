@@ -163,7 +163,7 @@ struct PaintTuning
 
 	std::string splash_sheet;
 	std::string splash_animation;
-	std::array<std::string, static_cast<size_t>(ProjectileType::ball) + 1> splash_animations;
+	std::array<std::string, static_cast<size_t>(ProjectileType::count)> splash_animations;
 
 	// Surface decoration stays inside the scored tile; only the short airborne
 	// splash can overhang it. These values never affect its contact rectangle.
@@ -178,7 +178,7 @@ struct PaintTuning
 	std::vector<SoundTuning> splash_sounds;
 	SoundTuning capture_sound;
 	SoundTuning dud_sound;
-	std::array<SoundTuning, static_cast<size_t>(ProjectileType::ball) + 1> impact_sounds;
+	std::array<SoundTuning, static_cast<size_t>(ProjectileType::count)> impact_sounds;
 	float min_impact_interval = 0.0f;
 	float min_capture_interval = 0.0f;
 };
@@ -328,7 +328,7 @@ private:
 	static constexpr size_t WEAPON_COUNT =
 		static_cast<size_t>(WeaponType::bucket) + 1;
 	static constexpr size_t PROJECTILE_COUNT =
-		static_cast<size_t>(ProjectileType::ball) + 1;
+		static_cast<size_t>(ProjectileType::count);
 
 	InputTuning input_;
 	MatchTuning match_;

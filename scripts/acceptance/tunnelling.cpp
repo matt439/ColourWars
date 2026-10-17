@@ -147,7 +147,12 @@ namespace
 		const GameTuning tuning((content / "tuning.json").string().c_str());
 		const LevelObjectBuilder builder = world.builder(tuning);
 		const PlayerTuning& player = tuning.player();
-		const Vector2F travel = player.max_velocity * SECONDS_PER_STEP;
+		// The farthest step Player::update can take: x_initial_velocity is
+		// unclamped on the first step of input, drop_down_velocity is added
+		// after the y clamp.
+		const Vector2F travel = Vector2F(
+			std::max(player.max_velocity.x, std::abs(player.x_initial_velocity)),
+			player.max_velocity.y + std::abs(player.drop_down_velocity)) * SECONDS_PER_STEP;
 		for (const auto& path : shipped_levels(content))
 		{
 			const LevelLoadedInfo info(path.string().c_str());
@@ -195,6 +200,19 @@ namespace
 			"player.max_velocity.x" }),
 			"A player fast enough to run through a wall was not rejected: " + horizontal);
 
+		// The two speeds Player::update sets past its clamp count too.
+		const GameTuning starting = fixtures.load([](rapidjson::Document& d)
+			{ d["player"]["x_initial_velocity"].SetFloat(1.0e5f); });
+		const std::string first_step = rejection(starting, world.builder(starting), objects);
+		require(mentions(first_step, { "horizontally", "player.x_initial_velocity" }),
+			"A first step of input fast enough to cross a wall was not rejected: " + first_step);
+
+		const GameTuning dropping = fixtures.load([](rapidjson::Document& d)
+			{ d["player"]["drop_down_velocity"].SetFloat(1.0e5f); });
+		const std::string drop = rejection(dropping, world.builder(dropping), objects);
+		require(mentions(drop, { "vertically", "player.drop_down_velocity" }),
+			"A drop-through fast enough to cross a floor was not rejected: " + drop);
+
 		// A non-positive extent or cap would make the bound meaningless; the
 		// tuning reader refuses one at load, before any stage is checked.
 		for (const char* field : { "size", "max_velocity" })
@@ -212,6 +230,7 @@ namespace
 
 		// The engine's boundary is unsafe: touching endpoints are no contact.
 		// A half-second step makes the travel exact: 120 + 10 is the bound.
+		// The drop-through speed is zeroed so max_velocity.y alone is the travel.
 		const auto slab = fixtures.write_text("tunnelling-slab.json", R"({ "collision_objects": [
 			{ "type": "Structure", "collision_type": "STRUCTURE",
 			  "sheet_name": "sprite_sheet_1", "frame_name": "square_white_4", "colour": "808080",
@@ -223,13 +242,17 @@ namespace
 		for (const float speed : { 259.0f, 260.0f })
 		{
 			const GameTuning edge = fixtures.load([speed](rapidjson::Document& d)
-				{ d["player"]["max_velocity"]["y"].SetFloat(speed); });
+				{
+					d["player"]["max_velocity"]["y"].SetFloat(speed);
+					d["player"]["drop_down_velocity"].SetFloat(0.0f);
+				});
 			const std::string message = rejection(edge, world.builder(edge), slab_objects, 0.5f);
 			require(speed == 260.0f ? mentions(message, { "vertically", "is 130," }) : message.empty(),
 				"The stage check disagreed with labrador::can_tunnel at its boundary: " + message);
 		}
-		std::cout << "Rejected: falling and running past the course's geometry, a zero size "
-			"or cap at load, and a step landing exactly on the engine's boundary.\n";
+		std::cout << "Rejected: falling, running, a first step and a drop-through past the "
+			"course's geometry, a zero size or cap at load, and a step landing exactly on "
+			"the engine's boundary.\n";
 	}
 
 	// The row this case closes said "the sniper's 2000 u/s already exceeds

@@ -32,7 +32,7 @@ private:
     labrador::SoundBank* bank_;
     std::vector<labrador::SoundBank::WaveHandle> splashes_;
     std::array<labrador::SoundBank::WaveHandle,
-        static_cast<size_t>(ProjectileType::ball) + 1> impacts_;
+        static_cast<size_t>(ProjectileType::count)> impacts_;
     labrador::SoundBank::WaveHandle capture_;
     labrador::SoundBank::WaveHandle dud_;
     // Invalid/uncredited owners share a bounded fallback rather than indexing

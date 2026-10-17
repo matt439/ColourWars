@@ -4,6 +4,7 @@
 #include "engine/collision/tunnelling.h"
 #include "game/objects/collision_object_type.h"
 #include "game/objects/level_object_builder.h"
+#include <algorithm>
 #include <cmath>
 #include <sstream>
 #include <string>
@@ -19,7 +20,7 @@ namespace
 	// below, so it must not compile until it is given one.
 	constexpr bool every_unswept_kind_is_bounded()
 	{
-		for (int index = 0; index <= static_cast<int>(ProjectileType::ball); ++index)
+		for (int index = 0; index < static_cast<int>(ProjectileType::count); ++index)
 		{
 			const ProjectileType type = static_cast<ProjectileType>(index);
 			if (!is_swept(type) && type != ProjectileType::rolling)
@@ -34,11 +35,13 @@ namespace
 		"stationary roller; give it a tunnelling bound in check_stage_tunnelling.");
 
 	// Something moved by endpoint sampling: its own extent, its farthest travel
-	// in one step on each axis, and what it collides with.
+	// in one step on each axis, the tuning keys that travel comes from, and
+	// what it collides with.
 	struct DiscreteMover
 	{
 		std::string name;
-		std::string speed_key;
+		std::string speed_keys_x;
+		std::string speed_keys_y;
 		Vector2F extent;
 		Vector2F travel;
 		CollisionLayer layer = 0u;
@@ -60,12 +63,22 @@ namespace
 		const CollisionObjectType player_type = CollisionObjectType::player_team_a;
 		// The roller paints one sweep from where it spawned and never moves.
 		const CollisionObjectType roller_type = CollisionObjectType::projectile_rolling_team_a;
+		// Player::update clamps to max_velocity on each axis, with two ways
+		// past it: the first step of input sets x to x_initial_velocity
+		// unclamped, and a drop-through adds drop_down_velocity to y after
+		// the clamp. Its farthest step on each axis is the larger of the
+		// first pair and the sum of the second.
+		const Vector2F player_speed(
+			std::max(std::abs(player.max_velocity.x), std::abs(player.x_initial_velocity)),
+			std::abs(player.max_velocity.y) + std::abs(player.drop_down_velocity));
 		return {
-			{ "a player", "player.max_velocity", player.size,
-				Vector2F(std::abs(player.max_velocity.x), std::abs(player.max_velocity.y)) *
-					seconds_per_step,
+			{ "a player",
+				"player.max_velocity.x (or player.x_initial_velocity, if that is larger)",
+				"player.max_velocity.y (or player.drop_down_velocity, which a drop-through "
+					"adds to it)",
+				player.size, player_speed * seconds_per_step,
 				collision_layer(player_type), collision_mask(player_type) },
-			{ "a rolling projectile", "projectiles.max_velocity",
+			{ "a rolling projectile", "projectiles.max_velocity.x", "projectiles.max_velocity.y",
 				tuning.projectile(ProjectileType::rolling).details.col_rect_size, Vector2F::ZERO,
 				collision_layer(roller_type), collision_mask(roller_type) },
 		};
@@ -73,7 +86,7 @@ namespace
 
 	void check_axis(const JsonValue& entry, const DiscreteMover& mover,
 		float seconds_per_step, const char* axis, const char* dimension,
-		const char* component, float travel, float mover_extent, float object_extent)
+		const std::string& speed_keys, float travel, float mover_extent, float object_extent)
 	{
 		if (!can_tunnel(travel, mover_extent, object_extent))
 		{
@@ -85,8 +98,8 @@ namespace
 			dimension + " of " + number(object_extent) + " the engine's discrete bound "
 			"(labrador::max_safe_displacement) is " +
 			number(max_safe_displacement(mover_extent, object_extent)) +
-			", so it could pass through between two steps. Lower " + mover.speed_key +
-			"." + component + " or thicken the object.");
+			", so it could pass through between two steps. Lower " + speed_keys +
+			" or thicken the object.");
 	}
 }
 
@@ -108,10 +121,10 @@ void check_stage_tunnelling(const GameTuning& tuning,
 			{
 				continue;
 			}
-			check_axis(entry, mover, seconds_per_step, "horizontally", "width", "x",
-				mover.travel.x, mover.extent.x, box.width);
-			check_axis(entry, mover, seconds_per_step, "vertically", "height", "y",
-				mover.travel.y, mover.extent.y, box.height);
+			check_axis(entry, mover, seconds_per_step, "horizontally", "width",
+				mover.speed_keys_x, mover.travel.x, mover.extent.x, box.width);
+			check_axis(entry, mover, seconds_per_step, "vertically", "height",
+				mover.speed_keys_y, mover.travel.y, mover.extent.y, box.height);
 		}
 	}
 }

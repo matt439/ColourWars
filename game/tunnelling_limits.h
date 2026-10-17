@@ -13,7 +13,9 @@ class LevelObjectBuilder;
 // an object it collides with between two steps.
 //
 // Which movers that is: the player, whose velocity Player clamps per axis to
-// player.max_velocity, and any unswept projectile kind (is_swept), of which
+// player.max_velocity except on the first step of input (x_initial_velocity,
+// so x takes the larger of the two) and on a drop-through (drop_down_velocity,
+// added to y after the clamp, so y takes the sum), and any unswept projectile kind (is_swept), of which
 // the only one is the roller, which never moves. Every other projectile kind
 // is exempt, not forgotten: Projectile::resolve_sweep tests its trajectory,
 // which is what tunnelling.h tells a discrete client to do.

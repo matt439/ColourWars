@@ -352,8 +352,9 @@ nothing. In the running game every edit also runs the file's own startup checks
 against the loaded resources (`validate_resources`): for presentation, that
 its named fonts, frames and sounds exist, and `match.countdown_size` leaves
 room under the GET READY heading. Edits under
-`tuning.paint`, `tuning.player.size` and `tuning.player.max_velocity` also
-run the startup check that builds every stage's objects, so a speed cap at
+`tuning.paint`, `tuning.player.size` and `tuning.player.max_velocity`, and
+of `tuning.player.x_initial_velocity` and `tuning.player.drop_down_velocity`,
+also run the startup check that builds every stage's objects, so a speed cap at
 which a player could step through a floor is refused
 (`game/tunnelling_limits.h`).
 Only then is the validated object copied over the live one: the

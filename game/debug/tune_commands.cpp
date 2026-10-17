@@ -323,11 +323,14 @@ DebugStatus DebugDirectorImpl::tune_validate_and_apply(int file, const std::stri
 	const std::string utf8 = labrador::path_to_utf8(path);
 	// Every edit runs the reader and, with an application, the resource checks
 	// startup runs on that file; paint also reaches every stage's objects, and
-	// the player's size and speed cap reach every stage's tunnelling bound.
+	// the player's size and the speeds its per-step travel is taken from reach
+	// every stage's tunnelling bound.
 	const bool checks_levels = name == "tuning" &&
 		(edited_path.empty() || edited_path.starts_with("paint.") ||
 			edited_path.starts_with("player.size.") ||
-			edited_path.starts_with("player.max_velocity."));
+			edited_path.starts_with("player.max_velocity.") ||
+			edited_path == "player.x_initial_velocity" ||
+			edited_path == "player.drop_down_velocity");
 	try
 	{
 		this->tune_targets_[static_cast<std::size_t>(file)]->validate(utf8, this->data_,

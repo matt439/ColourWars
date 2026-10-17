@@ -230,9 +230,12 @@ checks to their owners:
   spawn/station containment and spawn halves; duplicate station names; grey
   hex channel equality; assets and drawable text; and the engine's
   anti-tunnelling bound ([tunnelling_limits.h](../game/tunnelling_limits.h)):
-  a stage is rejected when a player at `tuning.player.max_velocity` would
-  travel at least its own extent plus an object's width or height in one
-  fixed step, so it could pass through that object. The `tunnelling`
+  a stage is rejected when a player at its farthest step would travel at
+  least its own extent plus an object's width or height, so it could pass
+  through that object. That step is `tuning.player.max_velocity`, widened
+  on x to `x_initial_velocity` if that is larger (the first step of input is
+  unclamped) and on y by `drop_down_velocity` (a drop-through adds it after
+  the clamp). The `tunnelling`
   acceptance case prints each shipped stage's margin. Flying paint is exempt
   because each shot's whole path is tested against the geometry every step.
 - Editor: its additional nonempty-string, numeric and upright-ramp checks.
