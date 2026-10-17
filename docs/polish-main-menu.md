@@ -801,6 +801,6 @@ the [locked arena](images/polish-main-menu/stage-locked-720p.png) and
 [solo Random with the complete objective](images/polish-main-menu/stage-solo-random-720p.png).
 
 Accepted-arena artwork and human presentation/readability review remain
-`POL#16`. Movement-feel (`POL#3`) still gates the reference blockout (`POL#17`),
-which gates the arena material/prop kit (`POL#9`). Physical-pad and listening
+`POL#16`. The reference blockout (`POL#17`) gates the arena material/prop kit
+(`POL#9`); movement-feel (`POL#3`) is ongoing tuning and gates neither. Physical-pad and listening
 acceptance remain open; menu-motion review (`POL#10`) was accepted 2026-10-17.

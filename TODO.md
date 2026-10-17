@@ -17,8 +17,6 @@ order is gameplay style first, UI after.
 Pick the next actions from the OPEN rows, preserving gameplay style before UI.
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
-- **Jump feel (`POL#3`):** try `exec jump_mid`, `jump_low`, `jump_snappy` on the Movement Course
-  and keep one; it gates the Close Quarters blockout.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -42,7 +40,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#3` | DECISION | HIGH | M | Keyboard/mouse found the jump too floaty and too high: pick a `jump_*` candidate, then re-measure and re-author the Movement Course. A physical pad later (with `ROAD#2`). [Playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
+| `POL#3` | OPEN | MED | M | Ongoing movement tuning, provisional while levels and art develop; gates nothing. Keyboard/mouse: jump a bit floaty and high (`jump_*` candidates to try). Pad half with `ROAD#2`. [Playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
 | `POL#14` | BLOCKED | MED | M | Human review of the implemented player badges, aim/readiness and blocked-shot cues in the reference composition; waits on the arena (`POL#17`). [§8](docs/polish-plan.md#help-players-read-the-tool-and-the-fight). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
@@ -54,7 +52,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#17` | BLOCKED | HIGH | XL | Close Quarters reference blockout against the §3 requirements table (routes, spawns, paint budget, weapon roles, pacing, side fairness, recovery pocket). Waits on `POL#3`. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
+| `POL#17` | OPEN | HIGH | XL | Close Quarters reference blockout against the §3 requirements table (routes, spawns, paint budget, weapon roles, pacing, side fairness, recovery pocket), on the current provisional movement values. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after CQ is accepted; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#3` | UNSCOPED | LOW | M | Resource names (sheet, frame, icon, colour, music) are checked only at game startup; the editor takes any non-empty name. |
 | `ED#4` | UNSCOPED | LOW | S | Registering a stage is manual (`manifest.json` and `cmake/runtime_assets.cmake`); the editor does not help. |

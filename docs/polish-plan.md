@@ -234,7 +234,9 @@ Use a small movement course to compare the baseline with candidate changes:
 
 Measure the resulting jump envelope and travel speed. Use those measurements
 when placing platforms; the old movement note is not a level-design specification.
-Tune values through keyboard/mouse and controller playtests before freezing them.
+Tune values through keyboard/mouse and controller playtests. They stay
+provisional, retuned as level design, art and audio develop, and nothing waits on
+fixing them (author, 2026-10-17).
 
 **Exit condition:** required jumps are reproducible, input feels responsive, and
 buffered input cannot cause extra jumps after pause, death, respawn or dropping
@@ -1060,8 +1062,8 @@ fallback under a system-only PATH. The 53-file ZIP contains all 26 reviewed
 runtime assets byte for byte and excludes source, debug and private audio.
 
 Accepted-arena artwork and human presentation/readability review remain
-`POL#16`. Movement-feel (`POL#3`) still gates `POL#17`'s reference blockout,
-which gates `POL#9`'s material/prop work. Physical-controller and listening
+`POL#16`. `POL#17`'s reference blockout gates `POL#9`'s material/prop work;
+movement-feel (`POL#3`) is ongoing tuning and gates neither (2026-10-17). Physical-controller and listening
 acceptance retain their existing gates.
 
 Once the reference match meets its exit conditions, extend the approved character
