@@ -243,7 +243,7 @@ is retained here:
 |---|---|
 | `sources/textures/` | Sprite-sheet PNG/XCF, menu PNG, generated weapon PNG and legacy texture conversion command |
 | `sources/levels/` | Publisher layouts and historical movement notes; playable JSONs remain runtime content |
-| `sources/fonts/` | Historical font command example; regeneration recipes for the shipped fonts remain `GAP#8.7` |
+| `sources/fonts/` | The [font recipe](#sprite-font-recipe-gap87) `fonts.json`, and the historical font command example `cmd.txt` |
 | `tools/` | Existing texconv and MakeSpriteFont executables |
 | `archive/textures/` | Old texture kit and unused player-frame experiment |
 | `archive/fonts/` | Unused compiled fonts |
@@ -285,3 +285,54 @@ remain in their existing TODO rows. To rerun the staging regression alone:
 ```powershell
 cmake -DTEST_DIR=out/validation/content-separation -P cmake/check_runtime_staging.cmake
 ```
+
+## Sprite font recipe (GAP#8.7)
+
+Implemented 2026-10-17. The seven atlases in `game/content/fonts/` are tracked
+output, on the wave bank's pattern: the recipe and tool are in this tree, the
+build checks the output without running the tool, and regeneration is an
+optional step that needs the faces installed.
+
+[`sources/fonts/fonts.json`](sources/fonts/fonts.json) is the recipe: per atlas
+the face, size, style, the face file it came from, and the texture size and
+line spacing a regeneration must give; for all of them the character region
+`0x20-0x7E` (exactly what [`drawable_text`](../drawable_text.h) accepts), no
+default character, and MakeSpriteFont's `CompressedMono` (BC2) format.
+
+| Atlas | Face | Size | Style |
+|---|---|---|---|
+| `courier_new_bold_16` | Courier New (`courbd.ttf`) | 16 | Bold |
+| `gill_sans_mt_bold_24`, `_36`, `_48`, `_72`, `_144` | Gill Sans MT (`GILB____.TTF`) | 24, 36, 48, 72, 144 | Bold |
+| `gill_sans_ultra_bold_144` | Gill Sans Ultra Bold (`GILSANUB.TTF`) | 144 | Regular |
+
+Courier New ships with Windows; both Gill Sans faces ship with Microsoft
+Office, so a fresh clone or a CI runner may have neither. That keeps
+regeneration out of builds and CI:
+
+```powershell
+scripts/build-fonts.ps1            # regenerate into a temp folder and compare
+scripts/build-fonts.ps1 -Update    # also write any that differ over game/content/fonts/
+```
+
+It runs `tools/MakeSpriteFont.exe` with an explicit region and format and
+compares each result with the tracked file: `identical`, `equivalent` (same
+glyph table, region, texture size and format; line spacing within 1e-5 or a
+few texture bytes apart) or `DIFFERENT`, which fails the run. A face that is not
+installed stops it with the face's name rather than letting GDI+ substitute
+another. On 2026-10-17, on this machine, five atlases regenerate byte for byte.
+`courier_new_bold_16` differs only in its line spacing's last float bit
+(`24.1666679` against the tracked `24.166666`), and `gill_sans_mt_bold_144` in
+4 of 1,261,568 texture bytes, two BC2 blocks; both are face-version or
+rasteriser noise, and the tracked files were left as they are.
+
+Every build runs [`cmake/check_sprite_fonts.cmake`](../../cmake/check_sprite_fonts.cmake)
+from runtime staging. With no tool and no faces, it reads each tracked atlas's
+header against the recipe: the `DXTKfont` signature, every glyph exactly the
+region in order, no default character, the recipe's texture size and DXGI
+format, and a file size equal to what the header describes. The recipe and
+`cmake/runtime_assets.cmake` must also name the same seven files. So a
+regenerated font with a narrower or wider region, or a different size, fails
+the build instead of reaching a menu.
+
+Text wrapping, the other half of `GAP#8.7`, is a widget capability rather than
+content: see [Weapon description wrapping](../../docs/menu-presentation.md#weapon-description-wrapping).

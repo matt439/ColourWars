@@ -9,6 +9,7 @@
 #include "game/states/option_row.h"
 #include "game/states/stage_preview.h"
 #include "game/states/ui_player_badge.h"
+#include "game/states/wrapped_text_drop_shadow.h"
 #include "engine/core/state_context.h"
 #include "engine/render/colour.h"
 
@@ -355,7 +356,7 @@ private:
 		std::unique_ptr<UiPlayerBadge> badge;
 		std::unique_ptr<MenuIcon> weapon_icon = nullptr;
 		std::unique_ptr<labrador::UiTextDropShadow> weapon_name = nullptr;
-		std::unique_ptr<labrador::UiTextDropShadow> weapon_description = nullptr;
+		std::unique_ptr<WrappedTextDropShadow> weapon_description = nullptr;
 	};
 	std::unique_ptr<labrador::UiTexture> background_ = nullptr;
 	std::unique_ptr<MenuPaperArtwork> paper_;

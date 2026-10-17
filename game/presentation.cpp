@@ -597,6 +597,7 @@ namespace
 		menu.weapon_description_shadow_offset =
 			read_vector_unchecked(description, "shadow_offset");
 		menu.weapon_description_x_offset = read_finite(description, "x_offset");
+		menu.weapon_description_max_width = read_positive(description, "max_width");
 
 		menu.mode_select_spacing = read_vector_unchecked(json, "mode_select_spacing");
 		menu.player_count_spacing = read_vector_unchecked(json, "player_count_spacing");

@@ -14,6 +14,7 @@ add_executable(ColourWars WIN32
     presentation.cpp
     save.cpp
     session.cpp
+    text_wrap.cpp
     tuning.cpp
     tunnelling_limits.cpp
 
@@ -139,6 +140,7 @@ add_executable(ColourWars WIN32
     states/prompt_bar.cpp
     states/results_menu.cpp
     states/stage_preview.cpp
+    states/wrapped_text_drop_shadow.cpp
 
     resource.rc
     settings.manifest

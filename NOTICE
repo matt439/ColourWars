@@ -75,11 +75,13 @@ track, bank or timestamp-based reuse supplies the replacement bank.
 
 ### Fonts
 
-`game/content/fonts/` holds compiled `.spritefont` files built from system
-fonts (Gill Sans MT, Courier New) with Microsoft's `MakeSpriteFont`. The
-compiled glyph atlases are redistributed here on the same footing as any other
-game asset built from a licensed system font; the fonts themselves are not
-included and are not ColourWars' to license.
+`game/content/fonts/` holds compiled `.spritefont` files built from installed
+fonts (Gill Sans MT and Gill Sans Ultra Bold, which ship with Microsoft Office,
+and Courier New, which ships with Windows) with Microsoft's `MakeSpriteFont`,
+by the recipe in `game/art/sources/fonts/fonts.json`. The compiled glyph
+atlases are redistributed here on the same footing as any other game asset
+built from a licensed font; the fonts themselves are not included and are not
+ColourWars' to license.
 
 ### Menu artwork
 

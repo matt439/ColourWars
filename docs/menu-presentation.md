@@ -437,6 +437,24 @@ separate columns. The complete contraction envelope must retain positive paper
 faces. No new fitting path or runtime asset is introduced. Texture artwork
 remains point-filtered and lettering linear-filtered.
 
+### Weapon description wrapping
+
+Descriptions wrap to the required `main_menu.weapon_description.max_width`,
+shipped as `920`, which must be finite and positive. The page draws them with
+`WrappedTextDropShadow` ([`game/states/wrapped_text_drop_shadow.h`](../game/states/wrapped_text_drop_shadow.h)),
+a `UiTextDropShadow` that passes every string through `text_wrap::wrap`
+([`game/text_wrap.h`](../game/text_wrap.h)) in its own font and scale. The wrap
+is greedy and measured with the engine's `measure_text`; it only adds breaks at
+spaces, keeps every authored `\n`, and never splits a word. Every shipped
+description's widest line (`859` for the Mister) is inside the width, so each
+draws exactly as authored and no pixel moved when wrapping was turned on.
+Startup refuses a description holding a single word wider than the width,
+naming the key and the word; the paper containment above still bounds the
+wrapped block. Wrapping is opt-in per widget: every other menu text keeps its
+authored breaks and width-only scale fitting. `scripts/acceptance/text_wrap.cpp`
+pins the breaks, and the Weapon paper probe opens the real page with a
+description that only fits once wrapped.
+
 ## Weapon-selection names and artwork
 
 `main_menu.weapon_select.sheet` selects the weapon-choice atlas and

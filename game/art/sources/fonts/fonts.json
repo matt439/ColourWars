@@ -1,0 +1,30 @@
+{
+  "_comment": [
+    "The recipe for the seven runtime atlases in game/content/fonts/.",
+    "scripts/build-fonts.ps1 runs game/art/tools/MakeSpriteFont.exe once per entry and compares the result with the tracked atlas; -Update writes it over.",
+    "cmake/check_sprite_fonts.cmake reads the tracked atlases' headers against this file on every build, and needs neither the tool nor the faces.",
+    "The faces are the machine's installed fonts, not files in this repository: Courier New ships with Windows; both Gill Sans faces ship with Microsoft Office.",
+    "character_region is the range game/drawable_text.h accepts; widening it is a locale decision (GAP#L11), not a regeneration."
+  ],
+  "tool": "game/art/tools/MakeSpriteFont.exe",
+  "character_region": { "first": 32, "last": 126 },
+  "default_character": 0,
+  "texture_format": "CompressedMono",
+  "dxgi_format": 74,
+  "fonts": [
+    { "file": "courier_new_bold_16.spritefont", "face": "Courier New", "face_file": "courbd.ttf", "size": 16, "style": "Bold",
+      "texture": { "width": 128, "height": 144 }, "line_spacing": 24.166666 },
+    { "file": "gill_sans_mt_bold_24.spritefont", "face": "Gill Sans MT", "face_file": "GILB____.TTF", "size": 24, "style": "Bold",
+      "texture": { "width": 256, "height": 168 }, "line_spacing": 37.109375 },
+    { "file": "gill_sans_mt_bold_36.spritefont", "face": "Gill Sans MT", "face_file": "GILB____.TTF", "size": 36, "style": "Bold",
+      "texture": { "width": 512, "height": 172 }, "line_spacing": 55.6640625 },
+    { "file": "gill_sans_mt_bold_48.spritefont", "face": "Gill Sans MT", "face_file": "GILB____.TTF", "size": 48, "style": "Bold",
+      "texture": { "width": 512, "height": 300 }, "line_spacing": 74.21875 },
+    { "file": "gill_sans_mt_bold_72.spritefont", "face": "Gill Sans MT", "face_file": "GILB____.TTF", "size": 72, "style": "Bold",
+      "texture": { "width": 1024, "height": 324 }, "line_spacing": 111.328125 },
+    { "file": "gill_sans_mt_bold_144.spritefont", "face": "Gill Sans MT", "face_file": "GILB____.TTF", "size": 144, "style": "Bold",
+      "texture": { "width": 2048, "height": 616 }, "line_spacing": 222.65625 },
+    { "file": "gill_sans_ultra_bold_144.spritefont", "face": "Gill Sans Ultra Bold", "face_file": "GILSANUB.TTF", "size": 144, "style": "Regular",
+      "texture": { "width": 2048, "height": 852 }, "line_spacing": 239.25 }
+  ]
+}

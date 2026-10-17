@@ -315,13 +315,14 @@ void MainMenuWeaponSelect::init()
 			clear_shadow,
 			this->menu_style().detail_shadow_offset);
 
-		widgets->weapon_description = std::make_unique<UiTextDropShadow>(
+		widgets->weapon_description = std::make_unique<WrappedTextDropShadow>(
 			name + "_wep_desc",
 			this->weapon_description(state.type),
 			this->look().weapon_description_font,
 			widgets->weapon_icon->rectangle().position() +
 				Vector2F(this->look().weapon_description_x_offset, 0.0f),
 			this->render_resources(),
+			this->look().weapon_description_max_width,
 			this->look().weapon_description_colour,
 			clear_shadow,
 			this->look().weapon_description_shadow_offset);

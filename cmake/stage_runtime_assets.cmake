@@ -57,6 +57,13 @@ execute_process(COMMAND "${CMAKE_COMMAND}"
 if(NOT bank_check EQUAL 0)
     message(FATAL_ERROR "Runtime audio validation failed")
 endif()
+execute_process(COMMAND "${CMAKE_COMMAND}"
+    "-DFONT_DIR=${content_root}/fonts"
+    -P "${CMAKE_CURRENT_LIST_DIR}/check_sprite_fonts.cmake"
+    RESULT_VARIABLE font_check)
+if(NOT font_check EQUAL 0)
+    message(FATAL_ERROR "Runtime font validation failed")
+endif()
 
 # Reject links/reparse points throughout owned directories before copying or
 # deleting anything. A stale directory may be removed recursively only after

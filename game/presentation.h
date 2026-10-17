@@ -401,6 +401,9 @@ struct MainMenuPresentation
 	labrador::Colour weapon_description_colour = labrador::Colour::white;
 	mattmath::Vector2F weapon_description_shadow_offset = { 0.0f, 0.0f };
 	float weapon_description_x_offset = 0.0f;
+	// The width each description wraps to, from its column (game/text_wrap.h).
+	// Authored breaks are kept, so text that already fits draws as authored.
+	float weapon_description_max_width = 0.0f;
 
 	mattmath::Vector2F mode_select_spacing = { 0.0f, 0.0f };
 	mattmath::Vector2F player_count_spacing = { 0.0f, 0.0f };

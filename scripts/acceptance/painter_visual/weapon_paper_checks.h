@@ -248,6 +248,20 @@ void weapon_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, co
         catch (const std::runtime_error& error) { rejected = std::string(error.what()).find(description ? "Weapon Select weapon description must fit the paper" : "Weapon Select weapon name must fit the paper") != std::string::npos; }
         require(rejected, "Actual Weapon paper accepted overflowing unscaled name/last-row description or reported the wrong diagnostic");
     }
+    {
+        // A description in words, too wide for the screen on one line from any tile
+        // (it starts at least x_offset in), fits the paper in two lines once the page
+        // wraps it to main_menu.weapon_description.max_width.
+        Presentation wrapped = original; auto& look = const_cast<MainMenuPresentation&>(wrapped.main_menu());
+        std::wstring words = L"paint"; for (int i = 1; i < 20; ++i) { words += L" paint"; }
+        const FontHandle font = app.render_resources()->resolve_sprite_font(look.weapon_description_font);
+        require(app.render_resources()->measure_text(font, words).x > 1920.0f - look.weapon_description_x_offset, "The wrapping fixture would fit the paper unwrapped");
+        const std::wstring lines = text_wrap::wrap(*app.render_resources(), font, words, look.weapon_description_max_width);
+        require(std::count(lines.begin(), lines.end(), L'\n') == 1, "The wrapping fixture no longer wraps to two lines");
+        look.weapon_descriptions[3] = words; presentation = wrapped; StateContext wrap_stack;
+        wrap_stack.push(std::make_unique<MainMenuWeaponSelect>(&context));
+        wrap_stack.clear();
+    }
     presentation = original;
     require(records.good(), "Weapon paper evidence write failed"); require(IsWindowVisible(static_cast<HWND>(app.window())) == FALSE && GetForegroundWindow() != static_cast<HWND>(app.window()), "Weapon paper probe exposed or activated its hidden window");
     std::cout << "PASS Weapon paper independent full paper/text/tool/masks/badges at six sizes; solo and sparse2/3/4 choices/readiness, palettes, ordered Random RNG/commit, recovery/routes, captured art/font/catalog, local motion/reduction/lifecycle/frozen redraw and resize; scripted reader only\n";

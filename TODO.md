@@ -111,7 +111,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `GAP#6.1` | OPEN | MED | M | The last match setup is not saved, so every launch walks the whole menu path again. |
 | `GAP#6.2` | OPEN | MED | M | Results are never kept: per-stage records, a NEW BEST line, best % on stage select; save sections and a version key go with it. |
 | `GAP#L9` | OPEN | LOW | M | No frame-rate or vsync setting, no render interpolation; `target_fps` is a literal 60. |
-| `GAP#L11` | DEFERRED | LOW | L | No locale axis; waits on `GAP#8.4` and `GAP#8.7`. |
+| `GAP#L11` | DEFERRED | LOW | L | No locale axis; waits on `GAP#8.4`. Fonts regenerate from [a recipe](game/art/README.md#sprite-font-recipe-gap87) and text can wrap. |
 
 ## Content pipeline
 
@@ -122,7 +122,6 @@ the accepted `GAP#8.6` scope.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `GAP#8.4` | OPEN | LOW | M | Other setting values, composed stage navigation/count hints, best-of mode and roster copy, connection/readout text, player-specific Pause titles, session continuation text and composed match/results text remain C++ literals. [Boundary](docs/menu-presentation.md#shared-headings-and-complete-control-legends). |
-| `GAP#8.7` | OPEN | LOW | M | Fonts cannot be regenerated (no recipe for the 7 atlases); no text wrapping. |
 
 ## Engine demonstration
 

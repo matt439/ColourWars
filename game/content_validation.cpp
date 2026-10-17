@@ -3,6 +3,7 @@
 #include "game/drawable_text.h"
 #include "game/objects/level_object_builder.h"
 #include "game/resource_validation.h"
+#include "game/text_wrap.h"
 #include "game/tunnelling_limits.h"
 
 using namespace labrador;
@@ -88,12 +89,21 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 	const MenuStyle& menu = presentation.menu();
 	const MainMenuPresentation& main_menu = presentation.main_menu();
 
+	// The page wraps each description to its column, which no break can do
+	// for a single word wider than the column.
+	const FontHandle description_font =
+		render->resolve_sprite_font(main_menu.weapon_description_font);
 	for (size_t i = 0; i < main_menu.weapon_descriptions.size(); i++)
 	{
+		const std::string where = "the weapon description at index " + std::to_string(i);
 		drawable_text::check_font_can_draw(render,
 			main_menu.weapon_description_font,
 			main_menu.weapon_descriptions[i],
-			"the weapon description at index " + std::to_string(i));
+			where);
+		text_wrap::check_fits(*render, description_font,
+			main_menu.weapon_descriptions[i],
+			main_menu.weapon_description_max_width, 1.0f,
+			"main_menu.weapon_description.max_width: " + where);
 	}
 
 	for (const Stage& stage : stages)
