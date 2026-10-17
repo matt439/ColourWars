@@ -146,10 +146,12 @@ A new file is not automatically a menu stage. To register it:
    Configure checks that these two lists agree.
 4. Configure/build again, then start the game and choose the new stage.
 
-The file's `display_name` and `icon_frame` control its menu presentation.
+The file's `display_name` is the stage's label on the stage-select page, which
+also draws a live preview of the arena itself.
 Stage names use the glyphs supported by the game's compiled fonts; unsupported
 characters such as emoji are rejected before saving.
-The icon must name an existing frame in `sprite_sheet_1`. Object sprite-sheet
+`icon_frame` is required legacy icon metadata that no screen draws today; it
+must still name an existing frame in `sprite_sheet_1`. Object sprite-sheet
 and frame names, CSS colour names and music names must also exist in the
 game's assets. The editor checks document structure and geometry; the game's
 startup validation resolves the actual resources.
