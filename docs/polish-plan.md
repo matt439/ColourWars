@@ -188,6 +188,11 @@ supplied by the author on 2026-10-15 and retained with the
 finished assets. The workshop kit and its pixel-grid choices remain historical
 comparison evidence, rather than the production art standard.
 
+The [classic Paint research](classic-paint-research.md) (2026-10-17) records what
+Windows 3.1 Paintbrush and Paint 95/98 looked like, their tools and their pixel
+facts, and lists the open decisions on making the style achievable in a real
+paint program.
+
 Build the gameplay style first: a small reference containing a character, two
 contrasting weapons, a painted platform, background materials and effects.
 Inspect it at actual gameplay sizes, especially four-player split-screen. Carry
