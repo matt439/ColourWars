@@ -363,13 +363,18 @@ namespace
 		// nothing, so the tuning half of that check is refusing one at load.
 		player.size = read_positive_vector(json, "size");
 		player.max_velocity = read_positive_vector(json, "max_velocity");
-		// Velocities and accelerations carry a direction in their sign, so
+		// The three horizontal rates are magnitudes: Player::update takes their
+		// direction from the stick. A zero first step could never leave rest,
+		// and braking divides by x_deacceleration (plus x_acceleration, which
+		// may be zero for a constant run) and is what stops a released stick.
+		player.x_initial_velocity = read_positive(json, "x_initial_velocity");
+		player.x_acceleration = read_non_negative(json, "x_acceleration");
+		player.x_deacceleration = read_positive(json, "x_deacceleration");
+		// A multiplier on gravity; a negative one would turn it round on a ramp.
+		player.ramp_gravity_multiplier = read_non_negative(json, "ramp_gravity_multiplier");
+		// The vertical rates carry a direction in their sign (y is down), so
 		// only finiteness is required of them.
-		player.x_initial_velocity = read_finite(json, "x_initial_velocity");
-		player.x_acceleration = read_finite(json, "x_acceleration");
-		player.x_deacceleration = read_finite(json, "x_deacceleration");
 		player.gravity = read_finite(json, "gravity");
-		player.ramp_gravity_multiplier = read_finite(json, "ramp_gravity_multiplier");
 		player.jump_launch_velocity = read_finite(json, "jump_launch_velocity");
 		player.jump_acceleration = read_finite(json, "jump_acceleration");
 		// Zero leaves a jump with its launch velocity and no held boost.

@@ -411,6 +411,10 @@ namespace
             { { "match", "countdown" }, -0.01 },
             { { "match", "overview" }, -0.01 },
             { { "player", "gravity" }, 1e100 },
+            { { "player", "x_initial_velocity" }, 0.0 },
+            { { "player", "x_acceleration" }, -0.01 },
+            { { "player", "x_deacceleration" }, 0.0 },
+            { { "player", "ramp_gravity_multiplier" }, -0.01 },
             { { "player", "jump_max_time" }, -0.01 },
             { { "player", "drop_down_analog_threshold" }, 1.01 },
             { { "player", "respawn_delay" }, -0.01 },
@@ -447,6 +451,8 @@ namespace
         const GameTuning edges = fixtures.load([](rapidjson::Document& d)
         {
             d["player"]["jump_max_time"].SetDouble(0.0);
+            d["player"]["x_acceleration"].SetDouble(0.0);
+            d["player"]["ramp_gravity_multiplier"].SetDouble(0.0);
             d["player"]["drop_down_analog_threshold"].SetDouble(1.0);
             d["weapons"]["roller"]["shoot_interval"].SetDouble(0.0);
             auto& diffusion = d["projectiles"]["spray"]["diffusion"];
@@ -454,6 +460,7 @@ namespace
             d["match"]["overview"].SetDouble(0.0);
         });
         require(edges.match().overview == 0.0f && edges.player().jump_max_time == 0.0f &&
+            edges.player().x_acceleration == 0.0f && edges.player().ramp_gravity_multiplier == 0.0f &&
             edges.player().drop_down_analog_threshold == 1.0f &&
             edges.weapon(WeaponType::roller).details.shoot_interval == 0.0f &&
             edges.projectile(ProjectileType::spray).diffusion.start_time ==
