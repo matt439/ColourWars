@@ -194,10 +194,10 @@ facts, and lists the open decisions on making the style achievable in a real
 paint program.
 The author's choices from it: assets are achievable in **Windows 98 Paint**, in
 24-bit colour, with at most **28 colours per level**, characters, team paint and
-HUD included, and no dithering by default. Each level owns exactly one team pair
-(2 slots), leaving 26 for everything else. The global team-colour option
-(`TeamColourPair`, chosen in Options) therefore goes: a level's definition names
-its pair, and the palette checks below become per level (`POL#28`).
+HUD included, and no dithering by default. The match's random team pair takes 2
+slots, leaving 26 for everything else, and those 26 must work with every pair.
+Whether the 26 are greys, greys with muted hues, or full colour waits on style
+mockups.
 
 Build the gameplay style first: a small reference containing a character, two
 contrasting weapons, a painted platform, background materials and effects.

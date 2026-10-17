@@ -38,7 +38,6 @@ questions in the polish sub-docs are superseded, not open.
 |---|---|---|---|---|
 | `POL#7` | OPEN | HIGH | M | Human review of character/team/tool readability in single- and four-player play, in the current arenas; re-check in Close Quarters (`POL#17`). E figure, action poses, masks, accents, grips, redraw and all five tools are implemented. [Painter](docs/polish-painter.md), [tools](docs/polish-tools.md). |
 | `POL#9` | OPEN | HIGH | XL | Material and prop kit, background layers, landmarks, room life for the warehouse direction, as part of the art style; fitted to Close Quarters (`POL#17`) later; collision silhouettes stay truthful. [§4](docs/polish-plan.md#environment-and-background). |
-| `POL#28` | OPEN | MED | M | Move team colours into the level: each level's definition names its one pair (2 of its 28 colours), and the global Options team-palette choice and random pair go. [§1](docs/polish-plan.md#1-establish-the-art-and-display-rules). |
 | `POL#16` | OPEN | MED | XL | Carry the style through accepted arenas after their blockouts; human presentation/readability review remains. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback

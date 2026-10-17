@@ -217,10 +217,14 @@ The accepted §1 rules ([polish-plan.md](polish-plan.md), [game/art/README.md](.
 
 - **Everything counts within the 28:** the level, the characters, the team paint
   colours and the HUD. Every colour on screen comes from that level's one colour box.
-- **Each level owns exactly one team pair**, which takes 2 of its 28 slots. That leaves
-  26 for everything else: terrain, background, characters, shadows and the HUD. The
-  global team-colour option goes, because a pair that isn't in a level's box can't
-  appear in it.
+- **The match's team pair takes 2 of the 28 slots**, leaving 26 for everything else:
+  terrain, background, characters, shadows and the HUD. The pair stays random per
+  match, as the [backstory](backstory.md#how-it-explains-the-game) says (the two
+  swatches this person hovered over), so each level's 26 must work with every
+  supported pair.
+- **Still open: what the 26 are.** Greys only (the backstory's grey picture), greys
+  with a few muted non-team hues, or full colour per level. Style mockups of all three
+  come first.
 
 ### Open decisions for the author
 
