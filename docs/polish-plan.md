@@ -156,10 +156,13 @@ before it is locked; this is the plan's sequence, not a list of soft gates.
    the painter and tools (`POL#7`), the player and shot cues (`POL#14`) and the
    material, prop and background kit (`POL#9`), judged in the current arenas.
    It is locked when §1's exit condition holds and the author accepts it.
-2. **Levels with movement.** Then the Close Quarters blockout (`POL#17`) is built
-   together with movement tuning (`POL#3`): the jump is tuned to the layout and
-   the layout to the jump, with neither frozen first. The kit is fitted to the
-   layout as it settles, and the other arenas (`POL#21`) follow.
+2. **Levels with movement and weapons.** Then the Close Quarters blockout
+   (`POL#17`) is built together with movement tuning (`POL#3`) and weapon tuning
+   (`POL#27`): the jump, the five tools' range, rate, damage, paint output and
+   supply, and the layout are each tuned against the other two, with none frozen
+   first. The §3 weapon-roles and fairness requirements are where the weapon
+   half is judged. The kit is fitted to the layout as it settles, and the other
+   arenas (`POL#21`) follow.
 
 UI artwork follows the gameplay style, as before. Audio, release and engine
 work are outside this sequence and keep their own rows.
@@ -275,7 +278,7 @@ copies, rebuild, and judge them in the game. The editor does not simulate play.
 | Verticality | Use height for route choice and tradeoffs. Important high ground needs a practical counter-route and escape options; it should not safely cover every route and spawn. |
 | Spawns | Keep four valid spawn positions per team with full character clearance. Give players room to orient and routes into play that an opponent cannot lock down from one firing position. Test repeated respawns under pressure. |
 | Painting | Budget exposed, reachable paintable surface by region, including walls and ceilings. Large safe home areas or awkward perimeter strips must not decide the result without meaningful contest. |
-| Weapon roles | Give short-range and roller play useful connected surfaces, and ranged weapons useful but contestable sightlines. Test all five existing weapons during blockout, even before their art is replaced. |
+| Weapon roles | Give short-range and roller play useful connected surfaces, and ranged weapons useful but contestable sightlines. Test all five existing weapons during blockout, even before their art is replaced, and retune their numbers with the layout and movement (`POL#27`) rather than only moving geometry around them. |
 | Pacing | Measure time to first contest, time back from spawn, unopposed painting stretches and recurring choke points. Adjust routes and dimensions using observed matches. |
 | Fairness | Swap teams and spawn sides with comparable loadouts. Investigate repeatable side or weapon advantages; a small set of wins alone does not establish balance. |
 | Readability | Players should recognise solid cover, jump-through platforms, ramps, paintable surfaces and decoration at speed. Camera framing must expose enough information to choose the next move. |
