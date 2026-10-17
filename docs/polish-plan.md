@@ -193,7 +193,8 @@ Windows 3.1 Paintbrush and Paint 95/98 looked like, their tools and their pixel
 facts, and lists the open decisions on making the style achievable in a real
 paint program.
 The author's choices from it: assets are achievable in **Windows 98 Paint**, in
-24-bit colour, with at most **28 colours per level**, and no dithering by default.
+24-bit colour, with at most **28 colours per level**, characters, team paint and
+HUD included, and no dithering by default.
 
 Build the gameplay style first: a small reference containing a character, two
 contrasting weapons, a painted platform, background materials and effects.

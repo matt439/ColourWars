@@ -215,9 +215,9 @@ The accepted §1 rules ([polish-plan.md](polish-plan.md), [game/art/README.md](.
 - **No dithering** by default: true colour wouldn't produce it. If it comes back, it
   comes back as a deliberate texture when the background kit (`POL#9`) is built.
 
-Still open: whether the characters, the team paint colours and the HUD count within a
-level's 28 or sit outside it as a shared set. That depends on how many colours the
-supported team palettes use.
+- **Everything counts within the 28:** the level, the characters, the team paint
+  colours and the HUD. Every colour on screen comes from that level's one colour box.
+  So the team colours each level supports take slots from its 28.
 
 ### Open decisions for the author
 
