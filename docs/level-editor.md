@@ -246,6 +246,10 @@ The manual GUI and saved-stage play checks below remain open (`ED#5`).
 For a manual GUI check, open each shipped arena, select a platform, move and
 resize it, edit a field, duplicate/delete, undo/redo, and save a copy. Reopen
 the copy and check its coordinates. Also check wheel zoom, middle-button pan,
-grid snapping and the unsaved-changes prompt on New, Open and Close. Rebuild
+grid snapping and the unsaved-changes prompt on New, Open and Close. Give a
+copy more than eight unknown resource names and check that Save and Save As
+list the first eight and "and N more", that No is the default and writes
+nothing, and that answering Yes to the unsaved-changes prompt on Close and then
+No here keeps the editor open. Rebuild
 and play a saved stage to check collisions, paintable faces, spawns, camera
 bounds and ramps. Document acceptance does not establish those play qualities.
