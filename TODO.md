@@ -28,8 +28,8 @@ questions in the polish sub-docs are superseded, not open.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#7` | BLOCKED | HIGH | M | Human review of character/team/tool readability in the reference composition; waits on the arena (`POL#17`). E figure, action poses, masks, accents, grips, redraw and all five tools are implemented. [Painter](docs/polish-painter.md), [tools](docs/polish-tools.md). |
-| `POL#9` | BLOCKED | HIGH | XL | Material and prop kit for the reference arena, background layers, landmarks, room life; collision silhouettes stay truthful. Waits on `POL#17`. [§4](docs/polish-plan.md#environment-and-background). |
+| `POL#7` | OPEN | HIGH | M | Human review of character/team/tool readability in single- and four-player play, in the current arenas; re-check in Close Quarters (`POL#17`). E figure, action poses, masks, accents, grips, redraw and all five tools are implemented. [Painter](docs/polish-painter.md), [tools](docs/polish-tools.md). |
+| `POL#9` | OPEN | HIGH | XL | Material and prop kit, background layers, landmarks, room life for the warehouse direction; fitted to Close Quarters (`POL#17`) as it lands; collision silhouettes stay truthful. [§4](docs/polish-plan.md#environment-and-background). |
 | `POL#16` | OPEN | MED | XL | Carry the style through accepted arenas after their blockouts; human presentation/readability review remains. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback
@@ -41,7 +41,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#3` | OPEN | MED | M | Ongoing movement tuning, provisional while levels and art develop; gates nothing. Keyboard/mouse: jump a bit floaty and high (`jump_*` candidates to try). Pad half with `ROAD#2`. [Playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
-| `POL#14` | BLOCKED | MED | M | Human review of the implemented player badges, aim/readiness and blocked-shot cues in the reference composition; waits on the arena (`POL#17`). [§8](docs/polish-plan.md#help-players-read-the-tool-and-the-fight). |
+| `POL#14` | OPEN | MED | M | Human review of the implemented player badges, aim/readiness and blocked-shot cues, in the current arenas; re-check in Close Quarters (`POL#17`). [§8](docs/polish-plan.md#help-players-read-the-tool-and-the-fight). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 

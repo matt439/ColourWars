@@ -139,9 +139,9 @@ also includes every action in all five hues and 28-pixel authoring samples.
 
 ## Remaining character work
 
-`POL#7` still owns the final human review of character/teammate readability in a coherent
-single- and four-player gameplay composition, after the reference-arena
-(`POL#17`) pass provides that composition. The [five-tool artwork and motion](polish-tools.md)
+`POL#7` still owns the human review of character/teammate readability in single- and
+four-player gameplay. It runs in the current arenas now; the reference arena
+(`POL#17`) is a re-check when it lands, not a precondition (author, 2026-10-17). The [five-tool artwork and motion](polish-tools.md)
 now use these hand attachments. The [quiet-detail increment](polish-plan.md#tool-personality-and-quiet-detail)
 adds independently phased breathing, blinks, weight shifts and acceleration/turn settling.
 Terrain, paint, effects and UI keep their

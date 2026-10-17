@@ -312,6 +312,10 @@ Keep collision silhouettes truthful. Decorative depth, foreground objects and
 surface effects must not conceal landing edges or suggest a route that cannot be
 used. Check the arena both clean and heavily painted with every team palette.
 
+The kit itself does not wait on the reference blockout (author, 2026-10-17):
+materials, props and background layers follow the art rules and the warehouse
+direction, and are fitted to Close Quarters once its layout exists.
+
 ### Characters and distinctive weapons
 
 The [production painter increments](polish-painter.md) implement `POL#7`'s artwork:
@@ -1062,8 +1066,9 @@ fallback under a system-only PATH. The 53-file ZIP contains all 26 reviewed
 runtime assets byte for byte and excludes source, debug and private audio.
 
 Accepted-arena artwork and human presentation/readability review remain
-`POL#16`. `POL#17`'s reference blockout gates `POL#9`'s material/prop work;
-movement-feel (`POL#3`) is ongoing tuning and gates neither (2026-10-17). Physical-controller and listening
+`POL#16`. `POL#9`'s material/prop kit proceeds alongside `POL#17`'s reference
+blockout and is fitted to it; movement-feel (`POL#3`) is ongoing tuning. Neither
+gates the other (2026-10-17). Physical-controller and listening
 acceptance retain their existing gates.
 
 Once the reference match meets its exit conditions, extend the approved character
@@ -1244,7 +1249,8 @@ without enlargement. Match timers, controls, shots and scoring are unchanged.
 opaque contrasting ink, border, duration and emphasis scale. The shared box
 needs no new atlas. The existing menu layouts carry the identity drawing;
 the full UI artwork pass remains `POL#16`. Human identification/readiness
-review remains `POL#14`, after `POL#17` supplies the reference composition.
+review remains `POL#14`, in the current arenas now and re-checked once `POL#17`
+supplies the reference composition.
 
 Validation on 2026-10-15: Debug and Release build under `/W4 /WX` and each pass
 all 21 consumer acceptance cases. The new case checks 1/2/4-player roster

@@ -3,8 +3,8 @@
 Implemented 2026-10-15, completing `POL#8`'s five-tool artwork and mechanism pass.
 The tools join the [E painter](polish-painter.md) in the accepted
 [Paint.exe drawing language](polish-plan.md#1-establish-the-art-and-display-rules).
-Human review of the reference composition remains `POL#7`, after the arena
-blockout (`POL#17`). These captures retain the existing arena, projectiles and HUD.
+Human readability review remains `POL#7`, in the current arenas now and
+re-checked once the reference blockout (`POL#17`) exists. These captures retain the existing arena, projectiles and HUD.
 
 ## Drawing and attachments
 
