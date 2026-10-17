@@ -7,6 +7,7 @@
 #include "game/debug/replay.h"
 #include "game/debug/tune_scope.h"
 #include "game/directory_consts.h"
+#include "game/objects/crude_drawing.h"
 #include "game/objects/level.h"
 #include "game/objects/level_builder.h"
 #include "game/objects/level_loaded_info.h"
@@ -786,6 +787,15 @@ namespace debug_console_acceptance
 		director.attach_match(match);
 		const StationLabelPresentation& look = presentation.debug_overlay().station_label;
 		const std::vector<LevelStation> stations = world.levels.get("movement_course")->stations();
+		// Shown is the presentation colour premultiplied; hidden is a tint that
+		// adds nothing under the engine's ONE, INV_SRC_ALPHA blend, which takes
+		// all four channels at zero. Alpha zero alone would add its rgb.
+		const labrador::Colour shown_tint = CrudeDrawing::premultiplied(look.colour);
+		const auto hidden = [&](int index)
+		{
+			const labrador::Colour tint = match.level->station_label(index).colour();
+			return tint.r == 0.0f && tint.g == 0.0f && tint.b == 0.0f && tint.a == 0.0f;
+		};
 		require(stations.size() == 10, "The course has eight stations and two spawns");
 
 		// The reference: the same seed and keys with the overlay never on.
@@ -811,19 +821,19 @@ namespace debug_console_acceptance
 			const LevelStation& station = stations[static_cast<std::size_t>(index)];
 			const mattmath::RectangleF bounds = label.bounds();
 			const mattmath::Vector2F expected = station.position + look.offset;
-			require(label.text() == labrador::widen(station.name) && label.colour() == look.colour,
-				station.name + " is labelled with its name in the station colour");
+			require(label.text() == labrador::widen(station.name) && label.colour() == shown_tint,
+				station.name + " is labelled with its name in the station colour, premultiplied");
 			require(std::fabs(bounds.x - expected.x) < 0.01f && std::fabs(bounds.y - expected.y) < 0.01f &&
 				bounds.width > 0.0f && bounds.height > 0.0f,
 				station.name + "'s label is a real box at the station plus the offset, which the scene culls by");
 		}
-		const auto visible = [&] { return level.station_label(0).colour().a > 0.0f; };
+		const auto visible = [&] { return level.station_label(0).colour() == shown_tint; };
 		for (int step = 0; step < length; ++step)
 		{
 			if (step == 100)
 			{
-				require(impl.execute("overlay stations").ok && level.station_label_count() == 10 && !visible() &&
-					level.station_label(9).colour().a == 0.0f, "Turned off, the labels stay and go transparent");
+				require(impl.execute("overlay stations").ok && level.station_label_count() == 10 && hidden(0) &&
+					hidden(9), "Turned off, the labels stay and take a tint that adds nothing");
 			}
 			if (step == 101)
 			{
@@ -838,13 +848,13 @@ namespace debug_console_acceptance
 
 		// Every build re-applies the overlay, and overlay none hides the labels.
 		match.build();
-		require(match.level->station_label_count() == 10 && match.level->station_label(0).colour() == look.colour,
+		require(match.level->station_label_count() == 10 && match.level->station_label(0).colour() == shown_tint,
 			"A rebuild shows the labels again");
-		require(impl.execute("overlay none").ok && match.level->station_label(0).colour().a == 0.0f,
+		require(impl.execute("overlay none").ok && hidden(0),
 			"overlay none hides them");
 		director.detach_match(match);
 		std::cout << "PASS overlay.stations: a Label per station in the Scene, at the station, made once, "
-			"hidden by colour, and the match unchanged by it\n";
+			"hidden by a zero tint, and the match unchanged by it\n";
 	}
 }
 #endif

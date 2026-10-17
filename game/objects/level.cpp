@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/objects/level.h"
 #include "game/debug/debug_overlay_draw.h"
+#include "game/objects/crude_drawing.h"
 #include "game/input_slots.h"
 #include "engine/render/text_encoding.h"
 
@@ -968,13 +969,14 @@ void Level::refresh_station_labels()
 		// and its retirements made, so the labels are all this tick ends.
 		this->scene_->end_tick();
 	}
-	// The scene cannot retire a Label and Label is final, so off is a
-	// transparent colour (docs/review/engine-reports.md, report 18).
-	Colour colour = look.colour;
-	if (!this->overlays_.stations)
-	{
-		colour.make_transparent();
-	}
+	// The scene cannot retire a Label and Label is final, so off is a tint
+	// that contributes nothing (docs/review/engine-reports.md, report 18).
+	// The blend is premultiplied (ONE, INV_SRC_ALPHA) and the texel is
+	// multiplied by the tint as given, so that tint is zero in all four
+	// channels: make_transparent() zeroes only alpha, and its rgb would be
+	// added over the world. On is premultiplied for the same reason.
+	const Colour colour = this->overlays_.stations ?
+		CrudeDrawing::premultiplied(look.colour) : Colour(0.0f, 0.0f, 0.0f, 0.0f);
 	for (std::size_t index = 0; index < this->station_labels_.size(); ++index)
 	{
 		Label& label = *this->station_labels_[index];

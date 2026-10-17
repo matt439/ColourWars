@@ -584,10 +584,10 @@ scaled display: this machine is at 100%, where nothing above is visible.
 [game/objects/level.cpp](../../game/objects/level.cpp), the Debug overlay
 `overlay.stations` and `labrador::Label`'s first client (gap audit D4). Each
 station's name is a `Label` the level's scene holds and culls by
-`Label::bounds()`. Turning the overlay off sets every label's colour
-transparent, and the `station_labels` case in
+`Label::bounds()`. Turning the overlay off sets every label's tint to zero
+in all four channels, and the `station_labels` case in
 [replay_checks.cpp](../../scripts/acceptance/debug_console/replay_checks.cpp)
-pins that the labels stay in the scene after that.
+pins that tint and that the labels stay in the scene after that.
 
 ### What happens
 
@@ -600,9 +600,16 @@ ways to make it optional:
   comment on `add`), so a `Label` lives as long as its scene. `GameObject`
   says an object "cannot report itself invisible: whether anything is drawn is
   a property of draw()". `Label` is `final`, though, so a client cannot write
-  the `draw()` that declines. What is left is a transparent colour, and the
-  scene still culls each hidden label and submits its glyphs, at alpha 0, to
-  every view it overlaps on every frame. The other route was making the
+  the `draw()` that declines. What is left is a tint that contributes
+  nothing, and the scene still culls each hidden label and submits its
+  glyphs, tinted to zero, to every view it overlaps on every frame. The
+  obvious call gives the wrong tint. `Colour::make_transparent()` zeroes
+  alpha and keeps rgb, and the engine blends premultiplied (ONE,
+  INV_SRC_ALPHA) and multiplies the texel by the tint as given, so a
+  yellow made transparent still adds its yellow glyphs over the world. The
+  first version of this exhibit did exactly that and its check passed,
+  because it tested only alpha. Hiding needs all four channels at zero
+  (`Colour(0, 0, 0, 0)`). The other route was making the
   labels lazily, on the overlay's first use. It needs an out-of-band
   `end_tick()` between world updates so that a paused match shows them. That
   is sound only because the client knows nothing else is pending then.
@@ -629,7 +636,7 @@ objects draw first, so a client can at least rely on it. The fuller answer is
 a per-object draw layer the cull loop respects. Exposing `set_font` on `Text`
 can go with either.
 
-An answer lets this repository delete the transparent-colour hide and the
+An answer lets this repository delete the zero-tint hide and the
 manual `end_tick()`. If a layer arrives, the station names can also sit over
 the low ceiling they label rather than beside it.
 

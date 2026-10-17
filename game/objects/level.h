@@ -200,7 +200,7 @@ private:
 	std::vector<LevelStation> stations_;
 	// Borrowed from scene_, one per stations_ entry once shown. The scene
 	// never retires an object that is not a collision object, so these live
-	// for the match; hiding them is a transparent colour.
+	// for the match; hiding them is a tint of zero in all four channels.
 	std::vector<labrador::Label*> station_labels_;
 
 	// Scene-owned geometry and players, which live for the whole match. Flying
