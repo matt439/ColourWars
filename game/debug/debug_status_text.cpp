@@ -77,7 +77,7 @@ std::vector<std::string> DebugDirectorImpl::status_lines() const
 	std::string overlays;
 	for (const auto& [name, on] : { std::pair<const char*, bool>{ "player", this->overlay_player_ },
 		{ "collision", this->overlay_collision_ }, { "camera", this->overlay_camera_ },
-		{ "paint", this->overlay_paint_ } })
+		{ "paint", this->overlay_paint_ }, { "stations", this->overlay_stations_ } })
 	{
 		overlays += on ? std::string(overlays.empty() ? "" : " ") + name : "";
 	}
@@ -183,7 +183,8 @@ std::string DebugDirectorImpl::status_strip() const
 	}
 	std::string overlays;
 	for (const auto& [name, on] : { std::pair<const char*, bool>{ "collision", this->overlay_collision_ },
-		{ "camera", this->overlay_camera_ }, { "paint", this->overlay_paint_ } })
+		{ "camera", this->overlay_camera_ }, { "paint", this->overlay_paint_ },
+		{ "stations", this->overlay_stations_ } })
 	{
 		overlays += on ? std::string(" ") + name : "";
 	}

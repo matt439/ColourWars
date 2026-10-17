@@ -135,7 +135,6 @@ frozen as above. These add to the hierarchies, never flatten them (CLAUDE.md); D
 |---|---|---|---|---|
 | `GAP#D1` | OPEN | MED | M | Give FocusGroup's per-slot cursors a client: a per-player menu page replacing team/weapon select's hand-rolled cursors; a misfit becomes a report. |
 | `GAP#D2` | OPEN | MED | M | No toggle/cycle/slider rows beyond OptionRow, no progress bar, no modal, no list-page base. |
-| `GAP#D4` | OPEN | MED | M | Use `labrador::Label` somewhere. |
 | `GAP#D5` | OPEN | MED | M | Rotated and moving structures behind the builder, one of each in a shipped stage, so the SAT and moving-response paths get a client. |
 
 ## Engine reports
@@ -159,6 +158,7 @@ engine master before filing, not the pin. Gap-audit Class 3 items not yet in the
 | `ENG#15` | OPEN | MED | S | File report 15: repeated runtime packaging and content staging; game asset/release policy stays here. [Report](docs/review/engine-reports.md#15-runtime-packaging-and-content-staging-are-repeated-in-the-client--draft-with-release-exhibit). |
 | `ENG#16` | OPEN | LOW | S | Recheck master and file report 16: windowed Apply shows a deliberately hidden window. [Report](docs/review/engine-reports.md#16-windowed-apply-shows-a-deliberately-hidden-window--draft-with-probe-exhibit). |
 | `ENG#17` | OPEN | LOW | S | File report 17: the Win32 window sizes its frame at system DPI and ignores `WM_DPICHANGED` once the client is per-monitor aware; answers OCA-66. [Report](docs/review/engine-reports.md#17-the-win32-window-ignores-dpi-once-the-client-opts-in--draft-with-manifest-exhibit). |
+| `ENG#18` | OPEN | LOW | S | Recheck master and file report 18: a `Label` in a `Scene` cannot be hidden (only a transparent colour) or drawn over collision objects. [Report](docs/review/engine-reports.md#18-a-label-in-a-scene-can-be-neither-hidden-nor-raised--draft-with-station-label-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console

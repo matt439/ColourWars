@@ -23,6 +23,8 @@
 #include "engine/render/colour.h"
 #include "engine/render/camera.h"
 #include "game/objects/level_overlays.h"
+#include "game/objects/level_station.h"
+#include "engine/render/label.h"
 #include "game/tuning.h"
 #include "game/objects/seat_input_filter.h"
 #include "game/objects/monitor.h"
@@ -78,6 +80,7 @@ public:
 		const labrador::AudioResources* audio_resources,
 		const PlaySettings* preferences,
 		const labrador::Mouse* mouse,
+		std::vector<LevelStation> stations,
 		OpeningMode opening, std::optional<float> duration = std::nullopt);
 
 	// Stop the level's voices and player weapon/redraw loops.
@@ -170,6 +173,11 @@ public:
 	std::wstring_view stage_entry_name() const;
 	mattmath::RectangleF stage_entry_bounds() const;
 	mattmath::RectangleF stage_entry_text_bounds() const;
+	// overlay.stations as the scene holds it: one Label per station, in
+	// LevelLoadedInfo::stations() order, made the first time the overlay is
+	// turned on and only hidden after that. None until then, so none in Release.
+	int station_label_count() const;
+	const labrador::Label& station_label(int index) const;
 	// Counts for the perf overlay, as of the last update.
 	int projectile_count() const;
 	int collision_object_count() const;
@@ -187,6 +195,13 @@ private:
 	std::vector<Player*> players_;
 	// Scene-owned cosmetics, advanced after final player contacts and muzzle repair.
 	std::vector<IdleDrip*> idle_drips_;
+
+	// What overlay.stations names: the authored stations, then the spawns.
+	std::vector<LevelStation> stations_;
+	// Borrowed from scene_, one per stations_ entry once shown. The scene
+	// never retires an object that is not a collision object, so these live
+	// for the match; hiding them is a transparent colour.
+	std::vector<labrador::Label*> station_labels_;
 
 	// Scene-owned geometry and players, which live for the whole match. Flying
 	// paint sweeps this list so its cost does not grow with other projectiles.
@@ -408,6 +423,9 @@ private:
 	// Runs on the worker that owns that view.
 	void draw_player_overlay(int view_index, labrador::DrawList& list) const;
 	void update_player_identity(float dt);
+	// Makes the labels on first use, then applies overlays_.stations and the
+	// current presentation (so tune is live). Main thread, between updates.
+	void refresh_station_labels();
 
 	void draw_countdown_text(labrador::DrawList& draw_list) const;
 	void draw_opening_card(labrador::DrawList& draw_list,

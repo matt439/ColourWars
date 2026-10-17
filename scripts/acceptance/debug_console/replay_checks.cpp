@@ -753,5 +753,98 @@ namespace debug_console_acceptance
 		std::cout << "PASS opening and reveal: full, quick, skipped by a seat in the match only, frozen "
 			"until GO, the reveal's length, intro overrides\n";
 	}
+
+	// overlay.stations on a real Level: one labrador::Label per station in
+	// the Level's Scene, at its authored place, made on first use and only
+	// hidden after that; and a match that shows and hides them plays out
+	// bit for bit as one that never does.
+	void check_station_labels(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"stations");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		CpuWorld world(game_directory, tuning, presentation);
+		GameData data;
+		data.set_stages(&world.stages);
+		data.set_level_infos(&world.levels);
+		DebugDirector director(&tuning, &presentation);
+		director.attach(nullptr, &data);
+		DebugDirectorImpl& impl = *director.impl();
+		impl.log().set_mirror_to_debugger(false);
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const float dt = 1.0f / 60.0f;
+		const int length = 400;
+
+		MatchRequest roster;
+		roster.stage = "movement_course";
+		roster.players = 2;
+		const MatchPlan plan = MatchPlanner(&world.stages).resolve(nullptr, roster,
+			MatchPlanner::ConnectedPads{}, [] { return 0u; });
+		require(plan.ok, "The stations roster resolves");
+		CpuMatch match(world, director);
+		match.settings = plan.settings;
+		director.attach_match(match);
+		const StationLabelPresentation& look = presentation.debug_overlay().station_label;
+		const std::vector<LevelStation> stations = world.levels.get("movement_course")->stations();
+		require(stations.size() == 10, "The course has eight stations and two spawns");
+
+		// The reference: the same seed and keys with the overlay never on.
+		std::srand(7);
+		match.build();
+		require(match.level->station_label_count() == 0, "A level makes no labels until overlay.stations");
+		for (int step = 0; step < length; ++step)
+		{
+			match.level->update(keyboard_step(step), dt);
+		}
+		require(match.level->station_label_count() == 0, "Nor does a match without the overlay");
+		const MatchFingerprint reference = MatchFingerprint::of(*match.level, length);
+
+		std::srand(7);
+		match.build();
+		Level& level = *match.level;
+		require(impl.execute("overlay stations").ok && level.station_label_count() == 10,
+			"overlay stations makes one label per station before any update, as a paused match needs");
+		require(impl.status_strip().find("stations") != std::string::npos, "The strip names the overlay");
+		for (int index = 0; index < level.station_label_count(); ++index)
+		{
+			const labrador::Label& label = level.station_label(index);
+			const LevelStation& station = stations[static_cast<std::size_t>(index)];
+			const mattmath::RectangleF bounds = label.bounds();
+			const mattmath::Vector2F expected = station.position + look.offset;
+			require(label.text() == labrador::widen(station.name) && label.colour() == look.colour,
+				station.name + " is labelled with its name in the station colour");
+			require(std::fabs(bounds.x - expected.x) < 0.01f && std::fabs(bounds.y - expected.y) < 0.01f &&
+				bounds.width > 0.0f && bounds.height > 0.0f,
+				station.name + "'s label is a real box at the station plus the offset, which the scene culls by");
+		}
+		const auto visible = [&] { return level.station_label(0).colour().a > 0.0f; };
+		for (int step = 0; step < length; ++step)
+		{
+			if (step == 100)
+			{
+				require(impl.execute("overlay stations").ok && level.station_label_count() == 10 && !visible() &&
+					level.station_label(9).colour().a == 0.0f, "Turned off, the labels stay and go transparent");
+			}
+			if (step == 101)
+			{
+				require(impl.execute("overlay.stations on").ok && level.station_label_count() == 10 && visible(),
+					"Turned on again, the same labels show and none are added");
+			}
+			match.level->update(keyboard_step(step), dt);
+		}
+		const MatchFingerprint shown = MatchFingerprint::of(level, length);
+		require(shown.hash == reference.hash,
+			"Labels in the scene change nothing in the match: " + MatchFingerprint::difference(reference, shown));
+
+		// Every build re-applies the overlay, and overlay none hides the labels.
+		match.build();
+		require(match.level->station_label_count() == 10 && match.level->station_label(0).colour() == look.colour,
+			"A rebuild shows the labels again");
+		require(impl.execute("overlay none").ok && match.level->station_label(0).colour().a == 0.0f,
+			"overlay none hides them");
+		director.detach_match(match);
+		std::cout << "PASS overlay.stations: a Label per station in the Scene, at the station, made once, "
+			"hidden by colour, and the match unchanged by it\n";
+	}
 }
 #endif

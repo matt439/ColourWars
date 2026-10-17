@@ -253,6 +253,7 @@ private:
 	bool overlay_collision_ = false;
 	bool overlay_camera_ = false;
 	bool overlay_paint_ = false;
+	bool overlay_stations_ = false;
 	bool god_ = false;
 	bool infinite_ammo_ = false;
 
@@ -291,6 +292,9 @@ private:
 	void log_match(const MatchPlan& plan, const std::string& how);
 
 	void apply_overlays(bool player_text_changed);
+	// The level's share of the overlay variables (player text and paint are
+	// pushed or drawn separately).
+	LevelOverlays level_overlays() const;
 	void apply_cheats();
 	DebugStatus apply_goto(DebugMatchTarget& match, const std::string& station, int seat);
 

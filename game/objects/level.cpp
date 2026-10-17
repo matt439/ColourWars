@@ -2,6 +2,7 @@
 #include "game/objects/level.h"
 #include "game/debug/debug_overlay_draw.h"
 #include "game/input_slots.h"
+#include "engine/render/text_encoding.h"
 
 using namespace mattmath;
 using namespace DirectX;
@@ -29,9 +30,11 @@ Level::Level(std::unique_ptr<Scene> scene,
 	const PlaySettings* preferences,
 	// Disambiguate from DirectX::Mouse.
 	const labrador::Mouse* mouse,
+	std::vector<LevelStation> stations,
 	OpeningMode opening, std::optional<float> duration) :
 	scene_(std::move(scene)),
 	players_(std::move(players)),
+	stations_(std::move(stations)),
 	viewport_dividers_(std::move(viewport_dividers)),
 	music_volume_(music_volume),
 	end_sting_volume_(end_sting_volume),
@@ -693,6 +696,7 @@ void Level::set_debug_frame_time(double frame_ms)
 
 void Level::refresh_layout()
 {
+	this->refresh_station_labels();
 	const Vector2F size = this->resolution_manager_->resolution_vec();
 	if (size == this->layout_size_)
 	{
@@ -851,7 +855,7 @@ void Level::draw_player_overlay(int view_index, DrawList& list) const
 	}
 
 	// Developer overlays, in world space under the HUD. Never on in Release.
-	if (this->overlays_.any())
+	if (this->overlays_.any_pane())
 	{
 		debug_overlay::draw_pane(list, this->overlays_, *this->scene_,
 			this->scene_->view(view_index), *player, this->camera_bounds_,
@@ -945,6 +949,49 @@ const BlockedShotFeedback& Level::blocked_shot_feedback() const
 void Level::set_overlays(const LevelOverlays& overlays)
 {
 	this->overlays_ = overlays;
+	this->refresh_station_labels();
+}
+
+void Level::refresh_station_labels()
+{
+	const StationLabelPresentation& look = this->presentation_->debug_overlay().station_label;
+	if (this->overlays_.stations && this->station_labels_.empty() && !this->stations_.empty())
+	{
+		for (const LevelStation& station : this->stations_)
+		{
+			this->station_labels_.push_back(this->scene_->add(std::make_unique<Label>(
+				widen(station.name), look.font, station.position + look.offset,
+				this->render_resources_, look.colour, look.scale)));
+		}
+		// Admit them now, so a paused match shows them too. This runs between
+		// world updates, when every tick's own additions have been admitted
+		// and its retirements made, so the labels are all this tick ends.
+		this->scene_->end_tick();
+	}
+	// The scene cannot retire a Label and Label is final, so off is a
+	// transparent colour (docs/review/engine-reports.md, report 18).
+	Colour colour = look.colour;
+	if (!this->overlays_.stations)
+	{
+		colour.make_transparent();
+	}
+	for (std::size_t index = 0; index < this->station_labels_.size(); ++index)
+	{
+		Label& label = *this->station_labels_[index];
+		label.set_position(this->stations_[index].position + look.offset);
+		label.set_scale(look.scale);
+		label.set_colour(colour);
+	}
+}
+
+int Level::station_label_count() const
+{
+	return static_cast<int>(this->station_labels_.size());
+}
+
+const Label& Level::station_label(int index) const
+{
+	return *this->station_labels_.at(static_cast<std::size_t>(index));
 }
 
 void Level::set_seat_labels(std::vector<std::wstring> labels)

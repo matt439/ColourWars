@@ -81,7 +81,7 @@ void debug_overlay::draw_pane(DrawList& list, const LevelOverlays& overlays,
 	const RectangleF& camera_bounds, const SpriteSheet& sheet,
 	SpriteSheet::frame_handle fill)
 {
-	if (!overlays.any() || view.camera.scale <= 0.0f)
+	if (!overlays.any_pane() || view.camera.scale <= 0.0f)
 	{
 		return;
 	}

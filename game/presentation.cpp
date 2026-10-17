@@ -1691,6 +1691,11 @@ namespace
 		debug.shadow_colour = read_colour(json, "shadow_colour");
 		debug.shadow_offset = read_vector(json, "shadow_offset");
 		debug.shadow_scale = json.number("shadow_scale");
+		const JsonValue station = json.object("station_label");
+		debug.station_label.font = station.string("font");
+		debug.station_label.scale = read_positive(station, "scale");
+		debug.station_label.offset = read_vector(station, "offset");
+		debug.station_label.colour = read_colour(station, "colour");
 		return debug;
 	}
 }
@@ -2012,6 +2017,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.font("results_menu.contribution_font", this->results_menu_.contribution_font);
 	check.font("prompt_bar.font", this->prompt_bar_.font);
 	check.font("debug_overlay.font", this->debug_overlay_.font);
+	check.font("debug_overlay.station_label.font", this->debug_overlay_.station_label.font);
 	check.font("hud.timer.font", this->hud_.timer_font);
 	const auto check_menu_line = [&](const std::string& key, const std::wstring& text,
 		const std::string& font, const Vector2F& position, float bottom, const Vector2F& shadow)

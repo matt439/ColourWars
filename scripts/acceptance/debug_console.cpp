@@ -188,6 +188,7 @@ int main(int argc, char** argv)
 			check_replay_codec();
 			replay_case = check_replay_cpu_match(game_directory);
 			check_opening(game_directory);
+			check_station_labels(game_directory);
 		}
 		catch (...)
 		{

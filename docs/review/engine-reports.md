@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Ten are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15, 16, 17). Seven are closed** and kept below as one paragraph
+> **Eleven are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18). Seven are closed** and kept below as one paragraph
 > each — what was asked, what shipped, and what this repository spent the
 > answer on.
 >
@@ -578,6 +578,65 @@ scaled display: this machine is at 100%, where nothing above is visible.
 
 ---
 
+## 18. A `Label` in a `Scene` can be neither hidden nor raised — **draft with station-label exhibit**
+
+**Exhibit:** `Level::refresh_station_labels` in
+[game/objects/level.cpp](../../game/objects/level.cpp), the Debug overlay
+`overlay.stations` and `labrador::Label`'s first client (gap audit D4). Each
+station's name is a `Label` the level's scene holds and culls by
+`Label::bounds()`. Turning the overlay off sets every label's colour
+transparent, and the `station_labels` case in
+[replay_checks.cpp](../../scripts/acceptance/debug_console/replay_checks.cpp)
+pins that the labels stay in the scene after that.
+
+### What happens
+
+Checked against the pin, `52e809a`, on 2026-10-17. Optional text in the world
+is ordinary: a name tag, a debug label, a sign that shows when a player is
+near. `Label` is the type for it, and two facts take away both of the usual
+ways to make it optional:
+
+- **No off switch.** `Scene` retires only collision objects (`scene.h`, the
+  comment on `add`), so a `Label` lives as long as its scene. `GameObject`
+  says an object "cannot report itself invisible: whether anything is drawn is
+  a property of draw()". `Label` is `final`, though, so a client cannot write
+  the `draw()` that declines. What is left is a transparent colour, and the
+  scene still culls each hidden label and submits its glyphs, at alpha 0, to
+  every view it overlaps on every frame. The other route was making the
+  labels lazily, on the overlay's first use. It needs an out-of-band
+  `end_tick()` between world updates so that a paused match shows them. That
+  is sound only because the client knows nothing else is pending then.
+- **No place in the draw order.** `Scene::draw_views` draws every
+  non-collision object, then every collision object. `renderer.h` says
+  `layer_depth` orders nothing. So a `Label`, which can only join the first
+  list, always draws under every structure, player and projectile. Text that
+  must read over the geometry has to leave the scene for the `ViewOverlay`
+  callback, which neither holds nor culls it: the two things `Label` exists to
+  add to `Text`.
+
+A smaller third point: `Text` exposes `set_text`, `set_colour`, `set_scale`
+and `set_position` but not `set_font`, so a live font change means making a
+new label, and the scene cannot give the old one back.
+
+### The ask, when it goes
+
+Either of two things lets a client switch a held object off. One is a
+visibility flag on `Label` (or on `GameObject`, which the cull loop could test
+before `cull_bounds`). The other is retirement for any scene object, by the
+same `for_deletion` request collision objects already have. For order, the
+smallest step is one sentence in `scene.h` promising that non-collision
+objects draw first, so a client can at least rely on it. The fuller answer is
+a per-object draw layer the cull loop respects. Exposing `set_font` on `Text`
+can go with either.
+
+An answer lets this repository delete the transparent-colour hide and the
+manual `end_tick()`. If a layer arrives, the station names can also sit over
+the low ceiling they label rather than beside it.
+
+**Status:** unfiled draft against the pin. Recheck engine master before filing.
+
+---
+
 # Closed
 
 Seven reports, all answered, all spent here. Kept as outcomes rather than as
@@ -814,9 +873,12 @@ changed none of the facts.
 
 - **`Scene::contacts()` having no reader** (`scene.h:200`) and
   **`labrador::Label` having no client** (`engine/render/label.h:26` — it
-  moved out of `scene/`). Still true, and still not engine defects. They are
-  things this client has not got round to exercising, which is a debt this
-  repository owes the engine rather than the other way round.
+  moved out of `scene/`). Neither was an engine defect. Both were things this
+  client had not got round to exercising, a debt this repository owed the
+  engine rather than the other way round, and both are now paid.
+  `Level::update_level_logic` hands `contacts()` to every player's
+  `end_contacts`. The Debug overlay `overlay.stations` holds one `Label` per
+  station in the level's scene. Using `Label` turned up report 18 above.
 
   A third item, the anti-tunnelling bound never being evaluated, is now paid.
   `game/tunnelling_limits.cpp` evaluates `can_tunnel` at startup, and on Debug

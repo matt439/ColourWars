@@ -145,8 +145,8 @@ running.
 | `weapon <seat\|all> <sprayer\|sniper\|roller\|mister\|bucket\|random>` | a seat's weapon (seats are 1-4) |
 | `intro <auto\|full\|quick\|off>` | how the next match begins: `auto` is the game's choice (the whole intro on a match's first build, the quick one from the colour preview on a rematch), `off` starts at the split-screen countdown. `record` and `play`, and any one-player match, always build without one (variable) |
 | `feedback <on\|off\|toggle>` | movement feedback (variable; `1`/`0` too). Immediate |
-| `overlay [player\|collision\|camera\|paint\|perf\|all\|none]` | toggle one [overlay](#overlays), or all on/off (`all` leaves `perf` alone, `none` clears it); alone, list them |
-| `overlay.player`, `overlay.collision`, `overlay.camera`, `overlay.paint`, `overlay.perf` `<on\|off\|toggle>` | the overlays as variables |
+| `overlay [player\|collision\|camera\|paint\|stations\|perf\|all\|none]` | toggle one [overlay](#overlays), or all on/off (`all` leaves `perf` alone, `none` clears it); alone, list them |
+| `overlay.player`, `overlay.collision`, `overlay.camera`, `overlay.paint`, `overlay.stations`, `overlay.perf` `<on\|off\|toggle>` | the overlays as variables |
 | `goto <station> [seat]` | put a seat (default 1) at a named [station](#stations-and-goto), at rest |
 | `respawn [seat\|all]` | respawn a seat or every seat now (default all) |
 | `kill [seat\|all]` | splat a seat or every seat (default all), god or not, to watch the respawn redraw |
@@ -231,7 +231,7 @@ registry as a menu page: the same entries as the console, grouped.
 |---|---|
 | match | intro, menu, players, restart, stage, weapon |
 | player | ammo, bot (picker: `bot all <behaviour>`), god, goto, kill, respawn |
-| view | feedback, overlay, overlay.camera, overlay.collision, overlay.paint, overlay.perf, overlay.player |
+| view | feedback, overlay, overlay.camera, overlay.collision, overlay.paint, overlay.perf, overlay.player, overlay.stations |
 | time | pause, step, timescale |
 | tuning | the `tuning` and `presentation` trees, then tune.diff, tune.reset, tune.save |
 | replay | checksum, play (picker over the recordings), record, replays |
@@ -274,6 +274,7 @@ label.
 | `overlay.collision` | per pane: the collision shape of every object in view (structures white, paintables green, jump-throughs cyan, ramps orange with their slope, players in their team colour, projectiles yellow) and the out-of-bounds edge in red |
 | `overlay.camera` | per pane: the camera's scroll border (magenta; the player moves inside it before the camera follows), the camera bounds (blue) and a cross at the followed centre |
 | `overlay.paint` | bottom left: paint coverage per team and per seat, as a share of the paintable area, live. When a narrow window cannot hold it and the bottom-right status strip on one row, the strip moves above it |
+| `overlay.stations` | in the world: every [station](#stations-and-goto)'s name, the spawns included, above the place `goto` puts a player. The names are `labrador::Label` objects in the level's scene, made the first time the overlay is turned on and hidden by a transparent colour after that, so they draw wherever the world is drawn (the intro picture and the overview too) and under structures and players. Font, scale, offset and colour are `presentation.debug_overlay.station_label`; scale and offset tune live. No default key |
 | `overlay.perf` | bottom left, above the paint panel: the [perf](#perf) graph and numbers. Not part of `overlay all` |
 
 They are set from the console, the debug menu, launch arguments (`+overlay all`)

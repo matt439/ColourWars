@@ -229,7 +229,7 @@ OpeningMode DebugDirectorImpl::opening_mode(OpeningMode chosen) const
 
 void DebugDirectorImpl::after_level_build(DebugMatchTarget& match)
 {
-	match.debug_set_overlays({ this->overlay_collision_, this->overlay_camera_ });
+	match.debug_set_overlays(this->level_overlays());
 	// New players start with their text off; only overlay.player turns it on.
 	if (this->overlay_player_)
 	{

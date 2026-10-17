@@ -102,5 +102,6 @@ std::unique_ptr<Level>
 		this->audio_resources_,
 		this->preferences_,
 		this->mouse_,
+		load_info->stations(),
 		opening, settings.duration());
 }

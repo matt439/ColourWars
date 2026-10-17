@@ -585,6 +585,17 @@ struct HudPresentation
 	float player_identity_reference_width = 1920.0f;
 };
 
+// overlay.stations: each station's name in world units, its top-left at the
+// station's position (a character's top-left) plus offset. The font is taken
+// when a level first shows the names; scale, offset and colour on every toggle.
+struct StationLabelPresentation
+{
+	std::string font;
+	float scale = 1.0f;
+	mattmath::Vector2F offset = { 0.0f, 0.0f };
+	labrador::Colour colour = labrador::Colour::black;
+};
+
 struct DebugOverlayPresentation
 {
 	std::string font;
@@ -595,6 +606,7 @@ struct DebugOverlayPresentation
 	labrador::Colour shadow_colour = labrador::Colour::black;
 	mattmath::Vector2F shadow_offset = { 0.0f, 0.0f };
 	float shadow_scale = 1.0f;
+	StationLabelPresentation station_label;
 };
 
 struct MovementBurstPresentation

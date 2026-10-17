@@ -898,6 +898,12 @@
     "colour": "LIGHT_GRAY",
     "shadow_colour": "BLACK",
     "shadow_offset": { "x": 1.0, "y": 1.0 },
-    "shadow_scale": 1.0
+    "shadow_scale": 1.0,
+    "station_label": {
+      "font": "courier_new_bold_16",
+      "scale": 1.0,
+      "offset": { "x": 0.0, "y": -76.0 },
+      "colour": "YELLOW"
+    }
   }
 }
