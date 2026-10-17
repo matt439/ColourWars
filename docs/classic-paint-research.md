@@ -204,7 +204,24 @@ The accepted §1 rules ([polish-plan.md](polish-plan.md), [game/art/README.md](.
 | **Black keyline under paint** | Pencil or Line at width 1 in black, then Fill. Or 95/98 outline+fill with black as foreground. In 3.1, filled shapes with **black as the background** colour. Paint recolouring with the eraser's right‑drag (95/98) or the Color Eraser (3.1) keeps the keyline intact. | Keyline in whole pixels (1 px at source, so 4 screen px at 400%). Fills butt hard against the keyline with no halo. The keyline must be **closed**, or the fill leaks. "Under paint" means paint pixels overwrite flat colour but stop at, or sit on, the black line: there is no blended edge. |
 | **Box‑head figures, E with head accent** | Rectangle (outline+fill) for head and body, Pencil for features, Curve for limbs or tools. The head accent is a Fill or eraser‑right‑drag swap in the team colour. | Figure colours drawn from a fixed palette. A team swap is an exact‑colour replace, which needs **dedicated key colours** in the source (the repo already separates exact paint‑material IDs). Mouse wobble is allowed, but every edge stays a hard cell. |
 
+### Decided by the author (2026-10-17)
+
+- **Version: Paint 98.** Assets should be achievable with Windows 98 Paint's tools,
+  presets and limits. jspaint's Windows 98 model is the working reference.
+- **Colour: 24-bit true colour, 28 swatches per level.** Any RGB value is allowed, but a
+  level uses at most 28 colours, the size of the colour box, as if it were drawn from
+  one saved .pal. Each level therefore gets its own restricted look. 16-bit was rejected
+  because it changes nothing visible in flat, unantialiased art.
+- **No dithering** by default: true colour wouldn't produce it. If it comes back, it
+  comes back as a deliberate texture when the background kit (`POL#9`) is built.
+
+Still open: whether the characters, the team paint colours and the HUD count within a
+level's 28 or sit outside it as a shared set. That depends on how many colours the
+supported team palettes use.
+
 ### Open decisions for the author
+
+Items 1, 2 and 5 below are answered above; they stay as the reasoning that was offered.
 
 1. **Which version to be faithful to.** *Recommendation: Paint 95/98 (MSPAINT 4.x), using jspaint ([jspaint.app](https://jspaint.app)) as the practical working tool.* Reasons:
    - Its 28‑colour palette is verified from the actual binary.
