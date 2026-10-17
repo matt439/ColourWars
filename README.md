@@ -232,8 +232,9 @@ Check runtime startup separately, preferably against the extracted Release ZIP:
 ./scripts/check-startup.ps1 -Executable C:/Games/ColourWars/ColourWars.exe -SystemOnlyPath
 ```
 
-It starts hidden from an unrelated directory with an isolated save, checks the
-game window and diagnostics, then closes gracefully. CI requires Debug startup
+It checks the executable's version stamp, starts it hidden from an unrelated
+directory with an isolated save, checks the game window and diagnostics, then
+closes gracefully. CI requires Debug startup
 (the engine supports software rendering there). Release startup may be explicitly
 skipped only for the engine's exact missing-hardware-adapter error; all application
 failures fail CI. Local checks default to requiring startup. These automated
@@ -278,7 +279,11 @@ The title screen displays the game revision and build configuration.
 `build-info.txt` also records the full game and engine revisions and selected
 backends. The identifier refreshes on every build, with `-dirty` for local
 changes and `source-archive` when Git metadata is unavailable. Rebuild after
-committing to produce a package labelled with that commit.
+committing to produce a package labelled with that commit. The release version
+is `project(VERSION)` in the root `CMakeLists.txt`; it is CPack's package version,
+heads `build-info.txt` and is stamped into `ColourWars.exe` (Properties >
+Details). CI keeps each passing Release ZIP as the `ColourWars-windows-x64` run
+artifact.
 
 Only the assets listed in [cmake/runtime_assets.cmake](cmake/runtime_assets.cmake)
 are staged and packaged; configure checks that the list matches the runtime manifest.

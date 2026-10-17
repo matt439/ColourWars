@@ -177,6 +177,16 @@ jobs:
             Move-Item -LiteralPath $backup -Destination $bank
           }
 
+      # Only a ZIP that passed inspection, its version stamp and startup.
+      - name: Upload Release package
+        if: matrix.preset == 'x64-release'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ColourWars-windows-x64
+          path: out/build/x64-release/packages/ColourWars-windows-x64.zip
+          if-no-files-found: error
+          retention-days: 14
+
       - name: Upload startup evidence
         if: always()
         uses: actions/upload-artifact@v4

@@ -122,12 +122,27 @@ $result = [ordered]@{
     executable = $executablePath
     working_directory = $workingDirectory
     profile = $profileDirectory
+    version = ''
     audio_expectation = $(if ($RequireAudio) { 'published-bank' } elseif ($RequireNoAudio) { 'missing-bank' } else { 'optional' })
     outcome = 'failed'
     diagnostic = ''
 }
 $failure = $null
 try {
+    # game/resource.rc stamps project(VERSION) from the root CMakeLists.txt.
+    $project = Get-Content -Raw -LiteralPath (Join-Path $PSScriptRoot '../CMakeLists.txt')
+    if ($project -notmatch 'project\(ColourWars VERSION (\d+\.\d+\.\d+)') {
+        throw 'The root CMakeLists.txt does not declare project(ColourWars VERSION x.y.z).'
+    }
+    $expectedVersion = $Matches[1]
+    $version = (Get-Item -LiteralPath $executablePath).VersionInfo
+    $result.version = $version.ProductVersion
+    if ($version.ProductName -cne 'ColourWars' -or $version.CompanyName -cne 'Matt Harding' -or
+        $version.FileVersion -cne $expectedVersion -or $version.ProductVersion -cne $expectedVersion -or
+        "$($version.FileMajorPart).$($version.FileMinorPart).$($version.FileBuildPart)" -cne $expectedVersion) {
+        throw "The executable's version resource is not stamped $expectedVersion (found '$($version.ProductName)' '$($version.FileVersion)')."
+    }
+
     # Launch hidden and enumerate by class: MainWindowHandle ignores hidden
     # windows and could otherwise mistake an error MessageBox for the game.
     $env:LOCALAPPDATA = $profileDirectory

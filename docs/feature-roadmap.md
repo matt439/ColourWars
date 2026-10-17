@@ -177,6 +177,11 @@ Implemented:
 - The title screen shows the game revision and build configuration.
   `build-info.txt` records full game/engine revisions and backends. Metadata
   refreshes on each build, including local-change markers.
+- The executable carries a VERSIONINFO resource stamped from the root
+  `project(VERSION)`, the number CPack also uses; `check-startup.ps1` fails an
+  executable that is not stamped with it. CI keeps the inspected, started Release
+  ZIP as the `ColourWars-windows-x64` run artifact for 14 days. No tag or release
+  job exists yet.
 
 Original package validation: Debug and Release builds; ZIP extraction into a temporary directory
 outside the checkout; all 16 packaged assets matched against their sources; no

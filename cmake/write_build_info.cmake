@@ -28,7 +28,7 @@ endfunction()
 read_revision("${SOURCE_DIR}" game)
 read_revision("${SOURCE_DIR}/external/labrador" engine)
 set(BUILD_LABEL "Build ${game_short} / ${CONFIG}")
-set(BUILD_DETAILS "ColourWars: ${game_full}\nLabrador: ${engine_full}\nConfiguration: ${CONFIG}\nRender: ${RENDER_BACKEND}\nAudio: ${AUDIO_BACKEND}\n")
+set(BUILD_DETAILS "Version: ${VERSION}\nColourWars: ${game_full}\nLabrador: ${engine_full}\nConfiguration: ${CONFIG}\nRender: ${RENDER_BACKEND}\nAudio: ${AUDIO_BACKEND}\n")
 file(MAKE_DIRECTORY "${OUTPUT_DIR}/game")
 configure_file("${SOURCE_DIR}/cmake/build_info.h.in"
     "${OUTPUT_DIR}/game/build_info.h" @ONLY)

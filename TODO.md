@@ -93,7 +93,7 @@ here.
 | `ROAD#4` | DEFERRED | LOW | M | A pad that returns in a different XInput slot cannot reclaim its player mid-match. Deferred until it proves inconvenient. [First increment](docs/feature-roadmap.md#first-increment-explicit-joining-and-reconnect-pause). |
 | `POL#24` | BLOCKED | MED | M | The finish review and fresh-player observations on the reference match; the gate before production widens. Waits on the reference arena (`POL#17`). |
 | `POL#25` | OPEN | MED | M | Qualify [visible, uncontended frame pacing](docs/polish-frame-pacing.md) against 60 fps on a recorded reference machine and set the supported hardware baseline. |
-| `GAP#7.6` | OPEN | LOW | S | Release identity: no VERSIONINFO, the stock `directx.ico`, no tags, no release job, no CI artifact upload. The ZIP and build stamp are done. |
+| `GAP#7.6` | BLOCKED | LOW | S | Release identity: the stock `directx.ico` waits on the gameplay style lock (`POL#7`, `POL#14`, `POL#9`); the first tag and any release job are the author's. VERSIONINFO, the ZIP, the build stamp and the CI ZIP artifact are done. |
 
 ## Game gaps
 
