@@ -812,12 +812,26 @@ changed none of the facts.
   second client should re-derive it — and is a small ask best made alongside
   something else.
 
-- **`Scene::contacts()` having no reader** (`scene.h:200`), **`labrador::Label`
-  having no client** (`engine/render/label.h:26` — it moved out of `scene/`),
-  and the anti-tunnelling bound never being evaluated. Still true, and still
-  not engine defects. They are things this client has not got round to
-  exercising, which is a debt this repository owes the engine rather than the
-  other way round.
+- **`Scene::contacts()` having no reader** (`scene.h:200`) and
+  **`labrador::Label` having no client** (`engine/render/label.h:26` — it
+  moved out of `scene/`). Still true, and still not engine defects. They are
+  things this client has not got round to exercising, which is a debt this
+  repository owes the engine rather than the other way round.
+
+  A third item, the anti-tunnelling bound never being evaluated, is now paid.
+  `game/tunnelling_limits.cpp` evaluates `can_tunnel` at startup, and on Debug
+  `reload` and `tune`, for every object in every stage against a player at its
+  speed cap. The step it uses is `SIMULATION_HZ` (`game/simulation.h`), the
+  same value `main.cpp` passes to the engine as `target_fps`. The row that
+  asked for the check also said "the sniper's 2000 u/s already exceeds it",
+  but that has been stale since `70efadf` added `Projectile::resolve_sweep`.
+  Every projectile kind except the roller tests its whole path each step, and
+  the roller never moves (`is_swept`, `projectile_type.h`). The `tunnelling`
+  acceptance case fires a jet at the 5000 u/s cap at a 10-unit slab, a case
+  the bound reports as unsafe, and the sweep still stops the jet at the slab.
+  No report follows. T3 declined continuous collision, and `tunnelling.h`
+  tells a discrete client to "separately test the trajectories that matter".
+  The sweep is that test, written where the trajectories are known.
 
 ---
 

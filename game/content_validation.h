@@ -10,8 +10,9 @@
 #include "game/tuning.h"
 
 // Every startup check that needs the loaded assets: tuning and presentation
-// resource names, each stage's object construction and match sounds, and the
-// authored text against its fonts. Throws with source context on the first
+// resource names, each stage's object construction, match sounds and
+// anti-tunnelling bound (game/tunnelling_limits.h), and the authored text
+// against its fonts. Throws with source context on the first
 // problem. Shared by wWinMain and the Debug `reload` command, which runs it on
 // candidate content before swapping it in.
 void validate_game_content(const GameTuning& tuning, const Presentation& presentation,

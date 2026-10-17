@@ -14,6 +14,7 @@ add_executable(ColourWars WIN32
     save.cpp
     session.cpp
     tuning.cpp
+    tunnelling_limits.cpp
 
     debug/bind_commands.cpp
     debug/bot.cpp

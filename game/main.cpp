@@ -13,6 +13,7 @@
 #include "game/tuning.h"
 #include "game/states/game_states.h"
 #include "game/save.h"
+#include "game/simulation.h"
 #include <cstdlib>
 #include <ctime>
 #include <string>
@@ -45,7 +46,7 @@ int WINAPI wWinMain(_In_ HINSTANCE, _In_opt_ HINSTANCE, _In_ LPWSTR, _In_ int)
 		options.window_title = L"Colour Wars";
 		options.resolution = save.resolution();
 		options.fullscreen = save.fullscreen();
-		options.target_fps = 60;
+		options.target_fps = SIMULATION_HZ;
 		options.max_threads = 16;
 
 		// Declare borrowed game resources before Application so they outlive its states.

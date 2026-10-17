@@ -135,7 +135,6 @@ frozen as above. These add to the hierarchies, never flatten them (CLAUDE.md); D
 |---|---|---|---|---|
 | `GAP#D1` | OPEN | MED | M | Give FocusGroup's per-slot cursors a client: a per-player menu page replacing team/weapon select's hand-rolled cursors; a misfit becomes a report. |
 | `GAP#D2` | OPEN | MED | M | No toggle/cycle/slider rows beyond OptionRow, no progress bar, no modal, no list-page base. |
-| `GAP#D3` | OPEN | MED | M | Check the engine's anti-tunnelling bound at tuning load and against real geometry; the sniper's 2000 u/s already exceeds it. |
 | `GAP#D4` | OPEN | MED | M | Use `labrador::Label` somewhere. |
 | `GAP#D5` | OPEN | MED | M | Rotated and moving structures behind the builder, one of each in a shipped stage, so the SAT and moving-response paths get a client. |
 

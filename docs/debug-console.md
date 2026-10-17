@@ -192,8 +192,8 @@ a dummy match returns to setup pages that wait for those seats; back out to the
 player count.
 
 **Reload** validates the new files with the same checks startup runs (resource
-names, every stage's objects, stations and sounds, fonts). On an error it prints
-the reason and keeps the current values. In a match it then restarts the match
+names, every stage's objects, stations, sounds and anti-tunnelling bound,
+fonts). On an error it prints the reason and keeps the current values. In a match it then restarts the match
 with the new values; in a menu it says the values apply to the next match, and
 they are swapped in before that match is built. Reloading replaces a live
 `feedback` toggle with the file's value, and says so. Rebuilding with new tuning
@@ -352,7 +352,10 @@ nothing. In the running game every edit also runs the file's own startup checks
 against the loaded resources (`validate_resources`): for presentation, that
 its named fonts, frames and sounds exist, and `match.countdown_size` leaves
 room under the GET READY heading. Edits under
-`tuning.paint` also run the startup check that builds every stage's objects.
+`tuning.paint`, `tuning.player.size` and `tuning.player.max_velocity` also
+run the startup check that builds every stage's objects, so a speed cap at
+which a player could step through a floor is refused
+(`game/tunnelling_limits.h`).
 Only then is the validated object copied over the live one: the
 records that weapons, projectiles, the HUD and movement feedback point at keep
 their addresses, and only the edited number changes.

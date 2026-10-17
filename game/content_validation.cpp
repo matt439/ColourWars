@@ -3,6 +3,7 @@
 #include "game/drawable_text.h"
 #include "game/objects/level_object_builder.h"
 #include "game/resource_validation.h"
+#include "game/tunnelling_limits.h"
 
 using namespace labrador;
 
@@ -69,12 +70,15 @@ void validate_game_content(const GameTuning& tuning, const Presentation& present
 	}
 
 	// All asset kinds are available now. Check every stage's actual object
-	// construction and resource references before opening the first menu.
+	// construction and resource references before opening the first menu,
+	// then that a player at its speed cap cannot step through what was built.
 	const LevelObjectBuilder content_validator(render, audio, &play_settings,
 		&tuning.paint());
 	for (const Stage& stage : stages)
 	{
 		level_infos.get(stage.name)->validate_content(content_validator, *render, *audio);
+		check_stage_tunnelling(tuning, content_validator,
+			level_infos.get(stage.name)->collision_objects_json());
 		tuning.validate_match_sounds(*render, *audio,
 			level_infos.get(stage.name)->sound_bank_name());
 	}

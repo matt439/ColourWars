@@ -121,6 +121,12 @@ namespace
 		return value;
 	}
 
+	Vector2F read_positive_vector(const JsonValue& parent, const char* key)
+	{
+		const JsonValue vector = parent.object(key);
+		return Vector2F(read_positive(vector, "x"), read_positive(vector, "y"));
+	}
+
 	SoundTuning read_sound(const JsonValue& sound)
 	{
 		SoundTuning tuning;
@@ -417,8 +423,11 @@ namespace
 		const JsonValue json = root.object("player");
 
 		PlayerTuning player;
-		player.size = read_vector(json, "size");
-		player.max_velocity = read_vector(json, "max_velocity");
+		// A zero, negative or non-finite extent or speed cap would leave the
+		// per-stage anti-tunnelling bound (game/tunnelling_limits.h) meaning
+		// nothing, so the tuning half of that check is refusing one at load.
+		player.size = read_positive_vector(json, "size");
+		player.max_velocity = read_positive_vector(json, "max_velocity");
 		player.x_initial_velocity = json.number("x_initial_velocity");
 		player.x_acceleration = json.number("x_acceleration");
 		player.x_deacceleration = json.number("x_deacceleration");

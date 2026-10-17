@@ -228,7 +228,13 @@ checks to their owners:
 
 - Runtime: finite bounds/object rectangles after float conversion; TLBR ordering;
   spawn/station containment and spawn halves; duplicate station names; grey
-  hex channel equality; assets and drawable text.
+  hex channel equality; assets and drawable text; and the engine's
+  anti-tunnelling bound ([tunnelling_limits.h](../game/tunnelling_limits.h)):
+  a stage is rejected when a player at `tuning.player.max_velocity` would
+  travel at least its own extent plus an object's width or height in one
+  fixed step, so it could pass through that object. The `tunnelling`
+  acceptance case prints each shipped stage's margin. Flying paint is exempt
+  because each shot's whole path is tested against the geometry every step.
 - Editor: its additional nonempty-string, numeric and upright-ramp checks.
   Unknown metadata and stations remain preserved even when not exposed as
   dedicated editor controls.

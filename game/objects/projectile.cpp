@@ -191,7 +191,7 @@ void Projectile::resolve_launch_obstruction(const Vector2F& origin,
 void Projectile::resolve_movement_contacts(
     std::span<CollisionObject* const> objects)
 {
-    if (this->type_ == ProjectileType::rolling || this->for_deletion_ ||
+    if (!is_swept(this->type_) || this->for_deletion_ ||
         !this->first_update_done_)
     {
         return;
