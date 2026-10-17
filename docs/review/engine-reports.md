@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Eleven are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18). Seven are closed** and kept below as one paragraph
+> **Twelve are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19). Seven are closed** and kept below as one paragraph
 > each — what was asked, what shipped, and what this repository spent the
 > answer on.
 >
@@ -98,8 +98,10 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 15 | Runtime packaging and content staging are repeated in the client | `game/CMakeLists.txt`, `cmake/release_package.cmake`, `cmake/runtime_assets.cmake`, `cmake/stage_runtime_assets.cmake` | draft — exhibit present; checked against published master 2026-10-15 |
 | 16 | Windowed Apply shows a deliberately hidden window | the offscreen/hide guard in `settings_menu_checks.h` around real Options Apply | draft — checked against the pin; recheck upstream before filing |
 | 17 | The Win32 window ignores DPI once the client opts in | the `dpiAwareness` block in `game/settings.manifest`; the DPI assertion in `scripts/check-startup.ps1` | draft — checked against published master 2026-10-17 |
+| 18 | A `Label` in a `Scene` can be neither hidden nor raised | the zero-tint hide in `Level::refresh_station_labels`; the `station_labels` case in `replay_checks.cpp` | draft — checked against the pin; recheck upstream before filing |
+| 19 | The window is shown before the client has loaded anything | `initialize()` before `load_manifest` in `game/main.cpp`, with a startup timing | draft — low priority; checked against the pin |
 
-Nothing else is outstanding, on either side, beyond reports 6 and 9-17 below. The fullscreen workaround the
+Nothing else is outstanding, on either side, beyond reports 6 and 9-19 below. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
@@ -641,6 +643,70 @@ manual `end_tick()`. If a layer arrives, the station names can also sit over
 the low ceiling they label rather than beside it.
 
 **Status:** unfiled draft against the pin. Recheck engine master before filing.
+
+---
+
+## 19. The window is shown before the client has loaded anything — **draft with startup timing exhibit**
+
+**Exhibit:** the order in [game/main.cpp](../../game/main.cpp), and a timing of
+it. `app.initialize()` shows the window. The client then registers its level
+kind, calls `app.load_manifest` and `validate_game_content`, and only
+`app.run` presents a first frame. Until then the window shows nothing the game
+drew (gap audit 5.1). There is no workaround in this tree, and the reasons are
+below.
+
+### What happens
+
+Checked against the pin, `52e809a`, on 2026-10-17. `Application::initialize`
+builds the window first (`create_window`), then the audio device and the
+render device. The Win32 `Window` constructor ends with
+`ShowWindow(SW_SHOWDEFAULT)`, or `SW_SHOWMAXIMIZED` in fullscreen
+(`engine/app/win32/window.cpp`, the end of `Window::Impl::Impl`). Its class
+brush is `COLOR_WINDOW + 1`. The window is visible before the call returns.
+`ApplicationOptions::visible` is the only visibility control, and it is read
+once, at creation. `Application` has no later `show()`.
+
+A one-off instrumentation, not kept, timed the wait on this machine (Ryzen 9
+9950X3D, warm file cache, 5 launches of each build). The clock ran from the
+return of `initialize()` to the top of `app.run`:
+
+| build | `load_manifest` done | top of `app.run` |
+|---|---|---|
+| Release | 44-46 ms | 52-53 ms |
+| Debug | 56-59 ms | 120-124 ms |
+
+That is about three 60 Hz frames in Release. It leaves out the device
+creation inside `initialize()` after the show, and the first menu's
+construction and present inside `run`, so the real wait is longer. A cold
+cache or a slower disk adds more, and the manifest grows with every stage and
+sound bank. This is small today. It is a shown, unpainted window on every
+launch, and the engine owns its whole cause.
+
+A client-side fix exists, and it is the wrong one. The client could pass
+`visible = false` and call `ShowWindow` on `Application::window()` after
+validation. That puts Win32 in a client of a portable shell. It copies the
+engine's choice of show command out of `window.cpp`. In fullscreen it moves
+the `WM_SIZE` that `window.cpp`'s comment says `create_device` relies on to a
+point after the device exists. [Report 16](#16-windowed-apply-shows-a-deliberately-hidden-window--draft-with-probe-exhibit)
+shows the same seam from the other side: visibility is decided once at
+creation, and nothing after creation keeps to it.
+
+### The ask, when it goes
+
+Either an `Application::show()` (with `ApplicationOptions::visible = false`
+meaning "not yet") that applies the same show command the constructor would
+have, or `initialize()` clearing and presenting one frame before it returns, so
+the shown window is at least the renderer's clear colour and not a system
+brush. The first lets a client show a window whose first frame is its own. The
+second needs nothing from any client. Report 16's fix (keeping deliberate
+hidden visibility) goes with either.
+
+An answer lets this client delete nothing, because nothing works around this
+today. The client would add one `app.show()` after `validate_game_content` in
+`main.cpp`, and `GAP#5.1`'s startup half would close.
+
+**Status:** unfiled draft against the pin, low priority. Recheck engine master
+before filing.
 
 ---
 

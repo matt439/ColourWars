@@ -822,7 +822,9 @@ in these numbers is the match's first draw after the build, which `perf` treats 
 an interval start. What remains of `GAP#5.1` is the hard cut itself: a transition
 look in the Paint.exe language (a fade, a wipe, a redraw or a deliberate cut) is UI
 art and follows the gameplay style lock. Separately, the startup window shows a
-blank client area during the asset walk, which needs an engine show-after-load.
+blank client area during the asset walk (about 53 ms in Release), which needs an
+engine show-after-load: [report 19](review/engine-reports.md#19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit)
+(`ENG#19`).
 Re-measure with `perf` when the blockouts (`POL#17`, `POL#21`) add geometry: the
 build makes paint tiles for every paintable face.
 

@@ -107,7 +107,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 |---|---|---|---|---|
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
 | `GAP#4.2` | OPEN | MED | L | No action map or rebinding: bindings are constexprs in `player_input.h`/`menu_input.h`. The engine's `gamepad.h` waits on this client (Class 2 D6); `GAP#F2` waits on it. |
-| `GAP#5.1` | BLOCKED | LOW | M | Screen changes are hard cuts: the transition look is UI art after the gameplay style lock (`POL#7`, `POL#14`, `POL#9`). Level builds [take under 2.5 ms in Release](docs/polish-plan.md#level-build-pause-measured-2026-10-17), so no loading card. Startup's blank window needs an engine show-after-load. |
+| `GAP#5.1` | BLOCKED | LOW | M | Screen changes are hard cuts: the transition look is UI art after the gameplay style lock (`POL#7`, `POL#14`, `POL#9`). Level builds [take under 2.5 ms in Release](docs/polish-plan.md#level-build-pause-measured-2026-10-17), so no loading card. The blank startup window waits on `ENG#19`. |
 | `GAP#6.1` | OPEN | MED | M | The last match setup is not saved, so every launch walks the whole menu path again. |
 | `GAP#6.2` | OPEN | MED | M | Results are never kept: per-stage records, a NEW BEST line, best % on stage select; save sections and a version key go with it. |
 | `GAP#L9` | OPEN | LOW | M | No frame-rate or vsync setting, no render interpolation; `target_fps` is a literal 60. |
@@ -158,6 +158,7 @@ engine master before filing, not the pin. Gap-audit Class 3 items not yet in the
 | `ENG#16` | OPEN | LOW | S | Recheck master and file report 16: windowed Apply shows a deliberately hidden window. [Report](docs/review/engine-reports.md#16-windowed-apply-shows-a-deliberately-hidden-window--draft-with-probe-exhibit). |
 | `ENG#17` | OPEN | LOW | S | File report 17: the Win32 window sizes its frame at system DPI and ignores `WM_DPICHANGED` once the client is per-monitor aware; answers OCA-66. [Report](docs/review/engine-reports.md#17-the-win32-window-ignores-dpi-once-the-client-opts-in--draft-with-manifest-exhibit). |
 | `ENG#18` | OPEN | LOW | S | Recheck master and file report 18: a `Label` in a `Scene` cannot be hidden (only a fully zero tint) or drawn over collision objects. [Report](docs/review/engine-reports.md#18-a-label-in-a-scene-can-be-neither-hidden-nor-raised--draft-with-station-label-exhibit). |
+| `ENG#19` | OPEN | LOW | S | Recheck master and file report 19: the window is shown before the manifest loads, with no later show call. [Report](docs/review/engine-reports.md#19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console
