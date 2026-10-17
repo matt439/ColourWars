@@ -732,8 +732,8 @@ the [partly ready roster](images/polish-main-menu/weapon-ready-720p.png) and
 [all Random choices](images/polish-main-menu/weapon-random-720p.png).
 
 Accepted arenas and human readability review remain `POL#16`;
-menu-motion review (`POL#10`), movement-feel (`POL#3`), physical-pad and listening
-acceptance retain their existing gates.
+movement-feel (`POL#3`), physical-pad and listening acceptance retain their
+existing gates.
 
 ## Stage Select
 
@@ -802,5 +802,5 @@ the [locked arena](images/polish-main-menu/stage-locked-720p.png) and
 
 Accepted-arena artwork and human presentation/readability review remain
 `POL#16`. Movement-feel (`POL#3`) still gates the reference blockout (`POL#17`),
-which gates the arena material/prop kit (`POL#9`). Menu-motion review
-(`POL#10`), physical-pad and listening acceptance remain open.
+which gates the arena material/prop kit (`POL#9`). Physical-pad and listening
+acceptance remain open; menu-motion review (`POL#10`) was accepted 2026-10-17.

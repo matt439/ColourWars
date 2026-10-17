@@ -539,7 +539,7 @@ with evidence under `out/validation/2026-10-16-menu-motion/verification.json`.
 Both builds, all 31 consumer cases per preset, ten relevant native menu/resume
 scopes per preset and both published-bank startup checks pass. The 60 native
 motion PPM captures match between Debug and Release.
-Human review of the shared paper motion remains `POL#10`.
+Human review of the shared paper motion was accepted with `POL#10` (2026-10-17).
 
 **Setup choice motion implemented (2026-10-16, part of `POL#10`).** Mode and
 Player count settle their focus accent inward within the existing padding and
@@ -568,7 +568,8 @@ Verification extends the existing `menu_focus_motion` consumer case and adds
 Both builds, all 31 consumer cases per preset, seven relevant native menu/resume
 scopes per preset and both published-bank startup checks pass. The 96 native
 setup-motion PPM captures match between Debug and Release.
-Human review of the shared paper and setup/per-player motion remains `POL#10`.
+Human review of the shared paper and setup/per-player motion was accepted with
+`POL#10` (2026-10-17).
 Reference-arena, movement-feel, controller and listening acceptance retain their
 existing gates.
 
@@ -610,10 +611,11 @@ Join/Stage PPM captures match between Debug and Release; 45 moving-envelope
 comparisons per preset keep every changed pixel inside the authored padding.
 The unchanged resume check also verifies rapid final confirmation followed by
 focus loss during the outgoing music fade.
-All planned menu-focus and selection-motion surfaces are implemented. Human
-review across the shared paper, setup/per-player choices, Join and arena-stage
-selection remains `POL#10`; reference-arena, movement-feel, physical-controller
-and listening acceptance retain their existing gates.
+All planned menu-focus and selection-motion surfaces are implemented. **The
+author accepted them on 2026-10-17** ("menus feel good"), across the shared
+paper, setup/per-player choices, Join and arena-stage selection, closing `POL#10`.
+Reference-arena, movement-feel, physical-controller and listening acceptance
+retain their existing gates.
 
 **Exit condition:** a complete match in the reference arena feels visually coherent
 and responsive. Jumping, landing and movement have visible, correctly timed feedback.
@@ -1024,9 +1026,8 @@ extracted Release with the published bank and optional-bank fallback under a
 system-only PATH. The 53-file Release ZIP contains all 26 reviewed runtime
 assets byte for byte and excludes source, debug and private audio.
 
-Accepted arenas and human review remain `POL#16`; menu-motion
-review (`POL#10`), movement-feel (`POL#3`), physical-controller and listening
-acceptance retain their existing gates.
+Accepted arenas and human review remain `POL#16`; movement-feel (`POL#3`),
+physical-controller and listening acceptance retain their existing gates.
 
 **Stage Select paper and briefing implemented (2026-10-16, part of `POL#16`).**
 The [Stage Select page](polish-main-menu.md#stage-select) uses a shared-style
@@ -1060,8 +1061,8 @@ runtime assets byte for byte and excludes source, debug and private audio.
 
 Accepted-arena artwork and human presentation/readability review remain
 `POL#16`. Movement-feel (`POL#3`) still gates `POL#17`'s reference blockout,
-which gates `POL#9`'s material/prop work. Menu-motion review (`POL#10`),
-physical-controller and listening acceptance retain their existing gates.
+which gates `POL#9`'s material/prop work. Physical-controller and listening
+acceptance retain their existing gates.
 
 Once the reference match meets its exit conditions, extend the approved character
 poses and feedback to every weapon and finish the other accepted arena blockouts.

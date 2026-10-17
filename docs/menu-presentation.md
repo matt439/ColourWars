@@ -312,9 +312,9 @@ without refreshing the displayed Random text/preview or adding a new pulse.
 
 Both pages register these clocks with the shared interruption and Reduce effects
 policy described above. No new presentation fields or artwork assets are needed.
-All planned menu-motion surfaces are implemented; human review of focus and
-selection motion remains in
-[`POL#10`](polish-plan.md#movement-and-interaction-feedback).
+All planned menu-motion surfaces are implemented, and the author accepted the
+focus and selection motion on 2026-10-17
+([`POL#10`](polish-plan.md#movement-and-interaction-feedback)).
 
 ## Team paper and cards
 
