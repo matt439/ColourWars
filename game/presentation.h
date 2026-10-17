@@ -218,9 +218,9 @@ struct MenuStyle
 	std::string sound_bank;
 	float repeat_delay = 0.0f;
 	float repeat_interval = 0.0f;
-	std::string direction_sound;
-	std::string confirm_sound;
-	std::string cancel_sound;
+	PresentationSound direction_sound;
+	PresentationSound confirm_sound;
+	PresentationSound cancel_sound;
 };
 
 // Per-player choice layout, positioned by row and column indices.
@@ -421,8 +421,8 @@ struct MainMenuPresentation
 	std::wstring credits_text;
 
 	PresentationSound music;
-	std::string error_sound;
-	std::string ready_sound;
+	PresentationSound error_sound;
+	PresentationSound ready_sound;
 	PresentationSound unready_sound;
 
 	// Weapon descriptions converted from UTF-8 to normalized wide text at load.
@@ -442,7 +442,7 @@ struct PauseMenuPresentation
 	float heading_y = 0.0f;
 	float status_y = 0.0f;
 	WidgetLayout layout;
-	std::string window_open_sound;
+	PresentationSound window_open_sound;
 	PresentationSound pad_lost_sound;
 	PresentationSound pad_back_sound;
 };

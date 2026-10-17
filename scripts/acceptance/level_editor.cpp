@@ -489,7 +489,19 @@ namespace
             document.set_property(level, "/sound/end_sting_volume", valid);
             require(document.validate().empty(), "The editor rejected an ending-sting gain boundary");
         }
-        std::cout << "PASS ending-sting editor validation and gain boundaries\n";
+        for (const char* invalid : { "-0.01", "1.01", "1e100" })
+        {
+            reject_without_change(document, [&]
+            {
+                document.set_property(level, "/sound/music_volume", invalid);
+            }, "The editor accepted an invalid music volume");
+        }
+        for (const char* valid : { "0", "1" })
+        {
+            document.set_property(level, "/sound/music_volume", valid);
+            require(document.validate().empty(), "The editor rejected a music gain boundary");
+        }
+        std::cout << "PASS ending-sting and music editor validation and gain boundaries\n";
     }
 
     void check_unknown_fields_and_rectangles(const fs::path& scratch)

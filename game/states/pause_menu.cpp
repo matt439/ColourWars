@@ -64,8 +64,7 @@ PauseMenuPage::PauseMenuPage(MenuContext* context, int player_num) :
 	MenuPage(context),
 	pausing_player_(player_num)
 {
-	this->window_open_sound_ =
-		this->resolve_wave(this->look().window_open_sound);
+	this->window_open_sound_ = this->resolve_sound(this->look().window_open_sound);
 }
 
 const PauseMenuPresentation& PauseMenuPage::look() const

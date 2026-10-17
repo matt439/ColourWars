@@ -264,6 +264,7 @@ namespace
                 [field](rapidjson::Document& d) { d["sound"].RemoveMember(field); });
         }
         variant("bad-sting-volume", false, [](rapidjson::Document& d) { d["sound"]["end_sting_volume"].SetDouble(1.1); });
+        variant("bad-music-volume", false, [](rapidjson::Document& d) { d["sound"]["music_volume"].SetDouble(1.5); });
         variant("reserved-station", false, [](rapidjson::Document& d) { d["stations"][0]["name"].SetString("spawn_a"); });
 
         const auto outside = variant("outside-spawn", true, [](rapidjson::Document& d)

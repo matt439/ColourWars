@@ -5,6 +5,7 @@ find_package(directxtk CONFIG REQUIRED)
 
 add_executable(ColourWars WIN32
     content_validation.cpp
+    content_value.cpp
     directory_consts.cpp
     drawable_text.cpp
     fatal_report.cpp

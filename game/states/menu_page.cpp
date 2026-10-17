@@ -20,9 +20,9 @@ MenuPage::MenuPage(MenuContext* context) :
 	this->widget_position_ = style.layout.position;
 	this->widget_size_ = style.layout.size;
 	this->widget_spacing_ = style.layout.spacing;
-	this->direction_sound_ = this->resolve_wave(style.direction_sound);
-	this->confirm_sound_ = this->resolve_wave(style.confirm_sound);
-	this->cancel_sound_ = this->resolve_wave(style.cancel_sound);
+	this->direction_sound_ = this->resolve_sound(style.direction_sound);
+	this->confirm_sound_ = this->resolve_sound(style.confirm_sound);
+	this->cancel_sound_ = this->resolve_sound(style.cancel_sound);
 	this->chrome_sheet_ = this->render_resources()->resolve_sprite_sheet(style.sprite_sheet);
 	this->chrome_pixel_ = this->render_resources()->sprite_sheet(this->chrome_sheet_)->
 		resolve_sprite_frame(style.fill_frame);
@@ -389,6 +389,16 @@ void MenuPage::play_wave(SoundBank::WaveHandle wave, float volume,
 {
 	SoundBankObject::play_wave(wave,
 		volume * this->save()->play_settings().sfx_gain(), pitch, pan);
+}
+
+MenuSound MenuPage::resolve_sound(const PresentationSound& sound) const
+{
+	return { this->resolve_wave(sound.name), sound.volume };
+}
+
+void MenuPage::play_wave(const MenuSound& sound) const
+{
+	this->play_wave(sound.wave, sound.volume);
 }
 
 void MenuPage::play_effect(SoundBank::EffectHandle effect, bool loop,

@@ -55,7 +55,7 @@ the stage name, menu icon and sound settings. New levels use the replacement
 `paint_exe` bank, `music.close_quarters` and its matching ending sting. Omit both
 music name and volume for a music-free arena; `end_sting_name` and
 `end_sting_volume` are independently optional as a pair. Movement Course omits
-both pairs. Ending-sting gains must be 0..1. The editor warns about a bank,
+both pairs. Music and ending-sting gains must be 0..1. The editor warns about a bank,
 music or sting name the bank does not define ([Resource names](#resource-names));
 it does not audition them.
 

@@ -457,6 +457,12 @@ namespace debug_console_acceptance
 			tuning.player().jump_buffer_time != 2.0f, "The reader's own range rule rejects a value");
 		require(!log_contains(log, "ColourWars-tune-", DebugSeverity::error),
 			"A rejection names the content file, not the temporary candidate");
+		require(!impl.execute("tune tuning.player.respawn_delay -1").ok &&
+			log_contains(log, "'respawn_delay' must be finite and not negative", DebugSeverity::error) &&
+			tuning.player().respawn_delay >= 0.0f, "A shared content-value bound rejects a value");
+		require(!impl.execute("tune presentation.menu_style.sounds.confirm.volume 1.5").ok &&
+			log_contains(log, "'volume' is 1.5, which is outside [0, 1]", DebugSeverity::error) &&
+			presentation.menu().confirm_sound.volume <= 1.0f, "A menu sound's volume is bounded like the others");
 		require(!impl.execute("tune presentation.movement_feedback.minimum_strength 1.5").ok &&
 			log_contains(log, "strength must be at most one", DebugSeverity::error),
 			"A cross-field rule rejects a value");

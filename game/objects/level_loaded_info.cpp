@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/objects/level_loaded_info.h"
+#include "game/content_value.h"
 #include "game/level_format.h"
 #include "engine/math/intersects.h"
 #include "game/objects/level_object_builder.h"
@@ -291,8 +292,9 @@ std::string LevelLoadedInfo::music_name() const
 }
 float LevelLoadedInfo::music_volume() const
 {
+	// Authored gain under the player's music preference, as the sting is.
 	return this->has_music() ?
-		this->json_doc_.root().object("sound").number("music_volume") : 0.0f;
+		content_value::read_unit(this->json_doc_.root().object("sound"), "music_volume") : 0.0f;
 }
 
 bool LevelLoadedInfo::has_end_sting() const
@@ -316,13 +318,7 @@ std::string LevelLoadedInfo::end_sting_name() const
 float LevelLoadedInfo::end_sting_volume() const
 {
 	if (!this->has_end_sting()) { return 0.0f; }
-	const JsonValue sound = this->json_doc_.root().object("sound");
-	const float volume = sound.number("end_sting_volume");
-	if (!std::isfinite(volume) || volume < 0.0f || volume > 1.0f)
-	{
-		throw std::runtime_error(sound.where() + ": end_sting_volume must be 0..1.");
-	}
-	return volume;
+	return content_value::read_unit(this->json_doc_.root().object("sound"), "end_sting_volume");
 }
 
 std::vector<Vector2F>

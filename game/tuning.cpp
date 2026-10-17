@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/tuning.h"
+#include "game/content_value.h"
 #include "game/resource_validation.h"
 
 #include "engine/assets/json.h"
@@ -9,16 +10,11 @@
 
 using namespace labrador;
 using namespace mattmath;
+using namespace content_value;
 
 namespace
 {
 	// Enum parsers use JsonValue's source context for unknown names.
-
-	Vector2F read_vector(const JsonValue& parent, const char* key)
-	{
-		const JsonValue vector = parent.object(key);
-		return Vector2F(vector.number("x"), vector.number("y"));
-	}
 
 	ProjectileType read_projectile_type(const JsonValue& parent,
 		const char* key)
@@ -82,58 +78,13 @@ namespace
 			"linear_size_and_col_rect.");
 	}
 
-	// Avoid trailing decimal zeroes in authored-value diagnostics.
-	std::string number_text(float value)
-	{
-		std::string text = std::to_string(value);
-		const size_t last = text.find_last_not_of('0');
-		if (text.find('.') != std::string::npos && last != std::string::npos)
-		{
-			text.erase(text[last] == '.' ? last : last + 1);
-		}
-		return text;
-	}
-
-	// Reject only ranges required by gameplay. Write comparisons so NaN fails.
-	float read_number_in(const JsonValue& parent, const char* key,
-		float low, float high)
-	{
-		const float value = parent.number(key);
-
-		if (!(value >= low && value <= high))
-		{
-			throw std::runtime_error(parent.where() + ": '" + key + "' is " +
-				number_text(value) + ", which is outside [" +
-				number_text(low) + ", " + number_text(high) + "].");
-		}
-		return value;
-	}
-
-	float read_positive(const JsonValue& parent, const char* key)
-	{
-		const float value = parent.number(key);
-
-		if (!std::isfinite(value) || !(value > 0.0f))
-		{
-			throw std::runtime_error(parent.where() + ": '" + key + "' is " +
-				number_text(value) + ", and must be finite and greater than zero.");
-		}
-		return value;
-	}
-
-	Vector2F read_positive_vector(const JsonValue& parent, const char* key)
-	{
-		const JsonValue vector = parent.object(key);
-		return Vector2F(read_positive(vector, "x"), read_positive(vector, "y"));
-	}
-
 	SoundTuning read_sound(const JsonValue& sound)
 	{
 		SoundTuning tuning;
 		tuning.name = sound.string("name");
 
 		// Reject authored volumes outside [0, 1] before SoundBank clamps them.
-		tuning.volume = read_number_in(sound, "volume", 0.0f, 1.0f);
+		tuning.volume = read_unit(sound, "volume");
 		return tuning;
 	}
 
@@ -154,13 +105,8 @@ namespace
 		tuning.strip = clip.string("strip");
 		tuning.paint_strip = clip.identifier("paint_strip");
 		tuning.frame_time = clip.has("frame_time")
-			? std::optional<float>(clip.number("frame_time"))
+			? std::optional<float>(read_positive(clip, "frame_time"))
 			: std::nullopt;
-		if (tuning.frame_time.has_value() &&
-			(!std::isfinite(*tuning.frame_time) || *tuning.frame_time <= 0.0f))
-		{
-			throw std::runtime_error(clip.where() + ": 'frame_time' must be finite and greater than zero.");
-		}
 		return tuning;
 	}
 
@@ -176,26 +122,15 @@ namespace
 		return *colour;
 	}
 
-	float json_non_negative(const JsonValue& parent, const char* key)
-	{
-		const float value = parent.number(key);
-		if (!std::isfinite(value) || value < 0.0f)
-		{
-			throw std::runtime_error(parent.where() + ": '" + key +
-				"' must be finite and not negative.");
-		}
-		return value;
-	}
-
 	InputTuning read_input(const JsonValue& root)
 	{
 		const JsonValue json = root.object("input");
 		InputTuning input;
-		input.trigger_shoot_threshold = read_number_in(json, "trigger_shoot_threshold", 0.0f, 1.0f);
-		input.trigger_jump_threshold = read_number_in(json, "trigger_jump_threshold", 0.0f, 1.0f);
-		input.movement_deadzone = read_number_in(json, "movement_deadzone", 0.0f, 1.0f);
-		input.menu_engage_threshold = read_number_in(json, "menu_engage_threshold", 0.0f, 1.0f);
-		input.menu_release_threshold = read_number_in(json, "menu_release_threshold", 0.0f, 1.0f);
+		input.trigger_shoot_threshold = read_unit(json, "trigger_shoot_threshold");
+		input.trigger_jump_threshold = read_unit(json, "trigger_jump_threshold");
+		input.movement_deadzone = read_unit(json, "movement_deadzone");
+		input.menu_engage_threshold = read_unit(json, "menu_engage_threshold");
+		input.menu_release_threshold = read_unit(json, "menu_release_threshold");
 		if (input.movement_deadzone >= 1.0f || input.menu_release_threshold <= 0.0f ||
 			input.menu_release_threshold >= input.menu_engage_threshold)
 		{
@@ -224,16 +159,18 @@ namespace
 		}
 		match.zoom_out = read_positive(json, "zoom_out");
 
-		// Zero skips the countdown or overview; these durations have no range check.
-		match.countdown = json.number("countdown");
-		match.overview = json.number("overview");
+		// Zero skips the overview; the countdown holds the opening push, so is
+		// checked against it below. Both are timers that run before or after
+		// the match, so neither is compared with its duration.
+		match.countdown = read_non_negative(json, "countdown");
+		match.overview = read_non_negative(json, "overview");
 
 		const JsonValue controls = json.object("controls_text");
 		match.controls_font = controls.string("font");
 		match.controls_colour = read_colour(controls, "colour");
 		match.controls_shadow_colour = read_colour(controls, "shadow_colour");
 		match.controls_shadow_offset = read_vector(controls, "shadow_offset");
-		match.controls_y = read_number_in(controls, "y", 0.0f, 1.0f);
+		match.controls_y = read_unit(controls, "y");
 
 		const JsonValue sounds = json.object("sounds");
 		match.countdown_sound = read_sound(sounds, "countdown");
@@ -255,9 +192,9 @@ namespace
 		match.undo_sound = read_sound(sounds, "undo");
 
 		const JsonValue opening = json.object("opening");
-		match.opening.settle = json_non_negative(opening, "settle");
+		match.opening.settle = read_non_negative(opening, "settle");
 		match.opening.preview = read_positive(opening, "preview");
-		match.opening.undo = json_non_negative(opening, "undo");
+		match.opening.undo = read_non_negative(opening, "undo");
 		match.opening.leave = read_positive(opening, "leave");
 		match.opening.push = read_positive(opening, "push");
 		const JsonValue reveal = json.object("reveal");
@@ -283,9 +220,7 @@ namespace
 		PaintTuning paint;
 
 		// Positive tile lengths are required to derive finite strip counts.
-		paint.size = Vector2F(
-			read_positive(json.object("size"), "x"),
-			read_positive(json.object("size"), "y"));
+		paint.size = read_positive_vector(json, "size");
 
 		paint.thickness = read_positive(json, "thickness");
 		paint.sheet = json.string("sheet");
@@ -308,7 +243,7 @@ namespace
 		const JsonValue visual = json.object("visual");
 		paint.edge_width = read_positive(visual, "edge_width");
 		paint.wet_duration = read_positive(visual, "wet_duration");
-		paint.wet_highlight = read_number_in(visual, "wet_highlight", 0.0f, 1.0f);
+		paint.wet_highlight = read_unit(visual, "wet_highlight");
 		paint.settle_depth = read_positive(visual, "settle_depth");
 		paint.splash_scale = read_positive(visual, "splash_scale");
 		if (!(paint.edge_width < paint.thickness))
@@ -317,7 +252,7 @@ namespace
 				": 'edge_width' must leave visible team paint inside the tile thickness.");
 		}
 		const JsonValue runoff = visual.object("runoff");
-		paint.runoff.delay = read_number_in(runoff, "delay", 0.0f, 1.0f);
+		paint.runoff.delay = read_unit(runoff, "delay");
 		const auto positive_runoff = [&](const char* key, float high)
 		{
 			const float value = read_number_in(runoff, key, 0.0f, high);
@@ -336,8 +271,8 @@ namespace
 		paint.runoff.trail_width = positive_runoff("trail_width", 16.0f);
 		paint.runoff.keyline_width = positive_runoff("keyline_width", 8.0f);
 		paint.runoff.face_inset = read_number_in(runoff, "face_inset", 0.0f, 16.0f);
-		paint.runoff.shade = read_number_in(runoff, "shade", 0.0f, 1.0f);
-		paint.runoff.highlight = read_number_in(runoff, "highlight", 0.0f, 1.0f);
+		paint.runoff.shade = read_unit(runoff, "shade");
+		paint.runoff.highlight = read_unit(runoff, "highlight");
 		if (!(paint.runoff.width + paint.runoff.face_inset <=
 			paint.thickness - paint.edge_width))
 		{
@@ -410,7 +345,7 @@ namespace
 		sounds.step_painted = read_choices("step_painted");
 		sounds.skid = read_sound(json, "skid");
 		sounds.landing_full_speed = read_positive(json, "landing_full_speed");
-		sounds.landing_min_gain = read_number_in(json, "landing_min_gain", 0.0f, 1.0f);
+		sounds.landing_min_gain = read_unit(json, "landing_min_gain");
 		sounds.stride_distance = read_positive(json, "stride_distance");
 		sounds.min_step_interval = read_positive(json, "min_step_interval");
 		sounds.skid_min_speed = read_positive(json, "skid_min_speed");
@@ -428,24 +363,27 @@ namespace
 		// nothing, so the tuning half of that check is refusing one at load.
 		player.size = read_positive_vector(json, "size");
 		player.max_velocity = read_positive_vector(json, "max_velocity");
-		player.x_initial_velocity = json.number("x_initial_velocity");
-		player.x_acceleration = json.number("x_acceleration");
-		player.x_deacceleration = json.number("x_deacceleration");
-		player.gravity = json.number("gravity");
-		player.ramp_gravity_multiplier = json.number("ramp_gravity_multiplier");
-		player.jump_launch_velocity = json.number("jump_launch_velocity");
-		player.jump_acceleration = json.number("jump_acceleration");
-		player.jump_max_time = json.number("jump_max_time");
+		// Velocities and accelerations carry a direction in their sign, so
+		// only finiteness is required of them.
+		player.x_initial_velocity = read_finite(json, "x_initial_velocity");
+		player.x_acceleration = read_finite(json, "x_acceleration");
+		player.x_deacceleration = read_finite(json, "x_deacceleration");
+		player.gravity = read_finite(json, "gravity");
+		player.ramp_gravity_multiplier = read_finite(json, "ramp_gravity_multiplier");
+		player.jump_launch_velocity = read_finite(json, "jump_launch_velocity");
+		player.jump_acceleration = read_finite(json, "jump_acceleration");
+		// Zero leaves a jump with its launch velocity and no held boost.
+		player.jump_max_time = read_non_negative(json, "jump_max_time");
 		player.jump_buffer_time = read_number_in(json, "jump_buffer_time", 0.0f, 1.0f);
 		player.ledge_grace_time = read_number_in(json, "ledge_grace_time", 0.0f, 1.0f);
-		player.drop_down_velocity = json.number("drop_down_velocity");
-		player.drop_down_analog_threshold =
-			json.number("drop_down_analog_threshold");
+		player.drop_down_velocity = read_finite(json, "drop_down_velocity");
+		// Compared with a stick axis, which is -1..1.
+		player.drop_down_analog_threshold = read_unit(json, "drop_down_analog_threshold");
 		player.starting_health = read_positive(json, "starting_health");
-		player.health_regen_delay = json.number("health_regen_delay");
-		player.health_regen_rate = json.number("health_regen_rate");
-		player.respawn_delay = json.number("respawn_delay");
-		player.damage_sound_delay = json.number("damage_sound_delay");
+		player.health_regen_delay = read_non_negative(json, "health_regen_delay");
+		player.health_regen_rate = read_non_negative(json, "health_regen_rate");
+		player.respawn_delay = read_non_negative(json, "respawn_delay");
+		player.damage_sound_delay = read_non_negative(json, "damage_sound_delay");
 
 		player.sound_bank = json.string("sound_bank");
 
@@ -532,9 +470,12 @@ namespace
 		details.offset = read_vector(json, "offset");
 		details.size = read_vector(json, "size");
 		details.nozzle_offset = read_vector(json, "nozzle_offset");
-		details.shoot_interval = json.number("shoot_interval");
-		details.starting_vel_length = json.number("starting_vel_length");
-		details.ammo_usage = json.number("ammo_usage");
+		// Zero fires every update; the sprayer and roller are authored so.
+		details.shoot_interval = read_non_negative(json, "shoot_interval");
+		details.starting_vel_length = read_non_negative(json, "starting_vel_length");
+		// Not compared with weapons.starting_ammo: a tank too small for one
+		// shot is a tool that reads as empty, which is a state, not a crash.
+		details.ammo_usage = read_non_negative(json, "ammo_usage");
 		details.sheet_name = json.string("sheet");
 		details.frame_name = json.string("frame");
 		details.proj_type = read_projectile_type(json, "projectile");
@@ -559,7 +500,7 @@ namespace
 			weapon.relative.add_vel =
 				read_add_player_velocity(json, "add_player_velocity");
 			weapon.relative.player_vel_amount =
-				json.number("player_velocity_amount");
+				read_finite(json, "player_velocity_amount");
 		}
 
 		weapon.loop_sounds = read_loop_sounds(json);
@@ -585,8 +526,8 @@ namespace
 
 		ProjectileTuning projectile;
 		ProjectileDetails& details = projectile.details;
-		details.gravity = json.number("gravity");
-		details.wind_resistance = json_non_negative(json, "wind_resistance");
+		details.gravity = read_finite(json, "gravity");
+		details.wind_resistance = read_non_negative(json, "wind_resistance");
 		projectile.wind_stop_factor = wind_stop_factor;
 		if (!std::isfinite(details.wind_resistance * wind_stop_factor))
 		{
@@ -599,10 +540,11 @@ namespace
 			projectile.spread_step = read_number_in(json, "spread_step", 0.0f, PI / 4.0f);
 		}
 		details.rotat_origin = read_rotation_origin(json, "rotation_origin");
-		details.delete_timer = json.number("delete_timer");
-		details.player_damage = json.number("player_damage");
-		details.size = read_vector(json, "size");
-		details.col_rect_size = read_vector(json, "collision_size");
+		// A shot that is deleted the update it is made never exists.
+		details.delete_timer = read_positive(json, "delete_timer");
+		details.player_damage = read_non_negative(json, "player_damage");
+		details.size = read_positive_vector(json, "size");
+		details.col_rect_size = read_positive_vector(json, "collision_size");
 		details.sheet_name = json.string("sheet");
 		details.animation_strip_name = json.string("animation");
 
@@ -610,10 +552,17 @@ namespace
 		{
 			const JsonValue diffusion = json.object("diffusion");
 			projectile.diffusion.type = read_diffusion_type(diffusion, "type");
-			projectile.diffusion.start_time = diffusion.number("start_time");
-			projectile.diffusion.end_time = diffusion.number("end_time");
-			projectile.diffusion.end_scale =
-				read_vector(diffusion, "end_scale");
+			projectile.diffusion.start_time = read_non_negative(diffusion, "start_time");
+			projectile.diffusion.end_time = read_non_negative(diffusion, "end_time");
+			projectile.diffusion.end_scale = read_positive_vector(diffusion, "end_scale");
+			// Equal times are a step to end_scale; a reversed pair would skip
+			// the growth the block describes.
+			if (!(projectile.diffusion.start_time <= projectile.diffusion.end_time))
+			{
+				throw std::runtime_error(diffusion.where() + ": 'start_time' is " +
+					number_text(projectile.diffusion.start_time) + ", after 'end_time' (" +
+					number_text(projectile.diffusion.end_time) + ").");
+			}
 		}
 
 		return projectile;
@@ -632,8 +581,8 @@ GameTuning::GameTuning(const char* path)
 	this->player_ = read_player(root);
 
 	const JsonValue weapons = root.object("weapons");
-	this->ammo_regen_delay_ = weapons.number("ammo_regen_delay");
-	this->ammo_regen_rate_ = weapons.number("ammo_regen_rate");
+	this->ammo_regen_delay_ = read_non_negative(weapons, "ammo_regen_delay");
+	this->ammo_regen_rate_ = read_non_negative(weapons, "ammo_regen_rate");
 	this->starting_ammo_ = read_positive(weapons, "starting_ammo");
 
 	const auto add_weapon = [this, &weapons](WeaponType type, const char* key)
@@ -650,8 +599,9 @@ GameTuning::GameTuning(const char* path)
 	add_weapon(WeaponType::bucket, "bucket");
 
 	const JsonValue projectiles = root.object("projectiles");
-	const Vector2F max_velocity = read_vector(projectiles, "max_velocity");
-	const float wind_stop_factor = json_non_negative(projectiles, "wind_stop_factor");
+	// A per-axis speed cap: a zero or negative one has no meaning.
+	const Vector2F max_velocity = read_positive_vector(projectiles, "max_velocity");
+	const float wind_stop_factor = read_non_negative(projectiles, "wind_stop_factor");
 
 	const auto add_projectile = [this, &projectiles, &max_velocity, wind_stop_factor](
 		ProjectileType type, const char* key)

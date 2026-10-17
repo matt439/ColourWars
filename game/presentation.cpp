@@ -1,6 +1,7 @@
 #include "game/pch.h"
 #include "game/presentation.h"
 #include "game/build_info.h"
+#include "game/content_value.h"
 
 #include "engine/assets/json.h"
 #include "engine/render/text_encoding.h"
@@ -15,6 +16,7 @@
 
 using namespace labrador;
 using namespace mattmath;
+using namespace content_value;
 
 namespace
 {
@@ -154,45 +156,12 @@ namespace
 		return text;
 	}
 
-	Vector2F read_vector(const JsonValue& parent, const char* key)
-	{
-		const JsonValue vector = parent.object(key);
-		return Vector2F(vector.number("x"), vector.number("y"));
-	}
-
-	float read_positive(const JsonValue& parent, const char* key)
-	{
-		const float value = parent.number(key);
-		if (!std::isfinite(value) || value <= 0.0f)
-		{
-			throw std::runtime_error(parent.where() + ": '" + key +
-				"' must be finite and greater than zero.");
-		}
-		return value;
-	}
-
-	Vector2F read_positive_vector(const JsonValue& parent, const char* key)
-	{
-		const JsonValue vector = parent.object(key);
-		return Vector2F(read_positive(vector, "x"), read_positive(vector, "y"));
-	}
-
 	MovementBurstPresentation read_movement_burst(const JsonValue& parent,
 		const char* key)
 	{
 		const JsonValue json = parent.object(key);
 		return { read_positive(json, "duration"), read_positive(json, "spread"),
 			read_positive(json, "lift"), read_positive(json, "particle_size") };
-	}
-
-	Vector2F read_finite_vector(const JsonValue& parent, const char* key)
-	{
-		const Vector2F value = read_vector(parent, key);
-		if (!std::isfinite(value.x) || !std::isfinite(value.y))
-		{
-			throw std::runtime_error(parent.where() + ": '" + key + "' must be finite.");
-		}
-		return value;
 	}
 
 	bool is_hex_colour(const std::string& text)
@@ -258,11 +227,7 @@ namespace
 		{
 			throw std::runtime_error(sound.where() + ": 'name' must not be empty.");
 		}
-		result.volume = sound.number("volume");
-		if (!std::isfinite(result.volume) || result.volume < 0.0f || result.volume > 1.0f)
-		{
-			throw std::runtime_error(sound.where() + ": 'volume' must be finite and from 0 to 1.");
-		}
+		result.volume = read_unit(sound, "volume");
 		return result;
 	}
 
@@ -271,9 +236,9 @@ namespace
 		const JsonValue json = parent.object(key);
 
 		WidgetLayout layout;
-		layout.position = read_vector(json, "position");
-		layout.size = read_vector(json, "size");
-		layout.spacing = read_vector(json, "spacing");
+		layout.position = read_vector_unchecked(json, "position");
+		layout.size = read_vector_unchecked(json, "size");
+		layout.spacing = read_vector_unchecked(json, "spacing");
 		return layout;
 	}
 
@@ -282,8 +247,8 @@ namespace
 		const JsonValue json = parent.object(key);
 
 		SelectPresentation select;
-		select.spacing = read_vector(json, "spacing");
-		select.size = read_vector(json, "size");
+		select.spacing = read_vector_unchecked(json, "spacing");
+		select.size = read_vector_unchecked(json, "size");
 		select.selected = read_colour(json, "selected");
 		select.unselected = read_colour(json, "unselected");
 		return select;
@@ -358,9 +323,9 @@ namespace
 
 		MenuStyle style;
 		const JsonValue layout = json.object("layout");
-		style.layout.position = read_finite_vector(layout, "position");
+		style.layout.position = read_vector(layout, "position");
 		style.layout.size = read_positive_vector(layout, "size");
-		style.layout.spacing = read_finite_vector(layout, "spacing");
+		style.layout.spacing = read_vector(layout, "spacing");
 		if (style.layout.position.x < 0.0f || style.layout.position.y < 0.0f ||
 			style.layout.position.x + style.layout.size.x > 1920.0f ||
 			style.layout.position.y + style.layout.size.y > 1080.0f)
@@ -387,25 +352,13 @@ namespace
 		const JsonValue motion = json.object("motion");
 		style.motion.focus_duration = read_positive(motion, "focus_duration");
 		style.motion.press_duration = read_positive(motion, "press_duration");
-		style.motion.arrow_travel = motion.number("arrow_travel");
-		style.motion.press_fraction = motion.number("press_fraction");
-		style.motion.selection_inset_fraction = motion.number("selection_inset_fraction");
+		// Travel is in keyline units.
+		style.motion.arrow_travel = read_number_in(motion, "arrow_travel", 0.0f, 2.0f);
+		style.motion.press_fraction = read_unit(motion, "press_fraction");
+		style.motion.selection_inset_fraction = read_number_in(motion, "selection_inset_fraction", 0.0f, 0.08f);
 		if (style.motion.focus_duration > 0.5f || style.motion.press_duration > 0.5f)
 		{
 			throw std::runtime_error(motion.where() + ": focus_duration and press_duration must be at most 0.5 seconds.");
-		}
-		if (!std::isfinite(style.motion.arrow_travel) || style.motion.arrow_travel < 0.0f || style.motion.arrow_travel > 2.0f)
-		{
-			throw std::runtime_error(motion.where() + ": arrow_travel must be finite and in [0,2] keyline units.");
-		}
-		if (!std::isfinite(style.motion.press_fraction) || style.motion.press_fraction < 0.0f || style.motion.press_fraction > 1.0f)
-		{
-			throw std::runtime_error(motion.where() + ": press_fraction must be finite and in [0,1].");
-		}
-		if (!std::isfinite(style.motion.selection_inset_fraction) || style.motion.selection_inset_fraction < 0.0f ||
-			style.motion.selection_inset_fraction > 0.08f)
-		{
-			throw std::runtime_error(motion.where() + ": selection_inset_fraction must be finite and in [0,0.08].");
 		}
 
 		const JsonValue fonts = json.object("fonts");
@@ -415,10 +368,10 @@ namespace
 
 		const JsonValue shadow = json.object("shadow");
 		style.shadow_colour = read_colour(shadow, "colour");
-		style.title_shadow_offset = read_vector(shadow, "title_offset");
-		style.heading_shadow_offset = read_vector(shadow, "heading_offset");
-		style.item_shadow_offset = read_vector(shadow, "item_offset");
-		style.detail_shadow_offset = read_vector(shadow, "detail_offset");
+		style.title_shadow_offset = read_vector_unchecked(shadow, "title_offset");
+		style.heading_shadow_offset = read_vector_unchecked(shadow, "heading_offset");
+		style.item_shadow_offset = read_vector_unchecked(shadow, "item_offset");
+		style.detail_shadow_offset = read_vector_unchecked(shadow, "detail_offset");
 
 		style.highlight = read_colour(json, "highlight");
 		style.unhighlight = read_colour(json, "unhighlight");
@@ -427,24 +380,24 @@ namespace
 		style.heading_colour = read_colour(json, "heading_colour");
 		const JsonValue chrome = json.object("chrome");
 		style.focus_panel_colour = read_colour(chrome, "focus_panel_colour");
-		style.focus_padding = read_vector(chrome, "focus_padding");
+		style.focus_padding = read_vector_unchecked(chrome, "focus_padding");
 		style.accent_width = read_positive(chrome, "accent_width");
 		style.panel_edge_colour = read_colour(chrome, "panel_edge_colour");
-		style.panel_shadow_offset = read_vector(chrome, "panel_shadow_offset");
+		style.panel_shadow_offset = read_vector_unchecked(chrome, "panel_shadow_offset");
 		style.scrim_colour = read_colour(chrome, "scrim_colour");
-		style.brand_position = read_vector(chrome, "brand_position");
+		style.brand_position = read_vector_unchecked(chrome, "brand_position");
 		style.brand_font = chrome.string("brand_font");
 		style.footer_y = chrome.number("footer_y");
 		style.rule_height = read_positive(chrome, "rule_height");
-		style.icon_padding = read_vector(chrome, "icon_padding");
-		style.box_size = read_vector(json, "box_size");
+		style.icon_padding = read_vector_unchecked(chrome, "icon_padding");
+		style.box_size = read_vector_unchecked(json, "box_size");
 
 		style.sound_bank = json.string("sound_bank");
 
 		const JsonValue sounds = json.object("sounds");
-		style.direction_sound = sounds.string("direction");
-		style.confirm_sound = sounds.string("confirm");
-		style.cancel_sound = sounds.string("cancel");
+		style.direction_sound = read_sound(sounds, "direction");
+		style.confirm_sound = read_sound(sounds, "confirm");
+		style.cancel_sound = read_sound(sounds, "cancel");
 
 		return style;
 	}
@@ -490,15 +443,14 @@ namespace
 		const JsonValue art = json.object("art");
 		menu.art.disabled_ink = read_colour(art, "disabled_ink");
 		menu.setup_focus_padding = read_positive_vector(json, "setup_focus_padding");
-		menu.setup_shadow_offset = json.number("setup_shadow_offset");
-		if (!std::isfinite(menu.setup_shadow_offset) || menu.setup_shadow_offset < 0.0f ||
-			menu.setup_shadow_offset > 24.0f || menu.setup_focus_padding.x > 48.0f ||
+		menu.setup_shadow_offset = read_number_in(json, "setup_shadow_offset", 0.0f, 24.0f);
+		if (menu.setup_focus_padding.x > 48.0f ||
 			menu.setup_focus_padding.y > 24.0f ||
 			menu.setup_focus_padding.x <= menu.setup_shadow_offset + menu.art.keyline_width ||
 			menu.setup_focus_padding.y <= menu.setup_shadow_offset + menu.art.keyline_width)
 		{
 			throw std::runtime_error(json.where() +
-				": setup_shadow_offset must be 0..24; setup_focus_padding must be at most (48,24) "
+				": setup_focus_padding must be at most (48,24) "
 				"and exceed setup_shadow_offset + art.keyline_width on both axes.");
 		}
 		if (menu.art.disabled_ink.a != 1.0f || menu.art.disabled_ink == menu.art.paper ||
@@ -509,7 +461,7 @@ namespace
 		}
 		const auto position = [&](const char* key)
 		{
-			const Vector2F value = read_finite_vector(json, key);
+			const Vector2F value = read_vector(json, key);
 			if (value.x < 0.0f || value.x > 1920.0f || value.y < 0.0f || value.y > 1080.0f)
 			{
 				throw std::runtime_error(json.where() + ": '" + key +
@@ -517,15 +469,10 @@ namespace
 			}
 			return value;
 		};
+		// A height in the (1920,1080) menu design.
 		const auto title_height = [&](const char* key)
 		{
-			const float value = json.number(key);
-			if (!std::isfinite(value) || value < 0.0f || value > 1080.0f)
-			{
-				throw std::runtime_error(json.where() + ": '" + key +
-					"' must be finite and from 0 to 1080 in the menu design.");
-			}
-			return value;
+			return read_number_in(json, key, 0.0f, 1080.0f);
 		};
 		const JsonValue backdrop = json.object("backdrop");
 		menu.backdrop_sheet = backdrop.string("sheet");
@@ -562,11 +509,7 @@ namespace
 		menu.options_status_position = position("options_status_position");
 		menu.options_value_x = json.number("options_value_x");
 		menu.options_spacing = read_positive_vector(json, "options_spacing");
-		menu.display_trial_seconds = json.number("display_trial_seconds");
-		if (!std::isfinite(menu.display_trial_seconds) || menu.display_trial_seconds < 1.0f || menu.display_trial_seconds > 60.0f)
-		{
-			throw std::runtime_error(json.where() + ": display_trial_seconds must be finite and 1..60.");
-		}
+		menu.display_trial_seconds = read_number_in(json, "display_trial_seconds", 1.0f, 60.0f);
 		menu.home_spacing = read_positive_vector(json, "home_spacing");
 		MenuPaperArtPresentation options_art = menu.art;
 		options_art.focus_padding = menu.setup_focus_padding;
@@ -605,9 +548,9 @@ namespace
 
 		const JsonValue credits = json.object("credits");
 		menu.credits_font = credits.identifier("font");
-		menu.credits_heading_position = read_finite_vector(credits, "heading_position");
-		menu.credits_position = read_finite_vector(credits, "position");
-		menu.credits_back_position = read_finite_vector(credits, "back_position");
+		menu.credits_heading_position = read_vector(credits, "heading_position");
+		menu.credits_position = read_vector(credits, "position");
+		menu.credits_back_position = read_vector(credits, "back_position");
 		menu.credits_text = drawable_text::widen_drawable(credits.string("text"),
 			credits.where() + ": text");
 
@@ -652,17 +595,17 @@ namespace
 		const JsonValue description = json.object("weapon_description");
 		menu.weapon_description_colour = read_colour(description, "colour");
 		menu.weapon_description_shadow_offset =
-			read_vector(description, "shadow_offset");
-		menu.weapon_description_x_offset = description.number("x_offset");
+			read_vector_unchecked(description, "shadow_offset");
+		menu.weapon_description_x_offset = read_finite(description, "x_offset");
 
-		menu.mode_select_spacing = read_vector(json, "mode_select_spacing");
-		menu.player_count_spacing = read_vector(json, "player_count_spacing");
+		menu.mode_select_spacing = read_vector_unchecked(json, "mode_select_spacing");
+		menu.player_count_spacing = read_vector_unchecked(json, "player_count_spacing");
 
 		menu.team_select = read_select(json, "team_select");
 		const JsonValue team_select = json.object("team_select");
 		menu.team_select.spacing = read_positive_vector(team_select, "spacing");
 		menu.team_select.size = read_positive_vector(team_select, "size");
-		menu.team_warning_position = read_finite_vector(team_select, "warning_position");
+		menu.team_warning_position = read_vector(team_select, "warning_position");
 		if (menu.team_warning_position.x < 0.0f || menu.team_warning_position.x > 1920.0f ||
 			menu.team_warning_position.y < 0.0f || menu.team_warning_position.y > content_height)
 		{
@@ -718,10 +661,10 @@ namespace
 			}
 		}
 		const JsonValue stage = json.object("stage_select");
-		menu.stage_select.preview_position = read_vector(stage, "preview_position");
+		menu.stage_select.preview_position = read_vector_unchecked(stage, "preview_position");
 		menu.stage_select.preview_size = read_positive_vector(stage, "preview_size");
-		menu.stage_select.name_position = read_vector(stage, "name_position");
-		menu.stage_select.navigation_position = read_vector(stage, "navigation_position");
+		menu.stage_select.name_position = read_vector_unchecked(stage, "name_position");
+		menu.stage_select.navigation_position = read_vector_unchecked(stage, "navigation_position");
 		menu.stage_select.briefing = read_layout(stage, "briefing");
 		menu.stage_select.briefing.size = read_positive_vector(stage.object("briefing"), "size");
 		menu.stage_select.briefing_padding = read_positive_vector(stage, "briefing_padding");
@@ -732,8 +675,8 @@ namespace
 		menu.music = read_sound(json, "music");
 
 		const JsonValue sounds = json.object("sounds");
-		menu.error_sound = sounds.string("error");
-		menu.ready_sound = sounds.string("ready");
+		menu.error_sound = read_sound(sounds, "error");
+		menu.ready_sound = read_sound(sounds, "ready");
 		menu.unready_sound = read_sound(sounds, "unready");
 
 		// Resolve descriptions by weapon name so file order is independent of enum order.
@@ -812,12 +755,12 @@ namespace
 				": box_size must be at most 1760 wide and leave 20 pixels above and below within menu_style.chrome.footer_y.");
 		}
 		menu.art = read_menu_paper(json, menu.box_size);
-		menu.heading_position = read_finite_vector(json, "heading_position");
-		menu.controls_position = read_finite_vector(json, "controls_position");
+		menu.heading_position = read_vector(json, "heading_position");
+		menu.controls_position = read_vector(json, "controls_position");
 		menu.controls_size = read_positive_vector(json, "controls_size");
-		menu.status_position = read_finite_vector(json, "status_position");
+		menu.status_position = read_vector(json, "status_position");
 		const JsonValue layout = json.object("layout");
-		menu.layout.position = read_finite_vector(layout, "position");
+		menu.layout.position = read_vector(layout, "position");
 		menu.layout.size = read_positive_vector(layout, "size");
 		menu.layout.spacing = read_positive_vector(layout, "spacing");
 		menu.item_font = json.identifier("item_font");
@@ -875,13 +818,13 @@ namespace
 		const auto read_preview_box = [&](const char* key)
 		{
 			const JsonValue box = preview.object(key);
-			return RectangleF(read_finite_vector(box, "position"), read_positive_vector(box, "size"));
+			return RectangleF(read_vector(box, "position"), read_positive_vector(box, "size"));
 		};
 		menu.stick_preview.raw_movement = read_preview_box("raw_movement");
 		menu.stick_preview.movement_response = read_preview_box("movement_response");
 		menu.stick_preview.aim = read_preview_box("aim");
-		menu.stick_preview.aim_readout_position = read_finite_vector(preview, "aim_readout_position");
-		menu.stick_preview.association_position = read_finite_vector(preview, "association_position");
+		menu.stick_preview.aim_readout_position = read_vector(preview, "aim_readout_position");
+		menu.stick_preview.association_position = read_vector(preview, "association_position");
 		menu.stick_preview.marker_size = read_positive(preview, "marker_size");
 		menu.stick_preview.line_width = read_positive(preview, "line_width");
 		const StickPreviewPresentation& view = menu.stick_preview;
@@ -964,7 +907,7 @@ namespace
 			throw std::runtime_error(json.where() + ": heading_y < status_y <= 900 required.");
 		}
 		menu.layout = read_layout(json, "layout");
-		menu.window_open_sound = json.string("window_open_sound");
+		menu.window_open_sound = read_sound(json, "window_open_sound");
 		const JsonValue sounds = json.object("sounds");
 		menu.pad_lost_sound = read_sound(sounds, "pad_lost");
 		menu.pad_back_sound = read_sound(sounds, "pad_back");
@@ -1024,7 +967,7 @@ namespace
 			throw std::runtime_error(json.where() +
 				": heading_y < winner_y < session_score_y < session_result_y required.");
 		}
-		menu.contribution_position = read_vector(json, "contribution_position");
+		menu.contribution_position = read_vector_unchecked(json, "contribution_position");
 		menu.contribution_spacing = read_positive(json, "contribution_spacing");
 		if (menu.contribution_spacing > 100.0f)
 		{
@@ -1034,24 +977,23 @@ namespace
 
 		const JsonValue fill = json.object("fill");
 		menu.fill_box_size = read_positive_vector(fill, "box_size");
-		menu.fill_box_y_offset = fill.number("box_y_offset");
+		menu.fill_box_y_offset = read_number_in(fill, "box_y_offset", 0.0f, 900.0f);
 		menu.team_fill_border = read_positive_vector(fill, "border");
 		menu.track_colour = read_colour(fill, "track_colour");
 		if (menu.track_colour.a != 1.0f || menu.track_colour == menu.art.ink)
 		{
 			throw std::runtime_error(fill.where() + ": track_colour must be opaque and distinct from art.ink.");
 		}
-		if (!std::isfinite(menu.fill_box_y_offset) || menu.fill_box_y_offset < 0.0f ||
-			menu.fill_box_y_offset > 900.0f || menu.fill_box_size.x > menu.box_size.x ||
+		if (menu.fill_box_size.x > menu.box_size.x ||
 			menu.fill_box_size.y > menu.box_size.y || menu.team_fill_border.x < menu.art.keyline_width ||
 			menu.team_fill_border.y < menu.art.keyline_width ||
 			menu.team_fill_border.x * 2.0f >= menu.fill_box_size.x ||
 			menu.team_fill_border.y * 2.0f >= menu.fill_box_size.y)
 		{
 			throw std::runtime_error(fill.where() +
-				": box_size must fit the panel, box_y_offset must be 0..900, and border must contain the keyline and leave positive fill space.");
+				": box_size must fit the panel, and border must contain the keyline and leave positive fill space.");
 		}
-		menu.team_fill_delay = fill.number("delay");
+		menu.team_fill_delay = read_number_in(fill, "delay", 0.0f, 10.0f);
 		// Zero has no defined fill ratio. Reject it here instead of sending a
 		// first-frame NaN to the renderer.
 		menu.team_fill_time = read_positive(fill, "time");
@@ -1060,23 +1002,15 @@ namespace
 		menu.team_fill_size =
 			menu.fill_box_size - menu.team_fill_border * 2.0f;
 
-		menu.show_results_delay = json.number("show_results_delay");
-		if (!std::isfinite(menu.team_fill_delay) || menu.team_fill_delay < 0.0f ||
-			menu.team_fill_delay > 10.0f || menu.team_fill_time > 10.0f ||
-			!std::isfinite(menu.show_results_delay) || menu.show_results_delay < 0.0f ||
-			menu.show_results_delay > 10.0f)
+		menu.show_results_delay = read_number_in(json, "show_results_delay", 0.0f, 10.0f);
+		if (menu.team_fill_time > 10.0f)
 		{
-			throw std::runtime_error(json.where() +
-				": fill.delay and show_results_delay must be 0..10, and fill.time must be at most 10.");
+			throw std::runtime_error(fill.where() + ": 'time' must be at most 10.");
 		}
 
 		const JsonValue team_mark = json.object("team_mark");
 		menu.team_mark_size = read_positive_vector(team_mark, "size");
-		menu.team_mark_gap = team_mark.number("gap");
-		if (!std::isfinite(menu.team_mark_gap) || menu.team_mark_gap < 0.0f || menu.team_mark_gap > 100.0f)
-		{
-			throw std::runtime_error(team_mark.where() + ": gap must be 0..100.");
-		}
+		menu.team_mark_gap = read_number_in(team_mark, "gap", 0.0f, 100.0f);
 
 		const JsonValue sounds = json.object("sounds");
 		menu.winner_sound = read_sound(sounds, "winner");
@@ -1093,10 +1027,10 @@ namespace
 
 		PromptBarPresentation bar;
 		bar.font = json.string("font");
-		bar.position = read_vector(json, "position");
+		bar.position = read_vector_unchecked(json, "position");
 		bar.colour = read_colour(json, "colour");
 		bar.shadow_colour = read_colour(json, "shadow_colour");
-		bar.shadow_offset = read_vector(json, "shadow_offset");
+		bar.shadow_offset = read_vector_unchecked(json, "shadow_offset");
 		return bar;
 	}
 
@@ -1125,11 +1059,12 @@ namespace
 		hud.meter_track_colour = read_colour(json, "meter_track_colour");
 		hud.meter_label_gap = read_positive(json, "meter_label_gap");
 		hud.reference_height = read_positive(json, "reference_height");
-		hud.right_margin = json.number("right_margin");
-		hud.ammo_top_margin = json.number("ammo_top_margin");
-		hud.health_top_margin = json.number("health_top_margin");
-		hud.box_size = read_vector(json, "box_size");
-		hud.box_fill_border = json.number("box_fill_border");
+		// Margins and the meter box are fractions of the player's view.
+		hud.right_margin = read_unit(json, "right_margin");
+		hud.ammo_top_margin = read_unit(json, "ammo_top_margin");
+		hud.health_top_margin = read_unit(json, "health_top_margin");
+		hud.box_size = read_positive_vector(json, "box_size");
+		hud.box_fill_border = read_non_negative(json, "box_fill_border");
 		hud.health_colour = read_colour(json, "health_colour");
 
 		hud.sprite_sheet = json.string("sprite_sheet");
@@ -1137,8 +1072,8 @@ namespace
 
 		const JsonValue timer = json.object("timer");
 		hud.timer_font = timer.string("font");
-		hud.timer_offset = read_vector(timer, "offset");
-		hud.timer_shadow_offset = read_vector(timer, "shadow_offset");
+		hud.timer_offset = read_vector_unchecked(timer, "offset");
+		hud.timer_shadow_offset = read_vector_unchecked(timer, "shadow_offset");
 		hud.timer_colour = read_colour(timer, "colour");
 		hud.timer_shadow_colour = read_colour(timer, "shadow_colour");
 		hud.timer_reference_width = read_positive(timer, "reference_width");
@@ -1167,12 +1102,12 @@ namespace
 
 		const JsonValue identity = json.object("player_identity");
 		hud.player_identity_font = identity.string("font");
-		hud.player_identity_offset = read_vector(identity, "offset");
-		hud.player_identity_shadow_offset = read_vector(identity, "shadow_offset");
+		hud.player_identity_offset = read_vector_unchecked(identity, "offset");
+		hud.player_identity_shadow_offset = read_vector_unchecked(identity, "shadow_offset");
 		hud.player_identity_colour = read_colour(identity, "colour");
 		hud.player_identity_shadow_colour = read_colour(identity, "shadow_colour");
 		hud.player_identity_background_colour = read_colour(identity, "background_colour");
-		hud.player_identity_padding = read_vector(identity, "padding");
+		hud.player_identity_padding = read_vector_unchecked(identity, "padding");
 		hud.player_identity_reference_width = read_positive(identity, "reference_width");
 
 
@@ -1185,7 +1120,7 @@ namespace
 		PlayerIdentityPresentation identity;
 		identity.enabled = json.boolean("enabled");
 		identity.world_size = read_positive_vector(json, "world_size");
-		identity.world_offset = read_finite_vector(json, "world_offset");
+		identity.world_offset = read_vector(json, "world_offset");
 		identity.emphasis_duration = read_positive(json, "emphasis_duration");
 		identity.emphasis_scale = read_positive(json, "emphasis_scale");
 		identity.ui_size = read_positive_vector(json, "ui_size");
@@ -1386,10 +1321,10 @@ namespace
 		}
 		figure.rest_arms_frame = json.identifier("rest_arms_frame");
 		figure.canvas_size = read_positive_vector(json, "canvas_size");
-		figure.accent_offset = read_finite_vector(json, "accent_offset");
+		figure.accent_offset = read_vector(json, "accent_offset");
 		figure.accent_size = read_positive_vector(json, "accent_size");
-		figure.rear_shoulder = read_finite_vector(json, "rear_shoulder");
-		figure.front_shoulder = read_finite_vector(json, "front_shoulder");
+		figure.rear_shoulder = read_vector(json, "rear_shoulder");
+		figure.front_shoulder = read_vector(json, "front_shoulder");
 		figure.arm_width = read_positive(json, "arm_width");
 		figure.elbow_drop = read_positive(json, "elbow_drop");
 		figure.hand_size = read_positive(json, "hand_size");
@@ -1447,7 +1382,7 @@ namespace
 		for (size_t index = 0; index < keys.size(); ++index)
 		{
 			const JsonValue grip = grips.object(keys[index]);
-			figure.grips[index] = { read_finite_vector(grip, "rear"), read_finite_vector(grip, "front") };
+			figure.grips[index] = { read_vector(grip, "rear"), read_vector(grip, "front") };
 		}
 		return figure;
 	}
@@ -1462,20 +1397,14 @@ namespace
 		redraw.pen_colour = read_colour(json, "pen_colour");
 		redraw.canvas_size = read_positive_vector(json, "canvas_size");
 		redraw.pen_width = read_positive(json, "pen_width");
-		redraw.draw_from = json.number("draw_from");
-		redraw.fill_at = json.number("fill_at");
-		if (!(redraw.draw_from >= 0.0f && redraw.draw_from < redraw.fill_at &&
-			redraw.fill_at <= 1.0f))
+		// Fractions of the respawn wait.
+		redraw.draw_from = read_unit(json, "draw_from");
+		redraw.fill_at = read_unit(json, "fill_at");
+		if (!(redraw.draw_from < redraw.fill_at))
 		{
-			throw std::runtime_error(json.where() + ": 'draw_from' and 'fill_at' must be "
-				"fractions of the respawn wait with 0 <= draw_from < fill_at <= 1.");
+			throw std::runtime_error(json.where() + ": 'draw_from' must come before 'fill_at'.");
 		}
-		redraw.camera_hold = json.number("camera_hold");
-		if (!std::isfinite(redraw.camera_hold) || redraw.camera_hold < 0.0f)
-		{
-			throw std::runtime_error(json.where() + ": 'camera_hold' must be finite and "
-				"not negative.");
-		}
+		redraw.camera_hold = read_non_negative(json, "camera_hold");
 
 		const JsonValue strokes = json.array("strokes");
 		if (strokes.size() == 0)
@@ -1520,17 +1449,6 @@ namespace
 		return redraw;
 	}
 
-	float read_fraction(const JsonValue& parent, const char* key)
-	{
-		const float value = parent.number(key);
-		if (!(value >= 0.0f && value <= 1.0f))
-		{
-			throw std::runtime_error(parent.where() + ": '" + key +
-				"' must be a fraction from 0 to 1.");
-		}
-		return value;
-	}
-
 	OpeningPresentation read_opening(const JsonValue& root)
 	{
 		const JsonValue json = root.object("opening");
@@ -1545,9 +1463,9 @@ namespace
 		monitor.ink = read_colour(art, "ink");
 		monitor.highlight = read_colour(art, "highlight");
 		monitor.power_light = read_colour(art, "power_light");
-		monitor.pen_width = read_fraction(art, "pen_width");
-		monitor.corner_step = read_fraction(art, "corner_step");
-		monitor.shadow_width = read_fraction(art, "shadow_width");
+		monitor.pen_width = read_unit(art, "pen_width");
+		monitor.corner_step = read_unit(art, "corner_step");
+		monitor.shadow_width = read_unit(art, "shadow_width");
 		monitor.vent_count = art.integer("vent_count");
 		if (monitor.pen_width <= 0.0f || monitor.pen_width > 0.02f ||
 			monitor.corner_step < monitor.pen_width || monitor.corner_step > 0.05f ||
@@ -1561,8 +1479,8 @@ namespace
 		const auto read_monitor_rectangle = [&art](const char* key)
 		{
 			const JsonValue value = art.object(key);
-			const RectangleF rectangle(read_fraction(value, "x"), read_fraction(value, "y"),
-				read_fraction(value, "width"), read_fraction(value, "height"));
+			const RectangleF rectangle(read_unit(value, "x"), read_unit(value, "y"),
+				read_unit(value, "width"), read_unit(value, "height"));
 			if (rectangle.width <= 0.0f || rectangle.height <= 0.0f ||
 				rectangle.right() > 1.0f || rectangle.bottom() > 1.0f)
 			{
@@ -1574,8 +1492,8 @@ namespace
 		monitor.power_button = read_monitor_rectangle("power_button");
 		monitor.power_indicator = read_monitor_rectangle("power_indicator");
 		const JsonValue glass = json.object("glass");
-		opening.glass = RectangleF(read_fraction(glass, "x"), read_fraction(glass, "y"),
-			read_fraction(glass, "width"), read_fraction(glass, "height"));
+		opening.glass = RectangleF(read_unit(glass, "x"), read_unit(glass, "y"),
+			read_unit(glass, "width"), read_unit(glass, "height"));
 		if (opening.glass.width <= 0.0f || opening.glass.height <= 0.0f ||
 			opening.glass.right() > 1.0f || opening.glass.bottom() > 1.0f)
 		{
@@ -1593,7 +1511,7 @@ namespace
 		opening.glass_colour = read_colour(json, "glass_colour");
 		opening.program_colour = read_colour(json, "program_colour");
 		opening.desktop_colour = read_colour(json, "desktop_colour");
-		opening.palette_height = read_fraction(json, "palette_height");
+		opening.palette_height = read_unit(json, "palette_height");
 		opening.palette_greys = read_colours(json, "palette_greys");
 		for (const Colour& grey : opening.palette_greys)
 		{
@@ -1615,8 +1533,8 @@ namespace
 		person.ink = read_colour(person_art, "ink");
 		person.rim = read_colour(person_art, "rim");
 		person.shade = read_colour(person_art, "shade");
-		person.pen_width = read_fraction(person_art, "pen_width");
-		person.shade_width = read_fraction(person_art, "shade_width");
+		person.pen_width = read_unit(person_art, "pen_width");
+		person.shade_width = read_unit(person_art, "shade_width");
 		if (person.pen_width <= 0.0f || person.pen_width > 0.025f ||
 			person.shade_width < person.pen_width || person.shade_width > 0.08f)
 		{
@@ -1629,31 +1547,31 @@ namespace
 		cursor.fill = read_colour(cursor_art, "fill");
 		cursor.shade = read_colour(cursor_art, "shade");
 		cursor.shadow = read_colour(cursor_art, "shadow");
-		cursor.shadow_offset = read_fraction(cursor_art, "shadow_offset");
+		cursor.shadow_offset = read_unit(cursor_art, "shadow_offset");
 		cursor.click_duration = read_positive(cursor_art, "click_duration");
-		cursor.click_reach = read_fraction(cursor_art, "click_reach");
+		cursor.click_reach = read_unit(cursor_art, "click_reach");
 		if (cursor.shadow_offset > 0.2f || cursor.click_duration <= 0.0f ||
 			cursor.click_duration > 0.5f || cursor.click_reach <= 0.0f || cursor.click_reach > 0.6f)
 		{
 			throw std::runtime_error(cursor_art.where() +
 				": cursor shadow/click must stay local; 'click_duration' must be in (0, 0.5].");
 		}
-		opening.adult_height = read_fraction(json, "adult_height");
-		opening.child_height = read_fraction(json, "child_height");
-		opening.cursor_size = read_fraction(json, "cursor_size");
-		opening.preview_strength = read_fraction(json, "preview_strength");
+		opening.adult_height = read_unit(json, "adult_height");
+		opening.child_height = read_unit(json, "child_height");
+		opening.cursor_size = read_unit(json, "cursor_size");
+		opening.preview_strength = read_unit(json, "preview_strength");
 		opening.figure_grey = read_colour(json, "figure_grey");
 		opening.percent_font = json.identifier("percent_font");
-		opening.percent_height = read_fraction(json, "percent_height");
+		opening.percent_height = read_unit(json, "percent_height");
 		const JsonValue reveal_art = json.object("reveal_art");
 		RevealArtPresentation& reveal = opening.reveal_art;
 		reveal.ink = read_colour(reveal_art, "ink");
 		reveal.paper = read_colour(reveal_art, "paper");
 		reveal.shade = read_colour(reveal_art, "shade");
 		reveal.keyline_width = read_positive(reveal_art, "keyline_width");
-		reveal.padding = read_fraction(reveal_art, "padding");
-		reveal.shadow_offset = read_fraction(reveal_art, "shadow_offset");
-		reveal.tick_length = read_fraction(reveal_art, "tick_length");
+		reveal.padding = read_unit(reveal_art, "padding");
+		reveal.shadow_offset = read_unit(reveal_art, "shadow_offset");
+		reveal.tick_length = read_unit(reveal_art, "tick_length");
 		reveal.beat_duration = read_positive(reveal_art, "beat_duration");
 		if (reveal.keyline_width > 0.06f || reveal.padding < 0.08f || reveal.padding > 0.18f ||
 			reveal.shadow_offset > 0.1f || reveal.tick_length > 0.2f || reveal.beat_duration > 0.5f)
@@ -1665,9 +1583,9 @@ namespace
 		const JsonValue acting = json.object("acting");
 		opening.face = read_colour(acting, "face");
 		opening.sweat = read_colour(acting, "sweat");
-		opening.hop = read_fraction(acting, "hop");
-		opening.shake = read_fraction(acting, "shake");
-		opening.slump = read_fraction(acting, "slump");
+		opening.hop = read_unit(acting, "hop");
+		opening.shake = read_unit(acting, "shake");
+		opening.slump = read_unit(acting, "slump");
 		if (opening.adult_height <= 0.0f || opening.child_height <= 0.0f ||
 			opening.cursor_size <= 0.0f || opening.palette_height <= 0.0f ||
 			opening.percent_height <= 0.0f)
@@ -1684,17 +1602,17 @@ namespace
 
 		DebugOverlayPresentation debug;
 		debug.font = json.string("font");
-		debug.font_scale = json.number("font_scale");
-		debug.line_spacing = json.number("line_spacing");
-		debug.position = read_vector(json, "position");
+		debug.font_scale = read_positive(json, "font_scale");
+		debug.line_spacing = read_positive(json, "line_spacing");
+		debug.position = read_vector_unchecked(json, "position");
 		debug.colour = read_colour(json, "colour");
 		debug.shadow_colour = read_colour(json, "shadow_colour");
-		debug.shadow_offset = read_vector(json, "shadow_offset");
-		debug.shadow_scale = json.number("shadow_scale");
+		debug.shadow_offset = read_vector_unchecked(json, "shadow_offset");
+		debug.shadow_scale = read_positive(json, "shadow_scale");
 		const JsonValue station = json.object("station_label");
 		debug.station_label.font = station.string("font");
 		debug.station_label.scale = read_positive(station, "scale");
-		debug.station_label.offset = read_vector(station, "offset");
+		debug.station_label.offset = read_vector_unchecked(station, "offset");
 		debug.station_label.colour = read_colour(station, "colour");
 		return debug;
 	}
@@ -1781,12 +1699,7 @@ Presentation::Presentation(const char* path)
 	this->music_mix_.fade_out = music_duration("fade_out");
 	this->music_mix_.duck_time = music_duration("duck_time");
 	this->music_mix_.restore_time = music_duration("restore_time");
-	this->music_mix_.pause_gain = music_mix.number("pause_gain");
-	if (!std::isfinite(this->music_mix_.pause_gain) ||
-		this->music_mix_.pause_gain < 0.0f || this->music_mix_.pause_gain > 1.0f)
-	{
-		throw std::runtime_error(music_mix.where() + ": pause_gain must be 0..1.");
-	}
+	this->music_mix_.pause_gain = read_unit(music_mix, "pause_gain");
 	this->main_menu_ = read_main_menu(root, this->menu_.footer_y);
 	this->controls_settings_ = read_controls_settings(root, this->menu_.footer_y);
 	this->pause_menu_ = read_pause_menu(root);
@@ -1898,7 +1811,7 @@ Presentation::Presentation(const char* path)
 	signal.keyline_width = read_positive(countdown_art, "keyline_width");
 	signal.shadow_offset = countdown_art.number("shadow_offset");
 	signal.beat_duration = read_positive(countdown_art, "beat_duration");
-	signal.pulse = read_fraction(countdown_art, "pulse");
+	signal.pulse = read_unit(countdown_art, "pulse");
 	if (signal.keyline_width > 8.0f || !std::isfinite(signal.shadow_offset) ||
 		signal.shadow_offset < 0.0f || signal.shadow_offset > 16.0f ||
 		signal.beat_duration > 0.5f || signal.pulse > 0.15f)
@@ -2798,15 +2711,15 @@ void Presentation::validate_resources(const RenderResources& render,
 	}
 
 	const std::string& bank = this->menu_.sound_bank;
-	check.wave("menu_style.sounds.direction", bank, this->menu_.direction_sound);
-	check.wave("menu_style.sounds.confirm", bank, this->menu_.confirm_sound);
-	check.wave("menu_style.sounds.cancel", bank, this->menu_.cancel_sound);
-	check.wave("main_menu.sounds.error", bank, this->main_menu_.error_sound);
-	check.wave("main_menu.sounds.ready", bank, this->main_menu_.ready_sound);
+	check.wave("menu_style.sounds.direction.name", bank, this->menu_.direction_sound.name);
+	check.wave("menu_style.sounds.confirm.name", bank, this->menu_.confirm_sound.name);
+	check.wave("menu_style.sounds.cancel.name", bank, this->menu_.cancel_sound.name);
+	check.wave("main_menu.sounds.error.name", bank, this->main_menu_.error_sound.name);
+	check.wave("main_menu.sounds.ready.name", bank, this->main_menu_.ready_sound.name);
 	check.wave("main_menu.sounds.unready.name", bank, this->main_menu_.unready_sound.name);
 	check.wave("controls_settings.sounds.volume_preview.name", bank, this->controls_settings_.volume_preview_sound.name);
 	check.effect("main_menu.music.name", bank, this->main_menu_.music.name);
-	check.wave("pause_menu.window_open_sound", bank, this->pause_menu_.window_open_sound);
+	check.wave("pause_menu.window_open_sound.name", bank, this->pause_menu_.window_open_sound.name);
 	check.wave("pause_menu.sounds.pad_lost.name", bank, this->pause_menu_.pad_lost_sound.name);
 	check.wave("pause_menu.sounds.pad_back.name", bank, this->pause_menu_.pad_back_sound.name);
 	check.effect("pause_menu.sounds.resume.name", bank, this->pause_menu_.resume_sound.name);

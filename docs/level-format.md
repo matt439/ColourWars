@@ -199,11 +199,9 @@ optional pairs are independent:
 
 A half-present pair is rejected, including when its provided value is null.
 The gain is authored gain multiplied by the saved music preference; the shared
-presentation mix controls fades and ducking. Ending-sting gain must be finite
-and in `0..1`. The runtime currently type-checks looping `music_volume` without
-a numeric range; the editor requires it to be finite and nonnegative. Prefer
-normal `0..1` gains, as in the template, rather than depending on playback
-clamping. The schema retains the runtime's unbounded numeric music field.
+presentation mix controls fades and ducking. Both gains must be finite and in
+`0..1`, in the runtime, the editor and the schema alike, so a gain above one is
+refused at load rather than clamped by playback.
 
 Names resolve as **effect instance** identifiers in the bank's JSON definition,
 not raw wave indices or audio paths. For example, the template uses

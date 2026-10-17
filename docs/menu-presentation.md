@@ -28,6 +28,26 @@ preview/briefing shapes, results bars and stick-response previews. Their
 identifiers must be nonempty, and startup validates the named frame against the
 named atlas. An art replacement must supply an appropriate solid fill.
 
+## Menu sounds
+
+Every menu sound is an object, `{ "name": "<wave>", "volume": <gain> }`, with
+the gain in `0..1` and multiplied by the player's SFX preference when it plays.
+
+| JSON path | Shipped value | Plays on |
+|---|---|---|
+| `menu_style.sounds.direction` | `ui.move` at `1.0` | Focus moves, on every menu page |
+| `menu_style.sounds.confirm` | `ui.confirm` at `1.0` | A row or choice is accepted |
+| `menu_style.sounds.cancel` | `ui.cancel` at `1.0` | Back |
+| `main_menu.sounds.error` | `ui.error` at `1.0` | A refused setup choice |
+| `main_menu.sounds.ready` | `ui.ready` at `1.0` | A player readies |
+| `main_menu.sounds.unready` | `ui.unready` at `0.7` | A player unreadies |
+| `pause_menu.window_open_sound` | `ui.pause_open` at `1.0` | Entering pause |
+
+The name must be a nonempty wave in `menu_style.sound_bank`; startup reports a
+missing one under its `.name` path. The other menu-owned cues (`pad_lost`,
+`pad_back`, `resume`, `volume_preview`, `series`, the results stings) take the
+same shape. `docs/audio-inventory.md` owns which wave each name is.
+
 ## Home return focus
 
 Home's initial focus is a bounded C++ choice among Play, Options and Credits,

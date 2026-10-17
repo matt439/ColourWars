@@ -63,7 +63,7 @@ protected:
 		quit
 	};
 
-	labrador::SoundBank::WaveHandle window_open_sound_;
+	MenuSound window_open_sound_;
 private:
 	int pausing_player_ = -1;
 };

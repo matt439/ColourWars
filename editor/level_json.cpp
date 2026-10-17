@@ -280,7 +280,10 @@ namespace colourwars_editor
                 fail("Music name and music volume come together, or neither for a silent stage.");
             }
             if (named && string(sound, "music_name").empty()) { fail("The music name must not be empty."); }
-            if (named && number(sound, "music_volume") < 0.0) { fail("Music volume must not be negative."); }
+            if (named && (number(sound, "music_volume") < 0.0 || number(sound, "music_volume") > 1.0))
+            {
+                fail("music_volume must be 0..1.");
+            }
             const bool sting = sound.HasMember("end_sting_name");
             if (sting != sound.HasMember("end_sting_volume"))
             {

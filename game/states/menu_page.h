@@ -21,6 +21,13 @@ namespace menu_consts
 	inline const mattmath::Vector2F DESIGN_RESOLUTION = { 1920.0f, 1080.0f };
 }
 
+// A menu wave resolved once, with the volume presentation.json gives it.
+struct MenuSound
+{
+	labrador::SoundBank::WaveHandle wave;
+	float volume = 1.0f;
+};
+
 // Shared menu layout, focus, prompts, and sound-bank access.
 // DebugPageTarget is how the developer tools reach the page on top; its
 // defaults say no, and the pages with a way out of a match say how.
@@ -118,14 +125,17 @@ protected:
 	std::unique_ptr<labrador::UiContainer> text_container_ = nullptr;
 
 	// Shared menu sounds resolved once per page.
-	labrador::SoundBank::WaveHandle direction_sound_;
-	labrador::SoundBank::WaveHandle confirm_sound_;
-	labrador::SoundBank::WaveHandle cancel_sound_;
+	MenuSound direction_sound_;
+	MenuSound confirm_sound_;
+	MenuSound cancel_sound_;
+	MenuSound resolve_sound(const PresentationSound& sound) const;
 
 	// Menu and results sounds use the user's SFX gain. Music is separate so
 	// it keeps its own gain without changing the authored relative volumes.
 	void play_wave(labrador::SoundBank::WaveHandle wave, float volume = 1.0f,
 		float pitch = 0.0f, float pan = 0.0f) const;
+	// At its authored volume, under the same SFX gain.
+	void play_wave(const MenuSound& sound) const;
 	void play_effect(labrador::SoundBank::EffectHandle effect, bool loop = false,
 		float volume = 1.0f, float pitch = 0.0f, float pan = 0.0f) const;
 

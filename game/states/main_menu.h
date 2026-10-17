@@ -54,8 +54,8 @@ protected:
 	void set_player_prompts(MenuPrompt prompts);
 
 	// Family-specific sounds; the looping music is stopped before entering a match.
-	labrador::SoundBank::WaveHandle error_sound_;
-	labrador::SoundBank::WaveHandle ready_sound_;
+	MenuSound error_sound_;
+	MenuSound ready_sound_;
 	labrador::SoundBank::WaveHandle unready_sound_;
 private:
 	MenuPrompt player_prompts_ = MenuPrompt::select_back;

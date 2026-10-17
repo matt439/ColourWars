@@ -13,8 +13,8 @@ MainMenuPage::MainMenuPage(MenuContext* context) :
 {
 	const MainMenuPresentation& look = this->look();
 
-	this->error_sound_ = this->resolve_wave(look.error_sound);
-	this->ready_sound_ = this->resolve_wave(look.ready_sound);
+	this->error_sound_ = this->resolve_sound(look.error_sound);
+	this->ready_sound_ = this->resolve_sound(look.ready_sound);
 	this->unready_sound_ = this->resolve_wave(look.unready_sound.name);
 }
 

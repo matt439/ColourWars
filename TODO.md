@@ -121,7 +121,6 @@ the accepted `GAP#8.6` scope.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `GAP#8.2` | OPEN | LOW | M | Range checks are ad hoc: no shared content-value checks or cross-field checks; menu sounds unbounded. |
 | `GAP#8.4` | OPEN | LOW | M | Other setting values, composed stage navigation/count hints, best-of mode and roster copy, connection/readout text, player-specific Pause titles, session continuation text and composed match/results text remain C++ literals. [Boundary](docs/menu-presentation.md#shared-headings-and-complete-control-legends). |
 | `GAP#8.7` | OPEN | LOW | M | Fonts cannot be regenerated (no recipe for the 7 atlases); no text wrapping. |
 

@@ -7,6 +7,7 @@
 #include <fstream>
 #include <iostream>
 #include <limits>
+#include <vector>
 #include <rapidjson/document.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
@@ -394,6 +395,71 @@ namespace
                 { d["projectiles"][name]["wind_resistance"].SetString("20"); });
         }
     }
+
+    // The shared content-value reads (game/content_value.h) and the
+    // cross-field rules written at the end of each reader.
+    void check_shared_bounds(Fixtures& fixtures)
+    {
+        const auto at = [](rapidjson::Document& d, const std::vector<const char*>& path) -> rapidjson::Value&
+        {
+            rapidjson::Value* value = &d;
+            for (const char* key : path) { value = &(*value)[key]; }
+            return *value;
+        };
+        struct Bound { std::vector<const char*> path; double invalid; };
+        const Bound bounds[]{
+            { { "match", "countdown" }, -0.01 },
+            { { "match", "overview" }, -0.01 },
+            { { "player", "gravity" }, 1e100 },
+            { { "player", "jump_max_time" }, -0.01 },
+            { { "player", "drop_down_analog_threshold" }, 1.01 },
+            { { "player", "respawn_delay" }, -0.01 },
+            { { "player", "health_regen_rate" }, -0.01 },
+            { { "weapons", "ammo_regen_delay" }, -0.01 },
+            { { "weapons", "ammo_regen_rate" }, 1e100 },
+            { { "weapons", "sprayer", "shoot_interval" }, -0.01 },
+            { { "weapons", "sniper", "starting_vel_length" }, -1.0 },
+            { { "weapons", "bucket", "ammo_usage" }, -0.01 },
+            { { "projectiles", "spray", "delete_timer" }, 0.0 },
+            { { "projectiles", "jet", "player_damage" }, -0.01 },
+            { { "projectiles", "ball", "gravity" }, 1e100 },
+            { { "projectiles", "mist", "diffusion", "start_time" }, -0.01 },
+        };
+        for (const Bound& bound : bounds)
+        {
+            const char* owner = *(bound.path.end() - 2);
+            const char* field = *(bound.path.end() - 1);
+            fixtures.rejects(owner, field, [&](rapidjson::Document& d) { at(d, bound.path).SetDouble(bound.invalid); });
+        }
+        fixtures.rejects("projectiles", "max_velocity", [](rapidjson::Document& d)
+            { d["projectiles"]["max_velocity"]["x"].SetDouble(0.0); });
+        fixtures.rejects("rolling", "collision_size", [](rapidjson::Document& d)
+            { d["projectiles"]["rolling"]["collision_size"]["y"].SetDouble(0.0); });
+
+        // A diffusion that would end before it starts.
+        fixtures.rejects("diffusion", "start_time", [](rapidjson::Document& d)
+        {
+            auto& diffusion = d["projectiles"]["spray"]["diffusion"];
+            diffusion["start_time"].SetDouble(diffusion["end_time"].GetDouble() + 0.01);
+        });
+
+        // The boundaries themselves are accepted unchanged.
+        const GameTuning edges = fixtures.load([](rapidjson::Document& d)
+        {
+            d["player"]["jump_max_time"].SetDouble(0.0);
+            d["player"]["drop_down_analog_threshold"].SetDouble(1.0);
+            d["weapons"]["roller"]["shoot_interval"].SetDouble(0.0);
+            auto& diffusion = d["projectiles"]["spray"]["diffusion"];
+            diffusion["start_time"].SetDouble(diffusion["end_time"].GetDouble());
+            d["match"]["overview"].SetDouble(0.0);
+        });
+        require(edges.match().overview == 0.0f && edges.player().jump_max_time == 0.0f &&
+            edges.player().drop_down_analog_threshold == 1.0f &&
+            edges.weapon(WeaponType::roller).details.shoot_interval == 0.0f &&
+            edges.projectile(ProjectileType::spray).diffusion.start_time ==
+                edges.projectile(ProjectileType::spray).diffusion.end_time,
+            "A shared content-value boundary was rejected or changed");
+    }
 }
 
 int main(int argc, char** argv)
@@ -440,6 +506,7 @@ int main(int argc, char** argv)
         check_actual_objects(world, custom, false);
         check_live_assignment(world, defaults, custom);
         check_validation(fixtures);
+        check_shared_bounds(fixtures);
         std::cout << "PASS gameplay tuning: exact legacy roller/mist/integrator parity, real custom values, "
             "stable live borrowed records, strict boundaries and contextual rejection.\n";
         return 0;

@@ -198,7 +198,7 @@
             "properties": {
                 "sound_bank_name": { "type": "string" },
                 "music_name": { "type": "string" },
-                "music_volume": { "type": "number" },
+                "music_volume": { "type": "number", "minimum": 0, "maximum": 1 },
                 "end_sting_name": { "type": "string" },
                 "end_sting_volume": { "type": "number", "minimum": 0, "maximum": 1 }
             },

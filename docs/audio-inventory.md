@@ -251,10 +251,11 @@ cue fails only on a machine that has the real bank.
    recreates the initial page without replaying the open cue. Back/No still
    play cancel. Opening a new pause session still plays the open cue; the
    controls/audio page returns to the existing pause page.
-6. **Menu sounds have no volume field.** Direction, confirm, cancel, error,
-   ready and pause-open are plain strings (`presentation.h:71-73, 171-172,
-   186`) and always play at 1.0 × SFX. Their gain must be built into the
-   wave, or the schema must change (`GAP#8.2`).
+6. **Every menu sound has a volume field.** Since 2026-10-17 direction,
+   confirm, cancel, error, ready and pause-open are `{name, volume}` objects
+   like the other menu cues, shipped at `1.0`, and play at volume × SFX
+   (`MenuSound` in `game/states/menu_page.h`). The gain is `0..1`
+   ([menu sounds](menu-presentation.md#menu-sounds)).
 7. **A stage needs its `sound` block for the bank, but not music.** Since
    2026-10-14 `music_name` and `music_volume` may be left out together, and the
    stage is silent (`LevelLoadedInfo::has_music`; `Level` leaves `music_`

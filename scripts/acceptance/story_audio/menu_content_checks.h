@@ -49,10 +49,18 @@ namespace
 	{
 		world.presentation.validate_resources(world.render, world.audio);
 		const MenuPresentationVariant variants(content);
-		struct Slot { const char* owner; const char* key; };
-		for (const Slot slot : { Slot{ "main_menu", "unready" },
-			Slot{ "controls_settings", "volume_preview" }, Slot{ "pause_menu", "pad_lost" },
-			Slot{ "pause_menu", "pad_back" }, Slot{ "end_menu", "series" } })
+		// A null group is a sound held directly by its owner.
+		struct Slot { const char* owner; const char* group; const char* key; };
+		const auto sound_of = [](rapidjson::Document& json, const Slot& slot) -> rapidjson::Value&
+		{
+			return slot.group ? json[slot.owner][slot.group][slot.key] : json[slot.owner][slot.key];
+		};
+		for (const Slot slot : { Slot{ "main_menu", "sounds", "unready" },
+			Slot{ "controls_settings", "sounds", "volume_preview" }, Slot{ "pause_menu", "sounds", "pad_lost" },
+			Slot{ "pause_menu", "sounds", "pad_back" }, Slot{ "end_menu", "sounds", "series" },
+			Slot{ "menu_style", "sounds", "direction" }, Slot{ "menu_style", "sounds", "confirm" },
+			Slot{ "menu_style", "sounds", "cancel" }, Slot{ "main_menu", "sounds", "error" },
+			Slot{ "main_menu", "sounds", "ready" }, Slot{ "pause_menu", nullptr, "window_open_sound" } })
 		{
 			const auto rejected = [&](auto edit)
 			{
@@ -60,7 +68,7 @@ namespace
 				try
 				{
 					const Presentation look = variants.load([&](rapidjson::Document& json)
-						{ edit(json[slot.owner]["sounds"][slot.key], json.GetAllocator()); });
+						{ edit(sound_of(json, slot), json.GetAllocator()); });
 					look.validate_resources(world.render, world.audio);
 				}
 				catch (const std::runtime_error& error)
@@ -73,6 +81,7 @@ namespace
 			};
 			rejected([](rapidjson::Value& sound, auto&) { sound["volume"].SetFloat(-0.01f); });
 			rejected([](rapidjson::Value& sound, auto&) { sound["volume"].SetFloat(1.01f); });
+			rejected([](rapidjson::Value& sound, auto&) { sound.RemoveMember("volume"); });
 			rejected([](rapidjson::Value& sound, auto& allocator)
 				{ sound["name"].SetString("", allocator); });
 			rejected([](rapidjson::Value& sound, auto& allocator)
@@ -80,7 +89,7 @@ namespace
 			for (const float volume : { 0.0f, 1.0f })
 			{
 				const Presentation look = variants.load([&](rapidjson::Document& json)
-					{ json[slot.owner]["sounds"][slot.key]["volume"].SetFloat(volume); });
+					{ sound_of(json, slot)["volume"].SetFloat(volume); });
 				look.validate_resources(world.render, world.audio);
 			}
 		}

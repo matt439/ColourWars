@@ -86,9 +86,9 @@
     "box_size": { "x": 900.0, "y": 600.0 },
     "sound_bank": "paint_exe",
     "sounds": {
-      "direction": "ui.move",
-      "confirm": "ui.confirm",
-      "cancel": "ui.cancel"
+      "direction": { "name": "ui.move", "volume": 1.0 },
+      "confirm": { "name": "ui.confirm", "volume": 1.0 },
+      "cancel": { "name": "ui.cancel", "volume": 1.0 }
     }
   },
 
@@ -333,8 +333,8 @@
     },
     "music": { "name": "music.menu", "volume": 0.65 },
     "sounds": {
-      "error": "ui.error",
-      "ready": "ui.ready",
+      "error": { "name": "ui.error", "volume": 1.0 },
+      "ready": { "name": "ui.ready", "volume": 1.0 },
       "unready": { "name": "ui.unready", "volume": 0.7 }
     },
     "weapon_descriptions": {
@@ -405,7 +405,7 @@
       "size": { "x": 100.0, "y": 50.0 },
       "spacing": { "x": 0.0, "y": 120.0 }
     },
-    "window_open_sound": "ui.pause_open",
+    "window_open_sound": { "name": "ui.pause_open", "volume": 1.0 },
     "sounds": {
       "pad_lost": { "name": "ui.pad_lost", "volume": 0.65 },
       "pad_back": { "name": "ui.pad_back", "volume": 0.65 },
