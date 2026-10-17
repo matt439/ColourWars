@@ -111,7 +111,7 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `GAP#5.1` | OPEN | MED | L | Visual hard cuts between screens; the level build blocks on the last menu frame. |
 | `GAP#6.1` | OPEN | MED | M | The last match setup is not saved, so every launch walks the whole menu path again. |
 | `GAP#6.2` | OPEN | MED | M | Results are never kept: per-stage records, a NEW BEST line, best % on stage select; save sections and a version key go with it. |
-| `GAP#7.5` | OPEN | MED | S | No DPI awareness in the manifest; `_WIN32_WINNT` pinned to 0x0601. The engine half is a report. |
+| `GAP#7.5` | OPEN | LOW | S | `_WIN32_WINNT` pinned to 0x0601 in `game/pch.h`. Per-monitor v2 awareness is in the manifest and checked at startup; the engine half is `ENG#17`. |
 | `GAP#L9` | OPEN | LOW | M | No frame-rate or vsync setting, no render interpolation; `target_fps` is a literal 60. |
 | `GAP#L11` | DEFERRED | LOW | L | No locale axis; waits on `GAP#8.4` and `GAP#8.7`. |
 
@@ -160,6 +160,7 @@ engine master before filing, not the pin. Gap-audit Class 3 items not yet in the
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half is report 14. |
 | `ENG#15` | OPEN | MED | S | File report 15: repeated runtime packaging and content staging; game asset/release policy stays here. [Report](docs/review/engine-reports.md#15-runtime-packaging-and-content-staging-are-repeated-in-the-client--draft-with-release-exhibit). |
 | `ENG#16` | OPEN | LOW | S | Recheck master and file report 16: windowed Apply shows a deliberately hidden window. [Report](docs/review/engine-reports.md#16-windowed-apply-shows-a-deliberately-hidden-window--draft-with-probe-exhibit). |
+| `ENG#17` | OPEN | LOW | S | File report 17: the Win32 window sizes its frame at system DPI and ignores `WM_DPICHANGED` once the client is per-monitor aware; answers OCA-66. [Report](docs/review/engine-reports.md#17-the-win32-window-ignores-dpi-once-the-client-opts-in--draft-with-manifest-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console

@@ -111,7 +111,8 @@ Developer shell, `scripts/run-acceptance.ps1 -Preset x64-debug` (or
 `x64-release`) builds the game and checks its actual objects for ammunition,
 paint coverage and save regressions. They do not create a graphics/audio device
 or touch the player's save. `scripts/check-startup.ps1` separately checks a
-hidden game process, isolated save, diagnostics and graceful shutdown.
+hidden game process, its per-monitor DPI awareness, isolated save, diagnostics
+and graceful shutdown.
 
 To run engine tests, configure the submodule as its own top-level project:
 

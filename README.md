@@ -233,7 +233,7 @@ Check runtime startup separately, preferably against the extracted Release ZIP:
 ```
 
 It checks the executable's version stamp, starts it hidden from an unrelated
-directory with an isolated save, checks the game window and diagnostics, then
+directory with an isolated save, checks the game window, its per-monitor v2 DPI awareness and diagnostics, then
 closes gracefully. CI requires Debug startup
 (the engine supports software rendering there). Release startup may be explicitly
 skipped only for the engine's exact missing-hardware-adapter error; all application

@@ -68,6 +68,29 @@ namespace ColourWars
         [DllImport("user32.dll", SetLastError = true)]
         private static extern IntPtr SendMessageTimeout(IntPtr window, uint message,
             IntPtr wParam, IntPtr lParam, uint flags, uint timeout, out IntPtr result);
+        [DllImport("shcore.dll")]
+        private static extern int GetProcessDpiAwareness(IntPtr process, out int value);
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetWindowDpiAwarenessContext(IntPtr window);
+        [DllImport("user32.dll")]
+        private static extern bool AreDpiAwarenessContextsEqual(IntPtr a, IntPtr b);
+
+        // PROCESS_DPI_AWARENESS: 0 unaware, 1 system, 2 per-monitor; -1 if the
+        // query itself failed.
+        public static int ProcessDpiAwareness(IntPtr process)
+        {
+            int value;
+            return GetProcessDpiAwareness(process, out value) == 0 ? value : -1;
+        }
+
+        // DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 is the pseudo-handle -4;
+        // per-monitor v1 reports the same process value, so only the window
+        // can tell the two apart.
+        public static bool PerMonitorV2(IntPtr window)
+        {
+            return AreDpiAwarenessContextsEqual(
+                GetWindowDpiAwarenessContext(window), new IntPtr(-4));
+        }
 
         public static IntPtr FindGame(int processId)
         {
@@ -108,6 +131,17 @@ namespace ColourWars
 '@
 }
 
+# game/settings.manifest declares per-monitor DPI awareness; a manifest that
+# stopped being embedded, or lost the element, would leave the game bitmap-
+# stretched on every scaled display with nothing else failing.
+function Assert-DpiAware {
+    $awareness = [ColourWars.StartupWindow]::ProcessDpiAwareness($process.Handle)
+    $result.dpi_awareness = $awareness
+    if ($awareness -ne 2) {
+        throw "The game process is not per-monitor DPI aware (PROCESS_DPI_AWARENESS $awareness); check game/settings.manifest is embedded."
+    }
+}
+
 function Read-StartupError {
     if (Test-Path -LiteralPath $stderrPath) {
         return [string](Get-Content -LiteralPath $stderrPath -Raw)
@@ -123,6 +157,7 @@ $result = [ordered]@{
     working_directory = $workingDirectory
     profile = $profileDirectory
     version = ''
+    dpi_awareness = $null
     audio_expectation = $(if ($RequireAudio) { 'published-bank' } elseif ($RequireNoAudio) { 'missing-bank' } else { 'optional' })
     outcome = 'failed'
     diagnostic = ''
@@ -186,6 +221,7 @@ try {
     }
 
     if ($missingHardware) {
+        Assert-DpiAware
         [ColourWars.StartupWindow]::CloseOwnedWindows($process.Id)
         if (-not $process.WaitForExit(3000)) {
             throw 'The missing-adapter error dialog did not close normally.'
@@ -209,6 +245,10 @@ try {
         }
         if (-not [ColourWars.StartupWindow]::Responds($window)) {
             throw 'The game window did not respond after startup.'
+        }
+        Assert-DpiAware
+        if (-not [ColourWars.StartupWindow]::PerMonitorV2($window)) {
+            throw 'The game window is not per-monitor v2 DPI aware; check the dpiAwareness element in game/settings.manifest.'
         }
         if (-not (Test-Path -LiteralPath (Join-Path $profileDirectory 'ColourWars/save_data.json'))) {
             throw 'The game did not create its save in the isolated profile.'
@@ -246,7 +286,7 @@ try {
             }
         }
         $result.outcome = 'passed'
-        $result.diagnostic = 'Game window, content startup, isolated save and graceful shutdown passed.'
+        $result.diagnostic = 'Game window, per-monitor v2 DPI awareness, content startup, isolated save and graceful shutdown passed.'
         Write-Output $result.diagnostic
     }
 }
