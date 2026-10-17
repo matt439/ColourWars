@@ -8,6 +8,8 @@
 
 namespace colourwars_editor
 {
+    struct ContentCatalog;
+
     enum class EntryKind { level, bounds, spawn_a, spawn_b, collision, decoration };
 
     struct Entry
@@ -68,6 +70,10 @@ namespace colourwars_editor
         bool dirty() const;
         const std::filesystem::path& path() const;
         std::vector<std::string> validate() const;
+        // Resource names the game would refuse at startup: one line each, empty when
+        // every name resolves in the catalog. Separate from validate(), which is
+        // structure only and blocks edits; these only warn.
+        std::vector<std::string> unresolved_resources(const ContentCatalog& catalog) const;
         std::string serialize() const;
 
     private:

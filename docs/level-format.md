@@ -181,8 +181,10 @@ validate that every source texel follows the art direction.
 inside that sheet, not an animation strip or a file path. The template uses
 `sprite_sheet_1` / `square_white_4`. `icon_frame` resolves in `sprite_sheet_1`
 independently. Runtime startup constructs the objects and resolves these names
-after the manifest has loaded. The editor checks nonempty names but does not
-load the resources. Registration still requires both the manifest and runtime
+after the manifest has loaded. The level editor warns about names that do not
+resolve in the source manifest's sheets and banks
+([Resource names](level-editor.md#resource-names)); it does not load the
+resources, and startup stays the authority. Registration still requires both the manifest and runtime
 asset list; follow [Play the level](level-editor.md#play-the-level).
 
 ## Sound
@@ -238,7 +240,8 @@ checks to their owners:
   the clamp). The `tunnelling`
   acceptance case prints each shipped stage's margin. Flying paint is exempt
   because each shot's whole path is tested against the geometry every step.
-- Editor: its additional nonempty-string, numeric and upright-ramp checks.
+- Editor: its additional nonempty-string, numeric and upright-ramp checks,
+  and warnings, not refusals, for resource names that do not resolve.
   Unknown metadata and stations remain preserved even when not exposed as
   dedicated editor controls.
 - Play/review: supported spawns, routes, weapon roles, fair side swaps, paint
@@ -254,8 +257,8 @@ runtime validation in the authoring workflow even after a schema pass.
 Point a JSON editor at [level.schema.json](level.schema.json), then open the file
 in ColourWarsEditor and save a copy. Register an intended runtime stage using
 the manifest and asset-list steps in [Play the level](level-editor.md#play-the-level).
-Rebuild and run it in the game: the schema and editor do not resolve its assets
-or establish playability.
+Rebuild and run it in the game: the schema does not resolve its assets, the
+editor only warns about names, and neither establishes playability.
 
 From an x64 Visual Studio Developer shell at the repository root:
 
@@ -270,7 +273,8 @@ paths with CPU resource metadata; it checks source and staged copies of all
 four shipped levels plus the template, with an untagged legacy clone of each.
 Its fixtures also exercise invalid
 versions, structural failures, unknown metadata, rectangle precedence and
-runtime checks beyond the schema. Editor acceptance checks version compatibility,
+runtime checks beyond the schema. It also holds the editor's resource-name
+catalog to the engine's sprite-sheet and sound-bank loaders. Editor acceptance checks version compatibility,
 new-document versioning and template/unknown-field round trips.
 
 On 2026-10-15, Debug and Release production builds passed under `/W4 /WX`, all

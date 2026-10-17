@@ -164,6 +164,8 @@ namespace colourwars_editor
             blockout_error_.clear();
         }
         catch (const std::exception& exception) { blockout_error_ = wide(exception.what()); }
+        content_catalog_ = load_content_catalog(std::filesystem::path(COLOURWARS_CONTENT_DIR));
+        unresolved_ = document_.unresolved_resources(content_catalog_);
         SendMessageW(object_list_, WM_SETREDRAW, FALSE, 0);
         SendMessageW(object_list_, LB_RESETCONTENT, 0, 0);
         int selected_index = -1;
@@ -202,8 +204,14 @@ namespace colourwars_editor
         EnableMenuItem(menu_, edit_redo, MF_BYCOMMAND | (document_.can_redo() ? MF_ENABLED : MF_GRAYED));
         EnableWindow(toolbar_[3], document_.can_undo()); EnableWindow(toolbar_[4], document_.can_redo());
         const std::vector<std::string> errors = document_.validate();
-        set_status(errors.empty() ? L"Ready  |  " + std::to_wstring(draw_items_.size()) + L" items  |  Save source levels, then rebuild the game to play changes."
-            : L"Needs attention: " + wide(errors.front()));
+        const std::wstring ready = L"Ready  |  " + std::to_wstring(draw_items_.size()) + L" items  |  ";
+        if (!errors.empty()) set_status(L"Needs attention: " + wide(errors.front()));
+        else if (!unresolved_.empty())
+            set_status(ready + std::to_wstring(unresolved_.size()) + (unresolved_.size() == 1 ? L" name" : L" names")
+                + L" the game will refuse: " + wide(unresolved_.front()));
+        else if (!content_catalog_.problems.empty())
+            set_status(ready + L"Resource names unchecked: " + wide(content_catalog_.problems.front()));
+        else set_status(ready + L"Save source levels, then rebuild the game to play changes.");
         InvalidateRect(canvas_, nullptr, FALSE);
     }
 
@@ -301,9 +309,24 @@ namespace colourwars_editor
         return std::filesystem::path(buffer.data());
     }
 
+    bool Editor::confirm_unresolved()
+    {
+        if (unresolved_.empty()) return true;
+        // Warn, never block: a stage is often saved midway through adding its art.
+        std::wstring text = L"The game will refuse this stage at startup:\n";
+        constexpr size_t shown = 8;
+        for (size_t index = 0; index < std::min(shown, unresolved_.size()); ++index)
+            text += L"\n- " + wide(unresolved_[index]);
+        if (unresolved_.size() > shown) text += L"\n- and " + std::to_wstring(unresolved_.size() - shown) + L" more";
+        text += L"\n\nNames are checked against game/content/manifest.json and the sheets and banks it lists. Save anyway?";
+        return MessageBoxW(window_, text.c_str(), L"Unresolved resource names",
+            MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2) == IDYES;
+    }
+
     bool Editor::save(bool save_as)
     {
         if (!apply_pending()) return false;
+        if (!confirm_unresolved()) return false;
         std::filesystem::path path = document_.path();
         if (save_as || path.empty())
         {
@@ -358,7 +381,7 @@ namespace colourwars_editor
                 L"Bounds are selectable in the list. View > Show all bounds shows every rectangle. This is a geometry preview, without textures or gameplay.\n\n"
                 L"Save to SOURCE content and rebuild the game. A NEW filename also needs its stem in game/content/manifest.json "
                 L"and its relative path in cmake/release_assets.cmake. Existing registered levels need no registration. "
-                L"Asset names must match your content. See docs/level-editor.md.",
+                L"Asset names must match your content: the status line names any the game would refuse, and Save asks first. See docs/level-editor.md.",
                 L"Using the level editor", MB_OK | MB_ICONINFORMATION);
             return;
         }

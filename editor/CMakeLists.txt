@@ -1,4 +1,5 @@
-add_library(colourwars_level_document STATIC level_document.cpp level_json.cpp blockout_aids.cpp)
+add_library(colourwars_level_document STATIC level_document.cpp level_json.cpp blockout_aids.cpp
+    content_catalog.cpp)
 target_include_directories(colourwars_level_document PUBLIC "${PROJECT_SOURCE_DIR}")
 target_include_directories(colourwars_level_document SYSTEM PRIVATE
     "${PROJECT_SOURCE_DIR}/external/rapidjson/include")

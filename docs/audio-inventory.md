@@ -183,7 +183,7 @@ editor default.
 | | `results_menu.sounds.winner/fill` (:191-192) | wave / effect | `results_menu.cpp:15-16` | `presentation.cpp:849-850` |
 | `levels/*.json` | `sound.sound_bank_name`, `music_name`, `music_volume` (`close_quarters.json:6-8`, `king_of_the_hill.json:6-8`, `turbulence.json:6-8`; `movement_course.json` names only the bank). `music_name` and `music_volume` are optional as a pair: a stage with neither is silent | effect | read at `level_loaded_info.cpp:255-266`, passed through `level_builder.cpp:97-99`, resolved at `level.cpp:62-64` | `level_loaded_info.cpp:170-179` |
 | `sound_bank_1.json` | `waves` (:4-27), `sound_effect_instances` (:30-127) | the bank | `sound_bank_loader.cpp:50-97` | |
-| `editor/level_document.cpp:212` | new-level `sound` block (`holly_dolly`, 0.3) | written into new stages | | `editor/level_json.cpp:253-258` checks only that the names are non-empty (`ED#3`) |
+| `editor/level_document.cpp:212` | new-level `sound` block (`holly_dolly`, 0.3) | written into new stages | | `editor/level_json.cpp:253-258` checks only that the names are non-empty (`ED#3`; closed 2026-10-17: the editor now also warns when the bank, music or sting is not in the source bank definition, see [level editor, Resource names](level-editor.md#resource-names)) |
 
 Sites that read no cue name of their own but still play or resolve the cues
 above:

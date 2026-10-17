@@ -63,7 +63,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#17` | DEFERRED | HIGH | XL | Close Quarters reference blockout against the §3 requirements table (routes, spawns, paint budget, weapon roles, pacing, side fairness, recovery pocket), tuned with `POL#3`. After the art style is locked. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
 | `POL#27` | DEFERRED | HIGH | L | Weapon tuning (range, rate, damage, paint output, supply) for all five tools, done with the blockout (`POL#17`) and movement (`POL#3`); values stay provisional. [Order](docs/polish-plan.md#development-order-2026-10-17), [§3](docs/polish-plan.md#design-requirements). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after CQ is accepted; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
-| `ED#3` | UNSCOPED | LOW | M | Resource names (sheet, frame, icon, colour, music) are checked only at game startup; the editor takes any non-empty name. |
 | `ED#4` | UNSCOPED | LOW | S | Registering a stage is manual (`manifest.json` and `cmake/runtime_assets.cmake`); the editor does not help. |
 | `ED#5` | OPEN | LOW | S | The manual GUI pass and the play-test of a saved stage have no recorded result. [Acceptance](docs/level-editor.md#acceptance-checks). |
 | `ED#6` | OPEN | LOW | S | Movement Course placeholder: it borrows Turbulence's icon frame; give it its own icon. |

@@ -55,8 +55,9 @@ the stage name, menu icon and sound settings. New levels use the replacement
 `paint_exe` bank, `music.close_quarters` and its matching ending sting. Omit both
 music name and volume for a music-free arena; `end_sting_name` and
 `end_sting_volume` are independently optional as a pair. Movement Course omits
-both pairs. Ending-sting gains must be 0..1. Names are validated by the game at
-startup; the editor does not audition them.
+both pairs. Ending-sting gains must be 0..1. The editor warns about a bank,
+music or sting name the bank does not define ([Resource names](#resource-names));
+it does not audition them.
 
 The property inspector lists individual fields for the current selection.
 Choose a field, edit its value and click **Apply**. Numbers use a decimal
@@ -131,6 +132,51 @@ game consumer acceptance suites also pass with the shared geometry, reproducing
 the baseline jump measurements. These checks do not close the manual canvas or
 saved-stage play checks in `ED#5`.
 
+## Resource names
+
+The game refuses a stage at startup when a name it resolves is missing
+(`LevelLoadedInfo::validate_content` and `LevelObjectBuilder::validate_objects`).
+The editor checks the same names against the same source files, so a typo shows
+while you edit rather than at the next game launch:
+
+| Field | Must name |
+|---|---|
+| `icon_frame` | a frame in `sprite_sheet_1` |
+| each object's `sheet_name` | a `sprite_sheet` listed in `game/content/manifest.json` |
+| each object's `frame_name` | an entry in that sheet's `sprite_frames`; an animation strip is not a frame |
+| `sound.sound_bank_name` | a `sound_bank` listed in the manifest |
+| `sound.music_name`, `sound.end_sting_name` | an effect of that bank: every wave when `create_effect_instance_for_each_wave` is true, plus each `sound_effect_instances` name |
+
+`colour` is not in the table because it is already a structural check: only the
+game's grey names and `RRGGBB` greys are accepted, and anything else is refused
+like any other invalid edit.
+
+These checks only warn, because a stage is often saved halfway through adding its
+art. The status line counts the unresolved names and shows the first one. Save
+and Save As list them and ask before writing; No is the default. The editor
+rereads the manifest, its sheets and its banks from source `game/content/` on
+each refresh, as it does tuning. If the manifest or a listed file cannot be read,
+the status line says *Resource names unchecked* and only the readable names are
+checked. Audio names are checked against the tracked `paint_exe.json`
+definition, not the `.xwb`. They are still checked when the bank is absent, even
+though the game then substitutes its silent fallback, which accepts any name.
+
+The game's startup validation is still the authority. The editor's catalog
+(`editor/content_catalog.cpp`) is a second reader of the sheet and bank formats,
+so the game-side `level_format` consumer case holds it to the engine's loaders on
+the staged content: every frame it lists resolves in the engine's sprite sheet,
+every animation strip it leaves out is refused as a frame, and its effect names
+equal the engine's sound-bank definition.
+
+`ED#3` implemented on 2026-10-17. The editor document checks cover every
+shipped level, the template and new-level defaults without warnings. They
+mutate each field in the table, including a strip name used as a frame and a
+frame borrowed from another sheet, and expect exactly one line naming the
+field and value. They also check undo, sheet scoping, the wave rule and a
+partial or missing content folder. A hidden GUI launch opens a level with an
+unknown `icon_frame` and reads the warning from the status line. The save
+prompt is a modal box, so it belongs to the manual pass in `ED#5`.
+
 ## Play the level
 
 For an existing stage, save its source JSON, rebuild the game and choose the
@@ -152,9 +198,9 @@ Stage names use the glyphs supported by the game's compiled fonts; unsupported
 characters such as emoji are rejected before saving.
 `icon_frame` is required legacy icon metadata that no screen draws today; it
 must still name an existing frame in `sprite_sheet_1`. Object sprite-sheet
-and frame names, CSS colour names and music names must also exist in the
-game's assets. The editor checks document structure and geometry; the game's
-startup validation resolves the actual resources.
+and frame names and music names must also exist in the game's assets. The
+editor warns about any that do not ([Resource names](#resource-names)); the
+game's startup validation resolves the actual resources.
 
 An optional top-level `include_in_random` boolean defaults to `true`. Set it to
 `false` in the level entry's property inspector for an experimental course that
@@ -181,6 +227,8 @@ encodings, ramps, the palette, undo/redo and save
 state, Unicode paths and failure recovery. Evidence and generated test levels
 remain in `out/acceptance/<preset>/level-editor/`. They also check the optional
 Random setting's default, insertion, validation, undo/redo and save/reopen.
+They check the resource-name warnings against source content, and a third
+hidden launch reads the status line of a level the game would refuse.
 The document checks also cover the shared current version, legacy save upgrades,
 unknown-field preservation, strict format type/version rejection before other
 field decoding, filename diagnostics, failed-upgrade recovery and retained

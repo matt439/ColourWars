@@ -3,6 +3,8 @@
 #include "game/objects/level_loaded_info.h"
 #include "game/objects/level_object_builder.h"
 #include "engine/assets/sprite_sheet_loader.h"
+#include "engine/assets/sound_bank_loader.h"
+#include "editor/content_catalog.h"
 
 #include <filesystem>
 #include <fstream>
@@ -12,6 +14,7 @@
 #include <rapidjson/schema.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
+#include <set>
 #include <typeinfo>
 
 using namespace labrador;
@@ -273,6 +276,52 @@ namespace
             { d["collision_objects"][0]["colour"].SetString("FF0000"); });
         runtime_rejects(chromatic, "not a grey", builder, render, audio);
     }
+
+    // The editor's warning-only resource check reads the sheet and bank formats
+    // itself. Hold its catalog to the engine's loaders on the staged content.
+    void check_editor_catalog(const std::filesystem::path& content)
+    {
+        const colourwars_editor::ContentCatalog catalog = colourwars_editor::load_content_catalog(content);
+        require(catalog.manifest_read && catalog.problems.empty() && !catalog.sprite_frames.empty() &&
+            !catalog.sound_effects.empty(), "The editor's content catalog did not read the staged manifest");
+        for (const auto& [sheet, frames] : catalog.sprite_frames)
+        {
+            require(frames.has_value(), "The editor could not read sprite sheet " + sheet);
+            const std::filesystem::path path = content / "textures" / (sheet + ".json");
+            const auto loaded = read_sprite_sheet(path.string().c_str(), TextureHandle{});
+            for (const std::string& frame : *frames)
+            {
+                try { loaded->resolve_sprite_frame(frame); }
+                catch (const std::exception&)
+                {
+                    throw std::runtime_error("The editor accepts frame " + frame + " that the engine's " +
+                        sheet + " does not resolve");
+                }
+            }
+            // A strip is not a frame to the engine, so the editor must not take one.
+            const rapidjson::Document json = read_document(path);
+            for (const auto& strip : json["animation_strips"].GetArray())
+            {
+                const std::string name = strip["name"].GetString();
+                if (frames->contains(name)) { continue; }
+                bool refused = false;
+                try { loaded->resolve_sprite_frame(name); }
+                catch (const std::exception&) { refused = true; }
+                require(refused, "The engine resolves strip " + name + " as a frame the editor would refuse");
+            }
+        }
+        for (const auto& [bank, effects] : catalog.sound_effects)
+        {
+            require(effects.has_value(), "The editor could not read sound bank " + bank);
+            const SoundBankDefinition definition = read_sound_bank_definition(
+                (content / "sounds" / (bank + ".json")).string().c_str());
+            std::set<std::string> engine;
+            for (const SoundBankDefinition::Effect& effect : definition.effects) { engine.insert(effect.name); }
+            require(engine == *effects, "The editor's effect names for " + bank +
+                " differ from the engine's sound-bank definition");
+        }
+        std::cout << "PASS editor content catalog matches the engine's sprite-sheet frames and sound-bank effects\n";
+    }
 }
 
 int main(int argc, char** argv)
@@ -333,6 +382,7 @@ int main(int argc, char** argv)
         write_document(scratch / "baseline.json", source);
         check_versions(scratch);
         check_schema_fixtures(schema, source, scratch, builder, render, audio);
+        check_editor_catalog(content);
         std::cout << "PASS level format 1: " << checked << " staged/source/template files, legacy object/paint parity, "
             "early version rejection, schema fixtures and runtime resource/geometry authority.\n";
         return 0;

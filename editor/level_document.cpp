@@ -8,6 +8,7 @@
 #endif
 #include <windows.h>
 
+#include "editor/content_catalog.h"
 #include "editor/level_json.h"
 #include "game/level_format.h"
 #include <rapidjson/pointer.h>
@@ -617,5 +618,73 @@ namespace colourwars_editor
         try { validate_document(impl_->document); }
         catch (const std::exception& error) { return { error.what() }; }
         return {};
+    }
+
+    std::vector<std::string> LevelDocument::unresolved_resources(const ContentCatalog& catalog) const
+    {
+        // The names LevelLoadedInfo::validate_content and LevelObjectBuilder resolve
+        // at startup. A file the catalog could not read leaves its names unchecked.
+        std::vector<std::string> result;
+        if (!catalog.manifest_read) { return result; }
+        const auto sheet_of = [&](const std::string& sheet) { return catalog.sprite_frames.find(sheet); };
+        try
+        {
+            const Document& document = impl_->document;
+            // The game draws stage icons from the stage-select page's sheet.
+            const std::string icon = string(document, "icon_frame");
+            const auto icons = sheet_of("sprite_sheet_1");
+            if (icons == catalog.sprite_frames.end())
+            {
+                result.push_back("icon_frame: manifest.json has no sprite sheet sprite_sheet_1.");
+            }
+            else if (icons->second && !icons->second->contains(icon))
+            {
+                result.push_back("icon_frame '" + icon + "' is not a frame in sprite_sheet_1.");
+            }
+            const Json& sound = member(document, "sound");
+            const std::string bank_name = string(sound, "sound_bank_name");
+            const auto bank = catalog.sound_effects.find(bank_name);
+            if (bank == catalog.sound_effects.end())
+            {
+                result.push_back("sound_bank_name '" + bank_name + "' is not a sound bank in manifest.json.");
+            }
+            else if (bank->second)
+            {
+                for (const char* field : { "music_name", "end_sting_name" })
+                {
+                    if (!sound.HasMember(field)) { continue; }
+                    const std::string effect = string(sound, field);
+                    if (!bank->second->contains(effect))
+                    {
+                        result.push_back(std::string(field) + " '" + effect +
+                            "' is not an effect in sound bank " + bank_name + ".");
+                    }
+                }
+            }
+            for (const char* list : { "collision_objects", "non_collision_objects" })
+            {
+                const Json& objects = array(document, list);
+                for (rapidjson::SizeType index = 0; index < objects.Size(); ++index)
+                {
+                    const Json& object = objects[index];
+                    const std::string where = object_label(object, index) + ": ";
+                    const std::string sheet = string(object, "sheet_name");
+                    const std::string frame = string(object, "frame_name");
+                    const auto frames = sheet_of(sheet);
+                    if (frames == catalog.sprite_frames.end())
+                    {
+                        result.push_back(where + "sheet_name '" + sheet + "' is not a sprite sheet in manifest.json.");
+                    }
+                    else if (frames->second && !frames->second->contains(frame))
+                    {
+                        result.push_back(where + "frame_name '" + frame + "' is not a frame in sprite sheet " +
+                            sheet + ".");
+                    }
+                }
+            }
+        }
+        // A structural error is validate()'s to report, not a resource name.
+        catch (const std::exception&) { return result; }
+        return result;
     }
 }

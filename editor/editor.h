@@ -2,6 +2,7 @@
 
 #include "editor/level_document.h"
 #include "editor/blockout_aids.h"
+#include "editor/content_catalog.h"
 
 #include <windows.h>
 
@@ -74,6 +75,9 @@ namespace colourwars_editor
         std::optional<BlockoutTuning> blockout_tuning_;
         std::vector<ScoringFace> scoring_faces_;
         std::wstring blockout_error_;
+        // Reread with tuning on every refresh; warnings only, never a blocked edit.
+        ContentCatalog content_catalog_;
+        std::vector<std::string> unresolved_;
         bool dragging_ = false;
         bool resizing_ = false;
         bool panning_ = false;
@@ -100,6 +104,7 @@ namespace colourwars_editor
         bool apply_pending();
         bool pending() const;
         bool confirm_discard();
+        bool confirm_unresolved();
         bool save(bool save_as);
         std::optional<std::filesystem::path> choose_file(bool save_as);
         void select(const Entry&);

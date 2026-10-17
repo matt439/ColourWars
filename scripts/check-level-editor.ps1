@@ -28,7 +28,7 @@ function Invoke-Logged {
 }
 
 function Test-EditorWindow {
-    param([string] $Executable, [string] $Level, [string] $RunDirectory)
+    param([string] $Executable, [string] $Level, [string] $RunDirectory, [string] $ExpectStatus = '')
 
     if (-not ('ColourWars.EditorWindowProbe' -as [type])) {
         Add-Type -TypeDefinition @'
@@ -59,6 +59,11 @@ namespace ColourWars
         [DllImport("user32.dll")]
         private static extern int GetDlgCtrlID(IntPtr window);
         [DllImport("user32.dll")]
+        private static extern bool EnumChildWindows(IntPtr parent, EnumWindowProc callback, IntPtr parameter);
+        [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+        private static extern IntPtr SendMessageTimeout(IntPtr window, uint message,
+            IntPtr wParam, StringBuilder lParam, uint flags, uint timeout, out IntPtr result);
+        [DllImport("user32.dll")]
         private static extern IntPtr GetMenu(IntPtr window);
         [DllImport("user32.dll")]
         private static extern IntPtr GetSubMenu(IntPtr menu, int position);
@@ -87,6 +92,26 @@ namespace ColourWars
             Send(window, 0x0111, new IntPtr(aids), IntPtr.Zero);
             Send(window, 0x0111, new IntPtr(aids), IntPtr.Zero);
             Send(window, 0x0111, new IntPtr(GetMenuItemID(view, 1)), IntPtr.Zero);
+        }
+
+        // The status line is the Static control that starts with Ready or Needs
+        // attention. WM_GETTEXT is marshalled across processes; GetWindowText is not.
+        public static string Status(IntPtr window)
+        {
+            string result = "";
+            EnumChildWindows(window, (child, parameter) => {
+                var name = new StringBuilder(256);
+                GetClassName(child, name, name.Capacity);
+                if (name.ToString() != "Static") return true;
+                var text = new StringBuilder(4096);
+                IntPtr copied;
+                if (SendMessageTimeout(child, 0x000D, new IntPtr(text.Capacity), text, 2, 2000, out copied) == IntPtr.Zero)
+                    return true; // WM_GETTEXT
+                string value = text.ToString();
+                if (value.StartsWith("Ready") || value.StartsWith("Needs attention")) result = value;
+                return true;
+            }, IntPtr.Zero);
+            return result;
         }
 
         public static IntPtr Find(int processId)
@@ -136,7 +161,7 @@ namespace ColourWars
     [System.IO.Directory]::CreateDirectory($working) | Out-Null
     $process = $null
     $before = (Get-FileHash -LiteralPath $Level -Algorithm SHA256).Hash
-    $result = [ordered]@{ outcome = 'failed'; level = $Level; window_title = ''; exit_code = $null }
+    $result = [ordered]@{ outcome = 'failed'; level = $Level; window_title = ''; status = ''; exit_code = $null }
     try {
         if ($Level.Contains('"')) { throw 'The level path contains an unsupported quote.' }
         $process = Start-Process -FilePath $Executable -ArgumentList ('"' + $Level + '"') `
@@ -164,6 +189,16 @@ namespace ColourWars
             throw "The editor title does not identify the requested file: $($result.window_title)"
         }
         [ColourWars.EditorWindowProbe]::CheckBlockoutControls($window)
+        $result.status = [ColourWars.EditorWindowProbe]::Status($window)
+        if (-not $result.status.StartsWith('Ready')) {
+            throw "The editor status line is not ready: $($result.status)"
+        }
+        if ($ExpectStatus -and -not $result.status.Contains($ExpectStatus)) {
+            throw "The editor status line lacks '$ExpectStatus': $($result.status)"
+        }
+        if (-not $ExpectStatus -and $result.status.Contains('the game will refuse')) {
+            throw "The editor reports an unresolved name for a shipped level: $($result.status)"
+        }
         [ColourWars.EditorWindowProbe]::Close($process.Id)
         if (-not $process.WaitForExit(10000)) { throw 'The editor did not close gracefully after WM_CLOSE.' }
         $process.WaitForExit()
@@ -175,7 +210,7 @@ namespace ColourWars
         $diagnostics = [string](Get-Content -LiteralPath (Join-Path $RunDirectory 'gui.err') -Raw)
         if (-not [string]::IsNullOrWhiteSpace($diagnostics)) { throw "Unexpected editor diagnostic: $diagnostics" }
         $result.outcome = 'passed'
-        Write-Host 'PASS hidden editor launch, explicit level, blockout toggle/selection and graceful close'
+        Write-Host 'PASS hidden editor launch, explicit level, blockout toggle/selection, status line and graceful close'
     }
     finally {
         if ($null -ne $process -and -not $process.HasExited) {
@@ -253,6 +288,11 @@ try {
     $courseRun = Join-Path $run 'movement-course'
     [System.IO.Directory]::CreateDirectory($courseRun) | Out-Null
     Test-EditorWindow -Executable $editor -Level (Join-Path $run 'movement_course.json') -RunDirectory $courseRun
+    # A stage the game would refuse opens normally and names the bad field in the status line.
+    $unresolvedRun = Join-Path $run 'unresolved-icon'
+    [System.IO.Directory]::CreateDirectory($unresolvedRun) | Out-Null
+    Test-EditorWindow -Executable $editor -Level (Join-Path $run 'unresolved_icon.json') -RunDirectory $unresolvedRun `
+        -ExpectStatus "1 name the game will refuse: icon_frame 'not_an_icon'"
     Write-Host "PASS level editor acceptance ($Preset). Evidence: $run"
 }
 finally {
