@@ -2,6 +2,7 @@
 
 #include "game/objects/level_end_info.h"
 #include "game/session.h"
+#include "game/match_records.h"
 #include "engine/render/colour.h"
 #include "game/states/menu_page.h"
 #include "game/states/ui_player_badge.h"
@@ -32,8 +33,13 @@ class ResultsMenuInitial final : public ResultsMenuPage
 public:
 	// `revealed`: the match already showed the winner and the coverage on
 	// the person's monitor, so this page keeps only the percentages.
+	// `record`: what this result did to the stage's record; the default
+	// (nothing recorded) shows no record line.
 	ResultsMenuInitial(MenuContext* context, const LevelEndInfo& end_info,
-		const Session& session = Session(), bool revealed = false);
+		const Session& session = Session(), bool revealed = false,
+		const RecordOutcome& record = RecordOutcome());
+	// The record line's text, or empty when the page shows none.
+	static std::wstring record_text(const RecordOutcome& record, const MenuRecordText& text);
 	void init() override;
 	void update_page(float dt) override;
 	// Proceeds as a confirm would; the match then opens the end menu.
@@ -43,6 +49,7 @@ protected:
 private:
 	Session session_;
 	bool revealed_ = false;
+	RecordOutcome record_;
 	std::vector<std::unique_ptr<labrador::UiTextDropShadow>> details_;
 	std::vector<std::unique_ptr<UiPlayerBadge>> player_badges_;
 	std::unique_ptr<labrador::UiTexture> box_ = nullptr;

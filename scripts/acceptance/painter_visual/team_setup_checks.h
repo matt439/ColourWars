@@ -3,6 +3,8 @@
 void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
+    // The series below finishes rounds, which write stage records.
+    const NestedSaveProfile profile(output / "team-setup-profile");
     Save preferences;
     auto& play = const_cast<PlaySettings&>(preferences.play_settings());
     play.music_volume = play.sfx_volume = 0;
@@ -420,6 +422,15 @@ void team_setup_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         }
     }
     require(series_evidence.good(), "Fixed-team series evidence write failed");
+    // Both idle rounds were draws: each counts on the stage, neither sets a best.
+    const StageRecord* course = preferences.records().find("movement_course");
+    require(course != nullptr && course->versus_played == 2 && course->draws == 2 &&
+        !course->best_win_percentage && course->practice_played == 0,
+        "Actual series rounds were not recorded once each on their stage");
+    Save reloaded; reloaded.load_save_file();
+    const StageRecord* saved = reloaded.records().find("movement_course");
+    require(saved != nullptr && saved->versus_played == 2 && saved->draws == 2,
+        "Actual series records did not reach the isolated save");
     require(evidence.good(), "Team-setup evidence write failed");
     std::cout << "PASS team setup held-entry/conflict/missing-pad/focus gates, manual edits and solo no-op\n";
     std::cout << "PASS actual shuffled 2P roster preserved through Pause Restart, Results/End and two best-of-three rounds; no physical-pad claim\n";

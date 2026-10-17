@@ -4,8 +4,8 @@ using namespace labrador;
 
 namespace
 {
-	// Format percentages with one decimal place.
-	std::wstring percentage_string(float percentage)
+	// One decimal place, truncated rather than rounded.
+	std::wstring one_decimal(float percentage)
 	{
 		std::wstring result = std::to_wstring(percentage);
 		size_t decimal_point = result.find(L'.');
@@ -13,8 +13,28 @@ namespace
 		{
 			result = result.substr(0, decimal_point + 2);
 		}
-		return result + L"%";
+		return result;
 	}
+}
+
+std::wstring percentage_text(float percentage)
+{
+	return one_decimal(percentage) + L"%";
+}
+
+int percentage_tenths(float percentage)
+{
+	std::wstring digits = one_decimal(percentage);
+	const size_t decimal_point = digits.find(L'.');
+	if (decimal_point != std::wstring::npos)
+	{
+		digits.erase(decimal_point, 1);
+	}
+	else
+	{
+		digits += L'0';
+	}
+	return std::stoi(digits);
 }
 
 PlayerTeam LevelEndInfo::winning_team() const
@@ -83,18 +103,18 @@ float LevelEndInfo::team_b_percentage() const
 // Label each team explicitly rather than relying on bar position or colour.
 std::wstring LevelEndInfo::team_a_percentage_string() const
 {
-	return L"A " + percentage_string(this->team_a_percentage());
+	return L"A " + percentage_text(this->team_a_percentage());
 }
 std::wstring LevelEndInfo::team_b_percentage_string() const
 {
-	return L"B " + percentage_string(this->team_b_percentage());
+	return L"B " + percentage_text(this->team_b_percentage());
 }
 std::wstring LevelEndInfo::winning_team_string() const
 {
 	// A single-team match reports coverage without declaring a winner.
 	if (this->one_team_only())
 	{
-		return percentage_string(100.0f * this->coverage_ratio()) + L" Painted";
+		return percentage_text(100.0f * this->coverage_ratio()) + L" Painted";
 	}
 
 	PlayerTeam winning = this->winning_team();
@@ -118,8 +138,8 @@ std::wstring LevelEndInfo::player_percentage_string(int slot) const
 	// Invalid or unattributed owners have no per-player credit.
 	if (slot < 0 || static_cast<size_t>(slot) >= this->player_areas.size())
 	{
-		return percentage_string(0.0f);
+		return percentage_text(0.0f);
 	}
-	return percentage_string(this->total_area > 0.0f ?
+	return percentage_text(this->total_area > 0.0f ?
 		100.0f * this->player_areas.at(static_cast<size_t>(slot)) / this->total_area : 0.0f);
 }

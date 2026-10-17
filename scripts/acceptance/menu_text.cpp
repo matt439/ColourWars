@@ -108,6 +108,14 @@ namespace
         { "round_complete", L"Round Complete", &MenuEndText::round_complete },
         { "series_complete", L"Series Complete", &MenuEndText::series_complete }
     };
+    struct RecordText { const char* key; const wchar_t* text; std::wstring MenuRecordText::* field; };
+    constexpr RecordText record_text[]{
+        { "new_best", L"NEW BEST", &MenuRecordText::new_best },
+        { "stage_best", L"STAGE BEST", &MenuRecordText::stage_best },
+        { "best_win", L"BEST WIN", &MenuRecordText::best_win },
+        { "best_coverage", L"BEST COVER", &MenuRecordText::best_coverage },
+        { "played", L"PLAYED", &MenuRecordText::played }
+    };
     struct StageText { const char* key; const wchar_t* text; std::wstring MenuStageText::* field; };
     constexpr StageText stage_text[]{
         { "browse_status", L"FIND YOUR ARENA", &MenuStageText::browse_status },
@@ -300,6 +308,10 @@ namespace
         {
             require(text.stage.*entry.field == entry.text, std::string("Arena status default changed: ") + entry.key);
         }
+        for (const auto& entry : record_text)
+        {
+            require(text.records.*entry.field == entry.text, std::string("Stage record default changed: ") + entry.key);
+        }
         for (const auto& entry : stage_briefing_text)
         {
             require(text.stage.*entry.field == entry.text, std::string("Arena briefing default changed: ") + entry.key);
@@ -353,7 +365,7 @@ namespace
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
         {
-            for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage" })
+            for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage", "records" })
             {
                 auto& object = d["menu_text"][group];
                 rapidjson::Value reordered(rapidjson::kObjectType);
@@ -372,7 +384,7 @@ namespace
         });
         check_defaults(reversed);
         variants.rejects("", [](rapidjson::Document& d) { d.RemoveMember("menu_text"); });
-        for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage" })
+        for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage", "records" })
         {
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"].RemoveMember(group); });
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"][group].SetArray(); });
@@ -399,6 +411,7 @@ namespace
         for (const auto& entry : value_text) { required("values", entry.key); }
         for (const auto& entry : confirmation_text) { required("confirmations", entry.key); }
         for (const auto& entry : end_text) { required("end", entry.key); }
+        for (const auto& entry : record_text) { required("records", entry.key); }
         for (const auto& entry : stage_text) { required("stage", entry.key); }
         for (const auto& entry : stage_briefing_text) { required("stage", entry.key); }
         for (const auto& entry : stage_cue_text) { required("stage", entry.key); }

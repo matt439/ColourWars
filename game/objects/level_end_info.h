@@ -6,6 +6,12 @@
 #include "game/objects/team_colour.h"
 #include "game/objects/player_team.h"
 
+// A percentage as the results show it: one decimal place, truncated, then "%".
+std::wstring percentage_text(float percentage);
+// The number percentage_text shows, in tenths (68.4% is 684), so a comparison
+// agrees with what a player can read.
+int percentage_tenths(float percentage);
+
 struct LevelEndInfo
 {
 	TeamColour team_colours = TeamColour();

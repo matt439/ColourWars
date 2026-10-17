@@ -445,6 +445,62 @@ void results_menu_matrix(Application& app, const Canvas& canvas, GameTuning& tun
         require(painted.width > 0 && std::abs(static_cast<float>(painted.width) - expected_width) < 2.0f,
             "Solo results bar no longer shows actual arena coverage");
     }
+    // The stage record: one contribution-font line right-aligned to the score
+    // bar on the contribution heading's row, hidden until the details reveal.
+    {
+        const MenuRecordText& words = presentation.menu_text().records;
+        RecordOutcome best; best.recorded = true; best.new_best = true; best.value = best.best = 60.0f;
+        RecordOutcome held; held.recorded = true; held.value = 51.0f; held.best = 72.15f;
+        RecordOutcome first_draw; first_draw.recorded = true;
+        const auto shown = [&](const RecordOutcome& record, bool revealed_details)
+        {
+            stack.clear();
+            stack.notify_activation(true);
+            input.reset_actions();
+            stack.push(std::make_unique<ResultsMenuProbeRoot>(app, canvas));
+            stack.push(std::make_unique<ResultsMenuInitial>(&context, victory, single, false, record));
+            tick();
+            if (revealed_details) { finish(); }
+            return results_menu_frame(app);
+        };
+        const RectangleF proceed = centered(detail_font, L"Press A/Enter to proceed", look.proceed_y);
+        for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080) })
+        {
+            resize_page(size);
+            roster(4);
+            const Frame plain = shown(RecordOutcome(), true);
+            const Frame hidden = shown(RecordOutcome(), false);
+            const std::pair<const RecordOutcome*, std::wstring> lines[]{
+                { &best, words.new_best + L" 60.0%" }, { &held, words.stage_best + L" 72.1%" } };
+            for (const auto& [record, line] : lines)
+            {
+                const Vector2F measured = app.render_resources()->measure_text(contribution_font, line);
+                const RectangleF box(Vector2F(fill_box.right() - measured.x, look.record_y), measured);
+                require(panel.contains(box) && box.y >= fill_box.bottom() && box.bottom() < proceed.y,
+                    "Results record line escapes the paper, the score bar or the continuation prompt");
+                for (int player = 0; player < 4; ++player)
+                {
+                    require(!box.intersects(contribution(victory, player)) &&
+                        !box.intersects(UiPlayerBadge::before(contribution(victory, player), presentation.player_identity())),
+                        "Results record line overlaps a contribution row or its badge");
+                }
+                const Frame with = shown(*record, true);
+                RectangleF area = box;
+                area.inflate(Vector2F(2.0f));
+                const RectangleI delta = foreground_delta_bounds(with, plain);
+                require(delta.width > 0 && delta.height > 0 && countdown_crop_bounds(project(area)).contains(delta),
+                    "Results record line was absent or drew outside its right-aligned row");
+                hud_text_contrast(with, project(box));
+                require(shown(*record, false).pixels == hidden.pixels,
+                    "Results record line showed before the details were revealed");
+                save(with, output / ("results-menu-record-" + std::string(record == &best ? "new-best" : "stage-best") + '-' +
+                    std::to_string(size.x) + 'x' + std::to_string(size.y) + ".ppm"));
+            }
+            require(shown(first_draw, true).pixels == plain.pixels,
+                "A recorded result with no stage best drew a record line");
+        }
+        stack.clear();
+    }
     require(records.good(), "Results-menu evidence write failed");
     std::cout << "PASS actual results: winner/draw, series ledger, solo coverage, sparse input-owner credit, "
         "timed continuation, revealed/plain score bars, palettes, frozen/reduced redraw, resize and "

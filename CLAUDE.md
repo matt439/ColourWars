@@ -226,7 +226,7 @@ Four JSON files are read at startup, before anything else:
 | `manifest.json` | which fonts, sprite sheets, levels and sound banks exist |
 | `tuning.json` | every number a match is *balanced* on ([game/tuning.h](game/tuning.h)) |
 | `presentation.json` | every font, colour, offset and box size the shell is *laid out* from ([game/presentation.h](game/presentation.h)) |
-| `%LOCALAPPDATA%\ColourWars\save_data.json` | resolution and fullscreen, read before the window exists |
+| `%LOCALAPPDATA%\ColourWars\save_data.json` | display and play preferences, read before the window exists, and per-stage records; versioned `SaveSection`s ([game/save_section.h](game/save_section.h)) |
 
 Tuning and presentation are deliberately two files with two audiences (a balance
 pass and an art pass) and are deliberately *not* manifest entries — they are read

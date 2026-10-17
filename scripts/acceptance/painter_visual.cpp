@@ -111,6 +111,25 @@ namespace
         return read(renderer);
     }
 
+    // Points LOCALAPPDATA at a nested profile for one matrix. A matrix whose
+    // matches finish writes stage records, and the probe's shared save
+    // fixture must stay byte-identical.
+    struct NestedSaveProfile
+    {
+        std::wstring previous;
+        explicit NestedSaveProfile(const std::filesystem::path& path)
+        {
+            wchar_t* raw = nullptr; size_t length = 0;
+            require(_wdupenv_s(&raw, &length, L"LOCALAPPDATA") == 0, "Cannot read the probe profile");
+            if (raw) { this->previous = raw; std::free(raw); }
+            std::filesystem::create_directories(path);
+            require(_wputenv_s(L"LOCALAPPDATA", path.c_str()) == 0, "Cannot isolate a matrix's saves");
+        }
+        ~NestedSaveProfile() { _wputenv_s(L"LOCALAPPDATA", this->previous.c_str()); }
+        NestedSaveProfile(const NestedSaveProfile&) = delete;
+        NestedSaveProfile& operator=(const NestedSaveProfile&) = delete;
+    };
+
     void save(const Frame& frame, const std::filesystem::path& path)
     {
         std::ofstream file(path, std::ios::binary);

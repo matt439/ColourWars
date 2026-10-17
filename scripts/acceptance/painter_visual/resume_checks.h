@@ -970,8 +970,10 @@ void debug_frame_text_matrix(Application& app, GameData& data, const Presentatio
 void resume_matrix(Application& app, Registry<LevelLoadedInfo>& levels, GameTuning& tuning,
     Presentation& presentation, const std::filesystem::path& content, const std::filesystem::path& output)
 {
+    // Finished matches write stage records into this matrix's own profile.
+    const NestedSaveProfile profile(output / "resume-profile");
     Save preferences;
-    // Keep this fixture's preferences in memory; no player/save file is written.
+    // Keep this fixture's preferences in memory; only stage records are saved.
     auto& play = const_cast<PlaySettings&>(preferences.play_settings());
     play.music_volume = play.sfx_volume = 0;
     play.aim_marker = false;

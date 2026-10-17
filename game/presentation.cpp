@@ -138,6 +138,12 @@ namespace
 		text.stage.browse_hint = read_menu_block(stage, "browse_hint");
 		text.stage.solo_mode = read_menu_line(stage, "solo_mode");
 		text.stage.single_match_mode = read_menu_line(stage, "single_match_mode");
+		const JsonValue records = json.object("records");
+		text.records.new_best = read_menu_line(records, "new_best");
+		text.records.stage_best = read_menu_line(records, "stage_best");
+		text.records.best_win = read_menu_line(records, "best_win");
+		text.records.best_coverage = read_menu_line(records, "best_coverage");
+		text.records.played = read_menu_line(records, "played");
 		const JsonValue headings = json.object("headings");
 		for (size_t index = 0; index < text.headings.size(); ++index)
 		{
@@ -666,6 +672,8 @@ namespace
 		menu.stage_select.preview_size = read_positive_vector(stage, "preview_size");
 		menu.stage_select.name_position = read_vector_unchecked(stage, "name_position");
 		menu.stage_select.navigation_position = read_vector_unchecked(stage, "navigation_position");
+		menu.stage_select.record_y = read_number_in(stage, "record_y", 0.0f, 1080.0f);
+		menu.stage_select.record_font = stage.string("record_font");
 		menu.stage_select.briefing = read_layout(stage, "briefing");
 		menu.stage_select.briefing.size = read_positive_vector(stage.object("briefing"), "size");
 		menu.stage_select.briefing_padding = read_positive_vector(stage, "briefing_padding");
@@ -962,6 +970,7 @@ namespace
 		menu.session_score_y = read_y("session_score_y");
 		menu.session_result_y = read_y("session_result_y");
 		menu.proceed_y = read_y("proceed_y");
+		menu.record_y = read_y("record_y");
 		if (menu.heading_y >= menu.winner_y || menu.winner_y >= menu.session_score_y ||
 			menu.session_score_y >= menu.session_result_y)
 		{
@@ -1929,6 +1938,7 @@ void Presentation::validate_resources(const RenderResources& render,
 	check.font("controls_settings.help_font", this->controls_settings_.help_font);
 	check.font("controls_settings.item_font", this->controls_settings_.item_font);
 	check.font("results_menu.contribution_font", this->results_menu_.contribution_font);
+	check.font("main_menu.stage_select.record_font", this->main_menu_.stage_select.record_font);
 	check.font("prompt_bar.font", this->prompt_bar_.font);
 	check.font("debug_overlay.font", this->debug_overlay_.font);
 	check.font("debug_overlay.station_label.font", this->debug_overlay_.station_label.font);
@@ -2427,6 +2437,42 @@ void Presentation::validate_resources(const RenderResources& render,
 	check_stage_briefing("versus_objective", this->menu_text_.stage.versus_objective, this->menu_.brand_font, 4.0f, 6.0f);
 	check_stage_briefing("solo_mode", this->menu_text_.stage.solo_mode, this->menu_.detail_font, 1.0f, 2.0f);
 	check_stage_briefing("single_match_mode", this->menu_text_.stage.single_match_mode, this->menu_.detail_font, 1.0f, 2.0f);
+	// Stage records share the navigation row, right-aligned to the preview,
+	// and the page shrinks a line to the room beside the arena counter. The
+	// copy must draw in its font and the row must sit below the preview edge
+	// and above the footer.
+	const RectangleF record_preview(stage.preview_position, stage.preview_size);
+	for (const std::wstring* label : { &this->menu_text_.records.best_win, &this->menu_text_.records.best_coverage })
+	{
+		const std::wstring line = *label + L" 100.0% / 99 " + this->menu_text_.records.played;
+		const Vector2F size = fixed_menu_size("menu_text.records", line, stage.record_font) +
+			this->menu_.detail_shadow_offset;
+		if (stage.record_y < record_preview.bottom() + this->menu_.rule_height ||
+			stage.record_y + size.y > this->menu_.footer_y)
+		{
+			throw std::runtime_error(this->source_path_ +
+				": main_menu.stage_select.record_y and record_font must place menu_text.records "
+				"below the preview edge and above the footer.");
+		}
+	}
+	const ResultsMenuPresentation& results = this->results_menu_;
+	const RectangleF results_panel((Vector2F(1920.0f, 1080.0f) - results.box_size) / 2.0f, results.box_size);
+	const float results_fill_right = (1920.0f + results.fill_box_size.x) / 2.0f;
+	const float results_fill_bottom = results_panel.y + results.fill_box_y_offset + results.fill_box_size.y;
+	const RectangleF contribution_heading(results.contribution_position, fixed_menu_size(
+		"results_menu.contribution_position", L"Surface held (% of arena)", results.contribution_font));
+	for (const std::wstring* label : { &this->menu_text_.records.new_best, &this->menu_text_.records.stage_best })
+	{
+		const Vector2F size = fixed_menu_size("menu_text.records", *label + L" 100.0%", results.contribution_font);
+		const RectangleF bounds(Vector2F(results_fill_right - size.x, results.record_y), size);
+		if (!results_panel.contains(bounds) || bounds.y < results_fill_bottom ||
+			bounds.bottom() > results.proceed_y || bounds.x <= contribution_heading.right())
+		{
+			throw std::runtime_error(this->source_path_ +
+				": results_menu.record_y and menu_text.records must fit the panel below the score bar, "
+				"above the prompt and to the right of the contribution heading.");
+		}
+	}
 	const auto finite_stage_rectangle = [](const RectangleF& bounds)
 	{
 		return std::isfinite(bounds.x) && std::isfinite(bounds.y) &&

@@ -408,6 +408,8 @@ private:
 	std::unique_ptr<labrador::UiTexture> briefing_accent_;
 	std::unique_ptr<labrador::UiTextDropShadow> stage_name_ = nullptr;
 	std::unique_ptr<labrador::UiTextDropShadow> navigation_;
+	// The shown stage's saved record; hidden for Random and unplayed stages.
+	std::unique_ptr<labrador::UiTextDropShadow> stage_record_;
 	std::unique_ptr<labrador::UiTextDropShadow> selection_status_;
 	std::unique_ptr<labrador::UiTextDropShadow> selection_hint_;
 	std::unique_ptr<labrador::UiTextDropShadow> random_mark_;
@@ -416,6 +418,8 @@ private:
 	int displayed_slot_ = -1;
 	ConfirmationState displayed_state_ = ConfirmationState::unconfirmed;
 	void update_stage_select_visuals();
+	// The record line for this roster's kind of match on `slot`, or empty.
+	std::wstring record_line(int slot) const;
 	void refresh_briefing_paper();
 	void check_paper_geometry() const;
 	// Returns the stage's slot, or the first slot for an empty or unknown name.

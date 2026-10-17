@@ -492,13 +492,22 @@ void GameLevel::open_results_menu()
 {
 	const LevelEndInfo result = this->level_->level_end_info();
 	this->session_.finish_round(result);
+	// Every finished round counts toward its stage's record, unless a Debug
+	// bot or replay played a seat (never in Release).
+	RecordOutcome record;
+	const std::vector<MenuPlayerSettings> seats = this->settings_.player_settings();
+	if (std::none_of(seats.begin(), seats.end(), [this](const MenuPlayerSettings& seat)
+		{ return this->data()->debug().drives_slot(seat.num); }))
+	{
+		record = this->data()->save()->record_result_and_save(this->settings_.stage(), result);
+	}
 	this->results_audio_ = std::make_unique<ResultsAudio>(this->data()->audio_resources(),
 		&this->data()->save()->play_settings(), *this->data()->presentation());
 	if (this->data()->debug().match_audio_paused()) { this->results_audio_->suspend(); }
 	this->menu_input_->reset_actions();
 	this->context()->push(
 		std::make_unique<ResultsMenuInitial>(this->menu_context_.get(),
-			result, this->session_, this->level_->revealed()),
+			result, this->session_, this->level_->revealed(), record),
 		[this]() { this->open_end_menu(); });
 }
 

@@ -151,6 +151,13 @@
       "solo_mode": "SOLO PRACTICE",
       "single_match_mode": "SINGLE MATCH"
     },
+    "records": {
+      "new_best": "NEW BEST",
+      "stage_best": "STAGE BEST",
+      "best_win": "BEST WIN",
+      "best_coverage": "BEST COVER",
+      "played": "PLAYED"
+    },
     "headings": {
       "home": "Make your mark.",
       "options": "Options",
@@ -322,6 +329,8 @@
       "preview_size": { "x": 1010.0, "y": 500.0 },
       "name_position": { "x": 150.0, "y": 245.0 },
       "navigation_position": { "x": 150.0, "y": 865.0 },
+      "record_y": 874.0,
+      "record_font": "gill_sans_mt_bold_24",
       "briefing": {
         "position": { "x": 1230.0, "y": 245.0 },
         "size": { "x": 540.0, "y": 665.0 },
@@ -444,6 +453,7 @@
     "winner_y": 255.0,
     "session_score_y": 340.0,
     "session_result_y": 405.0,
+    "record_y": 635.0,
     "proceed_y": 880.0,
     "art": {
       "ink": "1B1C20",

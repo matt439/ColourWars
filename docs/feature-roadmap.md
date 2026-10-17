@@ -346,3 +346,70 @@ both passed, including the new case and Release developer-tool exclusion.
 `scripts/check-startup.ps1` passed for both executables with isolated saves and
 graceful shutdown; evidence is under `out/validation/menu-navigation-debug/`
 and `out/validation/menu-navigation-release/`.
+
+## Stage records and the sectioned save (GAP#6.2)
+
+2026-10-17: every finished round now counts toward its stage's record, and the
+save that holds it is built from sections and carries a version key.
+
+**Save layout.** `Save` reads and writes a list of `SaveSection` objects
+(`game/save_section.h`) against one root object; each section's read is caught
+on its own, so a malformed section falls back to its defaults and leaves the
+others intact. The display and play preferences stay flat root keys exactly as
+before, so every existing save loads unchanged and needs no migration.
+`"save_version": 1` is written first. A missing key is version 0, the same flat
+layout. A higher version still loads every key this build knows and prints one
+stderr line; the next write drops what it does not know. That is accepted for a
+local save. New sections use nested keys: `"records"` now, and the last-match
+setup (`GAP#6.1`) adds its own the same way.
+
+**Records** (`game/match_records.h`) are an array of `{ "stage": ... }`
+objects, keyed by the manifest name, because the engine's JSON reader has no
+member iteration. Each holds versus matches played, wins by side (A/B), draws
+and the best winning share, plus practice matches played and the best
+coverage. Malformed entries are skipped one by one, counts are kept at 0 or
+more, percentages are clamped to 0-100, and a repeated stage keeps its first
+entry. Records for stages the manifest no longer lists are kept.
+
+Defaults chosen without an author call, recorded here so they can be revisited:
+- **Metric:** the winning team's share of painted surface
+  (`LevelEndInfo::team_*_percentage`), the number the results bar shows. Solo
+  practice (one team) keeps a separate best coverage of the arena.
+- **Records are keyed by stage only, not by match duration.** A shorter custom
+  duration can set a best.
+- A best moves only when the new value is higher **at the results' one-decimal
+  display** (`percentage_tenths`), so an invisible gain is never called a new
+  best. The first result on a stage is a new best. An unpainted practice run
+  sets no best, and a draw counts but sets and beats no best.
+- Every round of a series counts, including draw replays.
+
+**Write point.** `GameLevel::open_results_menu` records the round once, before
+the results open: one small synchronous write, the same cost as a settings
+Apply. A failed write keeps the record for the rest of the run and reports
+only on stderr. A match where a Debug bot or replay drives any seat
+(`DebugDirector::drives_slot`) records nothing; that is inert in Release. A
+Debug `+stage` session played from the keyboard does record, like any match.
+
+**Shown.** The results page adds one line on the contribution heading's row,
+right-aligned to the score bar and revealed with the other details: `NEW BEST
+68.4%`, or `STAGE BEST 72.1%` when the result did not beat it (a draw shows the
+best if one exists). Stage Select shows the shown stage's record on the
+navigation row, right-aligned to the preview: `BEST WIN 68.4% / 12 PLAYED` for
+a versus roster, `BEST COVER 37.0% / 2 PLAYED` for solo practice, or just the
+count when only draws were played. It is hidden for Random and for a stage
+not yet played in that kind of match, and shrinks rather than reach the arena
+counter. Both reuse the existing fonts and ink (`results_menu.contribution_font`,
+the 24 pt menu face via `stage_select.record_font`); the positions are
+`results_menu.record_y` and `stage_select.record_y`, and the labels are
+`menu_text.records`. No artwork was added; the later UI art pass may move both.
+
+Validation: the CPU case `match_records` covers display-precision bests, side,
+draw and practice tallies, the results-line text, version 0/1/newer saves,
+per-section and per-entry recovery, bounded values, a retired stage's record
+and an exact round trip; `settings`, `stick_settings` and `display_trial` pass
+unchanged. `menu_text` covers the new copy. The painter probe's results and
+Stage paper matrices check the line's placement, reveal timing, hiding and
+shrinking at 720p and 1080p. The Team setup matrix's real best-of-three series
+records its two drawn rounds once each and reloads them from disk; it and the
+Resume matrix, whose matches also finish, now save into nested profiles so the
+probe's shared save fixture stays byte-identical.

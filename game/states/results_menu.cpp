@@ -28,10 +28,30 @@ LevelEndInfo ResultsMenuPage::level_end_info() const
 }
 
 ResultsMenuInitial::ResultsMenuInitial(MenuContext* context,
-	const LevelEndInfo& end_info, const Session& session, bool revealed) :
-	ResultsMenuPage(context, end_info), session_(session), revealed_(revealed)
+	const LevelEndInfo& end_info, const Session& session, bool revealed,
+	const RecordOutcome& record) :
+	ResultsMenuPage(context, end_info), session_(session), revealed_(revealed),
+	record_(record)
 {
 
+}
+
+std::wstring ResultsMenuInitial::record_text(const RecordOutcome& record,
+	const MenuRecordText& text)
+{
+	if (!record.recorded)
+	{
+		return std::wstring();
+	}
+	if (record.new_best && record.best)
+	{
+		return text.new_best + L" " + percentage_text(*record.best);
+	}
+	if (record.best)
+	{
+		return text.stage_best + L" " + percentage_text(*record.best);
+	}
+	return std::wstring();
 }
 
 bool ResultsMenuInitial::debug_dismiss(bool /*leaving_match*/)
@@ -323,6 +343,15 @@ void ResultsMenuInitial::init()
 			UiPlayerBadge::before(this->details_.back()->bounds(), this->presentation().player_identity()),
 			static_cast<int>(i), &this->presentation().player_identity(), this->render_resources(), true));
 		this->texture_container_->add_child(this->player_badges_.back().get());
+	}
+	// The stage record sits on the contribution heading's row, right-aligned
+	// to the score bar, and is revealed with the other details.
+	const std::wstring record = record_text(this->record_, this->text().records);
+	if (!record.empty())
+	{
+		UiTextDropShadow* line = add_detail(record, Vector2F::ZERO, look.contribution_font);
+		line->set_position(Vector2F(this->fill_box_->rectangle().right() -
+			line->bounds().width, look.record_y));
 	}
 
 	if (this->revealed_)

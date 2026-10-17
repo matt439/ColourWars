@@ -240,6 +240,56 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     presentation = original; stages = shipped; for (auto& stage : stages) { stage.include_in_random = false; } open(1); browse(false); tick(settled); compare("no-eligible-left-wrap"); browse(true); tick(settled); compare("no-eligible-right-wrap");
     stages = { shipped.back() }; open(1); const Frame only = compare("single-excluded-stage"); browse(true); tick(settled); browse(false); require(only.pixels == frame().pixels, "Single excluded Stage offered Random or invented motion");
     stages = shipped; open(4, 5); compare("restored-default");
+    // Saved records: one line on the navigation row, right-aligned to the
+    // preview and shrunk clear of the arena counter, for the shown stage and
+    // this roster's kind of match only. Random and unplayed modes show none.
+    {
+        auto& board = const_cast<MatchRecords&>(preferences.records());
+        struct ClearRecords { MatchRecords& board; ~ClearRecords() { this->board = MatchRecords(); } } clear_records{ board };
+        const auto& geometry = original.main_menu().stage_select; const auto& style = original.menu(); const auto& record_words = original.menu_text().records;
+        const RectangleF preview(geometry.preview_position, geometry.preview_size);
+        const auto record_font = app.render_resources()->resolve_sprite_font(geometry.record_font);
+        const auto detail_font = app.render_resources()->resolve_sprite_font(style.detail_font);
+        StageRecord versus_record; versus_record.stage = shipped[0].name; versus_record.versus_played = 12; versus_record.team_a_wins = 7;
+        versus_record.team_b_wins = 4; versus_record.draws = 1; versus_record.best_win_percentage = 68.46f; versus_record.practice_played = 2; versus_record.best_coverage_percentage = 37.0f;
+        StageRecord draws_only; draws_only.stage = shipped[1].name; draws_only.versus_played = 3; draws_only.draws = 3;
+        StageRecord crowded; crowded.stage = shipped[2].name; crowded.versus_played = 123456789; crowded.team_b_wins = 123456789; crowded.best_win_percentage = 100.0f;
+        const auto shown = [&](int count, int selected, bool random, std::initializer_list<StageRecord> kept)
+        {
+            board = MatchRecords(); for (const StageRecord& record : kept) { board.insert(record); }
+            open(count, 1, selected); if (random) { browse(false); tick(settled); }
+            return frame();
+        };
+        for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080) })
+        {
+            app.resolution_manager()->set_resolution_exactly(size); std::ignore = app.renderer()->window_size_changed(size.x, size.y);
+            const Camera camera = Camera::frame(RectangleF(Vector2F::ZERO, menu_consts::DESIGN_RESOLUTION), app.viewport_manager()->fullscreen_viewport());
+            const auto pixels = [&](RectangleF bounds) { bounds.inflate(Vector2F(2.0f)); camera.calculate_view_rectangle(bounds); return countdown_crop_bounds(bounds); };
+            const auto expect = [&](const char* name, int count, int selected, const std::wstring& line)
+            {
+                const Frame without = shown(count, selected, false, {});
+                const Frame with = shown(count, selected, false, { versus_record, draws_only, crowded });
+                const std::wstring counter = L"<   ARENA " + std::to_wstring(selected + 1) + L" / " + std::to_wstring(stages.size()) + L"   >";
+                const RectangleF navigation(geometry.navigation_position, app.render_resources()->measure_text(detail_font, counter) + style.detail_shadow_offset);
+                const Vector2F measured = app.render_resources()->measure_text(record_font, line) + style.detail_shadow_offset;
+                const float scale = std::min(1.0f, (preview.right() - navigation.right() - style.focus_padding.x) / measured.x);
+                const RectangleF box(Vector2F(preview.right() - measured.x * scale, geometry.record_y), measured * scale);
+                const RectangleI delta = foreground_delta_bounds(with, without);
+                require(delta.width > 0 && delta.height > 0 && pixels(box).contains(delta) &&
+                    box.x >= navigation.right() + style.focus_padding.x - 0.5f && box.y >= preview.bottom() + style.rule_height,
+                    "Stage record escaped its right-aligned row beside the arena counter or below the preview");
+                hud_text_contrast(with, camera.calculate_view_rectangle(box));
+                save(with, output / ("stage-record-" + std::string(name) + '-' + std::to_string(size.x) + 'x' + std::to_string(size.y) + ".ppm"));
+                return scale;
+            };
+            require(expect("versus", 2, 0, record_words.best_win + L" 68.4% / 12 " + record_words.played) == 1.0f, "A typical versus stage record was shrunk");
+            require(expect("solo", 1, 0, record_words.best_coverage + L" 37.0% / 2 " + record_words.played) == 1.0f, "A typical practice stage record was shrunk");
+            expect("draws-only", 4, 1, L"3 " + record_words.played);
+            require(expect("crowded", 2, 2, record_words.best_win + L" 100.0% / 123456789 " + record_words.played) < 1.0f, "A record too long for its row was not shrunk");
+            require(shown(2, 0, true, {}).pixels == shown(2, 0, true, { versus_record }).pixels, "Random showed a stage record");
+            require(shown(1, 1, false, {}).pixels == shown(1, 1, false, { draws_only }).pixels, "A stage unplayed in this kind of match showed a record");
+        }
+    }
     stack.clear();
     for (const bool overlap : { false, true })
     {

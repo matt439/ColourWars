@@ -5,8 +5,9 @@
 #include <cstdio>
 #include <filesystem>
 #include <system_error>
+#include <array>
+#include <cmath>
 // The engine reads JSON; the game uses RapidJSON to write player settings.
-#include "rapidjson/document.h"
 #include "rapidjson/filewritestream.h"
 #include "rapidjson/writer.h"
 
@@ -15,123 +16,297 @@ using namespace directory_consts;
 using namespace mattmath;
 using namespace labrador;
 
-SaveData Save::load_from_json(const char* json_path) const
+namespace
 {
-    const JsonDocument document = read_json_file(json_path);
-    const JsonValue root = document.root();
-
-    auto data = SaveData();
-
-    // Recover invalid or missing settings independently so one bad field does
-    // not reset the other preferences.
-    try
+    ScreenResolution convert_ivec_to_resolution(const Vector2I& vec)
     {
-        const JsonValue resolution = root.object("resolution");
-        data.resolution = this->convert_ivec_to_resolution(
-            Vector2I(resolution.integer("x"), resolution.integer("y")));
-    }
-    catch (const std::runtime_error&)
-    {
-    }
-
-    try
-    {
-        data.fullscreen = root.boolean("fullscreen");
-    }
-    catch (const std::runtime_error&)
-    {
-    }
-
-    try
-    {
-        const std::string palette = root.string("team_palette");
-        for (int value = static_cast<int>(TeamColourPair::random);
-            value < static_cast<int>(TeamColourPair::count); ++value)
+        if (vec.x == 1280 && vec.y == 720)
         {
-            const TeamColourPair pair = static_cast<TeamColourPair>(value);
-            if (palette == TeamColourTools::palette_key(pair))
-            {
-                data.team_palette = pair;
-                break;
-            }
+            return ScreenResolution::s_1280_720;
+        }
+        else if (vec.x == 1920 && vec.y == 1080)
+        {
+            return ScreenResolution::s_1920_1080;
+        }
+        else if (vec.x == 2560 && vec.y == 1440)
+        {
+            return ScreenResolution::s_2560_1440;
+        }
+        else if (vec.x == 3840 && vec.y == 2160)
+        {
+            return ScreenResolution::s_3840_2160;
+        }
+        else
+        {
+            return SaveData{}.resolution;
         }
     }
-    catch (const std::runtime_error&)
+
+    Vector2I convert_resolution_to_ivec(ScreenResolution resolution)
     {
+        switch (resolution)
+        {
+        case ScreenResolution::s_1280_720:
+            return {1280, 720};
+        case ScreenResolution::s_1920_1080:
+            return {1920, 1080};
+        case ScreenResolution::s_2560_1440:
+            return {2560, 1440};
+        case ScreenResolution::s_3840_2160:
+            return {3840, 2160};
+        default:
+            return {-1, -1};
+        }
     }
 
-    const auto read_preference = [&root](const char* key, int minimum,
-        int maximum, int& destination)
+    // Resolution, window mode and team palette: flat root keys since version 0.
+    class DisplaySection final : public SaveSection
     {
-        try
+    public:
+        const char* key() const override { return "display"; }
+
+        void reset(SaveData& data) const override
         {
-            const int value = root.integer(key);
-            if (value >= minimum && value <= maximum)
+            const SaveData defaults;
+            data.resolution = defaults.resolution;
+            data.fullscreen = defaults.fullscreen;
+            data.team_palette = defaults.team_palette;
+        }
+
+        void read(const JsonValue& root, SaveData& data) const override
+        {
+            // Recover invalid or missing settings independently so one bad
+            // field does not reset the other preferences.
+            try
             {
-                destination = value;
+                const JsonValue resolution = root.object("resolution");
+                data.resolution = convert_ivec_to_resolution(
+                    Vector2I(resolution.integer("x"), resolution.integer("y")));
+            }
+            catch (const std::runtime_error&)
+            {
+            }
+
+            try
+            {
+                data.fullscreen = root.boolean("fullscreen");
+            }
+            catch (const std::runtime_error&)
+            {
+            }
+
+            try
+            {
+                const std::string palette = root.string("team_palette");
+                for (int value = static_cast<int>(TeamColourPair::random);
+                    value < static_cast<int>(TeamColourPair::count); ++value)
+                {
+                    const TeamColourPair pair = static_cast<TeamColourPair>(value);
+                    if (palette == TeamColourTools::palette_key(pair))
+                    {
+                        data.team_palette = pair;
+                        break;
+                    }
+                }
+            }
+            catch (const std::runtime_error&)
+            {
             }
         }
-        catch (const std::runtime_error&)
+
+        void write(SaveWriter& writer, const SaveData& data) const override
         {
+            const Vector2I resolution = convert_resolution_to_ivec(data.resolution);
+            writer.key("resolution");
+            writer.begin_object();
+            writer.key("x");
+            writer.integer(resolution.x);
+            writer.key("y");
+            writer.integer(resolution.y);
+            writer.end_object();
+            writer.key("fullscreen");
+            writer.boolean(data.fullscreen);
+            writer.key("team_palette");
+            writer.string(TeamColourTools::palette_key(data.team_palette));
         }
     };
-    read_preference("aim_sensitivity", 1, 5, data.play.aim_sensitivity);
-    read_preference("music_volume", 0, 100, data.play.music_volume);
-    read_preference("sfx_volume", 0, 100, data.play.sfx_volume);
 
-    // Each saved profile belongs to its XInput slot. Missing legacy profiles
-    // inherit the authored movement and the existing shared aim preference.
-    // Recover each field independently, including malformed array entries.
-    try
+    // Aim, volumes, per-pad sticks and comfort switches: flat root keys too.
+    class PlaySection final : public SaveSection
     {
-        const JsonValue profiles = root.array("pad_sticks");
-        const size_t count = std::min(profiles.size(), data.play.sticks.size());
-        for (size_t slot = 0; slot < count; ++slot)
+    public:
+        const char* key() const override { return "play"; }
+
+        void reset(SaveData& data) const override
         {
-            const JsonValue profile = profiles.at(slot);
-            const auto read_deadzone = [&profile](const char* key, int& destination)
+            data.play = PlaySettings();
+        }
+
+        void read(const JsonValue& root, SaveData& data) const override
+        {
+            const auto read_preference = [&root](const char* key, int minimum,
+                int maximum, int& destination)
             {
                 try
                 {
-                    const int value = profile.integer(key);
-                    if (value >= -1 && value <= 90) { destination = value; }
+                    const int value = root.integer(key);
+                    if (value >= minimum && value <= maximum)
+                    {
+                        destination = value;
+                    }
                 }
                 catch (const std::runtime_error&)
                 {
                 }
             };
-            read_deadzone("movement_deadzone", data.play.sticks[slot].movement_deadzone);
-            read_deadzone("aim_deadzone", data.play.sticks[slot].aim_deadzone);
+            read_preference("aim_sensitivity", 1, 5, data.play.aim_sensitivity);
+            read_preference("music_volume", 0, 100, data.play.music_volume);
+            read_preference("sfx_volume", 0, 100, data.play.sfx_volume);
+
+            // Each saved profile belongs to its XInput slot. Missing legacy profiles
+            // inherit the authored movement and the existing shared aim preference.
+            // Recover each field independently, including malformed array entries.
+            try
+            {
+                const JsonValue profiles = root.array("pad_sticks");
+                const size_t count = std::min(profiles.size(), data.play.sticks.size());
+                for (size_t slot = 0; slot < count; ++slot)
+                {
+                    const JsonValue profile = profiles.at(slot);
+                    const auto read_deadzone = [&profile](const char* key, int& destination)
+                    {
+                        try
+                        {
+                            const int value = profile.integer(key);
+                            if (value >= -1 && value <= 90) { destination = value; }
+                        }
+                        catch (const std::runtime_error&)
+                        {
+                        }
+                    };
+                    read_deadzone("movement_deadzone", data.play.sticks[slot].movement_deadzone);
+                    read_deadzone("aim_deadzone", data.play.sticks[slot].aim_deadzone);
+                }
+            }
+            catch (const std::runtime_error&)
+            {
+            }
+
+            const auto read_switch = [&root](const char* key, bool& destination)
+            {
+                try
+                {
+                    destination = root.boolean(key);
+                }
+                catch (const std::runtime_error&)
+                {
+                }
+            };
+            read_switch("view_shake", data.play.view_shake);
+            read_switch("aim_marker", data.play.aim_marker);
+            read_switch("reduce_effects", data.play.reduce_effects);
+        }
+
+        void write(SaveWriter& writer, const SaveData& data) const override
+        {
+            writer.key("aim_sensitivity");
+            writer.integer(data.play.aim_sensitivity);
+            writer.key("pad_sticks");
+            writer.begin_array();
+            for (const StickSettings& settings : data.play.sticks)
+            {
+                writer.begin_object();
+                writer.key("movement_deadzone");
+                writer.integer(settings.movement_deadzone);
+                writer.key("aim_deadzone");
+                writer.integer(settings.aim_deadzone);
+                writer.end_object();
+            }
+            writer.end_array();
+            writer.key("music_volume");
+            writer.integer(data.play.music_volume);
+            writer.key("sfx_volume");
+            writer.integer(data.play.sfx_volume);
+            writer.key("view_shake");
+            writer.boolean(data.play.view_shake);
+            writer.key("aim_marker");
+            writer.boolean(data.play.aim_marker);
+            writer.key("reduce_effects");
+            writer.boolean(data.play.reduce_effects);
+        }
+    };
+
+    // Every section, in the order the file is written. Sections hold no state,
+    // so one shared list serves every Save and Save stays copyable.
+    const std::array<const SaveSection*, 3>& save_sections()
+    {
+        static const DisplaySection display;
+        static const PlaySection play;
+        static const MatchRecordsSection records;
+        static const std::array<const SaveSection*, 3> sections{ &display, &play, &records };
+        return sections;
+    }
+
+    class FileSaveWriter final : public SaveWriter
+    {
+    public:
+        explicit FileSaveWriter(Writer<FileWriteStream>& writer) : writer_(writer) {}
+        void key(const char* name) override { this->writer_.Key(name); }
+        void integer(int value) override { this->writer_.Int(value); }
+        void number(float value) override
+        {
+            // JSON has no NaN or infinity; a section never writes one, and a
+            // zero keeps the document parseable if one ever does.
+            this->writer_.Double(std::isfinite(value) ? static_cast<double>(value) : 0.0);
+        }
+        void boolean(bool value) override { this->writer_.Bool(value); }
+        void string(const std::string& value) override
+        {
+            this->writer_.String(value.c_str(), static_cast<SizeType>(value.size()));
+        }
+        void begin_object() override { this->writer_.StartObject(); }
+        void end_object() override { this->writer_.EndObject(); }
+        void begin_array() override { this->writer_.StartArray(); }
+        void end_array() override { this->writer_.EndArray(); }
+    private:
+        Writer<FileWriteStream>& writer_;
+    };
+}
+
+SaveData Save::load_from_json(const char* json_path) const
+{
+    const JsonDocument document = read_json_file(json_path);
+    const JsonValue root = document.root();
+
+    // A file this build cannot have written still loads what it knows. The
+    // next save writes this version and drops the newer sections.
+    try
+    {
+        const int saved = root.has("save_version") ? root.integer("save_version") : 0;
+        if (saved > Save::version)
+        {
+            fprintf(stderr, "save: %s is save_version %d; this build writes %d and "
+                "will drop what it does not know on the next save.\n",
+                json_path, saved, Save::version);
         }
     }
     catch (const std::runtime_error&)
     {
     }
 
-    try
+    auto data = SaveData();
+    // One malformed section resets only itself.
+    for (const SaveSection* section : save_sections())
     {
-        data.play.view_shake = root.boolean("view_shake");
+        try
+        {
+            section->read(root, data);
+        }
+        catch (const std::runtime_error&)
+        {
+            section->reset(data);
+        }
     }
-    catch (const std::runtime_error&)
-    {
-    }
-
-    try
-    {
-        data.play.aim_marker = root.boolean("aim_marker");
-    }
-    catch (const std::runtime_error&)
-    {
-    }
-
-    try
-    {
-        data.play.reduce_effects = root.boolean("reduce_effects");
-    }
-    catch (const std::runtime_error&)
-    {
-    }
-
     return data;
 }
 bool Save::file_exists(const std::string& path)
@@ -213,35 +388,17 @@ bool Save::write_save_file(const SaveData& data) const
     auto write_buffer = std::make_unique<char[]>(65536);
     FileWriteStream os(fp, write_buffer.get(), 65536);
 
-    Document d;
-    d.SetObject();
-    Vector2I resolution_ivec = this->convert_resolution_to_ivec(data.resolution);
-    Value resolution(kObjectType);
-    resolution.AddMember("x", resolution_ivec.x, d.GetAllocator());
-    resolution.AddMember("y", resolution_ivec.y, d.GetAllocator());
-    d.AddMember("resolution", resolution, d.GetAllocator());
-    d.AddMember("fullscreen", data.fullscreen, d.GetAllocator());
-    Value palette(TeamColourTools::palette_key(data.team_palette), d.GetAllocator());
-    d.AddMember("team_palette", palette, d.GetAllocator());
-    d.AddMember("aim_sensitivity", data.play.aim_sensitivity, d.GetAllocator());
-    Value pad_sticks(kArrayType);
-    for (const StickSettings& settings : data.play.sticks)
-    {
-        Value profile(kObjectType);
-        profile.AddMember("movement_deadzone", settings.movement_deadzone, d.GetAllocator());
-        profile.AddMember("aim_deadzone", settings.aim_deadzone, d.GetAllocator());
-        pad_sticks.PushBack(profile, d.GetAllocator());
-    }
-    d.AddMember("pad_sticks", pad_sticks, d.GetAllocator());
-    d.AddMember("music_volume", data.play.music_volume, d.GetAllocator());
-    d.AddMember("sfx_volume", data.play.sfx_volume, d.GetAllocator());
-    d.AddMember("view_shake", data.play.view_shake, d.GetAllocator());
-    d.AddMember("aim_marker", data.play.aim_marker, d.GetAllocator());
-    d.AddMember("reduce_effects", data.play.reduce_effects, d.GetAllocator());
-
     // Writer flushes when the root object ends, before fclose below.
-    Writer<FileWriteStream> writer(os);
-    d.Accept(writer);
+    Writer<FileWriteStream> json(os);
+    FileSaveWriter writer(json);
+    json.StartObject();
+    writer.key("save_version");
+    writer.integer(Save::version);
+    for (const SaveSection* section : save_sections())
+    {
+        section->write(writer, data);
+    }
+    json.EndObject();
 
     // Check fclose before replacing the save. RapidJSON's FileWriteStream does
     // not report fwrite failures, so serialization alone cannot establish success.
@@ -290,7 +447,7 @@ bool Save::set_display_settings_and_save(ScreenResolution resolution,
     bool fullscreen, TeamColourPair palette)
 {
     // Validate the whole selection before changing any active preference.
-    if (this->convert_resolution_to_ivec(resolution).x <= 0)
+    if (convert_resolution_to_ivec(resolution).x <= 0)
     {
         throw std::invalid_argument("Invalid display resolution");
     }
@@ -299,48 +456,6 @@ bool Save::set_display_settings_and_save(ScreenResolution resolution,
     this->save_data_.fullscreen = fullscreen;
     this->save_data_.team_palette = palette;
     return this->save_to_file();
-}
-
-ScreenResolution Save::convert_ivec_to_resolution(
-    const Vector2I& vec) const
-{
-    if (vec.x == 1280 && vec.y == 720)
-    {
-        return ScreenResolution::s_1280_720;
-    }
-    else if (vec.x == 1920 && vec.y == 1080)
-    {
-        return ScreenResolution::s_1920_1080;
-    }
-    else if (vec.x == 2560 && vec.y == 1440)
-    {
-        return ScreenResolution::s_2560_1440;
-    }
-    else if (vec.x == 3840 && vec.y == 2160)
-    {
-        return ScreenResolution::s_3840_2160;
-    }
-    else
-    {
-        return SaveData{}.resolution;
-    }
-}
-Vector2I Save::convert_resolution_to_ivec(
-    ScreenResolution resolution) const
-{
-    switch (resolution)
-    {
-    case ScreenResolution::s_1280_720:
-        return {1280, 720};
-    case ScreenResolution::s_1920_1080:
-        return {1920, 1080};
-    case ScreenResolution::s_2560_1440:
-        return {2560, 1440};
-    case ScreenResolution::s_3840_2160:
-        return {3840, 2160};
-    default:
-        return {-1, -1};
-    }
 }
 
 SaveData Save::save_data() const
@@ -384,4 +499,22 @@ bool Save::set_play_settings_and_save(const PlaySettings& settings)
     }
     this->save_data_.play = normalized;
     return this->save_to_file();
+}
+
+const MatchRecords& Save::records() const
+{
+    return this->save_data_.records;
+}
+
+RecordOutcome Save::record_result_and_save(const std::string& stage,
+    const LevelEndInfo& result)
+{
+    const RecordOutcome outcome = this->save_data_.records.add(stage, result);
+    if (outcome.recorded)
+    {
+        // save_to_file already reports a failure on stderr; the results
+        // still show the record, which stays for the rest of this run.
+        std::ignore = this->save_to_file();
+    }
+    return outcome;
 }

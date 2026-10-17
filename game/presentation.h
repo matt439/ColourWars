@@ -136,6 +136,17 @@ struct MenuStageText
 	std::wstring single_match_mode;
 };
 
+// Labels for the per-stage records. The numbers and the joins between the
+// labels stay in code, as the other composed lines do.
+struct MenuRecordText
+{
+	std::wstring new_best;
+	std::wstring stage_best;
+	std::wstring best_win;
+	std::wstring best_coverage;
+	std::wstring played;
+};
+
 // Fixed roles select display text; navigation and accepted inputs remain code.
 struct MenuText
 {
@@ -151,6 +162,7 @@ struct MenuText
 	MenuConfirmationText confirmations;
 	MenuEndText end;
 	MenuStageText stage;
+	MenuRecordText records;
 	std::array<std::wstring, static_cast<size_t>(MenuHeading::count)> headings;
 	std::array<std::wstring, static_cast<size_t>(MenuPrompt::count)> prompts;
 	std::array<std::wstring, static_cast<size_t>(MenuItem::count)> items;
@@ -238,6 +250,9 @@ struct StageSelectPresentation
 	mattmath::Vector2F preview_size;
 	mattmath::Vector2F name_position;
 	mattmath::Vector2F navigation_position;
+	// The stage's record, on the navigation row, right-aligned to the preview.
+	float record_y = 0.0f;
+	std::string record_font;
 	WidgetLayout briefing;
 	mattmath::Vector2F briefing_padding;
 	labrador::Colour selected;
@@ -466,6 +481,8 @@ struct ResultsMenuPresentation
 	mattmath::Vector2F box_size = { 0.0f, 0.0f };
 	float session_score_y = 0.0f;
 	float session_result_y = 0.0f;
+	// The stage record line, right-aligned to the score bar, below it.
+	float record_y = 0.0f;
 	mattmath::Vector2F contribution_position = { 0.0f, 0.0f };
 	float contribution_spacing = 0.0f;
 	std::string contribution_font;

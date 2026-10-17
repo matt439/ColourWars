@@ -109,7 +109,6 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `GAP#4.2` | OPEN | MED | L | No action map or rebinding: bindings are constexprs in `player_input.h`/`menu_input.h`. The engine's `gamepad.h` waits on this client (Class 2 D6); `GAP#F2` waits on it. |
 | `GAP#5.1` | BLOCKED | LOW | M | Screen changes are hard cuts: the transition look is UI art after the gameplay style lock (`POL#7`, `POL#14`, `POL#9`). Level builds [take under 2.5 ms in Release](docs/polish-plan.md#level-build-pause-measured-2026-10-17), so no loading card. The blank startup window waits on `ENG#19`. |
 | `GAP#6.1` | OPEN | MED | M | The last match setup is not saved, so every launch walks the whole menu path again. |
-| `GAP#6.2` | OPEN | MED | M | Results are never kept: per-stage records, a NEW BEST line, best % on stage select; save sections and a version key go with it. |
 | `GAP#L9` | OPEN | LOW | M | No frame-rate or vsync setting, no render interpolation; `target_fps` is a literal 60. |
 | `GAP#L11` | DEFERRED | LOW | L | No locale axis; waits on `GAP#8.4`. Fonts regenerate from [a recipe](game/art/README.md#sprite-font-recipe-gap87) and text can wrap. |
 

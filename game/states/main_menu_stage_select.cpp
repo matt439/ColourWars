@@ -1,6 +1,8 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
 #include "game/drawable_text.h"
+#include "game/save.h"
+#include "game/objects/level_end_info.h"
 
 using namespace DirectX;
 using namespace mattmath;
@@ -130,6 +132,26 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->navigation_->set_text(random ? this->text().stage.random_navigation :
 		L"<   ARENA " + std::to_wstring(slot + 1) + L" / " +
 		std::to_wstring(this->random_slot()) + L"   >");
+	// The record shares the navigation row, right-aligned to the preview. A
+	// long played count shrinks it rather than reaching the arena counter.
+	const std::wstring record = random ? std::wstring() : this->record_line(slot);
+	this->stage_record_->set_text(record);
+	this->stage_record_->set_hidden(record.empty());
+	if (!record.empty())
+	{
+		const float preview_right = look.preview_position.x + look.preview_size.x;
+		const float room = preview_right - this->navigation_->bounds().right() -
+			this->menu_style().focus_padding.x;
+		const RectangleF record_bounds = RectangleF::union_of(
+			this->stage_record_->text_bounds_at(Vector2F::ZERO, 1.0f),
+			this->stage_record_->text_bounds_at(this->menu_style().detail_shadow_offset, 1.0f));
+		const float record_scale = std::min(1.0f, room / record_bounds.width);
+		this->stage_record_->set_scale(record_scale);
+		this->stage_record_->set_shadow_scale(record_scale);
+		this->stage_record_->set_shadow_offset(this->menu_style().detail_shadow_offset * record_scale);
+		this->stage_record_->set_position(Vector2F(preview_right -
+			record_bounds.width * record_scale, look.record_y));
+	}
 	this->preview_edge_->set_colour(confirmed ? look.selected :
 		this->menu_style().panel_edge_colour);
 	this->selection_status_->set_text(confirmed ?
@@ -153,6 +175,37 @@ void MainMenuStageSelect::update_stage_select_visuals()
 	this->check_paper_geometry();
 	this->displayed_slot_ = slot;
 	this->displayed_state_ = state;
+}
+std::wstring MainMenuStageSelect::record_line(int slot) const
+{
+	const StageList* stages = this->data()->stages();
+	if (slot < 0 || slot >= static_cast<int>(stages->size()))
+	{
+		return std::wstring();
+	}
+	const StageRecord* record = this->save()->records().find(
+		stages->at(static_cast<size_t>(slot)).name);
+	if (record == nullptr)
+	{
+		return std::wstring();
+	}
+	// Solo practice shows its coverage; a versus roster the winning share.
+	const MenuRecordText& text = this->text().records;
+	const bool solo = this->player_count() == 1;
+	const int played = solo ? record->practice_played : record->versus_played;
+	const std::optional<float>& best = solo ? record->best_coverage_percentage :
+		record->best_win_percentage;
+	if (played <= 0)
+	{
+		return std::wstring();
+	}
+	const std::wstring count = std::to_wstring(played) + L" " + text.played;
+	if (!best)
+	{
+		return count;
+	}
+	return (solo ? text.best_coverage : text.best_win) + L" " +
+		percentage_text(*best) + L" / " + count;
 }
 int MainMenuStageSelect::slot_of(const std::string& stage_name) const
 {
@@ -233,6 +286,9 @@ void MainMenuStageSelect::init()
 	this->navigation_ = std::make_unique<UiTextDropShadow>("navigation",
 		L"", style.detail_font, look.navigation_position, resources,
 		this->paper_art_.ink, clear_shadow, style.detail_shadow_offset);
+	this->stage_record_ = std::make_unique<UiTextDropShadow>("stage_record",
+		L"", look.record_font, Vector2F(0.0f, look.record_y), resources,
+		this->paper_art_.ink, clear_shadow, style.detail_shadow_offset, true);
 	this->random_mark_ = std::make_unique<UiTextDropShadow>("random_mark",
 		L"?", this->look().announcement_font, Vector2F::ZERO, resources,
 		style.highlight, style.shadow_colour, style.title_shadow_offset);
@@ -265,7 +321,8 @@ void MainMenuStageSelect::init()
 	}
 	this->text_container_ = std::make_unique<UiContainer>("text_container");
 	for (UiObject* widget : std::initializer_list<UiObject*>{ this->heading_.get(),
-		this->stage_name_.get(), this->navigation_.get(), this->random_mark_.get() })
+		this->stage_name_.get(), this->navigation_.get(), this->stage_record_.get(),
+		this->random_mark_.get() })
 	{
 		this->text_container_->add_child(widget);
 	}
@@ -352,6 +409,16 @@ void MainMenuStageSelect::check_paper_geometry() const
 	check_outer(this->heading_->bounds(), "heading");
 	check_outer(this->stage_name_->bounds(), "arena name");
 	check_outer(this->navigation_->bounds(), "navigation");
+	if (!this->stage_record_->hidden())
+	{
+		const RectangleF record = this->stage_record_->bounds();
+		check_outer(record, "stage record");
+		const RectangleF navigation = this->navigation_->bounds();
+		if (record.x <= navigation.right() || record.y < this->preview_edge_->bounds().bottom())
+		{
+			throw std::runtime_error("main_menu.stage_select.record_y: Stage Select record must sit below the preview edge, right of the arena counter.");
+		}
+	}
 	check_outer(this->preview_edge_->bounds(), "preview edge");
 	check_outer(this->preview_background_->bounds(), "preview background");
 	check_outer(this->stage_preview_->bounds(), "arena preview");
