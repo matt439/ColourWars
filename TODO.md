@@ -111,7 +111,6 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | `GAP#5.1` | OPEN | MED | L | Visual hard cuts between screens; the level build blocks on the last menu frame. |
 | `GAP#6.1` | OPEN | MED | M | The last match setup is not saved, so every launch walks the whole menu path again. |
 | `GAP#6.2` | OPEN | MED | M | Results are never kept: per-stage records, a NEW BEST line, best % on stage select; save sections and a version key go with it. |
-| `GAP#7.5` | OPEN | LOW | S | `_WIN32_WINNT` pinned to 0x0601 in `game/pch.h`. Per-monitor v2 awareness is in the manifest and checked at startup; the engine half is `ENG#17`. |
 | `GAP#L9` | OPEN | LOW | M | No frame-rate or vsync setting, no render interpolation; `target_fps` is a literal 60. |
 | `GAP#L11` | DEFERRED | LOW | L | No locale axis; waits on `GAP#8.4` and `GAP#8.7`. |
 

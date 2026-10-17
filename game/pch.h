@@ -5,9 +5,12 @@
 
 #pragma once
 
+// Windows 10, the release's stated floor. The engine sets no floor and so
+// compiles at the SDK default (also Windows 10), so game and engine see one
+// set of Win32 declarations.
 #include <winsdkver.h>
 #ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x0601
+#define _WIN32_WINNT 0x0A00
 #endif
 #include <sdkddkver.h>
 
