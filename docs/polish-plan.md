@@ -147,6 +147,23 @@ Relevant implementation references:
 [weapon artwork](../game/art/README.md), [level editor](level-editor.md) and
 [completed feature increments](feature-roadmap.md).
 
+## Development order (2026-10-17)
+
+The author set the order of the remaining work. Each phase starts when the one
+before it is locked; this is the plan's sequence, not a list of soft gates.
+
+1. **Lock the gameplay art style.** The style is the most important thing now:
+   the painter and tools (`POL#7`), the player and shot cues (`POL#14`) and the
+   material, prop and background kit (`POL#9`), judged in the current arenas.
+   It is locked when §1's exit condition holds and the author accepts it.
+2. **Levels with movement.** Then the Close Quarters blockout (`POL#17`) is built
+   together with movement tuning (`POL#3`): the jump is tuned to the layout and
+   the layout to the jump, with neither frozen first. The kit is fitted to the
+   layout as it settles, and the other arenas (`POL#21`) follow.
+
+UI artwork follows the gameplay style, as before. Audio, release and engine
+work are outside this sequence and keep their own rows.
+
 ## 1. Establish the art and display rules
 
 **Art rules accepted by the author on 2026-10-15 (`POL#1`).** Use Paint.exe
@@ -312,9 +329,10 @@ Keep collision silhouettes truthful. Decorative depth, foreground objects and
 surface effects must not conceal landing edges or suggest a route that cannot be
 used. Check the arena both clean and heavily painted with every team palette.
 
-The kit itself does not wait on the reference blockout (author, 2026-10-17):
-materials, props and background layers follow the art rules and the warehouse
-direction, and are fitted to Close Quarters once its layout exists.
+The kit is part of locking the art style, so it comes before the reference
+blockout ([development order](#development-order-2026-10-17)): materials, props
+and background layers follow the art rules and the warehouse direction, and are
+fitted to Close Quarters once its layout exists.
 
 ### Characters and distinctive weapons
 
@@ -1066,9 +1084,9 @@ fallback under a system-only PATH. The 53-file ZIP contains all 26 reviewed
 runtime assets byte for byte and excludes source, debug and private audio.
 
 Accepted-arena artwork and human presentation/readability review remain
-`POL#16`. `POL#9`'s material/prop kit proceeds alongside `POL#17`'s reference
-blockout and is fitted to it; movement-feel (`POL#3`) is ongoing tuning. Neither
-gates the other (2026-10-17). Physical-controller and listening
+`POL#16`. The [development order](#development-order-2026-10-17) puts `POL#9`'s
+material/prop kit in the art-style phase, before `POL#17`'s reference blockout,
+which is built with movement-feel tuning (`POL#3`). Physical-controller and listening
 acceptance retain their existing gates.
 
 Once the reference match meets its exit conditions, extend the approved character

@@ -14,7 +14,14 @@ its accepted sounds. Build gameplay artwork to the accepted
 [Paint.exe art rules](docs/polish-plan.md#1-establish-the-art-and-display-rules). The author's
 order is gameplay style first, UI after.
 
-Pick the next actions from the OPEN rows, preserving gameplay style before UI.
+**Order** ([development order](docs/polish-plan.md#development-order-2026-10-17)):
+1. **Lock the gameplay art style:** `POL#7` painter and tools, `POL#14` player and shot cues,
+   `POL#9` material/prop/background kit, in the current arenas.
+2. **Then levels with movement:** the Close Quarters blockout (`POL#17`) and jump/movement tuning
+   (`POL#3`) together, the kit fitted to it, then the other arenas (`POL#21`).
+
+UI artwork follows the gameplay style. Rows outside this sequence (audio, release, engine,
+tooling) are picked from OPEN when they don't compete with it.
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
@@ -29,7 +36,7 @@ questions in the polish sub-docs are superseded, not open.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#7` | OPEN | HIGH | M | Human review of character/team/tool readability in single- and four-player play, in the current arenas; re-check in Close Quarters (`POL#17`). E figure, action poses, masks, accents, grips, redraw and all five tools are implemented. [Painter](docs/polish-painter.md), [tools](docs/polish-tools.md). |
-| `POL#9` | OPEN | HIGH | XL | Material and prop kit, background layers, landmarks, room life for the warehouse direction; fitted to Close Quarters (`POL#17`) as it lands; collision silhouettes stay truthful. [§4](docs/polish-plan.md#environment-and-background). |
+| `POL#9` | OPEN | HIGH | XL | Material and prop kit, background layers, landmarks, room life for the warehouse direction, as part of the art style; fitted to Close Quarters (`POL#17`) later; collision silhouettes stay truthful. [§4](docs/polish-plan.md#environment-and-background). |
 | `POL#16` | OPEN | MED | XL | Carry the style through accepted arenas after their blockouts; human presentation/readability review remains. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback
@@ -40,7 +47,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#3` | OPEN | MED | M | Ongoing movement tuning, provisional while levels and art develop; gates nothing. Keyboard/mouse: jump a bit floaty and high (`jump_*` candidates to try). Pad half with `ROAD#2`. [Playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
+| `POL#3` | DEFERRED | MED | M | Movement tuning, done with the blockout (`POL#17`) once the art style is locked; values stay provisional. Keyboard/mouse: jump a bit floaty and high (`jump_*` candidates to try). Pad half with `ROAD#2`. [Playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
 | `POL#14` | OPEN | MED | M | Human review of the implemented player badges, aim/readiness and blocked-shot cues, in the current arenas; re-check in Close Quarters (`POL#17`). [§8](docs/polish-plan.md#help-players-read-the-tool-and-the-fight). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
@@ -52,7 +59,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#17` | OPEN | HIGH | XL | Close Quarters reference blockout against the §3 requirements table (routes, spawns, paint budget, weapon roles, pacing, side fairness, recovery pocket), on the current provisional movement values. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
+| `POL#17` | DEFERRED | HIGH | XL | Close Quarters reference blockout against the §3 requirements table (routes, spawns, paint budget, weapon roles, pacing, side fairness, recovery pocket), tuned with `POL#3`. After the art style is locked. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after CQ is accepted; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
 | `ED#3` | UNSCOPED | LOW | M | Resource names (sheet, frame, icon, colour, music) are checked only at game startup; the editor takes any non-empty name. |
 | `ED#4` | UNSCOPED | LOW | S | Registering a stage is manual (`manifest.json` and `cmake/runtime_assets.cmake`); the editor does not help. |
