@@ -17,6 +17,8 @@ With Reduce effects On:
   without the two white rays; the dry cross and aim/readiness shapes remain.
 - Quiet breathing, blinking, weight shifts and acceleration lean are suppressed.
   Action poses, hands, sleeves and team masks remain.
+- Backdrop clouds stay at their authored stationary anchors. Their drift clocks
+  freeze and resume from the held phases when detail returns.
 - Idle sprayer beads/drops and detached mister release haze are hidden. Active
   reduced updates retire old drips and reset quiet posing; restoring detail
   waits for fresh settling rather than replaying an interrupted bead.

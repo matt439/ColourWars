@@ -396,11 +396,17 @@ trees, a house, clouds, a sun, birds) replaces the dark void. The warehouse and
 industrial directions in the briefs above predate the Paint.exe rules: Tool Props
 governs the terrain everywhere, and each arena's subject (Close Quarters' paint
 workshop and supply warehouse) becomes its own backdrop and landmarks when its
-blockout is fitted. The bullets above beyond materials, undersides and
-background layers (landmarks, room life, ambient animation, parallax) and the
-human review remain open. The monitor palette now borrows the same kit swatches
+blockout is fitted. Landmarks, further room life, parallax and the human review
+remain open. The monitor palette now borrows the same kit swatches
 ([palette coherence](polish-terrain.md#monitor-palette-coherence-2026-10-18)),
 replacing its old grey ramp while keeping the final empty story slot.
+
+**Quiet cloud drift implemented 2026-10-18 (part of `POL#9`).** The
+[existing backdrop clouds](polish-terrain.md#quiet-cloud-drift-2026-10-18) now
+move slowly in bounded, independently phased cycles on the four-unit grid.
+They freeze with the world, stay stationary under Reduce effects and keep
+their full excursion inside their cull bounds. Landmarks, signage, further
+room life, parallax and human style review remain open.
 
 ### Characters and distinctive weapons
 

@@ -2,6 +2,7 @@
 #include "game/objects/level_object_builder.h"
 #include "engine/math/triangle.h"
 #include "game/objects/airbrush_shadow.h"
+#include "game/objects/drifting_visual.h"
 #include "game/paint_face_geometry.h"
 #include <cmath>
 #include <initializer_list>
@@ -218,6 +219,10 @@ std::unique_ptr<CollisionObject>
 		const TeamColour& team_colours,
 		const StageContext& context) const
 {
+	if (json.has("drift"))
+	{
+		throw std::runtime_error(json.where() + ": drift belongs only on decorative Visual entries");
+	}
 	const std::string type = json.string("type");
 	if (type == "Structure")
 	{
@@ -324,6 +329,21 @@ std::unique_ptr<GameObject>
 	const std::string type = json.string("type");
 	if (type == "Visual")
 	{
+		if (json.has("drift"))
+		{
+			const JsonValue drift = json.object("drift");
+			try
+			{
+				return std::make_unique<DriftingVisual>(json.string("sheet_name"),
+					json.string("frame_name"), decode_rectangle(json), this->render_resources_,
+					this->preferences_, colour_of(json), drift.number("distance"),
+					drift.number("period"), drift.number("phase"));
+			}
+			catch (const std::invalid_argument& error)
+			{
+				throw std::runtime_error(drift.where() + ": " + error.what());
+			}
+		}
 		return std::make_unique<Visual>(
 			json.string("sheet_name"),
 			json.string("frame_name"),

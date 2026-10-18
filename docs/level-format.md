@@ -109,7 +109,7 @@ does not use it for lookup, collision or uniqueness.
 | `collision_objects` | `Structure` | `STRUCTURE`, `STRUCTURE_JUMP_THROUGH` | Rectangle; optional `material`. Fixed solid or jump-through terrain; no scoring paint. |
 | `collision_objects` | `StructurePaintable` | `STRUCTURE_PAINTABLE` | Rectangle plus all four `paintable_faces` booleans; optional `material`. Fixed paint-scoring terrain. |
 | `collision_objects` | `StructureRamp` | `STRUCTURE_RAMP_RIGHT`, `STRUCTURE_RAMP_LEFT` | `triangle` with six coordinates; optional `material`. Fixed ramp collision; no scoring paint. |
-| `non_collision_objects` | `Visual` | None is read | Rectangle. Decorative art with no collision or score; backdrop props use sheet `terrain`. |
+| `non_collision_objects` | `Visual` | None is read | Rectangle; optional `drift`. Decorative art with no collision or score; backdrop props use sheet `terrain`. |
 
 Flat terrain and visuals use either of these object members:
 
@@ -162,6 +162,33 @@ Objects are created in array order, with non-collision objects before collision
 objects and players. Put backgrounds in `non_collision_objects`. A frame is
 stretched into the authored rectangle or ramp bounding box; its source texel
 size does not change collision dimensions.
+
+### Decorative drift
+
+A `Visual` may carry a bounded horizontal drift around its authored rectangle:
+
+```json
+"drift": { "distance": 32, "period": 60, "phase": 0.25 }
+```
+
+All three fields are required when `drift` is present. `distance` is the maximum
+horizontal excursion in world units, greater than zero and at most 256; `period`
+is a full cycle in seconds, from 1 through 3600; `phase` is the initial fraction
+of a cycle, from zero inclusive to one exclusive. Values must be finite numbers
+and stay in range when converted to the game's float numbers; the editor checks
+that conversion too.
+The offset is `distance * sin(2 * pi * (time / period + phase))`, snapped to the
+four-world-unit art grid. The authored rectangle is the stationary anchor, not
+the left edge of the motion. A distance between grid steps can round outward by
+up to two units; culling rounds the distance up to the next whole grid step so
+it includes the entire possible excursion.
+
+The initial pose follows `phase`; the stage preview retains that pose. Reduce
+effects holds the drawing at its anchor. Drift never changes collision, scoring
+or gameplay randomness, and cannot be authored on a collision object. Without
+`drift`, a `Visual` keeps its ordinary stationary drawing. The editor preserves
+the fields through loading and saving and exposes their numeric values in the
+property inspector.
 
 ## Materials
 

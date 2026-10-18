@@ -65,6 +65,7 @@ add_executable(ColourWars WIN32
     objects/collision_object_type.cpp
     objects/combat_feedback.cpp
     objects/airbrush_shadow.cpp
+    objects/drifting_visual.cpp
     objects/crude_drawing.cpp
     objects/countdown_art.cpp
     objects/reveal_art.cpp

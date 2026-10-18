@@ -450,7 +450,8 @@
                 "width": 256.0,
                 "height": 96.0
             },
-            "colour": "WHITE"
+            "colour": "WHITE",
+            "drift": { "distance": 32, "period": 48, "phase": 0.0 }
         },
         {
             "name": "cloud_2",
@@ -464,7 +465,8 @@
                 "width": 160.0,
                 "height": 64.0
             },
-            "colour": "WHITE"
+            "colour": "WHITE",
+            "drift": { "distance": 32, "period": 60, "phase": 0.17 }
         },
         {
             "name": "cloud_3",
@@ -478,7 +480,8 @@
                 "width": 256.0,
                 "height": 96.0
             },
-            "colour": "WHITE"
+            "colour": "WHITE",
+            "drift": { "distance": 48, "period": 72, "phase": 0.33 }
         },
         {
             "name": "cloud_4",
@@ -492,7 +495,8 @@
                 "width": 256.0,
                 "height": 96.0
             },
-            "colour": "WHITE"
+            "colour": "WHITE",
+            "drift": { "distance": 32, "period": 54, "phase": 0.51 }
         },
         {
             "name": "cloud_5",
@@ -506,7 +510,8 @@
                 "width": 160.0,
                 "height": 64.0
             },
-            "colour": "WHITE"
+            "colour": "WHITE",
+            "drift": { "distance": 48, "period": 66, "phase": 0.68 }
         },
         {
             "name": "cloud_6",
@@ -520,7 +525,8 @@
                 "width": 256.0,
                 "height": 96.0
             },
-            "colour": "WHITE"
+            "colour": "WHITE",
+            "drift": { "distance": 32, "period": 58, "phase": 0.84 }
         },
         {
             "name": "birds_1",

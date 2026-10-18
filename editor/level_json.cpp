@@ -225,6 +225,29 @@ namespace colourwars_editor
             }
         }
 
+        void validate_drift(const Json& object, bool collision)
+        {
+            if (!object.HasMember("drift")) { return; }
+            if (collision) { fail("Only decorative Visual entries may drift."); }
+            const Json& drift = object["drift"];
+            if (!drift.IsObject()) { fail("drift must be an object."); }
+            const double distance = number(drift, "distance");
+            const double period = number(drift, "period");
+            const double phase = number(drift, "phase");
+            if (distance <= 0.0 || distance > 256.0 || static_cast<float>(distance) <= 0.0f)
+            {
+                fail("drift.distance must be greater than zero and at most 256 world units.");
+            }
+            if (period < 1.0 || period > 3600.0)
+            {
+                fail("drift.period must be between 1 and 3600 seconds.");
+            }
+            if (phase < 0.0 || phase >= 1.0 || static_cast<float>(phase) >= 1.0f)
+            {
+                fail("drift.phase must be at least zero and less than one cycle.");
+            }
+        }
+
         void validate_object(const Json& object, bool collision)
         {
             if (!object.IsObject())
@@ -240,6 +263,7 @@ namespace colourwars_editor
             {
                 fail("Scenery is grey: use a grey colour name such as GAINSBORO, or RRGGBB with three equal pairs.");
             }
+            validate_drift(object, collision);
             if (!collision)
             {
                 if (type != "Visual")

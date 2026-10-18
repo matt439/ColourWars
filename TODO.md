@@ -37,7 +37,7 @@ questions in the polish sub-docs are superseded, not open.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#7` | OPEN | HIGH | M | Human review of character/team/tool readability in 1P and 4P play, in the current arenas; re-check in Close Quarters (`POL#17`). The author's 2026-10-18 build (no teammate accents), its poses, sleeves, grips and all five tools are implemented. [Painter](docs/polish-painter.md), [tools](docs/polish-tools.md). |
-| `POL#9` | OPEN | HIGH | L | Tool Props materials, airbrush shadows and the drawn backdrop are in all four arenas. Left: human review clean/painted, every pair, 1P/4P; landmarks, room life, ambient motion, parallax; CQ's own backdrop with `POL#17`. [Kit](docs/polish-terrain.md), [§4](docs/polish-plan.md#environment-and-background). |
+| `POL#9` | OPEN | HIGH | L | Tool Props materials, shadows, backdrop and quiet cloud drift are in all four arenas. Left: human review clean/painted, every pair, 1P/4P; landmarks, further room life, parallax; CQ's own backdrop with `POL#17`. [Kit](docs/polish-terrain.md), [§4](docs/polish-plan.md#environment-and-background). |
 | `POL#16` | OPEN | MED | XL | Carry the style through accepted arenas after their blockouts; human presentation/readability review remains. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback

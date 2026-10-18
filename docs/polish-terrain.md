@@ -1,4 +1,4 @@
-# Tool Props terrain, shadows and backdrop (`POL#9`, first increment)
+# Tool Props terrain, shadows and backdrop (`POL#9`)
 
 Implemented 2026-10-18. This page owns the terrain kit's rules, its runtime shape and
 what of `POL#9` remains. The art rules it follows are the accepted
@@ -154,12 +154,74 @@ Local evidence is under `out/validation/monitor-palette/` and `out/acceptance/`.
 Renderer run IDs are Debug `cab6344d19ea4df6a077b7f879b996e6` and Release
 `40276642ba4c4c4e865b8bbce23d5c95`. Human gameplay/style review remains below.
 
+## Quiet cloud drift (2026-10-18)
+
+The existing 23 clouds now drift slowly behind the four arenas. Each follows a
+bounded horizontal cycle, with a 32- or 48-unit excursion and a 48–72-second
+period. Different starting phases and periods keep neighbouring clouds from
+moving in lockstep. Position changes in four-world-unit cells, preserving the
+drawn grid. The atlas, palette and collision silhouettes are unchanged.
+
+`Visual` entries opt in through the level's optional `drift` object
+([format](level-format.md#decorative-drift)). The authored rectangle is the
+stationary anchor. [`DriftingVisual`](../game/objects/drifting_visual.h) owns a
+bounded cosmetic clock; Scene advances it once per world update, independently
+of how many views draw it. Draws only read the chosen position. Pause, count-in,
+the opening and the ending freeze it with the world. Rebuilding the stage starts
+from its authored phase, and stage previews retain that initial pose.
+
+Reduce effects immediately draws each cloud at its stationary anchor, including
+when changed while paused. Its clock stays frozen while reduced and resumes
+from the held phase when detail returns. Culling includes both drift extremes,
+the anchor, authored frame origins and view-pixel quantization. Drift has no
+collision, paint, audio or gameplay-randomness role.
+
+The runtime, editor and schema check the optional fields. The editor's existing
+numeric inspector can edit them; undo/redo and save/reopen retain them and
+unknown metadata. A plain `Visual` without `drift` remains stationary.
+
+Validation on 2026-10-18:
+
+- Debug and Release build under `/W4 /WX` and pass all 36 consumer cases. The
+  terrain case covers every shipped cloud, deterministic restart and phases,
+  full-cycle bounds, four-unit snapping, large/nonpositive/nonfinite ticks,
+  RNG independence, live reduction and named invalid-content diagnostics.
+- Both editor document suites and hidden launch/selection/close checks pass.
+  Drift checks cover schema agreement, numeric/type limits, float conversion,
+  transactional inspector edits, history and metadata-preserving save/reopen.
+- `scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -DriftOnly` and its
+  Release counterpart pass on the NVIDIA GeForce RTX 5080. Real D3D11 cloud
+  rasters match the old static art at zero phase, move to distinct extremes
+  and return exactly after a cycle at 1P/4P 720p, 1080p and QHD. Direct draws
+  agree with Scene when only a drifting edge enters the view. Projected
+  bounds, immediate reduction, held phases, frozen redraw/RNG and resize
+  round trips pass. Actual arena captures preserve simulation observations
+  and Debug replay fingerprints during drawing.
+- Isolated Debug and Release startup pass with the accepted bank and a
+  system-only PATH. The 55-file Release ZIP builds; all four packaged levels
+  byte-match their sources, required runtimes and accepted audio are present,
+  and no development files are packaged. Its extracted copy also passes
+  isolated startup and graceful shutdown. `git diff --check` passes.
+
+Retained native-size evidence includes the
+[cloud/culling crops at 720p](images/polish-terrain/cloud-drift-culling-720p.png),
+Close Quarters [early](images/polish-terrain/cloud-drift-cq-early-720p.png) and
+[12 seconds later](images/polish-terrain/cloud-drift-cq-later-720p.png), and a
+[4P 1080p sky composition](images/polish-terrain/cloud-drift-cq-4p-sky-1080p.png). The last
+fixture explicitly places the real players above the platforms so the normal
+cameras show clouds; it establishes no route or jump reachability. These are
+art/renderer checks; human motion/readability review remains open.
+
+Local evidence is under `out/validation/cloud-drift/` and `out/acceptance/`.
+Final renderer run IDs are Debug `d47fffce9a4342f3ade57904128a1741` and Release
+`3b239ecb30a345f3bce5c803adfe3f1d`.
+
 ## Not done (what `POL#9` still holds)
 
 - Human review in play, clean and heavily painted, with all three team pairs, at 1P
   and 4P (part of locking the style with `POL#7` and `POL#14`).
-- Landmarks, signage and room life; small ambient animation; captioned Paint-artefact
-  jokes in the backdrop; modest parallax after camera framing.
+- Landmarks, signage and further room life beyond cloud drift; captioned
+  Paint-artefact jokes in the backdrop; modest parallax after camera framing.
 - Close Quarters' own backdrop and fitting the kit to its blockout (`POL#17`); a
   palette and composition per arena (`POL#16`).
 - The overview and the monitor picture draw the arena small enough that one-cell

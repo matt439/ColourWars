@@ -4,6 +4,7 @@
 #include "game/paint_face_geometry.h"
 #include "game/level_format.h"
 #include <rapidjson/document.h>
+#include <rapidjson/schema.h>
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 #include <Windows.h>
@@ -700,6 +701,127 @@ namespace
         std::cout << "PASS optional materials: defaults, allowed types, inspector insert/clear and load refusal\n";
     }
 
+    void check_drift(const fs::path& repo, const fs::path& scratch)
+    {
+        LevelDocument base;
+        rapidjson::Document valid = parse(base.serialize());
+        rapidjson::Document drift;
+        drift.Parse("{\"distance\":32,\"period\":60,\"phase\":0.25,\"author_note\":\"retain\"}");
+        rapidjson::Value authored;
+        authored.CopyFrom(drift, valid.GetAllocator());
+        valid["non_collision_objects"][0].AddMember("drift", authored, valid.GetAllocator());
+        const rapidjson::Document schema_json = parse(contents(repo / "docs" / "level.schema.json"));
+        const rapidjson::SchemaDocument schema(schema_json);
+        const auto schema_accepts = [&](const rapidjson::Document& value)
+        {
+            rapidjson::SchemaValidator validator(schema);
+            return value.Accept(validator);
+        };
+        require(schema_accepts(valid), "The schema refused valid decorative drift");
+
+        const fs::path path = scratch / "drift.json";
+        write(path, encode(valid));
+        LevelDocument document;
+        document.load(path);
+        const Entry visual = entry(document, EntryKind::decoration);
+        std::size_t drift_fields = 0;
+        for (const Property& property : document.properties(visual))
+        {
+            if (property.path == "drift/distance" || property.path == "drift/period" ||
+                property.path == "drift/phase")
+            {
+                require(property.numeric && !property.boolean,
+                    "The drift inspector field must be numeric");
+                ++drift_fields;
+            }
+        }
+        require(drift_fields == 3, "The inspector omitted a drift field");
+        document.set_property(visual, "drift/distance", "48");
+        require(parse(document.serialize())["non_collision_objects"][0]["drift"]["distance"] == 48,
+            "Editing drift changed the wrong field");
+        require(document.undo() && parse(document.serialize()) == valid,
+            "Undo did not restore the original drift");
+        require(document.redo(), "A drift edit did not enter redo history");
+        document.save(path);
+        LevelDocument reopened;
+        reopened.load(path);
+        require(parse(reopened.serialize()) == parse(document.serialize()),
+            "Save/reopen changed drift or its unknown metadata");
+        for (const auto& [field, value] : std::map<std::string, std::string>{
+            { "distance", "0" }, { "period", "0.5" }, { "phase", "1" } })
+        {
+            reject_without_change(document, [&] { document.set_property(visual, "drift/" + field, value); },
+                "An invalid drift edit changed the document");
+        }
+
+        const auto variant = [&](const char* name, bool expected, const auto& change)
+        {
+            rapidjson::Document changed = parse(encode(valid));
+            change(changed);
+            require(schema_accepts(changed) == expected,
+                std::string("The schema disagreed about drift fixture ") + name);
+            const fs::path fixture = scratch / (std::string("drift-") + name + ".json");
+            write(fixture, encode(changed));
+            if (expected)
+            {
+                LevelDocument accepted;
+                accepted.load(fixture);
+                require(parse(accepted.serialize()) == changed,
+                    std::string("The editor changed drift fixture ") + name);
+            }
+            else
+            {
+                reject_without_change(reopened, [&] { reopened.load(fixture); },
+                    "The editor accepted invalid drift");
+            }
+        };
+        variant("absent", true, [](auto& d) { d["non_collision_objects"][0].RemoveMember("drift"); });
+        variant("minimum", true, [](auto& d)
+        {
+            auto& value = d["non_collision_objects"][0]["drift"];
+            value["distance"].SetDouble(0.25); value["period"].SetInt(1); value["phase"].SetInt(0);
+        });
+        variant("maximum", true, [](auto& d)
+        {
+            auto& value = d["non_collision_objects"][0]["drift"];
+            value["distance"].SetInt(256); value["period"].SetInt(3600); value["phase"].SetDouble(0.999);
+        });
+        variant("not-object", false, [](auto& d) { d["non_collision_objects"][0]["drift"].SetInt(2); });
+        variant("missing-distance", false, [](auto& d) { d["non_collision_objects"][0]["drift"].RemoveMember("distance"); });
+        variant("missing-period", false, [](auto& d) { d["non_collision_objects"][0]["drift"].RemoveMember("period"); });
+        variant("missing-phase", false, [](auto& d) { d["non_collision_objects"][0]["drift"].RemoveMember("phase"); });
+        variant("string-distance", false, [](auto& d) { d["non_collision_objects"][0]["drift"]["distance"].SetString("32"); });
+        variant("boolean-period", false, [](auto& d) { d["non_collision_objects"][0]["drift"]["period"].SetBool(true); });
+        variant("null-phase", false, [](auto& d) { d["non_collision_objects"][0]["drift"]["phase"].SetNull(); });
+        variant("zero-distance", false, [](auto& d) { d["non_collision_objects"][0]["drift"]["distance"].SetInt(0); });
+        variant("negative-distance", false, [](auto& d) { d["non_collision_objects"][0]["drift"]["distance"].SetInt(-1); });
+        variant("large-distance", false, [](auto& d) { d["non_collision_objects"][0]["drift"]["distance"].SetInt(257); });
+        variant("short-period", false, [](auto& d) { d["non_collision_objects"][0]["drift"]["period"].SetDouble(0.999); });
+        variant("long-period", false, [](auto& d) { d["non_collision_objects"][0]["drift"]["period"].SetInt(3601); });
+        variant("negative-phase", false, [](auto& d) { d["non_collision_objects"][0]["drift"]["phase"].SetDouble(-0.001); });
+        variant("complete-phase", false, [](auto& d) { d["non_collision_objects"][0]["drift"]["phase"].SetInt(1); });
+        variant("collision", false, [](auto& d)
+        {
+            rapidjson::Value value;
+            value.CopyFrom(d["non_collision_objects"][0]["drift"], d.GetAllocator());
+            d["collision_objects"][0].AddMember("drift", value, d.GetAllocator());
+        });
+        // JSON Schema checks authored numbers; game/editor also check the
+        // values after float conversion, as they do for rectangle sizes.
+        for (const auto& [field, value] : std::map<std::string, double>{
+            { "distance", 1.0e-100 }, { "phase", 0.999999999 } })
+        {
+            rapidjson::Document changed = parse(encode(valid));
+            changed["non_collision_objects"][0]["drift"][field.c_str()].SetDouble(value);
+            require(schema_accepts(changed), "A float-conversion fixture failed structurally");
+            const fs::path fixture = scratch / "drift-float-conversion.json";
+            write(fixture, encode(changed));
+            reject_without_change(reopened, [&] { reopened.load(fixture); },
+                "The editor accepted drift that leaves its range after float conversion");
+        }
+        std::cout << "PASS optional drift: schema/editor agreement, numeric limits and type/missing-field refusals, inspector history and metadata-preserving save/reopen\n";
+    }
+
     void check_palette_and_ramps(const fs::path& scratch)
     {
         LevelDocument document;
@@ -890,6 +1012,7 @@ int wmain(int argc, wchar_t* argv[])
         check_palette_and_ramps(scratch);
         check_random_setting(scratch);
         check_materials(scratch);
+        check_drift(repo, scratch);
         check_history_and_failures(scratch);
         std::cout << "PASS level editor document acceptance\n";
         return 0;

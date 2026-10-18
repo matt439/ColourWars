@@ -5,6 +5,7 @@ param(
     [switch] $SkipBuild,
     [switch] $IdentityOnly,
     [switch] $QuietOnly,
+    [switch] $DriftOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
     [switch] $ClosingOnly,
@@ -39,7 +40,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -124,6 +125,7 @@ function Write-ContactSheet {
         $monitorCellHeight = 160
         foreach ($file in Get-ChildItem -LiteralPath $CaptureDirectory -Filter '*.ppm' -File |
             Where-Object { $_.Name -like '*-player*.ppm' -or $_.Name -like 'monitor-*.ppm' -or
+                $_.Name -like 'drift-*-detail.ppm' -or
                 $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or
                 $_.Name -like 'supply-*-detail.ppm' -or $_.Name -like 'hud-*-detail.ppm' -or
                 $_.Name -like 'resume-*-detail.ppm' -or $_.Name -like 'end-menu-*-detail.ppm' -or
@@ -210,6 +212,9 @@ function Write-ContactSheet {
         })
         Write-ContactSheetPages -Images $quiet -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-quiet-contact'
+        $drift = @($images | Where-Object { $_.name -match '^drift-[14]p-1280-.*-view1-detail$' })
+        Write-ContactSheetPages -Images $drift -CellWidth 304 -CellHeight 160 `
+            -CaptureDirectory $CaptureDirectory -Stem 'painter-cloud-drift-contact'
         $markers = @($images | Where-Object { $_.name -match '^4p-aim-marker-.*-player[1-4]$' })
         Write-ContactSheetPages -Images $markers -CellWidth $cellWidth -CellHeight $cellHeight `
             -CaptureDirectory $CaptureDirectory -Stem 'painter-aim-markers-contact'
@@ -356,7 +361,19 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($IdentityOnly) {
+if ($DriftOnly) {
+    $result.scope = 'cloud-drift-only'
+    $result.player_counts = @(1, 4)
+    $result.stages = @('close_quarters', 'king_of_the_hill', 'turbulence', 'movement_course')
+    $result.palettes = @('blue_orange')
+    $result.weapons = @('sprayer')
+    $result.actions = @('cloud-anchor', 'cloud-right', 'cloud-left', 'cloud-loop', 'scene-edge-culling', 'reduce-effects', 'nonpositive-nonfinite-time', 'frozen-redraw', 'draw-update-rng', 'resize-round-trip')
+    $result.input_slots = @(3, 0, 1, 2)
+    $result.inputs = 'Real DriftingVisual in Scene with ordinary render fan-out and direct unculled reference; neutral scripted per-slot PlayerInputData for real arena context captures. Normal GamepadReader backend; no physical-device claim.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Native cloud_big art in real Scene at 1P/4P 720p/1080p/QHD: anchor exactly matches static Visual, both 48-unit extremes visibly differ, period closes exactly, all changed pixels lie inside projected cull bounds. Both edges compare Scene output against direct unculled drawing while the original anchor lies wholly outside the view. Immediate applied Reduce effects restores the anchor and freezes the phase; switching back restores the same displaced raster. Nonpositive/nonfinite time, repeated frozen drawing and draw/update RNG remain unchanged. Exact 720p resize round trip. Actual builder-owned solo contexts from all four arenas and a 4P1080 Close Quarters sky composition with explicitly placed players preserves frozen public simulation and Debug fingerprints. The 4P composition makes no gameplay-route or jump-reachability claim. Muted hardware rendering; human motion/readability, listening and performance acceptance remain separate.'
+}
+elseif ($IdentityOnly) {
     $result.player_counts = @(2, 4)
     $result.weapons = @('sprayer', 'sniper')
     $result.actions = @()
@@ -814,6 +831,7 @@ try {
     $probeArguments = @((Quote-Path $gameDirectory), (Quote-Path $captures))
     if ($IdentityOnly) { $probeArguments += 'identity' }
     elseif ($QuietOnly) { $probeArguments += 'quiet' }
+    elseif ($DriftOnly) { $probeArguments += 'drift' }
     elseif ($MonitorOnly) { $probeArguments += 'monitor' }
     elseif ($CountdownOnly) { $probeArguments += 'countdown' }
     elseif ($ClosingOnly) { $probeArguments += 'closing' }
@@ -919,7 +937,10 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($IdentityOnly) {
+    if ($DriftOnly) {
+        $result.diagnostic = 'Cloud-drift-only D3D11 hardware check passed: real cloud art/static reference, distinct loop/extreme rasters, 1P/4P 720p/1080p/QHD, both Scene entry edges against unculled drawings, projected bounds, immediate Reduce effects and retained phase, nonpositive/nonfinite time, frozen redraw and draw/update RNG, exact resize return. All four actual solo arena contexts and a 4P1080 Close Quarters sky composition with explicitly placed players retained simulation/Debug fingerprints; the driven composition establishes no gameplay-route or jump-reachability acceptance. Other painter matrices and human motion/readability, listening and performance acceptance were not run.'
+    }
+    elseif ($IdentityOnly) {
         $result.diagnostic = "Identity-only visual check passed. $identityDiagnostic Other painter matrices were not run."
     }
     elseif ($QuietOnly) {
