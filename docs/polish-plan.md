@@ -179,7 +179,7 @@ confirmed round-2 choices are:
 | Terrain | Tool Props |
 | Cast shadows | Airbrush |
 | Paint edge | Black keyline under paint |
-| Figures and teammate identity | Variant E with a head accent for teammates |
+| Figures and teammate identity | Variant E, rebuilt from parts on 2026-10-18 with no teammate accent (below) |
 
 These names refer to the [round-2 visual study](../game/art/references/style-board/index.html)
 ([original artifact](https://claude.ai/artifact/9J5kQgRMvVtXPe6r6cJ7vP)),
@@ -199,6 +199,44 @@ slots, leaving 26 for everything else, and those 26 must work with every pair.
 Whether the 26 are greys, greys with muted hues, or full colour waits on style
 mockups.
 
+**Figure and level palette chosen by the author on 2026-10-18.** In the
+[box-head builder](https://claude.ai/artifact/47ANdGfpipyeFa1W527cJq) the author
+picked this build, each part a few strokes in Windows 98 Paint:
+
+| Slot | Part | Drawing |
+|---|---|---|
+| Head | `h_ears` | 9x8 white rectangle with a 1x2 ear either side, level with the eyes |
+| Hat | `t_cap_back` | 9x4 team-colour cap, top corners erased, brim line running 3 px past the back |
+| Eyes | `tall` | two 1x2 vertical strokes, columns 5 and 9 |
+| Mouth | `smirk` | 3 px line, one pixel up at its right end |
+| Body | `b_overalls` | 9x9 team box, white shirt in the top 3 rows leaving two team straps, 1 px leg split in the bottom 2 rows |
+| Arms | `a_stub` | 2x2 team sleeves with a black edge, 2x2 white hands, front hand one pixel forward |
+| Legs | `e_tubes` | the current outlined 3 px team tubes with black boot rows |
+| Teammate mark | none | |
+
+There is no teammate mark: teammates already share the team colour, so the
+bobble/antenna/fork/flag head accents are withdrawn. Characters use black,
+white, the team colour and the level's dark grey only.
+
+The level palette is **Muted Day**, the greys-plus-muted-hues family, which
+settles the question above. Its 26 non-team roles:
+
+| Role | Hex | Role | Hex | Role | Hex |
+|---|---|---|---|---|---|
+| keyline | `000000` | pencil_body | `9A9186` | metal_dark | `6E7275` |
+| paper | `C9D3D9` | pencil_shade | `756E65` | shadow | `9CA2A2` |
+| bg_far | `C3C8C0` | pencil_wood | `C9AE8C` | shadow_deep | `7E8382` |
+| bg_mid | `A7B09E` | graphite | `3E3E40` | face | `FFFFFF` |
+| bg_line | `8E958C` | ruler_fill | `B5AFA3` | hud_paper | `F4F2EC` |
+| bg_detail | `F2F1EA` | ruler_marks | `45423E` | hud_ink | `2A2A2A` |
+| ground_fill | `8C8A86` | eraser_fill | `B8958C` | highlight | `FFFFFF` |
+| ground_top | `B4B1AA` | eraser_shade | `8F716A` | prop_accent | `945E52` |
+| ground_shade | `6A6865` | metal_light | `B8BCBE` | | |
+
+The team pairs stay blue/orange, pink/green and blue/yellow. Redrawing the
+production painter to this build is the next step of `POL#7`
+([painter](polish-painter.md#remaining-character-work)).
+
 Build the gameplay style first: a small reference containing a character, two
 contrasting weapons, a painted platform, background materials and effects.
 Inspect it at actual gameplay sizes, especially four-player split-screen. Carry
@@ -207,7 +245,7 @@ works.
 
 Record the production details as the reference is built:
 
-- Character proportions, weapon scale, team-colour regions and the head accent.
+- Character proportions, weapon scale and team-colour regions.
   The in-world team cue must remain readable at four-player size.
 - Palette roles: quiet background, readable terrain, distinct characters and
   bright paint. Check every supported team palette.

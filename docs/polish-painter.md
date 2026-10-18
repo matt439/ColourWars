@@ -139,6 +139,15 @@ also includes every action in all five hues and 28-pixel authoring samples.
 
 ## Remaining character work
 
+**Superseded figure (author, 2026-10-18).** The author chose a rebuilt figure
+and the Muted Day level palette ([art rules](polish-plan.md#1-establish-the-art-and-display-rules)):
+ear-stub head, backwards team cap, tall dot eyes, a smirk, centred overalls with
+straps, short team sleeves with white hands, and the current tube legs. The
+teammate head accents described above are withdrawn, since teammates already
+share a colour. The next `POL#7` step redraws the source canvas, every gait and
+action strip and its masks to that build, and removes the accents and their
+roster selection; the pen trace, grips and collision rectangle carry over.
+
 `POL#7` still owns the human review of character/teammate readability in single- and
 four-player gameplay. It runs in the current arenas now; the reference arena
 (`POL#17`) is a re-check when it lands, not a precondition (author, 2026-10-17). The [five-tool artwork and motion](polish-tools.md)
