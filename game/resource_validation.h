@@ -22,6 +22,11 @@ public:
 		check(key, [&] { render_.resolve_sprite_font(name); });
 	}
 
+	void sheet(const std::string& key, const std::string& name) const
+	{
+		check(key, [&] { render_.sprite_sheet(name); });
+	}
+
 	void frame(const std::string& key, const std::string& sheet,
 		const std::string& name) const
 	{

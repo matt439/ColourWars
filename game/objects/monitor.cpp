@@ -41,6 +41,7 @@ namespace
     constexpr float sticker_size = 0.022f;
     constexpr float coffee_radius = 0.045f;
     constexpr float lip = 0.012f;
+    constexpr float picker_padding = 0.2f; // of a picker swatch's width
 }
 
 MonitorPersona MonitorPersona::roll(const OpeningPresentation& look)
@@ -92,6 +93,11 @@ Monitor::Monitor(const OpeningPresentation* look, RenderResources* render_resour
     look_(look),
     persona_(std::move(persona))
 {
+    this->palette_swatches_.reserve(look->palette_frames.size());
+    for (const std::string& frame : look->palette_frames)
+    {
+        this->palette_swatches_.emplace_back(look->palette_sheet, frame, render_resources);
+    }
 }
 
 const MonitorPersona& Monitor::persona() const
@@ -139,16 +145,23 @@ RectangleF Monitor::picture(const RectangleF& screen) const
 RectangleF Monitor::palette_swatch(const RectangleF& screen, size_t index) const
 {
     const RectangleF palette = this->palette(screen);
-    const float size = palette.height * 0.66f;
-    const float gap = palette.height * 0.17f;
+    // Keep the original square cells and spacing on wide windows; shrink
+    // the whole row together when this kit has more slots than fit.
+    const float slots = static_cast<float>(this->palette_swatches_.size() + 1);
+    const float natural_size = palette.height * 0.66f;
+    const float natural_gap = palette.height * 0.17f;
+    const float fit = std::min(1.0f,
+        palette.width / (slots * natural_size + (slots + 1.0f) * natural_gap));
+    const float size = natural_size * fit;
+    const float gap = natural_gap * fit;
     return RectangleF(palette.x + gap + static_cast<float>(index) * (size + gap),
-        palette.y + gap, size, size);
+        palette.y + (palette.height - size) * 0.5f, size, size);
 }
 
 RectangleF Monitor::empty_slot(const RectangleF& screen) const
 {
-    // After the last grey: the slot the whole match is about.
-    return this->palette_swatch(screen, this->look_->palette_greys.size());
+    // After the last kit swatch: the slot the whole match is about.
+    return this->palette_swatch(screen, this->palette_swatches_.size());
 }
 
 RectangleF Monitor::swatch(const RectangleF& screen, int which) const
@@ -156,8 +169,12 @@ RectangleF Monitor::swatch(const RectangleF& screen, int which) const
     const RectangleF slot = this->empty_slot(screen);
     const float size = slot.width * 1.25f;
     const float gap = slot.width * 0.3f;
-    return RectangleF(slot.x + static_cast<float>(which) * (size + gap),
-        slot.y - size - gap * 2.0f, size, size);
+    const float pad = size * picker_padding;
+    const RectangleF program = this->program(screen);
+    const float left = std::clamp(slot.x, program.x + pad,
+        std::max(program.x + pad, program.right() - size * 2.0f - gap - pad));
+    return RectangleF(left + static_cast<float>(which) * (size + gap),
+        this->picture(screen).bottom() - gap - size - pad, size, size);
 }
 
 RectangleF Monitor::close_button(const RectangleF& screen) const
@@ -186,9 +203,9 @@ void Monitor::draw(DrawList& draw_list, const RectangleF& screen) const
 
     const RectangleF palette = this->palette(screen);
     this->fill(draw_list, palette, look.glass_colour);
-    for (size_t index = 0; index < look.palette_greys.size(); ++index)
+    for (size_t index = 0; index < this->palette_swatches_.size(); ++index)
     {
-        this->fill(draw_list, this->palette_swatch(screen, index), look.palette_greys[index]);
+        this->palette_swatches_[index].draw(draw_list, this->palette_swatch(screen, index));
     }
     this->frame_rectangle(draw_list, this->empty_slot(screen),
         std::max(1.0f, palette.height * 0.06f), look.slot_outline);
@@ -347,7 +364,7 @@ void Monitor::draw_picker(DrawList& draw_list, const RectangleF& screen,
     const OpeningPresentation& look = *this->look_;
     const RectangleF a = this->swatch(screen, 0);
     const RectangleF b = this->swatch(screen, 1);
-    const float pad = a.width * 0.2f;
+    const float pad = a.width * picker_padding;
     const RectangleF panel(a.x - pad, a.y - pad, b.right() - a.x + pad * 2.0f, a.height + pad * 2.0f);
     this->fill(draw_list, panel, look.glass_colour);
     this->frame_rectangle(draw_list, panel, std::max(1.0f, pad * 0.25f), look.slot_outline);

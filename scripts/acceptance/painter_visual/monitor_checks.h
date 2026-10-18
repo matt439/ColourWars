@@ -2,7 +2,7 @@
 // renderer, builder and raster helpers. The fixtures exercise composition and
 // story timing; they do not copy the monitor's decorative geometry.
 
-enum class MonitorCapture { plain, preview, saved, closed };
+enum class MonitorCapture { plain, picker, preview, saved, closed };
 
 // Isolate the two foreground drawings against the same opaque canvas. These
 // checks observe their raster and public inputs, not a second copy of the art.
@@ -86,6 +86,98 @@ bool monitor_pixel_equal(const Frame& first, const Frame& second, const Vector2F
     const int y = std::clamp(static_cast<int>(at.y), 0, first.height - 1);
     return same_pixel(first, second,
         (static_cast<size_t>(y) * static_cast<size_t>(first.width) + static_cast<size_t>(x)) * 4);
+}
+
+std::uint32_t monitor_rgb(const Frame& frame, int x, int y)
+{
+    require(x >= 0 && x < frame.width && y >= 0 && y < frame.height,
+        "monitor colour sample escaped the render target");
+    const size_t offset = (static_cast<size_t>(y) * static_cast<size_t>(frame.width) +
+        static_cast<size_t>(x)) * 4;
+    return (static_cast<std::uint32_t>(frame.pixels[offset]) << 16) |
+        (static_cast<std::uint32_t>(frame.pixels[offset + 1]) << 8) |
+        static_cast<std::uint32_t>(frame.pixels[offset + 2]);
+}
+
+bool monitor_contains(const RectangleF& outer, const RectangleF& inner)
+{
+    return inner.width > 0.0f && inner.height > 0.0f && inner.x >= outer.x && inner.y >= outer.y &&
+        inner.right() <= outer.right() && inner.bottom() <= outer.bottom();
+}
+
+void monitor_palette_pixels(const Frame& frame, const Monitor& monitor, const RectangleF& screen,
+    const Frame* saved = nullptr)
+{
+    // Independent shipped-art fixture: Muted Day's table in
+    // game/art/terrain/terrain.json, in role order. Reading the presentation's
+    // frame list or drawing a second atlas row would bless a reordered list or
+    // a wrong/tinted DDS. Duplicate white roles still need distinct cells.
+    constexpr std::array<std::uint32_t, 26> expected{ {
+        0x000000, 0xC9D3D9, 0xC3C8C0, 0xA7B09E, 0x8E958C, 0xF2F1EA,
+        0x8C8A86, 0xB4B1AA, 0x6A6865, 0x9A9186, 0x756E65, 0xC9AE8C,
+        0x3E3E40, 0xB5AFA3, 0x45423E, 0xB8958C, 0x8F716A, 0xB8BCBE,
+        0x6E7275, 0x9CA2A2, 0x7E8382, 0xFFFFFF, 0xF4F2EC, 0x2A2A2A,
+        0xFFFFFF, 0x945E52 } };
+    const RectangleF picture = monitor.picture(screen);
+    const RectangleF glass = monitor.glass(screen);
+    const RectangleF slot = monitor.empty_slot(screen);
+    require(monitor_contains(glass, slot) && slot.x >= picture.x && slot.right() < picture.right() &&
+        slot.y >= picture.bottom() && std::abs(slot.width - slot.height) < 0.01f,
+        "empty palette slot was not a square contained after the program's picture");
+    const int y = static_cast<int>(slot.center().y);
+    const int left = static_cast<int>(std::ceil(picture.x));
+    const int right = static_cast<int>(std::floor(slot.x));
+    const std::uint32_t gap_colour = monitor_rgb(frame, static_cast<int>(slot.center().x), y);
+    struct Run { int left, right; std::uint32_t colour; };
+    std::vector<Run> runs;
+    for (int x = left; x < right; ++x)
+    {
+        const std::uint32_t colour = monitor_rgb(frame, x, y);
+        if (colour == gap_colour) { continue; }
+        if (!runs.empty() && runs.back().right == x && runs.back().colour == colour)
+        {
+            runs.back().right = x + 1;
+        }
+        else { runs.push_back({ x, x + 1, colour }); }
+    }
+    require(runs.size() == expected.size(), "monitor palette did not show all 26 distinct role cells");
+    int previous_right = left;
+    for (size_t index = 0; index < expected.size(); ++index)
+    {
+        const Run& run = runs[index];
+        require(run.colour == expected[index], "monitor palette pixels differed from Muted Day role order");
+        require(run.left > previous_right, "monitor palette lost an outer or inter-cell gap");
+        const int x = (run.left + run.right) / 2;
+        int top = y, bottom = y + 1;
+        while (top > static_cast<int>(std::ceil(picture.bottom())) &&
+            monitor_rgb(frame, x, top - 1) == run.colour) { --top; }
+        while (bottom < static_cast<int>(std::floor(glass.bottom())) &&
+            monitor_rgb(frame, x, bottom) == run.colour) { ++bottom; }
+        require(std::abs((run.right - run.left) - (bottom - top)) <= 1 &&
+            std::abs(static_cast<float>(run.right - run.left) - slot.width) <= 1.0f,
+            "monitor palette cells were stretched or differed from the empty square slot");
+        if (saved != nullptr)
+        {
+            for (int row = top; row < bottom; ++row)
+            {
+                for (int column = run.left; column < run.right; ++column)
+                {
+                    const size_t offset = (static_cast<size_t>(row) * static_cast<size_t>(frame.width) +
+                        static_cast<size_t>(column)) * 4;
+                    require(same_pixel(frame, *saved, offset), "saving recoloured an existing terrain palette cell");
+                }
+            }
+        }
+        previous_right = run.right;
+    }
+    require(previous_right < right, "final terrain colour ran into the empty palette slot");
+    const int after_slot = static_cast<int>(std::ceil(slot.right()));
+    const int program_right = static_cast<int>(std::floor(picture.right()));
+    require(after_slot < program_right, "monitor palette lost the gap after its final empty slot");
+    for (int x = after_slot; x < program_right; ++x)
+    {
+        require(monitor_rgb(frame, x, y) == gap_colour, "a palette colour appeared after the final empty slot");
+    }
 }
 
 std::vector<float> monitor_persona_observation(const MonitorPersona& persona)
@@ -265,6 +357,7 @@ Frame monitor_fixture(Application& app, const Monitor& monitor, const RectangleF
     canvas.draw(list, window);
     monitor.draw(list, screen);
     picture.draw(list, monitor.picture(screen));
+    if (phase == MonitorCapture::picker) { monitor.draw_picker(list, screen, Colour::red, Colour::blue); }
     if (phase == MonitorCapture::preview)
     {
         monitor.draw_preview(list, monitor.picture(screen), Colour::red);
@@ -379,7 +472,8 @@ void monitor_matrix(Application& app, LevelBuilder& builder, const Canvas& canva
     persona.child = false;
     persona.mug = true;
 
-    for (const Vector2I size : { Vector2I(1280, 720), Vector2I(1920, 1080), Vector2I(2560, 1440) })
+    for (const Vector2I size : { Vector2I(640, 480), Vector2I(1024, 768), Vector2I(1280, 720),
+        Vector2I(1920, 1080), Vector2I(2560, 1440) })
     {
         app.resolution_manager()->set_resolution_exactly(size);
         std::ignore = app.renderer()->window_size_changed(size.x, size.y);
@@ -398,10 +492,34 @@ void monitor_matrix(Application& app, LevelBuilder& builder, const Canvas& canva
             const Frame behind = monitor_fixture(app, monitor, screen, canvas, picture_canvas,
                 MonitorCapture::plain, false);
             const Frame front = monitor_fixture(app, monitor, screen, canvas, picture_canvas, MonitorCapture::plain);
+            const Frame picker = monitor_fixture(app, monitor, screen, canvas, picture_canvas, MonitorCapture::picker);
             const Frame preview = monitor_fixture(app, monitor, screen, canvas, picture_canvas, MonitorCapture::preview);
             const Frame saved = monitor_fixture(app, monitor, screen, canvas, picture_canvas, MonitorCapture::saved);
             const Frame closed = monitor_fixture(app, monitor, screen, canvas, picture_canvas, MonitorCapture::closed);
             const RectangleF area = monitor.picture(screen);
+            const RectangleF screen_glass = monitor.glass(screen);
+            const RectangleF program(area.x, area.y, area.width, screen_glass.bottom() - area.y);
+            const RectangleF empty_slot = monitor.empty_slot(screen);
+            monitor_palette_pixels(front, monitor, screen, &saved);
+            monitor_palette_pixels(picker, monitor, screen);
+            monitor_palette_pixels(preview, monitor, screen);
+            for (const int which : { 0, 1 })
+            {
+                const RectangleF swatch = monitor.swatch(screen, which);
+                require(monitor_contains(program, swatch) && monitor_contains(screen_glass, swatch) &&
+                    swatch.bottom() < empty_slot.y,
+                    "picker colour escaped the program/glass or covered the final empty slot");
+                const Vector2F centre = swatch.center();
+                require(monitor_rgb(picker, static_cast<int>(centre.x), static_cast<int>(centre.y)) ==
+                    (which == 0 ? 0xFF0000u : 0x0000FFu), "picker lost a complete red or blue colour cell");
+            }
+            const RectangleI picker_delta = foreground_delta_bounds(picker, front);
+            RectangleF raster_program = program;
+            raster_program.inflate(1.0f); // Integer destinations may begin at the preceding pixel.
+            require(monitor_contains(raster_program, RectangleF(static_cast<float>(picker_delta.x),
+                static_cast<float>(picker_delta.y), static_cast<float>(picker_delta.width),
+                static_cast<float>(picker_delta.height))) && picker_delta.bottom() <= empty_slot.y,
+                "picker panel escaped the program or overlapped the empty palette slot");
             size_t overlapping = 0;
             size_t untinted = 0;
             for (int y = std::max(0, static_cast<int>(area.y)); y < std::min(size.y, static_cast<int>(area.bottom())); ++y)
@@ -434,13 +552,28 @@ void monitor_matrix(Application& app, LevelBuilder& builder, const Canvas& canva
             {
                 require(front.pixels == monitor_fixture(app, monitor, screen, canvas, picture_canvas,
                     MonitorCapture::plain).pixels, "frozen monitor fixture changed pixels");
+                require(picker.pixels == monitor_fixture(app, monitor, screen, canvas, picture_canvas,
+                    MonitorCapture::picker).pixels, "frozen monitor picker changed pixels");
             }
             require(std::rand() == expected_random, "monitor drawing consumed random numbers");
             require(persona_before == monitor_persona_observation(monitor.persona()), "monitor drawing changed its persona");
             save(front, output / (prefix + ".ppm"));
+            save(picker, output / (prefix + "-picker.ppm"));
             save(preview, output / (prefix + "-preview.ppm"));
             save(saved, output / (prefix + "-saved.ppm"));
             save(closed, output / (prefix + "-closed.ppm"));
+            if (!pushed && (size.x == 640 || size.x == 1280))
+            {
+                const int left = static_cast<int>(std::floor(area.x));
+                const int top = std::min(picker_delta.y, static_cast<int>(std::floor(empty_slot.y))) - 2;
+                const RectangleI detail(left, top,
+                    static_cast<int>(std::ceil(area.right())) - left,
+                    static_cast<int>(std::ceil(empty_slot.bottom())) - top + 2);
+                const std::string detail_stem = "monitor-palette-" + std::to_string(size.x);
+                save(foreground_crop(front, detail, 0), output / (detail_stem + "-detail.ppm"));
+                save(foreground_crop(picker, detail, 0), output / (detail_stem + "-picker-detail.ppm"));
+                save(foreground_crop(saved, detail, 0), output / (detail_stem + "-saved-detail.ppm"));
+            }
         }
     }
 
@@ -557,7 +690,8 @@ void monitor_matrix(Application& app, LevelBuilder& builder, const Canvas& canva
     monitor_frozen(app, *solo, output, "monitor-solo-practice-no-monitor", records);
     require(records.good(), "monitor capture record write failed");
     std::cout << "PASS monitor: six shades, adult/mug and child/stickers, picture-overlap notes before preview, "
-        "untinted picture/palette interiors, saved slot and closed desktop at 720p/1080p/QHD and bounded push; "
+        "26 ordered untinted Muted Day square cells and final empty slot, contained picker/panel, "
+        "saved slot preserves every terrain cell; native 640x480/1024x768/720p/1080p/QHD and bounded push; "
         "adult/child/mug seated/sigh/stand/leave foreground at native sizes and offset window, full departure, "
         "fixed cursor hotspot, local detached click ticks, expiry and reduced-effects suppression; "
         "real 2P/4P opening/preview/countdown/push/pullback/winner reveal/no-paint close, "

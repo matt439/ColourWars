@@ -398,7 +398,9 @@ governs the terrain everywhere, and each arena's subject (Close Quarters' paint
 workshop and supply warehouse) becomes its own backdrop and landmarks when its
 blockout is fitted. The bullets above beyond materials, undersides and
 background layers (landmarks, room life, ambient animation, parallax) and the
-human review remain open.
+human review remain open. The monitor palette now borrows the same kit swatches
+([palette coherence](polish-terrain.md#monitor-palette-coherence-2026-10-18)),
+replacing its old grey ramp while keeping the final empty story slot.
 
 ### Characters and distinctive weapons
 

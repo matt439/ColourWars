@@ -1512,14 +1512,22 @@ namespace
 		opening.program_colour = read_colour(json, "program_colour");
 		opening.desktop_colour = read_colour(json, "desktop_colour");
 		opening.palette_height = read_unit(json, "palette_height");
-		opening.palette_greys = read_colours(json, "palette_greys");
-		for (const Colour& grey : opening.palette_greys)
+		opening.palette_sheet = json.identifier("palette_sheet");
+		const JsonValue palette = json.array("palette_frames");
+		if (opening.palette_sheet.empty() || palette.size() == 0)
 		{
-			if (grey.r != grey.g || grey.g != grey.b)
+			throw std::runtime_error(json.where() +
+				": 'palette_sheet' and 'palette_frames' must not be empty.");
+		}
+		for (size_t index = 0; index < palette.size(); ++index)
+		{
+			const JsonValue entry = palette.at(index);
+			const std::string frame = entry.as_identifier();
+			if (frame.empty())
 			{
-				throw std::runtime_error(json.where() +
-					": every colour in 'palette_greys' must be a grey.");
+				throw std::runtime_error(entry.where() + ": palette frame must not be empty.");
 			}
+			opening.palette_frames.push_back(frame);
 		}
 		opening.slot_outline = read_colour(json, "slot_outline");
 		opening.sticky_notes = read_colours(json, "sticky_notes");
@@ -2739,6 +2747,22 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->respawn_redraw_.pen_frame);
 	check.frame("opening.fill_frame", this->opening_.sprite_sheet,
 		this->opening_.fill_frame);
+	check.sheet("opening.palette_sheet", this->opening_.palette_sheet);
+	const SpriteSheet* palette_sheet = render.sprite_sheet(this->opening_.palette_sheet);
+	for (size_t index = 0; index < this->opening_.palette_frames.size(); ++index)
+	{
+		const std::string key = "opening.palette_frames[" + std::to_string(index) + "]";
+		const std::string& name = this->opening_.palette_frames[index];
+		check.frame(key, this->opening_.palette_sheet, name);
+		const SpriteFrame& swatch = palette_sheet->sprite_frame(palette_sheet->resolve_sprite_frame(name));
+		const RectangleI& source = swatch.source_rectangle();
+		if (source.width <= 0 || source.height <= 0 || source.width != source.height ||
+			swatch.origin() != Vector2F::ZERO)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must name a positive square swatch with zero authored origin.");
+		}
+	}
 	check.font("opening.percent_font", this->opening_.percent_font);
 	const Vector2F heading_size = render.measure_text(
 		render.resolve_sprite_font(this->menu_.detail_font), L"GET READY");

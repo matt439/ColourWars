@@ -33,8 +33,8 @@ struct MonitorPersona
 };
 
 // The person's monitor, the paint program on it and its palette: one full
-// row of greys and the one empty slot the whole match is about. The picture
-// itself is the match's world, drawn by the scene into picture().
+// row of the level kit's swatches and the one empty slot the match is about.
+// The picture itself is the match's world, drawn by the scene into picture().
 //
 // Every rectangle is laid out in `screen`, the rectangle the whole screen is
 // mapped to: the window at rest, and a larger one while the view pushes
@@ -79,8 +79,18 @@ public:
         const labrador::Colour& colour) const;
 
 private:
+    // TextureObject keeps positioned drawing protected. These swatches are
+    // fixed atlas frames with WHITE tint, resolved once for this monitor.
+    class PaletteSwatch final : public labrador::TextureObject
+    {
+    public:
+        using TextureObject::TextureObject;
+        using TextureObject::draw;
+    };
+
     const OpeningPresentation* look_;
     MonitorPersona persona_;
+    std::vector<PaletteSwatch> palette_swatches_;
 
     mattmath::RectangleF program(const mattmath::RectangleF& screen) const;
     mattmath::RectangleF palette(const mattmath::RectangleF& screen) const;

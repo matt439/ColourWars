@@ -80,6 +80,8 @@ hangs: baked speckle tiles, dense `shadow_deep` near the platform thinning to
   take the shadows from it, so the preview shows the same arena.
 - The [`terrain` sheet](../game/art/terrain/README.md) is built by
   `scripts/build-terrain-art.ps1` from `game/art/terrain/terrain.json`.
+- The opening and reveal's monitor palette uses those same swatch frames with a
+  WHITE tint; its colours have no second RGB list in presentation data.
 
 ## Checks
 
@@ -111,6 +113,47 @@ These are calls the author has not yet seen; each is easy to reverse.
   if yellow or green on paper proves weak in play, the alternative is to redraw the
   outer keyline over the paint.
 
+## Monitor palette coherence (2026-10-18)
+
+The monitor's old row of 15 greys is replaced by the kit's 26 role swatches,
+followed by the one empty slot the story is about. `opening.palette_sheet` and
+`opening.palette_frames` in `presentation.json` name the atlas and the ordered
+frames. The face and highlight roles deliberately remain separate white cells,
+as they are in the kit. A later palette edit changes the shared atlas texels.
+
+The row keeps square cells and visible gutters, shrinking together to fit the
+program's width. The picker pair, including its panel and outline, stays inside
+the picture above the row. The cursor follows these fitted targets through the
+opening and reveal; saving fills only the final slot. The existing picture,
+glass, opening/reveal timing and gameplay cameras retain their layout.
+
+Startup checks the sheet and each indexed frame before a match can use it,
+requiring positive square swatches with zero authored origins. Missing, empty or
+wrongly typed fields and missing resources report their presentation keys.
+
+Validation on 2026-10-18:
+
+- Debug and Release build under `/W4 /WX` and pass all 36 consumer cases. The
+  story/audio case also checks the shipped role order, malformed fields, missing
+  resources, displaced/nonsquare frames and valid custom palettes.
+- Both focused D3D11 monitor matrices pass on the NVIDIA GeForce RTX 5080 at
+  640x480, 1024x768, 720p, 1080p and QHD, plus pushed framing. Actual pixels match
+  all 26 Muted Day cells in order, with square cells and visible gutters. Preview
+  and saving retain every existing swatch; the picker and panel remain contained.
+  Existing 2P/4P opening/reveal/winner/draw, solo bypass, cursor targeting,
+  reduced-effects and frozen raster/state/RNG checks pass; Debug also preserves
+  replay fingerprints.
+- Isolated Debug and Release startup pass with the accepted bank, a system-only
+  PATH and graceful shutdown. `git diff --check` passes.
+
+The retained [story preview at 720p](images/polish-terrain/monitor-palette-story-720p.png)
+shows the row with the arena; native-size palette/picker crops are retained for
+[1280x720](images/polish-terrain/monitor-palette-1280.png) and
+[640x480](images/polish-terrain/monitor-palette-640.png).
+Local evidence is under `out/validation/monitor-palette/` and `out/acceptance/`.
+Renderer run IDs are Debug `cab6344d19ea4df6a077b7f879b996e6` and Release
+`40276642ba4c4c4e865b8bbce23d5c95`. Human gameplay/style review remains below.
+
 ## Not done (what `POL#9` still holds)
 
 - Human review in play, clean and heavily painted, with all three team pairs, at 1P
@@ -119,7 +162,5 @@ These are calls the author has not yet seen; each is easy to reverse.
   jokes in the backdrop; modest parallax after camera framing.
 - Close Quarters' own backdrop and fitting the kit to its blockout (`POL#17`); a
   palette and composition per arena (`POL#16`).
-- The opening's monitor palette strip still shows 15 greys rather than the level's
-  palette.
 - The overview and the monitor picture draw the arena small enough that one-cell
   lines and ruler ticks drop pixels under point sampling.

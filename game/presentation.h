@@ -928,10 +928,12 @@ struct OpeningPresentation
 	labrador::Colour program_colour;
 	// What the glass shows once the program is closed without saving.
 	labrador::Colour desktop_colour;
-	// The palette along the bottom of the glass: full of greys, but for one
-	// empty slot. Its height is a fraction of the glass's.
+	// The level kit's swatches along the bottom of the glass, followed by one
+	// empty slot. Hues come from atlas texels, shared with the terrain.
+	// Its height is a fraction of the glass's.
 	float palette_height = 0.0f;
-	std::vector<labrador::Colour> palette_greys;
+	std::string palette_sheet;
+	std::vector<std::string> palette_frames;
 	labrador::Colour slot_outline;
 	std::vector<labrador::Colour> sticky_notes;
 	std::vector<labrador::Colour> stickers;

@@ -6,6 +6,7 @@
 #include "game/objects/weapon_builder.h"
 #include "game/objects/structure.h"
 #include "game/objects/structure_paintable.h"
+#include "game/objects/terrain_material.h"
 #include "game/objects/paint_audio.h"
 #include "game/states/connection_audio.h"
 #include "game/states/resume_audio.h"
@@ -16,6 +17,7 @@
 #include "engine/audio/null/recording.h"
 #include "engine/collision/partitioner.h"
 #include "engine/math/triangle.h"
+#include "engine/math/vector2i.h"
 #include "engine/render/sprite_font_file.h"
 
 #include <filesystem>
@@ -1978,6 +1980,7 @@ namespace
 #include "scripts/acceptance/story_audio/connection_checks.h"
 #include "scripts/acceptance/story_audio/resume_checks.h"
 #include "scripts/acceptance/story_audio/menu_content_checks.h"
+#include "scripts/acceptance/story_audio/opening_palette_content_checks.h"
 #include "scripts/acceptance/story_audio/main_menu_content_checks.h"
 #include "scripts/acceptance/story_audio/controls_content_checks.h"
 #include "scripts/acceptance/story_audio/resume_content_checks.h"
@@ -2000,6 +2003,7 @@ int main(int argc, char** argv)
 		require(argc == 2, "Usage: story_audio.exe <content directory>");
 		World world{ std::filesystem::path(argv[1]) };
 		check_menu_audio_content(world, std::filesystem::path(argv[1]));
+		check_opening_palette_content(world, std::filesystem::path(argv[1]));
 		check_main_menu_art_content(std::filesystem::path(argv[1]));
 		check_controls_art_content(world, std::filesystem::path(argv[1]));
 		check_resume_content(world, std::filesystem::path(argv[1]));
@@ -2064,7 +2068,7 @@ int main(int argc, char** argv)
 			"resume content/beats/cancellation/gains/mute and stale-fire loop cleanup, "
 			"results coda one-shot/focus/gains/mute/completed-state guard/teardown and arena ending-sting content/selection/lifecycle, "
 			"arena music raw-clock fades/ducking/restore/preferences/suspension/ending/silent fallback, "
-			"opening/reveal content, swatch/undo/colour/glass/skip edges, "
+			"opening/reveal content and atlas palette validation, swatch/undo/colour/glass/skip edges, "
 			"winner/draw click/close and per-team reactions, long-step cue order, off/solo, "
 			"countdown/GO/last-ten/time up, room-tone loop boundaries, gains/mute, suspension, destruction, weapon feedback validation, "
 			"empty/recovered/ready edges, independent loops, stop lifecycle, roller contacts, "
