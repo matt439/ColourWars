@@ -283,22 +283,68 @@ bounds and ramps. Document acceptance does not establish those play qualities.
 
 ## Registration assistance (`ED#4`)
 
-`ED#4` is ready for a bounded tooling increment. Add an opt-in registration
-helper for a level already saved under `game/content/levels/`. It previews the
-manifest and `COLOURWARS_RUNTIME_ASSETS` edits before applying both; ordinary
-Save/Save As must remain independent of registration. A command-line helper is
-enough for this increment; editor GUI integration can follow actual use.
-Also correct the editor Help text, which still names `cmake/release_assets.cmake`
-instead of `cmake/runtime_assets.cmake`.
+`ColourWarsRegisterStage` previews and explicitly registers a level already
+saved directly under `game/content/levels/`. Build the opt-in tool, then preview
+the two additions before choosing to apply them:
 
-Accept it on scratch content, without editing a player's save: validate the
-existing level and its basename, reject paths outside the source levels folder,
-handle duplicate/already-registered names clearly, and retain both originals
-if either edit fails. Preview must write nothing. Applied edits must configure
-successfully under the existing manifest/staging agreement check, stage the
-level beside the executable, and leave unrelated entries intact. Record the
-helper's usage and failure behaviour here. Registration does not establish
-route, spawn or gameplay acceptance (`ED#5`).
+```powershell
+cmake --build --preset x64-debug --target ColourWarsRegisterStage --parallel 2
+out/build/x64-debug/editor/ColourWarsRegisterStage.exe --repo . --stage game/content/levels/my_stage.json
+out/build/x64-debug/editor/ColourWarsRegisterStage.exe --repo . --stage game/content/levels/my_stage.json --apply
+```
+
+The target is excluded from normal builds and release packaging. Relative stage
+paths are relative to `--repo`; wide Windows paths are retained. `--help` explains
+the arguments. Exit codes are 0 for success/no-op, 2 for usage errors and 1 for a
+validation or apply failure. Ordinary Save/Save As remains independent, and the
+editor Help names `cmake/runtime_assets.cmake` and this separate helper.
+
+Preview writes nothing. It checks the existing level's structure and references
+against a complete content catalog, verifies that the complete manifest/runtime
+asset lists already agree, then shows the exact added name and runtime path.
+The basename uses ASCII letters, digits, `_` or `-`, with no leading hyphen or
+Windows device name. The file must have a `.json` extension and be directly in
+this source tree's levels directory; linked/reparse paths are refused. Duplicate
+or case-alias names, one-sided registration and unsupported/nonliteral CMake list
+syntax are diagnosed rather than guessed at. An entry already present in both
+lists is a validated no-op.
+
+Apply revalidates the proposal and unchanged stage/source bytes. It prepares and
+flushes both candidates and both original backups before replacing either list.
+Only the two entries are inserted; surrounding bytes, line endings and unrelated
+metadata remain. If the second replacement fails, the first is restored while
+it is still this operation's candidate. A failed rollback retains both originals
+at the recovery paths printed in the error; inspect both lists before retrying.
+Each replacement is atomic; the pair is not crash-atomic. The saved stage itself
+is never rewritten.
+
+Configure/build the game after registration to copy the stage beside the
+executable. The game's startup/content validation remains authoritative;
+registration does not establish route, spawn or gameplay acceptance (`ED#5`).
+GUI integration can follow actual use of the command-line helper.
+
+The document acceptance case also checks exact LF/CRLF and BOM-preserving
+appends, malformed/partial/aliased lists, resource validation, stale inputs and
+proposals, first/second replacement failures, locked/read-only files and named
+original backups after a failed rollback. The separate integration check uses
+a fresh scratch repository and only the reviewed runtime assets:
+
+```powershell
+./scripts/check-stage-registration.ps1 -Preset x64-debug
+./scripts/check-stage-registration.ps1 -Preset x64-release
+```
+
+On 2026-10-18, both presets passed the editor document and three hidden-window
+checks, then preview/apply/no-op and rejection checks, including a directory
+junction. Each scratch registration changed only the manifest and runtime list,
+passed the existing CMake agreement check, staged all 29 registered assets
+byte-for-byte, and passed isolated game startup with the published audio bank
+and per-monitor v2 DPI awareness. No hardware skip was used. Evidence is under
+`out/validation/stage-registration/`; the integration runs are
+`integration/x64-debug/6821efb469a946b89b2b943419b58153/` and
+`integration/x64-release/3850fed0b130438a814d23c6ee7817aa/`.
+These automated checks complete `ED#4`; the attended editor and saved-stage
+play review remains `ED#5`.
 
 ## Movement Course icon (`ED#6`, retired)
 

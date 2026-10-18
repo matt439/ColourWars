@@ -33,7 +33,6 @@ This is a selection guide, not another priority order; each owner defines a boun
 | id | next implementation slice | owner |
 |---|---|---|
 | `DBG#1` | Audit further colour consumers; seven existing colour paths now tune/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
-| `ED#4` | Safe, opt-in registration of a saved stage in both content lists | [Editor](docs/level-editor.md#registration-assistance-ed4) |
 | `GAP#4.2` | Default action bindings and evaluators preserving today's controls | [Input](docs/feature-roadmap.md#action-bindings-gap42) |
 | `GAP#6.1` | Remember match choices across launches while retaining explicit joining | [Setup](docs/feature-roadmap.md#remembered-match-setup-gap61) |
 | `GAP#8.4` | Extract existing connection/readout and player-specific Pause copy | [Text](docs/menu-presentation.md#remaining-text-slices-gap84) |
@@ -85,7 +84,6 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#17` | DEFERRED | HIGH | XL | Close Quarters reference blockout against the §3 requirements table (routes, spawns, paint budget, weapon roles, pacing, side fairness, recovery pocket), tuned with `POL#3`. After the art style is locked. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
 | `POL#27` | DEFERRED | HIGH | L | Weapon tuning (range, rate, damage, paint output, supply) for all five tools, done with the blockout (`POL#17`) and movement (`POL#3`); values stay provisional. [Order](docs/polish-plan.md#development-order-2026-10-17), [§3](docs/polish-plan.md#design-requirements). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after CQ is accepted; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
-| `ED#4` | OPEN | LOW | M | Add opt-in stage registration assistance for the manifest and runtime asset list, with preview and safe failure; correct the editor Help's obsolete path. [Scope](docs/level-editor.md#registration-assistance-ed4). |
 | `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 
 ## Audio replacement

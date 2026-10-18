@@ -380,7 +380,8 @@ namespace colourwars_editor
                 L"Cyan edges mark exposed scoring faces (authored edges when aids are off). Spawn boxes follow source tuning. "
                 L"Bounds are selectable in the list. View > Show all bounds shows every rectangle. This is a geometry preview, without textures or gameplay.\n\n"
                 L"Save to SOURCE content and rebuild the game. A NEW filename also needs its stem in game/content/manifest.json "
-                L"and its relative path in cmake/release_assets.cmake. Existing registered levels need no registration. "
+                L"and its relative path in cmake/runtime_assets.cmake. The opt-in ColourWarsRegisterStage helper previews both entries; --apply registers them. "
+                L"Existing registered levels need no registration. "
                 L"Asset names must match your content: the status line names any the game would refuse, and Save asks first. See docs/level-editor.md.",
                 L"Using the level editor", MB_OK | MB_ICONINFORMATION);
             return;
