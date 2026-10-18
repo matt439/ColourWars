@@ -473,12 +473,23 @@ Mode/Count/Team/Weapon/Stage pages, with reversed device order, missing/reconnec
 pad, fresh joins and confirmations, editable choices and cancellation. Normal
 save timing, Pause Restart and two drawn series rounds passed; Debug also checked
 developer-script/sparse-bot record/replay starts and an explicitly claimed bot
-on a normal menu start. Debug's existing Setup Paper and Setup Motion regressions
-passed at their display sizes; their broader Release rendering matrices were
-omitted after the shared behaviour passed the focused Release check. Both games
+  on a normal menu start. Debug's existing Setup Paper and Setup Motion regressions
+  passed at their display sizes. A follow-up audit corrected the original Release
+  omission record: Setup Paper completed its native checks (117 text and 24 motion
+  CSV rows, final PASS output and empty stderr), but its wrapper was interrupted
+  during contact-sheet generation before writing a final receipt. That is native
+  completion evidence, not a passed wrapper result; the original receipts remain
+  unchanged. Release Setup Motion remains unrun. Its extra three-resolution
+  Count/Team/Weapon animation, readiness, interruption and resize checks contain
+  no Release-specific branch or additional save path. Functional completion rests
+  on both-preset all-count CPU recovery/transaction checks and the actual Release
+  writer/relaunch flow, with Debug covering those shared rendering/lifecycle
+  regressions. The broader Release motion matrix remains an explicit limitation,
+  not a missing persistence acceptance gate. Both games
 also passed isolated published-bank startup, per-monitor v2 DPI awareness and
 graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
-are under `out/validation/remembered-setup/`. Physical-pad acceptance remains
+  are under `out/validation/remembered-setup/`, including the supplementary
+  `release-coverage-audit-*.json` receipt. Physical-pad acceptance remains
 `ROAD#2`; these checks use scripted input and establish no performance result.
 
 ## Action bindings (`GAP#4.2`)
