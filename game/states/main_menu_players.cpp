@@ -159,9 +159,23 @@ void MainMenuPlayerCount::init()
 	// A series needs both teams; solo remains available through Single Match.
 	this->focus_.set_enabled(this->_1_player.get(),
 		this->level_settings()->best_of() == 1);
-	if (this->level_settings()->best_of() > 1)
+	// Retain the previous count's focus, without retaining any device claims.
+	const int count = std::max(this->level_settings()->player_count(),
+		this->level_settings()->best_of() > 1 ? 2 : 1);
+	switch (count)
 	{
+	case 4:
+		this->focus_.set_focused(0, this->_4_players.get());
+		break;
+	case 3:
+		this->focus_.set_focused(0, this->_3_players.get());
+		break;
+	case 2:
 		this->focus_.set_focused(0, this->_2_players.get());
+		break;
+	default:
+		this->focus_.set_focused(0, this->_1_player.get());
+		break;
 	}
 	this->focus_.add(this->back_.get(), [this]
 		{
@@ -179,7 +193,8 @@ void MainMenuPlayerCount::start_join(int players, ScreenLayout layout)
 	settings->set_player_count(players);
 	settings->set_screen_layout(layout);
 	settings->begin_input_claims(this->activating_slot_);
-	if (players == 1)
+	if (players == 1 && settings->player_team(0) != PlayerTeam::a &&
+		settings->player_team(0) != PlayerTeam::b)
 	{
 		settings->set_player_team(0, PlayerTeam::a);
 	}

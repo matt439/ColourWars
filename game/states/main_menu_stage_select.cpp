@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
+#include "game/states/match_start.h"
 #include "game/drawable_text.h"
 #include "game/save.h"
 #include "game/objects/level_end_info.h"
@@ -70,7 +71,7 @@ void MainMenuStageSelect::update_page(float /*dt*/)
 				// simultaneous inputs cannot also pop the state underneath.
 				this->menu_context()->finish_with_music([context = this->context()]
 				{
-					context->pop();
+					context->pop(MatchStart::menu);
 				});
 				return;
 			}

@@ -85,10 +85,46 @@ namespace
         return true;
     }
 
+    bool same_setup(const std::optional<LastMatchSetup>& actual, const std::optional<LastMatchSetup>& expected)
+    {
+        if (actual.has_value() != expected.has_value()) { return false; }
+        if (!actual) { return true; }
+        if (actual->players.size() != expected->players.size() || actual->stage != expected->stage ||
+            actual->layout != expected->layout || actual->duration != expected->duration ||
+            actual->best_of != expected->best_of) { return false; }
+        for (size_t seat = 0; seat < actual->players.size(); ++seat)
+        {
+            if (actual->players[seat].team != expected->players[seat].team ||
+                actual->players[seat].weapon != expected->players[seat].weapon) { return false; }
+        }
+        return true;
+    }
+
     bool same_save(const SaveData& actual, const SaveData& expected)
     {
         return actual.resolution == expected.resolution && actual.fullscreen == expected.fullscreen &&
-            actual.team_palette == expected.team_palette && same_play(actual.play, expected.play);
+            actual.team_palette == expected.team_palette && same_play(actual.play, expected.play) &&
+            same_setup(actual.last_match, expected.last_match);
+    }
+
+    LastMatchSetup setup(bool alternate = false)
+    {
+        LastMatchSetup result;
+        result.players = { {PlayerTeam::b, WeaponType::bucket}, {PlayerTeam::a, WeaponType::mister} };
+        result.stage = "movement_course";
+        result.layout = labrador::ScreenLayout::two_player;
+        result.duration = 98.5f;
+        result.best_of = 3;
+        if (alternate)
+        {
+            result.players.push_back({PlayerTeam::b, WeaponType::sniper});
+            result.players.push_back({PlayerTeam::a, WeaponType::roller});
+            result.stage = "arena";
+            result.layout = labrador::ScreenLayout::four_player;
+            result.duration.reset();
+            result.best_of = 5;
+        }
+        return result;
     }
 
     PlaySettings preferences()
@@ -111,6 +147,7 @@ namespace
         require(save.set_play_settings_and_save(preferences()), "Cannot seed play preferences");
         require(save.set_display_settings_and_save(ScreenResolution::s_2560_1440,
             false, TeamColourPair::blue_yellow), "Cannot seed display preferences");
+        require(save.remember_match_setup_and_save(setup()), "Cannot seed remembered match choices");
         return save;
     }
 
@@ -130,7 +167,7 @@ namespace
         Save restored;
         restored.load_save_file();
         require(same_save(restored.save_data(), save.save_data()),
-            "Display trial failed to preserve display/play/four-pad preferences on reload");
+            "Display trial failed to preserve display/play/four-pad preferences or remembered setup on reload");
     }
 
     struct DisplayCall
@@ -330,16 +367,20 @@ namespace
                 changed.sticks = { StickSettings{ -1, 25 }, StickSettings{ 30, 40 },
                     StickSettings{ 55, 75 }, StickSettings{ 90, 0 } };
                 require(save.set_play_settings_and_save(changed), "Cannot seed an independent preferences change");
+                const LastMatchSetup changed_setup = setup(true);
+                require(save.remember_match_setup_and_save(changed_setup), "Cannot seed an independent remembered setup");
                 const std::string changed_file = contents(directory.save_path());
                 trial.advance(1.0f);
                 require(!trial.result(),
                     "Independent preference commit completed the display trial");
                 SaveData current = before; current.play = changed;
+                current.last_match = changed_setup;
                 require_unchanged(save, current, directory, changed_file);
                 trial.keep();
                 require_result(trial, DisplayTrialResult::kept);
                 require_choice(save, candidate);
                 require(same_play(save.play_settings(), changed), "Keep overwrote current shared or four-pad preferences");
+                require(same_setup(save.last_match_setup(), current.last_match), "Keep overwrote current remembered choices");
                 require(calls.size() == 1, "Keep reapplied or rolled back the accepted display");
                 require_reloaded(save);
                 const std::string kept_file = contents(directory.save_path());
@@ -350,6 +391,23 @@ namespace
             require(calls.size() == 1, "Destruction rolled back a kept display");
             require_reloaded(save);
         }
+    }
+
+    void check_revert_preserves_current_setup(const IsolatedSaveDirectory& directory)
+    {
+        Save save = seed_save();
+        int calls = 0;
+        DisplaySettingsTrial trial(&save, choice(true), false,
+            [&](ScreenResolution, bool) { ++calls; }, 15.0f);
+        trial.begin();
+        require(save.remember_match_setup_and_save(setup(true)), "Cannot update remembered setup during display trial");
+        const SaveData current = save.save_data();
+        const std::string bytes = contents(directory.save_path());
+        trial.cancel();
+        require_result(trial, DisplayTrialResult::reverted);
+        require(calls == 2, "Revert did not restore the display exactly once");
+        require_unchanged(save, current, directory, bytes);
+        require_reloaded(save);
     }
 
     class SaveReplacementLock
@@ -530,6 +588,7 @@ int main(int argc, char** /*argv*/)
         check_cancel_and_lifetime(directory);
         check_countdown(directory);
         check_keep_and_current_preferences(directory);
+        check_revert_preserves_current_setup(directory);
         check_failed_save(directory);
         check_reentrant_cancel(directory);
         std::srand(7349); const int expected_random = std::rand(); std::srand(7349);
@@ -537,7 +596,7 @@ int main(int argc, char** /*argv*/)
         require(std::rand() == expected_random, "Display trial behavior consumed gameplay RNG");
         std::cout << "PASS display trial: validated configuration, configured-preset/actual-mode rollback, "
             "unstarted/active/terminal lifetimes, finite countdown/expiry/hitch, reentrant cancellation, "
-            "apply/rollback exceptions, no writes before Keep, current shared/four-pad preference preservation, "
+            "apply/rollback exceptions, no writes before Keep, current shared/four-pad/remembered-setup preservation, "
             "real isolated save failures and recovery; fake display callback only, no window/device\n";
         return 0;
     }

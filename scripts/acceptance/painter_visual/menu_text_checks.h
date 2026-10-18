@@ -539,7 +539,7 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
             tap(Key::up); compare("series-skips-solo-" + std::to_string(mode), true, 4, original, legacy);
             tap(Key::down); compare("series-wraps-to-two-" + std::to_string(mode), true, 1, original, legacy);
         }
-        tap(Key::escape); compare("count-back-mode-" + std::to_string(mode), false, 0, original, legacy);
+        tap(Key::escape); compare("count-back-mode-" + std::to_string(mode), false, mode, original, legacy);
     }
     constexpr std::array<ScreenLayout, 4> layouts{ ScreenLayout::one_player, ScreenLayout::two_player,
         ScreenLayout::three_player, ScreenLayout::four_player };
@@ -554,10 +554,11 @@ void menu_setup_text_checks(Application& app, const Canvas& canvas, GameTuning& 
         for (int seat = 1; seat < count; ++seat)
             { require(settings.player_settings()[static_cast<size_t>(seat)].num == -1, "Player Count preclaimed another device"); }
         require(frame().pixels == destination(true).pixels, "Player Count did not reach actual Join Players");
-        tap(Key::escape); const Frame returned = compare("join-back-count-" + std::to_string(count), true, 0, original, legacy);
+        tap(Key::escape); const Frame returned = compare("join-back-count-" + std::to_string(count), true, count - 1, original, legacy);
         tick(); require(frame().pixels == returned.pixels, "Neutral Join return changed initial Count focus");
     }
-    for (int move = 0; move < 4; ++move) { tap(Key::down); }
+    // The last Join return retains Four Players, directly above Back.
+    tap(Key::down);
     tap(Key::enter); const Frame returned_mode = compare("count-back-button", false, 0, original, legacy);
     tick(); require(frame().pixels == returned_mode.pixels, "Neutral Count Back changed initial Mode focus");
     for (int move = 0; move < 4; ++move) { tap(Key::down); }

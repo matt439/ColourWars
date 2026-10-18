@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/game_states.h"
+#include "game/last_match_setup.h"
 using namespace labrador;
 
 GameMenu::GameMenu(GameData* game_data) : game_data_(game_data)
@@ -17,6 +18,10 @@ void GameMenu::init()
 	this->menu_input_ = std::make_unique<MenuInput>(this->data()->gamepads(),
 		this->data()->keyboard(), this->data()->tuning());
 	this->menu_level_settings_ = std::make_unique<MenuLevelSettings>();
+	if (const auto& remembered = this->data()->save()->last_match_setup(); remembered)
+	{
+		*this->menu_level_settings_ = remembered->restore(*this->data()->stages());
+	}
 	this->menu_context_ = std::make_unique<MenuContext>(this->data(),
 		this->menu_input_.get(), this->menu_level_settings_.get());
 	this->menu_context_->set_music_update([this](float dt) { this->update_music(dt); });
@@ -47,9 +52,9 @@ void GameMenu::open_menu(MainMenuScreen screen)
 		look.main_menu().music, look.music_mix(), true);
 	if (!this->context()->active()) { this->music_->suspend(); }
 	this->menu_input_->reset_actions();
-	// Closing the page starts a match with the settings in the shared context.
-	this->context()->push(this->build_page(screen),
-		[this]() { this->start_match(); });
+	// The frame retains provenance while pages replace each other during setup.
+	this->context()->push<MatchStart>(this->build_page(screen),
+		[this](const MatchStart& start) { this->start_match(start); });
 }
 
 std::unique_ptr<MainMenuPage> GameMenu::build_page(MainMenuScreen screen) const
@@ -80,14 +85,14 @@ std::unique_ptr<MainMenuPage> GameMenu::build_page(MainMenuScreen screen) const
 	}
 }
 
-void GameMenu::start_match()
+void GameMenu::start_match(MatchStart start)
 {
 	// Release resolved bank handles before a queued content reload can replace it.
 	this->menu_context_->cancel_music_exit();
 	this->music_.reset();
 	// Keep the menu context and its settings alive beneath the match.
 	this->context()->push<EndMenuAction>(
-		std::make_unique<GameLevel>(this->data(), *this->menu_level_settings_),
+		std::make_unique<GameLevel>(this->data(), *this->menu_level_settings_, start),
 		[this](const EndMenuAction& action) { this->on_match_ended(action); });
 }
 
@@ -128,13 +133,13 @@ void GameMenu::on_match_ended(const EndMenuAction& action)
 		break;
 	case EndMenuAction::restart:
 		// GameLevel normally handles restart without leaving the match.
-		this->start_match();
+		this->start_match(MatchStart::developer);
 		break;
 	}
 }
 
-GameLevel::GameLevel(GameData* game_data, const MenuLevelSettings& settings) :
-	game_data_(game_data), settings_(settings),
+GameLevel::GameLevel(GameData* game_data, const MenuLevelSettings& settings, MatchStart start) :
+	game_data_(game_data), settings_(settings), start_(start),
 	session_(settings.player_count() == 1 ? 1 : settings.best_of())
 {
 
@@ -189,6 +194,18 @@ void GameLevel::init()
 	// Content reloaded from the menus is swapped in by the first build.
 	this->data()->debug().attach_match(*this);
 	this->build_and_enter_level();
+	// Remember only a normally confirmed setup, after its first complete build.
+	// Later restarts/series rounds use build_and_enter_level without this write.
+	const std::vector<MenuPlayerSettings> seats = this->settings_.player_settings();
+	if (this->start_ == MatchStart::menu &&
+		std::none_of(seats.begin(), seats.end(), [this](const MenuPlayerSettings& seat)
+			{ return this->data()->debug().drives_slot(seat.num); }))
+	{
+		std::ignore = this->data()->save()->remember_match_setup_and_save(
+			LastMatchSetup::capture(this->settings_));
+		// This synchronous save is part of entering the match, not elapsed play.
+		this->data()->application()->reset_elapsed_time();
+	}
 }
 
 // LevelBuilder needs the match layout before it builds split-screen dividers.
@@ -569,6 +586,7 @@ const MenuLevelSettings& GameLevel::debug_settings() const
 
 void GameLevel::debug_rebuild(const MenuLevelSettings& plan, bool reset_session)
 {
+	this->start_ = MatchStart::developer;
 	this->settings_ = plan;
 	if (reset_session)
 	{
@@ -579,6 +597,7 @@ void GameLevel::debug_rebuild(const MenuLevelSettings& plan, bool reset_session)
 
 void GameLevel::debug_adopt(const MenuLevelSettings& plan, bool reset_session)
 {
+	this->start_ = MatchStart::developer;
 	this->settings_ = plan;
 	if (reset_session)
 	{

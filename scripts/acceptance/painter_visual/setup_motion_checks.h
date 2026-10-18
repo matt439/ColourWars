@@ -313,7 +313,10 @@ void setup_motion_matrix(Application& app, Registry<LevelLoadedInfo>& levels,
         capture("mode-rest", mode_rest, mode_stripe); capture("duration-press", duration_press, duration_stripe);
         capture("duration-rest", duration_rest, duration_stripe);
 
-        open(1); tap(0, GamepadButton::dpad_down); const Frame count_arrival = frame();
+        // Count retains this fixture's four-player choice. Settle at Three,
+        // then measure the same Two Players response and confirmation as before.
+        open(1); tap(0, GamepadButton::dpad_up); tick(settle_time);
+        tap(0, GamepadButton::dpad_up); const Frame count_arrival = frame();
         tick(motion.focus_duration * 0.4f); const Frame count_middle = frame(); tick(settle_time);
         const Frame count_rest = frame();
         const RectangleF count_stripe = focus_arrow(look.player_count_spacing, 3, presentation.menu_text().item(MenuItem::two_players));

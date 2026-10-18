@@ -15,6 +15,7 @@
 #include "game/states/resume_countdown.h"
 #include "game/states/resume_audio.h"
 #include "game/states/results_audio.h"
+#include "game/states/match_start.h"
 
 // Stack shapes during a session:
 //
@@ -48,7 +49,7 @@ private:
 	void open_menu(MainMenuScreen screen);
 	std::unique_ptr<MainMenuPage> build_page(MainMenuScreen screen) const;
 
-	void start_match();
+	void start_match(MatchStart start);
 	void on_match_ended(const EndMenuAction& action);
 	GameData* data() const;
 };
@@ -58,7 +59,8 @@ private:
 class GameLevel final : public labrador::State, private DebugMatchTarget
 {
 public:
-	GameLevel(GameData* game_data, const MenuLevelSettings& settings);
+	GameLevel(GameData* game_data, const MenuLevelSettings& settings,
+		MatchStart start = MatchStart::developer);
 
 	// Restores the screen layout that was active before the match.
 	~GameLevel() override;
@@ -85,6 +87,7 @@ private:
 	int builds_ = 0;
 	GameData* game_data_ = nullptr;
 	MenuLevelSettings settings_ = MenuLevelSettings();
+	MatchStart start_ = MatchStart::developer;
 	Session session_;
 	std::unique_ptr<Level> level_ = nullptr;
 	std::unique_ptr<LevelBuilder> level_builder_ = nullptr;

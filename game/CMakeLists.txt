@@ -10,6 +10,7 @@ add_executable(ColourWars WIN32
     drawable_text.cpp
     fatal_report.cpp
     game_data.cpp
+    last_match_setup.cpp
     main.cpp
     match_records.cpp
     presentation.cpp

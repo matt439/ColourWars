@@ -1,5 +1,6 @@
 #include "game/pch.h"
 #include "game/states/main_menu.h"
+#include "game/states/match_start.h"
 #include "game/build_info.h"
 #include <sstream>
 
@@ -22,7 +23,7 @@ bool MainMenuPage::debug_start_match(const MenuLevelSettings& plan)
 {
 	this->menu_context()->cancel_music_exit();
 	*this->level_settings() = plan;
-	this->context()->pop();
+	this->context()->pop(MatchStart::developer);
 	return true;
 }
 
@@ -509,6 +510,14 @@ void MainMenuModeSelect::init()
 			this->context()->transition_to(
 				std::make_unique<MainMenuHome>(this->menu_context()));
 		});
+	if (this->level_settings()->best_of() == 3)
+	{
+		this->focus_.set_focused(0, this->best_of_three_.get());
+	}
+	else if (this->level_settings()->best_of() == 5)
+	{
+		this->focus_.set_focused(0, this->best_of_five_.get());
+	}
 
 }
 

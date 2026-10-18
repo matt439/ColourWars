@@ -241,13 +241,13 @@ namespace
 		require(legacy.records().stages().empty(), "An unversioned save gained records");
 		require(legacy.save_to_file(), "Could not rewrite an unversioned save");
 		const std::string rewritten = directory.contents();
-		require(rewritten.rfind("{\"save_version\":1,", 0) == 0 &&
+		require(rewritten.rfind("{\"save_version\":" + std::to_string(Save::version) + ",", 0) == 0 &&
 			rewritten.find("\"aim_sensitivity\":4") != std::string::npos &&
 			rewritten.find("\"records\":[]") != std::string::npos,
 			"Saving did not write the version key, the flat preferences and the records section");
 		Save reread;
 		reread.load_save_file();
-		require_flat_preferences(reread, "A rewritten version-1 save lost a preference");
+		require_flat_preferences(reread, "A rewritten current-version save lost a preference");
 
 		// A newer layout still loads what this build knows; unknown parts go.
 		directory.write("{\"save_version\":7," + flat_preferences +
@@ -258,7 +258,7 @@ namespace
 		require(newer.records().find("arena") != nullptr && newer.records().find("arena")->versus_played == 3,
 			"A newer save lost records this build knows");
 		require(newer.save_to_file() && directory.contents().find("future") == std::string::npos &&
-			directory.contents().rfind("{\"save_version\":1,", 0) == 0,
+			directory.contents().rfind("{\"save_version\":" + std::to_string(Save::version) + ",", 0) == 0,
 			"Saving over a newer layout did not write this build's version");
 
 		for (const char* version : { "\"one\"", "null", "-1", "1.5" })

@@ -8,6 +8,7 @@
 #include "game/objects/team_colour.h"
 #include "game/play_settings.h"
 #include "game/match_records.h"
+#include "game/last_match_setup.h"
 
 struct SaveData
 {
@@ -17,6 +18,7 @@ struct SaveData
 	TeamColourPair team_palette = TeamColourPair::random;
 	PlaySettings play;
 	MatchRecords records;
+	std::optional<LastMatchSetup> last_match;
 };
 
 // The per-user save file. Its content is a list of SaveSection objects read
@@ -26,7 +28,8 @@ class Save
 public:
 	// 0 is the original flat file with no version key. 1 adds the version key
 	// and nested sections ("records") beside the same flat preference keys.
-	static constexpr int version = 1;
+	// 2 adds the independent nested "last_match" setup; older saves omit it.
+	static constexpr int version = 2;
 
 	Save() = default;
 	void load_save_file();
@@ -46,6 +49,10 @@ public:
 	// write keeps the record for this run and reports it on stderr only.
 	RecordOutcome record_result_and_save(const std::string& stage,
 		const LevelEndInfo& result);
+	const std::optional<LastMatchSetup>& last_match_setup() const;
+	// Writes a validated resolved setup. Unlike active display/play settings,
+	// the remembered setup changes in memory only after a successful write.
+	bool remember_match_setup_and_save(const LastMatchSetup& setup);
 private:
 	SaveData save_data_ = SaveData();
 	SaveData load_from_json(const char* json_path) const;

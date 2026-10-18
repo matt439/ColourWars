@@ -357,11 +357,12 @@ save that holds it is built from sections and carries a version key.
 on its own, so a malformed section falls back to its defaults and leaves the
 others intact. The display and play preferences stay flat root keys exactly as
 before, so every existing save loads unchanged and needs no migration.
-`"save_version": 1` is written first. A missing key is version 0, the same flat
-layout. A higher version still loads every key this build knows and prints one
+`"save_version": 2` is written first (version 1 introduced records; version 2
+adds remembered setup). A missing key is version 0, the same flat layout.
+A higher version still loads every key this build knows and prints one
 stderr line; the next write drops what it does not know. That is accepted for a
-local save. New sections use nested keys: `"records"` now, and the last-match
-setup (`GAP#6.1`) adds its own the same way.
+local save. New sections use nested keys: `"records"` and the last-match
+setup's `"last_match"` (`GAP#6.1`).
 
 **Records** (`game/match_records.h`) are an array of `{ "stage": ... }`
 objects, keyed by the manifest name, because the engine's JSON reader has no
@@ -416,24 +417,69 @@ probe's shared save fixture stays byte-identical.
 
 ## Remembered match setup (`GAP#6.1`)
 
-**OPEN.** Add a nested last-match `SaveSection`, using the existing sectioned
-save. Save the resolved choices of a normally started match: player count,
-teams, weapons, stage, layout, duration override and best-of length. Random
-weapons and stages have already resolved at this point; remembering Random
-intent would be separate work.
+The save's independent `"last_match"` section stores the resolved choices of a
+normally started match. Its seat-ordered `players` array holds team and concrete
+weapon keys and supplies the player count; the other fields are stage, layout,
+best-of length and an optional duration override. Omitted duration keeps using
+the tuning default. Random weapons and stages resolve before capture;
+remembering Random intent would be separate work.
 
-Seed the setup pages from those preferences on launch. Every device still joins
-explicitly and every player confirms again. Do not persist device claims,
-readiness, the active round, series scores or match progress. Keep the current
-menu path and allow every remembered choice to be changed.
-Returning from a match keeps the current in-memory choices. Developer
-script/bot/replay launches do not overwrite the remembered user setup.
+`GameMenu` restores these choices once on launch, after content has supplied the
+stage list. Mode and Count focus start at the remembered choices; Team, Weapon
+and Stage still require confirmation. Count starts fresh device claims,
+including when the remembered devices are missing. Device numbers, readiness,
+the active round, scores and progress never enter the saved model. Every choice
+remains editable, and returning from a match retains the menu's current
+in-memory choices.
 
-Acceptance: round-trip and relaunch restore the choices; old, missing or malformed
-sections recover without losing display/play preferences or records. Removed
-stages, unsupported weapons and invalid solo/series combinations fall back to
-valid choices. A failed write preserves the prior file and the active setup.
-Driven menu checks cover fresh claims, confirmation, changed choices and restart.
+The normal Stage confirmation carries a distinct match-start result from a
+developer launch. Capture occurs after the first successful level build, once
+bot/replay ownership is known, and excludes developer starts and any driven
+seat. Restart, rematch and later series rounds do not replace the remembered
+setup. Recording a manually confirmed, human-controlled match can remember
+those choices; recording does not drive its inputs.
+
+Missing or malformed sections recover independently of display/play preferences
+and records. Unsupported weapons use Sprayer; invalid teams recover to a valid
+roster; solo keeps either valid team and uses best-of-one. Layout follows the
+count, and invalid duration uses the tuning default. A removed stage falls back
+to the first manifest entry without consuming randomness; an explicitly chosen
+stage excluded from Random remains selectable. An unusable player count drops
+only this section. Capture validates the resolved model before writing. The
+candidate save replaces the prior file before becoming the remembered value in
+memory; a failed write reports on stderr and leaves the prior file and active
+match choices usable. Replacement requires serialization, stdio flush, stream
+error and close checks to pass; close success alone cannot establish that an
+earlier write succeeded.
+
+Validation on 2026-10-18: both `/W4 /WX` game builds and all 37 CPU acceptance
+cases passed. `remembered_setup` covers all counts and five tools, exact string
+keys, either solo team, legacy/current/newer saves, section isolation, malformed
+fields, removed/excluded stages, fresh claims, RNG preservation, strict capture
+and actual staging/replacement failures with unchanged memory/bytes and retry.
+Display trials retain remembered choices through Keep/Revert and concurrent
+changes. A private anonymous-pipe exhibit reproduced a stream error with a
+successful close; it supports the writer guard without claiming injected disk
+faults in `Save`.
+
+```powershell
+./scripts/check-painter.ps1 -Preset x64-debug -RememberedSetupOnly
+./scripts/check-painter.ps1 -Preset x64-release -RememberedSetupOnly
+```
+
+Both focused checks passed through actual `GameMenu` callbacks. A second hidden
+process reloaded the same isolated save and matched independently seeded
+Mode/Count/Team/Weapon/Stage pages, with reversed device order, missing/reconnected
+pad, fresh joins and confirmations, editable choices and cancellation. Normal
+save timing, Pause Restart and two drawn series rounds passed; Debug also checked
+developer-script/sparse-bot record/replay starts and an explicitly claimed bot
+on a normal menu start. Debug's existing Setup Paper and Setup Motion regressions
+passed at their display sizes; their broader Release rendering matrices were
+omitted after the shared behaviour passed the focused Release check. Both games
+also passed isolated published-bank startup, per-monitor v2 DPI awareness and
+graceful shutdown with a system-only PATH. Evidence and compact relaunch crops
+are under `out/validation/remembered-setup/`. Physical-pad acceptance remains
+`ROAD#2`; these checks use scripted input and establish no performance result.
 
 ## Action bindings (`GAP#4.2`)
 

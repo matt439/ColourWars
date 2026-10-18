@@ -37,6 +37,7 @@ param(
     [switch] $ControlsMenuOnly,
     [switch] $StickSettingsOnly,
     [switch] $TeamSetupOnly,
+    [switch] $RememberedSetupOnly,
     [string] $OutputDirectory
 )
 
@@ -45,7 +46,7 @@ Set-StrictMode -Version Latest
 if ($TuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'TuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -138,7 +139,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
+                $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
                 $_.Name -like 'setup-motion-*-detail.ppm' -or
@@ -367,7 +368,26 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($TuneColoursOnly) {
+if ($RememberedSetupOnly) {
+    $result.scope = 'remembered-setup-only'
+    $result.Remove('stage')
+    $result.stages = @('king_of_the_hill', 'turbulence', 'close_quarters', 'movement_course')
+    $result.player_counts = @(2)
+    $result.palettes = @('runtime-save-default')
+    $result.weapons = @('sprayer', 'sniper', 'mister', 'bucket')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('actual-normal-menu-start', 'last-match-save', 'editable-cancelled-choices', 'fresh-sparse-claims', 'fresh-confirmation', 'pause-restart', 'series-continuation', 'developer-bot-replay-exclusion', 'separate-process-relaunch')
+    $result.input_slots = @(3, 4)
+    if ($Preset -eq 'x64-debug') {
+        $result.player_counts += 4
+        $result.input_slots += -1
+        $result.weapons += 'roller'
+    }
+    $result.inputs = 'Actual GameMenu owns setup pages and the typed normal/developer launch callback. The existing scripted GamepadReader seam and local keyboard snapshots drive menus without foreground or global input. All saves, developer files and replay evidence are under a nested private profile.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Two hidden720p processes share only a new private remembered-setup profile. The writer drives actual menus, compares fresh independent Mode/Count/Join/Team/Weapon/Stage page rasters, preserves the prior save through provisional/cancelled changes and the first arena confirmation, then saves resolved choices through the real normal GameMenu callback. A normal Pause Restart and two drawn best-of-three rounds update records independently of last_match. Debug additionally starts a sparse pad/keyboard/device-less bot match through an actual private script, records and replays it through the real director/menu path, and changes a normal menu choice while an explicitly claimed seat is bot-driven; all preserve the user setup. A separate native reader process reloads Save and GameMenu, restores choices, begins with a missing pad and fresh claims, reconnects without autojoining, requires each player to confirm again and cancels a changed arena without saving. Seven compact crops, CSV and command/replay evidence retain frozen page pixels/RNG. Release runs normal menus/relaunch and excludes developer branches. No physical-pad, listening, human readability or performance acceptance.'
+}
+elseif ($TuneColoursOnly) {
     $result.scope = 'tune-colours-only'
     $result.Remove('stage')
     $result.stages = @('movement_course')
@@ -830,7 +850,7 @@ try {
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
-    if ($TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
+    if ($RememberedSetupOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
     foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
         $arguments += '/I' + (Quote-Path $include)
     }
@@ -898,6 +918,7 @@ try {
     elseif ($ControlsMenuOnly) { $probeArguments += 'controls-menu' }
     elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
     elseif ($TeamSetupOnly) { $probeArguments += 'team-setup' }
+    elseif ($RememberedSetupOnly) { $probeArguments += 'remembered-setup' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -914,6 +935,47 @@ try {
     if ($process.ExitCode -ne 0) {
         Get-Content -LiteralPath (Join-Path $run 'run.err') | ForEach-Object { Write-Host $_ }
         throw "Visual probe exited with $($process.ExitCode)."
+    }
+    if ($RememberedSetupOnly) {
+        # A new OS process reloads the writer's nested private save. The outer
+        # aim_marker=false runner fixture remains immutable in both launches.
+        $writerProcessId = $process.Id
+        $process.Dispose()
+        $process = $null
+        $env:PATH = "$gameDirectory;$previousPath"
+        $env:LOCALAPPDATA = $profile
+        $readerArguments = @((Quote-Path $gameDirectory), (Quote-Path $captures), 'remembered-setup-read')
+        try {
+            $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
+                -WorkingDirectory $working -ArgumentList $readerArguments `
+                -RedirectStandardOutput (Join-Path $run 'reader.log') `
+                -RedirectStandardError (Join-Path $run 'reader.err')
+            $null = $process.Handle
+        }
+        finally {
+            $env:PATH = $previousPath
+            $env:LOCALAPPDATA = $previousLocalAppData
+        }
+        $readerTimer = [Diagnostics.Stopwatch]::StartNew()
+        while (-not $process.WaitForExit(1000)) {
+            if ($readerTimer.Elapsed.TotalSeconds -gt 120) { throw 'Remembered setup reader exceeded its 120-second runtime limit.' }
+        }
+        $process.WaitForExit()
+        Get-Content -LiteralPath (Join-Path $run 'reader.log') | ForEach-Object { Write-Host $_ }
+        if ($process.ExitCode -ne 0) {
+            Get-Content -LiteralPath (Join-Path $run 'reader.err') | ForEach-Object { Write-Host $_ }
+            throw "Remembered setup reader exited with $($process.ExitCode)."
+        }
+        foreach ($line in Get-Content -LiteralPath (Join-Path $run 'reader.err')) {
+            if ($line.Trim() -ne '' -and $line -notmatch '^no audio: .*The manifest marks this bank optional, so it plays nothing\.') {
+                throw "Unexpected remembered setup reader diagnostic: $line"
+            }
+        }
+        $result['process_relaunch'] = [ordered]@{
+            outcome = 'passed'; writer_pid = $writerProcessId; reader_pid = $process.Id; reader_exit_code = $process.ExitCode
+            writer_log = Join-Path $run 'run.log'; reader_log = Join-Path $run 'reader.log'
+            profile = Join-Path $captures 'remembered-setup-profile'
+        }
     }
     $expectedSaveFailures = @{}
     if ($PausedOptionsOnly) {
@@ -974,7 +1036,10 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($TuneColoursOnly) {
+    if ($RememberedSetupOnly) {
+        $result.diagnostic = 'Remembered setup passed actual normal-menu save timing, changed/cancelled choices, independent fresh-page rasters, sparse explicit claims, Pause Restart, two drawn series rounds and a separate hidden process reloading choices while requiring fresh claims/confirmation. Debug also passed actual developer-script/sparse-bot record/replay launches and normal-menu bot exclusion; Release excluded those developer branches. Seven compact crops and CSV/replay/transcript evidence remain in the private run. No foreground/global input or physical-pad/listening/human readability/performance claim.'
+    }
+    elseif ($TuneColoursOnly) {
         $result.diagnostic = 'Tune-colours-only Debug D3D11 hardware checks passed: seven audited named/RGB/RGBA commands reached existing live movement/ordinary DebugText/StationLabel consumers or captured-and-reopened Home/Mode as documented. Reset reversal, premultiplied and hidden-zero station tint, full resource rejection, queued scratch reload guards/rebuild/rebase, private save, original content, frozen state/RNG/fingerprint and compact evidence passed. No Release native, foreground input, physical-pad, listening, human readability or performance acceptance.'
     }
     elseif ($MiniatureTerrainOnly) {

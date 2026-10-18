@@ -33,6 +33,7 @@
 #include "game/debug/match_fingerprint.h"
 #include "game/debug/debug_director_impl.h"
 #include "game/debug/tune_document.h"
+#include "game/debug/replay.h"
 #endif
 
 #include <filesystem>
@@ -2590,6 +2591,7 @@ namespace
 #include "scripts/acceptance/painter_visual/menu_motion_checks.h"
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 #include "scripts/acceptance/painter_visual/team_setup_checks.h"
+#include "scripts/acceptance/painter_visual/remembered_setup_checks.h"
 #include "scripts/acceptance/painter_visual/setup_motion_checks.h"
 #include "scripts/acceptance/painter_visual/join_stage_motion_checks.h"
 #include "scripts/acceptance/painter_visual/join_paper_checks.h"
@@ -2616,11 +2618,12 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"pause-menu" || std::wstring(argv[3]) == L"results-menu" ||
             std::wstring(argv[3]) == L"main-menu" || std::wstring(argv[3]) == L"settings-menu" ||
             std::wstring(argv[3]) == L"controls-menu" || std::wstring(argv[3]) == L"stick-settings" ||
-            std::wstring(argv[3]) == L"team-setup" || std::wstring(argv[3]) == L"weapon-catalog" ||
+            std::wstring(argv[3]) == L"team-setup" || std::wstring(argv[3]) == L"remembered-setup" ||
+            std::wstring(argv[3]) == L"remembered-setup-read" || std::wstring(argv[3]) == L"weapon-catalog" ||
             std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion" ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" ||
             std::wstring(argv[3]) == L"setup-paper" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options"))),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|miniature-terrain|tune-colours|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
+            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|miniature-terrain|tune-colours|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|remembered-setup|remembered-setup-read|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -2639,15 +2642,17 @@ int wmain(int argc, wchar_t** argv)
         const bool settings_menu_only = argc == 4 && std::wstring(argv[3]) == L"settings-menu";
         const bool controls_menu_only = argc == 4 && std::wstring(argv[3]) == L"controls-menu";
         const bool stick_settings_only = argc == 4 && std::wstring(argv[3]) == L"stick-settings";
+        const bool remembered_setup_only = argc == 4 && (std::wstring(argv[3]) == L"remembered-setup" ||
+            std::wstring(argv[3]) == L"remembered-setup-read");
 #if !COLOURWARS_DEV_TOOLS
         require(argc != 4 || std::wstring(argv[3]) != L"tune-colours", "TuneColoursOnly requires a Debug build");
 #endif
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
-        require(argc == 4 && (std::wstring(argv[3]) == L"team-setup" || menu_text_only ||
+        require(argc == 4 && (std::wstring(argv[3]) == L"team-setup" || remembered_setup_only || menu_text_only ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options")),
             "The scripted gamepad backend is restricted to focused team/setup/menu-text acceptance");
 #else
-        require(argc != 4 || (std::wstring(argv[3]) != L"team-setup" &&
+        require(argc != 4 || (!remembered_setup_only && std::wstring(argv[3]) != L"team-setup" &&
             std::wstring(argv[3]) != L"setup-motion" && std::wstring(argv[3]) != L"join-stage-motion" && std::wstring(argv[3]) != L"join-paper" && std::wstring(argv[3]) != L"team-paper" && std::wstring(argv[3]) != L"weapon-paper" && std::wstring(argv[3]) != L"stage-paper" && std::wstring(argv[3]) != L"home-return-focus" && std::wstring(argv[3]) != L"home-exit" && std::wstring(argv[3]) != L"options-defaults" && std::wstring(argv[3]) != L"display-trial" && std::wstring(argv[3]) != L"paused-options"),
             "Use check-painter.ps1 focused scripted input switches to compile the scripted input seam");
 #endif
@@ -2722,6 +2727,12 @@ int wmain(int argc, wchar_t** argv)
             return 0;
         }
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
+        if (remembered_setup_only)
+        {
+            remembered_setup_matrix(app, levels, canvas, tuning, presentation, content, output,
+                std::wstring(argv[3]) == L"remembered-setup-read");
+            return 0;
+        }
         if (argc == 4 && std::wstring(argv[3]) == L"paused-options")
         {
             paused_options_matrix(app, levels, canvas, tuning, presentation, output);

@@ -238,12 +238,14 @@ namespace
 
     // Every section, in the order the file is written. Sections hold no state,
     // so one shared list serves every Save and Save stays copyable.
-    const std::array<const SaveSection*, 3>& save_sections()
+    const std::array<const SaveSection*, 4>& save_sections()
     {
         static const DisplaySection display;
         static const PlaySection play;
         static const MatchRecordsSection records;
-        static const std::array<const SaveSection*, 3> sections{ &display, &play, &records };
+        static const LastMatchSetupSection last_match;
+        static const std::array<const SaveSection*, 4> sections{
+            &display, &play, &records, &last_match };
         return sections;
     }
 
@@ -398,14 +400,18 @@ bool Save::write_save_file(const SaveData& data) const
     {
         section->write(writer, data);
     }
-    json.EndObject();
+    const bool serialized = json.EndObject();
 
-    // Check fclose before replacing the save. RapidJSON's FileWriteStream does
-    // not report fwrite failures, so serialization alone cannot establish success.
+    // Ending the root flushes RapidJSON's buffer, but FileWriteStream ignores
+    // short fwrite results. Flush stdio and inspect its sticky error before
+    // always closing the file. Serialization, stream output and close must all
+    // succeed before the temporary file may replace the existing save.
+    const bool flushed = (fflush(fp) == 0);
+    const bool stream_good = (ferror(fp) == 0);
     const bool closed = (fclose(fp) == 0);
 
     std::error_code rename_ec;
-    if (closed)
+    if (serialized && flushed && stream_good && closed)
     {
         std::filesystem::rename(temp_file_path, save_path, rename_ec);
         if (!rename_ec)
@@ -517,4 +523,27 @@ RecordOutcome Save::record_result_and_save(const std::string& stage,
         std::ignore = this->save_to_file();
     }
     return outcome;
+}
+
+const std::optional<LastMatchSetup>& Save::last_match_setup() const
+{
+    return this->save_data_.last_match;
+}
+
+bool Save::remember_match_setup_and_save(const LastMatchSetup& setup)
+{
+    setup.validate();
+    SaveData candidate = this->save_data_;
+    candidate.last_match = setup;
+    if (!this->write_save_file(candidate))
+    {
+        fprintf(stderr, "save failure: Could not write %s.\n"
+            "The previous remembered match setup is unchanged.\n",
+            save_file_path().c_str());
+        return false;
+    }
+    // Only this section changes. Other active preferences and record objects
+    // keep their existing semantics and identity for their borrowers.
+    this->save_data_.last_match.swap(candidate.last_match);
+    return true;
 }
