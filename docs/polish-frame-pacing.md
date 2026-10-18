@@ -1,6 +1,7 @@
 # Frame pacing and the reference hardware (POL#25)
 
-POL#25 remains open. The target is a consistent 60 fps on a recorded reference
+POL#25 is `DECISION`: arrange an attended measurement session and choose the
+hardware baseline. The target is a consistent 60 fps on a recorded reference
 machine, followed by an explicit supported hardware baseline. The capture and
 analysis workflow below is implemented; it does not select that baseline.
 

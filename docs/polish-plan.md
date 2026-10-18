@@ -167,6 +167,16 @@ before it is locked; this is the plan's sequence, not a list of soft gates.
 UI artwork follows the gameplay style, as before. Audio, release and engine
 work are outside this sequence and keep their own rows.
 
+**Readiness audit (2026-10-18).** `POL#7` and `POL#14` now need the author's
+current-arena readability review. `POL#9` still has
+[bounded implementation slices](polish-terrain.md#ready-implementation-slices-2026-10-18)
+for small-view sampling, reusable landmarks and a parallax prototype. `POL#16`
+stays deferred behind the blockouts and the gameplay style lock. Listening/mix
+choices (`POL#23`) and attended performance/hardware acceptance (`POL#25`) are
+author sessions; their implemented tooling does not close those gates. Supporting
+implementation choices in TODO's NOW can proceed while reviews are pending,
+without changing the phase order above.
+
 ## 1. Establish the art and display rules
 
 **Art rules accepted by the author on 2026-10-15 (`POL#1`).** Use Paint.exe
@@ -196,8 +206,8 @@ The author's choices from it: assets are achievable in **Windows 98 Paint**, in
 24-bit colour, with at most **28 colours per level**, characters, team paint and
 HUD included, and no dithering by default. The match's random team pair takes 2
 slots, leaving 26 for everything else, and those 26 must work with every pair.
-Whether the 26 are greys, greys with muted hues, or full colour waits on style
-mockups.
+The author chose the greys-plus-muted-hues family, **Muted Day**, on 2026-10-18;
+the palette below settles the earlier mockup question.
 
 **Figure and level palette chosen by the author on 2026-10-18.** In the
 [box-head builder](https://claude.ai/artifact/47ANdGfpipyeFa1W527cJq) the author
@@ -418,8 +428,9 @@ plus a matching respawn redraw. The composition's human review remains open.
 The [five-tool production pass](polish-tools.md) implements `POL#8`: distinct
 Paint.exe designs, aligned paint masks and grips, paid-shot pressure recovery,
 hose motion, supported roller rotation/lift/settle, bucket slosh/handle motion
-and a detached cosmetic mist tail. The reference arena still gates composition
-acceptance. The projectile, contact and quiet-detail increments below extend
+and a detached cosmetic mist tail. Judge the gameplay style in the current
+arenas now; Close Quarters is a later composition re-check when `POL#17` lands.
+The projectile, contact and quiet-detail increments below extend
 that treatment without changing the match simulation.
 
 Author the character, hands, weapon grips and aim poses together. Cover idle,

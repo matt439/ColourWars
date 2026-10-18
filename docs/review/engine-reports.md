@@ -65,6 +65,25 @@ pin and described a bug the engine had fixed the day after that pin was taken â€
 four days before anyone wrote the report down. Every citation below was checked
 against `6b5c0bd`, and `6b5c0bd` will not be master for long.
 
+## Publication gate (`ENG#PUBLISH`)
+
+**Author decision:** choose which details from this private repository's twelve
+live drafts may be shared, and where, before filing them. Labrador's `PI-09`
+tracks this disclosure choice; its older seven-draft count does not supersede
+the twelve live entries here.
+
+All twelve remain unfiled drafts. The 2026-10-18 backlog cleanup filed no
+reports and left the engine pin unchanged. Local source checks, exhibit
+maintenance and reproduction work can continue while the publication decision
+is pending.
+
+Before authorized filing, refresh engine master from upstream and recheck the
+concrete client exhibit against that revision. Record the checked commit with
+the report. A cached `origin/master` ref or local branch is not evidence of
+live upstream master. An answered claim is withdrawn with a reason; an
+unanswered one is filed only with the details and destination the author has
+authorized.
+
 ## Why the exhibits matter more than the asks
 
 `PHILOSOPHY.md` declines speculative frameworks, and the engine has been

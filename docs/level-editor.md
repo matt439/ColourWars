@@ -236,6 +236,10 @@ can be intentional boundary geometry and are allowed.
 
 ## Acceptance checks
 
+`ED#5` is `DECISION`: the remaining GUI and saved-stage gameplay checks need an
+attended session and a recorded result. The automated checks below establish
+document behaviour and hidden-window operation, not that manual acceptance.
+
 ```powershell
 ./scripts/check-level-editor.ps1 -Preset x64-debug
 ./scripts/check-level-editor.ps1 -Preset x64-release
@@ -276,3 +280,29 @@ nothing, and that answering Yes to the unsaved-changes prompt on Close and then
 No here keeps the editor open. Rebuild
 and play a saved stage to check collisions, paintable faces, spawns, camera
 bounds and ramps. Document acceptance does not establish those play qualities.
+
+## Registration assistance (`ED#4`)
+
+`ED#4` is ready for a bounded tooling increment. Add an opt-in registration
+helper for a level already saved under `game/content/levels/`. It previews the
+manifest and `COLOURWARS_RUNTIME_ASSETS` edits before applying both; ordinary
+Save/Save As must remain independent of registration. A command-line helper is
+enough for this increment; editor GUI integration can follow actual use.
+Also correct the editor Help text, which still names `cmake/release_assets.cmake`
+instead of `cmake/runtime_assets.cmake`.
+
+Accept it on scratch content, without editing a player's save: validate the
+existing level and its basename, reject paths outside the source levels folder,
+handle duplicate/already-registered names clearly, and retain both originals
+if either edit fails. Preview must write nothing. Applied edits must configure
+successfully under the existing manifest/staging agreement check, stage the
+level beside the executable, and leave unrelated entries intact. Record the
+helper's usage and failure behaviour here. Registration does not establish
+route, spawn or gameplay acceptance (`ED#5`).
+
+## Movement Course icon (`ED#6`, retired)
+
+Retired 2026-10-18 during the backlog audit: `icon_frame` is required legacy
+metadata, and no current screen displays it. Stage Select draws the actual
+arena preview. Keep the existing valid frame rather than commission invisible
+artwork. A distinct icon becomes work only if an accepted screen needs one.

@@ -9,8 +9,7 @@ thread starts here: read **NOW**, then the owner of the row it picks up.
 **The only ordering in this file.** Keep this block to the current aim and the next few actions;
 results go in their owners, and `git log` is the changelog.
 
-**Aim (2026-10-15):** the [backstory](docs/backstory.md#building-it) build is complete, including
-its accepted sounds. Build gameplay artwork to the accepted
+**Aim (2026-10-18):** lock the gameplay style in the current arenas, using the accepted
 [Paint.exe art rules](docs/polish-plan.md#1-establish-the-art-and-display-rules). The author's
 order is gameplay style first, UI after.
 
@@ -24,7 +23,29 @@ order is gameplay style first, UI after.
 UI artwork follows the gameplay style. Rows outside this sequence (audio, release, engine,
 tooling) are picked from OPEN when they don't compete with it.
 
+**Ready implementation choices.** Start with `POL#9`'s
+[small-view terrain readability, reusable landmarks or parallax prototype](docs/polish-terrain.md#ready-implementation-slices-2026-10-18).
+These use the current arenas; Close Quarters' redesign stays in phase 2.
+When that work is awaiting review, the following supporting work can proceed locally.
+This is a selection guide, not another priority order; each owner defines a bounded first slice.
+
+| id | next implementation slice | owner |
+|---|---|---|
+| `DBG#1` | Existing presentation colours in live tuning, with validated apply/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
+| `ED#4` | Safe, opt-in registration of a saved stage in both content lists | [Editor](docs/level-editor.md#registration-assistance-ed4) |
+| `GAP#4.2` | Default action bindings and evaluators preserving today's controls | [Input](docs/feature-roadmap.md#action-bindings-gap42) |
+| `GAP#6.1` | Remember match choices across launches while retaining explicit joining | [Setup](docs/feature-roadmap.md#remembered-match-setup-gap61) |
+| `GAP#8.4` | Extract existing connection/readout and player-specific Pause copy | [Text](docs/menu-presentation.md#remaining-text-slices-gap84) |
+| `GAP#D1` | Use per-slot FocusGroup cursors on Team Select without changing its behaviour | [Menu client](docs/feature-roadmap.md#per-player-menu-focus-gapd1) |
+
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
+- **Gameplay style:** review the implemented painter/tools (`POL#7`) and player/shot cues
+  (`POL#14`) now; review the current environment kit with them (`POL#9`).
+- **Attended reviews:** the editor GUI and saved-stage play pass (`ED#5`), in-game audio
+  listening and optional-cue choices (`POL#23`), visible uncontended performance captures
+  and a supported hardware baseline (`POL#25`).
+- **Upstream publication:** choose which private engine drafts may be shared and where
+  (`ENG#PUBLISH`); the twelve filing rows wait on that choice.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -36,9 +57,9 @@ questions in the polish sub-docs are superseded, not open.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#7` | OPEN | HIGH | M | Human review of character/team/tool readability in 1P and 4P play, in the current arenas; re-check in Close Quarters (`POL#17`). The author's 2026-10-18 build (no teammate accents), its poses, sleeves, grips and all five tools are implemented. [Painter](docs/polish-painter.md), [tools](docs/polish-tools.md). |
-| `POL#9` | OPEN | HIGH | L | Tool Props materials, shadows, backdrop and quiet cloud drift are in all four arenas. Left: human review clean/painted, every pair, 1P/4P; landmarks, further room life, parallax; CQ's own backdrop with `POL#17`. [Kit](docs/polish-terrain.md), [§4](docs/polish-plan.md#environment-and-background). |
-| `POL#16` | OPEN | MED | XL | Carry the style through accepted arenas after their blockouts; human presentation/readability review remains. Gameplay style first, UI after. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
+| `POL#7` | DECISION | HIGH | M | Author review of the implemented painter and five tools in current-arena 1P/4P play; re-check in CQ (`POL#17`). [Painter](docs/polish-painter.md#remaining-character-work), [tools](docs/polish-tools.md). |
+| `POL#9` | OPEN | HIGH | XL | Current-arena terrain slices: small-view sampling, reusable landmarks or modest parallax; retain author style review. CQ-specific fitting follows `POL#17`. [Slices](docs/polish-terrain.md#ready-implementation-slices-2026-10-18). |
+| `POL#16` | DEFERRED | MED | XL | Extend the treatment through accepted arenas after `POL#17`/`POL#21`; remaining UI art follows the gameplay style lock. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback
 
@@ -49,7 +70,7 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#3` | DEFERRED | MED | M | Movement tuning, done with the blockout (`POL#17`) once the art style is locked; values stay provisional. Keyboard/mouse: jump a bit floaty and high (`jump_*` candidates to try). Pad half with `ROAD#2`. [Playtest](docs/polish-movement-course.md#keyboardmouse-playtest-2026-10-17). |
-| `POL#14` | OPEN | MED | M | Human review of the implemented player badges, aim/readiness and blocked-shot cues, in the current arenas; re-check in Close Quarters (`POL#17`). [§8](docs/polish-plan.md#help-players-read-the-tool-and-the-fight). |
+| `POL#14` | DECISION | MED | M | Author review of implemented player badges, aim/readiness and blocked-shot cues in current-arena play; re-check in CQ (`POL#17`). [§8](docs/polish-plan.md#help-players-read-the-tool-and-the-fight). |
 | `POL#18` | DECISION | MED | M | Physical-pad comfort review of resume timing and per-slot deadzones/response previews with two controllers; implementation and save association are complete. Needs pads (`ROAD#2`). [§8](docs/polish-plan.md#make-couch-play-comfortable-between-actions-and-rounds). |
 | `POL#19` | DEFERRED | LOW | L | Untimed learning workshop on the Movement Course; deferred until fresh-player observations exist. [§8](docs/polish-plan.md#let-players-learn-by-making-a-mess). |
 
@@ -63,9 +84,8 @@ records. Hit feedback (gap audit 5.3) and the "this is you" marker (2.4) live he
 | `POL#17` | DEFERRED | HIGH | XL | Close Quarters reference blockout against the §3 requirements table (routes, spawns, paint budget, weapon roles, pacing, side fairness, recovery pocket), tuned with `POL#3`. After the art style is locked. [§3](docs/polish-plan.md#3-redesign-the-levels-in-playable-blockouts). |
 | `POL#27` | DEFERRED | HIGH | L | Weapon tuning (range, rate, damage, paint output, supply) for all five tools, done with the blockout (`POL#17`) and movement (`POL#3`); values stay provisional. [Order](docs/polish-plan.md#development-order-2026-10-17), [§3](docs/polish-plan.md#design-requirements). |
 | `POL#21` | DEFERRED | MED | XL | King of the Hill and Turbulence blockouts after CQ is accepted; optional 1v1 CQ variant, a brief per layout, side-swap qualification. [Briefs](docs/polish-plan.md#initial-arena-briefs). |
-| `ED#4` | UNSCOPED | LOW | S | Registering a stage is manual (`manifest.json` and `cmake/runtime_assets.cmake`); the editor does not help. |
-| `ED#5` | OPEN | LOW | S | The manual GUI pass and the play-test of a saved stage have no recorded result. [Acceptance](docs/level-editor.md#acceptance-checks). |
-| `ED#6` | OPEN | LOW | S | Movement Course placeholder: it borrows Turbulence's icon frame; give it its own icon. |
+| `ED#4` | OPEN | LOW | M | Add opt-in stage registration assistance for the manifest and runtime asset list, with preview and safe failure; correct the editor Help's obsolete path. [Scope](docs/level-editor.md#registration-assistance-ed4). |
+| `ED#5` | DECISION | LOW | S | Record an attended editor GUI pass and play a saved stage; document/hidden-window checks are already implemented. [Acceptance](docs/level-editor.md#acceptance-checks). |
 
 ## Audio replacement
 
@@ -75,7 +95,7 @@ mix still belong here; a missing-bank silent fallback is not a defect.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `POL#23` | OPEN | HIGH | L | Assess [optional audio detail and the mix](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration) at 1/2/4 players. |
+| `POL#23` | DECISION | HIGH | L | Listen to the in-game 1/2/4-player mix and decide whether optional detail earns a cue; world detail follows the reference arena. [Remaining work](docs/audio-inventory.md#9-runtime-migration-and-remaining-integration). |
 | `ROAD#3` | BLOCKED | MED | M | Replacement-audio acceptance: gains, mute, suspension, resumed loops, the multiplayer mix; then the audible release and the missing-bank fallback separately. Waits on `POL#23`. |
 
 ## Acceptance and release
@@ -91,14 +111,14 @@ here.
 | `ROAD#2` | DECISION | MED | M | Physical-pad sessions: 2P and 4P on every stage and weapon; join, unplug/replug, pause, focus, fullscreen/resize, series draws, rematch, relaunch; plus a long multiplayer soak. Needs pads. |
 | `ROAD#4` | DEFERRED | LOW | M | A pad that returns in a different XInput slot cannot reclaim its player mid-match. Deferred until it proves inconvenient. [First increment](docs/feature-roadmap.md#first-increment-explicit-joining-and-reconnect-pause). |
 | `POL#24` | BLOCKED | MED | M | The finish review and fresh-player observations on the reference match; the gate before production widens. Waits on the reference arena (`POL#17`). |
-| `POL#25` | OPEN | MED | M | Qualify [visible, uncontended frame pacing](docs/polish-frame-pacing.md) against 60 fps on a recorded reference machine and set the supported hardware baseline. |
+| `POL#25` | DECISION | MED | M | Arrange attended visible, uncontended captures and choose the supported hardware baseline; capture/analysis tooling is implemented. [Acceptance](docs/polish-frame-pacing.md#remaining-acceptance). |
 | `GAP#7.6` | BLOCKED | LOW | S | Release identity: the stock `directx.ico` waits on the gameplay style lock (`POL#7`, `POL#14`, `POL#9`); the first tag and any release job are the author's. VERSIONINFO, the ZIP, the build stamp and the CI ZIP artifact are done. |
 
 ## Game gaps
 
 **Owner:** [docs/review/gap-audit.md](docs/review/gap-audit.md), Class 1, by its section numbers.
 The audit is **frozen** (2026-08-11): it owns each finding and its suggested shape, not its
-status, so these rows were checked against the code on 2026-10-13. The no-live-score and
+status. Live implementation scopes are linked in the rows. The no-live-score and
 random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The live
 [match scope decisions](docs/feature-roadmap.md#match-scope-decisions-2026-10-15) own the
 2026-10-15 calls on rulesets, solo practice, random teams and handicaps.
@@ -106,56 +126,60 @@ random-pair findings (1.1, 2.1) are Splatoon borrowings and stay closed. The liv
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `ROAD#5` | DEFERRED | LOW | M | Per-player handicaps: physical multiplayer observations (`ROAD#2`) must establish the need and mechanic. [Decision](docs/feature-roadmap.md#handicaps). |
-| `GAP#4.2` | OPEN | MED | L | No action map or rebinding: bindings are constexprs in `player_input.h`/`menu_input.h`. The engine's `gamepad.h` waits on this client (Class 2 D6); `GAP#F2` waits on it. |
+| `GAP#4.2` | OPEN | MED | L | Build default action bindings/evaluators before persistence and rebinding UI; preserve current controls. `GAP#F2` follows the client exhibit. [Scope](docs/feature-roadmap.md#action-bindings-gap42). |
 | `GAP#5.1` | BLOCKED | LOW | M | Screen changes are hard cuts: the transition look is UI art after the gameplay style lock (`POL#7`, `POL#14`, `POL#9`). Level builds [take under 2.5 ms in Release](docs/polish-plan.md#level-build-pause-measured-2026-10-17), so no loading card. The blank startup window waits on `ENG#19`. |
-| `GAP#6.1` | OPEN | MED | M | The last match setup is not saved, so every launch walks the whole menu path again. |
-| `GAP#L9` | OPEN | LOW | M | No frame-rate or vsync setting, no render interpolation; `target_fps` is a literal 60. |
+| `GAP#6.1` | OPEN | MED | M | Save and restore match choices in a separate save section; retain explicit device claims and confirmation. [Scope](docs/feature-roadmap.md#remembered-match-setup-gap61). |
+| `GAP#L9` | UNSCOPED | LOW | M | Scope presentation-rate/vsync settings separately from fixed 60 Hz simulation; the pin exposes no client vsync switch. [Boundary](docs/feature-roadmap.md#presentation-rate-gapl9). |
 | `GAP#L11` | DEFERRED | LOW | L | No locale axis; waits on `GAP#8.4`. Fonts regenerate from [a recipe](game/art/README.md#sprite-font-recipe-gap87) and text can wrap. |
 
 ## Content pipeline
 
 **Owner:** [docs/review/gap-audit.md](docs/review/gap-audit.md) Theme 8, frozen as above.
 The live [art/content policy](game/art/README.md#runtime-content-separation-gap86) owns
-the accepted `GAP#8.6` scope.
+the accepted `GAP#8.6` scope; [menu presentation](docs/menu-presentation.md#remaining-text-slices-gap84)
+owns the remaining `GAP#8.4` implementation slices.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `GAP#8.4` | OPEN | LOW | M | Other setting values, composed stage navigation/count hints, best-of mode and roster copy, connection/readout text, player-specific Pause titles, session continuation text and composed match/results text remain C++ literals. [Boundary](docs/menu-presentation.md#shared-headings-and-complete-control-legends). |
+| `GAP#8.4` | OPEN | LOW | L | Move remaining connection/Pause, setup, numeric-setting and result text into presentation data in bounded slices, preserving existing wording. [Scope](docs/menu-presentation.md#remaining-text-slices-gap84). |
 
 ## Engine demonstration
 
 **Owner:** [docs/review/gap-audit.md, Class 2](docs/review/gap-audit.md#class-2--gaps-in-the-role-as-the-engines-demonstration),
-frozen as above. These add to the hierarchies, never flatten them (CLAUDE.md); D6 is `GAP#4.2`.
+frozen as above, with live [menu and demonstration scopes](docs/feature-roadmap.md#per-player-menu-focus-gapd1).
+These add to the hierarchies, never flatten them (CLAUDE.md); D6 is `GAP#4.2`.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `GAP#D1` | OPEN | MED | M | Give FocusGroup's per-slot cursors a client: a per-player menu page replacing team/weapon select's hand-rolled cursors; a misfit becomes a report. |
-| `GAP#D2` | OPEN | MED | M | No toggle/cycle/slider rows beyond OptionRow, no progress bar, no modal, no list-page base. |
-| `GAP#D5` | OPEN | MED | M | Rotated and moving structures behind the builder, one of each in a shipped stage, so the SAT and moving-response paths get a client. |
+| `GAP#D1` | OPEN | MED | M | Give per-slot FocusGroup cursors a Team Select client, preserving selection/readiness; evaluate Weapon Select only after that fit. [Scope](docs/feature-roadmap.md#per-player-menu-focus-gapd1). |
+| `GAP#D2` | DEFERRED | MED | M | Additional widget/page bases need a concrete caller beyond OptionRow; scope only when an accepted page requires one. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
+| `GAP#D5` | DEFERRED | MED | M | Add rotated/moving builder structures and useful arena placements during `POL#17`/`POL#21` blockouts; qualify collision, support and paint. [Boundary](docs/feature-roadmap.md#other-demonstration-gaps). |
 
 ## Engine reports
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`.
+`GAP#F*`. The twelve drafts are unfiled; their filing rows share the publication
+decision below rather than representing upstream fixes already requested.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `ENG#6` | OPEN | MED | S | File report 6: no audio bus, master gain, listener or voice cap. [Report](docs/review/engine-reports.md#6-no-audio-bus-master-gain-listener-or-voice-cap--draft-with-mixing-exhibit). |
-| `ENG#9` | OPEN | MED | S | File report 9: no application-level per-frame hook or input consume scope (`DBG#4` waits on it). [Report](docs/review/engine-reports.md#9-no-application-level-per-frame-hook-or-input-capture--draft-with-console-exhibit). |
-| `ENG#10` | OPEN | LOW | S | File report 10: no read-back of the presented frame. [Report](docs/review/engine-reports.md#10-no-way-to-read-back-the-frame-that-was-presented--draft-with-screenshot-exhibit). |
-| `ENG#11` | OPEN | LOW | S | File report 11: F10 and a lone Alt enter the system menu with no opt-out. [Report](docs/review/engine-reports.md#11-f10-and-a-lone-alt-belong-to-the-system-menu-with-no-opt-out--draft-low-priority). |
-| `ENG#12` | OPEN | MED | S | File report 12: JSON is read-only, path-only, with no keys or source spans. [Report](docs/review/engine-reports.md#12-json-is-read-only-path-only-and-opaque--draft-with-live-tuning-exhibit). |
-| `ENG#13` | OPEN | LOW | S | File report 13: `Key` has no names. [Report](docs/review/engine-reports.md#13-key-has-no-names--draft-low-priority). |
-| `ENG#14` | OPEN | LOW | S | File report 14: no frame statistics or GPU timing (`DBG#5` waits on it). [Report](docs/review/engine-reports.md#14-no-frame-statistics-or-gpu-timing--draft-with-perf-exhibit). |
+| `ENG#PUBLISH` | DECISION | MED | S | Author chooses which private draft details may be shared and where before filing. [Publication gate](docs/review/engine-reports.md#publication-gate-engpublish). |
+| `ENG#6` | BLOCKED | MED | S | File the audio bus/master-gain report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#6-no-audio-bus-master-gain-listener-or-voice-cap--draft-with-mixing-exhibit). |
+| `ENG#9` | BLOCKED | MED | S | File the per-frame hook/input-capture report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#9-no-application-level-per-frame-hook-or-input-capture--draft-with-console-exhibit). |
+| `ENG#10` | BLOCKED | LOW | S | File the presented-frame read-back report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#10-no-way-to-read-back-the-frame-that-was-presented--draft-with-screenshot-exhibit). |
+| `ENG#11` | BLOCKED | LOW | S | File the F10/lone-Alt system-menu report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#11-f10-and-a-lone-alt-belong-to-the-system-menu-with-no-opt-out--draft-low-priority). |
+| `ENG#12` | BLOCKED | MED | S | File the JSON reading/source-span report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#12-json-is-read-only-path-only-and-opaque--draft-with-live-tuning-exhibit). |
+| `ENG#13` | BLOCKED | LOW | S | File the unnamed `Key` report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#13-key-has-no-names--draft-low-priority). |
+| `ENG#14` | BLOCKED | LOW | S | File the frame-statistics/GPU-timing report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#14-no-frame-statistics-or-gpu-timing--draft-with-perf-exhibit). |
 | `ENG#PARKED` | DEFERRED | LOW | S | Parked asks to ride with another report: the ignored `window_size_changed`, a desktop-size query, an atomic JSON write (F5, F9). [Not here](docs/review/engine-reports.md#what-is-deliberately-not-here). |
 | `GAP#F2` | BLOCKED | LOW | S | The action-map/Gamepads report (per-slot lookup, trigger threshold, "what did this pad press"). Waits on `GAP#4.2`. |
 | `GAP#F6` | UNSCOPED | LOW | S | Rumble (`set_vibration`, capabilities): unfiled, no exhibit. The FPS half is report 14. |
-| `ENG#15` | OPEN | MED | S | File report 15: repeated runtime packaging and content staging; game asset/release policy stays here. [Report](docs/review/engine-reports.md#15-runtime-packaging-and-content-staging-are-repeated-in-the-client--draft-with-release-exhibit). |
-| `ENG#16` | OPEN | LOW | S | Recheck master and file report 16: windowed Apply shows a deliberately hidden window. [Report](docs/review/engine-reports.md#16-windowed-apply-shows-a-deliberately-hidden-window--draft-with-probe-exhibit). |
-| `ENG#17` | OPEN | LOW | S | File report 17: the Win32 window sizes its frame at system DPI and ignores `WM_DPICHANGED` once the client is per-monitor aware; answers OCA-66. [Report](docs/review/engine-reports.md#17-the-win32-window-ignores-dpi-once-the-client-opts-in--draft-with-manifest-exhibit). |
-| `ENG#18` | OPEN | LOW | S | Recheck master and file report 18: a `Label` in a `Scene` cannot be hidden (only a fully zero tint) or drawn over collision objects. [Report](docs/review/engine-reports.md#18-a-label-in-a-scene-can-be-neither-hidden-nor-raised--draft-with-station-label-exhibit). |
-| `ENG#19` | OPEN | LOW | S | Recheck master and file report 19: the window is shown before the manifest loads, with no later show call. [Report](docs/review/engine-reports.md#19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit). |
+| `ENG#15` | BLOCKED | MED | S | File the runtime-packaging/content-staging report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#15-runtime-packaging-and-content-staging-are-repeated-in-the-client--draft-with-release-exhibit). |
+| `ENG#16` | BLOCKED | LOW | S | File the hidden-window Apply report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#16-windowed-apply-shows-a-deliberately-hidden-window--draft-with-probe-exhibit). |
+| `ENG#17` | BLOCKED | LOW | S | File the Win32 DPI report after `ENG#PUBLISH`; answers OCA-66. [Report](docs/review/engine-reports.md#17-the-win32-window-ignores-dpi-once-the-client-opts-in--draft-with-manifest-exhibit). |
+| `ENG#18` | BLOCKED | LOW | S | File the Label visibility/draw-order report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#18-a-label-in-a-scene-can-be-neither-hidden-nor-raised--draft-with-station-label-exhibit). |
+| `ENG#19` | BLOCKED | LOW | S | File the startup window-visibility report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console
@@ -165,7 +189,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `DBG#1` | OPEN | LOW | M | `tune` handles numbers only, and `tune.save` cannot insert a missing key. |
+| `DBG#1` | OPEN | LOW | M | Add validated existing colour tokens to `tune`/diff/reset/save; numbers and booleans already work. Font/string edits and missing-key insertion remain later slices. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | BLOCKED | LOW | S | Typing in the live console blanks the whole keyboard seat. Waits on `ENG#9`. |
 | `DBG#5` | BLOCKED | LOW | S | The perf overlay has no GPU, present or submit time. Waits on `ENG#14`. |
@@ -178,7 +202,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `CI#1` | OPEN | LOW | M | The foreground-dependent `check-debug-console` remains local; CI has no reliable focus workflow for it. [.github/workflows/ci.yml](.github/workflows/ci.yml). |
+| `CI#1` | UNSCOPED | LOW | M | Find a reliable attended/foreground runner model before adding `check-debug-console` to CI; hosted focus remains unproven. [Constraint](docs/debug-console.md#foreground-checks-ci1), [workflow](.github/workflows/ci.yml). |
 
 ## Areas with no open rows
 
@@ -194,6 +218,7 @@ A new row for one of these gets its section back.
 | Splatoon borrowings (no live score, random pairs) | gap audit 1.1, 2.1 | only the author reversing the decision |
 | Startup content validation | gap audit 8.1, `game/content_validation.cpp` | a content kind added without validation |
 | Code TODO/FIXME markers | `game/`, `editor/`, `scripts/`, `cmake/` | a new marker, which should be a row here instead |
+| Movement Course icon (`ED#6`, retired) | [level-editor.md](docs/level-editor.md#movement-course-icon-ed6-retired) | an accepted screen actually displays stage icons; current Stage Select uses a live preview |
 
 ---
 
@@ -218,6 +243,9 @@ the owner; a second copy here goes stale unnoticed.
    backstory, the ledger, the console's Not done), then give it a row here. Engine work belongs
    in Labrador; what this repository owes it is a report in the ledger.
 5. **NOW changes only when its items finish or the author reorders them.**
+6. **Keep readiness honest.** `OPEN` needs a concrete local next step in its owner. A human
+   acceptance session is `DECISION`, a named dependency is `BLOCKED`, and a broad capability
+   wishlist stays `UNSCOPED` or `DEFERRED`. Implementation does not close a human review gate.
 
 **`id`:** a stable handle, not an order; a retired id is never reused. Gap-audit rows keep the
 audit's own section number (`GAP#4.2`, `GAP#D3`, `GAP#F8`), ledger rows the report number

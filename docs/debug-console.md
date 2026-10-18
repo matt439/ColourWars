@@ -1073,9 +1073,45 @@ as the game. In Release:
   whole keyboard seat is blanked, because the engine has no per-key consume
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
-- **Strings, colours, fonts and absent keys in `tune`**, and inserting keys in
-  `tune.save`.
+- **Colours, strings, fonts and absent keys in `tune`**, and inserting keys in
+  `tune.save`: see [the scoped next slice](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
   this machine has no pad; both are covered on the CPU side.
+
+## Remaining live-tuning work (`DBG#1`)
+
+**OPEN; first slice:** edit existing, known colour tokens in
+`presentation.json` through `tune`, with read, validated apply, diff, reset and
+save. Numbers and booleans already work. Start from actual colour fields and
+the existing named/hex colour reader; arbitrary strings, fonts and insertion of
+absent keys remain later slices.
+
+Extend the client span reader only as needed to replace those tokens. Validate
+the complete candidate through `Presentation` and its existing resource checks
+before applying it; a rejected edit changes neither live content nor the diff.
+Audit each supported colour's consumer and report when it is adopted: live,
+new objects, rebuild or next screen. Numeric path wildcards do not establish
+the adoption scope of a newly supported token type.
+
+Acceptance: valid named/hex colours apply and round-trip through diff/reset/save;
+invalid values leave state intact. Preserve surrounding source bytes, line
+endings and unrelated external edits, existing conflict/force rules and atomic
+replacement behavior. Check captured versus reopened/rebuilt consumers and replay
+edit restrictions. Keep numeric/boolean behavior and Release developer-tool
+exclusion intact. These checks use scratch content and isolated profiles.
+
+The local RapidJSON span reader and candidate-file validation already provide
+the required route. `ENG#12` asks the engine to replace that client workaround;
+it does not block this slice.
+
+## Foreground checks (`CI#1`)
+
+**UNSCOPED.** `scripts/check-debug-console.ps1` remains an opt-in local check:
+its real key events and focus-sensitive scripts need a reliable foreground
+desktop, which the current hosted CI workflow does not establish. First assess
+an attended/dedicated runner model with explicit focus ownership and retained
+failure evidence. Scope CI integration only after that model is demonstrated;
+a hidden launch or synthetic CPU input check does not qualify the foreground
+workflow. Existing CPU acceptance and startup/editor CI checks remain in place.

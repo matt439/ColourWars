@@ -877,9 +877,10 @@ Native window close and teardown stop the owned voice immediately. These are aud
 visual screen cuts remain `GAP#5.1` (the level build was
 [measured](polish-plan.md#level-build-pause-measured-2026-10-17) too short to need a loading card).
 
-**POL#23 remains open.** Putting an accepted wave into the bank does not create
-a gameplay trigger. Complete the required new cues from section 4, assess Tier
-3 detail individually and keep it off or nearly off by default:
+**POL#23 is `DECISION`: an in-game listening pass and optional-cue choices.**
+The required cue migration is implemented. Putting another accepted wave into
+the bank does not establish a need for its gameplay trigger. Assess Tier 3
+detail individually during listening and keep it off or nearly off by default:
 
 - Movement: optional bonk/drop/hit-confirm details.
 - Paint/tool detail: optional blocked/slosh/drip cues.

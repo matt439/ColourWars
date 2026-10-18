@@ -10,10 +10,12 @@ untimed workshop. Existing arenas are unchanged.
 
 The source is [movement_course.json](../game/content/levels/movement_course.json).
 Open it directly in the [level editor](level-editor.md), save an experimental
-copy, then rebuild to test in the game. The reused Turbulence icon and simple
-existing blocks are placeholders. The stage deliberately has no music: its
-`sound` block names the replacement bank only. Existing action cues play;
-footstep and landing audio hooks remain in `POL#23`.
+copy, then rebuild to test in the game. Its reused Turbulence `icon_frame` is
+legacy metadata that no screen draws; Stage Select uses the live arena preview
+([`ED#6` retired](level-editor.md#movement-course-icon-ed6-retired)). The stage
+deliberately has no music: its `sound` block names the replacement bank only.
+Action cues, including footsteps and landings, use the accepted replacement set;
+optional detail and in-game mix listening remain in `POL#23`.
 
 ## Dimensions and route
 

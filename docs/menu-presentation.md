@@ -1158,10 +1158,9 @@ the edits. The values remain JSON strings outside numeric `tune`. Wording
 changes do not alter boolean choices, palette selection, cycling, disabled
 fullscreen resolution, Apply/Back behavior, save identifiers or persistence.
 Fixed palette labels remain in the existing palette data and are still read
-live. Resolution and
-numeric/percentage formatting, default-deadzone notation, stage
-composed navigation/count hints, best-of mode and roster copy, connection/readout text, player-specific Pause titles,
-session continuation text and composed match/results copy remain separate work under GAP#8.4.
+live. Duration/default and numeric settings text, composed setup copy,
+connection/readout text, player-specific Pause titles and session/results copy
+remain in the [remaining text slices](#remaining-text-slices-gap84).
 
 ### Stage Select Random display name
 
@@ -1568,3 +1567,33 @@ session continuation text, composed match/results text and other
 player-visible C++ text remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical
 audit is unchanged.
+
+## Remaining text slices (`GAP#8.4`)
+
+**OPEN.** Preserve the existing wording and move it into presentation data in
+bounded increments. Shared On/Off/Random values and the fixed labels described
+above are already implemented. The next slices are:
+
+1. **Connection and player readouts first:** Join's reconnect suffix/status,
+   player-specific Pause titles, missing/returned-controller text and Pad Sticks'
+   connection/raw/response readouts. Include the existing team-required warning.
+2. **Composed setup:** Arena navigation and Random availability count, best-of
+   mode and player/team roster lines, retaining their current numbers and order.
+3. **Numeric settings:** duration units and Default notation, resolution and
+   percentage values, and inherited/default deadzone notation. Preserve current
+   numeric precision, rounding, choices and saved identifiers.
+4. **Session and results:** continuation actions, round/results headings and
+   proceed prompt, contribution/team descriptions and composed match/result
+   lines. Retain reveal timing and solo/series distinctions.
+
+Each increment adds only the fields and bounded substitutions its callers need;
+there is no general formatting language. Required tokens must occur exactly as
+the caller expects; reject missing, repeated or unknown tokens with a named
+content error. Check actual font glyphs and measured bounds for the composed
+output, including long supported text and the caller's numeric limits.
+
+Keep the existing page capture/adoption behavior: a page retains its captured
+copy where it does today, and reopening adopts edits. Acceptance covers actual
+refreshes and reopening as well as malformed content. Navigation, readiness,
+input ownership, RNG, gameplay values, persistence and results stay unchanged.
+Use the current shipped copy; new wording or localisation is separate work.

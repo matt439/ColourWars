@@ -226,3 +226,23 @@ Final renderer run IDs are Debug `d47fffce9a4342f3ade57904128a1741` and Release
   palette and composition per arena (`POL#16`).
 - The overview and the monitor picture draw the arena small enough that one-cell
   lines and ruler ticks drop pixels under point sampling.
+
+## Ready implementation slices (2026-10-18)
+
+`POL#9` has three implementation slices in the current arenas. Retain checks and
+evidence for each slice. Final human style acceptance remains separate; no slice
+unlocks the phase-2 blockouts by itself.
+
+| Slice | Scope | Acceptance | Size |
+|---|---|---|---|
+| Small-view terrain readability | Address disappearing keylines and ruler ticks in the miniature overview and monitor picture. Choose an art/client-rendering treatment after comparing native-size captures. | Retain useful silhouettes at 720p, 1080p and QHD through overview/monitor transitions, resize and 1P/4P framing; keep gameplay cameras, collision and point-sampled gameplay art correct. | M |
+| Reusable landmarks | Add a small set of non-text Tool Props landmarks/background details to the current arenas under the Muted Day rules. Keep them reusable when layouts change. | Compare clean/heavily painted scenes for every team pair at 1P/4P. Landing edges and routes stay truthful; decoration changes no collision, paint budget or gameplay RNG. Animated details must respect pause, culling and Reduce effects. | M |
+| Modest parallax prototype | Compare distant/middle backdrop layers with the static version in the current arenas. Establish the per-view draw approach before broadening the art. | Independent split-screen views, conservative culling, resize and overview/monitor transitions remain correct; define static preview/editor behaviour. Keep drawing free of simulation/RNG mutation and retain a static Reduce effects presentation. | L |
+
+Start with the small-view defect. Landmarks and the parallax prototype are further
+current-phase choices, not a request to finish all scenery before reviewing it.
+Retain parallax only if the comparison improves the composition and readability;
+the static backdrop remains a valid outcome of the prototype.
+Captioned jokes need the author's wording and do not gate non-text landmarks.
+Close Quarters' own composition and fitting the kit to revised geometry stay
+with `POL#17`; final per-arena production stays with `POL#16`/`POL#21`.

@@ -413,3 +413,83 @@ shrinking at 720p and 1080p. The Team setup matrix's real best-of-three series
 records its two drawn rounds once each and reloads them from disk; it and the
 Resume matrix, whose matches also finish, now save into nested profiles so the
 probe's shared save fixture stays byte-identical.
+
+## Remembered match setup (`GAP#6.1`)
+
+**OPEN.** Add a nested last-match `SaveSection`, using the existing sectioned
+save. Save the resolved choices of a normally started match: player count,
+teams, weapons, stage, layout, duration override and best-of length. Random
+weapons and stages have already resolved at this point; remembering Random
+intent would be separate work.
+
+Seed the setup pages from those preferences on launch. Every device still joins
+explicitly and every player confirms again. Do not persist device claims,
+readiness, the active round, series scores or match progress. Keep the current
+menu path and allow every remembered choice to be changed.
+Returning from a match keeps the current in-memory choices. Developer
+script/bot/replay launches do not overwrite the remembered user setup.
+
+Acceptance: round-trip and relaunch restore the choices; old, missing or malformed
+sections recover without losing display/play preferences or records. Removed
+stages, unsupported weapons and invalid solo/series combinations fall back to
+valid choices. A failed write preserves the prior file and the active setup.
+Driven menu checks cover fresh claims, confirmation, changed choices and restart.
+
+## Action bindings (`GAP#4.2`)
+
+**OPEN; first slice:** introduce client-owned actions and binding evaluators for
+the existing gameplay and menu controls, retaining today's default mappings.
+Evaluate keyboard, mouse and pad snapshots with the same held, press and release
+semantics, trigger thresholds, stick response and disconnected-device behavior.
+Menu arming, neutral gates and direction repeat keep their current ownership.
+
+Acceptance: compare default action output with the existing readers, including
+opposing/aliased keys, thresholds, held entry, reconnect, focus return and
+simultaneous inputs. Real-page checks retain joining, selection, pause and
+confirmation behavior. Synthetic devices establish mapping behavior; physical-pad
+comfort remains `ROAD#2`.
+
+Persistence and the rebinding/capture page follow that working client seam; the
+first slice alone does not close `GAP#4.2`. Use its concrete input requirements
+as the exhibit for `GAP#F2`, checking engine master before filing a report.
+Rebinding artwork follows the gameplay style lock; its implementation does not
+gate the default evaluator. Upstream filing follows the
+[publication decision](review/engine-reports.md#publication-gate-engpublish).
+
+## Per-player menu focus (`GAP#D1`)
+
+**OPEN; Team Select first.** Try the engine's per-slot `FocusGroup` cursors on
+the existing three choices per player. Preserve each seat's row, the current
+Left/Right limits, team requirements, shuffle, readiness, cancellation and choice
+motion. Establish that shared candidate selection and derived focus painting can
+retain those rules before extracting a shared page base.
+
+Acceptance: drive one to four seats, simultaneous choices/confirmation/back,
+shuffle and held inputs, missing devices and return from Weapon Select. Compare
+the existing page's choices, readiness, appearance and RNG consumption. If the
+API cannot keep row ownership or readiness painting, retain the working page
+and draft a concrete local engine exhibit. Evaluate Weapon Select only after this
+fit; its single cycled icon is a different navigation case.
+
+## Other demonstration gaps
+
+`GAP#D2` is **DEFERRED** until an accepted page requires a widget or page
+abstraction beyond the existing `OptionRow`; a list of unused toggle, slider,
+progress or modal types is not an implementation task.
+
+`GAP#D5` is **DEFERRED** to the `POL#17`/`POL#21` blockouts. Add rotated and
+moving structures behind the builder with a useful arena placement for each,
+and collision, support, paint and editor acceptance for that layout. Choose
+their placement during blockout rather than altering the geometry under style review.
+
+## Presentation rate (`GAP#L9`)
+
+**UNSCOPED.** `SIMULATION_HZ` deliberately fixes gameplay at 60 Hz; changing
+`ApplicationOptions::target_fps` changes that step, not just presentation. The
+pinned D3D11 backend presents with sync interval 1 and exposes no client vsync
+switch. A presentation-rate setting must first identify its engine seam and
+supported policy, separately from simulation and any interpolation work.
+
+Inspect the current engine API and master before proposing a client setting or
+report. Define its persistence and visible acceptance on the intended refresh
+rates before implementation; this row does not supply a ready engine change.
