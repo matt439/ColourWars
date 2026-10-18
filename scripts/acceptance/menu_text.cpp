@@ -90,6 +90,18 @@ namespace
         { "options_rollback_failed", L"Could not restore display settings. Try Apply again.",
             &MenuStatusText::options_rollback_failed, true }
     };
+    struct ConnectionText { const char* key; const wchar_t* text; std::wstring MenuConnectionText::* field; };
+    constexpr ConnectionText connection_text[]{
+        { "join_reconnect_suffix", L" - Reconnect", &MenuConnectionText::join_reconnect_suffix },
+        { "join_ready", L"Everyone joined. Player 1 can continue.", &MenuConnectionText::join_ready },
+        { "join_waiting", L"Press A / Enter on each device to join. Reconnect reserved pads.",
+            &MenuConnectionText::join_waiting },
+        { "pause_title", L"Pause Menu", &MenuConnectionText::pause_title },
+        { "pause_player_title", L"Pause Menu P{player}", &MenuConnectionText::pause_player_title },
+        { "controller_lost", L"Controller lost", &MenuConnectionText::controller_lost },
+        { "all_connected", L"All players connected.", &MenuConnectionText::all_connected },
+        { "teams_required", L"Both teams need a player", &MenuConnectionText::teams_required }
+    };
     struct ValueText { const char* key; const wchar_t* text; std::wstring MenuValueText::* field; };
     constexpr ValueText value_text[]{
         { "on", L"On", &MenuValueText::on }, { "off", L"Off", &MenuValueText::off },
@@ -291,6 +303,16 @@ namespace
         {
             require(text.status.*entry.field == entry.text, std::string("Save-status default changed: ") + entry.key);
         }
+        for (const auto& entry : connection_text)
+        {
+            require(text.connection.*entry.field == entry.text,
+                std::string("Connection default changed: ") + entry.key);
+        }
+        for (int player = 1; player <= 4; ++player)
+        {
+            require(text.pause_title_for_player(player) == L"Pause Menu P" + std::to_wstring(player),
+                "Default Pause title changed its roster player number");
+        }
         for (const auto& entry : value_text)
         {
             require(text.values.*entry.field == entry.text, std::string("Fixed setting value default changed: ") + entry.key);
@@ -365,7 +387,7 @@ namespace
     {
         const auto reversed = variants.load([](rapidjson::Document& d)
         {
-            for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage", "records" })
+            for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage", "records", "connection" })
             {
                 auto& object = d["menu_text"][group];
                 rapidjson::Value reordered(rapidjson::kObjectType);
@@ -384,7 +406,7 @@ namespace
         });
         check_defaults(reversed);
         variants.rejects("", [](rapidjson::Document& d) { d.RemoveMember("menu_text"); });
-        for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage", "records" })
+        for (const char* group : { "headings", "prompts", "items", "title", "help", "status", "values", "confirmations", "end", "stage", "records", "connection" })
         {
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"].RemoveMember(group); });
             variants.rejects(group, [group](rapidjson::Document& d) { d["menu_text"][group].SetArray(); });
@@ -408,6 +430,7 @@ namespace
         for (const auto& entry : title_text) { required("title", entry.key); }
         for (const auto& entry : help_text) { required("help", entry.key); }
         for (const auto& entry : status_text) { required("status", entry.key); }
+        for (const auto& entry : connection_text) { required("connection", entry.key); }
         for (const auto& entry : value_text) { required("values", entry.key); }
         for (const auto& entry : confirmation_text) { required("confirmations", entry.key); }
         for (const auto& entry : end_text) { required("end", entry.key); }
@@ -1097,6 +1120,257 @@ namespace
             exact_items(d);
             d["pause_menu"]["layout"]["position"]["x"].SetFloat(right_position);
             d["menu_text"]["items"]["options"].SetString("FitFit");
+        }, &world);
+    }
+
+    void select_connection_font(rapidjson::Document& d, const char* key, const char* font)
+    {
+        const std::string role(key);
+        const char* field = role == "join_reconnect_suffix" ? "item" :
+            role == "pause_title" || role == "pause_player_title" || role == "controller_lost" ? "heading" : "detail";
+        d["menu_style"]["fonts"][field].SetString(font, d.GetAllocator());
+    }
+
+    void compact_connection_copy(rapidjson::Document& d)
+    {
+        for (const auto& entry : connection_text)
+        {
+            d["menu_text"]["connection"][entry.key].SetString("Fit");
+        }
+        d["menu_text"]["connection"]["pause_player_title"].SetString("P{player}");
+        for (const char* role : {"heading", "item", "detail"})
+        {
+            d["menu_style"]["fonts"][role].SetString("menu_text_exact");
+        }
+    }
+
+    void check_connection_text(Variants& variants, World& world)
+    {
+        const auto normalized = variants.load([](rapidjson::Document& d)
+        {
+            for (const auto& entry : connection_text)
+            {
+                d["menu_text"]["connection"][entry.key].SetString(
+                    "  A\xC2\xA0\xE2\x80\x9C" "B" "\xE2\x80\x9D\xE2\x80\x94" "C\xE2\x80\xA6  ");
+            }
+            d["menu_text"]["connection"]["pause_player_title"].SetString(
+                "  A\xC2\xA0\xE2\x80\x9C" "B" "\xE2\x80\x9D\xE2\x80\x94{player}\xE2\x80\xA6  ");
+        });
+        normalized.validate_resources(world.render, world.audio);
+        for (const auto& entry : connection_text)
+        {
+            require(normalized.menu_text().connection.*entry.field ==
+                (std::string(entry.key) == "pause_player_title" ? L"  A \"B\"-{player}...  " : L"  A \"B\"-C...  "),
+                std::string("Connection copy lost normalization or authored outer spaces: ") + entry.key);
+            const std::string field = std::string("connection.") + entry.key;
+            for (const char* invalid : {"   ", " \xC2\xA0 ", "first\nsecond", "first\rsecond", "tab\ttext",
+                "control\x01", "delete\x7F", "caf\xC3\xA9", "\xF0\x9F\x8E\xA8", "\xC3\x28"})
+            {
+                variants.rejects(field, [&](rapidjson::Document& d)
+                    { d["menu_text"]["connection"][entry.key].SetString(invalid, d.GetAllocator()); });
+            }
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                select_connection_font(d, entry.key, "menu_text_limited");
+                d["menu_text"]["connection"][entry.key].SetString(
+                    std::string(entry.key) == "pause_player_title" ? "Glyph~{player}" : "Glyph~", d.GetAllocator());
+            }, &world);
+            variants.rejects(field, [&](rapidjson::Document& d)
+            {
+                const std::string long_copy = std::string(2000, 'W') +
+                    (std::string(entry.key) == "pause_player_title" ? "{player}" : "");
+                d["menu_text"]["connection"][entry.key].SetString(long_copy.c_str(), d.GetAllocator());
+            }, &world);
+        }
+        for (int number = 1; number <= 4; ++number)
+        {
+            require(normalized.menu_text().pause_title_for_player(number) ==
+                L"  A \"B\"-" + std::to_wstring(number) + L"...  ",
+                "Pause player formatter changed normalized literals or did not replace its token");
+        }
+        for (const char* malformed : {"Pause P1", "{Player}", "{player }", "{player}{player}",
+            "{player} {seconds}", "{{player}}", "{player} }", "{ {player}", "{player", "player}"})
+        {
+            variants.rejects("connection.pause_player_title", [&](rapidjson::Document& d)
+                { d["menu_text"]["connection"]["pause_player_title"].SetString(malformed, d.GetAllocator()); });
+        }
+        for (const wchar_t* malformed : {L"Pause P1", L"{player}{player}", L"{player} {other}", L"{{player}}"})
+        {
+            MenuText mutated = normalized.menu_text();
+            mutated.connection.pause_player_title = malformed;
+            bool rejected = false;
+            try { mutated.pause_title_for_player(1); }
+            catch (const std::invalid_argument&) { rejected = true; }
+            require(rejected, "Directly mutated Pause formatter accepted an invalid template");
+        }
+        for (const char* format : {"{player}", "{player} AFTER", "BEFORE {player}", "BEFORE {player} AFTER"})
+        {
+            const auto copy = variants.load([&](rapidjson::Document& d)
+                { d["menu_text"]["connection"]["pause_player_title"].SetString(format, d.GetAllocator()); });
+            copy.validate_resources(world.render, world.audio);
+            for (int number = 1; number <= 4; ++number)
+            {
+                const std::wstring expected = std::string(format) == "{player}" ? std::to_wstring(number) :
+                    std::string(format) == "{player} AFTER" ? std::to_wstring(number) + L" AFTER" :
+                    std::string(format) == "BEFORE {player}" ? L"BEFORE " + std::to_wstring(number) :
+                    L"BEFORE " + std::to_wstring(number) + L" AFTER";
+                require(copy.menu_text().pause_title_for_player(number) == expected,
+                    "Pause token at a supported position changed its literal prefix or suffix");
+            }
+        }
+        for (int number : {(std::numeric_limits<int>::min)(), -1, 0, 5, 99, (std::numeric_limits<int>::max)()})
+        {
+            bool rejected = false;
+            try { normalized.menu_text().pause_title_for_player(number); }
+            catch (const std::invalid_argument&) { rejected = true; }
+            require(rejected, "Pause title formatter accepted a number outside roster players 1-4");
+        }
+        // P4 must be validated after substitution, even if the original
+        // template's letters/braces and the first three digits are drawable.
+        std::vector<Glyph> missing_four;
+        for (char32_t character = U' '; character <= U'~'; ++character)
+        {
+            if (character != U'4')
+            {
+                missing_four.push_back({character, mattmath::RectangleI(0, 0, 8, 16), 0.0f, 0.0f, 0.0f});
+            }
+        }
+        world.render.add_font("menu_connection_no_four",
+            std::make_unique<Font>(TextureHandle{}, std::move(missing_four), 20.0f));
+        variants.rejects("connection.pause_player_title", [](rapidjson::Document& d)
+        {
+            compact_connection_copy(d);
+            select_connection_font(d, "pause_player_title", "menu_connection_no_four");
+        }, &world);
+    }
+
+    void check_connection_bounds(Variants& variants, World& world)
+    {
+        const auto add_font = [&](const std::string& name, int width, int height)
+        {
+            std::vector<Glyph> glyphs;
+            for (char32_t character = U' '; character <= U'~'; ++character)
+            {
+                glyphs.push_back({character, mattmath::RectangleI(0, 0,
+                    character == U'~' ? width : 8, character == U'~' ? height : 16), 0.0f, 0.0f, 0.0f});
+            }
+            world.render.add_font(name, std::make_unique<Font>(TextureHandle{}, std::move(glyphs), 20.0f));
+        };
+        const auto target = [](rapidjson::Document& d, const char* key, const std::string& font)
+        {
+            compact_connection_copy(d);
+            select_connection_font(d, key, font.c_str());
+            d["menu_text"]["connection"][key].SetString(
+                std::string(key) == "pause_player_title" ? "~{player}" : "~", d.GetAllocator());
+        };
+        const auto original = variants.load([](rapidjson::Document&) {});
+        require(original.main_menu().setup_box_size == mattmath::Vector2F(1760.0f, 920.0f) &&
+            original.main_menu().team_box_size == mattmath::Vector2F(1840.0f, 920.0f) &&
+            original.menu().layout.position == mattmath::Vector2F(150.0f, 150.0f) &&
+            original.main_menu().player_count_spacing.y == 100.0f &&
+            original.pause_menu().box_size == mattmath::Vector2F(1050.0f, 900.0f),
+            "Connection boundary fixtures no longer match the shipped setup/team/Pause papers");
+
+        // Known eight-unit ordinary glyphs isolate one long supported field.
+        // Pause text is plain and centered on the full 1920x1080 paper;
+        // Join/Team retain positive shadow extents inside their inset paper.
+        struct Boundary { const char* key; int width; int height; };
+        constexpr Boundary boundaries[]{
+            {"join_ready", 1675, 75}, {"join_waiting", 1675, 75},
+            {"pause_title", 1050, 135}, {"pause_player_title", 1042, 135},
+            {"controller_lost", 1050, 135}, {"all_connected", 1050, 122},
+            {"teams_required", 1715, 65}
+        };
+        for (const auto& entry : boundaries)
+        {
+            const std::string name = std::string("menu_connection_") + entry.key;
+            add_font(name + "_width_edge", entry.width, 20);
+            add_font(name + "_width_over", entry.width + 1, 20);
+            add_font(name + "_height_edge", 8, entry.height);
+            add_font(name + "_height_over", 8, entry.height + 1);
+            const std::string field = std::string("connection.") + entry.key;
+            const auto width_edge = variants.load([&](rapidjson::Document& d)
+                { target(d, entry.key, name + "_width_edge"); });
+            width_edge.validate_resources(world.render, world.audio);
+            const auto height_edge = variants.load([&](rapidjson::Document& d)
+                { target(d, entry.key, name + "_height_edge"); });
+            height_edge.validate_resources(world.render, world.audio);
+            variants.rejects(field, [&](rapidjson::Document& d)
+                { target(d, entry.key, name + "_width_over"); }, &world);
+            variants.rejects(field, [&](rapidjson::Document& d)
+                { target(d, entry.key, name + "_height_over"); }, &world);
+
+            const bool pause_heading = std::string(entry.key) == "pause_title" ||
+                std::string(entry.key) == "pause_player_title" || std::string(entry.key) == "controller_lost";
+            if (pause_heading || std::string(entry.key) == "all_connected")
+            {
+                const auto role = std::find_if(std::begin(connection_text), std::end(connection_text),
+                    [&](const ConnectionText& candidate) { return std::string(candidate.key) == entry.key; });
+                require(role != std::end(connection_text), "Connection boundary role has no independent default");
+                const std::wstring words = std::string(entry.key) == "pause_player_title" ?
+                    width_edge.menu_text().pause_title_for_player(4) : width_edge.menu_text().connection.*role->field;
+                const auto& pause = width_edge.pause_menu();
+                const float y = pause_heading ? pause.heading_y : pause.status_y;
+                UiText text("connection", words, pause_heading ? width_edge.menu().heading_font : width_edge.menu().detail_font,
+                    mattmath::Vector2F(0.0f, y), &world.render, pause.art.ink);
+                text.set_position(mattmath::Vector2F((1920.0f - text.bounds().width) / 2.0f, y));
+                require(text.bounds().x == 435.0f && text.bounds().right() == 1485.0f &&
+                    text.bounds().width == 1050.0f && text.bounds().height == 20.0f,
+                    "Plain centered connection text changed its unscaled inclusive full-paper width");
+            }
+            else
+            {
+                const bool team = std::string(entry.key) == "teams_required";
+                const auto& style = width_edge.menu();
+                const mattmath::Vector2F position(150.0f, team ? 860.0f : 850.0f);
+                UiTextDropShadow text("connection", L"~", style.detail_font, position, &world.render,
+                    Colour::black, Colour(0.0f, 0.0f, 0.0f, 0.0f), style.detail_shadow_offset);
+                require(text.bounds().x == 150.0f && text.bounds().right() == (team ? 1866.0f : 1826.0f),
+                    "Join/Team connection text lost its retained transparent-shadow width at the inclusive inset edge");
+                UiTextDropShadow tall("connection-tall", L"~", height_edge.menu().detail_font, position, &world.render,
+                    Colour::black, Colour(0.0f, 0.0f, 0.0f, 0.0f), height_edge.menu().detail_shadow_offset);
+                require(tall.bounds().bottom() == 926.0f,
+                    "Join/Team actual glyph height and transparent shadow missed the inset paper bottom");
+            }
+        }
+
+        // Reconnect is appended only to reserved pads. The keyboard/mouse
+        // label is checked separately by the validator and never disconnected.
+        // "P4 - Pad 4" is ten ordinary eight-unit glyphs. The 1594-unit suffix
+        // plus a two-unit retained shadow exactly fills x=150 through x=1826.
+        add_font("menu_connection_suffix_edge", 1594, 98);
+        add_font("menu_connection_suffix_width_over", 1595, 98);
+        add_font("menu_connection_suffix_height_over", 1594, 99);
+        const auto suffix = [&](rapidjson::Document& d, const char* font)
+        {
+            target(d, "join_reconnect_suffix", font);
+            d["menu_style"]["shadow"]["item_offset"]["x"].SetFloat(2.0f);
+            d["menu_style"]["shadow"]["item_offset"]["y"].SetFloat(2.0f);
+        };
+        const auto suffix_edge = variants.load([&](rapidjson::Document& d)
+            { suffix(d, "menu_connection_suffix_edge"); });
+        suffix_edge.validate_resources(world.render, world.audio);
+        UiTextDropShadow reserved("reserved-pad", L"P4 - Pad 4~", suffix_edge.menu().item_font,
+            mattmath::Vector2F(150.0f, 650.0f), &world.render, Colour::black,
+            Colour(0.0f, 0.0f, 0.0f, 0.0f), suffix_edge.menu().item_shadow_offset);
+        require(reserved.bounds() == mattmath::RectangleF(150.0f, 650.0f, 1676.0f, 100.0f),
+            "Reserved-pad suffix no longer touches the exact inclusive paper edge and next row");
+        for (const char* overflow : {"menu_connection_suffix_width_over", "menu_connection_suffix_height_over"})
+        {
+            variants.rejects("connection.join_reconnect_suffix", [&](rapidjson::Document& d)
+                { suffix(d, overflow); }, &world);
+        }
+        const auto team_order = [](rapidjson::Document& d)
+        {
+            compact_connection_copy(d);
+            d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(172.5f);
+        };
+        const auto touches_heading = variants.load(team_order);
+        touches_heading.validate_resources(world.render, world.audio);
+        variants.rejects("connection.teams_required", [&](rapidjson::Document& d)
+        {
+            team_order(d);
+            d["main_menu"]["team_select"]["warning_position"]["y"].SetFloat(172.25f);
         }, &world);
     }
 
@@ -3890,6 +4164,8 @@ int main(int argc, char** argv)
         check_options_palette_timing(variants, world);
         check_setup_text(variants, world);
         check_pause_text(variants, world);
+        check_connection_text(variants, world);
+        check_connection_bounds(variants, world);
         check_confirmation_text(variants, world);
         check_confirmation_bounds(variants, world);
         check_display_trial_text(variants, world);
@@ -3920,7 +4196,8 @@ int main(int argc, char** argv)
         check_prompt_bar(world, defaults);
         std::cout << "PASS shared menu text: exact headings/items/complete legends, keyed and enum guards, normalization, "
             "font/paper/row/status/confirmation/End-heading bounds, unscaled centered confirmation/End-heading copy, width-only save-status fitting, "
-            "authored OptionRow value fitting, shadow-inclusive Random arena fitting, unscaled arena briefing/status/navigation, "
+            "authored OptionRow value fitting, connection schema/player tokens/fresh glyphs and exact Join/Pause/Team bounds, "
+            "shadow-inclusive Random arena fitting, unscaled arena briefing/status/navigation, "
             "width-only arena hints and actual PromptBar measurement compatibility.\n";
         return 0;
     }

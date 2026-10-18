@@ -34,7 +34,7 @@ This is a selection guide, not another priority order; each owner defines a boun
 |---|---|---|
 | `DBG#1` | Audit further colour consumers; seven existing colour paths now tune/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 | `GAP#4.2` | Default action bindings and evaluators preserving today's controls | [Input](docs/feature-roadmap.md#action-bindings-gap42) |
-| `GAP#8.4` | Extract existing connection/readout and player-specific Pause copy | [Text](docs/menu-presentation.md#remaining-text-slices-gap84) |
+| `GAP#8.4` | Extract Pad Sticks readouts, then composed setup/settings/results copy | [Text](docs/menu-presentation.md#remaining-text-slices-gap84) |
 | `GAP#D1` | Use per-slot FocusGroup cursors on Team Select without changing its behaviour | [Menu client](docs/feature-roadmap.md#per-player-menu-focus-gapd1) |
 
 **Waiting on the author**, whatever the order above. Each is a `DECISION` row below:
@@ -138,7 +138,7 @@ owns the remaining `GAP#8.4` implementation slices.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `GAP#8.4` | OPEN | LOW | L | Move remaining connection/Pause, setup, numeric-setting and result text into presentation data in bounded slices, preserving existing wording. [Scope](docs/menu-presentation.md#remaining-text-slices-gap84). |
+| `GAP#8.4` | OPEN | LOW | L | Move Pad Sticks readouts, generated player/device labels and composed setup, numeric-setting and result text into presentation data, preserving existing wording. [Scope](docs/menu-presentation.md#remaining-text-slices-gap84). |
 
 ## Engine demonstration
 

@@ -329,7 +329,7 @@ void MainMenuTeamSelect::init()
 	// Keep the warning below the four player cards and inside the paper.
 	this->both_teams_needed_ = std::make_unique<UiTextDropShadow>(
 		"both_teams_needed",
-		L"Both teams need a player",
+		this->text().connection.teams_required,
 		this->menu_style().detail_font,
 		look.team_warning_position,
 		this->render_resources(),

@@ -6,6 +6,8 @@
 #include "engine/assets/json.h"
 #include "engine/render/text_encoding.h"
 #include "game/drawable_text.h"
+#include "game/input_slots.h"
+#include "game/objects/player_badge.h"
 #include "game/resource_validation.h"
 
 #include <cmath>
@@ -158,6 +160,24 @@ namespace
 		for (size_t index = 0; index < text.items.size(); ++index)
 		{
 			text.items[index] = read_menu_line(items, menu_item_keys[index]);
+		}
+		const JsonValue connection = json.object("connection");
+		text.connection.join_reconnect_suffix = read_menu_line(connection, "join_reconnect_suffix");
+		text.connection.join_ready = read_menu_line(connection, "join_ready");
+		text.connection.join_waiting = read_menu_line(connection, "join_waiting");
+		text.connection.pause_title = read_menu_line(connection, "pause_title");
+		text.connection.pause_player_title = read_menu_line(connection, "pause_player_title");
+		text.connection.controller_lost = read_menu_line(connection, "controller_lost");
+		text.connection.all_connected = read_menu_line(connection, "all_connected");
+		text.connection.teams_required = read_menu_line(connection, "teams_required");
+		const std::wstring player_token = L"{player}";
+		const size_t player_at = text.connection.pause_player_title.find(player_token);
+		std::wstring player_literals = text.connection.pause_player_title;
+		if (player_at != std::wstring::npos) { player_literals.erase(player_at, player_token.size()); }
+		if (player_at == std::wstring::npos || player_literals.find_first_of(L"{}") != std::wstring::npos)
+		{
+			throw std::runtime_error(connection.where() +
+				": pause_player_title must contain exactly one {player} token and no other braces.");
 		}
 		return text;
 	}
@@ -1673,6 +1693,27 @@ std::wstring MenuText::display_countdown(int seconds) const
 	return result;
 }
 
+std::wstring MenuText::pause_title_for_player(int number) const
+{
+	if (number < 1 || number > 4)
+	{
+		throw std::invalid_argument("Pause title requires a player number from 1 to 4.");
+	}
+	std::wstring result = this->connection.pause_player_title;
+	const std::wstring token = L"{player}";
+	const size_t at = result.find(token);
+	if (at == std::wstring::npos)
+	{
+		throw std::invalid_argument("pause_player_title requires exactly one {player} token.");
+	}
+	result.replace(at, token.size(), std::to_wstring(number));
+	if (result.find_first_of(L"{}") != std::wstring::npos)
+	{
+		throw std::invalid_argument("pause_player_title requires exactly one {player} token and no other braces.");
+	}
+	return result;
+}
+
 const WeaponChoicePresentation& WeaponSelectArtworkPresentation::choice(WeaponType type) const
 {
 	const size_t index = static_cast<size_t>(type);
@@ -2882,13 +2923,14 @@ void Presentation::validate_resources(const RenderResources& render,
 	const RectangleF team_heading = check_team_text("menu_text.headings.teams",
 		this->menu_text_.heading(MenuHeading::teams), this->menu_.heading_font,
 		this->menu_.layout.position, this->menu_.heading_shadow_offset);
-	const RectangleF team_warning = check_team_text("main_menu.team_select.warning_position",
-		L"Both teams need a player", this->menu_.detail_font,
+	const RectangleF team_warning = check_team_text(
+		"menu_text.connection.teams_required at main_menu.team_select.warning_position",
+		this->menu_text_.connection.teams_required, this->menu_.detail_font,
 		main.team_warning_position, this->menu_.detail_shadow_offset);
 	if (team_warning.y < team_heading.bottom())
 	{
 		throw std::runtime_error(this->source_path_ +
-			": main_menu.team_select.warning_position must follow the Team Select heading.");
+			": menu_text.connection.teams_required at main_menu.team_select.warning_position must follow the Team Select heading.");
 	}
 	const RectangleF weapon_paper((Vector2F(1920.0f, this->menu_.footer_y) - main.weapon_box_size) / 2.0f,
 		main.weapon_box_size);
@@ -2982,6 +3024,91 @@ void Presentation::validate_resources(const RenderResources& render,
 		throw std::runtime_error(this->source_path_ + ": " + palette_timing_key +
 			" must fit unscaled beside the Options heading and above the first action's focus padding.");
 	}
+	// Check these additional roles after the established pages so a shared font
+	// or geometry error retains its earlier diagnostic wherever possible.
+	const MenuConnectionText& connection = this->menu_text_.connection;
+	const std::string reconnect_key = "menu_text.connection.join_reconnect_suffix";
+	const RectangleF join_heading = check_setup_paper("menu_text.headings.join_players",
+		this->menu_text_.heading(MenuHeading::join_players), this->menu_.heading_font,
+		this->menu_.layout.position, this->menu_.heading_shadow_offset, false, 0.0f);
+	float join_previous_bottom = join_heading.bottom();
+	for (int player = 0; player < 4; ++player)
+	{
+		const Vector2F position = this->menu_.layout.position +
+			Vector2F(0.0f, main.player_count_spacing.y * static_cast<float>(player + 2));
+		float row_bottom = join_previous_bottom;
+		for (int slot = -1; slot < input_slots::count; ++slot)
+		{
+			const std::wstring label = PlayerBadge::label(player) + L" - " + input_slots::device_name(slot);
+			const auto check_join_row = [&](const std::wstring& words)
+			{
+				std::ignore = fixed_menu_size(reconnect_key, words, this->menu_.item_font);
+				RectangleF bounds = check_setup_paper(reconnect_key, words, this->menu_.item_font,
+					position, this->menu_.item_shadow_offset, false, 0.0f);
+				// Match Join's retained acknowledgement strip beside the original
+				// text bounds, without adding focus-card padding to these rows.
+				const RectangleF accent(bounds.x - this->menu_.focus_padding.x, bounds.y,
+					std::max(0.0f, this->menu_.focus_padding.x), bounds.height);
+				bounds = RectangleF::union_of(bounds, accent);
+				if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) ||
+					!std::isfinite(bounds.width) || !std::isfinite(bounds.height) || !setup_inside.contains(bounds))
+				{
+					throw std::runtime_error(this->source_path_ + ": " + reconnect_key +
+						" must fit every composed Join player/device row inside the setup paper including its retained shadow and acknowledgement bounds.");
+				}
+				if (bounds.y < join_previous_bottom)
+				{
+					throw std::runtime_error(this->source_path_ + ": " + reconnect_key +
+						" requires Join player rows to follow the heading and each other without overlap.");
+				}
+				row_bottom = std::max(row_bottom, bounds.bottom());
+			};
+			check_join_row(label);
+			// The shared keyboard/mouse input is always connected. Only a
+			// reserved pad can actually display the reconnect suffix.
+			if (input_slots::is_pad(slot)) { check_join_row(label + connection.join_reconnect_suffix); }
+		}
+		join_previous_bottom = row_bottom;
+	}
+	const auto check_join_status = [&](const char* role, const std::wstring& words)
+	{
+		const std::string key = std::string("menu_text.connection.") + role;
+		std::ignore = fixed_menu_size(key, words, this->menu_.detail_font);
+		const RectangleF bounds = check_setup_paper(key, words, this->menu_.detail_font,
+			this->menu_.layout.position + Vector2F(0.0f, main.player_count_spacing.y * 7.0f),
+			this->menu_.detail_shadow_offset, false, 0.0f);
+		if (bounds.y < join_previous_bottom)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must follow all four Join player rows without overlap.");
+		}
+	};
+	check_join_status("join_ready", connection.join_ready);
+	check_join_status("join_waiting", connection.join_waiting);
+	const auto check_pause_connection = [&](const char* role, const std::wstring& words, bool heading)
+	{
+		const std::string key = std::string("menu_text.connection.") + role;
+		const Vector2F size = fixed_menu_size(key, words,
+			heading ? this->menu_.heading_font : this->menu_.detail_font);
+		// Pause uses plain UiText, centered on the full-design paper. It has
+		// neither Main's footer centering nor retained text-shadow bounds.
+		const RectangleF bounds((1920.0f - size.x) / 2.0f,
+			heading ? pause.heading_y : pause.status_y, size.x, size.y);
+		const float bottom = heading ? pause.status_y : pause.layout.position.y - pause.art.focus_padding.y;
+		if (!std::isfinite(bounds.x) || !std::isfinite(bounds.y) || !std::isfinite(bottom) ||
+			!confirmation_paper.contains(bounds) || bounds.bottom() > bottom)
+		{
+			throw std::runtime_error(this->source_path_ + ": " + key +
+				" must fit unscaled inside the Pause paper in heading, status, first-action order including the action's focus padding.");
+		}
+	};
+	check_pause_connection("pause_title", connection.pause_title, true);
+	for (int number = 1; number <= 4; ++number)
+	{
+		check_pause_connection("pause_player_title", this->menu_text_.pause_title_for_player(number), true);
+	}
+	check_pause_connection("controller_lost", connection.controller_lost, true);
+	check_pause_connection("all_connected", connection.all_connected, false);
 }
 
 const MenuStyle& Presentation::menu() const

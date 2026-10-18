@@ -305,7 +305,7 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 		std::wstring label = this->level_settings()->player_label(player);
 		if (!connected && players[player].num >= 0)
 		{
-			label += L" - Reconnect";
+			label += this->text().connection.join_reconnect_suffix;
 		}
 		this->players_[player]->set_text(label);
 		this->players_[player]->set_colour(connected ?
@@ -317,8 +317,8 @@ void MainMenuJoin::refresh_players(const std::vector<ProcessedMenuInput>& inputs
 		}
 		previous_bottom = row.bottom();
 	}
-	this->status_->set_text(ready ? L"Everyone joined. Player 1 can continue." :
-		L"Press A / Enter on each device to join. Reconnect reserved pads.");
+	this->status_->set_text(ready ? this->text().connection.join_ready :
+		this->text().connection.join_waiting);
 	if (this->check_paper_bounds(*this->status_, "status").y < previous_bottom)
 	{
 		throw std::runtime_error("main_menu.player_count_spacing: Join status must follow the player rows without overlap.");

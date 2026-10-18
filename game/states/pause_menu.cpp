@@ -76,8 +76,8 @@ std::wstring PauseMenuPage::player_number_text() const
 {
 	const int player = this->level_settings()->player_index_for_slot(
 		this->pausing_player_);
-	return player >= 0 ? L"Pause Menu P" + std::to_wstring(player + 1) :
-		L"Pause Menu";
+	return player >= 0 ? this->text().pause_title_for_player(player + 1) :
+		this->text().connection.pause_title;
 }
 
 int PauseMenuPage::pausing_player() const
@@ -164,9 +164,9 @@ void PauseMenuInitial::refresh_connections()
 	const bool was_waiting = this->waiting_for_players_;
 	this->waiting_for_players_ = !missing.empty();
 	this->connection_status_->set_text(this->waiting_for_players_ ? missing :
-		L"All players connected.");
+		this->text().connection.all_connected);
 	this->player_num_->set_text(this->waiting_for_players_ ?
-		L"Controller lost" : this->player_number_text());
+		this->text().connection.controller_lost : this->player_number_text());
 	this->connection_status_->set_position(Vector2F(
 		this->calculate_center_position(this->connection_status_->bounds().width,
 			DESIGN_RESOLUTION.x), this->look().status_y));

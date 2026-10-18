@@ -1560,13 +1560,74 @@ Controls/Pad Sticks row labels and help, the solo-practice hint, fixed
 Title/Home copy, fixed settings save-status messages, shared On/Off/Random
 setting values, Stage Select's shared Random display name, fixed selection
 statuses, fixed briefing copy, fixed mode labels and fixed navigation/hints, fixed Pause confirmation questions and End
-completion headings.
+completion headings, Join/Pause connection messages and player-specific Pause titles,
+and the Team Select warning.
 Other setting values,
-composed stage navigation/count hints, best-of mode and roster copy, connection/readout text, player-specific Pause titles,
+composed stage navigation/count hints, best-of mode and roster copy, Pad Sticks readouts and generated player/device labels,
 session continuation text, composed match/results text and other
 player-visible C++ text remain open under that item. Font
 regeneration, wrapping and locale selection remain separate work. The historical
 audit is unchanged.
+
+## Connection messages and player-specific Pause titles
+
+Eight required `menu_text.connection` fields supply the existing copy:
+
+| Key | Shipped text |
+|---|---|
+| `join_reconnect_suffix` | ` - Reconnect` (including its leading space) |
+| `join_ready` | `Everyone joined. Player 1 can continue.` |
+| `join_waiting` | `Press A / Enter on each device to join. Reconnect reserved pads.` |
+| `pause_title` | `Pause Menu` |
+| `pause_player_title` | `Pause Menu P{player}` |
+| `controller_lost` | `Controller lost` |
+| `all_connected` | `All players connected.` |
+| `teams_required` | `Both teams need a player` |
+
+These use the shared normalized, nonblank, single-line rules. Whitespace in the
+reconnect suffix is retained. The player-title template requires exactly one
+`{player}` and no other braces. Its formatter accepts only visible player
+numbers 1 through 4. Pause resolves the participant's roster index before
+formatting; an input slot does not determine the displayed player number.
+
+Join uses its captured item font and retained text/shadow bounds for generated
+player/device labels plus the reconnect suffix, and its detail font for both
+statuses. Startup checks all player numbers, ordinary device/waiting labels and
+real reserved-pad reconnect combinations against the setup-paper inset and
+heading/row/status order, including the acknowledgement strip. Keyboard/mouse
+does not disconnect under the existing input policy. Pause headings use the
+plain heading font, centered on the full design area; its connected status uses
+the plain detail font. Fallback, all four player titles and controller-loss
+headings must fit the Pause paper in order above status and the first action.
+Team's warning uses its existing detail-font/shadow and warning-position guard.
+Actual glyphs and finite positive measured bounds are required for each role.
+
+Pages retain captured copy and resolved fonts through refreshes; reopening
+adopts edits. Reconnect acknowledgement, readiness, input ownership, centering,
+navigation and RNG are unchanged. Generated player/device names, missing-player
+lists and Pad Sticks readouts remain C++ copy for later slices. This adds only
+the bounded player-number substitution, with no general formatting language.
+
+Validation (2026-10-18): Debug and Release builds and all 37 consumer CPU cases
+per preset pass. CPU coverage includes exact defaults, normalized whitespace,
+required fields/types, malformed player tokens and numbers, missing glyphs and
+inclusive full-text/shadow layout edges for every new role. The old Count
+bottom-edge positive now checks Join's later status edge while retaining the
+original Count overflow rejection; unrelated Weapon/Stage heading fixtures keep
+their moved-origin Join legend short so the intended heading owns the failure.
+
+The focused `ConnectionTextOnly` native scope passes on both presets: 89
+independent literal-text/bounds comparisons and 136 zero-time page updates at
+720p/1080p, with exactly eight compact text crops per preset. It exercises sparse
+Join claims, neutral return without autojoin, fallback and all four Pause roster
+numbers, interrupted Restart/controller loss, reconnect fresh-press Resume
+gates, Team warning recovery, custom copy/fonts retained through real refreshes
+and adopted/reversed on reopening, and frozen drawing/RNG. Debug/Release crops
+and CSV are byte-identical; the contact sheet was inspected. Both isolated
+published-bank/System-only-PATH startup checks pass with per-monitor v2 DPI
+awareness. Failed fixture/compile epochs are retained beside the final receipts
+under `out/validation/connection-text/`. This establishes no physical-pad,
+listening, human readability/style or performance acceptance.
 
 ## Remaining text slices (`GAP#8.4`)
 
@@ -1574,9 +1635,9 @@ audit is unchanged.
 bounded increments. Shared On/Off/Random values and the fixed labels described
 above are already implemented. The next slices are:
 
-1. **Connection and player readouts first:** Join's reconnect suffix/status,
-   player-specific Pause titles, missing/returned-controller text and Pad Sticks'
-   connection/raw/response readouts. Include the existing team-required warning.
+1. **Remaining connection and player readouts:** Pad Sticks' connection/raw/response
+   readouts and generated player/device labels. Join/Pause fixed connection copy,
+   player-specific Pause titles and the team-required warning are implemented.
 2. **Composed setup:** Arena navigation and Random availability count, best-of
    mode and player/team roster lines, retaining their current numbers and order.
 3. **Numeric settings:** duration units and Default notation, resolution and

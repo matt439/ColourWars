@@ -38,6 +38,7 @@ param(
     [switch] $StickSettingsOnly,
     [switch] $TeamSetupOnly,
     [switch] $RememberedSetupOnly,
+    [switch] $ConnectionTextOnly,
     [string] $OutputDirectory
 )
 
@@ -46,7 +47,7 @@ Set-StrictMode -Version Latest
 if ($TuneColoursOnly -and $Preset -ne 'x64-debug') {
     throw 'TuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
 }
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent) -gt 1) {
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent + [int]$RememberedSetupOnly.IsPresent + [int]$ConnectionTextOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -139,7 +140,7 @@ function Write-ContactSheet {
                 $_.Name -like 'pause-menu-*-detail.ppm' -or $_.Name -like 'results-menu-*-detail.ppm' -or
                 $_.Name -like 'main-menu-*-detail.ppm' -or $_.Name -like 'settings-menu-*-detail.ppm' -or
                 $_.Name -like 'controls-menu-*-detail.ppm' -or $_.Name -like 'stick-settings-*-detail.ppm' -or
-                $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
+                $_.Name -like 'connection-text-*-detail.ppm' -or $_.Name -like 'remembered-setup-*-detail.ppm' -or $_.Name -like 'team-setup-*-detail.ppm' -or $_.Name -like 'weapon-catalog-*-detail.ppm' -or
                 $_.Name -like 'menu-text-*-detail.ppm' -or
                 $_.Name -like 'menu-motion-*-detail.ppm' -or
                 $_.Name -like 'setup-motion-*-detail.ppm' -or
@@ -368,7 +369,20 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($RememberedSetupOnly) {
+if ($ConnectionTextOnly) {
+    $result.scope = 'connection-text-only'
+    $result.Remove('stage')
+    $result.player_counts = @(2, 3, 4)
+    $result.palettes = @('runtime-save-default')
+    $result.weapons = @()
+    $result.resolutions = @('1280x720', '1920x1080')
+    $result.actions = @('literal-connection-copy', 'sparse-claims', 'neutral-no-autojoin', 'pause-player-numbering', 'restart-loss-gate', 'fresh-reconnect-resume', 'team-warning', 'captured-text-font-refresh', 'reopen-reversal', 'frozen-draw-rng')
+    $result.input_slots = @(3, 4, 0, 2)
+    $result.inputs = 'Actual Join/Pause/Team pages and local MenuInput snapshots; the focused GamepadReader seam supplies deterministic sparse connections/buttons. No foreground/global input or physical-device claim.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Bounded connection-copy scope at720/1080: independently supplied literal text, unscaled full text/shadow bounds and native rasters over a standalone paper background; fallback Pause title and all four visible player numbers use reordered device slots. Actual Join distinguishes unclaimed, lost, returned-neutral and explicitly claimed states. Actual Restart confirmation falls back on a missing participant, Resume/Restart labels disable, missing-player Back cannot resume, and a held/released reconnect action needs a fresh press. Team warning shows only when the last confirmation would leave one team empty and clears after a provisional valid edit. All eight customized connection strings and three replacement font roles remain captured across presentation assignment and real refreshes, adopt on reopen and reverse only on reopen. Choices/claims remain unchanged except the one accepted Join action; frozen drawing preserves pixels/RNG. At most300 zero-dt page updates, concise CSV and exactly eight compact crops total per preset; no broad painter matrix, duplicate fullscreen captures, human readability, listening or performance qualification.'
+}
+elseif ($RememberedSetupOnly) {
     $result.scope = 'remembered-setup-only'
     $result.Remove('stage')
     $result.stages = @('king_of_the_hill', 'turbulence', 'close_quarters', 'movement_course')
@@ -850,7 +864,7 @@ try {
         '/DDIRECTX_TOOLKIT_IMPORT', '/DUSING_XAUDIO2_REDIST', '/DUSING_XINPUT',
         '/DUNICODE', '/D_UNICODE', '/external:W0')
     if ($debug) { $arguments += '/MDd' } else { $arguments += @('/MD', '/DNDEBUG') }
-    if ($RememberedSetupOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
+    if ($ConnectionTextOnly -or $RememberedSetupOnly -or $TeamSetupOnly -or $MenuTextOnly -or $SetupMotionOnly -or $JoinStageMotionOnly -or $JoinPaperOnly -or $TeamPaperOnly -or $WeaponPaperOnly -or $StagePaperOnly -or $HomeReturnFocusOnly -or $HomeExitOnly -or $OptionsDefaultsOnly -or $DisplayTrialOnly -or $PausedOptionsOnly) { $arguments += '/DCOLOURWARS_PAINTER_SCRIPTED_PADS' }
     foreach ($include in @($repo, (Join-Path $repo 'external/labrador'), (Join-Path $build 'generated'))) {
         $arguments += '/I' + (Quote-Path $include)
     }
@@ -919,6 +933,7 @@ try {
     elseif ($StickSettingsOnly) { $probeArguments += 'stick-settings' }
     elseif ($TeamSetupOnly) { $probeArguments += 'team-setup' }
     elseif ($RememberedSetupOnly) { $probeArguments += 'remembered-setup' }
+    elseif ($ConnectionTextOnly) { $probeArguments += 'connection-text' }
     $process = Start-Process -FilePath $executable -WindowStyle Hidden -PassThru `
         -WorkingDirectory $working -ArgumentList $probeArguments `
         -RedirectStandardOutput (Join-Path $run 'run.log') `
@@ -1036,7 +1051,10 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($RememberedSetupOnly) {
+    if ($ConnectionTextOnly) {
+        $result.diagnostic = 'Connection text passed bounded720/1080 literal/bounds rasters, sparse Join states and explicit claims, fallback/all-four Pause numbering, interrupted Restart and reconnect fresh-press gates, Team warning, captured custom copy/fonts through refresh/assignment/reopen/reversal and frozen drawing/RNG. Eight compact crops total and concise CSV retained; no broad matrix, foreground/global input, physical-pad, listening, human readability or performance claim.'
+    }
+    elseif ($RememberedSetupOnly) {
         $result.diagnostic = 'Remembered setup passed actual normal-menu save timing, changed/cancelled choices, independent fresh-page rasters, sparse explicit claims, Pause Restart, two drawn series rounds and a separate hidden process reloading choices while requiring fresh claims/confirmation. Debug also passed actual developer-script/sparse-bot record/replay launches and normal-menu bot exclusion; Release excluded those developer branches. Seven compact crops and CSV/replay/transcript evidence remain in the private run. No foreground/global input or physical-pad/listening/human readability/performance claim.'
     }
     elseif ($TuneColoursOnly) {

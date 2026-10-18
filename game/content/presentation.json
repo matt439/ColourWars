@@ -158,6 +158,16 @@
       "best_coverage": "BEST COVER",
       "played": "PLAYED"
     },
+    "connection": {
+      "join_reconnect_suffix": " - Reconnect",
+      "join_ready": "Everyone joined. Player 1 can continue.",
+      "join_waiting": "Press A / Enter on each device to join. Reconnect reserved pads.",
+      "pause_title": "Pause Menu",
+      "pause_player_title": "Pause Menu P{player}",
+      "controller_lost": "Controller lost",
+      "all_connected": "All players connected.",
+      "teams_required": "Both teams need a player"
+    },
     "headings": {
       "home": "Make your mark.",
       "options": "Options",

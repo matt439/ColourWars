@@ -370,11 +370,22 @@ namespace
         check_edge("menu_text", "solo_practice_hint", [](rapidjson::Document& d)
             { d["menu_style"]["layout"]["position"]["y"].SetFloat(204.5f); },
             [](rapidjson::Document& d) { d["menu_style"]["layout"]["position"]["y"].SetFloat(204.75f); });
-        check_edge("menu_text.items", "back", [](rapidjson::Document& d)
+        // Join shares Count's spacing and adds a status at row seven. Its
+        // complete 20-high text plus one-unit shadow reaches the inset bottom
+        // at 65 + 7*120 + 21 = 926. A Count Back card at that bottom would
+        // leave no space for this later status, so retain its old overflow
+        // rejection separately instead of calling that layout a valid page.
+        check_edge("menu_text.connection", "join_ready", [](rapidjson::Document& d)
         {
-            d["menu_style"]["layout"]["position"]["y"].SetFloat(175.5f);
+            d["menu_style"]["layout"]["position"]["y"].SetFloat(65.0f);
             d["main_menu"]["player_count_spacing"]["y"].SetFloat(120.0f);
         }, [](rapidjson::Document& d) { d["main_menu"]["player_count_spacing"]["y"].SetFloat(120.25f); });
+        variants.rejects("menu_text.items", "back", [&](rapidjson::Document& d)
+        {
+            exact(d);
+            d["menu_style"]["layout"]["position"]["y"].SetFloat(175.5f);
+            d["main_menu"]["player_count_spacing"]["y"].SetFloat(120.25f);
+        }, &world);
         for (const char* spacing : { "mode_select_spacing", "player_count_spacing" })
         {
             const char* field = std::string(spacing) == "mode_select_spacing" ? "single_match" : "one_player_practice";
@@ -610,6 +621,9 @@ namespace
             exact(d);
             d["main_menu"]["weapon_box_size"]["x"].SetFloat(1200.0f);
             d["menu_style"]["layout"]["position"]["x"].SetFloat(500.0f);
+            // Moving the shared origin also moves Join's unfitted legend.
+            // Keep it short so Weapon's heading owns this paper-edge case.
+            d["menu_text"]["connection"]["join_waiting"].SetString("Fit");
             d["menu_style"]["shadow"]["heading_offset"]["x"].SetFloat(6.0f);
             d["menu_text"]["headings"]["weapons"].SetString(std::string(130, 'F').c_str(), d.GetAllocator());
         };
@@ -672,6 +686,9 @@ namespace
             exact(d);
             d["main_menu"]["stage_box_size"]["x"].SetFloat(1200.0f);
             d["menu_style"]["layout"]["position"]["x"].SetFloat(500.0f);
+            // The shared origin must not make Join's separate legend the
+            // failing role in this Stage heading boundary fixture.
+            d["menu_text"]["connection"]["join_waiting"].SetString("Fit");
             d["menu_style"]["shadow"]["heading_offset"]["x"].SetFloat(6.0f);
             d["menu_text"]["headings"]["arena"].SetString(std::string(130, 'F').c_str(), d.GetAllocator());
         };
