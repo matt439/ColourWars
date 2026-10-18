@@ -16,7 +16,7 @@ With Reduce effects On:
   extra muzzle burst is omitted. Paint recovery keeps its team-colour bead
   without the two white rays; the dry cross and aim/readiness shapes remain.
 - Quiet breathing, blinking, weight shifts and acceleration lean are suppressed.
-  Action poses, hands, team masks and teammate head accents remain.
+  Action poses, hands, sleeves and team masks remain.
 - Idle sprayer beads/drops and detached mister release haze are hidden. Active
   reduced updates retire old drips and reset quiet posing; restoring detail
   waits for fresh settling rather than replaying an interrupted bead.

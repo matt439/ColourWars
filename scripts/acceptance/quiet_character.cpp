@@ -144,7 +144,7 @@ namespace
                 &world.presentation.respawn_redraw(), &world.render, &world.audio, &this->preferences,
                 0, PlayerTeam::a, type, std::move(weapon), WeaponType::none, Colour::white,
                 Viewport{}, body.position(), Vector2F::ZERO, 0.0f, Vector2F::ZERO,
-                SpriteFlip::none, 0.0f, 0, figure, 0));
+                SpriteFlip::none, 0.0f, 0, figure));
             const RectangleF floor(-10000.0f, 0.0f, 20000.0f, 100.0f);
             scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4", floor,
                 std::make_unique<RectangleF>(floor), &world.render, CollisionObjectType::structure));

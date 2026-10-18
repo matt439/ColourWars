@@ -5,7 +5,8 @@ The accepted Paint.exe art rules are in the
 The author's [accepted round-2 study](references/style-board/index.html)
 ([original artifact](https://claude.ai/artifact/9J5kQgRMvVtXPe6r6cJ7vP))
 is the reference for Zoom 400% values, Tool Props terrain, airbrush shadows,
-black paint keylines and figure E with teammate head accents.
+black paint keylines and figure E with teammate head accents; the figure has
+since been rebuilt from parts with no teammate mark ([painter](painter/README.md)).
 The complete export, including all five rounds of JSON and 112 local images,
 is retained unchanged in `references/style-board/`. Serve that directory over
 HTTP to use the board's JSON-backed tabs; direct image files remain viewable
@@ -20,7 +21,7 @@ the accepted drawing language; composition review remains in the polish plan.
 
 ## Painter artwork
 
-The [E painter source](painter/README.md) begins the accepted gameplay character
+The [painter source](painter/README.md) begins the accepted gameplay character
 pass. Its editable coarse-cell drawing, deterministic System.Drawing/texconv
 recipe and all-palette pose preview live outside runtime content. Rebuild it with
 `powershell -ExecutionPolicy Bypass -File scripts/build-painter-art.ps1`.

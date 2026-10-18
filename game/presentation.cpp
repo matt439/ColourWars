@@ -1313,26 +1313,16 @@ namespace
 		const JsonValue json = root.object("figure");
 		FigurePresentation figure;
 		figure.sprite_sheet = json.identifier("sprite_sheet");
-		const JsonValue accents = json.array("accent_frames");
-		if (accents.size() != figure.accent_frames.size())
-		{
-			throw std::runtime_error(accents.where() + ": needs four distinct teammate accent frames.");
-		}
-		for (size_t index = 0; index < figure.accent_frames.size(); ++index)
-		{
-			figure.accent_frames[index] = accents.at(index).as_identifier();
-			for (size_t previous = 0; previous < index; ++previous)
-			{
-				if (figure.accent_frames[index] == figure.accent_frames[previous])
-				{
-					throw std::runtime_error(accents.at(index).where() + ": teammate accent frames must be distinct.");
-				}
-			}
-		}
 		figure.rest_arms_frame = json.identifier("rest_arms_frame");
+		figure.rest_arms_paint_frame = json.identifier("rest_arms_paint_frame");
+		figure.sleeves_frame = json.identifier("sleeves_frame");
+		figure.sleeves_paint_frame = json.identifier("sleeves_paint_frame");
 		figure.canvas_size = read_positive_vector(json, "canvas_size");
-		figure.accent_offset = read_vector(json, "accent_offset");
-		figure.accent_size = read_positive_vector(json, "accent_size");
+		figure.body_inset = read_non_negative(json, "body_inset");
+		if (!(figure.body_width() > 0.0f))
+		{
+			throw std::runtime_error(json.where() + ": 'body_inset' must leave the hitbox inside 'canvas_size'.");
+		}
 		figure.rear_shoulder = read_vector(json, "rear_shoulder");
 		figure.front_shoulder = read_vector(json, "front_shoulder");
 		figure.arm_width = read_positive(json, "arm_width");
@@ -1360,7 +1350,7 @@ namespace
 		if (motion.blink_max_interval < motion.blink_min_interval ||
 			motion.blink_duration >= motion.blink_min_interval ||
 			motion.breath_height >= figure.canvas_size.y / 10.0f ||
-			motion.lean_distance + motion.shift_distance >= figure.canvas_size.x / 4.0f)
+			motion.lean_distance + motion.shift_distance >= figure.body_width() / 4.0f)
 		{
 			throw std::runtime_error(quiet.where() +
 				": quiet motion must stay modest and blink intervals must be ordered.");
@@ -1797,6 +1787,11 @@ Presentation::Presentation(const char* path)
 	this->figure_ = read_figure(root);
 	this->tool_motion_ = read_tool_motion(root);
 	this->respawn_redraw_ = read_respawn_redraw(root);
+	if (this->respawn_redraw_.canvas_size != this->figure_.canvas_size)
+	{
+		// The pen draws over the same overhanging canvas as the figure.
+		throw std::runtime_error("respawn_redraw.canvas_size must equal figure.canvas_size.");
+	}
 	this->opening_ = read_opening(root);
 	const JsonValue match = root.object("match");
 	this->match_.reference_size = read_positive_vector(match, "reference_size");
@@ -2732,12 +2727,12 @@ void Presentation::validate_resources(const RenderResources& render,
 		this->blocked_shot_.fill_frame);
 	check.frame("idle_drip.fill_frame", this->idle_drip().sprite_sheet,
 		this->idle_drip().fill_frame);
-	for (size_t index = 0; index < this->figure_.accent_frames.size(); ++index)
-	{
-		check.frame("figure.accent_frames[" + std::to_string(index) + "]", this->figure_.sprite_sheet,
-			this->figure_.accent_frames[index]);
-	}
 	check.frame("figure.rest_arms_frame", this->figure_.sprite_sheet, this->figure_.rest_arms_frame);
+	check.frame("figure.rest_arms_paint_frame", this->figure_.sprite_sheet,
+		this->figure_.rest_arms_paint_frame);
+	check.frame("figure.sleeves_frame", this->figure_.sprite_sheet, this->figure_.sleeves_frame);
+	check.frame("figure.sleeves_paint_frame", this->figure_.sprite_sheet,
+		this->figure_.sleeves_paint_frame);
 	check.frame("tool_motion.mist_tail.fill_frame", this->tool_motion_.mist_sheet,
 		this->tool_motion_.mist_frame);
 	check.frame("respawn_redraw.pen_frame", this->respawn_redraw_.sprite_sheet,

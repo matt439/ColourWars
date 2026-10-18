@@ -83,7 +83,8 @@ void FigureActing::draw_sweat(DrawList& draw_list, const RectangleF& figure,
     bool facing_right, float time) const
 {
     const float loop = time / 0.8f - std::floor(time / 0.8f);
-    const float side = facing_right ? 0.92f : 0.08f;
+    // Just clear of the front ear on the painter's whole canvas.
+    const float side = facing_right ? 0.88f : 0.12f;
     const Vector2F at(figure.x + figure.width * side,
         figure.y + figure.height * (0.08f + 0.22f * loop));
     const float radius = figure.height * 0.03f;

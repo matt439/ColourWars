@@ -5,7 +5,7 @@
                                  "first_frame":  {
                                                      "x":  4,
                                                      "y":  4,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  1,
@@ -17,7 +17,7 @@
                                  "first_frame":  {
                                                      "x":  4,
                                                      "y":  132,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  8,
@@ -29,7 +29,7 @@
                                  "first_frame":  {
                                                      "x":  4,
                                                      "y":  260,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  1,
@@ -41,7 +41,7 @@
                                  "first_frame":  {
                                                      "x":  4,
                                                      "y":  388,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  1,
@@ -53,7 +53,7 @@
                                  "first_frame":  {
                                                      "x":  4,
                                                      "y":  516,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  1,
@@ -65,7 +65,7 @@
                                  "first_frame":  {
                                                      "x":  4,
                                                      "y":  644,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  8,
@@ -77,7 +77,7 @@
                                  "first_frame":  {
                                                      "x":  4,
                                                      "y":  772,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  1,
@@ -89,7 +89,7 @@
                                  "first_frame":  {
                                                      "x":  4,
                                                      "y":  900,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  1,
@@ -101,7 +101,7 @@
                                  "first_frame":  {
                                                      "x":  4,
                                                      "y":  1028,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  2,
@@ -111,9 +111,9 @@
                              {
                                  "name":  "takeoff_paint",
                                  "first_frame":  {
-                                                     "x":  116,
+                                                     "x":  148,
                                                      "y":  1028,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  2,
@@ -125,7 +125,7 @@
                                  "first_frame":  {
                                                      "x":  4,
                                                      "y":  1156,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  2,
@@ -135,9 +135,9 @@
                              {
                                  "name":  "land_paint",
                                  "first_frame":  {
-                                                     "x":  116,
+                                                     "x":  148,
                                                      "y":  1156,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  2,
@@ -149,7 +149,7 @@
                                  "first_frame":  {
                                                      "x":  4,
                                                      "y":  1284,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  2,
@@ -159,9 +159,9 @@
                              {
                                  "name":  "fire_paint",
                                  "first_frame":  {
-                                                     "x":  116,
+                                                     "x":  148,
                                                      "y":  1284,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  2,
@@ -173,7 +173,7 @@
                                  "first_frame":  {
                                                      "x":  4,
                                                      "y":  1412,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  2,
@@ -183,9 +183,9 @@
                              {
                                  "name":  "hurt_paint",
                                  "first_frame":  {
-                                                     "x":  116,
+                                                     "x":  148,
                                                      "y":  1412,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  2,
@@ -197,7 +197,7 @@
                                  "first_frame":  {
                                                      "x":  4,
                                                      "y":  1540,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  2,
@@ -207,9 +207,9 @@
                              {
                                  "name":  "elimination_paint",
                                  "first_frame":  {
-                                                     "x":  116,
+                                                     "x":  148,
                                                      "y":  1540,
-                                                     "w":  52,
+                                                     "w":  68,
                                                      "h":  120
                                                  },
                                  "frame_count":  2,
@@ -225,7 +225,29 @@
                                                "y":  4
                                            },
                               "size":  {
-                                           "w":  52,
+                                           "w":  68,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "rest_arms",
+                              "position":  {
+                                               "x":  76,
+                                               "y":  4
+                                           },
+                              "size":  {
+                                           "w":  68,
+                                           "h":  120
+                                       }
+                          },
+                          {
+                              "name":  "sleeves",
+                              "position":  {
+                                               "x":  148,
+                                               "y":  4
+                                           },
+                              "size":  {
+                                           "w":  68,
                                            "h":  120
                                        }
                           },
@@ -236,69 +258,36 @@
                                                "y":  516
                                            },
                               "size":  {
-                                           "w":  52,
+                                           "w":  68,
                                            "h":  120
                                        }
                           },
                           {
-                              "name":  "rest_arms",
+                              "name":  "rest_arms_paint",
                               "position":  {
-                                               "x":  68,
-                                               "y":  4
+                                               "x":  76,
+                                               "y":  516
                                            },
                               "size":  {
-                                           "w":  52,
+                                           "w":  68,
                                            "h":  120
                                        }
                           },
                           {
-                              "name":  "accent_bobble",
-                              "position":  {
-                                               "x":  128,
-                                               "y":  4
-                                           },
-                              "size":  {
-                                           "w":  12,
-                                           "h":  12
-                                       }
-                          },
-                          {
-                              "name":  "accent_antenna",
+                              "name":  "sleeves_paint",
                               "position":  {
                                                "x":  148,
-                                               "y":  4
+                                               "y":  516
                                            },
                               "size":  {
-                                           "w":  12,
-                                           "h":  12
-                                       }
-                          },
-                          {
-                              "name":  "accent_fork",
-                              "position":  {
-                                               "x":  168,
-                                               "y":  4
-                                           },
-                              "size":  {
-                                           "w":  12,
-                                           "h":  12
-                                       }
-                          },
-                          {
-                              "name":  "accent_flag",
-                              "position":  {
-                                               "x":  188,
-                                               "y":  4
-                                           },
-                              "size":  {
-                                           "w":  12,
-                                           "h":  12
+                                           "w":  68,
+                                           "h":  120
                                        }
                           },
                           {
                               "name":  "pixel",
                               "position":  {
-                                               "x":  208,
+                                               "x":  220,
                                                "y":  4
                                            },
                               "size":  {

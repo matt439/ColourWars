@@ -72,7 +72,7 @@ preserves authored UNORM bytes. Atlas packing and JSON frame ordering are stable
 `lineup.png` shows all four poses enlarged at two pixels per world unit, followed
 by neutral and all five supported team hues on grey. Its smaller samples use
 the actual 720p gameplay scale, `720 / presentation.camera.reference_height`
-(currently 2/3), for all pane counts including four players. The E body alongside
+(currently 2/3), for all pane counts including four players. The painter body alongside
 each set is therefore 80 pixels tall, rather than the painter source sheet's
 28-pixel stress samples. Runtime perspective, aiming, hand overlap, arena
 composition and human readability acceptance remain separate checks.

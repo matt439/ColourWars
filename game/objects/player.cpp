@@ -54,7 +54,6 @@ Player::Player(const RectangleF& rectangle,
     float layer_depth,
     int sound_index,
     const FigurePresentation* figure,
-    int teammate_index,
     const ViewShakePresentation* view_shake) :
     MovingObject(velocity),
     AnimationObject(tuning->player().idle.sheet,
@@ -64,11 +63,10 @@ Player::Player(const RectangleF& rectangle,
                   tuning->player().idle.uniform_texture,
                   render_resources, team_colour, rotation, origin, flip, layer_depth),
     tuning_(tuning),
+    figure_(figure),
     clothing_(tuning->player().idle, render_resources, team_colour,
         rotation, origin, flip, layer_depth),
-    attachments_(movement_feedback, figure, render_resources,
-        teammate_index >= 0 ? teammate_index :
-            (sound_index >= 0 ? sound_index : std::max(player_num, 0) % 4)),
+    attachments_(movement_feedback, figure, render_resources),
     quiet_character_(figure, sound_index >= 0 ? sound_index : std::max(player_num, 0)),
     movement_feedback_(movement_feedback, render_resources),
     combat_feedback_(combat_feedback, render_resources),
@@ -247,10 +245,12 @@ void Player::draw(DrawList& draw_list) const
     // A figure drawn whole after dying has its tool where it fell.
     if (this->pose_.tool && !this->drawn_whole())
     {
-        this->attachments_.draw_arms(draw_list, this->posed_rectangle(),
-            this->facing_right(), *this->primary_);
+        const RectangleF canvas = this->figure_canvas(this->posed_rectangle());
+        this->attachments_.draw_arms(draw_list, canvas, this->facing_right(), *this->primary_);
+        this->attachments_.draw_sleeves(draw_list, canvas, this->facing_right(),
+            this->grey_.value_or(this->TextureObject::colour()));
         this->primary_->draw(draw_list, this->showing_debug_);
-        this->attachments_.draw_hands(draw_list, this->posed_rectangle(), *this->primary_);
+        this->attachments_.draw_hands(draw_list, canvas, *this->primary_);
     }
     this->movement_feedback_.draw(draw_list);
     if (!this->drawn_whole())
@@ -269,6 +269,11 @@ RectangleF Player::posed_rectangle() const
     return this->state_ == PlayerState::alive && this->health_ > 0.0f &&
         this->pose_.tool && !this->pose_.whole && !this->preferences_->reduce_effects ?
         this->quiet_character_.rectangle(posed) : posed;
+}
+
+RectangleF Player::figure_canvas(const RectangleF& body) const
+{
+    return this->figure_ != nullptr ? this->figure_->canvas_rectangle(body) : body;
 }
 
 bool Player::drawn_whole() const
@@ -291,8 +296,9 @@ void Player::set_pose(const FigurePose& pose)
     }
 }
 
-void Player::draw_figure(DrawList& draw_list, const RectangleF& rectangle, bool idle) const
+void Player::draw_figure(DrawList& draw_list, const RectangleF& body, bool idle) const
 {
+    const RectangleF rectangle = this->figure_canvas(body);
     // Use the clip selected by update_animation_state; draw must not mutate shared state.
     const SpriteFlip flip = this->facing_right()
         ? SpriteFlip::none
@@ -324,10 +330,10 @@ void Player::draw_figure(DrawList& draw_list, const RectangleF& rectangle, bool 
             this->attachments_.draw_blink(draw_list, rectangle, this->facing_right());
         }
     }
-    this->attachments_.draw_accent(draw_list, rectangle, this->facing_right());
     if (!this->pose_.tool || this->state_ == PlayerState::dead)
     {
-        this->attachments_.draw_rest_arms(draw_list, rectangle, this->facing_right());
+        this->attachments_.draw_rest_arms(draw_list, rectangle, this->facing_right(),
+            this->grey_.value_or(this->TextureObject::colour()));
     }
 }
 
@@ -339,7 +345,7 @@ void Player::draw_respawn(DrawList& draw_list) const
         this->draw_figure(draw_list, this->spawn_rectangle(), true);
         return;
     }
-    this->respawn_redraw_.draw(draw_list, this->spawn_rectangle(),
+    this->respawn_redraw_.draw(draw_list, this->figure_canvas(this->spawn_rectangle()),
         this->facing_right(), progress);
 }
 CollisionObjectType Player::collision_type() const
@@ -1066,7 +1072,7 @@ RectangleF Player::bounds() const
 {
     const bool held = this->primary_ != nullptr && this->state_ == PlayerState::alive &&
         this->pose_.tool && !this->drawn_whole();
-    RectangleF visual = this->attachments_.bounds(this->posed_rectangle(),
+    RectangleF visual = this->attachments_.bounds(this->figure_canvas(this->posed_rectangle()),
         this->facing_right(), held ? this->primary_.get() : nullptr);
     if (held)
     {
@@ -1082,7 +1088,8 @@ RectangleF Player::cull_bounds(float /*units_per_pixel*/) const
     if (this->state_ == PlayerState::dead)
     {
         return RectangleF::union_of(this->bounds(),
-            this->attachments_.bounds(this->spawn_rectangle(), this->facing_right(), nullptr));
+            this->attachments_.bounds(this->figure_canvas(this->spawn_rectangle()),
+                this->facing_right(), nullptr));
     }
     return this->bounds();
 }

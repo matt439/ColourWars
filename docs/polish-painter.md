@@ -1,6 +1,7 @@
 # Paint.exe painter: production artwork and action poses
 
-Implemented 2026-10-15, beginning `POL#7`. This carries the accepted
+Implemented 2026-10-15, beginning `POL#7`, and redrawn to the author's own
+build on 2026-10-18 ([below](#the-authors-build-2026-10-18)). This carries the accepted
 [figure E and Zoom 400% rules](polish-plan.md#1-establish-the-art-and-display-rules)
 into the game. The follow-up adds dedicated action poses to that foundation;
 the reference arena and the composition's human review remain open. The
@@ -137,16 +138,66 @@ contains native-size renderer crops; its labels identify pane count, palette,
 facing, action and frame. The source [lineup](../game/art/painter/lineup.png)
 also includes every action in all five hues and 28-pixel authoring samples.
 
-## Remaining character work
+## The author's build (2026-10-18)
 
-**Superseded figure (author, 2026-10-18).** The author chose a rebuilt figure
-and the Muted Day level palette ([art rules](polish-plan.md#1-establish-the-art-and-display-rules)):
-ear-stub head, backwards team cap, tall dot eyes, a smirk, centred overalls with
-straps, short team sleeves with white hands, and the current tube legs. The
-teammate head accents described above are withdrawn, since teammates already
-share a colour. The next `POL#7` step redraws the source canvas, every gait and
-action strip and its masks to that build, and removes the accents and their
-roster selection; the pen trace, grips and collision rectangle carry over.
+The author rebuilt the figure from parts in the
+[box-head builder](https://claude.ai/artifact/47ANdGfpipyeFa1W527cJq) and chose
+the Muted Day level palette ([art rules](polish-plan.md#1-establish-the-art-and-display-rules)):
+an ear-stub head, a backwards team cap, tall dot eyes, a smirk, centred overalls
+with team straps, short team sleeves with white hands, and the existing tube
+legs. Teammates have no head accent, because they already share the team
+colour. This supersedes the figure, accents and canvas described above; the
+records above are kept as written. The [source README](../game/art/painter/README.md)
+has the current layout and pen recipe.
+
+The author settled four fit questions the same day:
+
+- **Canvas.** The build is 15 cells wide, so the canvas grows from 13x30 to
+  17x30 cells (68x120 texels) with a gutter either side. It stays centred on the
+  unchanged 52x120 hitbox, and the two outer cells each side are visual only.
+  `figure.body_inset` gives the overhang, and `Player::figure_canvas` widens the
+  hitbox before the body, arms, hands, respawn pen and story eyes draw.
+  Collision, combat feedback and the quiet character's breathing keep the
+  hitbox, and its lean still scales by hitbox texels.
+- **Aiming arms.** While a tool is held, the team sleeves stay at the shoulders
+  (a `sleeves` frame and its paint layer) over thin black forearms
+  (`arm_width` 4) to 2x2 white, outlined hands on the grips (`hand_size` 16).
+  At rest the `rest_arms` frame, now with a team paint layer, is drawn over the
+  body with the front hand one cell forward.
+- **Smirk.** The raised cell sits directly above the line's right end, so the
+  respawn pen can draw it as one L stroke.
+- **Ears.** They sit as built, on the eyes' lower row and the row below.
+
+The action poses keep their gestures, legs and timing, redrawn on the new face
+and body: raised, squeezed, lowered and crossed eyes; open, clenched and
+frowning mouths; and the same flared or leaning lower bib. The accents, their
+three `presentation.json` keys, the roster-ordinal choice in `PlayerBuilder` and
+the `Player` constructor's `teammate_index` are removed. The respawn pen now
+traces 2,112 black texels in 28 strokes.
+
+Review follow-ups in the same change: the story's sweat drop sits just clear of
+the front ear on the wider canvas, and the bucket and mister rear grips move
+back four texels so the larger hands stay separate. The hurt ticks still
+anchor to the hitbox, so on the rear side they briefly cover the brim tip; that
+is left for the `POL#7` review.
+
+Validation on 2026-10-18:
+
+- Debug and Release build, and pass every consumer acceptance case and the
+  isolated startup check.
+- The Release painter probe passes its full real-D3D11 matrix on the NVIDIA
+  GeForce RTX 5080. A Debug run passed 673 checks before reaching the script's
+  600-second limit, which the full Debug matrix already exceeded before this change.
+- The art recipe validates the pen against all 2,112 composite black texels,
+  checks gutters, baselines, the fixed action rows and that the sleeves match
+  the rest arms, and regenerates the lineup.
+
+Captures: [four same-team painters at 720p](images/polish-painter/rebuilt-four-teammates-720p.png)
+and [native crops, doubled](images/polish-painter/rebuilt-figure-crops.png)
+(aimed sprayer and roller, the respawned figure, the tool-free story pose, fire,
+hurt and landing).
+
+## Remaining character work
 
 `POL#7` still owns the human review of character/teammate readability in single- and
 four-player gameplay. It runs in the current arenas now; the reference arena

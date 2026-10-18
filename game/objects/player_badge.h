@@ -5,7 +5,7 @@
 
 #include <string>
 
-// A roster number, independent of the input slot and the team-local head accent.
+// A roster number, independent of the input slot.
 // The same small drawing is used in the world, pane and existing menu rows.
 class PlayerBadge final : public CrudeDrawing
 {

@@ -286,7 +286,7 @@ namespace
         return read(renderer);
     }
 
-    // This checks raster output, rather than reproducing the arms/accent
+    // This checks raster output, rather than reproducing the arms/sleeves
     // geometry in the test. Keep one pixel for rasterized partial edges.
     size_t check_projected_bounds(const Frame& image, const Frame& blank,
         RectangleF bounds, const Viewport& viewport, Frame& crop)
@@ -2327,7 +2327,7 @@ namespace
             settle(*level, inputs);
             resize(app, *level, { 1280, 720 });
             // All four identical same-team tools overlap. Only roster identity
-            // and the existing head accents can distinguish the figures.
+            // distinguishes the figures; teammates share the team colour.
             for (int view = 0; view < 4; ++view)
             {
                 require(level->place_player(view, { 1400.0f + 12.0f * static_cast<float>(view), 1275.0f }),
@@ -3078,7 +3078,7 @@ int wmain(int argc, wchar_t** argv)
         std::cout << "PASS real builder roster; 1P/4P 720p/1080p/QHD; three palettes; "
             "five action clips and five tool mechanisms, distinct pinned body/tool rasters; "
             "paid fire/hold/release/recovery, hose/bucket travel, roller lift/travel; "
-            "moving aim quadrants and both facings; four same-team accents; frozen motion/redraw; "
+            "moving aim quadrants and both facings; four same-team figures; frozen motion/redraw; "
             "raster culling bounds; death/outline/fill/respawn; tool-free and whole story poses\n";
         return 0;
     }

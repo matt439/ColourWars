@@ -666,7 +666,7 @@ void Level::draw_acting(DrawList& list, int /*view*/) const
 		{
 			continue;
 		}
-		const RectangleF figure = player->posed_rectangle();
+		const RectangleF figure = player->figure_canvas(player->posed_rectangle());
 		const bool right = player->facing_right();
 		const float time = this->act_time_ + static_cast<float>(index) * 0.37f;
 		const float across = player->team() == PlayerTeam::a ? 1.0f : -1.0f;

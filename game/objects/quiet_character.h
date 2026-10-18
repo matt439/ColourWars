@@ -88,7 +88,7 @@ public:
     {
         if (figure_ == nullptr || !figure_->quiet.enabled) { return body; }
         const float compression = state_.breath * body.height / figure_->canvas_size.y;
-        const float lean = state_.lean * body.width / figure_->canvas_size.x;
+        const float lean = state_.lean * body.width / figure_->body_width();
         return { body.x + (std::abs(lean) + lean) / 2.0f, body.y + compression,
             body.width - std::abs(lean), body.height - compression };
     }

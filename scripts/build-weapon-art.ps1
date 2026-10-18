@@ -290,12 +290,12 @@ try {
             foreach($entry in $palettes.GetEnumerator()){
                 $x=12+474*($col%3);$y=$top+155+135*[Math]::Floor($col/3);$team=[Drawing.ColorTranslator]::FromHtml('#'+$entry.Value)
                 $g.DrawString($entry.Key,$small,$ink,$x,$y);$g.FillRectangle($ground,$x,($y+18),440,106)
-                # A body-sized E figure anchors the small tool samples.
-                $body=[Drawing.Bitmap]::new(52,120);$bg=[Drawing.Graphics]::FromImage($body)
+                # A body-sized painter anchors the small tool samples.
+                $body=[Drawing.Bitmap]::new(4*$painter.width,120);$bg=[Drawing.Graphics]::FromImage($body)
                 try{
                     $bodyRows=@($painter.torso)+@($painter.legs.idle)
-                    foreach($rows in @(@{rows=$painter.rest_arms},@{rows=$bodyRows})){
-                        for($cy=0;$cy -lt 30;++$cy){for($cx=0;$cx -lt 13;++$cx){
+                    foreach($rows in @(@{rows=$bodyRows},@{rows=$painter.rest_arms})){
+                        for($cy=0;$cy -lt 30;++$cy){for($cx=0;$cx -lt $painter.width;++$cx){
                             $v=$rows.rows[$cy][$cx];if($v -eq '.'){continue}
                             $c=if($v -eq 'K'){[Drawing.Color]::Black}elseif($v -eq 'T'){$team}else{[Drawing.Color]::White}
                             $b=[Drawing.SolidBrush]::new($c)
@@ -303,7 +303,7 @@ try {
                         }}
                     }
                 }finally{$bg.Dispose()}
-                try{$g.DrawImage($body,[Drawing.Rectangle]::new(($x+5),($y+28),[int][Math]::Round(52*$reviewScale),[int][Math]::Round(120*$reviewScale)))}finally{$body.Dispose()}
+                try{$g.DrawImage($body,[Drawing.Rectangle]::new(($x+5),($y+28),[int][Math]::Round(4*$painter.width*$reviewScale),[int][Math]::Round(120*$reviewScale)))}finally{$body.Dispose()}
                 $sample=0
                 foreach($pose in $source.pose_order){
                     $frame=if($pose -eq 'idle'){$name}else{"${name}_$pose"};$combined=[ColourWars.ToolArt]::Combined($drawings[$frame],$team,$colours.D,1.0)

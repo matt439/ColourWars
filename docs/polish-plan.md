@@ -233,9 +233,9 @@ settles the question above. Its 26 non-team roles:
 | ground_top | `B4B1AA` | eraser_shade | `8F716A` | prop_accent | `945E52` |
 | ground_shade | `6A6865` | metal_light | `B8BCBE` | | |
 
-The team pairs stay blue/orange, pink/green and blue/yellow. Redrawing the
-production painter to this build is the next step of `POL#7`
-([painter](polish-painter.md#remaining-character-work)).
+The team pairs stay blue/orange, pink/green and blue/yellow. The production
+painter is drawn to this build ([painter](polish-painter.md#the-authors-build-2026-10-18));
+the Muted Day palette waits on the terrain and background kit (`POL#9`).
 
 Build the gameplay style first: a small reference containing a character, two
 contrasting weapons, a painted platform, background materials and effects.
@@ -389,7 +389,8 @@ fitted to Close Quarters once its layout exists.
 ### Characters and distinctive weapons
 
 The [production painter increments](polish-painter.md) implement `POL#7`'s artwork:
-figure E, animated team masks, head accents and continuous tool grips, with
+the painter (redrawn to the author's 2026-10-18 build), animated team masks,
+team sleeves and continuous tool grips, with
 idle/run/jump/fall and dedicated takeoff/landing/firing/hurt/elimination clips,
 plus a matching respawn redraw. The composition's human review remains open.
 The [five-tool production pass](polish-tools.md) implements `POL#8`: distinct
@@ -480,7 +481,7 @@ Every painter also has individually phased breathing and weight shifts after
 settling, occasional short blinks, and a restrained acceleration/turn lean that
 settles after stopping. These reuse the coarse drawing and neutral fill rather
 than replacing its action clips. Compression keeps the feet baseline, and the
-same posed canvas supplies the head accent and shoulders while hands retain
+same posed canvas supplies the shoulders while hands retain
 the actual tool grips. Actions, airborne motion, elimination and story/redraw
 poses suppress inappropriate idle details. All sizes and timings are in
 `presentation.json` (`idle_drip` and `figure.quiet`); they remain subject to the
@@ -1337,11 +1338,12 @@ freezes under pause and clears at time-up, without changing paint or firing.
 monochrome pencil-cell `P1`–`P4` box uses the same
 [badge drawing](../game/objects/player_badge.cpp) beside team/weapon selection
 labels, in each pane's HUD and on the results contribution rows. The existing
-device labels and accepted teammate head accents remain. Identity follows
+device labels remain; teammates share the team colour and have no head
+accent (author, 2026-10-18). Identity follows
 roster/view order throughout; keyboard and sparse or reordered pad slots do
 not choose the number, and results retain their input-slot paint attribution.
 
-Each pane draws only its own figure's badge above the head accent. It stays
+Each pane draws only its own figure's badge above the head. It stays
 quiet during ordinary play, enlarges briefly at the countdown/live start,
 actual respawn and return from a covering menu or focus loss, then settles.
 The cue follows the same world camera as the character, including optional

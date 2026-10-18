@@ -300,7 +300,7 @@ namespace
                 &world.render, &world.audio, &this->preferences, 0, PlayerTeam::a,
                 WeaponType::sprayer, std::move(weapon), WeaponType::none, Colour::white,
                 Viewport{}, rectangle.top_left(), Vector2F::ZERO, 0.0f, Vector2F::ZERO,
-                SpriteFlip::none, 0.0f, -1, nullptr, -1, &world.presentation.camera().shake));
+                SpriteFlip::none, 0.0f, -1, nullptr, &world.presentation.camera().shake));
             const RectangleF floor(-10000, 0, 20000, 100);
             this->scene.add(std::make_unique<Structure>("sprite_sheet_1", "square_white_4",
                 floor, std::make_unique<RectangleF>(floor), &world.render,

@@ -793,16 +793,19 @@ struct QuietCharacterPresentation
 };
 
 // Figure details in the painter's authored canvas. Grips belong to the tool,
-// while shoulders and the head accent follow the posed figure rectangle.
+// while shoulders follow the posed figure canvas.
 struct FigurePresentation
 {
 	std::string sprite_sheet;
-	// Team-local roster indices, so all four manual teammates remain distinct.
-	std::array<std::string, 4> accent_frames;
+	// Arms drawn over the body, as neutral and team-paint pairs: rest_arms
+	// while no tool is held, sleeves (the same shoulders) while one is.
 	std::string rest_arms_frame;
+	std::string rest_arms_paint_frame;
+	std::string sleeves_frame;
+	std::string sleeves_paint_frame;
 	mattmath::Vector2F canvas_size;
-	mattmath::Vector2F accent_offset;
-	mattmath::Vector2F accent_size;
+	// Canvas texels either side of the hitbox: the brim and hands overhang it.
+	float body_inset = 0.0f;
 	mattmath::Vector2F rear_shoulder;
 	mattmath::Vector2F front_shoulder;
 	float arm_width = 0.0f;
@@ -813,6 +816,16 @@ struct FigurePresentation
 	labrador::Colour hand_colour;
 	std::array<FigureGripPresentation, static_cast<size_t>(WeaponType::bucket) + 1> grips;
 	QuietCharacterPresentation quiet;
+
+	// Canvas texels the hitbox spans.
+	float body_width() const { return canvas_size.x - body_inset * 2.0f; }
+
+	// The whole canvas around a figure's hitbox rectangle, overhang included.
+	mattmath::RectangleF canvas_rectangle(const mattmath::RectangleF& body) const
+	{
+		const float overhang = body_inset * body.width / this->body_width();
+		return { body.x - overhang, body.y, body.width + overhang * 2.0f, body.height };
+	}
 };
 
 // One stroke of a figure as the person drew it: the path of the pen's
