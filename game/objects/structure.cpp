@@ -15,12 +15,14 @@ Structure::Structure(const std::string& sheet_name,
 	float rotation,
 	const Vector2F& origin,
 	SpriteFlip flip,
-	float layer_depth) :
+	float layer_depth,
+	std::unique_ptr<const TerrainMaterial> material) :
 	TextureObject(sheet_name, frame_name, render_resources,
 		color, rotation, origin, flip, layer_depth),
 	collision_type_(collision_type),
 	sprite_rectangle_(sprite_rectangle),
-	collision_shape_(std::move(collision_shape))
+	collision_shape_(std::move(collision_shape)),
+	material_(std::move(material))
 {
 	if (this->collision_shape_ == nullptr)
 	{
@@ -34,6 +36,11 @@ void Structure::update(float /*dt*/)
 }
 void Structure::draw(DrawList& draw_list) const
 {
+	if (this->material_ != nullptr)
+	{
+		this->material_->paint(draw_list);
+		return;
+	}
 	this->TextureObject::draw(draw_list, this->sprite_rectangle_);
 }
 RectangleF Structure::bounds() const
@@ -67,6 +74,10 @@ const Shape* Structure::shape() const
 bool Structure::for_deletion() const
 {
 	return false;
+}
+const TerrainMaterial* Structure::material() const
+{
+	return this->material_.get();
 }
 const RectangleF& Structure::rectangle() const
 {

@@ -232,6 +232,16 @@ extend the same drawing, with authored panel sizes and text positions in
 Options cards include each row's label and value. The complete Credits body,
 palette names and save status fit their measured areas without changing copy.
 
+## Terrain and backdrop artwork
+
+The [terrain source](terrain/README.md) holds the Muted Day palette, the backdrop
+drawings (hills, trees, a house, clouds, a sun, birds) and the four airbrush
+speckle tiles, as editable cell shapes and grids. Rebuild it with
+`powershell -ExecutionPolicy Bypass -File scripts/build-terrain-art.ps1`; only
+`game/content/textures/terrain.{json,dds}` is staged and packaged. The walkable
+materials themselves are drawn by code from the sheet's palette swatches; the
+[terrain kit](../../docs/polish-terrain.md) owns their rules.
+
 ## Runtime content separation (GAP#8.6)
 
 Implemented 2026-10-15. Tracked runtime content in `game/content/` is the reviewed set

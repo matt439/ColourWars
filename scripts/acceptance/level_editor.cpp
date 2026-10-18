@@ -162,7 +162,7 @@ namespace
         const fs::path content = repo / "game/content";
         const ContentCatalog catalog = load_content_catalog(content);
         require(catalog.manifest_read && catalog.problems.empty(), "Source content catalog did not load cleanly");
-        for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx" })
+        for (const char* sheet : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
             require(catalog.sprite_frames.contains(sheet) && catalog.sprite_frames.at(sheet).has_value(),
                 std::string("Catalog lacks manifest sprite sheet ") + sheet);
         const std::set<std::string>& sheet_1 = *catalog.sprite_frames.at("sprite_sheet_1");
@@ -253,8 +253,8 @@ namespace
             "{ \"waves\": [\"a\", \"b\"], \"create_effect_instance_for_each_wave\": false,"
             " \"sound_effect_instances\": [{ \"name\": \"c\", \"wave\": \"a\" }] }");
         const ContentCatalog partial_catalog = load_content_catalog(partial);
-        // painter is invalid; menu_paint, weapon_paint and paint_fx are absent.
-        require(partial_catalog.manifest_read && partial_catalog.problems.size() == 4,
+        // painter is invalid; menu_paint, weapon_paint, paint_fx and terrain are absent.
+        require(partial_catalog.manifest_read && partial_catalog.problems.size() == 5,
             "Each unreadable sheet must be one problem");
         require(!partial_catalog.sprite_frames.at("painter") &&
             partial_catalog.problems.front().find("painter.json") != std::string::npos,
@@ -616,6 +616,90 @@ namespace
         std::cout << "PASS optional Random setting, validation, history and persistence\n";
     }
 
+    void check_materials(const fs::path& scratch)
+    {
+        LevelDocument document;
+        const auto material_of = [&](const Entry& item) -> std::string
+        {
+            const rapidjson::Document json = parse(document.serialize());
+            const rapidjson::Value& object = json[item.kind == EntryKind::collision ?
+                "collision_objects" : "non_collision_objects"][static_cast<rapidjson::SizeType>(item.index)];
+            return object.HasMember("material") ? object["material"].GetString() : "";
+        };
+        const std::map<std::string, std::string> defaults = {
+            { "Structure", "ground" }, { "StructureJumpThrough", "ruler" },
+            { "StructurePaintable", "pencil" }, { "StructureRampRight", "set_square" },
+            { "StructureRampLeft", "set_square" }, { "Visual", "" } };
+        std::map<std::string, Entry> added;
+        for (const auto& [type, material] : defaults)
+        {
+            added[type] = document.add_object(type, { 100, 200, 300, 150 });
+            require(material_of(added[type]) == material, type + " did not get its default material");
+        }
+        const Entry structure = added["Structure"];
+        reject_without_change(document, [&] { document.set_property(structure, "/material", "chalk"); },
+            "Unknown material was accepted");
+        reject_without_change(document, [&] { document.set_property(structure, "/material", "pencil"); },
+            "Paintable-only material was accepted on a solid structure");
+        reject_without_change(document, [&] { document.set_property(added["StructureRampLeft"], "/material", "ground"); },
+            "Ground was accepted on a ramp");
+        reject_without_change(document, [&] { document.set_property(added["StructurePaintable"], "/material", "ruler"); },
+            "Ruler was accepted on a paintable structure");
+        reject_without_change(document, [&] { document.set_property(structure, "/collision_type", "STRUCTURE_JUMP_THROUGH"); },
+            "Changing collision under a ground material was accepted");
+        reject_without_change(document, [&] { document.set_property(added["Visual"], "material", "ground"); },
+            "Inspector inserted a material on a decoration");
+        reject_without_change(document, [&] { document.set_property(structure, "unknown_optional", "ground"); },
+            "Inspector inserted an unknown missing field on a collision object");
+        for (const char* material : { "pencil", "eraser", "paint_tin", "ground" })
+        {
+            document.set_property(added["StructurePaintable"], "/material", material);
+            require(material_of(added["StructurePaintable"]) == material, "Allowed paintable material was refused");
+        }
+
+        // Clearing returns the legacy draw; the inspector then offers the field back.
+        const std::string with_material = document.serialize();
+        document.set_property(structure, "material", "");
+        require(material_of(structure).empty(), "Clearing material did not remove the field");
+        std::size_t count = 0;
+        for (const Property& property : document.properties(structure))
+            if (property.path == "material")
+            {
+                ++count;
+                require(property.value.empty() && property.label.find("ground") != std::string::npos &&
+                    property.label.find("pencil") == std::string::npos,
+                    "Missing material must show empty with only its collision's choices");
+            }
+        require(count == 1, "A collision object without material must offer it once");
+        for (const Property& property : document.properties(added["Visual"]))
+            require(property.path != "material", "A decoration must not offer a material");
+        reject_without_change(document, [&] { document.set_property(structure, "material", "ruler"); },
+            "Inspector added a mismatched missing material");
+        document.set_property(structure, "material", "ground");
+        require(document.serialize() == with_material, "Adding material back did not restore it");
+        require(document.undo() && material_of(structure).empty(), "Undo must restore the omission");
+        document.set_property(structure, "material", "ground");
+
+        const fs::path path = scratch / "materials.json";
+        document.save(path);
+        LevelDocument reopened;
+        reopened.load(path);
+        require(parse(reopened.serialize()) == parse(document.serialize()), "Materials did not survive saving");
+        const std::string saved = contents(path);
+        const std::string ground = "\"material\": \"ground\"";
+        const std::size_t at = saved.find(ground);
+        require(at != std::string::npos, "Saved fixture lacks a ground material");
+        for (const char* bad : { "\"material\": \"chalk\"", "\"material\": \"ruler\"", "\"material\": 3" })
+        {
+            std::string changed = saved;
+            changed.replace(at, ground.size(), bad);
+            const fs::path invalid = scratch / "invalid-material.json";
+            write(invalid, changed);
+            reject_without_change(reopened, [&] { reopened.load(invalid); }, "Invalid material loaded");
+        }
+        std::cout << "PASS optional materials: defaults, allowed types, inspector insert/clear and load refusal\n";
+    }
+
     void check_palette_and_ramps(const fs::path& scratch)
     {
         LevelDocument document;
@@ -805,6 +889,7 @@ int wmain(int argc, wchar_t* argv[])
         check_unknown_fields_and_rectangles(scratch);
         check_palette_and_ramps(scratch);
         check_random_setting(scratch);
+        check_materials(scratch);
         check_history_and_failures(scratch);
         std::cout << "PASS level editor document acceptance\n";
         return 0;

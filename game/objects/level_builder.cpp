@@ -59,6 +59,11 @@ std::unique_ptr<Level>
 	{
 		scene->add(std::move(object));
 	}
+	for (std::unique_ptr<GameObject>& shadow :
+		this->level_object_builder_->build_shadows(load_info->collision_objects_json()))
+	{
+		scene->add(std::move(shadow));
+	}
 
 	for (std::unique_ptr<labrador::CollisionObject>& object :
 		this->level_object_builder_->build_collision_objects(

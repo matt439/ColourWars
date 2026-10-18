@@ -224,7 +224,7 @@ namespace colourwars_editor
             "collision_objects":[{"name":"floor","type":"StructurePaintable",
                 "sheet_name":"sprite_sheet_1","frame_name":"square_white_4","colour":"GAINSBORO",
                 "rectangle":{"x":0,"y":1200,"width":3000,"height":100},
-                "collision_type":"STRUCTURE_PAINTABLE",
+                "collision_type":"STRUCTURE_PAINTABLE","material":"ground",
                 "paintable_faces":{"left":false,"top":true,"right":false,"bottom":false}}],
             "non_collision_objects":[{"name":"background","type":"Visual",
                 "sheet_name":"sprite_sheet_1","frame_name":"square_white_4","colour":"404040",
@@ -429,6 +429,21 @@ namespace colourwars_editor
             append_properties(metadata, "", result);
         }
         else { append_properties(value, "", result); }
+        if (entry.kind == EntryKind::collision && value.HasMember("collision_type") &&
+            value["collision_type"].IsString())
+        {
+            // material is optional and open-ended in the inspector's string edit,
+            // so name the values this collision tag accepts; an empty value is the
+            // legacy stretched draw and applying one adds the field.
+            const std::string allowed = allowed_materials(string(value, "collision_type"));
+            const auto existing = std::find_if(result.begin(), result.end(),
+                [](const Property& property) { return property.path == "material"; });
+            if (existing != result.end()) { existing->label = "material (" + allowed + ")"; }
+            else if (!allowed.empty())
+            {
+                result.push_back({ "material", "material (" + allowed + ")", "", false, false });
+            }
+        }
         return result;
     }
 
@@ -448,6 +463,17 @@ namespace colourwars_editor
                 if (value != "true" && value != "false") { fail("Use true or false for this property."); }
                 object.AddMember("include_in_random", value == "true", document.GetAllocator());
                 return;
+            }
+            if (pointer_text == "/material" && entry.kind == EntryKind::collision)
+            {
+                // Clearing the material returns the object to the legacy draw.
+                if (value.empty()) { object.RemoveMember("material"); return; }
+                if (target == nullptr)
+                {
+                    object.AddMember("material", Json(value.c_str(), document.GetAllocator()),
+                        document.GetAllocator());
+                    return;
+                }
             }
             if (target == nullptr) { fail("The selected property no longer exists."); }
             if (target->IsString())
@@ -526,6 +552,10 @@ namespace colourwars_editor
                         "STRUCTURE_RAMP_LEFT" : (paintable ? "STRUCTURE_PAINTABLE" :
                             (jump ? "STRUCTURE_JUMP_THROUGH" : "STRUCTURE")));
                     value.AddMember("collision_type", Json(collision, allocator), allocator);
+                    // Each kind starts drawn as its usual terrain-atlas material.
+                    const char* material = ramp_left || ramp_right ? "set_square" :
+                        (paintable ? "pencil" : (jump ? "ruler" : "ground"));
+                    value.AddMember("material", Json(material, allocator), allocator);
                 }
                 if (paintable)
                 {

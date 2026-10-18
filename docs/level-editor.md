@@ -70,6 +70,27 @@ it is corrected or discarded with Escape or **Revert**.
 Use the inspector for exact coordinates, paintable faces, sprite-sheet and
 frame names, colours, and other object properties.
 
+### Materials
+
+Collision objects carry an optional `material`, the terrain-atlas look the game
+draws them with ([Materials](level-format.md#materials)). The palette gives each
+new collision object its usual one: a solid `Structure` is `ground`, a
+jump-through `ruler`, a paintable platform `pencil` and either ramp
+`set_square`. Decorative visuals get none. Duplicates keep their material.
+
+The inspector's `material` row lists, in its label, the values the object's
+collision type allows, such as `material (ground, pencil, eraser, paint_tin)`
+on a paintable platform. It is a text field checked on Apply: an unknown name,
+or one the collision type does not allow, is refused like any other invalid
+edit. An object without a material still shows the row, empty; applying a value
+adds the field, as the Random setting does, and undo restores the omission.
+Applying an empty value removes the field, returning the object to the legacy
+stretched sheet/frame draw. The inspector adds no other missing field, and
+never a material on a decoration. Changing `collision_type` to one the current
+material does not fit is refused too: change or clear the material first.
+The canvas stays schematic and does not draw materials; play the stage to see
+them.
+
 | Action | Control |
 |---|---|
 | Select and move | Left click and drag |
@@ -226,7 +247,9 @@ They cover the shipped levels, the canonical template, unknown-field preservatio
 encodings, ramps, the palette, undo/redo and save
 state, Unicode paths and failure recovery. Evidence and generated test levels
 remain in `out/acceptance/<preset>/level-editor/`. They also check the optional
-Random setting's default, insertion, validation, undo/redo and save/reopen.
+Random setting's default, insertion, validation, undo/redo and save/reopen,
+and each palette kind's default material, refusal of unknown and mismatched
+materials (in edits and loaded files), and inserting and clearing a material.
 They check the resource-name warnings against source content, and a third
 hidden launch reads the status line of a level the game would refuse.
 The document checks also cover the shared current version, legacy save upgrades,

@@ -17,8 +17,9 @@ solo practice skips the person at both ends. See [the backstory](docs/backstory.
 The presentation uses dark ink panels, cream lettering and bright paint
 accents, with original menu artwork and a compact split-screen HUD. Health
 and paint meters are labelled; menus mark the focused choice with both a
-colour and a panel. The three arenas use pale paintable surfaces against
-grey scenery; the game refuses a hue there. Colours and spacing are authored in
+colour and a panel. The arenas are built from drawn stationery (pencils,
+rulers, erasers, a paint tin, set squares) on tiled ground against a crude drawn
+backdrop, in a muted palette with no team hue in it ([terrain kit](docs/polish-terrain.md)). Colours and spacing are authored in
 `game/content/presentation.json`; arena decoration lives in the level JSONs.
 The shared menu layout, fill atlas and team-selection pictures are described in
 [menu presentation](docs/menu-presentation.md).

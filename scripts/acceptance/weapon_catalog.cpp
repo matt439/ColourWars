@@ -57,7 +57,7 @@ namespace
 
         explicit World(const std::filesystem::path& content, bool legacy_weapon_sheet = true)
         {
-            for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx" })
+            for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
             {
                 if (!legacy_weapon_sheet && std::string(name) == "weapon_paint") { continue; }
                 render.add_sprite_sheet(name, read_sprite_sheet(

@@ -116,7 +116,7 @@ namespace
             tuning((content / "tuning.json").string().c_str()),
             presentation((content / "presentation.json").string().c_str())
         {
-            for (const char* sheet : { "sprite_sheet_1", "painter", "weapon_paint", "paint_fx" })
+            for (const char* sheet : { "sprite_sheet_1", "painter", "weapon_paint", "paint_fx", "terrain" })
             {
                 render.add_sprite_sheet(sheet, read_sprite_sheet(
                     (content / "textures" / (std::string(sheet) + ".json")).string().c_str(),

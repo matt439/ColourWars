@@ -1674,7 +1674,7 @@ int main(int argc, char** argv)
         require(argc == 2, "Usage: movement_course.exe <content directory>");
         const std::filesystem::path content(argv[1]);
         RenderResources render;
-        for (const char* name : { "sprite_sheet_1", "painter", "weapon_paint", "paint_fx" })
+        for (const char* name : { "sprite_sheet_1", "painter", "weapon_paint", "paint_fx", "terrain" })
         {
             render.add_sprite_sheet(name, read_sprite_sheet(
                 (content / "textures" / (std::string(name) + ".json")).string().c_str(),

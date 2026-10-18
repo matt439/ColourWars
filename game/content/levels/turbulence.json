@@ -87,6 +87,7 @@
         {
             "name": "boundary_wall_left",
             "type": "Structure",
+            "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -102,6 +103,7 @@
         {
             "name": "boundary_ceiling",
             "type": "Structure",
+            "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -117,6 +119,7 @@
         {
             "name": "boundary_wall_right",
             "type": "Structure",
+            "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -137,6 +140,7 @@
         {
             "name": "spawn_a_floor",
             "type": "Structure",
+            "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -152,6 +156,7 @@
         {
             "name": "spawn_a_wall",
             "type": "Structure",
+            "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -167,6 +172,7 @@
         {
             "name": "spawn_a_ceiling",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -182,6 +188,7 @@
         {
             "name": "spawn_b_floor",
             "type": "Structure",
+            "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -197,6 +204,7 @@
         {
             "name": "spawn_b_wall",
             "type": "Structure",
+            "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -212,6 +220,7 @@
         {
             "name": "spawn_a_ceiling",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -233,6 +242,7 @@
         {
             "name": "boundary_floor",
             "type": "StructurePaintable",
+            "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -255,6 +265,7 @@
         {
             "name": "central_divider",
             "type": "Structure",
+            "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -270,6 +281,7 @@
         {
             "name": "central_divider_ledge_left",
             "type": "Structure",
+            "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -285,6 +297,7 @@
         {
             "name": "central_divider_ledge_right",
             "type": "Structure",
+            "material": "ground",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -300,6 +313,7 @@
         {
             "name": "central_divider_ledge_paint",
             "type": "StructurePaintable",
+            "material": "pencil",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -326,6 +340,7 @@
         {
             "name": "upper_left",
             "type": "StructurePaintable",
+            "material": "pencil",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -348,6 +363,7 @@
         {
             "name": "upper_right",
             "type": "StructurePaintable",
+            "material": "pencil",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -370,6 +386,7 @@
         {
             "name": "upper_jump_mid",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -385,6 +402,7 @@
         {
             "name": "upper_jump_left",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -400,6 +418,7 @@
         {
             "name": "upper_jump_right",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -415,6 +434,7 @@
         {
             "name": "upper_top_paint",
             "type": "StructurePaintable",
+            "material": "pencil",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -444,6 +464,7 @@
         {
             "name": "left_bottom_left_jump",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -459,6 +480,7 @@
         {
             "name": "left_bottom_right_jump",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -474,6 +496,7 @@
         {
             "name": "left_lower_paint",
             "type": "StructurePaintable",
+            "material": "pencil",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -497,6 +520,7 @@
         {
             "name": "left_mid_left_jump",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -512,6 +536,7 @@
         {
             "name": "left_mid_right_jump",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -527,6 +552,7 @@
         {
             "name": "left_mid_paint",
             "type": "StructurePaintable",
+            "material": "pencil",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -549,6 +575,7 @@
         {
             "name": "left_upper_mid_right_jump",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -570,6 +597,7 @@
         {
             "name": "right_bottom_left_jump",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -585,6 +613,7 @@
         {
             "name": "right_bottom_right_jump",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -600,6 +629,7 @@
         {
             "name": "right_lower_paint",
             "type": "StructurePaintable",
+            "material": "pencil",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -623,6 +653,7 @@
         {
             "name": "right_mid_left_jump",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -638,6 +669,7 @@
         {
             "name": "right_mid_right_jump",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -653,6 +685,7 @@
         {
             "name": "right_mid_paint",
             "type": "StructurePaintable",
+            "material": "pencil",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -675,6 +708,7 @@
         {
             "name": "right_upper_mid_right_jump",
             "type": "Structure",
+            "material": "ruler",
             "sheet_name": "sprite_sheet_1",
             "frame_name": "square_white_4",
             "rectangle":
@@ -697,225 +731,312 @@
     "non_collision_objects":
     [
         {
-            "name": "level_background",
+            "name": "paper",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 0.0,
-                "y": 0.0,
-                "width": 6000.0,
-                "height": 6000.0
+            "sheet_name": "terrain",
+            "frame_name": "swatch_paper",
+            "rectangle":
+            {
+                "x": -100.0,
+                "y": -100.0,
+                "width": 6200.0,
+                "height": 6200.0
             },
-            "colour": "404040"
+            "colour": "WHITE"
         },
         {
-            "name": "arena_panel_joint_vertical_1",
+            "name": "sun",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 750.0,
-                "y": 0.0,
-                "width": 6.0,
-                "height": 6000.0
+            "sheet_name": "terrain",
+            "frame_name": "sun",
+            "rectangle":
+            {
+                "x": 5300.0,
+                "y": 4420.0,
+                "width": 224.0,
+                "height": 224.0
             },
-            "colour": "BLACK"
+            "colour": "WHITE"
         },
         {
-            "name": "arena_panel_joint_vertical_2",
+            "name": "cloud_1",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
+            "sheet_name": "terrain",
+            "frame_name": "cloud_big",
+            "rectangle":
+            {
+                "x": 160.0,
+                "y": 4450.0,
+                "width": 256.0,
+                "height": 96.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "cloud_2",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cloud_small",
+            "rectangle":
+            {
+                "x": 1060.0,
+                "y": 4587.0,
+                "width": 160.0,
+                "height": 64.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "cloud_3",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cloud_big",
+            "rectangle":
+            {
+                "x": 2171.0,
+                "y": 4724.0,
+                "width": 256.0,
+                "height": 96.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "cloud_4",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cloud_big",
+            "rectangle":
+            {
+                "x": 3493.0,
+                "y": 4511.0,
+                "width": 256.0,
+                "height": 96.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "cloud_5",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cloud_small",
+            "rectangle":
+            {
+                "x": 4526.0,
+                "y": 4648.0,
+                "width": 160.0,
+                "height": 64.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "cloud_6",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "cloud_big",
+            "rectangle":
+            {
+                "x": 5770.0,
+                "y": 4785.0,
+                "width": 256.0,
+                "height": 96.0
+            },
+            "colour": "WHITE"
+        },
+        {
+            "name": "birds_1",
+            "type": "Visual",
+            "sheet_name": "terrain",
+            "frame_name": "birds",
+            "rectangle":
+            {
                 "x": 1500.0,
-                "y": 0.0,
-                "width": 6.0,
-                "height": 6000.0
+                "y": 4600.0,
+                "width": 96.0,
+                "height": 32.0
             },
-            "colour": "BLACK"
+            "colour": "WHITE"
         },
         {
-            "name": "arena_panel_joint_vertical_3",
+            "name": "birds_2",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 2250.0,
-                "y": 0.0,
-                "width": 6.0,
-                "height": 6000.0
+            "sheet_name": "terrain",
+            "frame_name": "birds",
+            "rectangle":
+            {
+                "x": 4300.0,
+                "y": 4560.0,
+                "width": 96.0,
+                "height": 32.0
             },
-            "colour": "BLACK"
+            "colour": "WHITE"
         },
         {
-            "name": "arena_panel_joint_vertical_4",
+            "name": "hill_1",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 3000.0,
-                "y": 0.0,
-                "width": 6.0,
-                "height": 6000.0
+            "sheet_name": "terrain",
+            "frame_name": "hill_wide",
+            "rectangle":
+            {
+                "x": -100.0,
+                "y": 5680.0,
+                "width": 1536.0,
+                "height": 320.0
             },
-            "colour": "BLACK"
+            "colour": "WHITE"
         },
         {
-            "name": "arena_panel_joint_vertical_5",
+            "name": "hill_2",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 3750.0,
-                "y": 0.0,
-                "width": 6.0,
-                "height": 6000.0
+            "sheet_name": "terrain",
+            "frame_name": "hill_small",
+            "rectangle":
+            {
+                "x": 1276.0,
+                "y": 5808.0,
+                "width": 768.0,
+                "height": 192.0
             },
-            "colour": "BLACK"
+            "colour": "WHITE"
         },
         {
-            "name": "arena_panel_joint_vertical_6",
+            "name": "hill_3",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 4500.0,
-                "y": 0.0,
-                "width": 6.0,
-                "height": 6000.0
+            "sheet_name": "terrain",
+            "frame_name": "hill_wide",
+            "rectangle":
+            {
+                "x": 1884.0,
+                "y": 5680.0,
+                "width": 1536.0,
+                "height": 320.0
             },
-            "colour": "BLACK"
+            "colour": "WHITE"
         },
         {
-            "name": "arena_panel_joint_vertical_7",
+            "name": "hill_4",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 5250.0,
-                "y": 0.0,
-                "width": 6.0,
-                "height": 6000.0
+            "sheet_name": "terrain",
+            "frame_name": "hill_small",
+            "rectangle":
+            {
+                "x": 3260.0,
+                "y": 5808.0,
+                "width": 768.0,
+                "height": 192.0
             },
-            "colour": "BLACK"
+            "colour": "WHITE"
         },
         {
-            "name": "arena_panel_joint_horizontal_1",
+            "name": "hill_5",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 0.0,
-                "y": 4200.0,
-                "width": 6000.0,
-                "height": 6.0
+            "sheet_name": "terrain",
+            "frame_name": "hill_wide",
+            "rectangle":
+            {
+                "x": 3868.0,
+                "y": 5680.0,
+                "width": 1536.0,
+                "height": 320.0
             },
-            "colour": "BLACK"
+            "colour": "WHITE"
         },
         {
-            "name": "arena_panel_joint_horizontal_2",
+            "name": "hill_6",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 0.0,
-                "y": 5100.0,
-                "width": 6000.0,
-                "height": 6.0
+            "sheet_name": "terrain",
+            "frame_name": "hill_small",
+            "rectangle":
+            {
+                "x": 5244.0,
+                "y": 5808.0,
+                "width": 768.0,
+                "height": 192.0
             },
-            "colour": "BLACK"
+            "colour": "WHITE"
         },
         {
-            "name": "arena_panel_joint_horizontal_3",
+            "name": "hill_7",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 0.0,
-                "y": 5850.0,
-                "width": 6000.0,
-                "height": 6.0
+            "sheet_name": "terrain",
+            "frame_name": "hill_wide",
+            "rectangle":
+            {
+                "x": 5852.0,
+                "y": 5680.0,
+                "width": 1536.0,
+                "height": 320.0
             },
-            "colour": "BLACK"
+            "colour": "WHITE"
         },
         {
-            "name": "spawn_left_backplate",
+            "name": "house",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 45.0,
-                "y": 4700.0,
-                "width": 190.0,
-                "height": 100.0
+            "sheet_name": "terrain",
+            "frame_name": "house",
+            "rectangle":
+            {
+                "x": 3300.0,
+                "y": 5648.0,
+                "width": 384.0,
+                "height": 352.0
             },
-            "colour": "BLACK"
+            "colour": "WHITE"
         },
         {
-            "name": "spawn_left_backplate_stripe",
+            "name": "tree_1",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 61.0,
-                "y": 4720.0,
-                "width": 158.0,
-                "height": 8.0
+            "sheet_name": "terrain",
+            "frame_name": "tree_round",
+            "rectangle":
+            {
+                "x": 400.0,
+                "y": 5776.0,
+                "width": 128.0,
+                "height": 224.0
             },
-            "colour": "808080"
+            "colour": "WHITE"
         },
         {
-            "name": "spawn_left_backplate_mark",
+            "name": "tree_2",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 61.0,
-                "y": 4748.0,
-                "width": 52.0,
-                "height": 28.0
+            "sheet_name": "terrain",
+            "frame_name": "tree_tall",
+            "rectangle":
+            {
+                "x": 1000.0,
+                "y": 5744.0,
+                "width": 96.0,
+                "height": 256.0
             },
-            "colour": "808080"
+            "colour": "WHITE"
         },
         {
-            "name": "spawn_right_backplate",
+            "name": "tree_3",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 5765.0,
-                "y": 4700.0,
-                "width": 190.0,
-                "height": 100.0
+            "sheet_name": "terrain",
+            "frame_name": "tree_round",
+            "rectangle":
+            {
+                "x": 4900.0,
+                "y": 5776.0,
+                "width": 128.0,
+                "height": 224.0
             },
-            "colour": "BLACK"
+            "colour": "WHITE"
         },
         {
-            "name": "spawn_right_backplate_stripe",
+            "name": "tree_4",
             "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 5781.0,
-                "y": 4720.0,
-                "width": 158.0,
-                "height": 8.0
+            "sheet_name": "terrain",
+            "frame_name": "tree_tall",
+            "rectangle":
+            {
+                "x": 5500.0,
+                "y": 5744.0,
+                "width": 96.0,
+                "height": 256.0
             },
-            "colour": "808080"
-        },
-        {
-            "name": "spawn_right_backplate_mark",
-            "type": "Visual",
-            "sheet_name": "sprite_sheet_1",
-            "frame_name": "square_white_4",
-            "rectangle": {
-                "x": 5781.0,
-                "y": 4748.0,
-                "width": 52.0,
-                "height": 28.0
-            },
-            "colour": "808080"
+            "colour": "WHITE"
         }
     ]
 }

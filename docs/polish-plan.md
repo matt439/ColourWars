@@ -235,7 +235,7 @@ settles the question above. Its 26 non-team roles:
 
 The team pairs stay blue/orange, pink/green and blue/yellow. The production
 painter is drawn to this build ([painter](polish-painter.md#the-authors-build-2026-10-18));
-the Muted Day palette waits on the terrain and background kit (`POL#9`).
+the Muted Day palette is applied by the [terrain kit](polish-terrain.md) (`POL#9`).
 
 Build the gameplay style first: a small reference containing a character, two
 contrasting weapons, a painted platform, background materials and effects.
@@ -383,8 +383,22 @@ used. Check the arena both clean and heavily painted with every team palette.
 
 The kit is part of locking the art style, so it comes before the reference
 blockout ([development order](#development-order-2026-10-17)): materials, props
-and background layers follow the art rules and the warehouse direction, and are
-fitted to Close Quarters once its layout exists.
+and background layers follow the art rules, and are fitted to Close Quarters
+once its layout exists.
+
+**First increment implemented 2026-10-18 (part of `POL#9`).** The
+[Tool Props terrain kit](polish-terrain.md) draws every collision object in the
+four arenas as drawn stationery in the Muted Day palette: tiled ground, pencils,
+erasers, a paint tin, rulers for jump-throughs and set squares for ramps, each
+inside its collision shape and outlined only where exposed. Airbrush speckle
+hangs under floating platforms, and a crude drawn backdrop (paper sky, hills,
+trees, a house, clouds, a sun, birds) replaces the dark void. The warehouse and
+industrial directions in the briefs above predate the Paint.exe rules: Tool Props
+governs the terrain everywhere, and each arena's subject (Close Quarters' paint
+workshop and supply warehouse) becomes its own backdrop and landmarks when its
+blockout is fitted. The bullets above beyond materials, undersides and
+background layers (landmarks, room life, ambient animation, parallax) and the
+human review remain open.
 
 ### Characters and distinctive weapons
 

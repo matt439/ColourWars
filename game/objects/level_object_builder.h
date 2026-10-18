@@ -26,6 +26,12 @@ public:
 	std::vector<std::unique_ptr<labrador::GameObject>>
 		build_non_collision_objects(const labrador::JsonValue& json) const;
 
+	// The airbrush speckle under every exposed underside of a flat structure
+	// that wears a material. Scene draws plain objects before collision
+	// objects, so these land under all terrain and paint.
+	std::vector<std::unique_ptr<labrador::GameObject>>
+		build_shadows(const labrador::JsonValue& collision_objects) const;
+
 	std::vector<std::unique_ptr<labrador::GameObject>>
 		build_viewport_dividers(const labrador::ViewportManager* viewport_manager) const;
 
@@ -40,10 +46,22 @@ private:
 	const labrador::AudioResources* audio_resources_ = nullptr;
 	const PlaySettings* preferences_ = nullptr;
 
+	// What every object in a stage needs from the others: the flat rectangles
+	// that bury paint, everything that buries an outline (ramps too: a ramp's
+	// leg against a face makes one surface, though paint passes through it),
+	// and the x of the stage's mirror line.
+	struct StageContext
+	{
+		std::vector<mattmath::RectangleF> flat;
+		std::vector<mattmath::RectangleF> solid;
+		float mirror_x = 0.0f;
+	};
+	static StageContext stage_context(const labrador::JsonValue& collision_objects);
+
 	std::unique_ptr<labrador::CollisionObject>
 		build_collision_object(const labrador::JsonValue& json,
 			const TeamColour& team_colours,
-			std::span<const mattmath::RectangleF> paint_obstacles = {}) const;
+			const StageContext& context) const;
 
 	std::unique_ptr<labrador::GameObject>
 		build_non_collision_object(const labrador::JsonValue& json) const;

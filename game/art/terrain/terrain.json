@@ -1,0 +1,175 @@
+{
+  "_comment": [
+    "Editable terrain and backdrop kit on the 4x4-texel cell grid: every coordinate below is a cell.",
+    "Shapes are [op, role, ...]: rect x y w h, ellipse x y w h, poly x0 y0 x1 y1 ..., line x0 y0 x1 y1,",
+    "path x0 y0 x1 y1 ... (one-cell lines through every point). Ellipses and polygons fill without antialiasing.",
+    "A prop draws `fill`, then outlines the union one cell thick in `outline.role` (`edges` all, or top",
+    "for horizon pieces whose sides and bottom run under neighbours), then draws `detail` on top.",
+    "Grids use one character per cell; `legend` maps characters to roles and `.` is transparent.",
+    "Hues live only here: runtime draws the sheet with a WHITE tint."
+  ],
+  "cell_size": 4,
+  "atlas_width": 2048,
+  "gutter": 4,
+  "palette": {
+    "keyline": "000000",
+    "paper": "C9D3D9",
+    "bg_far": "C3C8C0",
+    "bg_mid": "A7B09E",
+    "bg_line": "8E958C",
+    "bg_detail": "F2F1EA",
+    "ground_fill": "8C8A86",
+    "ground_top": "B4B1AA",
+    "ground_shade": "6A6865",
+    "pencil_body": "9A9186",
+    "pencil_shade": "756E65",
+    "pencil_wood": "C9AE8C",
+    "graphite": "3E3E40",
+    "ruler_fill": "B5AFA3",
+    "ruler_marks": "45423E",
+    "eraser_fill": "B8958C",
+    "eraser_shade": "8F716A",
+    "metal_light": "B8BCBE",
+    "metal_dark": "6E7275",
+    "shadow": "9CA2A2",
+    "shadow_deep": "7E8382",
+    "face": "FFFFFF",
+    "hud_paper": "F4F2EC",
+    "hud_ink": "2A2A2A",
+    "highlight": "FFFFFF",
+    "prop_accent": "945E52"
+  },
+  "props": [
+    {
+      "name": "hill_wide", "cells": [384, 80], "outline": { "role": "bg_line", "edges": "top" },
+      "fill": [
+        ["poly", "bg_far", 0, 80, 0, 79, 8, 75, 16, 71, 24, 65, 32, 58, 40, 50, 48, 42, 56, 34, 64, 27, 72, 21, 80, 16,
+          88, 12, 96, 10, 104, 10, 112, 11, 120, 13, 128, 16, 136, 19, 144, 24, 152, 29, 160, 34, 168, 40, 176, 46,
+          184, 52, 192, 57, 200, 62, 208, 57, 216, 52, 224, 47, 232, 42, 240, 38, 248, 34, 256, 30, 264, 27, 272, 25,
+          280, 24, 288, 24, 296, 25, 304, 28, 312, 33, 320, 39, 328, 45, 336, 52, 344, 59, 352, 65, 360, 71, 368, 76,
+          376, 79, 384, 80],
+        ["rect", "bg_far", 0, 78, 384, 2]
+      ],
+      "detail": []
+    },
+    {
+      "name": "hill_small", "cells": [192, 48], "outline": { "role": "bg_line", "edges": "top" },
+      "fill": [
+        ["poly", "bg_far", 0, 48, 0, 47, 6, 47, 12, 46, 18, 43, 24, 39, 30, 35, 36, 30, 42, 26, 48, 21, 54, 17, 60, 13,
+          66, 10, 72, 9, 78, 8, 84, 8, 90, 9, 96, 11, 102, 13, 108, 16, 114, 19, 120, 22, 126, 26, 132, 27, 138, 24,
+          144, 23, 150, 22, 156, 23, 162, 26, 168, 31, 174, 37, 180, 42, 186, 46, 192, 48],
+        ["rect", "bg_far", 0, 46, 192, 2]
+      ],
+      "detail": []
+    },
+    {
+      "name": "tree_round", "cells": [32, 56], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [["ellipse", "bg_mid", 1, 1, 30, 29]],
+      "detail": [["line", "bg_line", 15, 30, 15, 55]]
+    },
+    {
+      "name": "tree_tall", "cells": [24, 64], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [["poly", "bg_mid", 8, 0, 16, 0, 22, 6, 24, 20, 22, 34, 15, 41, 8, 41, 2, 35, 0, 22, 2, 6]],
+      "detail": [["line", "bg_line", 11, 41, 11, 63]]
+    },
+    {
+      "name": "house", "cells": [96, 88], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [
+        ["poly", "bg_mid", 0, 32, 48, 0, 96, 32],
+        ["rect", "bg_mid", 10, 31, 76, 57]
+      ],
+      "detail": [
+        ["line", "bg_line", 10, 31, 85, 31],
+        ["rect", "bg_line", 18, 42, 13, 12], ["rect", "bg_detail", 19, 43, 11, 10], ["line", "bg_line", 24, 43, 24, 52],
+        ["rect", "bg_line", 65, 42, 13, 12], ["rect", "bg_detail", 66, 43, 11, 10], ["line", "bg_line", 71, 43, 71, 52],
+        ["rect", "bg_line", 41, 60, 14, 28], ["rect", "bg_detail", 42, 61, 12, 26], ["rect", "bg_line", 51, 73, 1, 2]
+      ]
+    },
+    {
+      "name": "cloud_big", "cells": [64, 24], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [
+        ["ellipse", "bg_detail", 5, 8, 16, 15],
+        ["ellipse", "bg_detail", 16, 0, 22, 23],
+        ["ellipse", "bg_detail", 35, 11, 12, 11],
+        ["rect", "bg_detail", 0, 18, 64, 6]
+      ],
+      "detail": []
+    },
+    {
+      "name": "cloud_small", "cells": [40, 16], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [
+        ["ellipse", "bg_detail", 3, 5, 12, 10],
+        ["ellipse", "bg_detail", 11, 0, 16, 15],
+        ["rect", "bg_detail", 0, 11, 40, 5]
+      ],
+      "detail": []
+    },
+    {
+      "name": "sun", "cells": [56, 56], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [["ellipse", "bg_detail", 16, 16, 23, 23]],
+      "detail": [
+        ["line", "bg_line", 44, 27, 52, 27], ["line", "bg_line", 42, 18, 49, 15], ["line", "bg_line", 36, 12, 40, 5],
+        ["line", "bg_line", 27, 10, 27, 2], ["line", "bg_line", 18, 12, 14, 5], ["line", "bg_line", 12, 18, 5, 15],
+        ["line", "bg_line", 10, 27, 2, 27], ["line", "bg_line", 12, 36, 5, 39], ["line", "bg_line", 18, 42, 14, 49],
+        ["line", "bg_line", 27, 44, 27, 52], ["line", "bg_line", 36, 42, 40, 49], ["line", "bg_line", 42, 36, 49, 39],
+        ["line", "bg_line", 22, 24, 23, 24], ["line", "bg_line", 31, 24, 32, 24],
+        ["line", "bg_line", 24, 31, 30, 31]
+      ]
+    },
+    {
+      "name": "birds", "cells": [24, 8], "outline": { "role": "bg_line", "edges": "all" },
+      "fill": [],
+      "detail": [
+        ["path", "bg_line", 0, 7, 2, 5, 4, 5, 5, 6, 6, 5, 8, 5, 10, 7],
+        ["path", "bg_line", 13, 3, 15, 1, 16, 1, 17, 2, 18, 1, 19, 1, 21, 3]
+      ]
+    }
+  ],
+  "speckle": {
+    "_comment": "Airbrush shadow tiles hung under platforms: one cell is one speck, deep and dense at the top, thinning to nothing by the last row. Column 0 and 15 stay empty so any tile abuts any other.",
+    "cells": [16, 8],
+    "legend": { "D": "shadow_deep", "S": "shadow" },
+    "tiles": {
+      "shadow_0": [
+        ".D..D.D.DDDD.D..",
+        ".DDS.D..DDS..SS.",
+        "..S.S.SS..SSS...",
+        ".S...S.S..SS....",
+        "...S...S......S.",
+        "...S............",
+        "................",
+        "................"
+      ],
+      "shadow_1": [
+        ".D..D.DDD.DD.DD.",
+        "..DD.SSDDD.S..D.",
+        "..SSSS.SSS.S....",
+        ".....S.S....S.S.",
+        ".....S.......S..",
+        ".S.......S......",
+        "....S......S....",
+        "................"
+      ],
+      "shadow_2": [
+        "..DDD.DD.DDD..D.",
+        ".DD.DDDSD...D.D.",
+        ".SSS.SSSSSS..S..",
+        ".S.S...S..S.S...",
+        "...SS..S.....S..",
+        "...S..SS........",
+        ".S..............",
+        "................"
+      ],
+      "shadow_3": [
+        ".D.D....DD.DD...",
+        "..DDS.DD.D.DDS..",
+        "...S...S.S.S..S.",
+        "....S...S.SS....",
+        ".S.S.....S..SS..",
+        "................",
+        "................",
+        "................"
+      ]
+    }
+  }
+}

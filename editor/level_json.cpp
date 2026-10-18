@@ -119,6 +119,44 @@ namespace colourwars_editor
             check_rectangle(result);
             return result;
         }
+
+        namespace
+        {
+            // Which atlas look each material is, and the only collision tags it
+            // may sit on: a jump-through is a ruler, a ramp a set square.
+            struct Material
+            {
+                std::string_view name;
+                std::string_view collision_types;
+            };
+
+            constexpr std::array<Material, 6> materials = { {
+                { "ground", " STRUCTURE STRUCTURE_PAINTABLE " },
+                { "pencil", " STRUCTURE_PAINTABLE " },
+                { "eraser", " STRUCTURE_PAINTABLE " },
+                { "paint_tin", " STRUCTURE_PAINTABLE " },
+                { "ruler", " STRUCTURE_JUMP_THROUGH " },
+                { "set_square", " STRUCTURE_RAMP_LEFT STRUCTURE_RAMP_RIGHT " } } };
+
+            bool sits_on(const Material& material, std::string_view collision_type)
+            {
+                return !collision_type.empty() && collision_type.find(' ') == std::string_view::npos &&
+                    material.collision_types.find(" " + std::string(collision_type) + " ") !=
+                        std::string_view::npos;
+            }
+        }
+
+        std::string allowed_materials(std::string_view collision_type)
+        {
+            std::string result;
+            for (const Material& material : materials)
+            {
+                if (!sits_on(material, collision_type)) { continue; }
+                if (!result.empty()) { result += ", "; }
+                result += material.name;
+            }
+            return result;
+        }
     }
 
     namespace
@@ -163,6 +201,27 @@ namespace colourwars_editor
                     fail("The stage name contains a character the game's fonts cannot draw; use printable ASCII letters.");
                 }
                 name.remove_prefix(match->size());
+            }
+        }
+
+        // Optional. Absent keeps the legacy stretched sheet/frame draw.
+        void validate_material(const Json& object, const std::string& collision_type)
+        {
+            if (!object.HasMember("material")) { return; }
+            const std::string name = string(object, "material");
+            const auto match = std::find_if(materials.begin(), materials.end(),
+                [&](const Material& material) { return material.name == name; });
+            if (match == materials.end())
+            {
+                fail("Unknown material '" + name +
+                    "': use ground, pencil, eraser, paint_tin, ruler or set_square.");
+            }
+            if (!sits_on(*match, collision_type))
+            {
+                const std::string allowed = allowed_materials(collision_type);
+                fail("Material '" + name + "' does not fit " + collision_type + " collision; " +
+                    (allowed.empty() ? std::string("") : "use " + allowed + " or ") +
+                    "remove the material.");
             }
         }
 
@@ -215,6 +274,7 @@ namespace colourwars_editor
                 {
                     fail("A ramp must have three distinct corners.");
                 }
+                validate_material(object, collision_type);
                 return;
             }
             if (type == "Structure")
@@ -240,6 +300,7 @@ namespace colourwars_editor
                 }
             }
             else { fail("Unknown collision object type: " + type); }
+            validate_material(object, collision_type);
             check_rectangle(object_rectangle(object));
         }
     }

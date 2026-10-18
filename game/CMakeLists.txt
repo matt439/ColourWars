@@ -64,6 +64,7 @@ add_executable(ColourWars WIN32
     objects/blocked_shot_feedback.cpp
     objects/collision_object_type.cpp
     objects/combat_feedback.cpp
+    objects/airbrush_shadow.cpp
     objects/crude_drawing.cpp
     objects/countdown_art.cpp
     objects/reveal_art.cpp
@@ -101,6 +102,7 @@ add_executable(ColourWars WIN32
     objects/stage.cpp
     objects/structure.cpp
     objects/structure_paintable.cpp
+    objects/terrain_material.cpp
     objects/team_colour.cpp
     objects/weapon.cpp
     objects/weapon_feedback.cpp

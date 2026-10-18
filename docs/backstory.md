@@ -10,8 +10,8 @@ answers a question a player might ask about a mechanic.
 
 ## The premise
 
-A picture is open in a paint program. Everything in it is grey, and the palette
-has one empty slot.
+A picture is open in a paint program. Everything in it is grey or faded to a
+muted tone, and the palette has one empty slot.
 
 While choosing a colour for that slot, the person at the computer tried two
 colours, like tester patches on a wall: one previewed over the left half of the
@@ -28,7 +28,7 @@ persuade the person to save it.
 
 | Mechanic | In the story |
 |---|---|
-| The grey world, with no team hues in the scenery | Nothing has been coloured yet; the slot is still empty |
+| The grey, muted world, with no team hues in the scenery | Nothing has been coloured yet; the slot is still empty |
 | The random colour pairs | The two swatches this person happened to hover over |
 | Two teams | The two halves of the picture, each previewed in one colour |
 | Covering ground | Persuading the person: more coverage, a stronger case |
@@ -150,7 +150,7 @@ Decided with the author on 2026-10-12, while the first slice was built:
 |---|---|
 | Respawn: the redraw at the spawn | Built. `RespawnRedraw`; strokes and timings in `presentation.json` `respawn_redraw` |
 | Respawn: the pop | Built. The accepted `player.pop` plays when the paint comes off, through `player.sounds.death` in the replacement bank (`STORY#1`) |
-| Grey scenery, each team on its own half | Built. Enforced by the game and the level editor |
+| Muted scenery, no team hue in it, each team on its own half | Built. Authored tints are grey, enforced by the game and the level editor; the Muted Day terrain and backdrop take their muted tones from the terrain sheet's texels ([terrain kit](polish-terrain.md)) |
 | Opening: monitor, person, preview, undo, leaving, countdown in the picture, push through the glass | Built. `level_intro.cpp`; `Monitor`, `Silhouette`, `ScreenCursor`; timings in `tuning.json` `match.opening`, look in `presentation.json` `opening` |
 | Opening: skip, quick rematch | Built. A, B or Start skips; a Start (Escape) pressed while the intro plays is a skip, never a pause, however late after GO it is released (`latch_intro_pause`); a rematch starts at the preview |
 | Rematch: a new random monitor | Built. Rolled per match from `opening.bezel_shades` and the decorations |

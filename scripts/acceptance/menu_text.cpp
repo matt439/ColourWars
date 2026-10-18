@@ -181,7 +181,7 @@ namespace
 
         explicit World(const std::filesystem::path& content)
         {
-            for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx" })
+            for (const char* name : { "sprite_sheet_1", "painter", "menu_paint", "weapon_paint", "paint_fx", "terrain" })
             {
                 render.add_sprite_sheet(name, read_sprite_sheet(
                     (content / "textures" / (std::string(name) + ".json")).string().c_str(), TextureHandle{}));

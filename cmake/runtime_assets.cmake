@@ -22,6 +22,8 @@ set(COLOURWARS_RUNTIME_ASSETS
     textures/weapon_paint.json
     textures/paint_fx.dds
     textures/paint_fx.json
+    textures/terrain.dds
+    textures/terrain.json
     levels/king_of_the_hill.json
     levels/turbulence.json
     levels/close_quarters.json

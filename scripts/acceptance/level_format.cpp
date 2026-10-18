@@ -266,6 +266,19 @@ namespace
         variant("bad-sting-volume", false, [](rapidjson::Document& d) { d["sound"]["end_sting_volume"].SetDouble(1.1); });
         variant("bad-music-volume", false, [](rapidjson::Document& d) { d["sound"]["music_volume"].SetDouble(1.5); });
         variant("reserved-station", false, [](rapidjson::Document& d) { d["stations"][0]["name"].SetString("spawn_a"); });
+        // The template's left wall is a ground STRUCTURE and its floor a ground STRUCTURE_PAINTABLE.
+        variant("ruler-jump-through", true, [](rapidjson::Document& d)
+        {
+            d["collision_objects"][0]["collision_type"].SetString("STRUCTURE_JUMP_THROUGH");
+            d["collision_objects"][0]["material"].SetString("ruler");
+        });
+        variant("no-material", true, [](rapidjson::Document& d) { d["collision_objects"][0].RemoveMember("material"); });
+        variant("bad-material", false, [](rapidjson::Document& d) { d["collision_objects"][0]["material"].SetString("chalk"); });
+        variant("non-string-material", false, [](rapidjson::Document& d) { d["collision_objects"][0]["material"].SetInt(1); });
+        variant("material-type-mismatch", false, [](rapidjson::Document& d)
+            { d["collision_objects"][0]["material"].SetString("ruler"); });
+        variant("paintable-material-mismatch", false, [](rapidjson::Document& d)
+            { d["collision_objects"][3]["material"].SetString("set_square"); });
 
         const auto outside = variant("outside-spawn", true, [](rapidjson::Document& d)
             { d["spawn_locations"]["team_a"][0]["x"].SetInt(-100000); });
@@ -341,6 +354,8 @@ int main(int argc, char** argv)
             (content / "textures/sprite_sheet_1.json").string().c_str(), TextureHandle{}));
         render.add_sprite_sheet("paint_fx", read_sprite_sheet(
             (content / "textures/paint_fx.json").string().c_str(), TextureHandle{}));
+        render.add_sprite_sheet("terrain", read_sprite_sheet(
+            (content / "textures/terrain.json").string().c_str(), TextureHandle{}));
         AudioResources audio;
         audio.add_sound_bank("paint_exe", SoundBank::silent());
         const GameTuning tuning((content / "tuning.json").string().c_str());

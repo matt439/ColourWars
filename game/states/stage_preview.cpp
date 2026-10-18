@@ -38,6 +38,10 @@ void StagePreview::set_stage(const std::string& stage)
 	// Finish construction before replacing the previous selection.
 	auto objects = builder.build_non_collision_objects(
 		level->non_collision_objects_json());
+	for (auto& shadow : builder.build_shadows(level->collision_objects_json()))
+	{
+		objects.push_back(std::move(shadow));
+	}
 	auto collision_objects = builder.build_collision_objects(
 		level->collision_objects_json(), TeamColour{});
 	const RectangleF world_bounds = level->zoom_out_finish_bounds_rectangle();

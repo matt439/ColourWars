@@ -1,6 +1,8 @@
 #include "game/pch.h"
 #include "game/objects/level_object_builder.h"
 #include "engine/math/triangle.h"
+#include "game/objects/airbrush_shadow.h"
+#include "game/paint_face_geometry.h"
 #include <cmath>
 #include <initializer_list>
 
@@ -152,6 +154,53 @@ namespace
 	}
 }
 
+namespace
+{
+	// The faces of `rectangle` nothing in `flat` covers (paint_face_geometry.h).
+	TerrainFaces exposed_faces(const RectangleF& rectangle, std::span<const RectangleF> flat)
+	{
+		std::vector<PaintFaceRectangle> obstacles;
+		obstacles.reserve(flat.size());
+		for (const RectangleF& other : flat)
+		{
+			obstacles.push_back({ other.left(), other.top(), other.right(), other.bottom() });
+		}
+		TerrainFaces faces;
+		faces.top = exposed_paint_intervals(rectangle.left(), rectangle.right(),
+			rectangle.top(), true, true, obstacles);
+		faces.bottom = exposed_paint_intervals(rectangle.left(), rectangle.right(),
+			rectangle.bottom(), true, false, obstacles);
+		faces.left = exposed_paint_intervals(rectangle.top(), rectangle.bottom(),
+			rectangle.left(), false, true, obstacles);
+		faces.right = exposed_paint_intervals(rectangle.top(), rectangle.bottom(),
+			rectangle.right(), false, false, obstacles);
+		return faces;
+	}
+
+	// An optional Tool Props material; absent keeps the stretched frame.
+	std::unique_ptr<const TerrainMaterial> material_of(const JsonValue& json,
+		CollisionObjectType type, const Shape& shape, std::span<const RectangleF> flat,
+		float mirror_x, RenderResources* render_resources)
+	{
+		if (!json.has("material"))
+		{
+			return nullptr;
+		}
+		try
+		{
+			return TerrainMaterial::make(json.string("material"), type, shape,
+				exposed_faces(shape.bounding_box(), flat), mirror_x, render_resources);
+		}
+		catch (const std::invalid_argument& error)
+		{
+			throw std::runtime_error(json.where() + ": " + error.what());
+		}
+	}
+
+	// Platforms, not walls or the stage's foundations.
+	constexpr float shadow_caster_limit = 200.0f;
+}
+
 LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
 	const AudioResources* audio_resources,
 	const PlaySettings* preferences,
@@ -167,7 +216,7 @@ LevelObjectBuilder::LevelObjectBuilder(RenderResources* render_resources,
 std::unique_ptr<CollisionObject>
 	LevelObjectBuilder::build_collision_object(const JsonValue& json,
 		const TeamColour& team_colours,
-		std::span<const RectangleF> paint_obstacles) const
+		const StageContext& context) const
 {
 	const std::string type = json.string("type");
 	if (type == "Structure")
@@ -185,7 +234,13 @@ std::unique_ptr<CollisionObject>
 			std::make_unique<RectangleF>(rectangle),
 			this->render_resources_,
 			collision_type,
-			colour_of(json));
+			colour_of(json),
+			0.0f,
+			Vector2F::ZERO,
+			SpriteFlip::none,
+			0.0f,
+			material_of(json, collision_type, rectangle, context.solid, context.mirror_x,
+				this->render_resources_));
 	}
 	if (type == "StructurePaintable")
 	{
@@ -213,8 +268,14 @@ std::unique_ptr<CollisionObject>
 			collision_type,
 			team_colours,
 			faces,
-			paint_obstacles,
-			colour_of(json));
+			context.flat,
+			colour_of(json),
+			0.0f,
+			Vector2F::ZERO,
+			SpriteFlip::none,
+			0.0f,
+			material_of(json, collision_type, rectangle, context.solid, context.mirror_x,
+				this->render_resources_));
 	}
 	if (type == "StructureRamp")
 	{
@@ -247,7 +308,10 @@ std::unique_ptr<CollisionObject>
 			colour_of(json),
 			0.0f,
 			Vector2F::ZERO,
-			flip);
+			flip,
+			0.0f,
+			material_of(json, collision_type, triangle, context.solid, context.mirror_x,
+				this->render_resources_));
 	}
 
 	throw std::runtime_error(json.where() +
@@ -272,31 +336,84 @@ std::unique_ptr<GameObject>
 		": '" + type + "' is not a non-collision object type");
 }
 
-std::vector<std::unique_ptr<CollisionObject>>
-	LevelObjectBuilder::build_collision_objects(const JsonValue& json,
-		const TeamColour& team_colours) const
+LevelObjectBuilder::StageContext
+	LevelObjectBuilder::stage_context(const JsonValue& json)
 {
 	// Only flat structures block paint. Ramps deliberately let projectiles pass
 	// through, and decorative art must not remove reachable scoring surface.
-	std::vector<RectangleF> paint_obstacles;
+	// The same rectangles decide which edges of the terrain are outlined.
+	StageContext context;
+	float left = 0.0f;
+	float right = 0.0f;
 	for (size_t index = 0; index < json.size(); ++index)
 	{
 		const JsonValue object = json.at(index);
 		const std::string type = object.string("type");
 		if (type == "Structure" || type == "StructurePaintable")
 		{
-			paint_obstacles.push_back(decode_rectangle(object));
+			const RectangleF rectangle = decode_rectangle(object);
+			left = context.flat.empty() ? rectangle.left() : std::min(left, rectangle.left());
+			right = context.flat.empty() ? rectangle.right() : std::max(right, rectangle.right());
+			context.flat.push_back(rectangle);
+			context.solid.push_back(rectangle);
+		}
+		else if (type == "StructureRamp")
+		{
+			const JsonValue t = object.object("triangle");
+			context.solid.push_back(TriangleRightAxisAligned(t.number("x1"), t.number("y1"),
+				t.number("x2"), t.number("y2"), t.number("x3"), t.number("y3")).bounding_box());
 		}
 	}
+	context.mirror_x = (left + right) / 2.0f;
+	return context;
+}
 
+std::vector<std::unique_ptr<CollisionObject>>
+	LevelObjectBuilder::build_collision_objects(const JsonValue& json,
+		const TeamColour& team_colours) const
+{
+	const StageContext context = stage_context(json);
 	std::vector<std::unique_ptr<CollisionObject>> collision_objects;
 	collision_objects.reserve(json.size());
 	for (size_t index = 0; index < json.size(); ++index)
 	{
 		collision_objects.push_back(
-			build_collision_object(json.at(index), team_colours, paint_obstacles));
+			build_collision_object(json.at(index), team_colours, context));
 	}
 	return collision_objects;
+}
+
+std::vector<std::unique_ptr<GameObject>>
+	LevelObjectBuilder::build_shadows(const JsonValue& json) const
+{
+	const StageContext context = stage_context(json);
+	std::vector<std::unique_ptr<GameObject>> shadows;
+	for (size_t index = 0; index < json.size(); ++index)
+	{
+		const JsonValue object = json.at(index);
+		const std::string type = object.string("type");
+		if (!object.has("material") || (type != "Structure" && type != "StructurePaintable"))
+		{
+			continue;
+		}
+		const RectangleF rectangle = decode_rectangle(object);
+		if (!(rectangle.width > rectangle.height && rectangle.height < shadow_caster_limit))
+		{
+			continue;
+		}
+		std::vector<PaintFaceRectangle> obstacles;
+		for (const RectangleF& other : context.solid)
+		{
+			obstacles.push_back({ other.left(), other.top(), other.right(), other.bottom() });
+		}
+		for (const auto& [low, high] : exposed_paint_intervals(rectangle.left(),
+			rectangle.right(), rectangle.bottom(), true, false, obstacles))
+		{
+			shadows.push_back(std::make_unique<AirbrushShadow>(
+				low, high, rectangle.bottom(), this->render_resources_));
+		}
+	}
+	return shadows;
 }
 
 std::vector<std::unique_ptr<GameObject>>
@@ -316,12 +433,13 @@ void LevelObjectBuilder::validate_objects(const JsonValue& collision_objects,
 	const JsonValue& non_collision_objects) const
 {
 	const TeamColour colours;
+	const StageContext context = stage_context(collision_objects);
 	for (size_t index = 0; index < collision_objects.size(); ++index)
 	{
 		const JsonValue object = collision_objects.at(index);
 		try
 		{
-			build_collision_object(object, colours);
+			build_collision_object(object, colours, context);
 		}
 		catch (const std::exception& error)
 		{
@@ -340,6 +458,7 @@ void LevelObjectBuilder::validate_objects(const JsonValue& collision_objects,
 			throw std::runtime_error(object.where() + ": " + error.what());
 		}
 	}
+	build_shadows(collision_objects);
 }
 
 std::vector<std::unique_ptr<GameObject>>

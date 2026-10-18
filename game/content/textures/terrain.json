@@ -1,0 +1,436 @@
+{
+    "animation_strips":  [
+
+                         ],
+    "sprite_frames":  [
+                          {
+                              "name":  "house",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  4
+                                           },
+                              "size":  {
+                                           "w":  384,
+                                           "h":  352
+                                       }
+                          },
+                          {
+                              "name":  "hill_wide",
+                              "position":  {
+                                               "x":  392,
+                                               "y":  4
+                                           },
+                              "size":  {
+                                           "w":  1536,
+                                           "h":  320
+                                       }
+                          },
+                          {
+                              "name":  "tree_tall",
+                              "position":  {
+                                               "x":  1932,
+                                               "y":  4
+                                           },
+                              "size":  {
+                                           "w":  96,
+                                           "h":  256
+                                       }
+                          },
+                          {
+                              "name":  "sun",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  224,
+                                           "h":  224
+                                       }
+                          },
+                          {
+                              "name":  "tree_round",
+                              "position":  {
+                                               "x":  232,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  128,
+                                           "h":  224
+                                       }
+                          },
+                          {
+                              "name":  "hill_small",
+                              "position":  {
+                                               "x":  364,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  768,
+                                           "h":  192
+                                       }
+                          },
+                          {
+                              "name":  "cloud_big",
+                              "position":  {
+                                               "x":  1136,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  256,
+                                           "h":  96
+                                       }
+                          },
+                          {
+                              "name":  "cloud_small",
+                              "position":  {
+                                               "x":  1396,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  160,
+                                           "h":  64
+                                       }
+                          },
+                          {
+                              "name":  "birds",
+                              "position":  {
+                                               "x":  1560,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  96,
+                                           "h":  32
+                                       }
+                          },
+                          {
+                              "name":  "shadow_0",
+                              "position":  {
+                                               "x":  1660,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  64,
+                                           "h":  32
+                                       }
+                          },
+                          {
+                              "name":  "shadow_1",
+                              "position":  {
+                                               "x":  1728,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  64,
+                                           "h":  32
+                                       }
+                          },
+                          {
+                              "name":  "shadow_2",
+                              "position":  {
+                                               "x":  1796,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  64,
+                                           "h":  32
+                                       }
+                          },
+                          {
+                              "name":  "shadow_3",
+                              "position":  {
+                                               "x":  1864,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  64,
+                                           "h":  32
+                                       }
+                          },
+                          {
+                              "name":  "swatch_keyline",
+                              "position":  {
+                                               "x":  1932,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_paper",
+                              "position":  {
+                                               "x":  1940,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_bg_far",
+                              "position":  {
+                                               "x":  1948,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_bg_mid",
+                              "position":  {
+                                               "x":  1956,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_bg_line",
+                              "position":  {
+                                               "x":  1964,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_bg_detail",
+                              "position":  {
+                                               "x":  1972,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_ground_fill",
+                              "position":  {
+                                               "x":  1980,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_ground_top",
+                              "position":  {
+                                               "x":  1988,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_ground_shade",
+                              "position":  {
+                                               "x":  1996,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_pencil_body",
+                              "position":  {
+                                               "x":  2004,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_pencil_shade",
+                              "position":  {
+                                               "x":  2012,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_pencil_wood",
+                              "position":  {
+                                               "x":  2020,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_graphite",
+                              "position":  {
+                                               "x":  2028,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_ruler_fill",
+                              "position":  {
+                                               "x":  2036,
+                                               "y":  360
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_ruler_marks",
+                              "position":  {
+                                               "x":  4,
+                                               "y":  588
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_eraser_fill",
+                              "position":  {
+                                               "x":  12,
+                                               "y":  588
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_eraser_shade",
+                              "position":  {
+                                               "x":  20,
+                                               "y":  588
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_metal_light",
+                              "position":  {
+                                               "x":  28,
+                                               "y":  588
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_metal_dark",
+                              "position":  {
+                                               "x":  36,
+                                               "y":  588
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_shadow",
+                              "position":  {
+                                               "x":  44,
+                                               "y":  588
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_shadow_deep",
+                              "position":  {
+                                               "x":  52,
+                                               "y":  588
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_face",
+                              "position":  {
+                                               "x":  60,
+                                               "y":  588
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_hud_paper",
+                              "position":  {
+                                               "x":  68,
+                                               "y":  588
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_hud_ink",
+                              "position":  {
+                                               "x":  76,
+                                               "y":  588
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_highlight",
+                              "position":  {
+                                               "x":  84,
+                                               "y":  588
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          },
+                          {
+                              "name":  "swatch_prop_accent",
+                              "position":  {
+                                               "x":  92,
+                                               "y":  588
+                                           },
+                              "size":  {
+                                           "w":  4,
+                                           "h":  4
+                                       }
+                          }
+                      ]
+}

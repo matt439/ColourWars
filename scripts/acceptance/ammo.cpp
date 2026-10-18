@@ -101,6 +101,8 @@ int main(int argc, char** argv)
             read_sprite_sheet(weapon_sheet_path.c_str(), TextureHandle{}));
         render.add_sprite_sheet("paint_fx", read_sprite_sheet(
             (content / "textures/paint_fx.json").string().c_str(), TextureHandle{}));
+        render.add_sprite_sheet("terrain", read_sprite_sheet(
+            (content / "textures/terrain.json").string().c_str(), TextureHandle{}));
         AudioResources audio;
         audio.add_sound_bank("paint_exe", SoundBank::silent());
         const GameTuning tuning(tuning_path.c_str());

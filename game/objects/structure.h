@@ -4,6 +4,7 @@
 #include "engine/render/texture_object.h"
 #include "game/objects/collision_object_type.h"
 #include "engine/render/colour.h"
+#include "game/objects/terrain_material.h"
 
 class Structure : public labrador::TextureObject, public labrador::CollisionObject
 {
@@ -20,7 +21,8 @@ public:
 		float rotation = 0.0f,
 		const mattmath::Vector2F& origin = mattmath::Vector2F::ZERO,
 		labrador::SpriteFlip flip = labrador::SpriteFlip::none,
-		float layer_depth = 0.0f);
+		float layer_depth = 0.0f,
+		std::unique_ptr<const TerrainMaterial> material = nullptr);
 
 	void update(float dt) override;
 	void draw(labrador::DrawList& draw_list) const override;
@@ -36,6 +38,8 @@ public:
 		const mattmath::Vector2F& normal, float penetration) override;
 
 	bool for_deletion() const override;
+	// The Tool Props drawing, or null for the legacy stretched frame.
+	const TerrainMaterial* material() const;
 protected:
 	const mattmath::RectangleF& rectangle() const;
 	CollisionObjectType collision_type() const;
@@ -44,4 +48,5 @@ private:
 		CollisionObjectType::structure;
 	mattmath::RectangleF sprite_rectangle_ = mattmath::RectangleF::ZERO;
 	std::unique_ptr<mattmath::Shape> collision_shape_ = nullptr;
+	std::unique_ptr<const TerrainMaterial> material_ = nullptr;
 };

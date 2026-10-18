@@ -36,25 +36,25 @@
             "name": "left_wall", "type": "Structure",
             "sheet_name": "sprite_sheet_1", "frame_name": "square_white_4", "colour": "808080",
             "rectangle": { "x": -100, "y": 0, "width": 100, "height": 1300 },
-            "collision_type": "STRUCTURE"
+            "collision_type": "STRUCTURE", "material": "ground"
         },
         {
             "name": "right_wall", "type": "Structure",
             "sheet_name": "sprite_sheet_1", "frame_name": "square_white_4", "colour": "808080",
             "rectangle": { "x": 3000, "y": 0, "width": 100, "height": 1300 },
-            "collision_type": "STRUCTURE"
+            "collision_type": "STRUCTURE", "material": "ground"
         },
         {
             "name": "ceiling", "type": "Structure",
             "sheet_name": "sprite_sheet_1", "frame_name": "square_white_4", "colour": "808080",
             "rectangle": { "x": -100, "y": -100, "width": 3200, "height": 100 },
-            "collision_type": "STRUCTURE"
+            "collision_type": "STRUCTURE", "material": "ground"
         },
         {
             "name": "paintable_floor", "type": "StructurePaintable",
             "sheet_name": "sprite_sheet_1", "frame_name": "square_white_4", "colour": "GAINSBORO",
             "rectangle": { "x": 0, "y": 1200, "width": 3000, "height": 100 },
-            "collision_type": "STRUCTURE_PAINTABLE",
+            "collision_type": "STRUCTURE_PAINTABLE", "material": "ground",
             "paintable_faces": { "left": false, "top": true, "right": false, "bottom": false }
         }
     ],

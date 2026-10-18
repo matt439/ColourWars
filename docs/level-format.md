@@ -99,16 +99,17 @@ device slot or view index. The same position is retained for respawn.
 ## Objects and geometry
 
 Every object needs `type`, `sheet_name`, `frame_name` and `colour`. Collision
-objects also need an allowed `collision_type`. A `name` is optional authoring
+objects also need an allowed `collision_type` and may name a `material`
+([Materials](#materials)). A `name` is optional authoring
 metadata: the editor uses a string name as its list label, and the runtime
 does not use it for lookup, collision or uniqueness.
 
 | Array | `type` | Allowed `collision_type` | Geometry and extra fields |
 |---|---|---|---|
-| `collision_objects` | `Structure` | `STRUCTURE`, `STRUCTURE_JUMP_THROUGH` | Rectangle. Fixed solid or jump-through terrain; no scoring paint. |
-| `collision_objects` | `StructurePaintable` | `STRUCTURE_PAINTABLE` | Rectangle plus all four `paintable_faces` booleans. Fixed paint-scoring terrain. |
-| `collision_objects` | `StructureRamp` | `STRUCTURE_RAMP_RIGHT`, `STRUCTURE_RAMP_LEFT` | `triangle` with six coordinates. Fixed ramp collision; no scoring paint. |
-| `non_collision_objects` | `Visual` | None is read | Rectangle. Decorative art with no collision or score. |
+| `collision_objects` | `Structure` | `STRUCTURE`, `STRUCTURE_JUMP_THROUGH` | Rectangle; optional `material`. Fixed solid or jump-through terrain; no scoring paint. |
+| `collision_objects` | `StructurePaintable` | `STRUCTURE_PAINTABLE` | Rectangle plus all four `paintable_faces` booleans; optional `material`. Fixed paint-scoring terrain. |
+| `collision_objects` | `StructureRamp` | `STRUCTURE_RAMP_RIGHT`, `STRUCTURE_RAMP_LEFT` | `triangle` with six coordinates; optional `material`. Fixed ramp collision; no scoring paint. |
+| `non_collision_objects` | `Visual` | None is read | Rectangle. Decorative art with no collision or score; backdrop props use sheet `terrain`. |
 
 Flat terrain and visuals use either of these object members:
 
@@ -162,9 +163,32 @@ objects and players. Put backgrounds in `non_collision_objects`. A frame is
 stretched into the authored rectangle or ramp bounding box; its source texel
 size does not change collision dimensions.
 
-## Grey scenery and resource identifiers
+## Materials
 
-Scenery is grey until players add team paint. `colour` accepts six hex digits
+`material` is an optional string on a collision object. It names the look the
+object is drawn with from the `terrain` atlas, instead of stretching its
+sheet/frame into the rectangle. An absent `material` keeps that legacy stretched
+draw unchanged. Each material may sit only on these collision types:
+
+| `material` | Allowed `collision_type` (object `type`) |
+|---|---|
+| `ground` | `STRUCTURE` (`Structure`) or `STRUCTURE_PAINTABLE` (`StructurePaintable`) |
+| `pencil`, `eraser`, `paint_tin` | `STRUCTURE_PAINTABLE` (`StructurePaintable`) |
+| `ruler` | `STRUCTURE_JUMP_THROUGH` (`Structure`) |
+| `set_square` | `STRUCTURE_RAMP_LEFT` or `STRUCTURE_RAMP_RIGHT` (`StructureRamp`) |
+
+Any other value, a non-string, or a value on a type the table does not allow is
+an error in the runtime builder, the editor and the schema alike. A material
+does not replace the sprite fields: `sheet_name` and `frame_name` stay required
+and validated, so keep them `sprite_sheet_1` / `square_white_4`, or the ramp
+frame for a ramp. Collision, scoring faces and geometry do not depend on it.
+Decorative backdrop objects take no material; they are ordinary `Visual`s whose
+`sheet_name` is `terrain` and whose `frame_name` is one of its props.
+
+## Grey tints and resource identifiers
+
+Authored tints are grey; scenery takes its muted hues only from the `terrain`
+sheet's texels, and no team hue appears until players add paint. `colour` accepts six hex digits
 `RRGGBB` without `#`, case insensitive for hex digits, with equal red, green and
 blue values, such as `404040`, `808080` and `DCDCDC`. Named colours use the
 engine's exact uppercase spelling:
@@ -176,6 +200,12 @@ The schema recognizes these names and six-digit hex syntax. Equality of the
 three hex channels is checked by the game/editor, so a coloured hex value can
 pass the schema and still fail content validation. Tinting art grey does not
 validate that every source texel follows the art direction.
+
+Hues come only from atlas texels: the `terrain` atlas carries the stage
+palette, and every JSON `colour` tint stays grey, with `WHITE` on `terrain`
+backdrop visuals so their texels show unchanged. A collision object with a
+`material` still needs a grey `colour`; neither a material nor a backdrop prop
+makes a coloured tint valid.
 
 `sheet_name` is a sprite-sheet manifest identifier; `frame_name` names a frame
 inside that sheet, not an animation strip or a file path. The template uses
@@ -222,7 +252,8 @@ check as spawns. After authored stations, the game appends `spawn_a` and
 affect normal gameplay.
 
 The schema covers required keys, scalar/array types, positive rectangle sizes,
-spawn counts, type/collision combinations, paint-face booleans, sound-pair
+spawn counts, type/collision combinations, material values and the collision
+types each allows, paint-face booleans, sound-pair
 presence, sting gain and station-name syntax/reserved names. It leaves these
 checks to their owners:
 
@@ -270,7 +301,7 @@ RapidJSON Draft-04 validation and the actual `LevelLoadedInfo`/`LevelObjectBuild
 paths with CPU resource metadata; it checks source and staged copies of all
 four shipped levels plus the template, with an untagged legacy clone of each.
 Its fixtures also exercise invalid
-versions, structural failures, unknown metadata, rectangle precedence and
+versions, structural failures, unknown and mismatched materials, unknown metadata, rectangle precedence and
 runtime checks beyond the schema. It also holds the editor's resource-name
 catalog to the engine's sprite-sheet and sound-bank loaders. Editor acceptance checks version compatibility,
 new-document versioning and template/unknown-field round trips.

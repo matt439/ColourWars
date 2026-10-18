@@ -214,6 +214,8 @@ The accepted §1 rules ([polish-plan.md](polish-plan.md), [game/art/README.md](.
   because it changes nothing visible in flat, unantialiased art.
 - **No dithering** by default: true colour wouldn't produce it. If it comes back, it
   comes back as a deliberate texture when the background kit (`POL#9`) is built.
+  The kit's first increment (2026-10-18) needed none: its shadows are airbrush
+  speckle in two palette colours ([terrain kit](polish-terrain.md)).
 
 - **Everything counts within the 28:** the level, the characters, the team paint
   colours and the HUD. Every colour on screen comes from that level's one colour box.
@@ -222,9 +224,8 @@ The accepted §1 rules ([polish-plan.md](polish-plan.md), [game/art/README.md](.
   match, as the [backstory](backstory.md#how-it-explains-the-game) says (the two
   swatches this person hovered over), so each level's 26 must work with every
   supported pair.
-- **Still open: what the 26 are.** Greys only (the backstory's grey picture), greys
-  with a few muted non-team hues, or full colour per level. Style mockups of all three
-  come first.
+- **The 26 are Muted Day** (author, 2026-10-18): greys with a few muted non-team
+  hues, the table in [polish-plan §1](polish-plan.md#1-establish-the-art-and-display-rules).
 
 ### Open decisions for the author
 

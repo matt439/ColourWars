@@ -1,7 +1,7 @@
 {
     "$schema": "http://json-schema.org/draft-04/schema#",
     "title": "ColourWars level format 1",
-    "description": "Structural checks for the runtime format. Unknown keys are retained by the editor and ignored by the runtime. Resource resolution, float conversion, geometry relationships and station-name uniqueness still require runtime validation; see level-format.md.",
+    "description": "Structural checks for the runtime format. Unknown keys are retained by the editor and ignored by the runtime. Resource resolution, float conversion, geometry relationships and station-name uniqueness still require runtime validation; collision objects take an optional material whose allowed values depend on collision_type; see level-format.md.",
     "type": "object",
     "required": [
         "display_name", "icon_frame", "sound", "spawn_locations", "level_bounds",
@@ -126,6 +126,11 @@
                 { "pattern": "^[0-9A-Fa-f]{6}$" }
             ]
         },
+        "material": {
+            "description": "Optional terrain-atlas look of a collision object; absent keeps the stretched sheet/frame draw. Draft-04 has no if/then, so each collision definition narrows this enum to the values its collision_type allows.",
+            "type": "string",
+            "enum": ["ground", "pencil", "eraser", "paint_tin", "ruler", "set_square"]
+        },
         "object_common": {
             "type": "object",
             "required": ["type", "sheet_name", "frame_name", "colour"],
@@ -145,8 +150,26 @@
                     "required": ["collision_type"],
                     "properties": {
                         "type": { "enum": ["Structure"] },
-                        "collision_type": { "enum": ["STRUCTURE", "STRUCTURE_JUMP_THROUGH"] }
+                        "collision_type": { "enum": ["STRUCTURE", "STRUCTURE_JUMP_THROUGH"] },
+                        "material": { "$ref": "#/definitions/material" }
                     }
+                },
+                {
+                    "anyOf": [
+                        { "not": { "required": ["material"] } },
+                        {
+                            "properties": {
+                                "collision_type": { "enum": ["STRUCTURE"] },
+                                "material": { "enum": ["ground"] }
+                            }
+                        },
+                        {
+                            "properties": {
+                                "collision_type": { "enum": ["STRUCTURE_JUMP_THROUGH"] },
+                                "material": { "enum": ["ruler"] }
+                            }
+                        }
+                    ]
                 }
             ]
         },
@@ -159,6 +182,12 @@
                     "properties": {
                         "type": { "enum": ["StructurePaintable"] },
                         "collision_type": { "enum": ["STRUCTURE_PAINTABLE"] },
+                        "material": {
+                            "allOf": [
+                                { "$ref": "#/definitions/material" },
+                                { "enum": ["ground", "pencil", "eraser", "paint_tin"] }
+                            ]
+                        },
                         "paintable_faces": {
                             "type": "object",
                             "required": ["left", "top", "right", "bottom"],
@@ -180,7 +209,13 @@
                     "properties": {
                         "type": { "enum": ["StructureRamp"] },
                         "collision_type": { "enum": ["STRUCTURE_RAMP_RIGHT", "STRUCTURE_RAMP_LEFT"] },
-                        "triangle": { "$ref": "#/definitions/triangle" }
+                        "triangle": { "$ref": "#/definitions/triangle" },
+                        "material": {
+                            "allOf": [
+                                { "$ref": "#/definitions/material" },
+                                { "enum": ["set_square"] }
+                            ]
+                        }
                     }
                 }
             ]
