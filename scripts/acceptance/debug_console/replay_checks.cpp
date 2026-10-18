@@ -5,6 +5,7 @@
 #include "game/debug/bot.h"
 #include "game/debug/match_fingerprint.h"
 #include "game/debug/replay.h"
+#include "game/debug/tune_document.h"
 #include "game/debug/tune_scope.h"
 #include "game/directory_consts.h"
 #include "game/objects/crude_drawing.h"
@@ -412,6 +413,15 @@ namespace debug_console_acceptance
 		require(impl.execute("record cpu 600").ok && impl.request().restart, "record queues a fresh build");
 		drive(director, match, dt, 2000, [&] { return impl.recording() || match.builds >= 2; });
 		require(impl.recording() && impl.level_updates() == 0, "Recording starts at a fresh build");
+		const std::string recorded_colour = impl.tune_token("presentation.debug_overlay.station_label.colour");
+		const std::string recorded_presentation = impl.tune_document("presentation")->current().text();
+		require(impl.execute("tune presentation.debug_overlay.station_label.colour").ok &&
+			!impl.execute("tune presentation.debug_overlay.station_label.colour 12345678").ok &&
+			!impl.execute("tune.reset presentation.debug_overlay.station_label.colour").ok &&
+			!impl.execute("tune.save presentation").ok && impl.recording() &&
+			impl.tune_token("presentation.debug_overlay.station_label.colour") == recorded_colour &&
+			impl.tune_document("presentation")->current().text() == recorded_presentation,
+			"A recording permits colour inspection but refuses colour edits/reset/save without changing its content hash");
 		const int recorded_steps = drive(director, match, dt, 2000, [&] { return !impl.recording(); }, 300);
 		require(!impl.recording() && recorded_steps >= length && log_contains(log, "record: saved", DebugSeverity::info) &&
 			log_contains(log, "(600 updates, checksum", DebugSeverity::info), "record stops by itself after 600 updates");
@@ -507,6 +517,13 @@ namespace debug_console_acceptance
 			"god, respawn, tune, tune.save, tune.reset and bot are refused while a replay runs");
 		require(log_contains(log, "tune.save: replaying 'cpu' would diverge", DebugSeverity::error),
 			"tune.save says why");
+		const std::string replayed_presentation = impl.tune_document("presentation")->current().text();
+		require(impl.execute("tune presentation.debug_overlay.station_label.colour").ok &&
+			!impl.execute("tune presentation.debug_overlay.station_label.colour ABCDEF").ok &&
+			!impl.execute("tune.reset presentation.debug_overlay.station_label.colour").ok &&
+			impl.tune_token("presentation.debug_overlay.station_label.colour") == recorded_colour &&
+			impl.tune_document("presentation")->current().text() == replayed_presentation && impl.playing(),
+			"A running replay permits the colour getter but refuses string edits/reset while preserving the presentation bytes");
 		// A script runs under a replay exactly as typed lines do: wait and echo
 		// pass, a command that would change the simulation is refused, and that
 		// refusal stops the script at its line.
@@ -834,6 +851,12 @@ namespace debug_console_acceptance
 			{
 				require(impl.execute("overlay stations").ok && level.station_label_count() == 10 && hidden(0) &&
 					hidden(9), "Turned off, the labels stay and take a tint that adds nothing");
+				require(impl.execute("tune presentation.debug_overlay.station_label.colour 10203000").ok,
+					"An invisible overlay may still receive an audited transparent colour");
+				level.refresh_layout();
+				require(hidden(0) && hidden(9) &&
+					impl.execute("tune.reset presentation.debug_overlay.station_label.colour").ok,
+					"A live colour edit does not reveal hidden station labels, and resets independently");
 			}
 			if (step == 101)
 			{
@@ -845,6 +868,31 @@ namespace debug_console_acceptance
 		const MatchFingerprint shown = MatchFingerprint::of(level, length);
 		require(shown.hash == reference.hash,
 			"Labels in the scene change nothing in the match: " + MatchFingerprint::difference(reference, shown));
+
+		// Do the explicit rand sentinel after the seeded simulation comparison,
+		// so the sentinel's own seeding cannot perturb that comparison.
+		const MatchFingerprint before_colour = MatchFingerprint::of(level, length);
+		std::vector<const labrador::Label*> original_labels;
+		for (int index = 0; index < level.station_label_count(); ++index)
+			{ original_labels.push_back(&level.station_label(index)); }
+		std::srand(8417); const int expected_random = std::rand(); std::srand(8417);
+		require(impl.execute("tune presentation.debug_overlay.station_label.colour 12345678").ok,
+			"A paused CPU match accepts an audited station-label RGBA colour");
+		level.refresh_layout();
+		const labrador::Colour edited_tint = CrudeDrawing::premultiplied(labrador::Colour(18, 52, 86, 120));
+		for (int index = 0; index < level.station_label_count(); ++index)
+		{
+			require(&level.station_label(index) == original_labels[static_cast<std::size_t>(index)] &&
+				level.station_label(index).colour() == edited_tint,
+				"Existing station labels adopt all RGBA channels, premultiplied, without replacing their scene objects");
+		}
+		require(std::rand() == expected_random && MatchFingerprint::difference(before_colour,
+			MatchFingerprint::of(level, length)).empty(),
+			"Live station-label colour adoption changes neither gameplay RNG nor the frozen match fingerprint");
+		require(impl.execute("tune.reset presentation.debug_overlay.station_label.colour").ok,
+			"Station-label colour reset restores the original file token before rebuilding");
+		level.refresh_layout();
+		require(visible(), "The same labels immediately adopt the restored station colour");
 
 		// Every build re-applies the overlay, and overlay none hides the labels.
 		match.build();

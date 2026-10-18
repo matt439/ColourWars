@@ -37,15 +37,22 @@ public:
 	const JsonSpanDocument& baseline() const { return this->baseline_; }
 	const std::map<std::string, TuneEdit>& edits() const { return this->edits_; }
 
-	// Every number and boolean, prefixed with the file name, in file order.
+	// A local path's tunable current leaf: every number/boolean, or a string
+	// on tune_colour_path's audited presentation allowlist. General strings,
+	// nulls, containers and missing keys are not tunable. A legacy dotted path
+	// hidden by a literal punctuated-key alias is conservatively unavailable.
+	const JsonLeaf* find(std::string_view path) const;
+
+	// Tunable leaves, prefixed with the file name, in file order.
 	std::vector<std::string> prefixed_paths() const;
 
 	// The current text with one leaf's token replaced: a candidate, not yet
-	// committed.
+	// committed. Refuses unsupported or stale leaves.
 	std::string edited(const JsonLeaf& leaf, std::string_view token) const;
 
 	// Makes a validated candidate the current text and records the edit (or
-	// drops it, when the token is the baseline's again).
+	// drops it, when the token is the baseline's again). Refuses type changes
+	// and candidates that change anything outside that one supported leaf.
 	void commit(std::string candidate_text, const std::string& path);
 
 	// The candidate text with `path` (or every edit, for an empty path) back

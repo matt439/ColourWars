@@ -10,8 +10,9 @@
 
 namespace
 {
-	// Records leaf spans while rapidjson reads. Every callback runs with the
-	// stream just past the token it reports.
+	// Records leaf spans while rapidjson reads. Boolean/null callbacks see the
+	// consumed token; numbers and strings may still see its opening position
+	// because their reader uses StreamLocalCopy until the callback returns.
 	class SpanHandler
 	{
 	public:
@@ -21,7 +22,7 @@ namespace
 		{
 		}
 
-		bool Null() { this->scalar(false); return true; }
+		bool Null() { this->scalar(); return true; }
 		bool Bool(bool value) { this->leaf(JsonLeaf::Kind::boolean, value ? 4u : 5u); return true; }
 		bool Int(int) { this->number(); return true; }
 		bool Uint(unsigned) { this->number(); return true; }
@@ -31,8 +32,8 @@ namespace
 		bool RawNumber(const char*, rapidjson::SizeType, bool) { this->number(); return true; }
 		bool String(const char*, rapidjson::SizeType, bool)
 		{
-			this->scalar(true);
-
+			if (!this->suppressed()) { ++this->strings_; }
+			this->string_token();
 			return true;
 		}
 
@@ -52,6 +53,7 @@ namespace
 			bool array = false;
 			std::size_t index = 0;
 			std::string path;
+			bool plain_path = true;
 		};
 
 		const rapidjson::StringStream& stream_;
@@ -82,6 +84,14 @@ namespace
 			return top.path.empty() ? this->key_ : top.path + "." + this->key_;
 		}
 
+		bool plain_value_path() const
+		{
+			if (this->frames_.empty()) { return true; }
+			const Frame& top = this->frames_.back();
+			return top.plain_path && (top.array || (!this->key_.empty() &&
+				this->key_.find_first_of(".[]") == std::string::npos));
+		}
+
 		// After any value inside an array, the next element is one further on.
 		void advance()
 		{
@@ -94,9 +104,10 @@ namespace
 		void open(bool array)
 		{
 			const std::string path = this->value_path();
+			const bool plain_path = this->plain_value_path();
 			const bool repeated = !this->suppressed() && !this->frames_.empty() &&
 				!this->seen_.insert(path).second;
-			this->frames_.push_back({ array, 0, path });
+			this->frames_.push_back({ array, 0, path, plain_path });
 			if (repeated)
 			{
 				this->suppressed_from_ = this->frames_.size();
@@ -113,13 +124,32 @@ namespace
 			this->advance();
 		}
 
-		void scalar(bool string)
+		void scalar()
 		{
-			if (string && !this->suppressed())
+			if (!this->suppressed())
 			{
-				++this->strings_;
+				// Null still owns its key. A later number/string/container with
+				// the same key must not become editable instead of that null.
+				this->seen_.insert(this->value_path());
 			}
 			this->advance();
+		}
+
+		void string_token()
+		{
+			// ParseString reports through a local stream copy, leaving this
+			// stream on its opening quote. The SAX reader has already validated
+			// the value; scan its raw spelling, skipping each escaped byte, so
+			// quotes, backslashes, Unicode escapes and UTF-8 remain byte-exact.
+			const char* text = this->stream_.head_;
+			const std::size_t begin = this->stream_.Tell();
+			std::size_t end = begin + 1;
+			while (text[end] != '"')
+			{
+				if (text[end] == '\\') { ++end; }
+				++end;
+			}
+			this->record(JsonLeaf::Kind::string, begin, end + 1);
 		}
 
 		static bool number_char(char c)
@@ -165,7 +195,7 @@ namespace
 			const std::string path = this->value_path();
 			if (!this->suppressed() && this->seen_.insert(path).second)
 			{
-				this->leaves_.push_back({ path, kind, begin, end });
+				this->leaves_.push_back({ path, kind, begin, end, this->plain_value_path() });
 			}
 			this->advance();
 		}

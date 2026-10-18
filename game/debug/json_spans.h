@@ -5,7 +5,7 @@
 #include <string_view>
 #include <vector>
 
-// One number or boolean in a JSON text, with its byte span. `path` is the
+// One scalar token in a JSON text, with its byte span. `path` is the
 // keys from the root joined by '.', array elements written [i]
 // ("weapons.sprayer.offset.x", "fonts[2]").
 struct JsonLeaf
@@ -14,23 +14,29 @@ struct JsonLeaf
 	{
 		number,
 		boolean,
+		string,
 	};
 
 	std::string path;
 	Kind kind = Kind::number;
 	std::size_t begin = 0;
 	std::size_t end = 0;
+	// False when a key is empty or contains path punctuation. The legacy
+	// dotted path is retained, but it cannot authorize a new string edit.
+	bool plain_path = true;
 };
 
-// The numbers and booleans of a JSON text and where each one is, so live
-// tuning can name every value a content file holds and replace one token
+// The numbers, booleans and strings of a JSON text and where each one is,
+// so live tuning can select supported values and replace one token
 // without touching a byte around it. Debug-only.
 //
 // Parsed by rapidjson's SAX reader with the flags the engine's reader uses
 // (engine/assets/json.cpp), so it accepts exactly what the game accepts. A
 // repeated key resolves to its first occurrence, as rapidjson's FindMember
-// does. Strings, nulls and containers carry no span: live tuning edits only
-// numbers and booleans (see docs/debug-console.md, "Live tuning"). The engine
+// does, including when the first value is a null or container. String spans
+// include their quotes and original escapes; scanning one does not make it
+// tunable (TuneDocument owns that policy). Nulls and containers carry no span.
+// The engine
 // has no in-memory parse and no key enumeration of its own (engine report 12).
 class JsonSpanDocument
 {
@@ -50,7 +56,7 @@ public:
 	// The text with exactly that leaf's bytes replaced by `token`.
 	std::string replaced(const JsonLeaf& leaf, std::string_view token) const;
 
-	// String leaves seen (not spanned), for the acceptance case.
+	// String values seen outside suppressed repeated containers.
 	std::size_t string_count() const { return this->string_count_; }
 
 private:

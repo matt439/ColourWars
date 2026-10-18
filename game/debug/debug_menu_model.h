@@ -16,6 +16,7 @@ struct DebugMenuRow
 		discard,  // drop what is staged
 		category, // open a category
 		variable, // name: value; Left/Right step it
+		inspect,  // print a value edited through the console; no stepping
 		run,      // run the command
 		pick,     // open a picker over the command's choices
 		choice,   // one picker entry: runs `line`
@@ -82,7 +83,7 @@ private:
 
 	// The tuning category walks the content files' paths: the node shown
 	// ("" for the two files, else a prefix ending in '.' or '['), and which
-	// page of it. Left/Right on a leaf runs `tune <path> next|prev|toggle`.
+	// page of it. Numeric/bool leaves step; colour leaves only print their value.
 	std::string tune_node_;
 	std::size_t tune_page_ = 0;
 	std::vector<DebugMenuRow> tuning_rows() const;

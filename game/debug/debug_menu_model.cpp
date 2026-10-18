@@ -271,7 +271,9 @@ std::vector<DebugMenuRow> DebugMenuModel::tuning_rows() const
 		{
 			value += std::string("  *") + tune_scope_name(scope);
 		}
-		all.push_back({ Kind::variable, label, value, "tune " + child, true });
+		const bool colour = tune_colour_path(child);
+		if (colour) { value += "  (console)"; }
+		all.push_back({ colour ? Kind::inspect : Kind::variable, label, value, "tune " + child, true });
 	}
 
 	if (all.size() <= max_rows)
@@ -371,6 +373,8 @@ DebugMenuModel::Result DebugMenuModel::confirm(std::size_t row)
 		const DebugEntry* listed = this->entry(chosen.label);
 		return this->run(chosen.label, listed != nullptr && listed->menu().staged);
 	}
+	case Kind::inspect:
+		return this->run(chosen.line, false);
 	case Kind::pick:
 		this->enter(category, chosen.label);
 		return Result::stay;

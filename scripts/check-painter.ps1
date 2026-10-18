@@ -7,6 +7,7 @@ param(
     [switch] $QuietOnly,
     [switch] $DriftOnly,
     [switch] $MiniatureTerrainOnly,
+    [switch] $TuneColoursOnly,
     [switch] $MonitorOnly,
     [switch] $CountdownOnly,
     [switch] $ClosingOnly,
@@ -41,7 +42,10 @@ param(
 
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
-if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
+if ($TuneColoursOnly -and $Preset -ne 'x64-debug') {
+    throw 'TuneColoursOnly requires x64-debug; Release developer-tool exclusion is checked by CPU acceptance.'
+}
+if (([int]$IdentityOnly.IsPresent + [int]$QuietOnly.IsPresent + [int]$DriftOnly.IsPresent + [int]$MiniatureTerrainOnly.IsPresent + [int]$TuneColoursOnly.IsPresent + [int]$MonitorOnly.IsPresent + [int]$CountdownOnly.IsPresent + [int]$ClosingOnly.IsPresent + [int]$SupplyOnly.IsPresent + [int]$HudOnly.IsPresent + [int]$ResumeOnly.IsPresent + [int]$EndMenuOnly.IsPresent + [int]$PauseMenuOnly.IsPresent + [int]$ResultsMenuOnly.IsPresent + [int]$MainMenuOnly.IsPresent + [int]$WeaponCatalogOnly.IsPresent + [int]$MenuTextOnly.IsPresent + [int]$MenuMotionOnly.IsPresent + [int]$SetupMotionOnly.IsPresent + [int]$JoinStageMotionOnly.IsPresent + [int]$SetupPaperOnly.IsPresent + [int]$JoinPaperOnly.IsPresent + [int]$TeamPaperOnly.IsPresent + [int]$WeaponPaperOnly.IsPresent + [int]$StagePaperOnly.IsPresent + [int]$HomeReturnFocusOnly.IsPresent + [int]$HomeExitOnly.IsPresent + [int]$OptionsDefaultsOnly.IsPresent + [int]$DisplayTrialOnly.IsPresent + [int]$PausedOptionsOnly.IsPresent + [int]$SettingsMenuOnly.IsPresent + [int]$ControlsMenuOnly.IsPresent + [int]$StickSettingsOnly.IsPresent + [int]$TeamSetupOnly.IsPresent) -gt 1) {
     throw 'Choose only one focused painter matrix.'
 }
 
@@ -127,6 +131,7 @@ function Write-ContactSheet {
         foreach ($file in Get-ChildItem -LiteralPath $CaptureDirectory -Filter '*.ppm' -File |
             Where-Object { $_.Name -like '*-player*.ppm' -or $_.Name -like 'monitor-*.ppm' -or
                 $_.Name -like 'drift-*-detail.ppm' -or $_.Name -like 'miniature-terrain-*-detail.ppm' -or
+                $_.Name -like 'tune-colours-*-detail.ppm' -or
                 $_.Name -like 'countdown-*-detail.ppm' -or $_.Name -like 'closing-*.ppm' -or
                 $_.Name -like 'supply-*-detail.ppm' -or $_.Name -like 'hud-*-detail.ppm' -or
                 $_.Name -like 'resume-*-detail.ppm' -or $_.Name -like 'end-menu-*-detail.ppm' -or
@@ -362,7 +367,21 @@ $result = [ordered]@{
     profile = $profile
     diagnostic = ''
 }
-if ($MiniatureTerrainOnly) {
+if ($TuneColoursOnly) {
+    $result.scope = 'tune-colours-only'
+    $result.Remove('stage')
+    $result.stages = @('movement_course')
+    $result.player_counts = @(1)
+    $result.palettes = @('runtime-save-default')
+    $result.weapons = @('roller')
+    $result.resolutions = @('1280x720')
+    $result.actions = @('validated-colour-command', 'live-unpainted-movement', 'live-debug-text', 'live-station-rgba', 'hidden-station-zero', 'captured-home-mode', 'reopen-reset-reversal', 'resource-rejection', 'queued-reload-guards', 'staged-reload-fallback', 'scratch-save', 'frozen-state-rng')
+    $result.input_slots = @(4)
+    $result.inputs = 'Real DebugDirector validated commands and actual consumers/pages/match; no foreground input or physical-device claim. Source/staged/user/profile and candidate TEMP/TMP directories are private to this probe.'
+    foreach ($key in @($result.Keys | Where-Object { $_ -like '*_checks' })) { $result.Remove($key) }
+    $result.checks = 'Debug-only hidden720p renderer proof for seven audited existing colour strings through the real validated tune path: unpainted movement fallback/highlight/keyline, ordinary DebugText foreground/shadow and existing station Label premultiplied RGBA update live; Home and Mode retain captured backgrounds until reopening, including reset reversal. Named/RGB/RGBA values, same-size station refresh and hidden zero tint, complete resource candidate rejection, actual queued scratch reload refusing tune/reset/save until rebuild/rebase, staged fallback when source files are absent, private save/reload and original content preservation. Compact native crops/CSV, repeated frozen pixels, draw RNG and real match observations/Debug fingerprint retained. No Release native run, physical-pad, human readability, listening or performance acceptance.'
+}
+elseif ($MiniatureTerrainOnly) {
     $result.scope = 'miniature-terrain-only'
     $result.Remove('stage')
     $result.player_counts = @(1, 4)
@@ -849,6 +868,7 @@ try {
     elseif ($QuietOnly) { $probeArguments += 'quiet' }
     elseif ($DriftOnly) { $probeArguments += 'drift' }
     elseif ($MiniatureTerrainOnly) { $probeArguments += 'miniature-terrain' }
+    elseif ($TuneColoursOnly) { $probeArguments += 'tune-colours' }
     elseif ($MonitorOnly) { $probeArguments += 'monitor' }
     elseif ($CountdownOnly) { $probeArguments += 'countdown' }
     elseif ($ClosingOnly) { $probeArguments += 'closing' }
@@ -954,7 +974,10 @@ try {
     $result.outcome = 'passed'
     $identityDiagnostic = 'Player identity passed all-palette same-team overlap, scripted crossing, sparse/reordered slots, native P1-P4 glyph distinction, quiet/emphasis/reduced effects, own-pane world-only bounds, dead/respawn/story suppression and frozen state. Human playing-size review remains separate.'
     $stageEntryDiagnostic = 'Stage entry passed all four authored names, a three-player roster, bounded title fitting at narrow/wide aspects, opening/monitor skips, static reduced-effects information and hiding before countdown and at GO.'
-    if ($MiniatureTerrainOnly) {
+    if ($TuneColoursOnly) {
+        $result.diagnostic = 'Tune-colours-only Debug D3D11 hardware checks passed: seven audited named/RGB/RGBA commands reached existing live movement/ordinary DebugText/StationLabel consumers or captured-and-reopened Home/Mode as documented. Reset reversal, premultiplied and hidden-zero station tint, full resource rejection, queued scratch reload guards/rebuild/rebase, private save, original content, frozen state/RNG/fingerprint and compact evidence passed. No Release native, foreground input, physical-pad, listening, human readability or performance acceptance.'
+    }
+    elseif ($MiniatureTerrainOnly) {
         $result.diagnostic = 'Miniature-terrain-only D3D11 hardware checks passed: independent exposed/masked edge, lit body, major ruler tick and ramp silhouette pixel oracles; actual owned paint overlay, exact native material/Scene parity and all four real 1P/4P arena overview/story contexts at720p/1080p/QHD. Legacy/adapted native crops, resize returns, frozen simulation/RNG and Debug fingerprints retained. Other painter matrices, human readability/style, physical pads, listening and performance acceptance were not run.'
     }
     elseif ($DriftOnly) {

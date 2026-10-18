@@ -32,13 +32,13 @@ namespace
 
 	// The directory reload reads: the source tree in a Debug build made from
 	// one, so edits apply without a rebuild; otherwise the staged copy.
-	std::filesystem::path reload_directory(bool& from_source)
+	std::filesystem::path reload_directory(const std::filesystem::path& source,
+		const std::filesystem::path& staged, bool& from_source)
 	{
-		const std::filesystem::path source(widen(source_paths::content_directory));
 		std::error_code ignored;
 		from_source = std::filesystem::is_regular_file(source / L"tuning.json", ignored) &&
 			std::filesystem::is_regular_file(source / L"presentation.json", ignored);
-		return from_source ? source : std::filesystem::path(widen(executable_directory()));
+		return from_source ? source : staged;
 	}
 
 	std::string utf8(const std::filesystem::path& path)
@@ -350,7 +350,8 @@ DebugStatus DebugDirectorImpl::reload_content()
 	}
 
 	bool from_source = false;
-	const std::filesystem::path directory = reload_directory(from_source);
+	const std::filesystem::path directory = reload_directory(this->source_content_directory(),
+		this->staged_content_directory(), from_source);
 	const std::string tuning_path = utf8(directory / L"tuning.json");
 	const std::string presentation_path = utf8(directory / L"presentation.json");
 	this->log_.info("reload: reading " + utf8(directory) +

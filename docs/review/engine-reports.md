@@ -333,9 +333,11 @@ it F11 as the debug menu's fallback key.
 ## 12. JSON is read-only, path-only and opaque — **draft with live-tuning exhibit**
 
 **Exhibit added by the developer debug system (phase 3).** The Debug `tune`
-command edits any number or boolean in `tuning.json` and `presentation.json`
+command edits numbers and booleans in `tuning.json` and `presentation.json`
 while the game runs, and `tune.save` writes the edits back into the source
-files.
+files. The 2026-10-18 client increment also supports seven existing, audited
+presentation colour strings; arbitrary strings, fonts and missing-key insertion
+remain outside that increment.
 
 ### What happens
 
@@ -359,12 +361,15 @@ value came from. Live tuning needs all three, so it does without:
   flags, keeps the key path, and recovers each number's byte span by scanning
   around the stream position, because the reader writes its position back
   only after the number callback returns. That is what lets the console list
-  `tuning.player.gravity`, complete it, and replace exactly its bytes.
+  `tuning.player.gravity`, complete it, and replace exactly its bytes. Colour
+  edits also need the raw quoted string span, including its original escapes;
+  scanning a string does not itself make that field tunable.
 - **A dead key cannot be told from a live one** except by experiment: the
   acceptance case replaces every number and boolean, one at a time, with a
   string and requires the reader to throw naming it
-  (`check_tune_consumed` in `scripts/acceptance/debug_console/tune_checks.cpp`;
-  some five hundred values today).
+  (`check_tune_consumed` in `scripts/acceptance/debug_console/tune_checks.cpp`).
+  The colour allowlist has separate reader/consumer checks and explicit adoption
+  scopes; numeric path wildcards cannot establish a string consumer's lifetime.
 
 ### The ask, when it goes
 

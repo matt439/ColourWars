@@ -14,6 +14,23 @@ namespace
 		TuneScope scope;
 	};
 
+	// The string allowlist and its consumer audit, before any numeric wildcard.
+	constexpr ScopeRow colour_rows[] = {
+		// MovementFeedback reads its borrowed record when drawing. Its colour
+		// is the fallback for unpainted dust; paint flecks keep their stored tint.
+		{ "presentation.movement_feedback.colour", TuneScope::live },
+		{ "presentation.movement_feedback.highlight", TuneScope::live },
+		{ "presentation.movement_feedback.keyline", TuneScope::live },
+		// DebugText reads its borrowed look on every draw; Level refreshes the
+		// existing station labels before refresh_layout's same-size early return.
+		{ "presentation.debug_overlay.colour", TuneScope::live },
+		{ "presentation.debug_overlay.shadow_colour", TuneScope::live },
+		{ "presentation.debug_overlay.station_label.colour", TuneScope::live },
+		// MainMenuHome::init and Mode Select copy the tint into their UiTexture
+		// (as do the other main-menu pages when each page is built).
+		{ "presentation.main_menu.backgrounds.home", TuneScope::next_screen },
+	};
+
 	// First match wins; evidence is the reader of each value. "live" means a
 	// pointer into the live object is read on every step (or on the event the
 	// value is about: a respawn, a refill, an animation change).
@@ -149,6 +166,10 @@ bool tune_pattern_matches(std::string_view pattern, std::string_view path)
 
 TuneScope tune_scope_of(std::string_view path)
 {
+	for (const ScopeRow& row : colour_rows)
+	{
+		if (path == row.pattern) { return row.scope; }
+	}
 	for (const ScopeRow& row : scope_rows)
 	{
 		if (tune_pattern_matches(row.pattern, path))
@@ -159,9 +180,22 @@ TuneScope tune_scope_of(std::string_view path)
 	return TuneScope::rebuild;
 }
 
+bool tune_colour_path(std::string_view path)
+{
+	for (const ScopeRow& row : colour_rows)
+	{
+		if (path == row.pattern) { return true; }
+	}
+	return false;
+}
+
 std::vector<std::string> tune_scope_patterns()
 {
 	std::vector<std::string> patterns;
+	for (const ScopeRow& row : colour_rows)
+	{
+		patterns.push_back(row.pattern);
+	}
 	for (const ScopeRow& row : scope_rows)
 	{
 		patterns.push_back(row.pattern);

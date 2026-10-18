@@ -3,11 +3,13 @@
 
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/debug_menu_model.h"
+#include "game/debug/debug_tokenizer.h"
 #include "game/debug/json_spans.h"
 #include "game/debug/tune_document.h"
 #include "game/debug/tune_scope.h"
 #include "engine/math/scalar.h"
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <process.h>
 
@@ -42,6 +44,234 @@ namespace debug_console_acceptance
 			model.confirm(static_cast<std::size_t>(more - rows.begin()));
 		} while (labels(model.rows()) != first_page);
 		throw std::runtime_error("The debug menu has no row '" + label + "' on any page");
+	}
+
+	const std::array<const char*, 7> colour_paths{
+		"presentation.movement_feedback.colour", "presentation.movement_feedback.highlight",
+		"presentation.movement_feedback.keyline", "presentation.debug_overlay.colour",
+		"presentation.debug_overlay.shadow_colour", "presentation.debug_overlay.station_label.colour",
+		"presentation.main_menu.backgrounds.home" };
+
+	std::vector<labrador::Colour> colour_values(const Presentation& presentation)
+	{
+		return { presentation.movement_feedback().colour, presentation.movement_feedback().highlight,
+			presentation.movement_feedback().keyline, presentation.debug_overlay().colour,
+			presentation.debug_overlay().shadow_colour, presentation.debug_overlay().station_label.colour,
+			presentation.main_menu().home_background_colour };
+	}
+
+	void check_colour_tunes(const std::filesystem::path& game_directory)
+	{
+		ScratchContent scratch(game_directory, L"colours");
+		GameTuning tuning((scratch.staged / L"tuning.json").string().c_str());
+		Presentation presentation((scratch.staged / L"presentation.json").string().c_str());
+		TestDirector test(tuning, presentation);
+		DebugDirectorImpl& impl = test.impl;
+		impl.set_content_directories(scratch.source, scratch.staged);
+		const std::string source_before = read_text(scratch.source / L"presentation.json");
+		const std::string staged_before = read_text(scratch.staged / L"presentation.json");
+		const auto initial = colour_values(presentation);
+		const MovementFeedbackPresentation* const movement = &presentation.movement_feedback();
+		const DebugOverlayPresentation* const overlay = &presentation.debug_overlay();
+		const StationLabelPresentation* const station = &overlay->station_label;
+		const char* const font = overlay->font.data();
+		const char* const sheet = movement->sprite_sheet.data();
+		std::array<std::string, 7> words{ "RED", "112233", "a1B2c3", "00000080",
+			"FFFFFF", "12345678", "654321" };
+		std::vector<labrador::Colour> expected{ { 255, 0, 0 }, { 17, 34, 51 },
+			{ 161, 178, 195 }, { 0, 0, 0, 128 }, { 255, 255, 255 }, { 18, 52, 86, 120 }, { 101, 67, 33 } };
+		require(impl.execute("feedback off").ok, "Colour tuning starts with an independent live F9 override");
+		for (std::size_t index = 0; index < colour_paths.size(); ++index)
+		{
+			const std::string path = colour_paths[index];
+			if (impl.tune_token(path) == "\"" + words[index] + "\"")
+			{
+				words[index] = index == 0 ? "BLUE" : "FEDCBA98";
+				expected[index] = index == 0 ? labrador::Colour(0, 0, 255) : labrador::Colour(254, 220, 186, 152);
+			}
+			const std::string token = "\"" + words[index] + "\"";
+			require(impl.execute("tune " + path + " " + words[index]).ok &&
+				impl.tune_token(path) == token && colour_values(presentation)[index] == expected[index],
+				"An audited colour accepts a named/RGB/RGBA word as one JSON string: " + path);
+			require(impl.execute("tune " + path).ok &&
+				log_contains(impl.log(), path + " = " + token, DebugSeverity::info),
+				"A colour getter prints the exact quoted token: " + path);
+		}
+		require(colour_values(presentation) == expected && !presentation.movement_feedback().enabled &&
+			&presentation.movement_feedback() == movement && &presentation.debug_overlay() == overlay &&
+			&presentation.debug_overlay().station_label == station && overlay->font.data() == font &&
+			movement->sprite_sheet.data() == sheet,
+			"Colour adoption keeps the borrowed records, unrelated string buffers and live F9 override");
+		require(read_text(scratch.source / L"presentation.json") == source_before &&
+			read_text(scratch.staged / L"presentation.json") == staged_before,
+			"Live colour edits do not write either content copy");
+		require(impl.execute("tune.diff presentation").ok, "Colour edits are listed by tune.diff");
+		for (std::size_t index = 0; index < colour_paths.size(); ++index)
+		{
+			const std::string path = colour_paths[index];
+			require(log_contains(impl.log(), "  " + path + "  ", DebugSeverity::info) &&
+				tune_scope_of(path) == (index == 6 ? TuneScope::next_screen : TuneScope::live),
+				"Each colour diff has its audited live/next-screen scope: " + path);
+		}
+		const auto reject = [&](const std::string& path, const std::string& value)
+		{
+			const auto before = colour_values(presentation);
+			const std::string text = impl.tune_document("presentation")->current().text();
+			const auto edits = impl.tune_document("presentation")->edits().size();
+			require(!impl.execute("tune " + path + " " + quote_word(value)).ok &&
+				colour_values(presentation) == before &&
+				impl.tune_document("presentation")->current().text() == text &&
+				impl.tune_document("presentation")->edits().size() == edits,
+				"Rejected colour word/path keeps all live values and pending JSON: " + path + "=" + value);
+		};
+		for (const char* value : { "next", "prev", "toggle", "+=1", "-=1", "#112233", "12345",
+			"1234567", "GGGGGG", "not_a_colour", "white", "black", "\"RED\"", "RED\\u0000", "RED\\n",
+			"RED\",\"enabled\":true,\"injected\":\"x", "RED;feedback on" })
+		{
+			reject(colour_paths.front(), value);
+		}
+		for (const char* path : { "presentation.debug_overlay.font", "presentation.movement_feedback.sprite_sheet",
+			"presentation.main_menu.backgrounds.title", "presentation.movement_feedback.colour.r",
+			"tuning.player.sound_bank" })
+		{
+			require(impl.tune_token(path).empty() && !impl.execute(std::string("tune ") + path).ok,
+				std::string("An arbitrary string is neither readable nor completed as tunable: ") + path);
+			reject(path, "WHITE");
+		}
+		require(!presentation.movement_feedback().enabled, "A quoted injection cannot run a second console statement");
+		require(impl.execute(std::string("tune.reset ") + colour_paths.front()).ok &&
+			colour_values(presentation).front() == initial.front() &&
+			colour_values(presentation).back() == expected.back(), "A colour path reset leaves the other colour edits intact");
+		require(impl.execute("tune.reset presentation").ok && colour_values(presentation) == initial &&
+			impl.tune_document("presentation")->edits().empty(), "A presentation reset restores every colour token");
+
+		// The literal save oracle replaces one exact span in otherwise untouched
+		// LF content. A subsequent external edit to another field must survive.
+		const std::string path = colour_paths[5];
+		const std::string local = "debug_overlay.station_label.colour";
+		const JsonSpanDocument original(source_before, "colour-save-reference");
+		const JsonLeaf* original_leaf = original.find(local);
+		require(original_leaf != nullptr, "The colour-save reference has a station label token");
+		const std::string original_token(original.token(*original_leaf));
+		std::string saved = source_before;
+		saved.replace(original_leaf->begin, original_leaf->end - original_leaf->begin, "\"12345678\"");
+		require(impl.execute("tune " + path + " 12345678").ok && impl.execute("tune.save presentation").ok &&
+			read_text(scratch.source / L"presentation.json") == saved &&
+			read_text(scratch.staged / L"presentation.json") == saved && saved.find('\r') == std::string::npos &&
+			impl.tune_document("presentation")->edits().empty(),
+			"Colour save changes exactly one quoted LF token, refreshes staging and rebases the edits");
+		require(Presentation((scratch.source / L"presentation.json").string().c_str()).debug_overlay().station_label.colour ==
+			labrador::Colour(18, 52, 86, 120), "The saved RGBA token loads through the real Presentation reader");
+		require(impl.execute("tune " + path + " ABCDEF").ok, "A second colour edit is pending before a disk conflict");
+		const JsonSpanDocument disk(saved, "colour-save-reference");
+		std::string external = disk.replaced(*disk.find(local), "\"FEDCBA\"");
+		const JsonSpanDocument external_document(external, "colour-save-reference");
+		external = external_document.replaced(*external_document.find("debug_overlay.colour"), "\"102030\"");
+		write_text(scratch.source / L"presentation.json", external);
+		require(!impl.execute("tune.save presentation").ok &&
+			read_text(scratch.source / L"presentation.json") == external &&
+			read_text(scratch.staged / L"presentation.json") == saved &&
+			impl.tune_token(path) == "\"ABCDEF\"",
+			"A colour conflict leaves disk, staged baseline and our pending token intact");
+		const JsonSpanDocument theirs(external, "colour-save-reference");
+		const std::string forced = theirs.replaced(*theirs.find(local), "\"ABCDEF\"");
+		require(impl.execute("tune.save presentation force").ok &&
+			read_text(scratch.source / L"presentation.json") == forced &&
+			read_text(scratch.staged / L"presentation.json") == forced &&
+			presentation.debug_overlay().colour == labrador::Colour(16, 32, 48),
+			"Forced colour save replaces only our conflict and adopts the unrelated external edit");
+		require(!original_token.empty() && !std::filesystem::exists(scratch.source / L"presentation.json.tmp") &&
+			!std::filesystem::exists(scratch.staged / L"presentation.json.tmp"),
+			"Colour save leaves no temporary files beside either content copy");
+	}
+
+	void check_colour_document()
+	{
+		const std::string local = "movement_feedback.colour";
+		const std::string baseline = "{\r\n  \"movement_feedback\":{\"colour\":\"\\u0052\\u0045D\"},\r\n"
+			"  \"font\":\"untouched\\\\path\",\r\n  \"number\":1\r\n}\r\n";
+		TuneDocument document("presentation", baseline);
+		const JsonLeaf* colour = document.find(local);
+		require(colour != nullptr && colour->kind == JsonLeaf::Kind::string &&
+			document.current().token(*colour) == "\"\\u0052\\u0045D\"" && document.find("font") == nullptr,
+			"TuneDocument exposes the audited colour while preserving its escaped baseline spelling");
+		const JsonLeaf stale = *colour;
+		document.commit(document.edited(*colour, "\"11223344\""), local);
+		require(document.edits().size() == 1 && document.edits().at(local).baseline_token == "\"\\u0052\\u0045D\"" &&
+			document.edits().at(local).current_token == "\"11223344\"" && document.reverted(local) == baseline,
+			"A string edit retains exact quoted baseline/current tokens and resets byte for byte");
+		const std::string pending = document.current().text();
+		const auto rejected_commit = [&](const std::string& candidate, const std::string& path)
+		{
+			bool refused = false;
+			try { document.commit(candidate, path); } catch (const std::invalid_argument&) { refused = true; }
+			require(refused && document.current().text() == pending && document.edits().size() == 1 &&
+				document.edits().at(local).current_token == "\"11223344\"",
+				"An unsupported, type-changing or multi-field commit leaves the string edit atomic");
+		};
+		const JsonLeaf* current = document.find(local);
+		rejected_commit(document.current().replaced(*current, "false"), local);
+		rejected_commit(document.current().replaced(*document.current().find("font"), "\"other\""), "font");
+		const JsonSpanDocument other(document.current().replaced(*current, "\"BLUE\""), "multi-field");
+		rejected_commit(other.replaced(*other.find("number"), "2"), local);
+		for (const JsonLeaf leaf : { stale, *document.current().find("font") })
+		{
+			bool refused = false;
+			try { document.edited(leaf, "\"WHITE\""); } catch (const std::invalid_argument&) { refused = true; }
+			require(refused && document.current().text() == pending,
+				"A stale string span or arbitrary string cannot be edited through TuneDocument");
+		}
+		const JsonSpanDocument external_baseline(baseline, "external-colour");
+		const std::string external = external_baseline.replaced(*external_baseline.find("number"), "25");
+		const TuneSplice splice = document.splice(external, false);
+		const JsonSpanDocument external_document(external, "external-colour");
+		require(splice.conflicts.empty() && splice.written == 1 && splice.text ==
+			external_document.replaced(*external_document.find(local), "\"11223344\"") &&
+			count_of(splice.text, "\r\n") == count_of(baseline, "\r\n") &&
+			splice.text.find("untouched\\\\path") != std::string::npos,
+			"A CRLF colour splice preserves unrelated numeric edits, escape bytes and every newline");
+		const std::string conflicting = external_document.replaced(*external_document.find(local), "\"BLUE\"");
+		require(document.splice(conflicting, false).conflicts.size() == 1 &&
+			document.splice(conflicting, false).written == 0 && document.splice(conflicting, true).written == 1,
+			"A changed colour token conflicts unless explicitly forced");
+		for (const char* missing : { R"({"movement_feedback":{}})", R"({"movement_feedback":{"colour":null}})",
+			R"({"movement_feedback":{"colour":{"value":"RED"}}})" })
+		{
+			const TuneSplice refused = document.splice(missing, true);
+			require(refused.conflicts.size() == 1 && refused.written == 0 && refused.text == missing,
+				"Even force cannot invent a missing colour key or replace null/a container");
+		}
+		document.rebase(splice.text);
+		require(document.edits().empty() && document.current().text() == splice.text &&
+			document.baseline().text() == splice.text && document.current_hash() == fnv1a(splice.text),
+			"Reload/rebase adopts the full string document as its new hash and empty edit baseline");
+		for (const char* alias : { R"({"movement_feedback.colour":"WHITE"})",
+			R"({"debug_overlay":{"station_label.colour":"WHITE"}})",
+			R"({"main_menu":{"backgrounds.home":"WHITE"}})" })
+		{
+			const TuneDocument literal("presentation", alias);
+			require(literal.prefixed_paths().empty(), "Literal path punctuation cannot turn an arbitrary string key into a colour");
+		}
+		for (const char* text : { R"({"movement_feedback.colour":"BLUE","movement_feedback":{"colour":"RED"}})",
+			R"({"movement_feedback":{"colour":"RED"},"movement_feedback.colour":"BLUE"})" })
+		{
+			const TuneDocument literal("presentation", text);
+			const JsonLeaf* leaf = literal.find(local);
+			require(leaf == nullptr || (literal.current().token(*leaf) == "\"RED\"" &&
+				leaf->begin == std::string(text).find("\"RED\"")),
+				"An alias before or beside the real object never exposes the literal-key string as a colour");
+		}
+		TuneDocument alias_edits("presentation", baseline);
+		alias_edits.commit(alias_edits.edited(*alias_edits.find(local), "\"BLUE\""), local);
+		const std::string literal_disk = R"({"movement_feedback.colour":"RED"})";
+		const TuneSplice alias_disk = alias_edits.splice(literal_disk, true);
+		require(alias_disk.written == 0 && alias_disk.conflicts.size() == 1 && alias_disk.text == literal_disk,
+			"Even force cannot splice an audited colour edit into a literal path-alias string");
+		TuneDocument number("tuning", R"({"number":1})");
+		number.commit(number.edited(*number.find("number"), "2"), "number");
+		const TuneSplice number_string = number.splice(R"({"number":"1"})", true);
+		require(number_string.written == 0 && number_string.conflicts.size() == 1,
+			"Scanning general strings does not make an on-disk numeric-to-string change force-writable");
 	}
 
 	void check_motion_tunes(DebugDirectorImpl& impl, GameTuning& tuning, const ScratchContent& scratch)
@@ -246,6 +476,7 @@ namespace debug_console_acceptance
 
 	void check_json_spans(const std::filesystem::path& game_directory)
 	{
+		check_colour_document();
 		for (const wchar_t* file : { L"tuning.json", L"presentation.json" })
 		{
 			const std::string text = read_text(game_directory / file);
@@ -274,7 +505,7 @@ namespace debug_console_acceptance
 			paths.push_back(leaf.path + "=" + std::string(document.token(leaf)));
 			joined += " " + paths.back();
 		}
-		require(paths == std::vector<std::string>{ "a[0]=1", "a[1][0]=2", "a[1][1]=true", "b=-1.5e3",
+		require(paths == std::vector<std::string>{ "a[0]=1", "a[1][0]=2", "a[1][1]=true", "s=\"q\\\"\xc3\xa9\"", "b=-1.5e3",
 			"o.x=false" }, "Nested arrays get [i] paths, exponents and signs are one token, and a "
 			"repeated key resolves to the first; got" + joined);
 
@@ -282,7 +513,37 @@ namespace debug_console_acceptance
 		require(count_of(spliced, "\r\n") == count_of(synthetic, "\r\n") &&
 			spliced.find("q\\\"\xc3\xa9") != std::string::npos,
 			"CRLF and escapes survive a splice");
-		for (const char* bad : { "{\"a\": 1,}", "{ // c\n \"a\": 1 }", "{\"a\": \"x }", "{\"a\": 1}\n2" })
+		for (const char* newline : { "\n", "\r\n" })
+		{
+			for (const char* token : { R"("")", R"("plain")", R"("slash\\")", R"("quote\"tail")",
+				R"("\\\"")", R"("q\"\\\/\b\f\n\r\t\u0041\uD83D\uDE00")" })
+			{
+				const std::string text = std::string("{") + newline + "  \"s\": " + token + "," + newline +
+					"  \"later\": 9" + newline + "}" + newline;
+				const JsonSpanDocument strings(text, "escaped-strings");
+				const JsonLeaf* leaf = strings.find("s");
+				require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string && strings.token(*leaf) == token &&
+					strings.replaced(*leaf, strings.token(*leaf)) == text,
+					"A string span includes both quotes and exact empty/escaped/Unicode bytes");
+				const std::string changed = strings.replaced(*leaf, "\"11223344\"");
+				require(changed.substr(0, leaf->begin) == text.substr(0, leaf->begin) &&
+					changed.substr(leaf->begin + 10) == text.substr(leaf->end) &&
+					count_of(changed, newline) == count_of(text, newline),
+					"Splicing an escaped string preserves all neighbouring tokens and LF/CRLF bytes");
+			}
+		}
+		const JsonSpanDocument duplicates(R"({"a":"first","\u0061":2,"b":null,"b":"later",
+			"c":{"x":"kept"},"c":false,"d":[null,"one",{"x":"two"}],"e":true,"e":"later"})",
+			"first-key-wins");
+		require(duplicates.leaves().size() == 5 && duplicates.token(*duplicates.find("a")) == "\"first\"" &&
+			duplicates.find("b") == nullptr && duplicates.find("c") == nullptr &&
+			duplicates.token(*duplicates.find("c.x")) == "\"kept\"" &&
+			duplicates.token(*duplicates.find("d[1]")) == "\"one\"" &&
+			duplicates.token(*duplicates.find("d[2].x")) == "\"two\"" &&
+			duplicates.token(*duplicates.find("e")) == "true",
+			"First string, null, container and boolean keys suppress later scalar keys, including escaped duplicate names");
+		for (const char* bad : { "{\"a\": 1,}", "{ // c\n \"a\": 1 }", "{\"a\": \"x }", "{\"a\": 1}\n2",
+			R"({"a":"\q"})", R"({"a":"\u00ZZ"})" })
 		{
 			std::string message;
 			try
@@ -306,6 +567,31 @@ namespace debug_console_acceptance
 		std::vector<std::string> paths = tuning.prefixed_paths();
 		const std::vector<std::string> more = presentation.prefixed_paths();
 		paths.insert(paths.end(), more.begin(), more.end());
+		std::size_t colour_count = 0;
+		for (const std::string& path : paths)
+		{
+			const TuneDocument& file = path.starts_with("presentation.") ? presentation : tuning;
+			const JsonLeaf* leaf = file.find(path.substr(path.find('.') + 1));
+			require(leaf != nullptr, "Every listed tune path is eligible through TuneDocument::find: " + path);
+			if (leaf->kind == JsonLeaf::Kind::string)
+			{
+				++colour_count;
+				require(std::find(colour_paths.begin(), colour_paths.end(), path) != colour_paths.end() &&
+					tune_colour_path(path), "Only the independently audited seven colours appear as string tune paths: " + path);
+			}
+		}
+		require(colour_count == colour_paths.size(), "Exactly seven authored colour strings are tunable");
+		for (std::size_t index = 0; index < colour_paths.size(); ++index)
+		{
+			const std::string path = colour_paths[index];
+			require(tune_colour_path(path) && tune_scope_of(path) ==
+				(index == 6 ? TuneScope::next_screen : TuneScope::live),
+				"The audited colour allowlist preserves its exact live/next-screen scope: " + path);
+		}
+		for (const char* path : { "movement_feedback.colour", "tuning.movement_feedback.colour",
+			"presentation.movement_feedback.colour.r", "presentation.movement_feedback.colour_extra",
+			"presentation.main_menu.backgrounds.title", "presentation.debug_overlay.font" })
+			{ require(!tune_colour_path(path), std::string("No prefix, suffix or nearby arbitrary string enters the colour allowlist: ") + path); }
 		for (const std::string& pattern : tune_scope_patterns())
 		{
 			require(std::any_of(paths.begin(), paths.end(), [&pattern](const std::string& path)
@@ -375,6 +661,7 @@ namespace debug_console_acceptance
 			(L"colourwars_consumed_" + std::to_wstring(_getpid()));
 		std::filesystem::create_directories(directory);
 		int checked = 0;
+		std::size_t colours_checked = 0;
 		for (const char* name : { "tuning", "presentation" })
 		{
 			const std::string text = read_text(game_directory / (std::string(name) + ".json"));
@@ -382,6 +669,7 @@ namespace debug_console_acceptance
 			const std::filesystem::path candidate = directory / (std::string(name) + ".json");
 			for (const JsonLeaf& leaf : document.leaves())
 			{
+				if (leaf.kind == JsonLeaf::Kind::string) { continue; }
 				bool comment = false;
 				for (std::size_t at = 0; at < leaf.path.size(); at = leaf.path.find('.', at) + 1)
 				{
@@ -416,7 +704,25 @@ namespace debug_console_acceptance
 					last_key(leaf.path) + "': " + message);
 				++checked;
 			}
+			if (std::string(name) == "presentation")
+			{
+				for (const char* prefixed : colour_paths)
+				{
+					const std::string path = std::string(prefixed).substr(std::string("presentation.").size());
+					const JsonLeaf* leaf = document.find(path);
+					require(leaf != nullptr && leaf->kind == JsonLeaf::Kind::string,
+						"The audited colour is an authored string: " + path);
+					write_text(candidate, document.replaced(*leaf, "false"));
+					std::string message;
+					try { Presentation loaded(candidate.string().c_str()); }
+					catch (const std::exception& error) { message = error.what(); }
+					require(message.find(last_key(path)) != std::string::npos,
+						"The Presentation reader consumes the audited colour and names a rejected type: " + path);
+					++colours_checked;
+				}
+			}
 		}
+		require(colours_checked == colour_paths.size(), "All seven colour strings have real Presentation consumers");
 		std::error_code ignored;
 		std::filesystem::remove_all(directory, ignored);
 		return checked;
@@ -524,6 +830,7 @@ namespace debug_console_acceptance
 		// them before the save/conflict fixtures below.
 		check_motion_tunes(impl, tuning, scratch);
 		check_menu_layout_tunes(impl, presentation, scratch);
+		check_colour_tunes(game_directory);
 
 		// tune.save, CRLF tuning: exactly that token changes.
 		const std::string tuning_before = read_text(scratch.source / L"tuning.json");
@@ -619,6 +926,22 @@ namespace debug_console_acceptance
 			std::vector<std::string>{ "next", "prev" } &&
 			registry.complete("tune presentation.movement_feedback.enabled ").candidates ==
 			std::vector<std::string>{ "off", "on", "toggle" }, "The value completes by kind");
+		require(registry.complete("tune presentation.movement_feedback.co").line ==
+			"tune presentation.movement_feedback.colour " &&
+			registry.complete("tune presentation.debug_overlay.font ").candidates.empty(),
+			"Colour leaves complete as paths while arbitrary font strings stay outside the tree");
+		const auto colour_choices = registry.complete("tune presentation.movement_feedback.colour ").candidates;
+		require(colour_choices.size() >= 2 &&
+			std::find(colour_choices.begin(), colour_choices.end(), "next") == colour_choices.end() &&
+			std::find(colour_choices.begin(), colour_choices.end(), "prev") == colour_choices.end() &&
+			std::find(colour_choices.begin(), colour_choices.end(), "toggle") == colour_choices.end(),
+			"Colour value completion offers literal examples instead of numeric or boolean operations");
+		for (const std::string& choice : colour_choices)
+		{
+			require(impl.execute("tune presentation.movement_feedback.colour " + choice).ok,
+				"A completed colour example is accepted by the actual command: " + choice);
+		}
+		impl.execute("tune.reset");
 
 		DebugMenuModel model(impl);
 		const std::vector<std::string> roots = labels(model.rows());
@@ -688,6 +1011,28 @@ namespace debug_console_acceptance
 		require(presentation.weapon_feedback().enabled != weapon_enabled,
 			"The weapon feedback group remains reachable and its boolean is tunable");
 		impl.execute("tune.reset");
+		model.back();
+		model.confirm(paged_row_index(model, "movement_feedback"));
+		const std::size_t colour_row = paged_row_index(model, "colour");
+		const std::string colour_token = impl.tune_token("presentation.movement_feedback.colour");
+		rows = model.rows();
+		require(rows[colour_row].kind == DebugMenuRow::Kind::inspect && rows[colour_row].enabled &&
+			rows[colour_row].value.find(colour_token) != std::string::npos &&
+			rows[colour_row].value.find("(console)") != std::string::npos,
+			"An audited colour has an enabled inspect row with its quoted token and console hint");
+		const std::string colour_text = impl.tune_document("presentation")->current().text();
+		const auto before_colours = colour_values(presentation);
+		const std::string colour_title = model.title();
+		impl.log().clear();
+		model.step(colour_row, 1); model.step(colour_row, -1);
+		require(impl.log().lines().empty() && colour_values(presentation) == before_colours &&
+			impl.tune_document("presentation")->current().text() == colour_text,
+			"Left/Right on a colour inspect row emits no step and changes no values or pending edits");
+		require(model.confirm(colour_row) == DebugMenuModel::Result::stay && model.title() == colour_title &&
+			log_contains(impl.log(), "[menu] tune presentation.movement_feedback.colour", DebugSeverity::echo) &&
+			log_contains(impl.log(), "presentation.movement_feedback.colour = " + colour_token, DebugSeverity::info) &&
+			colour_values(presentation) == before_colours,
+			"Confirm inspects the colour through a read-only tune getter and stays on the same menu node");
 	}
 }
 #endif

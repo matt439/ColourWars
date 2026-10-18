@@ -24,6 +24,11 @@ const char* tune_scope_note(TuneScope scope);
 // `rebuild`, which is always true if sometimes more than needed.
 TuneScope tune_scope_of(std::string_view path);
 
+// Only these existing presentation strings have audited colour consumers.
+// A general JSON string (including a font/resource name) is never implied by
+// the numeric scope wildcards. `path` includes the presentation. prefix.
+bool tune_colour_path(std::string_view path);
+
 // The table's patterns, so the acceptance case can check that every row
 // matches a path the files actually have. '*' is one segment, '**' any depth.
 std::vector<std::string> tune_scope_patterns();

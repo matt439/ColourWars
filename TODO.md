@@ -32,7 +32,7 @@ This is a selection guide, not another priority order; each owner defines a boun
 
 | id | next implementation slice | owner |
 |---|---|---|
-| `DBG#1` | Existing presentation colours in live tuning, with validated apply/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
+| `DBG#1` | Audit further colour consumers; seven existing colour paths now tune/reset/save | [Console](docs/debug-console.md#remaining-live-tuning-work-dbg1) |
 | `ED#4` | Safe, opt-in registration of a saved stage in both content lists | [Editor](docs/level-editor.md#registration-assistance-ed4) |
 | `GAP#4.2` | Default action bindings and evaluators preserving today's controls | [Input](docs/feature-roadmap.md#action-bindings-gap42) |
 | `GAP#6.1` | Remember match choices across launches while retaining explicit joining | [Setup](docs/feature-roadmap.md#remembered-match-setup-gap61) |
@@ -191,7 +191,7 @@ flow and a console over the menus are deliberately not done and get no rows.
 
 | id | status | sev | size | item |
 |---|---|---|---|---|
-| `DBG#1` | OPEN | LOW | M | Add validated existing colour tokens to `tune`/diff/reset/save; numbers and booleans already work. Font/string edits and missing-key insertion remain later slices. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
+| `DBG#1` | OPEN | LOW | M | Extend colour tuning beyond the seven audited fields; general string/font edits and missing-key insertion remain separate slices. [Scope](docs/debug-console.md#remaining-live-tuning-work-dbg1). |
 | `DBG#2` | DEFERRED | LOW | L | Replays hold only on the same build, machine and step, within one round. |
 | `DBG#4` | BLOCKED | LOW | S | Typing in the live console blanks the whole keyboard seat. Waits on `ENG#9`. |
 | `DBG#5` | BLOCKED | LOW | S | The perf overlay has no GPU, present or submit time. Waits on `ENG#14`. |

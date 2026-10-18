@@ -18,7 +18,7 @@
 #include <process.h>
 
 // tune, tune.diff, tune.reset, tune.save and tune.find: live edits of the
-// numbers and booleans in tuning.json and presentation.json, validated by the
+// numbers, booleans and audited presentation colours, validated by the
 // game's own readers. See docs/debug-console.md, "Live tuning".
 
 namespace
@@ -103,6 +103,29 @@ namespace
 			std::isfinite(value);
 	}
 
+	// Console quoting and JSON quoting have different escape rules. Encode the
+	// supplied value as one string token before the complete Presentation read.
+	std::string colour_token(std::string_view value)
+	{
+		constexpr char hex[] = "0123456789abcdef";
+		std::string result = "\"";
+		for (const char c : value)
+		{
+			const unsigned char byte = static_cast<unsigned char>(c);
+			if (byte < 0x20)
+			{
+				result += "\\u00";
+				result += hex[byte >> 4];
+				result += hex[byte & 0x0f];
+				continue;
+			}
+			if (c == '"' || c == '\\') { result += '\\'; }
+			result += c;
+		}
+		result += '"';
+		return result;
+	}
+
 	// `tune` completes its path one segment at a time and its value with the
 	// words that path accepts.
 	class TuneCommand final : public DebugCommand
@@ -113,8 +136,8 @@ namespace
 		using Body = std::function<DebugStatus(const DebugArgs&, DebugLog&)>;
 
 		TuneCommand(Paths paths, Token token, Body body) :
-			DebugCommand("tune", "print or set a number or boolean in tuning.json or "
-				"presentation.json: tune <path> [value|next|prev|+=x|-=x|toggle] [restart]",
+			DebugCommand("tune", "print or set a number, boolean or audited presentation colour: "
+				"tune <path> [value|next|prev|+=x|-=x|toggle] [restart]; colours use a name or RRGGBB/RRGGBBAA",
 				{ { "path", false, {} }, { "value", true, {} }, { "restart", true, {} } }),
 			paths_(std::move(paths)), token_(std::move(token)), body_(std::move(body))
 		{
@@ -138,6 +161,7 @@ namespace
 				{
 					return { "on", "off", "toggle" };
 				}
+				if (!token.empty() && token.front() == '"') { return { "WHITE", "BLACK" }; }
 				return token.empty() ? std::vector<std::string>() :
 					std::vector<std::string>{ "next", "prev" };
 			}
@@ -260,7 +284,7 @@ std::string DebugDirectorImpl::tune_token(const std::string& path)
 	{
 		return {};
 	}
-	const JsonLeaf* leaf = document->current().find(std::string_view(path).substr(dot + 1));
+	const JsonLeaf* leaf = document->find(std::string_view(path).substr(dot + 1));
 	return leaf == nullptr ? std::string() : std::string(document->current().token(*leaf));
 }
 
@@ -379,11 +403,11 @@ DebugStatus DebugDirectorImpl::tune_value(const std::string& path, const std::st
 			".json could not be read at startup");
 	}
 	const std::string rest = path.substr(dot + 1);
-	const JsonLeaf* leaf = document->current().find(rest);
+	const JsonLeaf* leaf = document->find(rest);
 	if (leaf == nullptr)
 	{
-		return DebugStatus::failure("tune: no number or boolean '" + path + "' (strings, colours "
-			"and keys the file leaves out are not tunable; try tune.find)");
+		return DebugStatus::failure("tune: no tunable value '" + path + "' (only numbers, booleans "
+			"and audited presentation colours; other strings, fonts and absent keys are not tunable; try tune.find)");
 	}
 	const std::string token(document->current().token(*leaf));
 	const TuneScope scope = tune_scope_of(path);
@@ -404,7 +428,11 @@ DebugStatus DebugDirectorImpl::tune_value(const std::string& path, const std::st
 	}
 
 	std::string next;
-	if (leaf->kind == JsonLeaf::Kind::boolean)
+	if (leaf->kind == JsonLeaf::Kind::string)
+	{
+		next = colour_token(word);
+	}
+	else if (leaf->kind == JsonLeaf::Kind::boolean)
 	{
 		bool ok = true;
 		const bool value = BoolVariable::parse(word, token == "true", ok);

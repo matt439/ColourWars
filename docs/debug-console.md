@@ -165,7 +165,7 @@ running.
 | `bind [key [line]]`, `unbind <key\|all>`, `binds`, `binds.reset` | the [key table](#binds) |
 | `console.live <on\|off>` | the [live console](#live-console) (variable) |
 | `perf`, `perf.reset`, `perf.capture <frames> <label>` | print/clear the [perf](#perf) numbers (and print the last level build's time) or export a bounded rendered-frame capture |
-| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number or boolean in `tuning.json` / `presentation.json` (see [Live tuning](#live-tuning)) |
+| `tune <path> [value\|next\|prev\|+=x\|-=x\|on\|off\|toggle] [restart]` | print or set a number, boolean or one of seven audited presentation colours; colours take a name or `RRGGBB`/`RRGGBBAA` (see [Live tuning](#live-tuning)) |
 | `tune.diff [tuning\|presentation]`, `tune.reset [path\|tuning\|presentation\|all]`, `tune.save [tuning\|presentation\|all] [force]`, `tune.find <word>` | list, revert, write back to the source files, search the paths |
 | `bot <seat\|all\|off> <idle\|walk\|jump\|chase\|paint\|off>` | scripted input for a seat or every idle dummy; `bot` alone lists (see [Bots](#bots)) |
 | `seed [n\|off]` | fix the random seed of the next build (see [Seed, record and play](#seed-record-and-play)) |
@@ -240,9 +240,12 @@ registry as a menu page: the same entries as the console, grouped.
 
 - **Up/Down** move; **A/Enter** selects; **B/Escape** goes back a level
   (picker -> entries -> categories) and closes at the top; **Left/Right** step a
-  variable (`toggle` for a bool, `next`/`prev` otherwise).
+  number or boolean (`toggle` for a bool, `next`/`prev` for a number).
 - A variable row shows `name  value`. Selecting a bool or a number steps it; a
   choice (`ammo`) opens a picker on its current value.
+- An audited colour row shows its quoted token and `(console)`. **A/Enter**
+  prints its current value and adoption scope; **Left/Right** leave it alone.
+  Enter a literal colour through `tune` in the console.
 - `stage`, `players`, `weapon` (for every seat), `overlay` and `goto` open a
   picker over their choices. Lists longer than twelve rows end with a note to
   use the console.
@@ -274,7 +277,7 @@ label.
 | `overlay.collision` | per pane: the collision shape of every object in view (structures white, paintables green, jump-throughs cyan, ramps orange with their slope, players in their team colour, projectiles yellow) and the out-of-bounds edge in red |
 | `overlay.camera` | per pane: the camera's scroll border (magenta; the player moves inside it before the camera follows), the camera bounds (blue) and a cross at the followed centre |
 | `overlay.paint` | bottom left: paint coverage per team and per seat, as a share of the paintable area, live. When a narrow window cannot hold it and the bottom-right status strip on one row, the strip moves above it |
-| `overlay.stations` | in the world: every [station](#stations-and-goto)'s name, the spawns included, above the place `goto` puts a player. The names are `labrador::Label` objects in the level's scene, made the first time the overlay is turned on and hidden after that by a tint of zero in all four channels (alpha zero alone is not invisible under the engine's premultiplied blend), so they draw wherever the world is drawn (the intro picture and the overview too) and under structures and players. Font, scale, offset and colour are `presentation.debug_overlay.station_label`; scale and offset tune live. No default key |
+| `overlay.stations` | in the world: every [station](#stations-and-goto)'s name, the spawns included, above the place `goto` puts a player. The names are `labrador::Label` objects in the level's scene, made the first time the overlay is turned on and hidden after that by a tint of zero in all four channels (alpha zero alone is not invisible under the engine's premultiplied blend), so they draw wherever the world is drawn (the intro picture and the overview too) and under structures and players. Font, scale, offset and colour are `presentation.debug_overlay.station_label`; scale, offset and colour tune live. No default key |
 | `overlay.perf` | bottom left, above the paint panel: the [perf](#perf) graph and numbers. Not part of `overlay all` |
 
 They are set from the console, the debug menu, launch arguments (`+overlay all`)
@@ -326,15 +329,16 @@ are refused (they would change the match outside the recorded input).
 
 ## Live tuning
 
-Every number and boolean in `tuning.json` and `presentation.json` can be read
-and changed while the game runs, by the path its keys give it:
+Every number and boolean in `tuning.json` and `presentation.json`, plus the
+seven audited colour paths below, can be read and changed while the game runs,
+by the path its keys give it:
 `tuning.player.gravity`, `tuning.weapons.sprayer.offset.x`,
 `presentation.movement_feedback.enabled`; an array element is `[i]`. The names
 are the files' own keys, scanned from the files, so they cannot drift from what
-the game reads (the acceptance case replaces every value with a string in turn
-and requires the game's reader to reject it by name). Tab completes a path one
-segment at a time (`tune tuning.pl` -> `tune tuning.player.`), and then the
-value (`next prev`, or `on off toggle`).
+the game reads (the numeric/boolean acceptance case replaces each value with a
+string in turn and requires the game's reader to reject it by name). Tab
+completes a path one segment at a time (`tune tuning.pl` -> `tune tuning.player.`), and then the
+value (`next prev`, `on off toggle`, or the colour suggestions `WHITE BLACK`).
 
 ```text
 tune tuning.player.gravity                 -> tuning.player.gravity = 2000.0  [live]
@@ -360,17 +364,67 @@ which a player could step through a floor is refused
 (`game/tunnelling_limits.h`).
 Only then is the validated object copied over the live one: the
 records that weapons, projectiles, the HUD and movement feedback point at keep
-their addresses, and only the edited number changes.
+their addresses, and only the edited value changes. A colour edit also keeps
+the live F9 feedback toggle.
 
 **When it shows.** Each path has a scope, printed after the edit and marked with
 `*` in the debug menu when it is not live:
 
-| Scope | Paths | Applies |
+| Scope | Numeric/boolean paths | Applies |
 |---|---|---|
 | live | `tuning.input.*`, `tuning.player.*` (not `size`), `tuning.match.sounds.*.volume`, `tuning.weapons.*`, `tuning.projectiles.*` (except sizes and mist `spread_step`), `tuning.match.opening.*`, `tuning.match.reveal.*`, `presentation.movement_feedback/respawn_redraw/opening/debug_overlay/hud/camera.*` | at once |
 | new shots | `tuning.projectiles.*.size`, `*.collision_size`, `tuning.projectiles.mist.spread_step` | the next projectile |
 | rebuild | `tuning.player.size`, `tuning.match.*`, `tuning.paint.*`, `presentation.match.*`, anything else not listed | the next build: `restart`, or add `restart` to the tune |
 | next screen | the rest of `presentation` (menus, pages, prompts) | when that page is next opened |
+
+**Colours.** These seven existing string fields are supported; numeric path
+wildcards do not make other strings editable. Use an engine colour name or
+six/eight hexadecimal digits, without a leading `#`. Names use the engine's
+case-sensitive spelling, such as `WHITE`, `BLACK` or `LIGHT_GRAY`; hexadecimal
+digits accept either case. Tab suggests `WHITE` and `BLACK`; those suggestions
+do not restrict the other names accepted by the normal presentation reader.
+Colour readouts and diffs
+show the quoted JSON token.
+
+| Colour path | Scope | Consumer |
+|---|---|---|
+| `presentation.movement_feedback.colour` | live | Existing movement puffs and the fallback tint for step/skid flecks. |
+| `presentation.movement_feedback.highlight` | live | Highlights of existing movement puffs and contact flecks. |
+| `presentation.movement_feedback.keyline` | live | Outlines of existing movement puffs and contact flecks. |
+| `presentation.debug_overlay.colour` | live | Player debug text, console input and ordinary log text. |
+| `presentation.debug_overlay.shadow_colour` | live | Player debug text and console/status/perf text shadows. |
+| `presentation.debug_overlay.station_label.colour` | live | Existing station labels, refreshed before the match is drawn. |
+| `presentation.main_menu.backgrounds.home` | next screen | Home and Mode Select copy this tint into their background widgets when opened. |
+
+Step/skid effects that captured a contacted surface's paint colour retain that
+tint; changing the fallback does not recolour those stored flecks. Their
+highlight and keyline still read the live presentation. Console error, warning,
+echo, caret, status and perf foreground inks keep their separate fixed colours.
+Station labels use the new premultiplied tint on the next layout refresh,
+including drawing beneath a paused console; hidden labels stay all-zero tint.
+An already-open Home or Mode page keeps its background until the page is
+reopened. These colour fields live inside fixed presentation records, so
+replacement preserves the addresses their live consumers borrow.
+
+```text
+tune presentation.movement_feedback.colour WHITE
+tune presentation.movement_feedback.highlight FFEEDD
+tune presentation.debug_overlay.shadow_colour 00000080
+tune presentation.main_menu.backgrounds.home 30343A
+tune presentation.movement_feedback.colour
+tune.diff presentation
+tune.reset presentation.movement_feedback.colour
+tune.reset presentation
+tune presentation.debug_overlay.station_label.colour YELLOW
+tune.save presentation
+```
+
+The first three edits demonstrate a named colour, RGB and RGBA. Colours accept
+literal values only; `next`, `prev`, arithmetic and boolean words are not
+colour stepping commands. Invalid colours leave the live object, current
+document and pending diff unchanged. Read, diff, reset and save use the same
+paths as numbers and booleans; edits, reset and save retain the existing
+record/replay and queued-reload restrictions.
 
 The shared `presentation.menu_style.layout.position/size/spacing` values use
 the menu's 1920 by 1080 design coordinates and apply when a page is next opened.
@@ -379,7 +433,7 @@ default row spacing; pages with their own layout still use their overrides.
 Position must be nonnegative, size positive and the first widget must fit within
 the design area. Spacing may be zero and is bounded by the design size on each
 axis. Named menu sheets and frames remain string settings edited in the JSON;
-`tune` changes numbers and booleans.
+only the seven colour strings listed above join numbers and booleans in `tune`.
 
 Weapon-choice names and artwork are also string settings under
 `presentation.main_menu.weapon_select.choices`. Edit them in JSON and use
@@ -455,13 +509,18 @@ path, a file or everything back to the file's value through the same validation.
 **`tune.save [tuning|presentation|all] [force]`** writes the edits into the
 **source** files in `game/content/` (known to a Debug build made from a
 checkout; elsewhere it says it needs one). Only the edited tokens change: key
-order, indentation, comments-as-keys, number style and line endings - including a
-file that mixes CRLF and LF - stay byte for byte. Before writing, each edited
-token on disk must still be the value the game loaded; if someone changed it in
+order, indentation, comments-as-keys, unrelated string escapes, number style and
+line endings - including a file that mixes CRLF and LF - stay byte for byte.
+Before writing, each edited token on disk must still be the value the game
+loaded; if someone changed it in
 the meantime, that is a conflict: nothing in that file is written and the paths
-are listed (`force` overwrites them). The file is replaced atomically, read back
-through the game's reader and every startup check that reads it (resources and
-every stage), so a save never leaves a file the next launch refuses; on failure
+are listed (`force` overwrites them). Colour conflicts compare the original
+quoted token bytes too: an externally changed spelling or escape is an edit,
+even if it decodes to the same colour. Each supplied colour literal is encoded
+as one JSON string token; its surrounding source bytes stay intact. The file
+is replaced atomically, read back through the game's reader and every startup
+check that reads it (resources and every stage), so a save never leaves a file
+the next launch refuses; on failure
 the old bytes go back (and if even that rename fails, the log says so and keeps
 them in `<name>.json.bak`). The staged copy beside the executable is replaced
 the same way, so a relaunch without a rebuild sees the save. `tune.save` and
@@ -473,12 +532,15 @@ while a recording or a replay runs).
 
 In the debug menu, **tuning** opens on the two files, then their groups one level
 at a time (`DEBUG / tuning / player`); long groups are paged with a `more (1/2)`
-row. A value row shows its token; Left/Right run `tune <path> prev|next` (a
-boolean toggles), echoed `[menu] tune ...`, and B/Escape climbs one level.
+row. A numeric/boolean value row shows its token; Left/Right run
+`tune <path> prev|next` (a boolean toggles). A colour inspection row shows its
+token and `(console)`; A/Enter runs `tune <path>` to read it, and Left/Right
+neither changes it nor emits a command. Menu commands are echoed
+`[menu] tune ...`, and B/Escape climbs one level.
 
-Not tunable: strings, colours, font and sheet names, and optional keys a file
-leaves out (`frame_time` on most clips, `diffusion` blocks) - `tune.save` never
-inserts keys.
+Not tunable: additional unaudited colours, arbitrary strings, font and sheet
+names, and optional keys a file leaves out (`frame_time` on most clips,
+`diffusion` blocks) - `tune.save` never inserts keys.
 
 ## Bots
 
@@ -1073,8 +1135,9 @@ as the game. In Release:
   whole keyboard seat is blanked, because the engine has no per-key consume
   (engine report 9).
 - **GPU, present and submit time** in the perf overlay (engine report 14).
-- **Colours, strings, fonts and absent keys in `tune`**, and inserting keys in
-  `tune.save`: see [the scoped next slice](#remaining-live-tuning-work-dbg1).
+- **Further colour fields, arbitrary strings, fonts and absent keys in `tune`**,
+  and inserting keys in `tune.save`: the seven audited colour fields above are
+  implemented; see [the remaining scope](#remaining-live-tuning-work-dbg1).
 - **Replays across builds or machines**, across step sizes, and across rounds
   (a recording stops at the end of the round).
 - **A driven check of the pad chord and of a bot on an unplugged pad seat**:
@@ -1082,18 +1145,21 @@ as the game. In Release:
 
 ## Remaining live-tuning work (`DBG#1`)
 
-**OPEN; first slice:** edit existing, known colour tokens in
-`presentation.json` through `tune`, with read, validated apply, diff, reset and
-save. Numbers and booleans already work. Start from actual colour fields and
-the existing named/hex colour reader; arbitrary strings, fonts and insertion of
-absent keys remain later slices.
+**OPEN.** The first bounded colour increment implements the seven existing
+paths listed under [Live tuning](#live-tuning), including read, validated
+apply, diff, reset and save. More existing colour fields remain, along with
+arbitrary string/font edits and insertion of absent keys.
 
-Extend the client span reader only as needed to replace those tokens. Validate
-the complete candidate through `Presentation` and its existing resource checks
-before applying it; a rejected edit changes neither live content nor the diff.
-Audit each supported colour's consumer and report when it is adopted: live,
-new objects, rebuild or next screen. Numeric path wildcards do not establish
-the adoption scope of a newly supported token type.
+The next bounded colour increment can follow an actual field's consumer,
+add that field explicitly and report when it is adopted: live, new objects,
+rebuild or next screen. Numeric path wildcards do not establish a colour's
+adoption scope. Keep the supported list tied to those audits rather than
+exposing arbitrary strings by their spelling. General string/font edits and
+missing-key insertion need their own scoped implementations.
+
+Every extension must validate the complete candidate through `Presentation`
+and its existing resource checks before applying it; a rejected edit changes
+neither live content nor the diff.
 
 Acceptance: valid named/hex colours apply and round-trip through diff/reset/save;
 invalid values leave state intact. Preserve surrounding source bytes, line
@@ -1105,6 +1171,32 @@ exclusion intact. These checks use scratch content and isolated profiles.
 The local RapidJSON span reader and candidate-file validation already provide
 the required route. `ENG#12` asks the engine to replace that client workaround;
 it does not block this slice.
+
+Validation of the seven-colour increment (2026-10-18): Debug and Release build
+under `/W4 /WX` and pass all 36 consumer cases each. The Debug console case
+checks raw string spans/escapes and first-occurrence keys, the strict allowlist,
+safe named/RGB/RGBA values and refusals, fixed borrowed records, F9 preservation,
+read/diff/reset, exact LF/CRLF save splices, conflicts/force and unrelated disk
+edits, completion and inspect rows. Real Level checks retain recording/replay
+edit restrictions, existing Label identity, premultiplied RGBA adoption, hidden
+zero tint and unchanged match fingerprints/RNG. Release still excludes developer
+tool RTTI.
+
+`scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -TuneColoursOnly` passes
+on the NVIDIA GeForce RTX 5080 at hidden 1280x720. Eleven records and nine
+captures cover all seven real consumers, Home/Mode capture and reopening/reset,
+full resource rejection, queued reload refusal and rebuild/rebase, staged
+fallback and saving. Content, user files, profiles and candidate TEMP/TMP are
+private to the run. Reload now honours the same content-directory overrides as
+`tune`; its normal source/staged defaults and source precedence are unchanged.
+The runner explicitly refuses this Debug-only scope for Release before compiling
+or launching it. Both game executables also pass isolated system-PATH startup,
+per-monitor-v2 DPI awareness and graceful shutdown with the accepted audio bank.
+
+Evidence is under `out/validation/tune-colours/`; the native run is
+`a2271b60ffb04b71860a8629e3a40d7a`. No tests were skipped. These muted hidden
+checks establish no physical-pad, listening, human readability or uncontended
+performance acceptance.
 
 ## Foreground checks (`CI#1`)
 

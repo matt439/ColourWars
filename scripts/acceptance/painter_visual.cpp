@@ -32,6 +32,7 @@
 #if COLOURWARS_DEV_TOOLS
 #include "game/debug/match_fingerprint.h"
 #include "game/debug/debug_director_impl.h"
+#include "game/debug/tune_document.h"
 #endif
 
 #include <filesystem>
@@ -2571,6 +2572,9 @@ namespace
 #include "scripts/acceptance/painter_visual/pause_question_checks.h"
 #include "scripts/acceptance/painter_visual/results_menu_checks.h"
 #include "scripts/acceptance/painter_visual/main_menu_checks.h"
+#if COLOURWARS_DEV_TOOLS
+#include "scripts/acceptance/painter_visual/tune_colour_checks.h"
+#endif
 #include "scripts/acceptance/painter_visual/setup_paper_checks.h"
 #include "scripts/acceptance/painter_visual/weapon_catalog_checks.h"
 #include "scripts/acceptance/painter_visual/menu_text_checks.h"
@@ -2605,7 +2609,7 @@ int wmain(int argc, wchar_t** argv)
     try
     {
         require(argc == 3 || (argc == 4 && (std::wstring(argv[3]) == L"identity" ||
-            std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"drift" || std::wstring(argv[3]) == L"miniature-terrain" || std::wstring(argv[3]) == L"monitor" ||
+            std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"drift" || std::wstring(argv[3]) == L"miniature-terrain" || std::wstring(argv[3]) == L"tune-colours" || std::wstring(argv[3]) == L"monitor" ||
             std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"closing" ||
             std::wstring(argv[3]) == L"supply" || std::wstring(argv[3]) == L"hud" ||
             std::wstring(argv[3]) == L"resume" || std::wstring(argv[3]) == L"end-menu" ||
@@ -2616,7 +2620,7 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion" ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" ||
             std::wstring(argv[3]) == L"setup-paper" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options"))),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|miniature-terrain|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
+            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|miniature-terrain|tune-colours|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -2635,6 +2639,9 @@ int wmain(int argc, wchar_t** argv)
         const bool settings_menu_only = argc == 4 && std::wstring(argv[3]) == L"settings-menu";
         const bool controls_menu_only = argc == 4 && std::wstring(argv[3]) == L"controls-menu";
         const bool stick_settings_only = argc == 4 && std::wstring(argv[3]) == L"stick-settings";
+#if !COLOURWARS_DEV_TOOLS
+        require(argc != 4 || std::wstring(argv[3]) != L"tune-colours", "TuneColoursOnly requires a Debug build");
+#endif
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
         require(argc == 4 && (std::wstring(argv[3]) == L"team-setup" || menu_text_only ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options")),
@@ -2691,6 +2698,13 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         const Canvas canvas(app.render_resources());
+#if COLOURWARS_DEV_TOOLS
+        if (argc == 4 && std::wstring(argv[3]) == L"tune-colours")
+        {
+            tune_colour_matrix(app, levels, tuning, presentation, content, output);
+            return 0;
+        }
+#endif
         if (argc == 4 && std::wstring(argv[3]) == L"miniature-terrain")
         {
             miniature_terrain_matrix(app, levels, builder, canvas, tuning, presentation, preferences, output);
