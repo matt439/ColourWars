@@ -9,6 +9,12 @@
 #include "game/objects/countdown_art.h"
 #include "game/objects/reveal_art.h"
 #include "game/objects/drifting_visual.h"
+#include "game/objects/miniature_view.h"
+#include "game/objects/terrain_material.h"
+#include "game/objects/player_builder.h"
+#include "game/game_data.h"
+#include "game/states/stage_preview.h"
+#include "engine/math/triangle.h"
 #include "game/states/menu_panel.h"
 #include "game/states/game_states.h"
 #include "game/states/end_menu.h"
@@ -34,6 +40,9 @@
 #include <iterator>
 #include <limits>
 #include <thread>
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
 
 #if defined(COLOURWARS_PAINTER_SCRIPTED_PADS)
 // This focused probe supplies the concrete input backend at the link seam.
@@ -2550,6 +2559,7 @@ namespace
     }
 #include "scripts/acceptance/painter_visual/drift_checks.h"
 #include "scripts/acceptance/painter_visual/monitor_checks.h"
+#include "scripts/acceptance/painter_visual/miniature_terrain_checks.h"
 #include "scripts/acceptance/painter_visual/countdown_checks.h"
 #include "scripts/acceptance/painter_visual/reveal_checks.h"
 #include "scripts/acceptance/painter_visual/hud_checks.h"
@@ -2595,7 +2605,7 @@ int wmain(int argc, wchar_t** argv)
     try
     {
         require(argc == 3 || (argc == 4 && (std::wstring(argv[3]) == L"identity" ||
-            std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"drift" || std::wstring(argv[3]) == L"monitor" ||
+            std::wstring(argv[3]) == L"quiet" || std::wstring(argv[3]) == L"drift" || std::wstring(argv[3]) == L"miniature-terrain" || std::wstring(argv[3]) == L"monitor" ||
             std::wstring(argv[3]) == L"countdown" || std::wstring(argv[3]) == L"closing" ||
             std::wstring(argv[3]) == L"supply" || std::wstring(argv[3]) == L"hud" ||
             std::wstring(argv[3]) == L"resume" || std::wstring(argv[3]) == L"end-menu" ||
@@ -2606,7 +2616,7 @@ int wmain(int argc, wchar_t** argv)
             std::wstring(argv[3]) == L"menu-text" || std::wstring(argv[3]) == L"menu-motion" ||
             std::wstring(argv[3]) == L"setup-motion" || std::wstring(argv[3]) == L"join-stage-motion" ||
             std::wstring(argv[3]) == L"setup-paper" || std::wstring(argv[3]) == L"join-paper" || std::wstring(argv[3]) == L"team-paper" || std::wstring(argv[3]) == L"weapon-paper" || std::wstring(argv[3]) == L"stage-paper" || std::wstring(argv[3]) == L"home-return-focus" || std::wstring(argv[3]) == L"home-exit" || std::wstring(argv[3]) == L"options-defaults" || (std::wstring(argv[3]) == L"display-trial" || std::wstring(argv[3]) == L"paused-options"))),
-            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
+            "usage: painter_visual <staged-content> <output> [identity|quiet|drift|miniature-terrain|monitor|countdown|closing|supply|hud|resume|end-menu|pause-menu|results-menu|main-menu|settings-menu|controls-menu|stick-settings|team-setup|weapon-catalog|menu-text|menu-motion|setup-motion|join-stage-motion|setup-paper|join-paper|team-paper|weapon-paper|stage-paper|home-return-focus|home-exit|options-defaults|display-trial|paused-options]");
         const bool identity_only = argc == 4 && std::wstring(argv[3]) == L"identity";
         const bool quiet_only = argc == 4 && std::wstring(argv[3]) == L"quiet";
         const bool monitor_only = argc == 4 && std::wstring(argv[3]) == L"monitor";
@@ -2658,6 +2668,7 @@ int wmain(int argc, wchar_t** argv)
         options.resolution = ScreenResolution::s_1280_720;
         options.fullscreen = false;
         options.max_threads = 4;
+        if (argc == 4 && std::wstring(argv[3]) == L"miniature-terrain") { options.view_capacity = 5; }
         options.visible = false;
         Application app(options);
         app.initialize();
@@ -2680,6 +2691,11 @@ int wmain(int argc, wchar_t** argv)
             app.audio_resources(), &preferences, &levels, &tuning, &presentation,
             app.resolution_manager(), app.thread_pool(), app.partitioner(), app.mouse());
         const Canvas canvas(app.render_resources());
+        if (argc == 4 && std::wstring(argv[3]) == L"miniature-terrain")
+        {
+            miniature_terrain_matrix(app, levels, builder, canvas, tuning, presentation, preferences, output);
+            return 0;
+        }
         if (argc == 4 && std::wstring(argv[3]) == L"drift")
         {
             drift_matrix(app, levels, canvas, builder, preferences, output);
@@ -2860,7 +2876,7 @@ int wmain(int argc, wchar_t** argv)
         }
         if (monitor_only)
         {
-            monitor_matrix(app, builder, canvas, tuning, presentation, preferences, output);
+            monitor_matrix(app, builder, canvas, tuning, presentation, preferences, content, output);
             require(records.good(), "Capture record write failed");
             std::cout << "PASS monitor-only visual check; other painter matrices were not run\n";
             return 0;
@@ -2923,7 +2939,7 @@ int wmain(int argc, wchar_t** argv)
         reduced_effects_matrix(app, builder, canvas, presentation, preferences, output, records);
         shake_matrix(app, builder, tuning, presentation, preferences, output);
         identity_matrix(app, builder, presentation, preferences, output);
-        monitor_matrix(app, builder, canvas, tuning, presentation, preferences, output);
+        monitor_matrix(app, builder, canvas, tuning, presentation, preferences, content, output);
         countdown_matrix(app, builder, canvas, tuning, presentation, preferences, output);
         closing_matrix(app, builder, canvas, tuning, presentation, preferences, output);
         hud_matrix(app, builder, canvas, presentation, output, false);

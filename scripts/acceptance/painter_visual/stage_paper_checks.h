@@ -1,5 +1,5 @@
 // Full actual Stage pages: the paper and text are independent constructions;
-// the unchanged StagePreview is rendered separately into its original pane.
+// the actual miniature StagePreview is rendered separately into its original pane.
 void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, const Canvas& canvas,
     GameTuning& tuning, Presentation& presentation, const std::filesystem::path& output)
 {
@@ -151,7 +151,7 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
         const UiTextDropShadow legend("independent-stage-prompt", prompt, footer.font, footer.position, app.render_resources(), footer.colour, footer.shadow_colour, footer.shadow_offset); legend.draw(list);
         const Frame expected = read(renderer); const std::string stem = "stage-paper-" + name + '-' + std::to_string(settings.player_count()) + "p-best" + std::to_string(best_of) + "-slot" + std::to_string(slot) + '-' + std::to_string(actual.width) + 'x' + std::to_string(actual.height);
         if (actual.pixels != expected.pixels) { save(actual, output / (stem + "-failure-actual.ppm")); save(expected, output / (stem + "-failure-expected.ppm")); const RectangleI delta = foreground_delta_bounds(actual, expected); std::cerr << "STAGE PAPER " << name << " delta=" << delta.x << ',' << delta.y << ',' << delta.width << ',' << delta.height << '\n'; }
-        require(actual.pixels == expected.pixels, "Actual Stage paper differs from independent paper/briefing/text and unchanged StagePreview raster");
+        require(actual.pixels == expected.pixels, "Actual Stage paper differs from independent paper/briefing/text and actual miniature StagePreview raster");
         const RectangleI pane = countdown_crop_bounds(camera.calculate_view_rectangle(preview)); require(foreground_crop(actual, pane, 0).pixels == foreground_crop(expected, pane, 0).pixels, "Stage paper changed the actual preview raster or its physical pane/camera");
         const auto contrast = [&](RectangleF bounds)
         {
@@ -305,5 +305,5 @@ void stage_paper_matrix(Application& app, Registry<LevelLoadedInfo>& levels, con
     }
     presentation = original;
     require(records.good(), "Stage paper evidence write failed"); require(IsWindowVisible(static_cast<HWND>(app.window())) == FALSE && GetForegroundWindow() != static_cast<HWND>(app.window()), "Stage paper probe exposed or activated its hidden window");
-    std::cout << "PASS Stage paper independent full paper/briefing/text plus unchanged actual StagePreview at six sizes; shipped arenas/eligible Random, solo/2P/4P modes, lock/unlock/start/back/recovery, exact Random latch/RNG, captured art/font/copy, local accent/reduction/lifecycle/frozen redraw and resize; scripted reader only\n";
+    std::cout << "PASS Stage paper independent full paper/briefing/text plus actual miniature StagePreview at six sizes; shipped arenas/eligible Random, solo/2P/4P modes, lock/unlock/start/back/recovery, exact Random latch/RNG, captured art/font/copy, local accent/reduction/lifecycle/frozen redraw and resize; scripted reader only\n";
 }

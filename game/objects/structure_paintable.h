@@ -64,6 +64,8 @@ public:
 
 	void update(float dt) override;
 	void draw(labrador::DrawList& draw_list) const override;
+	void draw_miniature(labrador::DrawList& draw_list,
+		const labrador::Camera& camera) const override;
 	// Surface splashes affect rendering extent, never layout/contact geometry.
 	mattmath::RectangleF cull_bounds(float units_per_pixel) const override;
 	void on_contact(const labrador::CollisionObject& other,
@@ -77,6 +79,7 @@ public:
 	std::vector<PaintRunoffVisual> runoff_visuals() const;
 
 private:
+	void draw_paint(labrador::DrawList& draw_list) const;
 	std::vector<PaintTile> paint_tiles_ = std::vector<PaintTile>();
 	TeamColour team_colours_ = TeamColour();
 	PaintableFaces faces_ = PaintableFaces();

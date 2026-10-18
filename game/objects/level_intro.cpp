@@ -275,7 +275,8 @@ void Level::draw_intro(Renderer& renderer) const
 	this->monitor_->draw(behind, screen);
 
 	// Each view's figures act in that view's own camera.
-	this->scene_->draw(renderer, [this](int view, DrawList& list) { this->draw_acting(list, view); });
+	this->draw_miniature_world(renderer,
+		[this](int view, DrawList& list) { this->draw_acting(list, view); });
 
 	// In front: the last view executes after every other.
 	DrawList front = renderer.view(renderer.view_count() - 1);

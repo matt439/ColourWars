@@ -2,7 +2,8 @@
 param(
     [ValidateSet('x64-debug', 'x64-release')]
     [string] $Preset = 'x64-debug',
-    [switch] $SkipBuild
+    [switch] $SkipBuild,
+    [string] $OutputDirectory
 )
 
 $ErrorActionPreference = 'Stop'
@@ -40,7 +41,11 @@ function Quote-ResponsePath {
 
 $repo = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $build = Join-Path $repo "out/build/$Preset"
-$evidence = Join-Path $repo "out/acceptance/$Preset"
+$evidence = if ($OutputDirectory) {
+    [System.IO.Path]::GetFullPath((Join-Path $OutputDirectory $Preset))
+} else {
+    Join-Path $repo "out/acceptance/$Preset"
+}
 [System.IO.Directory]::CreateDirectory($evidence) | Out-Null
 
 foreach ($command in 'cmake', 'cl') {

@@ -3,6 +3,7 @@
 
 #include "game/game_data.h"
 #include "game/objects/level_object_builder.h"
+#include "game/objects/structure.h"
 #include "game/states/menu_page.h"
 
 using namespace labrador;
@@ -84,7 +85,14 @@ void StagePreview::draw(DrawList& draw_list) const
 	}
 	for (const auto& object : this->collision_objects_)
 	{
-		object->draw(draw_list);
+		if (const auto* structure = dynamic_cast<const Structure*>(object.get()))
+		{
+			structure->draw_miniature(draw_list, camera);
+		}
+		else
+		{
+			object->draw(draw_list);
+		}
 	}
 
 	draw_list.set_viewport(fullscreen);

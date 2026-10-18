@@ -80,6 +80,7 @@ add_executable(ColourWars WIN32
     objects/level_intro.cpp
     objects/level_opening.cpp
     objects/monitor.cpp
+    objects/miniature_view.cpp
     objects/movement_audio.cpp
     objects/movement_feedback.cpp
     objects/paint_audio.cpp

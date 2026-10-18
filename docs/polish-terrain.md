@@ -35,7 +35,9 @@ hangs: baked speckle tiles, dense `shadow_deep` near the platform thinning to
 - **One cell is four world units**, as the painter's. Keylines are one cell. Interior
   detail (ticks, tile joints) sits on the world grid so neighbours line up; outlines
   sit on the exact edges, so sizes that are not whole cells lose part of an interior
-  cell, never an outline.
+  cell, never an outline. Miniature overview, monitor and stage-preview views use
+  the pixel treatment below when a cell projects below one pixel; gameplay keeps
+  the authored drawing.
 - **The drawing never leaves the collision shape.** No overhang, no hole in a
   walkable, no tip beyond the rectangle (the pencil's cut end is the honest version of
   its sharpened one). If it is black-lined you can stand on it; backdrop props are
@@ -68,9 +70,10 @@ hangs: baked speckle tiles, dense `shadow_deep` near the platform thinning to
   `OrientedTerrainMaterial` lays its drawing along the long axis; `GroundMaterial`,
   `PencilMaterial`, `RulerMaterial`, `EraserMaterial`, `PaintTinMaterial` and
   `SetSquareMaterial` each work their drawing out once, at construction, into an
-  immutable list of swatch quads. `draw` only replays it: const, deterministic and
-  identical in every view. A `Structure` owns its material; `Structure::draw` paints
-  it instead of the stretched frame.
+  immutable list of swatch quads. Ordinary drawing only replays it. The explicit
+  miniature path projects that same drawing for each view without mutating it.
+  A `Structure` owns its material; `Structure::draw` paints it instead of the
+  stretched frame.
 - [`AirbrushShadow`](../game/objects/airbrush_shadow.h) lays the four baked speckle
   tiles along a span on the world grid, choosing a variant by grid index and cropping
   the last tile rather than stretching it.
@@ -92,6 +95,11 @@ same quads, that each object stays within a quad budget, that every shadow hangs
 under a real underside inside its cull bounds, that every backdrop is untinted on
 paper, and that the material table refuses what it does not draw. Level-format and
 editor acceptance cover the field ([level editor](level-editor.md)).
+
+The terrain case also checks miniature projection at native and subpixel scales,
+negative/fractional camera origins, exposed seams, light thin rulers, surviving
+major marks and unchanged ramp pixel occupancy. These are geometry/raster rules,
+not human style acceptance.
 
 ## Decisions made while building it
 
@@ -216,6 +224,103 @@ Local evidence is under `out/validation/cloud-drift/` and `out/acceptance/`.
 Final renderer run IDs are Debug `d47fffce9a4342f3ade57904128a1741` and Release
 `3b239ecb30a345f3bce5c803adfe3f1d`.
 
+## Small-view terrain readability (2026-10-18)
+
+The overview, monitor picture and Stage Select preview keep useful exposed
+terrain strokes when the four-unit drawing cell projects below one pixel.
+The old drawing lost some keylines and ruler marks because both projected
+edges of their quads truncated to the same pixel. Changing the sampler would
+not recover a quad with no area.
+
+Materials now record which quads are exposed strokes or ruler marks while
+constructing their unchanged authored drawing. The miniature path grows an
+exposed stroke inward to one view pixel, clipped to its own filled extent.
+Buried faces remain unlined. Ramp strokes stay within their original stepped
+row bands, retaining the projected silhouette rather than inventing a ledge.
+Incidental brick joints and engraved interior lines keep their ordinary
+projection; the treatment does not widen everything drawn in black.
+
+A one-pixel ruler stays light. Two pixels can carry one leading keyline and
+a light body; larger rulers can retain their opposite edge and marks. Marks
+need three pixels of spacing to remain separate, so major marks survive after
+minor marks become unresolvable. No palette, atlas, collision shape, paint
+budget, gameplay camera or world-grid value changes.
+
+`TerrainMaterial::paint_miniature` takes the view's camera explicitly. At one
+pixel per cell or above it calls the ordinary painting path. Smaller drawings
+use viewport-local integer rectangles and restore the caller's camera; their
+point sampler remains unchanged. Each paintable structure still draws its
+material, splashes, owned paint and runoff in that order. Normal active and
+countdown gameplay continues through `Scene::draw`.
+
+The pinned engine supplies neither view context to object drawing nor a
+replacement draw callback inside Scene's ordered world walk. Level therefore
+uses a small sequential traversal for overview/monitor views, retaining Scene's
+viewport, append offset, culling and scenery-before-collision order. Scene still
+owns every object. A borrowed scenery list includes shadows, idle drips and
+later debug station labels; live collision objects come from Scene. Its public
+collision span does not promise render order, so parity with the pin is a
+tested dependency. Private [engine draft 20](review/engine-reports.md#20-scene-drawing-gives-client-objects-no-view-context---draft-with-miniature-terrain-exhibit)
+records what an engine answer would let the client delete. It is unfiled and
+still needs publication approval and an upstream-master recheck.
+
+StagePreview uses the same explicit-camera structure methods in its existing
+pane, with its existing camera and decorative object order. Drawing remains
+const and consumes no gameplay randomness. Human readability and style review
+remain part of `POL#9`.
+
+Retained native-size crops from a 1280x720 window compare the Close Quarters
+Stage Select preview [before](images/polish-terrain/small-view-cq-legacy-720p.png)
+and [with the miniature treatment](images/polish-terrain/small-view-cq-adapted-720p.png).
+The [four-player monitor picture](images/polish-terrain/small-view-monitor-720p.png)
+shows the same treatment in the opening. These captures support renderer review;
+they do not replace readability review in play.
+
+Validation on 2026-10-18:
+
+- Debug and Release build under `/W4 /WX` and pass all 36 consumer cases each.
+  The terrain case independently checks known exposed/masked edges, touching
+  ground, horizontal/vertical ruler marks and light bodies, ramp occupancy,
+  every shipped material, fractional/negative projection and invalid cameras.
+- `scripts/check-painter.ps1 -Preset x64-debug -SkipBuild -MiniatureTerrainOnly`
+  and its Release counterpart pass on the NVIDIA GeForce RTX 5080. Each records
+  379 comparisons; both CSVs and all 46 retained capture pairs are byte-identical.
+  Checks include independent pixel oracles, owned-paint dominance, ordinary
+  material/Scene parity, culling and append offsets, actual StagePreview panes,
+  all four arenas at 1P/4P framing and 720p/1080p/QHD, real story/overview and
+  solo-bypass paths, frozen observations/RNG/Debug fingerprints and resize returns.
+- Both `-StagePaperOnly` regressions pass, retaining the independent complete
+  paper/text oracle, original physical preview pane/camera, all shipped stages,
+  Random latching, ordinary destinations, live recovery and reduction checks.
+- Both `-MonitorOnly` regressions pass. The original shipped full-drift story
+  captures remain. A second identical 2P/4P story uses a private stage copy with
+  only five decorative cloud `drift` fields removed; reinserting them must
+  reproduce the original JSON. This isolates click accents from the legitimate
+  cloud-to-anchor change under Reduce effects. Six before/at/after comparisons
+  retain timing, containment, state, draw-RNG and Debug fingerprint assertions;
+  41 story records and compact cursor/card crops accompany the original captures.
+- Four hidden isolated startups pass with a system-only PATH and per-monitor-v2
+  DPI awareness: Debug and Release beside their builds, the extracted Release
+  ZIP, and a separate package copy with only its bank removed. All shut down
+  gracefully. The 55-file ZIP retains all 28 reviewed runtime assets, accepted
+  audio/provenance, runtimes and licences; Release developer RTTI is absent.
+
+Local evidence is under `out/validation/miniature-terrain/`; the consumer runner's
+new optional `-OutputDirectory` keeps this batch's CPU evidence separate from
+earlier runs. Initial native fixture failures and their diagnoses remain there:
+explicit float arguments, capacity for the prefix-view check, the stale monitor
+comparison and its newly declared third-party header path were repaired without
+changing production after the builds. Miniature/Stage paper results retain exact
+source-hash proof that subsequent edits affect only the monitor fixture/runner.
+Rendering was muted and may have shared the machine with Unreal validation;
+these checks establish no listening, physical-pad or performance acceptance.
+
+| Native scope | Debug run | Release run |
+|---|---|---|
+| Miniature terrain | `04f6840b7e344f31996eba4d8d8a0363` | `215ddb09e4c243c4b3da7d81eb360c79` |
+| Monitor | `384c0f05495744998586d217693486da` | `06ca1dc8100f40a99a0e7dd25a067800` |
+| Stage paper | `576301748e6c438db96b4d15368e4c67` | `52e2ed07aebc47748e7cc8a4163e15f0` |
+
 ## Not done (what `POL#9` still holds)
 
 - Human review in play, clean and heavily painted, with all three team pairs, at 1P
@@ -224,23 +329,21 @@ Final renderer run IDs are Debug `d47fffce9a4342f3ade57904128a1741` and Release
   Paint-artefact jokes in the backdrop; modest parallax after camera framing.
 - Close Quarters' own backdrop and fitting the kit to its blockout (`POL#17`); a
   palette and composition per arena (`POL#16`).
-- The overview and the monitor picture draw the arena small enough that one-cell
-  lines and ruler ticks drop pixels under point sampling.
 
 ## Ready implementation slices (2026-10-18)
 
-`POL#9` has three implementation slices in the current arenas. Retain checks and
-evidence for each slice. Final human style acceptance remains separate; no slice
-unlocks the phase-2 blockouts by itself.
+The small-view treatment above is implemented. Two current-arena implementation
+choices remain below; retain checks and evidence for each. Final human style
+acceptance remains separate; no slice unlocks the phase-2 blockouts by itself.
 
 | Slice | Scope | Acceptance | Size |
 |---|---|---|---|
-| Small-view terrain readability | Address disappearing keylines and ruler ticks in the miniature overview and monitor picture. Choose an art/client-rendering treatment after comparing native-size captures. | Retain useful silhouettes at 720p, 1080p and QHD through overview/monitor transitions, resize and 1P/4P framing; keep gameplay cameras, collision and point-sampled gameplay art correct. | M |
 | Reusable landmarks | Add a small set of non-text Tool Props landmarks/background details to the current arenas under the Muted Day rules. Keep them reusable when layouts change. | Compare clean/heavily painted scenes for every team pair at 1P/4P. Landing edges and routes stay truthful; decoration changes no collision, paint budget or gameplay RNG. Animated details must respect pause, culling and Reduce effects. | M |
 | Modest parallax prototype | Compare distant/middle backdrop layers with the static version in the current arenas. Establish the per-view draw approach before broadening the art. | Independent split-screen views, conservative culling, resize and overview/monitor transitions remain correct; define static preview/editor behaviour. Keep drawing free of simulation/RNG mutation and retain a static Reduce effects presentation. | L |
 
-Start with the small-view defect. Landmarks and the parallax prototype are further
-current-phase choices, not a request to finish all scenery before reviewing it.
+The small-view treatment is ready for author review. Landmarks and the parallax
+prototype are further current-phase choices, not a request to finish all scenery
+before reviewing it.
 Retain parallax only if the comparison improves the composition and readability;
 the static backdrop remains a valid outcome of the prototype.
 Captioned jokes need the author's wording and do not gate non-text landmarks.

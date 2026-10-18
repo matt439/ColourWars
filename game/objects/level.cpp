@@ -2,6 +2,7 @@
 #include "game/objects/level.h"
 #include "game/debug/debug_overlay_draw.h"
 #include "game/objects/crude_drawing.h"
+#include "game/objects/miniature_view.h"
 #include "game/input_slots.h"
 #include "engine/render/text_encoding.h"
 
@@ -10,6 +11,7 @@ using namespace DirectX;
 using namespace labrador;
 
 Level::Level(std::unique_ptr<Scene> scene,
+	std::vector<GameObject*> scenery,
 	std::vector<Player*> players,
 	std::vector<std::unique_ptr<GameObject>> viewport_dividers,
 	const TeamColour& team_colours,
@@ -34,6 +36,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 	std::vector<LevelStation> stations,
 	OpeningMode opening, std::optional<float> duration) :
 	scene_(std::move(scene)),
+	scenery_(std::move(scenery)),
 	players_(std::move(players)),
 	stations_(std::move(stations)),
 	viewport_dividers_(std::move(viewport_dividers)),
@@ -74,6 +77,7 @@ Level::Level(std::unique_ptr<Scene> scene,
 			drip = this->scene_->add(std::make_unique<IdleDrip>(
 				&presentation->idle_drip(type), render_resources, player->team_colour(),
 				static_cast<uint32_t>(this->idle_drips_.size()), preferences));
+			this->scenery_.push_back(drip);
 		}
 		this->idle_drips_.push_back(drip);
 	}
@@ -822,7 +826,26 @@ void Level::draw(Renderer& renderer) const
 	else
 	{
 		// The overview draws only the world, with no gameplay overlays.
-		this->scene_->draw(renderer);
+		this->draw_miniature_world(renderer);
+	}
+}
+
+void Level::draw_miniature_world(Renderer& renderer, const Scene::ViewOverlay& overlay) const
+{
+	const int count = this->scene_->view_count();
+	if (count == 0) { return; }
+	const int offset = std::max(0, renderer.view_count() - 1);
+	renderer.set_view_count(offset + count);
+	// At most four cosmetic views, drawn sequentially. Scene remains the only
+	// owner of the normal gameplay fan-out. The pin's collision span mirrors
+	// its current render order; a native parity check guards that dependency.
+	for (int index = 0; index < count; ++index)
+	{
+		const Scene::View& view = this->scene_->view(index);
+		DrawList list = renderer.view(offset + index);
+		draw_miniature_view(list, view.camera, view.viewport, this->scenery_,
+			this->scene_->collision_objects());
+		if (overlay) { overlay(index, list); }
 	}
 }
 
@@ -963,6 +986,7 @@ void Level::refresh_station_labels()
 			this->station_labels_.push_back(this->scene_->add(std::make_unique<Label>(
 				widen(station.name), look.font, station.position + look.offset,
 				this->render_resources_, look.colour, look.scale)));
+			this->scenery_.push_back(this->station_labels_.back());
 		}
 		// Admit them now, so a paused match shows them too. This runs between
 		// world updates, when every tick's own additions have been admitted

@@ -78,6 +78,17 @@ void StructurePaintable::update(float dt)
 void StructurePaintable::draw(DrawList& draw_list) const
 {
 	Structure::draw(draw_list);
+	this->draw_paint(draw_list);
+}
+
+void StructurePaintable::draw_miniature(DrawList& draw_list, const Camera& camera) const
+{
+	Structure::draw_miniature(draw_list, camera);
+	this->draw_paint(draw_list);
+}
+
+void StructurePaintable::draw_paint(DrawList& draw_list) const
+{
 	for (const auto& paint_tile : this->paint_tiles_)
 	{
 		paint_tile.draw_splash(draw_list);

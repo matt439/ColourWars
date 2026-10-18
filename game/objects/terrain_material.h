@@ -1,6 +1,7 @@
 #pragma once
 
 #include "engine/render/texture_object.h"
+#include "engine/render/camera.h"
 #include "engine/math/rectanglef.h"
 #include "engine/math/shape.h"
 #include "game/objects/collision_object_type.h"
@@ -27,7 +28,8 @@ enum class TerrainRole
 
 const char* terrain_role_name(TerrainRole role);
 
-// One solid swatch stretched over a world rectangle.
+// One solid swatch stretched over a rectangle: authored quads use world units,
+// projected_miniature_quads returns viewport-local pixels.
 struct TerrainQuad
 {
 	mattmath::RectangleF rectangle;
@@ -44,8 +46,9 @@ struct TerrainFaces
 
 // A Tool Props material: how a walkable rectangle (or a ramp's triangle) is
 // drawn. The drawing is worked out once, at construction, into a fixed list of
-// swatch quads that never leaves the collision shape; draw() only replays it,
-// so it is const, deterministic and identical in every view.
+// swatch quads that never leaves the collision shape. paint() replays it;
+// miniatures resolve its tagged strokes locally without changing that recipe.
+// Both paths are const and deterministic across concurrent views.
 class TerrainMaterial : public labrador::TextureObject
 {
 public:
@@ -63,6 +66,15 @@ public:
 	virtual ~TerrainMaterial() = default;
 
 	void paint(labrador::DrawList& draw_list) const;
+	// The small overview and monitor picture retain resolvable exposed edges
+	// and ruler marks in whole view pixels. The gameplay drawing above is
+	// untouched; at one pixel per authored cell this takes that exact path.
+	void paint_miniature(labrador::DrawList& draw_list,
+		const labrador::Camera& camera) const;
+	// Viewport-local pixel rectangles, in painter order. Empty projections are
+	// omitted. A nonfinite translation or nonpositive/nonfinite scale is invalid.
+	std::vector<TerrainQuad> projected_miniature_quads(
+		const labrador::Camera& camera) const;
 
 	const std::string& name() const;
 	const std::vector<TerrainQuad>& quads() const;
@@ -73,6 +85,17 @@ protected:
 	// Adds a quad clipped to `limit`; an empty result is dropped.
 	void add(const mattmath::RectangleF& rectangle, TerrainRole role,
 		const mattmath::RectangleF& limit);
+	enum class StrokeEdge { top, bottom, left, right };
+	// Unlike a fill or incidental joint, this is an authored exposed stroke.
+	// Its minimum pixel grows inward from the named edge, inside `limit`.
+	void add_stroke(const mattmath::RectangleF& rectangle, TerrainRole role,
+		const mattmath::RectangleF& limit, StrokeEdge edge);
+	void add_stroke(const mattmath::RectangleF& rectangle, TerrainRole role,
+		const mattmath::RectangleF& limit, StrokeEdge edge,
+		const mattmath::RectangleF& miniature_limit);
+	void configure_miniature_ruler(const mattmath::RectangleF& rectangle, bool vertical);
+	void add_ruler_mark(const mattmath::RectangleF& rectangle,
+		const mattmath::RectangleF& limit, bool major);
 	// A keyline CELL wide inside each exposed span of each face.
 	void outline(const mattmath::RectangleF& rectangle, const TerrainFaces& faces);
 
@@ -81,6 +104,19 @@ private:
 	std::array<labrador::SpriteSheet::frame_handle,
 		static_cast<size_t>(TerrainRole::count)> swatches_{};
 	std::vector<TerrainQuad> quads_;
+	struct MiniatureDetail
+	{
+		enum class Kind { fill, stroke, minor_mark, major_mark };
+		Kind kind = Kind::fill;
+		StrokeEdge edge = StrokeEdge::top;
+		mattmath::RectangleF limit = mattmath::RectangleF::ZERO;
+	};
+	// Parallel to quads_; construction records intent, drawing never guesses
+	// from a colour role (which also names joints and engraved interior lines).
+	std::vector<MiniatureDetail> miniature_details_;
+	mattmath::RectangleF ruler_rectangle_ = mattmath::RectangleF::ZERO;
+	bool miniature_ruler_ = false;
+	bool ruler_vertical_ = false;
 };
 
 // Drawn in a frame along the rectangle's long axis: `along` runs left to right

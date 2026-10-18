@@ -371,7 +371,7 @@ Frame monitor_fixture(Application& app, const Monitor& monitor, const RectangleF
 }
 
 void monitor_frozen(Application& app, Level& level, const std::filesystem::path& output,
-    const std::string& stem, std::ofstream& records)
+    const std::string& stem, std::ofstream& records, bool retain_frame = true)
 {
     const auto before = observation(level);
 #if COLOURWARS_DEV_TOOLS
@@ -394,7 +394,7 @@ void monitor_frozen(Application& app, Level& level, const std::filesystem::path&
     require(MatchFingerprint::difference(fingerprint, MatchFingerprint::of(level, 0)).empty(),
         "story drawing changed the replay fingerprint");
 #endif
-    save(first, output / (stem + ".ppm"));
+    if (retain_frame) { save(first, output / (stem + ".ppm")); }
     records << stem << ',' << level.player_count() << ',' << static_cast<int>(level.state()) << ','
         << level.level_end_info().team_a_area << ',' << level.level_end_info().team_b_area << '\n';
 }
@@ -422,9 +422,58 @@ std::unique_ptr<Level> monitor_story(Application& app, LevelBuilder& builder, in
     return builder.build_level(settings, TeamColourPair::blue_orange, OpeningMode::full);
 }
 
+std::filesystem::path monitor_static_backdrop(const std::filesystem::path& content,
+    const std::filesystem::path& output)
+{
+    const std::filesystem::path source = content / "levels" / "movement_course.json";
+    std::ifstream input(source, std::ios::binary);
+    require(input.good(), "cannot read the shipped monitor story stage");
+    const std::string bytes((std::istreambuf_iterator<char>(input)), std::istreambuf_iterator<char>());
+    rapidjson::Document original; original.Parse(bytes.c_str());
+    require(!original.HasParseError() && original.IsObject() && original.HasMember("non_collision_objects") &&
+        original["non_collision_objects"].IsArray(), "monitor story stage has no decoration array");
+    rapidjson::Document stationary; stationary.CopyFrom(original, stationary.GetAllocator());
+    size_t removed = 0;
+    for (auto& decoration : stationary["non_collision_objects"].GetArray())
+    {
+        if (!decoration.HasMember("drift")) { continue; }
+        require(decoration.HasMember("type") && decoration["type"].IsString() &&
+            std::string(decoration["type"].GetString()) == "Visual" && decoration.HasMember("frame_name") &&
+            decoration["frame_name"].IsString() && (std::string(decoration["frame_name"].GetString()) == "cloud_big" ||
+                std::string(decoration["frame_name"].GetString()) == "cloud_small"),
+            "monitor isolation would remove drift from an unexpected decoration");
+        decoration.RemoveMember("drift"); ++removed;
+    }
+    require(removed > 0, "monitor static-backdrop fixture removed no drifting clouds");
+    // Reinsert only the removed values into another copy. Equality with the
+    // original proves that geometry, collision, art, audio and unknown fields
+    // have not been rewritten to make the click comparison pass.
+    rapidjson::Document restored; restored.CopyFrom(stationary, restored.GetAllocator());
+    const auto& original_decorations = original["non_collision_objects"];
+    auto& restored_decorations = restored["non_collision_objects"];
+    for (rapidjson::SizeType index = 0; index < original_decorations.Size(); ++index)
+    {
+        if (!original_decorations[index].HasMember("drift")) { continue; }
+        rapidjson::Value drift(original_decorations[index]["drift"], restored.GetAllocator());
+        restored_decorations[index].AddMember(rapidjson::StringRef("drift"), drift, restored.GetAllocator());
+    }
+    require(restored == original, "monitor isolation changed fields beyond decorative drift");
+    rapidjson::StringBuffer serialized; rapidjson::Writer<rapidjson::StringBuffer> writer(serialized);
+    stationary.Accept(writer);
+    const std::filesystem::path fixture = output / "monitor-static-backdrop" / "movement_course.json";
+    std::filesystem::create_directories(fixture.parent_path());
+    std::ofstream file(fixture, std::ios::binary);
+    file.write(serialized.GetString(), static_cast<std::streamsize>(serialized.GetSize()));
+    require(file.good(), "monitor static-backdrop fixture write failed");
+    std::ofstream record(output / "monitor-static-backdrop.csv");
+    record << "source,removed_decorative_drift,other_fields_unchanged\nmovement_course," << removed << ",true\n";
+    require(record.good(), "monitor static-backdrop isolation record write failed");
+    return fixture;
+}
+
 void monitor_matrix(Application& app, LevelBuilder& builder, const Canvas& canvas,
     const GameTuning& tuning, const Presentation& presentation, PlaySettings& preferences,
-    const std::filesystem::path& output)
+    const std::filesystem::path& content, const std::filesystem::path& output)
 {
     const RestoreFlag restore_reduced{ preferences.reduce_effects, preferences.reduce_effects };
     preferences.reduce_effects = false;
@@ -579,109 +628,149 @@ void monitor_matrix(Application& app, LevelBuilder& builder, const Canvas& canva
 
     const OpeningTuning& opening = tuning.match().opening;
     const RevealTuning& reveal = tuning.match().reveal;
-    for (int count : { 2, 4 })
+    const auto fixture = monitor_static_backdrop(content, output);
+    Registry<LevelLoadedInfo> static_levels("Monitor static-backdrop Level");
+    auto static_info = std::make_unique<LevelLoadedInfo>(fixture.string().c_str());
+    static_info->validate(); static_levels.add("movement_course", std::move(static_info));
+    LevelBuilder static_builder(app.viewport_manager(), app.render_resources(), app.audio_resources(),
+        &preferences, &static_levels, &tuning, &presentation, app.resolution_manager(),
+        app.thread_pool(), app.partitioner(), app.mouse());
+    std::ofstream click_records(output / "monitor-click.csv");
+    click_records << "capture,players,expected_click_response,changed_pixels,state_unchanged,draw_rng_unchanged\n";
+    // The shipped pass retains all real cloud motion and its original story
+    // snapshots. Repeat the identical story/input sequence with only backdrop
+    // drift removed so Reduce effects can isolate the click accents: moving a
+    // cloud back to its anchor is a legitimate separate visual response.
+    for (const bool static_backdrop : { false, true })
     {
-        auto level = monitor_story(app, builder, count);
-        resize(app, *level, { 1280, 720 });
-        auto inputs = neutral_inputs();
-        const std::string prefix = "monitor-" + std::to_string(count) + "p-story-";
-        const auto snap = [&](const char* beat) { monitor_frozen(app, *level, output, prefix + beat, records); };
-        const auto advance = [&](float seconds)
+        for (int count : { 2, 4 })
         {
-            const int ticks = static_cast<int>(std::ceil(seconds / dt));
-            for (int tick = 0; tick < ticks; ++tick) { level->update(inputs, dt); }
-        };
-        snap("opening");
-        advance(opening.settle + opening.preview * 0.65f);
-        snap("preview-a");
-        advance(opening.preview);
-        snap("preview-b");
-        for (int tick = 0; tick < 1200 && level->state() == LevelState::opening; ++tick) { level->update(inputs, dt); }
-        require(level->state() == LevelState::start_countdown, "monitor story missed its countdown");
-        snap("countdown");
-        advance(std::max(0.0f, tuning.match().countdown - opening.push * 0.5f));
-        require(level->state() == LevelState::start_countdown, "monitor story missed its glass push");
-        snap("push");
-        for (int tick = 0; tick < 600 && level->state() != LevelState::active; ++tick) { level->update(inputs, dt); }
-        require(level->state() == LevelState::active, "monitor story did not reach active play");
-        if (count == 2)
-        {
-            require(level->place_player(0, { 1200, 1275 }), "could not place painting reveal fixture");
-            inputs[3].primary_shoot = true;
-            inputs[3].x_movement = 1;
-        }
-        for (int tick = 0; tick < 600 && level->state() == LevelState::active; ++tick) { level->update(inputs, dt); }
-        require(level->state() == LevelState::zoom_out, "monitor story missed its reveal pullback");
-        advance(tuning.match().zoom_out * 0.5f);
-        snap("pullback");
-        for (int tick = 0; tick < 600 && level->state() == LevelState::zoom_out; ++tick) { level->update(inputs, dt); }
-        require(level->state() == LevelState::overview, "monitor story did not reach its monitor overview");
-        const LevelEndInfo info = level->level_end_info();
-        require(count == 2 ? info.team_a_area > 0 && info.winning_team() == PlayerTeam::a :
-            info.team_a_area == 0 && info.team_b_area == 0, "monitor reveal fixture painted an unexpected result");
-        // Mirror only the elapsed 60 Hz updates, so captures bracket the
-        // actual story edge without exposing or writing private story timers.
-        float reveal_time = 0.0f;
-        const auto reveal_tick = [&]()
-        {
-            level->update(inputs, dt);
-            reveal_time += dt;
-        };
-        const auto reveal_before = [&](float target)
-        {
-            for (int tick = 0; tick < 1200 && reveal_time + dt < target; ++tick) { reveal_tick(); }
-            require(level->state() == LevelState::overview && reveal_time < target && reveal_time + dt >= target,
-                "monitor reveal capture missed its timing edge");
-        };
-        const RectangleF window(0, 0, 1280, 720);
-        const Monitor reveal_geometry(&look, app.render_resources(), {});
-        const Vector2F click_tip = count == 2 ? reveal_geometry.swatch(window, 0).center() :
-            reveal_geometry.close_button(window).center();
-        const auto click_response = [&](bool present)
-        {
-            const auto before = observation(*level);
-#if COLOURWARS_DEV_TOOLS
-            const MatchFingerprint fingerprint = MatchFingerprint::of(*level, 0);
-#endif
-            const Frame normal = render(*level, *app.renderer());
-            preferences.reduce_effects = true;
-            const Frame reduced = render(*level, *app.renderer());
-            preferences.reduce_effects = false;
-            const float reach = look.cursor_size * window.height * 2.0f;
-            RectangleF response(click_tip - Vector2F(reach), Vector2F(reach * 2.0f));
+            auto level = monitor_story(app, static_backdrop ? static_builder : builder, count);
+            resize(app, *level, { 1280, 720 });
+            auto inputs = neutral_inputs();
+            const std::string prefix = "monitor-" + std::to_string(count) +
+                (static_backdrop ? "p-static-backdrop-story-" : "p-story-");
+            const auto snap = [&](const char* beat)
+            { monitor_frozen(app, *level, output, prefix + beat, records, !static_backdrop); };
+            const auto advance = [&](float seconds)
+            {
+                const int ticks = static_cast<int>(std::ceil(seconds / dt));
+                for (int tick = 0; tick < ticks; ++tick) { level->update(inputs, dt); }
+            };
+            snap("opening");
+            advance(opening.settle + opening.preview * 0.65f);
+            snap("preview-a");
+            advance(opening.preview);
+            snap("preview-b");
+            for (int tick = 0; tick < 1200 && level->state() == LevelState::opening; ++tick) { level->update(inputs, dt); }
+            require(level->state() == LevelState::start_countdown, "monitor story missed its countdown");
+            snap("countdown");
+            advance(std::max(0.0f, tuning.match().countdown - opening.push * 0.5f));
+            require(level->state() == LevelState::start_countdown, "monitor story missed its glass push");
+            snap("push");
+            for (int tick = 0; tick < 600 && level->state() != LevelState::active; ++tick) { level->update(inputs, dt); }
+            require(level->state() == LevelState::active, "monitor story did not reach active play");
             if (count == 2)
             {
-                // A winning click also ticks the two coverage cards in the
-                // picture. The no-paint close retains only the cursor cue.
-                const RectangleF picture = reveal_geometry.picture(window);
-                const float left = std::min(response.x, picture.x);
-                const float top = std::min(response.y, picture.y);
-                response = RectangleF(left, top, std::max(response.right(), picture.right()) - left,
-                    std::max(response.bottom(), picture.bottom()) - top);
+                require(level->place_player(0, { 1200, 1275 }), "could not place painting reveal fixture");
+                inputs[3].primary_shoot = true;
+                inputs[3].x_movement = 1;
             }
-            const size_t changed = foreground_local_delta(normal, reduced, response);
-            require(present ? changed > 0 : changed == 0,
-                "real reveal click ticks were missing, premature or did not expire");
-            require(before == observation(*level), "reveal click comparison changed simulation state");
+            for (int tick = 0; tick < 600 && level->state() == LevelState::active; ++tick) { level->update(inputs, dt); }
+            require(level->state() == LevelState::zoom_out, "monitor story missed its reveal pullback");
+            advance(tuning.match().zoom_out * 0.5f);
+            snap("pullback");
+            for (int tick = 0; tick < 600 && level->state() == LevelState::zoom_out; ++tick) { level->update(inputs, dt); }
+            require(level->state() == LevelState::overview, "monitor story did not reach its monitor overview");
+            const LevelEndInfo info = level->level_end_info();
+            require(count == 2 ? info.team_a_area > 0 && info.winning_team() == PlayerTeam::a :
+                info.team_a_area == 0 && info.team_b_area == 0, "monitor reveal fixture painted an unexpected result");
+            // Mirror only the elapsed 60 Hz updates, so captures bracket the
+            // actual story edge without exposing or writing private story timers.
+            float reveal_time = 0.0f;
+            const auto reveal_tick = [&]()
+            {
+                level->update(inputs, dt);
+                reveal_time += dt;
+            };
+            const auto reveal_before = [&](float target)
+            {
+                for (int tick = 0; tick < 1200 && reveal_time + dt < target; ++tick) { reveal_tick(); }
+                require(level->state() == LevelState::overview && reveal_time < target && reveal_time + dt >= target,
+                    "monitor reveal capture missed its timing edge");
+            };
+            const RectangleF window(0, 0, 1280, 720);
+            const Monitor reveal_geometry(&look, app.render_resources(), {});
+            const Vector2F click_tip = count == 2 ? reveal_geometry.swatch(window, 0).center() :
+                reveal_geometry.close_button(window).center();
+            size_t click_sample = 0;
+            const auto click_response = [&](bool present)
+            {
+                const auto before = observation(*level);
 #if COLOURWARS_DEV_TOOLS
-            require(MatchFingerprint::difference(fingerprint, MatchFingerprint::of(*level, 0)).empty(),
-                "reveal click comparison changed the replay fingerprint");
+                const MatchFingerprint fingerprint = MatchFingerprint::of(*level, 0);
 #endif
-        };
-        reveal_before(reveal.walk_in + reveal.hover * 0.65f);
-        snap(count == 2 ? "reveal-preview" : "closing-hesitate");
-        const float click_at = reveal.walk_in + reveal.hover + reveal.hover + reveal.decide;
-        reveal_before(click_at);
-        snap(count == 2 ? "reveal-before-click" : "closing-before-click");
-        click_response(false);
-        reveal_tick();
-        snap(count == 2 ? "reveal-click" : "closing-click");
-        click_response(true);
-        reveal_before(click_at + look.cursor_art.click_duration + dt);
-        reveal_tick();
-        snap(count == 2 ? "reveal-saved" : "closing-desktop");
-        click_response(false);
+                std::srand(1957); const int expected_random = std::rand(); std::srand(1957);
+                const Frame normal = render(*level, *app.renderer());
+                preferences.reduce_effects = true;
+                const Frame reduced = render(*level, *app.renderer());
+                preferences.reduce_effects = false;
+                const float reach = look.cursor_size * window.height * 2.0f;
+                RectangleF response(click_tip - Vector2F(reach), Vector2F(reach * 2.0f));
+                if (count == 2)
+                {
+                    // A winning click also ticks the two coverage cards in the
+                    // picture. The no-paint close retains only the cursor cue.
+                    const RectangleF picture = reveal_geometry.picture(window);
+                    const float left = std::min(response.x, picture.x);
+                    const float top = std::min(response.y, picture.y);
+                    response = RectangleF(left, top, std::max(response.right(), picture.right()) - left,
+                        std::max(response.bottom(), picture.bottom()) - top);
+                }
+                const size_t changed = foreground_local_delta(normal, reduced, response);
+                require(present ? changed > 0 : changed == 0,
+                    "real reveal click ticks were missing, premature or did not expire");
+                require(before == observation(*level), "reveal click comparison changed simulation state");
+                require(std::rand() == expected_random, "reveal click comparison consumed match randomness");
+#if COLOURWARS_DEV_TOOLS
+                require(MatchFingerprint::difference(fingerprint, MatchFingerprint::of(*level, 0)).empty(),
+                    "reveal click comparison changed the replay fingerprint");
+#endif
+                constexpr const char* samples[] = { "before-click", "at-click", "after-expiry" };
+                require(click_sample < 3, "monitor isolated click comparison ran too many samples");
+                const std::string stem = prefix + samples[click_sample++];
+                click_records << stem << ',' << count << ',' << present << ',' << changed << ",true,true\n";
+                const RectangleI cursor_crop(static_cast<int>(click_tip.x - reach) - 2,
+                    static_cast<int>(click_tip.y - reach) - 2, static_cast<int>(reach * 2) + 4,
+                    static_cast<int>(reach * 2) + 4);
+                save(foreground_crop(normal, cursor_crop, 0), output / (stem + "-cursor-detail.ppm"));
+                save(foreground_crop(reduced, cursor_crop, 0), output / (stem + "-cursor-reduced-detail.ppm"));
+                if (count == 2)
+                {
+                    const RectangleF picture = reveal_geometry.picture(window);
+                    const RectangleI cards(static_cast<int>(picture.x), static_cast<int>(picture.y),
+                        static_cast<int>(picture.width), static_cast<int>(picture.height * 0.6f));
+                    save(foreground_crop(normal, cards, 0), output / (stem + "-cards-detail.ppm"));
+                    save(foreground_crop(reduced, cards, 0), output / (stem + "-cards-reduced-detail.ppm"));
+                }
+            };
+            reveal_before(reveal.walk_in + reveal.hover * 0.65f);
+            snap(count == 2 ? "reveal-preview" : "closing-hesitate");
+            const float click_at = reveal.walk_in + reveal.hover + reveal.hover + reveal.decide;
+            reveal_before(click_at);
+            snap(count == 2 ? "reveal-before-click" : "closing-before-click");
+            if (static_backdrop) { click_response(false); }
+            reveal_tick();
+            snap(count == 2 ? "reveal-click" : "closing-click");
+            if (static_backdrop) { click_response(true); }
+            reveal_before(click_at + look.cursor_art.click_duration + dt);
+            reveal_tick();
+            snap(count == 2 ? "reveal-saved" : "closing-desktop");
+            if (static_backdrop) { click_response(false); }
+            require(click_sample == (static_backdrop ? 3u : 0u), "monitor isolated click comparison missed a timing edge");
+        }
     }
+    require(click_records.good(), "monitor click isolation record write failed");
     // GameLevel::start_match supplies OpeningMode::off for solo practice;
     // use the same policy here rather than bypassing the shell's decision.
     auto solo = build(app, builder, 1, TeamColourPair::blue_orange);
@@ -694,6 +783,7 @@ void monitor_matrix(Application& app, LevelBuilder& builder, const Canvas& canva
         "saved slot preserves every terrain cell; native 640x480/1024x768/720p/1080p/QHD and bounded push; "
         "adult/child/mug seated/sigh/stand/leave foreground at native sizes and offset window, full departure, "
         "fixed cursor hotspot, local detached click ticks, expiry and reduced-effects suppression; "
-        "real 2P/4P opening/preview/countdown/push/pullback/winner reveal/no-paint close, "
+        "real shipped full-drift 2P/4P opening/preview/countdown/push/pullback/winner reveal/no-paint close; "
+        "identical static-backdrop story isolates before/at/after click accents with only decorative drift removed, "
         "solo practice without monitor, frozen redraw/persona/state/fingerprint and unchanged draw RNG\n";
 }

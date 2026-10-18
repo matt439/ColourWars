@@ -36,6 +36,31 @@ namespace
 		return RectangleF(left, top, right - left, bottom - top);
 	}
 
+	void validate_miniature_camera(const Camera& camera)
+	{
+		if (!std::isfinite(camera.scale) || camera.scale <= 0.0f ||
+			!std::isfinite(camera.translation.x) || !std::isfinite(camera.translation.y))
+		{
+			throw std::invalid_argument("miniature terrain needs a finite camera with positive scale");
+		}
+	}
+
+	RectangleF projected_pixels(const RectangleF& world, const Camera& camera)
+	{
+		const RectangleF projected = camera.calculate_view_rectangle(world);
+		if (!std::isfinite(projected.left()) || !std::isfinite(projected.top()) ||
+			!std::isfinite(projected.right()) || !std::isfinite(projected.bottom()))
+		{
+			throw std::invalid_argument("miniature terrain camera projection must stay finite");
+		}
+		// The renderer truncates the four edges independently. Preserve its
+		// silhouette, including the asymmetric answer around negative zero.
+		const float left = std::trunc(projected.left());
+		const float top = std::trunc(projected.top());
+		return RectangleF(left, top, std::trunc(projected.right()) - left,
+			std::trunc(projected.bottom()) - top);
+	}
+
 	const char* collision_type_label(CollisionObjectType type)
 	{
 		switch (type)
@@ -191,6 +216,111 @@ void TerrainMaterial::paint(DrawList& draw_list) const
 	}
 }
 
+void TerrainMaterial::paint_miniature(DrawList& draw_list, const Camera& camera) const
+{
+	validate_miniature_camera(camera);
+	if (camera.scale >= 1.0f / CELL)
+	{
+		this->paint(draw_list);
+		return;
+	}
+	const std::vector<TerrainQuad> projected = this->projected_miniature_quads(camera);
+	draw_list.set_camera(Camera::DEFAULT_CAMERA);
+	try
+	{
+		for (const TerrainQuad& quad : projected)
+		{
+			this->draw_with(draw_list, quad.rectangle,
+				this->swatches_[static_cast<size_t>(quad.role)], Colour::white,
+				Vector2F::ZERO, SpriteFlip::none, 0.0f);
+		}
+	}
+	catch (...)
+	{
+		draw_list.set_camera(camera);
+		throw;
+	}
+	draw_list.set_camera(camera);
+}
+
+std::vector<TerrainQuad> TerrainMaterial::projected_miniature_quads(const Camera& camera) const
+{
+	validate_miniature_camera(camera);
+	const bool miniature = camera.scale < 1.0f / CELL;
+	const RectangleF ruler = this->miniature_ruler_
+		? projected_pixels(this->ruler_rectangle_, camera) : RectangleF::ZERO;
+	const float ruler_thickness = this->ruler_vertical_ ? ruler.width : ruler.height;
+	std::vector<TerrainQuad> result;
+	result.reserve(this->quads_.size());
+	for (size_t index = 0; index < this->quads_.size(); ++index)
+	{
+		const TerrainQuad& quad = this->quads_[index];
+		RectangleF rectangle = projected_pixels(quad.rectangle, camera);
+		const MiniatureDetail& detail = this->miniature_details_[index];
+		if (miniature && detail.kind == MiniatureDetail::Kind::stroke)
+		{
+			if (this->miniature_ruler_ && (ruler_thickness < 2.0f ||
+				(ruler_thickness < 3.0f && detail.edge !=
+					(this->ruler_vertical_ ? StrokeEdge::left : StrokeEdge::top))))
+			{
+				// One pixel is the light board. Two can hold its leading line
+				// and a light row, but not a second line or black end caps.
+				continue;
+			}
+			const RectangleF limit = projected_pixels(detail.limit, camera);
+			switch (detail.edge)
+			{
+			case StrokeEdge::top:
+				rectangle.y = limit.top();
+				rectangle.height = std::max(1.0f, rectangle.height);
+				break;
+			case StrokeEdge::bottom:
+				rectangle.height = std::max(1.0f, rectangle.height);
+				rectangle.y = limit.bottom() - rectangle.height;
+				break;
+			case StrokeEdge::left:
+				rectangle.x = limit.left();
+				rectangle.width = std::max(1.0f, rectangle.width);
+				break;
+			case StrokeEdge::right:
+				rectangle.width = std::max(1.0f, rectangle.width);
+				rectangle.x = limit.right() - rectangle.width;
+				break;
+			}
+			rectangle = intersection(rectangle, limit);
+		}
+		else if (miniature && (detail.kind == MiniatureDetail::Kind::minor_mark ||
+			detail.kind == MiniatureDetail::Kind::major_mark))
+		{
+			const float period = detail.kind == MiniatureDetail::Kind::major_mark ? 80.0f : 16.0f;
+			if (ruler_thickness < 3.0f || period * camera.scale < 3.0f) { continue; }
+			// Marks keep a light gap between neighbours and stay between the
+			// two physical outlines. Major marks survive after minors cease
+			// to be distinguishable; neither can turn a thin board into a bar.
+			RectangleF interior(ruler.x + 1.0f, ruler.y + 1.0f,
+				ruler.width - 2.0f, ruler.height - 2.0f);
+			if (this->ruler_vertical_)
+			{
+				rectangle.height = 1.0f;
+				rectangle.width = std::max(1.0f, rectangle.width);
+				rectangle.x = interior.right() - rectangle.width;
+			}
+			else
+			{
+				rectangle.width = 1.0f;
+				rectangle.height = std::max(1.0f, rectangle.height);
+				rectangle.y = interior.bottom() - rectangle.height;
+			}
+			rectangle = intersection(rectangle, interior);
+		}
+		if (rectangle.width > 0.0f && rectangle.height > 0.0f)
+		{
+			result.push_back({ rectangle, quad.role });
+		}
+	}
+	return result;
+}
+
 const std::string& TerrainMaterial::name() const
 {
 	return this->name_;
@@ -208,6 +338,43 @@ void TerrainMaterial::add(const RectangleF& rectangle, TerrainRole role,
 	if (clipped.width > 0.0f && clipped.height > 0.0f)
 	{
 		this->quads_.push_back({ clipped, role });
+		this->miniature_details_.push_back({ MiniatureDetail::Kind::fill, StrokeEdge::top, limit });
+	}
+}
+
+void TerrainMaterial::add_stroke(const RectangleF& rectangle, TerrainRole role,
+	const RectangleF& limit, StrokeEdge edge)
+{
+	this->add_stroke(rectangle, role, limit, edge, limit);
+}
+
+void TerrainMaterial::add_stroke(const RectangleF& rectangle, TerrainRole role,
+	const RectangleF& limit, StrokeEdge edge, const RectangleF& miniature_limit)
+{
+	const size_t before = this->quads_.size();
+	this->add(rectangle, role, limit);
+	if (this->quads_.size() != before)
+	{
+		this->miniature_details_.back() = { MiniatureDetail::Kind::stroke, edge, miniature_limit };
+	}
+}
+
+void TerrainMaterial::configure_miniature_ruler(const RectangleF& rectangle, bool vertical)
+{
+	this->ruler_rectangle_ = rectangle;
+	this->ruler_vertical_ = vertical;
+	this->miniature_ruler_ = true;
+}
+
+void TerrainMaterial::add_ruler_mark(const RectangleF& rectangle,
+	const RectangleF& limit, bool major)
+{
+	const size_t before = this->quads_.size();
+	this->add(rectangle, TerrainRole::ruler_marks, limit);
+	if (this->quads_.size() != before)
+	{
+		this->miniature_details_.back().kind = major
+			? MiniatureDetail::Kind::major_mark : MiniatureDetail::Kind::minor_mark;
 	}
 }
 
@@ -215,21 +382,23 @@ void TerrainMaterial::outline(const RectangleF& rectangle, const TerrainFaces& f
 {
 	for (const auto& [low, high] : faces.top)
 	{
-		this->add(RectangleF(low, rectangle.top(), high - low, CELL), TerrainRole::keyline, rectangle);
+		this->add_stroke(RectangleF(low, rectangle.top(), high - low, CELL),
+			TerrainRole::keyline, rectangle, StrokeEdge::top);
 	}
 	for (const auto& [low, high] : faces.bottom)
 	{
-		this->add(RectangleF(low, rectangle.bottom() - CELL, high - low, CELL),
-			TerrainRole::keyline, rectangle);
+		this->add_stroke(RectangleF(low, rectangle.bottom() - CELL, high - low, CELL),
+			TerrainRole::keyline, rectangle, StrokeEdge::bottom);
 	}
 	for (const auto& [low, high] : faces.left)
 	{
-		this->add(RectangleF(rectangle.left(), low, CELL, high - low), TerrainRole::keyline, rectangle);
+		this->add_stroke(RectangleF(rectangle.left(), low, CELL, high - low),
+			TerrainRole::keyline, rectangle, StrokeEdge::left);
 	}
 	for (const auto& [low, high] : faces.right)
 	{
-		this->add(RectangleF(rectangle.right() - CELL, low, CELL, high - low),
-			TerrainRole::keyline, rectangle);
+		this->add_stroke(RectangleF(rectangle.right() - CELL, low, CELL, high - low),
+			TerrainRole::keyline, rectangle, StrokeEdge::right);
 	}
 }
 
@@ -413,6 +582,7 @@ RulerMaterial::RulerMaterial(const RectangleF& rectangle, const TerrainFaces& fa
 {
 	const float length = this->length();
 	const float thickness = this->thickness();
+	this->configure_miniature_ruler(rectangle, this->vertical());
 	this->place(0.0f, 0.0f, length, thickness, TerrainRole::ruler_fill);
 
 	if (thickness >= 6.0f * CELL)
@@ -425,8 +595,11 @@ RulerMaterial::RulerMaterial(const RectangleF& rectangle, const TerrainFaces& fa
 		{
 			const bool major = std::fmod(std::abs(world), 80.0f) < 0.5f;
 			const float mark = (major ? 3.0f : 2.0f) * CELL;
-			this->place(world - origin, thickness - bottom_keyline - mark, CELL, mark,
-				TerrainRole::ruler_marks);
+			const float along = world - origin;
+			const float across = thickness - bottom_keyline - mark;
+			this->add_ruler_mark(this->vertical()
+				? RectangleF(rectangle.x + across, rectangle.y + along, mark, CELL)
+				: RectangleF(rectangle.x + along, rectangle.y + across, CELL, mark), rectangle, major);
 		}
 	}
 
@@ -525,19 +698,34 @@ SetSquareMaterial::SetSquareMaterial(const Shape& shape, const TerrainFaces& fac
 			const float step = std::max(CELL,
 				std::abs(t.hypotenuse_x(y0) - t.hypotenuse_x(y1)) + CELL);
 			const float hyp_x = t.hypotenuse_left() ? span->first : span->second - step;
-			this->add(intersection(RectangleF(hyp_x, y0, step, y1 - y0), band), line, box);
+			const RectangleF hypotenuse = intersection(RectangleF(hyp_x, y0, step, y1 - y0), band);
+			if (outer_edge)
+			{
+				// A surviving pixel row may borrow one pixel only from its own
+				// filled band, never from the triangle's empty side or tip.
+				this->add_stroke(hypotenuse, line, box,
+					t.hypotenuse_left() ? StrokeEdge::left : StrokeEdge::right, band);
+			}
+			else { this->add(hypotenuse, line, box); }
 
 			if (!outer_edge || overlaps(vertical_leg, y0, y1))
 			{
-				this->add(RectangleF(corner_right ? span->second - CELL : span->first, y0,
-					CELL, y1 - y0), line, box);
+				const RectangleF leg(corner_right ? span->second - CELL : span->first, y0,
+					CELL, y1 - y0);
+				if (outer_edge)
+				{
+					this->add_stroke(leg, line, box,
+						corner_right ? StrokeEdge::right : StrokeEdge::left, band);
+				}
+				else { this->add(leg, line, box); }
 			}
 			if (row == 0)
 			{
 				if (!outer_edge) { this->add(band, line, box); }
 				else for (const auto& [low, high] : horizontal_leg)
 				{
-					this->add(intersection(RectangleF(low, y0, high - low, y1 - y0), band), line, box);
+					this->add_stroke(intersection(RectangleF(low, y0, high - low, y1 - y0), band),
+						line, box, corner_below ? StrokeEdge::bottom : StrokeEdge::top, band);
 				}
 			}
 		}

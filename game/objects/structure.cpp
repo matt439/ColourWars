@@ -43,6 +43,15 @@ void Structure::draw(DrawList& draw_list) const
 	}
 	this->TextureObject::draw(draw_list, this->sprite_rectangle_);
 }
+void Structure::draw_miniature(DrawList& draw_list, const Camera& camera) const
+{
+	if (this->material_ != nullptr)
+	{
+		this->material_->paint_miniature(draw_list, camera);
+		return;
+	}
+	this->TextureObject::draw(draw_list, this->sprite_rectangle_);
+}
 RectangleF Structure::bounds() const
 {
 	return this->sprite_rectangle_;

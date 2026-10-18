@@ -6,7 +6,7 @@
 > repository, in a file you can open, written because the engine offered
 > nothing better.
 >
-> **Twelve are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19). Seven are closed** and kept below as one paragraph
+> **Thirteen are live as unfiled drafts with exhibits (6, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20). Seven are closed** and kept below as one paragraph
 > each — what was asked, what shipped, and what this repository spent the
 > answer on.
 >
@@ -67,12 +67,12 @@ against `6b5c0bd`, and `6b5c0bd` will not be master for long.
 
 ## Publication gate (`ENG#PUBLISH`)
 
-**Author decision:** choose which details from this private repository's twelve
+**Author decision:** choose which details from this private repository's thirteen
 live drafts may be shared, and where, before filing them. Labrador's `PI-09`
 tracks this disclosure choice; its older seven-draft count does not supersede
-the twelve live entries here.
+the thirteen live entries here.
 
-All twelve remain unfiled drafts. The 2026-10-18 backlog cleanup filed no
+All thirteen remain unfiled drafts. The 2026-10-18 backlog cleanup filed no
 reports and left the engine pin unchanged. Local source checks, exhibit
 maintenance and reproduction work can continue while the publication decision
 is pending.
@@ -119,8 +119,9 @@ Report 6 now has its client-side mixing exhibit. It remains an unfiled draft.
 | 17 | The Win32 window ignores DPI once the client opts in | the `dpiAwareness` block in `game/settings.manifest`; the DPI assertion in `scripts/check-startup.ps1` | draft — checked against published master 2026-10-17 |
 | 18 | A `Label` in a `Scene` can be neither hidden nor raised | the zero-tint hide in `Level::refresh_station_labels`; the `station_labels` case in `replay_checks.cpp` | draft — checked against the pin; recheck upstream before filing |
 | 19 | The window is shown before the client has loaded anything | `initialize()` before `load_manifest` in `game/main.cpp`, with a startup timing | draft — low priority; checked against the pin |
+| 20 | Scene drawing gives client objects no view context | `draw_miniature_view`, `Level::draw_miniature_world`, the borrowed scenery mirror and `Structure::draw_miniature` | draft - source audit against the pin only; recheck upstream before filing |
 
-Nothing else is outstanding, on either side, beyond reports 6 and 9-19 below. The fullscreen workaround the
+Nothing else is outstanding, on either side, beyond reports 6 and 9-20 below. The fullscreen workaround the
 audit flagged under [What is deliberately not here](#what-is-deliberately-not-here)
 has since been driven and fixed — keyboard support made the Options page
 reachable on a machine with no pad.
@@ -726,6 +727,73 @@ today. The client would add one `app.show()` after `validate_game_content` in
 
 **Status:** unfiled draft against the pin, low priority. Recheck engine master
 before filing.
+
+---
+
+## 20. Scene drawing gives client objects no view context - **draft with miniature-terrain exhibit**
+
+**Exhibit:** [draw_miniature_view](../../game/objects/miniature_view.cpp),
+`Level::draw_miniature_world` and its borrowed scenery mirror in
+[level.cpp](../../game/objects/level.cpp), with the admissions in
+[LevelBuilder](../../game/objects/level_builder.cpp) and the explicit-camera
+`draw_miniature` methods in [Structure](../../game/objects/structure.cpp) and
+[StructurePaintable](../../game/objects/structure_paintable.cpp).
+[StagePreview](../../game/states/stage_preview.cpp) uses the same object seam
+for its separately owned preview objects.
+
+### What happens
+
+**Source audit against the pinned `52e809a` only, 2026-10-18.** This is not a
+fresh check of upstream master, a filed report or a claim about an unexamined
+engine revision.
+
+The game wants its small monitor picture and arena preview to retain readable
+terrain edges and ruler marks. Those are client art choices. Their drawing
+needs the current view's camera to project authored geometry into view pixels;
+ordinary gameplay keeps its existing terrain drawing.
+
+`GameObject::draw(DrawList&)` receives no camera or viewport. `DrawList` has
+`set_camera` and `set_viewport`, but no corresponding read access. `Scene`
+knows both values while it culls and draws each object; its only client draw
+callback, `ViewOverlay`, runs after the entire world. That callback cannot
+replace a structure's terrain drawing before that structure's paint and the
+later players and projectiles. Drawing corrected terrain over the completed
+world would change which object covers which.
+
+The client therefore repeats the miniature world's draw walk. It mirrors every
+non-collision admission into a borrowed list, including shadows, idle drips and
+later debug labels, while Scene remains their owner. It repeats Scene's cull,
+scenery-before-collision order and renderer-view append arithmetic, dispatches
+structures through a separate camera-taking virtual, then draws the acting
+overlay. Paint stays immediately after its own structure's material. Normal
+gameplay still uses `Scene::draw` and its render workers.
+
+The collision half also relies on a fact weaker than an API contract.
+`Scene::collision_objects()` promises objects in "no particular order". At
+this pin, `end_tick()` rebuilds that span in the same order `draw_views()`
+walks. Retirement uses swap-and-pop, so this is the current render order, not
+stable insertion order. Matching the current implementation preserves the
+picture today, but the public span does not promise equivalence to Scene's
+future render traversal. A pin change requires checking that dependency along
+with the duplicated cull and append behavior.
+
+### The ask, when it goes
+
+Provide a way for a client object's view-dependent drawing to receive or read
+its active camera and viewport while Scene retains ownership, culling, the
+ordered world walk and view fan-out. An equivalent client draw-dispatch seam
+inside that traversal would serve the same need. The terrain projection,
+minimum stroke size and choice of miniature views remain game policy; this
+does not ask the engine to implement the art or change a render backend.
+
+An answer should let this client delete its borrowed scenery mirror and
+repeated Scene draw walk, and remove the dependence on collision-span order
+as a substitute for a render traversal. It should also let camera-aware
+terrain stay in its existing position before its paint and later objects.
+
+**Status:** private, unfiled draft with a client exhibit; audited against the
+pin only. Filing requires `ENG#PUBLISH` and a fresh upstream-master check under
+the rule above. No upstream query or publication was performed for this draft.
 
 ---
 

@@ -26,6 +26,9 @@ public:
 
 	void update(float dt) override;
 	void draw(labrador::DrawList& draw_list) const override;
+	// The same painter order, with camera-aware strokes only in miniature views.
+	virtual void draw_miniature(labrador::DrawList& draw_list,
+		const labrador::Camera& camera) const;
 	mattmath::RectangleF bounds() const override;
 
 	const mattmath::Shape* shape() const override;

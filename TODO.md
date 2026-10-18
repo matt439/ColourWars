@@ -23,8 +23,9 @@ order is gameplay style first, UI after.
 UI artwork follows the gameplay style. Rows outside this sequence (audio, release, engine,
 tooling) are picked from OPEN when they don't compete with it.
 
-**Ready implementation choices.** Start with `POL#9`'s
-[small-view terrain readability, reusable landmarks or parallax prototype](docs/polish-terrain.md#ready-implementation-slices-2026-10-18).
+**Ready implementation choices.** `POL#9`'s small-view treatment is implemented;
+[reusable landmarks or a parallax prototype](docs/polish-terrain.md#ready-implementation-slices-2026-10-18)
+remain current-arena choices.
 These use the current arenas; Close Quarters' redesign stays in phase 2.
 When that work is awaiting review, the following supporting work can proceed locally.
 This is a selection guide, not another priority order; each owner defines a bounded first slice.
@@ -45,7 +46,7 @@ This is a selection guide, not another priority order; each owner defines a boun
   listening and optional-cue choices (`POL#23`), visible uncontended performance captures
   and a supported hardware baseline (`POL#25`).
 - **Upstream publication:** choose which private engine drafts may be shared and where
-  (`ENG#PUBLISH`); the twelve filing rows wait on that choice.
+  (`ENG#PUBLISH`); the thirteen filing rows wait on that choice.
 - **Hands and hardware:** a physical-pad session (`ROAD#2`, `DBG#7`, `POL#18`, the pad half of `POL#3`) and
   a clean Windows PC for the Release ZIP (`ROAD#1`). This machine has no pad.
 
@@ -58,7 +59,7 @@ questions in the polish sub-docs are superseded, not open.
 | id | status | sev | size | item |
 |---|---|---|---|---|
 | `POL#7` | DECISION | HIGH | M | Author review of the implemented painter and five tools in current-arena 1P/4P play; re-check in CQ (`POL#17`). [Painter](docs/polish-painter.md#remaining-character-work), [tools](docs/polish-tools.md). |
-| `POL#9` | OPEN | HIGH | XL | Current-arena terrain slices: small-view sampling, reusable landmarks or modest parallax; retain author style review. CQ-specific fitting follows `POL#17`. [Slices](docs/polish-terrain.md#ready-implementation-slices-2026-10-18). |
+| `POL#9` | OPEN | HIGH | XL | Current-arena terrain: reusable non-text landmarks or modest parallax; small-view strokes are implemented, with author readability/style review retained. CQ-specific fitting follows `POL#17`. [Slices](docs/polish-terrain.md#ready-implementation-slices-2026-10-18). |
 | `POL#16` | DEFERRED | MED | XL | Extend the treatment through accepted arenas after `POL#17`/`POL#21`; remaining UI art follows the gameplay style lock. [§6](docs/polish-plan.md#6-finish-the-match-presentation-and-extend-the-treatment). |
 
 ## Feel and feedback
@@ -159,7 +160,7 @@ These add to the hierarchies, never flatten them (CLAUDE.md); D6 is `GAP#4.2`.
 
 **Owner:** [docs/review/engine-reports.md](docs/review/engine-reports.md), the live ledger. Check
 engine master before filing, not the pin. Gap-audit Class 3 items not yet in the ledger are
-`GAP#F*`. The twelve drafts are unfiled; their filing rows share the publication
+`GAP#F*`. The thirteen drafts are unfiled; their filing rows share the publication
 decision below rather than representing upstream fixes already requested.
 
 | id | status | sev | size | item |
@@ -180,6 +181,7 @@ decision below rather than representing upstream fixes already requested.
 | `ENG#17` | BLOCKED | LOW | S | File the Win32 DPI report after `ENG#PUBLISH`; answers OCA-66. [Report](docs/review/engine-reports.md#17-the-win32-window-ignores-dpi-once-the-client-opts-in--draft-with-manifest-exhibit). |
 | `ENG#18` | BLOCKED | LOW | S | File the Label visibility/draw-order report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#18-a-label-in-a-scene-can-be-neither-hidden-nor-raised--draft-with-station-label-exhibit). |
 | `ENG#19` | BLOCKED | LOW | S | File the startup window-visibility report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#19-the-window-is-shown-before-the-client-has-loaded-anything--draft-with-startup-timing-exhibit). |
+| `ENG#20` | BLOCKED | LOW | S | Recheck upstream and file the view-aware object-drawing report after `ENG#PUBLISH`. [Report](docs/review/engine-reports.md#20-scene-drawing-gives-client-objects-no-view-context---draft-with-miniature-terrain-exhibit). |
 | `GAP#F10` | DEFERRED | LOW | S | `DrawList` colour transforms beyond multiply (greyscale, daltonize, hue remap); no exhibit yet. |
 
 ## Developer console
